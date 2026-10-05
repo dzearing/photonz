@@ -1,0 +1,34 @@
+{
+  "id": "a-second-clip-comes-in-at-the-playhead-from-the",
+  "title": "A second clip comes in at the playhead from the menu bar, like a sound does",
+  "goal": "Bringing a music bed onto a video has a menu row (Sequence, Add Sound), but bringing in a second video clip does not: File, Import Media only puts it on the Library shelf, and the person then has to find the shelf and drag the tile. Someone who looks in the menus for how to add a clip finds nothing that puts one on the timeline. Make the one row add a video or a sound at the playhead, the same way.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:48:04.997Z",
+  "updated": "2026-10-05T09:49:18.255Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager pass 2026-10-05, workflow lens (focus workflow step: add a second clip). Today: EditorCommands.swift:929-932 addSoundRow -> EditorState+Audio.swift:95-104 addSoundFromFile (SoundLibrary.openableTypes only). File > Import Media (EditorCommands.swift:332-336, EditorState+LibraryImport.swift:24-52) only fills the shelf; the timeline gets a clip by dragging the tile or the Library's Add at Playhead button (LibraryPanel.swift:807). The drop path that lands a video on the timeline with overwrite rules is ClipLanding.swift (bring-in-a-second-clip-and-cut-between-clips); reuse it rather than writing a second landing. Placement: Menu bar (Sequence), per the placement contract. Premiere's equivalent is Import then drag; Final Cut's is Import then E (append). Keep Add Sound's existing walks passing (rename their menu step).",
+  "acceptance": [
+    "Sequence has one row, Add Media at Playhead…, in place of Add Sound…, that opens a file panel taking videos and sounds; a video lands at the playhead on a video track (a free one, or a new one if every track is busy there) with its own sound linked under it, a sound lands as Add Sound does today",
+    "The picked file also appears on the Library shelf, as an import does",
+    "Undo takes the whole landing back in one step",
+    "The workflow walk's 'add a second clip' step can be done from this row; a walk at Next defaults chooses it through the menu (scripted file pick) and checks the clip and its sound are on the timeline at the playhead",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:48:04.999Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.254Z",
+      "note": "seq 3590 -> 2"
+    }
+  ]
+}

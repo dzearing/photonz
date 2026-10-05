@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 15,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T15:11:20.210Z",
-  "updated": "2026-10-05T00:41:33.366Z",
+  "updated": "2026-10-05T00:41:51.028Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-04, screenshot of a Card (single diamond, the instance) above a Card (four-diamond, the original) after one drag): \"when i drag a component to the canvas, why are there 2 copies\" then, told it was option a of the 2026-09-15 card: \"how does 'always a copy' translate into 'copy AND original'\".\n\nThe card: queue/decisions/a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t.json. The user picked a 'Always a copy' with the note 'An Instance, not a copy. Changes to the component change instances, but you can right click and make unique?'. Option a's small print said the original goes off to one side on the canvas, but its label and its pro 'Matches what every other design tool does with a library' read as one thing landing; Figma's library drag puts down only an instance. This task supersedes option a with what the card called c 'Originals leave the canvas'. Lesson for card writers: the label must state what lands on the canvas.\n\nCode (read, not run): EditorState+Components.swift:138-182 placeComponent / insertStarterComponent bring the original when document.mainComponent(componentID:) == nil, then sayTheOriginalArrived (:188). Shared components the same via EditorState+SharedComponents.swift:127. Originals are drawn on the canvas from document.mainComponents (CanvasComponents.swift:35). Edit Original today just selects the original on the canvas (ComponentPanel.swift:744-752 selectComponentOnCanvas; also :1007, PartsInspector.swift:126). Tests that pin today's behaviour: FirstDropIsAnInstanceTests (expect them to change). Trap: main components may be what instances render from (looks, versions, named colors, properties); keep them in the document model, just not in the drawn layer tree, so rendering and Codable round trips still work. Trap: PhotonzCore must stay pure; model change needs tests first.",
@@ -52,11 +52,16 @@
     {
       "t": "2026-10-05T00:41:33.365Z",
       "note": "Adversarial pass 2 (built thing, real probe, captures under an unlocked screen): one drag = one Card (expectLayers 6, was 11); Edit Original from a copy's right-click opens the Card alone with 'Card | Done' in the title bar; Opacity 40 there + Escape twice = both copies at 40% and 'Updated 2 copies of Card'. Make Component keeps the group in place as a copy and picks the new Library tile with its Name field focused (new LibraryComponentNameField), because the original's Name field is no longer on the canvas; renaming the component renames copies still wearing its name. Design change mid-task: parking keeps the ORIGINAL's id (knobs, versions, saved refs) and gives the stand-in copy a new id (Layer.duplicated) after the first version broke dozens of tests that edit originals by id. Edit space shows drawings where they stood if they fit a document-sized page, else centred. Rough items: Make Unique vs mock Detach -> settled by the 2026-09-20 card note; no mock for the space -> placement contract; see-through page, two Escapes, no shortcut -> left rough here (cosmetic, below the follow-up bar); three Components guides broken -> filed p1 the-components-guides-teach-edit-original-instea (seq 16, owns their walks). Walks: ~30 component walks moved into the space via new harness actions editPickedComponentOriginal / doneEditingOriginal; 26 rerun green on the final build plus earlier batches (copy-layout, copy-own-number, corner-names, link-break, starter-*, shelf-*, version-*, etc.) green."
+    },
+    {
+      "t": "2026-10-05T00:41:51.026Z",
+      "note": "Shipped da42b583: a drop puts down exactly one instance (starter, shared, made here); originals live in PhotonzDocument.componentOriginals and never reach the canvas, export or copy as image (ComponentLibraryRenderTests). Edit Original opens the original in its own space with Done in the title bar; Done writes back as one undo step and every copy follows. Make Component leaves a copy where the group was and names the component from its Library tile. Old files open with originals moved to the Library and a copy in their place. Right-click a copy: Edit Original, Make Unique. Verified: Scripts/test.sh green (11,250 tests), component-drop-one-instance-walk at Next defaults with 5 real window captures, 26 patched component walks green on the final build. Audit queue/audits/2026-10-04-one-instance-drop.json. Follow-up p1: the-components-guides-teach-edit-original-instea (three guides)."
     }
   ],
   "started": "2026-10-04T22:28:51.755Z",
   "walks": [
     "component-drop-one-instance-walk",
     "component-drag-lands-a-copy-walk"
-  ]
+  ],
+  "completed": "2026-10-05T00:41:51.027Z"
 }

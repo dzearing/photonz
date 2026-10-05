@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 3570,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T18:12:22.357Z",
-  "updated": "2026-10-04T18:12:22.360Z",
+  "updated": "2026-10-05T05:50:46.013Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows folding-a-panel-section-answers-within-a-frame (2026-10-04), which took folds from 18-108ms to 6-15ms: StoredSetting (dotted @AppStorage keys rebuilt the editor on every defaults write), PanelSectionFoldStore (per-section fold cells, panel redraws only when an open section's ceiling changes, other windows follow after 0.3s without motion), bodies kept built once opened (CollapsibleSection.isBuilt), reach (Tab via focusable(false, interactions: []), VoiceOver, header value) deferred to after the motion, walk markers asked through FoldedSectionReach. Residual measured on the final build, 13 full runs: worst press per run 14-16ms, misses at 16.1-18.6ms, scattered across Properties, Transitions, Effects/Appearance on a rectangle, and the guarded wait after five rapid Layers clicks (16.4-19.1ms, could not reproduce it outside the full walk: 6 isolated cycles with both windows open read 9-11ms). Each press = an ~8ms click pass then the fold pass starting ~8ms in. Time Profiler on that pass: generic AttributeGraph update, layout, accessibility needsUpdate/postUpdate (~10-15%), display list render; per animation frame 6-9ms, a share of it AppKit moving every NSView in the panel (CoreViewSetGeometry, tracking-area refresh, NSViewFrameDidChange posts), including the probe-only PanelTargetView markers (stopping their frame notifications made no measurable difference). Ideas not tried: fewer onGeometryChange observers per section during motion, fewer NSView-backed controls (VideoKit.Dropdown is an NSPopUpButton plus its own NSHostingView), measuring the shipping build's fold pass against the probe's. The press failure message now says how long after the click its longest pass began (MainThreadMeter.longestBeganMS), and every press log line ends 'longest Xms from Yms in'.",
@@ -22,9 +22,43 @@
     {
       "t": "2026-10-04T18:12:22.359Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-04T22:26:31.141Z",
+      "note": "rotating check 2026-10-04T22:26:31Z, 50 walks run from 727 onward in the rotation: section-fold-motion-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-10-05T02:45:02.098Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T05:50:14.726Z",
+      "note": "Reproduced on the current build at once: step 18 Captions 17.6ms, 'from 0ms in', i.e. the click's own pass. With limits lifted, every fold 12-23ms. Time Profiler on the click pass: -[NSMenuBarTrackingSession _mouseDownEventHandler:] beginning and dismissing a menu bar tracking session on EVERY walk click (2-6 samples each; TSM activation, SLS window list, _disableDeepClicks). The real pointer was resting at (0,1092), on the menu bar. Moved it mid-screen (CGWarpMouseCursorPosition, person idle 9h, put back after): same build, folds 6-15ms and the longest pass back to the fold frame ~8ms in. A synthetic event carries the right CG location (checked), so AppKit reads the real pointer. Fix in the meter (takeWalkMouseDown): leave out the dequeue's tail when NSMenu.didBeginTracking fired for the main menu; median 8.2ms, max 31ms left out per press."
+    },
+    {
+      "t": "2026-10-05T05:50:14.780Z",
+      "note": "App side: 16 folds each (fold-sixteen walk in /tmp) were still Properties worst 13.7-14.5, Transitions 14.2-15.4. Tried switches (clip, hit testing flip, body frame observer, defaults write, reach steps, probe markers): all within ±1.5ms noise. Fold-pass call tree: AppKitPopUpAdaptor.PlatformView.updateNSView (SwiftUI Menu rebuilding its items, AX text, symbol images) in every fold pass. Headers of Transitions (plus menu) and Properties (menu) re-ran on each fold because the chevron read the fold in CollapsibleSection.body. With accessories hidden: Properties 11.2->9.0 median, Transitions 12.8->9.4. Real fix: SectionFoldChevron + SectionFoldWindow read the fold cell; header reads PanelFoldCell.isFoldedUnwatched for its VoiceOver value. Result: Transitions 6.5/7.3, Properties 9.0/11.8, rect Appearance 6.8/8.2 (median/worst over 16)."
+    },
+    {
+      "t": "2026-10-05T05:50:14.835Z",
+      "note": "Guarded wait after the rapid clicks (the miss the last runner could not place): the meter is not reset between step 101's filmed press and step 106, and every filmed fold is followed ~0.8s later by a 8-42ms layout+AX pass. Ruled out by switch: film bookkeeping, re-hiding the window, VoiceOver/Tab follow-ups. A 0.9s film moved it to ~1.28s: it is the app answering the SCStream stopping. Set-aside passes did not catch it (it ends at a run loop edge, and widening set-aside would starve settled() inside films of passes), so filmWindow/filmThumb mark the meter before camera.stop and forget(since:) at the end. windowClick now delivers clicks like press (release queued, press dequeued through the meter). sendWindowsBehindThePerson excluded from the meter."
+    },
+    {
+      "t": "2026-10-05T05:50:14.889Z",
+      "note": "Verified on the final build, pointer on the menu bar: section-fold-motion-walk runs 7-16 green in a row (16 runs, 15 green; run 6 failed step 103 because the filmed click at step 101 did nothing: 'the window drew nothing new after the key', mainBusy 7ms; not seen in 22 other logged runs this session). 632 guarded presses median 7.2 worst 12.7; guarded waits worst 7.6. Scripts/test.sh 11261 pass. 62 related walks (windowClick, films, guarded steps, section presses): 60 green; history-filter-switch-speed-walk failed twice in batch then 12/12 across base and this build; view-to-edit-on-a-long-recording-walk fails on base too (logged on edit-mode-s-contents-come-in-with-the-slide-not)."
+    },
+    {
+      "t": "2026-10-05T05:50:14.943Z",
+      "note": "left rough, not filed: hovering a header still redraws the header row and its menu (same mechanism; not measured as a frame problem). The single missed filmed click (run 6) is a one-off so far; if it shows up again it earns a task. The VoiceOver header value still changes 0.45s after a fold and redraws the header then, off the click's frame as before."
+    },
+    {
+      "t": "2026-10-05T05:50:46.011Z",
+      "note": "Commit d7f44658. A fold now redraws only the section's chevron and body window, not its header and the menu at the header's end (SectionFoldChevron/SectionFoldWindow in InspectorSections.swift): over 16 folds Transitions median 6.5 worst 7.3ms, Properties 9.0/11.8, rectangle Appearance 6.8/8.2 (acceptance 2). Harness: the meter leaves out the menu bar's answer to a walk click when the person's pointer rests on the menu bar (median 8ms a click), the walk's own window-ordering errand, and the app's redraw when a film's camera stops; windowClick clicks like press. section-fold-motion-walk ten in a row green (632 guarded presses median 7.2 worst 12.7; waits worst 7.6) at Next defaults, films show no section dimmed or half open (acceptance 1, 3). Scripts/test.sh 11261 pass. Audit queue/audits/2026-10-04-section-fold-every-run.json."
     }
   ],
   "walks": [
     "section-fold-motion-walk"
-  ]
+  ],
+  "started": "2026-10-05T02:45:02.096Z",
+  "completed": "2026-10-05T05:50:46.012Z"
 }

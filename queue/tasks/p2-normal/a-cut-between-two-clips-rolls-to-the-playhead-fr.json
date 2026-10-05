@@ -1,0 +1,36 @@
+{
+  "id": "a-cut-between-two-clips-rolls-to-the-playhead-fr",
+  "title": "A cut between two clips rolls to the playhead from its right-click",
+  "goal": "Right-clicking a cut inside one clip offers Roll Edit to Playhead, but right-clicking the cut where two separate clips meet offers only transitions, though on the timeline the two cuts look the same. An editor used to Premiere expects to roll any edit point. Give the cut between two clips the same roll, so the outgoing clip gets longer by exactly what the incoming one gives up and nothing after it moves.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:48:23.286Z",
+  "updated": "2026-10-05T09:49:18.423Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager pass 2026-10-05, from reading the code, not yet seen on screen (hence p2 and the reproduce step). EditorState+TimelineMenus.swift:432-457 timelineCutMenuRows (a join inside one clip) ends with Roll Edit to Playhead via rollClipCut; timelineEditPointMenuRows (:461-479, the point between two clips, TimelineEditPoint outgoing/incoming) returns only Apply Default / Add / Remove Transition. The right-click task (right-click-does-what-you-would-expect-everywher, audit 2026-09-23-right-click-menus.json) built the roll for joins before edit points between separate clips existed (bring-in-a-second-clip-and-cut-between-clips, ClipLanding.swift). Spare footage between clips: DocumentCut / documentCut(at:) already reports spare for transitions; reuse it.",
+  "acceptance": [
+    "Reproduce first at Next defaults: put two clips end to end, right-click where they meet, and record what the menu offers (paste it in this task's log)",
+    "The edit point menu between two clips has Roll Edit to Playhead under the transition rows, enabled only when both clips have the spare footage the roll needs, as on a join",
+    "Rolling keeps both clips on their track, keeps their sound linked under them, keeps a transition on the cut, and is one undo step",
+    "The same row is in the menu bar wherever the join's roll already is, acting on the picked cut",
+    "Unit tests in PhotonzCore cover rolling between two clips (with and without spare, with a transition) and are written first",
+    "A walk at Next defaults rolls a cut between two clips and photographs before and after",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:48:23.288Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.422Z",
+      "note": "seq 3610 -> 5"
+    }
+  ]
+}

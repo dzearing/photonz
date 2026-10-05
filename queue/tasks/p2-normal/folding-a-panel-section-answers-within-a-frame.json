@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T00:26:30.372Z",
-  "updated": "2026-10-04T13:07:33.980Z",
+  "updated": "2026-10-04T18:15:35.175Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reopens a-panel-section-opens-and-closes-instantly-and-s (done) for one section. Found by find-out-whether-a-press-step-s-frame-guard-can, commit 264e54bd: MainThreadMeter did not count the time between two run loop runs, where AppKit dispatches a press's queued mouse-up, so every press guard read only part of the click. On the fixed meter, Scripts/playtest.sh Scripts/playtest/section-fold-motion-walk.json --no-build failed at step 12 (press \"Time section\", longestUnderMS 16) three times out of three on 2026-10-03: 22.6ms, 16.9ms, 19.7ms. On the old meter the same walk passed. The walk needs the Mac to itself (front: true).",
@@ -33,9 +33,31 @@
     {
       "t": "2026-10-04T13:07:33.979Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-10-04T13:08:57.738Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T13:49:39.180Z",
+      "note": "Reproduced: walk fails step 12 Time 23.2ms. With the limits lifted, EVERY guarded fold is over a frame on the honest meter, not just Time (base: Time 18-40, Properties 29-51, Audio 25-53, Transitions up to 62, Appearance with a clip picked 36-108ms). Instrumented the meter: each press = an 8ms click pass then ONE long pass 20-40ms later; animation frames stay under 10ms. Ruled out: the spring and the reveal transition (turning either off changed nothing). Found three causes by experiment: (1) @AppStorage with a DOTTED key (inspector.width in EditorView, timeline.height in TimelineDock, inspector.* in the panel) is invalidated by EVERY UserDefaults write in the app; proven with a standalone SwiftUI script (x.width rebuilt on writes of unrelated keys, ywidth not), so every fold rebuilt the whole editor body (_logChanges: EditorView _panelWidth changed on each fold). (2) The fold lived in the panel's stored setting, so each fold re-evaluated the whole panel and re-laid out every section: keeping the fold local to the section (prototype) took every fold to 5-15ms, Appearance 70->8ms. (3) Opening builds the body from nothing (NSPopUpButton+NSHostingView per dropdown, AX insertion): local fold with bodies still built/removed left opens at 25-65ms; local + kept-mounted gives 5-15ms."
+    },
+    {
+      "t": "2026-10-04T18:12:37.990Z",
+      "note": "Built (commit to follow): (1) StoredSetting + StoredSettingCell replace view-level @AppStorage (12 uses): a cell tells its readers only when its own key's value changes; a fold no longer rebuilds EditorView (walk now asserts expectBuilds editorBody 0 and inspectorPanel 0 after a fold). (2) PanelSectionFoldStore per panel, one PanelFoldCell per section, same inspector.collapsed setting; panel re-evaluates only when an OPEN section's dock ceiling would change (checkFoldBudget) or the setting was written from outside (syncs); other windows follow 0.3s later without motion. (3) CollapsibleSection keeps its body built once opened (isBuilt), SectionBodyHost so a fold skips the rows, one SectionRevealLayout fraction for both directions, plain rect clip. (4) Reach follows the fold off the click's frame: walk markers at once via FoldedSectionReach (a reference, no environment churn), VoiceOver + header value after 0.45s, Tab order 0.1s later via focusable(false, interactions: []) (proved with a bare SwiftUI window that Tab reached a hidden field without it, and that disabled dimmed and cost a 20ms frame on open). (5) Harness: a press failure says how long after the click its longest pass began. Numbers: base build every guarded fold 18-108ms; final build 6-15ms typical, worst per run 14-16ms. Walk: 3 and 4 runs in a row green on the final two builds, ~2 in 3 runs overall; residual filed as folding-a-panel-section-lands-under-a-frame-on-e (owns the walk). Related walks green: 66 run (dock, sections, library, measure, colour, sound, keyframe, title, timeline resize, an-editing-session); panel-rows-read-as-one-column-walk fails exactly as before this change (owned by walks-that-fail-in-the-full-sweep-11). Scripts/test.sh: 11220 pass."
+    },
+    {
+      "t": "2026-10-04T18:12:38.047Z",
+      "note": "left rough, not filed: a folded section stays built and pays its share of updates while folded (cost of keeping open cheap; a section folded since launch is not built until opened, first open still 25-65ms). VoiceOver hears a fold ~0.45s after the click. Both are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-10-04T18:15:35.173Z",
+      "note": "Commit 715f0ea9. A panel fold now redraws its own section only: StoredSetting replaces view-level @AppStorage (dotted keys rebuilt the editor on every defaults write), PanelSectionFoldStore gives each section its own fold cell (panel redraws only when an open section's dock height changes), bodies stay built once opened, Tab/VoiceOver/header value follow the fold after the motion. Measured: base build every guarded fold 18-108ms, now 6-15ms; Time 7-11ms. Acceptance 1 is NOT reliably met: on the final build section-fold-motion-walk passed 5 of 8 runs (best streak 2; earlier builds of this change reached 4 in a row twice), each miss one 16-18ms fold frame; that residual is filed as folding-a-panel-section-lands-under-a-frame-on-e, which owns the walk. Acceptance 2 met: films show shut bottom-up / open top-down every ~9ms. Walk now also asserts a fold builds neither editor nor panel. 66 related walks green; panel-rows-read-as-one-column-walk fails as it did before (walks-that-fail-in-the-full-sweep-11). Scripts/test.sh 11220 pass. Audit queue/audits/2026-10-04-section-fold-within-a-frame.json."
     }
   ],
   "walks": [
     "section-fold-motion-walk"
-  ]
+  ],
+  "started": "2026-10-04T13:08:57.737Z",
+  "completed": "2026-10-04T18:15:35.174Z"
 }

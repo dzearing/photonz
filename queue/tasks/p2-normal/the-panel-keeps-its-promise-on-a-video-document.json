@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-23T02:12:33.004Z",
-  "updated": "2026-10-04T13:06:24.202Z",
+  "updated": "2026-10-05T09:47:05.387Z",
   "deps": [
     "the-timeline-is-the-one-in-the-mock",
     "on-a-video-the-timeline-is-the-layer-list-and-th"
@@ -136,6 +136,10 @@
     {
       "t": "2026-10-04T13:06:24.201Z",
       "note": "Digest 2026-10-04: the panel got taller again this week. The picture fades (76596454) added Fade In and Fade Out rows to Time, which pushed the caption Background row out of the narrowest panel (captions-panel-keeps-its-margins-walk, fixed by scrolling in the walk, sweep 10) and now leaves a title's Shadow Kind row out of reach even after scrolling (panel-rows-read-as-one-column-walk, sweep 11, reproduced today). The clip menu audit (2026-10-03-video-clip-menu-leads-with-the-picture) also says a video's audio sections now sit below the fold in a 1200 by 720 window. Whatever the card decides has to hold with these rows in."
+    },
+    {
+      "t": "2026-10-05T09:47:05.386Z",
+      "note": "Manager 2026-10-05: correction to the digest line above. The title's Shadow Kind row WAS reachable; the walk failed because the harness's reveal scrolled the wrong scroller (fixed in 2b7c416a under walks-that-fail-in-the-full-sweep-11). The panel height problem this card asks about is still real, but that row is not evidence of it."
     }
   ],
   "walks": [],

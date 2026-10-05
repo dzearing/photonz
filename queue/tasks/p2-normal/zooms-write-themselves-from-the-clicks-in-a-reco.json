@@ -1,0 +1,40 @@
+{
+  "id": "zooms-write-themselves-from-the-clicks-in-a-reco",
+  "title": "Zooms write themselves from the clicks in a recording",
+  "goal": "A recording already remembers every click, and a zoom region can frame a spot and follow the pointer, but every zoom is made by hand. Screen Studio, the tool people use to turn a raw screen recording into something to share, puts a zoom in on each burst of clicks by itself, and that is most of why its output looks polished in minutes. Offer one command that does the same, making ordinary zoom regions the person can then move, trim or delete.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 7,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:48:57.237Z",
+  "updated": "2026-10-05T09:49:18.534Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager pass 2026-10-05, competitor lens (focus brief names Screen Studio and ScreenFlow: raw recording to polished share, zooms that follow the pointer). Building blocks already shipped: recorded clicks (a-recording-remembers-where-the-cursor-went-and, audit 2026-09-30-recorded-clicks.json), click effects (2026-09-30-click-effects.json), zoom regions with Follow Cursor (a-zoom-region-that-frames-a-spot-and-can-follow, audit 2026-09-30-zoom-regions.json). No mock draws automatic zooms (video-zoom-wt.html is the manual punch-in), so this is a new visible command and goes through a card first. Placement: Menu bar (Clip) and the clip's right-click, per the placement contract; no new panel button.",
+  "acceptance": [
+    "Only once the card on this task says yes, and built as the answer says",
+    "On a recording with recorded clicks, Clip has an Add Zooms from Clicks row (and the clip's right-click has it) that adds one zoom region per burst of nearby clicks, each framing the clicks and easing in before the first and out after the last",
+    "The zooms it makes are the same zoom regions a person draws by hand: they show on the clip, can be moved, trimmed, retimed and deleted, and the whole command is one undo step",
+    "On a recording with no clicks the row is greyed out",
+    "Unit tests in PhotonzCore for grouping clicks into zooms (spacing, edges of the clip, overlapping bursts) are written first",
+    "A walk at Next defaults opens the sample recording with scripted clicks, runs the command, and photographs a zoom at two moments",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:48:57.239Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.138Z",
+      "note": "Waiting on the card: should zooms come from clicks, and how."
+    },
+    {
+      "t": "2026-10-05T09:49:18.533Z",
+      "note": "seq 3640 -> 7"
+    }
+  ]
+}

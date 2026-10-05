@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p3-low",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-18T08:30:35.604Z",
-  "updated": "2026-10-05T08:13:11.208Z",
+  "updated": "2026-10-05T08:13:23.483Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From docs/design/vector-paths.md, Known rough edges: 'The Pen draws every anchor it has placed as the same round dot, so while you are drawing you cannot see which points are corners, bends, or curved on one side. The reshaping chrome tells all three apart.'\n\nNo card: this is not a new idiom, it is the Pen borrowing the vocabulary the reshaping chrome already ships and the user has already seen. p3 because nothing is broken and nothing is lost, it is only harder to read than it needs to be.\n\nRelated rough edge from the same list, worth mentioning in the audit rather than fixing here: 'The Pen still needs Option to place a half-smooth anchor as it draws, and its own chip does not mention it', so the two tools answer the same question differently. Once the points look different the chip has something to point at.\n\nSpec: docs/design/vector-paths.md section 'The Pen' (line 307) and 'Reshaping one' (line 474).",
@@ -64,10 +64,15 @@
     {
       "t": "2026-10-05T08:13:11.207Z",
       "note": "left rough: the Pen's hover tip and chip still never mention that Option and drag places a point curved on one side (vector-paths.md Known rough edges). Not filed: a discoverability nit, nothing broken, and the task notes asked for it to be mentioned rather than fixed; it is in the audit's rough list for the user to react to. expectPenMarks is a new step kind so it is refused under a lock until someone watches it run locked; it only reads the canvas's own state, like expectChrome."
+    },
+    {
+      "t": "2026-10-05T08:13:23.481Z",
+      "note": "Pen points now wear reshaping's marks as they go down (square corner, round bend, rounded square for one-sided), decided by PathAnchorMark in PhotonzCore for both tools; the point under the hand shows its kind live. Verified: pen-points-say-their-kind-walk ok at Next defaults with expectPenMarks and 6 real captures over dark and light in both appearances; 36 nearby walks ok; 11325 tests green. Audit queue/audits/2026-10-05-pen-point-marks.json."
     }
   ],
   "started": "2026-10-05T07:46:39.960Z",
   "walks": [
     "pen-points-say-their-kind-walk"
-  ]
+  ],
+  "completed": "2026-10-05T08:13:23.482Z"
 }

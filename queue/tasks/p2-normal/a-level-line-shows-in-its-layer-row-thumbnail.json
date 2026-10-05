@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T03:22:34.435Z",
-  "updated": "2026-10-05T02:29:24.361Z",
+  "updated": "2026-10-05T02:29:33.513Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-04 running Scripts/playtest/click-click-draws-a-line-walk.json --no-build: snapshot 3-called-off-leaves-nothing-sc.png (copied to queue/audits/2026-10-04-click-click-line-3-called-off-leaves-nothing-sc.png) shows rows Line and Line 2 (sloped) with a thin red stroke and Line 3 (drawn with Shift, level) with an empty grey thumbnail. Theory, not checked: the thumbnail scales the layer frame to fit, and a level line's frame is only a few points tall, so the stroke scales below a pixel.",
@@ -46,11 +46,16 @@
     {
       "t": "2026-10-05T02:29:24.360Z",
       "note": "Reproduced in a unit test: a level 304x4pt line rendered to an 80x1 thumbnail, fitted into the 38pt slot at about half a point. Fix: DocumentRenderer.thumbnail takes minimumAspect; the layer row asks for 0.25, so a flatter picture is centred on a clear band at a whole-pixel offset. Shelf and component previews unchanged. Verified with LayerThumbnailTests (5 new), click-click-draws-a-line-walk (ok) and new a-flat-line-keeps-its-thumbnail-walk (ok, dark + light captures). Full suite green, 11261 tests."
+    },
+    {
+      "t": "2026-10-05T02:29:33.511Z",
+      "note": "Level and upright lines now show their stroke in the layer row thumbnail (DocumentRenderer.thumbnail minimumAspect 0.25, used by the row only). Verified by 5 new LayerThumbnailTests, click-click-draws-a-line-walk and the new a-flat-line-keeps-its-thumbnail-walk in dark and light; full suite green. Commit 59142d8d."
     }
   ],
   "walks": [
     "a-flat-line-keeps-its-thumbnail-walk",
     "click-click-draws-a-line-walk"
   ],
-  "started": "2026-10-05T02:17:05.225Z"
+  "started": "2026-10-05T02:17:05.225Z",
+  "completed": "2026-10-05T02:29:33.512Z"
 }

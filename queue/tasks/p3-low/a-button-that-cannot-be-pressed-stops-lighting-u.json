@@ -5,11 +5,11 @@
   "epic": "design-system",
   "priority": "p3-low",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-09-22T12:19:44.405Z",
-  "updated": "2026-10-03T12:42:02.138Z",
+  "updated": "2026-10-05T09:22:44.295Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the 2026-09-22 digest pass while reading queue/audits/2026-09-21-video-bar-says-what-it-does.json, whose rough list says: 'A dimmed button still brightens a little and grows its hover ring when the pointer crosses it, so it reads as slightly more pressable than it is. This is in the shared icon button style, not in the video bar.'\n\nConfirmed in the code rather than taken on trust. Sources/Photonz/IconActionButtonStyle.swift: both styles read @Environment(\\.isEnabled) and use it for exactly one thing, .opacity(isEnabled ? 1 : 0.4) (lines 70 and 148). The hover state is tracked regardless (hovering, lines 45 and 129) and fillOpacity (lines 85 and 156) never consults isEnabled, so the hover fill is drawn on a disabled button and then dimmed to 40 per cent along with everything else, and the 0.12s ease still runs.\n\nThis is the SHARED style, so it is every dimmed round icon button in the app, not a video problem. It was found on the video bar because that row is the one place with four permanently dimmed buttons side by side.\n\nParked at p3 because design-system is staged next: it is a real defect, small, and it does not unblock the video focus.",
@@ -49,6 +49,20 @@
     {
       "t": "2026-10-03T12:42:02.137Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-10-05T09:13:21.300Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T09:22:37.521Z",
+      "note": "Epic design-system is staged next, not now; did the fix anyway because the defect shows on the video bar (focus) and is a real visible bug, a few lines in shared styles. Reproduced first: added LegibilitySheet.stillUnderThePointer, which draws each shared button style disabled at rest, hovered and pressed (light and dark) and fails on any pixel change. Before the fix it failed 20 ways: icon button, tool bar button, pill, prominent pill and caption bar button, hovered and pressed, both schemes. Fix: PhotonzCore ButtonPointerLook (tested in ButtonPointerLookTests) decides rest/hovered/pressed and returns rest whenever the button is disabled; IconActionButtonStyle, PillActionButtonStyle and CaptionBarButtonStyle read it. Enabled looks unchanged: same fills, shrink and animation timing; the sheet's enabled rest vs hovered/pressed pictures still differ. Caption bar button had the same defect and was folded in. The check runs inside Scripts/test.sh on every run, so it cannot come back quietly. No audit written: a defect fix in shared styles, not a new feature to playtest."
+    },
+    {
+      "t": "2026-10-05T09:22:44.293Z",
+      "note": "Disabled icon, tool bar, pill and caption bar buttons now sit still under the pointer (no hover fill, no pressed fill, no shrink). Rule in PhotonzCore ButtonPointerLook with unit tests; the three shared styles read it. Proven by a new pixel check in the legibility sheet that Scripts/test.sh runs every time: it failed for all five styles before the fix and passes after; enabled hover and press pictures still differ from rest. Full suite green (11,333 tests). Commit 896bebe1."
     }
-  ]
+  ],
+  "started": "2026-10-05T09:13:21.298Z",
+  "completed": "2026-10-05T09:22:44.294Z"
 }

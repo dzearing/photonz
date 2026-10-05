@@ -62,6 +62,10 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-09-30T04:43:25.576Z"
+  "status": "withdrawn",
+  "created": "2026-09-30T04:43:25.576Z",
+  "withdrawn": {
+    "reason": "Overtaken: your own ask dropping-a-component-puts-down-one-instance-and shipped option A (only the copy lands, the original lives in the Library) in da42b583 on 2026-10-05.",
+    "at": "2026-10-05T09:44:47.176Z"
+  }
 }

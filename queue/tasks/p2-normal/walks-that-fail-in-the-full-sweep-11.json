@@ -5,14 +5,14 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-04T08:36:34.686Z",
-  "updated": "2026-10-04T13:07:34.035Z",
+  "updated": "2026-10-05T01:59:07.214Z",
   "deps": [],
   "blockedBy": [],
-  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-04T08:36:34Z, not by a full sweep: it ran 50 of 737 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): panel-rows-read-as-one-column-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-04-012352.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-04T21:34:42Z: 738 of 739 walks passed in 198 minutes.\n\nFailing walks (1): panel-rows-read-as-one-column-walk\n\nFull output: queue/sweep/2026-10-04-111620.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: the-track-name-column-can-be-widened-and-its-but: track name column default widened 84->140: every timeline walk's lane geometry moved; 76 timeline walks checked by hand\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
   "acceptance": [
     "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
     "Each one is run on its own and passes twice in a row",
@@ -38,7 +38,36 @@
     {
       "t": "2026-10-04T13:07:34.034Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-10-04T21:34:43.008Z",
+      "note": "sweep 2026-10-04T21:34:42Z: 1 failing (panel-rows-read-as-one-column-walk)"
+    },
+    {
+      "t": "2026-10-05T01:33:26.506Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T01:33:39.468Z",
+      "note": "owns these walks: panel-rows-read-as-one-column-walk"
+    },
+    {
+      "t": "2026-10-05T01:59:06.774Z",
+      "note": "Reproduced on its own: FAILED step 27 (reveal Kind in Shadow 1), 50pt short. Diagnosed with a temporary log in bringIntoReach: at the dock's top the Effects list showed 28 of its 283pt; Kind was inside the list's own viewport, just under the dock's bottom edge. The list took every turn (28pt is room for a 20pt row), each wheel turn overshot (asked 76, list ended 152 off), and six rounds oscillated. A scrollPanel diagnostic walk showed the dock scrolls the whole shadow into view, so the APP is right and the WALK is right: the harness's reveal was wrong. Fix 2b7c416a: PlaytestReach.turns puts a scroller whose own viewport already holds the control after the ones around it (unit tested)."
+    },
+    {
+      "t": "2026-10-05T01:59:06.830Z",
+      "note": "left rough: scrollClip's wheel turn into the Effects list's SwiftUI scroller lands about twice the distance asked (76 asked, 152 travelled). Harmless now the dock takes that turn, and only a walk would ever notice, so no task; if a reveal oscillates again, this is why."
+    },
+    {
+      "t": "2026-10-05T01:59:07.212Z",
+      "note": "Fixed the walk harness, not the app or the walk (2b7c416a): a reveal now scrolls the dock first when the inner list already holds the control in its own viewport, instead of sliding it back and forth across a 28pt sliver of the Effects list. panel-rows-read-as-one-column-walk passes twice in a row; 17 walks that reveal into Effects, the Library shelf and captions pass; Scripts/test.sh green (11256 tests)."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-05T01:33:26.505Z",
+  "walks": [
+    "panel-rows-read-as-one-column-walk"
+  ],
+  "completed": "2026-10-05T01:59:07.213Z"
 }

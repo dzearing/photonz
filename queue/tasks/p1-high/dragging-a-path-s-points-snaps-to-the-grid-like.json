@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 17,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T05:11:14.705Z",
-  "updated": "2026-10-05T07:29:42.803Z",
+  "updated": "2026-10-05T07:29:54.334Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when I have grid snapping on, pen snaps to grid, but if i adjust a point on the path, it doesn't snap to grid\".\n\nFrom code reading (not run): placement snapping shipped in a-pen-point-lands-on-the-grid-line-you-can-see (PenSession.grid/free + place() in PhotonzCore, fed by CanvasNSView.canvasNudgeGrid, CanvasView.swift:1816; set at CanvasPen.swift:194/225/262; handles deliberately unsnapped). That task's scope was placement only. Point dragging is CanvasPathEdit.swift pathEditMouseDragged (:272-296): drag.current = drag.space.local(p), no grid or snap at all. Trap: drag.space converts into the layer's local space (a turned or scaled path); snap in DOCUMENT space where the grid lives, then convert, or a rotated path will snap to a rotated grid. Trap: the drag threshold (pathEditDragThreshold 4) must still apply before snapping kicks in so a click does not move a point.",
@@ -47,10 +47,15 @@
     {
       "t": "2026-10-05T07:29:42.802Z",
       "note": "built: NudgeGrid.crossing(nearest:) + PathEditSpace.gridLanding (PhotonzCore, 7 tests in PathPointGridLandingTests; Pen's onGrid now reuses crossing). CanvasPathEdit.pathEditMouseDragged snaps the grabbed ANCHOR in document space (turned paths land on the upright grid), threshold measured on raw pointer, Command frees, levers unsnapped, lit grid lines via liveGridSnapLines; a drag the grid pulls back home leaves no undo step. Verified: drag-path-points-on-the-grid-walk green at defaults (two corner drags on whole 32s, two-point drag, Command, snap off), 21 path walks + pen-on-the-grid + grid-guides + grid-pinch green, Scripts/test.sh green (11309). left rough (not filed, below the bar): Command pressed/released with the pointer still does not re-place the point until the next move; levers unsnapped is put to the user as an audit question rather than a task."
+    },
+    {
+      "t": "2026-10-05T07:29:54.332Z",
+      "note": "Path point drags snap to the grid at Next defaults: the grabbed point lands on the nearest crossing (upright grid even on turned paths), other picked points keep offsets, Command frees, levers unsnapped, lines light during the drag, no undo step when snapped home. Core: NudgeGrid.crossing + PathEditSpace.gridLanding with 7 tests; app: CanvasPathEdit/CanvasDisplay. Verified by drag-path-points-on-the-grid-walk (repro failed before, green after), 24 neighbouring walks green, Scripts/test.sh green (11309). Audit queue/audits/2026-10-05-drag-path-points-on-the-grid.json with real captures. Commit 597dfaf7."
     }
   ],
   "started": "2026-10-05T07:08:36.460Z",
   "walks": [
     "drag-path-points-on-the-grid-walk"
-  ]
+  ],
+  "completed": "2026-10-05T07:29:54.333Z"
 }

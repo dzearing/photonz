@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T02:56:58.111Z",
-  "updated": "2026-10-02T12:38:21.393Z",
+  "updated": "2026-10-05T09:44:58.980Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Filed from the intake window.",
@@ -68,6 +68,22 @@
     {
       "t": "2026-10-02T12:38:21.392Z",
       "note": "seq 50 -> 10"
+    },
+    {
+      "t": "2026-10-05T09:44:47.208Z",
+      "note": "the question \"When you drag a component off the Library, where should its original go?\" was taken down without an answer: Overtaken: your own ask dropping-a-component-puts-down-one-instance-and shipped option A (only the copy lands, the original lives in the Library) in da42b583 on 2026-10-05.. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-05T09:44:47.216Z",
+      "note": "waiting, but every question on this task was taken down without an answer. Nothing returns a task to the queue except an answer, so this will sit here until someone opens a new question."
+    },
+    {
+      "t": "2026-10-05T09:44:47.279Z",
+      "note": "not done yet: 2026-09-30-layer-row-lifts.json rough line 2 (\"The mock drops onto the middle of a shut group directly. Here every row is read in halves…\") differs from the mock and names nothing that settles it; 2026-09-30-legibility-check.json rough line 2 (\"The mock's quiet grey (#8B92A1) is a step deeper in light (#7C8392): at the mock's value…\") differs from the mock and names nothing that settles it; 2026-09-30-legibility-check.json rough line 3 (\"Liquid Glass cannot be drawn offscreen, so controls on glass are checked over white, blac…\") differs from the mock and names nothing that settles it; 2026-09-30-notices-say-what-happened.json rough line 1 (\"redline.html prints 'Measure mode: click two points for a live distance' over the canvas.…\") differs from the mock and names nothing that settles it; 2026-09-30-notices-say-what-happened.json rough line 2 (\"draw.html and vector-wt.html print 'Drag an anchor or a handle ...' and 'Click on the art…\") differs from the mock and names nothing that settles it; 2026-09-30-timing-strip-long-names.json rough line 4 (\"Departs from the mock, pre-existing and not from this change: the mock puts a small glyph…\") differs from the mock and names nothing that settles it; 2026-10-02-audio-effects.json rough line 1 (\"Titled Audio Effects, not the mock's Effects: a picked clip already has an Effects sectio…\") differs from the mock and names nothing that settles it; 2026-10-02-audio-effects.json rough line 2 (\"The mock (pages/video-audio.html, #gEffects) draws Effects as its own dock group with a r…\") differs from the mock and names nothing that settles it; 2026-10-02-audio-effects.json rough line 4 (\"The mock's row has a grip and an on/off dot; this row has a cross instead and no on/off y…\") differs from the mock and names nothing that settles it; 2026-10-02-audio-effects.json rough line 5 (\"The mock's menu rows carry icons; these do not.\") differs from the mock and names nothing that settles it; 2026-10-02-pivot-somewhere-else.json rough line 1 (\"The mock's tool bar has a pivot tool on Y. An earlier task left it out on purpose (a mode…\") differs from the mock and names nothing that settles it; 2026-10-02-pivot-somewhere-else.json rough line 2 (\"The mock's Around box is a bordered dropdown that shows the point's numbers (12, 4.4). Ou…\") differs from the mock and names nothing that settles it; 2026-10-02-recording-ready-at-stop.json rough line 3 (\"The mock's card only draws the finished state (green check, Copied to clipboard!). The in…\") differs from the mock and names nothing that settles it; 2026-10-02-sound-eq-compressor.json rough line 1 (\"The mock draws a drag grip on each row. The rows have no grip because the order is fixed:…\") differs from the mock and names nothing that settles it; 2026-10-03-timing-strip-marks.json rough line 1 (\"Side by side with the mock (icon-animate-wt.html, the timing dock; queue/audits/2026-09-3…\") differs from the mock and names nothing that settles it; 2026-10-03-timing-strip-marks.json rough line 3 (\"Unchanged from before, still different from the mock: the mock wraps a long name onto two…\") differs from the mock and names nothing that settles it; 2026-10-03-title-presets.json rough line 3 (\"Departs from the mock (video-title-wt): the mock shows a lower third as a linked componen…\") differs from the mock and names nothing that settles it; 2026-10-03-title-tiles.json rough line 3 (\"Departs from the mock (video-title-wt, step 10): the mock's Comps shelf shows a Lower thi…\") differs from the mock and names nothing that settles it; 2026-10-03-transitions-where-clips-meet.json rough line 2 (\"The section's hint, 'Drag a tile onto a cut on the timeline', is the first half of the mo…\") differs from the mock and names nothing that settles it; 2026-10-03-transitions-where-clips-meet.json rough line 5 (\"The mock's six tiles (Dip to color, Slide, Morph, Cut) are still not the app's six. That…\") differs from the mock and names nothing that settles it"
+    },
+    {
+      "t": "2026-10-05T09:44:58.979Z",
+      "note": "Covered, not abandoned: your own ask dropping-a-component-puts-down-one-instance-and shipped option A in da42b583 (one drag puts down one instance; the original lives in the Library). Card withdrawn as overtaken. Audit queue/audits/2026-10-04-one-instance-drop.json."
     }
   ],
   "started": "2026-09-30T04:39:50.937Z",

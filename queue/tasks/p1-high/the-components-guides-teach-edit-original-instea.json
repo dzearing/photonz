@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 16,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T00:03:18.636Z",
-  "updated": "2026-10-05T01:15:26.829Z",
+  "updated": "2026-10-05T01:15:58.760Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout of dropping-a-component-puts-down-one-instance-and (2026-10-04): originals moved off the canvas into PhotonzDocument.componentOriginals; Edit Original opens EditorState+OriginalSpace (a space document, Done in the title bar, Esc with nothing picked, Layer > Done Editing Original). Make a component was already updated in that task (its name-it step points at panelSection(\"libraryItem\")). Failing today: tutorial-component-versions-walk step 15 waits for name-it (the guide says Click the original, which is a copy now); tutorial-override-one-copy-walk step 15 Add menu has no Label Wording (the copy is picked, not the original); tutorial-use-it-again-and-again-walk step 37 press @fill (pick-the-original card). Likely needs a new TutorialTrigger (originalOpened, raised in editOriginal) and one for Done, since layerSelected fires on the right-click before the space opens. Harness actions editPickedComponentOriginal / doneEditingOriginal exist. In a space a made component opens where the group stood; a starter opens centred on a page the document's size (ComponentLibrary.editingSpace).",
@@ -35,6 +35,14 @@
     {
       "t": "2026-10-05T01:15:26.828Z",
       "note": "walks tutorial-use-it-again-and-again-walk, tutorial-override-one-copy-walk, tutorial-component-versions-walk -> tutorial-use-it-again-and-again-walk, tutorial-override-one-copy-walk, tutorial-component-versions-walk"
+    },
+    {
+      "t": "2026-10-05T01:15:58.698Z",
+      "note": "Adversarial pass 2 (real probe, unlocked screen, real captures): each card rings what it names (Done in the title bar, Properties on the opened original, State row on the copy after Done). Left rough, below the follow-up bar: the states guide's Done card covers the Hover label of the top-right drawing while it is up; the original's page is the dark see-through backdrop (already logged by dropping-a-component-puts-down-one-instance-and); the states guide's last card cannot wait (8-card budget, and a guide must end on a non-waiting card). All three are in the audit's rough list."
+    },
+    {
+      "t": "2026-10-05T01:15:58.758Z",
+      "note": "Shipped 377fce23: Use it again and again, Override one copy and A button in all its states now say right-click a button > Edit Original and ring Done in the title bar (new guide events originalOpened/originalFinished, new ring target on Done). Verified: their three tutorial walks green at Next defaults with no flags and real window captures; Scripts/test.sh green (11,254 tests, incl. new tests that no guide says click the original and every guide that edits it opens it and presses Done). Each guide is at or under 8 cards. Audit queue/audits/2026-10-04-components-guides-edit-original.json."
     }
   ],
   "walks": [
@@ -42,5 +50,6 @@
     "tutorial-override-one-copy-walk",
     "tutorial-component-versions-walk"
   ],
-  "started": "2026-10-05T00:59:31.876Z"
+  "started": "2026-10-05T00:59:31.876Z",
+  "completed": "2026-10-05T01:15:58.759Z"
 }

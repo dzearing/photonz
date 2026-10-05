@@ -1,0 +1,35 @@
+{
+  "id": "the-text-section-s-font-size-and-weight-menus-lo",
+  "title": "The Text section's Font, Size and Weight menus look like every other dropdown in the panel",
+  "goal": "With a title picked on a video, the panel shows two kinds of dropdown one above the other: the Time section's Fade In and Fade Out are the panel's drawn dropdowns with a chevron, full width, while the Text section's Font, Size and Weight are small system pop-up buttons with up and down arrows and a narrower box. It reads as two apps stitched together. Make the text menus the same dropdown the rest of the panel uses, keeping what they do today.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:48:33.817Z",
+  "updated": "2026-10-05T09:49:18.368Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager pass 2026-10-05, UI quality lens. Seen in /tmp/photonz-playtest/an-editing-session-walk/6-title-at-b-sc.png (copied to queue/manager/shots/2026-10-05-0245-app-dissolve.png for the panel at a cut): Font 'Georgia ⇕', Size '80 px ⇕', Weight 'Bold ⇕' against Fade In 'None ⌄'. Code: InspectorControls.swift:445-520 SelectionMenu is a SwiftUI Picker .pickerStyle(.menu) (a system pop-up). The rest of the video panel uses VideoKit.Dropdown (VideoKitControls.swift, an AppKit pull-down holding the drawn SelectFace, from every-dropdown-in-the-panel-opens-when-you-click, audit 2026-09-29-every-dropdown-opens-on-a-click.json). Callers: TextInspector.swift:74-105, CaptionsInspector.swift:323. Keep SelectionMenu's Equatable short-circuit (picking-or-retyping-a-caption-answers-at-once) and its MenuTip help. This is shared code, so Current gets it too; check Current's text panel still reads right.",
+  "acceptance": [
+    "Font, Size and Weight in the Text section (and the caption Font row, which uses the same control) are drawn with the panel's dropdown face, the same height, chevron, fill and label placement as Fade In, in light and dark",
+    "Mixed still reads Mixed in the dimmed style, a long font name is still cut with an ellipsis and spelled in full on hover, and the Size box still holds one width whatever size is picked",
+    "Picking from each still changes the text in one undo step, and the existing type menu tests and walks pass",
+    "The dropdown click walks cover the three menus (clicked at the middle and near each end), so a dead click target cannot come back",
+    "Side by side picture of the Text and Time sections before and after, light and dark, in the audit",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:48:33.819Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.367Z",
+      "note": "seq 3620 -> 4"
+    }
+  ]
+}

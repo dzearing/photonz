@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p3-low",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-03T12:41:41.559Z",
-  "updated": "2026-10-03T12:42:02.086Z",
+  "updated": "2026-10-05T08:58:25.077Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-10-03 digest design review. Evidence: queue/audits/2026-10-03-timing-strip-marks.json rough item 2 (the mark costs the name 14 points, 86 down to 72; names of 14 to 16 characters that fitted are now cut) and item 3 (the mock wraps long names onto two lines in a 58 pixel column; the app keeps one line). Commit 17ce4476.",
@@ -27,6 +27,31 @@
     {
       "t": "2026-10-03T12:42:02.085Z",
       "note": "seq 1350 -> 20"
+    },
+    {
+      "t": "2026-10-05T08:30:45.478Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T08:31:45.862Z",
+      "note": "Adversarial pass before building: the mock (icon-animate-wt.html, .track.bl-lt .tl) gives the layer heading a 58px column at 9.5px with normal wrapping, so a long name takes a second line and the row grows. Cost: a two-line heading makes its row taller, so a strip of many long names reaches its scroll ceiling sooner; the mock accepts that. A Photoshop/After Effects user reads names in a layer column; wrapping beats cutting for 14-20 character names. The column width (92pt) stays, so the video lanes and ruler keep their start. Plan: wrap heading names onto up to two lines, row grows to fit, middle-cut and tooltip only past two lines; walk renames to Notification bell / Settings window / Title text layer plus one name too long for two lines."
+    },
+    {
+      "t": "2026-10-05T08:57:08.867Z",
+      "note": "owns these walks: timing-strip-long-names-walk"
+    },
+    {
+      "t": "2026-10-05T08:58:05.044Z",
+      "note": "Built: headings wrap onto up to two lines (MotionStripHeading in PhotonzCore, tested; MotionStripView measures lines with the heading font and grows the row). Only a name two lines cannot hold is middle-cut with the tooltip. Strip ceiling 188 -> 220 so four two-line layers show without scrolling. Every heading drawn bright as the mock draws them (picked layer shown by its bars' accent ring). labelWidth stays 92 so lanes keep their start. Walks green: timing-strip-long-names-walk (rewritten: Notification bell, Settings window, Title text layer, plus one overlong name), tutorial-two-parts-out-of-phase-walk, motion-timing-strip-walk, motion-strip-way-back-walk. Scripts/test.sh: 11330 tests passed. Column width vs mock (58px) put to the user as its own task the-timing-strip-s-name-column-is-as-wide-as-the with a decision card."
+    },
+    {
+      "t": "2026-10-05T08:58:25.075Z",
+      "note": "Long layer names on the icon timing strip now wrap onto a second line beside their kind mark, as the mock does; only a name two lines cannot hold is cut, with the tooltip. Column stays 92pt so lanes keep their start; strip ceiling 188->220; headings all bright per mock. Core: MotionStripHeading + tests. Verified: timing-strip-long-names-walk (no flags, real captures), three other strip walks, Scripts/test.sh 11330 passed. Audit 2026-10-05-timing-strip-wrapped-names.json with mock side by side. Commit 473373fc."
     }
-  ]
+  ],
+  "started": "2026-10-05T08:30:45.475Z",
+  "walks": [
+    "timing-strip-long-names-walk"
+  ],
+  "completed": "2026-10-05T08:58:25.076Z"
 }

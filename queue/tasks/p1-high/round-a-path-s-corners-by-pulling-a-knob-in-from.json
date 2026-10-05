@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T05:11:14.548Z",
-  "updated": "2026-10-05T05:11:14.633Z",
+  "updated": "2026-10-05T06:51:06.255Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"When I make a polygon with the pen tool, i wish there was an easy way to round corners easily. Like just pull a knob in.\"\n\nFrom code reading (not run): the path model (PhotonzCore/VectorPath.swift) has no per-point corner radius; Corner Radius exists for rectangles/annotations (Layer.cornerRadius, Layer.swift:210, per-corner radii :340) and shipped 'each-corner-of-a-shape-can-be-rounded-on-its-own', 'one-corner-radius-not-two'. Path point editing lives in Sources/Photonz/CanvasPathEdit.swift (drag at :272) and EditorState+PathEdit.swift. Model change belongs in PhotonzCore (pure, Codable with a default so old documents decode, tests first). Trap: boolean ops (join/cut/overlap), hit testing, the path's bounds (VectorPath bounds/reach ~:493-511) and SVG export (SVGExport.swift) must all read the rounded outline, not the raw points. Trap: the knob must not collide with point handles at small zoom; hide knobs when the corner is too small on screen. Coordinate with the grid snapping task filed the same day: 'Dragging a path's points snaps to the grid like drawing them does'.",
@@ -32,6 +32,51 @@
     {
       "t": "2026-10-05T05:11:14.632Z",
       "note": "seq 500 -> 16"
+    },
+    {
+      "t": "2026-10-05T06:14:35.123Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T06:49:44.513Z",
+      "note": "owns these walks: round-a-path-s-corners-walk"
+    },
+    {
+      "t": "2026-10-05T06:50:07.337Z",
+      "note": "Review before building: a Figma/Illustrator user expects a radius widget inside each corner, drag in to round all, a modifier for one; the app's rectangle dots do the opposite (one by default, Option all). Followed the task (all by default, Option one) and put the inconsistency to the user as an audit question rather than guess. Knobs offered with Select only: under the Pen a press inside a shape starts the next shape. No mock covers this surface."
+    },
+    {
+      "t": "2026-10-05T06:50:07.394Z",
+      "note": "Model: PathAnchor.cornerRadius (omitted from files when 0). PathCornerRounding.swift builds drawnOutline (cut along both runs, cubic arc, proportional sharing of short edges, coincident meeting points merged). cgPath, SVGExport.pathData and the click test read it, so canvas, rings, booleans and SVG all draw the rounding. bounds stays on the points (the rounded ink is always inside them), so rounding never moves the frame. Radius kept on resize like stroke width; scaled by document rescale; carried by reverse."
+    },
+    {
+      "t": "2026-10-05T06:50:07.449Z",
+      "note": "Panel: in Next (readingWhatShows) a path with sharp points brings Appearance's Corner Radius row: one number or Mixed, limit = roundest a corner gets with all rounding, writes every corner, no four-corner opener over a path. Current release unchanged (unit test)."
+    },
+    {
+      "t": "2026-10-05T06:50:07.506Z",
+      "note": "Verified: new unit tests (PathCornerRoundingTests, PathCornerRadiusRowTests, DragReadoutTests), full suite 11302 passed. Walk round-a-path-s-corners-walk green at Next defaults with 10 real captures: knobs on hover and gone away, pull to 52 with pill 'Radius 52', undo/redo one step, Option pull one corner to 80, panel slider, push out to sharp, grid snap (landed 64 on the 32 point rung), Command frees (51). Measured top corner arc at r=52: canvas 192.5, render 192-193, SVG 192.33, theory 192.29."
+    },
+    {
+      "t": "2026-10-05T06:50:07.560Z",
+      "note": "Perf: a sharp path pays one scan of its anchors per cgPath/pathData/hit test (early exit); a rounded one does corner geometry with a 64 step arc length per curved run, linear in anchors. Not separately timed."
+    },
+    {
+      "t": "2026-10-05T06:50:07.615Z",
+      "note": "left rough: the Corner Radius number in Appearance does not move during a knob pull (catches up on release; the drag pill carries the live number). Did not clear the bar: the readout under the shape shows it live."
+    },
+    {
+      "t": "2026-10-05T06:50:07.670Z",
+      "note": "left rough: with the grid on at 100% the pull snaps to the grid's visible 32 point rung, consistent with the Pen; asked in the audit whether that is too coarse. Rounding is not taught by the reshape tutorial yet; knobs appear on hover so it is discoverable."
+    },
+    {
+      "t": "2026-10-05T06:51:06.253Z",
+      "note": "Pen paths round their sharp corners by pulling a knob in from the corner (all together, Option one), grid steps with Command to free, 'Radius N' pill, one undo per pull; Appearance Corner Radius reads/sets a path's corners in Next (one number or Mixed). Model PathAnchor.cornerRadius + PathCornerRounding.swift drawn outline read by canvas, rings, booleans, SVG and hit test. Verified: full suite 11302 passed; round-a-path-s-corners-walk green at Next defaults with real captures; corner measured on canvas 192.5, render 192-193, SVG 192.33 vs 192.29 theory. Commit 5a7d9544. Audit queue/audits/2026-10-04-round-a-path-s-corners.json."
     }
-  ]
+  ],
+  "started": "2026-10-05T06:14:35.121Z",
+  "walks": [
+    "round-a-path-s-corners-walk"
+  ],
+  "completed": "2026-10-05T06:51:06.254Z"
 }

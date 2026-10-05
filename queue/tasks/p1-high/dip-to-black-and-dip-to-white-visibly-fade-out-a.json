@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 5,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T17:31:44.445Z",
-  "updated": "2026-10-04T22:09:09.038Z",
+  "updated": "2026-10-04T22:09:34.155Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i dip to black, there is no fade out and fade in. It just goes to black and then to the new clip.\" then \"same with white\".\n\nFrom code reading (not run): the model does ramp. ClipTransition.dipAmount (PhotonzCore/ClipTransitions.swift:199-210) rises over beforeMS to the cut, holds holdMS at 1, falls over afterMS. Used for a cut inside a clip (ClipTransitions.swift:483, panel at :542 via dipPanel :565-575, a full-frame rectangle layer at that opacity) and for an edit point between two clips (EditPointTransitions.swift:245, panel inserted :307). Sound uses it too (TransitionSound.swift:46).\nSuspects, NOT confirmed, reproduce first: (1) default length 400 ms (ClipTransition.defaultLengthMS, :112) is split across the cut, so 200 ms down and 200 ms up, which at playback reads as a jump; (2) the playback path draws frames without the dip panel opacity (or only at whole-clip boundaries), while scrub/export are right; (3) at an edit point between two separate clips, the incoming clip starts drawing over the panel or the panel sits under it (insert at index + 1 ordering); (4) with a hold, the panel order or timing around the moved clip start. Existing walks with dips: transitions-at-a-cut-walk, transition-placement-and-hold-walk, transition-carries-the-sound-walk; check whether any of them measures frames mid-fade during PLAYBACK (likely not).",
@@ -54,10 +54,15 @@
     {
       "t": "2026-10-04T22:09:09.037Z",
       "note": "Rough items: dissolve default length is a question in the audit's evaluate list (no task, since the user decides). The mock's dip paragraph is not printed, covered by UX-PATTERNS §4. Nothing filed: nothing left clears the follow-up bar."
+    },
+    {
+      "t": "2026-10-04T22:09:34.153Z",
+      "note": "Reproduced at Next defaults: the dip ramped in playback, scrub and export, but the 0.4s default was 0.2s each way (about six frames) and played as two cuts. A new dip now defaults to 1.0s, 0.5s out and 0.5s in, matching Premiere, Final Cut and the mock. The Length menu on a dip says how the time splits. The spare label clears the band. New walk a-dip-fades-out-and-back-in-walk measures brightness at ten moments each way, stopped, playing and exported, for black, white, a hold and a cut inside one recording, and fails on any step over a third of the range. Tests 11228 green, 8 transition walks green, audit under queue/audits. Commit f2520838."
     }
   ],
   "started": "2026-10-04T21:34:43.236Z",
   "walks": [
     "a-dip-fades-out-and-back-in-walk"
-  ]
+  ],
+  "completed": "2026-10-04T22:09:34.154Z"
 }

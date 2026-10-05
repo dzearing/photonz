@@ -1,0 +1,35 @@
+{
+  "id": "an-edited-video-copies-to-the-clipboard-as-a-vid",
+  "title": "An edited video copies to the clipboard as a video or a GIF",
+  "goal": "In the Current release, the video window has Copy Video and Copy GIF, so a trimmed recording can be pasted straight into a chat without exporting a file. In Next, a recording opens in the editor and those two are gone: the only way to share an edit is to export a file and drag it out. Bring both back for the edited video in Next, so cutting a recording and pasting it into a message takes one command.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:47:54.944Z",
+  "updated": "2026-10-05T09:49:18.198Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Porting gap found by the manager pass 2026-10-05. Current: VideoEditorView.swift:662-672 copyMenu (Copy Video / Copy GIF) calls coordinator.copyRecording(state, as: .mp4/.gif), which copies the trimmed/cropped recording. Next opens recordings in ImageEditorRootView (Releases/Next/NextExperience.swift:25-30) and has no copy of the edited video: no NSSharingService/ShareLink anywhere, Copy Video only on the capture toast (AppCoordinator.swift:276) and History (HistoryOverlay.swift:644), both the raw recording. Reuse the Export sheet's writer (VideoExportDialog.swift, RecordingExport.swift) to a temp file and put the file URL on the pasteboard the way copyRecording does. Placement: Menu bar (Edit) per UX-PATTERNS placement contract; the result toast per the Toasts row. No new button anywhere else. A system share sheet is a separate question and NOT part of this task.",
+  "acceptance": [
+    "On a video document in Next, Edit has Copy Video and Copy as GIF rows (shortcuts chosen so they clash with nothing already in the menu bar), and both are greyed out on a still picture",
+    "Copy Video puts the whole edit on the clipboard as an MP4 written at the Export sheet's remembered size and quality for MP4, with burned-in captions if the edit has captions; Copy as GIF does the same with the GIF settings",
+    "While the copy is being written the toast shows it is copying, and it reads Copied when the file is on the clipboard; pasting into Messages or Finder gives the edited video, not the raw recording",
+    "The main thread is never held over 50 ms while the copy is written (measure it on the five minute sample with captions)",
+    "A walk at Next defaults opens a recording, cuts it, chooses Copy Video, and checks the clipboard holds a movie whose length is the edit's length",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:47:54.946Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.197Z",
+      "note": "seq 3580 -> 1"
+    }
+  ]
+}

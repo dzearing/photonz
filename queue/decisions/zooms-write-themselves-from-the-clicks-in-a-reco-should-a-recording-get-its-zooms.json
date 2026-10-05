@@ -1,0 +1,53 @@
+{
+  "id": "zooms-write-themselves-from-the-clicks-in-a-reco-should-a-recording-get-its-zooms",
+  "taskId": "zooms-write-themselves-from-the-clicks-in-a-reco",
+  "question": "Should a recording get its zooms from your clicks with one command, the way Screen Studio does?",
+  "context": "Photonz already records every click and can zoom to frame a spot. Screen Studio's best-known trick is making those zooms for you from the clicks. This asks whether Photonz should do the same, and how.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Add Zooms from Clicks, one command",
+      "summary": "Clip menu and the clip's right-click get Add Zooms from Clicks. It puts a zoom on each burst of clicks in the recording, easing in just before and out just after. You then move, trim or delete them like any zoom you drew.",
+      "pros": [
+        "A raw recording looks polished in one step, which is what people pick Screen Studio for",
+        "The zooms are ordinary ones you already know how to adjust",
+        "Nothing appears until you ask for it"
+      ],
+      "cons": [
+        "One more row in the Clip menu and the right-click",
+        "A busy recording can get more zooms than you want and you delete the extras"
+      ],
+      "mitigation": "Clicks close together share one zoom, and one Undo removes all of them."
+    },
+    {
+      "id": "b",
+      "label": "Zooms appear by themselves on opening",
+      "summary": "When a recording with clicks opens, its zooms are already there, as in Screen Studio. A switch in the clip's settings turns them off.",
+      "pros": [
+        "No step at all: the first playback already zooms",
+        "Closest to Screen Studio"
+      ],
+      "cons": [
+        "Opening a recording changes it before you have done anything",
+        "Every recording you open for a plain trim zooms, and you have to turn it off"
+      ],
+      "mitigation": "Only recordings made in Photonz with clicks get them, and the switch remembers your last choice."
+    },
+    {
+      "id": "c",
+      "label": "Do not build this",
+      "summary": "Zooms stay something you make by hand, one at a time.",
+      "pros": [
+        "Nothing new to learn or tidy up"
+      ],
+      "cons": [
+        "Polishing a recording stays slower than in Screen Studio"
+      ],
+      "mitigation": "Drawing a zoom by hand already follows the pointer.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-05T09:49:05.830Z"
+}

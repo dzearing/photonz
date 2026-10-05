@@ -1,0 +1,36 @@
+{
+  "id": "clips-snap-to-markers-and-a-marker-drags-to-a-ne",
+  "title": "Clips snap to markers, and a marker drags to a new moment",
+  "goal": "Markers are where an editor notes a moment to come back to, and in Premiere and Final Cut a clip dragged near one catches on it. In Photonz a clip's edge catches on the playhead and on other clips, but slides straight past a marker, and a marker put down in the wrong place can only be removed and added again because it cannot be dragged. Make markers something you can cut and arrange to.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T09:48:14.124Z",
+  "updated": "2026-10-05T09:49:18.313Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager pass 2026-10-05, objective gap against video-cutting success line 'Drag a clip along a track and onto another track, with snapping to clips, the playhead and markers'. Evidence: PhotonzCore/ClipBarDrag.swift:310-327 clipBarEdges lists the document ends, the playhead and clip edges/joins, no markers. TimelineDock.swift:881-888 marker flags ignore clicks; only Extract's ripple moves a marker (MarkedStretch.swift:123). Only the ruler range snaps to markers (RulerRange.swift:118-124); the playhead snaps to keys only (EditorState+KeyLanes.swift:375-381). TimelineMarker is id + atMS (TimelineMarks.swift:14-23). Naming a marker is NOT in scope (it would add a new field; left as an open thread in the manager report).",
+  "acceptance": [
+    "With snapping on (S), dragging a clip or trimming its edge catches on a marker within the same reach it catches on the playhead, and the line under the drag names it (for example 'caught on a marker at 0:12')",
+    "The playhead dragged along the ruler catches on markers too while snapping is on",
+    "A marker on the ruler drags left or right to a new moment, snapping to clips and the playhead, in one undo step; a click on it still moves the playhead there",
+    "With snapping off, nothing catches on a marker",
+    "Unit tests in PhotonzCore cover markers in the snap edges and moving a marker, written first",
+    "A walk at Next defaults adds a marker with M, drags a clip to it and photographs the catch, then drags the marker and checks its new time",
+    "Works at Next defaults with no switch turned on, and an audit written under queue/audits/ gives the try steps and a real picture",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T09:48:14.126Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-05T09:49:18.312Z",
+      "note": "seq 3600 -> 3"
+    }
+  ]
+}
