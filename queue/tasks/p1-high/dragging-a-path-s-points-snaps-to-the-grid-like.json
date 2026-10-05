@@ -1,0 +1,36 @@
+{
+  "id": "dragging-a-path-s-points-snaps-to-the-grid-like",
+  "title": "Dragging a path's points snaps to the grid like drawing them does",
+  "goal": "With Snap to Grid on, a Pen point already lands on the grid when you place it, but dragging an existing point of a path afterwards ignores the grid, so editing a shape knocks it off the grid. Dragging a point (or several picked points) catches the same grid lines placing one does, with Command to place it freely.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 17,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T05:11:14.705Z",
+  "updated": "2026-10-05T05:11:14.792Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when I have grid snapping on, pen snaps to grid, but if i adjust a point on the path, it doesn't snap to grid\".\n\nFrom code reading (not run): placement snapping shipped in a-pen-point-lands-on-the-grid-line-you-can-see (PenSession.grid/free + place() in PhotonzCore, fed by CanvasNSView.canvasNudgeGrid, CanvasView.swift:1816; set at CanvasPen.swift:194/225/262; handles deliberately unsnapped). That task's scope was placement only. Point dragging is CanvasPathEdit.swift pathEditMouseDragged (:272-296): drag.current = drag.space.local(p), no grid or snap at all. Trap: drag.space converts into the layer's local space (a turned or scaled path); snap in DOCUMENT space where the grid lives, then convert, or a rotated path will snap to a rotated grid. Trap: the drag threshold (pathEditDragThreshold 4) must still apply before snapping kicks in so a click does not move a point.",
+  "acceptance": [
+    "Reproduce first at Next defaults: grid visible, Snap to Grid on, draw a square with the Pen, drag one corner point and record its coordinates on release (expected today: off the grid)",
+    "Dragging a path point with Snap to Grid on lands it exactly on the nearest grid crossing (or line, matching how the Pen's placement snaps), and the live preview shows it on the grid during the drag",
+    "Dragging several picked points moves them together so the dragged point lands on the grid and the others keep their offsets",
+    "Holding Command while dragging places the point exactly under the pointer; with the grid or Snap to Grid off, dragging behaves as today",
+    "Pull handles on a point follow the same decision the Pen made for placement (deliberately unsnapped per the earlier task) unless the audit argues otherwise",
+    "Snapping to other points/guides/edges, if path editing has any, still works and the grid does not override a nearer snap that the Pen would prefer",
+    "A walk at Next defaults drags a corner point of a Pen square and checks the coordinates are whole grid steps, twice",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T05:11:14.707Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-05T05:11:14.790Z",
+      "note": "seq 500 -> 17"
+    }
+  ]
+}

@@ -1,0 +1,37 @@
+{
+  "id": "round-a-path-s-corners-by-pulling-a-knob-in-from",
+  "title": "Round a path's corners by pulling a knob in from the corner",
+  "goal": "A shape drawn with the Pen can have its sharp corners rounded without redrawing it: with the path picked, each corner shows a small round knob just inside it, and pulling the knob in rounds that corner live (pull one to round all corners together, hold a key to round just one), the way Figma and Illustrator's live corners work. The rounding stays editable and comes back off if you push the knob out.",
+  "epic": "icon-vector",
+  "priority": "p1-high",
+  "seq": 16,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T05:11:14.548Z",
+  "updated": "2026-10-05T05:11:14.633Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"When I make a polygon with the pen tool, i wish there was an easy way to round corners easily. Like just pull a knob in.\"\n\nFrom code reading (not run): the path model (PhotonzCore/VectorPath.swift) has no per-point corner radius; Corner Radius exists for rectangles/annotations (Layer.cornerRadius, Layer.swift:210, per-corner radii :340) and shipped 'each-corner-of-a-shape-can-be-rounded-on-its-own', 'one-corner-radius-not-two'. Path point editing lives in Sources/Photonz/CanvasPathEdit.swift (drag at :272) and EditorState+PathEdit.swift. Model change belongs in PhotonzCore (pure, Codable with a default so old documents decode, tests first). Trap: boolean ops (join/cut/overlap), hit testing, the path's bounds (VectorPath bounds/reach ~:493-511) and SVG export (SVGExport.swift) must all read the rounded outline, not the raw points. Trap: the knob must not collide with point handles at small zoom; hide knobs when the corner is too small on screen. Coordinate with the grid snapping task filed the same day: 'Dragging a path's points snaps to the grid like drawing them does'.",
+  "acceptance": [
+    "With a closed or open Pen path picked at Next defaults, every sharp corner point shows a corner knob a short way inside the corner when the pointer is over the shape; curved (smooth) points do not",
+    "Dragging a knob toward the inside rounds corners live with a readout of the radius; by default all sharp corners round together, and with Option held only the dragged one does (match Illustrator/Figma conventions and say which in the audit)",
+    "The radius stops at the most the two neighbouring segments allow, so a corner never overshoots or loops",
+    "The rounding is non-destructive and stored on the path's points: the points themselves stay where they are, the Corner Radius row in Appearance shows and edits the same value for a picked path (one number, or Mixed), and dragging a point afterwards keeps its rounding",
+    "Rounded corners render the same on canvas, in PNG export and in SVG export (a real arc or curve in the SVG), MEASURED at one corner and written in the audit",
+    "Grid snapping (when on) snaps the radius to whole grid steps, with Command to escape, consistent with other snapping",
+    "Undo is one step per drag",
+    "Unit tests in PhotonzCore first for the rounded outline (arc fitting, clamping, open and closed paths); a walk at Next defaults draws a pentagon with the Pen, pulls a knob, photographs it, and exports SVG",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T05:11:14.550Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-05T05:11:14.632Z",
+      "note": "seq 500 -> 16"
+    }
+  ]
+}
