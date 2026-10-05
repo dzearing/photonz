@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/copies-share-choice",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "seed": "The two knob kinds a walk could not reach before, photographed over two copies: a choice menu and a colour row. Each reads what the copies share, says Mixed when they differ, and setting it reaches both.",
   "steps": [
     {
@@ -142,8 +146,25 @@
       "seconds": 0.8
     },
     {
+      "comment": "Originals live in the Library since 2026-10-04, so the original is edited in its own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "action",
       "action": "exposeChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
     },
     {
       "do": "wait",
@@ -286,8 +307,25 @@
       "seconds": 0.5
     },
     {
+      "comment": "Edit Original: the original opens in its own space, where it stood.",
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "action",
       "action": "exposeColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
     },
     {
       "do": "wait",

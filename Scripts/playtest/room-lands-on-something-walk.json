@@ -153,6 +153,15 @@
       "seconds": 1.5
     },
     {
+      "comment": "Originals live in the Library since 2026-10-04, so the original is edited in its own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "expect",
       "control": "Add Property",
       "present": true
@@ -266,6 +275,14 @@
     {
       "do": "panel",
       "stage": "4-room-offered"
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "action",

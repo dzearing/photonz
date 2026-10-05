@@ -382,6 +382,8 @@ extension PhotonzDocument {
             }
         }
         walk(&layers)
+        // An original in the component library paints from the same styles.
+        walk(&componentOriginals)
     }
 }
 

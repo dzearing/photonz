@@ -145,7 +145,10 @@
       "do": "wait",
       "seconds": 0.8
     },
-    { "do": "action", "action": "positionAndSize" },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
     {
       "do": "expect",
       "field": "W",
@@ -183,8 +186,9 @@
       "reads": "Save button"
     },
     {
+      "comment": "Since 2026-10-04 the original goes into the Library and the group on the page becomes a copy, so the new tile is picked and its section offers Edit Original, where knobs are added.",
       "do": "expect",
-      "control": "Add Property",
+      "control": "Edit Original",
       "present": true
     },
     {
@@ -233,6 +237,24 @@
       "seconds": 1.0
     },
     {
+      "comment": "Undo and redo leave nothing picked, so the tile is picked first, the way a person would click it.",
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "comment": "Originals live in the Library since 2026-10-04: the knobs and the second look are added in the original's own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "expect",
       "control": "Add Property",
       "present": true
@@ -246,7 +268,7 @@
       "do": "panelMenu",
       "menu": "Add",
       "shot": "path-3-add-menu",
-      "choose": "Text \u201cSave\u201d \u00b7 Wording"
+      "choose": "Text “Save” · Wording"
     },
     {
       "do": "wait",
@@ -276,7 +298,7 @@
     {
       "do": "panelMenu",
       "menu": "Add",
-      "choose": "Rectangle \u00b7 Corner radius"
+      "choose": "Rectangle · Corner radius"
     },
     {
       "do": "wait",
@@ -351,6 +373,14 @@
     {
       "do": "panel",
       "stage": "5-second-version"
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "action",

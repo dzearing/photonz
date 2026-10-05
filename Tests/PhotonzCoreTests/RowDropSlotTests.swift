@@ -29,11 +29,13 @@ struct RowDropSlotTests {
     /// over, so it sits between the back label and the two badges.
     private func filledBar() -> (History, UUID) {
         var history = History(document: document())
-        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        // The ORIGINAL bar: a drag hands back an instance, and nothing goes
-        // inside an instance (`FirstDropIsAnInstanceTests`).
-        let bar = history.current
-            .mainComponent(componentID: StarterComponent.navBar.componentID)!.id
+        var dropped: UUID?
+        history.perform { dropped = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        // A drag hands back an instance, nothing goes inside an instance, and
+        // the original is in the component library, so the bar is made
+        // unique: an ordinary group with the bar's own row (`ComponentLibraryTests`).
+        let bar = dropped!
+        history.perform { _ = $0.detachInstances(ids: [bar]) }
         let box = history.current.canvasBounds(of: bar)!
         // Two badges land on the end, and they are told apart by name: a copy
         // keeps its original's name, so both arrive called "Badge".
@@ -124,11 +126,11 @@ struct RowDropSlotTests {
     @Test("Down a column, the piece goes in the gap you let go in")
     func aColumnTakesTheSlotToo() {
         var history = History(document: document())
-        history.perform { _ = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
-        // The ORIGINAL card, for the same reason the bar above uses its own
-        // (`FirstDropIsAnInstanceTests`).
-        let cardID = history.current
-            .mainComponent(componentID: StarterComponent.card.componentID)?.id
+        var dropped: UUID?
+        history.perform { dropped = $0.insertStarterComponent(.card, at: CGPoint(x: 400, y: 300)) }
+        // Made unique, for the same reason the bar above is.
+        if let dropped { history.perform { _ = $0.detachInstances(ids: [dropped]) } }
+        let cardID = dropped
         guard let cardID, history.current.layer(id: cardID)?.group?.layout?.arranges == true,
               let items = history.current.layer(id: cardID).map({ GroupFlow.arrangedItems(of: $0) }),
               items.count >= 2 else { Issue.record("the card is not a column"); return }

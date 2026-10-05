@@ -75,9 +75,19 @@ extension PhotonzDocument {
     /// The name a promoted group takes when its own name says nothing.
     public static let componentNameBase = "Component"
 
-    /// Every main in the document, in the order the tree holds them.
+    /// Every main in the document: the component library's first, in the
+    /// order the Library lists them, then any still in the picture in the
+    /// order the tree holds them (an editing space, or a document the editor
+    /// has not opened yet; `ComponentLibrary.swift`).
     public var mainComponents: [Layer] {
         var found: [Layer] = []
+        func walk(_ list: [Layer]) {
+            for index in list.indices {
+                if list[index].isMainComponent { found.append(list[index]) }
+                if case .group(let group) = list[index].content { walk(group.children) }
+            }
+        }
+        walk(componentOriginals)
         forEachLayer { if $0.isMainComponent { found.append($0) } }
         return found
     }
@@ -199,10 +209,19 @@ extension PhotonzDocument {
     /// Every version of the component takes the name, because the name belongs
     /// to the component and not to one drawing of it; which version a drawing is
     /// is its version name, and that is a different field.
+    ///
+    /// A copy still wearing the component's name takes the new one too: the
+    /// group you just made a component of IS a copy now (`ComponentLibrary`),
+    /// so naming the component has to name the thing you are looking at. A
+    /// copy somebody named for itself keeps its own name.
     public mutating func renameComponent(componentID: UUID, to name: String) {
         guard let chosen = ComponentNaming.normalized(name) else { return }
+        let worn = Set(componentVersions(of: componentID).compactMap { layer(id: $0.layerID)?.name })
         for version in componentVersions(of: componentID) {
             updateLayer(id: version.layerID) { $0.name = chosen }
+        }
+        for copy in instances(of: componentID) where worn.contains(copy.name) {
+            updateLayer(id: copy.id) { $0.name = chosen }
         }
     }
 

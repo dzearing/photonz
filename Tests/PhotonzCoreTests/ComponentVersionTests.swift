@@ -210,7 +210,9 @@ struct ComponentVersionTests {
                 layer.content = .text(content)
             }
         }
-        #expect(report.componentSync.updatedInstances == 1)
+        // The copy showing it, and the instance the editor left where that
+        // drawing stood when it moved the original into the library.
+        #expect(report.componentSync.updatedInstances == 2)
         #expect(history.current.layer(id: one)!.children[1].words == "Off")
         #expect(history.current.layer(id: two)!.children[1].words == "Save")
         // ...and the edit and every copy that followed it are one undo.

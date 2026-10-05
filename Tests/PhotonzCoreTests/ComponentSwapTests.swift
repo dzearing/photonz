@@ -188,27 +188,46 @@ struct ComponentSwapTests {
         #expect(doc.canvasBounds(of: neighbour.id) == before)
     }
 
+    /// A Card copy on the canvas whose ORIGINAL holds a Button copy, put
+    /// there the way a person does it now: Edit Original opens the Card on its
+    /// own, the Button goes inside, Done writes it back (`ComponentLibrary`).
+    /// Returns the card copy and the button copy inside the original.
+    private func cardHoldingAButton(alsoBringing extra: StarterComponent? = nil)
+        -> (doc: PhotonzDocument, card: UUID, button: UUID, space: PhotonzDocument)? {
+        var doc = document()
+        guard let card = doc.insertStarterComponent(.card, at: drop),
+              let loose = doc.insertStarterComponent(.button, at: CGPoint(x: 900, y: 200))
+        else { return nil }
+        doc.removeLayers(ids: [loose])
+        if let extra, let placed = doc.insertStarterComponent(extra, at: CGPoint(x: 1200, y: 1200)) {
+            doc.removeLayers(ids: [placed])
+        }
+        guard var space = doc.editingSpace(forComponent: StarterComponent.card.componentID),
+              let cardMain = space.layers.first,
+              let button = space.insertComponentInstance(of: StarterComponent.button.componentID,
+                                                         at: CGPoint(x: 60, y: 60)),
+              space.moveLayer(id: button, toGroup: cardMain.id)
+        else { return nil }
+        space.syncComponentInstances()
+        doc.returnFromEditingSpace(space, componentID: StarterComponent.card.componentID)
+        doc.syncComponentInstances()
+        return (doc, card, button, space)
+    }
+
     /// A copy sitting INSIDE another component is part of that component's
     /// drawing, so pointing it somewhere else reaches every copy of the
     /// component it lives in.
     @Test func aCopyInsideAnotherComponentSwapsAndEveryCopyOfItFollows() {
-        var doc = document()
-        guard let card = doc.insertStarterComponent(.card, at: drop),
-              let button = doc.insertStarterComponent(.button, at: CGPoint(x: 900, y: 200)),
-              let badge = doc.insertStarterComponent(.badge, at: CGPoint(x: 1200, y: 1200)),
-              let cardMain = doc.mainComponent(componentID: StarterComponent.card.componentID)
-        else { Issue.record("nothing placed"); return }
-        doc.removeLayers(ids: [badge])
-        // Put the button copy inside the card's ORIGINAL, so the card's copy
-        // holds one too.
-        let moved = doc.moveLayer(id: button, toGroup: cardMain.id)
-        #expect(moved)
-        doc.syncComponentInstances()
-        guard let inside = doc.layer(id: card)?.children
-            .first(where: { $0.instanceOf == StarterComponent.button.componentID })
+        guard let made = cardHoldingAButton(alsoBringing: .badge) else {
+            Issue.record("nothing placed"); return
+        }
+        var doc = made.doc
+        let (card, button) = (made.card, made.button)
+        guard doc.layer(id: card)?.children
+            .contains(where: { $0.instanceOf == StarterComponent.button.componentID }) == true
         else { Issue.record("the card's copy holds no button"); return }
-        _ = inside
         doc.swapComponentInstances(ids: [button], to: StarterComponent.badge.componentID)
+        doc.syncComponentInstances()
         #expect(doc.layer(id: button)?.instanceOf == StarterComponent.badge.componentID)
         let followed = doc.layer(id: card)?.children
             .contains { $0.instanceOf == StarterComponent.badge.componentID }
@@ -218,19 +237,18 @@ struct ComponentSwapTests {
     // MARK: - What it refuses
 
     @Test func aCopyCannotBePointedAtSomethingThatWouldHoldItself() {
-        var doc = document()
-        guard let card = doc.insertStarterComponent(.card, at: drop),
-              let button = doc.insertStarterComponent(.button, at: CGPoint(x: 900, y: 200)),
-              let cardMain = doc.mainComponent(componentID: StarterComponent.card.componentID)
-        else { Issue.record("nothing placed"); return }
-        _ = card
-        let moved = doc.moveLayer(id: button, toGroup: cardMain.id)
-        #expect(moved)
+        // Only in Edit Original's space can a copy inside an original be
+        // picked, so that is where the refusal is asked.
+        guard let made = cardHoldingAButton() else {
+            Issue.record("nothing placed"); return
+        }
+        var space = made.space
+        let button = made.button
         // The button copy lives inside the Card original, so pointing it at
         // the Card would make the Card hold itself.
-        let refused = doc.swapComponentInstances(ids: [button], to: StarterComponent.card.componentID)
+        let refused = space.swapComponentInstances(ids: [button], to: StarterComponent.card.componentID)
         #expect(refused == nil)
-        #expect(doc.layer(id: button)?.instanceOf == StarterComponent.button.componentID)
+        #expect(space.layer(id: button)?.instanceOf == StarterComponent.button.componentID)
     }
 
     @Test func pointingACopyAtWhatItAlreadyFollowsDoesNothing() {
@@ -274,14 +292,10 @@ struct ComponentSwapTests {
     }
 
     @Test func aChoiceThatWouldLoopIsOfferedButCannotBeTaken() {
-        var doc = document()
-        guard let button = doc.insertStarterComponent(.button, at: drop),
-              doc.insertStarterComponent(.card, at: CGPoint(x: 900, y: 200)) != nil,
-              let cardMain = doc.mainComponent(componentID: StarterComponent.card.componentID)
-        else { Issue.record("nothing placed"); return }
-        let moved = doc.moveLayer(id: button, toGroup: cardMain.id)
-        #expect(moved)
-        let choices = doc.componentSwapChoices(instances: [button])
+        guard let (_, _, button, space) = cardHoldingAButton() else {
+            Issue.record("nothing placed"); return
+        }
+        let choices = space.componentSwapChoices(instances: [button])
         #expect(choices.first(where: { $0.name == "Card" })?.canTake == false)
     }
 }

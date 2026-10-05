@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/component-own-room-walk",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "seed": "The room a card keeps inside its OWN edges, offered as a knob. A card built as one stack keeps its room on the outermost group and nowhere else, so until now every copy of it was stuck with the same roominess. The author exposes that room, drops two copies, and gives one of them 40 while the other stays on the original's 16. Then the original is tightened to 4: the copy that answered keeps its 40, the one that answered nothing follows.",
   "steps": [
     {
@@ -96,7 +100,10 @@
       "do": "wait",
       "seconds": 0.6
     },
-    { "do": "action", "action": "positionAndSize" },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
     {
       "do": "focus",
       "field": "W"
@@ -179,6 +186,15 @@
       "seconds": 1.2
     },
     {
+      "comment": "Originals live in the Library since 2026-10-04, so the original is edited in its own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "action",
       "action": "exposeRoom"
     },
@@ -194,6 +210,14 @@
     {
       "do": "snapshot",
       "name": "component-own-room-1-exposed"
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "action",
@@ -291,6 +315,14 @@
     {
       "do": "wait",
       "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "describe",

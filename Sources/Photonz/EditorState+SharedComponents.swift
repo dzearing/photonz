@@ -124,7 +124,6 @@ extension EditorState {
         var placed: UUID?
         let context = dropContext
         let moment = placementMomentMS
-        let broughtTheOriginal = document?.mainComponent(componentID: shared.id) == nil
         perform {
             placed = $0.adoptSharedComponent(shared, at: point, inside: context, atTimeMS: moment)
         }
@@ -133,7 +132,6 @@ extension EditorState {
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
         // Fetched off the shelf, so the shelf stays where you left it.
         askForLibraryAfterFetching(produced: .component)
-        if broughtTheOriginal { sayTheOriginalArrived(named: shared.name) }
         return placed
     }
 

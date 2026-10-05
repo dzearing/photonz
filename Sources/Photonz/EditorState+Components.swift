@@ -29,8 +29,10 @@ extension EditorState {
     }
 
     /// Layer > Make Component (Option Command K): promotes the selected group
-    /// to a main, in one undo step, and then does the two things that make the
-    /// command legible.
+    /// to a component, in one undo step: the original goes into the Library
+    /// and an instance takes the group's place, so the canvas shows exactly
+    /// what it showed. Then it does the two things that make the command
+    /// legible.
     ///
     /// It **shows the Library on the Components shelf**, because the whole
     /// point of the command is that the thing you drew lands somewhere you can
@@ -38,7 +40,7 @@ extension EditorState {
     /// seeing nothing change anywhere you are looking is the failure this
     /// avoids.
     ///
-    /// Then it **puts the Component section's Name field ready to type in**,
+    /// Then it **puts the new Library tile's Name field ready to type in**,
     /// with the name selected, so naming it is typing rather than hunting for a
     /// field. A component nobody named is a tile called "Component".
     func makeComponent() {
@@ -47,15 +49,17 @@ extension EditorState {
         var made: UUID?
         perform { made = $0.makeComponent(id: id) }
         guard let componentID = made else { return }
-        selectedLayerID = id
         setLibraryVisible(true)
         UserDefaults.standard.set(LibraryScope.components.rawValue, forKey: LibraryPanel.scopeKey)
         // ...and the shelf scrolls to the new tile, which is listed after the
         // components already in the document and so is often below the shelf's
         // own fold.
         pendingLibraryTileID = componentID.uuidString
-        // ...and setLibraryVisible cleared any picked tile, so the layer is
-        // still the one selected thing. Name it.
+        // The group you made it from is an instance now, standing exactly
+        // where it stood, and the original has gone into the Library
+        // (`ComponentLibrary`). So the new tile is what is picked, and its
+        // Name field has the keyboard: naming it is typing.
+        selectLibraryItem(componentID.uuidString)
         componentAwaitingName = componentID
     }
 
@@ -136,11 +140,11 @@ extension EditorState {
     /// tile and the Layer menu row all run.
     ///
     /// What you get back is always a COPY, whichever tile it was and however
-    /// many times you have used it. The first drop of a tile this document has
-    /// not taken yet also brings the ORIGINAL in — with its named colors and
-    /// its properties — and stands it clear of where you let go, so the thing
-    /// under your pointer is the copy you asked for
-    /// (`FirstDropIsAnInstanceTests`).
+    /// many times you have used it, and it is the only thing that lands on the
+    /// canvas. The first drop of a tile this document has not taken yet also
+    /// brings the ORIGINAL in — with its named colors and its properties — into
+    /// the document's component library, off the canvas
+    /// (`ComponentLibraryTests`).
     @discardableResult
     func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil) -> UUID? {
         // A component off the shared shelf this document has not taken yet
@@ -167,7 +171,6 @@ extension EditorState {
         var placed: UUID?
         let context = dropContext
         let moment = placementMomentMS
-        let broughtTheOriginal = document?.mainComponent(componentID: kind.componentID) == nil
         perform {
             placed = $0.insertStarterComponent(kind, at: point, inside: context,
                                                measure: { TextRasterizer.naturalSize($0) },
@@ -178,16 +181,7 @@ extension EditorState {
         selectLayer(placed, inGroup: self.document?.parentID(of: placed))
         // Fetched off the shelf, so the shelf stays where you left it.
         askForLibraryAfterFetching(produced: .component)
-        if broughtTheOriginal { sayTheOriginalArrived(named: kind.name) }
         return placed
-    }
-
-    /// The word on screen after the FIRST drag of a component: two drawings
-    /// landed, not one, and the only thing telling them apart is a small mark
-    /// on a name chip. Said once per component, because the drag after this one
-    /// puts down a copy and nothing else.
-    func sayTheOriginalArrived(named name: String?) {
-        raiseCanvasNotice(.componentOriginalArrived(component: name))
     }
 
     // MARK: - The room a drag in the air is asking for
@@ -1223,11 +1217,4 @@ extension EditorState {
         raiseCanvasNotice(.componentChoiceMade(options: made.options, knob: knob ?? "the choice property"))
     }
 
-    /// Layer ▸ Select Original: jumps from a copy to the thing every copy
-    /// follows, which is where a change to all of them is made.
-    func selectComponentOriginal() {
-        guard let componentID = selectedInstanceOriginal, let id = actionableLayerIDs.first
-        else { return }
-        selectComponentOnCanvas(componentID: componentID, version: instanceVersion(of: id))
-    }
 }

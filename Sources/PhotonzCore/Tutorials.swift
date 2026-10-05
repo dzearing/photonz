@@ -296,6 +296,9 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// than no name, so it is off the promise.
     public static let knownPanelSections = ["layers", "arrange", "annotation",
                                             "text", "measurements", "library", "component",
+                                            // A picked Library tile's own section, where a
+                                            // component is named (Make a component).
+                                            "libraryItem",
                                             "effects", "color", "canvas", "placement",
                                             // A picked screen's own size and surface, and
                                             // the columns it is designed to. Both are in

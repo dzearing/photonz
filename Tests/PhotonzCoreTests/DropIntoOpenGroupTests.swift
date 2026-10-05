@@ -23,18 +23,30 @@ struct DropIntoOpenGroupTests {
         layer?.children.first { $0.name == name }
     }
 
-    /// A bar on the canvas, and the id of the ORIGINAL bar — the one you can
-    /// step inside and add to.
+    /// A bar on the canvas you can step inside and add to.
     ///
-    /// A drag off the shelf hands back an INSTANCE now, and nothing goes
-    /// inside an instance, so the group these tests open is the original the
-    /// same drag brought in beside it (`FirstDropIsAnInstanceTests`).
+    /// A drag off the shelf hands back an INSTANCE, nothing goes inside an
+    /// instance, and the original is in the component library, not on the
+    /// canvas (`ComponentLibraryTests`). So the bar is made unique: an
+    /// ordinary group with the bar's own layout, which is what these tests
+    /// open.
     private func withBar() -> (History, UUID) {
         var history = History(document: document())
-        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        let barID = history.current
-            .mainComponent(componentID: StarterComponent.navBar.componentID)!.id
+        var placed: UUID?
+        history.perform { placed = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        let barID = placed!
+        history.perform { _ = $0.detachInstances(ids: [barID]) }
         return (history, barID)
+    }
+
+    /// The nav bar's ORIGINAL, open in Edit Original's space: the one place an
+    /// original is on a canvas you can drop onto, so the one place a copy
+    /// could be let go inside its own original.
+    private func withOriginalBar() -> (PhotonzDocument, UUID) {
+        var doc = document()
+        doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
+        let space = doc.editingSpace(forComponent: StarterComponent.navBar.componentID)!
+        return (space, space.layers[0].id)
     }
 
     /// A point over the right-hand half of the bar, well clear of the back
@@ -76,8 +88,7 @@ struct DropIntoOpenGroupTests {
     /// draws forever.
     @Test("A copy let go inside its own original is still refused")
     func aCopyInsideItsOwnOriginalIsStillRefused() {
-        let (history, barID) = withBar()
-        let doc = history.current
+        let (doc, barID) = withOriginalBar()
         let point = overTheBar(doc, barID)
         #expect(doc.componentDropTarget(of: StarterComponent.navBar.componentID,
                                         at: point, inside: barID) == .refused)
@@ -234,10 +245,10 @@ struct DropIntoOpenGroupTests {
 
     @Test("A drop that would draw forever has no box at all")
     func aRefusedDropHasNoBox() {
-        let (history, barID) = withBar()
-        let point = overTheBar(history.current, barID)
-        #expect(history.current.componentDropLanding(of: StarterComponent.navBar.componentID,
-                                                     at: point, inside: barID) == nil)
+        let (doc, barID) = withOriginalBar()
+        let point = overTheBar(doc, barID)
+        #expect(doc.componentDropLanding(of: StarterComponent.navBar.componentID,
+                                         at: point, inside: barID) == nil)
     }
 
     /// A plain group's BOX starts wherever its contents happen to start, but
@@ -298,12 +309,11 @@ struct DropIntoOpenGroupTests {
         history.perform { doc in
             frameID = doc.addFrame(origin: CGPoint(x: 100, y: 100),
                                    size: CGSize(width: 600, height: 500)).id
-            _ = doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
-            // The drop hands back an instance and stands the ORIGINAL clear of
-            // the screen, and it is the original you step inside, so it is put
-            // on the screen here (`FirstDropIsAnInstanceTests`).
-            barID = doc.mainComponent(componentID: StarterComponent.navBar.componentID)?.id
-            if let barID, let frameID { _ = doc.moveLayer(id: barID, toGroup: frameID) }
+            // The drop lands on the screen as an instance, and the original
+            // goes into the component library; made unique, the bar is an
+            // ordinary group you can step inside (`ComponentLibraryTests`).
+            barID = doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300))
+            if let barID { _ = doc.detachInstances(ids: [barID]) }
         }
         guard let barID else { Issue.record("no bar"); return }
         let doc = history.current

@@ -32,7 +32,11 @@ extension CanvasNSView {
     /// drops its own label rather than printing the name twice.
     var markedComponents: [Layer] {
         guard componentsEnabled, let document else { return [] }
-        return document.mainComponents.filter(\.isVisible)
+        // Only the ones in the picture: an original in the component library
+        // is not on this canvas (an editing space is the one place they are).
+        var found: [Layer] = []
+        document.forEachLayer { if $0.isMainComponent && $0.isVisible { found.append($0) } }
+        return found
     }
 
     /// The copies this canvas should mark. They get the glyph and NO name: a

@@ -136,7 +136,7 @@ extension PhotonzDocument {
             }
             return false
         }
-        return search(layers)
+        return search(layers) || search(componentOriginals)
     }
 
     /// Whether any original in the document exposes a knob, or any copy
@@ -152,7 +152,7 @@ extension PhotonzDocument {
             }
             return false
         }
-        return search(layers)
+        return search(layers) || search(componentOriginals)
     }
 
     /// Every copy of a component, wherever in the tree it sits.
@@ -539,7 +539,7 @@ extension PhotonzDocument {
     /// The contents a copy should be holding: the original's, with every id
     /// derived from this copy so two layers never share one, and with any copy
     /// found inside filled in the same way.
-    private func resolvedChildren(of componentID: UUID, version: UUID?, instance: UUID,
+    func resolvedChildren(of componentID: UUID, version: UUID?, instance: UUID,
                                   overrides: [ComponentOverride],
                                   pieceTextStyles: [ComponentPieceTextStyle] = [],
                                   stack: [UUID]) -> [Layer] {
@@ -756,6 +756,11 @@ extension PhotonzDocument {
             }
         }
         layers = rewrite(layers, stack: [])
+        // ...and the instances inside originals in the component library, so
+        // a card holding a button follows the button too.
+        if !componentOriginals.isEmpty {
+            componentOriginals = rewrite(componentOriginals, stack: [])
+        }
         return report
     }
 }

@@ -329,6 +329,54 @@ struct ComponentShareRow: View {
     }
 }
 
+// MARK: - Naming a component from its tile
+
+/// The Name field on a picked Components tile. One name in one place: it is
+/// the component's name, which every copy, the tile and the original's own
+/// section all read.
+struct LibraryComponentNameField: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+    let name: String
+
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    var body: some View {
+        HStack(spacing: 8) {
+            ComponentMark(size: 12)
+            TextField("Component name", text: $draft)
+                .textFieldStyle(.roundedBorder)
+                .font(.callout)
+                .focused($focused)
+                .onSubmit(commit)
+                .nameFieldKeys(commit: commit, revert: { draft = name })
+                .onChange(of: focused) { _, now in if !now { commit() } }
+        }
+        .onAppear {
+            draft = name
+            claimIfJustMade()
+        }
+        .onChange(of: editorState.componentAwaitingName) { _, _ in claimIfJustMade() }
+        .onChange(of: name) { _, now in if !focused { draft = now } }
+    }
+
+    private func commit() {
+        guard draft != name else { return }
+        editorState.renameComponent(componentID: componentID, to: draft)
+    }
+
+    /// Takes the keyboard Make Component handed over, once, with the name
+    /// selected so the first keystroke replaces it.
+    private func claimIfJustMade() {
+        guard editorState.componentAwaitingName == componentID else { return }
+        editorState.componentAwaitingName = nil
+        draft = name
+        focused = true
+        DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+    }
+}
+
 // MARK: - The picked Components tile's section
 
 /// The section that opens when you pick a component off the shelf. It answers
@@ -339,13 +387,10 @@ struct LibraryComponentInspector: View {
     var body: some View {
         if let main = editorState.selectedComponentLayer, let componentID = main.componentID {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    ComponentMark(size: 12)
-                    Text(main.name)
-                        .font(.subheadline.weight(.medium))
-                        .lineLimit(2)
-                        .truncationMode(.middle)
-                }
+                // The component's name, typed here: the original lives in the
+                // Library, so the Library is where it is named, and Make
+                // Component hands the keyboard straight to this field.
+                LibraryComponentNameField(componentID: componentID, name: main.name)
                 Text(inside(shown(componentID) ?? main) + versions(componentID) + copies(componentID))
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -359,15 +404,16 @@ struct LibraryComponentInspector: View {
                     .controlSize(.small)
                     .panelHelp(placeHelp(componentID))
                     .playtestControl("Place a Copy", detail: "Component")
-                    Button("Select Original") {
+                    Button("Edit Original") {
                         // The version the shelf is set to, or the button takes
                         // you to a drawing you were not looking at.
-                        editorState.selectComponentOnCanvas(
+                        editorState.editOriginal(
                             componentID: componentID,
                             version: editorState.shelfComponentVersion(of: componentID)?.id)
                     }
                     .controlSize(.small)
-                    .panelHelp("Selects the original on the canvas")
+                    .panelHelp("Opens the original on its own")
+                    .playtestControl("Edit Original", detail: "Library")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -534,10 +580,21 @@ struct LibraryComponentTile: View {
         LibraryShelfTile(name: entry.name, meta: entry.detail,
                          isSelected: isSelected, isComponent: true) { thumbnail }
         // Double click PLACES, the way it already does on a Media tile: one
-        // gesture for "give me one of these" everywhere on the shelf. Finding
-        // the original is the Select Original button in the section below.
+        // gesture for "give me one of these" everywhere on the shelf. Changing
+        // the original is Edit Original, on this tile's right-click and in the
+        // section below.
         .onTapGesture(count: 2) { place() }
         .onTapGesture { editorState.selectLibraryItem(entry.id) }
+        .contextMenu {
+            Button("Place a Copy") { place() }
+            // Only a component this document holds has an original to open; a
+            // starter or a shared one not taken yet is placed first.
+            if starter == nil, shared == nil, let componentID = layer.componentID {
+                Button(OriginalSpaceCopy.menuEdit) {
+                    editorState.editOriginal(componentID: componentID, version: shelfVersion?.id)
+                }
+            }
+        }
         // A picture of the component itself follows the pointer, so picking a
         // tile up looks like picking anything up on a Mac. Nothing in here
         // touches the app's state: a change made while the drag is being handed
@@ -744,19 +801,18 @@ struct ComponentInstanceInspector: View {
                     Button("Edit Original") {
                         // The version this copy is SHOWING, or the button takes
                         // you to a drawing you were not looking at.
-                        editorState.selectComponentOnCanvas(componentID: componentID,
-                                                            version: selection.version)
+                        editorState.editOriginal(componentID: componentID, version: selection.version)
                     }
                     .controlSize(.small)
-                    .panelHelp("Selects the drawing this copy shows, which is where a change to every copy of it is made")
+                    .panelHelp("Opens the original on its own. Every copy takes the change when you press Done")
                     .playtestControl("Edit Original")
                     // Detach is here as well as in the Layer menu, because a
                     // command that lives only in a menu is a command nobody
                     // finds. It is not destructive styling: nothing is deleted,
                     // the copy simply stops following, and undo is the way back.
-                    Button("Detach") { editorState.detachInstance() }
+                    Button("Make Unique") { editorState.detachInstance() }
                         .controlSize(.small)
-                        .playtestControl("Detach")
+                        .playtestControl("Make Unique")
                         .disabled(!editorState.canDetachInstance)
                         .panelHelp(CrowdWords.all(selection.count).map {
                                   "Turns \($0) copies into ordinary layers that no longer follow the original"
@@ -1005,15 +1061,15 @@ struct ComponentPieceInspector: View {
                         .panelHelp("Picks the whole copy, which is what moves, resizes and detaches")
                         .playtestControl("Select Copy")
                     Button("Edit Original") {
-                        editorState.selectComponentOnCanvas(componentID: piece.componentID)
+                        editorState.editOriginal(componentID: piece.componentID)
                     }
                     .controlSize(.small)
-                    .panelHelp("Selects the original, which is where a change to every copy is made")
+                    .panelHelp("Opens the original on its own. Every copy takes the change when you press Done")
                     .playtestControl("Edit Original")
-                    Button("Detach") { editorState.detachEnclosingCopy(of: piece) }
+                    Button("Make Unique") { editorState.detachEnclosingCopy(of: piece) }
                         .controlSize(.small)
                         .panelHelp("Turns this copy into ordinary layers, so every piece of it can be edited directly")
-                        .playtestControl("Detach")
+                        .playtestControl("Make Unique")
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

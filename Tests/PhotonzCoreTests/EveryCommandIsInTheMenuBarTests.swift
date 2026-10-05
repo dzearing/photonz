@@ -51,6 +51,9 @@ struct EveryCommandIsInTheMenuBarTests {
     /// A right-click row the menu bar holds under other words: the right-click
     /// title, and the bar's row that does the same thing to the thing in hand.
     static let sameCommand: [String: String] = [
+        // A Components tile's right-click places the picked component, which
+        // is Layer > Insert Component.
+        "Place a Copy": "Insert Component",
         // The timeline's Delete on a clip, a range or picked pieces is the
         // Clip menu's ⌫ row, which names what it will take.
         "Delete": "Delete This Piece",

@@ -195,7 +195,13 @@ enum LayerCommandList {
             rows.append(.command("Make Component", .commandOption("k")) { editorState.makeComponent() })
         }
         if offersDetachInstance {
-            rows.append(.command("Detach Instance", .commandOption("b")) { editorState.detachInstance() })
+            // A copy's two verbs, the way Figma's right-click offers them: go
+            // and change every copy, or let this one go its own way (the
+            // user's note on 2026-09-20: "you can right click and make unique").
+            if editorState.canEditPickedOriginal {
+                rows.append(.command(OriginalSpaceCopy.menuEdit) { editorState.editPickedOriginal() })
+            }
+            rows.append(.command("Make Unique", .commandOption("b")) { editorState.detachInstance() })
         }
         // Only on an original, and only when it would work: a row that means
         // nothing on the layer you right clicked is a row people hunt the

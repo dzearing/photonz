@@ -177,8 +177,10 @@ extension PhotonzDocument {
     public mutating func reflowLayouts() {
         for _ in 0..<Self.reflowPasses {
             let flowed = layers.map(GroupFlow.flowing)
-            guard flowed != layers else { return }
+            let originals = componentOriginals.map(GroupFlow.flowing)
+            guard flowed != layers || originals != componentOriginals else { return }
             layers = flowed
+            componentOriginals = originals
         }
     }
 

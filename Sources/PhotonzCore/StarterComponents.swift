@@ -697,16 +697,13 @@ extension PhotonzDocument {
             return insertComponentInstance(of: kind.componentID, at: point, inside: context)
         }
         let palette = adoptStarterStyles(kind.usedStyles)
-        var main = StarterComponents.layer(kind, scale: max(pixelScale, 1),
+        let main = StarterComponents.layer(kind, scale: max(pixelScale, 1),
                                            palette: palette, measure: measure)
-        let box = main.localBounds
-        main.frame.origin = originClearOfTheDrop(size: box.size, localBounds: box, at: point)
-        addLayerDrawnOnFrame(main)
+        // The original goes into the component library, not the picture: the
+        // drop puts down one instance and nothing else (`ComponentLibrary`).
+        addOriginal(main)
         addStarterKnobs(kind, to: main.id)
-        // The instance is the thing the hand asked for, so if it cannot be
-        // placed the original standing clear is still better than nothing.
         return insertComponentInstance(of: kind.componentID, at: point, inside: context)
-            ?? main.id
     }
 
     /// Where an original should sit when the drop point is about to be taken by

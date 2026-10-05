@@ -407,6 +407,9 @@ extension CanvasNSView {
                 onToolChange(.select)
                 return
             }
+            // ...and with nothing left to let go of, out of Edit Original's
+            // space and back to the document, the way it steps out of a group.
+            if onLeaveOriginalSpace() { return }
         }
         super.keyDown(with: event)
     }

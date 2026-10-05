@@ -276,30 +276,13 @@ extension PhotonzDocument {
         // a Retina capture is the size it looked there rather than twice it
         // (`SharedComponentScale`).
         let arriving = SharedComponentScale.drawings(shared, into: self)
-        guard var main = arriving.first else { return nil }
+        guard !arriving.isEmpty else { return nil }
         adoptSharedStyles(shared)
-        let box = main.localBounds
-        main.frame.origin = originClearOfTheDrop(size: box.size, localBounds: box, at: point)
-        addLayerDrawnOnFrame(main)
-        // The other versions land loose beside the first, the way adding a
-        // version does, rather than dropping strays into whatever it landed in.
-        placeExtraVersions(arriving, beside: main.id)
+        // Every version goes into the component library, not the picture: the
+        // drop puts down one instance and nothing else (`ComponentLibrary`).
+        for drawing in arriving { addOriginal(drawing) }
         repaintFromLocalStyles(shared)
-        return insertComponentInstance(of: shared.id, at: point, inside: context) ?? main.id
-    }
-
-    /// The versions after the first, each somewhere clear on the canvas.
-    private mutating func placeExtraVersions(_ drawings: [Layer], beside firstID: UUID) {
-        for drawing in drawings.dropFirst() {
-            guard let anchor = layer(id: firstID) else { continue }
-            let parent = parentOrigin(of: firstID) ?? .zero
-            let anchorBox = anchor.localBounds.offsetBy(dx: parent.x, dy: parent.y)
-            var version = drawing
-            let landing = roomForDrawing(size: version.localBounds.size, beside: anchorBox)
-            let box = version.localBounds
-            version.frame.origin = CGPoint(x: landing.x - box.minX, y: landing.y - box.minY)
-            addLayer(version)
-        }
+        return insertComponentInstance(of: shared.id, at: point, inside: context)
     }
 
     // MARK: - Following the shelf
@@ -376,6 +359,8 @@ extension PhotonzDocument {
     }
 
     private mutating func placeVersion(_ drawing: Layer, beside anchorID: UUID) {
+        // An original in the component library takes its new version there too.
+        if isInComponentLibrary(anchorID) { return addOriginal(drawing) }
         guard let anchor = layer(id: anchorID) else { return }
         let parent = parentOrigin(of: anchorID) ?? .zero
         let anchorBox = anchor.localBounds.offsetBy(dx: parent.x, dy: parent.y)

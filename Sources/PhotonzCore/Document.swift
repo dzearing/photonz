@@ -100,6 +100,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// The sounds the app has already listened to for captions, so opening
     /// the document again never listens again behind somebody's back.
     public internal(set) var captionsListenedTo: [UUID] = []
+    /// The ORIGINALS of this document's components: the drawings every
+    /// instance is filled from and Edit Original opens, kept here rather than
+    /// in `layers` so nothing that draws, exports or picks from the picture
+    /// ever meets one (`ComponentLibrary.swift`). Top-level layers, each a
+    /// main, in the order the Library lists them.
+    public var componentOriginals: [Layer] = []
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -119,7 +125,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
-        case captionLook, captionsListenedTo
+        case captionLook, captionsListenedTo, componentOriginals
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -162,6 +168,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // ...and for captions' look and what was listened to.
         if let captionLook { try c.encode(captionLook, forKey: .captionLook) }
         if !captionsListenedTo.isEmpty { try c.encode(captionsListenedTo, forKey: .captionsListenedTo) }
+        // A document with no components writes no library, so every file saved
+        // before originals left the canvas is byte for byte what it was.
+        if !componentOriginals.isEmpty { try c.encode(componentOriginals, forKey: .componentOriginals) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -204,6 +213,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         markOutMS = try c.decodeIfPresent(Int.self, forKey: .markOutMS)
         captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captionLook)
         captionsListenedTo = try c.decodeIfPresent([UUID].self, forKey: .captionsListenedTo) ?? []
+        // Nothing written is a document whose originals, if any, are still on
+        // its canvas: the editor moves them here when it opens one
+        // (`History.init`, `parkOriginals`).
+        componentOriginals = try c.decodeIfPresent([Layer].self, forKey: .componentOriginals)?
+            .map { $0.retiringItsOutline() } ?? []
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
     }
@@ -289,7 +303,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             }
             return nil
         }
-        return search(layers)
+        // ...and then the component library, so an original is found by id the
+        // way every model command already finds a layer. The canvas never asks
+        // for one: nothing in the picture carries an original's id.
+        return search(layers) ?? (componentOriginals.isEmpty ? nil : search(componentOriginals))
     }
 
     /// The layer's slot in the TOP-LEVEL stack. Nil for a layer that lives
@@ -329,7 +346,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     /// The group a layer lives in, nil when it sits loose on the canvas.
     public func parentID(of id: UUID) -> UUID? {
-        guard let path = path(of: id), path.count > 1 else { return nil }
+        guard let path = path(of: id) else { return libraryParentID(of: id) }
+        guard path.count > 1 else { return nil }
         return layer(atPath: Array(path.dropLast()))?.id
     }
 
@@ -337,7 +355,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// sum of the origins of every group above it, and `.zero` for a layer
     /// sitting loose on the canvas.
     public func parentOrigin(of id: UUID) -> CGPoint? {
-        guard let path = path(of: id) else { return nil }
+        // An original in the component library, or something inside one, is
+        // measured in the library's own space, where each original stands at
+        // the top level (`ComponentLibrary.swift`).
+        guard let path = path(of: id) else { return libraryParentOrigin(of: id) }
         var origin = CGPoint.zero
         var list = layers
         for index in path.dropLast() {
@@ -635,8 +656,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     @discardableResult
     public mutating func removeLayer(id: UUID) -> Layer? {
         var removed: Layer?
-        withSiblings(of: id) { siblings, index in
+        let found = withSiblings(of: id) { siblings, index in
             removed = siblings.remove(at: index)
+        }
+        if !found {
+            withLibrarySiblings(of: id) { siblings, index in removed = siblings.remove(at: index) }
         }
         return removed
     }
@@ -652,6 +676,8 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             }
         }
         prune(&layers)
+        // An original in the component library goes the same way.
+        if !componentOriginals.isEmpty { prune(&componentOriginals) }
     }
 
     /// Which of `ids` a delete may actually take. A locked layer is left where
@@ -681,9 +707,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
 
     /// Edits a layer wherever it lives, inside a group included.
     public mutating func updateLayer(id: UUID, _ mutate: (inout Layer) -> Void) {
-        withSiblings(of: id) { siblings, index in
+        let found = withSiblings(of: id) { siblings, index in
             mutate(&siblings[index])
         }
+        // An original lives in the component library, not the picture.
+        if !found { withLibrarySiblings(of: id) { siblings, index in mutate(&siblings[index]) } }
     }
 
     /// Reorders layers from the layers panel, which lists them top-down

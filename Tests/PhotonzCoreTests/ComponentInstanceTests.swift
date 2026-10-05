@@ -22,7 +22,7 @@ struct ComponentInstanceTests {
                                   layers: [box("Box", CGRect(x: 10, y: 10, width: 60, height: 30)),
                                            box("Label", CGRect(x: 20, y: 50, width: 40, height: 30))])
         let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Setting")!
-        let componentID = doc.makeComponent(id: group.id)!
+        let componentID = doc.makeComponentInLibrary(id: group.id)!
         return (doc, group.id, componentID)
     }
 

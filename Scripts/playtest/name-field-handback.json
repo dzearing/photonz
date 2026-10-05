@@ -1,6 +1,10 @@
 {
   "out": "/tmp/photonz-playtest/name-field-handback",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "steps": [
     {
       "do": "blank",
@@ -132,6 +136,26 @@
       "seconds": 0.4
     },
     {
+      "comment": "Originals live in the Library since 2026-10-04: the click picked the copy standing where the group was, and Edit Original opens the original in place.",
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        270
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
       "do": "action",
       "action": "exposeWording"
     },
@@ -176,6 +200,14 @@
     {
       "do": "tool",
       "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     },
     {
       "do": "action",

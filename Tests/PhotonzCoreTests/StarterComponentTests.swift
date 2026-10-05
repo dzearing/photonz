@@ -161,10 +161,12 @@ struct StarterComponentTests {
         let mine = doc.addColorStyle(name: StarterStyle.accent.name, colorHex: "#FF0000")
         doc.insertStarterComponent(.button, at: centre)
         #expect(doc.colorStyles.filter { $0.name == StarterStyle.accent.name }.count == 1)
-        // Two now: the original's pill and the pill of the instance the drop
-        // handed back (`FirstDropIsAnInstanceTests`). Both wear the color the
-        // document already kept under that name, which is the point.
-        let painted = doc.allLayers.filter { $0.colorStyleID(for: .fill) == mine }
+        // Two: the pill of the instance the drop handed back and the pill of
+        // the original it is filled from, kept in the component library
+        // (`ComponentLibraryTests`). Both wear the color the document already
+        // kept under that name, which is the point.
+        let everything = doc.allLayers + doc.componentOriginals.flatMap(\.selfAndDescendants)
+        let painted = everything.filter { $0.colorStyleID(for: .fill) == mine }
         #expect(painted.count == 2)
         #expect(painted.allSatisfy { $0.colorHex(for: .fill) == "#FF0000" })
     }

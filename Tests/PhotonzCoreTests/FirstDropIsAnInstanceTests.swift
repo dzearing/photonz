@@ -3,8 +3,10 @@ import Foundation
 import Testing
 @testable import PhotonzCore
 
-/// What a drag off the Library shelf hands you: an INSTANCE, every time, with
-/// the original placed clear of the drop.
+/// What a drag off the Library shelf hands you: an INSTANCE, every time, and
+/// nothing else. The original goes into the document's component library, not
+/// onto the canvas (the user, 2026-10-04: "how does 'always a copy' translate
+/// into 'copy AND original'"; `ComponentLibraryTests`).
 ///
 /// Chosen by the user on 2026-09-20 answering "When you drag a component onto
 /// the canvas, should you get the original or a copy?" with "Always a copy",
@@ -36,20 +38,18 @@ struct FirstDropIsAnInstanceTests {
         #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 1)
     }
 
-    /// The instance is the thing under your pointer; the original is somewhere
-    /// else entirely, so a click on what you just dropped can never land on it.
-    @Test func theInstanceTakesTheDropAndTheOriginalStandsClearOfIt() {
+    /// The instance is the thing under your pointer, and the only thing the
+    /// drop put on the canvas: the original is in the component library.
+    @Test func theInstanceTakesTheDropAndTheOriginalStaysOffTheCanvas() {
         var doc = document()
         guard let placed = doc.insertStarterComponent(.button, at: drop),
               let main = doc.mainComponent(componentID: StarterComponent.button.componentID),
-              let instanceBox = doc.canvasBounds(of: placed),
-              let mainBox = doc.canvasBounds(of: main.id)
+              let instanceBox = doc.canvasBounds(of: placed)
         else { Issue.record("nothing placed"); return }
         #expect(abs(instanceBox.midX - drop.x) <= 1)
         #expect(abs(instanceBox.midY - drop.y) <= 1)
-        #expect(!mainBox.intersects(instanceBox))
-        // On the canvas, not over the edge of it, so it can be reached.
-        #expect(CGRect(origin: .zero, size: doc.canvasSize).contains(mainBox))
+        #expect(doc.layers.map(\.id) == [placed])
+        #expect(doc.componentOriginals.map(\.id) == [main.id])
     }
 
     /// Everything the original used to arrive with still arrives: the named
@@ -76,9 +76,9 @@ struct FirstDropIsAnInstanceTests {
     }
 
     /// Dropped into a group you have stepped inside, the INSTANCE joins the
-    /// group and the original stays out on the canvas: a parts bin does not
-    /// belong inside the bar you are arranging.
-    @Test func droppingIntoAGroupPutsTheInstanceInItAndLeavesTheOriginalOutside() {
+    /// group and the original goes into the component library: a parts bin
+    /// does not belong inside the bar you are arranging, or on the canvas.
+    @Test func droppingIntoAGroupPutsTheInstanceInItAndTheOriginalInTheLibrary() {
         var doc = document()
         guard let barInstance = doc.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 200)),
               let barBox = doc.canvasBounds(of: barInstance)
@@ -88,19 +88,19 @@ struct FirstDropIsAnInstanceTests {
         else { Issue.record("no badge"); return }
         // A badge dropped inside a bar is an instance of the badge...
         #expect(doc.layer(id: badge)?.isComponentInstance == true)
-        // ...and the badge's ORIGINAL is a top-level layer, not a child of the bar.
+        // ...and the badge's ORIGINAL is in the library, not in the bar.
         guard let badgeMain = doc.mainComponent(componentID: StarterComponent.badge.componentID)
         else { Issue.record("no badge original"); return }
-        #expect(doc.layers.contains { $0.id == badgeMain.id })
+        #expect(doc.componentOriginals.contains { $0.id == badgeMain.id })
+        #expect(!doc.allLayers.contains { $0.isMainComponent })
     }
 
     // MARK: - On a recording
 
-    /// Dropped on a film, BOTH the copy and the original it brought in get the
-    /// stretch of timeline the drop asked for. Without that the parts bin
-    /// beside the drop would stand on top of every frame of the film, because
-    /// nothing ever placed it in time.
-    @Test func droppedOnARecordingTheOriginalGetsTheSameStretchAsTheCopy() {
+    /// Dropped on a film, the copy gets the stretch of timeline the drop asked
+    /// for, and nothing else lands on the film: the original is in the
+    /// component library, so there is no parts bin standing over every frame.
+    @Test func droppedOnARecordingOnlyTheCopyLandsOnTheFilm() {
         let canvas = CGSize(width: 1200, height: 800)
         let movie = MovieRef(pixelSize: canvas, durationMS: 8000)
         var clip = Layer(name: "Recording", content: .image(movie.frameRef(atSourceMS: 0)),
@@ -115,8 +115,8 @@ struct FirstDropIsAnInstanceTests {
         else { Issue.record("nothing placed"); return }
         #expect(doc.layer(id: placed)?.time?.inMS == 4000)
         #expect(main.id != placed)
-        #expect(main.time?.inMS == 4000)
-        #expect(main.time?.outMS == doc.layer(id: placed)?.time?.outMS)
+        #expect(doc.layers.count == 2)
+        #expect(!doc.allLayers.contains { $0.isMainComponent })
     }
 
     // MARK: - A component off the shared shelf
@@ -133,11 +133,10 @@ struct FirstDropIsAnInstanceTests {
         }
         #expect(doc.layer(id: placed)?.isComponentInstance == true)
         #expect(doc.mainComponents.count == 1)
-        guard let adoptedMain = doc.mainComponent(componentID: shared.id),
-              let instanceBox = doc.canvasBounds(of: placed),
-              let mainBox = doc.canvasBounds(of: adoptedMain.id)
+        guard doc.mainComponent(componentID: shared.id) != nil,
+              let instanceBox = doc.canvasBounds(of: placed)
         else { Issue.record("no original"); return }
-        #expect(!mainBox.intersects(instanceBox))
+        #expect(doc.layers.map(\.id) == [placed])
         #expect(abs(instanceBox.midX - drop.x) <= 1)
     }
 }

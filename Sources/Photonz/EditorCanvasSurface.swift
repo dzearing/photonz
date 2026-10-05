@@ -85,6 +85,7 @@ struct EditorCanvasSurface: View {
                        editorState.renameComponentVersion(componentID: $0, version: $1, to: $2)
                    },
                    onExitGroup: { editorState.exitGroupContext() },
+                   onLeaveOriginalSpace: { editorState.leaveOriginalSpaceOnEscape() },
                    canvasMenu: { hit, context, point in
                        // The square on a moving layer's path answers first, and
                        // BEFORE the click is aimed: aiming picks whatever is

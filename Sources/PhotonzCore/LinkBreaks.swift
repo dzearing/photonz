@@ -167,6 +167,11 @@ extension LinkBreakReport {
 
         var afterByID: [UUID: Layer] = [:]
         for layer in after.allLayers { afterByID[layer.id] = layer }
+        // ...and the originals in the component library, which are edited in
+        // Edit Original's space and written back (`ComponentLibrary`).
+        for original in after.componentOriginals {
+            for layer in original.selfAndDescendants { afterByID[layer.id] = layer }
+        }
         let edited = editableLayers(before)
 
         var breaks: [LinkBreak] = []
@@ -195,6 +200,7 @@ extension LinkBreakReport {
             }
         }
         walk(document.layers)
+        walk(document.componentOriginals)
         return found
     }
 
@@ -311,14 +317,12 @@ extension LinkBreakReport {
     private static func componentBreaks(_ before: PhotonzDocument, _ after: PhotonzDocument,
                                         _ edited: [Layer],
                                         _ afterByID: [UUID: Layer]) -> [LinkBreak] {
+        // Every original, in the picture or in the component library.
         var namesBefore: [UUID: String] = [:]
-        for layer in before.allLayers {
+        for layer in before.mainComponents {
             if let componentID = layer.componentID { namesBefore[componentID] = layer.name }
         }
-        var mainsAfter: Set<UUID> = []
-        for layer in after.allLayers {
-            if let componentID = layer.componentID { mainsAfter.insert(componentID) }
-        }
+        let mainsAfter = Set(after.mainComponents.compactMap(\.componentID))
 
         var ownedParts: [UUID: (fields: Int, copies: Int, only: String?)] = [:]
         var ungrouped: [UUID: Int] = [:]

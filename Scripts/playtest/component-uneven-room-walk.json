@@ -1,101 +1,444 @@
 {
   "out": "/tmp/photonz-playtest/component-uneven-room-walk",
-  "setup": { "forget": ["all"] },
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
   "seed": "Room that differs side to side, offered as a knob, and followed side by side. A card is given 10 of room above and below and 24 beside, the shape almost every real control has. A copy meets that room in the same control the canvas uses, and opening it lets the copy be roomier on one side. The side it types becomes its own; the three it did not touch are still the original's and go on moving when the card does.",
   "steps": [
-    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1360, "height": 1080 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [260, 220], "to": [560, 300], "steps": 8 },
-    { "do": "tool", "tool": "text" },
-    { "do": "click", "at": [268, 330] },
-    { "do": "type", "text": "Roomy or tight" },
-    { "do": "key", "key": "return", "modifiers": ["command"] },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "drag", "from": [200, 170], "to": [640, 400], "steps": 8 },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "stackSelection" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "focus", "field": "Gap" },
-    { "do": "type", "text": "12" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "positionAndSize" },
-    { "do": "focus", "field": "W" },
-    { "do": "type", "text": "360" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "action", "action": "stretchContentsAcross" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Each side" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "focus", "field": "Top" },
-    { "do": "type", "text": "10" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "focus", "field": "Bottom" },
-    { "do": "type", "text": "10" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "focus", "field": "Left" },
-    { "do": "type", "text": "24" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "focus", "field": "Right" },
-    { "do": "type", "text": "24" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "beginRenameSelectedLayer" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "type", "text": "Card" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "0-uneven", "note": "one card keeping 10 of room above and below and 24 beside, the shape almost every real control has. The Padding row is one row and says Mixed, and hovering it names all four in words" },
-    { "do": "snapshot", "name": "component-uneven-room-0-uneven" },
-    { "do": "render", "name": "component-uneven-room-0-uneven-doc" },
-    { "do": "action", "action": "makeComponent" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "action", "action": "exposeRoom" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "1-exposed", "note": "the whole point: the Properties list grew a Padding property even though the four sides disagree. Before this the row was simply missing" },
-    { "do": "snapshot", "name": "component-uneven-room-1-exposed" },
-    { "do": "action", "action": "pickFirstComponent" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "insertPickedComponent" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "2-copy", "note": "a copy, with nothing answered: the knob's Padding field says Mixed rather than going blank, and its tooltip names the original's four numbers in words" },
-    { "do": "snapshot", "name": "component-uneven-room-2-copy" },
-    { "do": "press", "control": "Padding sides" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-sides-open", "note": "the four sides come out in a popout over the knob, each already holding what the original keeps there, and the panel behind them is no taller than it was" },
-    { "do": "snapshot", "name": "component-uneven-room-3-sides-open" },
-    { "do": "focus", "field": "Left" },
-    { "do": "type", "text": "56" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "4-roomier-on-one-side", "note": "this copy alone is roomier on the left. Left reads in ordinary ink with its own way back beside it; top, right and bottom read one step quieter because they are still the original's. The revert arrow appeared on the knob's row too" },
-    { "do": "snapshot", "name": "component-uneven-room-4-roomier" },
-    { "do": "render", "name": "component-uneven-room-4-roomier-doc" },
-    { "do": "press", "control": "Follow again Left" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "5-one-side-handed-back", "note": "the left side alone was handed back: it reads the original's 24 again, one step quieter, and its arrow is gone. Nothing else about the copy moved" },
-    { "do": "snapshot", "name": "component-uneven-room-5-handed-back" },
-    { "do": "focus", "field": "Left" },
-    { "do": "type", "text": "56" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "action", "action": "selectComponentOriginal" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "focus", "field": "Padding" },
-    { "do": "type", "text": "6" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "6-original-levelled", "note": "typing one number over the ORIGINAL's row levels all four of its sides to 6, and it reaches the copy everywhere the copy did not type: the copy is now 6 above, below and right, and still the 56 it asked for on the left" },
-    { "do": "snapshot", "name": "component-uneven-room-6-original-levelled" },
-    { "do": "render", "name": "component-uneven-room-6-original-levelled-doc" }
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1360,
+      "height": 1080
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        260,
+        220
+      ],
+      "to": [
+        560,
+        300
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        268,
+        330
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Roomy or tight"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        170
+      ],
+      "to": [
+        640,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "stackSelection"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Gap"
+    },
+    {
+      "do": "type",
+      "text": "12"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "360"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "stretchContentsAcross"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Each side"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "focus",
+      "field": "Top"
+    },
+    {
+      "do": "type",
+      "text": "10"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "Bottom"
+    },
+    {
+      "do": "type",
+      "text": "10"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "Left"
+    },
+    {
+      "do": "type",
+      "text": "24"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "focus",
+      "field": "Right"
+    },
+    {
+      "do": "type",
+      "text": "24"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Card"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "0-uneven",
+      "note": "one card keeping 10 of room above and below and 24 beside, the shape almost every real control has. The Padding row is one row and says Mixed, and hovering it names all four in words"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-0-uneven"
+    },
+    {
+      "do": "render",
+      "name": "component-uneven-room-0-uneven-doc"
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "comment": "Originals live in the Library since 2026-10-04, so the original is edited in its own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "exposeRoom"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-exposed",
+      "note": "the whole point: the Properties list grew a Padding property even though the four sides disagree. Before this the row was simply missing"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-1-exposed"
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "insertPickedComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-copy",
+      "note": "a copy, with nothing answered: the knob's Padding field says Mixed rather than going blank, and its tooltip names the original's four numbers in words"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-2-copy"
+    },
+    {
+      "do": "press",
+      "control": "Padding sides"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-sides-open",
+      "note": "the four sides come out in a popout over the knob, each already holding what the original keeps there, and the panel behind them is no taller than it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-3-sides-open"
+    },
+    {
+      "do": "focus",
+      "field": "Left"
+    },
+    {
+      "do": "type",
+      "text": "56"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-roomier-on-one-side",
+      "note": "this copy alone is roomier on the left. Left reads in ordinary ink with its own way back beside it; top, right and bottom read one step quieter because they are still the original's. The revert arrow appeared on the knob's row too"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-4-roomier"
+    },
+    {
+      "do": "render",
+      "name": "component-uneven-room-4-roomier-doc"
+    },
+    {
+      "do": "press",
+      "control": "Follow again Left"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-side-handed-back",
+      "note": "the left side alone was handed back: it reads the original's 24 again, one step quieter, and its arrow is gone. Nothing else about the copy moved"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-5-handed-back"
+    },
+    {
+      "do": "focus",
+      "field": "Left"
+    },
+    {
+      "do": "type",
+      "text": "56"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "focus",
+      "field": "Padding"
+    },
+    {
+      "do": "type",
+      "text": "6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "6-original-levelled",
+      "note": "typing one number over the ORIGINAL's row levels all four of its sides to 6, and it reaches the copy everywhere the copy did not type: the copy is now 6 above, below and right, and still the 56 it asked for on the left"
+    },
+    {
+      "do": "snapshot",
+      "name": "component-uneven-room-6-original-levelled"
+    },
+    {
+      "do": "render",
+      "name": "component-uneven-room-6-original-levelled-doc"
+    }
   ]
 }

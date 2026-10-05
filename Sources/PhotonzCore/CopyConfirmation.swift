@@ -56,14 +56,6 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// word on screen the double click simply does nothing, which reads as
         /// the app being broken.
         case componentPieceRefused(ComponentPieceRefusal)
-        /// The FIRST drag of a component off the shelf, which puts TWO
-        /// drawings on the canvas: the copy you let go of, and the original it
-        /// follows, standing clear of the drop
-        /// (`FirstDropIsAnInstanceTests`). Without a word on screen that reads
-        /// as the app having dropped the same thing twice, and the difference
-        /// between the two is a small mark on a name chip. `component` names
-        /// the original.
-        case componentOriginalArrived(component: String?)
         /// A component was given another version (`ComponentVersions`).
         /// Adding one puts a WHOLE SECOND DRAWING on the canvas, which is the
         /// part the command does not look like it did: without a word on
@@ -416,7 +408,6 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .nothingClosed: return "Nothing closed"
         case .componentSwapped: return "Swapped"
         case .componentChoiceMade: return "Choice added"
-        case .componentOriginalArrived: return "Copy placed"
         // The author owns this word: a component whose question they called
         // State says "State added", never "Variant added"
         // (`ComponentVariantWording`).
@@ -526,12 +517,6 @@ public struct CopyConfirmation: Hashable, Sendable {
             return line
         case .componentChoiceMade(let options, let knob):
             return "1 of \(options) shapes shows. Copies pick it with \(knob)"
-        case .componentOriginalArrived(let component):
-            guard let component, !component.isEmpty else {
-                return "The original arrived beside it. Editing that changes every copy"
-            }
-            return "The original of \(component) arrived beside it. "
-                + "Editing that changes every copy"
         case .componentVersionAdded(let version, let component, _):
             guard let component, !component.isEmpty else {
                 return "\(version) is now its own drawing on the canvas"

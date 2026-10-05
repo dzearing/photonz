@@ -5591,7 +5591,12 @@ private final class Run {
                 let after = editor.document?.layers.count ?? 0
                 actionDetail = dimmed ? "menu row dimmed, nothing merged"
                     : "merged, \(before) layers became \(after)"
-            case .selectComponentOriginal: editor.selectComponentOriginal()
+            case .selectComponentOriginal: editor.editPickedOriginal()
+            case .editPickedComponentOriginal:
+                if let componentID = editor.playtestPickedComponentID {
+                    editor.editOriginal(componentID: componentID)
+                }
+            case .doneEditingOriginal: editor.finishEditingOriginal()
             case .copyLayer: editor.copySelectedLayer()
             case .pasteLayer: editor.paste()
             case .paintScreenSurface:
@@ -5617,13 +5622,14 @@ private final class Run {
                 }
             case .makeComponent: editor.makeComponent()
             case .shareSelectedComponent:
-                if let id = editor.selectedLayerID,
-                   let componentID = editor.document?.layer(id: id)?.componentID {
+                // The picked original, the component a picked copy follows, or
+                // the picked Library tile: since originals left the canvas,
+                // Make Component leaves the new tile picked rather than a layer.
+                if let componentID = editor.playtestPickedComponentID {
                     editor.setComponentShared(componentID, true)
                 }
             case .unshareSelectedComponent:
-                if let id = editor.selectedLayerID,
-                   let componentID = editor.document?.layer(id: id)?.componentID {
+                if let componentID = editor.playtestPickedComponentID {
                     editor.setComponentShared(componentID, false)
                 }
             case .exposeWording: editor.exposeFirstProperty(kind: .text)

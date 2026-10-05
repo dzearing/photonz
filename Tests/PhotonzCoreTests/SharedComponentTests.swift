@@ -178,11 +178,10 @@ struct SharedComponentTests {
         var other = blankDocument()
         other.adoptSharedComponent(shared, at: CGPoint(x: 400, y: 300))
         #expect(other.componentVersions(of: c.componentID).map(\.name) == ["Default", "Disabled"])
-        // The second drawing lands loose beside the first rather than on it.
-        let mains = other.mainComponents
-        #expect(mains.count == 2)
-        #expect(other.parentID(of: mains[1].id) == nil)
-        #expect(!mains[0].frame.intersects(mains[1].frame))
+        // Both drawings go into the component library, neither onto the canvas.
+        #expect(other.mainComponents.count == 2)
+        #expect(other.componentOriginals.count == 2)
+        #expect(!other.allLayers.contains { $0.isMainComponent })
     }
 
     // MARK: - Following an edit

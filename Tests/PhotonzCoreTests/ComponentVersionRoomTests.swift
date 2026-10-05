@@ -200,12 +200,14 @@ struct ComponentVersionRoomTests {
     @Test func oneUndoRemovesTheDrawingAndTheVersionTogether() {
         let c = withButton()
         var history = History(document: c.doc)
-        let before = history.current.layers.count
+        // The editor keeps originals in the component library, so the new
+        // drawing lands there, beside the first (`ComponentLibrary`).
+        let before = history.current.componentOriginals.count
         history.perform { _ = $0.addComponentVersion(componentID: c.componentID) }
         #expect(history.current.componentVersions(of: c.componentID).count == 2)
-        #expect(history.current.layers.count == before + 1)
+        #expect(history.current.componentOriginals.count == before + 1)
         history.undo()
         #expect(history.current.componentVersions(of: c.componentID).count == 1)
-        #expect(history.current.layers.count == before)
+        #expect(history.current.componentOriginals.count == before)
     }
 }

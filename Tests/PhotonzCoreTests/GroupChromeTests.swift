@@ -209,11 +209,12 @@ struct GroupChromeTests {
     @Test("Controls added to the Nav Bar never land on top of its title")
     func addedControlsNeverCoverTheTitle() throws {
         var history = History(document: PhotonzDocument(canvasSize: CGSize(width: 900, height: 700)))
-        history.perform { _ = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
-        // Controls are added to the ORIGINAL bar, because nothing goes inside
-        // an instance of one (`FirstDropIsAnInstanceTests`).
-        guard let barID = history.current
-                .mainComponent(componentID: StarterComponent.navBar.componentID)?.id,
+        var dropped: UUID?
+        history.perform { dropped = $0.insertStarterComponent(.navBar, at: CGPoint(x: 400, y: 300)) }
+        // Nothing goes inside an instance and the original is in the component
+        // library, so the bar is made unique first (`ComponentLibraryTests`).
+        if let dropped { history.perform { _ = $0.detachInstances(ids: [dropped]) } }
+        guard let barID = dropped,
               let box = history.current.canvasBounds(of: barID)
         else { Issue.record("the bar did not land"); return }
         // Let go at the far end of the bar, which is where a person adding a

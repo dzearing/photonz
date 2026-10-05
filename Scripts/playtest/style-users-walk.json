@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/style-users",
-  "seed": "Select What Uses This, on a colour style worn by a component. A copy's pieces carry the original's style bindings, so the button picks the original's own layers AND every copy's pieces alongside them. It is the one thing in the app that puts a piece in the selection, which no click can do, so what it picks and what the panel offers afterwards both have to be right. The panel keeps Position and Size here, because that section is only taken away when a piece is picked ON ITS OWN; a number typed into it reaches the original, and every copy follows. The line under the list says how many of the picked layers are pieces inside copies, because those are the ones it has no rows for.",
+  "seed": "Select What Uses This, on a colour style worn by a component. A copy's pieces carry their original's style bindings, and since 2026-10-04 the original lives in the Library (the group it was made from is a copy), so the button picks every copy's pieces. It is the one thing in the app that puts a piece in the selection, which no click can do, so what it picks and what the panel offers afterwards both have to be right: the count, the line under the list, and no Position to type for pieces that place themselves inside their copies.",
   "setup": {
     "forget": [
       "text",
@@ -196,7 +196,7 @@
     {
       "do": "describe",
       "stage": "3-four-colours",
-      "note": "THE COUNT: two shapes in the original and the two pieces of the one copy, so the style says four"
+      "note": "THE COUNT: the two pieces of each of the two copies (the group the component was made from is a copy now), so the style says four"
     },
     {
       "do": "snapshot",
@@ -222,7 +222,8 @@
     {
       "do": "expect",
       "field": "Selection",
-      "reads": "4 layers selected, 2 inside a copy"
+      "reads": "4 layers selected, all inside copies",
+      "comment": "Since 2026-10-04 the original is in the Library and the group it was made from is a copy, so all four layers wearing the style are pieces of the two copies."
     },
     {
       "do": "action",
@@ -231,12 +232,13 @@
     {
       "do": "expect",
       "field": "X",
-      "present": true
+      "present": false,
+      "comment": "Every picked layer is a piece inside a copy, which places itself inside its copy, so there is no position to type (since 2026-10-04 the original the copies follow is in the Library)."
     },
     {
       "do": "describe",
       "stage": "4-selected",
-      "note": "THE TEST: four layers picked, and two of them are pieces inside the copy, so the line under the list says both numbers instead of counting something with no row. Position and Size is still on the panel, because the section only goes away when a piece is picked on its own."
+      "note": "THE TEST: four layers picked, all pieces inside copies, so the line under the list says so instead of counting something with no row"
     },
     {
       "do": "snapshot",
@@ -244,40 +246,8 @@
     },
     {
       "do": "panel",
-      "stage": "4-selected"
-    },
-    {
-      "do": "focus",
-      "field": "X"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.4
-    },
-    {
-      "do": "type",
-      "text": "900"
-    },
-    {
-      "do": "key",
-      "key": "return"
-    },
-    {
-      "do": "wait",
-      "seconds": 1.2
-    },
-    {
-      "do": "describe",
-      "stage": "5-typed",
-      "note": "900 typed into X: the original's two shapes go there, and the copy follows its original across, so nothing on screen is left saying two different things"
-    },
-    {
-      "do": "snapshot",
-      "name": "styleusers-5-typed"
-    },
-    {
-      "do": "render",
-      "name": "styleusers-5-typed-doc"
+      "stage": "4-selected",
+      "note": "THE TEST: four layers picked, all pieces inside copies, so the line under the list says so instead of counting something with no row"
     }
   ]
 }

@@ -49,7 +49,7 @@
     {
       "do": "describe",
       "stage": "1-original",
-      "note": "a COPY of the starter Button in the middle of the canvas, with the ORIGINAL it follows standing clear of it, one gap to its right at about (552, 300)"
+      "note": "a COPY of the starter Button in the middle of the canvas; its original is in the Library, not on the canvas"
     },
     {
       "do": "action",
@@ -273,10 +273,30 @@
       "name": "6-back-to-the-original"
     },
     {
+      "do": "click",
+      "at": [
+        650,
+        470
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "comment": "Originals live in the Library since 2026-10-04: Edit Original opens the Button's original in its own space, centred on a page the document's size.",
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragTile",
       "tile": "Heading",
       "to": [
-        552,
+        450,
         300
       ],
       "expect": "takes",
@@ -288,9 +308,17 @@
       "seconds": 1.2
     },
     {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "describe",
       "stage": "7-on-the-original",
-      "note": "the other move, still there: the same style let go on the ORIGINAL's words lands, and every copy follows it."
+      "note": "the other move, still there: the same style let go on the ORIGINAL's words, in Edit Original's space, lands, and every copy follows it when you come back."
     },
     {
       "do": "snapshot",

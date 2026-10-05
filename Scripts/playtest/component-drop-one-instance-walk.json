@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/component-drop-one-instance",
+  "seed": "The user, 2026-10-04: one drag of a Card put TWO Cards on the canvas, the copy and the original beside it. A drag now puts down one instance and nothing else; the original lives in the document's component library and Edit Original opens it in a space of its own, with Done in the title bar. This walk drops a Card twice at Next defaults, opens the original from a copy's right-click menu, fades it, comes back with Escape, and photographs both copies faded.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "0-blank" },
+
+    { "do": "dragTile", "tile": "Card", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "1-one-drop", "note": "ONE Card on the canvas, picked, and no notice about an original arriving" },
+    { "do": "expectPicked", "layers": ["Card"] },
+    { "comment": "The Background plus ONE Card of four pieces. Before 2026-10-04 this read 11: a second Card, the original, stood beside the drop.", "do": "expectLayers", "count": 6 },
+    { "do": "snapshot", "name": "1-one-drop" },
+    { "do": "render", "name": "1-one-drop-doc" },
+
+    { "do": "dragTile", "tile": "Card", "to": [900, 650] },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "2-two-drops", "note": "two Cards, both copies; still no original on the canvas" },
+    { "do": "expectLayers", "count": 11 },
+    { "do": "snapshot", "name": "2-two-drops" },
+
+    { "do": "rightClick", "at": [420, 300], "choose": "Edit Original" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "3-original", "note": "the window shows only the Card's original, the title bar says Card with Done" },
+    { "do": "panel", "stage": "original" },
+    { "do": "snapshot", "name": "3-original" },
+
+    { "do": "focus", "field": "Opacity" },
+    { "do": "type", "text": "40" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "4-original-faded" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "5-back", "note": "back on the document: both copies took the fade, and the copy you came from is picked again" },
+    { "do": "expectPicked", "layers": ["Card"] },
+    { "do": "expectLayers", "count": 11 },
+    { "do": "snapshot", "name": "5-back" },
+    { "do": "render", "name": "5-back-doc" }
+  ]
+}

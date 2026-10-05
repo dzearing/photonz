@@ -1957,11 +1957,13 @@ struct EditorCommands: Commands {
                 // Photoshop binds neither the command nor the key. Select
                 // Original takes none: it is a way to get somewhere, not an
                 // edit, and the copy's own section has a button for it.
-                Button("Detach Instance") { editor?.detachInstance() }
+                Button("Make Unique") { editor?.detachInstance() }
                     .keyboardShortcut("b", modifiers: [.command, .option])
                     .disabled(!(editor?.canDetachInstance ?? false))
-                Button("Select Original") { editor?.selectComponentOriginal() }
-                    .disabled(!(editor?.canSelectComponentOriginal ?? false))
+                Button(OriginalSpaceCopy.menuEdit) { editor?.editPickedOriginal() }
+                    .disabled(!(editor?.canEditPickedOriginal ?? false))
+                Button(OriginalSpaceCopy.menuDone) { editor?.finishEditingOriginal() }
+                    .disabled(!(editor?.isEditingOriginal ?? false))
             }
             // Lining the selection up with itself (`next-align-layers`). Two
             // submenus rather than eight more rows, because these only ever

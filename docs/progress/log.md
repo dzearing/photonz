@@ -20638,3 +20638,13 @@ Next: the first editor window's ~200 ms first build
 - The Length menu on a dip says how it splits ("1.0s, 0.5s out and 0.5s in"). The spare-strip label starts past the band edge so the wider band does not cover it.
 - `measureFade` gained `smooth` (`FadeRamp`); `a-dip-fades-out-and-back-in-walk` measures Dip to black, Dip to white, a white hold and a dip inside one recording during playback at Next defaults.
 - Next: the user's answer on a dissolve's default length (audit evaluate).
+
+## 2026-10-04: dropping a component puts down one instance
+
+- Reproduced the user's "why are there 2 copies" on HEAD: one drag of the Card put the copy and its original side by side, with a notice saying the original arrived beside it.
+- Originals now live in `PhotonzDocument.componentOriginals` (`ComponentLibrary.swift`), not in `layers`, so the canvas, export, copy as image, hit testing, Layers and the timeline never meet one. Model lookups (`layer(id:)`, `updateLayer`, `removeLayer(s)`, `parentID`, `parentOrigin`, `mainComponents`, the sync, the style passes, link breaks, reflow) read the library too.
+- `History` parks any original that turns up in the picture (Make Component, an old file on open, a paste): an instance takes its place with everything about the layer but its id, and the original keeps its id in the library, so the page looks the same. Off for Edit Original's space (`History(parksOriginals: false)`).
+- Edit Original (copy panel, copy right-click, Library tile right-click, Layer menu) opens `EditorState+OriginalSpace`: a document holding only that component's drawings on a page the document's size, where it stood if it fits, with its own undo, Done in the title bar, Escape with nothing picked, Layer > Done Editing Original. Done writes it back as one undo step and replays style edits. Detach is now Make Unique.
+- Make Component picks the new Library tile and focuses its new Name field (`LibraryComponentNameField`); renaming a component renames the copies still wearing its name.
+- About 30 walks that edited originals on the canvas were moved into the space (harness actions `editPickedComponentOriginal`, `doneEditingOriginal`); new walk `component-drop-one-instance-walk`.
+- Next: `the-components-guides-teach-edit-original-instea` (three Components guides still say to click the original on the page).

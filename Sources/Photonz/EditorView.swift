@@ -350,6 +350,16 @@ struct EditorView: View {
             .ignoresSafeArea(.container, edges: .top)
             .allowsHitTesting(false)
         }
+        // Edit Original's space: the component's name and Done, in the same
+        // strip. Its own overlay because Done takes a click and the line above
+        // takes none.
+        .overlay(alignment: .top) {
+            VStack(spacing: 0) {
+                OriginalSpaceTitleBar()
+                Spacer(minLength: 0).allowsHitTesting(false)
+            }
+            .ignoresSafeArea(.container, edges: .top)
+        }
         .fileImporter(isPresented: $editorState.isImporterPresented,
                       allowedContentTypes: Experiments.shared.openingARecording
                           ? [.image, EditorState.photonzType] + RecordingContentTypes.all

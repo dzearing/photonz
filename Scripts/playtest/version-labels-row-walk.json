@@ -37,8 +37,9 @@
       "seconds": 1.0
     },
     {
-      "do": "key",
-      "key": "delete"
+      "comment": "Since 2026-10-04 the drop puts down one copy and the original lives in the Library, so its versions are built in Edit Original's space, where the Button stands in the middle of a page the document's size.",
+      "do": "action",
+      "action": "selectComponentOriginal"
     },
     {
       "do": "wait",
@@ -69,8 +70,8 @@
     {
       "do": "click",
       "at": [
-        875,
-        621
+        975,
+        671
       ],
       "space": "document",
       "count": 2
@@ -108,8 +109,8 @@
     {
       "do": "click",
       "at": [
-        900,
-        650
+        1000,
+        700
       ],
       "space": "document"
     },
@@ -218,8 +219,8 @@
     {
       "do": "click",
       "at": [
-        985,
-        621
+        1085,
+        671
       ],
       "space": "document",
       "count": 2
@@ -292,8 +293,8 @@
     {
       "do": "move",
       "at": [
-        920,
-        660
+        1020,
+        710
       ],
       "space": "document"
     },
@@ -304,7 +305,7 @@
     {
       "do": "describe",
       "stage": "hovered",
-      "note": "the pointer is resting on the FIRST drawing, which nobody has picked. It spells out the component it is a version of, Primary \u00b7 Default, on a plate over the row; the other three keep the short word they wear at rest. That is the only place on the canvas the component's name appears once a component has more than one drawing"
+      "note": "the pointer is resting on the FIRST drawing, which nobody has picked. It spells out the component it is a version of, Primary · Default, on a plate over the row; the other three keep the short word they wear at rest. That is the only place on the canvas the component's name appears once a component has more than one drawing"
     },
     {
       "do": "snapshot",

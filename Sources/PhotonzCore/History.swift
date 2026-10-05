@@ -25,12 +25,21 @@ public struct History: Sendable {
     /// burst of arrow-key nudges collapses into one step. Anything else landing
     /// in the stack ends the run.
     private var runName: String?
+    /// Whether an original that turns up in the picture is moved into the
+    /// component library, with an instance left in its place
+    /// (`ComponentLibrary.swift`). On for every document; off for the space
+    /// Edit Original opens, where the originals ARE the picture.
+    public let parksOriginals: Bool
 
-    public init(document: PhotonzDocument, limit: Int = 200) {
+    public init(document: PhotonzDocument, limit: Int = 200, parksOriginals: Bool = true) {
         var document = document
+        // A file saved while originals lived on the canvas opens with each one
+        // in the library and an instance where it stood: the same picture.
+        if parksOriginals { document.parkOriginals() }
         document.syncComponentInstances()
         self.current = document
         self.limit = limit
+        self.parksOriginals = parksOriginals
     }
 
     public var canUndo: Bool { !undoStack.isEmpty }
@@ -83,6 +92,9 @@ public struct History: Sendable {
     public func preparing(_ mutate: (inout PhotonzDocument) -> Void) -> PreparedEdit {
         var next = current
         mutate(&next)
+        // An original that landed in the picture — Make Component, a paste —
+        // goes into the component library and leaves an instance where it was.
+        if parksOriginals { next.parkOriginals() }
         // A color that was repainted some other way lets go of the style it
         // claimed, BEFORE the copies are refilled, so a copy is never rebuilt
         // from an original whose claim has already gone stale.
@@ -164,6 +176,7 @@ public struct History: Sendable {
             var next = document
             update(&next)
             guard next != document else { return document }
+            if parksOriginals { next.parkOriginals() }
             next.reflowLayouts()
             if next.syncComponentInstances().updatedInstances > 0 { next.reflowLayouts() }
             return next

@@ -32,7 +32,7 @@
     { "do": "action", "action": "makeComponent" },
     { "do": "waitFor", "condition": "tutorialStep", "value": "name-it", "timeout": 6 },
     { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "4-name-it", "note": "THE TEST: nothing on the page moved, the group wears four violet diamonds, the shelf opened itself on Components, and the Name box is waiting with the name selected" },
+    { "do": "describe", "stage": "4-name-it", "note": "THE TEST: nothing on the page moved, the group is now a copy wearing one violet diamond, the original went into the Library, the shelf opened itself on Components with the new tile picked, and its Name box is waiting with the name selected" },
     { "do": "panel", "stage": "4-name-it" },
     { "do": "snapshot", "name": "4-name-it" },
 

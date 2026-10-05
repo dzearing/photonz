@@ -1,0 +1,33 @@
+{
+  "feature": "Dropping a component puts down one instance and nothing else",
+  "epic": "ui-components",
+  "summary": "Dragging a component off the Library now puts down exactly one copy. The original lives in the Library and opens in a space of its own with Edit Original; Done brings you back and every copy follows.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/component-drop-one-instance-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library on Components and drag the Card tile onto a blank picture.", "shot": "2026-10-04-one-instance-drop-1-sc.png" },
+    { "do": "Drag the Card tile on once more, somewhere else.", "shot": "2026-10-04-one-instance-drop-2-sc.png" },
+    { "do": "Right-click the first Card and choose Edit Original.", "shot": "2026-10-04-one-instance-drop-3-sc.png" },
+    { "do": "With the Card picked, type 40 into Opacity and press Return.", "shot": "2026-10-04-one-instance-drop-4-sc.png" },
+    { "do": "Press Done in the title bar (or Escape twice).", "shot": "2026-10-04-one-instance-drop-5-sc.png" },
+    { "do": "Press Command Z once: both copies come back at full opacity together." },
+    { "do": "Draw two shapes, group them, press Option Command K, type a name and press Return." }
+  ],
+  "evaluate": [
+    "After one drag, is it obvious that the single Card on the page is all you got?",
+    "Is Done in the middle of the title bar where you look for the way back, the way Figma's main component editing or Sketch's symbol page feels?",
+    "When you press Option Command K, is it right that the group stays put as a copy and the new Library tile is the thing picked, ready to name?",
+    "Does Make Unique read better than Detach for letting one copy go its own way?",
+    "Does the original's space feel like a place of its own, or would you rather see the document dimmed behind it?"
+  ],
+  "rough": [
+    "Before this, one drag of the Card put two Cards on the page and said the original arrived beside it (2026-10-04-one-instance-drop-before-sc.png).",
+    "No mock covers Edit Original's space or its title bar; Done sits in the title bar because that row's one purpose is how you are looking at the window (UX-PATTERNS placement contract, Title bar row).",
+    "The copy's button and right-click row now say Make Unique where editor.html and ui-variants.html print Detach, from the user's note on decision a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t (your call on 2026-09-20: \"you can right click and make unique\").",
+    "The space's page is see-through, so it reads as the dark canvas around a lone component rather than as the document's white page.",
+    "Escape leaves the space only once nothing is picked, so it takes two presses straight after opening it; Done is one click.",
+    "Edit Original and Done Editing Original have menu rows but no shortcut.",
+    "Three Components guides (Use it again and again, Override one copy, A button in all its states) still tell you to click the original on the page and stop there; covered by the-components-guides-teach-edit-original-instea.",
+    "A file saved with originals on its canvas opens with each one in the Library and a copy standing in exactly the same place, so the page looks identical; an old drop's original beside its copy therefore opens as a second copy you can delete."
+  ]
+}

@@ -25,7 +25,9 @@ struct ComponentStyleTests {
                                   layers: [box("Box", CGRect(x: 10, y: 10, width: 60, height: 30)),
                                            box("Label", CGRect(x: 20, y: 50, width: 40, height: 30))])
         let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Setting")!
-        let component = doc.makeComponent(id: group.id)!
+        // The original goes into the component library, as the editor puts it,
+        // and the instance left in its place goes, so there are two copies.
+        let component = doc.makeComponentInLibrary(id: group.id)!
         let a = doc.insertComponentInstance(of: component, at: CGPoint(x: 200, y: 200))!
         let b = doc.insertComponentInstance(of: component, at: CGPoint(x: 500, y: 200))!
         doc.syncComponentInstances()

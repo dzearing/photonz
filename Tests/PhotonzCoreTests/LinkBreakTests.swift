@@ -35,7 +35,7 @@ struct LinkBreakTests {
         var doc = document([box("Box", rect: CGRect(x: 10, y: 10, width: 60, height: 30)),
                             box("Label", rect: CGRect(x: 20, y: 50, width: 40, height: 30))])
         let group = doc.groupLayers(ids: Set(doc.layers.map(\.id)), name: "Setting")!
-        let component = doc.makeComponent(id: group.id)!
+        let component = doc.makeComponentInLibrary(id: group.id)!
         let a = doc.insertComponentInstance(of: component, at: CGPoint(x: 200, y: 200))!
         let b = doc.insertComponentInstance(of: component, at: CGPoint(x: 500, y: 400))!
         return (History(document: doc), group.id, component, a, b)
@@ -275,7 +275,7 @@ struct LinkBreakTests {
         var doc = document([box("Box", fill: "#3366FF")])
         let inner = doc.layers[0].id
         let group = doc.groupLayers(ids: [inner], name: "Setting")!
-        let component = doc.makeComponent(id: group.id)!
+        let component = doc.makeComponentInLibrary(id: group.id)!
         _ = doc.insertComponentInstance(of: component, at: CGPoint(x: 300, y: 300))
         _ = doc.insertComponentInstance(of: component, at: CGPoint(x: 600, y: 300))
         var history = History(document: doc)

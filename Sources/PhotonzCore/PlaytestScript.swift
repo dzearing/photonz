@@ -1579,10 +1579,17 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the dock, which a walk cannot reach with the pointer, so this is the way
     /// in.
     case roomAroundContents
-    /// Layer ▸ Select Original: jumps from a copy of a component to the
-    /// original it follows, so a walk can edit the original after dropping a
-    /// copy without hunting for its row.
+    /// Layer ▸ Edit Original: opens the original a picked copy follows in its
+    /// own space (originals live in the Library, not on the canvas), so a walk
+    /// can edit the original after dropping a copy without hunting for it.
     case selectComponentOriginal
+    /// Opens the original of the picked component in its own space: the one a
+    /// picked copy follows, or the picked Library tile's, which is what Make
+    /// Component leaves picked.
+    case editPickedComponentOriginal
+    /// Done on Edit Original's space: back to the document, with every copy
+    /// following the edit.
+    case doneEditingOriginal
     /// Layer ▸ Delete Layer, which is a menu chord (⌘⌫) and so cannot be
     /// pressed in a walk. A walk that checks what happens after something is
     /// taken away asks for it here.

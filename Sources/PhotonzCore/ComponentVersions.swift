@@ -173,7 +173,8 @@ extension PhotonzDocument {
         // lands it exactly on the spot that was found.
         copy.frame.origin = CGPoint(x: settled.frame.origin.x + parent.x + (landing.x - sourceBox.minX),
                                     y: settled.frame.origin.y + parent.y + (landing.y - sourceBox.minY))
-        addLayer(copy)
+        // A component kept in the library takes its new drawing there too.
+        if isInComponentLibrary(settled.id) { addOriginal(copy) } else { addLayer(copy) }
         return versionID
     }
 

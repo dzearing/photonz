@@ -144,6 +144,7 @@ struct CanvasView: NSViewRepresentable {
     /// selected. Returns false at the top level, where Escape means what it
     /// always meant.
     let onExitGroup: () -> Bool
+    var onLeaveOriginalSpace: () -> Bool = { false }
     /// A right click asking for a menu: told the layer it landed on (nil for
     /// bare picture) and the group it resolved inside, it hands back the rows
     /// the menu should carry. One call, because the aim and the rows have to be
@@ -431,6 +432,7 @@ struct CanvasView: NSViewRepresentable {
         view.onRenameComponentVersion = onRenameComponentVersion
         view.onClickedNothing = onClickedNothing
         view.onExitGroup = onExitGroup
+        view.onLeaveOriginalSpace = onLeaveOriginalSpace
         view.canvasMenu = canvasMenu
         view.onDragBegin = onDragBegin
         view.onFramePreview = onFramePreview
@@ -580,6 +582,7 @@ final class CanvasNSView: NSView {
     /// sends nothing at all.
     var pointerIconFrameID: UUID?
     var onExitGroup: (() -> Bool) = { false }
+    var onLeaveOriginalSpace: (() -> Bool) = { false }
     var canvasMenu: ((UUID?, UUID?, CGPoint) -> [MenuRow]) = { _, _, _ in [] }
     var onDragBegin: ((UUID) -> Void) = { _ in }
     var onFramePreview: ((UUID, CGRect) -> Void) = { _, _ in }

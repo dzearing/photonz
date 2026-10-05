@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-04T15:11:20.210Z",
-  "updated": "2026-10-04T15:11:20.297Z",
+  "updated": "2026-10-05T00:41:33.366Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-04, screenshot of a Card (single diamond, the instance) above a Card (four-diamond, the original) after one drag): \"when i drag a component to the canvas, why are there 2 copies\" then, told it was option a of the 2026-09-15 card: \"how does 'always a copy' translate into 'copy AND original'\".\n\nThe card: queue/decisions/a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t.json. The user picked a 'Always a copy' with the note 'An Instance, not a copy. Changes to the component change instances, but you can right click and make unique?'. Option a's small print said the original goes off to one side on the canvas, but its label and its pro 'Matches what every other design tool does with a library' read as one thing landing; Figma's library drag puts down only an instance. This task supersedes option a with what the card called c 'Originals leave the canvas'. Lesson for card writers: the label must state what lands on the canvas.\n\nCode (read, not run): EditorState+Components.swift:138-182 placeComponent / insertStarterComponent bring the original when document.mainComponent(componentID:) == nil, then sayTheOriginalArrived (:188). Shared components the same via EditorState+SharedComponents.swift:127. Originals are drawn on the canvas from document.mainComponents (CanvasComponents.swift:35). Edit Original today just selects the original on the canvas (ComponentPanel.swift:744-752 selectComponentOnCanvas; also :1007, PartsInspector.swift:126). Tests that pin today's behaviour: FirstDropIsAnInstanceTests (expect them to change). Trap: main components may be what instances render from (looks, versions, named colors, properties); keep them in the document model, just not in the drawn layer tree, so rendering and Codable round trips still work. Trap: PhotonzCore must stay pure; model change needs tests first.",
@@ -32,6 +32,31 @@
     {
       "t": "2026-10-04T15:11:20.296Z",
       "note": "seq 500 -> 15"
+    },
+    {
+      "t": "2026-10-04T22:28:51.757Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-04T22:34:25.516Z",
+      "note": "Plan (adversarial pass 1): mains move out of the drawn layer tree into a document-level component library (componentOriginals), so canvas, export, copy-as-image, hit testing, Layers and the timeline leave them out by construction. Model lookups (mainComponents, layer(id:), updateLayer, removeLayer, style propagation, instance sync) also reach the library. Any main that turns up in the drawn tree (Make Component, paste, old files on open) is parked by History: an instance takes its place at the same spot (canvas looks identical), the original keeps its id and moves to the library. Starter/shared drops add the original straight to the library, so one drop = one instance. Edit Original opens a separate editing space in the same window: a document holding only that component's drawings, with its own undo. Done (title bar, Esc, menu) writes it back as one undo step and every instance follows. Risks: style edits made inside the space have to be replayed on the parent; a Figma user expects a Done/back control at the top, and a breadcrumb in the title bar fits the placement contract row for the window's mode."
+    },
+    {
+      "t": "2026-10-04T22:58:13.816Z",
+      "note": "Reproduced at Next defaults on HEAD f2520838 before any change (my work stashed): Scripts/playtest.sh /tmp/photonz-repro/one-drop-repro-walk.json (blank 1440x1024, showComponentShelf, dragTile Card to 420,300). Window capture repro-card-sc.png shows two Cards side by side, the dropped instance (picked) and the original beside it, with the notice 'Copy placed: The original of Card arrived beside it. Editing that changes every copy'. Shared drop is the same code path (adoptSharedComponent -> originClearOfTheDrop + addLayerDrawnOnFrame); the old FirstDropIsAnInstanceTests.theFirstDropOfASharedComponentIsAnInstance asserted the original's box sat beside the instance on the canvas."
+    },
+    {
+      "t": "2026-10-05T00:03:31.694Z",
+      "note": "owns these walks: component-drop-one-instance-walk, component-drag-lands-a-copy-walk"
+    },
+    {
+      "t": "2026-10-05T00:41:33.365Z",
+      "note": "Adversarial pass 2 (built thing, real probe, captures under an unlocked screen): one drag = one Card (expectLayers 6, was 11); Edit Original from a copy's right-click opens the Card alone with 'Card | Done' in the title bar; Opacity 40 there + Escape twice = both copies at 40% and 'Updated 2 copies of Card'. Make Component keeps the group in place as a copy and picks the new Library tile with its Name field focused (new LibraryComponentNameField), because the original's Name field is no longer on the canvas; renaming the component renames copies still wearing its name. Design change mid-task: parking keeps the ORIGINAL's id (knobs, versions, saved refs) and gives the stand-in copy a new id (Layer.duplicated) after the first version broke dozens of tests that edit originals by id. Edit space shows drawings where they stood if they fit a document-sized page, else centred. Rough items: Make Unique vs mock Detach -> settled by the 2026-09-20 card note; no mock for the space -> placement contract; see-through page, two Escapes, no shortcut -> left rough here (cosmetic, below the follow-up bar); three Components guides broken -> filed p1 the-components-guides-teach-edit-original-instea (seq 16, owns their walks). Walks: ~30 component walks moved into the space via new harness actions editPickedComponentOriginal / doneEditingOriginal; 26 rerun green on the final build plus earlier batches (copy-layout, copy-own-number, corner-names, link-break, starter-*, shelf-*, version-*, etc.) green."
     }
+  ],
+  "started": "2026-10-04T22:28:51.755Z",
+  "walks": [
+    "component-drop-one-instance-walk",
+    "component-drag-lands-a-copy-walk"
   ]
 }

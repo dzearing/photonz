@@ -1867,7 +1867,8 @@ final class EditorState {
     /// time, which keeps its title bar exactly as it was. The name is the
     /// file's own, never the release tag `windowTitle` may add.
     var titleLine: WindowTitleLine? {
-        guard let document, document.hasTime else { return nil }
+        // Edit Original's space says what you are editing instead.
+        guard originalSpace == nil, let document, document.hasTime else { return nil }
         let file = documentURL ?? openedFileURL
         return WindowTitleLine(fileName: file?.lastPathComponent ?? untitledName,
                                pictureSize: document.canvasSize,
@@ -2932,6 +2933,42 @@ final class EditorState {
         markSaved()
     }
 
+    /// Edit Original's own space, while one is open: the document you came
+    /// from, waiting under it (`EditorState+OriginalSpace`). Nil the rest of
+    /// the time, which is almost always.
+    var originalSpace: OriginalSpaceSession?
+
+    /// Puts a different stack under the window, for Edit Original's space and
+    /// for coming back out of it, and resets what belonged to the picture that
+    /// was showing: the selection, a text box being typed in, previews and the
+    /// thumbnails drawn of it. Hands back the stack it took away.
+    @discardableResult
+    func swapHistory(_ replacement: History, viewport camera: Viewport?) -> History? {
+        let outgoing = history
+        flushSelectionToHistory()
+        history = replacement
+        selection = nil
+        selectionTargetsPixels = false
+        selectedLayerID = nil
+        groupContextID = nil
+        activeTool = .select
+        previewMoves = [:]
+        dragPreview = nil
+        editingTextLayerID = nil
+        editingCaptionLayerID = nil
+        stylePreview = nil
+        paintPreview = nil
+        knobPaintPreview = nil
+        thumbnailCache = [:]
+        shelfThumbnails = [:]
+        iconPreviews = [:]
+        dragPreviewGeneration += 1
+        viewport = camera ?? fittedViewport(documentSize: replacement.current.canvasSize,
+                                            in: canvasViewSize)
+        rerender()
+        return outgoing
+    }
+
     /// Installs a freshly opened document, resetting every per-document bit
     /// of editor state.
     func installDocument(_ document: PhotonzDocument, url: URL?) {
@@ -2941,6 +2978,8 @@ final class EditorState {
         // (`EditorState+SharedComponents`).
         var document = document
         let sharedReport = syncSharedComponentsOnOpen(&document)
+        // A space Edit Original had open belongs to the picture going out.
+        originalSpace = nil
         history = History(document: document)
         savedDocument = document
         documentURL = url
@@ -3139,6 +3178,9 @@ final class EditorState {
     var isRecordingDocument: Bool { recordingURL != nil && documentURL == nil }
 
     func saveDocument() {
+        // What is saved is the document, so an open Edit Original space is
+        // finished first: the file never holds half an edit.
+        finishEditingOriginal()
         // Command S on a video saves the project, and a recording never saved
         // as one gets the save box first. Never the capture write-back below:
         // that flattens a picture over the file, and the file is a video.
@@ -3161,6 +3203,7 @@ final class EditorState {
     /// edit in a package that points at the recordings and sounds it plays
     /// where they sit, and copies none of them (`ProjectMedia`).
     func saveDocumentAs() {
+        finishEditingOriginal()
         guard document != nil else { return }
         #if PHOTONZ_PLAYTEST
         // A walk cannot answer a save box, so it says where the box would have
