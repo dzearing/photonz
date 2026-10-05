@@ -268,7 +268,7 @@
     },
     {
       "do": "wait",
-      "seconds": 0.5
+      "seconds": 1.0
     },
     {
       "do": "press",

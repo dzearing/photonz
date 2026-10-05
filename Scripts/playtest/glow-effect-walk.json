@@ -130,13 +130,19 @@
       "seconds": 0.8
     },
     {
-      "do": "panelMenu",
-      "menu": "@glow.2",
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "@glow.2"
     },
     {
       "do": "wait",
       "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "@glow.2",
+      "reads": "Inner"
     },
     {
       "do": "press",

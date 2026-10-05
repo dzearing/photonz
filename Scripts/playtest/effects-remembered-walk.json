@@ -430,9 +430,9 @@
       "seconds": 0.6
     },
     {
-      "do": "panelMenu",
-      "menu": "@shadow.2",
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "@shadow.2"
     },
     {
       "do": "wait",

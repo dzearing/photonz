@@ -182,13 +182,19 @@
       "name": "5-shadow-drop"
     },
     {
-      "do": "panelMenu",
-      "menu": "@shadow",
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "@shadow"
     },
     {
       "do": "wait",
       "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "@shadow",
+      "reads": "Inner"
     },
     {
       "do": "describe",
