@@ -246,6 +246,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// own words rather than the video's: a pill saying "Video written"
         /// over a PNG of one frame is a pill nobody believes.
         case frameWritten(file: String?)
+        /// The edit went onto the clipboard as a movie or an animated picture
+        /// (Edit ▸ Copy Video, Copy as GIF), or could not be made. Named by the
+        /// file a paste will carry, so the pill says which copy landed.
+        case videoCopied(file: String?, format: RecordingFormat)
         /// Shapes became paths (`next-turn-into-path`), said as a result the
         /// moment it happens, with Undo on the pill (Next,
         /// `next-notices-say-what-happened`). Before, this was a line of advice
@@ -397,6 +401,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .captionsFileWritten(let file): return file == nil ? "Not written" : "Captions written"
         case .videoWritten(let file): return file == nil ? "Not written" : "Video written"
         case .frameWritten(let file): return file == nil ? "Not written" : "Frame written"
+        case .videoCopied(let file, _): return file == nil ? "Not copied" : "Copied"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
         case .componentCycle: return "Not placed"
@@ -485,6 +490,12 @@ public struct CopyConfirmation: Hashable, Sendable {
             return file
         case .frameWritten(let file):
             guard let file else { return "The frame could not be written" }
+            return file
+        case .videoCopied(let file, let format):
+            guard let file else {
+                return format == .mp4 ? "The video could not be copied"
+                                      : "The \(format.fileExtension.uppercased()) could not be copied"
+            }
             return file
         case .specList(let count):
             return "Spec list with \(count == 0 ? "no visible measurements" : Self.measurementPhrase(count))"

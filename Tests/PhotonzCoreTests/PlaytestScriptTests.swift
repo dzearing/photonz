@@ -21,8 +21,8 @@ struct PlaytestScriptTests {
                      { "do": "readClipboard", "stage": "b", "behind": "empty" },
                      { "do": "action", "action": "copyImageWithCanvas" } ] }
         """)
-        guard case .readClipboard(let first, let unclaimed) = script.steps[0],
-              case .readClipboard(_, let claimed) = script.steps[1],
+        guard case .readClipboard(let first, let unclaimed, _) = script.steps[0],
+              case .readClipboard(_, let claimed, _) = script.steps[1],
               case .action(let action) = script.steps[2] else {
             Issue.record("readClipboard"); return
         }
@@ -845,7 +845,7 @@ struct PlaytestScriptTests {
         guard case .describe(let stage, let note) = script.steps[14] else { Issue.record("describe"); return }
         #expect(stage == "3-distance" && note == "after two clicks")
         guard case .clearClipboard = script.steps[15] else { Issue.record("clearClipboard"); return }
-        guard case .readClipboard(let clipStage, _) = script.steps[16] else { Issue.record("readClipboard"); return }
+        guard case .readClipboard(let clipStage, _, _) = script.steps[16] else { Issue.record("readClipboard"); return }
         #expect(clipStage == "8-spec")
         guard case .action(let action) = script.steps[17] else { Issue.record("action"); return }
         #expect(action == .copySpecList)

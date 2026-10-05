@@ -62,6 +62,10 @@ public enum PlaytestMenuStandIn {
         Chord(key: "z", modifiers: [.command, .shift]): .redo,
         Chord(key: "c", modifiers: [.command]): .copy,
         Chord(key: "c", modifiers: [.command, .shift]): .copyMerged,
+        // Edit ▸ Copy Video and Copy as GIF: the edit onto the clipboard as a
+        // file, window-scoped like Copy.
+        Chord(key: "c", modifiers: [.command, .shift, .control]): .copyVideo,
+        Chord(key: "g", modifiers: [.command, .shift, .control]): .copyAsGIF,
         Chord(key: "x", modifiers: [.command]): .cut,
         Chord(key: "v", modifiers: [.command]): .paste,
         Chord(key: "=", modifiers: [.command]): .zoomIn,

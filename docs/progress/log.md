@@ -20668,3 +20668,9 @@ Next: the first editor window's ~200 ms first build
 - Canvas (`CanvasPathCorners.swift`): with Select and the pointer over a picked path, a knob sits inside every sharp corner; pulling rounds all corners, ⌥ one, grid steps while the grid pulls, ⌘ frees, "Radius N" pill, one undo step. Appearance's Corner Radius row reads and sets a path's corners in Next.
 - New walk `round-a-path-s-corners-walk` and walk step `expectCorners`. Audit `queue/audits/2026-10-04-round-a-path-s-corners.json`.
 - Open question for the user (in the audit): rectangles' corner dots round one corner by default and all with ⌥, the opposite of path knobs.
+
+## 2026-10-05 — Copy an edited video to the clipboard
+
+- Edit ▸ Copy Video (⌃⇧⌘C) and Copy as GIF (⌃⇧⌘G) in Next, shown where `next-export-the-video` is on and greyed out on a still. `EditorState.copyVideo(as:)` (EditorState+VideoExport.swift) writes the edit through `writeVideo` into `$TMPDIR/PhotonzClipboard`, at the Export sheet's remembered quality and size (`VideoClipboardCopy.choice`), with captions burned in and the sheet's marked range, then puts the file on the clipboard. Progress is the export toast ("Copying the video"); the result is a `videoCopied` pill ("Copied · file").
+- Walks: `copy-the-edit-to-the-clipboard-walk` (cut, both copies, clipboard file length = edit), `copy-a-long-captioned-edit-walk` (five minutes with captions: 36 s, longest main thread pass 27 ms). New walk steps: actions `copyVideo`, `copyAsGIF`, `awaitCopy`; `readClipboard` `movie: true`.
+- Found: a 15 fps GIF plays 5% long (delays stored in hundredths); filed as `a-gif-plays-at-the-speed-of-the-edit-it-came-fro`.

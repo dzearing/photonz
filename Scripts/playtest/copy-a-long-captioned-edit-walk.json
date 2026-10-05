@@ -1,0 +1,22 @@
+{
+  "out": "/tmp/photonz-playtest/copy-a-long-captioned-edit-walk",
+  "clock": 540,
+  "seed": "Edit > Copy Video on the five minute talk with its captions written, at Next defaults: the copy is written with the captions in the picture, the window is never held for 50 ms or more in one pass while it writes, and the clipboard ends up holding the whole five minutes.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "A copy writes the same file Export does, so on a long edit it is minutes of work. The window has to stay yours the whole time: awaitCopy fails if any one pass of the main thread took 50 ms or more from the moment the copy started to the moment it said Copied" },
+    { "do": "action", "action": "openLongTalk" },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-captioned", "note": "Five minutes with its captions written" },
+
+    { "do": "clearClipboard" },
+    { "do": "action", "action": "copyVideo" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "snapshot", "name": "1-copying-a-long-edit" },
+    { "do": "action", "action": "awaitCopy" },
+    { "do": "readClipboard", "stage": "2-the-whole-edit", "movie": true }
+  ]
+}

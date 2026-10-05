@@ -1,0 +1,42 @@
+{
+  "out": "/tmp/photonz-playtest/copy-the-edit-to-the-clipboard-walk",
+  "clock": 240,
+  "seed": "A recording opened at Next defaults, cut in half, and copied with Edit > Copy Video and Copy as GIF: each copy says it is copying, ends saying Copied, and leaves a file on the clipboard that runs as long as the cut, not the recording.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Current's recording window had Copy Video and Copy GIF for pasting a trimmed recording into a chat. Next opens a recording in the editor, where the only way out was exporting a file. Edit > Copy Video (control shift command C) and Copy as GIF (control shift command G) put the edit itself on the clipboard" },
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-cut", "note": "The eight second recording cut at the middle and the second half thrown away: the edit runs four seconds" },
+    { "do": "snapshot", "name": "1-cut" },
+
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["control", "shift", "command"], "menuItem": "Copy Video" },
+    { "do": "snapshot", "name": "2-copying-the-video" },
+    { "do": "action", "action": "awaitCopy" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "3-copied", "note": "The pill at the foot of the canvas says Copied and names the file a paste will carry" },
+    { "do": "snapshot", "name": "3-copied" },
+    { "do": "readClipboard", "stage": "4-the-video-is-the-edit", "movie": true },
+
+    { "do": "wait", "seconds": 1.8 },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "g", "modifiers": ["control", "shift", "command"], "menuItem": "Copy as GIF" },
+    { "do": "snapshot", "name": "5-copying-the-gif" },
+    { "do": "action", "action": "awaitCopy" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "6-gif-copied" },
+    { "do": "readClipboard", "stage": "7-the-gif-is-the-edit", "movie": true }
+  ]
+}

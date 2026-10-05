@@ -709,6 +709,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// because both are menu chords, and because what they leave on the
     /// clipboard is only visible after a paste.
     case copy, copyMerged, cut
+    /// Edit ▸ Copy Video and Copy as GIF, called directly: the edit written
+    /// the way the Export sheet writes it and put on the clipboard as a file.
+    /// Both are menu chords, dimmed for the whole of a walk. `awaitCopy`
+    /// waits for the one that was started to land, and fails if the window
+    /// was held for 50 ms or more in any one pass while it was written.
+    case copyVideo, copyAsGIF, awaitCopy
     /// Edit ▸ Paste, called directly: copied keys land at the playhead,
     /// anything else lands as a layer, exactly as the menu row decides.
     case paste
@@ -3623,7 +3629,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Log what is on the clipboard. `behind` is the CLAIM about the picture
     /// on it, read off its four corners the way `writePicture` reads a file:
     /// "empty" means nothing behind the drawing, "painted" means a background.
-    case readClipboard(stage: String, behind: PictureCorners?)
+    ///
+    /// `movie` claims the clipboard holds a movie or animated picture file
+    /// that runs as long as the front editor's edit (the stretch Export would
+    /// write), within one of the file's frames: the edit, not the recording
+    /// it was cut from.
+    case readClipboard(stage: String, behind: PictureCorners?, movie: Bool = false)
     /// Write the app's own menu bar to the log and to `menus-<stage>.json`:
     /// every menu, item, shortcut and enabled state, exactly as it reads on
     /// screen. `menu` narrows it to one top-level menu by title.
@@ -5107,7 +5118,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "readClipboard":
             self = .readClipboard(stage: try f.string("stage"),
                                   behind: f.has("behind")
-                                      ? try f.enumValue("behind", PictureCorners.self) : nil)
+                                      ? try f.enumValue("behind", PictureCorners.self) : nil,
+                                  movie: try f.optionalFlag("movie") ?? false)
         case "menus":
             let choose = (try f.optionalString("choose"))?
                 .components(separatedBy: ">").map { $0.trimmingCharacters(in: .whitespaces) } ?? []

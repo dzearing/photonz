@@ -240,6 +240,71 @@ extension EditorState {
         }
     }
 
+    // MARK: Onto the clipboard
+
+    /// Whether Edit ▸ Copy Video and Copy as GIF can run: a document with
+    /// time, and no export or copy already writing (there is one toast).
+    var canCopyVideo: Bool { exportsVideo && videoExport == nil }
+
+    /// **Edit ▸ Copy Video / Copy as GIF.** The edit written the way the
+    /// Export sheet writes it, at the sheet's last choice for this format
+    /// (`VideoClipboardCopy`), into a scratch file that then goes on the
+    /// clipboard: what Current's recording window did for a trim, for the
+    /// whole timeline. The same toast an export shows says it is copying and
+    /// can stop it; the result pill says Copied once a paste would work.
+    func copyVideo(as format: RecordingFormat) {
+        guard canCopyVideo, let document else { return }
+        let choice = VideoClipboardCopy.choice(
+            rememberedQuality: RecordingExportMemory.quality(for: format),
+            rememberedSize: RecordingExportMemory.size(for: format),
+            canvasSize: document.canvasSize, format: format)
+        let url = Self.clipboardCopyURL(
+            named: RecordingExport.suggestedFileName(recording: videoExportName, format: format))
+        pauseDocument()
+        let run = VideoExportRun(fileName: url.lastPathComponent, title: format.copyingTitle)
+        videoExport = run
+        let steps = ProgressSteps(count: 500)
+        videoExportTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try? FileManager.default.removeItem(at: url)
+                try await writeVideo(format: format, quality: choice.quality, size: choice.size,
+                                     to: url, captions: choice.captions, range: choice.range) { done in
+                    guard steps.isNewStep(done) else { return }
+                    Task { @MainActor in run.fraction = done }
+                }
+                // A GIF's own bytes ride along for apps that paste a picture
+                // rather than attach a file, read off the main actor: a long
+                // one is tens of megabytes.
+                let bytes: Data? = format == .gif
+                    ? await Task.detached { try? Data(contentsOf: url) }.value : nil
+                try Task.checkCancellation()
+                ClipboardWriter.writeFile(url, data: bytes, dataType: bytes == nil ? nil : .gif)
+                videoExport = nil
+                videoExportTask = nil
+                raiseCanvasNotice(.videoCopied(file: url.lastPathComponent, format: format))
+            } catch is CancellationError {
+                try? FileManager.default.removeItem(at: url)
+                videoExport = nil
+                videoExportTask = nil
+            } catch {
+                NSLog("Copy to the clipboard failed: \(error)")
+                videoExport = nil
+                videoExportTask = nil
+                raiseCanvasNotice(.videoCopied(file: nil, format: format))
+            }
+        }
+    }
+
+    /// Where a copy is written: a scratch folder of its own, under the name a
+    /// paste will carry. The next copy of the same name replaces it.
+    private static func clipboardCopyURL(named name: String) -> URL {
+        let folder = FileManager.default.temporaryDirectory
+            .appendingPathComponent("PhotonzClipboard", isDirectory: true)
+        try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)
+        return folder.appendingPathComponent(name)
+    }
+
     /// Stop an export that is running. What has been written so far goes with
     /// it, so there is never a half a video left on the disk.
     func cancelVideoExport() {

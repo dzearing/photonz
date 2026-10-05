@@ -434,6 +434,18 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(editor?.document == nil)
             }
+            // The edit onto the clipboard as a file, to paste into a chat
+            // without exporting one first: Current's recording window had
+            // these on its own bar. Every Copy key with ⌘ and one or two of
+            // ⇧ ⌥ ⌃ is taken, so ⌃⇧⌘, with G for the GIF.
+            if Experiments.shared.videoExportEnabled {
+                Button("Copy Video") { editor?.copyVideo(as: .mp4) }
+                    .keyboardShortcut("c", modifiers: [.command, .shift, .control])
+                    .disabled(!(editor?.canCopyVideo ?? false))
+                Button("Copy as GIF") { editor?.copyVideo(as: .gif) }
+                    .keyboardShortcut("g", modifiers: [.command, .shift, .control])
+                    .disabled(!(editor?.canCopyVideo ?? false))
+            }
             Button("Paste") {
                 if let fieldEditor {
                     fieldEditor.paste(nil)

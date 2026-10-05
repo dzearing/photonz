@@ -215,6 +215,8 @@ private final class Run {
     private var savedProjectDocument: PhotonzDocument?
     /// The export `startExportAt1080p` began and when, for `awaitExport`.
     private var startedExport: (url: URL, began: Date)?
+    /// When `copyVideo` or `copyAsGIF` began, for `awaitCopy`.
+    private var startedCopy: (format: RecordingFormat, began: Date)?
     /// A recording save `beginHeldSave` started and `finishHeldSave` ends.
     private var heldSave: RecordingSaveAnnouncer.Report?
     /// The caption word a walk opened last, and when it was said then
@@ -668,6 +670,67 @@ private final class Run {
     private func writePNG(_ image: CGImage, name: String) throws {
         guard let data = ImageCodec.encode(image, format: .png) else { throw Failure(description: "could not encode \(name).png") }
         try data.write(to: out.appendingPathComponent("\(name).png"))
+    }
+
+    /// `readClipboard` with `movie`: the clipboard holds a movie or animated
+    /// picture FILE, as a paste into Messages or the Finder would get it, and
+    /// it runs as long as the stretch Export would write from the editor in
+    /// front. The raw recording the edit was cut from fails here.
+    private func claimClipboardMovieIsTheEdit(number: Int, stage: String) async throws {
+        let editor = try requireEditor()
+        let urls = NSPasteboard.general.readObjects(forClasses: [NSURL.self],
+                                                    options: [.urlReadingFileURLsOnly: true]) as? [URL]
+        guard let url = urls?.first else {
+            throw Failure(description: "there is no file on the clipboard to paste")
+        }
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            throw Failure(description: "the clipboard names \(url.lastPathComponent), which is not on the disk")
+        }
+        guard let document = editor.document, document.hasTime else {
+            throw Failure(description: "the editor in front has no edit to measure the copy against")
+        }
+        let editMS = document.exportRangeMS(.marked).count
+        let fileMS: Int
+        let fps: Double
+        if url.pathExtension.lowercased() == "gif" {
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil) else {
+                throw Failure(description: "\(url.lastPathComponent) could not be read as a GIF")
+            }
+            let count = CGImageSourceGetCount(source)
+            var seconds = 0.0
+            for index in 0..<count {
+                let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
+                let gif = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
+                let delay = (gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double)
+                    ?? (gif?[kCGImagePropertyGIFDelayTime] as? Double) ?? 0
+                seconds += delay
+            }
+            fileMS = Int((seconds * 1000).rounded())
+            // Its frames are the measure: the delays round to hundredths
+            // (`VideoClipboardCopy.holdsTheEdit`).
+            let planned = RecordingExportMemory.quality(for: .gif).targetFPS
+            guard VideoClipboardCopy.holdsTheEdit(frames: count, editMS: editMS, fps: planned) else {
+                throw Failure(description: "\(url.lastPathComponent) on the clipboard holds \(count) frames "
+                              + "and the edit at \(Self.round2(planned)) a second is "
+                              + "\(Int((Double(editMS) / 1000 * planned).rounded())): it is not the edit")
+            }
+            note(number, stage, "\(url.lastPathComponent) on the clipboard holds \(count) frames, the edit's "
+                 + "\(editMS) ms at \(Self.round2(planned)) a second; its delays add up to \(fileMS) ms")
+            return
+        } else {
+            let asset = AVURLAsset(url: url)
+            let seconds = (try? await asset.load(.duration).seconds) ?? 0
+            fileMS = Int((seconds * 1000).rounded())
+            let track = try? await asset.loadTracks(withMediaType: .video).first
+            let rate = (try? await track?.load(.nominalFrameRate)).flatMap { $0 } ?? 0
+            fps = rate > 0 ? Double(rate) : DocumentVideoExport.movieFPS
+        }
+        guard VideoClipboardCopy.runsAsLong(fileMS: fileMS, asEditMS: editMS, fps: fps) else {
+            throw Failure(description: "\(url.lastPathComponent) on the clipboard runs \(fileMS) ms "
+                          + "and the edit runs \(editMS) ms: it is not the edit")
+        }
+        note(number, stage, "\(url.lastPathComponent) on the clipboard runs \(fileMS) ms, "
+             + "the edit \(editMS) ms, at \(Self.round2(fps)) frames a second")
     }
 
     /// What the four corners of a picture a walk just wrote are, and whether
@@ -2623,8 +2686,9 @@ private final class Run {
             NSPasteboard.general.clearContents()
             note(number, step.name, "cleared")
 
-        case .readClipboard(let stage, let behind):
+        case .readClipboard(let stage, let behind, let movie):
             let types = NSPasteboard.general.types?.map(\.rawValue) ?? []
+            if movie { try await claimClipboardMovieIsTheEdit(number: number, stage: stage) }
             let text = NSPasteboard.general.string(forType: .string)
             // The picture's corners, read off the PNG that went on the
             // clipboard: what an app that pastes it would get.
@@ -2922,6 +2986,48 @@ private final class Run {
                     + (share.map { ", so the write took \(Self.round2($0)) of its running time" } ?? "")
                     + "; while it wrote, \(window)",
                  state: describe())
+
+        // Edit ▸ Copy Video and Copy as GIF, the way the rows run them. The
+        // meter is zeroed here so `awaitCopy` reads the copy's own passes.
+        case .action(let action) where action == .copyVideo || action == .copyAsGIF:
+            let editor = try requireEditor()
+            let format: RecordingFormat = action == .copyVideo ? .mp4 : .gif
+            guard editor.canCopyVideo else {
+                throw Failure(description: "Copy \(format == .mp4 ? "Video" : "as GIF") is dimmed: "
+                              + (editor.exportsVideo ? "an export or a copy is already writing"
+                                                     : "this document has no time in it"))
+            }
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            startedCopy = (format, Date())
+            editor.copyVideo(as: format)
+            guard let run = editor.videoExport else {
+                throw Failure(description: "the copy did not start: no toast came up")
+            }
+            note(number, step.name, "\(run.title): \(run.fileName), with the toast up", state: describe())
+
+        case .action(.awaitCopy):
+            let editor = try requireEditor()
+            guard let (format, began) = startedCopy else {
+                throw Failure(description: "no copy was started to wait for")
+            }
+            try await poll("the copy to land on the clipboard", within: 600) { editor.videoExport == nil }
+            let took = Int(Date().timeIntervalSince(began) * 1000)
+            let longest = MainThreadMeter.shared.longestMS
+            let window = MainThreadMeter.shared.report
+            startedCopy = nil
+            let said = editor.copyConfirmation.map { "\($0.title): \($0.detail)" } ?? "no pill"
+            guard editor.copyConfirmation?.title == "Copied" else {
+                throw Failure(description: "the \(format.fileExtension.uppercased()) copy ended without "
+                              + "saying Copied (the pill reads \(said))")
+            }
+            note(number, step.name, "copied in \(took) ms, the pill reads \(said); while it wrote, \(window)",
+                 state: describe())
+            if longest >= 50 {
+                throw Failure(description: String(
+                    format: "the main thread froze for %.1fms in one pass while the copy was written, "
+                        + "and a copy may hold it for under 50ms", longest))
+            }
 
         case .action(let action) where action == .closeDocument:
             let closing = try requireWindow()
@@ -6142,7 +6248,7 @@ private final class Run {
                     editor.setContentPlacement(id: id, horizontal: .stretch)
                 }
             case .closeDocument, .askToClose, .answerCloseFirst, .exportVideoAsTheSheetDoes,
-                 .startExportAt1080p, .awaitExport,
+                 .startExportAt1080p, .awaitExport, .copyVideo, .copyAsGIF, .awaitCopy,
                  .saveProjectAs, .answerCloseExport, .expectReopenedAsSaved, .expectMissingMedia:
                 break  // handled above, where there is still a window to close
             case .closeSheets:

@@ -1,0 +1,28 @@
+{
+  "feature": "Copy an edited video to the clipboard",
+  "epic": "video-share",
+  "summary": "Edit > Copy Video and Copy as GIF put the whole edit on the clipboard as a file, cuts and burned-in captions included, so a trimmed recording pastes straight into a chat or the Finder without exporting first.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, put the playhead in the middle, press B on the clip and delete the second half." },
+    { "do": "Choose Edit > Copy Video (Control Shift Command C).", "shot": "2026-10-05-copy-the-edit-1.png" },
+    { "do": "Watch the toast at the foot of the canvas fill, then read the pill that replaces it.", "shot": "2026-10-05-copy-the-edit-2.png" },
+    { "do": "Paste into Messages or a Finder window and play what lands." },
+    { "do": "Choose Edit > Copy as GIF (Control Shift Command G) and paste it into a chat.", "shot": "2026-10-05-copy-the-edit-3.png" },
+    { "do": "Open a screenshot instead and look at Edit: both rows are greyed out." }
+  ],
+  "evaluate": [
+    "Is Edit next to Copy where you would look for this, or did you reach for a right-click on the canvas or the clip first?",
+    "Are Control Shift Command C and G keys you would remember, or would you rather have one key and a choice in the toast?",
+    "Is the size and quality the Export sheet last used the right thing for a copy, or should a copy always be small enough for a chat?",
+    "Does the pill saying Copied plus the file name tell you enough to paste with confidence?"
+  ],
+  "rough": [
+    "No mock draws a clipboard copy for a video; the rows follow the placement contract (UX-PATTERNS menu bar and toasts rows) and add nothing anywhere else.",
+    "There is no right-click route yet: the canvas and clip menus do not offer Copy Video, so it is reachable only from Edit and its keys.",
+    "A copy uses whatever the Export sheet last chose for that format, so a person who last exported a Full size High MP4 copies a big file; nothing on the toast says which size it used.",
+    "A GIF at 15 frames a second plays about 5 percent long (4.0 s of edit plays 4.2 s), because GIF stores delays in hundredths; Export has the same behaviour and filed as a-gif-plays-at-the-speed-of-the-edit-it-came-fro.",
+    "While a copy writes, Export and a second copy are greyed out: one toast, one file at a time."
+  ]
+}
