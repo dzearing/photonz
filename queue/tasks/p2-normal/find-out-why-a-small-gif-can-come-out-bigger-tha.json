@@ -1,0 +1,26 @@
+{
+  "id": "find-out-why-a-small-gif-can-come-out-bigger-tha",
+  "title": "Find out why a small GIF can come out bigger than a standard one in a busy test run",
+  "goal": "One of two full test runs on 2026-10-05 failed the check that a GIF exported at the small size weighs less than one at the standard size; the same check passed on its own and in the next full run. Find out whether a busy machine really can make the small GIF bigger, which a person exporting would notice, or whether the test is measuring the wrong thing.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3610,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T18:57:40.418Z",
+  "updated": "2026-10-05T18:57:40.421Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-05 by the-tool-lens-text-style-and-component-menus-in, whose change touches no export code. Full `Scripts/test.sh` printed: `✘ Test \"written twice, a GIF is the same file and a HEIC the same pictures\" recorded an issue at AnimatedExportWeighTests.swift:155:37: Expectation failed: (small → 91233) < (standard → 84279)`; the test took 138s in that run. `Scripts/test.sh --filter AnimatedExportWeighTests` then passed (3 tests, 21.6s), and the next full run passed all 11399. Earlier history: the-export-size-test-fails-about-one-run-in-thre (done) fixed a similar load-sensitive size check; fbaa917c (A GIF plays at the speed of the edit it came from) landed just before this was seen.",
+  "acceptance": [
+    "The cause of the failure is written down in this task",
+    "Either the export or the test is fixed so the check holds on a loaded machine, proved by three full Scripts/test.sh runs in a row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T18:57:40.420Z",
+      "note": "created (manual)"
+    }
+  ]
+}

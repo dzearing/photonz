@@ -1,0 +1,29 @@
+{
+  "id": "the-whole-value-tooltip-walk-reads-a-shadow-kind",
+  "title": "The whole-value tooltip walk reads a shadow Kind that is now two segments",
+  "goal": "A scripted check that proves a shortened menu value is spelled out on hover fails part way through, because it still looks for a shadow Kind menu that became two buttons (Drop and Inner) earlier today. Point it at what the shadow row now shows so the check runs to the end again.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3600,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T18:57:32.902Z",
+  "updated": "2026-10-05T18:57:32.905Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-05 by the-tool-lens-text-style-and-component-menus-in: `Scripts/playtest-all.sh --no-build --only <list>` printed `menu-says-its-whole-value-walk 8s FAILED step 27 (expect): no tooltip called \"Kind\" in \"Shadow\" is in the panel; the ones that are: Shadow Style, Color, Twist, Reorder, Switch, Remove, Style, Color, Drop, Inner`. Step 27 is `{\"do\":\"expect\",\"tooltip\":\"Kind\",\"in\":\"Shadow\",\"present\":true}`; commit b4c89240 (Two-way effect settings are a segmented control) moved Kind onto EffectChoiceRow, whose segments carry the tooltips. Likely fix: expect tooltip Drop or Inner in Shadow, or move the two-of-a-kind claim to a row that is still a dropdown (Position in Border).",
+  "acceptance": [
+    "menu-says-its-whole-value-walk passes at Next defaults",
+    "Its two-of-a-kind step still claims something about a row name that appears on more than one row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T18:57:32.904Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "menu-says-its-whole-value-walk"
+  ]
+}

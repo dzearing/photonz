@@ -440,21 +440,24 @@ struct LibraryComponentInspector: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 74, alignment: .leading)
-                Picker("", selection: Binding(
-                    get: { shelfVersion.id },
-                    set: { editorState.chooseShelfComponentVersion(componentID: componentID,
-                                                                   version: $0) })) {
-                    ForEach(versions) { version in
-                        Text(version.name).tag(version.id)
-                    }
-                }
-                .labelsHidden()
-                .controlSize(.small)
-                .panelHelp("Which look of this component a copy off this tile arrives showing. A copy can still be switched afterwards")
+                // The panel's dropdown, filling the rest of the row.
+                VideoKit.Dropdown(
+                    label: "Place",
+                    value: shelfVersion.name,
+                    help: Self.placeVersionHelp,
+                    choices: .picking(versions, current: shelfVersion, title: \.name) {
+                        editorState.chooseShelfComponentVersion(componentID: componentID, version: $0.id)
+                    })
+                    .frame(maxWidth: .infinity)
+                    .panelHelp(Self.placeVersionHelp)
+                    .playtestControl("Place", detail: shelfVersion.name)
             }
             .playtestField("Place")
         }
     }
+
+    private static let placeVersionHelp = "Which look of this component a copy off this tile arrives "
+        + "showing. A copy can still be switched afterwards"
 
     /// The drawing the shelf is set to hand over, for the sentence above.
     private func shown(_ componentID: UUID) -> Layer? {
@@ -1637,24 +1640,24 @@ struct ComponentInstanceProperties: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                     .frame(width: 74, alignment: .leading)
-                Picker("", selection: Binding(
-                    get: { selection.version ?? Self.mixedOption },
-                    set: { chosen in
-                        guard chosen != Self.mixedOption else { return }
-                        editorState.setInstanceVersion(instances: instances, to: chosen)
-                    })) {
-                    if selection.hasMixedVersions {
-                        Text(MixedValue.text)
-                            .foregroundStyle(MixedLook.style)
-                            .tag(Self.mixedOption)
-                    }
-                    ForEach(selection.versions) { version in
-                        Text(version.name).tag(version.id)
-                    }
-                }
-                .labelsHidden()
-                .controlSize(.small)
-                .panelHelp("Which look of this component the copy shows. Everything you have set on the copy comes with it")
+                // The panel's dropdown. Copies showing different looks read
+                // Mixed on its face, in the quieter ink every Mixed wears.
+                let shown = selection.versions.first { $0.id == selection.version }
+                let value = selection.hasMixedVersions ? MixedValue.text
+                    : (shown?.name ?? selection.versions.first?.name ?? "")
+                VideoKit.Dropdown(
+                    label: variantName,
+                    value: value,
+                    valueStyle: selection.hasMixedVersions ? MixedLook.style : nil,
+                    help: Self.versionHelp,
+                    choices: .picking(selection.versions,
+                                      current: selection.hasMixedVersions ? nil : shown,
+                                      title: \.name) {
+                        editorState.setInstanceVersion(instances: instances, to: $0.id)
+                    })
+                    .frame(maxWidth: .infinity)
+                    .panelHelp(Self.versionHelp)
+                    .playtestControl(variantName, detail: value)
             }
             // Named by its row, not by the look it happens to be showing: a
             // walk that called this menu "Default" would be naming the very
@@ -1684,36 +1687,27 @@ struct ComponentInstanceProperties: View {
             let options = editorState.componentVariantOptionLabels(
                 componentID: selection.componentID ?? UUID(), version: selection.version,
                 propertyID: property.id)
-            // The closed title is where a menu shows its value, so that is
-            // where Mixed goes: a row the copies disagree on offers the word
-            // rather than picking one copy's shape and printing it as if it
-            // were everybody's. The word is a row of the menu's own, drawn one
-            // step quieter, which is what the closed title then wears —
-            // measured against a real value in the same shot on 2026-09-05.
-            Picker("", selection: Binding(
-                get: {
-                    isMixed ? Self.mixedOption
-                        : (reading.optionValue ?? options.first?.id ?? Self.mixedOption)
-                },
-                set: { chosen in
-                    // Mixed is a report about the selection, not a state
-                    // anybody can set, so landing back on it does nothing.
-                    guard chosen != Self.mixedOption else { return }
-                    editorState.setInstanceOverride(instances: instances, property: property.id,
-                                                    value: .variant(chosen))
-                })) {
-                if isMixed {
-                    Text(MixedValue.text)
-                        .foregroundStyle(MixedLook.style)
-                        .tag(Self.mixedOption)
-                }
-                ForEach(options, id: \.id) { option in
-                    Text(option.label).tag(option.id)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .panelHelp("Only the shapes the original holds. A copy can never show something it does not define")
+            // The face is where a dropdown shows its value, so that is where
+            // Mixed goes: a row the copies disagree on reads the word, one
+            // step quieter, rather than picking one copy's shape and printing
+            // it as if it were everybody's. Mixed is a report about the
+            // selection, not a row anybody can pick.
+            let picked = reading.optionValue ?? options.first?.id
+            let value = isMixed ? MixedValue.text : (options.first { $0.id == picked }?.label ?? "")
+            VideoKit.Dropdown(
+                label: property.name,
+                value: value,
+                valueStyle: isMixed ? MixedLook.style : nil,
+                help: Self.variantHelp,
+                choices: options.map { option in
+                    .item(option.label, isOn: !isMixed && option.id == picked) {
+                        editorState.setInstanceOverride(instances: instances, property: property.id,
+                                                        value: .variant(option.id))
+                    }
+                })
+                .frame(maxWidth: .infinity)
+                .panelHelp(Self.variantHelp)
+                .playtestControl(property.name, detail: value)
         case .color:
             InstanceColorKnob(instances: instances, property: property)
         case .number where property.numberSlot?.isFourSided == true:
@@ -1737,9 +1731,12 @@ struct ComponentInstanceProperties: View {
     /// the same place down the panel.
     private static let nameColumn: CGFloat = 74
 
-    /// The row the menu shows while the copies disagree. It is never an answer
-    /// anybody can land on: choosing it is ignored.
-    private static let mixedOption = UUID()
+    /// The dropdowns' hover tips, on the AppKit button and in the panel's
+    /// register where a walk reads them.
+    private static let versionHelp = "Which look of this component the copy shows. "
+        + "Everything you have set on the copy comes with it"
+    private static let variantHelp = "Only the shapes the original holds. "
+        + "A copy can never show something it does not define"
 
     /// The way back. Without it a copy that was set once can only be put right
     /// by undoing, and an override made ten edits ago is out of undo's reach.

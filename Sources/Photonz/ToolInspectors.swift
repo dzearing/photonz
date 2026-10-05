@@ -33,15 +33,18 @@ struct MeasureToolInspector: View {
         VStack(alignment: .leading, spacing: 8) {
             if Experiments.shared.measureModesEnabled {
                 field("Mode") {
-                    Picker("Mode", selection: $state.measureToolMode) {
-                        ForEach(MeasureToolMode.available(
-                            alignmentEnabled: Experiments.shared.measureAlignEnabled), id: \.self) { mode in
-                            Text(mode.title).tag(mode)
-                        }
-                    }
-                    .labelsHidden().controlSize(.small)
-                    .panelHelp("What a click does. The Measure button holds the same list, "
-                          + "and I cycles it. In Size, [ and ] pick a smaller or larger element.")
+                    // The panel's dropdown, as wide as the section.
+                    VideoKit.Dropdown(
+                        label: "Mode",
+                        value: editorState.measureToolMode.title,
+                        help: Self.modeHelp,
+                        choices: .picking(MeasureToolMode.available(
+                            alignmentEnabled: Experiments.shared.measureAlignEnabled),
+                                          current: editorState.measureToolMode,
+                                          title: \.title) { state.measureToolMode = $0 })
+                        .frame(maxWidth: .infinity)
+                        .panelHelp(Self.modeHelp)
+                        .playtestControl("Mode", detail: editorState.measureToolMode.title)
                     // The keys the mode answers to, taught here because this
                     // line stays: the canvas hint fades in two seconds and
                     // used to be the only place the [ and ] keys were written.
@@ -54,27 +57,29 @@ struct MeasureToolInspector: View {
                 }
             }
             if Experiments.shared.measureCenterSnapEnabled {
-                field("Snap") {
-                    Picker("Snap", selection: $state.measureSnapsToCenters) {
-                        Text("Edges").tag(false)
-                        Text("Edges and centers").tag(true)
-                    }
-                    .labelsHidden().controlSize(.small)
-                    .panelHelp("What measure points magnetize to. Hold Command to drag free.")
+                field("Snap", reads: Self.snapTitle(editorState.measureSnapsToCenters)) {
+                    // Two answers, so both show: the fields mock's segmented
+                    // control, never a menu of two (comp-fields.html, Select).
+                    SegmentedControl("Snap", selection: editorState.measureSnapsToCenters,
+                                     options: [.init(false, Self.snapTitle(false), help: Self.snapHelp),
+                                               .init(true, Self.snapTitle(true), help: Self.snapHelp)],
+                                     pick: { state.measureSnapsToCenters = $0 })
+                        .controlSize(.small)
+                        .frame(maxWidth: .infinity)
                 }
             }
             if Experiments.shared.measureRolesEnabled {
                 field("Show") {
-                    Picker("Show", selection: Binding(
-                        get: { editorState.measureShowFilter },
-                        set: { editorState.setMeasureShowFilter($0) })) {
-                        ForEach(EditorState.MeasureShowFilter.allCases, id: \.self) { filter in
-                            Text(filter.title).tag(filter)
-                        }
-                    }
-                    .labelsHidden().controlSize(.small)
-                    .panelHelp("Which measurements the canvas shows. A view filter only: exports "
-                          + "always include every visible measurement.")
+                    VideoKit.Dropdown(
+                        label: "Show",
+                        value: editorState.measureShowFilter.title,
+                        help: Self.showHelp,
+                        choices: .picking(EditorState.MeasureShowFilter.allCases,
+                                          current: editorState.measureShowFilter,
+                                          title: \.title) { editorState.setMeasureShowFilter($0) })
+                        .frame(maxWidth: .infinity)
+                        .panelHelp(Self.showHelp)
+                        .playtestControl("Show", detail: editorState.measureShowFilter.title)
                 }
             }
         }
@@ -82,14 +87,32 @@ struct MeasureToolInspector: View {
         .padding(.vertical, 8)
     }
 
-    @ViewBuilder private func field<Content: View>(_ label: String,
+    /// `reads`, for a row of segments: the caption carries what the row says,
+    /// so a walk reads it, `{"control": "Snap", "reads": "Snap, Edges"}`, and
+    /// presses each segment by its own word.
+    @ViewBuilder private func field<Content: View>(_ label: String, reads: String? = nil,
                                                    @ViewBuilder _ content: () -> Content) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+            if let reads {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+                    .playtestControl(label, detail: reads)
+            } else {
+                Text(label).font(.caption).foregroundStyle(.secondary)
+            }
             content()
         }
         .playtestField(label)
     }
+
+    /// Each dropdown's hover tip, on the AppKit button and in the panel's
+    /// register where a walk reads it.
+    static let modeHelp = "What a click does. The Measure button holds the same list, "
+        + "and I cycles it. In Size, [ and ] pick a smaller or larger element."
+    static let snapHelp = "What measure points magnetize to. Hold Command to drag free."
+    static let showHelp = "Which measurements the canvas shows. A view filter only: exports "
+        + "always include every visible measurement."
+
+    static func snapTitle(_ toCenters: Bool) -> String { toCenters ? "Edges and centers" : "Edges" }
 }
 
 // MARK: - Magic Wand tool properties (D15)
@@ -179,18 +202,22 @@ struct FillToolInspector: View {
 struct CropToolInspector: View {
     @Environment(EditorState.self) private var editorState
 
+    static let help = "What shape the crop keeps. The Crop button holds the same list."
+
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("Aspect").font(.caption).foregroundStyle(.secondary)
-            Picker("Aspect", selection: Binding(get: { editorState.cropAspect },
-                                                set: { editorState.setCropAspect($0) })) {
-                ForEach(CropAspect.allCases, id: \.self) { aspect in
-                    Text(aspect.label).tag(aspect)
-                }
-            }
-            .labelsHidden().controlSize(.small)
-            .panelHelp("What shape the crop keeps. The Crop button holds the same list.")
+            VideoKit.Dropdown(
+                label: "Aspect",
+                value: editorState.cropAspect.label,
+                help: Self.help,
+                choices: .picking(CropAspect.allCases, current: editorState.cropAspect,
+                                  title: \.label) { editorState.setCropAspect($0) })
+                .frame(maxWidth: .infinity)
+                .panelHelp(Self.help)
+                .playtestControl("Aspect", detail: editorState.cropAspect.label)
         }
+        .playtestField("Aspect")
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 8)
     }

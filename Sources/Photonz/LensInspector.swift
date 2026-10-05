@@ -21,6 +21,10 @@ struct LensInspector: View {
     @Environment(EditorState.self) private var editorState
     let layer: Layer
 
+    /// The Does dropdown's hover tip, on the AppKit button and in the panel's
+    /// register where a walk reads it.
+    static let help = "What this layer does to the picture underneath it. " + LensCopy.safety
+
     private var lens: LensContent {
         editorState.document?.layer(id: layer.id)?.lens ?? LensContent()
     }
@@ -41,20 +45,19 @@ struct LensInspector: View {
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text("Does").font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                Picker("Does", selection: Binding(
-                    get: { kind },
-                    set: { editorState.setLensKind($0) })) {
-                    ForEach(LensKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(kind)
-                    }
-                }
-                .labelsHidden()
-                .controlSize(.small)
-                .fixedSize()
-                .panelHelp("What this layer does to the picture underneath it. "
-                           + LensCopy.safety)
+                // The panel's dropdown, filling the rest of the row the way
+                // Font does in the Text section.
+                VideoKit.Dropdown(
+                    label: "Does",
+                    value: kind.title,
+                    help: Self.help,
+                    choices: .picking(LensKind.allCases, current: kind,
+                                      title: \.title) { editorState.setLensKind($0) })
+                    .frame(maxWidth: .infinity)
+                    .panelHelp(Self.help)
+                    .playtestControl("Does", detail: kind.title)
             }
+            .playtestField("Does")
             // Magnify's picture comes from somewhere else on the canvas, so it
             // has a magnification and a shape where the other five have one
             // number. Same two rows a callout has always had.
@@ -109,24 +112,25 @@ struct LensInspector: View {
 struct LensToolInspector: View {
     @Environment(EditorState.self) private var editorState
 
+    static let help = "What the next lens you draw does to the picture underneath it. "
+        + "A lens already on the canvas is switched in its own section. " + LensCopy.safety
+
     var body: some View {
         @Bindable var state = editorState
         VStack(alignment: .leading, spacing: 10) {
             HStack(spacing: 8) {
                 Text("Does").font(.caption).foregroundStyle(.secondary)
-                Spacer(minLength: 8)
-                Picker("Does", selection: $state.lensToolKind) {
-                    ForEach(LensKind.allCases, id: \.self) { kind in
-                        Text(kind.title).tag(kind)
-                    }
-                }
-                .labelsHidden()
-                .controlSize(.small)
-                .fixedSize()
-                .panelHelp("What the next lens you draw does to the picture underneath it. "
-                           + "A lens already on the canvas is switched in its own section. "
-                           + LensCopy.safety)
+                VideoKit.Dropdown(
+                    label: "Does",
+                    value: editorState.lensToolKind.title,
+                    help: Self.help,
+                    choices: .picking(LensKind.allCases, current: editorState.lensToolKind,
+                                      title: \.title) { state.lensToolKind = $0 })
+                    .frame(maxWidth: .infinity)
+                    .panelHelp(Self.help)
+                    .playtestControl("Does", detail: editorState.lensToolKind.title)
             }
+            .playtestField("Does")
             if editorState.lensToolKind.magnifies {
                 MagnifierToolSettingsRows()
             } else if let title = editorState.lensToolAdjustment.settingTitle {

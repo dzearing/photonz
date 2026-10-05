@@ -1,0 +1,49 @@
+{
+  "feature": "Tool, lens, text style and component menus wear the panel's dropdown",
+  "epic": "video-titles-graphics",
+  "task": "the-tool-lens-text-style-and-component-menus-in",
+  "summary": "The last system pop-ups in the right hand panel now look like Font and Blending: the Measure tool's Mode and Show, the Crop tool's Aspect, a lens's Does, a saved text style's Font, Size and Weight, and a component's Place, look and choice menus. The Measure tool's Snap has two answers, so it shows both as a segmented control. No panel menu draws the up and down arrows any more.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/tool-and-library-dropdowns-open-on-a-click-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press M for the Measure tool and look at its section: Mode and Show are dropdowns, Snap is two segments.",
+      "shot": "2026-10-05-tool-library-dropdowns-2-measure-picked-sc.png"
+    },
+    {
+      "do": "Press C for Crop and pick 16:9 from Aspect."
+    },
+    {
+      "do": "Press K for the Lens tool, drag a lens on the canvas, and pick Greyscale from its Does.",
+      "shot": "2026-10-05-tool-library-dropdowns-5-lens-layer-sc.png"
+    },
+    {
+      "do": "Save a label's type as a style, click its tile in the Library, and change Font, Size and Weight.",
+      "shot": "2026-10-05-tool-library-dropdowns-7-text-style-picked-sc.png"
+    },
+    {
+      "do": "Switch the Mac to Light and look at the same style.",
+      "shot": "2026-10-05-tool-library-dropdowns-8-text-style-light-sc.png"
+    },
+    {
+      "do": "Give the Button component a second look, then pick a copy and switch its Variant.",
+      "shot": "2026-10-05-tool-library-dropdowns-10-variant-sc.png"
+    },
+    {
+      "do": "Pick a copy of a component with a choice and switch its Shape, then press Command Z.",
+      "shot": "2026-10-05-tool-library-dropdowns-12-choice-light-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does the Measure Tool section now read as the same app as the Text and Appearance sections?",
+    "Is Snap clearer as two segments than as a menu, given Edges and centers is a long word for a segment?",
+    "Should the Lens's Does, six answers, stay a dropdown, or would you rather see them all?",
+    "Do the Library style's Size and Weight, side by side at half width, still read their values in full?"
+  ],
+  "rough": [
+    "Snap matches the fields mock (comp-fields.html, Select): two options are a segmented control, so Snap shows both answers. The task's list had named it among the dropdowns.",
+    "The tool settings capsule over the canvas still shows Snap and Show as system pop-ups with up and down arrows. It is not the panel, so this task left it; the capsule is the canvas's own strip.",
+    "A copy's choice menu (Shape) stops a little short of the panel's right edge, where the copy's other rows keep a column for their revert arrow. Matches the Label row under it.",
+    "Mixed copies read Mixed on the dropdown's face in the quieter ink, the way Blending does, rather than as an extra row inside the menu. Not seen in a picture in this walk."
+  ]
+}

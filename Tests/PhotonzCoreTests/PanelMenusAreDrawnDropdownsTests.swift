@@ -45,21 +45,12 @@ struct PanelMenusAreDrawnDropdownsTests {
         "SegmentedControl.swift",
     ]
 
-    /// Panel menus still drawn as system pop-ups on 2026-10-05, by file, and
-    /// how many. This list may only shrink: converting one means lowering its
-    /// count here, and the test says so when a count is higher than the file.
-    /// Converting them is the task "The tool, lens, text style and component
-    /// menus in the panel wear the panel's dropdown".
-    static let stillSystemPopUps: [String: Int] = [
-        // The measure tool's Mode, Snap and Show, and the crop tool's Aspect.
-        "ToolInspectors.swift": 4,
-        // A lens layer's Does, and the lens tool's.
-        "LensInspector.swift": 2,
-        // A Library text style's Font, Size and Weight.
-        "TextStylePanel.swift": 3,
-        // A component's property menus.
-        "ComponentPanel.swift": 3,
-    ]
+    /// Panel menus still drawn as system pop-ups, by file, and how many. This
+    /// list may only shrink, and it is empty: the last twelve (the measure
+    /// and crop tools, a lens's Does, a Library text style's Font, Size and
+    /// Weight, and a component's menus) were converted on 2026-10-05. A file
+    /// earns a place here again only with a reason a dropdown cannot serve.
+    static let stillSystemPopUps: [String: Int] = [:]
 
     /// Every system pop-up in one file's text, as the line it starts on.
     static func systemPopUps(in text: String) -> [Int] {

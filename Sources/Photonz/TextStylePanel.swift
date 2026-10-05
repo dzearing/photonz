@@ -388,43 +388,44 @@ struct LibraryTextStyleInspector: View {
         }
     }
 
+    /// Every dropdown's hover tip, on the AppKit button and in the panel's
+    /// register where a walk reads it.
+    private static let help = "Changing this re-sets every piece of text using this style"
+
     private func fontRow(_ style: TextStyle) -> some View {
         captioned("Font") {
-            Picker("Font", selection: binding(style, \.fontName)) {
-                ForEach(TextStyles.fontOptions(picked: [style.treatment.fontName]), id: \.self) {
-                    Text($0).tag($0)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .panelHelp("Changing this re-sets every piece of text using this style")
+            dropdown("Font", style, \.fontName,
+                     TextStyles.fontOptions(picked: [style.treatment.fontName]), title: { $0 })
         }
     }
 
     private func sizeRow(_ style: TextStyle) -> some View {
         captioned("Size") {
-            Picker("Size", selection: binding(style, \.fontSize)) {
-                ForEach(sizes(style), id: \.self) {
-                    Text(TextStyles.sizeWords($0)).tag($0)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .panelHelp("Changing this re-sets every piece of text using this style")
+            dropdown("Size", style, \.fontSize, sizes(style), title: TextStyles.sizeWords)
         }
     }
 
     private func weightRow(_ style: TextStyle) -> some View {
         captioned("Weight") {
-            Picker("Weight", selection: binding(style, \.weight)) {
-                ForEach(TextWeight.allCases, id: \.self) {
-                    Text($0.rawValue.capitalized).tag($0)
-                }
-            }
-            .labelsHidden()
-            .controlSize(.small)
-            .panelHelp("Changing this re-sets every piece of text using this style")
+            dropdown("Weight", style, \.weight, TextWeight.allCases, title: { $0.rawValue.capitalized })
         }
+    }
+
+    /// The panel's dropdown, as wide as its column, for one of the style's
+    /// own settings.
+    private func dropdown<Value: Equatable>(_ label: String, _ style: TextStyle,
+                                            _ key: WritableKeyPath<TextTreatment, Value>,
+                                            _ values: [Value],
+                                            title: @escaping (Value) -> String) -> some View {
+        let current = style.treatment[keyPath: key]
+        return VideoKit.Dropdown(
+            label: label,
+            value: title(current),
+            help: Self.help,
+            choices: .picking(values, current: current, title: title) { binding(style, key).wrappedValue = $0 })
+            .frame(maxWidth: .infinity)
+            .panelHelp(Self.help)
+            .playtestControl(label, detail: title(current))
     }
 
     private func colorRow(_ style: TextStyle) -> some View {

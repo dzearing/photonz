@@ -1,0 +1,979 @@
+{
+  "out": "/tmp/photonz-playtest/tool-and-library-dropdowns-open-on-a-click-walk",
+  "seed": "Every menu the tools, a lens, a saved text style and a component put in the panel opens when a person clicks it, at Next defaults with no flag changed. The Measure tool's Mode and Show, the Crop tool's Aspect, the Lens tool's Does and a drawn lens's Does, a Library text style's Font, Size and Weight, and a component's Place, Variant and choice menus each wear the panel's dropdown face and are clicked on it in the middle and 8pt in from each end, and the Measure tool's Snap, two answers, is a segmented control whose segments are pressed with the pointer; each pick reads back on the face, and one undo takes back one pick.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1200,
+      "canvasHeight": 800,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-measure",
+      "note": "the Measure tool in hand: Mode, Snap and Show in its section wear the panel's dropdown face, the one Font and Blending wear"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-measure"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Mode",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Gap"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Mode",
+      "reads": "Gap"
+    },
+    {
+      "do": "press",
+      "control": "Edges",
+      "in": "Snap"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Snap",
+      "reads": "Snap, Edges"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Spacing"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Show",
+      "reads": "Spacing"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-measure-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Mode",
+      "at": [
+        "centre"
+      ],
+      "choose": "Distance"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Edges and centers",
+      "in": "Snap"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Snap",
+      "reads": "Snap, Edges and centers"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Show",
+      "at": [
+        "centre"
+      ],
+      "choose": "All"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "crop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Aspect",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "16:9"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Aspect",
+      "reads": "16:9"
+    },
+    {
+      "do": "describe",
+      "stage": "3-crop",
+      "note": "the Crop tool's Aspect, picked with the pointer: 16:9"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-crop"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Aspect",
+      "at": [
+        "centre"
+      ],
+      "choose": "Free"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "k"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "lens"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Does",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Pixelate"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Does",
+      "reads": "Pixelate"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-lens-tool"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        500,
+        380
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "expect",
+      "menu": "Does",
+      "reads": "Pixelate"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Does",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Greyscale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Does",
+      "reads": "Greyscale"
+    },
+    {
+      "do": "describe",
+      "stage": "5-lens-layer",
+      "note": "a lens drawn and picked: its Does reads Greyscale, picked from the panel's dropdown with the pointer"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-lens-layer"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Does",
+      "reads": "Pixelate"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Does",
+      "reads": "Greyscale"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Sign in"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        180,
+        145
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Style",
+      "at": [
+        "centre"
+      ],
+      "choose": "Save as Style"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "type",
+      "text": "Heading"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "click",
+      "at": [
+        650,
+        560
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Heading"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "6-text-style",
+      "note": "the saved style's own settings in the Library: Font, Size and Weight wear the panel's dropdown face"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-text-style"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Font",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Georgia"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Font",
+      "reads": "Georgia"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Size",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "48 px"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "48 px"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Weight",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Bold"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Bold"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-text-style-picked"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Weight",
+      "reads": "Regular"
+    },
+    {
+      "do": "expect",
+      "menu": "Size",
+      "reads": "48 px"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "8-text-style-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "click",
+      "at": [
+        360,
+        220
+      ]
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Place",
+      "reads": "Default"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Place",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Disabled"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Place",
+      "reads": "Disabled"
+    },
+    {
+      "do": "describe",
+      "stage": "9-place",
+      "note": "the shelf's Place row, the panel's dropdown, set to Disabled with the pointer"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-place"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        760,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "click",
+      "at": [
+        760,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "scrollPanel",
+      "by": -900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Variant",
+      "reads": "Disabled"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Variant",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Default"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Variant",
+      "reads": "Default"
+    },
+    {
+      "do": "describe",
+      "stage": "10-variant",
+      "note": "the copy's Variant row, the panel's dropdown, switched back to Default with the pointer"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-variant"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Variant",
+      "reads": "Disabled"
+    },
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1320,
+      "height": 920
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        240
+      ],
+      "to": [
+        420,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        330
+      ],
+      "to": [
+        560,
+        390
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        620,
+        420
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        240,
+        460
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Quality"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        180
+      ],
+      "to": [
+        700,
+        540
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "group"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "makeComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Row"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "Originals live in the Library since 2026-10-04, so the original is edited in its own space.",
+      "do": "action",
+      "action": "editPickedComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "exposeChoice"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "pickFirstComponent"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "dropComponent",
+      "at": [
+        950,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "click",
+      "at": [
+        880,
+        205
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "11-choice-copy"
+    },
+    {
+      "do": "expect",
+      "reads": "Rectangle",
+      "control": "Shape"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Shape",
+      "at": [
+        "centre",
+        "start",
+        "end"
+      ],
+      "choose": "Rectangle 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "reads": "Rectangle 2",
+      "control": "Shape"
+    },
+    {
+      "do": "describe",
+      "stage": "11-choice",
+      "note": "the copy's Shape choice, the panel's dropdown, switched to the second rectangle with the pointer"
+    },
+    {
+      "do": "snapshot",
+      "name": "11-choice"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "reads": "Rectangle",
+      "control": "Shape"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "12-choice-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    }
+  ]
+}
