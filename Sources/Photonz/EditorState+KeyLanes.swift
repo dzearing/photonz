@@ -370,14 +370,16 @@ extension EditorState {
         return max(0, Int(span.rounded()))
     }
 
-    /// A playhead dragged across the timeline: pulled onto a key within
-    /// `reachMS` of the hand, the way Premiere's playhead catches keyframes.
+    /// A playhead dragged across the timeline: pulled onto a key or a marker
+    /// within `reachMS` of the hand, the way Premiere's playhead catches
+    /// keyframes and markers.
     func dragPlayhead(toMS ms: Int, snappingWithinMS reachMS: Int) {
         guard reachMS > 0, let document = shownDocument ?? document else {
             dragPlayhead(toMS: ms)
             return
         }
-        dragPlayhead(toMS: KeySnap.snapped(ms, to: document.keyMoments(layerIDs: nil), withinMS: reachMS))
+        dragPlayhead(toMS: KeySnap.snapped(ms, to: document.playheadSnapMoments(keysOf: nil),
+                                           withinMS: reachMS))
     }
 
     /// The layers ⇧K and ⌥K step across: the picked one, or every layer.

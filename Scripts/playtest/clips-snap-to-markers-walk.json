@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/clips-snap-to-markers-walk",
+  "seed": "Markers are something to cut and arrange to, as in Premiere: at Next defaults with no flag set, M drops a marker, a clip slid near it catches on it and the capsule under the drag names it, the playhead dragged along the ruler catches on it, and the marker itself drags along the ruler to a new moment, catching on the playhead, as one step to undo. A click on it still puts the playhead there.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "m" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 2000, "snapping": true },
+    { "do": "describe", "stage": "0-marker-dropped", "note": "the eight second sample at Next defaults: the playhead put at 0:02 on the ruler and M dropped a marker there, the orange flag hanging from the ruler" },
+    { "do": "clickRuler", "seconds": 0.5 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "0-a-marker-at-two-seconds" },
+
+    { "do": "dragClip", "clip": "Tutorial Sample", "byMS": 1970, "hold": "1-clip-caught-on-the-marker" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 2.0, "within": 0.001, "count": 1 },
+    { "do": "describe", "stage": "1-clip-caught", "note": "THE FIRST TEST: the clip slid right until its start was 30 ms short of the marker, held there for the picture, and let go. With snapping on it caught on the marker, the capsule under the drag said 'caught on a marker at 0:02', and the clip starts exactly at 0:02" },
+    { "do": "snapshot", "name": "1-clip-landed-on-the-marker" },
+
+    { "do": "dragRuler", "from": 0.5, "to": 1.97 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 2000 },
+    { "do": "describe", "stage": "2-playhead-caught", "note": "THE SECOND TEST: the playhead dragged along the ruler from 0:00.5 to 30 ms short of the marker caught on it, and stands exactly at 0:02" },
+
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "snapping": false },
+    { "do": "dragRuler", "from": 2.0, "to": 1.97 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 1970, "markerAtMS": 2000 },
+    { "do": "describe", "stage": "3-snapping-off", "note": "S turned snapping off: the same drag of the playhead now lands where the hand let go, 30 ms short of the marker, and nothing catches" },
+    { "do": "key", "key": "s" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "snapping": true },
+
+    { "do": "clickRuler", "seconds": 6.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "dragRuler", "from": 2.0, "to": 5.97, "hold": "4-marker-in-the-hand" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 6000, "playheadMS": 6000 },
+    { "do": "describe", "stage": "4-marker-moved", "note": "THE THIRD TEST: the playhead parked at 0:06, and the marker pressed at 0:02 and dragged along the ruler to 30 ms short of it: it caught on the playhead and stands at 0:06, and the playhead did not move" },
+    { "do": "snapshot", "name": "4-marker-moved-to-the-playhead" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 2000 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 2.0, "within": 0.001, "count": 1 },
+    { "do": "describe", "stage": "5-one-undo", "note": "one undo put the marker back at 0:02 and left the clip where it was: the whole marker drag was one step" },
+
+    { "do": "dragRuler", "from": 2.02, "to": 2.02 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 2000, "markerAtMS": 2000 },
+    { "do": "describe", "stage": "6-click-on-the-marker", "note": "THE FOURTH TEST: a click on the marker, 20 ms to its right, put the playhead exactly on it at 0:02 and left the marker where it was" },
+    { "do": "snapshot", "name": "6-click-put-the-playhead-on-it" }
+  ]
+}

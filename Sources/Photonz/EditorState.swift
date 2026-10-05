@@ -1721,6 +1721,9 @@ final class EditorState {
     /// The range being drawn or reshaped on the ruler while the hand is down,
     /// which the band shows; written to the In and the Out on letting go.
     var rulerRangeDraft: Range<Int>?
+    /// A marker being dragged along the ruler while the hand is down, which
+    /// the ruler draws where it would land; moved there on letting go.
+    var rulerMarkerDraft: RulerMarkerDraft?
     /// The range last drawn on the ruler, which is the thing in hand for as
     /// long as the marks stay on it and nothing else is picked.
     var rulerRangeInHand: Range<Int>?

@@ -490,8 +490,9 @@ struct TimelineDock: View {
     }
 
     /// A press on the ruler (`EditorState+RulerRange`): on the playhead it
-    /// scrubs, on an end of the marked stretch it moves that end, anywhere
-    /// else a drag draws a range and a click moves the playhead.
+    /// scrubs, on an end of the marked stretch it moves that end, on a marker
+    /// it moves the marker, anywhere else a drag draws a range and a click
+    /// moves the playhead.
     private func rulerScrub(laneWidth: CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
@@ -878,9 +879,12 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
                                       hasIn: drawing || editorState.document?.markInMS != nil,
                                       hasOut: drawing || editorState.document?.markOutMS != nil)
                 }
+                // A marker in the hand is drawn where it would land.
+                let draft = editorState.rulerMarkerDraft
                 ForEach(editorState.document?.markers ?? []) { marker in
                     TimelineMarkerFlag()
-                        .offset(x: x(marker.atMS) - TimelineMarkerFlag.width / 2)
+                        .offset(x: x(draft?.id == marker.id ? draft?.atMS ?? marker.atMS : marker.atMS)
+                                    - TimelineMarkerFlag.width / 2)
                 }
             }
             .frame(width: laneWidth, height: height, alignment: .topLeading)
@@ -894,12 +898,17 @@ private struct TimelineRulerRow<Scrub: Gesture>: View {
             case .active(let point):
                 let ms = TimelineDock.rulerMS(point.x, laneWidth, ruler)
                 pointerMS = ms
-                // Over an end of the band the pointer says it can be dragged.
+                // Over an end of the band or a marker the pointer says it can
+                // be dragged.
                 let grip = RulerRange.grip(atMS: ms, playheadMS: editorState.documentTimeMS,
                                            markInMS: editorState.document?.markInMS,
                                            markOutMS: editorState.document?.markOutMS,
+                                           markers: editorState.document?.markers ?? [],
                                            reachMS: TimelineDock.rulerGrabMS(laneWidth, ruler))
-                showEdgeCursor(grip == .inEdge || grip == .outEdge)
+                switch grip {
+                case .inEdge, .outEdge, .marker: showEdgeCursor(true)
+                case .playhead, .newRange: showEdgeCursor(false)
+                }
             case .ended:
                 showEdgeCursor(false)
             }

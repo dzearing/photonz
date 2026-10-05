@@ -1,0 +1,31 @@
+{
+  "feature": "Clips snap to markers, and a marker drags to a new moment",
+  "epic": "video-cutting",
+  "task": "clips-snap-to-markers-and-a-marker-drags-to-a-ne",
+  "summary": "Markers now work like Premiere's. A clip slid or trimmed near a marker catches on it, and so does the playhead dragged along the ruler. A marker put down in the wrong place can be dragged along the ruler to a new moment, catching on cuts and the playhead, as one undo step.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording; snapping (the magnet, S) is on by default.",
+  "switched": {},
+  "try": [
+    { "do": "Click the ruler at about 0:02 and press M to drop a marker there." },
+    { "do": "Click the ruler further left, then drag the clip right until its start nears the marker.", "shot": "2026-10-05-markers-1-clip-caught-sc.png" },
+    { "do": "Drag the clip's right edge in toward the marker and watch it catch there." },
+    { "do": "Drag the playhead along the ruler past the marker; it catches on it." },
+    { "do": "Park the playhead at 0:06, then press the marker's flag and drag it toward the playhead.", "shot": "2026-10-05-markers-2-marker-in-hand-sc.png" },
+    { "do": "Press ⌘Z once: the marker goes back where it was.", "shot": "2026-10-05-markers-3-dragged-by-hand-sc.png" },
+    { "do": "Click a marker's flag: the playhead jumps exactly onto it." },
+    { "do": "Press S to turn snapping off and repeat a drag: nothing catches on the marker." }
+  ],
+  "evaluate": [
+    "Does a clip catching on a marker feel like the same pull it gets from the playhead, no stronger and no weaker?",
+    "When the playhead is standing on a marker, a press there takes the playhead (Premiere's rule). Is that what you expect, or should the marker win?",
+    "Does the left-right arrow over a marker's flag tell you it can be dragged?",
+    "Is the green catch line enough to tell you a clip caught on a marker, or do you want the words beside it?"
+  ],
+  "rough": [
+    "No mock draws markers being dragged or caught on, so Premiere is the reference here.",
+    "The words 'caught on a marker at 0:02' are in the bar's spoken readout (what VoiceOver and the walks read), not drawn on screen. That is how every catch works today, the playhead's included: on screen it is the green catch line.",
+    "A marker just dropped with M sits under the playhead, and a press there drags the playhead, as in Premiere. To drag that marker you move the playhead off it first.",
+    "A marker dropped onto another becomes one marker, since markers have no names yet and two on one frame are the same mark.",
+    "The marker drag shows no capsule with its time while it moves, the same as dragging an end of the In/Out band."
+  ]
+}

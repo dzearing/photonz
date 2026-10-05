@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/drag-a-marker-by-hand-walk",
+  "seed": "A marker on the ruler under a real pointer, at Next defaults with no flag set: pressed on its flag and dragged, it moves to where the pointer let go, as one step to undo. The ruler is about 194 pt a second from 0:00 at x 160 in a window this size (measured off clips-snap-to-markers-walk's pictures).",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "m" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "clickRuler", "seconds": 6.5 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 2000, "playheadMS": 6500 },
+    { "do": "describe", "stage": "0-marker-at-two", "note": "M dropped a marker at 0:02 and the playhead was parked at 0:06.5, out of the way" },
+    { "do": "windowDrag", "from": [549, 858], "to": [937, 858], "steps": 12, "hold": "1-marker-under-the-pointer" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 4000, "withinMS": 60, "playheadMS": 6500 },
+    { "do": "describe", "stage": "1-dragged-by-hand", "note": "a real press on the marker's flag at 0:02, dragged along the ruler to about 0:04 and let go: the marker moved there, the playhead stayed at 0:06.5, and no range was drawn" },
+    { "do": "expectTimeline", "hasIn": false, "hasOut": false },
+    { "do": "snapshot", "name": "1-marker-dragged-by-hand" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "markers": 1, "markerAtMS": 2000 },
+    { "do": "describe", "stage": "2-one-undo", "note": "one undo put the marker back at 0:02" }
+  ]
+}

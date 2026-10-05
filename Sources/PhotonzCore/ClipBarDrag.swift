@@ -296,7 +296,8 @@ public struct ClipBarDrag: Hashable, Sendable {
 extension PhotonzDocument {
 
     /// Everything on the timeline a clip's edge can land on: the two ends of
-    /// the document, the playhead, and every other clip's ends and joins.
+    /// the document, the playhead, every marker, and every other clip's ends
+    /// and joins.
     ///
     /// Its own joins are NOT in here. A seam catching on the seam next to it
     /// would make the piece between them collapse to nothing the moment you
@@ -313,6 +314,12 @@ extension PhotonzDocument {
         if end > 0 { edges.append(MotionStripEdge(ms: end, name: ClipBarCopy.theEnd, isStart: false)) }
         if let playheadMS {
             edges.append(MotionStripEdge(ms: playheadMS, name: ClipBarCopy.thePlayhead, isStart: true))
+        }
+        // A marker is where an editor noted a moment to cut to, so a clip
+        // catches on it as it would in Premiere or Final Cut.
+        for marker in markers {
+            edges.append(MotionStripEdge(ms: marker.atMS, name: ClipBarCopy.marker(atMS: marker.atMS),
+                                         isStart: true))
         }
         for layer in allLayers where !layerIDs.contains(layer.id) {
             guard let time = layer.time else { continue }
@@ -362,6 +369,12 @@ public enum ClipBarCopy {
     public static let theStart = "the start"
     public static let theEnd = "the end"
     public static let thePlayhead = "the playhead"
+
+    /// `a marker at 0:12`: a marker has no name of its own, so it is named
+    /// by the moment it marks.
+    public static func marker(atMS ms: Int) -> String {
+        "a marker at \(MotionStripRuler.timecode(Double(ms)))"
+    }
 
     /// `2.4s`, the way a length is said on the bar: seconds with one decimal,
     /// because what it answers is how much there is rather than when.

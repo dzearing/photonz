@@ -51,6 +51,40 @@ extension PhotonzDocument {
         return true
     }
 
+    /// Move a marker to another moment, kept on the ruler and the markers kept
+    /// in order. Dropped on another marker the two become one, the way two
+    /// markers on one frame always are. False where nothing changed.
+    @discardableResult
+    public mutating func moveMarker(_ id: UUID, toMS ms: Int) -> Bool {
+        guard let index = markers.firstIndex(where: { $0.id == id }) else { return false }
+        let at = onTheRuler(ms)
+        guard markers[index].atMS != at else { return false }
+        if markers.contains(where: { $0.id != id && $0.atMS == at }) {
+            markers.remove(at: index)
+            return true
+        }
+        markers[index].atMS = at
+        markers.sort { $0.atMS < $1.atMS }
+        return true
+    }
+
+    /// What a playhead dragged along the ruler catches on: every key on these
+    /// layers (every layer where nil) and every marker.
+    public func playheadSnapMoments(keysOf layerIDs: [UUID]?) -> [Int] {
+        Array(Set(keyMoments(layerIDs: layerIDs)).union(markers.map(\.atMS))).sorted()
+    }
+
+    /// What a marker dragged along the ruler catches on: every edit point,
+    /// both ends of the video and the playhead. Never another marker, which it
+    /// would only become.
+    public func markerSnapMoments(playheadMS: Int?) -> [Int] {
+        var moments = Set(editPointMoments())
+        moments.insert(0)
+        moments.insert(documentDurationMS)
+        if let playheadMS { moments.insert(playheadMS) }
+        return moments.sorted()
+    }
+
     /// The marker the playhead is standing on: the nearest one within
     /// `withinMS` of `ms`, nil when none is that close. What Sequence ▸ Remove
     /// Marker takes away, the menu bar having no pointer to aim with.

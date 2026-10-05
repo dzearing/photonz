@@ -1901,9 +1901,10 @@ private final class Run {
             editor.beginRulerPress(atMS: from, reachMS: reach)
             let grip = editor.rulerPress.map { "\($0.grip)" } ?? "nothing"
             let steps = 8
+            // A press let go where it went down is a click, as under a hand.
             for step in 1...steps {
                 let ms = from + (to - from) * step / steps
-                editor.dragRulerPress(toMS: ms, moved: true, snapMS: snap)
+                editor.dragRulerPress(toMS: ms, moved: from != to, snapMS: snap)
                 await sleep(0.03)
             }
             if let hold {
@@ -1916,8 +1917,11 @@ private final class Run {
             }
             editor.endRulerPress(atMS: to, moved: from != to)
             await sleep(0.2)
+            let markers = editor.document?.markers.map { "\($0.atMS)" } ?? []
             let marks = [editor.document?.markInMS.map { "In \($0) ms" },
-                         editor.document?.markOutMS.map { "Out \($0) ms" }].compactMap { $0 }
+                         editor.document?.markOutMS.map { "Out \($0) ms" },
+                         markers.isEmpty ? nil : "markers at \(markers.joined(separator: ", ")) ms"]
+                .compactMap { $0 }
             note(number, step.name, "pressed the ruler at \(EditorState.timecode(ms: from)) (took hold of "
                  + "\(grip)) and let go at \(EditorState.timecode(ms: to)): "
                  + (marks.isEmpty ? "no marks" : marks.joined(separator: ", "))
@@ -2248,8 +2252,8 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
-        case .dragClip(let clip, let byMS, let modifiers):
-            try await dragClip(clip, byMS: byMS, modifiers: modifiers, number: number)
+        case .dragClip(let clip, let byMS, let modifiers, let hold):
+            try await dragClip(clip, byMS: byMS, modifiers: modifiers, hold: hold, number: number)
 
         case .dragTiming(let bar, let grab, let byMS, let hold, let cancel, let cancelBy):
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
@@ -6820,7 +6824,7 @@ private final class Run {
     /// carried along and let go, through the calls the clip's own press makes
     /// (`TimelineTrackSelect`, `ClipPiecesBar.carry`).
     private func dragClip(_ clip: String, byMS: Int, modifiers: [PlaytestModifier],
-                          number: Int) async throws {
+                          hold: String? = nil, number: Int) async throws {
         let editor = try requireEditor()
         guard editor.isMotionStripOpen else {
             throw Failure(description: "the window is in View mode, so no clip is on "
@@ -6856,12 +6860,24 @@ private final class Run {
             editor.updateClipBarDrag(byMS: Int((Double(byMS) * fraction).rounded()))
             await sleep(0.05)
         }
+        // What the bar caught on with the hand still down: the words the
+        // capsule under the drag says.
+        let caught = editor.clipBarSnap.map { ", " + ClipBarCopy.caught(on: $0) } ?? ", caught on nothing"
+        if let hold {
+            await sleep(0.35)
+            let window = try requireWindow()
+            if let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+            }
+        }
         editor.commitClipBarDrag()
         await sleep(0.1)
         let picked = editor.document?.allLayers
             .filter { editor.isLayerSelected($0.id) }.map(\.name) ?? []
         note(number, "dragClip", "pressed \(layer.name) with \(TimelineDock.toolReading(editor.timelineTool))"
-             + (byMS == 0 ? "" : ", carried \(byMS) ms") + "; picked: \(picked.joined(separator: ", "))",
+             + (byMS == 0 ? "" : ", carried \(byMS) ms\(caught)") + (hold.map { ", held \($0).png" } ?? "")
+             + "; picked: \(picked.joined(separator: ", "))",
              state: describe())
     }
 
@@ -12864,6 +12880,13 @@ private final class Run {
         }
         if let want = claim.markers, want != (document?.markers.count ?? 0) {
             wrong.append("there are \(document?.markers.count ?? 0) markers, not \(want)")
+        }
+        if let want = claim.markerAtMS {
+            let at = document?.markers.map(\.atMS) ?? []
+            if !at.contains(where: { abs($0 - want) <= claim.withinMS }) {
+                wrong.append("no marker is at \(want) ms; "
+                    + (at.isEmpty ? "there are none" : "they are at " + at.map { "\($0) ms" }.joined(separator: ", ")))
+            }
         }
         var drawn = ""
         if claim.rulerMatches == true || claim.rulerAtPlayhead != nil {

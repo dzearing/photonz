@@ -7,10 +7,11 @@ import Foundation
 // In and the Out ARE the range, so the keys, the Mark menu, Extract and Lift and
 // an export all read the same two numbers (`TimelineMarks.swift`).
 //
-// A press on the ruler means one of four things, decided by where it lands:
+// A press on the ruler means one of five things, decided by where it lands:
 //
 // - on an end of the marked stretch: that end moves (the band's handles);
 // - on the playhead: it scrubs, the way the ruler always has;
+// - on a marker: the marker moves, and a click puts the playhead on it;
 // - anywhere else: a new range, from where the press landed to where the hand
 //   lets go. A press that never moves is a click, which puts the playhead
 //   there and, outside the marked stretch, clears it; a double-click there
@@ -28,6 +29,8 @@ public enum RulerGrip: Hashable, Sendable {
     case inEdge
     /// The end of the marked stretch.
     case outEdge
+    /// A marker: a drag moves it, a click puts the playhead on it.
+    case marker(UUID)
     /// Nothing yet: a drag draws a new range, a click moves the playhead.
     case newRange
 }
@@ -39,15 +42,29 @@ public enum RulerRange {
     ///
     /// An end of the stretch wins over the playhead: its handle is what is
     /// drawn under the pointer, and the transport's scrub bar still scrubs.
+    /// The playhead wins over a marker, as in Premiere, so a marker just
+    /// dropped under it with M never stops the playhead being dragged off it;
+    /// the nearest marker wins over drawing a range.
     public static func grip(atMS ms: Int, playheadMS: Int, markInMS: Int?, markOutMS: Int?,
-                            reachMS: Int) -> RulerGrip {
+                            markers: [TimelineMarker] = [], reachMS: Int) -> RulerGrip {
         let reach = max(1, reachMS)
         var edges: [(grip: RulerGrip, distance: Int)] = []
         if let markInMS, abs(ms - markInMS) <= reach { edges.append((.inEdge, abs(ms - markInMS))) }
         if let markOutMS, abs(ms - markOutMS) <= reach { edges.append((.outEdge, abs(ms - markOutMS))) }
         if let nearest = edges.min(by: { $0.distance < $1.distance }) { return nearest.grip }
         if abs(ms - playheadMS) <= reach { return .playhead }
+        if let marker = markers.filter({ abs(ms - $0.atMS) <= reach })
+            .min(by: { abs(ms - $0.atMS) < abs(ms - $1.atMS) }) {
+            return .marker(marker.id)
+        }
         return .newRange
+    }
+
+    /// Where a marker dragged to `ms` lands: snapped to the nearest of
+    /// `snapTo` within `reachMS`, and never off either end of the ruler.
+    public static func markerMoved(toMS ms: Int, lengthMS: Int,
+                                   snapTo moments: [Int] = [], reachMS: Int = 0) -> Int {
+        min(max(0, KeySnap.snapped(ms, to: moments, withinMS: reachMS)), max(0, lengthMS))
     }
 
     /// The range a drag from `anchor` to `ms` draws: earliest end first, on the
@@ -76,7 +93,7 @@ public enum RulerRange {
         case .outEdge:
             let end = max(to, range.lowerBound + LayerTime.shortestMS)
             return range.lowerBound..<min(length, end)
-        case .playhead, .newRange:
+        case .playhead, .marker, .newRange:
             return range
         }
     }

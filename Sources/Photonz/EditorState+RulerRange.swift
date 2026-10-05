@@ -5,8 +5,9 @@ import PhotonzCore
 //
 // Drag along the ruler and the stretch dragged over is marked across every
 // track, the In and the Out set together as one undo step. A press on the
-// playhead still scrubs, a press on either end of the band moves that end,
-// and a click moves the playhead and, outside the band, lets it go. A
+// playhead still scrubs, a press on either end of the band moves that end, a
+// press on a marker drags the marker (one undo step, catching on the cuts and
+// the playhead), and a click moves the playhead and, outside the band, lets it go. A
 // double-click beside the marks lets them go whoever set them (user
 // 2026-09-29), and so does Escape while the timeline has the keyboard.
 //
@@ -17,6 +18,13 @@ import PhotonzCore
 // down, and the marks stay on the ruler as marks.
 
 extension EditorState {
+
+    /// A marker being dragged along the ruler: which, and where it would land
+    /// if let go now. Drawn there in place of the marker itself.
+    struct RulerMarkerDraft: Equatable {
+        let id: UUID
+        let atMS: Int
+    }
 
     /// What one press on the ruler is doing: what it took hold of, where it
     /// landed, and the marked stretch it started from.
@@ -41,8 +49,9 @@ extension EditorState {
         guard documentHasTime, let document else { return }
         let grip = RulerRange.grip(atMS: ms, playheadMS: documentTimeMS,
                                    markInMS: document.markInMS, markOutMS: document.markOutMS,
-                                   reachMS: reachMS)
+                                   markers: document.markers, reachMS: reachMS)
         rulerPress = RulerPress(grip: grip, atMS: ms, range: document.markedRangeMS)
+        rulerMarkerDraft = nil
         if grip == .playhead { beginPlayheadDrag() }
     }
 
@@ -57,16 +66,22 @@ extension EditorState {
         }
         let moved = press.hasMoved
         let length = document.documentDurationMS
-        let moments = snapMS > 0 ? document.rangeSnapMoments() : []
         switch press.grip {
         case .playhead:
             dragPlayhead(toMS: ms, snappingWithinMS: snapMS)
+        case .marker(let id):
+            guard moved else { return }
+            let moments = snapMS > 0 ? document.markerSnapMoments(playheadMS: documentTimeMS) : []
+            rulerMarkerDraft = RulerMarkerDraft(id: id, atMS: RulerRange.markerMoved(
+                toMS: ms, lengthMS: length, snapTo: moments, reachMS: snapMS))
         case .inEdge, .outEdge:
             guard moved, let range = press.range else { return }
+            let moments = snapMS > 0 ? document.rangeSnapMoments() : []
             rulerRangeDraft = RulerRange.moving(press.grip, of: range, toMS: ms, lengthMS: length,
                                                 snapTo: moments, reachMS: snapMS)
         case .newRange:
             guard moved else { return }
+            let moments = snapMS > 0 ? document.rangeSnapMoments() : []
             rulerRangeDraft = RulerRange.drawn(fromMS: press.atMS, toMS: ms, lengthMS: length,
                                                snapTo: moments, reachMS: snapMS)
         }
@@ -81,12 +96,22 @@ extension EditorState {
         rulerPress = nil
         let draft = rulerRangeDraft
         rulerRangeDraft = nil
+        let markerDraft = rulerMarkerDraft
+        rulerMarkerDraft = nil
         switch press.grip {
         case .playhead:
             endPlayheadDrag()
             // The first click of a double-click put the playhead under the
             // pointer, so the second lands on it: still a double-click.
             if !moved, clicks >= 2 { clearMarksForADoubleClick(atMS: ms) }
+        case .marker(let id):
+            if moved {
+                if let markerDraft, markerDraft.id == id { moveMarker(id, toMS: markerDraft.atMS) }
+            } else {
+                // A click on a marker puts the playhead exactly on it, not a
+                // few points beside it where the pointer happened to land.
+                clickRuler(atMS: document?.markers.first { $0.id == id }?.atMS ?? ms, clicks: clicks)
+            }
         case .inEdge, .outEdge, .newRange:
             if moved {
                 if let draft { markRulerRange(draft) }
@@ -117,6 +142,12 @@ extension EditorState {
         guard documentHasTime, let document,
               document.rulerClickClearsMarks(atMS: ms, clicks: 2, rangeInHand: false) else { return }
         clearMarkInOut()
+    }
+
+    /// A marker let go of on the ruler: moved there as one step to undo.
+    func moveMarker(_ id: UUID, toMS ms: Int) {
+        guard documentHasTime, var trial = document, trial.moveMarker(id, toMS: ms) else { return }
+        perform { $0.moveMarker(id, toMS: ms) }
     }
 
     /// Something on the timeline is in the hand's grip: Escape is calling

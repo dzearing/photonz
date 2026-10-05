@@ -2954,8 +2954,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// hand, carried `byMS` along (nought is a click) and let go. It goes in
     /// through the same editor calls the clip's own press makes, the way
     /// `dragTiming` does for the strip. `modifiers` are the keys held at the
-    /// press: ⇧ keeps Track Select Forward to the clip's own track.
-    case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier])
+    /// press: ⇧ keeps Track Select Forward to the clip's own track. `hold`
+    /// photographs the window with the clip still in the hand, so the catch
+    /// and the words under it are in the picture.
+    case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier], hold: String? = nil)
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
     /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
@@ -4364,7 +4366,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dragClip":
             self = .dragClip(clip: try f.string("clip"),
                              byMS: Int((try f.optionalNumber("byMS") ?? 0).rounded()),
-                             modifiers: try f.modifiers())
+                             modifiers: try f.modifiers(),
+                             hold: try f.optionalString("hold"))
         case "dragTiming":
             let grab: PlaytestTimingGrab = if fields["grab"] == nil {
                 .body
@@ -4915,7 +4918,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 rowScale: try f.optionalNumber("rowScale"),
                 dockHeight: try f.optionalNumber("dockHeight"),
                 arrived: fields["arrived"] as? Bool,
-                trackColumn: try f.optionalNumber("trackColumn"))
+                trackColumn: try f.optionalNumber("trackColumn"),
+                markerAtMS: try f.optionalNumber("markerAtMS").map { Int($0) })
             if let height = claim.dockHeight, height <= 0 {
                 throw f.invalid("dockHeight", "the timeline dock stands some points tall, not \(height)")
             }
@@ -5345,6 +5349,8 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     public var hasIn: Bool?
     public var hasOut: Bool?
     public var markers: Int?
+    /// A marker stands at this moment, within `withinMS`.
+    public var markerAtMS: Int?
     /// Every number on the ruler is DRAWN over the moment it names, read off
     /// where the numbers really landed on screen rather than off the ruler's
     /// sums. Zoomed in on 2026-09-24 every number sat seconds left of its
@@ -5402,7 +5408,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 timelineTool: TimelineTool? = nil, tracks: [String]? = nil,
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
                 outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
-                dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil) {
+                dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil,
+                markerAtMS: Int? = nil) {
+        self.markerAtMS = markerAtMS
         self.dockHeight = dockHeight
         self.trackColumn = trackColumn
         self.arrived = arrived
@@ -5434,7 +5442,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
 
     public var claimsSomething: Bool {
         open != nil || mode != nil || tool != nil || timelineTool != nil || snapping != nil || playheadMS != nil || keyboard != nil || rate != nil || blade != nil || markInMS != nil
-            || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil
+            || markOutMS != nil || hasIn != nil || hasOut != nil || markers != nil || markerAtMS != nil
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
             || zoomScale != nil || rowScale != nil || dockHeight != nil || arrived != nil

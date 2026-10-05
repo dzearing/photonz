@@ -20680,3 +20680,10 @@ Next: the first editor window's ~200 ms first build
 - Sequence ▸ Add Media at Playhead… replaces Add Sound…: a video lands at the playhead on the lowest picture track free for its length with nothing playing over it (else a new track over the topmost busy one), its sound linked under it; a sound lands as Add Sound did. `PhotonzDocument.pictureLandingAtPlayhead` (ClipLanding.swift), start snaps onto a clip edge within a frame because the playhead rests on the last millisecond.
 - Walk: `Scripts/playtest/add-media-at-playhead-walk.json` (front, no flags). Audit: `queue/audits/2026-10-05-add-media-at-playhead.json`.
 - Open: whether the playhead should move to the new clip's end, and whether the row earns a key.
+
+## 2026-10-05 — Clips snap to markers, and a marker drags to a new moment
+
+- Markers are now snap edges for clip moves and trims (`clipBarEdges`, named "a marker at 0:12"), and the playhead dragged on the ruler catches on markers as well as keys (`playheadSnapMoments`).
+- A press on a marker's flag drags it (`RulerGrip.marker`, `moveMarker`, one undo step), catching on cuts, clip ends, both ends and the playhead; a click on it puts the playhead exactly on it. The playhead still wins over a marker under it, as in Premiere; In/Out band ends win over both.
+- Walks: `clips-snap-to-markers-walk` (editor-driven, all four behaviours) and `drag-a-marker-by-hand-walk` (real pointer `windowDrag`). New walk fields: `dragClip.hold`, `expectTimeline.markerAtMS`; `dragRuler` with from == to is now a click.
+- Next: nothing open on this; marker names stay out of scope.
