@@ -549,7 +549,11 @@ extension EditorState {
                 ViewBuildMeter.shared.built(.layerThumbnail)
                 #endif
                 let image = await Task.detached(priority: .utility) {
-                    renderer.thumbnail(for: id, in: doc, store: store, maxDimension: 80)
+                    // A quarter as tall as wide at the least, so a level line
+                    // keeps a stroke you can see in its slot
+                    // (`DocumentRenderer.thumbnail`).
+                    renderer.thumbnail(for: id, in: doc, store: store, maxDimension: 80,
+                                       minimumAspect: 0.25)
                 }.value
                 self.thumbnailsInFlight.remove(hash)
                 if let image { self.thumbnailCache[id] = (hash, image) }

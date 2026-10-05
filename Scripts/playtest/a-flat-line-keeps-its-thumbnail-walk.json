@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/a-flat-line-keeps-its-thumbnail",
+  "setup": {"forget": ["shapes", "panel", "tools"]},
+  "steps": [
+    {"do": "blank", "canvasWidth": 1000, "canvasHeight": 800, "width": 1400, "height": 1000},
+    {"do": "wait", "seconds": 1},
+    {"do": "expectLayers", "count": 1},
+    {"do": "tool", "tool": "line"},
+    {"do": "drag", "from": [120, 200], "to": [520, 200], "steps": 8},
+    {"do": "wait", "seconds": 0.4},
+    {"do": "expectLayers", "count": 2},
+    {"do": "tool", "tool": "line"},
+    {"do": "drag", "from": [700, 120], "to": [700, 560], "steps": 8},
+    {"do": "wait", "seconds": 0.4},
+    {"do": "expectLayers", "count": 3},
+    {"do": "tool", "tool": "select"},
+    {"do": "appearance", "value": "dark"},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "snapshot", "name": "1-dark"},
+    {"do": "appearance", "value": "light"},
+    {"do": "wait", "seconds": 0.6},
+    {"do": "snapshot", "name": "2-light"},
+    {"do": "appearance", "value": "dark"}
+  ]
+}

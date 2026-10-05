@@ -1,0 +1,24 @@
+{
+  "feature": "A level line shows in its layer row thumbnail",
+  "epic": "measure-redline",
+  "summary": "A line drawn level or upright now shows its stroke in the layers list, as heavy as a sloped line's, instead of an empty grey tile.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Pick the Line tool and draw a level line with Shift held.", "shot": "2026-10-04-flat-line-thumbnail-3-beside-sloped-sc.png" },
+    { "do": "Look at its row in Layers: a thin stroke runs across the middle of the tile." },
+    { "do": "Draw a straight up and down line and look at its row.", "shot": "2026-10-04-flat-line-thumbnail-1-dark-sc.png" },
+    { "do": "Switch the Mac to Light appearance and look at both rows again.", "shot": "2026-10-04-flat-line-thumbnail-2-light-sc.png" },
+    { "do": "Draw a sloped line and an arrow and compare their rows with the level one." }
+  ],
+  "evaluate": [
+    "Can you tell at a glance that the level line's row is a line?",
+    "Does the level line's stroke look as heavy as a sloped line's?",
+    "Do sloped lines, arrows and measurements look the same as before?"
+  ],
+  "rough": [
+    "The stroke in every line thumbnail is about one pixel, because a long line shrunk into a 40 point tile is thin. It now matches sloped lines rather than being drawn heavier.",
+    "Level measurements also gained a visible caliper in their rows, a side effect of the same fix.",
+    "No mock covers the layer row thumbnail of a line."
+  ]
+}

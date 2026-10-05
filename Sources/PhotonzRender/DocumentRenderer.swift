@@ -875,8 +875,15 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// One layer rendered alone and downscaled for the layers panel. Renders
     /// the sprite at full size (so text/annotations rasterize at their true
     /// layout) and resamples with CoreGraphics. Never upscales.
+    ///
+    /// `minimumAspect` (short side over long side) centres a picture flatter
+    /// than that on a clear band. A line drawn level has a box a few points
+    /// tall and hundreds wide, which shrinks to one row of pixels; a slot that
+    /// fits it then shows half a point of it, an empty grey tile beside a row
+    /// called Line. With the band the stroke keeps the thickness a sloped line
+    /// gets, and its tile looks the same as theirs.
     public func thumbnail(for id: UUID, in document: PhotonzDocument, store: ImageStore,
-                          maxDimension: CGFloat) -> CGImage? {
+                          maxDimension: CGFloat, minimumAspect: CGFloat? = nil) -> CGImage? {
         // Room for a line that sits ON or PAST the layer's edge, and no more:
         // a tile drawn exactly the size of the box showed an outline-only shape
         // as an empty square the moment its line moved outside
@@ -888,28 +895,36 @@ public final class DocumentRenderer: @unchecked Sendable {
         // honest answer and the useful one — you see the blur you made.
         if let layer = document.detachedLayer(id: id), case .lens = layer.content {
             return resampled(rasterize(region: layer.frame.standardized, of: document, store: store),
-                             maxDimension: maxDimension)
+                             maxDimension: maxDimension, minimumAspect: minimumAspect)
         }
         let outset = document.layer(id: id)?.outlineOutset ?? 0
         guard let sprite = renderSprite(for: id, in: document, store: store,
                                         padding: outset) else { return nil }
-        return resampled(sprite, maxDimension: maxDimension)
+        return resampled(sprite, maxDimension: maxDimension, minimumAspect: minimumAspect)
     }
 
-    /// `image` fitted inside `maxDimension` on its longer side. Never upscales.
-    private func resampled(_ image: CGImage?, maxDimension: CGFloat) -> CGImage? {
+    /// `image` fitted inside `maxDimension` on its longer side, and centred on
+    /// a clear band when it is flatter than `minimumAspect`. Never upscales.
+    private func resampled(_ image: CGImage?, maxDimension: CGFloat,
+                           minimumAspect: CGFloat? = nil) -> CGImage? {
         guard let image else { return nil }
         let scale = min(1, maxDimension / CGFloat(max(image.width, image.height)))
-        guard scale < 1 else { return image }
         let width = max(1, Int((CGFloat(image.width) * scale).rounded()))
         let height = max(1, Int((CGFloat(image.height) * scale).rounded()))
+        // The band, in whole pixels, with the picture on a whole pixel inside
+        // it so a one-pixel stroke stays one solid row rather than two faint ones.
+        let floor = minimumAspect.map { min(1, max(0, $0)) } ?? 0
+        let canvasWidth = max(width, Int((CGFloat(height) * floor).rounded()))
+        let canvasHeight = max(height, Int((CGFloat(width) * floor).rounded()))
+        guard scale < 1 || canvasWidth != width || canvasHeight != height else { return image }
         guard let space = CGColorSpace(name: CGColorSpace.sRGB),
-              let context = CGContext(data: nil, width: width, height: height,
+              let context = CGContext(data: nil, width: canvasWidth, height: canvasHeight,
                                       bitsPerComponent: 8, bytesPerRow: 0,
                                       space: space,
                                       bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else { return nil }
         context.interpolationQuality = .high
-        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        context.draw(image, in: CGRect(x: (canvasWidth - width) / 2, y: (canvasHeight - height) / 2,
+                                       width: width, height: height))
         return context.makeImage()
     }
 
