@@ -34,7 +34,8 @@
     { "do": "describe", "stage": "3-neighbours", "note": "The menus beside it were not touched: only the one that had to shorten something leads with a value." },
     { "do": "expect", "tooltip": "Size", "reads": "The size of this text" },
 
-    { "do": "describe", "stage": "4-two-of-a-kind", "note": "The panel wears the same word on several rows at once, so a claim about one of them says which row it means." },
-    { "do": "expect", "tooltip": "Kind", "in": "Shadow", "present": true }
+    { "do": "describe", "stage": "4-two-of-a-kind", "note": "The panel wears the same word on several rows at once, so a claim about one of them says which row it means. Style is on the text and on its shadow, and each says its own sentence: unnamed finds the text's, in Shadow finds the shadow's. (It was the shadow's Kind until that became two segments, Drop and Inner.)" },
+    { "do": "expect", "tooltip": "Style", "reads": "Save this text as a named style, or use one you already saved" },
+    { "do": "expect", "tooltip": "Style", "in": "Shadow", "reads": "Save this shadow as a named style, or use one you already saved" }
   ]
 }
