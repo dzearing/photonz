@@ -798,6 +798,11 @@ extension CanvasNSView {
             pathEditMouseDragged(to: p, event: event)
             return
         }
+        // A knob inside one of its corners, likewise (`CanvasPathCorners`).
+        if pathCornerDrag != nil {
+            pathCornerMouseDragged(to: p, event: event)
+            return
+        }
         // A box being swept over the points owns the rest of the gesture too:
         // the press that started it landed off the shape, where a rubber band
         // over LAYERS would otherwise have been drawn.
@@ -1207,6 +1212,7 @@ extension CanvasNSView {
                            event: event) {
             return
         }
+        if pathCornerMouseUp(event: event) { return }
         // And the release of a box swept over the points, for the same reason
         // and in the same place: it answers nothing when no sweep is in
         // flight, so every other release is untouched.

@@ -3112,6 +3112,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
     case expectMeasures(count: Int)
+    /// CLAIMS how round a path's corners are, asked of the document: `radius`
+    /// is what every sharp corner draws at (to within `within` points), and
+    /// `rounded` is how many of them are rounded at all. The only way a walk
+    /// can claim a corner knob did anything: a rounded path has exactly the
+    /// points it had before (`PathCornerRounding.swift`). `layer` names the
+    /// path; left off it is the last path in the document. `corner` narrows
+    /// the `radius` claim to the one corner at that place in the path, which
+    /// is how a walk claims ⌥ rounded one corner and left the rest alone.
+    case expectCorners(layer: String?, corner: Int?, radius: CGFloat?, rounded: Int?,
+                       within: CGFloat)
     /// What the document would be WRITTEN as, asked without saving anything.
     ///
     /// `pictured` is how many layers have no vector answer and would ride out
@@ -3741,7 +3751,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -3816,6 +3826,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .panel: "panel"
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
+        case .expectCorners: "expectCorners"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
         case .expectRecording: "expectRecording"
@@ -4543,6 +4554,32 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectClipPictures(clip: try f.string("clip"),
                                        absent: try f.optionalFlag("absent") ?? false, within: within)
+        case "expectCorners":
+            let radius = try f.optionalNumber("radius")
+            let rounded = try f.optionalNumber("rounded")
+            guard radius != nil || rounded != nil else {
+                throw f.invalid("radius", "expectCorners has to claim something: \"radius\" for "
+                    + "how round every corner is drawn, or \"rounded\" for how many are rounded")
+            }
+            if let radius, radius < 0 {
+                throw f.invalid("radius", "a radius is zero or more, not \(radius)")
+            }
+            if let rounded, rounded < 0 || rounded != rounded.rounded() {
+                throw f.invalid("rounded", "a number of corners is a whole number, zero or more, not \(rounded)")
+            }
+            let corner = try f.optionalNumber("corner")
+            if let corner, corner < 0 || corner != corner.rounded() {
+                throw f.invalid("corner", "a corner is named by its point's place in the path, "
+                    + "a whole number from 0, not \(corner)")
+            }
+            if corner != nil, radius == nil {
+                throw f.invalid("corner", "naming a corner is only half a claim: add \"radius\"")
+            }
+            self = .expectCorners(layer: try f.optionalString("layer"),
+                                  corner: corner.map { Int($0) },
+                                  radius: radius.map { CGFloat($0) },
+                                  rounded: rounded.map { Int($0) },
+                                  within: CGFloat(try f.optionalNumber("within") ?? 0.5))
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

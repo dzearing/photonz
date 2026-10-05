@@ -1044,7 +1044,7 @@ extension CanvasNSView {
         }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
             || endpointDrag != nil || endpointHoldLayerID != nil || measureHandleDrag != nil
-            || captionDrag != nil || pathAnchorDrag != nil
+            || captionDrag != nil || pathAnchorDrag != nil || pathCornerDrag != nil
         // The blue selection outline hides during a RESIZE (frame handles,
         // annotation endpoints, a caliper handle, or a caption pill drag that
         // re-shapes the frame) so the edges being aligned stay unobstructed;

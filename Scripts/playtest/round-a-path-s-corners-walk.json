@@ -1,0 +1,491 @@
+{
+  "out": "/tmp/photonz-playtest/round-a-path-s-corners-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 700,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        450,
+        180
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        612,
+        298
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        550,
+        488
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        350,
+        488
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        288,
+        298
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        450,
+        180
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPath",
+      "anchors": 5,
+      "closed": true,
+      "curves": 0
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "select",
+      "timeout": 2
+    },
+    {
+      "do": "expectCorners",
+      "rounded": 0
+    },
+    {
+      "do": "describe",
+      "stage": "1-pentagon",
+      "note": "a pentagon drawn with the Pen at Next defaults: five sharp corners, the path picked"
+    },
+    {
+      "do": "move",
+      "at": [
+        450,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-knobs",
+      "note": "with the pointer over the shape, a small round knob sits a short way inside every corner"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-knobs-showing"
+    },
+    {
+      "do": "move",
+      "at": [
+        120,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2b-away",
+      "note": "with the pointer off across the canvas the knobs are gone and only the points remain"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-knobs-gone"
+    },
+    {
+      "do": "move",
+      "at": [
+        450,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        450,
+        196
+      ],
+      "to": [
+        450,
+        260.3
+      ],
+      "steps": 14,
+      "readout": "Radius 52",
+      "hold": "2-mid-pull"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "radius": 52,
+      "rounded": 5
+    },
+    {
+      "do": "expectPath",
+      "anchors": 5,
+      "closed": true,
+      "curves": 0,
+      "anchor": 0,
+      "near": [
+        450,
+        180
+      ],
+      "within": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-rounded",
+      "note": "pulling the top knob in rounded all five corners together to 52, the pill under the shape read Radius 52 while the button was down, and the five points did not move"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-all-corners-rounded"
+    },
+    {
+      "do": "render",
+      "name": "3-rounded-render"
+    },
+    {
+      "do": "expectSVG",
+      "pictured": 0,
+      "contains": " C"
+    },
+    {
+      "do": "writeSVG",
+      "name": "3-rounded"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectCorners",
+      "rounded": 0
+    },
+    {
+      "do": "describe",
+      "stage": "4-undo",
+      "note": "one undo step takes the whole pull back"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectCorners",
+      "radius": 52,
+      "rounded": 5
+    },
+    {
+      "do": "move",
+      "at": [
+        450,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        535.6,
+        322.7
+      ],
+      "to": [
+        502.7,
+        333.4
+      ],
+      "steps": 14,
+      "modifiers": [
+        "option"
+      ],
+      "readout": "Radius 80",
+      "hold": "5-mid-option-pull"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "corner": 1,
+      "radius": 80
+    },
+    {
+      "do": "expectCorners",
+      "corner": 0,
+      "radius": 52
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-corner",
+      "note": "with Option held only the pulled corner rounded further, to 80; the other four stayed at 52, and the panel's Corner Radius reads Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-one-corner-rounder"
+    },
+    {
+      "do": "drag",
+      "from": [
+        450,
+        260.3
+      ],
+      "to": [
+        450,
+        150
+      ],
+      "steps": 14
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "rounded": 0
+    },
+    {
+      "do": "expectPath",
+      "anchors": 5,
+      "closed": true,
+      "curves": 0
+    },
+    {
+      "do": "describe",
+      "stage": "6-pushed-out",
+      "note": "pushing the top knob back out past the corner made every corner sharp again"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-sharp-again"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "radius": 69,
+      "rounded": 5,
+      "within": 3
+    },
+    {
+      "do": "describe",
+      "stage": "6b-panel",
+      "note": "the Corner Radius row in Appearance rounds the same corners: half way along its track is half way to round, about 69 on this pentagon"
+    },
+    {
+      "do": "panel",
+      "stage": "6b-panel-rounds-the-path"
+    },
+    {
+      "do": "snapshot",
+      "name": "6b-panel-rounded"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectCorners",
+      "rounded": 0
+    },
+    {
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Show grid"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        450,
+        360
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Path"
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        450,
+        370
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "drag",
+      "from": [
+        450,
+        196
+      ],
+      "to": [
+        450,
+        258.6
+      ],
+      "steps": 14,
+      "readout": "Radius 64"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "radius": 64,
+      "rounded": 5
+    },
+    {
+      "do": "describe",
+      "stage": "7-grid",
+      "note": "with the grid on, a pull that asked for 50.6 landed on 64: the grid at this zoom draws a line every 32 points, the same lines a point drawn with the Pen lands on"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-on-the-grid"
+    },
+    {
+      "do": "drag",
+      "from": [
+        450,
+        275.2
+      ],
+      "to": [
+        450,
+        258.6
+      ],
+      "steps": 8,
+      "modifiers": [
+        "command"
+      ],
+      "readout": "Radius 51"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectCorners",
+      "radius": 51,
+      "rounded": 5
+    },
+    {
+      "do": "describe",
+      "stage": "8-command-frees",
+      "note": "holding Command freed the pull from the grid: the same 50.6 landed on 51"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-off-grid"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "feature": "Round a path's corners with a knob",
+  "epic": "icon-vector",
+  "summary": "A shape drawn with the Pen can have its sharp corners rounded by pulling a small knob in from any corner, and sharpened again by pushing it back out. The points never move, and the rounding shows the same on the canvas, in a picture export and in SVG.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Press P and click five points around a pentagon, then click the first point again to close it.", "shot": "2026-10-04-path-corners-1-knobs.png" },
+    { "do": "Rest the pointer over the shape: a small round knob sits a short way inside every corner. Move away and they go." },
+    { "do": "Drag the top knob straight down. All five corners round together, and the pill under the shape reads the radius.", "shot": "2026-10-04-path-corners-2-pull.png" },
+    { "do": "Hold Option and drag another corner's knob further in: only that corner rounds, and Corner Radius in Appearance says Mixed.", "shot": "2026-10-04-path-corners-3-option.png" },
+    { "do": "Drag the Corner Radius slider in Appearance: every corner takes that one number.", "shot": "2026-10-04-path-corners-4-panel.png" },
+    { "do": "Drag the top knob back out past its corner: every corner is sharp again. Press Command Z to step back one pull.", "shot": "2026-10-04-path-corners-5-sharp.png" },
+    { "do": "Turn on Show grid for the canvas and pull a knob: the radius lands on grid lines. Hold Command while pulling to place it freely." },
+    { "do": "Export as SVG and open the file in a browser: the corners are real curves, the same shape as on the canvas." }
+  ],
+  "evaluate": [
+    "Is pulling one knob to round every corner what you expected, with Option to round just one?",
+    "A rectangle's own corner dots do the opposite: one corner by default and Option for all four. Should the two agree, and which way?",
+    "Is the knob easy to find and grab, a short way inside each corner, only while the pointer is over the shape?",
+    "With the grid on at 100% the radius jumps by the grid's visible step (32 on a plain canvas). Is that too coarse for rounding?",
+    "Does the selection box staying around the points, not the rounded edge, feel right?"
+  ],
+  "rough": [
+    "No mock covers rounding a path's corners, so this follows the task's description and Figma's and Illustrator's live corners.",
+    "The Corner Radius number in Appearance does not follow the knob while it is being pulled. It catches up the moment you let go, and the pill under the shape shows the live number meanwhile.",
+    "Measured at the top corner of a pentagon rounded 52: the edge of the arc crosses the corner's centre line at 192.5 on the canvas, between 192 and 193 in the rendered picture, and at 192.33 in the SVG, against 192.29 by the geometry.",
+    "Knobs show with the Select tool only. Under the Pen a click inside a shape starts the next shape, so knobs there would steal those clicks.",
+    "A corner where a curve arrives is rounded into the curve itself, so that corner is smooth but not an exact circle.",
+    "Combining shapes (Join, Cut Out and the rest) uses the rounded outline and the result keeps the curves as ordinary points; it is no longer adjustable with a knob, as in Illustrator."
+  ]
+}

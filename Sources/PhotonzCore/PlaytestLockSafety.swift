@@ -129,6 +129,9 @@ public enum PlaytestLockSafety {
         "action", "appKey", "appearance", "blank", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragTile", "dropImage", "expect", "expectInView", "expectLayers",
         "expectMeasures", "expectNotice",
+        // Added 2026-10-04 by reading: it asks the document for a path's
+        // corner radii, the same read `expectPath` makes, and no name.
+        "expectCorners",
         "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
         "expectStoredRecording",
         // Watched on 2026-09-20, forced under a lock: it asks the editor for

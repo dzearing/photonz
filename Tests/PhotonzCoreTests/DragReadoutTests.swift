@@ -18,6 +18,14 @@ struct DragReadoutTests {
         #expect(DragReadout.text(.size(CGSize(width: 580, height: 448))) == "580 × 448")
     }
 
+    /// A corner knob says how round the corner is, to the half point an icon
+    /// grid works in.
+    @Test func aCornerKnobSaysItsRadius() {
+        #expect(DragReadout.text(.radius(12)) == "Radius 12")
+        #expect(DragReadout.text(.radius(1.5)) == "Radius 1.5")
+        #expect(DragReadout.text(.radius(7.9)) == "Radius 8")
+    }
+
     /// Whole numbers. A pointer lands on 240.4 constantly and a pill that
     /// counted decimals would be unreadable at the speed a drag moves.
     @Test func everyNumberIsWhole() {

@@ -72,6 +72,7 @@ extension LayerContent {
                 out.point = anchor.point.magnified(by: scale)
                 out.handleIn = anchor.handleIn?.magnified(by: scale)
                 out.handleOut = anchor.handleOut?.magnified(by: scale)
+                out.cornerRadius = anchor.cornerRadius * scale
                 return out
             }
             return .path(path)

@@ -259,7 +259,11 @@ public enum SVGExport {
     /// Path data for one outline, in the shape's own coordinates. A run with
     /// no handle on either end is written as a straight run, exactly as the
     /// rasterizer draws it, so a straight edge stays straight in the file.
+    ///
+    /// A rounded corner goes out as the arc it is drawn with, a real curve in
+    /// the file, so a browser draws the same shape the canvas does.
     public static func pathData(_ content: PathContent) -> String {
+        let content = content.drawnOutline
         guard !content.anchors.isEmpty else { return "" }
         var parts: [String] = []
         // One M per ring, so a shape with a hole in it leaves as one path of

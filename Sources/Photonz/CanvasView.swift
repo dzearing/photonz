@@ -1171,6 +1171,14 @@ final class CanvasNSView: NSView {
     var pathAnchorDrag: PathAnchorDrag?
     /// A box being swept over the points of the picked path right now.
     var pathPointSweep: PathPointSweepDrag?
+    /// A knob inside one of the picked path's corners being pulled right now
+    /// (`CanvasPathCorners.swift`).
+    var pathCornerDrag: PathCornerDrag?
+    /// Whether the pointer is over the picked path, which is when the knobs
+    /// inside its corners show.
+    var pathCornerKnobsHovered = false
+    /// Those knobs.
+    let pathCornerKnobsLayer = CAShapeLayer()
     /// Every point of the picked path, as a dot each: round for a smooth bend,
     /// square for a hard corner.
     let pathAnchorsLayer = CAShapeLayer()

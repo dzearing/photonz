@@ -48,6 +48,7 @@ extension CanvasNSView {
         refreshDrawLanding()
         refreshPointerIconFrame(at: convert(event.locationInWindow, from: nil))
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
+        refreshPathCornerHover(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
@@ -77,6 +78,7 @@ extension CanvasNSView {
         // row means reaching up to the tool bar, and a number that changed on
         // the way to being read would be no better than the one it replaced.
         refreshNameLabelHover(at: nil)
+        refreshPathCornerHover(at: nil)
         applyGrabCursor(nil)
         // Nothing is being aimed at once the pointer is off the canvas, so
         // nothing is left drawn on an idle window.
@@ -191,7 +193,10 @@ extension CanvasNSView {
             at: local, zoom: viewport.zoom,
             handlesShowing: PathContent.leversShowing(for: pathAnchorSelection)) {
         case .anchor, .handle: return (.grab, .identity)
-        case .segment, nil: return nil
+        case .segment, nil:
+            // A knob inside a corner is a grab of its own too, read after the
+            // points exactly as the press reads it.
+            return pathCornerKnobHit(at: p) != nil ? (.grab, .identity) : nil
         }
     }
 
@@ -213,6 +218,9 @@ extension CanvasNSView {
         let selected = selectedLayerID.flatMap { id in document?.canvasLayer(id: id) }
         guard let frame = selectedLayerFrame else { return true }
         let local = handleSpacePoint(p, layer: selected)
+        // ⌥ on a path's corner knob rounds that corner alone, so it is not a
+        // copy drag either.
+        if pathCornerKnobHit(at: p) != nil { return false }
         // ⌥ on a rounding dot takes all four corners, so it is not a copy drag
         // either — the badge would promise the wrong gesture.
         if Experiments.shared.cornerHandlesEnabled, let selected,

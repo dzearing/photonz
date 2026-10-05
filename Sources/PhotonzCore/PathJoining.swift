@@ -266,7 +266,7 @@ extension PathContent {
         var flipped = self
         flipped.anchors = anchors.reversed().map {
             PathAnchor(point: $0.point, handleIn: $0.handleOut, handleOut: $0.handleIn,
-                       kind: $0.kind)
+                       kind: $0.kind, cornerRadius: $0.cornerRadius)
         }
         return flipped
     }

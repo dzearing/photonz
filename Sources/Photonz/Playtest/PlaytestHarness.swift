@@ -2263,6 +2263,12 @@ private final class Run {
         case .expectMeasures(let count):
             note(number, step.name, try checkMeasures(count), state: describe())
 
+        case .expectCorners(let layerName, let corner, let radius, let rounded, let within):
+            note(number, step.name,
+                 try checkCorners(layerName, corner: corner, radius: radius, rounded: rounded,
+                                  within: within),
+                 state: describe())
+
         case .expectSVG(let pictured, let contains):
             note(number, step.name, try checkSVG(pictured: pictured, contains: contains),
                  state: describe())
@@ -9405,6 +9411,42 @@ private final class Run {
             }
         }
         return found.map { "the marquee reads \($0), as claimed" } ?? "no marquee, as claimed"
+    }
+
+    /// How round a path's corners are drawn, asked of the document
+    /// (`PlaytestStep.expectCorners`).
+    private func checkCorners(_ layerName: String?, corner: Int?, radius: CGFloat?,
+                              rounded: Int?, within: CGFloat) throws -> String {
+        let editor = try requireEditor()
+        let paths = (editor.document?.allLayers ?? []).filter { $0.path != nil }
+        let found = layerName.map { name in paths.last { $0.name == name } } ?? paths.last
+        guard let layer = found, let content = layer.path else {
+            throw Failure(description: "no path " + (layerName.map { "called \"\($0)\" " } ?? "")
+                + "in the document")
+        }
+        let corners = content.roundableCorners
+        let drawn = corners.map { content.drawnCornerRadius(at: $0) }
+        let listed = drawn.map { "\(Self.round1($0))" }.joined(separator: ", ")
+        let shape = "\(layer.name) has \(corners.count) sharp corners drawn at [\(listed)]"
+        if let rounded {
+            let count = drawn.filter { $0 > 0 }.count
+            guard count == rounded else {
+                throw Failure(description: "\(shape): \(count) rounded, not the \(rounded) claimed")
+            }
+        }
+        if let corner, let radius {
+            let at = content.drawnCornerRadius(at: corner)
+            guard abs(at - radius) <= within else {
+                throw Failure(description: "\(shape): corner \(corner) is drawn at "
+                    + "\(Self.round1(at)), not \(Self.round1(radius))")
+            }
+        } else if let radius {
+            guard !drawn.isEmpty, drawn.allSatisfy({ abs($0 - radius) <= within }) else {
+                throw Failure(description: "\(shape), not all \(Self.round1(radius))"
+                    + " to within \(Self.round1(within))")
+            }
+        }
+        return shape + ", as claimed"
     }
 
     /// What the path the Pen drew is made of, asked of the document rather than

@@ -312,7 +312,13 @@ struct CornerRadiusRow: View {
     /// chevron. Both releases READ four corners honestly, because a document is
     /// a document: a card drawn with a rounded top opened in either one shows
     /// the four numbers rather than a single one that is not true.
-    private var canOpenCorners: Bool { Experiments.shared.shapePartsEnabled }
+    ///
+    /// A path has as many corners as it has sharp points, not four, so over
+    /// one there is nothing to open apart: its one number rounds them all and
+    /// the knob inside a corner on the canvas rounds one alone.
+    private var canOpenCorners: Bool {
+        Experiments.shared.shapePartsEnabled && !selection.roundsPathPoints
+    }
 
     /// What the box holds when nobody is typing in it.
     ///
@@ -330,7 +336,8 @@ struct CornerRadiusRow: View {
         // release before it cannot open them at all, so there this row is still
         // the only place a corner set on its own can be read and it holds the
         // four.
-        guard !canOpenCorners, let shorthand = selection.shorthand else {
+        guard !canOpenCorners, !selection.roundsPathPoints,
+              let shorthand = selection.shorthand else {
             return .standIn(LayerStyleSelection.mixedText)
         }
         return .standIn(shorthand)

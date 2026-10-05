@@ -40,15 +40,21 @@ public struct CornerRadiusSelection: Hashable, Sendable {
         /// past its edge, so the number rounds the curve it CROPS with rather
         /// than a corner it paints (`ContainerRounding.swift`).
         public let cropsContents: Bool
+        /// True when this layer is a path, whose corners are its own sharp
+        /// points rather than the four of a box (`PathCornerRounding.swift`).
+        /// It has no four corners to open apart.
+        public let roundsPathPoints: Bool
 
         public init(id: UUID, radii: CornerRadii, limit: CGFloat, roundsViaStyle: Bool,
-                    floor: CornerRadii = .none, cropsContents: Bool = false) {
+                    floor: CornerRadii = .none, cropsContents: Bool = false,
+                    roundsPathPoints: Bool = false) {
             self.id = id
             self.radii = radii
             self.limit = limit
             self.roundsViaStyle = roundsViaStyle
             self.floor = floor
             self.cropsContents = cropsContents
+            self.roundsPathPoints = roundsPathPoints
         }
     }
 
@@ -82,6 +88,11 @@ public struct CornerRadiusSelection: Hashable, Sendable {
 
     public var count: Int { members.count }
     public var isEmpty: Bool { members.isEmpty }
+
+    /// Whether anything this row speaks for is a path rounding its own points.
+    /// A path has as many corners as it has sharp points, not four, so the
+    /// row does not offer to open four corners apart over one.
+    public var roundsPathPoints: Bool { members.contains(where: \.roundsPathPoints) }
 
     /// The layers a drag in this row rounds, in the order they were given.
     public var layerIDs: [UUID] { members.map(\.id) }
@@ -232,6 +243,20 @@ public struct CornerRadiusSelection: Hashable, Sendable {
 
 extension Layer {
 
+    /// True when this layer is a path with at least one sharp point to round.
+    public var hasRoundablePathCorners: Bool {
+        guard let path else { return false }
+        return !path.roundableCorners.isEmpty
+    }
+
+    /// Rounds every sharp point of a path the same. Nothing for any other
+    /// layer.
+    mutating func setPathCornerRadius(_ radius: CGFloat) {
+        guard var path else { return }
+        path.setCornerRadius(max(0, radius))
+        content = .path(path)
+    }
+
     /// True when rounding this layer curves the outline it draws rather than
     /// masking the picture of it. Only a rectangle has an outline with corners
     /// on it to curve.
@@ -305,7 +330,15 @@ extension PhotonzDocument {
         var reachedInto = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
-            guard !cornersOnly || layer.hasCorners else { continue }
+            // A path's corners are its sharp points, and the panel that reads
+            // what is drawn rounds them (`PathCornerRounding.swift`). The
+            // release before it leaves a path exactly as it always did.
+            let pathCorners = readingWhatShows && layer.hasRoundablePathCorners
+            guard !cornersOnly || layer.hasCorners || pathCorners else { continue }
+            if pathCorners, let path = layer.path {
+                members.append(pathMember(of: layer, path: path))
+                continue
+            }
             guard !skippingKnobbedCopies || !roundingIsAKnob(layerID: id) else { continue }
             // A group has no corners of its own to round, so the row speaks for
             // the things inside it instead, exactly as if they had been picked
@@ -343,6 +376,25 @@ extension PhotonzDocument {
             cropsContents: readingWhatShows && layer.roundingCropsItsContents)
     }
 
+    /// A path's place in the row: the radius its corners wear, as one number
+    /// when they agree, and how round its corners can go when they all round
+    /// together.
+    private func pathMember(of layer: Layer, path: PathContent) -> CornerRadiusSelection.Member {
+        let corners = path.roundableCorners
+        let radii = corners.map { path.anchors[$0].cornerRadius }
+        let most = radii.max() ?? 0
+        let least = radii.min() ?? 0
+        // Four numbers is what the row reads in, so corners that disagree are
+        // said as four that disagree: the row then says Mixed over a path
+        // just as it does over a box rounded corner by corner.
+        let shown = most == least
+            ? CornerRadii(most)
+            : CornerRadii(topLeft: most, topRight: most, bottomRight: most, bottomLeft: least)
+        let limit = corners.map { path.cornerRadiusLimit(at: $0, allCorners: true) }.max() ?? 1
+        return CornerRadiusSelection.Member(id: layer.id, radii: shown, limit: max(1, limit),
+                                            roundsViaStyle: false, roundsPathPoints: true)
+    }
+
     /// The number the row shows for one layer: the one that is rounding it.
     ///
     /// A rectangle's own curve normally speaks for it. The exception is a
@@ -372,6 +424,12 @@ extension PhotonzDocument {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
+            if onlyWhatShows, layer.hasRoundablePathCorners {
+                // A path rounds its own sharp points, every one the same.
+                updateLayer(id: id) { $0.setPathCornerRadius(radii.uniform ?? radii.largest) }
+                changed += 1
+                continue
+            }
             let floor = onlyWhatShows ? layer.cornerRadiusFloor : .none
             let wanted = floor.isRound ? radii.doingSomethingOver(floor) : radii
             // Each layer rounded the way it rounds, and the other number put to
@@ -406,6 +464,12 @@ extension PhotonzDocument {
             // The same rule the one slider follows: over a container, a number
             // at or under the curve its contents already have cuts nothing, so
             // it is not written at all.
+            if onlyWhatShows, layer.hasRoundablePathCorners {
+                // A path has no top left: one corner of four means them all.
+                updateLayer(id: id) { $0.setPathCornerRadius(radius) }
+                changed += 1
+                continue
+            }
             let floor = onlyWhatShows ? layer.cornerRadiusFloor[corner] : 0
             let wanted = radius > floor ? radius : 0
             updateLayer(id: id) { $0.setRoundedCorner(corner, to: wanted) }

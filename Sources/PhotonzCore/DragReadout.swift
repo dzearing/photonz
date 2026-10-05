@@ -23,6 +23,8 @@ public enum DragReadout {
     public enum Subject: Equatable, Hashable, Sendable {
         case position(CGPoint)
         case size(CGSize)
+        /// How round a corner is being pulled, by the knob inside it.
+        case radius(CGFloat)
     }
 
     /// What is being dragged, for the one rule that picks the reading.
@@ -57,6 +59,10 @@ public enum DragReadout {
         switch subject {
         case .position(let point): "\(whole(point.x)), \(whole(point.y))"
         case .size(let size): "\(whole(size.width)) × \(whole(size.height))"
+        // Named, because one bare number under a shape could be anything.
+        // Half points stay, since a radius of 1.5 is an ordinary one on an
+        // icon grid.
+        case .radius(let radius): "Radius \(halves(radius))"
         }
     }
 
@@ -87,6 +93,12 @@ public enum DragReadout {
             y = clamped(below, low: bounds.minY, high: bounds.maxY - size.height)
         }
         return CGRect(x: x, y: y, width: size.width, height: size.height)
+    }
+
+    /// To the nearest half, written without a trailing ".0".
+    private static func halves(_ value: CGFloat) -> String {
+        let doubled = Int((max(0, value) * 2).rounded())
+        return doubled % 2 == 0 ? "\(doubled / 2)" : "\(doubled / 2).5"
     }
 
     /// Whole numbers, and never the "-0" that rounding a small negative gives.

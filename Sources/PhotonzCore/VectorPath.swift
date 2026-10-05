@@ -64,15 +64,50 @@ public struct PathAnchor: Hashable, Codable, Sendable {
     public var handleOut: CGPoint?
     /// Whether the two sides are meant to stay in line. See `PathAnchorKind`.
     public var kind: PathAnchorKind
+    /// How round this corner is drawn, in document points. Nought is a sharp
+    /// corner, which is what every point starts as.
+    ///
+    /// The point itself never moves for it: the corner is cut back and bridged
+    /// by an arc only where the path is DRAWN (`PathCornerRounding.swift`), so
+    /// the rounding stays editable and goes away again at nought. A radius the
+    /// two edges either side cannot hold is drawn as large as they can.
+    public var cornerRadius: CGFloat
 
     public init(point: CGPoint,
                 handleIn: CGPoint? = nil,
                 handleOut: CGPoint? = nil,
-                kind: PathAnchorKind = .corner) {
+                kind: PathAnchorKind = .corner,
+                cornerRadius: CGFloat = 0) {
         self.point = point
         self.handleIn = handleIn
         self.handleOut = handleOut
         self.kind = kind
+        self.cornerRadius = cornerRadius
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case point, handleIn, handleOut, kind, cornerRadius
+    }
+
+    public init(from decoder: any Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        point = try c.decode(CGPoint.self, forKey: .point)
+        handleIn = try c.decodeIfPresent(CGPoint.self, forKey: .handleIn)
+        handleOut = try c.decodeIfPresent(CGPoint.self, forKey: .handleOut)
+        kind = try c.decodeIfPresent(PathAnchorKind.self, forKey: .kind) ?? .corner
+        // A file written before corners could be rounded comes back sharp.
+        cornerRadius = try c.decodeIfPresent(CGFloat.self, forKey: .cornerRadius) ?? 0
+    }
+
+    public func encode(to encoder: any Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(point, forKey: .point)
+        try c.encodeIfPresent(handleIn, forKey: .handleIn)
+        try c.encodeIfPresent(handleOut, forKey: .handleOut)
+        try c.encode(kind, forKey: .kind)
+        // Left out of a sharp corner, so nothing already on disk changes shape
+        // the next time it is saved.
+        if cornerRadius > 0 { try c.encode(cornerRadius, forKey: .cornerRadius) }
     }
 
     /// The control point for the run arriving here, in layer coordinates.
@@ -122,9 +157,11 @@ public struct PathAnchor: Hashable, Codable, Sendable {
         func scale(_ handle: CGPoint?) -> CGPoint? {
             handle.map { CGPoint(x: $0.x * x, y: $0.y * y) }
         }
+        // The radius is left alone, like the line's width: what is measured
+        // in points holds still when a box is dragged.
         return PathAnchor(point: CGPoint(x: point.x * x, y: point.y * y),
                           handleIn: scale(handleIn), handleOut: scale(handleOut),
-                          kind: kind)
+                          kind: kind, cornerRadius: cornerRadius)
     }
 
     /// The same anchor shifted. Handles are offsets, so they do not move.
@@ -154,6 +191,14 @@ public struct PathSegment: Hashable, Sendable {
         control2 = to.controlIn
         end = to.point
         isStraight = from.handleOut == nil && to.handleIn == nil
+    }
+
+    init(start: CGPoint, control1: CGPoint, control2: CGPoint, end: CGPoint, isStraight: Bool) {
+        self.start = start
+        self.control1 = control1
+        self.control2 = control2
+        self.end = end
+        self.isStraight = isStraight
     }
 
     /// The tight box this run covers: where the curve actually goes, not where
@@ -727,7 +772,9 @@ extension PathContent {
     /// says so rather than pretending its two ends are joined.
     public func containsInside(_ point: CGPoint) -> Bool {
         guard isClosed else { return false }
-        let rings = flattenedRings()
+        // The outline as it is DRAWN, rounded corners and all, so a press on a
+        // corner that has been cut away misses the shape it can no longer see.
+        let rings = drawnOutline.flattenedRings()
         guard rings.contains(where: { $0.count >= 3 }) else { return false }
         var crossings = 0
         var winding = 0
@@ -753,7 +800,7 @@ extension PathContent {
         // Every ring counts: the edge of a hole is as much the shape's outline
         // as its rim is, and a press on it has to catch the shape.
         var best = CGFloat.infinity
-        for outline in flattenedRings() {
+        for outline in drawnOutline.flattenedRings() {
             guard outline.count >= 2 else {
                 if let only = outline.first {
                     best = min(best, hypot(point.x - only.x, point.y - only.y))

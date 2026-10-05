@@ -976,6 +976,38 @@ release, and what you get has points you can pull. The mock's four words are
 jargon the house style keeps out of user-facing copy, so they are said once in
 the flag's description and nowhere else.
 
+## Rounding its corners
+
+Every sharp point can be rounded without moving it, the live corners Figma and
+Illustrator have. `PathAnchor.cornerRadius` (nought, and left out of the file,
+for a sharp point) is the whole of the model; `PathCornerRounding.swift` turns
+it into the outline that is DRAWN (`PathContent.drawnOutline`): each rounded
+corner is cut back along both runs and bridged by an arc, a true circle between
+two straight runs and cut into the curve itself where a curve meets the corner.
+
+- **Everything that draws reads the drawn outline**: `cgPath` (canvas, rings,
+  area operations), `SVGExport.pathData` and the click test. Everything that
+  edits reads the points, so dragging a point keeps its rounding.
+- **No overshoot.** An edge too short for the corners at both its ends is shared
+  in proportion to what each asked for, so arcs meet in the middle at worst. A
+  radius asked past that is stored as asked and drawn as large as it can be.
+- **Which points round**: a point meant as a corner with a run arriving and a
+  run leaving, where the line turns by more than a degree. Smooth bends, the
+  ends of an open line and points in the middle of a straight run do not.
+- **The box stays round the points**, not the rounded ink, so the layer's frame
+  and Position never move when a corner is rounded.
+- **On the canvas** (`CanvasPathCorners.swift`, Select only): with the pointer
+  over a picked path, a knob rests 16 screen points inside every sharp corner
+  along the line halving it, and rides the arc's centre once rounded, so it
+  keeps pace with the hand. All corners round together; ⌥ rounds the one pulled.
+  The pull lands on whole grid steps while the grid pulls (⌘ frees it), else
+  whole points (half points zoomed in), reads "Radius N" in the drag pill, and
+  is one undo step. A corner shorter than 32 screen points on either side shows
+  no knob.
+- **In the panel** (Next): Appearance's one Corner Radius row reads a path's
+  radius (Mixed when its corners differ) and sets every corner; there are no
+  four corners to open over a path.
+
 ## What the next slices add
 
 * **SVG export** — done, under `icon-export`. A path is already exactly the

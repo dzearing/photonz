@@ -161,9 +161,18 @@ extension CanvasNSView {
     func pathEditMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
         guard let viewport, let picked = editablePath else { return false }
         let local = pathLocalPoint(p, layer: picked.layer)
-        guard let target = picked.content.editTarget(
+        let found = picked.content.editTarget(
             at: local, zoom: viewport.zoom,
-            handlesShowing: PathContent.leversShowing(for: pathAnchorSelection)) else {
+            handlesShowing: PathContent.leversShowing(for: pathAnchorSelection))
+        // A knob inside a corner comes after the points and levers, which
+        // always win a press they are under, and before the outline: on a
+        // sharp corner the knob sits close enough to both edges that a press
+        // on it would otherwise read as a press on the line.
+        switch found {
+        case .anchor?, .handle?: break
+        default: if pathCornerMouseDown(at: p, event: event) { return true }
+        }
+        guard let target = found else {
             // A press off the shape, where a rubber band would otherwise have
             // started, sweeps a box over the POINTS instead of over the
             // layers. Nothing is let go yet: the release says whether this was
@@ -571,7 +580,7 @@ extension CanvasNSView {
         return true
     }
 
-    private func commitPathEdit(_ id: UUID, _ content: PathContent) {
+    func commitPathEdit(_ id: UUID, _ content: PathContent) {
         guard let layer = document?.canvasLayer(id: id) else { return }
         // The same box the refit will give it, turned shape included, so the
         // outline does not step sideways between here and the document coming
@@ -632,7 +641,14 @@ extension CanvasNSView {
         pathLeversLayer.zPosition = 97
         pathLeversLayer.lineWidth = 1
 
-        for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer] {
+        // Above the points: a knob never sits on one, and drawn over the
+        // outline's dots it reads as the thing to grab.
+        pathCornerKnobsLayer.isHidden = true
+        pathCornerKnobsLayer.zPosition = 99
+        pathCornerKnobsLayer.lineWidth = 1
+
+        for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
+                      pathCornerKnobsLayer] {
             layer?.addSublayer(shape)
         }
     }
@@ -647,7 +663,8 @@ extension CanvasNSView {
     /// you can still see what you are editing.
     func refreshPathEditChrome() {
         guard let viewport, let picked = editablePath else {
-            for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer] {
+            for shape in [pathLeversLayer, pathAnchorsLayer, pathPickedAnchorsLayer,
+                          pathCornerKnobsLayer] {
                 shape.isHidden = true
                 shape.path = nil
             }
@@ -664,14 +681,17 @@ extension CanvasNSView {
         // painted the old ones back over them, so the shape bent under a set of
         // points that never moved until the button came up (2026-09-14).
         let drag = pathAnchorDrag.flatMap { $0.layerID == picked.id ? $0 : nil }
-        let content = drag?.reshaped() ?? picked.content
+        // ...and the same for a corner knob in hand, whose pull is previewed
+        // and never committed until the button comes up.
+        let cornerDrag = pathCornerDrag.flatMap { $0.layerID == picked.id ? $0 : nil }
+        let content = drag?.reshaped() ?? cornerDrag?.reshaped() ?? picked.content
         // Where the shape's own coordinates sit on the canvas. A committed path
         // is normalised against its box (`PathBuilder.refit`), so it is the
         // layer's own space; an in-flight one is still measured from the box
         // the button went down in, which is what the preview is refitted from.
         // Either way the turn on it is part of the answer, or the dots would
         // sit in a straight square beside the shape they belong to.
-        let space = drag?.space ?? pathEditSpace(of: picked.layer)
+        let space = drag?.space ?? cornerDrag?.space ?? pathEditSpace(of: picked.layer)
         func chromePoint(_ local: CGPoint) -> CGPoint {
             viewport.viewPoint(fromDocument: space.document(local))
         }
@@ -746,6 +766,8 @@ extension CanvasNSView {
         pathPickedAnchorsLayer.fillColor = accent
         pathPickedAnchorsLayer.strokeColor = NSColor.white.cgColor
         pathPickedAnchorsLayer.isHidden = pickedDots.isEmpty
+
+        refreshPathCornerKnobs(content: content, space: space)
 
         pathChromeShowing = content
         pathChromeSpace = space

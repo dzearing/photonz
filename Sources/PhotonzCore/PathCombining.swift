@@ -134,7 +134,17 @@ extension PathContent {
     /// A run with no handle on either end is emitted as a LINE rather than as a
     /// cubic that happens to look flat, so a straight edge is exactly straight
     /// and stays that way through an area operation.
+    ///
+    /// It is the outline as DRAWN: a rounded corner comes out as its arc
+    /// (`PathCornerRounding.swift`), so the canvas, a ring round the shape and
+    /// an area operation all see the shape you can see.
     public var cgPath: CGPath {
+        let drawn = drawnOutline
+        return drawn.sharpCGPath
+    }
+
+    /// The outline exactly as its anchors state it, with no rounding read.
+    var sharpCGPath: CGPath {
         let path = CGMutablePath()
         var runs = segments[...]
         for range in ringRanges {
