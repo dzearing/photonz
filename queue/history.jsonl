@@ -9401,3 +9401,11 @@
 {"t":"2026-10-05T09:49:18.480Z","ev":"task_resequenced","id":"find-out-whether-a-clip-on-a-locked-track-can-st","from":3630,"to":6}
 {"t":"2026-10-05T09:49:18.535Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":3640,"to":7}
 {"t":"2026-10-05T09:49:57.334Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":8,"report":"queue/manager/2026-10-05-0249.md"}
+{"t":"2026-10-05T09:50:14.293Z","ev":"manager_pass","exit":0,"ready":8}
+{"t":"2026-10-05T09:50:14.362Z","ev":"task_started","id":"an-edited-video-copies-to-the-clipboard-as-a-vid","title":"An edited video copies to the clipboard as a video or a GIF","priority":"p2-normal"}
+{"t":"2026-10-05T09:54:18.753Z","ev":"task_note","id":"an-edited-video-copies-to-the-clipboard-as-a-vid"}
+{"t":"2026-10-05T09:56:36.587Z","ev":"task_walks","id":"an-edited-video-copies-to-the-clipboard-as-a-vid","walks":["copy-the-edit-to-the-clipboard-walk","copy-a-long-captioned-edit-walk"]}
+{"t":"2026-10-05T10:20:32.198Z","ev":"task_created","id":"a-gif-plays-at-the-speed-of-the-edit-it-came-fro","priority":"p2-normal","title":"A GIF plays at the speed of the edit it came from"}
+{"t":"2026-10-05T10:20:36.908Z","ev":"task_walks","id":"a-gif-plays-at-the-speed-of-the-edit-it-came-fro","walks":[]}
+{"t":"2026-10-05T10:20:51.451Z","ev":"task_note","id":"an-edited-video-copies-to-the-clipboard-as-a-vid"}
+{"t":"2026-10-05T10:21:03.748Z","ev":"task_done","id":"an-edited-video-copies-to-the-clipboard-as-a-vid","from":"in_progress","note":"Edit > Copy Video (⌃⇧⌘C) and Copy as GIF (⌃⇧⌘G) in Next put the whole edit on the clipboard via the Export writer at the sheet's remembered settings, captions burned in, with the export toast while copying and a Copied pill (EditorState+VideoExport.swift, EditorCommands.swift, PhotonzCore/VideoClipboardCopy.swift). Verified at Next defaults by copy-the-edit-to-the-clipboard-walk (clipboard file = 4.0 s edit, GIF = edit's 60 frames) and copy-a-long-captioned-edit-walk (5 min captioned copy, longest main-thread pass 27 ms); 11342 tests pass. Audit queue/audits/2026-10-05-copy-the-edit-to-the-clipboard.json. Commit adb729d6."}

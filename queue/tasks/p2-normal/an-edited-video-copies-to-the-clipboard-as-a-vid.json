@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:47:54.944Z",
-  "updated": "2026-10-05T09:49:18.198Z",
+  "updated": "2026-10-05T10:21:03.747Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Porting gap found by the manager pass 2026-10-05. Current: VideoEditorView.swift:662-672 copyMenu (Copy Video / Copy GIF) calls coordinator.copyRecording(state, as: .mp4/.gif), which copies the trimmed/cropped recording. Next opens recordings in ImageEditorRootView (Releases/Next/NextExperience.swift:25-30) and has no copy of the edited video: no NSSharingService/ShareLink anywhere, Copy Video only on the capture toast (AppCoordinator.swift:276) and History (HistoryOverlay.swift:644), both the raw recording. Reuse the Export sheet's writer (VideoExportDialog.swift, RecordingExport.swift) to a temp file and put the file URL on the pasteboard the way copyRecording does. Placement: Menu bar (Edit) per UX-PATTERNS placement contract; the result toast per the Toasts row. No new button anywhere else. A system share sheet is a separate question and NOT part of this task.",
@@ -30,6 +30,32 @@
     {
       "t": "2026-10-05T09:49:18.197Z",
       "note": "seq 3580 -> 1"
+    },
+    {
+      "t": "2026-10-05T09:50:14.356Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T09:54:18.751Z",
+      "note": "Pre-build review: a first-time user looks for a paste-into-chat copy next to Copy in Edit (no mock draws one; video-entry-wt only asks whether Export should default to the clipboard). Premiere/Final Cut have no clipboard copy at all (Share/Export), so this goes further than the grown-up tool; Current had it on a toolbar menu, which the placement contract does not allow in Next, so it is Edit rows only. Keys: ⌘C ⇧⌘C ⌥⌘C ⌥⇧⌘C ⌃⌘C are all taken (Copy, Copy Merged, Canvas Size, Copy Look, Copy as Spec List), so ⌃⇧⌘C Copy Video and ⌃⇧⌘G Copy as GIF, both free. Range follows the Export sheet (In to Out where marked, else all of it). Rows are shown only where the Next video export switch is on, so Current's Edit menu is untouched."
+    },
+    {
+      "t": "2026-10-05T09:56:36.585Z",
+      "note": "owns these walks: copy-the-edit-to-the-clipboard-walk, copy-a-long-captioned-edit-walk"
+    },
+    {
+      "t": "2026-10-05T10:20:51.449Z",
+      "note": "Verified: copy-the-edit-to-the-clipboard-walk ok at Next defaults (MP4 copy 1278 ms, file 4000 ms = edit 4000 ms; GIF 60 frames = edit at 15/s; longest pass 12 ms). copy-a-long-captioned-edit-walk ok: five minute talk with captions copied in 35.9 s, longest main thread pass 27.2 ms, clipboard file 319240 ms = edit; a frame at 20 s pulled from the copied file shows the burned-in caption. Scripts/test.sh: 11342 tests passed. Left rough (not filed, no open task covers it and it is a could-also): Copy Video is not on the canvas or clip right-click menus yet; the manager scoped placement to Edit only. Filed: a-gif-plays-at-the-speed-of-the-edit-it-came-fro (GIF delay rounding, reproduced)."
+    },
+    {
+      "t": "2026-10-05T10:21:03.745Z",
+      "note": "Edit > Copy Video (⌃⇧⌘C) and Copy as GIF (⌃⇧⌘G) in Next put the whole edit on the clipboard via the Export writer at the sheet's remembered settings, captions burned in, with the export toast while copying and a Copied pill (EditorState+VideoExport.swift, EditorCommands.swift, PhotonzCore/VideoClipboardCopy.swift). Verified at Next defaults by copy-the-edit-to-the-clipboard-walk (clipboard file = 4.0 s edit, GIF = edit's 60 frames) and copy-a-long-captioned-edit-walk (5 min captioned copy, longest main-thread pass 27 ms); 11342 tests pass. Audit queue/audits/2026-10-05-copy-the-edit-to-the-clipboard.json. Commit adb729d6."
     }
-  ]
+  ],
+  "started": "2026-10-05T09:50:14.355Z",
+  "walks": [
+    "copy-the-edit-to-the-clipboard-walk",
+    "copy-a-long-captioned-edit-walk"
+  ],
+  "completed": "2026-10-05T10:21:03.746Z"
 }
