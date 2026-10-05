@@ -311,15 +311,21 @@ public enum DocumentMovieWriter {
             throw WriteError.writerFailed("the file could not be opened for writing")
         }
         CGImageDestinationSetProperties(dest, containerProperties(for: format) as CFDictionary)
-        let frameProps = frameProperties(for: format, delay: plan.frameDelay)
+        let delays = frameDelays(for: format, plan: plan)
 
         var wroteAny = false
+        var owed: TimeInterval = 0
         for index in 0..<plan.frameCount {
             if Task.isCancelled {
                 try? FileManager.default.removeItem(at: destination)
                 throw CancellationError()
             }
+            // A frame that could not be drawn hands its time to the next one,
+            // so the file still runs as long as the edit.
+            owed += delays[index]
             guard let picture = await frames(plan.documentTimeMS(at: index)) else { continue }
+            let frameProps = frameProperties(for: format, delay: owed)
+            owed = 0
             CGImageDestinationAddImage(dest, fitted(picture, to: plan.size), frameProps as CFDictionary)
             wroteAny = true
             onProgress?(Double(index + 1) / Double(plan.frameCount))
@@ -457,6 +463,14 @@ public enum DocumentMovieWriter {
         case .heic: return [kCGImagePropertyHEICSDictionary: [kCGImagePropertyHEICSLoopCount: 0]]
         case .mp4: return [:]
         }
+    }
+
+    /// How long each frame is held, in seconds. A GIF's are whole hundredths
+    /// spread so they add up to the edit (`GIFFrameTiming`); a HEIC keeps
+    /// whatever it is given, so every frame is 1/fps.
+    private static func frameDelays(for format: RecordingFormat, plan: VideoFramePlan) -> [TimeInterval] {
+        guard format == .gif else { return Array(repeating: plan.frameDelay, count: plan.frameCount) }
+        return plan.gifDelaysInHundredths.map { Double($0) / 100 }
     }
 
     private static func frameProperties(for format: RecordingFormat,

@@ -43,10 +43,18 @@ public enum VideoClipboardCopy {
         return Double(abs(fileMS - editMS)) <= frame + 1
     }
 
-    /// The same question for an animated picture, asked of its frames. A GIF
-    /// keeps each frame's delay in hundredths of a second, so its running time
-    /// drifts from the edit's by the rounding while its frames are exactly
-    /// the edit's: one picture for every 1/fps of it, within one.
+    /// Whether a GIF read back runs as long as the edit: its delays, which the
+    /// format keeps in hundredths, add up to the edit's length within one
+    /// hundredth plus the edit's own rounding to a hundredth
+    /// (`GIFFrameTiming`).
+    public static func gifRunsAsLong(fileMS: Int, asEditMS editMS: Int) -> Bool {
+        guard fileMS > 0, editMS > 0 else { return false }
+        let editHundredths = Int((Double(editMS) / 10).rounded()) * 10
+        return abs(fileMS - editHundredths) <= 10
+    }
+
+    /// The same question for an animated picture, asked of its frames: one
+    /// picture for every 1/fps of the edit, within one.
     public static func holdsTheEdit(frames: Int, editMS: Int, fps: Double) -> Bool {
         guard frames > 0, editMS > 0 else { return false }
         let wanted = Int((Double(editMS) / 1000 * max(1, fps)).rounded())

@@ -242,6 +242,31 @@ struct DocumentMovieWriterTests {
         #expect(first.width == 480)
     }
 
+    /// What a written GIF's frame delays add up to, read off the file.
+    static func gifRunningMS(_ url: URL) throws -> Int {
+        let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil))
+        var seconds = 0.0
+        for index in 0..<CGImageSourceGetCount(source) {
+            let properties = CGImageSourceCopyPropertiesAtIndex(source, index, nil) as? [CFString: Any]
+            let gif = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
+            seconds += (gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double) ?? 0
+        }
+        return Int((seconds * 1000).rounded())
+    }
+
+    @Test("A four second edit writes a GIF that runs four seconds at every preset",
+          arguments: VideoExportQuality.allCases)
+    func aGIFRunsAsLongAsTheEdit(_ quality: VideoExportQuality) async throws {
+        let plan = DocumentVideoExport.plan(durationMS: 4_000,
+                                            canvasSize: CGSize(width: 320, height: 200),
+                                            format: .gif, quality: quality)
+        let out = Self.folder.appendingPathComponent("runs-\(quality.rawValue).gif")
+        try await DocumentMovieWriter.writeAnimated(plan: plan, format: .gif, to: out,
+                                                    frames: Self.twoHalves(plan: plan))
+        let running = try Self.gifRunningMS(out)
+        #expect(abs(running - 4_000) <= 10, "\(quality.rawValue) runs \(running) ms")
+    }
+
     /// How loud a stretch of a written file is, read the way the timeline reads
     /// a waveform.
     static func loudness(_ wave: Waveform, fromMS: Int, toMS: Int) -> Float {

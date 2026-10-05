@@ -215,4 +215,30 @@ struct VideoCutExportTests {
             #expect(t < 2.0001 || t > 3.9999, "frame \(index) sampled the dropped piece at \(t)s")
         }
     }
+
+    @Test("A recording's GIF at fifteen a second runs as long as what was kept")
+    func animatedExportRunsAsLongAsTheKeptPieces() async throws {
+        let dir = TestClip.makeScratchDirectory()
+        defer { TestClip.cleanUp(dir) }
+        let source = dir.appendingPathComponent("source.mp4")
+        try await TestClip.write(to: source, seconds: 6)
+
+        var cuts = VideoCutList(duration: 6)
+        _ = cuts.split(atTimeline: 2)
+        _ = cuts.split(atTimeline: 4)
+        _ = cuts.removePiece(at: 1)
+
+        let out = dir.appendingPathComponent("timed.gif")
+        try await VideoExporter.exportAnimated(from: source, to: out, format: .gif,
+                                               cuts: cuts, targetFPS: 15, maxDimension: 160)
+        let read = try #require(CGImageSourceCreateWithURL(out as CFURL, nil))
+        var seconds = 0.0
+        for index in 0..<CGImageSourceGetCount(read) {
+            let properties = CGImageSourceCopyPropertiesAtIndex(read, index, nil) as? [CFString: Any]
+            let gif = properties?[kCGImagePropertyGIFDictionary] as? [CFString: Any]
+            seconds += (gif?[kCGImagePropertyGIFUnclampedDelayTime] as? Double) ?? 0
+        }
+        // Four kept seconds, not 60 frames of seven hundredths (4.2).
+        #expect(abs(seconds - 4) < 0.0101, "runs \(seconds) s")
+    }
 }

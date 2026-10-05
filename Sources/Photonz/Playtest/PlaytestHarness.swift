@@ -706,16 +706,22 @@ private final class Run {
                 seconds += delay
             }
             fileMS = Int((seconds * 1000).rounded())
-            // Its frames are the measure: the delays round to hundredths
-            // (`VideoClipboardCopy.holdsTheEdit`).
+            // Its frames are the edit's, one for every 1/fps of it, and its
+            // delays, kept in hundredths, add up to the edit within one
+            // (`GIFFrameTiming`).
             let planned = RecordingExportMemory.quality(for: .gif).targetFPS
             guard VideoClipboardCopy.holdsTheEdit(frames: count, editMS: editMS, fps: planned) else {
                 throw Failure(description: "\(url.lastPathComponent) on the clipboard holds \(count) frames "
                               + "and the edit at \(Self.round2(planned)) a second is "
                               + "\(Int((Double(editMS) / 1000 * planned).rounded())): it is not the edit")
             }
+            guard VideoClipboardCopy.gifRunsAsLong(fileMS: fileMS, asEditMS: editMS) else {
+                throw Failure(description: "\(url.lastPathComponent) on the clipboard holds the edit's \(count) "
+                              + "frames but its delays add up to \(fileMS) ms against the edit's \(editMS) ms: "
+                              + "it plays at the wrong speed")
+            }
             note(number, stage, "\(url.lastPathComponent) on the clipboard holds \(count) frames, the edit's "
-                 + "\(editMS) ms at \(Self.round2(planned)) a second; its delays add up to \(fileMS) ms")
+                 + "\(editMS) ms at \(Self.round2(planned)) a second, and runs \(fileMS) ms")
             return
         } else {
             let asset = AVURLAsset(url: url)

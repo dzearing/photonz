@@ -1,0 +1,22 @@
+{
+  "feature": "A GIF plays at the speed of the edit",
+  "epic": "video-share",
+  "summary": "A GIF from Export or from Copy as GIF now runs as long as the edit it came from. A four second cut was a 4.2 second GIF at Standard and a 3.84 second one at High; both are now 4.0.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and cut it to about four seconds." },
+    { "do": "Choose Edit > Copy as GIF.", "shot": "2026-10-05-gif-runs-as-long-as-the-edit-1.png" },
+    { "do": "Paste it into a chat or a browser beside the editor and play both together." },
+    { "do": "Export the same edit as a GIF at High, then at Small, and open each in Quick Look." }
+  ],
+  "evaluate": [
+    "Does the pasted GIF finish its loop at the same moment the edit's playhead reaches the end?",
+    "Does a long GIF (a minute or more) stay in step with the edit to the end?",
+    "Does motion in the GIF at Standard still look even, with no visible stutter from frames held a hundredth longer than their neighbours?"
+  ],
+  "rough": [
+    "No mock covers how long a GIF runs; this is a timing fix with nothing new on screen.",
+    "At fifteen a second a GIF frame is held alternately six and seven hundredths, because the format cannot store a fifteenth. The total keeps to the clock; single frames are a hundredth apart."
+  ]
+}

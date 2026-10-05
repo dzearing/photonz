@@ -186,14 +186,20 @@ public struct AnimatedExportPlan: Hashable, Sendable {
     /// back into the file, so a dropped piece contributes no frames and the
     /// join lands between two neighbouring frames like any other.
     public let cuts: VideoCutList?
+    /// How long what is exported runs, in seconds: the trimmed or cut length,
+    /// which a GIF's delays add up to (`GIFFrameTiming`). Frame count times
+    /// frame delay where nobody said.
+    public let duration: TimeInterval
 
     public init(frameCount: Int, frameDelay: TimeInterval, size: CGSize,
-                trimStart: TimeInterval = 0, cuts: VideoCutList? = nil) {
+                trimStart: TimeInterval = 0, cuts: VideoCutList? = nil,
+                duration: TimeInterval? = nil) {
         self.frameCount = frameCount
         self.frameDelay = frameDelay
         self.size = size
         self.trimStart = trimStart
         self.cuts = cuts
+        self.duration = duration ?? Double(frameCount) * frameDelay
     }
 
     /// The presentation time (seconds) to sample the i-th frame at: offset by
@@ -268,7 +274,8 @@ public enum AnimatedExportPlanner {
         // 1/fps step across the duration.
         let count = max(1, Int((max(0, duration) * fps).rounded()))
         let size = Geometry.downscaledToFit(sourceSize, maxDimension: maxDimension)
-        return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size)
+        return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
+                                  duration: max(0, duration))
     }
 
     /// Plan a GIF/HEIC re-encode honoring a trim window and optional crop
@@ -288,7 +295,7 @@ public enum AnimatedExportPlanner {
         let baseSize = crop?.outputSize ?? sourceSize
         let size = Geometry.downscaledToFit(baseSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
-                                  trimStart: trim.inPoint)
+                                  trimStart: trim.inPoint, duration: max(0, trimmed))
     }
 
     /// Frame rate to use when copying a recording to the clipboard as an animated
@@ -322,6 +329,7 @@ public enum AnimatedExportPlanner {
         let baseSize = crop?.outputSize ?? sourceSize
         let size = Geometry.downscaledToFit(baseSize, maxDimension: maxDimension)
         return AnimatedExportPlan(frameCount: count, frameDelay: delay, size: size,
-                                  trimStart: cuts.pieces.first?.start ?? 0, cuts: cuts)
+                                  trimStart: cuts.pieces.first?.start ?? 0, cuts: cuts,
+                                  duration: max(0, cuts.timelineDuration))
     }
 }

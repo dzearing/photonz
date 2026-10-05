@@ -174,19 +174,28 @@ public enum VideoExporter {
         let containerProps = containerProperties(for: format)
         CGImageDestinationSetProperties(dest, containerProps as CFDictionary)
 
-        let frameProps = frameProperties(for: format, delay: plan.frameDelay)
+        // A GIF's delays are whole hundredths spread to add up to the clip
+        // (`GIFFrameTiming`); a HEIC keeps 1/fps as given.
+        let delays = format == .gif
+            ? plan.gifDelaysInHundredths.map { Double($0) / 100 }
+            : Array(repeating: plan.frameDelay, count: plan.frameCount)
         let cropRect = crop.map { Geometry.pixelAligned($0.rect) }
         var wroteAny = false
+        var owed: TimeInterval = 0
         for index in 0..<plan.frameCount {
             if Task.isCancelled {
                 try? FileManager.default.removeItem(at: destination)
                 throw CancellationError()
             }
+            // A frame that could not be read hands its time to the next one.
+            owed += delays[index]
             let time = CMTime(seconds: plan.sampleTime(index), preferredTimescale: 600)
             guard var frame = try? await generator.image(at: time).image else { continue }
             if let cropRect, let cropped = frame.cropping(to: cropRect) {
                 frame = scaled(cropped, to: plan.size) ?? cropped
             }
+            let frameProps = frameProperties(for: format, delay: owed)
+            owed = 0
             CGImageDestinationAddImage(dest, frame, frameProps as CFDictionary)
             wroteAny = true
             onProgress?(index + 1, plan.frameCount)
