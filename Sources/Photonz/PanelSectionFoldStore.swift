@@ -104,7 +104,7 @@ final class PanelSectionFoldStore {
     private func tellCells(_ flipped: Set<String>) {
         for name in flipped {
             guard let id = InspectorSectionID(rawValue: name), let cell = cells[id] else { continue }
-            cell.isFolded = folds.contains(name)
+            cell.fold(folds.contains(name))
         }
     }
 
@@ -160,7 +160,19 @@ final class PanelSectionFoldStore {
 /// One section's fold, watched by that section alone.
 @MainActor @Observable
 final class PanelFoldCell {
-    fileprivate(set) var isFolded: Bool
+    private(set) var isFolded: Bool
+    /// The same, read without tying the reader to it: for the header, which
+    /// says the fold to VoiceOver once the motion has settled and must not be
+    /// redrawn by the click (`CollapsibleSection`).
+    @ObservationIgnored private(set) var isFoldedUnwatched: Bool
 
-    init(isFolded: Bool) { self.isFolded = isFolded }
+    init(isFolded: Bool) {
+        self.isFolded = isFolded
+        isFoldedUnwatched = isFolded
+    }
+
+    fileprivate func fold(_ folded: Bool) {
+        isFoldedUnwatched = folded
+        isFolded = folded
+    }
 }

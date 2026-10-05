@@ -563,42 +563,19 @@ struct CollapsibleSection<Content: View>: View {
     @State private var isCarrying = false
     /// The pointer on the header, which lights the mock's heading up in ink.
     @State private var isHovering = false
-    /// Whether the body has been built at all. Once it has, folding keeps it
-    /// and only closes the window it is seen through: building a body is most
-    /// of what opening one cost (Transitions 50ms, Appearance 65ms against 15
-    /// and 9 kept, `section-fold-motion-walk` 2026-10-04). A section folded
-    /// since launch is not built until it is first opened.
-    @State private var isBuilt = false
-
-    private var isFolded: Bool { fold?.isFolded ?? isCollapsed }
-    /// Whether a folded body is out of the Tab order, so Tab cannot land in a
-    /// field nobody can see (it did, with the body kept built: measured with
-    /// a bare SwiftUI window on 2026-10-04), and whether it is gone from
-    /// VoiceOver and from a walk reading names. Both follow the fold behind
-    /// it on purpose, so the click's own frame carries the picture and
-    /// nothing else: switching off every control in a body and taking it out
-    /// of the accessibility tree cost as much as the rest of the fold
-    /// together (Transitions 19 against 9ms, Audio 17 opening), so they wait
-    /// for the motion to settle, a beat apart, both ways. A walk reading
-    /// names follows the fold at once (`reach`). A pointer cannot reach a
-    /// body whose window is shut whatever these say (`allowsHitTesting`).
-    ///
-    /// Out of the Tab order by `focusable(false, interactions: [])` rather
-    /// than `disabled`: the same for Tab, but it dims nothing and touches only
-    /// what can take focus, where switching every control off and on again
-    /// was a 20ms frame of its own as Transitions opened.
-    @State private var isOutOfTabOrder = false
-    @State private var isUnheard = false
-    /// A folded body's controls are gone from what a walk can find by name,
-    /// as from what a person can see (`FoldedSectionReach`).
-    @State private var reach = FoldedSectionReach()
     /// What the header says it is to VoiceOver, collapsed or expanded. It
-    /// changes with the body leaving or rejoining what VoiceOver hears, not
-    /// in the click's own frame; nil until the first fold, and then the fold.
+    /// changes with the body leaving or rejoining what VoiceOver hears, after
+    /// the motion rather than in the click's own frame; nil until the first
+    /// fold, and then the fold.
     @State private var spokenFolded: Bool?
-    /// The steps above still waiting from the last fold. A new fold cancels
-    /// them, so five clicks in a second settle once, on where they ended.
-    @State private var reachSteps: Task<Void, Never>?
+
+    /// Read here only to say it: the header is not redrawn by a fold. Only
+    /// the chevron and the window the body is seen through are, each reading
+    /// the fold for itself. A header redrawn by every click also rebuilt the
+    /// menu at its far end (Transitions' plus, Properties' menu), every item's
+    /// words and symbol, and that was a quarter of the fold: 11 to 13ms
+    /// against 9 without it (`section-fold-motion-walk`, 2026-10-04).
+    private var isFoldedUnwatched: Bool { fold?.isFoldedUnwatched ?? isCollapsed }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
@@ -606,66 +583,14 @@ struct CollapsibleSection<Content: View>: View {
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                     onHeaderHeight?($0)
                 }
-            // Opened, the body is uncovered top down as the section grows, and
-            // shut, it is covered again from the bottom up as it shrinks, so
-            // everything under it slides on the same curve rather than jumping
-            // to where it ends up. It used to fade in place and slide down from
-            // over its own header, and the click's animation never reached the
-            // dock at all, so in practice it was a jump (filmed 2026-10-02).
-            // The curve is the click's own: see `InspectorPanel.foldMotion`.
-            //
-            // The body is a view of its own whose inputs a fold does not
-            // touch, so folding redraws the header and the window the body is
-            // seen through, and SwiftUI leaves the body's rows alone.
-            let folded = isFolded
-            if !folded || isBuilt {
-                SectionBodyHost(bodyCeiling: bodyCeiling, onBodyHeight: onBodyHeight, content: content)
-                    .onGeometryChange(for: CGRect.self) {
-                        $0.frame(in: .named(inspectorDockSpace))
-                    } action: { frame in
-                        // A folded body is still laid out, at its whole height
-                        // under a closed window, and where it sits then is no
-                        // room anything inside it has.
-                        if !isFolded { onBodyFrame?(frame) }
-                    }
-                    .modifier(SectionRevealModifier(fraction: folded ? 0 : 1))
-                    // Folded, nothing in it can be reached: not by the pointer,
-                    // not by Tab, not by VoiceOver or a walk reading names.
-                    .allowsHitTesting(!folded)
-                    .focusable(!isOutOfTabOrder, interactions: [])
-                    .accessibilityHidden(isUnheard)
-                    .environment(\.foldedSectionReach, reach)
-                    .onAppear { isBuilt = true }
-                    // The first time a body folded since launch is opened it is
-                    // built then, and grows in the same way.
-                    .transition(.asymmetric(
-                        insertion: .modifier(active: SectionRevealModifier(fraction: 0),
-                                             identity: SectionRevealModifier(fraction: 1)),
-                        removal: .identity))
-            }
-        }
-        .onChange(of: isFolded) { _, folded in
-            reach.isFolded = folded
-            reachSteps?.cancel()
-            reachSteps = Task { @MainActor in
-                try? await Task.sleep(for: .seconds(Self.reachDelay))
-                guard !Task.isCancelled else { return }
-                if isUnheard != folded { isUnheard = folded }
-                if spokenFolded != folded { spokenFolded = folded }
-                try? await Task.sleep(for: .seconds(Self.beatApart))
-                guard !Task.isCancelled else { return }
-                if isOutOfTabOrder != folded { isOutOfTabOrder = folded }
-            }
+            SectionFoldWindow(fold: fold, isCollapsed: isCollapsed, bodyCeiling: bodyCeiling,
+                              onBodyHeight: onBodyHeight, onBodyFrame: onBodyFrame,
+                              onSettled: { folded in
+                                  if spokenFolded != folded { spokenFolded = folded }
+                              },
+                              content: content)
         }
     }
-
-    /// Past the fold's 0.25s spring, and past the other windows' following
-    /// it too (`PanelSectionFoldStore.followDelay`), so each has a frame of
-    /// its own rather than sharing one.
-    private static var reachDelay: Double { 0.45 }
-    /// Between a body leaving or rejoining what VoiceOver hears and the Tab
-    /// order.
-    private static var beatApart: Double { 0.1 }
 
     private var header: some View {
         Group {
@@ -696,7 +621,7 @@ struct CollapsibleSection<Content: View>: View {
             return .handled
         }
         .accessibilityAddTraits(.isButton)
-        .accessibilityValue((spokenFolded ?? isFolded) ? "collapsed" : "expanded")
+        .accessibilityValue((spokenFolded ?? isFoldedUnwatched) ? "collapsed" : "expanded")
         .playtestHover { isHovering = $0 }
         .panelHelp("Drag to reorder • click to collapse")
         // Named for a scripted walk, so one can collapse a section, or pick it
@@ -710,10 +635,8 @@ struct CollapsibleSection<Content: View>: View {
     /// the help on it says so.
     private var mockHeaderRow: some View {
         HStack(spacing: 8) {
-            Image(systemName: "chevron.right")
-                .font(.system(size: 9, weight: .bold))
-                .foregroundStyle(VideoKit.Palette.faint)
-                .rotationEffect(.degrees(isFolded ? 0 : 90))
+            SectionFoldChevron(fold: fold, isCollapsed: isCollapsed,
+                               size: 9, weight: .bold, style: VideoKit.Palette.faint)
             Text(DockGroupHeader.title(title))
                 .font(.system(size: DockGroupHeader.titleSize, weight: .semibold))
                 .tracking(DockGroupHeader.titleTracking)
@@ -729,11 +652,9 @@ struct CollapsibleSection<Content: View>: View {
 
     private var classicHeaderRow: some View {
         HStack(spacing: 6) {
-            Image(systemName: "chevron.right")
-                .font(.system(size: PanelSectionLook.Section.chevronSize,
-                              weight: PanelSectionLook.Section.chevronWeight))
-                .foregroundStyle(.secondary)
-                .rotationEffect(.degrees(isFolded ? 0 : 90))
+            SectionFoldChevron(fold: fold, isCollapsed: isCollapsed,
+                               size: PanelSectionLook.Section.chevronSize,
+                               weight: PanelSectionLook.Section.chevronWeight, style: .secondary)
             Text(title)
                 .font(PanelSectionLook.Section.titleFont)
             Spacer(minLength: 8)
@@ -772,6 +693,134 @@ struct CollapsibleSection<Content: View>: View {
                 onReorderEnd()
             }
     }
+}
+
+/// The chevron on a section's header, turned by the fold. A view of its own so
+/// a fold redraws the chevron and not the header round it.
+private struct SectionFoldChevron<Style: ShapeStyle>: View {
+    let fold: PanelFoldCell?
+    let isCollapsed: Bool
+    let size: CGFloat
+    let weight: Font.Weight
+    let style: Style
+
+    var body: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: size, weight: weight))
+            .foregroundStyle(style)
+            .rotationEffect(.degrees((fold?.isFolded ?? isCollapsed) ? 0 : 90))
+    }
+}
+
+/// The window a section's body is seen through, opened and shut by the fold,
+/// and everything that follows a fold behind it. The one part of a section,
+/// with its chevron, that a fold redraws (`CollapsibleSection.body`).
+private struct SectionFoldWindow<Content: View>: View {
+    let fold: PanelFoldCell?
+    let isCollapsed: Bool
+    let bodyCeiling: CGFloat?
+    let onBodyHeight: ((CGFloat) -> Void)?
+    let onBodyFrame: ((CGRect) -> Void)?
+    /// Told when the body has left or rejoined what VoiceOver hears, so the
+    /// header can say the fold at the same moment.
+    let onSettled: (Bool) -> Void
+    @ViewBuilder let content: () -> Content
+
+    /// Whether the body has been built at all. Once it has, folding keeps it
+    /// and only closes the window it is seen through: building a body is most
+    /// of what opening one cost (Transitions 50ms, Appearance 65ms against 15
+    /// and 9 kept, `section-fold-motion-walk` 2026-10-04). A section folded
+    /// since launch is not built until it is first opened.
+    @State private var isBuilt = false
+
+    private var isFolded: Bool { fold?.isFolded ?? isCollapsed }
+    /// Whether a folded body is out of the Tab order, so Tab cannot land in a
+    /// field nobody can see (it did, with the body kept built: measured with
+    /// a bare SwiftUI window on 2026-10-04), and whether it is gone from
+    /// VoiceOver and from a walk reading names. Both follow the fold behind
+    /// it on purpose, so the click's own frame carries the picture and
+    /// nothing else: switching off every control in a body and taking it out
+    /// of the accessibility tree cost as much as the rest of the fold
+    /// together (Transitions 19 against 9ms, Audio 17 opening), so they wait
+    /// for the motion to settle, a beat apart, both ways. A walk reading
+    /// names follows the fold at once (`reach`). A pointer cannot reach a
+    /// body whose window is shut whatever these say (`allowsHitTesting`).
+    ///
+    /// Out of the Tab order by `focusable(false, interactions: [])` rather
+    /// than `disabled`: the same for Tab, but it dims nothing and touches only
+    /// what can take focus, where switching every control off and on again
+    /// was a 20ms frame of its own as Transitions opened.
+    @State private var isOutOfTabOrder = false
+    @State private var isUnheard = false
+    /// A folded body's controls are gone from what a walk can find by name,
+    /// as from what a person can see (`FoldedSectionReach`).
+    @State private var reach = FoldedSectionReach()
+    /// The steps above still waiting from the last fold. A new fold cancels
+    /// them, so five clicks in a second settle once, on where they ended.
+    @State private var reachSteps: Task<Void, Never>?
+
+    var body: some View {
+        // Opened, the body is uncovered top down as the section grows, and
+        // shut, it is covered again from the bottom up as it shrinks, so
+        // everything under it slides on the same curve rather than jumping
+        // to where it ends up. It used to fade in place and slide down from
+        // over its own header, and the click's animation never reached the
+        // dock at all, so in practice it was a jump (filmed 2026-10-02).
+        // The curve is the click's own: see `InspectorPanel.foldMotion`.
+        //
+        // The body is a view of its own whose inputs a fold does not
+        // touch, so folding redraws the window the body is seen through,
+        // and SwiftUI leaves the body's rows alone.
+        let folded = isFolded
+        VStack(alignment: .leading, spacing: 0) {
+            if !folded || isBuilt {
+                SectionBodyHost(bodyCeiling: bodyCeiling, onBodyHeight: onBodyHeight, content: content)
+                    .onGeometryChange(for: CGRect.self) {
+                        $0.frame(in: .named(inspectorDockSpace))
+                    } action: { frame in
+                        // A folded body is still laid out, at its whole height
+                        // under a closed window, and where it sits then is no
+                        // room anything inside it has.
+                        if !isFolded { onBodyFrame?(frame) }
+                    }
+                    .modifier(SectionRevealModifier(fraction: folded ? 0 : 1))
+                    // Folded, nothing in it can be reached: not by the pointer,
+                    // not by Tab, not by VoiceOver or a walk reading names.
+                    .allowsHitTesting(!folded)
+                    .focusable(!isOutOfTabOrder, interactions: [])
+                    .accessibilityHidden(isUnheard)
+                    .environment(\.foldedSectionReach, reach)
+                    .onAppear { isBuilt = true }
+                    // The first time a body folded since launch is opened it is
+                    // built then, and grows in the same way.
+                    .transition(.asymmetric(
+                        insertion: .modifier(active: SectionRevealModifier(fraction: 0),
+                                             identity: SectionRevealModifier(fraction: 1)),
+                        removal: .identity))
+            }
+        }
+        .onChange(of: isFolded) { _, folded in
+            reach.isFolded = folded
+            reachSteps?.cancel()
+            reachSteps = Task { @MainActor in
+                try? await Task.sleep(for: .seconds(Self.reachDelay))
+                guard !Task.isCancelled else { return }
+                if isUnheard != folded { isUnheard = folded }
+                onSettled(folded)
+                try? await Task.sleep(for: .seconds(Self.beatApart))
+                guard !Task.isCancelled else { return }
+                if isOutOfTabOrder != folded { isOutOfTabOrder = folded }
+            }
+        }
+    }
+
+    /// Past the fold's 0.25s spring, and past the other windows' following
+    /// it too (`PanelSectionFoldStore.followDelay`), so each has a frame of
+    /// its own rather than sharing one.
+    private static var reachDelay: Double { 0.45 }
+    /// Between a body leaving or rejoining what VoiceOver hears and the Tab
+    /// order.
+    private static var beatApart: Double { 0.1 }
 }
 
 /// A section's body, inside its own scroller when the dock has had to shorten
@@ -831,7 +880,7 @@ private struct SectionRevealLayout: Layout {
 }
 
 /// A section body open (1), shut (0) or anywhere between while it moves. The
-/// body stays built while it is shut: see `CollapsibleSection.isBuilt`.
+/// body stays built while it is shut: see `SectionFoldWindow.isBuilt`.
 ///
 /// It is seen through a window the height the section has been given, so a
 /// body opening is uncovered top down and one shutting is covered from the

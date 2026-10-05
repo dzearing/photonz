@@ -28,7 +28,7 @@ extension EnvironmentValues {
     /// The panel section this is inside, asked at the moment a walk looks
     /// whether it is folded: a folded body is kept built, under a window
     /// closed to nothing, and nothing in it is there for a walk to find, as
-    /// nothing is for a person (`CollapsibleSection.isBuilt`). A reference
+    /// nothing is for a person (`SectionFoldWindow.isBuilt`). A reference
     /// handed down once and asked later, so a fold costs SwiftUI nothing:
     /// handed down as a flag, every fold re-sent it through the whole body,
     /// an 18ms frame of its own as Transitions opened (2026-10-04).

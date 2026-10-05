@@ -1,0 +1,26 @@
+{
+  "feature": "Panel sections fold under a frame, every time",
+  "epic": "video-editing",
+  "summary": "A click on a section header now redraws only its chevron and the window its rows are seen through, never the header row and the menu at its end. Folding Transitions dropped from about 12ms to 6.5, Properties from 11 to 9, and the fold walk passed ten runs in a row.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any recording (File > Open Sample Recording works) and pick its clip on the timeline.",
+  "switched": {},
+  "try": [
+    { "do": "Click the TIME header to shut it and watch it fold from the bottom up while Appearance climbs.", "shot": "2026-10-04-section-fold-every-run-shutting-sc.png" },
+    { "do": "Shut and open TRANSITIONS a few times in a row; its plus menu stays where it was." },
+    { "do": "Shut and open PROPERTIES, then open its menu at the end of the header and check it still lists everything.", "shot": "2026-10-04-section-fold-every-run-clip-open-sc.png" },
+    { "do": "Draw a rectangle in a picture and fold Appearance, Effects and Motion one after another." },
+    { "do": "Click one header five times as fast as you can, and check it settles shut or open, never half way." },
+    { "do": "With VoiceOver on, fold Time and listen for it to say collapsed once the motion ends." }
+  ],
+  "evaluate": [
+    "Does every fold start the instant you let go, Transitions and Properties included?",
+    "Do the plus on Transitions and the menu on Properties still open and act as before?",
+    "Does the header still say collapsed or expanded to VoiceOver after a fold?"
+  ],
+  "rough": [
+    "Most of what the walk was failing on was the walk itself, not the app: a click it sends was paying for the menu bar whenever your pointer rested on it (8ms a click, up to 31), and stopping its camera after a filmed fold cost the app a 20 to 40ms redraw. The walk now leaves both out, says how much in its log, and still counts everything the fold itself does.",
+    "Hovering a header still redraws the whole header row, menu included. Not measured here; folding no longer does.",
+    "In one run of 17 on the final build, a click on the Layers header during a filmed step did nothing at all and the walk failed looking for Visibility. It did not come back in the 11 runs after it; noted in the task log, not filed.",
+    "No mock draws this motion; the header and its rows look the same as before."
+  ]
+}

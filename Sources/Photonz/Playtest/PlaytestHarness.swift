@@ -49,7 +49,14 @@ enum PlaytestHarness {
     /// goes back after each step. Nothing a walk does needs it in front: its
     /// events are handed to the window directly and its pictures are taken of
     /// the window by id.
+    ///
+    /// The walk's own errand, so it is left out of the main thread meter: a
+    /// press runs it 30ms after the click, in the middle of what the click
+    /// set moving, and the window list it asks for added a millisecond or two
+    /// to a fold's frames (`section-fold-motion-walk`, 2026-10-04).
     static func sendWindowsBehindThePerson() {
+        let began = CACurrentMediaTime()
+        defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - began) }
         guard aProbeWindowIsOverAnotherApp() else { return }
         // Front to back, each to the very back: the first ends up in front of
         // the rest again, so the probe's own order survives.
@@ -1573,22 +1580,30 @@ private final class Run {
             let window = try requireWindow()
             let point = try windowPoint(at)
             var stamp = ProcessInfo.processInfo.systemUptime
-            func post(_ type: NSEvent.EventType, clicks: Int, pressure: Float) {
+            func event(_ type: NSEvent.EventType, clicks: Int, pressure: Float) -> NSEvent? {
                 stamp += 0.016
-                guard let event = NSEvent.mouseEvent(
-                        with: type, location: point, modifierFlags: [], timestamp: stamp,
-                        windowNumber: window.windowNumber, context: nil, eventNumber: 0,
-                        clickCount: clicks, pressure: pressure) else { return }
-                NSApp.postEvent(event, atStart: false)
+                return NSEvent.mouseEvent(
+                    with: type, location: point, modifierFlags: [], timestamp: stamp,
+                    windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                    clickCount: clicks, pressure: pressure)
             }
             let front = await takeTheFrontForADrag()
-            post(.mouseMoved, clicks: 0, pressure: 0)
+            if let moved = event(.mouseMoved, clicks: 0, pressure: 0) { NSApp.postEvent(moved, atStart: false) }
             await sleep(0.15)
             for click in 1...count {
-                post(.leftMouseDown, clicks: click, pressure: 1)
-                await sleep(0.05)
-                post(.leftMouseUp, clicks: click, pressure: 0)
-                await sleep(0.08)
+                guard let down = event(.leftMouseDown, clicks: click, pressure: 1),
+                      let up = event(.leftMouseUp, clicks: click, pressure: 0) else { break }
+                // Delivered as `press` delivers its click: the release queued
+                // first, so a view tracking the mouse finds it, and the press
+                // taken out of the queue by the meter, which leaves out what
+                // the menu bar spends on it when the person's pointer rests
+                // there. Left to the run loop, five quick clicks paid it five
+                // times over in the guarded wait after them, 16 to 19ms passes
+                // no person's click makes (`takeWalkMouseDown`).
+                NSApp.postEvent(up, atStart: false)
+                NSApp.postEvent(down, atStart: true)
+                NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+                await sleep(0.13)
             }
             await sleep(0.3)
             await giveTheFrontBack(front)
@@ -6395,10 +6410,13 @@ private final class Run {
         // click, and the double click meant to go back to a hundred percent
         // fell through to the menu, which opened and held the main thread
         // until the walk's clock ran out.
+        //
+        // Taken out of the queue by the meter, which leaves out what the menu
+        // bar spends on it when the person's pointer rests there
+        // (`MainThreadMeter.takeWalkMouseDown`).
         NSApp.postEvent(up, atStart: false)
         NSApp.postEvent(down, atStart: true)
-        NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
-                                        inMode: .default, dequeue: true) ?? down)
+        NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
         // The release lifts the window over every other app's, inside AppKit
         // where nothing the app calls is involved (a hook on every ordering
         // call caught none), so it goes straight back the moment the release
@@ -8822,6 +8840,9 @@ private final class Run {
                               number: number)
         }
         await sleep(film.seconds)
+        // The camera stopping is the film's own cost (`filmWindow` says why).
+        let beforeTheStop = MainThreadMeter.shared.mark()
+        defer { MainThreadMeter.shared.forget(since: beforeTheStop) }
         await camera.stop()
         let frames = camera.frames
         guard frames.count >= 2 else {
@@ -8928,7 +8949,7 @@ private final class Run {
             await sleep(0.25)
         }
         defer {
-            if hidden { host.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+            if hidden { harnessWork { host.alphaValue = 0 }; MainThreadMeter.shared.countPassesAgain() }
         }
         // A press waits for its control to stop moving, which beside anything
         // restless (a picked shape's outline, a shelf of previews) is its
@@ -8953,6 +8974,15 @@ private final class Run {
             keyAt = lastPressClickAt ?? keyAt
         }
         await sleep(film.seconds)
+        // Stopping the camera is the film's to pay for too: the app answers
+        // the capture ending with a whole layout and accessibility pass of
+        // its own, 8 to 42ms, and that pass moved with the camera (0.83s after
+        // the click on a 0.45s film, 1.28s on a 0.9s one), never with the
+        // fold it filmed (`section-fold-motion-walk`, 2026-10-04). No person
+        // folding a section has the walk's camera stop on them, so what the
+        // meter read from here to the end of the film is taken back off it.
+        let beforeTheStop = MainThreadMeter.shared.mark()
+        defer { MainThreadMeter.shared.forget(since: beforeTheStop) }
         await camera.stop()
         let frames = camera.frames
         // A frame counts when it draws something the one before it did not.
@@ -8974,11 +9004,15 @@ private final class Run {
                 }
             }
         }
-        let cadence = SlideCadence.read(picturesAtMS: drawn, keyAtMS: 0, withinMS: film.withinMS)
-        write(json: ["frames": readings, "firstMS": cadence.firstMS ?? -1, "lastMS": cadence.lastMS ?? -1,
-                     "pictures": cadence.pictures, "longestStillMS": cadence.longestStillMS],
-              to: "\(film.name).json")
-        if !frames.isEmpty { captures.photographed("\(film.name)-0") }
+        // So is reading the cadence and writing it down.
+        let cadence = harnessWork {
+            let cadence = SlideCadence.read(picturesAtMS: drawn, keyAtMS: 0, withinMS: film.withinMS)
+            write(json: ["frames": readings, "firstMS": cadence.firstMS ?? -1, "lastMS": cadence.lastMS ?? -1,
+                         "pictures": cadence.pictures, "longestStillMS": cadence.longestStillMS],
+                  to: "\(film.name).json")
+            if !frames.isEmpty { captures.photographed("\(film.name)-0") }
+            return cadence
+        }
         if let ceiling = film.longestStillUnderMS, cadence.pictures > 0, cadence.longestStillMS >= ceiling {
             throw Failure(description: String(format: "the window sat still for %.0fms in the middle of the slide, "
                 + "past the %.0fms this walk allows: ", cadence.longestStillMS, ceiling) + cadence.summary)
@@ -16276,6 +16310,73 @@ final class MainThreadMeter {
     func setAsidePasses() { setAside += 1 }
     func countPassesAgain() { setAside = max(0, setAside - 1) }
 
+    /// What the meter had read at one moment, so a stretch the walk itself
+    /// caused can be taken back off it (`forget(since:)`).
+    struct Mark {
+        fileprivate let busy: CFTimeInterval
+        fileprivate let passes: Int
+        fileprivate let longest: CFTimeInterval
+        fileprivate let longestEndedAt: CFTimeInterval
+    }
+
+    func mark() -> Mark {
+        Mark(busy: busy, passes: passes, longest: longest, longestEndedAt: longestEndedAt)
+    }
+
+    /// Takes back everything the meter read since `mark`, which the walk
+    /// caused rather than the app: a film's camera stopping (`filmWindow`).
+    /// What a wait reads slice by slice is left alone.
+    func forget(since mark: Mark) {
+        busy = mark.busy
+        passes = mark.passes
+        longest = mark.longest
+        longestEndedAt = mark.longestEndedAt
+    }
+
+    /// What the menu bar spent on a walk's mouse-downs since the meter was
+    /// zeroed, left out of the press it came with (`takeWalkMouseDown`).
+    private var menuBarLeftOut: CFTimeInterval = 0
+
+    /// Takes a walk's own mouse-down out of the queue, which a press has to do
+    /// to deliver it (`pressControl` says why), and leaves out of the meter
+    /// what the MENU BAR spent answering it, when it answered it at all.
+    ///
+    /// AppKit's menu bar watches every mouse-down as it leaves the queue, and
+    /// decides whether it was a click in the menu bar from where the REAL
+    /// pointer is, not from where the event says it is. A walk never moves
+    /// the real pointer, so when the person left theirs resting on the menu
+    /// bar, every press of the walk opens a menu bar tracking session and
+    /// shuts it again inside the click's own pass: 2 to 6ms of window server
+    /// round trips that no person's click ever pays, because their pointer is
+    /// on the thing they click. Measured 2026-10-04 on the same build, with
+    /// the pointer resting at the top left corner: every fold in
+    /// `section-fold-motion-walk` 12 to 23ms, its longest pass the click's
+    /// own; with the pointer mid-screen, 6 to 15ms, its longest the fold's
+    /// frame 8ms after the click. Only a mouse-down during which the main
+    /// menu began tracking is left out, and the note says how much.
+    func takeWalkMouseDown(_ fallback: NSEvent) -> NSEvent {
+        // Told on the main thread, inside the dequeue below.
+        final class Began: @unchecked Sendable { var yes = false }
+        let began = Began()
+        let watch = NotificationCenter.default.addObserver(
+            forName: NSMenu.didBeginTrackingNotification, object: NSApp.mainMenu, queue: nil
+        ) { _ in began.yes = true }
+        let start = CACurrentMediaTime()
+        let event = NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
+                                    inMode: .default, dequeue: true) ?? fallback
+        let end = CACurrentMediaTime()
+        NotificationCenter.default.removeObserver(watch)
+        if began.yes {
+            // Only what lies in the pass still open: the menu bar answers at
+            // the very end of the dequeue, after any run of the run loop it
+            // made to fetch the event, and that run closed a pass of its own.
+            let spent = min(end - start, clock.running(at: end) ?? 0)
+            exclude(spent)
+            menuBarLeftOut += spent
+        }
+        return event
+    }
+
     /// A stall a walk asked for, run once while the next click's release is
     /// handled (`press` with `stallMS`). The release is dispatched by AppKit
     /// outside any harness code, so a monitor is the one place to stand.
@@ -16331,7 +16432,7 @@ final class MainThreadMeter {
     }
 
     func reset() {
-        busy = 0; passes = 0; longest = 0
+        busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0
         zeroedAt = CACurrentMediaTime()
         clock.restart(at: CACurrentMediaTime())
         sinceAsked = 0
@@ -16378,6 +16479,10 @@ final class MainThreadMeter {
         total += clock.running(at: CACurrentMediaTime()) ?? 0
         return String(format: "mainBusy %.1fms over %d passes, longest %.1fms from %.0fms in",
                       total * 1000, passes, longest * 1000, longestBeganMS)
+            + (menuBarLeftOut > 0
+               ? String(format: ", %.1fms left out that the menu bar spent on the pointer resting over it",
+                        menuBarLeftOut * 1000)
+               : "")
     }
 }
 
