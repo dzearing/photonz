@@ -1,0 +1,39 @@
+{
+  "id": "the-timing-strip-s-name-column-is-as-wide-as-the-how-wide-should-the-column-of-la",
+  "taskId": "the-timing-strip-s-name-column-is-as-wide-as-the",
+  "question": "How wide should the column of layer names on the icon timing strip be?",
+  "context": "The mock draws the names in a narrower column than the app. Picture: queue/audits/2026-10-05-timing-strip-wrapped-names-vs-mock.png (mock on top, app below).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep the wider column; bars stay where they start now",
+      "summary": "Layer names sit in the column the app has today. Names up to about 13 letters fit on one line, longer ones wrap onto two, and the bars start at the same point as the video timeline's.",
+      "pros": [
+        "Fewer names wrap, so the strip stays shorter",
+        "Bars start at the same point in the icon strip and the video timeline"
+      ],
+      "cons": [
+        "Wider than the mock: the bars get a little less room"
+      ],
+      "mitigation": "The strip stretches across the whole window, so the bars lose about 3 percent of their width.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Narrow it to the mock's width; bars start further left",
+      "summary": "The name column shrinks to the mock's width. The bars, ruler and playhead all start further left, and most names of two words wrap onto two lines, as Bell body does in the mock.",
+      "pros": [
+        "Looks like the mock",
+        "The bars get more room"
+      ],
+      "cons": [
+        "Most names wrap, so each layer's row is taller and fewer layers fit before the strip scrolls",
+        "The icon strip's bars no longer start where the video timeline's do"
+      ],
+      "mitigation": "The strip already grows taller before it scrolls, so four two-line layers still fit."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-05T08:57:50.268Z"
+}

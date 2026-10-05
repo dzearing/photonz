@@ -1,0 +1,44 @@
+{
+  "feature": "Layer names on the timing strip wrap instead of being cut",
+  "epic": "icon-animate",
+  "summary": "A layer name too long for one line of the timing strip now takes a second line beside its kind mark, the way the Make a bell swing mock wraps Bell body, so names like Notification bell and Settings window read whole without pointing at them. Every heading is drawn bright, as the mock draws them.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: timing-strip-long-names-walk (no flags).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any picture, draw a rectangle and name it Notification bell (double-click its row in Layers)."
+    },
+    {
+      "do": "Pick Rotation from Add Motion in the Motion section, so the strip opens across the bottom."
+    },
+    {
+      "do": "Draw an ellipse called Settings window and a rectangle called Title text layer, and give each a Rotation.",
+      "shot": "2026-10-05-timing-strip-wrapped-names-1-sc.png"
+    },
+    {
+      "do": "Read the strip's headings: each long name sits whole on two lines beside its mark, and the bars still start at 0 on the ruler."
+    },
+    {
+      "do": "Name a fourth layer settings-capture-top-left-corner-shadow and give it a Rotation: only this one is cut in the middle."
+    },
+    {
+      "do": "Rest the pointer on that cut heading to read it whole on the tooltip.",
+      "shot": "2026-10-05-timing-strip-wrapped-names-2-sc.png"
+    },
+    {
+      "do": "Compare with the mock's timing dock, mock on top and the app below.",
+      "shot": "2026-10-05-timing-strip-wrapped-names-vs-mock.png"
+    }
+  ],
+  "evaluate": [
+    "Do Notification bell, Settings window and Title text layer read at a glance on two lines?",
+    "Is a taller row for a two-line name a fair price, or does a strip of long names now feel too tall?",
+    "With every heading bright, can you still tell which layer is picked from its bars' blue ring alone?",
+    "Is cutting only names that two lines cannot hold the right line to draw?"
+  ],
+  "rough": [
+    "The name column stays 92 points where the mock's is 58 pixels, so the app wraps later than the mock: Bell body fits on one line here. Narrowing it would move where the bars start, so it is your call on card the-timing-strip-s-name-column-is-as-wide-as-the-how-wide-should-the-column-of-la.",
+    "A two-line heading makes its row about 10 points taller. The strip now grows to 220 points before it scrolls (was 188), so four layers with two-line names still show without scrolling.",
+    "Every heading is now drawn bright, as the mock draws them; before, headings of layers not picked were dimmed. The picked layer is shown by the blue ring on its bars."
+  ]
+}

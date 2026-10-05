@@ -50,11 +50,38 @@ struct MotionStripView: View {
     static let markGap: CGFloat = 3
     /// What a layer's name has left of the column once its mark is in.
     static var headingNameRoom: CGFloat { labelWidth - 6 - markWidth - markGap }
+    /// The face a heading's name is drawn in, measured with the same font so
+    /// "two lines" here means two lines on screen.
+    static let headingFont = NSFont.systemFont(ofSize: 10, weight: .semibold)
+    static let headingLineHeight: CGFloat =
+        NSLayoutManager().defaultLineHeight(for: headingFont)
+
+    /// How many lines a layer's name needs in the heading's room. A long name
+    /// takes a second line, the way the mock wraps it (`MotionStripHeading`).
+    static func headingLinesNeeded(_ name: String) -> Int {
+        guard !name.isEmpty else { return 1 }
+        let box = (name as NSString).boundingRect(
+            with: CGSize(width: headingNameRoom, height: .greatestFiniteMagnitude),
+            options: [.usesLineFragmentOrigin],
+            attributes: [.font: headingFont])
+        return max(1, Int((box.height / headingLineHeight).rounded()))
+    }
+
+    /// How tall a layer's heading row is: a lane's height when it holds a bar,
+    /// the short hairline row when not, and taller when the name wraps.
+    static func headingRowHeight(for group: MotionStripGroup) -> CGFloat {
+        let base = group.bar == nil ? layerRowHeight
+                                    : (group.isSound ? soundLaneHeight : laneHeight)
+        return MotionStripHeading.rowHeight(base: base,
+                                            lines: headingLinesNeeded(group.layerName),
+                                            lineHeight: headingLineHeight)
+    }
     /// Air round the whole strip.
     private static let inset: CGFloat = 12
     /// Past which the strip scrolls instead of growing. Six or seven lanes fit
-    /// before it does, which is more than any icon has.
-    private static let bodyCeiling: CGFloat = 188
+    /// before it does, which is more than any icon has, and four layers whose
+    /// names each take two lines still show whole.
+    private static let bodyCeiling: CGFloat = 220
 
     var body: some View {
         VStack(spacing: 0) {
@@ -169,11 +196,8 @@ struct MotionStripView: View {
         let groups = editorState.motionStripGroups
         let lanes = groups.reduce(0) { $0 + $1.lanes.count }
         // A row with a bar in it is as tall as a lane; a bare heading is the
-        // short hairline row it always was.
-        let headings = groups.reduce(CGFloat(0)) {
-            $0 + ($1.bar == nil ? Self.layerRowHeight
-                                : ($1.isSound ? Self.soundLaneHeight : Self.laneHeight))
-        }
+        // short hairline row it always was; a name on two lines grows either.
+        let headings = groups.reduce(CGFloat(0)) { $0 + Self.headingRowHeight(for: $1) }
         let content = MotionStripRulerView.height
             + headings
             + CGFloat(lanes) * Self.laneHeight
@@ -387,21 +411,27 @@ private struct MotionStripGroupView: View {
             HStack(spacing: 6) {
                 // The mark for what kind of layer it is, then its name, as the
                 // mock draws the heading. The mark comes out of the name's
-                // room, never the lanes': the column stays one width.
-                HStack(spacing: MotionStripView.markGap) {
+                // room, never the lanes': the column stays one width, so a
+                // long name takes a second line rather than being cut, and
+                // only a name two lines cannot hold is cut, with the tooltip.
+                HStack(alignment: .firstTextBaseline, spacing: MotionStripView.markGap) {
                     Image(systemName: group.mark.symbol)
                         .font(.system(size: 9, weight: .medium))
                         .frame(width: MotionStripView.markWidth)
                         .accessibilityHidden(true)
                     Text(group.layerName)
-                        .font(.system(size: 10, weight: .semibold))
-                        .lineLimit(1)
+                        .font(Font(MotionStripView.headingFont))
+                        .lineLimit(MotionStripHeading.lineLimit)
                         .truncationMode(.middle)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
-                .foregroundStyle(isPicked ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
+                // Every heading bright, as the mock draws them: which layer is
+                // picked is said by its bars' accent ring, not by dimming the
+                // names of the others.
+                .foregroundStyle(.primary)
                 .frame(width: MotionStripView.labelWidth - 6, alignment: .leading)
-                .wholeNameTip(group.layerName, weight: .semibold,
-                              room: MotionStripView.headingNameRoom)
+                .wholeNameTip(group.layerName, when: MotionStripHeading.isCut(
+                    neededLines: MotionStripView.headingLinesNeeded(group.layerName)))
                 if let bar = group.bar {
                     clipBar(bar)
                 } else {
@@ -419,10 +449,7 @@ private struct MotionStripGroupView: View {
     /// A layer that occupies time gets a bar, and it needs the same room a lane
     /// gets to draw one in. A layer that does not keeps the labelled hairline
     /// it has always had (`docs/design/video-surface.md` §2).
-    private var rowHeight: CGFloat {
-        guard group.bar != nil else { return MotionStripView.layerRowHeight }
-        return group.isSound ? MotionStripView.soundLaneHeight : MotionStripView.laneHeight
-    }
+    private var rowHeight: CGFloat { MotionStripView.headingRowHeight(for: group) }
 
     /// The stretch of the document this layer occupies, drawn where it happens.
     ///
@@ -442,8 +469,6 @@ private struct MotionStripGroupView: View {
         ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
                       bar: bar, laneWidth: laneWidth, isSound: group.isSound)
     }
-
-    private var isPicked: Bool { editorState.selectedLayerID == group.layerID }
 }
 
 /// The clip's bar while it is being TRIMMED (`docs/design/video-surface.md`
@@ -662,7 +687,14 @@ extension View {
                       room: CGFloat) -> some View {
         let font = NSFont.systemFont(ofSize: size, weight: weight)
         let natural = (name as NSString).size(withAttributes: [.font: font]).width
-        if natural > room {
+        wholeNameTip(name, when: natural > room)
+    }
+
+    /// The same tooltip, for a label that has decided for itself whether its
+    /// name is cut (a heading that wraps before it cuts).
+    @ViewBuilder
+    func wholeNameTip(_ name: String, when isCut: Bool) -> some View {
+        if isCut {
             toolTip(name)
         } else {
             self

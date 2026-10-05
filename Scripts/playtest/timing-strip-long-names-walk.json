@@ -1,56 +1,319 @@
 {
   "out": "/tmp/photonz-playtest/timing-strip-long-names-walk",
-  "seed": "A layer name longer than the timing strip's name column. Two layers called settings-capture-top and settings-capture-left, each given the same rotation, so the strip holds two headings that begin the same way and differ only at the end. At Next defaults, nothing switched on by hand. The strip has to tell the two apart on sight, and a name it cannot show whole has to be readable in full by resting the pointer on it, without leaving the strip.",
-  "setup": { "forget": ["tools", "panel", "motion"] },
+  "seed": "Layer names longer than one line of the timing strip's name column: Notification bell, Settings window and Title text layer, which used to fit before each heading gained its kind mark, plus one name too long even for two lines. At Next defaults, nothing switched on by hand. The mock (icon-animate-wt.html, the timing dock) wraps a long name onto a second line, so every one of the three reads whole without pointing at it; only the overlong one is cut, and it reads in full by resting the pointer on it.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel",
+      "motion"
+    ]
+  },
   "steps": [
-    { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [300, 120], "to": [560, 320], "steps": 8 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "click", "at": [430, 220] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "beginRenameSelectedLayer" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "type", "text": "settings-capture-top" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "tool", "tool": "ellipse" },
-    { "do": "drag", "from": [340, 340], "to": [460, 450], "steps": 8 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "click", "at": [400, 395] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "beginRenameSelectedLayer" },
-    { "do": "wait", "seconds": 0.5 },
-    { "do": "type", "text": "settings-capture-left" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "tool", "tool": "rectangle" },
-    { "do": "drag", "from": [640, 140], "to": [760, 240], "steps": 8 },
-    { "do": "tool", "tool": "select" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "click", "at": [700, 190] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "1-two-long-names", "note": "three headings on the strip. The two long ones begin the same way and differ only at the end, and the cut keeps the end: one reads as the top one, the other as the left one. The short Rectangle sits in the column whole, exactly as before. Each heading starts with the mark for its kind, the way the Make a bell swing mock draws it: a square for the two rectangles, a circle for the ellipse." },
-    { "do": "snapshot", "name": "1-two-long-names" },
-    { "do": "hover", "label": "settings-capture-top" },
-    { "do": "describe", "stage": "2-top-read-whole", "note": "resting on the cut heading raises the app's own tooltip carrying the whole name, settings-capture-top, just over the heading, without leaving the strip." },
-    { "do": "snapshot", "name": "2-top-read-whole" },
-    { "do": "hover", "label": "settings-capture-left" },
-    { "do": "describe", "stage": "3-left-read-whole", "note": "and the other one says settings-capture-left, so the two are told apart in full." },
-    { "do": "snapshot", "name": "3-left-read-whole" },
-    { "do": "hover", "at": [58, 959], "window": "Untitled" },
-    { "do": "describe", "stage": "4-pointed-at", "note": "the same name, raised the way a hand raises it: the pointer resting on the face of the cut heading, settin…re-top, brings up settings-capture-top." },
-    { "do": "snapshot", "name": "4-pointed-at" },
-    { "do": "hover", "at": [41, 883], "window": "Untitled" },
-    { "do": "describe", "stage": "5-short-name-says-nothing", "note": "resting on the Rectangle heading, which fits the column whole, raises nothing: a tooltip that only repeats what is already on screen is noise." }
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 560,
+      "width": 1420,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        620,
+        330
+      ],
+      "to": [
+        720,
+        430
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        670,
+        380
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "settings-capture-top-left-corner-shadow"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Motion",
+      "choose": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        140
+      ],
+      "to": [
+        760,
+        240
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        190
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Title text layer"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Motion",
+      "choose": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        340
+      ],
+      "to": [
+        460,
+        450
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        400,
+        395
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Settings window"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Motion",
+      "choose": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        120
+      ],
+      "to": [
+        560,
+        320
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        430,
+        220
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "beginRenameSelectedLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Notification bell"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Motion",
+      "choose": "Rotation"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-long-names-whole",
+      "note": "four headings on the strip, newest at the top, each starting with the mark for its kind. Notification bell, Settings window and Title text layer each read whole, wrapped onto a second line the way the Make a bell swing mock wraps a long name, and each row grows to hold both lines. Only settings-capture-top-left-corner-shadow, too long even for two lines, is cut in the middle. The bars and the ruler start at the same point as before, and the strip is tall enough to show all four layers without scrolling."
+    },
+    {
+      "do": "snapshot",
+      "name": "1-long-names-whole"
+    },
+    {
+      "do": "hover",
+      "label": "settings-capture-top-left-corner-shadow"
+    },
+    {
+      "do": "describe",
+      "stage": "2-cut-name-read-whole",
+      "note": "resting on the one heading two lines cannot hold raises the app's own tooltip with the whole name, without leaving the strip."
+    },
+    {
+      "do": "snapshot",
+      "name": "2-cut-name-read-whole"
+    },
+    {
+      "do": "hover",
+      "at": [
+        50,
+        808
+      ],
+      "window": "Untitled"
+    },
+    {
+      "do": "describe",
+      "stage": "3-whole-name-says-nothing",
+      "note": "the pointer resting on the face of the Notification bell heading, which now reads whole on two lines, raises nothing: a tooltip that only repeats what is already on screen is noise."
+    },
+    {
+      "do": "snapshot",
+      "name": "3-whole-name-says-nothing"
+    }
   ]
 }
