@@ -20687,3 +20687,10 @@ Next: the first editor window's ~200 ms first build
 - A press on a marker's flag drags it (`RulerGrip.marker`, `moveMarker`, one undo step), catching on cuts, clip ends, both ends and the playhead; a click on it puts the playhead exactly on it. The playhead still wins over a marker under it, as in Premiere; In/Out band ends win over both.
 - Walks: `clips-snap-to-markers-walk` (editor-driven, all four behaviours) and `drag-a-marker-by-hand-walk` (real pointer `windowDrag`). New walk fields: `dragClip.hold`, `expectTimeline.markerAtMS`; `dragRuler` with from == to is now a click.
 - Next: nothing open on this; marker names stay out of scope.
+
+## 2026-10-05 — Appearance and Effects menus on the panel's dropdown
+
+- Blending and Masked by wear `VideoKit.SelectFace` through the new `VideoKit.ListDropdown` (a popover list, so Blending still previews each mode on the canvas); the Effects list's Kind/Follows/Position and a saved effect style's Kind are `VideoKit.Dropdown`.
+- `DropdownButton.alignmentRectInsets` is zero: every AppKit dropdown had sat 4pt left of the slider column. `Dropdown` honours `.disabled`.
+- `PanelMenusAreDrawnDropdownsTests` refuses system pop-ups in the panel; 12 bare Pickers remain on its shrinking list.
+- Next: `the-tool-lens-text-style-and-component-menus-in` (those 12), `two-choice-effect-settings-are-a-segmented-contr` (p1, comp-fields says two choices are a `.seg`).
