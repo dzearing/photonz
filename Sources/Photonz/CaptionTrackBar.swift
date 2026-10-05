@@ -121,8 +121,10 @@ struct CaptionBarButtonStyle: ButtonStyle {
         @Environment(\.shownPointer) private var shown
 
         var body: some View {
-            let pressed = configuration.isPressed || shown == .pressed
-            let lit = filled || hovering || pressed
+            // A button that cannot be pressed sits still under the pointer.
+            let look = ButtonPointerLook(enabled: isEnabled, hovering: hovering,
+                                         pressed: configuration.isPressed || shown == .pressed)
+            let lit = filled || look.isLit
             configuration.label
                 .labelStyle(Tight())
                 .measuredInk()
@@ -134,7 +136,7 @@ struct CaptionBarButtonStyle: ButtonStyle {
                     .fill(lit ? AnyShapeStyle(VideoKit.Palette.glassThin) : AnyShapeStyle(Color.clear)))
                 .overlay(RoundedRectangle(cornerRadius: 7)
                     .strokeBorder(lit ? AnyShapeStyle(VideoKit.Palette.edgeLo) : AnyShapeStyle(Color.clear)))
-                .scaleEffect(pressed ? 0.97 : 1)
+                .scaleEffect(look.isPressed ? 0.97 : 1)
                 .contentShape(RoundedRectangle(cornerRadius: 7))
                 .opacity(isEnabled ? 1 : 0.55)
                 .fixedSize()

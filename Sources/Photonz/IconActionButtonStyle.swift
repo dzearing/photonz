@@ -1,3 +1,4 @@
+import PhotonzCore
 import SwiftUI
 
 /// Shared design language for small icon action buttons (history overlay,
@@ -48,9 +49,11 @@ struct IconActionButtonStyle: ButtonStyle {
 
         var body: some View {
             let destructive = configuration.role == .destructive
-            let pressed = configuration.isPressed || shown == .pressed
-            let hovered = style.pointerFeedback && hovering
-            let lit = pressed || hovered
+            // A button that cannot be pressed sits still under the pointer.
+            let look = ButtonPointerLook(enabled: isEnabled, hovering: hovering,
+                                         pressed: configuration.isPressed || shown == .pressed,
+                                         answersHover: style.pointerFeedback)
+            let lit = look.isLit
             // Over the accent circle the wash is white, so the tool in hand
             // brightens under the pointer instead of going muddy.
             let tint: Color = style.isActive ? .white : (destructive ? .red : .primary)
@@ -70,16 +73,16 @@ struct IconActionButtonStyle: ButtonStyle {
                         accentCircle
                     }
                     Circle().fill(alarmed ? Color.red
-                                  : tint.opacity(fillOpacity(pressed: pressed, hovered: hovered)))
+                                  : tint.opacity(fillOpacity(look)))
                 }
-                .scaleEffect(pressed && style.pointerFeedback ? 0.90 : 1)
+                .scaleEffect(look.isPressed && style.pointerFeedback ? 0.90 : 1)
                 .contentShape(style.squareHitTarget ? AnyShape(Rectangle()) : AnyShape(Circle()))
                 // Quieter, never gone: at 40% a glyph on light glass read
                 // 1.6:1, under the system's own disabled label.
                 .opacity(isEnabled ? 1 : 0.55)
                 .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
-                .animation(.easeOut(duration: 0.10), value: pressed)
+                .animation(.easeOut(duration: 0.10), value: look.isPressed)
         }
 
         @ViewBuilder private var accentCircle: some View {
@@ -91,10 +94,12 @@ struct IconActionButtonStyle: ButtonStyle {
             }
         }
 
-        private func fillOpacity(pressed: Bool, hovered: Bool) -> Double {
-            if pressed { return 0.22 }
-            if hovered { return 0.12 }
-            return 0
+        private func fillOpacity(_ look: ButtonPointerLook) -> Double {
+            switch look {
+            case .pressed: 0.22
+            case .hovered: 0.12
+            case .rest: 0
+            }
         }
     }
 }
@@ -141,8 +146,10 @@ struct PillActionButtonStyle: ButtonStyle {
 
         var body: some View {
             let destructive = configuration.role == .destructive
-            let pressed = configuration.isPressed || shown == .pressed
-            let active = pressed || hovering
+            // A button that cannot be pressed sits still under the pointer.
+            let look = ButtonPointerLook(enabled: isEnabled, hovering: hovering,
+                                         pressed: configuration.isPressed || shown == .pressed)
+            let active = look.isLit
             let tint: Color = destructive ? .red : .primary
             // Destructive under the pointer: the system's white on red, never
             // red words on a wash of red (see `IconActionButtonStyle`).
@@ -155,20 +162,22 @@ struct PillActionButtonStyle: ButtonStyle {
                 .padding(.horizontal, 10)
                 .padding(.vertical, 5)
                 .background {
-                    Capsule().fill(alarmed ? Color.red : tint.opacity(fillOpacity(pressed: pressed)))
+                    Capsule().fill(alarmed ? Color.red : tint.opacity(fillOpacity(look)))
                 }
-                .scaleEffect(pressed ? 0.96 : 1)
+                .scaleEffect(look.isPressed ? 0.96 : 1)
                 .contentShape(Capsule())
                 .opacity(isEnabled ? 1 : 0.55)
                 .playtestHover { hovering = $0 }
                 .animation(.easeOut(duration: 0.12), value: hovering)
-                .animation(.easeOut(duration: 0.10), value: pressed)
+                .animation(.easeOut(duration: 0.10), value: look.isPressed)
         }
 
-        private func fillOpacity(pressed: Bool) -> Double {
-            if pressed { return 0.20 }
-            if hovering { return prominent ? 0.14 : 0.12 }
-            return prominent ? 0.08 : 0
+        private func fillOpacity(_ look: ButtonPointerLook) -> Double {
+            switch look {
+            case .pressed: 0.20
+            case .hovered: prominent ? 0.14 : 0.12
+            case .rest: prominent ? 0.08 : 0
+            }
         }
     }
 }

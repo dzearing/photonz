@@ -151,6 +151,31 @@ enum LegibilityCatalogue {
         return all
     }
 
+    /// Every shared button style that answers the pointer, for the check that
+    /// a disabled one does not (`LegibilitySheet.stillUnderThePointer`). The
+    /// sheet disables each and draws it at rest, hovered and pressed.
+    static var pointerStill: [(String, (VideoKit.ShownPointer) -> AnyView)] {
+        [
+            ("Icon button", { pointer in
+                AnyView(Button {} label: { symbol("trash") }.buttonStyle(IconActionButtonStyle())
+                    .environment(\.shownPointer, pointer)) }),
+            ("Tool bar button", { pointer in
+                AnyView(Button {} label: { symbol("cursorarrow").font(.system(size: 15, weight: .medium)) }
+                    .buttonStyle(.tool(isActive: false))
+                    .environment(\.shownPointer, pointer)) }),
+            ("Pill button", { pointer in
+                AnyView(Button("Clear All") {}.buttonStyle(PillActionButtonStyle())
+                    .environment(\.shownPointer, pointer)) }),
+            ("Pill button, prominent", { pointer in
+                AnyView(Button("Edit") {}.buttonStyle(PillActionButtonStyle(prominent: true))
+                    .environment(\.shownPointer, pointer)) }),
+            ("Caption bar button", { pointer in
+                AnyView(Button {} label: { Label("Listen", systemImage: "waveform") }
+                    .buttonStyle(CaptionBarButtonStyle())
+                    .environment(\.shownPointer, pointer)) }),
+        ]
+    }
+
     // MARK: - The panel
 
     private static var panel: [Specimen] {

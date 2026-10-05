@@ -239,6 +239,7 @@ enum LegibilitySheet {
                 }
             }
         }
+        failures += stillUnderThePointer(out: out)
         let seconds = Date().timeIntervalSince(started)
         print(String(format: "legibility: %d words and icons measured on %d specimens, light and dark, in %.0fs; "
                      + "pictures in %@", measured, catalogue.count, seconds, out.path))
@@ -251,6 +252,43 @@ enum LegibilitySheet {
         print("legibility: UNREADABLE (the user: no white on white or black on black, ever):")
         for failure in failures { print("  \(failure)") }
         return false
+    }
+
+    // MARK: - A button that cannot be pressed sits still
+
+    /// A disabled button drawn hovered and pressed must be the very picture
+    /// of it at rest: a button that brightens or grows its fill under the
+    /// pointer says "press me" in the one moment a person is deciding, and
+    /// then does nothing. Every shared button style in `pointerStill` is
+    /// drawn three ways, light and dark, and any pixel that moves fails.
+    private static func stillUnderThePointer(out: URL) -> [String] {
+        var failures: [String] = []
+        for scheme in [ColorScheme.light, .dark] {
+            let schemeName = scheme == .dark ? "dark" : "light"
+            for (control, view) in LegibilityCatalogue.pointerStill {
+                func drawn(_ pointer: VideoKit.ShownPointer) -> InkPicture? {
+                    render(view(pointer).disabled(true).padding(10)
+                        .background(VideoKit.Palette.panel)
+                        .environment(\.drawnOffscreen, true)
+                        .environment(\.colorScheme, scheme)).flatMap(picture)
+                }
+                guard let rest = drawn(.live) else {
+                    failures.append("\(control), disabled, \(schemeName): could not be drawn")
+                    continue
+                }
+                for (state, pointer) in [("hovered", VideoKit.ShownPointer.hovered), ("pressed", .pressed)] {
+                    guard let moved = drawn(pointer), moved.width == rest.width, moved.height == rest.height,
+                          !zip(moved.pixels, rest.pixels).contains(where: { a, b in
+                              abs(a.r - b.r) + abs(a.g - b.g) + abs(a.b - b.b) > 0.02 })
+                    else {
+                        failures.append("\(control), disabled, \(schemeName): answers the pointer when "
+                                        + "\(state) (a button that cannot be pressed must sit still)")
+                        continue
+                    }
+                }
+            }
+        }
+        return failures
     }
 }
 #endif
