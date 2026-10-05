@@ -32,7 +32,8 @@
     { "do": "snapshot", "name": "2-letters" },
     { "do": "render", "name": "2-canvas-letters" },
 
-    { "do": "panelMenu", "menu": "Follows", "in": "Border", "choose": "Box" },
+    { "do": "press", "control": "Box", "in": "Border, Follows" },
+    { "do": "expect", "control": "Follows", "in": "Border", "reads": "Box" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "panel", "stage": "3-box" },
     { "do": "describe", "stage": "3-box", "note": "the same border switched to follow the BOX: a plain rectangle round the label, and the Position row arrives with it" },

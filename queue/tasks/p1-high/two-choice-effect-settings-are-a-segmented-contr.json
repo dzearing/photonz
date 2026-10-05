@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 500,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T16:15:12.273Z",
-  "updated": "2026-10-05T16:15:12.276Z",
+  "updated": "2026-10-05T16:56:51.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/comp-fields.html section 05 Select: \"For 5 or more exclusive options, or fewer when space is tight. Below that use a .seg\" and the dont: \"Use a select for two options. That is a segmented control.\" Found 2026-10-05 by the-appearance-and-effects-menus-wear-the-same-d while comparing against the mock; that task moved these rows from the system pop-up onto VideoKit.Dropdown (EffectsListInspector.swift BorderFollowsRow, GlowKindRow, ShadowKindRow; EffectStylePanel.picker). Use SegmentedControl (Sources/Photonz/DesignSystem), never Picker .segmented (UX-PATTERNS: The one segmented control). Walks that choose these today: label-border-follows-walk (panelMenu Follows), appearance-and-effects-dropdowns-open-on-a-click-walk (panelMenu Kind/Follows/Position at centre/start/end); remove those panelMenu steps from the click walk and lower EveryDropdownIsClickedByAWalkTests.builtNames if Kind/Position leave the style panel dropdown.",
@@ -23,6 +23,36 @@
     {
       "t": "2026-10-05T16:15:12.275Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T16:39:21.931Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T16:56:26.415Z",
+      "note": "owns these walks: appearance-and-effects-dropdowns-open-on-a-click-walk, label-border-follows-walk, two-way-effect-setting-reads-mixed-walk"
+    },
+    {
+      "t": "2026-10-05T16:56:51.550Z",
+      "note": "Review before building: a first-time user sees both answers and needs no dropdown to learn the other exists; a Photoshop user knows Drop and Inner shadow as two separate effects, and a switch on one effect is quicker. The one gap the app had was Mixed: a segmented control has nowhere to write it, so it goes beside the name (UX-PATTERNS §4), with no segment lit."
+    },
+    {
+      "t": "2026-10-05T16:56:51.607Z",
+      "note": "Built: EffectsListInspector EffectChoiceRow (SegmentedControl, the name carries playtestControl so walks read 'Kind in Shadow' as before) for Shadow Kind, Glow Kind and Follows; EffectStylePanel.picker is a SegmentedControl for a style's Kind and Position (full-width row, 3 words fit at 220pt). Effects-list Position stays a dropdown: about 146pt needed against a control column of about 122pt at the default 264pt dock and about 80pt at 220pt (measured off probe captures). Masked by stays a dropdown (one choice per layer). EveryDropdownIsClickedByAWalkTests builtSites 6 to 5, Kind and Position out of builtNames. Current: these shared rows draw as the system segmented picker there (fallsBackToSystem), as Current draws every other segmented row."
+    },
+    {
+      "t": "2026-10-05T16:56:51.663Z",
+      "note": "Verified: appearance-and-effects-dropdowns-open-on-a-click-walk (each segment pressed with real mouse events, undo/redo one step), label-border-follows-walk, new two-way-effect-setting-reads-mixed-walk (Mixed reads, Drop gives both layers Drop, one undo brings Mixed back, narrowest dock picture) all ok with real captures; Scripts/test.sh 11399 tests passed, legibility clean."
+    },
+    {
+      "t": "2026-10-05T16:56:51.719Z",
+      "note": "left rough: a saved style's Position is segmented while the Effects list's Position is a dropdown (room differs). Asked as an evaluate question in the audit rather than filed."
     }
+  ],
+  "started": "2026-10-05T16:39:21.930Z",
+  "walks": [
+    "appearance-and-effects-dropdowns-open-on-a-click-walk",
+    "label-border-follows-walk",
+    "two-way-effect-setting-reads-mixed-walk"
   ]
 }

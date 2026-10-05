@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/appearance-and-effects-dropdowns-open-on-a-click-walk",
-  "seed": "Every menu in the Appearance section and the Effects list opens when a person clicks it, at Next defaults with no flag changed. Blending and Masked by open their lists from a press near either end and in the middle, and each pick reads back on the face. A shadow's Kind, a glow's Kind, a border's Follows and Position, and a saved effect style's Kind are panel dropdowns now, clicked on their face in the middle and 8pt in from each end; every click must open the menu and the last picks a value. Pictures in dark and light.",
+  "seed": "Every menu in the Appearance section and the Effects list opens when a person clicks it, and every two-way effect setting switches when a person clicks either answer, at Next defaults with no flag changed. Blending and Masked by open their lists from a press near either end and in the middle, and each pick reads back on the face. A shadow's Kind, a glow's Kind, a border's Follows and a saved effect style's Kind are segmented controls with both answers showing: each segment is clicked with the pointer and the row reads back what was picked, and one undo takes back one pick. A border's Position, three words that do not fit the effect row in a narrow dock, stays a dropdown and is clicked on its face in the middle and 8pt in from each end. Pictures in dark and light.",
   "setup": {
     "forget": [
       "all"
@@ -244,15 +244,9 @@
       "seconds": 0.9
     },
     {
-      "do": "panelMenu",
-      "menu": "Kind",
-      "in": "Shadow",
-      "at": [
-        "centre",
-        "start",
-        "end"
-      ],
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "Shadow"
     },
     {
       "do": "wait",
@@ -261,8 +255,23 @@
     {
       "do": "expect",
       "control": "Kind",
-      "in": "Shadow",
-      "reads": "Shadow, Inner"
+      "reads": "Inner",
+      "in": "Shadow"
+    },
+    {
+      "do": "press",
+      "control": "Drop",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Drop",
+      "in": "Shadow"
     },
     {
       "do": "action",
@@ -275,8 +284,22 @@
     {
       "do": "expect",
       "control": "Kind",
-      "in": "Shadow",
-      "reads": "Shadow, Drop"
+      "reads": "Inner",
+      "in": "Shadow"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Drop",
+      "in": "Shadow"
     },
     {
       "do": "panelMenu",
@@ -291,15 +314,9 @@
       "seconds": 0.9
     },
     {
-      "do": "panelMenu",
-      "menu": "Kind",
-      "in": "Glow",
-      "at": [
-        "centre",
-        "start",
-        "end"
-      ],
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "Glow"
     },
     {
       "do": "wait",
@@ -308,8 +325,38 @@
     {
       "do": "expect",
       "control": "Kind",
-      "in": "Glow",
-      "reads": "Glow, Inner"
+      "reads": "Inner",
+      "in": "Glow"
+    },
+    {
+      "do": "press",
+      "control": "Outer",
+      "in": "Glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Outer",
+      "in": "Glow"
+    },
+    {
+      "do": "press",
+      "control": "Inner",
+      "in": "Glow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Inner",
+      "in": "Glow"
     },
     {
       "do": "panelMenu",
@@ -324,15 +371,9 @@
       "seconds": 0.9
     },
     {
-      "do": "panelMenu",
-      "menu": "Follows",
-      "in": "Border",
-      "at": [
-        "centre",
-        "start",
-        "end"
-      ],
-      "choose": "Box"
+      "do": "press",
+      "control": "Box",
+      "in": "Border, Follows"
     },
     {
       "do": "wait",
@@ -341,8 +382,38 @@
     {
       "do": "expect",
       "control": "Follows",
-      "in": "Border",
-      "reads": "Border, Follows, Box"
+      "reads": "Box",
+      "in": "Border"
+    },
+    {
+      "do": "press",
+      "control": "Letters",
+      "in": "Border, Follows"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "reads": "Letters",
+      "in": "Border"
+    },
+    {
+      "do": "press",
+      "control": "Box",
+      "in": "Border, Follows"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Follows",
+      "reads": "Box",
+      "in": "Border"
     },
     {
       "do": "panelMenu",
@@ -376,7 +447,7 @@
     {
       "do": "describe",
       "stage": "3-effects",
-      "note": "a shadow, a glow and a border on the label: each Kind, Follows and Position is the panel's dropdown filling its row, where the shadow's Kind used to be a narrow system pop-up"
+      "note": "a shadow, a glow and a border on the label: each Kind and the Follows are segmented controls with both answers on screen; the border's Position is still the panel's dropdown"
     },
     {
       "do": "snapshot",
@@ -460,21 +531,16 @@
     {
       "do": "describe",
       "stage": "6-style",
-      "note": "the saved shadow style's own settings: its Kind is the panel's dropdown too"
+      "note": "the saved shadow style's own settings: its Kind is a segmented control too"
     },
     {
       "do": "snapshot",
       "name": "6-style"
     },
     {
-      "do": "panelMenu",
-      "menu": "Kind",
-      "at": [
-        "centre",
-        "start",
-        "end"
-      ],
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "Kind"
     },
     {
       "do": "wait",
@@ -484,6 +550,20 @@
       "do": "expect",
       "control": "Kind",
       "reads": "Kind, Inner"
+    },
+    {
+      "do": "press",
+      "control": "Drop",
+      "in": "Kind"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "reads": "Kind, Drop"
     }
   ]
 }

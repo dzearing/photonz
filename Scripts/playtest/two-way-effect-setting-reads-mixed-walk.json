@@ -1,0 +1,214 @@
+{
+  "out": "/tmp/photonz-playtest/two-way-effect-setting-reads-mixed-walk",
+  "seed": "Two labels, each with the shadow a label arrives with. One shadow is switched to Inner, then both labels are picked: the shadow's Kind lights no segment and says Mixed beside its name. A click on Drop gives both shadows Drop, and one undo puts the disagreement back. At Next defaults, no flag changed. Then the dock goes to its narrowest and a border is added to one label, to see how a shadow's Kind and a border's Follows sit there.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1320,
+      "height": 1000
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        130
+      ]
+    },
+    {
+      "do": "type",
+      "text": "First"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        140,
+        330
+      ]
+    },
+    {
+      "do": "type",
+      "text": "Second"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "First"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Inner",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "Inner"
+    },
+    {
+      "do": "selectRow",
+      "row": "Second",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "mixed"
+    },
+    {
+      "do": "reveal",
+      "control": "Effects section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "1-mixed",
+      "note": "two labels picked whose shadows disagree: Kind lights neither segment and says Mixed beside its name"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-mixed"
+    },
+    {
+      "do": "press",
+      "control": "Drop",
+      "in": "Shadow"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "Drop"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-both-drop"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow",
+      "reads": "mixed"
+    },
+    {
+      "do": "action",
+      "action": "dockNarrowest"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "First"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Border"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "panel",
+      "stage": "3-narrowest"
+    },
+    {
+      "do": "reveal",
+      "control": "Follows"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "3-narrowest",
+      "note": "the dock at its narrowest: the shadow's Kind and the border's Follows in the effect row's control column"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-narrowest"
+    }
+  ]
+}

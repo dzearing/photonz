@@ -275,43 +275,24 @@ private struct BorderFollowsRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
-    /// The dropdown's hover tip, on the AppKit button and in the panel's
-    /// register where a walk reads it.
-    static let help = "Letters draws round each letter, so words stay readable over "
-        + "anything. Box draws round the label's frame."
-
     var body: some View {
         let borders = editorState.layerStyleSelection.borders(at: row.index)
         if borders.hasLettersEverywhere {
             let ids = borders.layerIDs
-            let reading = borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters }
-            HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
-                Text("Follows")
-                    .panelRowName()
-                    .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-                // The panel's dropdown, filling the rest of the row the way
-                // Font does in the Text section.
-                VideoKit.Dropdown(
-                    label: "Follows",
-                    value: reading.isMixed ? LayerStyleSelection.mixedText
-                        : (reading.value ?? .letters).title,
-                    valueStyle: reading.isMixed ? MixedLook.style : nil,
-                    help: Self.help,
-                    choices: .picking(BorderFollows.allCases,
-                                      current: reading.isMixed ? nil : reading.value,
-                                      title: \.title) { new in
-                        editorState.setBorderEffectFollows(at: row.index, ids: ids, to: new)
-                    })
-                    .frame(maxWidth: .infinity)
-                    .disabled(ids.isEmpty)
-                    .panelHelp(Self.help)
-                    .playtestControl("Follows", detail: reading.isMixed ? "mixed"
-                                        : (reading.value ?? .letters).title)
-            }
+            EffectChoiceRow(
+                name: "Follows",
+                reading: borders.reading { $0.borderEffect(at: row.index)?.follows ?? .letters },
+                otherwise: .letters,
+                options: [.init(.letters, BorderFollows.letters.title,
+                                help: "Draws round each letter, so words stay readable over anything"),
+                          .init(.box, BorderFollows.box.title, help: "Draws round the label's frame")],
+                isEnabled: !ids.isEmpty) { new in
+                    editorState.setBorderEffectFollows(at: row.index, ids: ids, to: new)
+                }
             // Its own row name, the way the Color row above it carries one:
-            // with this row on screen the border holds THREE menus, and a walk
-            // that said `{"menu": "Border"}` could not say which of them it
-            // meant. So this one is `{"menu": "Follows", "in": "Border"}` and
+            // with this row on screen the border holds two pickers, and a walk
+            // that said `{"in": "Border"}` could not say which of them it
+            // meant. So this one is `{"control": "Box", "in": "Border, Follows"}` and
             // the Position keeps the row's own name.
             .playtestField("Follows")
         }
@@ -520,38 +501,20 @@ private struct GlowKindRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
-    /// The dropdown's hover tip, on the AppKit button and in the panel's
-    /// register where a walk reads it.
-    static let help = "Outer throws the halo past the layer's edge. "
-        + "Inner lights the edge from inside."
-
     var body: some View {
         let glows = editorState.layerStyleSelection.glows(at: row.index)
         let ids = glows.layerIDs
-        let reading = glows.reading { $0.glowEffect(at: row.index)?.kind ?? .outer }
-        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
-            Text("Kind")
-                .panelRowName()
-                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-            VideoKit.Dropdown(
-                label: "Kind",
-                value: reading.isMixed ? LayerStyleSelection.mixedText
-                    : (reading.value ?? .outer).title,
-                valueStyle: reading.isMixed ? MixedLook.style : nil,
-                help: Self.help,
-                choices: .picking(GlowKind.allCases,
-                                  current: reading.isMixed ? nil : reading.value,
-                                  title: \.title) { new in
-                    editorState.setGlowKind(at: row.index, ids: ids, to: new)
-                })
-                .frame(maxWidth: .infinity)
-                .disabled(ids.isEmpty)
-                .panelHelp(Self.help)
-                .playtestControl("Kind", detail: reading.isMixed ? "mixed"
-                                    : (reading.value ?? .outer).title)
-        }
+        EffectChoiceRow(
+            name: "Kind",
+            reading: glows.reading { $0.glowEffect(at: row.index)?.kind ?? .outer },
+            otherwise: .outer,
+            options: [.init(.outer, GlowKind.outer.title, help: "Throws the halo past the layer's edge"),
+                      .init(.inner, GlowKind.inner.title, help: "Lights the edge from inside")],
+            isEnabled: !ids.isEmpty) { new in
+                editorState.setGlowKind(at: row.index, ids: ids, to: new)
+            }
         // No field name of its own: it belongs to the glow row above it, so a
-        // walk names it `{"control": "Kind", "in": "Glow 2"}` and two glows
+        // walk names it `{"control": "Inner", "in": "Glow 2"}` and two glows
         // never answer to the same words.
     }
 }
@@ -618,31 +581,62 @@ private struct ShadowKindRow: View {
     let ids: [UUID]
 
     var body: some View {
-        let reading = editorState.layerStyleSelection.shadows(at: index)
-            .reading { $0.shadow(at: index)?.kind ?? .drop }
-        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
-            Text("Kind")
-                .panelRowName()
-                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
-            VideoKit.Dropdown(
-                label: "Kind",
-                value: reading.isMixed ? LayerStyleSelection.mixedText
-                    : (reading.value ?? .drop).title,
-                valueStyle: reading.isMixed ? MixedLook.style : nil,
-                help: "Drop throws it behind the layer. Inner casts it into the layer.",
-                choices: .picking(ShadowKind.allCases,
-                                  current: reading.isMixed ? nil : reading.value,
-                                  title: \.title) { new in
-                    editorState.setShadowKind(index: index, ids: ids, to: new)
-                })
-                .frame(maxWidth: .infinity)
-                .panelHelp("Drop throws it behind the layer. Inner casts it into the layer.")
-                .playtestControl("Kind", detail: reading.isMixed ? "mixed"
-                                    : (reading.value ?? .drop).title)
-        }
+        EffectChoiceRow(
+            name: "Kind",
+            reading: editorState.layerStyleSelection.shadows(at: index)
+                .reading { $0.shadow(at: index)?.kind ?? .drop },
+            otherwise: .drop,
+            options: [.init(.drop, ShadowKind.drop.title, help: "Throws it behind the layer"),
+                      .init(.inner, ShadowKind.inner.title, help: "Casts it into the layer")],
+            isEnabled: true) { new in
+                editorState.setShadowKind(index: index, ids: ids, to: new)
+            }
         // No field name of its own: it belongs to the shadow row above it, so
-        // a walk names it `{"control": "Kind", "in": "Shadow 2"}` and two
+        // a walk names it `{"control": "Inner", "in": "Shadow 2"}` and two
         // shadows never answer to the same words.
+    }
+}
+
+/// A setting of an effect with two answers: the app's one segmented control,
+/// both answers on screen and one click between them, the way the fields mock
+/// draws any choice of fewer than five (`comp-fields.html` §05: "Use a select
+/// for two options. That is a segmented control."). Until 2026-10-05 each of
+/// these opened a dropdown to show its other word.
+///
+/// While the picked layers disagree no segment is lit and the word Mixed
+/// rides beside the name, where a picture-free bar has nowhere else to say
+/// it; picking either answer gives it to every one of them in one step.
+private struct EffectChoiceRow<Value: Hashable & Sendable>: View {
+    let name: String
+    let reading: StyleReading<Value>
+    /// What a row speaking for nothing reads as.
+    let otherwise: Value
+    let options: [SegmentedControl<Value>.Option]
+    let isEnabled: Bool
+    let pick: (Value) -> Void
+
+    private var shown: Value? { reading.isMixed ? nil : (reading.value ?? otherwise) }
+
+    var body: some View {
+        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
+            HStack(spacing: 4) {
+                Text(name)
+                    .panelRowName()
+                if reading.isMixed { MixedWord() }
+            }
+            .lineLimit(1)
+            .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
+            // The name carries what the row says, so a walk reads it the way
+            // it read the dropdown this replaced: `{"control": "Kind", "in":
+            // "Shadow", "reads": "Inner"}`. Each segment is pressed by its own
+            // word.
+            .playtestControl(name, detail: reading.isMixed ? "mixed"
+                             : options.first { $0.value == shown }?.title ?? "")
+            SegmentedControl(name, selection: shown, options: options, pick: pick)
+                .controlSize(.small)
+                .frame(maxWidth: .infinity)
+                .disabled(!isEnabled)
+        }
     }
 }
 

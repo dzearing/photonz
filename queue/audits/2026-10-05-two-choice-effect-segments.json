@@ -1,0 +1,48 @@
+{
+  "feature": "Two-way effect settings are segmented controls",
+  "epic": "video-titles-graphics",
+  "summary": "A shadow's Kind (Drop or Inner), a glow's Kind (Outer or Inner), a label border's Follows (Letters or Box) and a saved style's Kind now show both answers side by side. One click switches them, with no dropdown to open.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Type a label with the Text tool (T), press Command-Return, and look at its Shadow in the Effects list: Kind shows Drop and Inner side by side.",
+      "shot": "2026-10-05-two-choice-segments-1-effects-sc.png"
+    },
+    {
+      "do": "Click Inner, then Drop, then press Command-Z once: the shadow goes back to Inner."
+    },
+    {
+      "do": "Add a Glow and a Border from the plus on the Effects header, then click Outer or Inner on the glow and Letters or Box on the border."
+    },
+    {
+      "do": "Make a second label, switch one label's shadow to Inner, and pick both in the Layers list: Kind lights neither segment and says Mixed.",
+      "shot": "2026-10-05-two-choice-segments-2-mixed-sc.png"
+    },
+    {
+      "do": "Click Drop: both shadows turn Drop. Press Command-Z once and the Mixed comes back."
+    },
+    {
+      "do": "Drag the dock's left edge as narrow as it goes and look at Follows and Kind.",
+      "shot": "2026-10-05-two-choice-segments-3-narrowest-sc.png"
+    },
+    {
+      "do": "Save a shadow as a style (its Style menu, Save as Style), open it in the Library's Styles shelf, and click Inner or Drop under Kind.",
+      "shot": "2026-10-05-two-choice-segments-4-style-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Is one click on the other word quicker than the dropdown it replaced?",
+    "Does Mixed beside the name read clearly enough when no segment is lit?",
+    "At the narrowest dock, is Letters | Box too tight against the panel edge?",
+    "Is it right that a border's Position (Inside, Center, Outside) is still a dropdown in the Effects list but a segmented control on a saved style?"
+  ],
+  "rough": [
+    "Matches the fields mock (comp-fields.html section 05: two to four choices are a segmented control), drawn as the app's one segmented control (UX-PATTERNS: The one segmented control).",
+    "A border's Position stays a dropdown in the Effects list: its three words need about 146pt and the effect row's control column is about 122pt at the dock's default width and about 80pt at its narrowest. Settled by UX-PATTERNS, The one segmented control (a dropdown in its place when the words would be cut short) and this task's own checklist.",
+    "On a saved style, Position is a segmented control: there the control runs the whole width of the dock, so three words fit even at the narrowest. The two places now look different for the same question.",
+    "Masked by stays a dropdown: it lists the layers below, so it can hold any number of choices. Settled by UX-PATTERNS §3 and the fields mock's rule that five or more choices are a select.",
+    "Mixed is drawn as UX-PATTERNS §4 What Mixed looks like says: the word beside the row's own name, no segment lit.",
+    "Current also changes: it draws these rows as the system's segmented picker, the way it draws every other segmented row, where yesterday's change had given it the panel dropdown."
+  ]
+}

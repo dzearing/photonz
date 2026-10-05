@@ -547,25 +547,27 @@ struct LibraryEffectStyleInspector: View {
         slider(style, "Opacity", CGFloat(value), 0...1, .percent) { effect, new in apply(&effect, Double(new)) }
     }
 
+    /// A choice of two or three words (a shadow's or a glow's Kind, a
+    /// border's Position): the app's one segmented control, every answer on
+    /// screen, as the fields mock draws a choice of fewer than five. The row is
+    /// as wide as the sliders under it, so three words fit even in the
+    /// narrowest dock; past that the control turns itself into a dropdown.
     private func picker<Option: Hashable>(
         _ style: EffectStyle, _ label: String, _ options: [Option], current: Option,
         title: KeyPath<Option, String>,
         _ apply: @escaping (inout LayerEffect, Option) -> Void) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             Text(label).font(.caption).foregroundStyle(.secondary)
-            // The panel's dropdown, as wide as the sliders under it.
-            VideoKit.Dropdown(
-                label: label,
-                value: current[keyPath: title],
-                help: "Changing this re-sets every effect using this style",
-                choices: .picking(options, current: current, title: { $0[keyPath: title] }) { new in
-                    var effect = style.effect
-                    apply(&effect, new)
-                    editorState.setEffectStyle(styleID: style.id, effect: effect)
-                })
-                .frame(maxWidth: .infinity)
-                .panelHelp("Changing this re-sets every effect using this style")
                 .playtestControl(label, detail: current[keyPath: title])
+            SegmentedControl(label, selection: current,
+                             options: options.map { .init($0, $0[keyPath: title]) }) { new in
+                var effect = style.effect
+                apply(&effect, new)
+                editorState.setEffectStyle(styleID: style.id, effect: effect)
+            }
+            .controlSize(.small)
+            .frame(maxWidth: .infinity)
+            .panelHelp("Changing this re-sets every effect using this style")
         }
         .playtestField(label)
     }
