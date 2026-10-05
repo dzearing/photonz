@@ -111,13 +111,19 @@
       "seconds": 0.4
     },
     {
-      "do": "panelMenu",
-      "menu": "Shadow 2",
-      "choose": "Inner"
+      "do": "press",
+      "control": "Inner",
+      "in": "Shadow 2"
     },
     {
       "do": "wait",
       "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Kind",
+      "in": "Shadow 2",
+      "reads": "Inner"
     },
     {
       "do": "panel",
