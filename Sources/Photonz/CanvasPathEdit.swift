@@ -44,6 +44,9 @@ struct PathAnchorDrag {
     /// Latched once the pointer has really travelled, so a click that wobbles
     /// does not count as a reshape and leaves no undo step.
     var moved: Bool
+    /// The grid lines the grabbed point is standing on, in the document, while
+    /// the grid is holding it there. Nil on an axis nothing is pulling.
+    var gridLines: (x: CGFloat?, y: CGFloat?) = (nil, nil)
 
     /// The shape as it stands right now.
     func reshaped() -> PathContent {
@@ -282,10 +285,28 @@ extension CanvasNSView {
         guard let viewport, var drag = pathAnchorDrag else { return }
         // The layer's box travels with the shape, so the pointer is read in the
         // space the press was taken in rather than the one under it now.
-        drag.current = drag.space.local(p)
-        if hypot(drag.current.x - drag.start.x, drag.current.y - drag.start.y)
+        let raw = drag.space.local(p)
+        // The threshold is the HAND's travel, read before the grid has its
+        // say: a click that wobbles must not move a point, and a grid that
+        // pulled the point a whole cell on a two point wobble would.
+        if hypot(raw.x - drag.start.x, raw.y - drag.start.y)
             * viewport.zoom >= CanvasNSView.pathEditDragThreshold {
             drag.moved = true
+        }
+        drag.current = raw
+        drag.gridLines = (nil, nil)
+        // A POINT lands on the grid the way the Pen put it down, and every
+        // other picked point travels the same distance with it. A lever stays
+        // where the hand leaves it, which is what the Pen does with one too.
+        // ⌘ means "exactly where I put it", as it does everywhere on the canvas.
+        if drag.moved, case .anchor(let index) = drag.target,
+           drag.original.anchors.indices.contains(index) {
+            let landing = drag.space.gridLanding(
+                pointer: p, dragging: drag.original.anchors[index].point,
+                pressedAt: drag.start,
+                on: event.modifierFlags.contains(.command) ? nil : canvasNudgeGrid)
+            drag.current = landing.pointer
+            drag.gridLines = (landing.lineX, landing.lineY)
         }
         drag.breaking = event.modifierFlags.contains(.option)
         pathAnchorDrag = drag
@@ -311,14 +332,17 @@ extension CanvasNSView {
         guard let drag = pathAnchorDrag else { return false }
         applyGrabCursor(nil)
         // A press that never really moved leaves no undo step behind: it was a
-        // click that picked a point, which is not a change to the drawing.
-        if drag.moved {
+        // click that picked a point, which is not a change to the drawing. Nor
+        // does a drag the grid pulled straight back to where it began.
+        if drag.moved, drag.reshaped() != drag.original {
             // The drag is still in hand while this runs, so the chrome the
             // commit draws is the shape the drag ended on rather than the one
             // the document still holds for the moment it takes the committed
             // document to come back round. Nothing jumps on release.
             commitPathEdit(drag.layerID, drag.reshaped())
             pathAnchorDrag = nil
+            // The lines it was standing on go out with the button.
+            if let viewport { refreshGridSnapLines(in: viewport) }
         } else {
             pathAnchorDrag = nil
             refreshPathEditChrome()

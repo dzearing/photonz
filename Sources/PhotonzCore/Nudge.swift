@@ -158,3 +158,15 @@ extension Nudge {
         return layerWouldMove ? .layers : .region
     }
 }
+
+extension NudgeGrid {
+    /// The crossing nearest `point`: where a point put down or dragged there
+    /// lands. A grid of columns draws nothing across the canvas, so there is
+    /// no line across to land on and the vertical stays where it was.
+    public func crossing(nearest point: CGPoint) -> CGPoint {
+        CGPoint(x: pulls(horizontally: true)
+                    ? Snapping.quantized(point.x, to: spacing, from: origin.x) : point.x,
+                y: pulls(horizontally: false)
+                    ? Snapping.quantized(point.y, to: spacing, from: origin.y) : point.y)
+    }
+}

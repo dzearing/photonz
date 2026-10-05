@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 17,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T05:11:14.705Z",
-  "updated": "2026-10-05T05:11:14.792Z",
+  "updated": "2026-10-05T07:29:42.803Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when I have grid snapping on, pen snaps to grid, but if i adjust a point on the path, it doesn't snap to grid\".\n\nFrom code reading (not run): placement snapping shipped in a-pen-point-lands-on-the-grid-line-you-can-see (PenSession.grid/free + place() in PhotonzCore, fed by CanvasNSView.canvasNudgeGrid, CanvasView.swift:1816; set at CanvasPen.swift:194/225/262; handles deliberately unsnapped). That task's scope was placement only. Point dragging is CanvasPathEdit.swift pathEditMouseDragged (:272-296): drag.current = drag.space.local(p), no grid or snap at all. Trap: drag.space converts into the layer's local space (a turned or scaled path); snap in DOCUMENT space where the grid lives, then convert, or a rotated path will snap to a rotated grid. Trap: the drag threshold (pathEditDragThreshold 4) must still apply before snapping kicks in so a click does not move a point.",
@@ -31,6 +31,26 @@
     {
       "t": "2026-10-05T05:11:14.790Z",
       "note": "seq 500 -> 17"
+    },
+    {
+      "t": "2026-10-05T07:08:36.461Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T07:10:31.411Z",
+      "note": "reproduced at Next defaults: new walk drag-path-points-on-the-grid-walk, Pen square on 32s, corner dragged 352,288 -> 397,341 with Snap to grid on landed at (397, 341), off the grid (step 28 expectPath failed). Adversarial pass: Illustrator/Figma snap the ANCHOR (not the pointer) to the grid and move the rest of a multi-pick by the same delta; that is the design here. Path editing has no other magnets (points/guides/edges), so the grid has nothing nearer to defer to. Handles stay unsnapped, as the Pen's placement decided."
+    },
+    {
+      "t": "2026-10-05T07:29:33.895Z",
+      "note": "owns these walks: drag-path-points-on-the-grid-walk"
+    },
+    {
+      "t": "2026-10-05T07:29:42.802Z",
+      "note": "built: NudgeGrid.crossing(nearest:) + PathEditSpace.gridLanding (PhotonzCore, 7 tests in PathPointGridLandingTests; Pen's onGrid now reuses crossing). CanvasPathEdit.pathEditMouseDragged snaps the grabbed ANCHOR in document space (turned paths land on the upright grid), threshold measured on raw pointer, Command frees, levers unsnapped, lit grid lines via liveGridSnapLines; a drag the grid pulls back home leaves no undo step. Verified: drag-path-points-on-the-grid-walk green at defaults (two corner drags on whole 32s, two-point drag, Command, snap off), 21 path walks + pen-on-the-grid + grid-guides + grid-pinch green, Scripts/test.sh green (11309). left rough (not filed, below the bar): Command pressed/released with the pointer still does not re-place the point until the next move; levers unsnapped is put to the user as an audit question rather than a task."
     }
+  ],
+  "started": "2026-10-05T07:08:36.460Z",
+  "walks": [
+    "drag-path-points-on-the-grid-walk"
   ]
 }

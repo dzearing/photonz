@@ -1339,8 +1339,11 @@ extension CanvasNSView {
         // hand is standing on, lit for as long as the button is down.
         let pen: (x: CGFloat?, y: CGFloat?) =
             tool == .pen ? penSession.pressGridLines : (nil, nil)
-        return (move?.gridX ?? resize?.gridX ?? draw.0 ?? pen.x,
-                move?.gridY ?? resize?.gridY ?? draw.1 ?? pen.y)
+        // A point of a path being dragged is standing on its lines the same way.
+        let point: (x: CGFloat?, y: CGFloat?) =
+            pathAnchorDrag.flatMap { $0.moved ? $0.gridLines : nil } ?? (nil, nil)
+        return (move?.gridX ?? resize?.gridX ?? draw.0 ?? point.x ?? pen.x,
+                move?.gridY ?? resize?.gridY ?? draw.1 ?? point.y ?? pen.y)
     }
 
     /// A guide's reach, from canvas points into view points, with a few points

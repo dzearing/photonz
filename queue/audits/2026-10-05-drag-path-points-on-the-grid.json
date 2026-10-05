@@ -1,0 +1,25 @@
+{
+  "feature": "Dragging a path's points snaps to the grid",
+  "epic": "icon-vector",
+  "summary": "With the grid showing and Snap to grid on, dragging a point of a path now lands it on a grid crossing, the same way the Pen places one. Several picked points move together, with the dragged one on the grid.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Turn the grid on from the canvas bar (Snap to grid is on by default).",
+  "switched": {},
+  "try": [
+    { "do": "Press P and click four corners of a rough square, then click the first corner again to close it." },
+    { "do": "Drag one corner point somewhere new and watch it jump from crossing to crossing, with the two lines it stands on lit.", "shot": "2026-10-05-drag-path-points-grid-held-sc.png" },
+    { "do": "Let go, then drag a second corner the same way.", "shot": "2026-10-05-drag-path-points-grid-two-corners-sc.png" },
+    { "do": "Click one point, Shift-click another, then drag one of them: both move, and the dragged one lands on the grid." },
+    { "do": "Hold Command while dragging a point: it goes exactly under the pointer." },
+    { "do": "Turn Snap to grid off and drag a point: it moves freely, as before." }
+  ],
+  "evaluate": [
+    "Does the point land on the crossing you expected, rather than the one nearest your pointer?",
+    "Do the lit grid lines help you see where the point will land, or are they noise?",
+    "Should the levers on a curved point also snap to the grid, or is free placement right for them?"
+  ],
+  "rough": [
+    "Levers (the handles that bend a curve) still move freely, matching how the Pen places them; the third question above asks whether that is right.",
+    "Pressing or releasing Command with the mouse perfectly still does not move the point until the pointer moves again.",
+    "No mock covers point dragging on the grid; this follows the Pen's existing grid behaviour."
+  ]
+}

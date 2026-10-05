@@ -126,3 +126,50 @@ public struct PathEditSpace: Hashable, Sendable {
         return naive.offsetBy(dx: before.x - after.x, dy: before.y - after.y)
     }
 }
+
+/// Where a dragged point of a path is held, with the grid pulling: the pointer
+/// to read the drag at, and the lines the point is standing on.
+public struct PathPointGridLanding: Equatable, Sendable {
+    /// The pointer, in the shape's own coordinates, that puts the grabbed
+    /// point where it lands. A drag works every frame out as the press plus
+    /// the pointer's travel, so handing it THIS pointer moves every picked
+    /// point by the same amount and the grabbed one onto the grid.
+    public let pointer: CGPoint
+    /// The grid lines the grabbed point is standing on, in the document, for
+    /// the canvas to light. Nil on an axis nothing is pulling.
+    public let lineX: CGFloat?
+    public let lineY: CGFloat?
+}
+
+extension PathEditSpace {
+    /// A point of the shape being dragged to `pointer` (document coordinates),
+    /// held to the grid the canvas is drawing.
+    ///
+    /// It is the POINT that lands on a crossing, not the pointer: a press
+    /// lands a few points off the dot it grabs, and snapping the pointer would
+    /// leave the point that same few points off every line. That is how every
+    /// drawing tool behaves, and it is what the Pen does when it places one.
+    ///
+    /// The crossing is found on the CANVAS, where the grid is drawn, and only
+    /// then said in the shape's own coordinates. Snapping in the shape's own
+    /// space would put a point of a turned shape on a grid turned with it,
+    /// which is off every line anybody can see.
+    ///
+    /// `grid` is nil when nothing is pulling: the grid hidden, Snap to grid
+    /// off, or ⌘ held. The pointer then comes back exactly as it was read.
+    public func gridLanding(pointer: CGPoint, dragging anchor: CGPoint, pressedAt start: CGPoint,
+                            on grid: NudgeGrid?) -> PathPointGridLanding {
+        let raw = local(pointer)
+        guard let grid, grid.spacing.isFinite, grid.spacing > 0 else {
+            return PathPointGridLanding(pointer: raw, lineX: nil, lineY: nil)
+        }
+        let travelled = document(CGPoint(x: anchor.x + raw.x - start.x,
+                                         y: anchor.y + raw.y - start.y))
+        let landed = grid.crossing(nearest: travelled)
+        let there = local(landed)
+        return PathPointGridLanding(
+            pointer: CGPoint(x: start.x + there.x - anchor.x, y: start.y + there.y - anchor.y),
+            lineX: landed.x,
+            lineY: grid.axes.drawsRows ? landed.y : nil)
+    }
+}

@@ -497,12 +497,8 @@ public struct PenSession: Equatable, Sendable {
     /// A grid of columns draws nothing across the canvas, so there is no line
     /// across to land on and the vertical stays where the hand put it.
     private func onGrid(_ point: CGPoint) -> CGPoint {
-        guard !free, let grid, grid.spacing.isFinite, grid.spacing > 0 else { return point }
-        return CGPoint(
-            x: Snapping.quantized(point.x, to: grid.spacing, from: grid.origin.x),
-            y: grid.axes.drawsRows
-                ? Snapping.quantized(point.y, to: grid.spacing, from: grid.origin.y)
-                : point.y)
+        guard !free, let grid else { return point }
+        return grid.crossing(nearest: point)
     }
 
     /// The same offset turned onto the nearest multiple of 45 degrees, at the
