@@ -4219,6 +4219,35 @@ struct PlaytestScriptTests {
         #expect(script.steps[0].name == "expectPath")
     }
 
+    // MARK: - What the Pen's points say they are
+
+    @Test("An expectPenMarks step lists the mark each placed point wears, in order")
+    func expectPenMarksReadsTheMarks() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPenMarks", "marks": ["square", "round", "roundedSquare"] } ] }
+        """)
+        guard case .expectPenMarks(let marks) = script.steps[0] else {
+            Issue.record("expectPenMarks"); return
+        }
+        #expect(marks == [.square, .round, .roundedSquare])
+        #expect(script.steps[0].name == "expectPenMarks")
+        #expect(PlaytestStep.names.contains("expectPenMarks"))
+    }
+
+    @Test("An expectPenMarks step refuses a mark the canvas never draws")
+    func expectPenMarksRefusesAnUnknownMark() {
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectPenMarks", "marks": ["square", "diamond"] } ] }
+            """)
+        }
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectPenMarks" } ] }
+            """)
+        }
+    }
+
     // MARK: - Did the points keep up with the pointer?
 
     @Test("An expectChrome step asks how far the points drifted off the shape")

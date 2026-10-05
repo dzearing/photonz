@@ -1,0 +1,26 @@
+{
+  "feature": "The Pen's points say what kind of point they are",
+  "epic": "icon-vector",
+  "summary": "While you draw with the Pen, each point now wears the same mark reshaping gives it: a square for a hard corner, a circle for a smooth bend, a rounded square for a point curved on one side. You can see the shape you are making while you make it, and nothing changes look when you finish.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any picture (the walk uses one that is half dark, half light).",
+  "switched": {},
+  "try": [
+    { "do": "Press P to pick up the Pen, then click once on the canvas.", "shot": "2026-10-05-pen-point-marks-1-three-kinds.png" },
+    { "do": "Press somewhere else and drag before letting go: the point turns from a square into a circle while the button is still down.", "shot": "2026-10-05-pen-point-marks-2-mid-drag.png" },
+    { "do": "Hold Option and press and drag a third point: it wears a rounded square.", "shot": "2026-10-05-pen-point-marks-6-close-up.png" },
+    { "do": "Switch the Mac to dark appearance and look at the three points again.", "shot": "2026-10-05-pen-point-marks-3-dark.png" },
+    { "do": "Move the pointer onto the first point: the ring that says a click closes the shape sits round its square.", "shot": "2026-10-05-pen-point-marks-4-close-ring.png" },
+    { "do": "Press Return to finish the path open and look at its points now that it is picked.", "shot": "2026-10-05-pen-point-marks-5-picked.png" }
+  ],
+  "evaluate": [
+    "Can you tell the corner, the bend and the one-sided point apart at a glance while drawing, without zooming in?",
+    "Is the rounded square different enough from the square at normal zoom, or does it read as a square?",
+    "Does a point turning from square to circle the moment a press becomes a drag feel helpful, or busy?",
+    "With the marks now a little larger than the old dots (8 points across, the size reshaping uses), do they crowd a small icon while you draw?"
+  ],
+  "rough": [
+    "No mock draws Pen points by kind: the draw page's mock shows every anchor as one round dot, so this goes further than the mock, using the marks reshaping already ships.",
+    "The Pen's own chip still does not mention that Option and drag places a point curved on one side; that is a separate rough edge listed in the vector paths design notes and left in this task's log.",
+    "The task's try path says 'Option click' for the third kind. An Option click on empty canvas places a plain corner; it is Option and DRAG that places a point curved on one side (or Option click on the point you just dragged, which straightens its outgoing side). The steps above say what actually works."
+  ]
+}

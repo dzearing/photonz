@@ -337,6 +337,19 @@ for anyone who never thinks to press Return — which also means a double click
 ends a path, for free, since the second click of one lands on the anchor the
 first just placed.
 
+### Its points say what they are as they go down
+
+Every point the Pen places wears the mark reshaping gives its kind: a square
+for a click (a hard corner), a circle for a press and drag (a smooth bend), a
+rounded square for ⌥ and drag (curved on one side only). One answer decides
+the mark for both tools (`PathAnchorMark`), at the same size, so a finished
+path does not change its look the moment it is picked up. The point under the
+hand is marked too, as it would land (`PenSession.markedAnchors`): a press
+reads as a square and turns round the moment it becomes a drag, and the arms
+being pulled out run beneath it. The run out to the pointer between clicks is
+not a point and wears nothing. `pen-points-say-their-kind-walk` reads the
+marks with `expectPenMarks` over a picture that is half dark, half light.
+
 ### Two points are enough, when they make a shape
 
 **Closing is not a head count.** The Pen used to refuse to join a path up until
@@ -1036,9 +1049,6 @@ two straight runs and cut into the curve itself where a curve meets the corner.
   double click the point to curve both sides, then double click one lever to
   straighten the side you did not want. The chip guides the first step but
   cannot name the second until there is a lever to name.
-* **The Pen draws every anchor it has placed as the same round dot**, so while
-  you are drawing you cannot see which points are corners, bends, or curved on
-  one side. The reshaping chrome tells all three apart.
 * **A path cannot be scaled by dragging any more once its points show.** The
   Position and Size fields do it, and a group round it does it, but there is no
   corner to pull. Whether that is missed is the question the reshape audit asks.

@@ -2325,6 +2325,19 @@ private final class Run {
                      + "\(Self.round1(now))pt now, asked for \(Self.round1(within))pt",
                  state: describe())
 
+        case .expectPenMarks(let marks):
+            let canvas = try requireCanvas()
+            let showing = canvas.penAnchorMarks
+            let words = { (list: [PathAnchorMark]) in
+                list.isEmpty ? "none" : list.map(\.rawValue).joined(separator: ", ")
+            }
+            guard showing == marks else {
+                throw Failure(description: "the Pen's points wear \(words(showing)), and a walk "
+                    + "asked for \(words(marks)). A point's mark is how a corner, a bend and a point "
+                    + "curved on one side are told apart while drawing (PathAnchorMark).")
+            }
+            note(number, step.name, "the Pen's points wear \(words(showing))", state: describe())
+
         case .expectSharp(let absent, let within):
             note(number, step.name, try await checkSharp(absent: absent, within: within),
                  state: describe())

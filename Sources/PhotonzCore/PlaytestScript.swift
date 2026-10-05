@@ -3307,6 +3307,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// holds at every zoom. Left off it is one point: the points are on the
     /// shape, not near it.
     case expectChrome(within: CGFloat)
+    /// CLAIMS the mark the Pen is drawing on each point of the path it is
+    /// laying down, first placed first: `square` for a hard corner, `round`
+    /// for a smooth bend, `roundedSquare` for a point curved on one side only
+    /// (`PathAnchorMark`). The same marks reshaping draws, so a walk can say a
+    /// point reads as what it is while it is still being drawn. While the
+    /// button is down the point being placed is in the list, as it would land.
+    case expectPenMarks(marks: [PathAnchorMark])
     /// CLAIMS that the canvas is showing the picture drawn at the size it is
     /// being shown at, rather than a document-sized picture blown up.
     ///
@@ -3751,7 +3758,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -3836,6 +3843,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectRegion: "expectRegion"
         case .expectPath: "expectPath"
         case .expectChrome: "expectChrome"
+        case .expectPenMarks: "expectPenMarks"
         case .expectSharp: "expectSharp"
         case .expectFrameSharp: "expectFrameSharp"
         case .expectWaveform: "expectWaveform"
@@ -4512,6 +4520,21 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("within", "a distance on screen is zero or more, not \(within)")
             }
             self = .expectChrome(within: CGFloat(within))
+        case "expectPenMarks":
+            let words = try f.optionalStrings("marks")
+            guard !words.isEmpty else {
+                throw f.invalid("marks", "expectPenMarks claims the mark on every point placed, "
+                    + "first placed first, so it needs at least one")
+            }
+            var marks: [PathAnchorMark] = []
+            for word in words {
+                guard let mark = PathAnchorMark(rawValue: word) else {
+                    let known = PathAnchorMark.allCases.map(\.rawValue).joined(separator: ", ")
+                    throw f.invalid("marks", "\"\(word)\" is not a mark the canvas draws: \(known)")
+                }
+                marks.append(mark)
+            }
+            self = .expectPenMarks(marks: marks)
         case "expectSharp":
             let absent = try f.optionalFlag("absent") ?? false
             let within = try f.optionalNumber("within") ?? 3

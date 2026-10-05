@@ -444,6 +444,17 @@ public struct PenSession: Equatable, Sendable {
         }
     }
 
+    /// The points the canvas marks: every anchor placed and, while the button
+    /// is down, the one being placed as it would land. So a press reads as a
+    /// corner under the hand and turns into a bend the moment it becomes a
+    /// drag, and Option on the point just placed shows it going curved on one
+    /// side before the button comes up. The run out to the pointer between
+    /// clicks is not a point and is never marked.
+    public var markedAnchors: [PathAnchor] {
+        guard press != nil else { return anchors }
+        return livePath?.anchors ?? anchors
+    }
+
     /// What the canvas shows between clicks: the path so far plus the run to
     /// the pointer, which is the curve about to be committed. The run is shown
     /// closing back onto the first anchor when a click there would close, so

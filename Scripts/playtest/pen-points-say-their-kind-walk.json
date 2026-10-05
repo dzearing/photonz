@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/pen-points-say-their-kind-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "fixtures/Half dark half light 900x700.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+
+    { "do": "click", "at": [260, 300] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPenMarks", "marks": ["square"] },
+    { "do": "describe", "stage": "1-click", "note": "a click puts down a hard corner, and it wears the square reshaping gives a hard corner" },
+
+    { "do": "drag", "from": [420, 460], "to": [500, 460], "steps": 10, "hold": "2-bend-under-the-hand" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPenMarks", "marks": ["square", "round"] },
+    { "do": "describe", "stage": "2-drag", "note": "a press and drag puts down a smooth bend, and it wears the circle; the hold picture shows it already round with the button still down" },
+
+    { "do": "drag", "from": [700, 300], "to": [700, 380], "steps": 10, "modifiers": ["option"] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPenMarks", "marks": ["square", "round", "roundedSquare"] },
+    { "do": "describe", "stage": "3-option-drag", "note": "Option and drag puts down a point curved on one side only, and it wears the rounded square" },
+
+    { "do": "click", "at": [840, 460] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPenMarks", "marks": ["square", "round", "roundedSquare", "square"] },
+    { "do": "move", "at": [900, 200] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "snapshot", "name": "4-three-kinds-light" },
+
+    { "do": "appearance", "value": "dark" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "5-three-kinds-dark" },
+
+    { "do": "move", "at": [262, 302] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "6-close-ring", "note": "the pointer on the first point: the ring that says a click closes the shape sits round its square, as it did round the old dot" },
+    { "do": "snapshot", "name": "6-close-ring-on-a-square" },
+
+    { "do": "move", "at": [842, 462] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "7-finish-ring", "note": "the pointer on the last point: the ring that says a click finishes the path open" },
+    { "do": "snapshot", "name": "7-finish-ring" },
+
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPath", "anchors": 4, "closed": false, "smooth": 1, "halfSmooth": 1 },
+    { "do": "describe", "stage": "8-finished", "note": "Return finished it open and the path is picked: reshaping draws the same three marks the Pen did, so nothing changed look" },
+    { "do": "snapshot", "name": "8-picked-same-marks" },
+    { "do": "appearance", "value": "light" }
+  ]
+}

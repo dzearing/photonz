@@ -24,9 +24,11 @@ extension CanvasNSView {
         penAnchorsLayer.zPosition = 97
         penAnchorsLayer.lineWidth = 1
 
+        // Under the marks, as reshaping's levers are, so the arms of the point
+        // being dragged out run beneath its mark rather than across it.
         penHandlesLayer.fillColor = nil
         penHandlesLayer.isHidden = true
-        penHandlesLayer.zPosition = 97
+        penHandlesLayer.zPosition = 96.5
         penHandlesLayer.lineWidth = 1
 
         penTargetLayer.fillColor = nil
@@ -84,13 +86,18 @@ extension CanvasNSView {
         }
         penPathLayer.isHidden = false
 
-        // A dot on every anchor placed, so the first click leaves something on
-        // screen and you can count what you have put down.
+        // A mark on every anchor placed, so the first click leaves something on
+        // screen and you can count what you have put down. Each wears the mark
+        // reshaping gives its kind (`PathAnchorMark`) at the size reshaping
+        // draws it, so a corner, a bend and a point curved on one side can be
+        // told apart while you draw, and nothing changes look when the path is
+        // finished and picked up. The point under the hand is marked too, as it
+        // would land: a press reads as a corner and turns round the moment it
+        // becomes a drag.
         let dots = CGMutablePath()
-        for anchor in penSession.anchors {
+        for anchor in penSession.markedAnchors {
             let p = viewport.viewPoint(fromDocument: anchor.point)
-            let r: CGFloat = anchor.kind == .smooth ? 3.5 : 3
-            dots.addEllipse(in: CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2))
+            dots.addPath(PathAnchorMark(anchor).path(centredOn: p, radius: 4))
         }
         penAnchorsLayer.path = dots
         penAnchorsLayer.fillColor = NSColor.white.cgColor
@@ -307,6 +314,14 @@ extension CanvasNSView {
         default:
             return false
         }
+    }
+
+    /// The marks the Pen is showing on its points right now, first placed
+    /// first, for a walk to check (`expectPenMarks`). Empty with no path in
+    /// progress.
+    var penAnchorMarks: [PathAnchorMark] {
+        guard tool == .pen else { return [] }
+        return penSession.markedAnchors.map(PathAnchorMark.init)
     }
 
     /// Whether a path is being laid down right now, which is what decides

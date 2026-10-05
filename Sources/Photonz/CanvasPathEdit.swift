@@ -755,29 +755,10 @@ extension CanvasNSView {
             // and a dot smaller than its own target is a dot you aim at and
             // miss. A picked one is a little larger again.
             let r: CGFloat = isPicked ? 5 : 4
-            let box = CGRect(x: p.x - r, y: p.y - r, width: r * 2, height: r * 2)
-            // A smooth bend is round and a hard corner is square, so what a
-            // point IS can be read off the canvas rather than remembered. A
-            // point curved on ONE side is drawn half way between the two,
-            // which is what it is. Without a third dot it wears the hard
-            // corner's square — it IS a corner by kind, since its two sides
-            // are not tied together — and a rounded corner in an icon looks
-            // exactly like a sharp one until you drag something.
-            //
-            // The dot says WHETHER, not WHICH SIDE: the outline itself already
-            // shows which run is straight, and a glyph turned to face the
-            // straight side read as a diamond at eight points across rather
-            // than as anything anybody could name.
+            // What the point IS, read off its mark (`PathAnchorMark`): the
+            // same mark the Pen gave it as it was placed.
             let into = isPicked ? pickedDots : dots
-            if anchor.kind == .smooth {
-                into.addEllipse(in: box)
-            } else if anchor.isHalfSmooth {
-                // Half way between the two, because that is what the point is.
-                into.addPath(CGPath(roundedRect: box, cornerWidth: r * 0.6,
-                                    cornerHeight: r * 0.6, transform: nil))
-            } else {
-                into.addRect(box)
-            }
+            into.addPath(PathAnchorMark(anchor).path(centredOn: p, radius: r))
         }
         pathAnchorsLayer.path = dots
         pathAnchorsLayer.fillColor = NSColor.white.cgColor
