@@ -255,6 +255,58 @@ struct TutorialComponentsTrackTests {
         #expect(guide.sample == .componentCopies)
     }
 
+    // MARK: Reaching the original
+
+    /// The guides that change the original rather than a copy.
+    private var guidesThatEditTheOriginal: [TutorialGuide] {
+        components.filter { ["use-it-again-and-again", "override-one-copy",
+                             "component-versions"].contains($0.id) }
+    }
+
+    @Test func noGuideSendsYouToClickTheOriginalOnThePage() {
+        // An original lives in the Library, never on the page (2026-10-04), so
+        // every button a guide's page shows is a copy. A card saying to click
+        // the original, or the drawing wearing four diamonds, points at
+        // something that is not there.
+        for guide in components {
+            for step in guide.steps {
+                let copy = step.body.lowercased()
+                #expect(!copy.contains("click the original"), "\(guide.id)/\(step.id)")
+                #expect(!copy.contains("four diamonds"), "\(guide.id)/\(step.id)")
+            }
+        }
+    }
+
+    @Test func everyGuideThatChangesTheOriginalOpensItAndPressesDone() throws {
+        for guide in guidesThatEditTheOriginal {
+            let opens = try #require(guide.steps.firstIndex { $0.advance.trigger == .originalOpened },
+                                     "\(guide.id) never waits for the original to open")
+            #expect(guide.steps[opens].body.contains("Edit Original"),
+                    "\(guide.id)/\(guide.steps[opens].id) never says how to open it")
+            let done = try #require(guide.steps.firstIndex { $0.advance.trigger == .originalFinished },
+                                    "\(guide.id) never waits for Done")
+            #expect(opens < done, "\(guide.id) presses Done before it opens the original")
+            #expect(guide.steps[done].anchor == .originalDone,
+                    "\(guide.id)/\(guide.steps[done].id) says press Done without ringing it")
+            #expect(guide.steps[done].body.contains("Done"), "\(guide.id)/\(guide.steps[done].id)")
+        }
+    }
+
+    @Test func doneIsOnlyRungWhileTheOriginalIsOpen() {
+        // The Done button is in the title bar only while an original is open,
+        // so a card pointing at it anywhere else points at nothing.
+        for guide in components {
+            var open = false
+            for step in guide.steps {
+                if step.anchor == .originalDone {
+                    #expect(open, "\(guide.id)/\(step.id) rings Done with no original open")
+                }
+                if step.advance.trigger == .originalOpened { open = true }
+                if step.advance.trigger == .originalFinished { open = false }
+            }
+        }
+    }
+
     // MARK: The states guide
 
     /// Reached by its id, which is what a saved place in a track points at. The
@@ -331,11 +383,17 @@ struct TutorialComponentsTrackTests {
                 "it never says how a change made in one state reaches the rest")
     }
 
-    @Test func itEndsWithEveryStateOnThePageRatherThanOnACard() throws {
+    @Test func itShowsAllFourTogetherBeforeTakingYouBackToThePage() throws {
+        // The four drawings stand together in the original's own space, not on
+        // the page, so the card that shows them is the one that has you press
+        // Done, and the guide ends on a copy choosing among them.
         let guide = try statesGuide()
+        let together = try #require(guide.steps.first { $0.id == "all-four-together" })
+        #expect(together.anchor == .originalDone)
+        #expect(together.advance.trigger == .originalFinished)
         let last = try #require(guide.steps.last)
-        #expect(last.anchor == .canvas, "it ends in the panel, away from the four drawings")
-        #expect(last.id == "all-four-together")
+        #expect(last.id == "a-copy-picks-one")
+        #expect(last.anchor == .panelSection("component"))
         #expect(guide.sample == .componentCopies)
     }
 

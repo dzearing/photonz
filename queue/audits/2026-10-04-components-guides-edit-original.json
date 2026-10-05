@@ -1,0 +1,27 @@
+{
+  "feature": "Components guides open the original with Edit Original",
+  "epic": "ui-components",
+  "summary": "The three Components guides that change a component (Use it again and again, Override one copy, A button in all its states) now have you right-click a button and choose Edit Original, ring the Done button in the title bar when it is time to go back, and run from first card to last again.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Help > Tutorials, Components track. Walks: tutorial-use-it-again-and-again-walk, tutorial-override-one-copy-walk, tutorial-component-versions-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Start Use it again and again and double click the Save Button tile twice to put two copies down." },
+    { "do": "Right-click any button and choose Edit Original: the card moves on and points at the colour section.", "shot": "2026-10-04-components-guides-edit-original-1.png" },
+    { "do": "Double click the box, pick another colour, and read the card now ringing Done in the title bar.", "shot": "2026-10-04-components-guides-edit-original-2.png" },
+    { "do": "Press Done and watch every copy repaint on the page.", "shot": "2026-10-04-components-guides-edit-original-3.png" },
+    { "do": "Start Override one copy: Edit Original on the top button, Add > Label Wording, Done, then click the middle button and type new words.", "shot": "2026-10-04-components-guides-edit-original-4.png" },
+    { "do": "Start A button in all its states and build Hover, Pressed and Disabled inside Edit Original until the card rings Done.", "shot": "2026-10-04-components-guides-edit-original-5.png" },
+    { "do": "Press Done and pick a state from the copy's State row.", "shot": "2026-10-04-components-guides-edit-original-6.png" }
+  ],
+  "evaluate": [
+    "Does 'right-click a button and choose Edit Original' read as the obvious way to reach the original?",
+    "Is the card beside Done clear that pressing it is what takes you back to the page?",
+    "In the states guide, does showing all four states on the original's own page, then a copy picking one back on the page, land the lesson as well as the old ending did?",
+    "Is it clear on the first card of each guide that every button on the page is a copy?"
+  ],
+  "rough": [
+    "In the states guide the card under Done covers the Hover label of the top right drawing while it is up.",
+    "The original's own page is drawn on the dark see-through backdrop rather than on a page, so the button sits on black; that came with Edit Original and is left as the previous task logged it.",
+    "The states guide is at its eight card budget, so its last card asks you to pick a state from the copy's row without waiting for you to do it."
+  ]
+}

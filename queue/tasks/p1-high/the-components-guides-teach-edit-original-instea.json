@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 16,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T00:03:18.636Z",
-  "updated": "2026-10-05T00:03:18.639Z",
+  "updated": "2026-10-05T01:15:26.829Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Fallout of dropping-a-component-puts-down-one-instance-and (2026-10-04): originals moved off the canvas into PhotonzDocument.componentOriginals; Edit Original opens EditorState+OriginalSpace (a space document, Done in the title bar, Esc with nothing picked, Layer > Done Editing Original). Make a component was already updated in that task (its name-it step points at panelSection(\"libraryItem\")). Failing today: tutorial-component-versions-walk step 15 waits for name-it (the guide says Click the original, which is a copy now); tutorial-override-one-copy-walk step 15 Add menu has no Label Wording (the copy is picked, not the original); tutorial-use-it-again-and-again-walk step 37 press @fill (pick-the-original card). Likely needs a new TutorialTrigger (originalOpened, raised in editOriginal) and one for Done, since layerSelected fires on the right-click before the space opens. Harness actions editPickedComponentOriginal / doneEditingOriginal exist. In a space a made component opens where the group stood; a starter opens centred on a page the document's size (ComponentLibrary.editingSpace).",
@@ -23,11 +23,24 @@
     {
       "t": "2026-10-05T00:03:18.638Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T00:59:31.877Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T01:02:39.748Z",
+      "note": "Reproduced on HEAD da42b583 (probe built 17:42, after the commit): Scripts/playtest-all.sh --no-build tutorial-use-it-again / tutorial-override-one-copy tutorial-component-versions -> use-it-again FAILED step 37 (press @fill: no row, the copy is picked, not the original); component-versions FAILED step 15 (name-it never came: Add on a copy has no A second Variant); override FAILED step 15 (Add menu rows: Shadow, Glow, Border, Blur, no Label Wording). Adversarial pass 1: a first-time user now has nothing on the page to click that is the original (every button on the page is a copy, the sample's original is parked into the Library at load), so every 'click the original' card is a dead end. A Figma user expects right-click > Edit main component, so the cards say right-click a button and choose Edit Original; the original opens picked, so the panel steps that follow (Color, Properties/Add) point at the right section. Done is a new event and a new ring target (the Done button in the title bar), and a new 'original opened' event, because a right-click picks the copy first and would satisfy a layerSelected wait. Budget: states guide is at 8 already, so its canvas payoff 'all four together' becomes the Done card (the four drawings are only together inside the space now) and the last card is the copy picking its state. Others grow to 7."
+    },
+    {
+      "t": "2026-10-05T01:15:26.828Z",
+      "note": "walks tutorial-use-it-again-and-again-walk, tutorial-override-one-copy-walk, tutorial-component-versions-walk -> tutorial-use-it-again-and-again-walk, tutorial-override-one-copy-walk, tutorial-component-versions-walk"
     }
   ],
   "walks": [
     "tutorial-use-it-again-and-again-walk",
     "tutorial-override-one-copy-walk",
     "tutorial-component-versions-walk"
-  ]
+  ],
+  "started": "2026-10-05T00:59:31.876Z"
 }

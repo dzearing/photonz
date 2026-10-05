@@ -1,111 +1,432 @@
 {
   "out": "/tmp/photonz-playtest/tutorial-component-versions-walk",
-  "seed": "The fourth guide of the Components track, rewritten on 2026-09-15 from a button with two looks to a button with the four states it really has. The walk builds Hover, Pressed and Disabled under one name, renames the component's own question from Variant to State, and ends with all four drawings on the page and a copy switched to one of them. The guide is called A button in all its states.",
-  "setup": { "forget": ["tutorials", "panel", "color", "groups"] },
+  "seed": "The fourth guide of the Components track, rewritten on 2026-09-15 from a button with two looks to a button with the four states it really has. The walk builds Hover, Pressed and Disabled under one name, renames the component's own question from Variant to State, and ends with all four drawings on the page and a copy switched to one of them. The guide is called A button in all its states. Since 2026-10-04 the original lives in the Library, so the states are built inside Edit Original and the walk comes back with Done before a copy picks one.",
+  "setup": {
+    "forget": [
+      "tutorials",
+      "panel",
+      "color",
+      "groups"
+    ]
+  },
   "steps": [
-    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
-    { "do": "wait", "seconds": 1 },
-
-    { "do": "startGuide", "guide": "component-versions" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "four-states", "timeout": 10 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "1-four-states", "note": "the same desk the override guide uses: one original and two copies, with the whole right hand side of the page clear for the states about to be built" },
-    { "do": "snapshot", "name": "1-four-states" },
-
-    { "do": "click", "at": [176, 112] },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "add-a-look", "timeout": 6 },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "describe", "stage": "2-add-a-look", "note": "the Properties list on the original, empty, saying what goes in it" },
-    { "do": "panel", "stage": "2-add-a-look" },
-    { "do": "snapshot", "name": "2-add-a-look" },
-
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "name-it", "timeout": 6 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "3-second-drawing", "note": "an exact copy landed beside the first on clear page, it is the one selected, and its name is waiting to be typed over" },
-    { "do": "snapshot", "name": "3-second-drawing" },
-
-    { "do": "type", "text": "Hover" },
-    { "do": "key", "key": "return" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "call-the-question-state", "timeout": 6 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "4-named-hover", "note": "two drawings under one name, the second one called Hover, and the question above them still called Variant" },
-    { "do": "panel", "stage": "4-named-hover" },
-    { "do": "snapshot", "name": "4-named-hover" },
-
-    { "do": "focus", "field": "Property name" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "key", "key": "delete" },
-    { "do": "type", "text": "State" },
-    { "do": "key", "key": "return" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "change-only-what-differs", "timeout": 6 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "5-question-is-state", "note": "THE RENAME: the component's own question now reads State, which is what every copy will be asked" },
-    { "do": "panel", "stage": "5-question-is-state" },
-    { "do": "expect", "field": "Property name", "reads": "State" },
-    { "do": "snapshot", "name": "5-question-is-state" },
-
-    { "do": "click", "at": [380, 114], "count": 2 },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Color", "in": "@fill" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "press", "control": "Shades 5" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "key", "key": "escape" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "the-other-two", "timeout": 6 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "6-hover-differs", "note": "THE TEST for a state being a whole drawing: only Hover changed colour. The resting drawing and both copies are untouched, and everything Hover did not change came across with the copy" },
-    { "do": "snapshot", "name": "6-hover-differs" },
-    { "do": "render", "name": "6-hover-differs-doc" },
-
-    { "do": "click", "at": [176, 112] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "type", "text": "Pressed" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "fadeLayerSlightly" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "addComponentVersion" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "type", "text": "Disabled" },
-    { "do": "key", "key": "return" },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "action", "action": "fadeLayer" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "7-four-states-built", "note": "all four states now stand on the page under one name as one set, two rows of two: Default and Hover on top, Pressed and Disabled straight under them, each one labelled, with the two copies below the set" },
-    { "do": "panel", "stage": "7-four-states-built" },
-    { "do": "snapshot", "name": "7-four-states-built" },
-    { "do": "render", "name": "7-four-states-built-doc" },
-
-    { "do": "action", "action": "tutorialNext" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "a-copy-picks-one", "timeout": 6 },
-    { "do": "wait", "seconds": 0.9 },
-    { "do": "snapshot", "name": "8-pick-a-copy" },
-
-    { "do": "click", "at": [176, 290] },
-    { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "9-copy-picked", "note": "a copy's own section, with State as its top row: the name the original was given is the word the copy is asked in" },
-    { "do": "panel", "stage": "9-copy-picked" },
-    { "do": "snapshot", "name": "9-copy-picked" },
-
-    { "do": "action", "action": "showNextComponentVersion" },
-    { "do": "waitFor", "condition": "tutorialStep", "value": "all-four-together", "timeout": 6 },
-    { "do": "wait", "seconds": 1 },
-    { "do": "describe", "stage": "10-all-four-together", "note": "THE PAYOFF: four drawings under one name standing together on the page, each labelled with its state, and one copy switched to Hover while the other carries on resting" },
-    { "do": "panel", "stage": "10-all-four-together" },
-    { "do": "snapshot", "name": "10-all-four-together" },
-    { "do": "render", "name": "10-all-four-together-doc" },
-
-    { "do": "action", "action": "tutorialNext" },
-    { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "11-finished", "note": "Done closed the guide" }
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "startGuide",
+      "guide": "component-versions"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "four-states",
+      "timeout": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-four-states",
+      "note": "the same desk the override guide uses: three copies of Save Button on the page, whose original lives in the Library"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-four-states"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        176,
+        112
+      ],
+      "choose": "Edit Original"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "add-a-look",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "2-add-a-look",
+      "note": "the original opened on a page of its own and picked: the Properties list, empty, saying what goes in it"
+    },
+    {
+      "do": "panel",
+      "stage": "2-add-a-look"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-add-a-look"
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "name-it",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-second-drawing",
+      "note": "an exact copy landed beside the first on clear page, it is the one selected, and its name is waiting to be typed over"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-second-drawing"
+    },
+    {
+      "do": "type",
+      "text": "Hover"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "call-the-question-state",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "4-named-hover",
+      "note": "two drawings under one name, the second one called Hover, and the question above them still called Variant"
+    },
+    {
+      "do": "panel",
+      "stage": "4-named-hover"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-named-hover"
+    },
+    {
+      "do": "focus",
+      "field": "Property name"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "type",
+      "text": "State"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "change-only-what-differs",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-question-is-state",
+      "note": "THE RENAME: the component's own question now reads State, which is what every copy will be asked"
+    },
+    {
+      "do": "panel",
+      "stage": "5-question-is-state"
+    },
+    {
+      "do": "expect",
+      "field": "Property name",
+      "reads": "State"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-question-is-state"
+    },
+    {
+      "do": "click",
+      "at": [
+        380,
+        114
+      ],
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "@fill"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Shades 5"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "the-other-two",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "6-hover-differs",
+      "note": "THE TEST for a state being a whole drawing: only Hover changed colour. The resting drawing is untouched, and everything Hover did not change came across with the copy"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-hover-differs"
+    },
+    {
+      "do": "render",
+      "name": "6-hover-differs-doc"
+    },
+    {
+      "do": "click",
+      "at": [
+        176,
+        112
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Pressed"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "fadeLayerSlightly"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "addComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "type",
+      "text": "Disabled"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "fadeLayer"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "7-four-states-built",
+      "note": "all four states stand together on the original's own page under one name, two rows of two: Default and Hover on top, Pressed and Disabled under them, each labelled"
+    },
+    {
+      "do": "panel",
+      "stage": "7-four-states-built"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-four-states-built"
+    },
+    {
+      "do": "render",
+      "name": "7-four-states-built-doc"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "all-four-together",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "8-all-four-together",
+      "note": "THE PAYOFF: four drawings under one name, together on the original's page, and the card rings Done"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-all-four-together"
+    },
+    {
+      "do": "press",
+      "control": "Done"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tutorialStep",
+      "value": "a-copy-picks-one",
+      "timeout": 6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "describe",
+      "stage": "9-copy-picked",
+      "note": "back on the page with the copy you right-clicked picked again: its own section, with State as its top row listing all four"
+    },
+    {
+      "do": "panel",
+      "stage": "9-copy-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "9-copy-picked"
+    },
+    {
+      "do": "action",
+      "action": "showNextComponentVersion"
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "describe",
+      "stage": "10-copy-switched",
+      "note": "one copy switched to Hover while the other two carry on resting"
+    },
+    {
+      "do": "panel",
+      "stage": "10-copy-switched"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-copy-switched"
+    },
+    {
+      "do": "render",
+      "name": "10-copy-switched-doc"
+    },
+    {
+      "do": "action",
+      "action": "tutorialNext"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "11-finished",
+      "note": "Done closed the guide"
+    }
   ]
 }

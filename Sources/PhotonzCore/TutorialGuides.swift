@@ -830,10 +830,11 @@ public enum TutorialGuides {
     /// The other half of the bargain: the shelf hands things back, and one edit
     /// to the original reaches every copy of it.
     ///
-    /// It reaches inside the original through the LAYERS LIST rather than by
-    /// double clicking the canvas. A double click's first click already selects
-    /// the group, which raises the event a waiting step is listening for, so
-    /// the card moves on before the person has got inside anything.
+    /// The original is not on the page. It lives in the Library, and every
+    /// button the page shows is a copy (2026-10-04), so the guide opens it with
+    /// Edit Original and brings you back with Done. Opening is its own event
+    /// rather than a selection: the right-click that offers Edit Original
+    /// picks the copy first, which would move a waiting card on early.
     public static let useItAgainAndAgain = TutorialGuide(
         id: "use-it-again-and-again",
         track: .components,
@@ -848,14 +849,14 @@ public enum TutorialGuides {
                 id: "the-shelf",
                 anchor: .panelSection("library"),
                 title: "Your button is on the shelf",
-                body: "Save Button sits on Components beside the ones the app came with. The drawing on the page wearing four diamonds is the original.",
+                body: "Save Button sits on Components beside the ones the app came with. The button on the page is a copy of it, marked with a violet diamond.",
                 side: .leading,
                 prepare: [.showPanel, .showComponentShelf, .revealTarget]),
             TutorialStep(
                 id: "place-one",
                 anchor: .panelSection("library"),
                 title: "Put a copy on the page",
-                body: "Double click the Save Button tile. A copy lands wearing one diamond instead of four, which is how a copy is marked.",
+                body: "Double click the Save Button tile. Another copy lands on the page, wearing the same diamond.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .showComponentShelf, .revealTarget]),
@@ -868,19 +869,26 @@ public enum TutorialGuides {
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .showComponentShelf, .revealTarget]),
             TutorialStep(
-                id: "pick-the-original",
+                id: "open-the-original",
                 anchor: .canvas,
-                title: "Now go to the original",
-                body: "Click the drawing wearing four diamonds. It is an ordinary group, sitting where you left it.",
-                advance: .waitsFor(.layerSelected)),
+                title: "Now open the original",
+                body: "Right-click any of the buttons and choose Edit Original. The original lives in the Library, so it opens on a page of its own.",
+                advance: .waitsFor(.originalOpened)),
             TutorialStep(
                 id: "change-it-once",
                 anchor: .panelSection("color"),
                 title: "Change it once",
-                body: "Double click its box, clear of the words, to reach the shape itself. Then give it another colour here. Every copy repaints with it.",
+                body: "Double click its box, clear of the words, to reach the shape itself. Then give it another colour here.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
+            TutorialStep(
+                id: "press-done",
+                anchor: .originalDone,
+                title: "Press Done",
+                body: "Done takes you back to your page, and every copy repaints with the new colour.",
+                side: .below,
+                advance: .waitsFor(.originalFinished)),
             TutorialStep(
                 id: "one-place",
                 anchor: .canvas,
@@ -894,7 +902,9 @@ public enum TutorialGuides {
     /// The order of the steps is the model. The original decides which
     /// properties it has, because the decision applies to every copy at once;
     /// the copy answers, and its answer survives the next edit to the original
-    /// because it is written back over the top after the refill.
+    /// because it is written back over the top after the refill. The original
+    /// is reached with Edit Original and left with Done, because it lives in
+    /// the Library rather than on the page.
     public static let overrideOneCopy = TutorialGuide(
         id: "override-one-copy",
         track: .components,
@@ -906,11 +916,11 @@ public enum TutorialGuides {
                    FeatureCatalog.componentsFlag],
         steps: [
             TutorialStep(
-                id: "pick-the-original",
+                id: "open-the-original",
                 anchor: .canvas,
                 title: "The original decides",
-                body: "What is inside a copy belongs to the original, so the original says which parts a copy may set. Click the drawing wearing four diamonds.",
-                advance: .waitsFor(.layerSelected)),
+                body: "What is inside a copy belongs to the original, so the original says which parts a copy may set. Right-click the top button and choose Edit Original.",
+                advance: .waitsFor(.originalOpened)),
             TutorialStep(
                 id: "add-a-knob",
                 anchor: .panelSection("component"),
@@ -920,16 +930,23 @@ public enum TutorialGuides {
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
+                id: "press-done",
+                anchor: .originalDone,
+                title: "Back to the page",
+                body: "Press Done. Every copy on the page now offers that one property.",
+                side: .below,
+                advance: .waitsFor(.originalFinished)),
+            TutorialStep(
                 id: "pick-a-copy",
                 anchor: .canvas,
                 title: "Now pick one copy",
-                body: "Click the copy just under it, the one wearing a single diamond.",
+                body: "Click the button just under the top one.",
                 advance: .waitsFor(.layerSelected)),
             TutorialStep(
                 id: "give-it-its-own-words",
                 anchor: .panelSection("component"),
                 title: "Give it its own words",
-                body: "Type new words into the Label box. This copy alone changes, and the one below it carries on following the original.",
+                body: "Type new words into the Label box. This copy alone changes, and the others carry on following the original.",
                 side: .leading,
                 advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
@@ -973,6 +990,12 @@ public enum TutorialGuides {
     /// Apply to Other States for real (it needs a piece selected INSIDE one
     /// drawing and a difference to carry, or the row is dimmed), and a step of
     /// its own for picking a copy before switching it.
+    ///
+    /// The states are drawn on the original, which lives in the Library rather
+    /// than on the page (2026-10-04), so the guide opens it with Edit Original
+    /// and the four drawings stand together on its own page. That is where the
+    /// payoff card is, beside Done, and the last card is back on the page with
+    /// a copy choosing among them.
     public static let componentVersions = TutorialGuide(
         id: "component-versions",
         track: .components,
@@ -987,8 +1010,8 @@ public enum TutorialGuides {
                 id: "four-states",
                 anchor: .canvas,
                 title: "A button is really four buttons",
-                body: "It has a resting look, a hovered look, a pressed look and a disabled look. One name for all four is what stops them drifting apart. Click the original.",
-                advance: .waitsFor(.layerSelected)),
+                body: "Resting, hovered, pressed and disabled. One name for all four stops them drifting apart. Right-click the top button and choose Edit Original.",
+                advance: .waitsFor(.originalOpened)),
             TutorialStep(
                 id: "add-a-look",
                 anchor: .panelSection("component"),
@@ -1029,18 +1052,19 @@ public enum TutorialGuides {
                 side: .leading,
                 prepare: [.showPanel, .revealTarget]),
             TutorialStep(
+                id: "all-four-together",
+                anchor: .originalDone,
+                title: "There they are, all four",
+                body: "Four drawings under one name, each labelled with its state. Change the words or a corner in one and the row under the list carries it to the rest. Press Done.",
+                side: .below,
+                advance: .waitsFor(.originalFinished)),
+            TutorialStep(
                 id: "a-copy-picks-one",
                 anchor: .panelSection("component"),
                 title: "A copy picks its state",
-                body: "Click one of the copies under the original. Its State row lists all four, and picking one redraws that copy on its own.",
+                body: "Back on the page, every copy can show any of the four. Pick one from this copy's State row and it alone redraws.",
                 side: .leading,
-                advance: .waitsFor(.editMade),
                 prepare: [.showPanel, .revealTarget]),
-            TutorialStep(
-                id: "all-four-together",
-                anchor: .canvas,
-                title: "There they are, all four",
-                body: "Four drawings under one name, each labelled with its state. Change the words or a corner in one and the row under the list carries it to the rest."),
         ])
 
     // MARK: - Colours and Styles

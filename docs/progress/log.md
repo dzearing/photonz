@@ -20648,3 +20648,9 @@ Next: the first editor window's ~200 ms first build
 - Make Component picks the new Library tile and focuses its new Name field (`LibraryComponentNameField`); renaming a component renames the copies still wearing its name.
 - About 30 walks that edited originals on the canvas were moved into the space (harness actions `editPickedComponentOriginal`, `doneEditingOriginal`); new walk `component-drop-one-instance-walk`.
 - Next: `the-components-guides-teach-edit-original-instea` (three Components guides still say to click the original on the page).
+
+## 2026-10-04 — Components guides open the original with Edit Original
+
+- Use it again and again, Override one copy and A button in all its states now say to right-click a button and choose Edit Original, and a later card rings Done in the title bar. They run end to end again at Next defaults (their three tutorial walks green, real captures in `queue/audits/2026-10-04-components-guides-edit-original*.png`).
+- New guide events `TutorialTrigger.originalOpened` / `.originalFinished`, raised in `EditorState+OriginalSpace` (finished is raised last, after the copy you came from is picked again, so a following "pick a copy" card waits for the person). New ring target `TutorialAnchor.originalDone` on the Done button (pill).
+- The states guide stays at eight cards: its "all four together" payoff is now the card beside Done, on the original's own page, and it ends on a copy picking its state.

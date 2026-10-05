@@ -115,6 +115,11 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// A surface, like the strip it sits in, and only there while the
     /// document has time. So only a guide that brings a recording points here.
     public static let timelineTracks = TutorialAnchor("timelineTracks")
+    /// The Done button in the title bar while a component's original is open
+    /// on a page of its own (Edit Original). Only there while one is open, so
+    /// a step may only ring it after a step that waited for
+    /// `TutorialTrigger.originalOpened`.
+    public static let originalDone = TutorialAnchor("originalDone")
 
     /// One tool's button in the floating tool bar. Named off the tool, so the
     /// button's words and its tooltip can change freely.
@@ -260,6 +265,8 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
         // The bar is a glass pill, and so is every round button on it: a pill
         // round a button as tall as it is wide comes out a circle.
         if name == Self.toolBar.name || name == Self.moreTools.name { return .pill }
+        // A small prominent button, which the system draws as a capsule.
+        if name == Self.originalDone.name { return .pill }
         if part(after: Prefix.tool) != nil || part(after: Prefix.toolGroup) != nil {
             return .pill
         }
@@ -342,7 +349,7 @@ public struct TutorialAnchor: Hashable, Codable, Sendable, CustomStringConvertib
     /// This is the PROMISE. That the app keeps it in a live window is checked
     /// separately, by a walk that drives the real editor.
     public static var all: [TutorialAnchor] {
-        [canvas, toolBar, moreTools, panel, titleBar, timingStrip, timelineTracks]
+        [canvas, toolBar, moreTools, panel, titleBar, timingStrip, timelineTracks, originalDone]
             + Tool.allCases.map(tool)
             + ToolGroup.allCases.map(toolGroup)
             + knownPanelSections.map(panelSection)
@@ -413,6 +420,14 @@ public enum TutorialTrigger: Hashable, Codable, Sendable {
     /// stands between a step and the sheet anchor it names: a card pointed at a
     /// sheet that is not up yet has nothing to point at.
     case dialogOpened(TutorialAnchor.Dialog)
+    /// A component's original opened on a page of its own, by Edit Original
+    /// on a copy, a Library tile or the Layer menu. Not `layerSelected`: the
+    /// right-click that offers Edit Original picks the copy first, which would
+    /// move a step on before anything opened.
+    case originalOpened
+    /// The person pressed Done on an open original (or Escape with nothing
+    /// picked), and is back on the page with every copy following.
+    case originalFinished
     /// The person pushed a setting to at least this much, and it really is
     /// there now.
     ///

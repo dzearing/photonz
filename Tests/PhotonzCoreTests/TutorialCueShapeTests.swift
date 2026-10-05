@@ -67,6 +67,13 @@ struct TutorialCueShapeTests {
         }
     }
 
+    @Test func theDoneButtonOfAnOpenOriginalIsAPill() {
+        // A small prominent button in the title bar, which the system draws as
+        // a capsule.
+        #expect(TutorialAnchor.originalDone.cueShape == .pill)
+        #expect(TutorialAnchor.all.contains(.originalDone))
+    }
+
     @Test func everyAnchorTheAppPromisesHasAShape() {
         // Nothing falls through to something unusable: a shape is either a
         // pill or a corner radius that is not negative.

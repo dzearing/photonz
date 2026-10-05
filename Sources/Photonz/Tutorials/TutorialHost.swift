@@ -136,6 +136,10 @@ extension EditorState: TutorialHost {
         case .gridShown: canvasGrid.isVisible
         case .keylinesShown: iconKeylinesShowing
         case .dialogOpened(let dialog): isShowing(dialog)
+        // An original already open is the step's ask already met; pressing
+        // Done is an event, and the next one is the one asked for.
+        case .originalOpened: isEditingOriginal
+        case .originalFinished: false
         // The one that is a NUMBER rather than a switch. Read off the lens the
         // person is holding, because that is the one whose slider the step is
         // pointing at; with nothing picked there is no number and the answer is
@@ -186,6 +190,8 @@ extension VideoEditorState: TutorialHost {
         // A recording's window has no canvas, no grid, neither of these sheets
         // and no lens, so none of them is ever already so in here either.
         case .gridShown, .keylinesShown, .dialogOpened, .settingReached: false
+        // Nor any component to open.
+        case .originalOpened, .originalFinished: false
         // And it has no timeline to cut, bring clips onto or caption.
         case .timeTakenOut, .clipCut, .clipAdded, .titleAdded, .keyAdded,
              .transitionAdded, .captionsAdded, .captionRetyped: false

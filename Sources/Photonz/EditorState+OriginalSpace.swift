@@ -83,6 +83,7 @@ extension EditorState {
         if let drawing = spaceHistory.current.mainComponent(componentID: componentID, version: version) {
             selectLayer(drawing.id, inGroup: nil)
         }
+        TutorialController.shared.note(.originalOpened, from: self)
     }
 
     /// Done: back to the document, with the edit made in the space written into
@@ -97,6 +98,9 @@ extension EditorState {
         if let id = session.cameFrom, document?.layer(id: id) != nil {
             selectLayer(id, inGroup: session.cameFromGroup)
         }
+        // Last, after the copy you came from is picked again, so a guide step
+        // after Done that waits on picking a copy waits for the person.
+        TutorialController.shared.note(.originalFinished, from: self)
     }
 
     /// The component a walk means by "the selected component": the picked
@@ -139,6 +143,7 @@ struct OriginalSpaceTitleBar: View {
                     .controlSize(.small)
                     .help(OriginalSpaceCopy.doneHelp)
                     .playtestControl(OriginalSpaceCopy.done, detail: name)
+                    .tutorialAnchor(.originalDone)
             }
             .fixedSize()
             .frame(maxWidth: .infinity)
