@@ -20674,3 +20674,9 @@ Next: the first editor window's ~200 ms first build
 - Edit ▸ Copy Video (⌃⇧⌘C) and Copy as GIF (⌃⇧⌘G) in Next, shown where `next-export-the-video` is on and greyed out on a still. `EditorState.copyVideo(as:)` (EditorState+VideoExport.swift) writes the edit through `writeVideo` into `$TMPDIR/PhotonzClipboard`, at the Export sheet's remembered quality and size (`VideoClipboardCopy.choice`), with captions burned in and the sheet's marked range, then puts the file on the clipboard. Progress is the export toast ("Copying the video"); the result is a `videoCopied` pill ("Copied · file").
 - Walks: `copy-the-edit-to-the-clipboard-walk` (cut, both copies, clipboard file length = edit), `copy-a-long-captioned-edit-walk` (five minutes with captions: 36 s, longest main thread pass 27 ms). New walk steps: actions `copyVideo`, `copyAsGIF`, `awaitCopy`; `readClipboard` `movie: true`.
 - Found: a 15 fps GIF plays 5% long (delays stored in hundredths); filed as `a-gif-plays-at-the-speed-of-the-edit-it-came-fro`.
+
+## 2026-10-05 — Add Media at Playhead
+
+- Sequence ▸ Add Media at Playhead… replaces Add Sound…: a video lands at the playhead on the lowest picture track free for its length with nothing playing over it (else a new track over the topmost busy one), its sound linked under it; a sound lands as Add Sound did. `PhotonzDocument.pictureLandingAtPlayhead` (ClipLanding.swift), start snaps onto a clip edge within a frame because the playhead rests on the last millisecond.
+- Walk: `Scripts/playtest/add-media-at-playhead-walk.json` (front, no flags). Audit: `queue/audits/2026-10-05-add-media-at-playhead.json`.
+- Open: whether the playhead should move to the new clip's end, and whether the row earns a key.

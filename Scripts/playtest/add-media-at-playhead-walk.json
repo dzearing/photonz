@@ -1,0 +1,66 @@
+{
+  "out": "/tmp/photonz-playtest/add-media-at-playhead-walk",
+  "seed": "Sequence > Add Media at Playhead... is the menu bar's way to put a second clip or a sound on the timeline, where File > Import Media only fills the Library. A video lands at the playhead on a picture track free there with nothing playing over it, or a new one on top when every track is busy, its own sound linked under it; past the end of everything it goes on the end of V1, the editing session's second clip step. A sound lands as Add Sound always put one. The file goes on the Library shelf too, and one Undo takes the whole landing back. At Next defaults, no flag set; the Open panel is answered by importPicks.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": ["all"],
+    "scratch": [
+      "sample:recording as b-roll.mp4",
+      "sample:music"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+    { "do": "describe", "stage": "1-one-recording", "note": "An eight second screen recording on V1, its sound on Audio under it, the playhead two seconds in" },
+    { "do": "snapshot", "name": "1-one-recording" },
+
+    { "do": "importPicks", "files": ["scratch/b-roll.mp4"] },
+    { "do": "menus", "stage": "2-sequence-menu", "menu": "Sequence", "choose": "Sequence > Add Media at Playhead…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V2", "startsAt": 2.0, "endsAt": 10.0, "within": 0.05, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "expectTracks", "tracks": ["V2", "V1", "Audio", "Audio 2"] },
+    { "do": "expectWaveform", "clip": "b-roll", "within": 2 },
+    { "do": "describe", "stage": "3-over-the-recording", "note": "THE FIRST TEST: Add Media at Playhead with b-roll picked. V1 is busy at the playhead, so the clip lands two seconds in on a new V2 over it, seen at once and covering nothing; its own sound came with it, linked on a new Audio 2 under the recording's" },
+    { "do": "snapshot", "name": "3-over-the-recording" },
+
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "b-roll.mp4", "present": true },
+    { "do": "describe", "stage": "4-on-the-shelf-too", "note": "THE SECOND TEST: the Library, opened, has b-roll.mp4 on its shelf, as an import would have put it" },
+    { "do": "snapshot", "name": "4-on-the-shelf-too" },
+    { "do": "action", "action": "hideLibrary" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "b-roll", "count": 0 },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+    { "do": "describe", "stage": "5-one-undo", "note": "THE THIRD TEST: one Command Z takes the clip, its sound and both new tracks back" },
+
+    { "do": "clickRuler", "seconds": 8.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "importPicks", "files": ["scratch/b-roll.mp4"] },
+    { "do": "menus", "stage": "6-sequence-menu-at-the-end", "menu": "Sequence", "choose": "Sequence > Add Media at Playhead…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "within": 0.05, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "describe", "stage": "6-on-the-end-of-v1", "note": "THE FOURTH TEST, the editing session's second clip from the menu: the playhead at the end of the recording, Add Media at Playhead puts b-roll on the end of V1, its sound following on the Audio track" },
+    { "do": "snapshot", "name": "6-on-the-end-of-v1" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "importPicks", "files": ["scratch/Sample Music.m4a"] },
+    { "do": "menus", "stage": "7-sequence-menu-for-music", "menu": "Sequence", "choose": "Sequence > Add Media at Playhead…" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectClip", "clip": "Sample Music", "startsAt": 0.0, "within": 0.05, "count": 1 },
+    { "do": "expectWaveform", "clip": "Sample Music", "within": 2 },
+    { "do": "describe", "stage": "7-music-bed", "note": "THE FIFTH TEST: the same row with a sound picked lays fourteen seconds of music at the start on a sound track of its own, as Add Sound did" },
+    { "do": "snapshot", "name": "7-music-bed" }
+  ]
+}

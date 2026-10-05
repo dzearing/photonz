@@ -180,6 +180,17 @@ extension EditorState {
         }
     }
 
+    /// Sequence ▸ Add Media at Playhead…, a recording: at the playhead, on a
+    /// picture track free there and seen there, or a new one over the top.
+    @discardableResult
+    func addClipAtPlayhead(_ url: URL) async -> UUID? {
+        let at = documentTimeMS
+        return await landTimelineFile(TimelineFileInAir(url: url, kind: .recording)) { [weak self] inAir in
+            guard let document = self?.document, let length = inAir.lengthMS else { return nil }
+            return document.pictureLandingAtPlayhead(lengthMS: length, atMS: at)
+        }
+    }
+
     /// Reads the file if nobody has yet, and lands it where `landing` says.
     /// The document remembers the file as it lands, under its own name, so it
     /// stays on the Library shelf after its last clip is cut away.

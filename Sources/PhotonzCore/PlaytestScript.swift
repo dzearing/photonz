@@ -2613,7 +2613,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a picture taken while it is still in the air, ring and all.
     case dropOnLibrary(file: String, hold: String?, release: Bool)
     /// The files the next Import Media… hands back, standing in for the Open
-    /// panel a walk cannot click inside. Relative to the script, like `open`.
+    /// panel a walk cannot click inside, or the first of them for the next
+    /// Add Media at Playhead…. Relative to the script, like `open`.
     case importPicks(files: [String])
     /// One click on the timeline's ruler at `seconds`, which puts the playhead
     /// there the way the ruler's own gesture does. The ruler is SwiftUI and a

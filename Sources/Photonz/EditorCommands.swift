@@ -938,8 +938,10 @@ struct EditorCommands: Commands {
             .disabled(!(editor?.canDetachSound ?? false))
     }
 
-    @ViewBuilder private var addSoundRow: some View {
-        Button("Add Sound…") { editor?.addSoundFromFile() }
+    /// A video or a sound, onto the timeline at the playhead: the menu's
+    /// way in for a second clip, where Import Media only fills the Library.
+    @ViewBuilder private var addMediaRow: some View {
+        Button("Add Media at Playhead…") { editor?.addMediaFromFile() }
             .disabled(!(editor?.documentHasTime ?? false))
     }
 
@@ -1492,7 +1494,7 @@ struct EditorCommands: Commands {
             trackMenu
             Divider()
             if Experiments.shared.soundOnTheTimelineEnabled {
-                addSoundRow
+                addMediaRow
                 exportSoundRow
                 Divider()
             }
@@ -1563,7 +1565,7 @@ struct EditorCommands: Commands {
             }
             if Experiments.shared.soundOnTheTimelineEnabled {
                 detachAudioRow
-                addSoundRow
+                addMediaRow
                 flattenLevelRow
                 exportSoundRow
                 Divider()

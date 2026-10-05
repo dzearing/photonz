@@ -65,6 +65,10 @@ public struct ClipLanding: Hashable, Sendable {
 
     public var endMS: Int { startMS + lengthMS }
 
+    /// How near a clip's edge the playhead has to be for a clip put down at
+    /// it to start on that edge: one frame at thirty a second.
+    public static let playheadReachMS = 34
+
     /// A start pulled onto the nearest edge within reach: where a clip, or
     /// the playhead, already is, so b-roll let go near the end of the
     /// recording butts onto it rather than leaving a sliver of black. The
@@ -155,6 +159,48 @@ extension PhotonzDocument {
             return ClipLanding(target: .onto(chosen.id), startMS: ms, lengthMS: lengthMS, edit: edit,
                                trackName: chosen.name, allowed: allowed, isLocked: chosen.isLocked)
         }
+    }
+
+    /// Where a recording put down at the playhead with no pointer lands:
+    /// Sequence ▸ Add Media at Playhead….
+    ///
+    /// Nothing says which track, so it takes the lowest picture track that is
+    /// free for its whole length with nothing playing over it there, which is
+    /// the end of V1 when the playhead is past everything and the track over
+    /// the recording when it is not. Where every one is busy it gets a new
+    /// track straight over the topmost that is playing. Either way it is seen
+    /// the moment it lands and nothing already cut is covered. Hidden and
+    /// locked tracks are passed over.
+    ///
+    /// A playhead within a frame of where a clip starts or ends is taken to
+    /// mean there: the playhead rests on the LAST frame of a document, a
+    /// millisecond short of its end, and a clip put down there belongs after
+    /// the recording, not a millisecond over it on a track of its own.
+    public func pictureLandingAtPlayhead(lengthMS: Int, atMS ms: Int) -> ClipLanding {
+        let tracks = timelineTracks
+        let start = ClipLanding.snapped(startMS: max(0, ms), lengthMS: lengthMS, to: timelineEdgesMS,
+                                        withinMS: ClipLanding.playheadReachMS)
+        let span = start..<(start + max(LayerTime.shortestMS, lengthMS))
+        func busy(_ track: DocumentTrack) -> Bool {
+            clipIDs(onTrack: track.id).contains { id in
+                guard let time = layer(id: id)?.time else { return true }
+                return time.inMS < span.upperBound && span.lowerBound < time.outMS
+            }
+        }
+        let picture = tracks.indices.filter { tracks[$0].kind == .video && !tracks[$0].isHidden }
+        let topBusy = picture.first { busy(tracks[$0]) }
+        let free = picture.filter { index in
+            (topBusy.map { index < $0 } ?? true) && !tracks[index].isLocked && !busy(tracks[index])
+        }
+        if let lowest = free.last {
+            return ClipLanding(target: .onto(tracks[lowest].id), startMS: span.lowerBound,
+                               lengthMS: lengthMS, edit: .overwrite, trackName: tracks[lowest].name,
+                               allowed: true)
+        }
+        return ClipLanding(target: .newTrack(at: topBusy ?? 0), startMS: span.lowerBound,
+                           lengthMS: lengthMS, edit: .overwrite,
+                           trackName: Self.freeTrackName(.video, used: Set(tracks.map(\.name))),
+                           allowed: true)
     }
 
     /// Whether a track carries a layer that is there the whole way through,

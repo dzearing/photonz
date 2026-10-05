@@ -90,17 +90,48 @@ extension EditorState {
 
     // MARK: - Bringing sound in
 
-    /// **Add Sound.** Pick a file; it lands on the timeline where the playhead
-    /// is, as a layer, and everything the timeline does works on it at once.
-    func addSoundFromFile() {
+    /// **Add Media at Playhead.** Pick a recording or a sound; it lands on the
+    /// timeline where the playhead is, as a layer, and everything the timeline
+    /// does works on it at once. The one menu row that puts something on the
+    /// timeline, where Import Media only fills the Library.
+    func addMediaFromFile() {
+        guard documentHasTime else { return }
+        #if PHOTONZ_PLAYTEST
+        // Probe only: a walk cannot click inside an Open panel, so it names
+        // the file the panel would have handed back (`importPicks`).
+        if let picked = playtestImportPicks?.first {
+            playtestImportPicks = nil
+            Task { await addMedia(from: picked) }
+            return
+        }
+        if PlaytestHarness.isDrivingAWalk {
+            NSLog("Add Media at Playhead… under a walk with no importPicks step before it: no Open panel shown")
+            return
+        }
+        #endif
         let panel = NSOpenPanel()
-        panel.allowedContentTypes = SoundLibrary.openableTypes
+        panel.allowedContentTypes = Self.importableTypes
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
         panel.prompt = "Add"
-        panel.message = "Choose a sound to put on the timeline"
+        panel.message = "Choose a video or a sound to put at the playhead"
         guard panel.runModal() == .OK, let url = panel.url else { return }
-        Task { await addSound(from: url, atMS: documentTimeMS) }
+        Task { await addMedia(from: url) }
+    }
+
+    /// The same thing without the panel. A recording lands on a picture track
+    /// free there, its own sound linked under it
+    /// (`PhotonzDocument.pictureLandingAtPlayhead`); a sound lands as Add
+    /// Sound always put one. Either way the file goes on the Library shelf too.
+    @discardableResult
+    func addMedia(from url: URL) async -> UUID? {
+        switch MediaFiles.kind(of: url) {
+        case .recording: return await addClipAtPlayhead(url)
+        case .sound: return await addSound(from: url, atMS: documentTimeMS)
+        case nil:
+            raiseCanvasNotice(.mediaWouldNotOpen(name: url.lastPathComponent))
+            return nil
+        }
     }
 
     /// The same thing without the panel: what a drop on the timeline does, and

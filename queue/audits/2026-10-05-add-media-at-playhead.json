@@ -1,0 +1,26 @@
+{
+  "feature": "Add Media at Playhead",
+  "epic": "video-cutting",
+  "summary": "Sequence has one row, Add Media at Playhead…, that puts a video or a sound on the timeline where the playhead is. A video lands on a picture track that is free there, or a new one on top, with its own sound linked under it, and the file goes on the Library shelf too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording with the timeline showing. Walk: Scripts/playtest/add-media-at-playhead-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and click the ruler two seconds in." },
+    { "do": "Choose Sequence > Add Media at Playhead… and pick a second video.", "shot": "2026-10-05-add-media-at-playhead-3-over-the-recording-sc.png" },
+    { "do": "Open the Library and find the video's tile on the shelf.", "shot": "2026-10-05-add-media-at-playhead-4-on-the-shelf-too-sc.png" },
+    { "do": "Press Command Z once." },
+    { "do": "Click the ruler at the end of the recording and choose Add Media at Playhead… again with the same video.", "shot": "2026-10-05-add-media-at-playhead-6-on-the-end-of-v1-sc.png" },
+    { "do": "Move the playhead to the start and choose the row once more, picking a music file.", "shot": "2026-10-05-add-media-at-playhead-7-music-bed-sc.png" }
+  ],
+  "evaluate": [
+    "With the playhead over the recording, is a new V2 on top where you expected the video to go?",
+    "With the playhead at the end, does landing on the end of V1 feel like Final Cut's append?",
+    "Is Add Media at Playhead… a name you would find when looking for how to add a clip?",
+    "Should the playhead jump to the end of the clip that just landed, the way Premiere's Overwrite does?"
+  ],
+  "rough": [
+    "No mock covers the Sequence menu's rows; the row is placed by the placement contract (UX-PATTERNS §Menu bar: Sequence acts on the time).",
+    "The playhead stays where it was after a landing; Premiere's Overwrite moves it to the end of the new clip. Left as is and asked above.",
+    "The row has no keyboard shortcut. Final Cut's E (append) and Premiere's period (overwrite) both mean something else here today."
+  ]
+}

@@ -181,8 +181,9 @@ final class EditorState {
     /// inside a sheet to pick it (`PlaytestAction.exportDialogAsSVG`). Compiled
     /// out of every shipping build.
     var playtestOpensExportOnSVG = false
-    /// Probe only: the files Import Media… hands back instead of showing its
-    /// Open panel, which a walk cannot click inside.
+    /// Probe only: the files Import Media… (or the first of them, Add Media
+    /// at Playhead…) hands back instead of showing its Open panel, which a
+    /// walk cannot click inside.
     var playtestImportPicks: [URL]?
     /// Probe only: where the Export sheet says the file is going, for the same
     /// reason. Nil leaves the sheet on whatever was last picked.
