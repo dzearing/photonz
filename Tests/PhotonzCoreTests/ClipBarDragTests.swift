@@ -379,6 +379,11 @@ struct ClipBarDragTests {
         #expect(ClipBarCopy.moving(startMS: 63_000, changeMS: 1_000) == "Starts 1:03 · +1.0s")
     }
 
+    @Test func copyingSaysItIsACopyAndWhereItWouldStart() {
+        #expect(ClipBarCopy.copying(startMS: 9_000, changeMS: 4_000) == "Copy · Starts 0:09 · +4.0s")
+        #expect(ClipBarCopy.copying(startMS: 9_000, changeMS: 4_000).count <= 30)
+    }
+
     @Test func carryingSaysWhereItIsGoing() {
         #expect(ClipBarCopy.carrying(pieceNumber: 3, toPlace: 1, of: 3)
                 == "Piece 3 → place 1 of 3")

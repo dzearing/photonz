@@ -1,0 +1,28 @@
+{
+  "feature": "Option drag on a clip leaves a copy behind",
+  "epic": "video-cutting",
+  "summary": "Hold Option and drag a clip, or one piece of a cut clip, along the timeline: a copy goes where you let go and the original stays put, the way Premiere, Final Cut and Photonz's own canvas do it. One undo takes the copy away.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and press Command K with the playhead a quarter of the way in, to cut it in two.", "shot": "2026-10-05-option-drag-copies-a-clip-1-split-sc.png" },
+    { "do": "Hold Option with the pointer over the second piece. The pointer wears the copy badge." },
+    { "do": "Keep Option held and drag the second piece to the right. A copy follows the hand on a new track over V1, since V1 is busy there.", "shot": "2026-10-05-option-drag-copies-a-clip-3-copy-mid-drag-sc.png" },
+    { "do": "Let go. The copy lands with its own sound under it, and the cut clip on V1 has not moved.", "shot": "2026-10-05-option-drag-copies-a-clip-4-copied-sc.png" },
+    { "do": "Press Command Z once. The copy is gone and the cut clip is as it was.", "shot": "2026-10-05-option-drag-copies-a-clip-5-undone-sc.png" },
+    { "do": "Option-drag an uncut clip past the end of everything on its track: the copy stays on that track, touching it if you let go near its end." },
+    { "do": "Option-drag on empty track space: it still draws a range, as before." }
+  ],
+  "evaluate": [
+    "Is a copy of just the piece you grabbed (rather than the whole recording) what you expected when you Option-dragged one half of a cut clip?",
+    "When the copy would cover something on its own track, is going up onto a new track over it the right answer, or would you rather it overwrote what is there, as Premiere does?",
+    "Does the copy badge on the pointer appear soon enough that you know Option will copy before you press?",
+    "Is it fine that the copy's sound appears only when you let go, rather than travelling under the hand?"
+  ],
+  "rough": [
+    "No mock covers Option-drag on the timeline; it follows Premiere's gesture and the paste-at-playhead rule for where a copy goes.",
+    "A copy that would cover something on its own track goes up onto a new track over it, as a pasted clip does; Premiere's Option-drag overwrites instead. Your call on the evaluate question above decides it.",
+    "The copy's sound is not drawn while the copy is carried: a sound that needed a new track would grow the timeline by a row under the hand and slide every row above it away from the pointer. It lands with the copy.",
+    "The readout capsule sits over the copy's own label while it is carried, as it does for any carried clip."
+  ]
+}

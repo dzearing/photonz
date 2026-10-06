@@ -20701,3 +20701,11 @@ Next: the first editor window's ~200 ms first build
 - Core: `PhotonzDocument.pasteLanding` / `pasteClip` (`Sources/PhotonzCore/ClipPaste.swift`), tests `ClipPasteAtPlayheadTests`. App: `pasteClipAtPlayhead` in `EditorState+Clipboard.swift`; ruler right click offers Paste for a copied clip (`clipOnClipboard`).
 - Walks: `paste-a-clip-at-the-playhead-walk`, `paste-a-clip-from-the-ruler-menu-walk`.
 - Open: captions still paste only through a ruler range.
+
+## 2026-10-05 — Option drag on a clip leaves a copy behind
+
+- Option-drag on a clip's bar carries out a copy and leaves the clip where it was (Premiere, Final Cut, the canvas). On a piece of a cut clip it copies that piece alone as a clip of its own. A copy that would cover something on its own track goes up onto a new track over it, the paste-at-playhead rule. One undo. Option over a clip badges the pointer with the copy cursor.
+- Core: `Sources/PhotonzCore/ClipDragCopy.swift` (`clipDragCopy`, `placeClipCopy`, `liftClipsOffOverlaps`, track id derived from the copy so the drag preview and the drop are one row), `ClipBarCopy.copying`; `addTrack`/`moveClipToNewTrack` take an optional id. Tests `ClipDragCopyTests`.
+- App: `beginClipBarDrag(copying:)` in `EditorState+ClipBar.swift` (copy made at the grab, drawn in the shown document WITHOUT its sound so no row grows under the hand, landed in one perform); badge via `clipBarHover` + a key/pointer watch that re-asserts `NSCursor.dragCopy`.
+- Walk `option-drag-copies-a-clip-walk` (needs the Mac: front + dragGrip); new waitFor conditions `clipsOfOneRecording`, `clipCopyBadge`.
+- Open: overwrite vs new track for a covering copy is asked in the audit.

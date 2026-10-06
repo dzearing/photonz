@@ -399,6 +399,13 @@ public enum ClipBarCopy {
         "Starts \(MotionStripRuler.timecode(Double(startMS))) · \(change(changeMS))"
     }
 
+    /// What it says while a copy is being carried out of a clip with ⌥ held
+    /// (`ClipDragCopy.swift`): the same as a slide, saying first that what is
+    /// moving is a copy, since the original under it has not gone anywhere.
+    public static func copying(startMS: Int, changeMS: Int) -> String {
+        "Copy · \(moving(startMS: startMS, changeMS: changeMS))"
+    }
+
     /// What it says while a piece is being carried somewhere else in the
     /// order: where it is going, counted the way a person counts.
     public static func carrying(pieceNumber: Int, toPlace place: Int, of count: Int) -> String {

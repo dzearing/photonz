@@ -360,15 +360,22 @@ extension EditorState {
 
     /// Aim the clip in hand at a track, or at a new one, or back at its own.
     func setClipTrackDrop(_ drop: TrackDrop?) {
-        guard let session = clipBarDrag, let document, let drop else {
+        guard let session = clipBarDrag, var document, let drop else {
             if clipTrackDrop != nil { clipTrackDrop = nil }
             return
         }
+        // A copy carried out with ⌥ is not in the document yet, so it is asked
+        // about in the document as shown. Its home is the track of the clip it
+        // came out of, and aiming it there means let it land at home, going up
+        // onto a new track over it where home is busy (`liftClipsOffOverlaps`)
+        // rather than refusing.
+        let home = session.copies.first.flatMap { document.trackID(ofClip: $0.original) }
+        if !session.copies.isEmpty { document = withDraggedClipBar(document) }
         let id = session.layerID
         let result: ClipTrackDrop?
         switch drop {
         case .onto(let track):
-            result = track == document.trackID(ofClip: id) ? nil
+            result = track == document.trackID(ofClip: id) || track == home ? nil
                 : ClipTrackDrop(target: drop, allowed: document.canPlace(
                     id, onTrack: track, atInMS: session.landing.clipStartMS))
         case .newTrack:

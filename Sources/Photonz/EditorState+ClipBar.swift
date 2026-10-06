@@ -355,8 +355,10 @@ extension EditorState {
 
     // MARK: A bar under the hand
 
-    /// Take hold of an edge, a piece or the bar itself.
-    func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab) {
+    /// Take hold of an edge, a piece or the bar itself. `copying` is ⌥ held
+    /// as the hand took hold of a piece or the bar: what moves is a copy, and
+    /// the clip stays where it was (`ClipDragCopy.swift`).
+    func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab, copying: Bool = false) {
         endTrimBeforeCutting()
         guard let document, let layer = document.layer(id: layerID),
               let time = layer.time, let pieces = layer.clipPieces,
@@ -364,6 +366,7 @@ extension EditorState {
               !document.isClipOnLockedTrack(layerID) else { return }
         pauseDocument()
         clipTrackDrop = nil
+        if copying, beginCopyingClipBarDrag(layerID: layerID, grab: grab, in: document) { return }
         // A bar taken hold of while it is one of several picked clips carries
         // the others along, Premiere's way, so the pick survives the press.
         let along = grab == .body ? clipsCarriedAlong(with: layerID, in: document) : [:]
@@ -385,6 +388,50 @@ extension EditorState {
                                          heldTimelineMS: max(1, document.documentDurationMS),
                                          along: along)
         watchForClipBarEscape()
+    }
+
+    /// ⌥ held as a bar or a piece was taken hold of: a copy comes out of it
+    /// and follows the hand, Premiere's way and the canvas's, and the clip it
+    /// came out of never moves. A piece of a cut clip comes out as a clip of
+    /// its own; a bar that is one of several picked brings a copy of each.
+    ///
+    /// The copies are made now, so each has one id from the grab to the let
+    /// go: the timeline draws it as a bar of its own while it travels, and the
+    /// same layer is what lands. False where there is nothing to copy, and the
+    /// press is then the plain drag it would have been without ⌥.
+    private func beginCopyingClipBarDrag(layerID: UUID, grab: ClipBarGrab,
+                                         in document: PhotonzDocument) -> Bool {
+        let piece: Int?
+        switch grab {
+        case .body: piece = nil
+        case .carry(let index): piece = index
+        case .clipStart, .seam: return false
+        }
+        guard let copy = document.clipDragCopy(of: layerID, piece: piece),
+              let time = copy.time, let pieces = copy.clipPieces else { return false }
+        var copies = [ClipBarCopySource(original: layerID, layer: copy)]
+        var along: [UUID: Int] = [:]
+        if piece == nil {
+            for (id, start) in clipsCarriedAlong(with: layerID, in: document) {
+                guard let other = document.clipDragCopy(of: id) else { continue }
+                copies.append(ClipBarCopySource(original: id, layer: other))
+                along[other.id] = start
+            }
+        }
+        // The originals stay where they are, so unlike a slide the copy can
+        // catch on them: let go of it just after the clip it came out of and
+        // it lands touching it.
+        let drag = ClipBarDrag(grab: .body, pieces: pieces, clipStartMS: time.inMS,
+                               others: document.clipBarEdges(excluding: Set<UUID>(), playheadMS: documentTimeMS),
+                               snapWithinMS: clipSnapMS, startIsFree: copy.startIsFree,
+                               alongStartsMS: Array(along.values))
+        clipBarDrag = ClipBarDragSession(layerID: copy.id, grab: .body, drag: drag,
+                                         landing: drag.landing(byMS: 0),
+                                         heldTimelineMS: max(1, document.documentDurationMS),
+                                         along: along, copies: copies)
+        watchForClipBarEscape()
+        refreshClipBarCopyCursor(optionHeld: true)
+        return true
     }
 
     /// The other picked clips a bar carries along, each with where it
@@ -440,6 +487,13 @@ extension EditorState {
         carriedCaptionCueID = nil
         let landing = session.landing
         let id = session.layerID
+        if !session.copies.isEmpty {
+            landClipBarCopies(session)
+            refreshClipBarCopyCursor(optionHeld: ClipPiecesBar.optionHeld)
+            documentTimeMS = min(documentTimeMS, lastDocumentTimeMS)
+            documentMomentChanged()
+            return
+        }
         switch session.grab {
         case .clipStart where session.drag.startIsFree:
             // Nothing behind it to trim into, so this edge is simply the moment
@@ -487,7 +541,120 @@ extension EditorState {
         guard clipBarDrag != nil else { return }
         clipBarDrag = nil
         carriedCaptionCueID = nil
+        refreshClipBarCopyCursor(optionHeld: ClipPiecesBar.optionHeld)
         documentMomentChanged()
+    }
+
+    /// Let go of copies carried out with ⌥: each lands where the hand left it,
+    /// the one in the hand onto the track it was carried to, all as one step
+    /// to undo, and the copies are what is picked afterwards.
+    ///
+    /// A copy let go where it was lifted from would sit exactly over the clip
+    /// it came out of, which nobody means, so that drag leaves nothing.
+    private func landClipBarCopies(_ session: ClipBarDragSession) {
+        let drop = clipTrackDrop
+        clipTrackDrop = nil
+        let landing = session.landing
+        let toTrack = drop.flatMap { $0.allowed ? $0.target : nil }
+        guard landing.movedMS != 0 || toTrack != nil else { return }
+        var landed: [UUID] = []
+        perform { document in
+            for copy in session.copies {
+                let start = copy.layer.id == session.layerID
+                    ? landing.clipStartMS
+                    : (session.along[copy.layer.id] ?? 0) + landing.movedMS
+                if document.placeClipCopy(copy.layer, over: copy.original, atInMS: start) {
+                    landed.append(copy.layer.id)
+                }
+            }
+            switch toTrack {
+            case .onto(let track): document.moveClip(session.layerID, toTrack: track)
+            case .newTrack(let at): document.moveClipToNewTrack(session.layerID, at: at)
+            case nil: break
+            }
+            // A copy never covers what was already cut: one let go over
+            // something on its own track goes up onto a new track over it.
+            document.liftClipsOffOverlaps(landed)
+        }
+        if landed.count > 1 {
+            selectLayers(Set(landed))
+        } else if let copy = landed.first {
+            selectLayer(copy)
+        }
+        if let track = document?.trackID(ofClip: session.layerID),
+           track != document?.trackID(ofClip: session.copies[0].original) {
+            selectedTrackIDs = [track]
+        }
+    }
+
+    // MARK: The copy badge
+
+    /// The pointer came onto a clip's bar, or left it. `key` names the piece,
+    /// since the pointer crosses from one piece to the next and the two halves
+    /// of that can arrive in either order.
+    ///
+    /// Nothing on the timeline says a drag can leave a copy behind, so the
+    /// badged pointer is the whole invitation, as it is on the canvas: hold ⌥
+    /// over a clip and the cursor answers before anything is pressed.
+    func clipBarHover(_ key: String, layerID: UUID, inside: Bool) {
+        if inside { clipBarHovered[key] = layerID } else { clipBarHovered[key] = nil }
+        var optionHeld = ClipPiecesBar.optionHeld
+        #if PHOTONZ_PLAYTEST
+        // A walk's pointer holds its keys somewhere a hover can read them.
+        optionHeld = optionHeld || PlaytestPointer.restingModifiers.contains(.option)
+        #endif
+        refreshClipBarCopyCursor(optionHeld: optionHeld)
+    }
+
+    /// The watch on ⌥ and on the pointer, armed while the pointer is over a
+    /// clip's bar or a copy is in the hand, and taken down otherwise.
+    private func watchForClipBarCopyKeys() {
+        let wanted = !clipBarHovered.isEmpty || clipBarDrag?.copies.isEmpty == false
+        if wanted, clipBarCopyCursorWatch == nil {
+            clipBarCopyCursorWatch = NSEvent.addLocalMonitorForEvents(
+                matching: [.flagsChanged, .mouseMoved, .leftMouseDragged, .cursorUpdate]) { [weak self] event in
+                if event.type == .flagsChanged {
+                    self?.refreshClipBarCopyCursor(optionHeld: event.modifierFlags.contains(.option))
+                } else {
+                    self?.reassertClipBarCopyCursor()
+                }
+                return event
+            }
+        } else if !wanted, let watch = clipBarCopyCursorWatch {
+            NSEvent.removeMonitor(watch)
+            clipBarCopyCursorWatch = nil
+        }
+    }
+
+    /// Put the badge back on top. The views under the pointer hand it their
+    /// own cursor on every move and every cursor update, in the same turn the
+    /// badge went up, so it is set again once they have had their say.
+    private func reassertClipBarCopyCursor() {
+        guard clipBarCopyCursorShown else { return }
+        DispatchQueue.main.async { [weak self] in
+            if self?.clipBarCopyCursorShown == true { NSCursor.dragCopy.set() }
+        }
+    }
+
+    /// Badge the pointer while ⌥ is down over a clip that can be copied, and
+    /// for the whole of a copy being carried; hand it back otherwise. Pushed
+    /// and popped once each, so the timeline's other cursors are untouched.
+    func refreshClipBarCopyCursor(optionHeld: Bool) {
+        watchForClipBarCopyKeys()
+        let overACopyableClip = clipBarHovered.values.contains { !isClipLocked($0) }
+        let want = clipBarDrag.map { !$0.copies.isEmpty }
+            ?? (optionHeld && overACopyableClip && timelineTool == .select)
+        guard want != clipBarCopyCursorShown else { return }
+        clipBarCopyCursorShown = want
+        if want {
+            NSCursor.dragCopy.push()
+            // Made current there and then, as the canvas makes its own badge
+            // current, rather than waiting on the next cursor update.
+            NSCursor.dragCopy.set()
+            reassertClipBarCopyCursor()
+        } else {
+            NSCursor.pop()
+        }
     }
 
     /// Escape, for as long as there is a bar in hand. A key WATCH rather than a
@@ -519,6 +686,19 @@ extension EditorState {
         guard let session = clipBarDrag else { return document }
         var document = document
         let landing = session.landing
+        // Copies carried out with ⌥ are in the document as shown, over the
+        // clips they came out of, so the timeline draws each as a bar of its
+        // own and the canvas plays it where the hand has it.
+        //
+        // Shown without their sound: a copy's sound that needed a track of its
+        // own would grow the timeline by a row under the hand, and the dock
+        // grows upwards, so every row above it would slide away from the
+        // pointer in the middle of a drag. The sound lands with the copy.
+        for copy in session.copies {
+            var shown = copy.layer
+            shown.soundDetached = true
+            document.placeClipCopy(shown, over: copy.original, atInMS: copy.layer.time?.inMS ?? 0)
+        }
         document.updateLayer(id: session.layerID) { layer in
             layer.setClipPieces(landing.pieces)
             layer.time = layer.time?.moved(toInMS: landing.clipStartMS)
@@ -528,6 +708,13 @@ extension EditorState {
             document.updateLayer(id: id) { layer in
                 layer.time = layer.time?.moved(toInMS: start + landing.movedMS)
             }
+        }
+        // A copy over something on its own track is shown on the new track it
+        // will land on (`liftClipsOffOverlaps`), rather than hidden under what
+        // it covers. That track goes in ABOVE the one the hand is on, so
+        // nothing under the pointer moves.
+        if !session.copies.isEmpty, landing.movedMS != 0 {
+            document.liftClipsOffOverlaps(session.copies.map(\.layer.id))
         }
         // **The ruler is HELD for the length of the drag.** A document that
         // grew to fit the clip being dragged would rescale the ruler under the
@@ -557,7 +744,9 @@ extension EditorState {
                                         lengthMS: landing.pieces.piece(at: after)?.lengthMS ?? 0,
                                         changeMS: landing.movedMS)
         case .body:
-            let moving = ClipBarCopy.moving(startMS: landing.clipStartMS, changeMS: landing.movedMS)
+            let moving = session.copies.isEmpty
+                ? ClipBarCopy.moving(startMS: landing.clipStartMS, changeMS: landing.movedMS)
+                : ClipBarCopy.copying(startMS: landing.clipStartMS, changeMS: landing.movedMS)
             guard let track = clipTrackDropReading else { return moving }
             return "\(moving), \(track)"
         case .carry(let piece):
@@ -590,4 +779,16 @@ struct ClipBarDragSession {
     /// The other picked clips carried along with a `.body` drag, each with
     /// where it started. Empty for a bar dragged on its own.
     var along: [UUID: Int] = [:]
+    /// The copies an ⌥ drag carries, each with the clip it came out of. Empty
+    /// for every other drag. The one in the hand is `layerID`, and any others
+    /// are in `along`.
+    var copies: [ClipBarCopySource] = []
+}
+
+/// A copy an ⌥ drag carries out of a clip (`ClipDragCopy.swift`).
+struct ClipBarCopySource {
+    /// The clip it came out of, which stays where it is.
+    let original: UUID
+    /// The copy as it was lifted, starting where what it copies starts.
+    let layer: Layer
 }

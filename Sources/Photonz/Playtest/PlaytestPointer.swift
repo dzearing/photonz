@@ -144,6 +144,12 @@ enum PlaytestPointer {
     private static var lastLocation: CGPoint?
     private static weak var lastWindow: NSWindow?
 
+    /// The keys the walk's last `move` held while the pointer rested. A key
+    /// held by a person reaches a hover through the keyboard's own state, and
+    /// a walk's never does, so a hover that answers ⌥ (the copy badge over a
+    /// clip, `EditorState.clipBarHover`) asks here as well.
+    static var restingModifiers: NSEvent.ModifierFlags = []
+
     /// The walk's pointer arrived at `location`, in `window`'s coordinates.
     static func placed(at location: CGPoint, in window: NSWindow) {
         lastLocation = location
@@ -163,6 +169,7 @@ enum PlaytestPointer {
         inside = []
         lastLocation = nil
         lastWindow = nil
+        restingModifiers = []
     }
 
     /// The pointer comes to rest at `location`, in `window`'s own coordinates.

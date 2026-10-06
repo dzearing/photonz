@@ -389,6 +389,13 @@ struct ClipPiecesBar: View {
             // after it, the right click answered for the lane's left edge and
             // landed on whichever piece was drawn last (2026-09-23).
             .contentShape(Rectangle())
+            // The copy badge, while ⌥ is down over the clip.
+            .playtestHover(Self.pieceName(layerName: fieldName, index: index, of: pieces.count)) { inside in
+                editorState.clipBarHover("\(layerID)/\(isLinkedSound)/\(index)", layerID: layerID, inside: inside)
+            }
+            .onDisappear {
+                editorState.clipBarHover("\(layerID)/\(isLinkedSound)/\(index)", layerID: layerID, inside: false)
+            }
             .gesture(carry(pieces, index: index))
             .onTapGesture {
                 // A click on the clip takes it rather than any keys picked on
@@ -675,9 +682,10 @@ struct ClipPiecesBar: View {
 
     static func help(_ pieces: ClipPieces, index: Int) -> String {
         guard pieces.count > 1 else {
-            return "The clip. Drag it to move it along the timeline."
+            return "The clip. Drag it to move it along the timeline, Option-drag to copy it."
         }
-        return "Piece \(index + 1) of \(pieces.count). Drag it somewhere else in the order."
+        return "Piece \(index + 1) of \(pieces.count). Drag it somewhere else in the order, "
+            + "Option-drag to copy it."
     }
 
     // MARK: The fades
@@ -1110,8 +1118,12 @@ struct ClipPiecesBar: View {
                     let whole = pieces.count == 1
                         || NSEvent.modifierFlags.contains(.command)
                         || editorState.multiSelectedLayerIDs.contains(layerID)
+                    // ⌥ leaves the clip where it is and carries out a copy:
+                    // of the whole clip, or of this piece alone where a carry
+                    // would have rearranged it (`ClipDragCopy.swift`).
                     editorState.beginClipBarDrag(layerID: layerID,
-                                                 grab: whole ? .body : .carry(piece: index))
+                                                 grab: whole ? .body : .carry(piece: index),
+                                                 copying: Self.optionHeld)
                 }
                 editorState.updateClipBarDrag(
                     byMS: Self.ms(value.translation.width, laneWidth: laneWidth,
@@ -1130,6 +1142,12 @@ struct ClipPiecesBar: View {
     /// when the thing being dragged does. A grip's own space travels with the
     /// grip, so a drag read there chases its own tail.
     static let handSpace: CoordinateSpace = .global
+
+    /// ⌥ down right now, read the same two ways.
+    static var optionHeld: Bool {
+        NSEvent.modifierFlags.contains(.option)
+            || NSApp.currentEvent?.modifierFlags.contains(.option) == true
+    }
 
     /// ⌘ down right now, on the keyboard or on the event being handled (a
     /// walk's posted drag carries its keys on the event, not the keyboard).

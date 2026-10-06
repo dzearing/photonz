@@ -668,6 +668,15 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// that reads the gain Normalize set waits for this rather than guessing
     /// at a delay (`CleanedSounds.swift`).
     case soundSettled
+    /// This many clips on the timeline, and no more, read one and the same
+    /// recording: the most any single recording is read by. What a walk waits
+    /// on to prove an Option drag on a clip left a copy behind rather than
+    /// moving the clip (`ClipDragCopy.swift`).
+    case clipsOfOneRecording(Int)
+    /// The pointer wears the copy badge the timeline puts on it while ⌥ is
+    /// down over a clip: the timeline says it put it there AND the cursor
+    /// really is the badge, so something taking it straight back down fails.
+    case clipCopyBadge
     /// A dialog is up (or has gone), named by the words at the top of it:
     /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
     ///
@@ -4076,9 +4085,11 @@ public enum PlaytestStep: Sendable, Equatable {
             case "tutorialFinished": .tutorialFinished(try f.string("value"))
             case "exportSizeWeighed": .exportSizeWeighed
             case "soundSettled": .soundSettled
+            case "clipsOfOneRecording": .clipsOfOneRecording(Int(try f.number("value")))
+            case "clipCopyBadge": .clipCopyBadge
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, dialogUp or dialogGone")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp or dialogGone")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

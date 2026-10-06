@@ -1743,6 +1743,13 @@ final class EditorState {
     var timelinePicks: [TimelinePick] = []
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
+    /// The ⌥ watch armed while the pointer rests on a clip's bar, so the copy
+    /// badge comes and goes with the key (`EditorState+ClipBar`).
+    @ObservationIgnored var clipBarCopyCursorWatch: Any?
+    /// The pieces of clip bars the pointer is over, each with its clip, and
+    /// whether the copy badge is pushed onto the cursor stack right now.
+    @ObservationIgnored var clipBarHovered: [String: UUID] = [:]
+    @ObservationIgnored var clipBarCopyCursorShown = false
     /// ...and the one armed while a transition's band is.
     @ObservationIgnored var clipTransitionEscapeWatch: Any?
     /// The Escape watch armed for exactly as long as a bar is in hand

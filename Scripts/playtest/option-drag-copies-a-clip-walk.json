@@ -1,0 +1,165 @@
+{
+  "out": "/tmp/photonz-playtest/option-drag-copies-a-clip-walk",
+  "seed": "Option drag on a clip leaves a copy behind (task option-drag-on-a-clip-leaves-a-copy-behind). At Next defaults with no flag changed: open a recording, split it with Command K, hold Option over the second piece and the pointer wears the copy badge, then Option-drag that piece right with a real mouse. The original stays cut in two exactly where it was, a copy of the second piece lands later as a clip of its own reading the same recording, on a new track straight over V1 because V1 is busy there, and one undo takes the copy away.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample piece 2",
+      "present": true
+    },
+    {
+      "do": "waitFor",
+      "condition": "clipsOfOneRecording",
+      "value": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "1-split"
+    },
+    {
+      "do": "move",
+      "control": "Tutorial Sample piece 2",
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "clipCopyBadge",
+      "timeout": 2
+    },
+    {
+      "do": "describe",
+      "stage": "2-badge",
+      "note": "Option held over the second piece: the cursor reads dragCopy, the canvas's own copy badge"
+    },
+    {
+      "do": "dragGrip",
+      "control": "Tutorial Sample piece 2",
+      "by": 120,
+      "steps": 24,
+      "modifiers": [
+        "option"
+      ],
+      "hold": "3-copy-mid-drag"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "waitFor",
+      "condition": "clipsOfOneRecording",
+      "value": 2
+    },
+    {
+      "do": "expect",
+      "field": "Track V2",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-let-go"
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample piece 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample clip",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "4-copied",
+      "note": "THE TEST: the recording is still cut in two where it was, and a copy of its second piece sits later on the timeline as a clip of its own, reading the same recording, with its sound under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-copied"
+    },
+    {
+      "do": "key",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "waitFor",
+      "condition": "clipsOfOneRecording",
+      "value": 1
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample clip",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample piece 2",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "one undo took the copy away and left the cut recording as it was"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-undone"
+    }
+  ]
+}

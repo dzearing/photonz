@@ -1069,6 +1069,7 @@ private final class Run {
             // it. Setting it here and letting `mouseMoved` read it lands the
             // canvas in the same state a person holding ⌥ would.
             canvas.pointerModifiers = flags
+            PlaytestPointer.restingModifiers = flags
             let inCanvas = canvas.convert(inWindow, from: nil)
             if let event = mouseEvent(.mouseMoved, at: inCanvas, on: canvas, flags: flags) {
                 canvas.mouseMoved(with: event)
@@ -15016,6 +15017,10 @@ private final class Run {
         // Answered above, where it does not need a window with an editor in it.
         case .exportSizeWeighed: ExportWeigh.onScreen?.isSettled == true
         case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
+        case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
+        case .clipsOfOneRecording(let count):
+            (Dictionary(grouping: editor.document?.timelineClipLayers.compactMap(\.movie) ?? [], by: { $0 })
+                .values.map(\.count).max() ?? 0) == count
         case .edgeMap: !editor.snappingEdgeMap.isEmpty
         case .captionField: window?.firstResponder is NSTextView
         case .tool(let tool): editor.activeTool == tool
@@ -16392,6 +16397,11 @@ private final class Run {
             // The pointer's shape, so a walk can prove the cue appeared over a
             // handle and nowhere else.
             "cursor": Self.cursorName(),
+            // Whether the timeline has put the copy badge on the pointer: ⌥
+            // held over a clip's bar, or a copy being carried out of one
+            // (`EditorState.clipBarHover`). Read beside `cursor`, it says
+            // whether the badge went up and whether anything took it down.
+            "clipCopyBadge": editor.clipBarCopyCursorShown,
             // ...and what the canvas thinks is under the pointer, which is the
             // other half: these two disagreeing means the cue was right and the
             // pointer did not follow it.

@@ -497,9 +497,10 @@ extension PhotonzDocument {
     /// A new empty track. Picture and captions tracks land on top, sound at
     /// the bottom, unless a place is given.
     @discardableResult
-    public mutating func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil) -> UUID {
+    public mutating func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil, id: UUID? = nil) -> UUID {
         materializeTracks()
-        let track = DocumentTrack(name: Self.freeTrackName(kind, used: Set(tracks.map(\.name))),
+        let track = DocumentTrack(id: id ?? UUID(),
+                                  name: Self.freeTrackName(kind, used: Set(tracks.map(\.name))),
                                   kind: kind)
         let place = index ?? (kind == .audio ? tracks.count : 0)
         tracks.insert(track, at: min(max(0, place), tracks.count))
@@ -601,10 +602,10 @@ extension PhotonzDocument {
     /// Carry a clip onto a new track of its kind, made at `index` in the
     /// timeline's list, which is what a drop between two tracks does.
     @discardableResult
-    public mutating func moveClipToNewTrack(_ clipID: UUID, at index: Int) -> UUID? {
+    public mutating func moveClipToNewTrack(_ clipID: UUID, at index: Int, newTrackID: UUID? = nil) -> UUID? {
         guard let clip = layers.first(where: { $0.id == clipID }), trackID(ofClip: clipID) != nil,
               !isClipOnLockedTrack(clipID) else { return nil }
-        let track = addTrack(clip.clipTrackKind, at: index)
+        let track = addTrack(clip.clipTrackKind, at: index, id: newTrackID)
         updateLayer(id: clipID) { $0.trackID = track }
         restackByTracks()
         return track

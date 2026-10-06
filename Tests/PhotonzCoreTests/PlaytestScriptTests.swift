@@ -4032,6 +4032,28 @@ struct PlaytestScriptTests {
         #expect(condition == .dialog("Resize Image", up: true) && timeout == 3)
     }
 
+    @Test func waitForReadsHowManyClipsShareOneRecording() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "clipsOfOneRecording", "value": 2 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .clipsOfOneRecording(2))
+    }
+
+    @Test func waitForReadsTheClipCopyBadge() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "clipCopyBadge" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .clipCopyBadge)
+    }
+
     @Test func waitForReadsWhetherADialogHasGone() {
         let json = """
         { "out": "/tmp/x", "steps": [
