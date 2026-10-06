@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:35:45.802Z",
-  "updated": "2026-10-06T13:35:58.090Z",
+  "updated": "2026-10-06T19:08:23.227Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Command R is unbound on a video today: grep of Sources/Photonz for keyboardShortcut(\"r\" finds only Command Shift R (EditorCommands.swift ~1839). Photoshop uses Command R for Rulers; check the app has no rulers row that should own it, and if it does, keep it on pictures and take it on a video the way Command K is taken.\n\nSpeed lives in three places: the Clip menu's Speed submenu (EditorCommands.swift ~819-831, freezeAndSpeedRows), the clip's right-click Speed submenu (EditorState+TimelineMenus.swift ~144), and the panel's Speed dropdown (SpeedInspector.swift ~93, .playtestField(\"Speed\")). A submenu row cannot carry a key, so the menu side probably wants a Speed... row above the submenu or the key printed on the submenu's own title if AppKit allows; decide and say which in the audit. No new control: Premiere's typed Speed/Duration dialog is NOT in scope, and a typed speed box would be a new control needing a card.\n\nFound by the Premiere key gap check this pass (docs/design/video-vs-premiere.md, key reference docs/design/video.md 249-289). Searched: speed duration, command r: nothing.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-10-06T13:35:58.089Z",
       "note": "seq 3700 -> 3"
+    },
+    {
+      "t": "2026-10-06T18:40:51.670Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T19:03:49.280Z",
+      "note": "owns these walks: command-r-opens-the-speed-walk, command-r-with-no-clip-walk"
+    },
+    {
+      "t": "2026-10-06T19:08:06.389Z",
+      "note": "Before building: a Premiere editor expects Cmd R to open speed for the picked clip. No mock covers the key. Photoshop's Cmd R is Rulers, which this app has none of, so a picture loses nothing. A submenu title cannot carry a key, so the Clip menu gets a Change Speed... row (Cmd R) above the Speed submenu. 'Nothing picked' read as 'no clip in hand': like every Clip menu row, the piece under the playhead counts, so Cmd R opens and picks it; only with no clip at all does it say No clip picked."
+    },
+    {
+      "t": "2026-10-06T19:08:06.444Z",
+      "note": "Built: TimelineKeys maps Cmd R to .openClipSpeed wherever the keyboard is (SpeedKeyTests). EditorState+SpeedKey.openClipSpeed picks the piece, shows the panel, raises pendingClipSpeedChoices; InspectorPanel unfolds and scrolls to Time; VideoKit.Dropdown gained opensWhenAsked/opened and opens its menu 0.3s later. Under a walk it holds the open face rather than putting a menu on screen (DropdownButton.holdsOpenInsteadOfShowing, waitFor panelMenuOpen). A held frame opens Hold. Retiming switched off (Current): the key is left alone."
+    },
+    {
+      "t": "2026-10-06T19:08:06.499Z",
+      "note": "Verified: Scripts/test.sh 11576 tests green; command-r-opens-the-speed-walk (panel hidden, then Time folded, both open Speed; 2x; undo) and command-r-with-no-clip-walk green at Next defaults, screen unlocked, real captures. Commit e1d3eba6."
+    },
+    {
+      "t": "2026-10-06T19:08:06.557Z",
+      "note": "left rough (not filed, harness only, seen once): a press on 'Time section' after the panel was hidden and shown again clicked window (1596, 762) while the header sat near y 228, so the fold did not happen and the step did not fail; the walk now uses windowClick at the header's point. Also the real NSMenu drop-open is not photographed by any walk (an open menu needs the Mac to itself); the audit's rough says so and asks nothing more."
+    },
+    {
+      "t": "2026-10-06T19:08:23.225Z",
+      "note": "Command R opens the panel's Speed list for the piece in hand (picks it, brings the panel back, unfolds Time; a held frame opens Hold; no clip says No clip picked). Clip > Change Speed... carries the key. Pictures unchanged (no Rulers in the app). Verified by SpeedKeyTests, full test.sh (11576 green), command-r-opens-the-speed-walk and command-r-with-no-clip-walk at Next defaults with real captures. Audit queue/audits/2026-10-06-command-r-speed.json; docs/design/video-vs-premiere.md gap 12 closed. Commit e1d3eba6."
     }
-  ]
+  ],
+  "started": "2026-10-06T18:40:51.668Z",
+  "walks": [
+    "command-r-opens-the-speed-walk",
+    "command-r-with-no-clip-walk"
+  ],
+  "completed": "2026-10-06T19:08:23.226Z"
 }
