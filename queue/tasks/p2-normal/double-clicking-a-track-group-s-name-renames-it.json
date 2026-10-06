@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:24:44.726Z",
-  "updated": "2026-10-06T05:24:48.867Z",
+  "updated": "2026-10-06T05:41:16.365Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/TimelineTrackRows.swift ~1094-1112: the group header is a Button whose action is toggleTrackGroupCollapsed, with a simultaneousGesture TapGesture(count: 2) for rename. A plain Button fires once per click, so a double-click likely toggles twice. Read in the code by the 2026-10-05 22:xx manager pass, not seen on screen, hence p2 and the reproduce step. A track's own name renames on double-click without this problem (~167-170).",
@@ -27,6 +27,31 @@
     {
       "t": "2026-10-06T05:24:48.866Z",
       "note": "seq 3690 -> 1"
+    },
+    {
+      "t": "2026-10-06T05:26:11.181Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T05:31:23.359Z",
+      "note": "Reproduced at Next defaults (no flags): Scripts/playtest.sh /tmp/group-dblclick-repro.json (V2 added, V2+V1 grouped, then press 'Track group Group 1' count 2 = two real clicks, AppKit click counts 1 and 2). Panel after: only 'Track group Group 1' and 'Track Audio', V2 and V1 gone, no name field. Pictures: before shows Group 1 open with V2/V1, after shows '> Group 1' folded to one row. A temporary log in toggleTrackGroupCollapsed printed exactly ONE toggle (clickCount=1, wasCollapsed=false): the first click folds, and the second click neither folds again nor renames, because the simultaneous TapGesture(count: 2) never fires on the Button. So it is worse than the task guessed: the group ends FOLDED and double-click rename does not work at all. Only the right-click Rename… reaches the field."
+    },
+    {
+      "t": "2026-10-06T05:31:23.446Z",
+      "note": "owns these walks: group-name-double-click-renames-walk"
+    },
+    {
+      "t": "2026-10-06T05:41:08.492Z",
+      "note": "Fix: the group heading is now two buttons. The chevron (walk name 'Track group X', as before) folds at once. The name ('Group name X') reads AppKit's click count like a track's name does: a double-click starts renaming, and a single click folds after NSEvent.doubleClickInterval, cancelled by a second click, so a double-click never folds. Chose the wait over fold-then-unfold because the task asks for the group to stay as it was, and the chevron gives an instant fold. The removed TapGesture(count: 2) never fired beside the Button. The name field also got the track field's async focus and commit-on-blur, and renameTrackGroup skips a no-change rename. Verified: group-name-double-click-renames-walk green at defaults (open + folded double-click, name single click, chevron), tracks-you-can-add-rename-group-walk green, Scripts/test.sh 11436 passed. Nothing left rough earns a follow-up."
+    },
+    {
+      "t": "2026-10-06T05:41:16.363Z",
+      "note": "Reproduced: a double-click on a group's name folded the group and never opened the name (two pictures, one fold logged). Fixed in TimelineTrackRows: the chevron folds at once, a double-click on the name only renames, and a single click on the name folds after the double-click time. Verified by group-name-double-click-renames-walk at Next defaults, tracks-you-can-add-rename-group-walk, Scripts/test.sh (11436 passed). Audit: queue/audits/2026-10-05-group-name-double-click-renames.json"
     }
-  ]
+  ],
+  "started": "2026-10-06T05:26:11.180Z",
+  "walks": [
+    "group-name-double-click-renames-walk"
+  ],
+  "completed": "2026-10-06T05:41:16.364Z"
 }

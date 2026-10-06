@@ -9618,3 +9618,9 @@
 {"t":"2026-10-06T05:25:21.670Z","ev":"task_resequenced","id":"the-editing-session-walk-adds-captions-the-way-a","from":3650,"to":6}
 {"t":"2026-10-06T05:25:21.725Z","ev":"task_walks","id":"the-editing-session-walk-adds-captions-the-way-a","walks":["an-editing-session-walk"]}
 {"t":"2026-10-06T05:25:57.324Z","ev":"manager","filed":6,"readyBefore":2,"readyAfter":7,"report":"queue/manager/2026-10-05-2225.md"}
+{"t":"2026-10-06T05:26:11.121Z","ev":"manager_pass","exit":0,"ready":7}
+{"t":"2026-10-06T05:26:11.187Z","ev":"task_started","id":"double-clicking-a-track-group-s-name-renames-it","title":"Double-clicking a track group's name renames it without folding it","priority":"p2-normal"}
+{"t":"2026-10-06T05:31:23.361Z","ev":"task_note","id":"double-clicking-a-track-group-s-name-renames-it"}
+{"t":"2026-10-06T05:31:23.448Z","ev":"task_walks","id":"double-clicking-a-track-group-s-name-renames-it","walks":["group-name-double-click-renames-walk"]}
+{"t":"2026-10-06T05:41:08.494Z","ev":"task_note","id":"double-clicking-a-track-group-s-name-renames-it"}
+{"t":"2026-10-06T05:41:16.366Z","ev":"task_done","id":"double-clicking-a-track-group-s-name-renames-it","from":"in_progress","note":"Reproduced: a double-click on a group's name folded the group and never opened the name (two pictures, one fold logged). Fixed in TimelineTrackRows: the chevron folds at once, a double-click on the name only renames, and a single click on the name folds after the double-click time. Verified by group-name-double-click-renames-walk at Next defaults, tracks-you-can-add-rename-group-walk, Scripts/test.sh (11436 passed). Audit: queue/audits/2026-10-05-group-name-double-click-renames.json"}
