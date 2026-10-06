@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3600,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T18:57:32.902Z",
-  "updated": "2026-10-05T18:57:32.905Z",
+  "updated": "2026-10-05T22:34:38.666Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-05 by the-tool-lens-text-style-and-component-menus-in: `Scripts/playtest-all.sh --no-build --only <list>` printed `menu-says-its-whole-value-walk 8s FAILED step 27 (expect): no tooltip called \"Kind\" in \"Shadow\" is in the panel; the ones that are: Shadow Style, Color, Twist, Reorder, Switch, Remove, Style, Color, Drop, Inner`. Step 27 is `{\"do\":\"expect\",\"tooltip\":\"Kind\",\"in\":\"Shadow\",\"present\":true}`; commit b4c89240 (Two-way effect settings are a segmented control) moved Kind onto EffectChoiceRow, whose segments carry the tooltips. Likely fix: expect tooltip Drop or Inner in Shadow, or move the two-of-a-kind claim to a row that is still a dropdown (Position in Border).",
@@ -21,9 +21,23 @@
     {
       "t": "2026-10-05T18:57:32.904Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T22:27:39.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T22:34:38.601Z",
+      "note": "Reproduced: step 27 failed exactly as in notes. Replaced the Kind-in-Shadow claim with two claims on Style (the text's Style menu and the shadow's Style both carry the word, with different sentences): unnamed reads the text's sentence, in Shadow reads the shadow's. Walk ok at Next defaults (no flags), 28 steps, 1 real capture. Scripts/test.sh green (11399 tests). Walk-only fix, no audit (no feature changed)."
+    },
+    {
+      "t": "2026-10-05T22:34:38.664Z",
+      "note": "menu-says-its-whole-value-walk passes again at Next defaults: its two-of-a-kind step now claims the word Style, worn by both the text and its shadow, and checks that naming the Shadow row picks the shadow's sentence. Commit f35eeee2; walk run green, Scripts/test.sh green."
     }
   ],
   "walks": [
     "menu-says-its-whole-value-walk"
-  ]
+  ],
+  "started": "2026-10-05T22:27:39.738Z",
+  "completed": "2026-10-05T22:34:38.665Z"
 }

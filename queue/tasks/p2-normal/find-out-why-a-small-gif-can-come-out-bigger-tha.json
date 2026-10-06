@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3610,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T18:57:40.418Z",
-  "updated": "2026-10-05T18:57:40.421Z",
+  "updated": "2026-10-05T23:25:32.344Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-05 by the-tool-lens-text-style-and-component-menus-in, whose change touches no export code. Full `Scripts/test.sh` printed: `✘ Test \"written twice, a GIF is the same file and a HEIC the same pictures\" recorded an issue at AnimatedExportWeighTests.swift:155:37: Expectation failed: (small → 91233) < (standard → 84279)`; the test took 138s in that run. `Scripts/test.sh --filter AnimatedExportWeighTests` then passed (3 tests, 21.6s), and the next full run passed all 11399. Earlier history: the-export-size-test-fails-about-one-run-in-thre (done) fixed a similar load-sensitive size check; fbaa917c (A GIF plays at the speed of the edit it came from) landed just before this was seen.",
@@ -21,6 +21,25 @@
     {
       "t": "2026-10-05T18:57:40.420Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T22:53:14.216Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T23:25:32.223Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-05T23:25:32.281Z",
+      "note": "Cause: the test wrote its own source recording every run on the hardware H.264 encoder, which decides differently when other encodes share it. Alone: 55,108 bytes, GIFs 234,554/191,412/121,440 every time. Written beside 15 others (temporary experiment test, Scripts/test.sh --filter): sources 53,164 to 90,592 bytes, Small GIF 57 to 89 per cent of Standard. The GIF step is byte-identical from one source (the test's own twice-written check held in the failing run), so a busy machine does not change a person's export; it changed the test's input. Separately and NOT about load: on a crisp source (ProRes 422) Small outweighs Standard deterministically (26,988 vs 23,280; 19 of 19 writes identical) because Standard keeps 640px and Small's scale to 480 turns crisp lines into in-between greys (256 vs 128 colour palette, first frame 12,102 vs 6,388 bytes). Filed as a-small-gif-of-a-crisp-recording-weighs-less-tha (p2, video-share)."
+    },
+    {
+      "t": "2026-10-05T23:25:32.342Z",
+      "note": "Cause written in the log: the test re-encoded its source on the hardware encoder each run, and that file changes under load; the GIF export from a fixed file does not. Test now writes its source with the software H.264 encoder (identical under load, 18 of 18) and no longer claims Small < Standard for a GIF, which is a property of the recording (filed a-small-gif-of-a-crisp-recording-weighs-less-tha). Commit 729be390. Three full Scripts/test.sh runs in a row passed, 11,399 tests each."
     }
-  ]
+  ],
+  "started": "2026-10-05T22:53:14.213Z",
+  "walks": [],
+  "completed": "2026-10-05T23:25:32.343Z"
 }

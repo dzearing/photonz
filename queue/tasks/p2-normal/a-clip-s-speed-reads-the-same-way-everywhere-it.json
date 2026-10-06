@@ -1,0 +1,41 @@
+{
+  "id": "a-clip-s-speed-reads-the-same-way-everywhere-it",
+  "title": "A clip's speed reads the same way everywhere it is shown",
+  "goal": "A clip at half speed reads 50% on its bar, Half Speed in the Speed menu and 0.5x in the panel's clip line, three words for one value. Pick the mock's way, a number with an x, and use it on the bar and the clip line, so an editor reading the timeline and the panel sees the same thing.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T00:43:44.185Z",
+  "updated": "2026-10-06T00:44:25.430Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Badge: ClipPiecesBar.badge (Sources/Photonz/ClipPiecesBar.swift:658-668) writes whole multiples as Nx and everything else as N%. Menu titles: ClipSpeed.title (Sources/PhotonzCore/ClipSpeed.swift:213) gives Normal / Half Speed / Quarter Speed / N% Speed / Nx Speed. The clip line in Properties already reads 1.0x (see /tmp/photonz-playtest/an-editing-session-walk/2-cut-sc.png). Mock: docs/design/mocks/pages/video.html clip face speed badge '1.5x'; video-speed.html. Whether the menu keeps Half Speed as words is the runner's call within the acceptance; the bar and clip line must match. Found by the 2026-10-05 evening manager pass's video.html comparison.",
+  "acceptance": [
+    "The speed badge on a clip's bar reads 0.25x, 0.5x, 2x, 4x and so on, matching the clip line in the panel and the mock's 1.5x badge (video.html)",
+    "The Speed dropdown keeps its words where a word helps (Normal) and shows the same number for the rest, so the dropdown's face and the badge agree for every stop",
+    "A unit test covers the reading for every speed stop, and the existing speed walk's expectations are updated and run green",
+    "Try it: open a recording, split it, set the second piece to Half Speed from the panel, and read the bar and the panel. Audit written under queue/audits/ with a picture of the bar beside the panel",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T00:43:44.187Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T00:44:16.467Z",
+      "note": "seq 3670 -> 5"
+    },
+    {
+      "t": "2026-10-06T00:44:22.180Z",
+      "note": "The clip line picture is kept at queue/manager/shots/2026-10-05-1810-clip-panel.png (the /tmp path in the notes is cleared on reboot)."
+    },
+    {
+      "t": "2026-10-06T00:44:25.429Z",
+      "note": "Correction: the picture is at queue/manager/shots/2026-10-05-1744-clip-panel.png."
+    }
+  ]
+}

@@ -1,0 +1,52 @@
+{
+  "id": "music-dips-under-the-speech-by-itself-when-you-put-music-under-someone",
+  "taskId": "music-dips-under-the-speech-by-itself",
+  "question": "When you put music under someone talking, should it dip under their voice by itself?",
+  "context": "The captions now know exactly when someone is speaking. The audio mock draws a Duck switch and a 'Duck music under voiceover' command; both were cut in September because the app could not tell which sound was a voice. Today you dip music by dragging level points by hand.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One command, Duck Under Speech",
+      "summary": "Right-click the music and choose Duck Under Speech (also in the menu bar). The music dips under every spoken stretch and you can drag the points afterwards. Nothing happens until you ask.",
+      "pros": [
+        "You decide when it happens",
+        "The result is ordinary level points you already know how to move"
+      ],
+      "cons": [
+        "One more step to learn",
+        "Re-cutting the talk afterwards leaves the old dips where they were until you run it again"
+      ],
+      "mitigation": "Running it again replaces the dips it made before and keeps any you drew by hand."
+    },
+    {
+      "id": "b",
+      "label": "Music always dips under speech",
+      "summary": "Any music under a talking recording dips by itself and follows the speech when you cut. A Duck switch on the music's Sound section turns it off.",
+      "pros": [
+        "Zero steps: the music bed just sounds right",
+        "Stays right after every cut"
+      ],
+      "cons": [
+        "Something changes the sound without being asked",
+        "Dragged points and the automatic dip can disagree"
+      ],
+      "mitigation": "The switch is on the music's own section, and the dip is drawn on its bar so you can see it happening."
+    },
+    {
+      "id": "c",
+      "label": "Do not build this",
+      "summary": "Keep ducking by hand with level points on the music's bar, as today.",
+      "pros": [
+        "Nothing new on screen"
+      ],
+      "cons": [
+        "A music bed under a talk takes four drags per sentence"
+      ],
+      "mitigation": "None.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-06T00:44:03.509Z"
+}

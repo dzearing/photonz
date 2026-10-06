@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 500,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T16:15:12.273Z",
-  "updated": "2026-10-05T16:56:51.720Z",
+  "updated": "2026-10-05T16:57:11.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/comp-fields.html section 05 Select: \"For 5 or more exclusive options, or fewer when space is tight. Below that use a .seg\" and the dont: \"Use a select for two options. That is a segmented control.\" Found 2026-10-05 by the-appearance-and-effects-menus-wear-the-same-d while comparing against the mock; that task moved these rows from the system pop-up onto VideoKit.Dropdown (EffectsListInspector.swift BorderFollowsRow, GlowKindRow, ShadowKindRow; EffectStylePanel.picker). Use SegmentedControl (Sources/Photonz/DesignSystem), never Picker .segmented (UX-PATTERNS: The one segmented control). Walks that choose these today: label-border-follows-walk (panelMenu Follows), appearance-and-effects-dropdowns-open-on-a-click-walk (panelMenu Kind/Follows/Position at centre/start/end); remove those panelMenu steps from the click walk and lower EveryDropdownIsClickedByAWalkTests.builtNames if Kind/Position leave the style panel dropdown.",
@@ -47,6 +47,10 @@
     {
       "t": "2026-10-05T16:56:51.719Z",
       "note": "left rough: a saved style's Position is segmented while the Effects list's Position is a dropdown (room differs). Asked as an evaluate question in the audit rather than filed."
+    },
+    {
+      "t": "2026-10-05T16:57:11.078Z",
+      "note": "Shadow Kind, Glow Kind and Follows in the Effects list, and a saved style's Kind and Position, are the app's one segmented control at Next defaults (EffectsListInspector EffectChoiceRow, EffectStylePanel.picker). Mixed lights no segment and says Mixed beside the name; one pick reaches all picked layers in one undo. Effects-list Position stays a dropdown (3 words need ~146pt vs ~122pt default / ~80pt narrowest column); Masked by stays a dropdown (one choice per layer). Verified: click walk, label-border-follows-walk, new two-way-effect-setting-reads-mixed-walk all ok with real captures; Scripts/test.sh 11399 passed. Audit 2026-10-05-two-choice-effect-segments. Commit b4c89240."
     }
   ],
   "started": "2026-10-05T16:39:21.930Z",
@@ -54,5 +58,6 @@
     "appearance-and-effects-dropdowns-open-on-a-click-walk",
     "label-border-follows-walk",
     "two-way-effect-setting-reads-mixed-walk"
-  ]
+  ],
+  "completed": "2026-10-05T16:57:11.079Z"
 }

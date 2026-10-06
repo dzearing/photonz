@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:27:36.398Z",
-  "updated": "2026-10-05T12:50:52.990Z",
+  "updated": "2026-10-05T13:21:28.553Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html line ~214, .numgrid with <span class=\"stepper sm\"><span class=\"k\">Size</span><input id=\"pSize\" value=\"28\"></span> beside <span class=\"select sm\">Regular</span>. App: TextInspector.swift SelectionMenu(label: \"Size\") over TextStyles.fontSizes, now on VideoKit.Dropdown (2026-10-05, the-text-section-s-font-size-and-weight-menus-lo); CaptionsInspector.swift CaptionsTextInspector has the same Size row. Seen in queue/audits/2026-10-05-text-menus-after-dark-sc.png. The panel-rows-in-one-column layout stacks Size and Weight as two rows (PanelPair); the mock puts them side by side on one line, so the runner decides with the placement contract whether the pair shares a row. Size is clamped by setTextStyle already (typed sizes in walks use setTextSizeThreeDigits).",
@@ -27,6 +27,37 @@
     {
       "t": "2026-10-05T12:50:52.989Z",
       "note": "seq 500 -> 40"
+    },
+    {
+      "t": "2026-10-05T12:53:10.835Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T13:00:37.088Z",
+      "note": "owns these walks: title-size-box-walk, text-size-box-mixed-walk, every-title-dropdown-opens-on-a-click-walk"
+    },
+    {
+      "t": "2026-10-05T13:21:16.064Z",
+      "note": "Adversarial pass before building: a Photoshop user expects a size field that takes any number with presets on the same field (a combo box), arrow keys nudging by 1 and Shift by 10. The mock draws a stepper with the name inside the well and no preset list, so the presets ride on a small chevron at the box's end (the task's own checklist asks for them). Placement: both are Text-section values in the panel, so they share a line as the mock's numgrid does, the same full-width two-column grid Position and Size already uses."
+    },
+    {
+      "t": "2026-10-05T13:21:16.120Z",
+      "note": "Built: TextStyles.sizeShowing/sizeOptions/smallestSize(1)/largestSize(999) in core, test-first (TextSizeBoxTests). PanelNumberField gains look .well (mock's .stepper.sm: name inside a sunken well) and presets (a bare VideoKit.Dropdown chevron). TextSizeAndWeightRow in TextInspector.swift, used by the Text section and CaptionsTextInspector when next-panel-rows-in-one-column is on (Next default); Current keeps its two menus. Walks: title-size-box-walk, text-size-box-mixed-walk (new, no flags), every-title-dropdown-opens-on-a-click-walk still clicks Size's presets at centre/start/end."
+    },
+    {
+      "t": "2026-10-05T13:21:16.176Z",
+      "note": "left rough: dragging sideways on the word Size does not scrub the size (input.css describes the stepper label as a scrub handle); with Mixed showing an arrow key does nothing rather than stepping each layer from its own size. Neither earned its own task: no one has asked, and typing covers both."
+    },
+    {
+      "t": "2026-10-05T13:21:28.551Z",
+      "note": "Size in the Text section (and a Captions layer's) is a box you type into beside Weight on one line, as video-title-wt.html draws it, with presets on a chevron at its end; Return lands on every picked text in one undo step, arrows nudge, Mixed reads dimmed. Commit c7fbd9f1. Verified by TextSizeBoxTests, Scripts/test.sh green (11376), title-size-box-walk and text-size-box-mixed-walk at Next defaults with real captures light and dark, plus every-title-dropdown/type-menu-labels/size-menu-one-width/mixed-one-look/captions walks. Audit queue/audits/2026-10-05-title-size-box.json."
     }
-  ]
+  ],
+  "started": "2026-10-05T12:53:10.834Z",
+  "walks": [
+    "title-size-box-walk",
+    "text-size-box-mixed-walk",
+    "every-title-dropdown-opens-on-a-click-walk"
+  ],
+  "completed": "2026-10-05T13:21:28.552Z"
 }

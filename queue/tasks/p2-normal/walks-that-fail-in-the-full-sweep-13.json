@@ -1,0 +1,64 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-13",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3620,
+  "status": "done",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-05T22:27:39.507Z",
+  "updated": "2026-10-05T23:42:29.416Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-05T22:27:39Z: 752 of 758 walks passed in 207 minutes.\n\nFailing walks (6): appearance-list-walk, fix-a-caption-word-walk, layer-row-lifts-at-scale-walk, layers-lazy-rows-walk, menu-says-its-whole-value-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  menu-says-its-whole-value-walk -> the-whole-value-tooltip-walk-reads-a-shadow-kind (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 4: appearance-list-walk, fix-a-caption-word-walk, layer-row-lifts-at-scale-walk, layers-lazy-rows-walk\n\nFull output: queue/sweep/2026-10-05-120028.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T22:27:39.509Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-10-05T23:25:55.411Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T23:26:03.586Z",
+      "note": "owns these walks: appearance-list-walk, fix-a-caption-word-walk, layer-row-lifts-at-scale-walk, layers-lazy-rows-walk"
+    },
+    {
+      "t": "2026-10-05T23:42:20.594Z",
+      "note": "appearance-list-walk: the WALK was wrong, not the app. Step 24 opened a shadow's Kind as a dropdown ('Shadow 2' menu), but Kind became a two-way segment in b4c89240. It now presses Inner in Shadow 2 and reads Kind back as Inner, the same change 4a5fc67b made to its sibling effect walks."
+    },
+    {
+      "t": "2026-10-05T23:42:20.649Z",
+      "note": "layers-lazy-rows-walk: the WALK was wrong. It asks for a 4000pt scroll to reach the bottom of 121 layer rows, but at 40pt a row in a 200pt list the bottom is about 4640pt down (the run stopped at Rectangle 19, exactly 100 rows down), so Background was never built for step 270 to scroll back from. Now 8000pt each way; the scroll stops at the end and the log shows Background reached. Open question: why 4000 was enough through the 2026-10-04 sweep. Row height, the 200pt default and the forget-all reset all predate it; not chased further."
+    },
+    {
+      "t": "2026-10-05T23:42:20.707Z",
+      "note": "fix-a-caption-word-walk and layer-row-lifts-at-scale-walk: nothing changed. Each passed 4 runs out of 4 on its own. Each failed once across the last 80 sweep logs, both in the 2026-10-05 12:00 sweep. fix-a-caption-word sets front:true, so a text field losing the keyboard to the canvas fits something else taking the front mid-sweep. layer-row-lifts-at-scale reads the model's layer rows, not lazily built views, so a missing 'design' row points to Separate into Layers being slow or reading the text differently under load. Not reproduced, so no fix and no task filed; left here for the next sweep that sees it again."
+    },
+    {
+      "t": "2026-10-05T23:42:20.764Z",
+      "note": "Verified: all four walks passed twice in a row (8 of 8 runs) on the probe, Screen Recording granted, screen unlocked. Scripts/test.sh passed: 11399 tests."
+    },
+    {
+      "t": "2026-10-05T23:42:29.414Z",
+      "note": "All 4 owned walks pass twice in a row. appearance-list-walk and layers-lazy-rows-walk were wrong, not the app: Kind is a segment now, and 4000pt never reached the bottom of 121 rows. Both updated in 09e6a06c. fix-a-caption-word-walk and layer-row-lifts-at-scale-walk passed 4 of 4 alone, unchanged; their one sweep failure is logged on the task. Scripts/test.sh green (11399 tests)."
+    }
+  ],
+  "standing": "walk-sweep",
+  "started": "2026-10-05T23:25:55.410Z",
+  "walks": [
+    "appearance-list-walk",
+    "fix-a-caption-word-walk",
+    "layer-row-lifts-at-scale-walk",
+    "layers-lazy-rows-walk"
+  ],
+  "completed": "2026-10-05T23:42:29.415Z"
+}

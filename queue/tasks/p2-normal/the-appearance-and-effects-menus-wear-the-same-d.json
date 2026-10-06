@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T12:21:51.131Z",
-  "updated": "2026-10-05T12:51:02.215Z",
+  "updated": "2026-10-05T16:21:13.824Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-05 in /tmp/photonz-playtest/type-menu-labels/2-size-menu-sc.png (copied to queue/manager/shots/2026-10-05-appearance-popups.png): Blending \"Normal ⇕\" and Masked by \"Nothing ⇕\" directly under Font/Size/Weight drawn as VideoKit.Dropdown. Run: Scripts/playtest.sh Scripts/playtest/type-menu-labels-walk.json --no-build. Code: BlendModeInspector.swift:60 (PanelNamedControl Blending), mask row near it, EffectsListInspector.swift (4 x pickerStyle(.menu)), EffectStylePanel.swift. Pattern to copy: SelectionMenu in InspectorControls.swift now wraps VideoKit.Dropdown (valueStyle for Mixed, help on the button, onGeometryChange + SelectFace.fits for the clipped-name tip). Follow-up from the-text-section-s-font-size-and-weight-menus-lo.",
@@ -32,6 +32,33 @@
     {
       "t": "2026-10-05T12:51:02.214Z",
       "note": "Digest 2026-10-05: this is the third pass that converts panel menus to the drawn dropdown one section at a time (Fade In, then Text on 2026-10-05, now this), while UX-PATTERNS' kit table already says every .select is VideoKit.Dropdown. Added an acceptance item: a test that refuses a system pop-up anywhere in the panel, so this is the last pass. grep on 2026-10-05: pickerStyle(.menu) in EffectsListInspector.swift x4, EffectStylePanel.swift x1, EditorView.swift x1, CanvasGridSettingsView.swift x1, ExportDialog.swift x2 (the last three are not the panel)."
+    },
+    {
+      "t": "2026-10-05T15:28:24.588Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T15:31:27.118Z",
+      "note": "Plan after reading: (1) the five Effects menus (border Follows, border Position, glow Kind, shadow Kind, and a saved effect style's Kind/Position) become VideoKit.Dropdown, filling their row like Font. (2) Blending and Masked by are NOT system pop-ups: they are buttons that open a list in a popover, Blending's list paints each mode on the canvas as the pointer rests on it. Turning them into an NSMenu would lose that preview, so they keep their list and wear the same face (new kit piece VideoKit.ListDropdown: SelectFace as a plain button, accent edge while open). (3) Guard test over the panel's sources. Found while reading: bare Pickers are system pop-ups too, and 12 more sit in the panel the digest's grep did not see (measure tool Mode/Snap/Show, crop Aspect, lens Does x2, a Library text style's Font/Size/Weight, component property menus x3). The guard names them as a list that may only shrink and a follow-up task converts them. Adversarial: a Photoshop user expects Blending to preview on hover (Photoshop does), which the popover keeps; the face change alone moves nothing they click."
+    },
+    {
+      "t": "2026-10-05T16:15:41.999Z",
+      "note": "owns these walks: appearance-and-effects-dropdowns-open-on-a-click-walk, blend-mode-walk, layers-combine-walk"
+    },
+    {
+      "t": "2026-10-05T16:15:48.865Z",
+      "note": "left rough: re-opening Blending or Masked by within ~1s of picking a row sometimes does nothing in a walk (popover re-present). Reproduced on the OLD button too: /tmp/variant2-walk.json (five press/pick cycles, 0.6s+0.8s waits) failed 1 of 3 on HEAD's BlendModeInspector and 1 of 2 on the new one, at a different cycle each time. Not seen by a hand, so not filed; the click walk waits 1.5s after each pick and passed 4 of 4. Also fixed on the way: DropdownButton reported NSPopUpButton's bezel alignment inset, so every AppKit dropdown in the panel sat 4pt left of the slider column (Font at x 184pt vs Opacity 188pt); alignmentRectInsets is now zero. Also: Dropdown now honours .disabled (it ignored it). Filed: the-tool-lens-text-style-and-component-menus-in (12 bare Pickers in the panel), two-choice-effect-settings-are-a-segmented-contr (comp-fields 05 Select: two choices are a .seg)."
+    },
+    {
+      "t": "2026-10-05T16:21:13.822Z",
+      "note": "Blending and Masked by wear VideoKit's dropdown face (new VideoKit.ListDropdown, keeping Blending's live-preview list); shadow/glow Kind, border Follows/Position and a saved effect style's Kind are VideoKit.Dropdown filling their row. Every AppKit dropdown moved 4pt onto the slider column (alignmentRectInsets zero). PanelMenusAreDrawnDropdownsTests guards the panel (12 known bare Pickers left on a shrinking list, filed as the-tool-lens-text-style-and-component-menus-in). Verified: Scripts/test.sh green (11399), 29 touched walks pass, new appearance-and-effects-dropdowns-open-on-a-click-walk clicks each at middle and both ends at Next defaults (4 of 4 runs). Audit 2026-10-05-panel-dropdowns-appearance-effects. Commit 174d90f5. Shared files, so Current's Effects/dropdowns get the same face, as with the Text section pass."
     }
-  ]
+  ],
+  "started": "2026-10-05T15:28:24.585Z",
+  "walks": [
+    "appearance-and-effects-dropdowns-open-on-a-click-walk",
+    "blend-mode-walk",
+    "layers-combine-walk"
+  ],
+  "completed": "2026-10-05T16:21:13.823Z"
 }

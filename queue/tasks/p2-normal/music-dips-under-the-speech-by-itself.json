@@ -1,0 +1,38 @@
+{
+  "id": "music-dips-under-the-speech-by-itself",
+  "title": "Music dips under the speech by itself",
+  "goal": "A music bed added under a talking recording plays at full level over the voice, and the only fix today is dragging four level points around every sentence. The captions already know exactly when someone is talking, so the music can dip under the speech in one step, the way Premiere's auto ducking and the audio mock do.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T00:44:03.432Z",
+  "updated": "2026-10-06T00:44:16.528Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "docs/design/video-audio.md section 7 cut 'Duck music under voiceover' on 2026-09-21 because 'it needs the app to know which layer is a voice'. That has changed: captions now write themselves with word-level timing (the captions track, CaptionCue / TranscribedWord), so the spoken stretches are known. The level model already represents a duck as points either side of a dip (Sources/PhotonzCore/AudioMix.swift:12-14, 41, 157, 277), and walks already have a .soundDuck step (PlaytestScript.swift:1231). Mock: docs/design/mocks/pages/video-audio.html (Duck toggle :326, menu row 'Duck music under voiceover' :101, Ducking section :626-632). Competitors: Premiere Essential Sound auto-ducking, Final Cut's audio ducking, Descript. New visible command, so it went through a card first (manager prompt rule). Filed by the 2026-10-05 evening manager pass.",
+  "acceptance": [
+    "Built the way the user picks on the decision card attached to this task",
+    "On a recording whose captions have written themselves, with music added from Sequence, the music sits lower under every stretch of speech and comes back up in the gaps, as level points on the music's bar that can be dragged afterwards like any other",
+    "A sound with no captions anywhere in the document says so (the row is dimmed with a tip saying captions are needed) rather than doing nothing",
+    "The dip is heard in playback and in the exported MP4: a test reads the exported music level inside and outside a spoken stretch",
+    "Try it: open the sample talk, let captions write, Sequence > Add Media at Playhead and pick a music file, then do what the card settled. Audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T00:44:03.434Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T00:44:11.271Z",
+      "note": "waiting on decision music-dips-under-the-speech-by-itself-when-you-put-music-under-someone"
+    },
+    {
+      "t": "2026-10-06T00:44:16.527Z",
+      "note": "seq 3690 -> 6"
+    }
+  ]
+}

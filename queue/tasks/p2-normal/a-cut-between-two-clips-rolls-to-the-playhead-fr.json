@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:23.286Z",
-  "updated": "2026-10-05T12:50:53.046Z",
+  "updated": "2026-10-05T14:01:39.094Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, from reading the code, not yet seen on screen (hence p2 and the reproduce step). EditorState+TimelineMenus.swift:432-457 timelineCutMenuRows (a join inside one clip) ends with Roll Edit to Playhead via rollClipCut; timelineEditPointMenuRows (:461-479, the point between two clips, TimelineEditPoint outgoing/incoming) returns only Apply Default / Add / Remove Transition. The right-click task (right-click-does-what-you-would-expect-everywher, audit 2026-09-23-right-click-menus.json) built the roll for joins before edit points between separate clips existed (bring-in-a-second-clip-and-cut-between-clips, ClipLanding.swift). Spare footage between clips: DocumentCut / documentCut(at:) already reports spare for transitions; reuse it.",
@@ -35,6 +35,32 @@
     {
       "t": "2026-10-05T12:50:53.044Z",
       "note": "seq 5 -> 10"
+    },
+    {
+      "t": "2026-10-05T13:36:29.011Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T13:46:28.293Z",
+      "note": "Reproduced at Next defaults before the change (Scripts/playtest.sh Scripts/playtest/roll-the-cut-between-two-clips-walk.json on HEAD c7fbd9f1): right-clicking the cut between \"Tutorial Sample\" and \"b-roll\" printed: the menu on \"Edit point Tutorial Sample to b-roll\" opened but there is no row called \"Roll Edit to Playhead\"; the rows are: Apply Default Transition, Add Transition"
+    },
+    {
+      "t": "2026-10-05T14:01:12.487Z",
+      "note": "owns these walks: roll-the-cut-between-two-clips-walk, roll-the-cut-between-two-clips-from-the-menu-bar-walk"
+    },
+    {
+      "t": "2026-10-05T14:01:24.997Z",
+      "note": "Built: PhotonzDocument.rollCut(at:toMS:) / canRollCut (TimelineMenuEdits.swift) rolls a join or an edit point; edit point: outgoing last piece trimEnd, incoming first piece trimStart and its start moved by the same delta, refused when a transition on the cut could no longer be paid for. App: timelineEditPointMenuRows ends with Roll Edit to Playhead (shown even with transitions off), Clip menu's canRollCutInHand/rollCutInHand take any cut in hand. Tests: EditPointRollTests (6). Walks: roll-the-cut-between-two-clips-walk (right-click, undo/redo, dimmed when out of reach), ...-from-the-menu-bar-walk (front). Left rough, not filed: a roll past the spare is refused rather than clamped to what the spare allows; same rule as the join's roll, nobody has asked for clamping; put in the audit for the user to react to."
+    },
+    {
+      "t": "2026-10-05T14:01:39.092Z",
+      "note": "Roll Edit to Playhead now on the right-click of the cut between two clips (under the transition rows) and on Clip > Roll Edit to Playhead when that cut is picked; outgoing grows by what incoming gives up, nothing after moves, transition and linked sound kept, one undo. Reproduced first (menu offered only Apply Default Transition, Add Transition). Verified: EditPointRollTests (6, written first), full suite 11382 green, roll-the-cut-between-two-clips-walk + -from-the-menu-bar-walk ok at Next defaults with real captures, related walks (timeline-right-click, transition-picker-at-a-cut, second-clip-on-the-timeline, transition-placement-and-hold) ok. Audit queue/audits/2026-10-05-roll-the-cut-between-two-clips.json. Commit 82c3ac78."
     }
-  ]
+  ],
+  "started": "2026-10-05T13:36:29.010Z",
+  "walks": [
+    "roll-the-cut-between-two-clips-walk",
+    "roll-the-cut-between-two-clips-from-the-menu-bar-walk"
+  ],
+  "completed": "2026-10-05T14:01:39.093Z"
 }

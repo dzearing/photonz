@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:42.977Z",
-  "updated": "2026-10-05T14:38:25.270Z",
+  "updated": "2026-10-05T14:38:38.746Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, from reading the code, NOT reproduced (the loop held the probe). PhotonzCore/Document.swift:687-689 deletableLayerIDs filters on layer.isLocked only; Track.isLocked lives in DocumentTracks.swift:52. EditorState+Layout.swift:48-56 deleteSelectedLayers uses actionableLayerIDs then deleteLayers. canDeleteClipPieceInHand (EditorState+ClipBar.swift:155-161) has no track-lock check either. Timeline-side guards that DO hold: EditorState+ClipBar.swift:111-113, 357-361; EditorState+TimelineMenus.swift:77-87, 327; TimelineMenuEdits.swift:58-91. Whether a locked track's clip can be picked on the canvas at all is the first thing to learn; if it cannot, this is likely a no-op.",
@@ -51,10 +51,15 @@
     {
       "t": "2026-10-05T14:38:25.269Z",
       "note": "left rough (no task, does not clear the bar): deleting a locked TRACK itself from its header (deleteTracksInHand) still takes the track and its clips. That is a deliberate whole-track act and Premiere allows deleting a locked track too, so left as is; not reproduced as a complaint. Collage/merge-down also remove layers without a track-lock check, but they are still-image edits that do not reach a recording's clip. No audit written: a bug fix with no new surface to playtest."
+    },
+    {
+      "t": "2026-10-05T14:38:38.744Z",
+      "note": "Reproduced at Next defaults: with V1 locked, clicking the recording on the canvas and pressing Delete removed it. Fixed in PhotonzCore (deletableLayerIDs leaves out clips on locked tracks and what is inside them; removeClipPiece/ripple refuse them) plus the app's deleteLayer, Cut and piece-in-hand guards. Tests written first (3 new, full suite 11385 green); new walk a-locked-track-keeps-its-clip-walk proves Delete, Delete Layer (row dimmed), Cmd-Delete, Cut and whole-canvas marquee + Delete all keep it, and a mixed pick deletes only the unlocked rectangle. Commit 4c522403."
     }
   ],
   "started": "2026-10-05T14:19:54.565Z",
   "walks": [
     "a-locked-track-keeps-its-clip-walk"
-  ]
+  ],
+  "completed": "2026-10-05T14:38:38.745Z"
 }

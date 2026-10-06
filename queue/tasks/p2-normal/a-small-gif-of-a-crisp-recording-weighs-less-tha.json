@@ -1,0 +1,54 @@
+{
+  "id": "a-small-gif-of-a-crisp-recording-weighs-less-tha",
+  "title": "A Small GIF of a crisp recording weighs less than its Standard",
+  "goal": "On a sharp, mostly still screen recording no wider than 800 pixels, the Export sheet's Small GIF comes out heavier than Standard, so someone picking Small to save space gets a bigger file. Small should always be the lightest GIF choice, or the sheet should not offer it as the smaller one.",
+  "epic": "video-share",
+  "priority": "p2-normal",
+  "seq": 3630,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-05T23:08:32.953Z",
+  "updated": "2026-10-06T00:19:43.027Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-10-05 by find-out-why-a-small-gif-can-come-out-bigger-tha. Reproduced with a temporary test (Tests/PhotonzMediaTests/ZZGIFLoadExperiment.swift, since removed): the screen clip from AnimatedExportWeighTests.screenSource (2s, 640x400, 20 rows of 4px text lines, a 100x70 block moving 90px/s) written as ProRes 422 .mov via AVAssetWriter, then VideoExporter.exportAnimated at each VideoExportQuality. `Scripts/test.sh --filter ZZGIFLoadExperiment` printed `ZZ quiet prores src=6024769 gifs=[32836, 23280, 26988]` (High/Standard/Small bytes) and the same triple for 18 more writes made alongside other encodes: deterministic, not load. Why, read from the GIF blocks: Standard keeps 640px (under its 800 cap) so every line stays two-colour (128-colour global palette, first frame 6,388 bytes); Small scales to 480x300, which softens every 4px line into in-between greys (256-colour palette, first frame 12,102 bytes) and each later delta frame is about 1.4x Standard's at 56% of the area. On a mostly still recording the first frame dominates, so 20 frames at 480 outweigh 30 at 640. With a software H.264 source of the same clip it is a tie (Small 74,685 vs Standard 74,948); with the hardware encoder's noisier output Small is 57-89% of Standard. Ideas, unproven: scale by a whole factor where it can (640 to 320), or snap to the source's own pixel grid; measure before choosing. Export is VideoExporter.exportAnimated (generator.maximumSize does the scaling) and DocumentMovieWriter.writeAnimated (fitted).",
+  "acceptance": [
+    "A 2 second 640 by 400 screen-like recording (lines of text, one block moving) exports a Small GIF lighter than its Standard GIF",
+    "Whatever changes keeps a GIF byte for byte the same when written twice",
+    "The Export sheet never shows Small heavier than Standard for a GIF on the recordings the export tests use"
+  ],
+  "log": [
+    {
+      "t": "2026-10-05T23:08:32.955Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T23:59:15.438Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T00:19:42.798Z",
+      "note": "Reproduced: crisp (ProRes) 640x400 clip wrote High/Standard/Small GIFs of 32,836/23,280/26,988 bytes. Cause confirmed by experiment: the generator's wide filter (and CG .high) at 640->480 makes greys; CG .medium (bilinear) at 480 weighs 16,591 and looks the same. Plain bilinear alone aliases thin lines past 2x (checked visually on 1920->480), so frames come down in at most two steps: wide filter to 2x target, then bilinear (GIFFrameScaling in PhotonzCore, VideoExporter.gifScaled). GIF only; HEIC untouched."
+    },
+    {
+      "t": "2026-10-06T00:19:42.853Z",
+      "note": "Editor window path (DocumentFrames -> Core Image renderer at plan.size) measured separately and already had Small under Standard (640: 13,550 vs 11,471; 960: 17,609 vs 7,440; 1920: 15,176 vs 6,059), so DocumentMovieWriter is unchanged (its fitted() is a no-op there: frames are drawn at the file's size)."
+    },
+    {
+      "t": "2026-10-06T00:19:42.910Z",
+      "note": "After: H.264 640 120,867/74,948/52,558; crisp 640 32,836/23,280/15,920; crisp 960 33,347/24,913/9,326; crisp 1920 31,231/22,573/8,929 (High/Standard/Small). GIFs byte-identical twice (AnimatedExportWeighTests now writes the crisp clip and claims GIF Small < Standard). Full suite 11,403 tests green; walks an-edited-recording-comes-out-as-a-video-walk and a-frame-of-a-video-comes-out-as-a-picture-walk ok. No UI change, so no audit. Commit c2293b20."
+    },
+    {
+      "t": "2026-10-06T00:19:42.965Z",
+      "note": "walks none -> none"
+    },
+    {
+      "t": "2026-10-06T00:19:43.025Z",
+      "note": "Recording GIF export brings frames down in at most two steps (wide filter to 2x target, then bilinear; GIFFrameScaling + VideoExporter.gifScaled). Crisp 640x400 clip: Small 15,920 vs Standard 23,280 (was 26,988). Small lightest on every test recording; GIFs byte-identical twice. Verified by AnimatedExportWeighTests (crisp clip added, GIF Small<Standard claimed), GIFFrameScalingTests, full suite green, two GIF walks ok. Commit c2293b20."
+    }
+  ],
+  "walks": [],
+  "started": "2026-10-05T23:59:15.435Z",
+  "completed": "2026-10-06T00:19:43.026Z"
+}

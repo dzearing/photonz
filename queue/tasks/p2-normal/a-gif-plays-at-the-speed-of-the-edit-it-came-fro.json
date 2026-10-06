@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T10:20:32.194Z",
-  "updated": "2026-10-05T12:50:53.550Z",
+  "updated": "2026-10-05T15:10:52.205Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-05 by copy-the-edit-to-the-clipboard-walk: step 31 read Tutorial Sample.gif on the clipboard as 60 frames whose delays add to 4200 ms against a 4000 ms edit (log: /tmp/photonz-playtest/copy-the-edit-to-the-clipboard-walk/log.json). Cause: DocumentMovieWriter.swift:466 and VideoExporter.swift:722 write kCGImagePropertyGIFUnclampedDelayTime = 1/fps, which ImageIO stores as 7cs at 15fps. Either pick per-frame delays that alternate 6 and 7 cs so the sum tracks the clock, or pick GIF rates that divide 100 (10, 20, 25, 50). VideoClipboardCopy.holdsTheEdit currently checks frames for this reason; the walk can switch to runsAsLong once this lands.",
@@ -30,7 +30,27 @@
     {
       "t": "2026-10-05T12:50:53.549Z",
       "note": "seq 3580 -> 100"
+    },
+    {
+      "t": "2026-10-05T14:55:26.609Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T14:59:56.688Z",
+      "note": "walks none -> copy-the-edit-to-the-clipboard-walk"
+    },
+    {
+      "t": "2026-10-05T15:10:52.103Z",
+      "note": "Reproduced: an ImageIO probe stored 1/15 s as 0.07 and 1/24 s as 0.04; exact hundredths survive. Fixed in GIFFrameTiming (PhotonzCore), used by DocumentMovieWriter.writeAnimated and VideoExporter.exportAnimated. The walk's harness check now also requires VideoClipboardCopy.gifRunsAsLong. Recording export (AppCoordinator) shares VideoExporter so its GIFs are fixed too; a bug fix, not a Current behaviour change. Nothing new filed: nothing left rough."
+    },
+    {
+      "t": "2026-10-05T15:10:52.203Z",
+      "note": "GIFs from Export and Copy as GIF now run as long as the edit: frame delays are whole hundredths spread to add up to the edit (GIFFrameTiming), within a hundredth at Small, Standard and High. Verified by new core and media tests that write real GIFs and read back their delays, the full suite (11,396 passed), and copy-the-edit-to-the-clipboard-walk at Next defaults, which now claims 4000 ms against the 4000 ms edit (was 4200). Commit fbaa917c."
     }
   ],
-  "walks": []
+  "walks": [
+    "copy-the-edit-to-the-clipboard-walk"
+  ],
+  "started": "2026-10-05T14:55:26.607Z",
+  "completed": "2026-10-05T15:10:52.204Z"
 }

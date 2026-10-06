@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3590,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T16:14:19.365Z",
-  "updated": "2026-10-05T16:14:19.368Z",
+  "updated": "2026-10-05T18:58:01.307Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-10-05 by the-appearance-and-effects-menus-wear-the-same-d: a Picker with no pickerStyle is a system pop-up on the Mac, and the digest grep only looked for pickerStyle(.menu). Sites (bare Picker): ToolInspectors.swift (Mode ~36, Snap ~58, Show ~68, Aspect ~185), LensInspector.swift (Does ~45 and ~118), TextStylePanel.swift (Font/Size/Weight ~393-419, LibraryTextStyleInspector), ComponentPanel.swift (~443, ~1640, ~1693). Pattern: VideoKit.Dropdown(label:value:valueStyle:help:choices: .picking(...)) + .panelHelp(same) + .playtestControl; Mixed reads LayerStyleSelection.mixedText with MixedLook.style. Lower the counts in Tests/PhotonzCoreTests/PanelMenusAreDrawnDropdownsTests.swift stillSystemPopUps as each converts. Click proof: copy Scripts/playtest/appearance-and-effects-dropdowns-open-on-a-click-walk.json (panelMenu with at: centre/start/end, front: true).",
@@ -23,6 +23,35 @@
     {
       "t": "2026-10-05T16:14:19.367Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-05T17:52:51.011Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-05T18:57:09.810Z",
+      "note": "owns these walks: tool-and-library-dropdowns-open-on-a-click-walk"
+    },
+    {
+      "t": "2026-10-05T18:57:48.298Z",
+      "note": "Built: measure Mode/Show, crop Aspect, lens Does (layer and tool), Library text style Font/Size/Weight, component Place/Variant/choice are VideoKit.Dropdown; Mixed reads on the face in MixedLook.style (mixedOption row removed). Snap is a SegmentedControl: the fields mock says never a select for two options. Added playtestField to Aspect and Does rows. PanelMenusAreDrawnDropdownsTests.stillSystemPopUps is empty; EveryDropdownIsClickedByAWalkTests builtSites 8, builtNames + Variant, Shape."
+    },
+    {
+      "t": "2026-10-05T18:57:48.354Z",
+      "note": "Verified: new tool-and-library-dropdowns-open-on-a-click-walk clicks each dropdown at centre/start/end and presses both Snap segments, reads each pick back, one undo per pick, dark and light, no flags (13 real captures). 27 of 28 neighbouring walks pass; menu-says-its-whole-value-walk fails on the shadow Kind segmented change from b4c89240, filed as the-whole-value-tooltip-walk-reads-a-shadow-kind. Scripts/test.sh: one run failed AnimatedExportWeighTests (load-sensitive, passes alone, next full run 11399 green); filed find-out-why-a-small-gif-can-come-out-bigger-tha."
+    },
+    {
+      "t": "2026-10-05T18:57:48.408Z",
+      "note": "left rough: component-choice-one-step-walk passes while its copy shows No properties (canMakeChoice is false at the step whose note says it turns true), so it proves less than its notes claim; not filed, a describe-only walk. left rough: the tool settings capsule over the canvas still uses system pop-ups for Snap and Show; it is not the panel and is excluded from the guard on purpose."
+    },
+    {
+      "t": "2026-10-05T18:58:01.305Z",
+      "note": "Twelve panel system pop-ups converted: eleven to VideoKit.Dropdown, Snap (two answers) to the segmented control per the fields mock. Guard list empty. Proved by tool-and-library-dropdowns-open-on-a-click-walk (pointer clicks at centre/start/end, read-back, undo, dark and light, no flags) and Scripts/test.sh green. Audit 2026-10-05-tool-library-dropdowns.json."
     }
-  ]
+  ],
+  "started": "2026-10-05T17:52:51.009Z",
+  "walks": [
+    "tool-and-library-dropdowns-open-on-a-click-walk"
+  ],
+  "completed": "2026-10-05T18:58:01.306Z"
 }

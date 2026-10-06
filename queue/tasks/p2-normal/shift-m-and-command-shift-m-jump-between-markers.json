@@ -1,0 +1,34 @@
+{
+  "id": "shift-m-and-command-shift-m-jump-between-markers",
+  "title": "Shift M and Command Shift M jump between markers on a video",
+  "goal": "Editors drop markers with M while they watch and then hop between them to cut. On a video, Shift M should move the playhead to the next marker and Command Shift M to the previous one, as in Premiere. Today markers can be made and dragged but not reached from the keyboard, and Shift M quietly changes the canvas selection tool instead.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T00:43:44.086Z",
+  "updated": "2026-10-06T00:44:16.358Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Timeline keys: Sources/PhotonzCore/TimelineKeys.swift (M -> .addMarker at :201); carried out in Sources/Photonz/EditorState+TimelineKeys.swift; menu rows in Sources/Photonz/EditorCommands.swift. Shift M today is the invisible selection-cycle button in EditorView.swift:3141. Plain letters act on the timeline only while it has the keyboard, so the same gate settles the Shift M conflict: timeline first on a video, Photoshop's cycle elsewhere (memory: Photoshop shortcut parity). Premiere: Shift M next marker, Command Shift M previous marker. Found by the 2026-10-05 evening manager pass's key audit; Up/Down already jump between edit points.",
+  "acceptance": [
+    "With the timeline holding the keyboard (as it does straight after a recording opens), Shift M puts the playhead on the next marker and Command Shift M on the previous one; at the last or first marker nothing moves",
+    "Sequence (or wherever Add Marker lives in the menu bar) gains Go to Next Marker and Go to Previous Marker rows carrying those keys, dimmed when there is no marker that way",
+    "On a still image Shift M still cycles the selection tools, as Photoshop does",
+    "A walk at Next defaults drops three markers, presses Shift M and Command Shift M, and reads the playhead after each; it runs green",
+    "Try it: open a recording, press M at three moments, Home, then Shift M three times. Audit written under queue/audits/",
+    "anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T00:43:44.088Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T00:44:16.357Z",
+      "note": "seq 3660 -> 3"
+    }
+  ]
+}
