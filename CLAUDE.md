@@ -35,7 +35,7 @@ Photonz is a native macOS (arm64, macOS 26+) photo/screenshot editor. SwiftUI sh
 | App + DMG | `Scripts/build-app.sh --dmg` |
 | Run the app | `open "dist/Photonz Dev.app"` |
 | Run the app *as an agent* | `Scripts/probe-app.sh [file]` → builds and launches `dist/Photonz Probe.app` (`….photonz.probe`). Unmanned runners use this, never the dev app — see below |
-| Full walk sweep | Not yours to run: it is about 720 walks and about 175 minutes, eighteen times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` puts it on the pile; the loop runs the full set at most once a day, and a rotating check after each task that lands code, asked for or not (`queue/bin/sweep.sh schedule`). `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
+| Full walk sweep | Not yours to run: it is about 770 walks and about 210 minutes, 21 times the 600s ceiling on an agent's background work. `queue/bin/sweep.sh request "<why>"` puts it on the pile; the loop runs the full set at most once a day, and a rotating check after each task that lands code, asked for or not (`queue/bin/sweep.sh schedule`). `Scripts/playtest-all.sh --no-build <name-fragment>` runs just the walks you touched, in seconds |
 | Where the loop's day went | `queue/bin/loop-day.mjs` (add `--hours 48`): the share of wall clock spent building, sweeping and idle |
 | Scripted playtest | `Scripts/playtest.sh <walk.json>` → drives the probe editor from a JSON script (keys, clicks, drags), writes offscreen renders + `log.json`. Probe-only, compiled out of release. See `docs/design/playtest-harness.md`; example: `Scripts/playtest/redline-walk.json` |
 | Regenerate icon | `swift Scripts/make-icon.swift` (only when intentionally changing it) |
@@ -60,7 +60,7 @@ The schedule now:
   last check, and the next chunk of the set, carrying on where it stopped. Over
   a day the rotation covers the whole set anyway, in ten minute pieces.
 * **A rotating check is not a sweep.** It never closes the standing walk task,
-  and fifty walks passing is never the state of five hundred. A walk it finds
+  and thirty walks passing is never the state of seven hundred. A walk it finds
   broken lands on a task the same day: onto the open task that owns it (it said
   so with `queue.mjs walks`, or its words name the walk), otherwise onto the
   standing walk task, which the check opens if none is open. At most one new

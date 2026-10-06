@@ -35,9 +35,9 @@
 // WHY A ROTATING CHECK AND NOT NOTHING. A floor on its own trades safety for
 // speed: twelve hours and ten tasks could land between one whole-set answer and
 // the next. The rotation keeps a real regression signal running the whole time
-// at a twelfth of the price, and it is honest about what it is: it never closes
-// the standing walk task and never reads as a sweep, because fifty walks
-// passing is not the state of five hundred.
+// at a small part of the price, and it is honest about what it is: it never closes
+// the standing walk task and never reads as a sweep, because thirty walks
+// passing is not the state of seven hundred.
 //
 // Drill: queue/bin/sweep-schedule-drill.mjs
 export const DEFAULTS = {
@@ -45,10 +45,15 @@ export const DEFAULTS = {
   // minutes at 544 walks, which is 16 per cent of a day at this floor.
   floorHours: 24,
   // How long a rotating check is allowed to take, in walks-worth of time. Ten
-  // minutes is about fifty walks, which is a twelfth of the set and short
-  // enough that it never reads as the loop stalling.
+  // minutes is short enough that it never reads as the loop stalling; at the
+  // measured cost of a walk (about 18s on 2026-10-06) it is about thirty five
+  // walks, so the rotation still comes round the set in about a day of checks.
   sliceMinutes: 10,
-  // Only a default; sweep-size.mjs measures the real one off the history.
+  // Only the last resort. A check is planned at what walks cost in the last
+  // rotating checks (sliceWalkSecondsFromDisk), then in the last whole-set runs,
+  // and only with neither on disk at this. Until 2026-10-06 this number WAS the
+  // plan: twelve seconds a walk, so fifty walks a check, while walks had grown
+  // to 17.6s and every ten minute check ran about fifteen.
   perWalkSeconds: 12,
   // Walks EVERY rotating check runs, ahead of the rest. Kept to the few that
   // drive a whole experience end to end the way a person gets it, because a
@@ -209,6 +214,56 @@ export function pickSlice({
   return { walks: picked, nextCursor: i, changed: changedPicked, always: alwaysPicked, rotated, lap, budget };
 }
 
+// What a walk costs inside a rotating check, measured off the checks that ran.
+// `events` is queue/history.jsonl, parsed. A check's seconds run from before
+// the probe is built to after the last walk, so the build and the launch are in
+// the number, spread over the walks, which is what the plan needs. The median of
+// the last `last` checks, not the mean: one check that ran while the machine
+// was busy (22.3s a walk on 2026-10-05) must not move the next one.
+// Thrown out: a check stopped on the clock (its seconds are the cap, not its
+// walks), one a locked screen cut down (a refused walk costs under a second,
+// and planning on that would make the next unlocked check twice too long), and
+// one of a handful of walks or an implausible pace (it did not really run).
+const SLICE_PLAUSIBLE = { minWalks: 10, min: 3, max: 60 };
+export function sliceWalkSeconds(events = [], { last = 10 } = {}) {
+  const paces = [];
+  for (const o of events) {
+    if (!o || o.ev !== 'slice_pass' || o.timedOut) continue;
+    if ((Number(o.couldNotRun) || 0) > 0) continue;
+    const walks = Number(o.walks) || 0;
+    const seconds = Number(o.seconds) || 0;
+    if (walks < SLICE_PLAUSIBLE.minWalks || seconds <= 0) continue;
+    const per = seconds / walks;
+    if (per < SLICE_PLAUSIBLE.min || per > SLICE_PLAUSIBLE.max) continue;
+    paces.push(per);
+  }
+  const recent = paces.slice(-last);
+  if (!recent.length) return { seconds: DEFAULTS.perWalkSeconds, checks: 0, measured: false };
+  const sorted = [...recent].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  const median = sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  return { seconds: median, checks: recent.length, measured: true };
+}
+
+// The same, read off the disk, with somewhere to fall back to: the whole-set
+// runs (sweep-size.mjs) when no rotating check has been recorded yet, and the
+// default only when there is no history at all.
+export function sliceWalkSecondsFromDisk(repo = REPO) {
+  const file = join(repo, 'queue', 'history.jsonl');
+  const events = [];
+  if (existsSync(file)) {
+    for (const line of readFileSync(file, 'utf8').split('\n')) {
+      if (!line.includes('"slice_pass"')) continue;
+      try { events.push(JSON.parse(line)); } catch { /* a torn line */ }
+    }
+  }
+  const m = sliceWalkSeconds(events);
+  if (m.measured) return { ...m, from: `the median of the last ${m.checks} rotating checks` };
+  const full = sweepPerWalkSeconds(repo);
+  if (full.measured) return { seconds: full.seconds, checks: 0, measured: true, from: `the median of the last ${full.runs} whole-set sweeps` };
+  return { seconds: DEFAULTS.perWalkSeconds, checks: 0, measured: false, from: 'the default, with nothing recorded to measure' };
+}
+
 // ---------------------------------------------------------------- the CLI ----
 // Reading the state off disk lives here rather than in sweep.sh, so the shell
 // asks one question and gets one answer.
@@ -216,6 +271,7 @@ import { readFileSync, writeFileSync, existsSync, readdirSync, mkdirSync } from 
 import { join, dirname, basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { perWalkSeconds as sweepPerWalkSeconds } from './sweep-size.mjs';
 
 export const REPO = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 
@@ -312,14 +368,19 @@ if (isMain) {
     const latest = readJSON(join(dir, 'latest.json'));
     const base = rotation.lastHead || (latest && latest.head) || null;
     const walks = walkNames();
+    // Planned at what walks have really cost lately; --per-walk overrides it.
+    const forced = Number(arg('--per-walk', NaN));
+    const pace = forced > 0
+      ? { seconds: forced, from: 'given with --per-walk' }
+      : sliceWalkSecondsFromDisk();
     const s = pickSlice({
       walks,
       cursor: Number(rotation.cursor) || 0,
       changed: changedWalks(base),
       minutes: Number(arg('--minutes', process.env.PHOTONZ_SLICE_MINUTES || DEFAULTS.sliceMinutes)),
-      perWalkSeconds: Number(arg('--per-walk', DEFAULTS.perWalkSeconds)),
+      perWalkSeconds: pace.seconds,
     });
-    if (argv.includes('--json')) console.log(JSON.stringify({ ...s, of: walks.length, from: Number(rotation.cursor) || 0, laps: Number(rotation.laps) || 0, head }));
+    if (argv.includes('--json')) console.log(JSON.stringify({ ...s, of: walks.length, from: Number(rotation.cursor) || 0, laps: Number(rotation.laps) || 0, head, perWalkSeconds: +pace.seconds.toFixed(1), perWalkFrom: pace.from }));
     else for (const w of s.walks) console.log(w);
     process.exit(0);
   }
@@ -346,6 +407,7 @@ if (isMain) {
   // Printed by `queue/bin/sweep.sh schedule`, so there is one copy of these
   // sentences and it is the one the code runs off.
   const f = DEFAULTS.floorHours;
+  const pace = sliceWalkSecondsFromDisk();
   console.log(`The walk sweep's schedule
 
   The full set runs at most once every ${f} hours, so once a day, and only when
@@ -361,6 +423,10 @@ if (isMain) {
   every walk whose script changed since the last check, then the next chunk of
   the set in rotation, carrying on where it stopped. Over a day the rotation
   covers the whole set anyway, in pieces.
+
+  How many walks fit in those minutes is measured, not guessed: right now
+  ${pace.seconds.toFixed(1)}s a walk, ${pace.from}, so about
+  ${Math.max(1, Math.floor(DEFAULTS.sliceMinutes * 60 / pace.seconds))} walks a check.
 
   A rotating check is not a sweep. It never closes the standing walk task and
   its green is never the state of the walk set. A walk it finds broken goes

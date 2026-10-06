@@ -9,7 +9,7 @@
 // a runner had asked, and a runner asks after every task.
 //
 //   node queue/bin/sweep-schedule-drill.mjs
-import { decide, pickSlice, DEFAULTS, decideFromDisk, codeLandedBetween, WALK_PATHS } from './sweep-schedule.mjs';
+import { decide, pickSlice, DEFAULTS, decideFromDisk, codeLandedBetween, WALK_PATHS, sliceWalkSeconds, sliceWalkSecondsFromDisk } from './sweep-schedule.mjs';
 import { mkdtempSync, mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -162,6 +162,60 @@ s = pickSlice({ walks, cursor: 0, changed: [], always: ['gone-walk'], minutes: 1
 check('a name that is no longer a walk in the set is left out', !s.walks.includes('gone-walk') && s.always.length === 0, s.always);
 check('the end to end editing session walk is in every check',
   DEFAULTS.everyCheck.includes('an-editing-session-walk'), DEFAULTS.everyCheck);
+
+console.log('how long a walk takes, measured off the checks that ran (2026-10-06: planned at 12s, ran at 17.6s)');
+// Until 2026-10-06 a check was planned at a fixed twelve seconds a walk, so it
+// always picked fifty walks, while walks had grown to about eighteen seconds:
+// every "ten minute" check ran about fifteen, an hour and a half of the loop's
+// day it was never meant to spend.
+const slice = (seconds, extra = {}) => ({ ev: 'slice_pass', walks: 50, seconds, rotating: true, ...extra });
+let m = sliceWalkSeconds([slice(880), slice(880), slice(880)]);
+check('even checks give their cost back: 880s for fifty walks is 17.6s a walk', Math.abs(m.seconds - 17.6) < 0.01, m);
+check('...and say it was measured, and over how many checks', m.measured === true && m.checks === 3, m);
+m = sliceWalkSeconds([slice(880), slice(880), slice(880), slice(3000)]);
+check('one slow check does not move it (the median, not the mean)', Math.abs(m.seconds - 17.6) < 0.01, m);
+m = sliceWalkSeconds([slice(880), slice(880), slice(600, { timedOut: true })]);
+check('a check stopped on the clock is not read as its walks being cheap', Math.abs(m.seconds - 17.6) < 0.01 && m.checks === 2, m);
+m = sliceWalkSeconds([slice(880), slice(880), slice(200, { couldNotRun: 20 })]);
+check('a check a locked screen cut down is not read as quick walks', Math.abs(m.seconds - 17.6) < 0.01 && m.checks === 2, m);
+m = sliceWalkSeconds([slice(880), slice(880), slice(30, { walks: 3 }), slice(40)]);
+check('a check of a handful of walks, or one that did not really run, is thrown out', Math.abs(m.seconds - 17.6) < 0.01 && m.checks === 2, m);
+m = sliceWalkSeconds([{ ev: 'sweep_pass', walks: 700, seconds: 7000 }, slice(880)]);
+check('a whole-set run is not a rotating check', m.checks === 1, m);
+m = sliceWalkSeconds([...Array(10).fill(slice(600)), ...Array(10).fill(slice(900))]);
+check('only the last ten checks count, so it follows the walks as they grow', Math.abs(m.seconds - 18) < 0.01 && m.checks === 10, m);
+m = sliceWalkSeconds([]);
+check('with no check recorded it says so rather than inventing a number', m.measured === false && m.checks === 0, m);
+s = pickSlice({ walks: Array.from({ length: 800 }, (_, i) => `w${i}`), cursor: 0, minutes: 10, perWalkSeconds: 17.6 });
+check('ten minutes at the measured 17.6s a walk is 34 walks, not fifty', s.walks.length === 34, s.walks.length);
+check('...which is about ten minutes, not fifteen', Math.abs(s.walks.length * 17.6 / 60 - 10) < 0.5, s.walks.length * 17.6 / 60);
+s = pickSlice({ walks: Array.from({ length: 800 }, (_, i) => `w${i}`), cursor: 790, minutes: 10, perWalkSeconds: 17.6 });
+check('the cursor still moves on by what ran and wraps, so no walk is skipped for good', s.nextCursor === 24 && s.lap === true, s);
+{
+  const q = mkdtempSync(join(tmpdir(), 'sweep-schedule-measure-'));
+  try {
+    mkdirSync(join(q, 'queue'), { recursive: true });
+    const lines = [
+      JSON.stringify({ ev: 'task_done', id: 'x' }),
+      'not json at all',
+      ...Array(5).fill(JSON.stringify(slice(900))),
+    ];
+    writeFileSync(join(q, 'queue', 'history.jsonl'), lines.join('\n') + '\n');
+    m = sliceWalkSecondsFromDisk(q);
+    check('read off queue/history.jsonl, past lines that are not checks or not JSON', Math.abs(m.seconds - 18) < 0.01 && m.measured, m);
+    check('...and says where the number came from', /rotating check/.test(m.from), m.from);
+    writeFileSync(join(q, 'queue', 'history.jsonl'), JSON.stringify({
+      ev: 'sweep_pass', walks: 500, seconds: 7000, couldNotRun: 0,
+    }) + '\n');
+    m = sliceWalkSecondsFromDisk(q);
+    check('with no check yet it falls back on the whole-set runs', Math.abs(m.seconds - 14) < 0.01 && /sweep/.test(m.from), m);
+    rmSync(join(q, 'queue', 'history.jsonl'));
+    m = sliceWalkSecondsFromDisk(q);
+    check('and with no history at all it still gives a number', m.seconds > 0 && m.measured === false, m);
+  } finally {
+    rmSync(q, { recursive: true, force: true });
+  }
+}
 
 console.log('on disk, moving the clock and HEAD through a real repo');
 // The pure checks above take codeSince* as given. These make real commits and

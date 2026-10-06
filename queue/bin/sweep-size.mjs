@@ -48,8 +48,11 @@ const REFUSAL_SECONDS = 0.9;
 // and a net whose size follows the thing it is catching is no net. See
 // capMinutes() for why this number. Was 20 until 2026-10-02, when a walk had
 // crept to 14.6s (the median of the last ten sweeps) and the net was down to 37
-// per cent over a good sweep; 24 puts it back above half again.
-export const BUDGET_SECONDS_PER_WALK = 24;
+// per cent over a good sweep; 24 puts it back above half again. Raised to 26
+// on 2026-10-06, when the median had reached 16.2s and 24 was 48 per cent over
+// it: 26 is 60 per cent over, and a probe that never drives is still stopped
+// about a seventh of the way into the set.
+export const BUDGET_SECONDS_PER_WALK = 26;
 
 // A run reporting less than this per walk did not really run: the probe failed
 // to build, or every walk bailed in the first second. Real walks have never

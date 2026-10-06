@@ -2,7 +2,7 @@
 # The full walk sweep, owned by the go loop instead of by a task runner.
 #
 # Scripts/playtest-all.sh runs every scripted walk in Scripts/playtest:
-# about 720 walks and about 175 minutes. That size is COUNTED, not remembered:
+# about 770 walks and about 210 minutes. That size is COUNTED, not remembered:
 # queue/bin/sweep-size.mjs reads the walk count off disk and the seconds a walk
 # costs out of the recorded sweeps in queue/history.jsonl, and CI fails if this
 # comment drifts away from it. It used to be typed in, and by 2026-09-19 eleven
@@ -177,7 +177,7 @@ why-not)
 # It is NOT a sweep and must never read as one: it never clears a request, never
 # closes the standing walk task, and says in its own output how small it is. Its
 # job is to catch a regression the day it lands rather than twelve hours later,
-# at a twelfth of the price.
+# at a small part of the price.
 slice)
   PICK="$SDIR/.slice-walks.txt"
   SLICE_JSON="$SDIR/.slice-pick.json"
@@ -191,6 +191,7 @@ slice)
   OF=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).of)' "$SLICE_JSON")
   FROM=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).from)' "$SLICE_JSON")
   CHANGED=$(node -e 'console.log(JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).changed.length)' "$SLICE_JSON")
+  PACE=$(node -e 'const o=JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")); console.log(o.perWalkSeconds ? `${o.perWalkSeconds}s a walk, ${o.perWalkFrom}` : "")' "$SLICE_JSON" 2>/dev/null)
   ALWAYS=$(node -e 'console.log((JSON.parse(require("fs").readFileSync(process.argv[1],"utf8")).always || []).length)' "$SLICE_JSON")
   if (( N == 0 )); then
     echo "==> Rotating check: no walks to run."
@@ -201,6 +202,7 @@ slice)
   began_s=$SECONDS
   began=$(now)
   echo "==> Rotating check: $N of $OF walks, from $FROM in the rotation, $ALWAYS run in every check, $CHANGED because their script changed."
+  [[ -n "$PACE" ]] && echo "    Sized to ${PHOTONZ_SLICE_MINUTES:-10} minutes at $PACE."
   echo "    This is NOT the full sweep. What it does not run is unknown, not passing."
   Q note "rotating walk check: $N of $OF walks" >/dev/null 2>&1
   AWAKE_PIDFILE="$SDIR/.awake.pid"
@@ -281,7 +283,9 @@ slice-summary)
   if [[ -s "$SDIR/last-slice.json" ]]; then
     node -e '
       const r = JSON.parse(require("fs").readFileSync(process.argv[1], "utf8"));
-      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, of: r.of, rotating: true }));
+      // couldNotRun and timedOut let the next check be planned only on runs
+      // that really ran their walks (sweep-schedule.mjs sliceWalkSeconds).
+      console.log(JSON.stringify({ walks: r.walks, passed: r.passed, failed: r.failed.length, seconds: r.seconds, of: r.of, couldNotRun: r.couldNotRun || 0, timedOut: !!r.timedOut, rotating: true }));
     ' "$SDIR/last-slice.json"
   else
     echo '{}'
