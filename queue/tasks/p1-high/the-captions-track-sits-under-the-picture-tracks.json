@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:34:52.077Z",
-  "updated": "2026-10-06T13:35:57.867Z",
+  "updated": "2026-10-06T15:47:24.654Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html TIMELINE MODEL (~line 730): tracks Title (comp), V1, V2, CAP, Audio. App: /tmp/photonz-playtest/an-editing-session-walk/6-title-at-b-sc.png and 5-dissolve-sc.png read Title, Captions, Words, V1, Audio.\n\nFirst find out whether the timeline's track order is also the stacking order on the canvas. If it is, the captions lane moving below V1 must not send captions under the picture: either captions are always composited last (they are a caption track, not a layer a person stacks), or this needs a card. If keeping captions on top means breaking the rule that a higher track draws in front, open a decision card rather than inventing one, with the mock's order and Premiere's (captions track at the top) as options; mark the task blocked and say so in the log.\n\nWhere the caption track is inserted on Add Captions is in the captions code (search Sources for where the captions track or Words lane is created and its index chosen). The done task that lets tracks be reordered by dragging headers must keep working. Walks that assert track order (search Scripts/playtest for Captions in expectTimeline or describe notes) need updating. Searched: caption track order, captions above, track order: nothing open.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-10-06T13:35:57.866Z",
       "note": "seq 520 -> 60"
+    },
+    {
+      "t": "2026-10-06T15:16:53.506Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T15:19:17.065Z",
+      "note": "Review before building: the timeline's track order IS the stacking order (moveTrack/restackByTracks: a higher track draws in front), and captions land via addLayer on top of the stack, listed by stack order, so a title typed after captions lists above them and also DRAWS over them today. Moving the lane under V1 without more would send captions under the picture. Decision, no card: a Captions track is its own kind, not a picture track, and Premiere's caption tracks and Resolve's subtitle tracks both draw over every video track wherever they sit; the 'higher track draws in front' rule keeps holding among picture tracks. So: (1) the timeline lists a Captions track under the last picture track and over the sound (loose ones, and Add Track > Captions), (2) the renderer and canvas clicks treat every Captions layer as drawn last, (3) restack keeps Captions at the top of the stack so the folded layers list agrees. A moved Captions track stays where it was dragged (written tracks are never re-sorted)."
+    },
+    {
+      "t": "2026-10-06T15:19:17.120Z",
+      "note": "owns these walks: an-editing-session-walk"
+    },
+    {
+      "t": "2026-10-06T15:47:24.585Z",
+      "note": "left rough (no task): the listening row now stands under V1 but no walk photographs it, because the sample is heard too fast; the layers list (timeline folded) shows Captions on top while the timeline lists it under V1, which is the drawing truth. Audit rough lines: Words lane settled by fix-a-caption-one-word-at-a-time-on-the-canvas-a; the other two are notes for the user, not defects."
+    },
+    {
+      "t": "2026-10-06T15:47:24.652Z",
+      "note": "Captions list under the last picture track and over the sound (Title, V1, Captions+Words, Audio), from Add Captions, Add Track > Captions and the listening row; drawn last whatever row they sit in (drawingOrder in the composite and canvas clicks), so moving the row changes nothing seen; a dragged Captions track stays put and Cmd-Z puts it back. Verified: full suite 11,560 green; CaptionsTrackPlaceTests + CaptionsDrawOnTopRenderTests; new captions-sit-under-the-picture-walk at Next defaults (frames before/after the move byte identical) and an-editing-session-walk with the order check; audit queue/audits/2026-10-06-captions-under-the-picture.json. Commit c7a04159."
     }
-  ]
+  ],
+  "started": "2026-10-06T15:16:53.505Z",
+  "walks": [
+    "an-editing-session-walk"
+  ],
+  "completed": "2026-10-06T15:47:24.653Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:34:51.996Z",
-  "updated": "2026-10-06T13:35:57.752Z",
+  "updated": "2026-10-06T13:55:40.050Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by putting the 06:16 an-editing-session-walk pictures beside video-transition-wt.html. Mock lines 249-250: Out = screen-rec, In = b-roll, the clip names. App: /tmp/photonz-playtest/an-editing-session-walk/4-picker-sc.png and 5-dissolve-sc.png show Out: Piece 1, In: Piece 2 under a V1 whose two bars both read Sample Talk.\n\nCause: Sources/PhotonzCore/EditPointTransitions.swift ~60, documentCut(at:) .join case sets outgoingName \"Piece \\(index)\" and incomingName \"Piece \\(index + 1)\". The .edit case already uses layer names.\n\nTwo honest ways: name the sides after the clip with which side of the cut (for example Sample Talk, before / after), or give the bars the same numbers the panel uses. Pick the one that leaves the timeline as the mock draws it (bars carry the clip's name only, video.html), so the panel side is the likely change. Core is pure: test-first in PhotonzCoreTests. Check whether the same Piece N string reaches any other copy (right-click menus, the cut's tooltip, walk descriptions) and keep them in step. Walks that assert Piece 1 need updating with it.",
@@ -28,6 +28,37 @@
     {
       "t": "2026-10-06T13:35:57.751Z",
       "note": "seq 510 -> 40"
+    },
+    {
+      "t": "2026-10-06T13:36:46.613Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T13:37:21.233Z",
+      "note": "Reproduced from /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png: Edit point Out: Piece 1, In: Piece 2 above a V1 whose two bars both read Sample Talk. Pre-build review: the Out/In keys already say which side, so the honest name for each side is the clip name the bar carries (Premiere keeps the clip name on both halves of a blade). A suffix like 'before/after' would repeat the key and cost width on a long name. Change: core documentCut(.join) names both sides with the layer name."
+    },
+    {
+      "t": "2026-10-06T13:55:07.973Z",
+      "note": "owns these walks: cut-panel-names-the-clip-walk, an-editing-session-walk, transition-picker-at-a-cut-walk"
+    },
+    {
+      "t": "2026-10-06T13:55:27.054Z",
+      "note": "Built: core documentCut(.join) names both sides with the clip's name (test first in EditPointTransitionTests). The end-to-end walk then showed Sample Talk cut short in the Out box: CutField counted its key-to-value gap three times (HStack spacing 6 + Spacer 4 + 6 = 16pt, the mock's .field is gap 6). Now HStack(spacing:0)+Spacer(minLength:6). New walk cut-panel-names-the-clip-walk (Next defaults, pointer clicks: Cmd-K and B/V paths, long name via a scratch file); Out/In expects added to an-editing-session-walk; transition-picker-at-a-cut-walk now reads b-roll at a join. All three green, Scripts/test.sh 11548 green."
+    },
+    {
+      "t": "2026-10-06T13:55:27.113Z",
+      "note": "left rough (under the bar): (1) a 'press' by name on '<clip> join 1' right after Cmd-K left the clip in hand and the panel's Edit point below the fold, while a real pointer click at the same point picks the cut; and 'expect field Out' passed reading the field out of view. Walk-harness quirk only, no person affected. (2) Edit point header floors to whole seconds: a blade click at 1.97s reads 'at 0:01' beside a ruler mark of 2s, same as the transport clock. (3) Long names middle-truncate in a ~70pt box ('Quar...l take'); the bar shows the whole name."
+    },
+    {
+      "t": "2026-10-06T13:55:40.048Z",
+      "note": "A cut inside one clip now names both sides by the clip's name (Out: Sample Talk, In: Sample Talk), matching its bars; a cut between two clips still names each. Core fix in EditPointTransitions.swift (test first). The Out box's key-to-value gap now matches the mock's 6pt, so Sample Talk reads whole. Verified by cut-panel-names-the-clip-walk (new, Next defaults, pointer clicks, long name), an-editing-session-walk and transition-picker-at-a-cut-walk, all green; Scripts/test.sh green. Audit: queue/audits/2026-10-06-cut-panel-names-the-clip.json. Commit 8998c14a."
     }
-  ]
+  ],
+  "started": "2026-10-06T13:36:46.612Z",
+  "walks": [
+    "cut-panel-names-the-clip-walk",
+    "an-editing-session-walk",
+    "transition-picker-at-a-cut-walk"
+  ],
+  "completed": "2026-10-06T13:55:40.049Z"
 }

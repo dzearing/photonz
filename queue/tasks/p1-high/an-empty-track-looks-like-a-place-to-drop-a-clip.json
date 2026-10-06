@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:34:52.242Z",
-  "updated": "2026-10-06T13:35:57.923Z",
+  "updated": "2026-10-06T16:15:14.353Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video.html, the New video step 1 frame: empty V1 and Audio lanes dashed and hatched. App: /tmp/photonz-playtest/new-empty-video-walk/2-empty-video-sc.png (bare lanes, grid lines only) and 5-tile-over-v1-sc.png (the dashed preview appears only during a drag). Flag FeatureCatalog.blankVideoFlag, enabledByDefaultIn [.next]. Track lanes draw in Sources/Photonz/TimelineTrackRows.swift. Reuse the drag preview's dash style so the two read as one idea. A slot is drawn chrome, not a new control, so no card. Searched: empty lane, empty track, dashed lane: nothing.",
@@ -29,6 +29,32 @@
     {
       "t": "2026-10-06T13:35:57.922Z",
       "note": "seq 540 -> 70"
+    },
+    {
+      "t": "2026-10-06T16:00:08.026Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T16:14:47.928Z",
+      "note": "owns these walks: empty-track-slot-walk, new-empty-video-walk"
+    },
+    {
+      "t": "2026-10-06T16:15:09.868Z",
+      "note": "reproduced: /tmp/photonz-playtest/new-empty-video-walk/2-empty-video-sc.png shows bare lanes. Adversarial pass: a Premiere/FCP user sees empty tracks as drop targets already; the risk is a slot that reads as a locked hatch, so the slot uses filled 6pt stripes under a dashed edge (mock .lane.empty) while a locked track keeps its thin-line hatch and no slot. Built TimelineEmptySlot (TimelineLaneDrop.swift), shown when TimelineTrackRowModel.showsEmptySlot (no clips, no linked sound, no inner rows, not Captions, not locked); hidden while a carried clip lights the whole lane. New walk empty-track-slot-walk: new video slots dark+light, ghost over slot, landed (clip + its sound fill V1 and Audio), undo brings slots back, redo, Add Track gives a V2 slot. Both it and new-empty-video-walk pass; Scripts/test.sh 11562 tests pass."
+    },
+    {
+      "t": "2026-10-06T16:15:09.924Z",
+      "note": "left rough: while a file is held over a slot the rest of the lane stays striped where the mock's step 3 lights the whole lane; kept per this task's 'drop preview unchanged'. Not filed: the user can react on the audit line."
+    },
+    {
+      "t": "2026-10-06T16:15:14.351Z",
+      "note": "Empty lanes now draw the mock's dashed, striped slot (TimelineEmptySlot in TimelineLaneDrop.swift, gated by TimelineTrackRowModel.showsEmptySlot). Goes when a clip lands, back on undo, also on a track added with Add Track; drop ghost unchanged. Verified at Next defaults by empty-track-slot-walk (7 real captures, dark and light) and new-empty-video-walk; Scripts/test.sh green. Audit: queue/audits/2026-10-06-empty-track-slot.json with the mock frame beside it."
     }
-  ]
+  ],
+  "started": "2026-10-06T16:00:08.025Z",
+  "walks": [
+    "empty-track-slot-walk",
+    "new-empty-video-walk"
+  ],
+  "completed": "2026-10-06T16:15:14.352Z"
 }

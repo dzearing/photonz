@@ -1,0 +1,30 @@
+{
+  "id": "find-out-why-a-caption-word-opened-for-typing-so",
+  "title": "Find out why a caption word opened for typing sometimes loses the keyboard",
+  "goal": "About one run in several, a caption word opened on the picture for fixing does not take the typing: the word is open but the keys go to the canvas. Find out whether a person can hit this too or whether only the walk does, and fix whichever it is.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3680,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T15:44:49.943Z",
+  "updated": "2026-10-06T15:44:49.946Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen twice with the same signature: the 2026-10-05 12:00 sweep (queue/sweep/2026-10-05-120028.log) and on 2026-10-06 in the captions-track-order task run: `Scripts/playtest-all.sh --no-build captions caption-` printed `fix-a-caption-word-walk 11s FAILED step 11 (type): no text field has the keyboard (first responder is CanvasNSView)`. Step 8 (captionsExpectWordOpen) had passed, so the word field was open but not first responder. Re-run on its own straight after: ok. walks-that-fail-in-the-full-sweep-13 saw the first one and left it unfiled (4 of 4 passes alone). The walk sets front:true; the 2026-10-06 failure came mid-batch, right after the probe relaunch, so suspect the field asking for first responder before the window is key. Not reproduced on demand, hence p2.",
+  "acceptance": [
+    "The cause is named in the task log, with the run that showed it",
+    "fix-a-caption-word-walk passes ten runs in a row on its own",
+    "If a person can hit it, a double click on a caption word always takes the next keystroke"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T15:44:49.945Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "fix-a-caption-word-walk"
+  ]
+}
