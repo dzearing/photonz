@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:44.292Z",
-  "updated": "2026-10-06T03:46:02.709Z",
+  "updated": "2026-10-06T03:46:07.092Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Word menu: Sources/Photonz/EditorState+CaptionWords.swift:182-197 (Edit Word, Split Here, Merge with Next which merges WORDS inside one line, Delete Word, Move to Next Line -> document.moveCaptionWordsToNextCue). Menu bar rows: EditorCommands.swift:1388-1390. No cue-level join exists (grep join/merge cue finds nothing). Mock: docs/design/mocks/pages/video-captions.html (editing in place). Premiere: Merge Captions. Success item for video-audio: captions 'can be edited in place'. Found by the 2026-10-05 evening manager pass's captions comparison.",
@@ -49,10 +49,15 @@
     {
       "t": "2026-10-06T03:46:02.708Z",
       "note": "left rough, not filed: a joined line wraps to two rows on the picture even with Lines set to 1 (Lines only decides grouping when captions are written; a hand join is the person's choice). The Join row is run from the menu as built, not a right click at a spot on the track bar; the bar's menu is the same captionCueMenuRows the walk reads. Both are in the audit's rough."
+    },
+    {
+      "t": "2026-10-06T03:46:07.090Z",
+      "note": "Join with Next Line on the caption bar's menu and Move to Previous Line on a word's menu (plus Sequence > Caption Word rows, dimmed on the first/last line), core in CaptionWordEdits with 7 new tests; walk caption-lines-join-and-a-word-moves-back-walk green at Next defaults incl. undo and SRT; Scripts/test.sh green; audit queue/audits/2026-10-05-caption-lines-join-and-move-back.json"
     }
   ],
   "started": "2026-10-06T03:24:55.637Z",
   "walks": [
     "caption-lines-join-and-a-word-moves-back-walk"
-  ]
+  ],
+  "completed": "2026-10-06T03:46:07.091Z"
 }
