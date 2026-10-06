@@ -115,6 +115,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     /// Final Cut's ⌘T, Premiere's ⌘D: the default transition on the cut at
     /// the playhead (`DefaultTransition.swift`).
     case applyDefaultTransition
+    /// Premiere's ⌘R, Speed/Duration: the speeds of the piece in hand, which
+    /// live in the panel's Time section, opened there.
+    case openClipSpeed
     /// Premiere's and Final Cut's S: clips stop, or start again, catching on
     /// the playhead, the cuts and each other while they are dragged.
     case toggleSnapping
@@ -169,6 +172,9 @@ public enum TimelineKeys {
         case (.letter("k"), [.command]): return .splitAtPlayhead
         // Final Cut's key, since Premiere's ⌘D is Photoshop's Deselect here.
         case (.letter("t"), [.command]): return .applyDefaultTransition
+        // Premiere's Speed/Duration. Photoshop's ⌘R is Rulers, which this app
+        // does not have, so a picture loses nothing to it.
+        case (.letter("r"), [.command]): return .openClipSpeed
         case (.letter("i"), [.option]): return .clearIn
         case (.letter("o"), [.option]): return .clearOut
         // Premiere's Go to Previous Marker. ⇧M, the next one, is Photoshop's

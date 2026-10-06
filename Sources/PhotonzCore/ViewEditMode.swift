@@ -119,7 +119,7 @@ extension TimelineKeyCommand {
             return false
         case .markIn, .markOut, .markClip, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
              .rippleDelete, .extractMarked, .liftMarked, .rippleTrimToPlayhead,
-             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
+             .applyDefaultTransition, .openClipSpeed, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
              .zoomIn, .zoomOut, .zoomToFit, .nudgeClips:
             return true
         }

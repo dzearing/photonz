@@ -1,0 +1,26 @@
+{
+  "feature": "Command R opens a clip's speed",
+  "epic": "video-beats-premiere",
+  "summary": "Command R, Premiere's Speed/Duration key, opens the Speed list in the panel for the picked piece, bringing the panel back and opening the Time section if either was put away. Clip ▸ Change Speed… carries the key so it can be learned from the menu.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording and cut it at two seconds: press B and click the clip there, or put the playhead there and press Command K.", "shot": "2026-10-06-command-r-speed-0-sc.png" },
+    { "do": "Click the second piece on the timeline." },
+    { "do": "Press Command R.", "shot": "2026-10-06-command-r-speed-1-sc.png" },
+    { "do": "Pick 2x from the list that dropped open.", "shot": "2026-10-06-command-r-speed-2-sc.png" },
+    { "do": "Fold the Time section by its header, then press Command R again.", "shot": "2026-10-06-command-r-speed-3-sc.png" },
+    { "do": "Open Clip in the menu bar and find Change Speed… with Command R beside it." },
+    { "do": "Make a new empty video and press Command R.", "shot": "2026-10-06-command-r-speed-4-sc.png" }
+  ],
+  "evaluate": [
+    "Does the Speed list dropping open under the panel's Speed row feel like Premiere's Speed/Duration, or do you want a box of its own on the canvas?",
+    "With nothing clicked, Command R opens the speed of the piece under the playhead and picks it. Is that what you expect?",
+    "Is Change Speed… above the Speed submenu in the Clip menu the right way to show the key, or is two speed rows one too many?",
+    "On a held frame Command R opens its Hold list instead. Is that the right answer for a frame with no speed?"
+  ],
+  "rough": [
+    "The pictures show the Speed dropdown with its open edge but not the list itself: a walk never puts a real menu on screen, so the list a person sees when it drops open was not photographed. The panel's own click opens the same menu the same way.",
+    "No mock covers a key for speed; the list it opens is the panel's own Speed dropdown, unchanged."
+  ]
+}

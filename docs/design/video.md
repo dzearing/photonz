@@ -273,6 +273,7 @@ before the toolbar's single-letter key equivalents can take it.
 | ⇧⌘M | Go to Previous Marker | same |
 | ⌘K | Split at Playhead (Premiere's Add Edit) | same |
 | ⇧⌘K | Split Everything at Playhead | same |
+| ⌘R | Speed: opens the picked piece's Speed list in the panel (Premiere's Speed/Duration) | same |
 | ⌫ | Lift: what is picked goes, nothing else moves | delete, as ever |
 | ⇧⌫ (and ⌥⌫) | Ripple Delete | ⌥⌫ only |
 | ← / → | One frame; ⇧ five | nudge a picked layer, else a frame |

@@ -1,0 +1,15 @@
+{
+  "out": "/tmp/photonz-playtest/command-r-with-no-clip-walk",
+  "seed": "Command R on a video with no clip to retime changes nothing and says what it needs, rather than doing nothing silently. At Next defaults, no flag set.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blankVideo", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "key", "key": "r", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectNotice", "says": "No clip picked" },
+    { "do": "expectEdited", "edited": false },
+    { "do": "describe", "stage": "1-no-clip", "note": "THE TEST: an empty video has no clip, so Command R puts up No clip picked, Pick a clip to set its speed, and the document is untouched" },
+    { "do": "snapshot", "name": "1-no-clip-picked" }
+  ]
+}

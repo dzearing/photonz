@@ -195,19 +195,25 @@ extension VideoKit {
         var swatch: AnyShapeStyle?
         var size: SelectFace.Size = .small
         let choices: [Choice]
+        /// The app is asking for this list open (`Dropdown.opensWhenAsked`).
+        var opensWhenAsked: Bool
+        var opened: @MainActor () -> Void
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
-             choices: [Choice]) {
+             choices: [Choice], opensWhenAsked: Bool = false, opened: @escaping @MainActor () -> Void = {}) {
             self.label = label
             self.value = value
             self.swatch = swatch
             self.size = size
             self.choices = choices
+            self.opensWhenAsked = opensWhenAsked
+            self.opened = opened
         }
 
         var body: some View {
             FieldRow(label: label) {
-                Dropdown(label: label, value: value, swatch: swatch, size: size, choices: choices)
+                Dropdown(label: label, value: value, swatch: swatch, size: size, choices: choices,
+                         opensWhenAsked: opensWhenAsked, opened: opened)
             }
         }
     }
@@ -272,10 +278,16 @@ extension VideoKit {
         /// Just the chevron (`SelectFace.isBare`).
         var isBare = false
         let choices: [Choice]
+        /// The app is asking for this list open, the way ⌘R asks for the
+        /// Speed list (`EditorState+SpeedKey`). It opens once the dropdown is
+        /// in a window and the panel has settled round it, then `opened` says
+        /// so, so the ask is answered once.
+        var opensWhenAsked = false
+        var opened: @MainActor () -> Void = {}
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
              valueStyle: AnyShapeStyle? = nil, help: String? = nil, isBare: Bool = false,
-             choices: [Choice]) {
+             choices: [Choice], opensWhenAsked: Bool = false, opened: @escaping @MainActor () -> Void = {}) {
             self.label = label
             self.value = value
             self.swatch = swatch
@@ -284,6 +296,8 @@ extension VideoKit {
             self.help = help
             self.isBare = isBare
             self.choices = choices
+            self.opensWhenAsked = opensWhenAsked
+            self.opened = opened
         }
 
         private var face: SelectFace {
@@ -295,6 +309,7 @@ extension VideoKit {
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
             button.toolTip = help
             enable(button, context.environment.isEnabled)
+            button.open(whenAsked: opensWhenAsked, opened: opened)
             return button
         }
 
@@ -311,6 +326,7 @@ extension VideoKit {
             button.update(label: label, value: value, radius: size == .small ? 6 : 8, choices: choices)
             if button.toolTip != help { button.toolTip = help }
             enable(button, context.environment.isEnabled)
+            button.open(whenAsked: opensWhenAsked, opened: opened)
         }
 
         func sizeThatFits(_ proposal: ProposedViewSize, nsView button: DropdownButton,
@@ -367,6 +383,26 @@ extension VideoKit {
         /// What the menu was last built from, so an update that changes
         /// nothing in it leaves the open menu alone.
         private var built: [String] = []
+        /// An ask to open is on its way, so a redraw while it waits does not
+        /// queue a second one.
+        private var openAsked = false
+
+        /// The dropdowns a walk is holding open, by label: a walk never puts
+        /// a menu on screen, since an open menu takes every key on the Mac,
+        /// so an ask to open shows the open face and is recorded here instead
+        /// (`PlaytestCondition.panelMenuOpen`).
+        private static var heldOpenForAWalk: [String: WeakDropdown] = [:]
+
+        /// Set by a walk as it starts. The kit cannot ask the app whether a
+        /// walk is driving it, so the walk tells the kit.
+        static var holdsOpenInsteadOfShowing = false
+
+        private struct WeakDropdown { weak var button: DropdownButton? }
+
+        /// Whether a walk is holding the dropdown called `label` open.
+        static func isHeldOpenForAWalk(_ label: String) -> Bool {
+            heldOpenForAWalk[label]?.button?.isOpen == true
+        }
 
         init(face: SelectFace) {
             self.face = face
@@ -435,7 +471,37 @@ extension VideoKit {
 
         @objc private func pick(_ item: NSMenuItem) {
             guard actions.indices.contains(item.tag) else { return }
+            if Self.heldOpenForAWalk[accessibilityLabel() ?? ""]?.button === self {
+                isOpen = false
+                Self.heldOpenForAWalk[accessibilityLabel() ?? ""] = nil
+            }
             actions[item.tag]()
+        }
+
+        /// Open when the app asks, once per ask. A beat late on purpose: the
+        /// ask may have just opened a folded section or brought the panel
+        /// out, and the list hangs from the face, so it waits for the face to
+        /// have stopped moving.
+        func open(whenAsked asked: Bool, opened: @escaping @MainActor () -> Void) {
+            guard asked else { openAsked = false; return }
+            guard !openAsked else { return }
+            openAsked = true
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { [weak self] in
+                // A dropdown the panel rebuilt in the meantime leaves the ask
+                // to the one that replaced it.
+                guard let self, self.openAsked else { return }
+                self.openAsked = false
+                guard self.window != nil else { return }
+                // Answered before the menu opens: an open menu holds this
+                // thread until it shuts.
+                opened()
+                if Self.holdsOpenInsteadOfShowing {
+                    self.isOpen = true
+                    Self.heldOpenForAWalk[self.accessibilityLabel() ?? ""] = WeakDropdown(button: self)
+                } else {
+                    self.openMenu()
+                }
+            }
         }
 
         override var title: String {

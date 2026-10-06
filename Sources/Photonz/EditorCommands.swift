@@ -816,9 +816,16 @@ struct EditorCommands: Commands {
     // Retiming is a property of the piece you are on, so it is a
     // list of speeds rather than a surface of its own
     // (`video-speed`). Its sound goes with it, at the same rate.
+    // Premiere's ⌘R, Speed/Duration, opens that list in the panel's Time
+    // section; a submenu's own title cannot carry a key, so the key is on a
+    // row of its own above the list (`EditorState+SpeedKey`). Photoshop's ⌘R
+    // is Rulers, which this app does not have.
     @ViewBuilder private var freezeAndSpeedRows: some View {
         Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
             .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
+        Button("Change Speed\u{2026}") { editor?.openClipSpeed() }
+            .keyboardShortcut("r", modifiers: .command)
+            .disabled(!(editor?.canOpenClipSpeed ?? false))
         Menu("Speed") {
             ForEach(EditorState.clipSpeeds, id: \.self) { percent in
                 Button(ClipSpeed.title(percent)) {

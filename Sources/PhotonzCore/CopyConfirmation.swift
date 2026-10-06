@@ -198,6 +198,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// frames to pay for it (`#rowAlign`). The segment stays where it
         /// was, so it says why.
         case transitionSideRefused(ClipTransitionAlignment)
+        /// ⌘R found no clip to retime: nothing picked and nothing under the
+        /// playhead, or a title picked. A key that does nothing reads as a
+        /// key that is broken, so it says what it needs.
+        case speedNeedsAClip
         /// A transition asked of a clip went on one end and not the other:
         /// the cut at `atMS` has no spare frames to pay for it
         /// (`TransitionTargets.swift`). "No transition added" would be false,
@@ -390,6 +394,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .transitionOnEveryCut(let kind, let outcome):
             return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
+        case .speedNeedsAClip: return "No clip picked"
         case .transitionCutSkipped: return "1 cut skipped"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
@@ -458,6 +463,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "No spare frames at \(CaptionProgress.clock(ms))"
         case .transitionSideRefused:
             return "No spare frames on that side"
+        case .speedNeedsAClip:
+            return "Pick a clip to set its speed"
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
         case .clickAdded(let ms):

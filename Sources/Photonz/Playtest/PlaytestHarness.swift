@@ -124,6 +124,9 @@ enum PlaytestHarness {
         let scriptURL = URL(fileURLWithPath: arguments[flag + 1]).standardizedFileURL
         let run = Run(scriptURL: scriptURL, coordinator: coordinator)
         self.run = run
+        // A walk never puts a panel dropdown's menu on screen when the app
+        // opens one for you (⌘R's Speed list): it holds the face open instead.
+        VideoKit.DropdownButton.holdsOpenInsteadOfShowing = true
         watchForWindowsOverThePerson()
         forgetEditorsWhoseWindowCloses()
         Task { await run.start() }
@@ -15199,6 +15202,7 @@ private final class Run {
         case .exportSizeWeighed: ExportWeigh.onScreen?.isSettled == true
         case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
         case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
+        case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .clipsOfOneRecording(let count):
             (Dictionary(grouping: editor.document?.timelineClipLayers.compactMap(\.movie) ?? [], by: { $0 })
                 .values.map(\.count).max() ?? 0) == count

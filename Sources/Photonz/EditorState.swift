@@ -2733,6 +2733,13 @@ final class EditorState {
     /// fixes.
     private(set) var effectToReveal: String?
 
+    /// ⌘R has asked for the speeds of the piece in hand, and the panel's
+    /// Speed dropdown has not opened yet (`EditorState+SpeedKey`). A flag
+    /// rather than a count, because the dropdown may not exist when it is
+    /// raised: a folded Time section, or a panel that was hidden, builds it a
+    /// pass or two later, and it opens when it is built.
+    var pendingClipSpeedChoices = false
+
     /// The effect you last opened, by `LayerEffectRow.id`, for as long as it
     /// stays open.
     ///

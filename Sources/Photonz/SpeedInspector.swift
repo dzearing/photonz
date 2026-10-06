@@ -94,7 +94,10 @@ struct SpeedInspector: View {
             choices: .picking(ClipSpeed.stops, current: piece.speedPercent, title: ClipSpeed.menuTitle,
                               isEnabled: { $0 == piece.speedPercent || editorState.canSetClipSpeed($0) }) {
                 editorState.setClipSpeedInHand($0)
-            })
+            },
+            // ⌘R, Premiere's Speed/Duration, opens this list (`EditorState+SpeedKey`).
+            opensWhenAsked: editorState.pendingClipSpeedChoices,
+            opened: editorState.clipSpeedChoicesOpened)
         .playtestField("Speed")
         .panelHelp(reading.framesSentence)
         // How long it runs is the Properties pane's clip line, one section up.
@@ -123,7 +126,10 @@ struct SpeedInspector: View {
             choices: .picking(ClipPieces.holdStopsMS, current: piece.lengthMS, title: ClipPieces.holdTitle,
                               isEnabled: { $0 == piece.lengthMS || editorState.canSetHoldLength($0) }) {
                 editorState.setHoldLengthInHand($0)
-            })
+            },
+            // A held frame has no speed, so ⌘R opens how long it holds.
+            opensWhenAsked: editorState.pendingClipSpeedChoices,
+            opened: editorState.clipSpeedChoicesOpened)
         .playtestField("Hold")
         .panelHelp("How long the frame stays on screen.")
         let push = piece.holdPush ?? .pictureOnly

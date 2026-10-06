@@ -686,6 +686,12 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// This asks the editor whether the sheet is really up, so "pressing that
     /// row opened the resize dialog" is a step the walk fails on.
     case dialog(String, up: Bool)
+    /// A panel dropdown, by its label, has its list open. What a walk waits on
+    /// to prove a key opened a dropdown for you (⌘R, the Speed row) rather
+    /// than only that the dropdown exists. Under a walk the list is held open
+    /// without putting the menu on screen, which would take every key on the
+    /// Mac, so this asks the dropdown rather than the screen.
+    case panelMenuOpen(String)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -4115,7 +4121,8 @@ public enum PlaytestStep: Sendable, Equatable {
             case "clipCopyBadge": .clipCopyBadge
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp or dialogGone")
+            case "panelMenuOpen": .panelMenuOpen(try f.string("value"))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp, dialogGone or panelMenuOpen")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

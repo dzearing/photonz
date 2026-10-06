@@ -499,6 +499,14 @@ struct InspectorPanel: View {
                 // and then this panel is born with the request already waiting.
                 .onChange(of: editorState.pendingLibraryReveal) { revealer(proxy).requestLibrary() }
                 .onAppear { revealer(proxy).requestLibrary() }
+                // ⌘R asked for the speeds of the piece in hand: the Time
+                // section open and on screen, so its Speed list can drop open
+                // from it (`EditorState+SpeedKey`). On appear too, for a panel
+                // the key has just brought out.
+                .onChange(of: editorState.pendingClipSpeedChoices) { _, asked in
+                    if asked { showTimeSection(proxy) }
+                }
+                .onAppear { if editorState.pendingClipSpeedChoices { showTimeSection(proxy) } }
                 // You opened an effect, or added one: put the settings that just
                 // appeared where you can see them. This is the LAST reveal the dock
                 // has, and picking something is deliberately not one of them — the
@@ -1642,6 +1650,23 @@ struct InspectorPanel: View {
     private func toggleCollapsed(_ id: InspectorSectionID) {
         withAnimation(foldMotion) {
             refold { folds.toggle(id) }
+        }
+    }
+
+    /// The Time section opened if it was folded and scrolled on screen if it
+    /// was not, without moving one that is already in view.
+    private func showTimeSection(_ proxy: ScrollViewProxy) {
+        expand(.speed)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+            guard let frame = reveal.sectionFrames[.speed] else {
+                proxy.scrollTo(InspectorSectionID.speed, anchor: .top)
+                return
+            }
+            let inView = frame.minY >= 0 && frame.maxY <= reveal.viewportHeight
+            guard !inView else { return }
+            withAnimation(reduceMotion ? nil : .easeInOut(duration: 0.2)) {
+                proxy.scrollTo(InspectorSectionID.speed, anchor: frame.minY < 0 ? .top : .bottom)
+            }
         }
     }
 

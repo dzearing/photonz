@@ -146,6 +146,8 @@ extension EditorState {
             return rippleTrimToPlayhead(end)
         case .applyDefaultTransition:
             return applyDefaultTransition()
+        case .openClipSpeed:
+            return openClipSpeed()
         case .toggleSnapping:
             toggleTimelineSnapping()
         case .selectTool:
