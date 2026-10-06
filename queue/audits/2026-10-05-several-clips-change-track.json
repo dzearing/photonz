@@ -1,0 +1,31 @@
+{
+  "feature": "Several picked clips change track together",
+  "epic": "video-cutting",
+  "summary": "Pick two or more clips and drag one of them up or down: they all go the same number of tracks and the same time, as one undo. Above the top track a new track is made for them, the way a single clip's drop makes one.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is several-picked-clips-change-track-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording, trim it to six seconds with W, then Sequence > Add Media at Playhead with the playhead at the end to put a second clip after it on V1." },
+    { "do": "Cut each clip once with Command K." },
+    { "do": "Click a piece of the first clip, then Command click a piece of the second.", "shot": "2026-10-05-several-clips-change-track-1-two-picked-sc.png" },
+    { "do": "Drag the second clip a little right and up past the top of V1, and watch the line over V1 and the readout.", "shot": "2026-10-05-several-clips-change-track-2-carried-up-sc.png" },
+    { "do": "Let go: both clips sit on a new V2, a little later, cuts and sound intact.", "shot": "2026-10-05-several-clips-change-track-3-both-up-sc.png" },
+    { "do": "Press Command Z once: both are back on V1 and V2 is gone." },
+    { "do": "Pick both again and drag one down onto the Audio track: the lane lights red.", "shot": "2026-10-05-several-clips-change-track-5-refused-on-sound-sc.png" },
+    { "do": "Let go: both stay on V1 and only slide in time.", "shot": "2026-10-05-several-clips-change-track-6-slid-only-sc.png" }
+  ],
+  "evaluate": [
+    "When you carry several clips up, is the line over the top track enough to tell you all of them are going, not just the one in your hand?",
+    "Does one Command Z undoing the whole move, new track included, match what you expect from Premiere?",
+    "When the move is refused, is sliding in time anyway what you want, or would you rather nothing moved at all?",
+    "With clips on two tracks picked, does each one going up by the same count feel right?"
+  ],
+  "rough": [
+    "While in the hand only the lane under the pointer lights up; the other picked clips do not show where they will land until you let go. The single clip drop works the same way.",
+    "A refusal because the track takes only sound reads \"no room on Audio\", the single clip's words; task a-clip-refused-by-a-track-of-the-wrong-kind-says gives it the real reason.",
+    "Tracks are counted down the whole list, so a pick that mixes picture with a separate music clip refuses to go up (the music would land on a picture track). Premiere moves sound the other way instead; not built.",
+    "Option dragging several picked clips still leaves copies on their own tracks and only slides them in time.",
+    "The walk puts the second clip on the timeline by dropping the file there, not through Add Media at Playhead, because the menu step needs the Mac to itself.",
+    "No mock frame draws several clips carried between tracks; the cues are the ones the single clip drop already uses."
+  ]
+}

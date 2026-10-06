@@ -2281,8 +2281,9 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
-        case .dragClip(let clip, let byMS, let modifiers, let hold):
-            try await dragClip(clip, byMS: byMS, modifiers: modifiers, hold: hold, number: number)
+        case .dragClip(let clip, let byMS, let modifiers, let hold, let tracksUp):
+            try await dragClip(clip, byMS: byMS, modifiers: modifiers, hold: hold,
+                               tracksUp: tracksUp, number: number)
 
         case .dragTiming(let bar, let grab, let byMS, let hold, let cancel, let cancelBy):
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
@@ -6947,7 +6948,7 @@ private final class Run {
     /// carried along and let go, through the calls the clip's own press makes
     /// (`TimelineTrackSelect`, `ClipPiecesBar.carry`).
     private func dragClip(_ clip: String, byMS: Int, modifiers: [PlaytestModifier],
-                          hold: String? = nil, number: Int) async throws {
+                          hold: String? = nil, tracksUp: Int = 0, number: Int) async throws {
         let editor = try requireEditor()
         guard editor.isMotionStripOpen else {
             throw Failure(description: "the window is in View mode, so no clip is on "
@@ -6972,20 +6973,41 @@ private final class Run {
             editor.beginTrackSelectForwardDrag(layerID: layer.id, onItsTrackOnly: shift)
         case .select:
             guard byMS != 0 else {
-                // A click with the arrow: the clip, or added to what is picked.
-                if shift { editor.extendSelection(toLayer: layer.id) } else { editor.selectLayer(layer.id) }
+                // A click with the arrow: the clip, or with ⇧ or ⌘ added to
+                // what is picked (`ClipPiecesBar`'s tap).
+                if shift || modifiers.contains(.command) {
+                    editor.extendSelection(toLayer: layer.id)
+                } else {
+                    editor.selectLayer(layer.id)
+                }
                 note(number, "dragClip", "clicked \(layer.name) with Select", state: describe())
                 return
             }
             editor.beginClipBarDrag(layerID: layer.id, grab: .body)
         }
+        // Up or down as well: the hand over the lane it lands on, read from
+        // where the dock drew its rows, through the call the clip's own drag
+        // makes with the pointer (`ClipPiecesBar.carry`).
+        let carried = tracksUp == 0 ? nil : try pointerY(carrying: layer.id, tracksUp: tracksUp)
         for fraction in [0.35, 0.7, 1.0] {
             editor.updateClipBarDrag(byMS: Int((Double(byMS) * fraction).rounded()))
+            if let carried {
+                let y = carried.from + (carried.to - carried.from) * fraction
+                editor.updateClipTrackDrop(pointerY: y, travelledY: y - carried.from)
+            }
             await sleep(0.05)
+        }
+        if tracksUp != 0, editor.clipTrackDrop == nil {
+            throw Failure(description: "\(layer.name) carried \(tracksUp) track(s) "
+                + (tracksUp > 0 ? "up" : "down") + " is not aimed at any track")
         }
         // What the bar caught on with the hand still down: the words the
         // capsule under the drag says.
-        let caught = editor.clipBarSnap.map { ", " + ClipBarCopy.caught(on: $0) } ?? ", caught on nothing"
+        var caught = editor.clipBarSnap.map { ", " + ClipBarCopy.caught(on: $0) } ?? ", caught on nothing"
+        if let drop = editor.clipTrackDrop {
+            let aimed: String = editor.clipTrackDropReading ?? "at a new track"
+            caught += ", aimed " + aimed + (drop.allowed ? "" : ", refused")
+        }
         if let hold {
             await sleep(0.35)
             let window = try requireWindow()
@@ -7002,6 +7024,30 @@ private final class Run {
              + (byMS == 0 ? "" : ", carried \(byMS) ms\(caught)") + (hold.map { ", held \($0).png" } ?? "")
              + "; picked: \(picked.joined(separator: ", "))",
              state: describe())
+    }
+
+    /// Where a hand carrying a clip `tracksUp` tracks up starts and ends, in
+    /// the tracks' own space: the middle of the clip's lane, and the middle of
+    /// the lane that many rows up, or just past the top or bottom row.
+    private func pointerY(carrying id: UUID, tracksUp: Int) throws -> (from: CGFloat, to: CGFloat) {
+        let editor = try requireEditor()
+        let rows = editor.trackDropRows.values.sorted { $0.minY < $1.minY }
+        guard let own = editor.document?.trackID(ofClip: id),
+              let from = rows.firstIndex(where: { $0.trackID == own }) else {
+            throw Failure(description: "the clip's track is not drawn on the timeline, so there "
+                + "is no lane to carry it from")
+        }
+        let start = (rows[from].minY + rows[from].maxY) / 2
+        let row = from - tracksUp
+        let end: CGFloat
+        if row < 0, let top = rows.first {
+            end = top.minY - TrackDrop.edgeBand * 2
+        } else if row >= rows.count, let bottom = rows.last {
+            end = bottom.maxY + TrackDrop.edgeBand * 2
+        } else {
+            end = (rows[row].minY + rows[row].maxY) / 2
+        }
+        return (start, end)
     }
 
     private func dragTiming(_ bar: String, grab: PlaytestTimingGrab, byMS: Int,

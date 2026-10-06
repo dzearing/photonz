@@ -1,0 +1,31 @@
+{
+  "id": "a-clip-refused-by-a-track-of-the-wrong-kind-says",
+  "title": "A clip refused by a track of the wrong kind says why, not \"no room\"",
+  "goal": "Carrying a clip (or several picked clips) onto a track that cannot take it, such as picture onto a sound track or anything onto a locked track, makes the readout under the hand say \"no room on Audio\", as if something were in the way. An editor then looks for a clip to move that is not there. The words should name the real reason in a short label.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3650,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T06:21:09.153Z",
+  "updated": "2026-10-06T06:21:09.156Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-05 by Scripts/playtest/several-picked-clips-change-track-walk.json step 49 (dragClip Tutorial Sample tracksUp -1): log note \"aimed no room on Audio, refused\"; picture queue/audits/2026-10-05-several-clips-change-track-5-refused-on-sound-sc.png. The single clip drop says the same (EditorState+Tracks.swift clipTrackDropReading: drop.allowed ? \"to name\" : \"no room on name\"). ClipTrackDrop only carries allowed: Bool; it needs a reason (kind / locked / overlap) from canPlace / canMoveClips.",
+  "acceptance": [
+    "Carried onto a sound track, a picture clip reads a short label that says the track takes sound only (30 characters at most), not no room",
+    "Carried onto a locked track it says the track is locked",
+    "A real overlap still reads no room on <track>",
+    "A walk holds each of the three and reads the words"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T06:21:09.155Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "several-picked-clips-change-track-walk"
+  ]
+}

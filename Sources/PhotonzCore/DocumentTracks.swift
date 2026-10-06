@@ -583,7 +583,7 @@ extension PhotonzDocument {
 
     /// The stretch a clip covers; a layer with no time of its own covers the
     /// whole document.
-    private func clipSpan(_ layer: Layer, movedTo inMS: Int?) -> Range<Int> {
+    func clipSpan(_ layer: Layer, movedTo inMS: Int?) -> Range<Int> {
         guard let time = layer.time else { return 0..<max(1, documentDurationMS) }
         let moved = inMS.map { time.moved(toInMS: $0) } ?? time
         return moved.inMS..<max(moved.inMS + 1, moved.outMS)

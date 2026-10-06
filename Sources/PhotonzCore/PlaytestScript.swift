@@ -2985,8 +2985,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `dragTiming` does for the strip. `modifiers` are the keys held at the
     /// press: ⇧ keeps Track Select Forward to the clip's own track. `hold`
     /// photographs the window with the clip still in the hand, so the catch
-    /// and the words under it are in the picture.
-    case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier], hold: String? = nil)
+    /// and the words under it are in the picture. `tracksUp` carries it that
+    /// many tracks up as well (down when negative), the hand going over the
+    /// middle of the lane it lands on, or just over the top track or under the
+    /// bottom one when there is no lane that far, which asks for a new track.
+    case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier], hold: String? = nil,
+                  tracksUp: Int = 0)
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
     /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
@@ -4398,7 +4402,8 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .dragClip(clip: try f.string("clip"),
                              byMS: Int((try f.optionalNumber("byMS") ?? 0).rounded()),
                              modifiers: try f.modifiers(),
-                             hold: try f.optionalString("hold"))
+                             hold: try f.optionalString("hold"),
+                             tracksUp: Int((try f.optionalNumber("tracksUp") ?? 0).rounded()))
         case "dragTiming":
             let grab: PlaytestTimingGrab = if fields["grab"] == nil {
                 .body

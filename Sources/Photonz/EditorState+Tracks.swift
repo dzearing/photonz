@@ -336,9 +336,10 @@ extension EditorState {
     /// down, so a sideways slide started near the top of a lane never makes a
     /// track by accident.
     func updateClipTrackDrop(pointerY: CGFloat, travelledY: CGFloat) {
-        // Several clips carried at once stay on their own tracks: they slide
-        // in time only.
-        guard let session = clipBarDrag, case .body = session.grab, session.along.isEmpty,
+        // Several copies carried out at once with ⌥ stay on their own tracks:
+        // they slide in time only. Several clips moved go up or down together.
+        guard let session = clipBarDrag, case .body = session.grab,
+              session.along.isEmpty || session.copies.isEmpty,
               abs(travelledY) >= 8 else {
             if clipTrackDrop != nil { clipTrackDrop = nil }
             return
@@ -375,6 +376,17 @@ extension EditorState {
         if !session.copies.isEmpty { document = withDraggedClipBar(document) }
         let id = session.layerID
         let result: ClipTrackDrop?
+        if !session.along.isEmpty, session.copies.isEmpty {
+            // Several picked clips: every one goes the same number of tracks,
+            // and if any of them cannot land, none of them change track.
+            let home = document.trackID(ofClip: id).map { TrackDrop.onto($0) }
+            result = drop == home ? nil
+                : ClipTrackDrop(target: drop, allowed: document.canMoveClips(
+                    Array(session.along.keys), carrying: id, to: drop,
+                    byMS: session.landing.movedMS))
+            if clipTrackDrop != result { clipTrackDrop = result }
+            return
+        }
         switch drop {
         case .onto(let track):
             result = track == document.trackID(ofClip: id) || track == home ? nil
@@ -384,6 +396,13 @@ extension EditorState {
             result = ClipTrackDrop(target: drop, allowed: !document.isClipOnLockedTrack(id))
         }
         if clipTrackDrop != result { clipTrackDrop = result }
+    }
+
+    /// Let go of several picked clips carried onto a track with `id` in the
+    /// hand: the slide and every change of track are one step to undo.
+    func landClips(_ id: UUID, along: [UUID], movedMS: Int, on drop: ClipTrackDrop) {
+        perform { $0.moveClips(along, carrying: id, to: drop.target, byMS: movedMS) }
+        if let track = document?.trackID(ofClip: id) { selectedTrackIDs = [track] }
     }
 
     /// Let go of a clip that was carried onto a track: the slide and the change

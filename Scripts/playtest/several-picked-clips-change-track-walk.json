@@ -1,0 +1,75 @@
+{
+  "out": "/tmp/photonz-playtest/several-picked-clips-change-track-walk",
+  "seed": "Several picked clips carried up a track go together (task several-picked-clips-move-onto-another-track-tog). At Next defaults with no flag changed: a recording trimmed to six seconds on V1, a second clip after it on V1, both cut, both picked (click, then Command click), and the second carried half a second later and one track up past the top. Both land on one new track over V1, half a second later, each still with its own sound linked under it, as one undo. Carried one track DOWN, onto the sound track, the lane lights red and on letting go both only slide in time, staying on V1.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"],
+    "scratch": ["sample:recording as b-roll.mp4"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "w" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+
+    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 5.96 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
+
+    { "comment": "Cut both: the recording at 3s, b-roll at 9s.", "do": "dragClip", "clip": "Tutorial Sample" },
+    { "do": "clickRuler", "seconds": 3.0 },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "dragClip", "clip": "b-roll" },
+    { "do": "clickRuler", "seconds": 9.0 },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
+    { "do": "expectClip", "clip": "b-roll", "pieces": 2 },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+
+    { "do": "dragClip", "clip": "Tutorial Sample" },
+    { "do": "dragClip", "clip": "b-roll", "modifiers": ["command"] },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample", "b-roll"] },
+    { "do": "describe", "stage": "1-two-picked", "note": "both cut clips picked on V1, the recording with a click and b-roll with Command click" },
+    { "do": "snapshot", "name": "1-two-picked" },
+
+    { "do": "dragClip", "clip": "b-roll", "byMS": 500, "tracksUp": 1, "hold": "2-carried-up" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V2", "startsAt": 0.5, "endsAt": 6.5, "count": 1 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V2", "startsAt": 6.5, "endsAt": 14.5, "count": 1 },
+    { "do": "expectTracks", "tracks": ["V2", "V1", "Audio"] },
+    { "do": "expectWaveform", "clip": "Tutorial Sample", "within": 2 },
+    { "do": "expectWaveform", "clip": "b-roll", "within": 2 },
+    { "do": "describe", "stage": "3-both-up", "note": "THE FIRST TEST: b-roll carried half a second later and one track up past the top took the recording with it: both on a new V2 over V1, half a second later, cuts and all, each one's sound still linked on its own sound track" },
+    { "do": "snapshot", "name": "3-both-up" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+    { "do": "describe", "stage": "4-one-undo", "note": "THE SECOND TEST: one Command Z puts both back on V1 where they were and takes the new track away" },
+
+    { "do": "dragClip", "clip": "Tutorial Sample" },
+    { "do": "dragClip", "clip": "b-roll", "modifiers": ["command"] },
+    { "do": "dragClip", "clip": "Tutorial Sample", "byMS": 500, "tracksUp": -1, "hold": "5-refused-on-sound" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.5, "endsAt": 6.5, "count": 1 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.5, "endsAt": 14.5, "count": 1 },
+    { "do": "describe", "stage": "6-slid-only", "note": "THE THIRD TEST: carried down onto the Audio track, which takes no picture, the lane lit red while in the hand, and on letting go both stayed on V1 and only slid half a second later" },
+    { "do": "snapshot", "name": "6-slid-only" }
+  ]
+}

@@ -508,8 +508,18 @@ extension EditorState {
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
         case .body where !session.along.isEmpty:
-            // Several picked clips: all of them by the same amount, one step.
-            clipTrackDrop = nil
+            // Several picked clips: all of them by the same amount, and the
+            // same number of tracks up or down where they were carried there,
+            // one step.
+            if let drop = clipTrackDrop {
+                clipTrackDrop = nil
+                let along = Array(session.along.keys)
+                if drop.allowed, document?.canMoveClips(along, carrying: id, to: drop.target,
+                                                        byMS: landing.movedMS) == true {
+                    landClips(id, along: along, movedMS: landing.movedMS, on: drop)
+                    break
+                }
+            }
             guard landing.movedMS != 0 else { break }
             perform { $0.moveClips([id] + Array(session.along.keys), byMS: landing.movedMS) }
         case .body:
