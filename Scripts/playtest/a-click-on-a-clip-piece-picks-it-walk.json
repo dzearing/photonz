@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/a-click-on-a-clip-piece-picks-it-walk",
+  "seed": "A click on a piece of a cut recording picks the clip with that piece in hand, made the way a hand makes it: a real press and release posted to the window at a point on the piece's bar, at Next defaults with no flag touched. The recording is cut in two with piece 1 in hand, a click on piece 2 takes piece 2 (ring round it, Piece reads 2 of 2), a click on piece 1 takes it back. A walk's canvas `click` at the same point would hand the press to the picture under the timeline and pick nothing, which is why it fails there now.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    {
+      "comment": "One cut at 0:04 leaves piece 1 in hand. The playhead goes to 0:06, over piece 2, so the panel would follow the playhead if the pick went missing.",
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 1"] },
+    {
+      "comment": "The middle of piece 2 on V1 in the 1728x990 probe window. The canvas runs under the timeline, so a real click here is the timeline's, not the picture's.",
+      "do": "expectClickReaches",
+      "at": [1300, 894],
+      "space": "window",
+      "what": "chrome"
+    },
+    { "do": "windowClick", "at": [1300, 894] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
+    { "do": "reveal", "control": "Time section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "Piece", "reads": "2 of 2" },
+    {
+      "do": "describe",
+      "stage": "1-piece-2",
+      "note": "THE TEST: a click on the second piece's bar picked the clip with piece 2 in hand: the accent ring sits round piece 2 and Properties reads Piece 2 of 2, with the clip line running 4.0s to 8.0s, the way a click picks a clip in Premiere's timeline"
+    },
+    { "do": "snapshot", "name": "1-click-picks-piece-2" },
+    { "do": "windowClick", "at": [550, 894] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 1"] },
+    { "do": "expect", "field": "Piece", "reads": "1 of 2" },
+    {
+      "do": "describe",
+      "stage": "2-piece-1",
+      "note": "a click on the first piece takes it instead, with the playhead still over piece 2: the pick follows the click, never the playhead"
+    },
+    { "do": "snapshot", "name": "2-click-picks-piece-1" }
+  ]
+}

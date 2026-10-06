@@ -1203,6 +1203,21 @@ private final class Run {
         case .click(let at, let count, let modifiers):
             let canvas = try requireCanvas()
             let p = try viewPoint(at)
+            // The press below goes to the canvas view itself, and the canvas
+            // runs under the timeline, the panel and the tool bar. A point
+            // there is a click no hand can make: on 2026-10-05 a walk aimed at
+            // a clip piece on the timeline and the canvas took it as a click
+            // on nothing, so the clip came out unpicked while a real click
+            // picks it. A window point is how a walk aims at chrome, so one
+            // that chrome covers fails, naming the step that reaches it; any
+            // other point that chrome covers says so in the log line.
+            let (reachesCanvas, coveredBy) = try realClickTaker(at)
+            if !reachesCanvas, at.space == .window {
+                throw Failure(description: "a click at \(short(at.point)) window never reaches the picture: "
+                    + "\(coveredBy) takes a real one there. `click` hands its press to the canvas, so to "
+                    + "click the timeline, the panel or anything else over the picture use `windowClick`")
+            }
+            let covered = reachesCanvas ? "" : "a real click here goes to \(coveredBy), not the picture; "
             let flags = eventFlags(modifiers)
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
@@ -1233,7 +1248,7 @@ private final class Run {
                let event = mouseEvent(.leftMouseUp, at: p, on: canvas, flags: flags, clicks: count) { canvas.mouseUp(with: event) }
             let t2 = CACurrentMediaTime()
             await sleep(0.05)
-            let timing = (target === canvas ? "" : "landed on the open text field; ")
+            let timing = covered + (target === canvas ? "" : "landed on the open text field; ")
                 + String(format: "handler down %.1fms up %.1fms; ", (t1 - t0) * 1000, (t2 - t1) * 1000)
                 + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
@@ -8604,8 +8619,10 @@ private final class Run {
     /// driving the picture and blind to the thing asked here, so this question
     /// goes to the WINDOW and is hit tested exactly as AppKit does it for a
     /// pointer. What comes back is what a hand would get.
-    private func checkClickReaches(_ at: PlaytestPoint,
-                                   what: PlaytestClickTaker) throws -> String {
+    /// Who a real click at a point goes to, hit tested through the window as
+    /// AppKit does it for a pointer: whether it reaches the picture, and the
+    /// kind of view that takes it.
+    private func realClickTaker(_ at: PlaytestPoint) throws -> (reaches: Bool, took: String) {
         let canvas = try requireCanvas()
         let window = try requireWindow()
         // The frame view, whose coordinates ARE the window's base coordinates,
@@ -8613,10 +8630,14 @@ private final class Run {
         guard let root = window.contentView?.superview ?? window.contentView else {
             throw Failure(description: "the window has no content view")
         }
-        let inWindow = try windowPoint(at)
-        let hit = root.hitTest(inWindow)
+        let hit = root.hitTest(try windowPoint(at))
         let reaches = hit === canvas || (hit?.isDescendant(of: canvas) ?? false)
-        let took = hit.map { String(describing: type(of: $0)) } ?? "nothing at all"
+        return (reaches, hit.map { String(describing: type(of: $0)) } ?? "nothing at all")
+    }
+
+    private func checkClickReaches(_ at: PlaytestPoint,
+                                   what: PlaytestClickTaker) throws -> String {
+        let (reaches, took) = try realClickTaker(at)
         let where_ = "at \(short(at.point)) \(at.space.rawValue)"
         switch what {
         case .canvas:
