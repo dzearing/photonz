@@ -50,6 +50,14 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// A lane with sound on it is the kit's taller lane, because its level
     /// line needs somewhere to be dragged.
     var carriesSound: Bool { track.kind == .audio || clips.contains(where: \.isSound) }
+
+    /// Nothing is drawn on the lane, so it is drawn as the mock's empty slot
+    /// (`.lane.empty`), the place a clip goes. Not on a locked track, which
+    /// takes nothing and is striped as locked, and not on a Captions track,
+    /// which is filled by captioning rather than by a drop.
+    var showsEmptySlot: Bool {
+        clips.isEmpty && linked.isEmpty && inner.isEmpty && !isCaptions && !track.isLocked
+    }
 }
 
 /// One row of the dock's grid: a group's heading or a track.

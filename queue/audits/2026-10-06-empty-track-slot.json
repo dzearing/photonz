@@ -1,0 +1,45 @@
+{
+  "feature": "An empty track is drawn as the place a clip goes",
+  "epic": "video-cutting",
+  "summary": "A track with nothing on it is now the mock's dashed, striped slot instead of bare background, so a new video shows where a clip goes before you start dragging. The slot goes when a clip lands and comes back when the last one leaves.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/empty-track-slot-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "File > New Video, press Return to keep 1920 x 1080. Look at V1 and Audio on the timeline.",
+      "shot": "2026-10-06-empty-track-slot-1-empty-dark-sc.png"
+    },
+    {
+      "do": "Compare it with the mock's New video step 1 (video.html, New, empty).",
+      "shot": "2026-10-06-empty-track-slot-mock-video-new-step1.png"
+    },
+    {
+      "do": "Switch the Mac to Light appearance and look again.",
+      "shot": "2026-10-06-empty-track-slot-2-empty-light-sc.png"
+    },
+    {
+      "do": "File > Import Media, then drag the tile onto V1 and hold it there.",
+      "shot": "2026-10-06-empty-track-slot-3-tile-over-v1-sc.png"
+    },
+    {
+      "do": "Let go, then press Command Z.",
+      "shot": "2026-10-06-empty-track-slot-5-undone-sc.png"
+    },
+    {
+      "do": "Press Shift Command Z, then Add Track > Video Track.",
+      "shot": "2026-10-06-empty-track-slot-6-added-dark-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does an empty V1 read as somewhere to drop a clip before you have picked anything up?",
+    "Are the stripes quiet enough in light appearance, or do they need to be stronger?",
+    "With the drop ghost over part of the slot, do the two read as one idea?",
+    "Should a picked empty track (the blue wash on V2) still show its stripes, as it does now?"
+  ],
+  "rough": [
+    "Matches the mock's slot: dashed edge in the strong line colour, 45 degree stripes 6 points wide in the line colour at 60%, corner of 8.",
+    "The mock prints a sentence under the empty tracks ('A 1920 x 1080 timeline with no clips...'). It stays out, as it did on 2026-09-27: chrome may say a label of 30 characters at most (UX-PATTERNS §4).",
+    "While a file is held over a slot, the ghost covers only where the clip will land, its own length, and the rest of the lane keeps its stripes; the mock's step 3 lights the whole lane. The ghost's shape is from bring-in-a-second-clip-and-cut-between-clips, and this task (an-empty-track-looks-like-a-place-to-drop-a-clip) was asked to leave it unchanged.",
+    "A locked empty track keeps its locked stripes and no slot, and an empty Captions track has no slot, since neither takes a drop. No mock covers either."
+  ]
+}

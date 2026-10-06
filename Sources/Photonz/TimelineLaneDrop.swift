@@ -156,6 +156,49 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 }
 
+// MARK: - The empty slot
+
+/// A lane with nothing on it, drawn as the place a clip goes: the mock's
+/// `.lane.empty` (`video.html`, New video step 1), a dashed edge over
+/// diagonal stripes. Its dashes are the drop ghost's, so the slot and the
+/// clip about to fill it read as one idea; the ghost is solid and covers it
+/// where the clip will land.
+struct TimelineEmptySlot: View {
+    @Environment(\.colorScheme) private var colorScheme
+
+    /// `repeating-linear-gradient(45deg, transparent 6px, line 60% 6px)`:
+    /// a stripe 6 points wide every 12, measured across the stripes.
+    static let stripe: CGFloat = 6
+    /// `border-radius: var(--r2)`, a lane's corner rather than a clip's.
+    static let cornerRadius: CGFloat = 8
+
+    var body: some View {
+        let shape = RoundedRectangle(cornerRadius: Self.cornerRadius)
+        let stripes = VideoKit.Palette.line.color(colorScheme).opacity(0.6)
+        Canvas { context, size in
+            // Across the stripes is 45 degrees, so along the lane a stripe
+            // and its gap each take 6 times root 2.
+            let step = Self.stripe * 2.squareRoot()
+            var path = Path()
+            var x: CGFloat = -size.height
+            while x < size.width {
+                path.move(to: CGPoint(x: x, y: 0))
+                path.addLine(to: CGPoint(x: x + step, y: 0))
+                path.addLine(to: CGPoint(x: x + step + size.height, y: size.height))
+                path.addLine(to: CGPoint(x: x + size.height, y: size.height))
+                path.closeSubpath()
+                x += step * 2
+            }
+            context.fill(path, with: .color(stripes))
+        }
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(VideoKit.Palette.lineStrong,
+                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+        .allowsHitTesting(false)
+        .panelReadout("empty slot")
+    }
+}
+
 // MARK: - The ghost
 
 /// Where the file in the air will land, drawn on its lane the length it will

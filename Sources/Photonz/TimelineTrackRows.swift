@@ -402,6 +402,12 @@ struct TimelineTrackRow: View {
             // thing from its name to the end of its lane.
             if isHeld { heldFill.allowsHitTesting(false) }
             TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: laneHeight)
+            // An empty track says where a clip goes before anything is
+            // carried (`TimelineEmptySlot`). A carried clip lights the whole
+            // lane instead, as the mock swaps `.lane.empty` for `.lane.drop`.
+            if row.showsEmptySlot, editorState.clipTrackDrop?.target != .onto(track.id) {
+                TimelineEmptySlot()
+            }
             // A click on the bare lane puts the playhead there; a drag draws a
             // box that picks the clips it touches, or with ⌥ a range on the
             // tracks it crosses (`EditorState+TrackRange`). A clip on top

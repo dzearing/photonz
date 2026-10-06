@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/empty-track-slot-walk",
+  "seed": "An empty track is drawn as the place a clip goes (video.html, the New video on ramp, step 1: an empty V1 and Audio, each a dashed, striped slot). File > New Video shows both lanes as slots, in dark and in light. A tile dragged onto V1 still draws the drop ghost over the slot, and once it lands, with its sound on Audio, neither lane is a slot. Undo takes the clip off and the slot comes back; redo puts the clip back. A track added with Add Track on a video that already has a clip is a slot too. At Next defaults, no flag set.",
+  "setup": {
+    "forget": ["all"],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    { "do": "appearance", "value": "dark" },
+    { "do": "blankVideo", "width": 1400, "height": 900 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectTimeline", "tracks": ["V1", "Audio"], "lengthMS": 10000, "open": true },
+    { "do": "describe", "stage": "1-empty", "note": "THE FIRST TEST: a new, empty video. V1 and Audio are each drawn as a dashed, striped slot, not as bare background" },
+    { "do": "snapshot", "name": "1-empty-dark" },
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "2-empty-light" },
+    { "do": "appearance", "value": "dark" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "importPicks", "files": ["scratch/b-roll.mp4"] },
+    { "do": "action", "action": "importMedia" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectNotice", "says": "b-roll.mp4 is in the Library" },
+    { "do": "dropOnTimeline", "tile": "b-roll.mp4", "track": "V1", "seconds": 4.0, "release": false, "hold": "3-tile-over-v1" },
+    { "do": "dropOnTimeline", "tile": "b-roll.mp4", "track": "V1", "seconds": 4.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 4.0, "count": 1 },
+    { "do": "describe", "stage": "4-landed", "note": "THE SECOND TEST: the clip landed on V1 and its sound on Audio, so neither is a slot any more" },
+    { "do": "snapshot", "name": "4-landed" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "b-roll", "count": 0 },
+    { "do": "describe", "stage": "5-undone", "note": "THE THIRD TEST: undo took the clip off V1, and V1 is a slot again" },
+    { "do": "snapshot", "name": "5-undone" },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "count": 1 },
+
+    { "do": "panelMenu", "menu": "Add Track", "choose": "Video Track" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "6-added", "note": "THE FOURTH TEST: a video track added with Add Track on a video with a clip is drawn as a slot, beside V1's clip" },
+    { "do": "snapshot", "name": "6-added-dark" },
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "7-added-light" },
+    { "do": "appearance", "value": "dark" }
+  ]
+}
