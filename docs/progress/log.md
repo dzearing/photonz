@@ -20709,3 +20709,9 @@ Next: the first editor window's ~200 ms first build
 - App: `beginClipBarDrag(copying:)` in `EditorState+ClipBar.swift` (copy made at the grab, drawn in the shown document WITHOUT its sound so no row grows under the hand, landed in one perform); badge via `clipBarHover` + a key/pointer watch that re-asserts `NSCursor.dragCopy`.
 - Walk `option-drag-copies-a-clip-walk` (needs the Mac: front + dragGrip); new waitFor conditions `clipsOfOneRecording`, `clipCopyBadge`.
 - Open: overwrite vs new track for a covering copy is asked in the audit.
+
+## 2026-10-06 — shadow and glow keys
+
+- Shadow distance, direction, color, opacity and glow color, opacity are keyable values (six new `MotionProperty` cases), offered in Animate a property under Effects, with lanes, easing, copy/paste and Effects-list edits at the playhead becoming keys.
+- Tests: `ShadowGlowKeysTests`, `KeyedShadowRenderTests`, `KeyedShadowExportTests` (MP4 read back). Walk: `shadow-distance-keys-walk`. Titles now offer 12 keyable values, so three walks' counts moved.
+- Next: `keys-on-a-layer-with-several-shadows-move-the-sh` (keys reach only the first shadow; a title has two and Add Effect appends a third).
