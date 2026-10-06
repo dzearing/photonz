@@ -271,6 +271,22 @@ enum LegibilityCatalogue {
         all.append(Specimen(control: "Clip speed badge", state: "retimed", ground: .panel, inks: 2) {
             AnyView(Kit.ClipBar(title: "Intro take", kind: .video, speed: "2x").frame(width: 180))
         })
+        // A transition sits ON the two clips at a cut, so its icon is read
+        // against the band, or for a dip's outline against the clips under it.
+        for (state, dip, selected) in [("dissolve", false, false), ("dissolve picked", false, true),
+                                       ("dip", true, false)] {
+            all.append(Specimen(control: "Transition band", state: state, ground: .panel) {
+                AnyView(ZStack {
+                    HStack(spacing: 0) {
+                        Kit.ClipBar(title: "", kind: .video).frame(width: 90)
+                        Kit.ClipBar(title: "", kind: .video).frame(width: 90)
+                    }
+                    Kit.TransitionBand(isDip: dip, isSelected: selected,
+                                       height: Kit.Metrics.compactLaneHeight)
+                        .frame(width: 34)
+                })
+            })
+        }
         all.append(Specimen(control: "Timeline time capsule", state: "rest", ground: .panel) {
             AnyView(ClipPiecesBar.capsule("0:04.20", x: 0, laneWidth: 300).frame(width: 300, alignment: .leading))
         })

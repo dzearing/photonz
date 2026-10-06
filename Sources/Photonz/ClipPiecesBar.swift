@@ -323,7 +323,8 @@ struct ClipPiecesBar: View {
             .overlay(alignment: .topLeading) {
                 filmstrip(item, index: index, pieceWidth: raw, shown: shown, pictures: pictures)
             }
-            .overlay { kitFace(item, width: shown.width, hiddenLeading: max(0, -shown.x),
+            .overlay { kitFace(item, width: shown.width,
+                               hiddenLeading: max(0, -shown.x) + bandCover(pieces, piece: index, ruler: ruler),
                                pictures: pictures) }
             .frame(width: shown.width, height: barHeight)
             .overlay {
@@ -885,6 +886,17 @@ struct ClipPiecesBar: View {
         return pieces.cuts.filter { $0.drawnTransition != nil }
     }
 
+    /// How much of a piece's start a transition band covers, so its name
+    /// starts past the band rather than under it, cut off at the band's edge.
+    private func bandCover(_ pieces: ClipPieces, piece index: Int, ruler: MotionStripRuler) -> CGFloat {
+        guard kind != nil, index > 0, let cut = shownCuts(pieces).first(where: { $0.index == index }),
+              let transition = editorState.drawnClipTransition(cut, at: .join(clip: layerID, index: index))
+        else { return 0 }
+        let after = max(0, transition.lengthMS - transition.beforeMS)
+        // The grip straddles the band's edge by two points.
+        return laneWidth * ruler.fraction(spanningMS: Double(after)) + 2
+    }
+
     /// One transition, drawn across its join: a band as long as the transition
     /// is, centred on the cut, with a grip at each end to make it longer or
     /// shorter. Both ends do the same thing, because a transition is measured
@@ -897,10 +909,15 @@ struct ClipPiecesBar: View {
             let width = laneWidth * ruler.fraction(spanningMS: Double(transition.lengthMS))
             let x = x0 + laneWidth * ruler.fraction(spanningMS: Double(cut.atMS - transition.beforeMS))
             let picked = editorState.selectedClipCutIndex == cut.index && isPicked
+            let grabs = (leading: ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: transition),
+                         trailing: ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: transition))
+            let gripsFit = width >= Self.smallestGrabbablePiece
             ZStack {
                 if kind != nil {
                     VideoKit.TransitionBand(isDip: !transition.kind.needsOverlap,
-                                            isSelected: picked, height: barHeight)
+                                            isSelected: picked, height: barHeight,
+                                            leadingGrip: grabs.leading && gripsFit,
+                                            trailingGrip: grabs.trailing && gripsFit)
                 } else {
                 RoundedRectangle(cornerRadius: 3)
                     .fill(Color.accentColor.opacity(picked ? 0.55 : 0.35))
@@ -927,15 +944,14 @@ struct ClipPiecesBar: View {
                 if kind != nil { TimelineCutMenu(layerID: layerID, cut: cut.index) }
             }
             .overlay(alignment: .leading) {
-                if ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: transition) {
-                    bandGrip(cut, leading: true, width: width)
-                }
+                if grabs.leading { bandGrip(cut, leading: true, width: width) }
             }
             .overlay(alignment: .trailing) {
-                if ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: transition) {
-                    bandGrip(cut, leading: false, width: width)
-                }
+                if grabs.trailing { bandGrip(cut, leading: false, width: width) }
             }
+            // Pressable and right-clickable by a walk, as the join's grip it
+            // covers was; marked before the offset so the mark moves with it.
+            .playtestControl(Self.bandName(layerName: layerName, cut: cut.index), detail: layerName)
             .offset(x: x)
             .playtestField(Self.bandName(layerName: layerName, cut: cut.index))
             .panelHelp("\(transition.kind.title) over the join after piece \(cut.index). "
@@ -950,10 +966,14 @@ struct ClipPiecesBar: View {
     @ViewBuilder
     private func bandGrip(_ cut: ClipCut, leading: Bool, width: CGFloat) -> some View {
         if width >= Self.smallestGrabbablePiece {
+            // On the dock the band draws its own grip (`.xband .gr`), so this
+            // is only where the hand takes hold of it, straddling the edge as
+            // the grip does.
             Rectangle()
-                .fill(.white.opacity(0.85))
-                .frame(width: 3, height: barHeight - 4)
+                .fill(kind == nil ? AnyShapeStyle(.white.opacity(0.85)) : AnyShapeStyle(Color.clear))
+                .frame(width: kind == nil ? 3 : 5, height: barHeight - 4)
                 .contentShape(Rectangle().inset(by: -5))
+                .offset(x: kind == nil ? 0 : (leading ? -2 : 2))
                 .gesture(bandDrag(cut, leading: leading))
                 .playtestControl("\(Self.bandName(layerName: layerName, cut: cut.index)) "
                                  + (leading ? "start" : "end"), detail: layerName)
@@ -991,7 +1011,7 @@ struct ClipPiecesBar: View {
         let room = min(neighbourWidth(pieces, edge: edge, ruler: ruler),
                        Self.gripWidth * 3)
         let width = max(3, min(Self.gripWidth, room / 3))
-        if isPicked, room >= Self.smallestGrabbablePiece {
+        if isPicked, room >= Self.smallestGrabbablePiece, !gripHidesUnderABand(pieces, edge: edge) {
             gripFace(width: width)
                 .frame(width: width, height: barHeight)
                 .contentShape(Rectangle().inset(by: -5))
@@ -1036,6 +1056,17 @@ struct ClipPiecesBar: View {
                               ? "Where the clip ends. Drag it."
                               : "The join after piece \(edge). Drag it."))
         }
+    }
+
+    /// A join carrying a transition on the dock: the band is drawn over it,
+    /// as the mock draws `.xband` over the seam with nothing on top but its
+    /// icon, so the join's own grip would be a second mark in the middle of
+    /// it. The band picks the cut and opens its menu instead. It does not
+    /// move the cut: a band is clicked to pick it, and a click that slipped a
+    /// point would have rolled the edit.
+    private func gripHidesUnderABand(_ pieces: ClipPieces, edge: Int) -> Bool {
+        guard kind != nil, edge > 0, edge < pieces.count else { return false }
+        return shownCuts(pieces).contains { $0.index == edge }
     }
 
     /// A grip as the strip draws it (an accent capsule), or as the kit's clip

@@ -1,0 +1,47 @@
+{
+  "feature": "A transition on the timeline reads as a transition",
+  "epic": "video-transitions-motion",
+  "summary": "A transition on a cut is now the mock's band: a cyan to orange bar with a white edge, the transition icon in the middle and a grip at each end, and solid, so the clip's name no longer shows through it. The second piece's name starts just past the band instead of under it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording, put the playhead at 0:02 and press Command K.",
+      "shot": "2026-10-06-transition-band-beside-mock.png"
+    },
+    {
+      "do": "Click the clip, click the cut, and pick Cross dissolve in the picker that opens at the cut.",
+      "shot": "2026-10-06-transition-band-1-dissolve-dark-sc.png"
+    },
+    {
+      "do": "Zoom the timeline right in and look at the band across the cut.",
+      "shot": "2026-10-06-transition-band-2-zoomed-dark-sc.png"
+    },
+    {
+      "do": "Switch the Mac to Light appearance and look again.",
+      "shot": "2026-10-06-transition-band-3-zoomed-light-sc.png"
+    },
+    {
+      "do": "Click the band, then drag either end grip to make it longer."
+    },
+    {
+      "do": "Right-click the band and look at the cut's menu."
+    },
+    {
+      "do": "Change the Type to Dip to black and look at the dashed outline.",
+      "shot": "2026-10-06-transition-band-5-dip-light-sc.png"
+    }
+  ],
+  "evaluate": [
+    "At the default zoom, can you tell at a glance which cuts carry a transition?",
+    "Is the band's icon readable on both ends of the gradient, in light and in dark?",
+    "Zoomed right in, does the wide band still read as one transition, or does its grey middle look washed out?",
+    "With the join's own grip gone from under the band, do you miss being able to drag the cut there, or is Roll Edit to Playhead on the band's right-click enough?"
+  ],
+  "rough": [
+    "The band matches the mock's colour: the mock's 75% gradient is drawn over the same dark the mock's timeline has behind it, so it looks the same over any clip and nothing under it shows through.",
+    "Zoomed right in, the middle of the cyan to orange gradient is a muted grey-brown over a long stretch. It matches the mock's gradient, just drawn wide.",
+    "The join's own trim grip is no longer drawn through a band. The band picks the cut and right-clicking it opens the cut's menu, but dragging the band does not roll the edit; Roll Edit to Playhead in that menu does.",
+    "A dip's white icon sits right where the playhead usually is after you apply it, so the playhead line covers it until you move."
+  ]
+}

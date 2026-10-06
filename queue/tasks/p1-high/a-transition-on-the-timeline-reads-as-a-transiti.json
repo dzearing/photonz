@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:34:52.160Z",
-  "updated": "2026-10-06T13:35:57.810Z",
+  "updated": "2026-10-06T15:02:00.935Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/shared/components/video.css .xband (~line 95): 34px tall, radius 6, linear-gradient(90deg, rgba(18,194,233,.75), rgba(255,157,92,.75)), 1px rgba(255,255,255,.55) border, shadow-2, icon centred; .xband.blk (dip) is a dashed outline, no fill; .gr.l/.gr.r grips straddle the edges. video.html uses it on V1.\n\nApp: /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (crop the bottom 330 px): a pale translucent box at the cut with the playhead's cut marker inside, and the S of Sample Talk showing through. Find the band in the timeline clip bar code (search Sources/Photonz for the transition overlay drawn at a cut on the clip bar). Colours go through the design tokens, not new literals, and the contrast check must stay green. Searched: transition band, transition icon: only done design-system tasks.",
@@ -28,6 +28,37 @@
     {
       "t": "2026-10-06T13:35:57.809Z",
       "note": "seq 530 -> 50"
+    },
+    {
+      "t": "2026-10-06T14:07:29.723Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T14:53:05.845Z",
+      "note": "owns these walks: transition-band-reads-as-the-mock-walk, an-editing-session-walk, default-transition-key-walk, transition-edge-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-10-06T15:02:00.761Z",
+      "note": "Reproduced from an-editing-session-walk 5-dissolve-sc.png: the band was the mock's 75% gradient laid straight on the clips, so the S of the next piece's name showed through, the join's own trim grip was drawn on top of it (the 'cut marker'), and the band's grips were drawn twice (the kit's 5x16 and the clip bar's 3pt white bars)."
+    },
+    {
+      "t": "2026-10-06T15:02:00.817Z",
+      "note": "Adversarial review before building: a Premiere editor expects the transition to cover the cut with only its icon and length handles; the cut under it is reached by the rolling tool, not by dragging the transition. So the join grip is not drawn through a band; the band picks the cut, right-click opens the cut menu (which carries Roll Edit to Playhead). Tried letting a drag on the band body roll the cut: it stole the start grip's drag (transition-edge-follows-the-pointer-walk step 63 went red, green on HEAD) and a one point slip on a click would roll the edit, so dropped it. B is the Blade tool, not a cut, so the try path cuts with Command K."
+    },
+    {
+      "t": "2026-10-06T15:02:00.876Z",
+      "note": "Shipped: VideoKit.TransitionBand draws the mock's 75% gradient over a solid base of the mock's dark timeline (new Palette.transitionFrom/To/Base/Ink tokens), 12pt icon (.ic.xs), grips only on ends that can be dragged; ClipPiecesBar hides the join grip under a band, makes its band hit areas clear (one visible grip), names the band as a playtest control, and starts the following piece's name past the band. Legibility sheet now draws the band (dissolve, picked, dip) over clips. default-transition-key-walk right-clicks the band instead of the hidden join. New walk transition-band-reads-as-the-mock-walk (front: true: the join grip click only takes in the active app, same as an-editing-session-walk)."
+    },
+    {
+      "t": "2026-10-06T15:02:00.934Z",
+      "note": "left rough: transition-picker-at-a-cut-walk failed once at step 27 (picker at the cut not found) while the person was using the Mac, then passed twice on the same code and on HEAD; not reproducible, not filed. Zoomed-in band's gradient middle is muted (mock's own gradient) and a fresh dip's white icon sits under the playhead line; both in the audit, neither clears the follow-up bar."
     }
+  ],
+  "started": "2026-10-06T14:07:29.722Z",
+  "walks": [
+    "transition-band-reads-as-the-mock-walk",
+    "an-editing-session-walk",
+    "default-transition-key-walk",
+    "transition-edge-follows-the-pointer-walk"
   ]
 }

@@ -382,10 +382,18 @@ extension VideoKit {
     ///
     /// A dip is an outline rather than a fill, so the black it dips through
     /// can still be seen under it.
+    ///
+    /// The band has a solid base under the mock's 75% gradient: laid straight
+    /// on a clip, 75% let the clip's name show through and turned the two
+    /// colours to mud, so a cut with a transition on it read like one without.
     struct TransitionBand: View {
+        @Environment(\.colorScheme) private var colorScheme
         var isDip = false
         var isSelected = false
         var height: CGFloat = Metrics.laneHeight
+        /// Which ends draw a grip: an end that cannot be dragged has none.
+        var leadingGrip = true
+        var trailingGrip = true
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: 6)
@@ -395,23 +403,26 @@ extension VideoKit {
                                        style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
                 } else {
                     shape
-                        .fill(LinearGradient(colors: [rgb(0x12C2E9, 0.75), rgb(0xFF9D5C, 0.75)],
-                                             startPoint: .leading, endPoint: .trailing))
+                        .fill(Palette.transitionBase)
+                        .overlay(shape.fill(LinearGradient(colors: [Palette.transitionFrom.color(colorScheme),
+                                                      Palette.transitionTo.color(colorScheme)],
+                                             startPoint: .leading, endPoint: .trailing)))
                         .overlay(shape.strokeBorder(Color.white.opacity(0.55)))
                         .shadow(color: .black.opacity(0.4), radius: 5, y: 4)
                 }
                 TransitionGlyph()
-                    .fill(isDip ? Color.white : rgb(0x0B0D18))
-                    .frame(width: 10, height: 10)
+                    .fill(isDip ? AnyShapeStyle(Color.white) : AnyShapeStyle(Palette.transitionInk))
+                    .frame(width: 12, height: 12)
                     .shadow(color: isDip ? .black.opacity(0.9) : .clear, radius: 1, y: 1)
+                    .measuredInk()
             }
             .overlay {
                 if isSelected {
                     shape.stroke(Palette.accent, lineWidth: 2).padding(-1)
                 }
             }
-            .overlay(alignment: .leading) { grip.offset(x: -2) }
-            .overlay(alignment: .trailing) { grip.offset(x: 2) }
+            .overlay(alignment: .leading) { if leadingGrip { grip.offset(x: -2) } }
+            .overlay(alignment: .trailing) { if trailingGrip { grip.offset(x: 2) } }
             .frame(height: height)
         }
 

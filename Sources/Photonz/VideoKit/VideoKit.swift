@@ -86,6 +86,15 @@ extension VideoKit {
         /// A box you type into (`--well`): sunk below the panel, where a
         /// dropdown's face is raised above it.
         static let well = Tone(light: rgb(0xEEF0F5), dark: rgb(0x0E1015))
+        /// A transition on the timeline (`.xband`): one picture becoming
+        /// another, cyan into orange at 75%, with a dark icon on it. The mock
+        /// draws it over its dark timeline; the band carries that dark under
+        /// it as its own base, so it looks as the mock's does over any clip and
+        /// a clip's name under it never shows through.
+        static let transitionFrom = Tone(light: rgb(0x12C2E9, 0.75), dark: rgb(0x12C2E9, 0.75))
+        static let transitionTo = Tone(light: rgb(0xFF9D5C, 0.75), dark: rgb(0xFF9D5C, 0.75))
+        static let transitionBase = Tone(light: rgb(0x14161D), dark: rgb(0x14161D))
+        static let transitionInk = Tone(light: rgb(0x0B0D18), dark: rgb(0x0B0D18))
         static let glassThin = Tone(light: rgb(0xFFFFFF, 0.58), dark: rgb(0x1E222D, 0.6))
         static let glassChrome = Tone(light: rgb(0xFAFBFD, 0.88), dark: rgb(0x161922, 0.78))
         static let edgeLo = Tone(light: rgb(0x161A2A, 0.10), dark: rgb(0x000000, 0.45))

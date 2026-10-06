@@ -327,7 +327,9 @@ struct TimelineEditPointView: View {
         let width = max(6, laneWidth * ruler.fraction(spanningMS: Double(drawn.spanMS)))
         let picked = editorState.isEditPointPicked(point)
         return VideoKit.TransitionBand(isDip: !drawn.kind.needsOverlap, isSelected: picked,
-                                       height: height)
+                                       height: height,
+                                       leadingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: true, of: drawn),
+                                       trailingGrip: ClipTransitionEdgeDrag.canGrab(leadingEdge: false, of: drawn))
             .frame(width: width, height: height)
             .contentShape(Rectangle())
             .onTapGesture(count: 2) { editorState.openTransitionPicker(at: place) }

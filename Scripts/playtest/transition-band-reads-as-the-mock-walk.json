@@ -1,0 +1,219 @@
+{
+  "out": "/tmp/photonz-playtest/transition-band-reads-as-the-mock-walk",
+  "seed": "A transition on a cut is drawn the way the video mock draws .xband, at Next defaults with no flag touched: a recording is cut with Command K at two seconds, the cut is clicked and Cross dissolve picked at the cut, and the band is photographed at the default zoom and zoomed right in, in dark and in light. It is a solid cyan to orange band with a white edge, the transition icon in the middle and a grip at each end, with no join grip drawn through it and the clip's name starting past it rather than under it. A click on the band picks the cut, and a dip to black is drawn as a dashed outline so the clips under it still read.",
+  "setup": {
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "expectTimeline",
+      "playheadMS": 2000,
+      "withinMS": 40
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Tutorial Sample join 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Cross dissolve",
+      "present": true
+    },
+    {
+      "do": "press",
+      "control": "Cross dissolve",
+      "in": "At this cut"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample transition at join 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Tutorial Sample join 1",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-dissolve",
+      "note": "THE BAND: a cross dissolve on the cut, at the default zoom, drawn solid with a white edge, the transition icon in the middle and a grip at each end; no join grip through it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-dissolve-dark"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "action",
+      "action": "timelineZoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-zoomed",
+      "note": "zoomed right in: the band is wide, its icon still centred, and the second piece's name starts past the band rather than under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoomed-dark"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed-light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Tutorial Sample transition at join 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cross dissolve"
+    },
+    {
+      "do": "describe",
+      "stage": "4-picked",
+      "note": "a click on the band picks the cut it sits on: the panel talks about the cross dissolve, and the band wears the accent ring"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-picked-light"
+    },
+    {
+      "do": "action",
+      "action": "clipTransitionDipToBlack"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "describe",
+      "stage": "5-dip",
+      "note": "A DIP is the mock's dashed outline rather than a fill, so the clips under it still read"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-dip-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dip-dark"
+    }
+  ]
+}

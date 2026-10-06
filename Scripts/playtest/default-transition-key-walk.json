@@ -240,7 +240,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Tutorial Sample join 1",
+      "on": "Tutorial Sample transition at join 1",
       "shot": "7-the-cut-menu"
     },
     {
