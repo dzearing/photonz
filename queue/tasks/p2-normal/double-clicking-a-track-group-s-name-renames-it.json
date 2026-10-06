@@ -1,0 +1,32 @@
+{
+  "id": "double-clicking-a-track-group-s-name-renames-it",
+  "title": "Double-clicking a track group's name renames it without folding it",
+  "goal": "Find out whether double-clicking a track group's name on the timeline, to rename it, also folds the group and opens it again under the pointer, and stop it if so. The name of a group is both the fold button and the place you double-click to rename, so each of the two clicks may count as a fold.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:24:44.726Z",
+  "updated": "2026-10-06T05:24:48.867Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/TimelineTrackRows.swift ~1094-1112: the group header is a Button whose action is toggleTrackGroupCollapsed, with a simultaneousGesture TapGesture(count: 2) for rename. A plain Button fires once per click, so a double-click likely toggles twice. Read in the code by the 2026-10-05 22:xx manager pass, not seen on screen, hence p2 and the reproduce step. A track's own name renames on double-click without this problem (~167-170).",
+  "acceptance": [
+    "Reproduce first: at Next defaults, open a recording, add a second video track, right-click a track header > Group Track, then double-click the group's name. Write in the log whether the tracks below fold and unfold (a filmed walk or two pictures), and whether the group ends folded or open",
+    "If it does: a double-click on the group's name only starts renaming, and the group stays as it was; a single click still folds and unfolds it, as the chevron says",
+    "If it does not: the log says so with the evidence, and the task closes with no change",
+    "A walk at Next defaults double-clicks a group's name and checks the group is still open and the name field is up. Audit written under queue/audits/ if the app changed; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:24:44.728Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:24:48.866Z",
+      "note": "seq 3690 -> 1"
+    }
+  ]
+}

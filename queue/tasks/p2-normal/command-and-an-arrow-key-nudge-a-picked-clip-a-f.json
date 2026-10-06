@@ -1,0 +1,33 @@
+{
+  "id": "command-and-an-arrow-key-nudge-a-picked-clip-a-f",
+  "title": "Command and an arrow key nudge a picked clip a frame in time",
+  "goal": "Lining a clip up to a beat or a word is a frame-by-frame job. Premiere editors nudge a picked clip one frame earlier or later from the keyboard, five with Shift. Here the arrow keys always move the playhead, so the only way to shift a clip by one frame is a careful drag at high zoom.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:24:44.644Z",
+  "updated": "2026-10-06T05:24:48.980Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Keys table: Sources/PhotonzCore/TimelineKeys.swift (arrows at ~179-182 step frames only); handlers Sources/Photonz/EditorState+TimelineKeys.swift; menu rows Sources/Photonz/EditorCommands.swift (Option Shift arrows at ~995-1000 are caption timing; no Command arrow binding exists today, grep checked). Premiere's Nudge Clip Selection Left/Right: check its default Mac keyboard map before binding (recalled as Command Left/Right, Shift Command for five frames); if Premiere's Mac keys differ and are free here, use Premiere's. Reuse the move rule moveClips(byMS:) and the frame length from the document's frame rate. Found by the 2026-10-05 22:xx manager pass's key audit: no time-nudge function exists anywhere.",
+  "acceptance": [
+    "With one or more clips picked on the timeline, Command Left and Command Right move them one frame earlier or later, Shift Command five frames, each press one undo step; with nothing picked the keys do nothing",
+    "A nudge that would run into the clip next to it on the same track, or before the start, stops at the edge rather than overlapping; a clip on a locked track does not move",
+    "The Clip menu (or wherever the clip's other time commands live in the menu bar) carries Nudge Earlier and Nudge Later with those keys, dimmed with nothing picked",
+    "Plain arrows still step the playhead; Option Shift arrows still move captions; Command arrows in a text field still move the caret",
+    "Try it at Next defaults: open a recording, cut it with Command K, click the second piece, press Command Right three times and read its start in the panel. A walk does the same and reads the start before and after. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:24:44.646Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:24:48.979Z",
+      "note": "seq 3680 -> 3"
+    }
+  ]
+}

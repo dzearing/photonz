@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:43.884Z",
-  "updated": "2026-10-06T00:44:16.247Z",
+  "updated": "2026-10-06T01:12:45.856Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Read from code, not yet seen on screen (hence the reproduce step). Edit > Paste goes pasteWhatIsOnTheClipboard (Sources/Photonz/EditorState+RangeClipboard.swift:39): keys at playhead, else a ruler range at the playhead, else paste() -> pasteLayer (Sources/Photonz/EditorState+Clipboard.swift:306) which duplicates the layer with its own in/out and only steps its FRAME on the canvas (PasteCascade). So a copied clip lands over the original at the same time. Only a range drawn on the ruler pastes at the playhead (copy-cut-and-paste-a-range-of-time, done). The landing rule (free track or new track on top, linked sound under it) already exists for Add Media at Playhead (a48ef47a) — reuse it rather than writing a second one. Premiere: Command V pastes at the playhead on the targeted track (overwrite). Found by the 2026-10-05 evening manager pass's key audit.",
@@ -29,6 +29,40 @@
     {
       "t": "2026-10-06T00:44:16.246Z",
       "note": "seq 3640 -> 1"
+    },
+    {
+      "t": "2026-10-06T00:45:08.231Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T00:46:34.376Z",
+      "note": "Reproduced on the probe at Next defaults (Scripts/playtest.sh /tmp/pcp/repro.json: openSampleRecording, selectRow Tutorial Sample, Edit Copy, clickRuler 5.0, Edit Paste): the timeline after paste reads 'Tutorial Sample copy on V2 0.00s to 8.00s; Tutorial Sample on V1 0.00s to 8.00s'. So the copy lands at the original's time on a new track over it, and only its canvas frame steps (PasteCascade), not at the playhead."
+    },
+    {
+      "t": "2026-10-06T01:07:14.884Z",
+      "note": "owns these walks: paste-a-clip-at-the-playhead-walk, paste-a-clip-from-the-ruler-menu-walk"
+    },
+    {
+      "t": "2026-10-06T01:07:25.530Z",
+      "note": "Adversarial review before building: a Premiere editor expects Cmd-V at the playhead and the playhead to move to the end of what landed (both done). The mock-less gap: Premiere overwrites the targeted track; the checklist asks for its own track when free and a new track over it otherwise, so nothing already cut is covered; built that way. Captions excluded (they paste as a range). Right click on the ruler offered Paste only for a range, so it now offers it for a copied clip too (actions live where you click)."
+    },
+    {
+      "t": "2026-10-06T01:07:25.586Z",
+      "note": "Built: PhotonzDocument.pasteLanding/pasteClip (Sources/PhotonzCore/ClipPaste.swift, 11 tests in ClipPasteAtPlayheadTests), wired into pasteLayer via pasteClipAtPlayhead (EditorState+Clipboard.swift) and the ruler menu row (EditorState+RangeClipboard.swift clipOnClipboard). Walks paste-a-clip-at-the-playhead-walk and paste-a-clip-from-the-ruler-menu-walk green at Next defaults; existing paste-cascade, paste-onto-frame, pasted-layer-name, paste-hands-you-the-pointer, copy-and-paste-a-range and copy-a-range-from-its-menu walks still green."
+    },
+    {
+      "t": "2026-10-06T01:07:25.649Z",
+      "note": "left rough: a copied caption line still pastes the old way (captions go through a ruler range); kept in this log, not filed, since no one has hit it and the range path covers the job. Audit rough lines: no follow-up earned a task."
+    },
+    {
+      "t": "2026-10-06T01:12:45.854Z",
+      "note": "Cmd-V on a video lays a copied clip in at the playhead (own track if free, else a new track over it, linked sound under it, one undo; playhead waits at its end so a second paste follows). Ruler right click offers Paste for a copied clip. Stills unchanged. Core PhotonzDocument.pasteClip with 11 tests; full suite 11414 green; walks paste-a-clip-at-the-playhead-walk and paste-a-clip-from-the-ruler-menu-walk green at Next defaults with real captures; existing paste walks green. Audit queue/audits/2026-10-05-paste-a-clip-at-the-playhead.json"
     }
-  ]
+  ],
+  "started": "2026-10-06T00:45:08.230Z",
+  "walks": [
+    "paste-a-clip-at-the-playhead-walk",
+    "paste-a-clip-from-the-ruler-menu-walk"
+  ],
+  "completed": "2026-10-06T01:12:45.855Z"
 }

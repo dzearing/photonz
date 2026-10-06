@@ -9602,3 +9602,19 @@
 {"t":"2026-10-06T04:59:41.304Z","ev":"task_walks","id":"find-out-whether-a-click-on-a-clip-piece-picks-i","walks":["a-click-on-a-clip-piece-picks-it-walk"]}
 {"t":"2026-10-06T04:59:41.363Z","ev":"task_note","id":"find-out-whether-a-click-on-a-clip-piece-picks-i"}
 {"t":"2026-10-06T04:59:46.499Z","ev":"task_done","id":"find-out-whether-a-click-on-a-clip-piece-picks-i","from":"in_progress","note":"The app was never at fault: a real click posted to the window on piece 2 picks the clip with piece 2 in hand. Only the walk's canvas click failed, because it hands the press to the canvas under the timeline. Fixed in the harness: a click step at a window point covered by chrome now fails, naming windowClick, and a covered point in any other space says so in the log; documented under click in docs/design/playtest-harness.md. New walk a-click-on-a-clip-piece-picks-it-walk (no flags) picks piece 2 then piece 1 with real clicks; it, the 5 walks that click at window or view points, and Scripts/test.sh all pass. Commit d0d6de4b."}
+{"t":"2026-10-06T05:17:36.099Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":900,"of":766,"rotating":true}
+{"t":"2026-10-06T05:24:04.224Z","ev":"task_created","id":"a-shadow-s-offset-colour-and-softness-and-a-glow","priority":"p2-normal","title":"A shadow's offset, colour and softness and a glow's colour key like their size"}
+{"t":"2026-10-06T05:24:15.032Z","ev":"task_created","id":"a-border-s-width-and-colour-key-like-any-other-v","priority":"p2-normal","title":"A border's width and colour key like any other value"}
+{"t":"2026-10-06T05:24:28.017Z","ev":"task_created","id":"several-picked-clips-move-onto-another-track-tog","priority":"p2-normal","title":"Several picked clips move onto another track together"}
+{"t":"2026-10-06T05:24:44.648Z","ev":"task_created","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f","priority":"p2-normal","title":"Command and an arrow key nudge a picked clip a frame in time"}
+{"t":"2026-10-06T05:24:44.730Z","ev":"task_created","id":"double-clicking-a-track-group-s-name-renames-it","priority":"p2-normal","title":"Double-clicking a track group's name renames it without folding it"}
+{"t":"2026-10-06T05:24:48.868Z","ev":"task_resequenced","id":"double-clicking-a-track-group-s-name-renames-it","from":3690,"to":1}
+{"t":"2026-10-06T05:24:48.925Z","ev":"task_resequenced","id":"several-picked-clips-move-onto-another-track-tog","from":3670,"to":2}
+{"t":"2026-10-06T05:24:48.981Z","ev":"task_resequenced","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f","from":3680,"to":3}
+{"t":"2026-10-06T05:24:49.038Z","ev":"task_resequenced","id":"a-shadow-s-offset-colour-and-softness-and-a-glow","from":3650,"to":4}
+{"t":"2026-10-06T05:24:49.093Z","ev":"task_resequenced","id":"a-border-s-width-and-colour-key-like-any-other-v","from":3660,"to":5}
+{"t":"2026-10-06T05:25:11.179Z","ev":"objectives_updated","by":"manager","change":"video-editing success, focus workflow and video-audio/video-beats-premiere success lists now say captions are written on demand with Add Captions, matching the user ask of 2026-09-28 (captions-only-when-you-ask-for-them); they had still said captions write themselves"}
+{"t":"2026-10-06T05:25:21.593Z","ev":"task_created","id":"the-editing-session-walk-adds-captions-the-way-a","priority":"p2-normal","title":"The editing session walk adds captions the way a person does"}
+{"t":"2026-10-06T05:25:21.670Z","ev":"task_resequenced","id":"the-editing-session-walk-adds-captions-the-way-a","from":3650,"to":6}
+{"t":"2026-10-06T05:25:21.725Z","ev":"task_walks","id":"the-editing-session-walk-adds-captions-the-way-a","walks":["an-editing-session-walk"]}
+{"t":"2026-10-06T05:25:57.324Z","ev":"manager","filed":6,"readyBefore":2,"readyAfter":7,"report":"queue/manager/2026-10-05-2225.md"}

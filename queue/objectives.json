@@ -71,7 +71,7 @@
             "Every Premiere key on the gap report does its Premiere job on a video document straight after it opens, with no click first: J K L, I O, M, B, V, Q W, apostrophe and semicolon, = - and backslash, S, Command K, Shift Delete, and a default transition key",
             "The five minute workflow takes no more presses than Premiere: removing a marked stretch is at most three presses (I, O, one key), and the whole cut to ninety seconds is under 40 presses and drags",
             "On a five minute recording with its captions written, no press on the timeline and no frame of playback keeps the main thread busy over 50 ms",
-            "Captions for five minutes of speech write themselves in under 10 seconds on this Mac (measured 2026-09-24: about 3 s, already ahead of Premiere)",
+            "Add Captions writes the captions for five minutes of speech in under 10 seconds on this Mac (measured 2026-09-24: about 3 s, already ahead of Premiere)",
             "The ruler, playhead, clips and captions agree to the frame at every zoom, and a title, the export size and the export sheet need no restyling or guessing to come out right for sharing at 1080p"
           ]
         },
@@ -121,7 +121,7 @@
           "success": [
             "A recording's own sound is visible under its picture as an audio segment with a waveform, from the moment it opens",
             "Detach, move, trim, fade, and set the volume of any audio segment; bring in music on its own track",
-            "Captions are extracted from the speech automatically, on this Mac, land on a captions track, can be edited in place and styled, and export burned in or as SRT"
+            "Captions are extracted from the speech on this Mac when you ask for them (one Add Captions command, never on open: the user asked for this on 2026-09-28), land on a captions track, can be edited in place and styled, and export burned in or as SRT"
           ]
         },
         {
@@ -139,7 +139,7 @@
         "A Premiere or Final Cut editor can cut a 5 minute screen recording to 90 seconds, add a second clip and a music bed, a title that flies in, captions, a transition, and export MP4, without being taught, in less time than in Premiere",
         "The timeline, transport, clips, tracks, transition picker and properties match the video mocks (video.html and its video-*.html walkthroughs, comp-video.html) side by side",
         "Playback of a full-screen Retina recording never blinks or stutters",
-        "One scripted editing session (an-editing-session-walk) runs at Next defaults in every rotating check: it opens a talking recording, cuts it, adds a second clip, a transition and a title moving from A to B, lets the captions write themselves, plays the whole edit looking 30 times for a blank frame, and exports the MP4",
+        "One scripted editing session (an-editing-session-walk) runs at Next defaults in every rotating check: it opens a talking recording, cuts it, adds a second clip, a transition and a title moving from A to B, asks for captions with Add Captions, plays the whole edit looking 30 times for a blank frame, and exports the MP4",
         "Everything is reachable in Next with default settings"
       ],
       "spec": {
@@ -156,7 +156,7 @@
           "Screen Studio and ScreenFlow: a raw screen recording to a polished share in minutes, zooms that follow the pointer",
           "Photoshop, for anything drawn on the picture: a text layer moved from A to B, grown, faded and styled by dragging it, now over time"
         ],
-        "workflow": "Open a five minute talking screen recording. Cut it to about ninety seconds, add a second clip and a music bed, put in a title that moves from A to B, let the captions write themselves, add a transition at a cut, and export an MP4. Count the steps, and note every place the screen does not say what to do next."
+        "workflow": "Open a five minute talking screen recording. Cut it to about ninety seconds, add a second clip and a music bed, put in a title that moves from A to B, add captions from the speech, add a transition at a cut, and export an MP4. Count the steps, and note every place the screen does not say what to do next."
       }
     },
     {

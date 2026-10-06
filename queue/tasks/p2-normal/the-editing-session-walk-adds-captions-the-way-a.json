@@ -1,0 +1,39 @@
+{
+  "id": "the-editing-session-walk-adds-captions-the-way-a",
+  "title": "The editing session walk adds captions the way a person does",
+  "goal": "The one walk that plays a whole edit at Next defaults says the captions 'wrote themselves, nothing was pressed'. Since 2026-09-28 the app writes captions only when asked, so that line tells anyone reading the walk the wrong thing, and the walk never proves the Add Captions command a person actually uses still works inside a full edit.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:25:21.589Z",
+  "updated": "2026-10-06T05:25:21.724Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Scripts/playtest/an-editing-session-walk.json step 3 uses action captionsWriteQuietly (PlaytestHarness.swift ~3944, which calls editor.writeCaptions(quietly:) directly); seed text line 3 and note line ~52 say 'Nothing was pressed: the captions wrote themselves'. The user's ask: captions-only-when-you-ask-for-them (done 2026-09-28). objectives.json now words the focus success the same way (this pass). Find a walk step that presses a menu row or a playtest control by name (lock-safety: a by-name lookup makes the walk refuse on a locked screen; prefer the app's register of panel controls or a menu row read without opening it, see PlaytestLockSafety.swift). Walk-only change: no Sources edit expected unless the Add Captions control needs a playtest name.",
+  "acceptance": [
+    "an-editing-session-walk asks for captions through the app's own Add Captions command (the timeline's + menu, the clip's right-click Audio row, or the menu bar, whichever a first-time user meets first) instead of the harness's quiet step, and waits for them",
+    "Its seed and step notes say captions were asked for, and no longer say they wrote themselves",
+    "The walk still runs green at Next defaults with its 7 real pictures, within the rotating check's time, and still fails on a blank frame",
+    "Anything left rough is written into this task's log, or filed as a follow-up task if it clears the follow-up bar"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:25:21.591Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:25:21.668Z",
+      "note": "seq 3650 -> 6"
+    },
+    {
+      "t": "2026-10-06T05:25:21.723Z",
+      "note": "owns these walks: an-editing-session-walk"
+    }
+  ],
+  "walks": [
+    "an-editing-session-walk"
+  ]
+}

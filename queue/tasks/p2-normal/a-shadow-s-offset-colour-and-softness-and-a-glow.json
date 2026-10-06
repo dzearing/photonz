@@ -1,0 +1,33 @@
+{
+  "id": "a-shadow-s-offset-colour-and-softness-and-a-glow",
+  "title": "A shadow's offset, colour and opacity and a glow's colour key like their size",
+  "goal": "An editor animating a title wants its shadow to drift, darken or soften, or its glow to change colour, over time. Today only the size of a shadow or glow can take keys; the rest of their settings stay fixed for the whole clip, so a title cannot, say, lift off the page with a growing shadow offset.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:24:04.220Z",
+  "updated": "2026-10-06T05:24:49.037Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Success list of video-transitions-motion: 'Any animatable value (transform, opacity, effects, text, volume) can be keyframed'. Today Layer.keyableProperties (Sources/PhotonzCore/PropertyKeys.swift ~224) lists position, scale, rotation, opacity, cornerRadius, strokeWidth, color, blur, shadow (size only), glow (size only), textSize, crop edges, volume. Missing here: shadow offset, colour, opacity; glow colour, opacity. MotionProperty lives in Sources/PhotonzCore/LayerMotion.swift; key lanes in Sources/Photonz/KeyLanesView.swift; panel list in Sources/Photonz/PropertyKeysInspector.swift; renderer DocumentRenderer applies effects. The same gap was logged as under the bar on keyframe-anything-and-see-and-shape-the-keys-on ('only glow size is keyable, not its colour, softness or strength'); this 2026-10-05 22:xx pass found it again, so it is filed now. TDD in PhotonzCore first (interpolating a colour and an offset). Border keys are the follow-on task a-border-s-width-and-colour-key-like-any-other-v.",
+  "acceptance": [
+    "On a layer with a drop shadow, + Animate a property offers the shadow's distance (or X and Y offset), colour and opacity, and a glow's colour and opacity; each keys with a diamond, shows in its own lane under the track, and takes easing from right-click like any other key",
+    "Changing one of those values in the Effects section at a second moment, with that value keyed, adds a key; the picture between keys moves smoothly, colour included, checked by a render test, and an exported MP4 read back shows the in-between value",
+    "Copy Keys and Paste Keys carry these keys to another layer that has the same effect",
+    "Try it at Next defaults with no flag changed: open a recording, press T and type a title, add a Drop Shadow, + Animate a property > Shadow distance, set 2 at 0:01 and 30 at 0:03, play. A walk does the same and photographs the panel and the picture at both keys",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:24:04.222Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:24:49.036Z",
+      "note": "seq 3650 -> 4"
+    }
+  ]
+}

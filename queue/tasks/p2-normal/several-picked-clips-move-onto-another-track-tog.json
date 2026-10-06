@@ -1,0 +1,33 @@
+{
+  "id": "several-picked-clips-move-onto-another-track-tog",
+  "title": "Several picked clips move onto another track together",
+  "goal": "An editor who picks two or three clips and drags them up a track, to lay b-roll over the talk or move a group onto its own row, expects them all to go. Today a drag of several picked clips only slides them along in time; dragging one clip onto another track works, several does not, and nothing on screen says why.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:24:28.013Z",
+  "updated": "2026-10-06T05:24:48.924Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/EditorState+ClipBar.swift ~510: `case .body where !session.along.isEmpty` clears clipTrackDrop and only calls moveClips(byMS:). The single-clip path uses landClip(_:atInMS:moved:on:) with the ClipTrackDrop from the drag (EditorState+Tracks.swift ~336, 389). Needs a core move that shifts several layers by a track delta (PhotonzCore, test first: track index offset per clip, kinds checked, locked tracks refused). Premiere and Final Cut both move a multi-selection across tracks. Found by the 2026-10-05 22:xx manager pass reading the drag code, not on screen, hence the reproduce step.",
+  "acceptance": [
+    "Reproduce first: pick two clips on V1 (Command click), drag one of them up onto V2 or the space above the top track, and write in the log what happens today",
+    "Several picked clips dragged up or down move together by the same number of tracks and the same time, as one undo step; a new track is made over the top when the drag goes above it, the way a single clip's drop does",
+    "A clip whose target track is locked, or the wrong kind (picture onto an audio track), stops the whole move from changing track and the drop shows the same not-allowed cue a single clip shows; the clips still slide in time",
+    "Each clip's linked sound stays linked and follows its picture",
+    "Try it at Next defaults: open a recording, Add Media at Playhead for a second clip, cut both, Command click two pieces, drag them up a track. A walk does the same and reads which track each clip landed on. Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:24:28.015Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:24:48.923Z",
+      "note": "seq 3670 -> 2"
+    }
+  ]
+}

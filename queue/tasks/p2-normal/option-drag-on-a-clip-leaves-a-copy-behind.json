@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:43.983Z",
-  "updated": "2026-10-06T00:44:16.303Z",
+  "updated": "2026-10-06T02:35:10.667Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Lane press: TimelineTrackRows.swift:965-990 uses Option to start a range on empty space (drawsRange). Clip bar drag: Sources/PhotonzCore/ClipBarDrag.swift + Sources/Photonz/EditorState+ClipBar.swift have no modifier handling at all (grep option/modifierFlags finds nothing). Option-copy already exists on the canvas and in key lanes; match its cursor. Duplicate (Command J) already exists in the clip menu (EditorState+TimelineMenus.swift:213) for the copy itself. Found by the 2026-10-05 evening manager pass's key audit.",
@@ -29,6 +29,35 @@
     {
       "t": "2026-10-06T00:44:16.302Z",
       "note": "seq 3650 -> 2"
+    },
+    {
+      "t": "2026-10-06T01:27:45.128Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T02:34:50.755Z",
+      "note": "owns these walks: option-drag-copies-a-clip-walk"
+    },
+    {
+      "t": "2026-10-06T02:34:50.812Z",
+      "note": "Before building: after a split the clip is ONE layer of two pieces, so Option on a piece has to copy that piece as a clip of its own (an editor sees each stretch between cuts as a clip). A copy that lands over something on its own track would put two clips on one moment of one track, which no editor allows, so it goes up onto a new track over it, the rule paste-at-playhead landed today. On the timeline the split key is Command K (B picks the Blade, Premiere's way), so the audit says Command K, not the B the task text assumed."
+    },
+    {
+      "t": "2026-10-06T02:34:50.869Z",
+      "note": "Built: core ClipDragCopy.swift (clipDragCopy, placeClipCopy, liftClipsOffOverlaps with a track id derived from the copy so preview and drop share one row) + 15 tests; EditorState+ClipBar copy session (made at the grab, drawn in the shown document, landed as one perform), copy badge via playtestHover plus a flagsChanged/mouse watch that re-asserts NSCursor.dragCopy, which other views reset in the same turn. The copy's preview carries no sound: its sound needed a new bottom row, the dock grows upward, and the rows slid under the hand and aimed the drop at another track (found in the walk's mid-drag capture). New walk claims: waitFor clipsOfOneRecording / clipCopyBadge."
+    },
+    {
+      "t": "2026-10-06T02:34:50.923Z",
+      "note": "left rough (no task, below the bar or covered by the audit's evaluate questions): overwrite vs new track for a covering copy is the user's call in the audit; the copy's sound shows only on let go; Option-drag of several picked clips is built (each gets a copy) but no walk drives it; a copied piece keeps its clip's animated keyframes on the layer's own clock, untested for a piece copied from late in a clip."
+    },
+    {
+      "t": "2026-10-06T02:35:10.665Z",
+      "note": "Option-drag on a timeline clip (or one piece of a cut clip) carries out a copy and leaves the original; covering copies go onto a new track over their own; copy badge on the pointer; one undo. Core ClipDragCopy.swift + 15 tests, app EditorState+ClipBar. Verified: option-drag-copies-a-clip-walk green at Next defaults with real pointer (two clips of one recording, badge reads dragCopy, undo back to one); marquee-and-track-range, bar-end-follows-the-pointer, cut-on-the-timeline, a-clip-shows-where-it-will-land, paste-a-clip-at-the-playhead walks green; Scripts/test.sh 11432 tests green. Audit queue/audits/2026-10-05-option-drag-copies-a-clip.json. Commit 722d93a5."
     }
-  ]
+  ],
+  "started": "2026-10-06T01:27:45.127Z",
+  "walks": [
+    "option-drag-copies-a-clip-walk"
+  ],
+  "completed": "2026-10-06T02:35:10.666Z"
 }

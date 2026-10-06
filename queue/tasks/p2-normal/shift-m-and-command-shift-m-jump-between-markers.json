@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:44.086Z",
-  "updated": "2026-10-06T00:44:16.358Z",
+  "updated": "2026-10-06T03:06:54.454Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Timeline keys: Sources/PhotonzCore/TimelineKeys.swift (M -> .addMarker at :201); carried out in Sources/Photonz/EditorState+TimelineKeys.swift; menu rows in Sources/Photonz/EditorCommands.swift. Shift M today is the invisible selection-cycle button in EditorView.swift:3141. Plain letters act on the timeline only while it has the keyboard, so the same gate settles the Shift M conflict: timeline first on a video, Photoshop's cycle elsewhere (memory: Photoshop shortcut parity). Premiere: Shift M next marker, Command Shift M previous marker. Found by the 2026-10-05 evening manager pass's key audit; Up/Down already jump between edit points.",
@@ -29,6 +29,33 @@
     {
       "t": "2026-10-06T00:44:16.357Z",
       "note": "seq 3660 -> 3"
+    },
+    {
+      "t": "2026-10-06T02:51:02.885Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T03:06:34.633Z",
+      "note": "owns these walks: shift-m-jumps-between-markers-walk, go-to-marker-menu-rows-walk, shift-letter-shortcut-walk"
+    },
+    {
+      "t": "2026-10-06T03:06:43.249Z",
+      "note": "Adversarial pass: Premiere editors expect Shift M / Cmd Shift M; the conflict is Photoshop's Shift M selection cycle, settled by the timeline-keyboard gate like M/I/O. Cmd Shift M has no other meaning so it works wherever the keyboard is (the file's rule for keys no tool wants). At the first/last marker the press is still swallowed so Shift M never falls through to the selection cycle."
+    },
+    {
+      "t": "2026-10-06T03:06:43.308Z",
+      "note": "left rough (no task, below the bar): ruler right-click menu has no Go to Next/Previous Marker rows, since every row there acts at the clicked moment; raised as an evaluate question in the audit instead."
+    },
+    {
+      "t": "2026-10-06T03:06:54.452Z",
+      "note": "Shift M (timeline has the keyboard) and Cmd Shift M (anywhere on a video) go to the next / previous marker; Sequence has Go to Next/Previous Marker rows with those keys, dimmed when nothing lies that way. Still images keep Shift M's selection cycle. Core tests first (TimelineKeysTests, ViewEditModeTests); walks shift-m-jumps-between-markers-walk (Next defaults), go-to-marker-menu-rows-walk, shift-letter-shortcut-walk all green; full suite 11434 tests green. Audit queue/audits/2026-10-05-shift-m-jumps-between-markers.json. Commit 185274c7."
     }
-  ]
+  ],
+  "started": "2026-10-06T02:51:02.884Z",
+  "walks": [
+    "shift-m-jumps-between-markers-walk",
+    "go-to-marker-menu-rows-walk",
+    "shift-letter-shortcut-walk"
+  ],
+  "completed": "2026-10-06T03:06:54.453Z"
 }

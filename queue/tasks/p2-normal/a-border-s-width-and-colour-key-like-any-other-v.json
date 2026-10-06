@@ -1,0 +1,35 @@
+{
+  "id": "a-border-s-width-and-colour-key-like-any-other-v",
+  "title": "A border's width and colour key like any other value",
+  "goal": "A border round a picture or a title is drawn by an effect, and none of its settings can change over time: a picture cannot grow a frame as it lands, and a title's outline cannot change colour. An editor expects to animate it like any other look.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T05:24:15.028Z",
+  "updated": "2026-10-06T05:24:49.092Z",
+  "deps": [
+    "a-shadow-s-offset-colour-and-softness-and-a-glow"
+  ],
+  "blockedBy": [],
+  "notes": "Follows a-shadow-s-offset-colour-and-softness-and-a-glow (same plumbing: new MotionProperty cases in Sources/PhotonzCore/LayerMotion.swift, Layer.keyableProperties in PropertyKeys.swift, interpolation, KeyLanesView, PropertyKeysInspector). Border is effect-owned (LayerMotion.swift ~175-179 says strokeWidth is lines/paths only); effects list UI in Sources/Photonz/EffectsListInspector.swift ~279-439; glyph stroke at DocumentRenderer.swift ~988. Success list: 'Any animatable value (transform, opacity, effects, text, volume)'.",
+  "acceptance": [
+    "On a layer with a Border effect, + Animate a property offers the border's width and colour; each keys with a diamond, has its own lane under the track, drags in time and takes easing from right-click",
+    "Between keys the border grows and changes colour smoothly on the canvas and in an exported MP4 (render test plus an export test that reads a frame back); a border that follows the letters of a title animates the same way",
+    "A line or path's own stroke width keys as before, and the two are not confused in the list (one says Border width, the other Stroke width)",
+    "Try it at Next defaults: open a recording, pick it, add a Border, + Animate a property > Border width, 0 at 0:00 and 12 at 0:01, play. A walk does the same and photographs both keys",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T05:24:15.030Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T05:24:49.091Z",
+      "note": "seq 3660 -> 5"
+    }
+  ]
+}
