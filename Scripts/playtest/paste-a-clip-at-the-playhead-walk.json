@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/paste-a-clip-at-the-playhead-walk",
+  "seed": "A copied clip pastes at the playhead, the way Premiere pastes it. At Next defaults, no flag set: the recording is picked and copied with Cmd-C (Edit, Copy: a walk cannot press a menu chord in a background app, so it runs the same command), the playhead goes to 0:05 and Cmd-V lays the copy in starting there. V1 is busy at 0:05, so it lands on a new V2 straight over it, its own sound linked under the recording's; nothing already cut moves. The playhead waits at the copy's end, so a second Cmd-V lays the next copy straight after it, on V1 where V1 is free. One undo takes a paste back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample"] },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+    { "do": "action", "action": "copy" },
+    { "do": "wait", "seconds": 0.3 },
+
+    { "do": "clickRuler", "seconds": 5.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 5000, "withinMS": 40 },
+    { "do": "action", "action": "paste" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy", "track": "V2", "startsAt": 5.0, "endsAt": 13.0, "within": 0.05, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "expectTracks", "tracks": ["V2", "V1", "Audio", "Audio 2"] },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample copy"] },
+    { "do": "expectTimeline", "playheadMS": 13000, "withinMS": 60 },
+    { "do": "describe", "stage": "1-pasted-at-the-playhead", "note": "THE FIRST TEST: Cmd-V with the playhead at 0:05 lays the copy in from 0:05 to 0:13. V1 is busy there, so it lands on a new V2 straight over the recording, covering nothing, its own sound linked on a new Audio 2. The copy is picked and the playhead waits at its end" },
+    { "do": "snapshot", "name": "1-pasted-at-the-playhead" },
+
+    { "do": "action", "action": "paste" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy 2", "track": "V1", "startsAt": 13.0, "endsAt": 21.0, "within": 0.05, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy", "track": "V2", "startsAt": 5.0, "endsAt": 13.0, "within": 0.05, "count": 1 },
+    { "do": "expectTimeline", "playheadMS": 21000, "withinMS": 60 },
+    { "do": "describe", "stage": "2-pasted-again-after-it", "note": "THE SECOND TEST: Cmd-V again lays the next copy straight after the first, at the playhead, 0:13 to 0:21, on V1 where V1 is free: not stepped across the canvas, not back at 0:00" },
+    { "do": "snapshot", "name": "2-pasted-again-after-it" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy 2", "count": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy", "track": "V2", "startsAt": 5.0, "count": 1 },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy", "count": 0 },
+    { "do": "expectTracks", "tracks": ["V1", "Audio"] },
+    { "do": "describe", "stage": "3-one-undo-each", "note": "THE THIRD TEST: one undo takes each paste back, the second paste first; after two the timeline is the recording alone again" }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "feature": "A copied clip pastes at the playhead",
+  "epic": "video-cutting",
+  "summary": "Command V on a video now puts a copied clip in at the playhead, the way Premiere does, instead of back on top of the original at its old time. Paste on the ruler's right click takes a copied clip too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Click the recording's clip on the timeline and press Command C." },
+    { "do": "Click the ruler at 0:05 and press Command V.", "shot": "2026-10-05-paste-a-clip-at-the-playhead-1-pasted-sc.png" },
+    { "do": "Press Command V again without moving the playhead.", "shot": "2026-10-05-paste-a-clip-at-the-playhead-2-again-sc.png" },
+    { "do": "Press Command Z twice." },
+    { "do": "Right click the ruler at the end of the recording and choose Paste.", "shot": "2026-10-05-paste-a-clip-at-the-playhead-3-ruler-menu-sc.png" },
+    { "do": "Open a screenshot, copy a layer and paste it: it still steps across the canvas as before." }
+  ],
+  "evaluate": [
+    "Is a new V2 over the original the right place when the clip's own track is busy at the playhead, or would you rather it covered what is there on V1, as Premiere's paste does?",
+    "Does the playhead jumping to the end of what you pasted help you lay copies end to end, or does it lose your place?",
+    "Is it clear the pasted clip is picked and ready to drag?",
+    "Is 'copy', 'copy 2' the naming you expect for pasted clips?"
+  ],
+  "rough": [
+    "No mock covers paste; it is a keyboard and right-click behaviour, so there is no frame to put it beside.",
+    "Premiere's paste covers what is on the targeted track; this one puts the copy on a new track over it when the track is busy, so nothing already cut is ever covered. That was the task's own checklist, not a guess.",
+    "A copied caption line or Captions layer still pastes the old way; captions paste through a range drawn on the ruler."
+  ]
+}

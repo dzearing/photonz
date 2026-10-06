@@ -116,10 +116,25 @@ extension EditorState {
         return true
     }
 
-    /// Paste, on the ruler's menu: the copied range, laid in where the right
-    /// click landed.
+    /// Paste, on the ruler's menu: the copied range, or a copied clip, laid
+    /// in where the right click landed.
     func pasteRangeRow(atMS ms: Int) -> MenuRow? {
-        guard rangeOnClipboard != nil else { return nil }
-        return .command("Paste", KeyClipboardKeys.paste) { self.pasteRange(atMS: ms) }
+        if rangeOnClipboard != nil {
+            return .command("Paste", KeyClipboardKeys.paste) { self.pasteRange(atMS: ms) }
+        }
+        guard clipOnClipboard else { return nil }
+        return .command("Paste", KeyClipboardKeys.paste) {
+            self.moveDocumentPlayhead(toMS: ms)
+            self.paste()
+        }
+    }
+
+    /// Whether the clipboard holds a copied clip, which ⌘V lays in at the
+    /// playhead (`pasteClipAtPlayhead`).
+    var clipOnClipboard: Bool {
+        guard let document, documentHasTime,
+              let data = NSPasteboard.general.data(forType: NSPasteboard.PasteboardType(LayerTransfer.pasteboardType)),
+              let transfer = try? JSONDecoder().decode(LayerTransfer.self, from: data) else { return false }
+        return document.pasteLanding(for: transfer.layer, fromTrack: nil, atMS: documentTimeMS) != nil
     }
 }

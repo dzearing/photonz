@@ -20694,3 +20694,10 @@ Next: the first editor window's ~200 ms first build
 - `DropdownButton.alignmentRectInsets` is zero: every AppKit dropdown had sat 4pt left of the slider column. `Dropdown` honours `.disabled`.
 - `PanelMenusAreDrawnDropdownsTests` refuses system pop-ups in the panel; 12 bare Pickers remain on its shrinking list.
 - Next: `the-tool-lens-text-style-and-component-menus-in` (those 12), `two-choice-effect-settings-are-a-segmented-contr` (p1, comp-fields says two choices are a `.seg`).
+
+## 2026-10-05 — A copied clip pastes at the playhead
+
+- Cmd-V on a video lays a copied clip in at the playhead (Premiere): on its own track where free, a new track straight over it otherwise, linked sound under it, one undo; playhead waits at its end so repeated pastes butt end to end. Stills keep the canvas cascade.
+- Core: `PhotonzDocument.pasteLanding` / `pasteClip` (`Sources/PhotonzCore/ClipPaste.swift`), tests `ClipPasteAtPlayheadTests`. App: `pasteClipAtPlayhead` in `EditorState+Clipboard.swift`; ruler right click offers Paste for a copied clip (`clipOnClipboard`).
+- Walks: `paste-a-clip-at-the-playhead-walk`, `paste-a-clip-from-the-ruler-menu-walk`.
+- Open: captions still paste only through a ruler range.

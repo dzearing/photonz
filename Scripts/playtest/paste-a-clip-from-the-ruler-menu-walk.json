@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/paste-a-clip-from-the-ruler-menu-walk",
+  "seed": "Paste on the ruler's right click takes a copied clip as well as a copied range. At Next defaults: the recording is picked and copied (Edit, Copy), the ruler's right click at the end of the recording chooses Paste, and the copy lands on the end of V1, straight after it.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "copy" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "clickRuler", "seconds": 8.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "0-ruler-menu", "note": "a walk's right click cannot put the pointer over the ruler, so the menu acts at the playhead, the ruler's own fallback; Paste is on it because a clip is on the clipboard" },
+    { "do": "rightClick", "at": [750, 860], "space": "window", "shot": "0-ruler-menu-paste", "choose": "Paste" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample copy", "track": "V1", "startsAt": 8.0, "endsAt": 16.0, "within": 0.05, "count": 1 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 8.0, "count": 1 },
+    { "do": "describe", "stage": "1-pasted-from-the-menu", "note": "Paste from the ruler's right click lays the copied clip in on the end of V1, straight after the recording" },
+    { "do": "snapshot", "name": "1-pasted-from-the-menu" }
+  ]
+}

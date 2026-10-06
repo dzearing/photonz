@@ -316,6 +316,12 @@ extension EditorState {
             return nil
         }
         guard let document else { return nil }
+        // On a video a copied clip goes in at the playhead, as Premiere
+        // pastes one, rather than back over the original at its old time.
+        if documentHasTime,
+           document.pasteLanding(for: layer, fromTrack: nil, atMS: documentTimeMS) != nil {
+            return pasteClipAtPlayhead(layer, copiedFrom: transfer.layer)
+        }
         // Each paste of one clipboard steps past the last, so pasting twice
         // leaves two copies you can see and tell apart rather than one hidden
         // exactly under the other.
@@ -335,6 +341,34 @@ extension EditorState {
         selectedLayerID = layer.id
         recordPaste(layer.id, at: layer.frame)
         return layer.id
+    }
+
+    /// A copied clip laid in at the playhead, as one step to undo: on the
+    /// track it came off where that stretch is free, else on a new one just
+    /// over it, its sound linked under it (`PhotonzDocument.pasteClip`). It
+    /// keeps its place on the canvas, since a clip at another moment is not
+    /// hidden under the one it was copied from. What landed is picked and the
+    /// playhead waits at its end, so pressing ⌘V again lays the next copy
+    /// straight after it, the way a pasted range does.
+    private func pasteClipAtPlayhead(_ layer: Layer, copiedFrom original: Layer) -> UUID? {
+        guard let document else { return nil }
+        var layer = layer
+        layer.name = LayerNaming.pastedName(of: original.name,
+                                            taken: Set(document.allLayers.map(\.name)))
+        let source = document.layer(id: original.id) != nil ? document.trackID(ofClip: original.id) : nil
+        let at = documentTimeMS
+        discardDragPreview()
+        endTrimBeforeCutting()
+        pauseDocument()
+        var landed: UUID?
+        perform { landed = $0.pasteClip(layer, fromTrack: source, atMS: at) }
+        guard let landed, let time = self.document?.layer(id: landed)?.time else { return nil }
+        selectedClipPieceIndex = nil
+        selectLayer(landed)
+        if let track = self.document?.trackID(ofClip: landed) { selectedTrackIDs = [track] }
+        scrubDocument(toMS: time.outMS)
+        documentMomentChanged()
+        return landed
     }
 
     /// `point` is where a drag let go, in canvas coordinates; nil for ⌘V,
