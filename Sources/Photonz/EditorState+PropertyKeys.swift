@@ -33,6 +33,12 @@ extension EditorState {
     /// The values it lists, keyed or not, in the mock's order.
     var keyRows: [KeyedProperty] { keyLayer?.keyableProperties ?? [] }
 
+    /// What a value's row is called on the picked layer: "Shadow 3 distance"
+    /// on a title with three shadows, so each row says which one it keys.
+    func keyTitle(_ property: KeyedProperty) -> String {
+        keyLayer.map { property.title(on: $0) } ?? property.title
+    }
+
     /// How many of them are keyed, for the header's count.
     var keyedRowCount: Int { animatingRows.count }
 

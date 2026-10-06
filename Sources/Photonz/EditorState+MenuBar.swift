@@ -81,8 +81,8 @@ extension EditorState {
            let lane = lanes.first(where: { lane in lane.keys.contains { picked.refs.contains($0.ref) } }) {
             return lane
         }
-        if case let .motion(property)? = activeKeyProperty,
-           let lane = lanes.first(where: { $0.property == property }) {
+        if case let .motion(property, effect)? = activeKeyProperty,
+           let lane = lanes.first(where: { $0.property == property && $0.effect == effect }) {
             return lane
         }
         return lanes.count == 1 ? lanes[0] : nil

@@ -13,26 +13,30 @@ extension EditorState {
     /// The keyed value the section speaks for: the one last touched when it
     /// has two keys, else a move, else the first in the panel's order that has
     /// two. Nil when nothing on the picked layer has a stretch to shape.
-    var betweenKeysProperty: MotionProperty? {
+    ///
+    /// Always a `.motion`, naming which shadow, glow or border where it is one
+    /// of those.
+    var betweenKeysProperty: KeyedProperty? {
         guard let layer = keyLayer else { return nil }
-        let moving = Set((layer.motions ?? []).filter { $0.keyframes.count > 1 }.map(\.property))
+        let moving = Set((layer.motions ?? []).filter { $0.keyframes.count > 1 }
+            .map { KeyedProperty.motion($0.property, effect: $0.effectOrdinal) })
         guard !moving.isEmpty else { return nil }
-        if case let .motion(active)? = activeKeyProperty, moving.contains(active) { return active }
-        if moving.contains(.position) { return .position }
-        for case let .motion(property) in keyRows where moving.contains(property) { return property }
-        return nil
+        if let active = activeKeyProperty, moving.contains(active) { return active }
+        if moving.contains(.motion(.position)) { return .motion(.position) }
+        return keyRows.first { moving.contains($0) }
     }
 
     /// The curve of the stretch the playhead is in.
     var betweenKeysCurve: EasingCurve? {
-        guard let layer = keyLayer, let property = betweenKeysProperty, let document else { return nil }
-        return document.stretchCurve(layerID: layer.id, property, atDocumentTimeMS: documentTimeMS)
+        guard let layer = keyLayer, case let .motion(property, effect)? = betweenKeysProperty,
+              let document else { return nil }
+        return document.stretchCurve(layerID: layer.id, property, effect: effect, atDocumentTimeMS: documentTimeMS)
     }
 
     /// The Curve dropdown, and the Animate menu's Easing: the stretch under
     /// the playhead runs on `curve`.
     func curveBetweenKeys(_ curve: EasingCurve) {
-        guard let layer = keyLayer, let property = betweenKeysProperty,
+        guard let layer = keyLayer, case let .motion(property, effect)? = betweenKeysProperty,
               let current = betweenKeysCurve, current != curve else { return }
         if let key = betweenKeysStretchKey {
             var choice = ownStretchCurves[key] ?? CustomChoice()
@@ -40,7 +44,7 @@ extension EditorState {
             ownStretchCurves[key] = choice
         }
         let time = documentTimeMS
-        perform { $0.curveStretch(layerID: layer.id, property, atDocumentTimeMS: time, curve) }
+        perform { $0.curveStretch(layerID: layer.id, property, effect: effect, atDocumentTimeMS: time, curve) }
     }
 
     /// What the Curve dropdown's Custom puts back: the stretch's own curve
@@ -54,9 +58,9 @@ extension EditorState {
 
     /// Which stretch the playhead is in, as a key for `ownStretchCurves`.
     private var betweenKeysStretchKey: String? {
-        guard let layer = keyLayer, let property = betweenKeysProperty,
+        guard let layer = keyLayer, case let .motion(property, effect)? = betweenKeysProperty,
               let stored = document?.layer(id: layer.id),
-              let motion = stored.keyedMotion(property),
+              let motion = stored.keyedMotion(property, effect: effect),
               let stretch = motion.stretch(atMS: stored.motionClockMS(atDocumentTimeMS: documentTimeMS))
         else { return nil }
         return "\(motion.id.uuidString)#\(stretch)"

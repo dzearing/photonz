@@ -421,7 +421,7 @@ private struct AnimatePropertyButton: View {
     private var picker: some View {
         let groups = PropertyPicker.groups(all: editorState.keyRows,
                                            keyed: Set(editorState.animatingRows),
-                                           query: query)
+                                           query: query, title: editorState.keyTitle)
         return VStack(alignment: .leading, spacing: 0) {
             TextField("Find a property", text: $query)
                 .textFieldStyle(.roundedBorder)
@@ -451,7 +451,9 @@ private struct AnimatePropertyButton: View {
                             .padding(.top, 8)
                             .padding(.bottom, 2)
                         ForEach(group.properties, id: \.self) { property in
-                            PickerRow(property: property) { pick(property) }
+                            PickerRow(property: property, title: editorState.keyTitle(property)) {
+                                pick(property)
+                            }
                         }
                     }
                 }
@@ -471,6 +473,9 @@ private struct AnimatePropertyButton: View {
 /// One value in the picker: its mark, its name, and what kind of number it is.
 private struct PickerRow: View {
     let property: KeyedProperty
+    /// Its name on the picked layer, which says which shadow on a title with
+    /// several (`KeyedProperty.title(on:)`).
+    let title: String
     let action: () -> Void
     @State private var isHovering = false
 
@@ -481,7 +486,7 @@ private struct PickerRow: View {
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundStyle(.tertiary)
                     .frame(width: 12)
-                Text(property.title)
+                Text(title)
                     .font(.system(size: 11))
                     .lineLimit(1)
                 Spacer(minLength: 4)
@@ -497,14 +502,14 @@ private struct PickerRow: View {
         .foregroundStyle(isHovering ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
         .background(isHovering ? AnyShapeStyle(VideoKit.Palette.accent.opacity(0.14)) : AnyShapeStyle(.clear))
         .playtestHover { isHovering = $0 }
-        .playtestControl(property.title, detail: "Animate a property")
+        .playtestControl(title, detail: "Animate a property")
     }
 
     /// The mock's `.mt`: px, %, °, dB, or colour.
     private var unit: String {
         switch property {
         case .volume: "dB"
-        case let .motion(motion):
+        case let .motion(motion, _):
             [.color, .shadowColor, .glowColor, .borderColor].contains(motion)
                 ? "color" : (MotionEntry.suffix(motion) ?? DocumentUnit.word)
         }
@@ -515,6 +520,7 @@ private struct PickerRow: View {
 private struct PropertyKeyRow: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
+    private var title: String { editorState.keyTitle(property) }
 
     @State private var isHovering = false
 
@@ -544,9 +550,9 @@ private struct PropertyKeyRow: View {
         }
         .frame(minHeight: 24)
         .contentShape(Rectangle())
-        .playtestHover("Row \(property.title)") { isHovering = $0 }
-        .playtestField(property.title)
-        .panelStartProbe(.row, owner: property.title)
+        .playtestHover("Row \(title)") { isHovering = $0 }
+        .playtestField(title)
+        .panelStartProbe(.row, owner: title)
         // The verbs for one key live where you click, the way Premiere puts
         // them on a keyframe's own menu: the diamond is the stopwatch, and
         // this is the key under the playhead.
@@ -577,9 +583,9 @@ private struct PropertyKeyRow: View {
         // Not 0: SwiftUI stops hit testing a view at no opacity at all, and a
         // click that lands a beat before the hover does must still count.
         .opacity(isHovering ? 1 : 0.001)
-        .panelHelp("Stop animating \(property.title.lowercased())")
-        .accessibilityLabel("Stop animating \(property.title.lowercased())")
-        .playtestControl("Stop Animating", detail: "Animating, \(property.title)")
+        .panelHelp("Stop animating \(title.lowercased())")
+        .accessibilityLabel("Stop animating \(title.lowercased())")
+        .playtestControl("Stop Animating", detail: "Animating, \(title)")
     }
 
     /// ‹ ◆ › and the name.
@@ -590,7 +596,7 @@ private struct PropertyKeyRow: View {
             stepButton(forward: true)
             // The value last touched reads in the key colour, the mock's
             // `.prow.sel`: it is the one the Graph link and the lanes follow.
-            Text(property.title)
+            Text(title)
                 .font(.system(size: 11, weight: isActive ? .semibold : .regular))
                 .foregroundStyle(isActive ? AnyShapeStyle(VideoKit.Palette.comp)
                                           : isKeyed ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
@@ -617,8 +623,8 @@ private struct PropertyKeyRow: View {
         .disabled(!can)
         .opacity(isKeyed ? 1 : 0)
         .panelHelp(forward ? "Next key" : "Previous key")
-        .accessibilityLabel(forward ? "Next \(property.title) key" : "Previous \(property.title) key")
-        .playtestControl(forward ? "Next Key" : "Previous Key", detail: "Animating, \(property.title)")
+        .accessibilityLabel(forward ? "Next \(title) key" : "Previous \(title) key")
+        .playtestControl(forward ? "Next Key" : "Previous Key", detail: "Animating, \(title)")
     }
 }
 
@@ -628,6 +634,7 @@ private struct PropertyKeyRow: View {
 private struct KeyDiamondButton: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
+    private var title: String { editorState.keyTitle(property) }
     let state: KeyDiamond
 
     @State private var isHovering = false
@@ -641,7 +648,7 @@ private struct KeyDiamondButton: View {
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .playtestHover("Key \(property.title)") { isHovering = $0 }
+        .playtestHover("Key \(title)") { isHovering = $0 }
         .panelHelp(help)
         .accessibilityLabel(help)
         .panelReadout(word)
@@ -658,9 +665,9 @@ private struct KeyDiamondButton: View {
 
     private var help: String {
         switch state {
-        case .dormant: "Animate \(property.title.lowercased()) from here"
-        case .betweenKeys: "Add a \(property.title.lowercased()) key here"
-        case .onKey: "Remove this \(property.title.lowercased()) key"
+        case .dormant: "Animate \(title.lowercased()) from here"
+        case .betweenKeys: "Add a \(title.lowercased()) key here"
+        case .onKey: "Remove this \(title.lowercased()) key"
         }
     }
 
@@ -679,25 +686,26 @@ private struct KeyDiamondButton: View {
 private struct PropertyKeyValue: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
+    private var title: String { editorState.keyTitle(property) }
 
     var body: some View {
         switch editorState.keyedValue(property) {
         case let .number(number)?:
-            numberBox(number, label: property.title, suffix: suffix) {
+            numberBox(number, label: title, suffix: suffix) {
                 editorState.setKeyedValue(.number($0), for: property)
             }
         case let .point(point)?:
             HStack(spacing: 4) {
-                numberBox(Double(point.x), label: "\(property.title) X", leading: "X", suffix: nil) {
+                numberBox(Double(point.x), label: "\(title) X", leading: "X", suffix: nil) {
                     editorState.setKeyedValue(.point(CGPoint(x: $0, y: point.y)), for: property)
                 }
-                numberBox(Double(point.y), label: "\(property.title) Y", leading: "Y", suffix: nil) {
+                numberBox(Double(point.y), label: "\(title) Y", leading: "Y", suffix: nil) {
                     editorState.setKeyedValue(.point(CGPoint(x: point.x, y: $0)), for: property)
                 }
             }
         case let .color(hex)?:
-            ColorWellButton(hex: hex, name: property.title,
-                            wellKey: "key-\(property.title)",
+            ColorWellButton(hex: hex, name: title,
+                            wellKey: "key-\(title)",
                             onCommit: { picked in
                 editorState.setKeyedValue(.color(picked), for: property)
                 editorState.recordRecentColor(hex: picked)
@@ -718,7 +726,7 @@ private struct PropertyKeyValue: View {
 
     private var suffix: String? {
         switch property {
-        case let .motion(motion): MotionEntry.suffix(motion)
+        case let .motion(motion, _): MotionEntry.suffix(motion)
         case .volume: "dB"
         }
     }

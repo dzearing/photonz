@@ -98,7 +98,7 @@ public enum PropertyPicker {
         switch property {
         case .volume:
             return "Levels"
-        case let .motion(motion):
+        case let .motion(motion, _):
             switch motion {
             case .position, .scale, .rotation: return "Transform"
             case .opacity, .cornerRadius, .strokeWidth, .color: return "Appearance"
@@ -111,14 +111,17 @@ public enum PropertyPicker {
     }
 
     /// What the picker offers: every value not already animating whose name
-    /// holds the query, grouped in the order the values come.
+    /// holds the query, grouped in the order the values come. `title` is what
+    /// each row is called, which on a layer with three shadows says which
+    /// (`KeyedProperty.title(on:)`), so "shadow 3" finds the third's values.
     public static func groups(all: [KeyedProperty], keyed: Set<KeyedProperty>,
-                              query: String) -> [Group] {
+                              query: String,
+                              title: (KeyedProperty) -> String = { $0.title }) -> [Group] {
         let needle = query.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         var order: [String] = []
         var members: [String: [KeyedProperty]] = [:]
         for property in all where !keyed.contains(property) {
-            if !needle.isEmpty, !property.title.lowercased().contains(needle) { continue }
+            if !needle.isEmpty, !title(property).lowercased().contains(needle) { continue }
             let title = group(property)
             if members[title] == nil { order.append(title) }
             members[title, default: []].append(property)

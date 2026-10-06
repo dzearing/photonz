@@ -116,7 +116,7 @@
     },
     {
       "do": "expect",
-      "control": "Shadow size",
+      "control": "Shadow 1 size",
       "in": "Animate a property",
       "present": true
     },
@@ -160,7 +160,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 14 properties"
+      "reads": "1 of 19 properties"
     },
     {
       "do": "action",
@@ -304,7 +304,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 14 properties"
+      "reads": "1 of 19 properties"
     },
     {
       "do": "expect",
@@ -349,7 +349,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 14 properties"
+      "reads": "1 of 19 properties"
     },
     {
       "do": "press",
@@ -485,7 +485,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 14 properties"
+      "reads": "1 of 19 properties"
     },
     {
       "do": "panel",

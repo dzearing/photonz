@@ -29,11 +29,14 @@ extension MotionProperty {
 
 extension Layer {
 
-    /// The look values keyed on this layer, in `MotionProperty.looks` order.
-    var keyedLooks: [MotionProperty] {
+    /// The look values keyed on this layer, in `MotionProperty.looks` order,
+    /// each with which shadow, glow or border it belongs to (nought for
+    /// everything else, and for the first of those).
+    var keyedLooks: [(MotionProperty, Int)] {
         guard let motions, !motions.isEmpty else { return [] }
-        let keyed = Set(motions.map(\.property))
-        return MotionProperty.looks.filter { keyed.contains($0) }
+        return MotionProperty.looks.flatMap { property in
+            Set(motions.filter { $0.property == property }.map(\.effectOrdinal)).sorted().map { (property, $0) }
+        }
     }
 }
 
@@ -52,9 +55,10 @@ extension PhotonzDocument {
             let looks = layer.keyedLooks
             guard !looks.isEmpty else { continue }
             var worn = layer
-            for property in looks {
-                guard let value = keyedValue(layerID: id, .motion(property), atDocumentTimeMS: ms) else { continue }
-                worn = property.applied(value, to: worn, authored: worn)
+            for (property, effect) in looks {
+                guard let value = keyedValue(layerID: id, .motion(property, effect: effect),
+                                             atDocumentTimeMS: ms) else { continue }
+                worn = property.applied(value, to: worn, authored: worn, effect: effect)
             }
             if worn != layer { posed.updateLayer(id: id) { $0 = worn } }
         }
@@ -93,18 +97,20 @@ extension PhotonzDocument {
         for id in layerIDs {
             guard let kept = stored[id], let was = posed[id], let after = layer(id: id) else { continue }
             var restored = after
-            var keys: [(MotionProperty, MotionValue)] = []
-            for property in kept.keyedLooks {
-                if let now = property.current(of: after), now != property.current(of: was) {
-                    keys.append((property, now))
+            var keys: [(KeyedProperty, MotionValue)] = []
+            for (property, effect) in kept.keyedLooks {
+                if let now = property.current(of: after, effect: effect),
+                   now != property.current(of: was, effect: effect) {
+                    keys.append((.motion(property, effect: effect), now))
                 }
-                if let own = kept.keyStill(property), property.current(of: restored) != property.current(of: kept) {
-                    restored = property.applied(own, to: restored, authored: restored)
+                if let own = kept.keyStill(property, effect: effect),
+                   property.current(of: restored, effect: effect) != property.current(of: kept, effect: effect) {
+                    restored = property.applied(own, to: restored, authored: restored, effect: effect)
                 }
             }
             if restored != after { updateLayer(id: id) { $0 = restored } }
             for (property, value) in keys {
-                setKeyedValue(value, layerID: id, .motion(property), atDocumentTimeMS: ms, ease: ease)
+                setKeyedValue(value, layerID: id, property, atDocumentTimeMS: ms, ease: ease)
             }
         }
     }

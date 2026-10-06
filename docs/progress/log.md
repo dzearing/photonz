@@ -20735,3 +20735,10 @@ Next: the first editor window's ~200 ms first build
 - `ClipTrackDrop` carries the refusal (asked only when refused); `clipTrackDropReading` uses it.
 - `dragClip` walk step takes `reads`; `several-picked-clips-change-track-walk` holds all three refusals and reads the words.
 - Next: nothing open from this; moving one clip of a recording up split the sound onto a new `Audio 2` lane, which is existing behaviour noted in the task log.
+
+## 2026-10-06 — Keys on several shadows move the shadow you picked
+
+- A keyed shadow, glow or border value now names which one of its kind it moves (`LayerMotion.effect`, nil = the first, so saved files read back unchanged). `KeyedProperty.motion(property, effect:)`; `title(on:)` reads "Shadow 3 distance" where a layer has several, matching the Effects list's numbering, and plain "Shadow distance" where it has one.
+- Picker, Animating rows, lanes, the between-keys curve, Effects-list edits at the playhead and canvas folds are all per shadow. Removing, dragging or inserting an Effects entry carries keys with their entry (`remapEffectMotions` in `ColorStyles.swift`); a removed entry takes its keys.
+- Tests: `KeysOnSeveralEffectsTests`. Walk: new `keys-on-a-later-shadow-walk`. A typed title wears two shadows, so titles now offer 19 keyable values and read "Shadow 1 ..." in four walks.
+- Next: nothing open from this.

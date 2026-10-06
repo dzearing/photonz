@@ -156,17 +156,17 @@ extension PhotonzDocument {
 
     /// The curve of the stretch the playhead is in, on one keyed value of a
     /// layer. Nil where that value has fewer than two keys.
-    public func stretchCurve(layerID: UUID, _ property: MotionProperty,
+    public func stretchCurve(layerID: UUID, _ property: MotionProperty, effect: Int = 0,
                              atDocumentTimeMS ms: Int) -> EasingCurve? {
-        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(property),
+        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(property, effect: effect),
               let stretch = motion.stretch(atMS: layer.motionClockMS(atDocumentTimeMS: ms)) else { return nil }
         return motion.stretchCurve(stretch)
     }
 
     /// The Curve dropdown: the stretch the playhead is in runs on `curve`.
-    public mutating func curveStretch(layerID: UUID, _ property: MotionProperty,
+    public mutating func curveStretch(layerID: UUID, _ property: MotionProperty, effect: Int = 0,
                                       atDocumentTimeMS ms: Int, _ curve: EasingCurve) {
-        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(property),
+        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(property, effect: effect),
               let stretch = motion.stretch(atMS: layer.motionClockMS(atDocumentTimeMS: ms)) else { return }
         let made = motion.curvingStretch(stretch, curve)
         updateLayer(id: layerID) { edited in

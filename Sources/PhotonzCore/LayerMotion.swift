@@ -37,8 +37,12 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// How round its corners are, in document points: the mask a picture, a
     /// clip or a box is cut out with (`LayerStyle.cornerRadius`).
     case cornerRadius
-    /// How soft and far its shadow spreads, in document points: the first
-    /// shadow in its Effects list, which a key brings in when there is none.
+    /// How soft and far its shadow spreads, in document points: one shadow
+    /// of its Effects list (`LayerMotion.effect`, the first unless it says),
+    /// and the first is brought in by a key when there is none.
+    ///
+    /// Every shadow, glow and border value below is the same: it belongs to
+    /// one entry of its kind, which the motion names.
     case shadow
     /// How big its type is, in document points. Words only.
     case textSize
@@ -103,6 +107,37 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cropRight: "Crop right"
         case .cropBottom: "Crop bottom"
         }
+    }
+
+    /// The kind of Effects list entry this value belongs to, where it belongs
+    /// to one: a layer may have several shadows, glows or borders, and a key
+    /// says which of them it moves (`LayerMotion.effect`).
+    public var effectKind: EffectKind? {
+        switch self {
+        case .shadow, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity: .shadow
+        case .glow, .glowColor, .glowOpacity: .glow
+        case .borderWidth, .borderColor: .border
+        default: nil
+        }
+    }
+
+    /// What the row is called on a layer holding `count` entries of this
+    /// value's kind, for the one at `effect` (counting from nought): a lone
+    /// shadow's distance is "Shadow distance", the third of three is "Shadow 3
+    /// distance", the name its Effects row already has (`LayerEffectRow.title`)
+    /// with the value after it.
+    public func title(effect: Int, of count: Int) -> String {
+        guard let kind = effectKind, count > 1 || effect > 0 else { return title }
+        let value: String = switch self {
+        case .shadow, .glow: "size"
+        case .shadowDistance: "distance"
+        case .shadowDirection: "direction"
+        case .shadowColor, .glowColor, .borderColor: "color"
+        case .shadowOpacity, .glowOpacity: "opacity"
+        case .borderWidth: "width"
+        default: title
+        }
+        return "\(kind.title) \(effect + 1) \(value)"
     }
 
     /// The four edges of a keyed crop.
@@ -196,8 +231,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     }
 
     /// The value this layer is wearing now, or nil where the layer has no such
-    /// property at all.
-    public func current(of layer: Layer) -> MotionValue? {
+    /// property at all. `effect` says which shadow, glow or border, counting
+    /// from nought among those of its kind; everything else ignores it.
+    public func current(of layer: Layer, effect: Int = 0) -> MotionValue? {
+        // Read only by the cases that need them: this is asked for every
+        // value a panel lists, and Position should not build three lists.
+        var shadow: ShadowStyle? { layer.style.shadows.dropFirst(effect).first }
+        var glow: GlowEffect? { layer.style.glowEffects.dropFirst(effect).first }
+        var border: BorderEffect? { layer.style.borderEffects.dropFirst(effect).first }
         switch self {
         case .position:
             return .point(layer.frame.origin)
@@ -234,31 +275,30 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             guard layer.hasRoundableCorners else { return nil }
             return .number(Double(layer.roundedCornerRadius))
         case .shadow:
-            guard let shadow = layer.style.shadows.first else { return nil }
-            return .number(Double(shadow.radius))
+            return shadow.map { .number(Double($0.radius)) }
         case .textSize:
             return layer.text.map { .number(Double($0.fontSize)) }
         case .glow:
-            return layer.style.glowEffects.first.map { .number(Double($0.size)) }
+            return glow.map { .number(Double($0.size)) }
         case .shadowDistance:
-            return layer.style.shadows.first.map { .number(Double($0.distance)) }
+            return shadow.map { .number(Double($0.distance)) }
         case .shadowDirection:
-            return layer.style.shadows.first.map { .number(Double($0.directionDegrees)) }
+            return shadow.map { .number(Double($0.directionDegrees)) }
         case .shadowColor:
-            return layer.style.shadows.first.map { .color($0.colorHex) }
+            return shadow.map { .color($0.colorHex) }
         case .shadowOpacity:
-            return layer.style.shadows.first.map { .number($0.opacity * 100) }
+            return shadow.map { .number($0.opacity * 100) }
         case .glowColor:
-            return layer.style.glowEffects.first.map { .color($0.colorHex) }
+            return glow.map { .color($0.colorHex) }
         case .glowOpacity:
-            return layer.style.glowEffects.first.map { .number($0.opacity * 100) }
+            return glow.map { .number($0.opacity * 100) }
         case .borderWidth:
-            // The first border in the Effects list. A layer with none is still
-            // offered it at nought (`keyStill`), as with a shadow's size, and a
-            // key above nought brings one in (`applied`).
-            return layer.style.borderEffects.first.map { .number(Double($0.width)) }
+            // A layer with no border is still offered the first one's width at
+            // nought (`keyStill`), as with a shadow's size, and a key above
+            // nought brings one in (`applied`).
+            return border.map { .number(Double($0.width)) }
         case .borderColor:
-            return layer.style.borderEffects.first.map { .color($0.colorHex) }
+            return border.map { .color($0.colorHex) }
         case .cropLeft, .cropTop, .cropRight, .cropBottom:
             // Nothing cut away: a keyed crop is measured from the picture as
             // it is drawn, whatever the Crop tool already took off it.
@@ -876,6 +916,15 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// with-and-without is the thing you do constantly, so it is the gesture
     /// that keeps your work.
     public var isOn: Bool
+    /// Which shadow, glow or border a value of one of those moves, counting
+    /// from nought among the layer's entries of that kind: 2 is "Shadow 3".
+    /// Nil is the first, which is every key written before a layer's second
+    /// shadow could be keyed, so those read back byte for byte the same and
+    /// keep moving the shadow they always moved (`effectOrdinal`).
+    public var effect: Int?
+
+    /// Which of its kind this moves, the first where nothing has said.
+    public var effectOrdinal: Int { max(0, effect ?? 0) }
 
     public init(id: UUID = UUID(), property: MotionProperty,
                 from: MotionValue, to: MotionValue,
@@ -883,8 +932,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                 repeats: MotionRepeat = .foreverThereAndBack, isOn: Bool = true,
                 pivot: MotionPivot? = nil, stops: [MotionStop]? = nil,
                 fromEase: KeyEase? = nil, toEase: KeyEase? = nil,
-                fromHandles: KeyHandles? = nil, toHandles: KeyHandles? = nil) {
+                fromHandles: KeyHandles? = nil, toHandles: KeyHandles? = nil,
+                effect: Int? = nil) {
         self.id = id
+        // Only a shadow, glow or border value names one of its kind, and the
+        // first is written as nothing at all.
+        self.effect = property.effectKind != nil && (effect ?? 0) > 0 ? effect : nil
         self.fromEase = fromEase
         self.toEase = toEase
         self.fromHandles = fromHandles
@@ -1261,7 +1314,7 @@ extension Layer {
         }) {
             moved = motion.property.applied(motion.value(atMS: ms, cycleMS: cycleMS),
                                             to: moved, authored: self,
-                                            magnification: magnification)
+                                            magnification: magnification, effect: motion.effectOrdinal)
         }
         return moved
     }
@@ -1278,8 +1331,11 @@ extension MotionProperty {
     /// `magnification` is how much everything containing this layer has
     /// already grown it, which is what the two lengths stated in points get
     /// multiplied by.
+    ///
+    /// `effect` is which shadow, glow or border a value of one of those moves,
+    /// counting from nought among its kind (`LayerMotion.effect`).
     func applied(_ value: MotionValue, to layer: Layer, authored: Layer,
-                 magnification: CGFloat = 1) -> Layer {
+                 magnification: CGFloat = 1, effect: Int = 0) -> Layer {
         var moved = layer
         // A growth of nought leaves nothing to draw and a growth that is not a
         // number is not one, so neither is allowed to eat the distance.
@@ -1350,17 +1406,17 @@ extension MotionProperty {
             // a picture or a clip is masked (`setRoundedCorners`).
             moved.setRoundedCorners(CGFloat(max(0, points)) * grown)
         case let (.shadow, .number(points)):
-            // The first shadow's softness. A layer with none is given one the
-            // moment the size rises above nothing, which is what keying a
-            // shadow onto a title that never had one means; at nothing it is
-            // left without one rather than carrying an invisible entry.
+            // The softness of the shadow the motion names. A layer with none
+            // is given one the moment the FIRST shadow's size rises above
+            // nothing, which is what keying a shadow onto a title that never
+            // had one means; at nothing it is left without one rather than
+            // carrying an invisible entry. A later shadow is never brought in:
+            // there is no "third" of a list with nothing in it.
             let radius = CGFloat(max(0, points)) * grown
-            var shadows = moved.style.shadows
-            if shadows.isEmpty {
-                if radius > 0 { moved.style.shadows = [ShadowStyle(radius: radius)] }
+            if moved.style.shadows.isEmpty {
+                if effect == 0, radius > 0 { moved.style.shadows = [ShadowStyle(radius: radius)] }
             } else {
-                shadows[0].radius = radius
-                moved.style.shadows = shadows
+                moved.style.updateShadow(at: effect) { $0.radius = radius }
             }
         case let (.textSize, .number(points)):
             // The type grows and so does the box it is set in, about the box's
@@ -1375,50 +1431,46 @@ extension MotionProperty {
             moved.frame = CGRect(x: box.midX - grownBox.width / 2, y: box.midY - grownBox.height / 2,
                                  width: grownBox.width, height: grownBox.height)
         case let (.glow, .number(points)):
-            // The first glow's reach. A key never brings a glow in: the row is
+            // The named glow's reach. A key never brings a glow in: the row is
             // only offered where one is already there.
-            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            guard let index = moved.style.place(of: .glow, ordinal: effect) else { break }
             moved.style.updateGlowEffect(at: index) { $0.size = CGFloat(max(0, points)) * grown }
         case let (.shadowDistance, .number(points)):
             // Thrown further the way it already points. Like the size, a key
             // never brings a shadow in on its own: these rows are offered only
             // where one is there, or where a size key has just brought one.
-            guard !moved.style.shadows.isEmpty else { break }
-            moved.style.updateShadow(at: 0) { $0.setDistance(CGFloat(max(0, points)) * grown) }
+            moved.style.updateShadow(at: effect) { $0.setDistance(CGFloat(max(0, points)) * grown) }
         case let (.shadowDirection, .number(degrees)):
             // Turned about the layer, as far away as it was. Worked out here
             // rather than with the panel's own setter, which steps a shadow
             // sitting right under its layer one point out so the dial shows
             // something: a key must not move a shadow nobody threw.
-            guard !moved.style.shadows.isEmpty else { break }
-            moved.style.updateShadow(at: 0) { shadow in
+            moved.style.updateShadow(at: effect) { shadow in
                 let distance = shadow.distance
                 let radians = CGFloat(degrees) * .pi / 180
                 shadow.offset = CGSize(width: distance * cos(radians), height: distance * sin(radians))
             }
         case let (.shadowColor, .color(hex)):
-            guard !moved.style.shadows.isEmpty else { break }
-            moved.style.updateShadow(at: 0) { $0.colorHex = hex }
+            moved.style.updateShadow(at: effect) { $0.colorHex = hex }
         case let (.shadowOpacity, .number(percent)):
-            guard !moved.style.shadows.isEmpty else { break }
-            moved.style.updateShadow(at: 0) { $0.opacity = min(max(percent / 100, 0), 1) }
+            moved.style.updateShadow(at: effect) { $0.opacity = min(max(percent / 100, 0), 1) }
         case let (.glowColor, .color(hex)):
-            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            guard let index = moved.style.place(of: .glow, ordinal: effect) else { break }
             moved.style.updateGlowEffect(at: index) { $0.colorHex = hex }
         case let (.glowOpacity, .number(percent)):
-            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            guard let index = moved.style.place(of: .glow, ordinal: effect) else { break }
             moved.style.updateGlowEffect(at: index) { $0.opacity = min(max(percent / 100, 0), 1) }
         case let (.borderWidth, .number(points)):
-            // The first ring in the list, wherever it sits among the other
-            // effects. Magnified from above like the other lengths: a frame on
-            // a picture drawn at twice the size is twice as thick.
+            // The named ring, wherever it sits among the other effects.
+            // Magnified from above like the other lengths: a frame on a
+            // picture drawn at twice the size is twice as thick.
             let width = CGFloat(max(0, points)) * grown
-            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .border }) else {
-                // None yet: a width above nothing brings one in, INSIDE the
-                // edge, so a picture that fills the frame shows it (the frame
-                // growing round a recording as it lands). Like a shadow's size,
-                // which brings a shadow in the same way.
-                if width > 0 {
+            guard let index = moved.style.place(of: .border, ordinal: effect) else {
+                // None yet: a width above nothing brings the first one in,
+                // INSIDE the edge, so a picture that fills the frame shows it
+                // (the frame growing round a recording as it lands). Like a
+                // shadow's size, which brings a shadow in the same way.
+                if effect == 0, width > 0 {
                     moved.style.effects.insert(.border(BorderEffect(width: width, position: .inside)),
                                                at: moved.style.insertionIndex(for: .border))
                 }
@@ -1427,7 +1479,7 @@ extension MotionProperty {
             moved.style.updateBorderEffect(at: index) { $0.width = width }
         case let (.borderColor, .color(hex)):
             // Painting a ring a colour makes it flat, as the panel's well does.
-            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .border }) else { break }
+            guard let index = moved.style.place(of: .border, ordinal: effect) else { break }
             moved.style.updateBorderEffect(at: index) { $0.colorHex = hex }
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):

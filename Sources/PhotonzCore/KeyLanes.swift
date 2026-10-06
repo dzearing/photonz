@@ -46,9 +46,22 @@ public struct KeyLane: Identifiable, Hashable, Sendable {
     public let motionID: UUID
     public let property: MotionProperty
     public let keys: [LaneKey]
+    /// Which shadow, glow or border it keys (`LayerMotion.effect`).
+    public let effect: Int
+    /// What the lane is called: the panel row's name, which says which shadow
+    /// on a layer with several ("Shadow 3 distance").
+    public let title: String
 
     public var id: UUID { motionID }
-    public var title: String { property.title }
+
+    public init(motionID: UUID, property: MotionProperty, keys: [LaneKey], effect: Int = 0,
+                title: String? = nil) {
+        self.motionID = motionID
+        self.property = property
+        self.keys = keys
+        self.effect = effect
+        self.title = title ?? KeyedProperty.motion(property, effect: effect).title
+    }
 }
 
 /// A lane opened into its curve: the value over time, on the timeline's own
@@ -91,9 +104,21 @@ extension PhotonzDocument {
         laneOrder.firstIndex(of: property) ?? laneOrder.count
     }
 
-    /// The keyed values of a layer, in the panel's order.
+    /// The keyed values of a layer, in the panel's order: Shadow 1's values
+    /// before Shadow 2's, as the panel lists them.
     func laneMotions(of layer: Layer) -> [LayerMotion] {
-        keyedMotions(of: layer).sorted { Self.laneRank($0.property) < Self.laneRank($1.property) }
+        let motions = keyedMotions(of: layer)
+        guard motions.contains(where: { $0.effectOrdinal > 0 }) else {
+            return motions.sorted { Self.laneRank($0.property) < Self.laneRank($1.property) }
+        }
+        // A later shadow's values sit where the panel lists them, after the
+        // values of the shadow before it.
+        let panel = layer.keyableProperties
+        func rank(_ motion: LayerMotion) -> (Int, Int) {
+            let place = panel.firstIndex(of: .motion(motion.property, effect: motion.effectOrdinal))
+            return (place ?? panel.count, Self.laneRank(motion.property))
+        }
+        return motions.sorted { rank($0) < rank($1) }
     }
 
     /// Whether a layer has any value keyed, which is what earns its track the
@@ -139,7 +164,9 @@ extension PhotonzDocument {
                 return LaneKey(ref: KeyRef(motionID: motion.id, clockMS: key.atMS), documentMS: at,
                                ease: key.ease ?? fallback, reading: motion.property.format(key.value))
             }
-            return KeyLane(motionID: motion.id, property: motion.property, keys: keys)
+            return KeyLane(motionID: motion.id, property: motion.property, keys: keys,
+                           effect: motion.effectOrdinal, title: KeyedProperty.motion(motion.property, effect: motion.effectOrdinal)
+                               .title(on: layer))
         }
     }
 
@@ -154,14 +181,16 @@ extension PhotonzDocument {
     }
 
     private mutating func replaceMotions(layerID: UUID, _ made: [UUID: LayerMotion?],
-                                         stills: [(MotionProperty, MotionValue)] = []) {
+                                         stills: [(LayerMotion, MotionValue)] = []) {
         updateLayer(id: layerID) { edited in
             let kept = (edited.motions ?? []).compactMap { motion -> LayerMotion? in
                 guard let replacement = made[motion.id] else { return motion }
                 return replacement
             }
             edited.motions = kept.isEmpty ? nil : kept
-            for (property, value) in stills { edited.setKeyStill(property, value) }
+            for (motion, value) in stills {
+                edited.setKeyStill(motion.property, value, effect: motion.effectOrdinal)
+            }
         }
     }
 
@@ -232,14 +261,14 @@ extension PhotonzDocument {
         let hits = picked(refs, on: layer)
         guard !hits.isEmpty else { return false }
         var made: [UUID: LayerMotion?] = [:]
-        var stills: [(MotionProperty, MotionValue)] = []
+        var stills: [(LayerMotion, MotionValue)] = []
         for (motion, indices) in hits {
             var list = motion.keyframes
             let first = list[indices[0]].value
             for index in indices.sorted(by: >) { list.remove(at: index) }
             if list.isEmpty {
                 made[motion.id] = .some(nil)
-                stills.append((motion.property, first))
+                stills.append((motion, first))
             } else {
                 made[motion.id] = motion.rebuilt(from: list)
             }

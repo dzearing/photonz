@@ -703,25 +703,28 @@ extension Layer {
     /// changes behind their back leaves a shadow wearing the border's name.
     mutating func insertEffect(_ effect: LayerEffect, at index: Int) {
         let at = min(max(0, index), style.effects.count)
+        let before = style.effects
         style.effects.insert(effect, at: at)
-        remapEffectPlaces { $0 >= at ? $0 + 1 : $0 }
+        remapEffectPlaces(before: before) { $0 >= at ? $0 + 1 : $0 }
     }
 
     /// Takes an effect out of the list. Its name goes with it, and everything
     /// below it comes up a place.
     mutating func removeEffect(at index: Int) {
         guard style.effects.indices.contains(index) else { return }
+        let before = style.effects
         style.effects.remove(at: index)
-        remapEffectPlaces { $0 == index ? nil : ($0 > index ? $0 - 1 : $0) }
+        remapEffectPlaces(before: before) { $0 == index ? nil : ($0 > index ? $0 - 1 : $0) }
     }
 
     /// Drags an effect somewhere else in the list, names and all.
     mutating func moveEffect(from: Int, to: Int) {
         guard style.effects.indices.contains(from),
               style.effects.indices.contains(to), from != to else { return }
+        let before = style.effects
         let moved = style.effects.remove(at: from)
         style.effects.insert(moved, at: to)
-        remapEffectPlaces { place in
+        remapEffectPlaces(before: before) { place in
             if place == from { return to }
             if from < to { return place > from && place <= to ? place - 1 : place }
             return place >= to && place < from ? place + 1 : place
@@ -731,9 +734,31 @@ extension Layer {
     /// Rewrites every name a place in the Effects list carries — the colour
     /// bindings here and the effect-style bindings in `EffectStyles.swift` —
     /// dropping the ones the change answered with nothing.
-    private mutating func remapEffectPlaces(_ move: (Int) -> Int?) {
+    private mutating func remapEffectPlaces(before: [LayerEffect], _ move: (Int) -> Int?) {
         remapEffectStyleBindings(move)
         remapEffectColorBindings(move)
+        remapEffectMotions(before: before, move)
+    }
+
+    /// Carries every keyed shadow, glow and border value with the entry it
+    /// keys (`LayerMotion.effect`): taking Shadow 1 out makes the keyed Shadow
+    /// 3 the second shadow, and its keys go on moving it. Keys on the entry
+    /// that went go with it. A key naming an entry that was never there (the
+    /// first shadow's size, which brings one in) is left alone.
+    private mutating func remapEffectMotions(before: [LayerEffect], _ move: (Int) -> Int?) {
+        guard let motions, motions.contains(where: { $0.property.effectKind != nil }) else { return }
+        let after = style.effects
+        let kept = motions.compactMap { motion -> LayerMotion? in
+            guard let kind = motion.property.effectKind else { return motion }
+            let places = before.indices.filter { before[$0].kind == kind }
+            guard places.indices.contains(motion.effectOrdinal) else { return motion }
+            guard let now = move(places[motion.effectOrdinal]), after.indices.contains(now) else { return nil }
+            var carried = motion
+            let ordinal = after[..<now].filter { $0.kind == kind }.count
+            carried.effect = ordinal > 0 ? ordinal : nil
+            return carried
+        }
+        self.motions = kept.isEmpty ? nil : kept
     }
 
     /// Rewrites every effect COLOUR binding's place, dropping the ones the

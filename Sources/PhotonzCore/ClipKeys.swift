@@ -184,7 +184,7 @@ extension PhotonzDocument {
                 updateLayer(id: layerID) { edited in
                     let kept = (edited.motions ?? []).filter { $0.id != motion.id }
                     edited.motions = kept.isEmpty ? nil : kept
-                    edited.setKeyStill(motion.property, value)
+                    edited.setKeyStill(motion.property, value, effect: motion.effectOrdinal)
                 }
             } else {
                 var rest = list

@@ -27,15 +27,32 @@ import Foundation
 public enum KeyedProperty: Hashable, Sendable {
     /// Anything a motion can change: where it is, how big, how turned, how
     /// faded, how round, how soft, how big its type is.
-    case motion(MotionProperty)
+    ///
+    /// `effect` says which shadow, glow or border a value of one of those
+    /// belongs to, counting from nought among the layer's entries of that
+    /// kind (`LayerMotion.effect`). Everything else leaves it at nought.
+    case motion(MotionProperty, effect: Int = 0)
     /// How loud it plays, in decibels. Kept as the mixer's own level points.
     case volume
 
-    /// What its row is called.
+    /// What its row is called, with no layer to number its effects by: a
+    /// later shadow still says which it is.
     public var title: String {
         switch self {
-        case let .motion(property): property.title
+        case let .motion(property, effect): property.title(effect: effect, of: 1)
         case .volume: "Volume"
+        }
+    }
+
+    /// What its row is called on this layer: "Shadow 3 distance" where the
+    /// layer has several shadows, the name its Effects row has, and simply
+    /// "Shadow distance" where it has one.
+    public func title(on layer: Layer) -> String {
+        switch self {
+        case let .motion(property, effect):
+            let count = property.effectKind.map { kind in layer.style.effects.filter { $0.kind == kind }.count } ?? 1
+            return property.title(effect: effect, of: count)
+        case .volume: return "Volume"
         }
     }
 }
@@ -124,12 +141,12 @@ extension LayerMotion {
 
     /// A property keyed for the first time, with one key, eased `ease` when
     /// that is given (the timeline bar's Easing) and by the curve otherwise.
-    public static func keyed(_ property: MotionProperty, atMS ms: Int,
+    public static func keyed(_ property: MotionProperty, effect: Int = 0, atMS ms: Int,
                              value: MotionValue, ease: KeyEase? = nil) -> LayerMotion {
         let made = LayerMotion(property: property, from: value, to: value,
                                timing: MotionTiming(startMS: max(0, ms), durationMS: 1),
                                curve: PropertyKeys.curve, repeats: .once,
-                               pivot: property == .rotation ? .centre : nil)
+                               pivot: property == .rotation ? .centre : nil, effect: effect)
         guard let ease else { return made }
         return made.easing(key: 0, ease)
     }
@@ -225,11 +242,27 @@ extension Layer {
         var list: [KeyedProperty] = []
         if !isSoundOnly {
             let order: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
-                                           .strokeWidth, .color, .blur, .shadow, .shadowDistance,
-                                           .shadowDirection, .shadowColor, .shadowOpacity,
-                                           .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor, .textSize]
-                + MotionProperty.cropEdges
+                                           .strokeWidth, .color, .blur]
             for property in order where keyStill(property) != nil {
+                list.append(.motion(property))
+            }
+            // Each shadow, glow and border with its own values, in the order
+            // its Effects row has them: Shadow 1's five, then Shadow 2's.
+            let effects: [(EffectKind, [MotionProperty])] = [
+                (.shadow, [.shadow, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity]),
+                (.glow, [.glow, .glowColor, .glowOpacity]),
+                (.border, [.borderWidth, .borderColor]),
+            ]
+            for (kind, values) in effects {
+                let count = max(1, style.effects.filter { $0.kind == kind }.count)
+                for effect in 0..<count {
+                    for property in values where keyStill(property, effect: effect) != nil {
+                        list.append(.motion(property, effect: effect))
+                    }
+                }
+            }
+            for property in [MotionProperty.textSize] + MotionProperty.cropEdges
+            where keyStill(property) != nil {
                 list.append(.motion(property))
             }
         }
@@ -238,9 +271,11 @@ extension Layer {
     }
 
     /// What a property reads when nothing keys it: the layer's own value, or
-    /// nothing for an effect it has not got yet, which a key can bring in.
-    func keyStill(_ property: MotionProperty) -> MotionValue? {
-        if let value = property.current(of: self) { return value }
+    /// nothing for an effect it has not got yet, which a key can bring in
+    /// (only the first: there is no third shadow of a list with none).
+    func keyStill(_ property: MotionProperty, effect: Int = 0) -> MotionValue? {
+        if let value = property.current(of: self, effect: effect) { return value }
+        guard effect == 0 else { return nil }
         switch property {
         case .blur, .shadow, .borderWidth: return isSoundOnly ? nil : .number(0)
         // The colour a ring is born with (`BorderEffect`), for a ring a
@@ -250,22 +285,23 @@ extension Layer {
         }
     }
 
-    /// The motion that keys this property, if it is keyed.
-    public func keyedMotion(_ property: MotionProperty) -> LayerMotion? {
-        (motions ?? []).first { $0.property == property }
+    /// The motion that keys this property, if it is keyed: for a shadow, glow
+    /// or border value, the one keying that entry of its kind.
+    public func keyedMotion(_ property: MotionProperty, effect: Int = 0) -> LayerMotion? {
+        (motions ?? []).first { $0.property == property && $0.effectOrdinal == effect }
     }
 
     /// Writes a value as the layer's own, unkeyed. Scale has no value of its
     /// own to hold (a layer is always 100% of itself), so a still scale is the
     /// layer drawn that much larger about its middle.
-    mutating func setKeyStill(_ property: MotionProperty, _ value: MotionValue) {
+    mutating func setKeyStill(_ property: MotionProperty, _ value: MotionValue, effect: Int = 0) {
         if property == .scale {
             guard case let .number(percent) = value, percent > 0, percent != 100 else { return }
             let box = frame.standardized
             self = drawnLarger(by: CGFloat(percent) / 100, about: CGPoint(x: box.midX, y: box.midY))
             return
         }
-        self = property.applied(value, to: self, authored: self)
+        self = property.applied(value, to: self, authored: self, effect: effect)
     }
 
     /// The moment of the DOCUMENT a moment of this layer's own clock plays
@@ -314,7 +350,7 @@ extension PhotonzDocument {
     /// The moments, in the layer's own clock, this property is keyed at.
     private func keyMoments(of layer: Layer, _ property: KeyedProperty) -> [Int] {
         switch property {
-        case let .motion(motion): layer.keyedMotion(motion)?.keyframes.map(\.atMS) ?? []
+        case let .motion(motion, effect): layer.keyedMotion(motion, effect: effect)?.keyframes.map(\.atMS) ?? []
         case .volume: layer.soundLevel?.points.map(\.atMS) ?? []
         }
     }
@@ -341,8 +377,10 @@ extension PhotonzDocument {
                            atDocumentTimeMS ms: Int) -> MotionValue? {
         guard let layer = layer(id: layerID) else { return nil }
         switch property {
-        case let .motion(motion):
-            guard let keyed = layer.keyedMotion(motion) else { return layer.keyStill(motion) }
+        case let .motion(motion, effect):
+            guard let keyed = layer.keyedMotion(motion, effect: effect) else {
+                return layer.keyStill(motion, effect: effect)
+            }
             return keyed.value(atMS: keyClock(of: layer, property, atDocumentTimeMS: ms),
                                cycleMS: keyCycle(of: layer))
         case .volume:
@@ -374,11 +412,11 @@ extension PhotonzDocument {
               layer.keyableProperties.contains(property) else { return false }
         let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
         switch property {
-        case let .motion(motion):
-            guard let value = layer.keyStill(motion) else { return false }
+        case let .motion(motion, effect):
+            guard let value = layer.keyStill(motion, effect: effect) else { return false }
             updateLayer(id: layerID) { edited in
                 var motions = edited.motions ?? []
-                motions.append(.keyed(motion, atMS: clock, value: value, ease: ease))
+                motions.append(.keyed(motion, effect: effect, atMS: clock, value: value, ease: ease))
                 edited.motions = motions
             }
         case .volume:
@@ -402,11 +440,11 @@ extension PhotonzDocument {
         guard keyCount(layerID: layerID, property) > 0,
               let value = keyedValue(layerID: layerID, property, atDocumentTimeMS: ms) else { return false }
         switch property {
-        case let .motion(motion):
+        case let .motion(motion, effect):
             updateLayer(id: layerID) { edited in
-                let kept = (edited.motions ?? []).filter { $0.property != motion }
+                let kept = (edited.motions ?? []).filter { $0.property != motion || $0.effectOrdinal != effect }
                 edited.motions = kept.isEmpty ? nil : kept
-                edited.setKeyStill(motion, value)
+                edited.setKeyStill(motion, value, effect: effect)
             }
         case .volume:
             guard case let .number(decibels) = value else { return false }
@@ -439,8 +477,8 @@ extension PhotonzDocument {
         guard let layer = layer(id: layerID), layer.keyableProperties.contains(property) else { return false }
         let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
         switch property {
-        case let .motion(motion):
-            if let keyed = layer.keyedMotion(motion) {
+        case let .motion(motion, effect):
+            if let keyed = layer.keyedMotion(motion, effect: effect) {
                 let next = keyed.settingKey(atMS: clock, value: value, ease: ease)
                 updateLayer(id: layerID) { edited in
                     edited.motions = (edited.motions ?? []).map { $0.id == keyed.id ? next : $0 }
@@ -452,7 +490,7 @@ extension PhotonzDocument {
                     edited.motions = motions
                 }
             } else {
-                updateLayer(id: layerID) { $0.setKeyStill(motion, value) }
+                updateLayer(id: layerID) { $0.setKeyStill(motion, value, effect: effect) }
             }
         case .volume:
             guard case let .number(decibels) = value else { return false }
@@ -486,8 +524,8 @@ extension PhotonzDocument {
         }
         let clock = keyClock(of: layer, property, atDocumentTimeMS: ms)
         switch property {
-        case let .motion(motion):
-            guard let keyed = layer.keyedMotion(motion) else { return false }
+        case let .motion(motion, effect):
+            guard let keyed = layer.keyedMotion(motion, effect: effect) else { return false }
             let next = keyed.removingKey(atMS: clock)
             updateLayer(id: layerID) { edited in
                 edited.motions = (edited.motions ?? []).compactMap { $0.id == keyed.id ? next : $0 }
@@ -585,16 +623,18 @@ extension PhotonzDocument {
             }
             restored.transform.rotation = stored.transform.rotation
         }
-        for property in MotionProperty.looks where keyed.contains(property) {
-            guard let value = property.current(of: after), value != property.current(of: before),
-                  let old = stored.keyStill(property) else { continue }
-            keys.append((property, value))
-            restored = property.applied(old, to: restored, authored: restored)
+        var lookKeys: [(KeyedProperty, MotionValue)] = keys.map { (.motion($0.0), $0.1) }
+        for (property, effect) in after.keyedLooks {
+            guard let value = property.current(of: after, effect: effect),
+                  value != property.current(of: before, effect: effect),
+                  let old = stored.keyStill(property, effect: effect) else { continue }
+            lookKeys.append((.motion(property, effect: effect), value))
+            restored = property.applied(old, to: restored, authored: restored, effect: effect)
         }
         if restored != after { updateLayer(id: layerID) { $0 = restored } }
-        guard !keys.isEmpty else { return false }
-        for (property, value) in keys {
-            setKeyedValue(value, layerID: layerID, .motion(property), atDocumentTimeMS: ms, ease: ease)
+        guard !lookKeys.isEmpty else { return false }
+        for (property, value) in lookKeys {
+            setKeyedValue(value, layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
         }
         return true
     }
@@ -679,13 +719,13 @@ extension PhotonzDocument {
         let reading: String
         switch (property, value) {
         case let (.volume, .number(decibels)): reading = "\(MotionNumber.text(decibels)) dB"
-        case let (.motion(motion), .number(number)) where motion.isLength:
+        case let (.motion(motion, _), .number(number)) where motion.isLength:
             // The panel's own word for a length beside it, never a second one.
             reading = "\(MotionNumber.text(number)) \(DocumentUnit.word)"
-        case let (.motion(motion), value): reading = motion.format(value)
+        case let (.motion(motion, _), value): reading = motion.format(value)
         default: return nil
         }
-        return "\(property.title) \(reading)"
+        return "\(property.title(on: layer)) \(reading)"
     }
 
     /// The playhead as the bar writes it: seconds, two decimals ("4.12s").

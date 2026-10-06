@@ -591,6 +591,22 @@ extension LayerStyle {
         return effects[..<index].filter { $0.kind == .shadow }.count
     }
 
+    /// Where in the list the entry of `kind` numbered `ordinal` sits, counting
+    /// from nought among that kind: the third shadow's place, wherever the
+    /// other effects put it. Nil where there are not that many.
+    public func place(of kind: EffectKind, ordinal: Int) -> Int? {
+        guard ordinal >= 0 else { return nil }
+        return effects.indices.filter { effects[$0].kind == kind }.dropFirst(ordinal).first
+    }
+
+    /// Which of its kind the entry at `index` is, counting from nought: the
+    /// mirror of `place(of:ordinal:)`.
+    public func ordinal(ofEffect index: Int) -> Int? {
+        guard effects.indices.contains(index) else { return nil }
+        let kind = effects[index].kind
+        return effects[..<index].filter { $0.kind == kind }.count
+    }
+
     /// Where in the list a new entry of this kind belongs.
     ///
     /// A pinned kind keeps its one place at the top; everything else lands at

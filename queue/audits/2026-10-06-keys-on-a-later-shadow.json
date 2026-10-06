@@ -1,0 +1,27 @@
+{
+  "feature": "Keys on a layer with several shadows move the shadow you picked",
+  "epic": "video-transitions-motion",
+  "summary": "On a title with several shadows, glows or borders, Animate a property now names each one's values (Shadow 3 distance), and a key moves only that shadow. Before, every shadow key moved Shadow 1.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/keys-on-a-later-shadow-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording, step to 0:01, press T and type a title, then Command-Return." },
+    { "do": "In Effects, press the plus and choose Shadow, so the title has Shadow 1, 2 and 3." },
+    { "do": "In Properties, click Animate a property and pick Shadow 3 distance.", "shot": "2026-10-06-keys-on-a-later-shadow-1-picker-sc.png" },
+    { "do": "Type 2 in the Shadow 3 distance box and press Return." },
+    { "do": "Step the playhead two seconds on, then drag Shadow 3's Distance slider in the Effects list.", "shot": "2026-10-06-keys-on-a-later-shadow-3-list-keys-it-sc.png" },
+    { "do": "Scrub between 0:01 and 0:03 and watch only the third shadow move." },
+    { "do": "Take Shadow 1 out with its cross, and scrub again: the keyed shadow, now Shadow 2, keeps its keys." }
+  ],
+  "evaluate": [
+    "Does Shadow 3 distance in the picker read as the same shadow the Effects list calls Shadow 3?",
+    "Is a picker of 19 values on a plain title (two shadows of five values each) still quick to find things in, or does it want the shadows folded?",
+    "When you remove or drag a shadow in the Effects list, do its keys going with it match what you expect?",
+    "Does a title with one shadow still read simply Shadow distance, with no number?"
+  ],
+  "rough": [
+    "A typed title wears two shadows, so its picker now lists Shadow 1 and Shadow 2 values: ten shadow rows where there were five. No mock covers more than one shadow; the numbering is the Effects list's own (Shadow 1, Shadow 2).",
+    "The Animating count on a plain title went from 14 to 19 properties for the same reason.",
+    "Removing a shadow that had keys takes its keys with it, with no undo prompt beyond the usual Undo."
+  ]
+}
