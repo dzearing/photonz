@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/an-editing-session-walk",
-  "seed": "One editing session, end to end, exactly as a person running Next gets it with no flag touched: a talking screen recording opens and its captions write themselves, a stretch is cut out of the middle with Command K twice and Delete, the captions coming along with the picture so the last line ends with the recording, a second clip is let go on the end of V1, a cross dissolve goes on the jump cut from the picker at the cut, a title typed on the picture moves from A to B by keying Position and dragging it a second later, the whole edit plays through while the canvas is looked at 30 times and the walk fails if the clip area is ever empty, and the edit is written out as an MP4 with its sound. It runs in every rotating check.",
+  "seed": "One editing session, end to end, exactly as a person running Next gets it with no flag touched: a talking screen recording opens and captions are asked for from the timeline's + menu, a stretch is cut out of the middle with Command K twice and Delete, the captions coming along with the picture so the last line ends with the recording, a second clip is let go on the end of V1, a cross dissolve goes on the jump cut from the picker at the cut, a title typed on the picture moves from A to B by keying Position and dragging it a second later, the whole edit plays through while the canvas is looked at 30 times and the walk fails if the clip area is ever empty, and the edit is written out as an MP4 with its sound. It runs in every rotating check.",
   "setup": {
     "front": true,
     "forget": [
@@ -20,8 +20,13 @@
       "seconds": 0.6
     },
     {
+      "do": "panelMenu",
+      "menu": "Add Track",
+      "choose": "Captions"
+    },
+    {
       "do": "action",
-      "action": "captionsWriteQuietly"
+      "action": "captionsWaitToLand"
     },
     {
       "do": "action",
@@ -49,7 +54,7 @@
     {
       "do": "describe",
       "stage": "1-opened",
-      "note": "A 17 second screen recording with somebody talking, opened at Next defaults. Nothing was pressed: the captions wrote themselves onto one Captions track, the recording is on V1 with its sound under it"
+      "note": "A 17 second screen recording with somebody talking, opened at Next defaults. Captions asked for from the timeline's + menu, Captions, landed on one Captions track, the recording is on V1 with its sound under it"
     },
     {
       "do": "snapshot",
@@ -61,7 +66,7 @@
     },
     {
       "do": "action",
-      "action": "videoSeekMiddle"
+      "action": "videoSeekQuarter"
     },
     {
       "do": "key",
@@ -72,7 +77,7 @@
     },
     {
       "do": "action",
-      "action": "videoSeekQuarter"
+      "action": "videoSeekMiddle"
     },
     {
       "do": "key",
@@ -110,7 +115,7 @@
     {
       "do": "describe",
       "stage": "2-cut",
-      "note": "THE CUT: Command K at 0:08 and at 0:04, Premiere's Add Edit, then Delete throws the middle piece away and closes the gap. V1 is two pieces of the recording, 12.9 seconds long, and the captions came along: the lines for the words that went are gone, every later line moved up with its words, and the last one ends with the recording"
+      "note": "THE CUT: Command K at 0:04 and at 0:08, Premiere's Add Edit, the second cut leaving the middle piece picked, then Delete throws it away and closes the gap. V1 is two pieces of the recording, 12.9 seconds long, and the captions came along: the lines for the words that went are gone, every later line moved up with its words, and the last one ends with the recording"
     },
     {
       "do": "snapshot",
