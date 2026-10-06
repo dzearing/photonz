@@ -9782,3 +9782,15 @@
 {"t":"2026-10-06T16:15:09.870Z","ev":"task_note","id":"an-empty-track-looks-like-a-place-to-drop-a-clip"}
 {"t":"2026-10-06T16:15:09.926Z","ev":"task_note","id":"an-empty-track-looks-like-a-place-to-drop-a-clip"}
 {"t":"2026-10-06T16:15:14.354Z","ev":"task_done","id":"an-empty-track-looks-like-a-place-to-drop-a-clip","from":"in_progress","note":"Empty lanes now draw the mock's dashed, striped slot (TimelineEmptySlot in TimelineLaneDrop.swift, gated by TimelineTrackRowModel.showsEmptySlot). Goes when a clip lands, back on undo, also on a track added with Add Track; drop ghost unchanged. Verified at Next defaults by empty-track-slot-walk (7 real captures, dark and light) and new-empty-video-walk; Scripts/test.sh green. Audit: queue/audits/2026-10-06-empty-track-slot.json with the mock frame beside it."}
+{"t":"2026-10-06T16:27:18.884Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":548,"of":778,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-06T16:27:19.063Z","ev":"task_started","id":"choosing-a-value-to-animate-answers-at-once","title":"Choosing a value to animate answers at once","priority":"p2-normal"}
+{"t":"2026-10-06T17:51:51.104Z","ev":"task_created","id":"animate-a-property-opens-closes-and-keys-a-value","priority":"p2-normal","title":"Animate a property opens, closes and keys a value inside 50 ms"}
+{"t":"2026-10-06T17:51:57.704Z","ev":"task_note","id":"clicking-a-clip-on-the-timeline-answers-at-once"}
+{"t":"2026-10-06T17:51:57.760Z","ev":"task_walks","id":"choosing-a-value-to-animate-answers-at-once","walks":["keyframe-anything-walk","an-editing-session-walk","shadow-distance-keys-walk"]}
+{"t":"2026-10-06T17:52:10.218Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:10.275Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:10.333Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:10.388Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:10.446Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:10.501Z","ev":"task_note","id":"choosing-a-value-to-animate-answers-at-once"}
+{"t":"2026-10-06T17:52:43.533Z","ev":"task_done","id":"choosing-a-value-to-animate-answers-at-once","from":"in_progress","note":"Pick from Animate a property now holds ~80 ms, was ~200 (keyframe-anything x3: Position 71-78, Scale 79-81, Blur 82-86; an-editing-session x3: Position 79-83; Shadow 1 distance 61). Fixes: SegmentedControl's collapsed dropdown no longer rebuilt on every ViewThatFits measure (180 per pick); the list closes one run-loop pass before the value starts. Cause measured and logged; walks pass, tests green; audit 2026-10-06-animate-a-property-pick-speed. 50 ms line not met: moved with all measurements to animate-a-property-opens-closes-and-keys-a-value."}

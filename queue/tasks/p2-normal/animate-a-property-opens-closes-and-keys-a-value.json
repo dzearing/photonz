@@ -1,0 +1,33 @@
+{
+  "id": "animate-a-property-opens-closes-and-keys-a-value",
+  "title": "Animate a property opens, closes and keys a value inside 50 ms",
+  "goal": "Opening the Animate a property list still holds the app for about a tenth of a second, and picking a value about 80 ms, because each one makes the whole right-hand panel lay itself out again even though only one row changed. Bring opening, closing and picking under the 50 ms the video success list asks for.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3690,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T17:51:51.100Z",
+  "updated": "2026-10-06T17:51:51.103Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carries the 50 ms line from choosing-a-value-to-animate-answers-at-once, which took a pick from about 200 ms to about 80 ms (log there has every measurement). Stopwatch: Scripts/playtest/perf/animate-pick-cost-walk.json (12 x open, pick Position, undo; read median longest per kind). On 2026-10-06 after that task: open 109-113 ms, pick 77-80 ms, undo 70-73 ms, Escape close 66-78 ms.\n\nWhere the time goes (probe, Time Profiler + SwiftUI template via xcrun xctrace attached to the probe during the stopwatch walk):\n- The pick is two passes now: closing the popover (~75 ms) then the document change (~80 ms).\n- CLOSE pass: the popover hands key/focus back to the editor window, and every focusable AppKit-backed control in the window updates (24 SwiftUI Sliders/SystemSlider, ~32 text fields, ~16 AppKitPopUpAdaptor menus, ButtonFocusInteractionModifier on every button), which invalidates their sizes and re-lays out the panel's sections. Blanking every section but Properties took Escape-close from 75 to 35 ms; Effects alone is ~25 ms of it, Text ~7. Opening is the same plus ~50 ms of NSPopover machinery (window, sizing ~40 PickerRows, addChildWindow).\n- CHANGE pass: ~40% accessibility (AccessibilityViewGraph.update, AccessibilityNode.updateFocusResponder walking every responder), the rest layout: SectionRevealLayout/inner ScrollView re-measure, ViewThatFits re-measure, HStack firstTextBaseline explicitAlignment. Ablations (pick ms): baseline 165 (one pass), Effects body blank -29, PropertyKeyRow blank -25, key lanes -6, Text -9, Appearance -5.\n- Probe-only cost: the playtest hover/help/readout anchors are ~20 ms of a pick and do not exist in a release build; the accessibility share is paid because the walk harness reads controls through accessibility.\nIdeas not tried: keep the search field's popover from taking key until it is clicked (risk: typed letters reach the canvas as tool keys), make the Effects list rows not depend on the window's focus, make sections that read the whole document read only what they draw.",
+  "acceptance": [
+    "Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk",
+    "Pressing Animate a property to open the list holds the main thread under 50 ms in the same walks",
+    "Closing the list with Escape or a pick no longer re-lays out the sections the list does not touch (Effects, Text, Appearance), shown by blanking them in Scripts/playtest/perf/animate-pick-cost-walk.json and the hold not moving",
+    "The value still arrives armed, its lane still opens and its first key still lands, as today"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T17:51:51.102Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "keyframe-anything-walk",
+    "an-editing-session-walk",
+    "shadow-distance-keys-walk"
+  ]
+}

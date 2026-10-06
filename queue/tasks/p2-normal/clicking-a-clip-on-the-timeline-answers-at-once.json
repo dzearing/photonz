@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:35:45.716Z",
-  "updated": "2026-10-06T13:35:58.146Z",
+  "updated": "2026-10-06T17:51:57.703Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced from the loop's walk logs: every /tmp/photonz-playtest/*/log.json from the last two days, notes matching '\"...\" in Track V... longest N ms' or a press on a piece. n=43, median 46.5 ms, p90 106.3 ms, max 167.9 ms, 18 over 50. In an-editing-session-walk (06:16 today) step 33, a click on \"Sample Talk join 1\" in Track V1 held 125.2 ms with inspectorPanel bodies counted; picking from the layers list (step 31) held 55.1 ms.\n\nThe success line is video-beats-premiere's third (no press on the timeline, no frame of playback over 50 ms, on five minutes with captions written). The earlier fixes for the same family are done tasks a-long-captioned-recording-edits-without-freezin and picking-or-retyping-a-caption-answers-at-once: read their logs first, the panel rebuilding on a pick was the culprit before. Measure on the probe only.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-06T13:35:58.145Z",
       "note": "seq 3690 -> 4"
+    },
+    {
+      "t": "2026-10-06T17:51:57.702Z",
+      "note": "From choosing-a-value-to-animate-answers-at-once (2026-10-06): a SegmentedControl's collapsed dropdown (an AppKit NSPopUpButton) sat in ViewThatFits as the second candidate and was built and torn down on every measure even while the bar fitted: 180 per panel relayout on a typed title with shadows, ~35 ms of a 200 ms pick. Fixed in SegmentedControl.collapsed (it now measures the drawn face and lays the real dropdown on it), so every panel relayout is cheaper. Other ViewThatFits rows whose branches hold AppKit views (PropertyKeyRow, CaptionsInspector, ArrangementInspector) are worth the same check. Profiling recipe that named the cost: xcrun xctrace record --template 'Time Profiler' (or 'SwiftUI') --attach <probe pid> --time-limit 10s during a perf walk, export the time-profile table, keep Main Thread samples in the hitch window."
     }
   ]
 }

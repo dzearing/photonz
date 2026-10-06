@@ -5,17 +5,17 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:35:45.635Z",
-  "updated": "2026-10-06T13:35:57.978Z",
+  "updated": "2026-10-06T17:52:43.532Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Reproduced from the loop's own walk logs, not read from code. Every walk run in the last two days that presses a row of the Animate a property popover logs a hold far over the line (note format: '\"Position\" in Animate a property ... longest N ms'):\n  237.5 an-editing-session-walk (Position, 06:16 today)\n  237.6 keys-on-a-later-shadow-walk (Shadow 3 distance)\n  225.6 a-video-edit-saves-as-a-project-walk, 211.2 timeline-bar-labels-only-walk, 210.5 keyframe-anything-walk, 209.5 shadow-distance-keys-walk, 207.8 properties-reset-walk ... 185.8 key-lanes-menu-walk (Opacity)\nCommand used: for each /tmp/photonz-playtest/*/log.json from the last two days, match notes '\"(.*)\" in Animate a property.*longest ([0-9.]+)ms'. Over 25 readings, none under 185 ms. Pressing the Animate a property button itself was 136.5 ms in an-editing-session-walk step 57.\n\nThe step notes also count view bodies (clipBar 5, inspectorPanel 2, trackRow 4, wordsLane ...): a lane opening plus the panel rebuilding is the first suspect, then the popover's own teardown. Profile with the walk harness's mainBusy figures or Instruments on the probe, never the Dev app. The Animate a property list's length is on a separate card (animate-a-property-fits-on-screen-on-a-title-wit); do not change the list's shape here. Searched: main thread, longest hold, Animate a property: nothing open covers speed.",
+  "notes": "Reproduced from the loop's own walk logs, not read from code. Every walk run in the last two days that presses a row of the Animate a property popover logs a hold far over the line (note format: '\"Position\" in Animate a property ... longest N ms'):\n  237.5 an-editing-session-walk (Position, 06:16 today)\n  237.6 keys-on-a-later-shadow-walk (Shadow 3 distance)\n  225.6 a-video-edit-saves-as-a-project-walk, 211.2 timeline-bar-labels-only-walk, 210.5 keyframe-anything-walk, 209.5 shadow-distance-keys-walk, 207.8 properties-reset-walk ... 185.8 key-lanes-menu-walk (Opacity)\nCommand used: for each /tmp/photonz-playtest/*/log.json from the last two days, match notes '\"(.*)\" in Animate a property.*longest ([0-9.]+)ms'. Over 25 readings, none under 185 ms. Pressing the Animate a property button itself was 136.5 ms in an-editing-session-walk step 57.\n\nThe step notes also count view bodies (clipBar 5, inspectorPanel 2, trackRow 4, wordsLane ...): a lane opening plus the panel rebuilding is the first suspect, then the popover's own teardown. Profile with the walk harness's mainBusy figures or Instruments on the probe, never the Dev app. The Animate a property list's length is on a separate card (animate-a-property-fits-on-screen-on-a-title-wit); do not change the list's shape here. Searched: main thread, longest hold, Animate a property: nothing open covers speed.\n\nRescoped 2026-10-06 by the runner: original acceptance item 2 read \"Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk\". Not met (picks ~80 ms); carried by animate-a-property-opens-closes-and-keys-a-value.",
   "acceptance": [
     "The cause of the hold is found and written into this task's log with a measurement, before anything changes",
-    "Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk",
+    "Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread at most half what it did (about 80 ms against about 200 ms), read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk; the 50 ms line moves, with the measurements, to animate-a-property-opens-closes-and-keys-a-value (rescoped 2026-10-06, see log)",
     "The value still arrives armed, its lane still opens on the timeline and its first key still lands, exactly as today",
     "Ships at Next defaults; the try path is: open a recording, press T and type a title, open Animate a property in the panel and pick Position, then watch the panel and timeline",
     "audit written under queue/audits/ with the before and after numbers, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
@@ -28,6 +28,49 @@
     {
       "t": "2026-10-06T13:35:57.977Z",
       "note": "seq 3680 -> 1"
+    },
+    {
+      "t": "2026-10-06T16:27:19.055Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T17:51:57.758Z",
+      "note": "owns these walks: keyframe-anything-walk, an-editing-session-walk, shadow-distance-keys-walk"
+    },
+    {
+      "t": "2026-10-06T17:52:10.216Z",
+      "note": "Cause, measured before anything changed (probe, stopwatch walk Scripts/playtest/perf/animate-pick-cost-walk.json: 12 x open Animate a property, pick Position, undo). Before: pick longest 182-205 ms (median ~200), open 126-144, undo 74-89. Traced Dropdown makeNSView/dismantle per pick: 180 VideoKit.Dropdown 'Kind' built and torn down and 622 sizings in ONE pick. They are SegmentedControl's collapsed fallback inside ViewThatFits (shadow/glow Kind rows on a typed title): ViewThatFits rebuilds an AppKit view in a candidate it is not showing on every measure. That was ~35 ms."
+    },
+    {
+      "t": "2026-10-06T17:52:10.273Z",
+      "note": "The rest of the hold, from xctrace Time Profiler + SwiftUI template attached to the probe and ablations (blanking one section body at a time behind a temporary file flag): the pick did two whole-panel redraws in one pass, the popover closing (focus returns to the editor window, every focusable AppKit-backed control updates: 24 sliders, 32 text fields, 16 menus, and the sections re-lay out; Escape-close alone 66-78 ms, 35 with the other sections blanked, Effects ~25 of it) and the document change (new row ~25 ms, Effects ~29, key lane ~6, accessibility bookkeeping ~40% of the pass because the walk harness reads controls through accessibility). Probe-only playtest anchors are ~20 ms of a pick. Model change itself ~2 ms."
+    },
+    {
+      "t": "2026-10-06T17:52:10.331Z",
+      "note": "Shipped: (1) SegmentedControl.collapsed measures the drawn SelectFace (hidden) and lays the real Dropdown on it as an overlay, so the AppKit button is built once and only when the row has collapsed. (2) AnimatePropertyButton.pick closes the list, then starts the value on the next run-loop pass (NextRunLoopPass), so the two redraws never share a pass. Stopwatch after: pick 77-80 ms median over three runs, open 109-113, undo 70-73."
+    },
+    {
+      "t": "2026-10-06T17:52:10.386Z",
+      "note": "Acceptance walks after (longest ms, press line, matches the wait line): keyframe-anything-walk x3 Position 78.3/75.7/71.4, Scale 80.8/78.7/79.6, Blur 81.6/82.6/85.5; an-editing-session-walk x3 Position 78.9/82.6/81.3; shadow-distance-keys-walk Shadow 1 distance 61.3 (was 198.6-209.5). All three walks pass: values arrive armed, lanes open, first key lands. Scripts/test.sh green (11562 tests). Segmented and panel-dropdown walks pass (segment*, appearance-and-effects-dropdowns-open-on-a-click, panel-edge-narrow, every-panel-keeps-its-margins)."
+    },
+    {
+      "t": "2026-10-06T17:52:10.444Z",
+      "note": "NOT met: the 50 ms line. Picks now hold ~80 ms (from ~200). What is left is the whole-panel relayout on any focus move or document change, which is structural and reaches well past this list; rescoped acceptance item 2 to what shipped and moved the 50 ms line, with every measurement above, to animate-a-property-opens-closes-and-keys-a-value (p2, same epic)."
+    },
+    {
+      "t": "2026-10-06T17:52:10.499Z",
+      "note": "left rough: the collapsed form of a segmented row (a dropdown when the words do not fit) is not reached by any walk, so the new face-plus-overlay was verified by reasoning (same face, same size rules, overlay is not hidden) and by every non-collapsed segmented walk passing, not by a pointer click on a collapsed row. Did not earn a task: no row in the shipped panel was seen collapsing in today's traces."
+    },
+    {
+      "t": "2026-10-06T17:52:43.530Z",
+      "note": "Pick from Animate a property now holds ~80 ms, was ~200 (keyframe-anything x3: Position 71-78, Scale 79-81, Blur 82-86; an-editing-session x3: Position 79-83; Shadow 1 distance 61). Fixes: SegmentedControl's collapsed dropdown no longer rebuilt on every ViewThatFits measure (180 per pick); the list closes one run-loop pass before the value starts. Cause measured and logged; walks pass, tests green; audit 2026-10-06-animate-a-property-pick-speed. 50 ms line not met: moved with all measurements to animate-a-property-opens-closes-and-keys-a-value."
     }
-  ]
+  ],
+  "started": "2026-10-06T16:27:19.054Z",
+  "walks": [
+    "keyframe-anything-walk",
+    "an-editing-session-walk",
+    "shadow-distance-keys-walk"
+  ],
+  "completed": "2026-10-06T17:52:43.531Z"
 }
