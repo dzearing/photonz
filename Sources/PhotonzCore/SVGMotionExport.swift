@@ -164,6 +164,7 @@ enum MotionSVG {
                 push(" \(role)=\"\(track.base)\"", [track.element])
             case .blur, .cornerRadius, .shadow, .textSize, .glow,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
+             .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom:
                 // An animated SVG has no way to say this yet: a blur in the
                 // file is a filter, and animating its softness means writing a
@@ -300,6 +301,7 @@ enum MotionSVG {
             attributes = "attributeName=\"stroke-width\""
         case .blur, .cornerRadius, .shadow, .textSize, .glow,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
+             .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom:
             // Never reached: these are dropped before a track is asked for.
             return nil
@@ -525,6 +527,7 @@ private extension MotionProperty {
         case .position, .rotation, .scale: true
         case .opacity, .color, .strokeWidth, .blur, .cornerRadius, .shadow, .textSize, .glow,
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
+             .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom: false
         }
     }

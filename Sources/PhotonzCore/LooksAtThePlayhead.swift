@@ -23,7 +23,8 @@ extension MotionProperty {
     public static let looks: [MotionProperty] = [.opacity, .color, .blur, .strokeWidth,
                                                   .cornerRadius, .shadow, .shadowDistance,
                                                   .shadowDirection, .shadowColor, .shadowOpacity,
-                                                  .glow, .glowColor, .glowOpacity, .textSize]
+                                                  .glow, .glowColor, .glowOpacity, .borderWidth,
+                                                  .borderColor, .textSize]
 }
 
 extension Layer {

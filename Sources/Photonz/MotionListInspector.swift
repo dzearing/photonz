@@ -746,8 +746,9 @@ enum MotionEntry {
         // The app's ONE word for a length (`DocumentUnit`), not a second one
         // of this panel's own: a thickness on a motion row and a thickness in
         // Appearance are the same distance.
-        case .strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .textSize: DocumentUnit.word
-        case .position, .color, .shadowColor, .glowColor: nil
+        case .strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .borderWidth, .textSize:
+            DocumentUnit.word
+        case .position, .color, .shadowColor, .glowColor, .borderColor: nil
         }
     }
 }

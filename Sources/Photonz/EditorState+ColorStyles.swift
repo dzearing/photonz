@@ -782,8 +782,11 @@ extension EditorState {
     /// Not gated on saved styles: a color still has to be readable and
     /// settable with `next-styles` off. What that flag takes away is the styles
     /// button beside the color, and `ColorStyleControl` hides itself.
+    ///
+    /// Read at the playhead, so a keyed colour shows what the keys give it
+    /// there (`EditorState+LooksAtThePlayhead.swift`).
     func colorStyleSelection(slot: ColorSlot) -> ColorStyleSelection {
-        guard let document else {
+        guard let document = lookReadingDocument else {
             return ColorStyleSelection(slot: slot, members: [], selectionCount: 0)
         }
         return document.colorStyleSelection(layerIDs: colorStyleTargetIDs, slot: slot)
@@ -1035,7 +1038,9 @@ extension EditorState {
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
         discardDragPreview()
-        perform { _ = $0.setColorHex(layerIDs: targets, slot: slot, hex: hex) }
+        // At the playhead: a keyed colour takes a key there, as a slider's
+        // value does, rather than changing a colour the keys never read.
+        performLooksHere(targets) { _ = $0.setColorHex(layerIDs: targets, slot: slot, hex: hex) }
         armToolsFromSelection(slot: slot, targets: targets)
         recordRecentColor(hex: hex)
     }
@@ -1047,7 +1052,7 @@ extension EditorState {
         let targets = colorStyleSelection(slot: slot).layerIDs
         guard !targets.isEmpty else { return }
         discardDragPreview()
-        perform { _ = $0.setPaint(layerIDs: targets, slot: slot, paint: paint) }
+        performLooksHere(targets) { _ = $0.setPaint(layerIDs: targets, slot: slot, paint: paint) }
         armToolsFromSelection(slot: slot, targets: targets)
         // The recents row is a row of colours, so a gradient leaves its flat
         // colour there rather than nothing.
@@ -1099,7 +1104,7 @@ extension EditorState {
 
     /// What the picked layers are painted with in a slot, when they agree.
     func selectionPaint(slot: ColorSlot) -> Paint? {
-        document?.sharedPaint(layerIDs: colorStyleTargetIDs, slot: slot)
+        lookReadingDocument?.sharedPaint(layerIDs: colorStyleTargetIDs, slot: slot)
     }
 
     /// What a colour row's chip shows: the paint in flight while a drag is
@@ -1126,7 +1131,7 @@ extension EditorState {
             discardDragPreview()
         }
         paintPreview = (slot, targets, paint)
-        _ = doc.setPaint(layerIDs: targets, slot: slot, paint: paint)
+        editingLooksHere(targets, in: &doc) { _ = $0.setPaint(layerIDs: targets, slot: slot, paint: paint) }
         submit(doc)
     }
 

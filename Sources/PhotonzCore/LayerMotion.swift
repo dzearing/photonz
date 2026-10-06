@@ -60,6 +60,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     case glowColor
     /// How strong its first glow is, as a percentage.
     case glowOpacity
+    /// How thick the first border in its Effects list is, in document points:
+    /// a frame growing round a picture as it lands. Not a line's own stroke,
+    /// which is `strokeWidth`, and the two are named apart in every list.
+    case borderWidth
+    /// What the first border in its Effects list is painted: a title's
+    /// outline changing colour.
+    case borderColor
     /// How much of a picture or a clip is cut away from each edge, as a
     /// percent of the picture: Premiere's Crop effect, whose four edges are
     /// keyed one at a time. The picture that is kept stays where it was drawn
@@ -89,6 +96,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .shadowOpacity: "Shadow opacity"
         case .glowColor: "Glow color"
         case .glowOpacity: "Glow opacity"
+        case .borderWidth: "Border width"
+        case .borderColor: "Border color"
         case .cropLeft: "Crop left"
         case .cropTop: "Crop top"
         case .cropRight: "Crop right"
@@ -105,7 +114,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// A distance in document points, which the panel writes in the app's one
     /// word for a length (`DocumentUnit`).
     public var isLength: Bool {
-        [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .textSize].contains(self)
+        [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .borderWidth, .textSize]
+            .contains(self)
     }
 
     /// The order the menu offers them in: where it is, how big, how turned,
@@ -135,6 +145,10 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// size, so a shadow a size key brings in is thrown and painted by them
     /// too; the distance is a length the growth multiplies, like the size.
     ///
+    /// A border's colour sits just outside its width, for the same reason: a
+    /// ring a width key brings in is painted by it too. The width is a length
+    /// the growth multiplies, set before it.
+    ///
     /// The crop is innermost of all: Premiere crops the picture first and
     /// moves, turns and grows what is left, so a crop is a cut in the picture
     /// the growth then magnifies, and the growth keeps its middle where the
@@ -142,7 +156,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     public static let nestingOrder: [MotionProperty] =
         [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth,
          .cornerRadius, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .shadow,
-         .glowColor, .glowOpacity, .glow, .textSize,
+         .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize,
          .cropLeft, .cropTop, .cropRight, .cropBottom]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
@@ -201,8 +215,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // Only where the line IS the layer: a path's outline, a line, an
             // arrow. A box's edge lives in the Effects list and is that
             // effect's business, not the layer's.
+            //
+            // The line's OWN width, never a Border's: a line can wear a ring
+            // as well, and that ring keys as Border width. Reading the wider
+            // of the two put the border's number in this row while a key here
+            // changed only the line.
             guard layer.drawsItsOwnOutline else { return nil }
-            return .number(Double(layer.outlineWidth))
+            if let path = layer.path { return .number(Double(path.strokeWidth)) }
+            return layer.annotation.map { .number(Double($0.strokeWidth)) }
         case .blur:
             // Only where there is a blur in the Effects list to change. The
             // menu says what the layer HAS, and offering a blur to a layer
@@ -232,6 +252,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             return layer.style.glowEffects.first.map { .color($0.colorHex) }
         case .glowOpacity:
             return layer.style.glowEffects.first.map { .number($0.opacity * 100) }
+        case .borderWidth:
+            // The first border in the Effects list. A layer with none is still
+            // offered it at nought (`keyStill`), as with a shadow's size, and a
+            // key above nought brings one in (`applied`).
+            return layer.style.borderEffects.first.map { .number(Double($0.width)) }
+        case .borderColor:
+            return layer.style.borderEffects.first.map { .color($0.colorHex) }
         case .cropLeft, .cropTop, .cropRight, .cropBottom:
             // Nothing cut away: a keyed crop is measured from the picture as
             // it is drawn, whatever the Crop tool already took off it.
@@ -274,7 +301,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
              let (.shadow, .number(points)), let (.textSize, .number(points)),
-             let (.glow, .number(points)), let (.shadowDistance, .number(points)):
+             let (.glow, .number(points)), let (.shadowDistance, .number(points)),
+             let (.borderWidth, .number(points)):
             return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
@@ -1156,7 +1184,13 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(now), to: .number(now + 45),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
-        case .shadowColor, .glowColor:
+        case .borderWidth:
+            // A frame growing in round the picture, from what it is now.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(max(now * 2, 8)),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .shadowColor, .glowColor, .borderColor:
             // As with the layer's own colour, the second one is yours to pick.
             let hex = if case let .color(hex) = current ?? .color("#000000") { hex } else { "#000000" }
             return LayerMotion(property: property, from: .color(hex), to: .color(hex),
@@ -1374,6 +1408,27 @@ extension MotionProperty {
         case let (.glowOpacity, .number(percent)):
             guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
             moved.style.updateGlowEffect(at: index) { $0.opacity = min(max(percent / 100, 0), 1) }
+        case let (.borderWidth, .number(points)):
+            // The first ring in the list, wherever it sits among the other
+            // effects. Magnified from above like the other lengths: a frame on
+            // a picture drawn at twice the size is twice as thick.
+            let width = CGFloat(max(0, points)) * grown
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .border }) else {
+                // None yet: a width above nothing brings one in, INSIDE the
+                // edge, so a picture that fills the frame shows it (the frame
+                // growing round a recording as it lands). Like a shadow's size,
+                // which brings a shadow in the same way.
+                if width > 0 {
+                    moved.style.effects.insert(.border(BorderEffect(width: width, position: .inside)),
+                                               at: moved.style.insertionIndex(for: .border))
+                }
+                break
+            }
+            moved.style.updateBorderEffect(at: index) { $0.width = width }
+        case let (.borderColor, .color(hex)):
+            // Painting a ring a colour makes it flat, as the panel's well does.
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .border }) else { break }
+            moved.style.updateBorderEffect(at: index) { $0.colorHex = hex }
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
             moved = moved.croppedByKey(self, percent: percent, authored: authored)

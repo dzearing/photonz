@@ -20715,3 +20715,10 @@ Next: the first editor window's ~200 ms first build
 - Shadow distance, direction, color, opacity and glow color, opacity are keyable values (six new `MotionProperty` cases), offered in Animate a property under Effects, with lanes, easing, copy/paste and Effects-list edits at the playhead becoming keys.
 - Tests: `ShadowGlowKeysTests`, `KeyedShadowRenderTests`, `KeyedShadowExportTests` (MP4 read back). Walk: `shadow-distance-keys-walk`. Titles now offer 12 keyable values, so three walks' counts moved.
 - Next: `keys-on-a-layer-with-several-shadows-move-the-sh` (keys reach only the first shadow; a title has two and Add Effect appends a third).
+
+## 2026-10-06 — border keys
+
+- Border width and Border color are keyable values (`MotionProperty.borderWidth/.borderColor`), offered on every picture layer as the video mock's catalogue does, grouped under Effects where the Border lives. They act on the first Border in the list; a width key above 0 on a layer with none brings an Inside ring in. Stroke width now reads a line's own stroke only.
+- Fixed: a panel colour well on a keyed colour (fill, border, shadow, glow) wrote a colour the keys never read. Colour wells now read at the playhead and write through `performLooksHere`/`editingLooksHere`.
+- Tests: `BorderKeysTests`, `KeyedBorderRenderTests`, `KeyedBorderExportTests`. Walk: `border-width-keys-walk`. Clips and titles now offer 14 keyable values, so three walks' counts moved.
+- Next: `a-border-added-to-a-picture-that-fills-the-frame` (a new Border lands Outside, off the canvas on a full-frame recording).

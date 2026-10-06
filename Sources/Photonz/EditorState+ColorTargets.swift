@@ -43,7 +43,8 @@ extension EditorState {
     /// layers a person picked rather than the ones the row happened to claim.
     func colorStyleSelection(_ rowTarget: ColorTarget) -> ColorStyleSelection {
         let target = resolved(rowTarget)
-        guard let document else {
+        // Read at the playhead, so a keyed colour shows what the keys give it.
+        guard let document = lookReadingDocument else {
             return ColorStyleSelection(slot: target.lead, members: [], selectionCount: 0)
         }
         let all = colorStyleTargetIDs
@@ -101,7 +102,7 @@ extension EditorState {
     func selectionPaint(_ rowTarget: ColorTarget) -> Paint? {
         let target = resolved(rowTarget)
         if let place = target.effectIndex {
-            return document?.sharedPaint(layerIDs: reach(target.parts[0]), effectAt: place)
+            return lookReadingDocument?.sharedPaint(layerIDs: reach(target.parts[0]), effectAt: place)
         }
         guard target.isSplit else { return selectionPaint(slot: target.lead) }
         let members = colorStyleSelection(target).members
@@ -138,7 +139,9 @@ extension EditorState {
             discardDragPreview()
         }
         paintPreview = (target.lead, ids, paint)
-        for one in work { _ = doc.setPaint(layerIDs: one.ids, slot: one.slot, paint: paint) }
+        editingLooksHere(ids, in: &doc) { doc in
+            for one in work { _ = doc.setPaint(layerIDs: one.ids, slot: one.slot, paint: paint) }
+        }
         submit(doc)
     }
 
@@ -156,7 +159,9 @@ extension EditorState {
             let ids = colorStyleSelection(target).layerIDs
             guard !ids.isEmpty else { return }
             discardDragPreview()
-            perform { _ = $0.setPaint(layerIDs: ids, effectAt: place, paint: paint) }
+            // At the playhead: a keyed shadow, glow or border colour takes a
+            // key there rather than changing a colour the keys never read.
+            performLooksHere(ids) { _ = $0.setPaint(layerIDs: ids, effectAt: place, paint: paint) }
             recordRecentColor(hex: paint.hex)
             return
         }
@@ -167,7 +172,7 @@ extension EditorState {
         let work = work(target)
         guard !work.isEmpty else { return }
         discardDragPreview()
-        perform { doc in
+        performLooksHere(work.flatMap(\.ids)) { doc in
             for one in work { _ = doc.setPaint(layerIDs: one.ids, slot: one.slot, paint: paint) }
         }
         for one in work { armToolsFromSelection(slot: one.slot, targets: one.ids) }

@@ -1,0 +1,51 @@
+{
+  "feature": "Border keys: width and colour",
+  "epic": "video-transitions-motion",
+  "summary": "A border's width and colour now take keys like any other value, so a picture can grow a frame as it lands and a title's outline can change colour over a clip. Changing a keyed colour from the panel at a later moment now adds a key there, for shadows and glows as well as borders.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is border-width-keys-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording, pick it, click the plus on Effects and choose Border, then set the Border's Position to Inside.",
+      "shot": "2026-10-06-border-keys-1-the-picker.png"
+    },
+    {
+      "do": "With the playhead at 0:00, click Animate a property in Properties and pick Border width, then type 0 and press Return.",
+      "shot": "2026-10-06-border-keys-2-first-key-at-0.png"
+    },
+    {
+      "do": "Move the playhead to 0:01, type 12 into Border width and press Return.",
+      "shot": "2026-10-06-border-keys-3-second-key-at-12.png"
+    },
+    {
+      "do": "Put the playhead at half a second and read the value, the diamond and the frame.",
+      "shot": "2026-10-06-border-keys-4-between-the-keys.png"
+    },
+    {
+      "do": "Back at 0:00, pick Border color from Animate a property, move to 0:01 and paint the border a new colour from the panel.",
+      "shot": "2026-10-06-border-keys-5-colour-keyed-at-1.png"
+    },
+    {
+      "do": "Go to the start and press Space to play it.",
+      "shot": "2026-10-06-border-keys-6-after-playing.png"
+    },
+    {
+      "do": "On a title with no Border, pick Border width from Animate a property and key it from 0 to 6."
+    }
+  ],
+  "evaluate": [
+    "Does the frame growing in round the recording over the first second read as the picture landing?",
+    "Are Border width and Border color the names you would look for, and is it clear they are not a line's own Stroke width?",
+    "When you paint a keyed border colour from the Effects list at a later moment, does it feel like it added a key, the way typing a number does?",
+    "Keying Border width up on a layer with no Border brings one in, inside the edge. Is that what you would expect, or should you have to add the Border first?"
+  ],
+  "rough": [
+    "A Border added from the Effects plus lands Outside, and a recording fills the whole frame, so the ring is drawn off the canvas and nothing shows until Position is set to Inside. The walk sets Inside for this reason: task a-border-added-to-a-picture-that-fills-the-frame.",
+    "The video mock groups Border width and Border color under Appearance; the app lists them under Effects because the Border now lives in the Effects list: task outline-leaves-appearance-and-an-effect-s-colour.",
+    "Offering Border width and Border color on every picture layer matches the mock's catalogue. A width key above 0 on a layer with no Border brings an Inside ring in.",
+    "A keyed colour flattens a gradient border to one colour while it plays.",
+    "Only the first Border in the list takes keys; a second ring keeps its own width and colour.",
+    "Animate a property now lists 14 values for a clip or a title, so Border color sits below the fold of the picker until you scroll or type in Find a property.",
+    "A border's Offset and Position still cannot take keys."
+  ]
+}

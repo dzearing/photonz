@@ -227,7 +227,7 @@ extension Layer {
             let order: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
                                            .strokeWidth, .color, .blur, .shadow, .shadowDistance,
                                            .shadowDirection, .shadowColor, .shadowOpacity,
-                                           .glow, .glowColor, .glowOpacity, .textSize]
+                                           .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor, .textSize]
                 + MotionProperty.cropEdges
             for property in order where keyStill(property) != nil {
                 list.append(.motion(property))
@@ -242,7 +242,10 @@ extension Layer {
     func keyStill(_ property: MotionProperty) -> MotionValue? {
         if let value = property.current(of: self) { return value }
         switch property {
-        case .blur, .shadow: return isSoundOnly ? nil : .number(0)
+        case .blur, .shadow, .borderWidth: return isSoundOnly ? nil : .number(0)
+        // The colour a ring is born with (`BorderEffect`), for a ring a
+        // width key brings in: the video mock offers it on every picture.
+        case .borderColor: return isSoundOnly ? nil : .color(BorderEffect().colorHex)
         default: return nil
         }
     }

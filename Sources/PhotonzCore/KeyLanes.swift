@@ -85,7 +85,7 @@ extension PhotonzDocument {
                                                       .strokeWidth, .color, .blur, .shadow,
                                                       .shadowDistance, .shadowDirection, .shadowColor,
                                                       .shadowOpacity, .glow, .glowColor, .glowOpacity,
-                                                      .textSize]
+                                                      .borderWidth, .borderColor, .textSize]
 
     static func laneRank(_ property: MotionProperty) -> Int {
         laneOrder.firstIndex(of: property) ?? laneOrder.count

@@ -505,7 +505,7 @@ private struct PickerRow: View {
         switch property {
         case .volume: "dB"
         case let .motion(motion):
-            [.color, .shadowColor, .glowColor].contains(motion)
+            [.color, .shadowColor, .glowColor, .borderColor].contains(motion)
                 ? "color" : (MotionEntry.suffix(motion) ?? DocumentUnit.word)
         }
     }
