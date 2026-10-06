@@ -1,0 +1,179 @@
+{
+  "out": "/tmp/photonz-playtest/half-speed-reads-alike-walk",
+  "seed": "A clip's speed reads one way wherever it is shown: a recording is cut into three, the second piece is set to half speed from the panel, and the badge on its bar, the Speed dropdown's face and the clip line in Properties all say 0.5x, at Next defaults with no flag touched. Then 2x, with no trailing nought anywhere.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "key",
+      "key": "2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "Cut at 0:02 and at 0:04, the way the speed walk does: the second cut leaves the middle piece, piece 2, in hand.",
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "action",
+      "action": "clipSplit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 3
+    },
+    {
+      "do": "action",
+      "action": "videoSeekThreeQuarters"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Time section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "Piece",
+      "reads": "2 of 3"
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "Normal"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Tutorial Sample 2.0s → 4.0s · 2.0s · 1.0x"
+    },
+    {
+      "do": "describe",
+      "stage": "1-cut",
+      "note": "the recording is three pieces with the middle one picked, all at the speed they were recorded, so no bar carries a badge, the Speed dropdown says Normal and the clip line says the mock's 1.0x"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-cut-in-three"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Speed",
+      "choose": "0.5x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "0.5x"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Tutorial Sample 2.0s → 6.0s · 4.0s · 0.5x"
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample piece 2",
+      "reads": "Tutorial Sample 0 to 10000 ms, 3 pieces, piece 2 0.5x"
+    },
+    {
+      "do": "describe",
+      "stage": "2-half-speed",
+      "note": "THE TEST: the second piece at half speed reads 0.5x three times over: the badge on its bar, the Speed dropdown's face and the clip line at the top of Properties. A Premiere or Final Cut editor reading the timeline and the panel sees one number, never a percentage in one place and words in another"
+    },
+    {
+      "do": "panel",
+      "stage": "2-half-speed"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-half-speed-reads-alike"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Speed",
+      "choose": "2x"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Speed",
+      "reads": "2x"
+    },
+    {
+      "do": "expect",
+      "field": "Clip line",
+      "reads": "Tutorial Sample 2.0s → 3.0s · 1.0s · 2x"
+    },
+    {
+      "do": "expect",
+      "field": "Tutorial Sample piece 3",
+      "reads": "Tutorial Sample 0 to 7000 ms, 3 pieces, piece 2 2x",
+      "comment": "Any piece's field reads the whole bar. At 2x the second piece has slid out from under the playhead and the third is the one the timeline names."
+    },
+    {
+      "do": "describe",
+      "stage": "3-double",
+      "note": "the same piece at double speed: 2x on the bar, on the dropdown and in the clip line, with no trailing nought anywhere"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-double-reads-alike"
+    }
+  ]
+}

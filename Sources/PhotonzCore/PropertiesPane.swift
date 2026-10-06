@@ -51,12 +51,14 @@ public struct ClipLine: Hashable, Sendable {
         String(format: "%.1fs", Double(ms) / 1000)
     }
 
-    /// `1.0x`, `0.5x`, `0.25x`: one decimal, two where one would round a
-    /// speed the menu offers into one it does not.
+    /// `0.5x`, `2x`, `0.25x`: the same reading as the speed badge on the
+    /// piece's bar (`ClipSpeed.multiple`), so the panel and the timeline say
+    /// one thing. At the recorded speed, where the bar has no badge, it is the
+    /// mock's `1.0x`.
     public static func speedText(percent: Int) -> String {
         guard percent > 0 else { return "held" }
-        let format = percent % 10 == 0 ? "%.1fx" : "%.2fx"
-        return String(format: format, Double(percent) / 100)
+        guard percent != ClipPiece.asRecordedPercent else { return "1.0x" }
+        return ClipSpeed.multiple(percent)
     }
 
     /// The chip on the pane's header: what kind of thing is picked, in the

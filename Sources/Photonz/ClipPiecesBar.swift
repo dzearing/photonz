@@ -669,11 +669,7 @@ struct ClipPiecesBar: View {
         // quiet a hold on the picture pushed into it. Same piece, and the word
         // for it is different because what you get is different.
         if piece.isHeld { return isSound ? "silence" : "hold" }
-        switch piece.speedPercent {
-        case ClipPiece.asRecordedPercent: return nil
-        case let percent where percent % 100 == 0: return "\(percent / 100)x"
-        default: return "\(piece.speedPercent)%"
-        }
+        return ClipSpeed.badge(piece.speedPercent)
     }
 
     static func pieceName(layerName: String, index: Int, of count: Int) -> String {

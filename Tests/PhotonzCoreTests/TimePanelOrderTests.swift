@@ -232,7 +232,7 @@ struct ClipSpeedValueTests {
 
     @Test func aSpeedInTheMenuSaysWhenItIsSilent() {
         #expect(ClipSpeed.menuTitle(100) == "Normal")
-        #expect(ClipSpeed.menuTitle(400) == "4x Speed (silent)")
-        #expect(ClipSpeed.menuTitle(25) == "Quarter Speed (silent)")
+        #expect(ClipSpeed.menuTitle(400) == "4x (silent)")
+        #expect(ClipSpeed.menuTitle(25) == "0.25x (silent)")
     }
 }

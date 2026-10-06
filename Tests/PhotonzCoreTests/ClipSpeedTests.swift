@@ -48,13 +48,45 @@ struct ClipSpeedTests {
 
     @Test func aSpeedIsNamedTheWayPeopleSayIt() {
         #expect(ClipSpeed.title(100) == "Normal")
-        #expect(ClipSpeed.title(50) == "Half Speed")
-        #expect(ClipSpeed.title(25) == "Quarter Speed")
-        #expect(ClipSpeed.title(200) == "2x Speed")
-        #expect(ClipSpeed.title(3000) == "30x Speed")
+        #expect(ClipSpeed.title(50) == "0.5x")
+        #expect(ClipSpeed.title(25) == "0.25x")
+        #expect(ClipSpeed.title(200) == "2x")
+        #expect(ClipSpeed.title(3000) == "30x")
         // A speed nobody offered but somebody reached anyway still has a name.
-        #expect(ClipSpeed.title(62) == "62% Speed")
-        #expect(ClipSpeed.title(250) == "2.5x Speed")
+        #expect(ClipSpeed.title(62) == "0.62x")
+        #expect(ClipSpeed.title(250) == "2.5x")
+    }
+
+    /// A multiple of the recorded speed, the mock's `1.5x`: no trailing
+    /// nought, and two decimals where one would turn a quarter into a third.
+    @Test func aSpeedIsWrittenAsAMultiple() {
+        #expect(ClipSpeed.multiple(25) == "0.25x")
+        #expect(ClipSpeed.multiple(50) == "0.5x")
+        #expect(ClipSpeed.multiple(100) == "1x")
+        #expect(ClipSpeed.multiple(150) == "1.5x")
+        #expect(ClipSpeed.multiple(200) == "2x")
+        #expect(ClipSpeed.multiple(1000) == "10x")
+        #expect(ClipSpeed.multiple(3000) == "30x")
+        #expect(ClipSpeed.multiple(333) == "3.33x")
+    }
+
+    /// The bar's badge, the Speed dropdown's face and the panel's clip line
+    /// are three places an editor reads one value, so they read it alike.
+    @Test func everyStopReadsTheSameOnTheBarTheDropdownAndTheClipLine() {
+        let expected: [Int: String] = [25: "0.25x", 50: "0.5x", 200: "2x", 400: "4x",
+                                       1000: "10x", 3000: "30x"]
+        for stop in ClipSpeed.stops where stop != ClipPiece.asRecordedPercent {
+            let reading = expected[stop]
+            #expect(reading != nil, "a new stop needs its reading added here: \(stop)")
+            #expect(ClipSpeed.badge(stop) == reading)
+            #expect(ClipSpeed.title(stop) == reading)
+            #expect(ClipLine.speedText(percent: stop) == reading)
+        }
+        // At the recorded speed the bar says nothing, the dropdown says the
+        // word, and the clip line says the mock's 1.0x.
+        #expect(ClipSpeed.badge(100) == nil)
+        #expect(ClipSpeed.title(100) == "Normal")
+        #expect(ClipLine.speedText(percent: 100) == "1.0x")
     }
 
     // MARK: - What happens to the sound

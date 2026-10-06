@@ -207,17 +207,29 @@ public enum ClipSpeed {
         return .asRecorded
     }
 
-    /// What a speed is called where it is offered. `Normal` rather than `100%`,
+    /// What a speed is called where it is offered. `Normal` rather than `1x`,
     /// because the one everybody picks is the one going back to how it was
-    /// recorded and nobody thinks of that as a percentage.
+    /// recorded and nobody thinks of that as a multiple. Every other speed is
+    /// its number, the same one the bar's badge and the clip line carry, so
+    /// the dropdown's face and the timeline never disagree about a piece.
     public static func title(_ percent: Int) -> String {
-        switch percent {
-        case ClipPiece.asRecordedPercent: return "Normal"
-        case 50: return "Half Speed"
-        case 25: return "Quarter Speed"
-        case let p where p < 100: return "\(p)% Speed"
-        default: return "\(ratio(Double(percent) / 100))x Speed"
-        }
+        percent == ClipPiece.asRecordedPercent ? "Normal" : multiple(percent)
+    }
+
+    /// What is written on a piece's bar: its speed, and nothing at all at the
+    /// speed it was recorded, because a badge on every piece says nothing.
+    public static func badge(_ percent: Int) -> String? {
+        percent == ClipPiece.asRecordedPercent ? nil : multiple(percent)
+    }
+
+    /// A speed as a multiple of the recorded one, the mock's `1.5x`: `2x`
+    /// rather than `2.0x`, and `0.25x` rather than a quarter rounded to `0.3x`.
+    public static func multiple(_ percent: Int) -> String {
+        let whole = percent / 100
+        let hundredths = percent % 100
+        guard hundredths != 0 else { return "\(whole)x" }
+        let digits = hundredths % 10 == 0 ? String(hundredths / 10) : String(format: "%02d", hundredths)
+        return "\(whole).\(digits)x"
     }
 
     /// A speed as a row of the Speed menu: its name, and "(silent)" where the

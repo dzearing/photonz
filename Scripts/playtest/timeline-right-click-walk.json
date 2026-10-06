@@ -283,7 +283,7 @@
       ],
       "space": "window",
       "shot": "11-first-piece-menu",
-      "choose": "Speed > 2x Speed"
+      "choose": "Speed > 2x"
     },
     {
       "do": "wait",

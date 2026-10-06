@@ -57,13 +57,14 @@ struct PropertiesPaneTests {
         #expect(line.inText == "7.0s")
         #expect(line.outText == "9.0s")
         #expect(line.lengthText == "2.0s")
-        #expect(line.speedText == "4.0x")
+        #expect(line.speedText == "4x")
     }
 
-    @Test func aSpeedThatIsNotATenthKeepsItsDigits() {
+    @Test func aSpeedReadsTheWayTheBarBadgesIt() {
         #expect(ClipLine.speedText(percent: 25) == "0.25x")
         #expect(ClipLine.speedText(percent: 50) == "0.5x")
-        #expect(ClipLine.speedText(percent: 3000) == "30.0x")
+        #expect(ClipLine.speedText(percent: 150) == "1.5x")
+        #expect(ClipLine.speedText(percent: 3000) == "30x")
         #expect(ClipLine.speedText(percent: 0) == "held")
     }
 

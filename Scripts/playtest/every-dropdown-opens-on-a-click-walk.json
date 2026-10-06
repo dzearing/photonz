@@ -181,7 +181,7 @@
         "start",
         "end"
       ],
-      "choose": "2x Speed"
+      "choose": "2x"
     },
     {
       "do": "wait",
@@ -190,7 +190,7 @@
     {
       "do": "expect",
       "menu": "Speed",
-      "reads": "2x Speed"
+      "reads": "2x"
     },
     {
       "do": "snapshot",

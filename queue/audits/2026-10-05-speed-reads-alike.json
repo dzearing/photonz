@@ -1,0 +1,43 @@
+{
+  "feature": "A clip's speed reads the same way everywhere",
+  "epic": "video-transitions-motion",
+  "summary": "A retimed piece now says its speed as one number with an x, the mock's 1.5x, on its bar, on the Speed dropdown and in the clip line. Half speed is 0.5x in all three places, never 50% on the bar and Half Speed in the menu.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording and pick the clip on the timeline."
+    },
+    {
+      "do": "Put the playhead at 0:02 and press Command K, then at 0:04 and press Command K again."
+    },
+    {
+      "do": "Click the middle piece, open the Speed dropdown in the panel's Time section and pick 0.5x."
+    },
+    {
+      "do": "Read the badge at the top right of the piece's bar, the Speed dropdown and the clip line under the name in Properties: all three say 0.5x.",
+      "shot": "2026-10-05-speed-reads-alike-half.png"
+    },
+    {
+      "do": "Pick 2x from the same dropdown: the badge, the dropdown and the clip line all say 2x, with no trailing nought.",
+      "shot": "2026-10-05-speed-reads-alike-double.png"
+    },
+    {
+      "do": "Open the Speed dropdown again and read the list: Normal, then 0.25x (silent), 0.5x, 2x, 4x (silent) and on up."
+    },
+    {
+      "do": "Right-click the piece and open Speed: the same numbers, so the menu and the timeline agree too."
+    }
+  ],
+  "evaluate": [
+    "Does 0.5x on the bar read as the same thing as 0.5x in the panel at a glance?",
+    "Is Normal still the right word for the speed it was recorded at, rather than 1x?",
+    "Do you miss Half Speed and Quarter Speed as words in the dropdown, or is the number quicker?",
+    "Is the clip line's 1.0x at normal speed (the mock's text) fine next to 2x without a nought?"
+  ],
+  "rough": [
+    "At normal speed the clip line reads 1.0x, which matches the mock's clip line word for word; every other speed drops the nought (2x, not 2.0x). The bar has no badge at normal speed, so the two never sit side by side.",
+    "The bar's badge matches the mock's: top right of the piece, a dark chip with white bold monospaced text (video.html, clip-02's 1.5x).",
+    "The walk picks the middle piece by cutting twice rather than clicking it: a left click the walk makes at a point on a piece left nothing picked. I could not tell from here whether that is the walk or the app, so it is written in the task log to look into; please check that a click on a piece picks it for you."
+  ]
+}

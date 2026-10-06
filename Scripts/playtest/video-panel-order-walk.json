@@ -26,11 +26,11 @@
     { "do": "snapshot", "name": "1-a-clip" },
     { "do": "panelMargins", "stage": "1-a-clip" },
 
-    { "do": "panelMenu", "menu": "Speed", "shot": "2-the-speed-dropdown", "choose": "2x Speed" },
+    { "do": "panelMenu", "menu": "Speed", "shot": "2-the-speed-dropdown", "choose": "2x" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "2-double-speed", "note": "THE SECOND TEST: speed is ONE dropdown, the one a Premiere editor reaches for in Speed/Duration. Picking 2x halves the bar on the timeline, the Length row reads 8s into 4s and the Sound row says it plays higher. The silent speeds say (silent) on their own row in the menu" },
-    { "do": "expect", "menu": "Speed", "reads": "2x Speed" },
-    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 4.0s · 4.0s · 2.0x" },
+    { "do": "expect", "menu": "Speed", "reads": "2x" },
+    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 0.0s → 4.0s · 4.0s · 2x" },
     { "do": "expect", "field": "Sound reading", "reads": "Higher" },
     { "do": "snapshot", "name": "2-double-speed" },
 
