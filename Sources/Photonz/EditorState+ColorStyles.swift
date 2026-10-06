@@ -494,7 +494,10 @@ extension EditorState {
         // The rows below this one are about to shift up a place, and a fold is
         // known by its place (`foldedEffectRows`).
         forgetEffectFolds()
-        perform { _ = $0.addEffect(kind, layerIDs: ids) }
+        // A ring inside a picture that fills the frame sits on the picture's
+        // own edge, which only the pixels can say the colour of.
+        let edges = kind == .border ? pictureEdges(of: ids) : [:]
+        perform { _ = $0.addEffect(kind, layerIDs: ids, edges: edges) }
         // ...and the one that just arrived is the one you are working on, so
         // the list keeps room for it and the panel puts it on screen.
         revealAddedEffect(kind.kind)

@@ -1,0 +1,24 @@
+{
+  "feature": "A Border on a picture that fills the frame",
+  "epic": "video-transitions-motion",
+  "summary": "Adding a Border to a recording or screenshot that fills the whole frame now shows a ring: it lands Inside the picture's edge, in an ink that stands out from that edge, on the canvas and in the exported movie. Shapes and pictures with room round them still get theirs Outside.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: a-border-on-a-full-frame-picture-shows-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording or a full-window screenshot and pick its layer (its clip in the timeline)." },
+    { "do": "In Effects, press the plus and choose Border.", "shot": "2026-10-06-border-on-full-frame-picture-1.png" },
+    { "do": "Look at the picture's edge: a thin white ring runs all the way round, and Position reads Inside." },
+    { "do": "Export as MP4 and open a frame of the file: the same ring is there." },
+    { "do": "Draw a rectangle over the recording, then Effects plus > Border on it: Position reads Outside.", "shot": "2026-10-06-border-on-full-frame-picture-2.png" }
+  ],
+  "evaluate": [
+    "Is a 2 px ring enough to notice on a full-frame recording, or should a frame on a whole picture arrive thicker?",
+    "Does a white ring on a dark recording read as the frame you asked for, rather than a selection highlight?",
+    "Would you expect Outside to grow the canvas round the picture instead, the way a matted frame would?"
+  ],
+  "rough": [
+    "No mock covers adding a Border to a full-frame picture; this follows the model rule that a ring you ask for is one you can see.",
+    "The ink is chosen once, from the edge of the frame under the playhead when you press the plus; a recording whose edge goes from dark to light later keeps the first choice.",
+    "A picture turned or skewed so it still covers the frame keeps Outside, which can still sit partly off the canvas."
+  ]
+}

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/border-width-keys-walk",
-  "seed": "A picture grows a frame as it lands: at Next defaults with no flag changed, the recording is picked, given a Border from the Effects plus set Inside (the recording fills the frame, so an Outside ring would be off the canvas), and keyed through Animate a property > Border width, 0 at 0:00 and 12 at 0:01. The diamond fills on each key and is hollow between them, the width reads part way between, the picture's frame grows as the playhead moves, and playing runs it. Then the border's colour is keyed, and painting the ring at a second moment is a second key there.",
+  "seed": "A picture grows a frame as it lands: at Next defaults with no flag changed, the recording is picked, given a Border from the Effects plus, which lands Inside by itself because the recording fills the frame, and keyed through Animate a property > Border width, 0 at 0:00 and 12 at 0:01. The diamond fills on each key and is hollow between them, the width reads part way between, the picture's frame grows as the playhead moves, and playing runs it. Then the border's colour is keyed, and painting the ring at a second moment is a second key there.",
   "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
@@ -15,8 +15,7 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "panelMenu", "menu": "Add Effect", "choose": "Border" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "panelMenu", "menu": "Border", "choose": "Inside" },
-    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "control": "Position", "in": "Border", "reads": "Inside" },
     { "do": "reveal", "control": "Properties section" },
     { "do": "wait", "seconds": 0.5 },
     { "do": "press", "control": "Animate a property" },

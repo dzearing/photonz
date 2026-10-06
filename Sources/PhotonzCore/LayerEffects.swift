@@ -864,13 +864,19 @@ extension PhotonzDocument {
     /// takes its fixed place, and a second press does nothing rather than
     /// putting two answers to one question in the list. Returns how many layers
     /// took it.
+    ///
+    /// `edges` is the colour round the edge of a picture, by layer, read off
+    /// its pixels by the app: a picture has no fill to ink a ring against, and
+    /// a ring drawn inside it sits on those pixels.
     @discardableResult
-    public mutating func addEffect(_ addable: AddableEffect, layerIDs: [UUID]) -> Int {
+    public mutating func addEffect(_ addable: AddableEffect, layerIDs: [UUID],
+                                   edges: [UUID: Paint] = [:]) -> Int {
         var changed = 0
         for id in layerIDs {
             guard let layer = layer(id: id), !layer.isLocked else { continue }
             if !addable.kind.isCountable,
                layer.style.effects.contains(where: { $0.kind == addable.kind }) { continue }
+            let fillsCanvas = coversCanvas(id)
             updateLayer(id: id) { target in
                 var arriving = addable.newEffect
                 // A ring you asked for is a ring you can see: it lands in an
@@ -878,7 +884,14 @@ extension PhotonzDocument {
                 // rather than a fixed black that disappears on a dark one
                 // (`BorderInk.swift`).
                 if case .border(var ring) = arriving {
-                    ring.paint = BorderInk.standingOut(from: target.paint(for: .fill))
+                    // Outside is off the canvas on a layer that covers it (a
+                    // recording or screenshot filling the frame), and a ring
+                    // nobody can see is a press that did nothing. Inside, it
+                    // sits on the picture's own edge, so that is what it is
+                    // inked against.
+                    let fill = target.paint(for: .fill)
+                    if fillsCanvas { ring.position = .inside }
+                    ring.paint = BorderInk.standingOut(from: fill ?? (fillsCanvas ? edges[id] : nil))
                     arriving = .border(ring)
                 }
                 // Through the layer, never through the list: a name worn by an
@@ -890,6 +903,19 @@ extension PhotonzDocument {
             changed += 1
         }
         return changed
+    }
+
+    /// Whether a layer covers the whole canvas, so nothing drawn outside its
+    /// edge can be seen. Only an upright layer counts: a turned or skewed one
+    /// leaves the canvas corners bare and its edges cross the frame.
+    public func coversCanvas(_ id: UUID) -> Bool {
+        guard let layer = layer(id: id), let box = canvasBounds(of: id),
+              layer.transform.rotation == 0, layer.transform.skewX == 0,
+              layer.transform.skewY == 0 else { return false }
+        // Half a point of give, so a frame that is the canvas give or take a
+        // rounding still counts.
+        let canvas = CGRect(origin: .zero, size: canvasSize).insetBy(dx: 0.5, dy: 0.5)
+        return !canvas.isEmpty && box.contains(canvas)
     }
 
     /// The cross on a row: takes that entry out of the list, on every picked

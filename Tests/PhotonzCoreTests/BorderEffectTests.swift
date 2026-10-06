@@ -68,6 +68,87 @@ struct BorderEffectTests {
         #expect(border?.paints == true)
     }
 
+    // MARK: A picture that fills the frame
+
+    private func picture(_ frame: CGRect, transform: LayerTransform = .identity) -> Layer {
+        var layer = Layer(name: "Recording", content: .image(ImageRef(pixelSize: frame.size)),
+                          frame: frame)
+        layer.transform = transform
+        return layer
+    }
+
+    @Test("A border added to a picture that fills the frame lands Inside, where it can be seen")
+    func fullFramePictureGetsAnInsideRing() {
+        // Found on 2026-10-06: the sample recording fills the canvas, so an
+        // Outside ring sat wholly off it and adding a Border drew nothing.
+        let layer = picture(CGRect(x: 0, y: 0, width: 400, height: 300))
+        var doc = document([layer])
+        #expect(doc.addEffect(.border, layerIDs: [layer.id]) == 1)
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.position == .inside)
+    }
+
+    @Test("The ring inside a full-frame picture is inked against the picture's edge")
+    func fullFrameRingInkedAgainstTheEdge() {
+        // A picture has no fill of its own, so the app reads the colour round
+        // its edge and hands it in: on a dark recording the ring goes light.
+        let layer = picture(CGRect(x: 0, y: 0, width: 400, height: 300))
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id], edges: [layer.id: Paint(hex: "#303747")])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.colorHex == BorderInk.onDark)
+    }
+
+    @Test("A picture's edge colour is not used for a ring drawn outside it")
+    func outsideRingIgnoresThePicturesEdge() {
+        // Outside, the ring sits on whatever is under the picture, not on it.
+        let layer = picture(CGRect(x: 40, y: 30, width: 200, height: 150))
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id], edges: [layer.id: Paint(hex: "#303747")])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.colorHex == BorderInk.onLight)
+    }
+
+    @Test("A picture larger than the frame also gets its ring Inside")
+    func overflowingPictureGetsAnInsideRing() {
+        let layer = picture(CGRect(x: -20, y: -10, width: 450, height: 330))
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.position == .inside)
+    }
+
+    @Test("A picture that leaves room round it keeps the Outside ring")
+    func smallPictureKeepsOutside() {
+        let layer = picture(CGRect(x: 40, y: 30, width: 200, height: 150))
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.position == .outside)
+    }
+
+    @Test("A turned full-frame picture keeps Outside: its edges cross the canvas")
+    func turnedPictureKeepsOutside() {
+        let layer = picture(CGRect(x: 0, y: 0, width: 400, height: 300),
+                            transform: LayerTransform(rotation: 0.2))
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.position == .outside)
+    }
+
+    @Test("A shape that does not fill the frame still lands Outside, as before")
+    func shapeKeepsOutside() {
+        let layer = box()
+        var doc = document([layer])
+        doc.addEffect(.border, layerIDs: [layer.id])
+        #expect(doc.layer(id: layer.id)?.style.effects.first?.border?.position == .outside)
+    }
+
+    @Test("Picking a full-frame picture and a small shape gives each the ring it can show")
+    func mixedSelectionChoosesPerLayer() {
+        let full = picture(CGRect(x: 0, y: 0, width: 400, height: 300))
+        let shape = box()
+        var doc = document([full, shape])
+        #expect(doc.addEffect(.border, layerIDs: [full.id, shape.id]) == 2)
+        #expect(doc.layer(id: full.id)?.style.effects.first?.border?.position == .inside)
+        #expect(doc.layer(id: shape.id)?.style.effects.first?.border?.position == .outside)
+    }
+
     // MARK: More than one of them
 
     @Test("An inner and an outer border are two entries with their own settings")

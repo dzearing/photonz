@@ -56,6 +56,20 @@ extension EditorState {
         return ChromaKeySampler.wallColour(of: bitmap)
     }
 
+    /// The colour round the very edge of each picked picture that fills the
+    /// frame, as it is on screen now, for inking a new Border against it.
+    func pictureEdges(of ids: [UUID]) -> [UUID: Paint] {
+        guard let shown = shownDocument ?? document else { return [:] }
+        var edges: [UUID: Paint] = [:]
+        for id in ids where shown.coversCanvas(id) {
+            guard case .image(let ref) = shown.layer(id: id)?.content,
+                  let bitmap = store.image(for: ref),
+                  let edge = EdgeColourSampler.edgeColour(of: bitmap) else { continue }
+            edges[id] = Paint(hex: edge.hexString)
+        }
+        return edges
+    }
+
     /// Switching the key off, or back on, without forgetting its numbers.
     func setKeyIsOn(_ on: Bool, ids: [UUID]) {
         setLayerStyle(ids: ids) { $0.key?.isOn = on }
