@@ -68,10 +68,9 @@ enum PlaytestHarness {
     }
 
     /// Whether a visible window of this app sits in front of the frontmost
-    /// window of any other app. Safe off the main thread, which is where the
-    /// watcher asks it, so a walk's own timing of the main thread never
-    /// includes it.
-    nonisolated static func aProbeWindowIsOverAnotherApp() -> Bool {
+    /// window of any other app. Ask it on the main thread only
+    /// (`watchForWindowsOverThePerson` says why).
+    static func aProbeWindowIsOverAnotherApp() -> Bool {
         let me = Int(getpid())
         guard let list = CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID)
                 as? [[String: Any]] else { return false }
@@ -88,18 +87,25 @@ enum PlaytestHarness {
     /// The step loop does the same after every step; this catches what rises
     /// in the middle of one (a slider still tracking, a popover opening a beat
     /// after its press) within a frame or two rather than at the end of the
-    /// step. One look costs about a millisecond (measured 2026-09-26), on this
-    /// thread and never the main one.
+    /// step. Each look is left out of the main thread meter.
+    ///
+    /// It looks from the main thread, never from a thread of its own, which is
+    /// where it looked until 2026-10-06. Every way of reading the window list
+    /// first takes the app's window server connection lock and waits, still
+    /// holding it, for the app's last frame to land. When the main thread is
+    /// part way through sending frames for two windows, it needs that same
+    /// lock to send the frame being waited for, so both sat until the wait
+    /// gave up at half a second: `caption-pick-answers-at-once-walk` read a
+    /// 500ms freeze on about one run in five, every one 497 to 501ms, and a
+    /// sample of the probe had the watcher in
+    /// `SLSConnectionSynchronizeSLSCATransaction` and the main thread in
+    /// `SLSConnectionSetLastSLSCATransaction` for the same 400ms. On the main
+    /// thread no frame is ever half sent while it looks.
     private static func watchForWindowsOverThePerson() {
-        Thread.detachNewThread {
-            while true {
-                Thread.sleep(forTimeInterval: 0.02)
-                guard aProbeWindowIsOverAnotherApp() else { continue }
-                DispatchQueue.main.async {
-                    MainActor.assumeIsolated { sendWindowsBehindThePerson() }
-                }
-            }
+        let timer = Timer(timeInterval: 0.02, repeats: true) { _ in
+            MainActor.assumeIsolated { sendWindowsBehindThePerson() }
         }
+        RunLoop.main.add(timer, forMode: .common)
     }
 
     /// Every editor announces itself when its canvas lands in a window, so
