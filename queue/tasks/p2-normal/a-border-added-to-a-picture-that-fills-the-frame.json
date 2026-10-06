@@ -1,0 +1,40 @@
+{
+  "id": "a-border-added-to-a-picture-that-fills-the-frame",
+  "title": "A Border added to a picture that fills the frame shows on the picture",
+  "goal": "Adding a Border to a recording or screenshot that fills the whole frame draws nothing at all: the new ring sits outside the picture's edge, which is off the canvas, so it is missing from the canvas and from the exported movie. A person adds a frame and sees nothing happen.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 110,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T08:33:08.675Z",
+  "updated": "2026-10-06T12:04:10.005Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-06 in border-width-keys-walk: first run added a Border to the full-frame Tutorial Sample, keyed width 0 -> 12, and every window capture showed no ring (crop of 3-second-key-at-12-sc.png at the picture's left edge: board, then picture, nothing between). Setting Position to Inside made the ring appear at once. Cause: EffectKind.border.newEffect is BorderEffect() whose position defaults to .outside (LayerEffects.swift ~554), and a layer whose frame equals the canvas has nowhere outside to draw. Likely fix: newEffect takes the layer and canvas, and lands Inside when the layer covers the canvas. The Add Effect path is shared, so check whether this needs scoping to Next.",
+  "acceptance": [
+    "Open the sample recording at Next defaults, pick it, Effects + > Border: a ring is visible on the canvas without touching Position",
+    "The same ring is in an exported MP4 frame",
+    "A Border added to a shape or a title that does not fill the frame still lands Outside, as today"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T08:33:08.677Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-06T08:33:11.426Z",
+      "note": "walks border-width-keys-walk -> none"
+    },
+    {
+      "t": "2026-10-06T12:03:58.118Z",
+      "note": "daily digest 2026-10-06: checked, well formed (reproduced in border-width-keys-walk, cause named). Stays p2, next in line for the loop."
+    },
+    {
+      "t": "2026-10-06T12:04:10.004Z",
+      "note": "seq 3680 -> 110"
+    }
+  ],
+  "walks": []
+}

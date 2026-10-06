@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:24:15.028Z",
-  "updated": "2026-10-06T05:24:49.092Z",
+  "updated": "2026-10-06T08:56:35.735Z",
   "deps": [
     "a-shadow-s-offset-colour-and-softness-and-a-glow"
   ],
@@ -30,6 +30,43 @@
     {
       "t": "2026-10-06T05:24:49.091Z",
       "note": "seq 3660 -> 5"
+    },
+    {
+      "t": "2026-10-06T08:03:42.187Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T08:10:15.960Z",
+      "note": "owns these walks: border-width-keys-walk"
+    },
+    {
+      "t": "2026-10-06T08:56:06.372Z",
+      "note": "Adversarial pass before building: the video mock (pages/video.html PROP_CATALOG) offers Border width (still 0) and Border color on every layer under Appearance, wider than this task's 'on a layer with a Border effect'. Built to the mock: offered on every non-sound layer (keyStill 0 / born colour, like Shadow size), a width key above 0 brings an Inside ring in. Grouped under Effects because the Border lives there now (outline-leaves-appearance-and-an-effect-s-colour)."
+    },
+    {
+      "t": "2026-10-06T08:56:06.428Z",
+      "note": "Built: MotionProperty.borderWidth/.borderColor (LayerMotion.swift: current/applied/format/preset/nesting; colour nests outside width so a ring a width key brings in is painted too), lanes, picker group, looks, SVG export skip. Stroke width now reads a line's OWN stroke, not max(stroke, first border), so the two rows never show each other's number."
+    },
+    {
+      "t": "2026-10-06T08:56:06.482Z",
+      "note": "Reproduced and fixed a bug on the way: painting a KEYED colour from any panel colour well (Color section Border row, Effects list colour, fill) wrote the layer's own colour, which the key overrides, so nothing changed and no key was added. Walk step 'Key in Border color reads on a key' failed with 'between keys' before the fix. Colour wells now read at the playhead and write through performLooksHere/editingLooksHere (EditorState+ColorStyles.swift, EditorState+ColorTargets.swift), as the sliders already did. This also makes the shadow-glow audit's 'change a keyed shadow colour in the Effects list' step true; it was not before."
+    },
+    {
+      "t": "2026-10-06T08:56:06.539Z",
+      "note": "Verified: BorderKeysTests (16), KeyedBorderRenderTests (box width, box colour, letters of a title), KeyedBorderExportTests (real MP4 read back at both keys and half way); full suite 11502 green. Walks: border-width-keys-walk at Next defaults (6 real captures) plus 36 related walks green; three walks' counts moved 12 -> 14 properties."
+    },
+    {
+      "t": "2026-10-06T08:56:06.593Z",
+      "note": "Filed a-border-added-to-a-picture-that-fills-the-frame (a new Border lands Outside, which is off-canvas on a full-frame recording: reproduced in the walk). Left rough here, no task: a keyed colour flattens a gradient border while it plays; Offset and Position cannot key; Border color is below the picker's fold."
+    },
+    {
+      "t": "2026-10-06T08:56:35.733Z",
+      "note": "Border width and Border color key like any other value (MotionProperty.borderWidth/.borderColor), offered on every picture layer as the video mock does, with lanes, easing, copy/paste and panel edits at the playhead; a width key brings an Inside ring in. Also fixed panel colour wells on a keyed colour not keying. Verified: BorderKeysTests, KeyedBorderRenderTests (box and title letters), KeyedBorderExportTests (MP4 read back), full suite 11502 green, border-width-keys-walk at Next defaults plus 36 related walks. Audit queue/audits/2026-10-06-border-keys.json. Commit a0498228."
     }
-  ]
+  ],
+  "started": "2026-10-06T08:03:42.186Z",
+  "walks": [
+    "border-width-keys-walk"
+  ],
+  "completed": "2026-10-06T08:56:35.734Z"
 }

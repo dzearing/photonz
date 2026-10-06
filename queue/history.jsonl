@@ -9624,3 +9624,93 @@
 {"t":"2026-10-06T05:31:23.448Z","ev":"task_walks","id":"double-clicking-a-track-group-s-name-renames-it","walks":["group-name-double-click-renames-walk"]}
 {"t":"2026-10-06T05:41:08.494Z","ev":"task_note","id":"double-clicking-a-track-group-s-name-renames-it"}
 {"t":"2026-10-06T05:41:16.366Z","ev":"task_done","id":"double-clicking-a-track-group-s-name-renames-it","from":"in_progress","note":"Reproduced: a double-click on a group's name folded the group and never opened the name (two pictures, one fold logged). Fixed in TimelineTrackRows: the chevron folds at once, a double-click on the name only renames, and a single click on the name folds after the double-click time. Verified by group-name-double-click-renames-walk at Next defaults, tracks-you-can-add-rename-group-walk, Scripts/test.sh (11436 passed). Audit: queue/audits/2026-10-05-group-name-double-click-renames.json"}
+{"t":"2026-10-06T05:56:32.280Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":741,"of":767,"rotating":true}
+{"t":"2026-10-06T05:56:32.442Z","ev":"task_started","id":"several-picked-clips-move-onto-another-track-tog","title":"Several picked clips move onto another track together","priority":"p2-normal"}
+{"t":"2026-10-06T05:58:59.760Z","ev":"task_note","id":"several-picked-clips-move-onto-another-track-tog"}
+{"t":"2026-10-06T05:58:59.815Z","ev":"task_note","id":"several-picked-clips-move-onto-another-track-tog"}
+{"t":"2026-10-06T06:21:09.157Z","ev":"task_created","id":"a-clip-refused-by-a-track-of-the-wrong-kind-says","priority":"p2-normal","title":"A clip refused by a track of the wrong kind says why, not \"no room\""}
+{"t":"2026-10-06T06:21:29.412Z","ev":"task_walks","id":"several-picked-clips-move-onto-another-track-tog","walks":["several-picked-clips-change-track-walk"]}
+{"t":"2026-10-06T06:21:38.718Z","ev":"task_note","id":"several-picked-clips-move-onto-another-track-tog"}
+{"t":"2026-10-06T06:21:38.774Z","ev":"task_note","id":"several-picked-clips-move-onto-another-track-tog"}
+{"t":"2026-10-06T06:21:57.249Z","ev":"task_done","id":"several-picked-clips-move-onto-another-track-tog","from":"in_progress","note":"Several picked clips dragged up or down now move together by the same number of tracks and time, one undo, with a new track made past the top; a locked or wrong-kind track refuses the track change (red lane) and they only slide. Core moveClips(_:carrying:to:byMS:) in PhotonzCore/ClipsAcrossTracks.swift with 13 tests; app wiring in EditorState+Tracks/+ClipBar. Verified: Scripts/test.sh 11450 passed; several-picked-clips-change-track-walk ok at Next defaults with 5 real captures; six neighbouring track/clip walks ok. Audit queue/audits/2026-10-05-several-clips-change-track.json. Commit 1d417e25."}
+{"t":"2026-10-06T06:35:05.816Z","ev":"task_note","id":"edit-mode-s-contents-come-in-with-the-slide-not"}
+{"t":"2026-10-06T06:35:42.211Z","ev":"slice_pass","walks":42,"passed":41,"failed":1,"seconds":762,"of":768,"rotating":true}
+{"t":"2026-10-06T06:35:42.371Z","ev":"task_started","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f","title":"Command and an arrow key nudge a picked clip a frame in time","priority":"p2-normal"}
+{"t":"2026-10-06T07:02:24.897Z","ev":"task_walks","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f","walks":["command-arrows-nudge-a-clip-walk"]}
+{"t":"2026-10-06T07:02:52.218Z","ev":"task_note","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f"}
+{"t":"2026-10-06T07:02:52.273Z","ev":"task_note","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f"}
+{"t":"2026-10-06T07:02:52.328Z","ev":"task_note","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f"}
+{"t":"2026-10-06T07:02:52.382Z","ev":"task_note","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f"}
+{"t":"2026-10-06T07:03:07.445Z","ev":"task_done","id":"command-and-an-arrow-key-nudge-a-picked-clip-a-f","from":"in_progress","note":"Cmd+Left/Right nudge picked clips a frame (Shift+Cmd five), one undo step each, stopping at the clip next door and at the start; locked-track clips stay. Clip menu rows Nudge Earlier/Later, dimmed with nothing picked; a text field keeps the keys. Core ClipNudge.swift + tests, TimelineKeys binding, EditorState+ClipNudge, walk command-arrows-nudge-a-clip-walk green at Next defaults, test.sh 11464 passed, audit queue/audits/2026-10-06-clip-nudge.json. Commit 61b4d4d1."}
+{"t":"2026-10-06T07:21:31.954Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":940,"of":769,"rotating":true}
+{"t":"2026-10-06T07:21:32.131Z","ev":"task_started","id":"a-shadow-s-offset-colour-and-softness-and-a-glow","title":"A shadow's offset, colour and opacity and a glow's colour key like their size","priority":"p2-normal"}
+{"t":"2026-10-06T07:44:58.889Z","ev":"task_created","id":"keys-on-a-layer-with-several-shadows-move-the-sh","priority":"p2-normal","title":"Keys on a layer with several shadows move the shadow you picked"}
+{"t":"2026-10-06T07:45:04.329Z","ev":"task_walks","id":"keys-on-a-layer-with-several-shadows-move-the-sh","walks":[]}
+{"t":"2026-10-06T07:45:04.388Z","ev":"task_walks","id":"a-shadow-s-offset-colour-and-softness-and-a-glow","walks":["shadow-distance-keys-walk","properties-pane-walk","properties-reset-walk","key-a-title-s-scale-walk"]}
+{"t":"2026-10-06T07:45:33.054Z","ev":"task_note","id":"a-shadow-s-offset-colour-and-softness-and-a-glow"}
+{"t":"2026-10-06T07:45:33.113Z","ev":"task_note","id":"a-shadow-s-offset-colour-and-softness-and-a-glow"}
+{"t":"2026-10-06T07:45:33.172Z","ev":"task_note","id":"a-shadow-s-offset-colour-and-softness-and-a-glow"}
+{"t":"2026-10-06T07:45:55.019Z","ev":"task_done","id":"a-shadow-s-offset-colour-and-softness-and-a-glow","from":"in_progress","note":"Shadow distance, direction, color, opacity and glow color, opacity now key like size (LayerMotion.swift + key lists). Verified by ShadowGlowKeysTests, KeyedShadowRenderTests, an MP4 read-back test, full suite 11483 green, and shadow-distance-keys-walk at Next defaults (5 real captures). Audit queue/audits/2026-10-06-shadow-glow-keys.json. Follow-up filed: keys-on-a-layer-with-several-shadows-move-the-sh."}
+{"t":"2026-10-06T08:01:21.093Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-14","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-10-06T08:03:42.021Z","ev":"slice_pass","walks":50,"passed":49,"failed":1,"seconds":894,"of":770,"rotating":true}
+{"t":"2026-10-06T08:03:42.195Z","ev":"task_started","id":"a-border-s-width-and-colour-key-like-any-other-v","title":"A border's width and colour key like any other value","priority":"p2-normal"}
+{"t":"2026-10-06T08:10:15.962Z","ev":"task_walks","id":"a-border-s-width-and-colour-key-like-any-other-v","walks":["border-width-keys-walk"]}
+{"t":"2026-10-06T08:33:08.679Z","ev":"task_created","id":"a-border-added-to-a-picture-that-fills-the-frame","priority":"p2-normal","title":"A Border added to a picture that fills the frame shows on the picture"}
+{"t":"2026-10-06T08:33:11.428Z","ev":"task_walks","id":"a-border-added-to-a-picture-that-fills-the-frame","walks":[]}
+{"t":"2026-10-06T08:56:06.374Z","ev":"task_note","id":"a-border-s-width-and-colour-key-like-any-other-v"}
+{"t":"2026-10-06T08:56:06.430Z","ev":"task_note","id":"a-border-s-width-and-colour-key-like-any-other-v"}
+{"t":"2026-10-06T08:56:06.484Z","ev":"task_note","id":"a-border-s-width-and-colour-key-like-any-other-v"}
+{"t":"2026-10-06T08:56:06.541Z","ev":"task_note","id":"a-border-s-width-and-colour-key-like-any-other-v"}
+{"t":"2026-10-06T08:56:06.595Z","ev":"task_note","id":"a-border-s-width-and-colour-key-like-any-other-v"}
+{"t":"2026-10-06T08:56:06.657Z","ev":"task_note","id":"keys-on-a-layer-with-several-shadows-move-the-sh"}
+{"t":"2026-10-06T08:56:35.736Z","ev":"task_done","id":"a-border-s-width-and-colour-key-like-any-other-v","from":"in_progress","note":"Border width and Border color key like any other value (MotionProperty.borderWidth/.borderColor), offered on every picture layer as the video mock does, with lanes, easing, copy/paste and panel edits at the playhead; a width key brings an Inside ring in. Also fixed panel colour wells on a keyed colour not keying. Verified: BorderKeysTests, KeyedBorderRenderTests (box and title letters), KeyedBorderExportTests (MP4 read back), full suite 11502 green, border-width-keys-walk at Next defaults plus 36 related walks. Audit queue/audits/2026-10-06-border-keys.json. Commit a0498228."}
+{"t":"2026-10-06T09:15:43.540Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":982,"of":771,"rotating":true}
+{"t":"2026-10-06T09:15:43.706Z","ev":"task_started","id":"the-editing-session-walk-adds-captions-the-way-a","title":"The editing session walk adds captions the way a person does","priority":"p2-normal"}
+{"t":"2026-10-06T09:26:20.213Z","ev":"task_note","id":"the-editing-session-walk-adds-captions-the-way-a"}
+{"t":"2026-10-06T09:26:20.270Z","ev":"task_note","id":"the-editing-session-walk-adds-captions-the-way-a"}
+{"t":"2026-10-06T09:26:20.325Z","ev":"task_note","id":"the-editing-session-walk-adds-captions-the-way-a"}
+{"t":"2026-10-06T09:26:20.387Z","ev":"task_done","id":"the-editing-session-walk-adds-captions-the-way-a","from":"in_progress","note":"an-editing-session-walk now asks for captions through the timeline's + menu (Add Track, Captions) and waits for them to land; seed and step note say they were asked for. Also fixed the cut order so Delete takes the middle piece the walk describes and the dissolve sits on a real jump cut. Ran green at Next defaults with no flags, 7 real pictures, 57s, blank-frame check unchanged; Scripts/test.sh green (11502 tests). Commit cf7c6df4."}
+{"t":"2026-10-06T09:42:01.369Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":777,"of":771,"rotating":true}
+{"t":"2026-10-06T09:42:01.545Z","ev":"task_started","id":"a-clip-refused-by-a-track-of-the-wrong-kind-says","title":"A clip refused by a track of the wrong kind says why, not \"no room\"","priority":"p2-normal"}
+{"t":"2026-10-06T10:00:09.501Z","ev":"task_note","id":"a-clip-refused-by-a-track-of-the-wrong-kind-says"}
+{"t":"2026-10-06T10:00:09.563Z","ev":"task_done","id":"a-clip-refused-by-a-track-of-the-wrong-kind-says","from":"in_progress","note":"Refused drops now say why: PhotonzCore ClipPlacementRefusal (wrong kind / locked / no room) for one clip and several picked clips; capsule reads 'Audio takes sound only', 'V2 is locked', 'no room on V2'. dragClip walk step gained 'reads'; several-picked-clips-change-track-walk holds all three and passes at Next defaults with 9 real captures. Full suite green (11517 tests). Audit queue/audits/2026-10-06-refused-drop-says-why.json. Commit 44719376."}
+{"t":"2026-10-06T10:21:06.447Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":1091,"of":771,"rotating":true}
+{"t":"2026-10-06T10:21:06.634Z","ev":"task_started","id":"keys-on-a-layer-with-several-shadows-move-the-sh","title":"Keys on a layer with several shadows move the shadow you picked","priority":"p2-normal"}
+{"t":"2026-10-06T10:48:00.063Z","ev":"task_walks","id":"keys-on-a-layer-with-several-shadows-move-the-sh","walks":["keys-on-a-later-shadow-walk","shadow-distance-keys-walk"]}
+{"t":"2026-10-06T10:48:09.938Z","ev":"task_note","id":"keys-on-a-layer-with-several-shadows-move-the-sh"}
+{"t":"2026-10-06T10:48:09.995Z","ev":"task_note","id":"keys-on-a-layer-with-several-shadows-move-the-sh"}
+{"t":"2026-10-06T10:48:10.051Z","ev":"task_note","id":"keys-on-a-layer-with-several-shadows-move-the-sh"}
+{"t":"2026-10-06T10:54:17.892Z","ev":"task_done","id":"keys-on-a-layer-with-several-shadows-move-the-sh","from":"in_progress","note":"Each keyed shadow, glow and border value names which one it moves (LayerMotion.effect; old files = first). Animate a property, rows and lanes read 'Shadow 3 distance'; keying it moves Shadow 3 only; dragging Shadow 3's Distance in Effects at a second moment adds a key there; removing/dragging an entry carries its keys. Verified: KeysOnSeveralEffectsTests + full suite (11,536) green; keys-on-a-later-shadow-walk ok at Next defaults with 4 real captures; 10 related walks ok. Commit eb02d641. Audit queue/audits/2026-10-06-keys-on-a-later-shadow.json."}
+{"t":"2026-10-06T11:12:57.948Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":876,"of":772,"rotating":true}
+{"t":"2026-10-06T11:12:58.118Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-14","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-10-06T11:42:07.518Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-14","walks":["caption-pick-answers-at-once-walk"]}
+{"t":"2026-10-06T11:42:07.575Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-14"}
+{"t":"2026-10-06T11:42:07.630Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-14"}
+{"t":"2026-10-06T11:42:07.687Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-14"}
+{"t":"2026-10-06T11:42:15.096Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-14","from":"in_progress","note":"caption-pick-answers-at-once-walk's 500ms freezes were the walk harness, not the app: its window watcher read the window list from its own thread and stalled the main thread's frame commit on a WindowServer lock until a ~500ms timeout. Watcher now looks from the main thread (8f034c7b). Walk 25 runs after: no freeze, timings unchanged; focus-drill clean; timing walks pass; test.sh green."}
+{"t":"2026-10-06T12:01:36.627Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":994,"of":772,"rotating":true}
+{"t":"2026-10-06T12:03:39.644Z","ev":"task_created","id":"a-rotating-walk-check-takes-the-ten-minutes-it-i","priority":"p2-normal","title":"A rotating walk check takes the ten minutes it is given"}
+{"t":"2026-10-06T12:03:53.241Z","ev":"task_created","id":"animate-a-property-fits-on-screen-on-a-title-wit","priority":"p2-normal","title":"Animate a property fits on screen on a title with several shadows"}
+{"t":"2026-10-06T12:03:58.062Z","ev":"task_note","id":"time-on-a-video-reads-in-frames-where-an-editor"}
+{"t":"2026-10-06T12:03:58.120Z","ev":"task_note","id":"a-border-added-to-a-picture-that-fills-the-frame"}
+{"t":"2026-10-06T12:04:09.448Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":6,"to":10}
+{"t":"2026-10-06T12:04:09.503Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":30,"to":20}
+{"t":"2026-10-06T12:04:09.560Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":40,"to":30}
+{"t":"2026-10-06T12:04:09.615Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":50,"to":40}
+{"t":"2026-10-06T12:04:09.671Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":60,"to":50}
+{"t":"2026-10-06T12:04:09.727Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":70,"to":60}
+{"t":"2026-10-06T12:04:09.782Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":80,"to":70}
+{"t":"2026-10-06T12:04:09.836Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":90,"to":80}
+{"t":"2026-10-06T12:04:09.892Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":120,"to":90}
+{"t":"2026-10-06T12:04:09.948Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":130,"to":100}
+{"t":"2026-10-06T12:04:10.006Z","ev":"task_resequenced","id":"a-border-added-to-a-picture-that-fills-the-frame","from":3680,"to":110}
+{"t":"2026-10-06T12:04:10.062Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":3700,"to":120}
+{"t":"2026-10-06T12:04:10.119Z","ev":"task_resequenced","id":"a-rotating-walk-check-takes-the-ten-minutes-it-i","from":3690,"to":130}
+{"t":"2026-10-06T12:04:15.623Z","ev":"triage","summary":"merged 0, dropped 0, moved 0, filed 2 (rotating check sizing for the loop, Animate a property list length), folded 1 (fixed 33ms nudge into the frames card task), reset 0, groomed 0, p2 resequenced to clean steps of 10"}
+{"t":"2026-10-06T12:04:49.855Z","ev":"task_created","id":"a-clip-landing-where-another-sits-does-the-same","priority":"p2-normal","title":"A clip landing where another sits does the same thing however it got there"}
+{"t":"2026-10-06T12:04:58.650Z","ev":"decision_opened","id":"a-clip-landing-where-another-sits-does-the-same-when-a-clip-lands-on-a-spot-that","taskId":"a-clip-landing-where-another-sits-does-the-same","question":"When a clip lands on a spot that already holds a clip, what should happen?"}
+{"t":"2026-10-06T12:05:02.298Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":3680,"to":140}
+{"t":"2026-10-06T12:05:02.353Z","ev":"task_note","id":"a-clip-landing-where-another-sits-does-the-same"}
+{"t":"2026-10-06T12:05:05.700Z","ev":"triage","summary":"addendum: filed 1 more (one landing rule for a clip arriving on an occupied spot, blocked on a new card)"}
+{"t":"2026-10-06T12:05:09.214Z","ev":"task_blocked","id":"a-clip-landing-where-another-sits-does-the-same","from":"pending","note":"waiting on the card: when a clip lands on a spot that already holds a clip, what should happen?"}
+{"t":"2026-10-06T12:06:28.209Z","ev":"digest","file":"2026-10-06.md"}

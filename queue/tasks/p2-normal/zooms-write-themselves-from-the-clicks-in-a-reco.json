@@ -4,12 +4,12 @@
   "goal": "A recording already remembers every click, and a zoom region can frame a spot and follow the pointer, but every zoom is made by hand. Screen Studio, the tool people use to turn a raw screen recording into something to share, puts a zoom in on each burst of clicks by itself, and that is most of why its output looks polished in minutes. Offer one command that does the same, making ordinary zoom regions the person can then move, trim or delete.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 20,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T09:48:57.237Z",
-  "updated": "2026-10-05T12:50:53.157Z",
+  "updated": "2026-10-06T12:04:09.502Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager pass 2026-10-05, competitor lens (focus brief names Screen Studio and ScreenFlow: raw recording to polished share, zooms that follow the pointer). Building blocks already shipped: recorded clicks (a-recording-remembers-where-the-cursor-went-and, audit 2026-09-30-recorded-clicks.json), click effects (2026-09-30-click-effects.json), zoom regions with Follow Cursor (a-zoom-region-that-frames-a-spot-and-can-follow, audit 2026-09-30-zoom-regions.json). No mock draws automatic zooms (video-zoom-wt.html is the manual punch-in), so this is a new visible command and goes through a card first. Placement: Menu bar (Clip) and the clip's right-click, per the placement contract; no new panel button.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-05T12:50:53.156Z",
       "note": "seq 7 -> 30"
+    },
+    {
+      "t": "2026-10-06T12:04:09.501Z",
+      "note": "seq 30 -> 20"
     }
   ]
 }

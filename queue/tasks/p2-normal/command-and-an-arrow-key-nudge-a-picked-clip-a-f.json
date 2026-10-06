@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:24:44.644Z",
-  "updated": "2026-10-06T05:24:48.980Z",
+  "updated": "2026-10-06T07:03:07.444Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Keys table: Sources/PhotonzCore/TimelineKeys.swift (arrows at ~179-182 step frames only); handlers Sources/Photonz/EditorState+TimelineKeys.swift; menu rows Sources/Photonz/EditorCommands.swift (Option Shift arrows at ~995-1000 are caption timing; no Command arrow binding exists today, grep checked). Premiere's Nudge Clip Selection Left/Right: check its default Mac keyboard map before binding (recalled as Command Left/Right, Shift Command for five frames); if Premiere's Mac keys differ and are free here, use Premiere's. Reuse the move rule moveClips(byMS:) and the frame length from the document's frame rate. Found by the 2026-10-05 22:xx manager pass's key audit: no time-nudge function exists anywhere.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-06T05:24:48.979Z",
       "note": "seq 3680 -> 3"
+    },
+    {
+      "t": "2026-10-06T06:35:42.365Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T07:02:24.895Z",
+      "note": "owns these walks: command-arrows-nudge-a-clip-walk"
+    },
+    {
+      "t": "2026-10-06T07:02:52.216Z",
+      "note": "Before building: Premiere's Mac map has Nudge Clip Selection Left/Right on Cmd+Left/Right, Shift+Cmd for five; both were free here (only Option+Shift arrows, captions, were taken). Problem found: Cmd+K makes PIECES of one clip, not two clips, so a picked piece cannot move on its own without a gap the model has no way to hold. Decided: a nudge moves the whole clip, matching a Cmd drag on a piece. Asked in the audit's evaluate list rather than on a decision card, since the user's reaction to that line becomes a task."
+    },
+    {
+      "t": "2026-10-06T07:02:52.270Z",
+      "note": "Second danger: a menu key equivalent fires before a text field gets the key. Fixed: the menu rows print their keys only while the timeline has the keyboard (same as J/K/L), and when a field has the keyboard the row hands the caret move to the field, the way Cut/Copy/Paste do. The walk proves it: renaming a clip, Cmd+Left reached the Clip menu row, which moved the caret to the front, and the clip did not move."
+    },
+    {
+      "t": "2026-10-06T07:02:52.325Z",
+      "note": "Built: PhotonzCore/ClipNudge.swift (canNudgeClips, nudgeClips(byFrames:) stop at the clip next door on the same track and at 0; locked-track clips stay; tests ClipNudgeTests, 13). TimelineKeys .nudgeClips(frames:) on Cmd/Shift+Cmd arrows, timeline focus only (TimelineKeysTests). App: EditorState+ClipNudge.swift (Next only via the cutRecording flag), Clip menu rows Nudge Earlier/Later (EditorCommands nudgeClipRows). Walk command-arrows-nudge-a-clip-walk (front:true, needs the Mac: windowClick plus menus) green; neighbouring walks premiere-keys, every-command-in-the-menu-bar, a-click-on-a-clip-piece green; Scripts/test.sh 11464 passed."
+    },
+    {
+      "t": "2026-10-06T07:02:52.380Z",
+      "note": "Rough items: the piece-vs-whole-clip question is in the audit's evaluate list for the user to answer. The missing menu rows for the five-frame nudge and the fixed 33ms frame are left rough here: a person barely notices either and neither clears the follow-up bar. Walk detail: a 'shortcut' step cannot prove a timeline key, because the timeline router takes it before the menu, so the walk picks the menu row with menus choose."
+    },
+    {
+      "t": "2026-10-06T07:03:07.442Z",
+      "note": "Cmd+Left/Right nudge picked clips a frame (Shift+Cmd five), one undo step each, stopping at the clip next door and at the start; locked-track clips stay. Clip menu rows Nudge Earlier/Later, dimmed with nothing picked; a text field keeps the keys. Core ClipNudge.swift + tests, TimelineKeys binding, EditorState+ClipNudge, walk command-arrows-nudge-a-clip-walk green at Next defaults, test.sh 11464 passed, audit queue/audits/2026-10-06-clip-nudge.json. Commit 61b4d4d1."
     }
-  ]
+  ],
+  "started": "2026-10-06T06:35:42.363Z",
+  "walks": [
+    "command-arrows-nudge-a-clip-walk"
+  ],
+  "completed": "2026-10-06T07:03:07.443Z"
 }

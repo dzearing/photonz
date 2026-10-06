@@ -1,0 +1,32 @@
+{
+  "id": "animate-a-property-fits-on-screen-on-a-title-wit",
+  "title": "Animate a property fits on screen on a title with several shadows",
+  "goal": "The list you choose a value to animate from has grown in one day from 8 values to 19 for a plain title, mostly five rows for each of its shadows, and on a normal window only about half of it shows before you have to scroll. Someone looking for Shadow color or Border color has to know to scroll or type. The list should stay short enough to read at a glance, as the video mock's is, while every value stays reachable.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 120,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T12:03:53.237Z",
+  "updated": "2026-10-06T12:04:10.061Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in three audits on 2026-10-06, each listing it as rough: 2026-10-06-shadow-glow-keys (8 -> 12 values for a title), 2026-10-06-border-keys (14 values, Border color below the fold), 2026-10-06-keys-on-a-later-shadow (a typed title wears two shadows, so 19 values with ten shadow rows). Picture: queue/audits/2026-10-06-keys-on-a-later-shadow-1-picker-sc.png shows the popover reaching the top of the window with the list cut at Shadow 1 distance. The mock's catalogue lists 13 values for a picture layer and only one shadow value (Shadow size). Folding each effect's values under its name is one way to do it; a departure from the mock's flat list is a decision card, not a quiet change.",
+  "acceptance": [
+    "On a title typed at Next defaults in a default-size window, Animate a property shows every group heading (Transform, Appearance, Effects) and at least one value under each without scrolling",
+    "Every value that can take a key today is still reachable from the list in at most one more click, and typing its name in Find a property still finds it",
+    "The shadows are told apart the same way the Effects list tells them apart (Shadow 1, Shadow 2)",
+    "A walk at Next defaults photographs the open list on a title with two shadows and on a recording with a Border, and the audit puts it beside the video mock's property list (pages/video.html, PROP_CATALOG)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T12:03:53.239Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-06T12:04:10.060Z",
+      "note": "seq 3700 -> 120"
+    }
+  ]
+}

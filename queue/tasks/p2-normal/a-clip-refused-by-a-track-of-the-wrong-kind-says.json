@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3650,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T06:21:09.153Z",
-  "updated": "2026-10-06T06:21:09.156Z",
+  "updated": "2026-10-06T10:00:09.562Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-05 by Scripts/playtest/several-picked-clips-change-track-walk.json step 49 (dragClip Tutorial Sample tracksUp -1): log note \"aimed no room on Audio, refused\"; picture queue/audits/2026-10-05-several-clips-change-track-5-refused-on-sound-sc.png. The single clip drop says the same (EditorState+Tracks.swift clipTrackDropReading: drop.allowed ? \"to name\" : \"no room on name\"). ClipTrackDrop only carries allowed: Bool; it needs a reason (kind / locked / overlap) from canPlace / canMoveClips.",
@@ -23,9 +23,23 @@
     {
       "t": "2026-10-06T06:21:09.155Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-06T09:42:01.537Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T10:00:09.499Z",
+      "note": "adversarial pass: an editor told no room hunts for a clip in the way; now kind is said before lock (unlocking would not help), and with several picked clips the track named is the one that refused, which can be a different lane from the one under the hand (asked in the audit). Left rough, not filed: moving one recording clip alone onto a new V2 split the sound onto a new Audio 2 lane (seen in the walk; existing behaviour, not a refusal, nobody reported it); long graphic track names can push the words past 30 chars, as before."
+    },
+    {
+      "t": "2026-10-06T10:00:09.560Z",
+      "note": "Refused drops now say why: PhotonzCore ClipPlacementRefusal (wrong kind / locked / no room) for one clip and several picked clips; capsule reads 'Audio takes sound only', 'V2 is locked', 'no room on V2'. dragClip walk step gained 'reads'; several-picked-clips-change-track-walk holds all three and passes at Next defaults with 9 real captures. Full suite green (11517 tests). Audit queue/audits/2026-10-06-refused-drop-says-why.json. Commit 44719376."
     }
   ],
   "walks": [
     "several-picked-clips-change-track-walk"
-  ]
+  ],
+  "started": "2026-10-06T09:42:01.536Z",
+  "completed": "2026-10-06T10:00:09.561Z"
 }

@@ -1,0 +1,32 @@
+{
+  "id": "a-rotating-walk-check-takes-the-ten-minutes-it-i",
+  "title": "A rotating walk check takes the ten minutes it is given",
+  "goal": "The check that runs a slice of the scripted walks after each task is meant to take about ten minutes, but it plans its slice as if a walk takes 12 seconds when walks now take about 18, so every check runs about fifteen minutes. Over a day that is more than an hour and a half of the loop's time that was never meant to be spent, and the rules describing the check no longer match what it does.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T12:03:39.640Z",
+  "updated": "2026-10-06T12:04:10.118Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-06 by the daily digest. queue/bin/sweep-schedule.mjs DEFAULTS has sliceMinutes 10 and perWalkSeconds 12; pickSlice budget = floor(10*60/12) = 50 walks. Measured over the last 30 slice_pass events: `grep '\"slice_pass\"' queue/history.jsonl | tail -30` then sum seconds and walks: 30 checks, average 14.6 min, 50 walks each, 17.6 s per walk. loop-day.mjs --hours 24 on 2026-10-06: rotating checks 383 min (26.6% of the day, 26 checks) against 231 min (16.1%) the day before. The digests of 2026-10-04 and 2026-10-05 both noted checks running about 14 minutes.",
+  "acceptance": [
+    "The slice size is worked out from how long walks have really taken in recent checks (for example from the seconds and walk counts the loop already records after each check), not a fixed guess",
+    "Over the next ten rotating checks after the change, the average check takes between 9 and 11 minutes (queue/history.jsonl slice_pass seconds)",
+    "The full set is still covered by the rotation over a day: the cursor keeps moving and no walk is skipped for good",
+    "The sweep schedule's own drill or unit tests cover the new sizing"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T12:03:39.642Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-06T12:04:10.117Z",
+      "note": "seq 3690 -> 130"
+    }
+  ]
+}

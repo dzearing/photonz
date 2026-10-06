@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:24:04.220Z",
-  "updated": "2026-10-06T05:24:49.037Z",
+  "updated": "2026-10-06T07:45:55.018Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Success list of video-transitions-motion: 'Any animatable value (transform, opacity, effects, text, volume) can be keyframed'. Today Layer.keyableProperties (Sources/PhotonzCore/PropertyKeys.swift ~224) lists position, scale, rotation, opacity, cornerRadius, strokeWidth, color, blur, shadow (size only), glow (size only), textSize, crop edges, volume. Missing here: shadow offset, colour, opacity; glow colour, opacity. MotionProperty lives in Sources/PhotonzCore/LayerMotion.swift; key lanes in Sources/Photonz/KeyLanesView.swift; panel list in Sources/Photonz/PropertyKeysInspector.swift; renderer DocumentRenderer applies effects. The same gap was logged as under the bar on keyframe-anything-and-see-and-shape-the-keys-on ('only glow size is keyable, not its colour, softness or strength'); this 2026-10-05 22:xx pass found it again, so it is filed now. TDD in PhotonzCore first (interpolating a colour and an offset). Border keys are the follow-on task a-border-s-width-and-colour-key-like-any-other-v.",
@@ -28,6 +28,38 @@
     {
       "t": "2026-10-06T05:24:49.036Z",
       "note": "seq 3650 -> 4"
+    },
+    {
+      "t": "2026-10-06T07:21:32.124Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T07:45:04.386Z",
+      "note": "owns these walks: shadow-distance-keys-walk, properties-pane-walk, properties-reset-walk, key-a-title-s-scale-walk"
+    },
+    {
+      "t": "2026-10-06T07:45:33.052Z",
+      "note": "Adversarial review before building: a Premiere user keys Drop Shadow distance/opacity/colour under Effect Controls, so these belong in the same picker and lanes as size; the Effects list already has Distance/Direction/Opacity/colour rows, so the keys use those words (distance+direction rather than X/Y). Found that a typed title carries two shadows and Add Effect appends a third, while keys reach only the first: filed keys-on-a-layer-with-several-shadows-move-the-sh (p2)."
+    },
+    {
+      "t": "2026-10-06T07:45:33.111Z",
+      "note": "Built: six new MotionProperty cases (shadowDistance, shadowDirection, shadowColor, shadowOpacity, glowColor, glowOpacity) in LayerMotion.swift (title, current, applied, format, default motion, nestingOrder just outside .shadow so a size key's new shadow is thrown/painted too); added to keyableProperties, MotionProperty.looks (so Effects panel edits at the playhead become keys), lane order, picker group Effects, SVG drop lists, panel units. Direction applied without the panel's 1pt nudge. Distance is a length the growth multiplies. Tests: ShadowGlowKeysTests (core, 15), KeyedShadowRenderTests (pixels at both keys and between), KeyedShadowExportTests (real MP4 read back at 0.5/2.0/3.5s). Full suite 11483 green."
+    },
+    {
+      "t": "2026-10-06T07:45:33.170Z",
+      "note": "Walks: new shadow-distance-keys-walk (no flags, 5 real captures). Titles now offer 12 keyable values instead of 8, so properties-pane-walk, properties-reset-walk and key-a-title-s-scale-walk now expect 'of 12 properties'; all three green. Left rough (under the bar): the picker for a title now scrolls below Shadow distance; glow softness and shadow spread are still unkeyable; a title typed at 0:00 ends at 0:03 so a 0:03 key lands on its last frame."
+    },
+    {
+      "t": "2026-10-06T07:45:55.016Z",
+      "note": "Shadow distance, direction, color, opacity and glow color, opacity now key like size (LayerMotion.swift + key lists). Verified by ShadowGlowKeysTests, KeyedShadowRenderTests, an MP4 read-back test, full suite 11483 green, and shadow-distance-keys-walk at Next defaults (5 real captures). Audit queue/audits/2026-10-06-shadow-glow-keys.json. Follow-up filed: keys-on-a-layer-with-several-shadows-move-the-sh."
     }
-  ]
+  ],
+  "started": "2026-10-06T07:21:32.123Z",
+  "walks": [
+    "shadow-distance-keys-walk",
+    "properties-pane-walk",
+    "properties-reset-walk",
+    "key-a-title-s-scale-walk"
+  ],
+  "completed": "2026-10-06T07:45:55.017Z"
 }

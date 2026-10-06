@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:25:21.589Z",
-  "updated": "2026-10-06T05:25:21.724Z",
+  "updated": "2026-10-06T09:26:20.386Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Scripts/playtest/an-editing-session-walk.json step 3 uses action captionsWriteQuietly (PlaytestHarness.swift ~3944, which calls editor.writeCaptions(quietly:) directly); seed text line 3 and note line ~52 say 'Nothing was pressed: the captions wrote themselves'. The user's ask: captions-only-when-you-ask-for-them (done 2026-09-28). objectives.json now words the focus success the same way (this pass). Find a walk step that presses a menu row or a playtest control by name (lock-safety: a by-name lookup makes the walk refuse on a locked screen; prefer the app's register of panel controls or a menu row read without opening it, see PlaytestLockSafety.swift). Walk-only change: no Sources edit expected unless the Add Captions control needs a playtest name.",
@@ -31,9 +31,31 @@
     {
       "t": "2026-10-06T05:25:21.723Z",
       "note": "owns these walks: an-editing-session-walk"
+    },
+    {
+      "t": "2026-10-06T09:15:43.700Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T09:26:20.211Z",
+      "note": "Before building: the + menu (Add Track, Captions) is the timeline's own ask and is lock-safe as a panelMenu read without opening; the right click is not lock-safe and the inspector button only shows once Edit mode and the Captions section are up, so the + menu is what the walk now uses. A non-quiet ask picks the Captions layer and switches to Edit; the walk's later steps (select tool, Cmd K, Delete) are unaffected because the cuts act on the clip in hand. Baseline run of the old walk gave the same 2-cut picture as the new step, so the swap changes nothing downstream."
+    },
+    {
+      "t": "2026-10-06T09:26:20.268Z",
+      "note": "Found while comparing pictures: the walk cut at 0:08 then 0:04, and a cut leaves the piece BEFORE it picked, so Delete threw away the first 4 seconds, not the middle the note claimed, and the dissolve went on a seamless join. Swapped the cut order (0:04 then 0:08); now the middle goes, the captions for 0:00-0:04 stay, and the dissolve blends Copying 135 into Ready 0 across a real jump cut. Same 12.94s length, everything after unchanged."
+    },
+    {
+      "t": "2026-10-06T09:26:20.323Z",
+      "note": "left rough: the walk proves the + menu row works, not a pointer click on the + button (panelMenu chooses inside the app). captions-on-demand-walk covers the right click and the inspector button; no task filed, as no person-visible defect was seen. 20 other walks still use captionsWriteQuietly as setup for features that are not about captions, which is what the quiet step is for."
+    },
+    {
+      "t": "2026-10-06T09:26:20.384Z",
+      "note": "an-editing-session-walk now asks for captions through the timeline's + menu (Add Track, Captions) and waits for them to land; seed and step note say they were asked for. Also fixed the cut order so Delete takes the middle piece the walk describes and the dissolve sits on a real jump cut. Ran green at Next defaults with no flags, 7 real pictures, 57s, blank-frame check unchanged; Scripts/test.sh green (11502 tests). Commit cf7c6df4."
     }
   ],
   "walks": [
     "an-editing-session-walk"
-  ]
+  ],
+  "started": "2026-10-06T09:15:43.698Z",
+  "completed": "2026-10-06T09:26:20.385Z"
 }

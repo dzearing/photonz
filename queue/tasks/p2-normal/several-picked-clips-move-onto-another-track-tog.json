@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T05:24:28.013Z",
-  "updated": "2026-10-06T05:24:48.924Z",
+  "updated": "2026-10-06T06:21:57.248Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Sources/Photonz/EditorState+ClipBar.swift ~510: `case .body where !session.along.isEmpty` clears clipTrackDrop and only calls moveClips(byMS:). The single-clip path uses landClip(_:atInMS:moved:on:) with the ClipTrackDrop from the drag (EditorState+Tracks.swift ~336, 389). Needs a core move that shifts several layers by a track delta (PhotonzCore, test first: track index offset per clip, kinds checked, locked tracks refused). Premiere and Final Cut both move a multi-selection across tracks. Found by the 2026-10-05 22:xx manager pass reading the drag code, not on screen, hence the reproduce step.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-06T05:24:48.923Z",
       "note": "seq 3670 -> 2"
+    },
+    {
+      "t": "2026-10-06T05:56:32.435Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T05:58:59.758Z",
+      "note": "Reproduced 2026-10-05 in the probe (walk Scripts/playtest/zz-repro-multi-track-walk.json, throwaway): recording trimmed to 6s on V1, b-roll dropped on V1 at 6s, both picked (dragClip click, then shift-click), clipCarryToNewTrackOnTopHeld + clipDragRelease. Result: 'expectClip FAILED: no clip called \"Tutorial Sample\" is on V2; the timeline: b-roll on V1 6.00s to 14.00s; Tutorial Sample on V1 0.00s to 6.00s'. Both stay on V1. Two causes in code: updateClipTrackDrop refuses any drop while session.along is non-empty (so a real drag shows no target), and commitClipBarDrag's .body-with-along branch clears clipTrackDrop and only slides in time."
+    },
+    {
+      "t": "2026-10-06T05:58:59.813Z",
+      "note": "Adversarial pass: Premiere moves a multi-selection by the same number of tracks (V clips up, A clips down mirrored); acceptance asks a positional shift with wrong kind refusing the whole track change, so a mixed picture + pure-sound pick moving up is refused (the sound would land on a picture track) and still slides in time. Linked sound is part of the picture layer (soundTrackID), so it stays on its audio track and follows in time with no extra work. Option-copy of several picked clips stays time-only for now (copies path not touched). A drop between two tracks with several clips: one new track at that place for the hand's track, every other clip shifted by the same rows, and rows above the top or below the bottom get new tracks made, as the single drop does."
+    },
+    {
+      "t": "2026-10-06T06:21:29.410Z",
+      "note": "owns these walks: several-picked-clips-change-track-walk"
+    },
+    {
+      "t": "2026-10-06T06:21:38.716Z",
+      "note": "Built: PhotonzCore ClipsAcrossTracks.swift (canMoveClips / moveClips(_:carrying:to:byMS:)), 13 tests in ClipsAcrossTracksTests; EditorState+Tracks updateClipTrackDrop now aims several moved clips (not ⌥ copies), setClipTrackDrop asks canMoveClips, landClips lands them in one perform; commitClipBarDrag's several-clips branch lands the track move when allowed, otherwise slides in time as before. Walk step dragClip gained tracksUp (pointer Y through updateClipTrackDrop from the dock's drawn rows) and ⌘ on a click extends the pick like ⇧. New walk several-picked-clips-change-track-walk: ok at Next defaults, 5 real captures. Neighbours ok: track-select-forward, a-shape-s-bar-keeps-its-track, tracks-you-can-add-rename-group, clips-snap-to-markers, default-transition-on-picked-clips, option-drag-copies-a-clip. Scripts/test.sh: 11450 tests passed. The timeline is shared code (as every earlier track task), so Current documents with time get the same gesture."
+    },
+    {
+      "t": "2026-10-06T06:21:38.772Z",
+      "note": "Left rough (no task, under the bar): other picked clips are not drawn on their landing lanes while in the hand (single drop is the same); ⌥-dragging several picked clips still only slides them in time (copies path untouched); mixed picture + separate sound pick refuses to go up, Premiere would mirror the sound down; walk adds the second clip by dropOnTimeline because Add Media at Playhead's menu step needs the Mac to itself. Filed: a-clip-refused-by-a-track-of-the-wrong-kind-says (refusal reads 'no room on Audio' when the reason is the kind)."
+    },
+    {
+      "t": "2026-10-06T06:21:57.246Z",
+      "note": "Several picked clips dragged up or down now move together by the same number of tracks and time, one undo, with a new track made past the top; a locked or wrong-kind track refuses the track change (red lane) and they only slide. Core moveClips(_:carrying:to:byMS:) in PhotonzCore/ClipsAcrossTracks.swift with 13 tests; app wiring in EditorState+Tracks/+ClipBar. Verified: Scripts/test.sh 11450 passed; several-picked-clips-change-track-walk ok at Next defaults with 5 real captures; six neighbouring track/clip walks ok. Audit queue/audits/2026-10-05-several-clips-change-track.json. Commit 1d417e25."
     }
-  ]
+  ],
+  "started": "2026-10-06T05:56:32.434Z",
+  "walks": [
+    "several-picked-clips-change-track-walk"
+  ],
+  "completed": "2026-10-06T06:21:57.247Z"
 }

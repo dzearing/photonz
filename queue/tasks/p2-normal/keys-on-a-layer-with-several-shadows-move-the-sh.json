@@ -1,0 +1,65 @@
+{
+  "id": "keys-on-a-layer-with-several-shadows-move-the-sh",
+  "title": "Keys on a layer with several shadows move the shadow you picked",
+  "goal": "A title comes with two shadows, and adding a Drop Shadow puts a third at the bottom of its Effects list. Every shadow key (size, distance, direction, colour, opacity) moves only the first shadow, so someone who adds a shadow and keys its distance sees a different shadow move and their own stay put.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3660,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T07:44:58.885Z",
+  "updated": "2026-10-06T10:54:17.891Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-10-06 while building a-shadow-s-offset-colour-and-softness-and-a-glow. Reproduced on the probe with /tmp/sgk/explore.json: typed title (Georgia 80 bold) shows Effects 2 shadows; panelMenu Add Effect > Shadow appends Shadow 3 (screenshot /tmp/photonz-playtest/sgk-explore/2-shadow-sc.png, Effects count 3). MotionProperty.shadow/.shadowDistance/.shadowDirection/.shadowColor/.shadowOpacity all apply to style.shadows.first (LayerMotion.swift applied/current), and glow keys to the first glow. Needs an index on a keyed shadow value (MotionProperty is a flat String enum, so likely a separate effect index on LayerMotion, defaulting to 0 for old files).",
+  "acceptance": [
+    "On a title with three shadows, Animate a property says which shadow each shadow value belongs to, and keying Shadow 3 distance moves Shadow 3 only",
+    "Changing a keyed value in a shadow other than the first, in the Effects list at a second moment, adds a key to that shadow",
+    "The existing shadow keys on saved documents keep moving the first shadow"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T07:44:58.887Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-06T07:45:04.327Z",
+      "note": "walks shadow-distance-keys-walk -> none"
+    },
+    {
+      "t": "2026-10-06T08:56:06.654Z",
+      "note": "also true of borders (2026-10-06): Border width and Border color keys move only the FIRST Border in the Effects list; a second ring keeps its own values."
+    },
+    {
+      "t": "2026-10-06T10:21:06.628Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T10:48:00.061Z",
+      "note": "walks none -> keys-on-a-later-shadow-walk, shadow-distance-keys-walk"
+    },
+    {
+      "t": "2026-10-06T10:48:09.936Z",
+      "note": "adversarial review before: Premiere gives each effect instance its own stopwatches, so a key belongs to one Drop Shadow, not to 'shadows'. The app names its shadows Shadow 1/2/3 in Effects, so the picker reuses those names. Risk found: keys addressed by position break when a shadow is removed or dragged, so remove/move/insert in the Effects list now carry keys with their shadow (and drop keys on a removed one). A plain typed title wears two shadows, so its picker grows from 5 to 10 shadow rows (count 14 -> 19 properties)."
+    },
+    {
+      "t": "2026-10-06T10:48:09.993Z",
+      "note": "built: LayerMotion.effect (nil = first, so saved files are unchanged); KeyedProperty.motion(property, effect:) with title(on:); per-effect current/applied/keyStill/keyedMotion; lookPosed/editLooks/foldEditIntoKeys/lanes/stretch curve all effect-aware; Effects list remove/move/insert remap keyed motions (ColorStyles.swift). Tests: KeysOnSeveralEffectsTests (20), full suite 11,536 green. Walks: new keys-on-a-later-shadow-walk ok with 4 real captures; shadow-distance-keys, key-a-title-s-scale, properties-pane, properties-reset updated for Shadow 1 naming and the 19-value count, all ok; border-width-keys, glow-effect, separate-shadow, punch-in-and-hold ok."
+    },
+    {
+      "t": "2026-10-06T10:48:10.049Z",
+      "note": "left rough: the icon Motion list (MotionListInspector) still titles rows by property alone, so a later shadow's motion would read 'Shadow distance' there; that list only shows icon motions, which never key shadows, so no person sees it today."
+    },
+    {
+      "t": "2026-10-06T10:54:17.889Z",
+      "note": "Each keyed shadow, glow and border value names which one it moves (LayerMotion.effect; old files = first). Animate a property, rows and lanes read 'Shadow 3 distance'; keying it moves Shadow 3 only; dragging Shadow 3's Distance in Effects at a second moment adds a key there; removing/dragging an entry carries its keys. Verified: KeysOnSeveralEffectsTests + full suite (11,536) green; keys-on-a-later-shadow-walk ok at Next defaults with 4 real captures; 10 related walks ok. Commit eb02d641. Audit queue/audits/2026-10-06-keys-on-a-later-shadow.json."
+    }
+  ],
+  "walks": [
+    "keys-on-a-later-shadow-walk",
+    "shadow-distance-keys-walk"
+  ],
+  "started": "2026-10-06T10:21:06.625Z",
+  "completed": "2026-10-06T10:54:17.890Z"
+}

@@ -1,0 +1,50 @@
+{
+  "id": "a-clip-landing-where-another-sits-does-the-same-when-a-clip-lands-on-a-spot-that",
+  "taskId": "a-clip-landing-where-another-sits-does-the-same",
+  "question": "When a clip lands on a spot that already holds a clip, what should happen?",
+  "context": "A dropped file covers what is under it, as Premiere does. A pasted clip, an Option-dragged copy and Add Media at Playhead go up onto a new track instead. A clip you drag along is refused with 'no room'. These were each built on their own over the last two weeks.",
+  "options": [
+    {
+      "id": "a",
+      "label": "It covers what is there, every way in (Premiere)",
+      "summary": "Dropping a file, pasting, Option-dragging a copy, dragging a clip and Add Media at Playhead all cover what is under them on that track, trimming or splitting it. Hold Command to push things along instead. A drag is never refused for lack of room.",
+      "pros": [
+        "Works the way Premiere and Final Cut do",
+        "One rule to learn, and it is the one a dropped file already follows"
+      ],
+      "cons": [
+        "A careless drop can cover part of a clip you cut"
+      ],
+      "mitigation": "Undo brings it back in one press, and the bar over the tracks says Overwrite before you let go."
+    },
+    {
+      "id": "b",
+      "label": "It goes up onto a new track, every way in",
+      "summary": "Nothing is ever covered. Whatever way a clip arrives, if its spot is taken it lands on a new track over it. A dropped file stops covering what is there, and a dragged clip goes up a track instead of being refused.",
+      "pros": [
+        "Nothing you cut is ever hidden or trimmed by a landing"
+      ],
+      "cons": [
+        "Not how Premiere works",
+        "The timeline grows a track for every landing that overlaps"
+      ],
+      "mitigation": "An empty track can be removed from its right-click menu."
+    },
+    {
+      "id": "c",
+      "label": "Keep the three rules as they are",
+      "summary": "A dropped file covers, a paste or Option-drag copy goes up a track, and a dragged clip is refused with no room.",
+      "pros": [
+        "Nothing changes"
+      ],
+      "cons": [
+        "The same spot does three different things depending on how you got there"
+      ],
+      "mitigation": "None.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-06T12:04:58.649Z"
+}
