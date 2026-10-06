@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 3640,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T04:22:06.320Z",
-  "updated": "2026-10-06T04:22:23.029Z",
+  "updated": "2026-10-06T04:59:46.498Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-05 while writing Scripts/playtest/half-speed-reads-alike-walk.json. Repro: openSampleRecording, Cmd 2, select tool, videoSeekMiddle, clipSplit (piece 1 in hand), videoSeekThreeQuarters, then { \"do\": \"click\", \"at\": [1300, 894], \"space\": \"window\" } (centre of piece 2 on V1 in the 1728x990 probe window; the same y the right-click walks use, e.g. timeline-right-click-walk [349.2, 893]). log.json for the click: 'at (1300, 894) window = view (1300, 862) handler down 0.3ms up 0.2ms; clipBar bodies 2' and state 'selected': 'nil', 'selection': []. The panel then showed Time (Piece 2 of 3/2 of 2), Captions, Transitions only; with the playhead at the 4s cut it showed the Edit point section instead. A second identical click gave the same state. The piece's tap is ClipPiecesBar .onTapGesture -> EditorState.selectClipPiece (Sources/Photonz/ClipPiecesBar.swift ~400), sharing the piece with .gesture(carry(...)); something under it (a lane background tap?) may be clearing the selection. No existing walk left-clicks a clip to pick it (they rightClick or press by name), so there is no evidence either way. A press by name on 'Tutorial Sample piece 2' left piece 1 in hand. Not reproduced by a person: Ghoztty Accessibility was denied, so no real click could be made.",
@@ -26,7 +26,27 @@
     {
       "t": "2026-10-06T04:22:23.028Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-06T04:42:22.000Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T04:59:41.302Z",
+      "note": "walks none -> a-click-on-a-clip-piece-picks-it-walk"
+    },
+    {
+      "t": "2026-10-06T04:59:41.361Z",
+      "note": "Reproduced on the probe, 2026-10-05: same setup, walk 'click' at (1300,894) window left nothing picked (selected nil); a 'windowClick' (real press+release posted to the window, hit tested by AppKit) at the same point picked the clip with piece 2 in hand (Properties Piece 2 of 2, clip line 4.0s->8.0s, ring round piece 2). So the app is right and only the walk's click was wrong: 'click' hands its press to the canvas view, which runs under the timeline, and the canvas took it as a click on nothing. Photonz Dev was not touched (runner rule); the window-posted click on the probe is the stand-in for a person's click."
+    },
+    {
+      "t": "2026-10-06T04:59:46.496Z",
+      "note": "The app was never at fault: a real click posted to the window on piece 2 picks the clip with piece 2 in hand. Only the walk's canvas click failed, because it hands the press to the canvas under the timeline. Fixed in the harness: a click step at a window point covered by chrome now fails, naming windowClick, and a covered point in any other space says so in the log; documented under click in docs/design/playtest-harness.md. New walk a-click-on-a-clip-piece-picks-it-walk (no flags) picks piece 2 then piece 1 with real clicks; it, the 5 walks that click at window or view points, and Scripts/test.sh all pass. Commit d0d6de4b."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-click-on-a-clip-piece-picks-it-walk"
+  ],
+  "started": "2026-10-06T04:42:21.999Z",
+  "completed": "2026-10-06T04:59:46.497Z"
 }
