@@ -85,6 +85,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     case shuttle(ShuttleKey)
     case stepFrames(Int)
     case editPoint(forward: Bool)
+    /// Premiere's ⇧M and ⌘⇧M: the playhead to the next marker, or the one
+    /// before it.
+    case marker(forward: Bool)
     case goToStart, goToEnd
     case markIn, markOut, clearIn, clearOut
     /// Escape on the timeline: the In and the Out both go, the range with them.
@@ -160,6 +163,9 @@ public enum TimelineKeys {
         case (.letter("t"), [.command]): return .applyDefaultTransition
         case (.letter("i"), [.option]): return .clearIn
         case (.letter("o"), [.option]): return .clearOut
+        // Premiere's Go to Previous Marker. ⇧M, the next one, is Photoshop's
+        // selection cycle on the canvas, so it waits for the keyboard below.
+        case (.letter("m"), [.command, .shift]): return .marker(forward: false)
         // View and Edit (`ViewEditMode`). ⌘1 is Actual Size on a picture;
         // a document with time has no use for 100% that beats one key for
         // the player.
@@ -176,6 +182,7 @@ public enum TimelineKeys {
         case (.right, [.shift]): return .stepFrames(shiftStepFrames)
         case (.up, []): return .editPoint(forward: false)
         case (.down, []): return .editPoint(forward: true)
+        case (.letter("m"), [.shift]): return .marker(forward: true)
         case (.delete, []), (.forwardDelete, []): return .lift
         case (.delete, [.shift]), (.forwardDelete, [.shift]): return .rippleDelete
         // The range goes, the way a click beside it drops it. On the canvas
@@ -278,6 +285,13 @@ extension PhotonzDocument {
     /// before the first.
     public func neighbourEditPoint(from ms: Int, forward: Bool) -> Int? {
         let moments = editPointMoments()
+        return forward ? moments.first { $0 > ms } : moments.last { $0 < ms }
+    }
+
+    /// The marker after a moment, or before it: where ⇧M and ⌘⇧M take the
+    /// playhead. Nil past the last one or before the first.
+    public func neighbourMarker(from ms: Int, forward: Bool) -> Int? {
+        let moments = markers.map(\.atMS).sorted()
         return forward ? moments.first { $0 > ms } : moments.last { $0 < ms }
     }
 }

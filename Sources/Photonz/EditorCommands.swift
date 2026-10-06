@@ -1296,6 +1296,14 @@ struct EditorCommands: Commands {
 
     // Sequence: the ruler's marker rows that act on one that is there.
     @ViewBuilder private var markerRows: some View {
+        // Premiere's keys. ⇧M is the canvas's selection cycle until the
+        // timeline has the keyboard; ⌘⇧M is nothing else's.
+        Button("Go to Next Marker") { editor?.goToMarker(forward: true) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: .shift) : nil)
+            .disabled(!(editor?.canGoToMarker(forward: true) ?? false))
+        Button("Go to Previous Marker") { editor?.goToMarker(forward: false) }
+            .keyboardShortcut(timed ? KeyboardShortcut("m", modifiers: [.command, .shift]) : nil)
+            .disabled(!(editor?.canGoToMarker(forward: false) ?? false))
         let marker = editor?.markerAtPlayhead
         Button("Remove Marker") { if let marker { editor?.removeMarker(marker) } }
             .disabled(marker == nil)

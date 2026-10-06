@@ -105,6 +105,19 @@ struct TimelineKeysTests {
         #expect(command(.letter("m"), focused: false) == nil)   // the marquee
     }
 
+    @Test("Shift-M and Command-Shift-M go to the next and previous marker, as in Premiere")
+    func markerJumpKeys() {
+        #expect(command(.letter("m"), [.shift]) == .marker(forward: true))
+        #expect(command(.letter("m"), [.command, .shift]) == .marker(forward: false))
+        // ⇧M is Photoshop's selection cycle on the canvas, so it waits for
+        // the timeline to have the keyboard; ⌘⇧M is nothing else's.
+        #expect(command(.letter("m"), [.shift], focused: false) == nil)
+        #expect(command(.letter("m"), [.command, .shift], focused: false) == .marker(forward: false))
+        // Held, it carries on through them, the way a held arrow does.
+        #expect(command(.letter("m"), [.shift], repeating: true) == .marker(forward: true))
+        #expect(command(.letter("m"), [.option]) == nil)
+    }
+
     @Test("Q and W ripple trim to the playhead on a focused timeline")
     func qAndWTrim() {
         #expect(command(.letter("q")) == .rippleTrimToPlayhead(.start))
@@ -313,6 +326,24 @@ struct TimelineKeysTests {
         #expect(doc.neighbourEditPoint(from: 2000, forward: false) == 0)
         #expect(doc.neighbourEditPoint(from: 0, forward: false) == nil)
         #expect(doc.neighbourEditPoint(from: 8000, forward: true) == nil)
+    }
+
+    // MARK: - Markers
+
+    @Test("Shift-M and Command-Shift-M walk the markers and stop at the ends")
+    func markerNeighbours() {
+        var doc = PhotonzDocument.recording(Self.movie, name: "take")
+        #expect(doc.neighbourMarker(from: 0, forward: true) == nil)
+        doc.addMarker(atMS: 5000)
+        doc.addMarker(atMS: 1000)
+        doc.addMarker(atMS: 3000)
+        #expect(doc.neighbourMarker(from: 0, forward: true) == 1000)
+        #expect(doc.neighbourMarker(from: 1000, forward: true) == 3000)
+        #expect(doc.neighbourMarker(from: 3500, forward: true) == 5000)
+        #expect(doc.neighbourMarker(from: 5000, forward: true) == nil)
+        #expect(doc.neighbourMarker(from: 5000, forward: false) == 3000)
+        #expect(doc.neighbourMarker(from: 2000, forward: false) == 1000)
+        #expect(doc.neighbourMarker(from: 1000, forward: false) == nil)
     }
 
     @Test("Every layer with time adds its in and out")

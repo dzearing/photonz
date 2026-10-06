@@ -107,7 +107,8 @@ struct TimelineKeysStartAnEditTests {
     func watchingKeys() {
         let watching: [TimelineKeyCommand] = [
             .playPause, .shuttle(.forward), .shuttle(.stop), .stepFrames(1), .stepFrames(-5),
-            .editPoint(forward: true), .goToStart, .goToEnd, .selectTool,
+            .editPoint(forward: true), .marker(forward: true), .marker(forward: false),
+            .goToStart, .goToEnd, .selectTool,
             .showMode(.view), .showMode(.edit), .toggleViewEdit,
         ]
         for command in watching { #expect(command.startsAnEdit == false, "\(command)") }

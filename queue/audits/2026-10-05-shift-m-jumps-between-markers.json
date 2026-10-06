@@ -1,0 +1,27 @@
+{
+  "feature": "Shift M and Command Shift M jump between markers",
+  "epic": "video-beats-premiere",
+  "summary": "On a video, Shift M puts the playhead on the next marker and Command Shift M on the one before, as in Premiere. Sequence carries both rows with their keys, dimmed when there is no marker that way.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: shift-m-jumps-between-markers-walk, go-to-marker-menu-rows-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording. Without clicking anything, press M at three different moments while you scrub.", "shot": "2026-10-05-shift-m-markers-1.png" },
+    { "do": "Press Home." },
+    { "do": "Press Shift M three times: the playhead lands on each marker in turn." },
+    { "do": "Press Shift M once more: at the last marker nothing moves, and the canvas tool stays as it was.", "shot": "2026-10-05-shift-m-markers-3.png" },
+    { "do": "Press Command Shift M until it stops on the first marker.", "shot": "2026-10-05-shift-m-markers-5.png" },
+    { "do": "Open Sequence in the menu bar: Go to Next Marker and Go to Previous Marker sit under Add Marker's group, dimmed when there is nowhere to go." },
+    { "do": "Open a still picture and press Shift M: it still cycles the selection tools, as in Photoshop." }
+  ],
+  "evaluate": [
+    "Do the two keys land where your hands expect after Premiere?",
+    "Should Command Shift M also work after you click the canvas, as it does now, or only while the timeline has the keyboard like Shift M?",
+    "Does a press at the last marker doing nothing feel right, or would you want a small cue?",
+    "Would you also want Go to Next and Previous Marker on the ruler's right-click menu?"
+  ],
+  "rough": [
+    "No mock covers marker navigation or the Sequence menu's rows; the keys and the menu rows follow Premiere.",
+    "Shift M only means Next Marker while the timeline has the keyboard (the ring round the dock). After a click on the picture it goes back to cycling the selection tools, the same rule as M, I and O. Command Shift M has no other meaning, so it works either way.",
+    "The ruler's right-click menu does not carry the two rows: every row there acts at the moment you clicked, and a jump from the playhead would be the one row that does not."
+  ]
+}

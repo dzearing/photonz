@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/go-to-marker-menu-rows-walk",
+  "seed": "Sequence carries Go to Next Marker (Shift M while the timeline has the keyboard) and Go to Previous Marker (Command Shift M), dimmed when there is no marker that way. At Next defaults, no flag set. Front, because the menu bar is the key window's.",
+  "setup": { "front": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "keyboard": "timeline" },
+    { "do": "menus", "stage": "1-no-markers-yet", "menu": "Sequence" },
+
+    { "do": "key", "key": "home" },
+    { "do": "key", "key": "right", "modifiers": ["shift"] },
+    { "do": "key", "key": "m" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "key", "key": "m" },
+    { "do": "key", "key": "home" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markers": 2, "playheadMS": 0 },
+    { "do": "menus", "stage": "2-sequence-menu-at-the-start", "menu": "Sequence", "oneKeyEach": true },
+
+    { "do": "menus", "stage": "3-go-to-next-marker", "menu": "Sequence", "choose": "Sequence > Go to Next Marker" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 167, "withinMS": 34 },
+    { "do": "menus", "stage": "4-go-to-next-marker-again", "menu": "Sequence", "choose": "Sequence > Go to Next Marker" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 40 },
+    { "do": "menus", "stage": "5-sequence-menu-at-the-last-marker", "menu": "Sequence" },
+    { "do": "menus", "stage": "6-go-to-previous-marker", "menu": "Sequence", "choose": "Sequence > Go to Previous Marker" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "6-back-by-the-menu", "note": "Sequence, Go to Previous Marker took the playhead back to the first marker, five frames in" },
+    { "do": "expectTimeline", "playheadMS": 167, "withinMS": 34 }
+  ]
+}

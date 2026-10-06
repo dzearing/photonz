@@ -269,6 +269,8 @@ before the toolbar's single-letter key equivalents can take it.
 | I / O | Set In / Set Out at the playhead | Measure / Ellipse |
 | ⌥I / ⌥O | Clear In / Clear Out | same |
 | M | Add Marker | marquee |
+| ⇧M | Go to Next Marker | cycle the selection tools |
+| ⇧⌘M | Go to Previous Marker | same |
 | ⌘K | Split at Playhead (Premiere's Add Edit) | same |
 | ⇧⌘K | Split Everything at Playhead | same |
 | ⌫ | Lift: what is picked goes, nothing else moves | delete, as ever |

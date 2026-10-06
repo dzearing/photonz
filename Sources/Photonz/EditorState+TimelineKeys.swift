@@ -11,7 +11,7 @@ import SwiftUI
 // loses it to a press anywhere else, Premiere's own panel focus. While it does, J/K/L
 // shuttle, I and O mark, ' and ; extract and lift what they mark, Q and W
 // ripple trim the clip under the playhead up to it, S switches snapping, the
-// arrows step frames and edit points, and V, B and
+// arrows step frames and edit points, ⇧M goes to the next marker, and V, B and
 // the zoom keys pick the timeline's tools, where the same letters on the canvas
 // are Photoshop's tools. `TimelineKeyRouter` gets a press here before the
 // toolbar or the menu bar can take it.
@@ -86,6 +86,11 @@ extension EditorState {
             stepDocument(byFrames: frames)
         case .editPoint(let forward):
             goToEditPoint(forward: forward)
+        case .marker(let forward):
+            // At the last marker, or the first, nothing moves; the press is
+            // still the timeline's, so ⇧M never falls through to the canvas's
+            // selection cycle.
+            goToMarker(forward: forward)
         case .goToStart:
             goToDocumentStart()
         case .goToEnd:
@@ -205,6 +210,23 @@ extension EditorState {
     func goToEditPoint(forward: Bool) {
         guard documentHasTime, let document,
               let moment = document.neighbourEditPoint(from: documentTimeMS, forward: forward) else { return }
+        pauseDocument()
+        scrubDocument(toMS: moment)
+    }
+
+    // MARK: Markers
+
+    func canGoToMarker(forward: Bool) -> Bool {
+        guard documentHasTime, let document,
+              let moment = document.neighbourMarker(from: documentTimeMS, forward: forward) else { return false }
+        return min(moment, lastDocumentTimeMS) != documentTimeMS
+    }
+
+    /// ⇧M and ⌘⇧M, Premiere's: the playhead to the next marker, or the one
+    /// before it.
+    func goToMarker(forward: Bool) {
+        guard canGoToMarker(forward: forward), let document,
+              let moment = document.neighbourMarker(from: documentTimeMS, forward: forward) else { return }
         pauseDocument()
         scrubDocument(toMS: moment)
     }
