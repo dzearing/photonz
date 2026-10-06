@@ -162,8 +162,20 @@ public enum VideoExporter {
         generator.requestedTimeToleranceBefore = .zero
         generator.requestedTimeToleranceAfter = .zero
         // With a crop we must keep full resolution until after cropping; without
-        // one, let the generator down-scale straight to the output size.
-        if crop == nil { generator.maximumSize = plan.size }
+        // one, let the generator down-scale straight to the output size. A GIF
+        // has the generator stop at most twice the size it ends at and takes the
+        // last step plainly (`GIFFrameScaling`): the generator's filter turns
+        // crisp edges into greys a GIF pays for, enough that Small came out
+        // heavier than Standard.
+        if crop == nil {
+            if format == .gif {
+                if let step = GIFFrameScaling.firstStep(from: naturalSize, to: plan.size) {
+                    generator.maximumSize = step
+                }
+            } else {
+                generator.maximumSize = plan.size
+            }
+        }
 
         guard let utType = animatedUTType(for: format),
               let dest = CGImageDestinationCreateWithURL(destination as CFURL, utType,
@@ -192,8 +204,9 @@ public enum VideoExporter {
             let time = CMTime(seconds: plan.sampleTime(index), preferredTimescale: 600)
             guard var frame = try? await generator.image(at: time).image else { continue }
             if let cropRect, let cropped = frame.cropping(to: cropRect) {
-                frame = scaled(cropped, to: plan.size) ?? cropped
+                frame = format == .gif ? cropped : (scaled(cropped, to: plan.size) ?? cropped)
             }
+            if format == .gif { frame = gifScaled(frame, to: plan.size) }
             let frameProps = frameProperties(for: format, delay: owed)
             owed = 0
             CGImageDestinationAddImage(dest, frame, frameProps as CFDictionary)
@@ -689,7 +702,23 @@ public enum VideoExporter {
 
     /// Down-scale a CGImage to `size` (bitmap context). Used to fit a cropped
     /// frame into the planned output size for animated exports.
-    private static func scaled(_ image: CGImage, to size: CGSize) -> CGImage? {
+    /// A GIF frame at the size it is written at: the wide filter first where
+    /// the frame is more than twice that, then one plain step
+    /// (`GIFFrameScaling`). A frame already that size is left alone.
+    private static func gifScaled(_ image: CGImage, to size: CGSize) -> CGImage {
+        let w = Int(size.width.rounded()), h = Int(size.height.rounded())
+        guard image.width != w || image.height != h else { return image }
+        var frame = image
+        let source = CGSize(width: image.width, height: image.height)
+        if let step = GIFFrameScaling.firstStep(from: source, to: size),
+           let nearer = scaled(frame, to: step) {
+            frame = nearer
+        }
+        return scaled(frame, to: size, quality: .medium) ?? frame
+    }
+
+    private static func scaled(_ image: CGImage, to size: CGSize,
+                               quality: CGInterpolationQuality = .high) -> CGImage? {
         let w = Int(size.width.rounded()), h = Int(size.height.rounded())
         guard w > 0, h > 0,
               let space = image.colorSpace ?? CGColorSpace(name: CGColorSpace.sRGB),
@@ -698,7 +727,7 @@ public enum VideoExporter {
                                   bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
             return nil
         }
-        ctx.interpolationQuality = .high
+        ctx.interpolationQuality = quality
         ctx.draw(image, in: CGRect(x: 0, y: 0, width: w, height: h))
         return ctx.makeImage()
     }

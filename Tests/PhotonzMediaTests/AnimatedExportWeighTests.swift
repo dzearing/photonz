@@ -59,12 +59,22 @@ struct AnimatedExportWeighTests {
     /// every GIF made from it. A person's recording is one fixed file, and a
     /// GIF made from one fixed file is the same bytes busy or quiet, so a
     /// fixed source is the case that matches theirs.
-    static func screenSource(seconds: Int, size: CGSize, stillAfter: Double) async throws -> URL {
-        let url = folder.appendingPathComponent("screen-\(seconds)s-\(Int(size.width)).mp4")
+    ///
+    /// `crisp` writes it as ProRes instead: every 4 pixel line stays two
+    /// colours, the way a screen recording of real text keeps its edges, which
+    /// is the case where scaling costs a GIF the most.
+    static func screenSource(seconds: Int, size: CGSize, stillAfter: Double,
+                             crisp: Bool = false) async throws -> URL {
+        let url = folder.appendingPathComponent(
+            "screen-\(seconds)s-\(Int(size.width))" + (crisp ? ".mov" : ".mp4"))
         if FileManager.default.fileExists(atPath: url.path) { return url }
         let width = Int(size.width), height = Int(size.height), fps = 30
-        let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        let input = AVAssetWriterInput(mediaType: .video, outputSettings: [
+        let writer = try AVAssetWriter(outputURL: url, fileType: crisp ? .mov : .mp4)
+        let settings: [String: Any] = crisp ? [
+            AVVideoCodecKey: AVVideoCodecType.proRes422,
+            AVVideoWidthKey: width,
+            AVVideoHeightKey: height,
+        ] : [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: width,
             AVVideoHeightKey: height,
@@ -72,7 +82,8 @@ struct AnimatedExportWeighTests {
             AVVideoEncoderSpecificationKey: [
                 kVTVideoEncoderSpecification_EnableHardwareAcceleratedVideoEncoder as String: false,
             ],
-        ])
+        ]
+        let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(
             assetWriterInput: input,
@@ -150,12 +161,13 @@ struct AnimatedExportWeighTests {
     /// choice would be no use on the row.
     @Test("written twice, a GIF is the same file and a HEIC the same pictures")
     func theSameFileTwice() async throws {
-        for (label, seconds, size, stillAfter) in [
-            ("short", 2, CGSize(width: 640, height: 400), 99.0),
-            ("longer", 6, CGSize(width: 960, height: 600), 3.0),
+        for (label, seconds, size, stillAfter, crisp) in [
+            ("short", 2, CGSize(width: 640, height: 400), 99.0, false),
+            ("crisp", 2, CGSize(width: 640, height: 400), 99.0, true),
+            ("longer", 6, CGSize(width: 960, height: 600), 3.0, false),
         ] {
             let source = try await Self.screenSource(seconds: seconds, size: size,
-                                                     stillAfter: stillAfter)
+                                                     stillAfter: stillAfter, crisp: crisp)
             let trim = VideoTrim(duration: await VideoExporter.duration(of: source))
             for format in [RecordingFormat.gif, .heic] {
                 var landed: [VideoExportQuality: Int] = [:]
@@ -190,16 +202,14 @@ struct AnimatedExportWeighTests {
                 let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
                     + "bytes at High/Standard/Small, so the preset row does not move the size"
                 // Small is lighter than High, and every choice writes a
-                // different file. Neither Small nor High is claimed against
-                // Standard. Small under Standard is a property of the
-                // recording, not of the preset: Standard keeps a recording
-                // under 800 pixels at its own size, and on a sharp, mostly
-                // still one Small's scaling turns every crisp line into
-                // in-between greys that weigh more than the frames it saves.
-                // The short clip written as ProRes came out 23,280 bytes at
-                // Standard and 26,988 at Small every time, and written by this
-                // encoder it is a tie (queue task
-                // a-small-gif-of-a-crisp-recording-weighs-less-tha).
+                // different file. A GIF's Small is lighter than its Standard
+                // too, the crisp clip included: Standard keeps a recording
+                // under 800 pixels at its own size, and Small's scaling used to
+                // turn every crisp line into in-between greys that weighed more
+                // than the frames it saved (23,244 bytes at Standard against
+                // 26,988 at Small, every time). Its frames now come down in a
+                // plain last step (`GIFFrameScaling`). A HEIC's Small is not
+                // claimed against its Standard: its encoder decides under load.
                 // High against Standard: on the longer clip, still
                 // for half its length, a GIF has landed five per cent apart
                 // and the other way round, and a HEIC's High came out under its
@@ -207,6 +217,7 @@ struct AnimatedExportWeighTests {
                 // The sheet weighs every choice, so it shows whichever way
                 // round they really are.
                 #expect(small < high, "\(row)")
+                if format == .gif { #expect(small < standard, "\(row)") }
                 #expect(Set([high, standard, small]).count == 3, "\(row)")
                 // What the choice writes, as opposed to what the encoder makes
                 // of it, is exact every time: fewer frames each step down.

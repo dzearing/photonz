@@ -49,3 +49,31 @@ extension AnimatedExportPlan {
                                                  durationMS: Int((duration * 1000).rounded()))
     }
 }
+
+/// **How a GIF frame is brought down to the size it is written at.**
+///
+/// A wide filter (what `AVAssetImageGenerator` and a high quality draw use)
+/// turns each crisp edge of a screen recording into a run of in-between greys,
+/// and a GIF pays for every colour it has to tell apart. A 640 pixel recording
+/// of text came out 26,988 bytes at Small (480 wide) against 23,244 at Standard
+/// (kept at 640): the smaller choice wrote the bigger file. A plain bilinear
+/// step leaves a 480 pixel frame of it at 16,591, and reads the same.
+///
+/// A plain step that spans more than two source pixels starts dropping them,
+/// so thin lines flicker from bright to faint; that is what the wide filter is
+/// for. So a frame goes down in at most two steps: the wide filter to twice the
+/// size it ends at, only where it is bigger than that, then one plain step.
+public enum GIFFrameScaling {
+
+    /// The size the wide filter brings a frame to before the plain last step,
+    /// or nil when the plain step alone does it (the frame is at most twice the
+    /// target on both sides).
+    public static func firstStep(from source: CGSize, to target: CGSize) -> CGSize? {
+        guard source.width > 0, source.height > 0, target.width > 0, target.height > 0 else {
+            return nil
+        }
+        let twice = CGSize(width: target.width * 2, height: target.height * 2)
+        guard source.width > twice.width || source.height > twice.height else { return nil }
+        return twice
+    }
+}
