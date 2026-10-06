@@ -20722,3 +20722,9 @@ Next: the first editor window's ~200 ms first build
 - Fixed: a panel colour well on a keyed colour (fill, border, shadow, glow) wrote a colour the keys never read. Colour wells now read at the playhead and write through `performLooksHere`/`editingLooksHere`.
 - Tests: `BorderKeysTests`, `KeyedBorderRenderTests`, `KeyedBorderExportTests`. Walk: `border-width-keys-walk`. Clips and titles now offer 14 keyable values, so three walks' counts moved.
 - Next: `a-border-added-to-a-picture-that-fills-the-frame` (a new Border lands Outside, off the canvas on a full-frame recording).
+
+## 2026-10-06 — editing session walk asks for captions
+
+- `an-editing-session-walk` now asks for captions from the timeline's + menu (`panelMenu` Add Track, Captions, then `captionsWaitToLand`) instead of the harness's quiet step, and its seed and note say so.
+- Its two Command K presses now cut at 0:04 then 0:08: a cut leaves the piece before it picked, so the old order deleted the opening four seconds rather than the middle, and the dissolve sat on a seamless join. Now it is a real jump cut.
+- Green at Next defaults, 7 real pictures, 57s. Walk-only; no Sources change.
