@@ -1,0 +1,33 @@
+{
+  "id": "clicking-a-clip-on-the-timeline-answers-at-once",
+  "title": "Clicking a clip on the timeline answers at once",
+  "goal": "Clicking a clip piece on the timeline sometimes keeps the app busy for a tenth of a second or more before it answers: in the last two days' walks, 18 of 43 clip clicks held it over 50 ms and the worst 168 ms. Picking a clip is the most common press in an edit, and the video success list asks that no press on the timeline go over 50 ms. Find what makes some clicks slow and bring them under.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:35:45.716Z",
+  "updated": "2026-10-06T13:35:58.146Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced from the loop's walk logs: every /tmp/photonz-playtest/*/log.json from the last two days, notes matching '\"...\" in Track V... longest N ms' or a press on a piece. n=43, median 46.5 ms, p90 106.3 ms, max 167.9 ms, 18 over 50. In an-editing-session-walk (06:16 today) step 33, a click on \"Sample Talk join 1\" in Track V1 held 125.2 ms with inspectorPanel bodies counted; picking from the layers list (step 31) held 55.1 ms.\n\nThe success line is video-beats-premiere's third (no press on the timeline, no frame of playback over 50 ms, on five minutes with captions written). The earlier fixes for the same family are done tasks a-long-captioned-recording-edits-without-freezin and picking-or-retyping-a-caption-answers-at-once: read their logs first, the panel rebuilding on a pick was the culprit before. Measure on the probe only.",
+  "acceptance": [
+    "The slow clicks are explained in this task's log: which clicks are slow and why, with numbers",
+    "Nine of ten clip clicks in an-editing-session-walk and the-ninety-second-cut-walk hold the main thread under 50 ms, read from the walk logs over three runs, and none goes over 100 ms",
+    "Picking still shows the clip in the panel, rings it on the timeline and keeps the keyboard on the timeline, as today",
+    "Ships at Next defaults; the try path is: open the five minute sample used by the-ninety-second-cut-walk, add captions, cut it twice with B, then click each piece in turn",
+    "audit written under queue/audits/ with the before and after numbers, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:35:45.718Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:58.145Z",
+      "note": "seq 3690 -> 4"
+    }
+  ]
+}

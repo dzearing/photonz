@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T12:03:39.640Z",
-  "updated": "2026-10-06T12:04:10.118Z",
+  "updated": "2026-10-06T13:16:17.176Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-06 by the daily digest. queue/bin/sweep-schedule.mjs DEFAULTS has sliceMinutes 10 and perWalkSeconds 12; pickSlice budget = floor(10*60/12) = 50 walks. Measured over the last 30 slice_pass events: `grep '\"slice_pass\"' queue/history.jsonl | tail -30` then sum seconds and walks: 30 checks, average 14.6 min, 50 walks each, 17.6 s per walk. loop-day.mjs --hours 24 on 2026-10-06: rotating checks 383 min (26.6% of the day, 26 checks) against 231 min (16.1%) the day before. The digests of 2026-10-04 and 2026-10-05 both noted checks running about 14 minutes.",
@@ -27,6 +27,37 @@
     {
       "t": "2026-10-06T12:04:10.117Z",
       "note": "seq 3690 -> 130"
+    },
+    {
+      "t": "2026-10-06T13:08:01.891Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T13:16:09.009Z",
+      "note": "Plan: replace the fixed 12s/walk with the median pace of the last ten slice_pass events (seconds/walks, which already includes the probe build). Skip timed-out, locked (couldNotRun>0) and tiny checks. Fall back on the whole-set median, then the default. Cursor logic untouched."
+    },
+    {
+      "t": "2026-10-06T13:16:09.009Z",
+      "note": "Shipped in sweep-schedule.mjs (sliceWalkSeconds, sliceWalkSecondsFromDisk, --pick uses it, --per-walk still overrides). slice_pass now records couldNotRun and timedOut. Today: 18.0s a walk, 33 walks a check (33 x 18 = 594s). Lap: 774/33 = about 24 checks, roughly a day at the current rate of checks. 16 new drill checks in sweep-schedule-drill.mjs; all sweep drills green; Scripts/test.sh green (11548 tests)."
+    },
+    {
+      "t": "2026-10-06T13:16:09.009Z",
+      "note": "Also fixed: sweep-size-drill was already red (stale quoted size, cap headroom 48% under its 50% floor). Ran sweep-size.mjs --write and raised BUDGET_SECONDS_PER_WALK 24 -> 26 (60% headroom)."
+    },
+    {
+      "t": "2026-10-06T13:16:09.009Z",
+      "note": "Acceptance item 2 (the next ten checks average 9 to 11 minutes) can only be read after ten more checks have run: grep slice_pass queue/history.jsonl | tail -10. Expected about 10 min; the build overhead is now spread over 33 walks instead of 50, so the median corrects itself within a few checks if it runs a little long."
+    },
+    {
+      "t": "2026-10-06T13:16:09.065Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-06T13:16:17.174Z",
+      "note": "Rotating check now planned at the median pace of the last ten rotating checks (18.0s a walk today, 33 walks, about 594s) instead of a fixed 12s (50 walks, about 14.6 min). Locked, timed-out and tiny checks are left out; slice_pass now records couldNotRun and timedOut. Cursor unchanged, so a lap of 774 walks is about 24 checks. Drilled in sweep-schedule-drill.mjs (16 new checks); every sweep drill and Scripts/test.sh green. Also fixed the already-red sweep-size drill (quoted size, cap 24s to 26s). The 9 to 11 minute average over the next ten checks can only be read once they have run: grep slice_pass queue/history.jsonl | tail -10. Commit 8eca4fd9."
     }
-  ]
+  ],
+  "started": "2026-10-06T13:08:01.890Z",
+  "walks": [],
+  "completed": "2026-10-06T13:16:17.175Z"
 }

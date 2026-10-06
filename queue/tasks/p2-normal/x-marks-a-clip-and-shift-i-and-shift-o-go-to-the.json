@@ -1,0 +1,34 @@
+{
+  "id": "x-marks-a-clip-and-shift-i-and-shift-o-go-to-the",
+  "title": "X marks a clip, and Shift I and Shift O go to the marks, as in Premiere",
+  "goal": "Premiere editors mark a whole clip with X and jump to their In and Out with Shift I and Shift O. Here X does not mark a clip and Shift I and Shift O do nothing on the timeline, so marking a clip to lift or extract it takes two trips with the playhead. Give the timeline these three keys.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:35:45.884Z",
+  "updated": "2026-10-06T13:35:58.033Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Key map: Sources/PhotonzCore/TimelineKeys.swift ~153-233 (pure, test-first in PhotonzCoreTests); dispatch in Sources/Photonz/EditorState+TimelineKeys.swift ~289, which takes presses before the menu bar while the timeline has the keyboard. X today is the fill swap on an invisible tool bar stand-in that answers under every tool (EditorCommands.swift ~140): make sure the timeline's X wins only while the timeline holds the keyboard. Option X (Clear In and Out) already exists (EditorCommands.swift ~888, TimelineMenuKeys.clearInOut) and should sit beside the new rows. Marks and extract: the done task marking-an-in-and-an-out-and-pressing-one-key-ta.\n\nFound by the Premiere key gap check this pass: X, Shift I, Shift O missing, no task or card covers or declined them (searched mark clip, go to in, shift i).",
+  "acceptance": [
+    "With the timeline holding the keyboard, X sets In and Out to the start and end of the clip under the playhead (the topmost picture track's clip there), and Command Z takes the marks back",
+    "Shift I moves the playhead to the In mark and Shift O to the Out mark; with no mark set they do nothing and say nothing",
+    "After a click on the picture, X keeps its Photoshop meaning (swap the fill colours), the same rule M, I and O already follow",
+    "Sequence shows rows for Mark Clip, Go to In and Go to Out with these keys",
+    "Ships at Next defaults; the try path is: open a recording, press B at two and at four seconds, put the playhead at three seconds, press X, then apostrophe to extract the clip; then mark again and press Shift I and Shift O",
+    "audit written under queue/audits/ and the keys added to docs/design/video-vs-premiere.md, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:35:45.886Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:58.032Z",
+      "note": "seq 3710 -> 2"
+    }
+  ]
+}

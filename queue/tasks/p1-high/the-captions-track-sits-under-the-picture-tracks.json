@@ -1,0 +1,33 @@
+{
+  "id": "the-captions-track-sits-under-the-picture-tracks",
+  "title": "The Captions track sits under the picture tracks, as the mock draws it",
+  "goal": "When captions are added, their track and its Words lane land between the title and the footage, so they push the clip you are cutting away from everything above it. The mock stacks the tracks Title, V1, V2, Captions, Audio: captions sit under the picture, just above the sound. Put them there, and keep the captions drawn over the picture whatever lane they sit in.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:34:52.077Z",
+  "updated": "2026-10-06T13:35:57.867Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video.html TIMELINE MODEL (~line 730): tracks Title (comp), V1, V2, CAP, Audio. App: /tmp/photonz-playtest/an-editing-session-walk/6-title-at-b-sc.png and 5-dissolve-sc.png read Title, Captions, Words, V1, Audio.\n\nFirst find out whether the timeline's track order is also the stacking order on the canvas. If it is, the captions lane moving below V1 must not send captions under the picture: either captions are always composited last (they are a caption track, not a layer a person stacks), or this needs a card. If keeping captions on top means breaking the rule that a higher track draws in front, open a decision card rather than inventing one, with the mock's order and Premiere's (captions track at the top) as options; mark the task blocked and say so in the log.\n\nWhere the caption track is inserted on Add Captions is in the captions code (search Sources for where the captions track or Words lane is created and its index chosen). The done task that lets tracks be reordered by dragging headers must keep working. Walks that assert track order (search Scripts/playtest for Captions in expectTimeline or describe notes) need updating. Searched: caption track order, captions above, track order: nothing open.",
+  "acceptance": [
+    "After Add Captions on a recording with a title, the tracks read from the top Title, V1 (and any V2), Captions with its Words lane, Audio, and the audit shows it beside video.html's timeline",
+    "Captions are still drawn on top of the picture and the title in the canvas and in an exported MP4, so moving the lane changes where it is listed and nothing about what you see",
+    "A captions track the person has dragged somewhere else stays where they put it, and undo puts a moved track back",
+    "Ships at Next defaults; the try path is: open a talking recording, press T and type a title, choose Add Captions from the timeline's + menu, read the track headers top to bottom",
+    "audit written under queue/audits/ with the track list and an exported frame, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:34:52.079Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:57.866Z",
+      "note": "seq 520 -> 60"
+    }
+  ]
+}

@@ -1,0 +1,34 @@
+{
+  "id": "an-empty-track-looks-like-a-place-to-drop-a-clip",
+  "title": "An empty track looks like a place to drop a clip",
+  "goal": "A new video from an empty timeline shows its V1 and Audio lanes as bare background, the same as empty time, so a first-time user is not told where a clip goes until they are already dragging one. The mock draws an empty lane as a dashed, hatched slot. Draw empty lanes that way until something lands on them.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:34:52.242Z",
+  "updated": "2026-10-06T13:35:57.923Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video.html, the New video step 1 frame: empty V1 and Audio lanes dashed and hatched. App: /tmp/photonz-playtest/new-empty-video-walk/2-empty-video-sc.png (bare lanes, grid lines only) and 5-tile-over-v1-sc.png (the dashed preview appears only during a drag). Flag FeatureCatalog.blankVideoFlag, enabledByDefaultIn [.next]. Track lanes draw in Sources/Photonz/TimelineTrackRows.swift. Reuse the drag preview's dash style so the two read as one idea. A slot is drawn chrome, not a new control, so no card. Searched: empty lane, empty track, dashed lane: nothing.",
+  "acceptance": [
+    "File > New Video shows its empty V1 and Audio lanes as the mock's dashed slots, and the audit has them beside video.html's New video step",
+    "The slot goes the moment a clip lands on the lane and comes back if the last clip leaves it, with undo",
+    "An empty track added with + on a video that already has clips shows the same slot",
+    "The drop preview while dragging is unchanged",
+    "Ships at Next defaults (next-blank-video is on in Next); the try path is: File > New Video, keep the default size, look at the timeline, then drag a Library tile onto V1",
+    "audit written under queue/audits/ in light and dark, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:34:52.244Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:57.922Z",
+      "note": "seq 540 -> 70"
+    }
+  ]
+}

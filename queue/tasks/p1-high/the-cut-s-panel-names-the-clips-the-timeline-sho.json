@@ -1,0 +1,33 @@
+{
+  "id": "the-cut-s-panel-names-the-clips-the-timeline-sho",
+  "title": "The cut's panel names the clips the timeline shows",
+  "goal": "Click a cut inside one recording and the panel's Edit point section reads Out: Piece 1 and In: Piece 2, while both bars on the timeline read Sample Talk with no number. The panel names things you cannot find. The mock names the two sides by the names their bars carry, so make the panel and the timeline agree.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:34:51.996Z",
+  "updated": "2026-10-06T13:35:57.752Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by putting the 06:16 an-editing-session-walk pictures beside video-transition-wt.html. Mock lines 249-250: Out = screen-rec, In = b-roll, the clip names. App: /tmp/photonz-playtest/an-editing-session-walk/4-picker-sc.png and 5-dissolve-sc.png show Out: Piece 1, In: Piece 2 under a V1 whose two bars both read Sample Talk.\n\nCause: Sources/PhotonzCore/EditPointTransitions.swift ~60, documentCut(at:) .join case sets outgoingName \"Piece \\(index)\" and incomingName \"Piece \\(index + 1)\". The .edit case already uses layer names.\n\nTwo honest ways: name the sides after the clip with which side of the cut (for example Sample Talk, before / after), or give the bars the same numbers the panel uses. Pick the one that leaves the timeline as the mock draws it (bars carry the clip's name only, video.html), so the panel side is the likely change. Core is pure: test-first in PhotonzCoreTests. Check whether the same Piece N string reaches any other copy (right-click menus, the cut's tooltip, walk descriptions) and keep them in step. Walks that assert Piece 1 need updating with it.",
+  "acceptance": [
+    "After a blade cut inside one recording, the Out and In fields name the two sides with words that can be matched to what the two bars on the timeline say, and the audit shows both side by side",
+    "A cut between two different clips still reads their own names (Sample Talk and b-roll), unchanged",
+    "The names stay short enough for the field without wrapping, on a clip with a long name",
+    "Ships at Next defaults, nothing to switch; the try path is: open a recording, press B at two seconds, click the cut, read Edit point in the panel and the two bars",
+    "audit written under queue/audits/ with a picture of the panel beside the timeline, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:34:51.998Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:57.751Z",
+      "note": "seq 510 -> 40"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T08:33:08.675Z",
-  "updated": "2026-10-06T12:04:10.005Z",
+  "updated": "2026-10-06T12:33:03.529Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-06 in border-width-keys-walk: first run added a Border to the full-frame Tutorial Sample, keyed width 0 -> 12, and every window capture showed no ring (crop of 3-second-key-at-12-sc.png at the picture's left edge: board, then picture, nothing between). Setting Position to Inside made the ring appear at once. Cause: EffectKind.border.newEffect is BorderEffect() whose position defaults to .outside (LayerEffects.swift ~554), and a layer whose frame equals the canvas has nowhere outside to draw. Likely fix: newEffect takes the layer and canvas, and lands Inside when the layer covers the canvas. The Add Effect path is shared, so check whether this needs scoping to Next.",
@@ -34,7 +34,36 @@
     {
       "t": "2026-10-06T12:04:10.004Z",
       "note": "seq 3680 -> 110"
+    },
+    {
+      "t": "2026-10-06T12:06:44.774Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T12:32:27.310Z",
+      "note": "walks none -> a-border-on-a-full-frame-picture-shows-walk, border-width-keys-walk"
+    },
+    {
+      "t": "2026-10-06T12:33:03.353Z",
+      "note": "Reproduced first on the probe (scratch walk): Border added to the sample recording read Position Outside and the canvas render had no ring. After moving it Inside, the ring was drawn but in graphite #1C1C1E on the #303747 recording (1.3:1), still invisible, so the ink is now chosen from the picture's edge pixels (EdgeColourSampler, app passes edges: to addEffect)."
+    },
+    {
+      "t": "2026-10-06T12:33:03.408Z",
+      "note": "Scope: kept in shared code, not Next-only. The Effects list is shared and ungated, recent effect fixes (eb02d641) landed the same way, and the only change Current sees is an invisible ring becoming visible."
+    },
+    {
+      "t": "2026-10-06T12:33:03.464Z",
+      "note": "left rough (no task, under the bar): ink is picked once from the frame at the playhead when the plus is pressed; a turned or skewed full-frame picture keeps Outside. Both in the audit rough."
+    },
+    {
+      "t": "2026-10-06T12:33:03.527Z",
+      "note": "A new Border on a layer covering the canvas lands Inside, inked against the picture's edge (PhotonzCore addEffect + coversCanvas, PhotonzRender EdgeColourSampler, EditorState.pictureEdges). Verified on the probe at Next defaults: 2 px white ring on the canvas and in every edge of an exported MP4 frame; a box still gets Outside. Walk a-border-on-a-full-frame-picture-shows-walk; 16 Border walks green; full suite 11,548 green. Commit bb16f0e8, audit 2026-10-06-border-on-full-frame-picture."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-border-on-a-full-frame-picture-shows-walk",
+    "border-width-keys-walk"
+  ],
+  "started": "2026-10-06T12:06:44.772Z",
+  "completed": "2026-10-06T12:33:03.528Z"
 }

@@ -1,0 +1,33 @@
+{
+  "id": "several-clips-carried-together-show-where-each-o",
+  "title": "Several clips carried together show where each one lands",
+  "goal": "Pick two or more clips and drag them up a track: only the lane under the pointer lights up, and the other clips give no sign of where they will land until you let go. Holding Option to carry copies of several clips still only slides them in time and never changes their track. Show every carried clip's landing place while it is in the hand, and let Option copies change track the way a plain drag now does.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:35:45.963Z",
+  "updated": "2026-10-06T13:35:58.203Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the audit queue/audits/2026-10-05-several-clips-change-track.json rough list: \"While in the hand only the lane under the pointer lights up; the other picked clips do not show where they will land until you let go\" and \"Option dragging several picked clips still leaves copies on their own tracks and only slides them in time.\" The second is a gesture that now behaves differently with and without Option, which a person will hit.\n\nCode: the multi-clip carry in Sources/Photonz/EditorState+ClipBar.swift (~510, clipTrackDrop) and the landing rule landClip; reuse that rule for the Option copies rather than writing a second one, and reuse the single drop's lane highlight. What happens on a busy spot is the open card on a-clip-landing-where-another-sits-does-the-same: follow whatever the app does today for a busy spot and do not settle that question here. Walk to extend: the several-clips-change-track walk (needs-the-Mac rules apply to real drags; see CLAUDE.md).",
+  "acceptance": [
+    "While several picked clips are carried up or down, each one shows where it will land on its own target lane, and a clip that cannot land there shows the refusal on its own lane, not only on the lane under the pointer",
+    "Option dragging several picked clips up or down leaves the originals and lands the copies on the tracks above or below, with the same landing rule a plain several-clip drag uses",
+    "A single clip drag and a plain several-clip drag land exactly as today",
+    "Ships at Next defaults; the try path is: open a recording, drop a second file onto the timeline, add a V2 track, Shift-click both clips and drag them up; then do it again holding Option",
+    "audit written under queue/audits/ with a picture taken mid-drag, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:35:45.965Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:58.202Z",
+      "note": "seq 3720 -> 5"
+    }
+  ]
+}

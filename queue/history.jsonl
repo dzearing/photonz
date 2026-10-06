@@ -9714,3 +9714,43 @@
 {"t":"2026-10-06T12:05:05.700Z","ev":"triage","summary":"addendum: filed 1 more (one landing rule for a clip arriving on an occupied spot, blocked on a new card)"}
 {"t":"2026-10-06T12:05:09.214Z","ev":"task_blocked","id":"a-clip-landing-where-another-sits-does-the-same","from":"pending","note":"waiting on the card: when a clip lands on a spot that already holds a clip, what should happen?"}
 {"t":"2026-10-06T12:06:28.209Z","ev":"digest","file":"2026-10-06.md"}
+{"t":"2026-10-06T12:06:44.780Z","ev":"task_started","id":"a-border-added-to-a-picture-that-fills-the-frame","title":"A Border added to a picture that fills the frame shows on the picture","priority":"p2-normal"}
+{"t":"2026-10-06T12:32:27.312Z","ev":"task_walks","id":"a-border-added-to-a-picture-that-fills-the-frame","walks":["a-border-on-a-full-frame-picture-shows-walk","border-width-keys-walk"]}
+{"t":"2026-10-06T12:33:03.355Z","ev":"task_note","id":"a-border-added-to-a-picture-that-fills-the-frame"}
+{"t":"2026-10-06T12:33:03.410Z","ev":"task_note","id":"a-border-added-to-a-picture-that-fills-the-frame"}
+{"t":"2026-10-06T12:33:03.466Z","ev":"task_note","id":"a-border-added-to-a-picture-that-fills-the-frame"}
+{"t":"2026-10-06T12:33:03.530Z","ev":"task_done","id":"a-border-added-to-a-picture-that-fills-the-frame","from":"in_progress","note":"A new Border on a layer covering the canvas lands Inside, inked against the picture's edge (PhotonzCore addEffect + coversCanvas, PhotonzRender EdgeColourSampler, EditorState.pictureEdges). Verified on the probe at Next defaults: 2 px white ring on the canvas and in every edge of an exported MP4 frame; a box still gets Outside. Walk a-border-on-a-full-frame-picture-shows-walk; 16 Border walks green; full suite 11,548 green. Commit bb16f0e8, audit 2026-10-06-border-on-full-frame-picture."}
+{"t":"2026-10-06T12:49:21.821Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":810,"of":773,"rotating":true}
+{"t":"2026-10-06T12:49:22.022Z","ev":"task_started","id":"animate-a-property-fits-on-screen-on-a-title-wit","title":"Animate a property fits on screen on a title with several shadows","priority":"p2-normal"}
+{"t":"2026-10-06T12:51:55.128Z","ev":"decision_opened","id":"animate-a-property-fits-on-screen-on-a-title-wit-animate-a-property-lists-19-valu","taskId":"animate-a-property-fits-on-screen-on-a-title-wit","question":"Animate a property lists 19 values on a typed title, and only 8 show. How should the list fit?"}
+{"t":"2026-10-06T12:52:25.014Z","ev":"task_note","id":"animate-a-property-fits-on-screen-on-a-title-wit"}
+{"t":"2026-10-06T12:52:25.071Z","ev":"task_note","id":"animate-a-property-fits-on-screen-on-a-title-wit"}
+{"t":"2026-10-06T12:52:25.128Z","ev":"task_walks","id":"animate-a-property-fits-on-screen-on-a-title-wit","walks":["animate-a-property-list-walk"]}
+{"t":"2026-10-06T12:52:29.718Z","ev":"task_blocked","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":"in_progress","note":"Reproduced (new animate-a-property-list-walk: a typed title shows 8 of 19 values; Shadow 2, Border, Text size below the fold). Folding the shadows departs from the mock's flat list, so a decision card asks how the list should fit (recommend one row per shadow/border that opens in place, list grows to fit)."}
+{"t":"2026-10-06T13:08:01.731Z","ev":"slice_pass","walks":50,"passed":50,"failed":0,"seconds":774,"of":774,"rotating":true}
+{"t":"2026-10-06T13:08:01.897Z","ev":"task_started","id":"a-rotating-walk-check-takes-the-ten-minutes-it-i","title":"A rotating walk check takes the ten minutes it is given","priority":"p2-normal"}
+{"t":"2026-10-06T13:16:09.067Z","ev":"task_walks","id":"a-rotating-walk-check-takes-the-ten-minutes-it-i","walks":[]}
+{"t":"2026-10-06T13:16:17.177Z","ev":"task_done","id":"a-rotating-walk-check-takes-the-ten-minutes-it-i","from":"in_progress","note":"Rotating check now planned at the median pace of the last ten rotating checks (18.0s a walk today, 33 walks, about 594s) instead of a fixed 12s (50 walks, about 14.6 min). Locked, timed-out and tiny checks are left out; slice_pass now records couldNotRun and timedOut. Cursor unchanged, so a lap of 774 walks is about 24 checks. Drilled in sweep-schedule-drill.mjs (16 new checks); every sweep drill and Scripts/test.sh green. Also fixed the already-red sweep-size drill (quoted size, cap 24s to 26s). The 9 to 11 minute average over the next ten checks can only be read once they have run: grep slice_pass queue/history.jsonl | tail -10. Commit 8eca4fd9."}
+{"t":"2026-10-06T13:16:36.576Z","ev":"loop_reloaded","from":"4b9af247eeac","to":"5cd2cfaa6728"}
+{"t":"2026-10-06T13:16:36.693Z","ev":"loop_started","pid":50834}
+{"t":"2026-10-06T13:16:36.741Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":false}
+{"t":"2026-10-06T13:27:20.143Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":500,"of":774,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-06T13:34:52.000Z","ev":"task_created","id":"the-cut-s-panel-names-the-clips-the-timeline-sho","priority":"p1-high","title":"The cut's panel names the clips the timeline shows"}
+{"t":"2026-10-06T13:34:52.081Z","ev":"task_created","id":"the-captions-track-sits-under-the-picture-tracks","priority":"p1-high","title":"The Captions track sits under the picture tracks, as the mock draws it"}
+{"t":"2026-10-06T13:34:52.164Z","ev":"task_created","id":"a-transition-on-the-timeline-reads-as-a-transiti","priority":"p1-high","title":"A transition on the timeline reads as a transition, as the mock draws it"}
+{"t":"2026-10-06T13:34:52.246Z","ev":"task_created","id":"an-empty-track-looks-like-a-place-to-drop-a-clip","priority":"p1-high","title":"An empty track looks like a place to drop a clip"}
+{"t":"2026-10-06T13:35:45.639Z","ev":"task_created","id":"choosing-a-value-to-animate-answers-at-once","priority":"p2-normal","title":"Choosing a value to animate answers at once"}
+{"t":"2026-10-06T13:35:45.720Z","ev":"task_created","id":"clicking-a-clip-on-the-timeline-answers-at-once","priority":"p2-normal","title":"Clicking a clip on the timeline answers at once"}
+{"t":"2026-10-06T13:35:45.806Z","ev":"task_created","id":"command-r-changes-a-picked-clip-s-speed-as-in-pr","priority":"p2-normal","title":"Command R changes a picked clip's speed, as in Premiere"}
+{"t":"2026-10-06T13:35:45.888Z","ev":"task_created","id":"x-marks-a-clip-and-shift-i-and-shift-o-go-to-the","priority":"p2-normal","title":"X marks a clip, and Shift I and Shift O go to the marks, as in Premiere"}
+{"t":"2026-10-06T13:35:45.967Z","ev":"task_created","id":"several-clips-carried-together-show-where-each-o","priority":"p2-normal","title":"Several clips carried together show where each one lands"}
+{"t":"2026-10-06T13:35:57.753Z","ev":"task_resequenced","id":"the-cut-s-panel-names-the-clips-the-timeline-sho","from":510,"to":40}
+{"t":"2026-10-06T13:35:57.811Z","ev":"task_resequenced","id":"a-transition-on-the-timeline-reads-as-a-transiti","from":530,"to":50}
+{"t":"2026-10-06T13:35:57.868Z","ev":"task_resequenced","id":"the-captions-track-sits-under-the-picture-tracks","from":520,"to":60}
+{"t":"2026-10-06T13:35:57.924Z","ev":"task_resequenced","id":"an-empty-track-looks-like-a-place-to-drop-a-clip","from":540,"to":70}
+{"t":"2026-10-06T13:35:57.979Z","ev":"task_resequenced","id":"choosing-a-value-to-animate-answers-at-once","from":3680,"to":1}
+{"t":"2026-10-06T13:35:58.034Z","ev":"task_resequenced","id":"x-marks-a-clip-and-shift-i-and-shift-o-go-to-the","from":3710,"to":2}
+{"t":"2026-10-06T13:35:58.091Z","ev":"task_resequenced","id":"command-r-changes-a-picked-clip-s-speed-as-in-pr","from":3700,"to":3}
+{"t":"2026-10-06T13:35:58.147Z","ev":"task_resequenced","id":"clicking-a-clip-on-the-timeline-answers-at-once","from":3690,"to":4}
+{"t":"2026-10-06T13:35:58.204Z","ev":"task_resequenced","id":"several-clips-carried-together-show-where-each-o","from":3720,"to":5}
+{"t":"2026-10-06T13:36:30.552Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":11,"report":"queue/manager/2026-10-06-0638.md"}

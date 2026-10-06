@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T12:03:53.237Z",
-  "updated": "2026-10-06T12:04:10.061Z",
+  "updated": "2026-10-06T12:52:29.717Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in three audits on 2026-10-06, each listing it as rough: 2026-10-06-shadow-glow-keys (8 -> 12 values for a title), 2026-10-06-border-keys (14 values, Border color below the fold), 2026-10-06-keys-on-a-later-shadow (a typed title wears two shadows, so 19 values with ten shadow rows). Picture: queue/audits/2026-10-06-keys-on-a-later-shadow-1-picker-sc.png shows the popover reaching the top of the window with the list cut at Shadow 1 distance. The mock's catalogue lists 13 values for a picture layer and only one shadow value (Shadow size). Folding each effect's values under its name is one way to do it; a departure from the mock's flat list is a decision card, not a quiet change.",
@@ -27,6 +27,30 @@
     {
       "t": "2026-10-06T12:04:10.060Z",
       "note": "seq 3700 -> 120"
+    },
+    {
+      "t": "2026-10-06T12:49:22.016Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T12:52:25.012Z",
+      "note": "Reproduced with new walk Scripts/playtest/animate-a-property-list-walk.json (green, 2 real -sc captures, unlocked): a typed title (two shadows) lists 19 values and the 260pt picker shows 8 (Transform 3, Appearance 2, Effects: Blur, Shadow 1 size, Shadow 1 distance); Shadow 1 color..Shadow 2, Border and the Text group are below the fold. Recording + Border: Border color, Crop (4) and Levels (Volume) below the fold. Acceptance 1 as worded (Transform/Appearance/Effects headings + one value each) already passes; the Text/Crop/Levels headings do not show."
+    },
+    {
+      "t": "2026-10-06T12:52:25.069Z",
+      "note": "Adversarial review: the mock's own picker is a flat list in a 260pt box with 13 values, so it scrolls too; it never had more than one shadow value. Premiere folds each effect in Effect Controls. Shadow numbering already matches the Effects list (acceptance 3 holds today via KeyedProperty.title(on:)). Folding each effect into one expandable row departs from the mock's flat list, which the task notes say is a decision card, so I opened one (recommend A: one row per shadow/glow/border opening in place, list grows to fit up to window height; Find a property stays flat). Implementation once answered: PropertyPicker.groups in PhotonzCore/PropertiesPane.swift gains a folded shape (TDD), AnimatePropertyButton.picker in PropertyKeysInspector.swift renders it and drops the fixed maxHeight 260."
+    },
+    {
+      "t": "2026-10-06T12:52:25.126Z",
+      "note": "owns these walks: animate-a-property-list-walk"
+    },
+    {
+      "t": "2026-10-06T12:52:29.715Z",
+      "note": "Reproduced (new animate-a-property-list-walk: a typed title shows 8 of 19 values; Shadow 2, Border, Text size below the fold). Folding the shadows departs from the mock's flat list, so a decision card asks how the list should fit (recommend one row per shadow/border that opens in place, list grows to fit)."
     }
+  ],
+  "started": "2026-10-06T12:49:22.014Z",
+  "walks": [
+    "animate-a-property-list-walk"
   ]
 }

@@ -1,0 +1,33 @@
+{
+  "id": "a-transition-on-the-timeline-reads-as-a-transiti",
+  "title": "A transition on the timeline reads as a transition, as the mock draws it",
+  "goal": "A Cross dissolve laid on a cut shows as a small pale box with a cut marker in it, and the clip's own name shows through it, so at a glance you cannot tell whether a cut has a transition on it. The mock draws a clear coloured band across the seam with a white edge, the transition's icon in the middle and grips for its length on each side. Make the band match.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:34:52.160Z",
+  "updated": "2026-10-06T13:35:57.810Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/shared/components/video.css .xband (~line 95): 34px tall, radius 6, linear-gradient(90deg, rgba(18,194,233,.75), rgba(255,157,92,.75)), 1px rgba(255,255,255,.55) border, shadow-2, icon centred; .xband.blk (dip) is a dashed outline, no fill; .gr.l/.gr.r grips straddle the edges. video.html uses it on V1.\n\nApp: /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (crop the bottom 330 px): a pale translucent box at the cut with the playhead's cut marker inside, and the S of Sample Talk showing through. Find the band in the timeline clip bar code (search Sources/Photonz for the transition overlay drawn at a cut on the clip bar). Colours go through the design tokens, not new literals, and the contrast check must stay green. Searched: transition band, transition icon: only done design-system tasks.",
+  "acceptance": [
+    "A dissolve on a cut is drawn as the mock's band: an opaque gradient across the seam with a white edge, the transition's own icon centred, and a grip on each side, with nothing from the clip's label showing through it",
+    "A dip (to black or white) is the mock's outline rather than a fill, so what is under it still reads",
+    "Picking the band, dragging its grips and right-clicking it still do what they do today",
+    "Ships at Next defaults; the try path is: open a recording, press B at two seconds, click the cut, pick Cross dissolve in the picker, look at the cut on V1 at the default zoom and zoomed right in",
+    "audit written under queue/audits/ with the band beside the mock's .xband at the same scale, in light and dark, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:34:52.162Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:57.809Z",
+      "note": "seq 530 -> 50"
+    }
+  ]
+}

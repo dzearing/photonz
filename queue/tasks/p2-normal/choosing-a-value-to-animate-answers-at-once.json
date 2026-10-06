@@ -1,0 +1,33 @@
+{
+  "id": "choosing-a-value-to-animate-answers-at-once",
+  "title": "Choosing a value to animate answers at once",
+  "goal": "Every time someone picks a value from Animate a property (Position, Scale, a shadow's distance), the app stops answering for about a fifth of a second, which is long enough to feel as a hitch on every key you set. The video success list asks that no press keep the app busy over 50 ms. Make choosing a value answer inside that.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-06T13:35:45.635Z",
+  "updated": "2026-10-06T13:35:57.978Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced from the loop's own walk logs, not read from code. Every walk run in the last two days that presses a row of the Animate a property popover logs a hold far over the line (note format: '\"Position\" in Animate a property ... longest N ms'):\n  237.5 an-editing-session-walk (Position, 06:16 today)\n  237.6 keys-on-a-later-shadow-walk (Shadow 3 distance)\n  225.6 a-video-edit-saves-as-a-project-walk, 211.2 timeline-bar-labels-only-walk, 210.5 keyframe-anything-walk, 209.5 shadow-distance-keys-walk, 207.8 properties-reset-walk ... 185.8 key-lanes-menu-walk (Opacity)\nCommand used: for each /tmp/photonz-playtest/*/log.json from the last two days, match notes '\"(.*)\" in Animate a property.*longest ([0-9.]+)ms'. Over 25 readings, none under 185 ms. Pressing the Animate a property button itself was 136.5 ms in an-editing-session-walk step 57.\n\nThe step notes also count view bodies (clipBar 5, inspectorPanel 2, trackRow 4, wordsLane ...): a lane opening plus the panel rebuilding is the first suspect, then the popover's own teardown. Profile with the walk harness's mainBusy figures or Instruments on the probe, never the Dev app. The Animate a property list's length is on a separate card (animate-a-property-fits-on-screen-on-a-title-wit); do not change the list's shape here. Searched: main thread, longest hold, Animate a property: nothing open covers speed.",
+  "acceptance": [
+    "The cause of the hold is found and written into this task's log with a measurement, before anything changes",
+    "Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk",
+    "The value still arrives armed, its lane still opens on the timeline and its first key still lands, exactly as today",
+    "Ships at Next defaults; the try path is: open a recording, press T and type a title, open Animate a property in the panel and pick Position, then watch the panel and timeline",
+    "audit written under queue/audits/ with the before and after numbers, and anything left rough is filed as a follow-up task if it clears the follow-up bar and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-06T13:35:45.637Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-06T13:35:57.977Z",
+      "note": "seq 3680 -> 1"
+    }
+  ]
+}
