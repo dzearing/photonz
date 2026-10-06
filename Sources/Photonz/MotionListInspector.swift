@@ -740,13 +740,14 @@ enum MotionEntry {
     /// its own.
     static func suffix(_ property: MotionProperty) -> String? {
         switch property {
-        case .rotation: "°"
-        case .scale, .opacity, .cropLeft, .cropTop, .cropRight, .cropBottom: "%"
+        case .rotation, .shadowDirection: "°"
+        case .scale, .opacity, .shadowOpacity, .glowOpacity,
+             .cropLeft, .cropTop, .cropRight, .cropBottom: "%"
         // The app's ONE word for a length (`DocumentUnit`), not a second one
         // of this panel's own: a thickness on a motion row and a thickness in
         // Appearance are the same distance.
-        case .strokeWidth, .blur, .cornerRadius, .shadow, .glow, .textSize: DocumentUnit.word
-        case .position, .color: nil
+        case .strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .textSize: DocumentUnit.word
+        case .position, .color, .shadowColor, .glowColor: nil
         }
     }
 }

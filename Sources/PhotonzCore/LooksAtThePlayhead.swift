@@ -21,7 +21,9 @@ extension MotionProperty {
     /// The keyable values that are how a layer LOOKS rather than where it is:
     /// the ones a panel row changes. Place, size and angle are the canvas's.
     public static let looks: [MotionProperty] = [.opacity, .color, .blur, .strokeWidth,
-                                                  .cornerRadius, .shadow, .glow, .textSize]
+                                                  .cornerRadius, .shadow, .shadowDistance,
+                                                  .shadowDirection, .shadowColor, .shadowOpacity,
+                                                  .glow, .glowColor, .glowOpacity, .textSize]
 }
 
 extension Layer {

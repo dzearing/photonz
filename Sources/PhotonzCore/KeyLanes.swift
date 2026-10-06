@@ -82,7 +82,10 @@ extension PhotonzDocument {
 
     /// The order the panel lists values in, which the lanes keep.
     private static let laneOrder: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
-                                                      .strokeWidth, .color, .blur, .shadow, .textSize]
+                                                      .strokeWidth, .color, .blur, .shadow,
+                                                      .shadowDistance, .shadowDirection, .shadowColor,
+                                                      .shadowOpacity, .glow, .glowColor, .glowOpacity,
+                                                      .textSize]
 
     static func laneRank(_ property: MotionProperty) -> Int {
         laneOrder.firstIndex(of: property) ?? laneOrder.count

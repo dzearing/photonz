@@ -1,0 +1,52 @@
+{
+  "feature": "Shadow and glow keys: distance, direction, colour, opacity",
+  "epic": "video-transitions-motion",
+  "summary": "A shadow's distance, direction, colour and opacity, and a glow's colour and opacity, now take keys like their size, so a title can lift off the page or a glow can warm from blue to orange over a clip.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is shadow-distance-keys-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording, put the playhead at 0:01, press T, click on the picture and type a title, then press Command-Return.",
+      "shot": "2026-10-06-shadow-glow-keys-1-the-picker.png"
+    },
+    {
+      "do": "In Properties, click Animate a property and pick Shadow distance under Effects."
+    },
+    {
+      "do": "Type 2 into the Shadow distance box and press Return.",
+      "shot": "2026-10-06-shadow-glow-keys-2-first-key-at-2.png"
+    },
+    {
+      "do": "Move the playhead to 0:03, type 30 into Shadow distance and press Return.",
+      "shot": "2026-10-06-shadow-glow-keys-3-second-key-at-30.png"
+    },
+    {
+      "do": "Step the playhead back to 0:02 and read the value and the diamond.",
+      "shot": "2026-10-06-shadow-glow-keys-4-between-the-keys.png"
+    },
+    {
+      "do": "Go to the start and press Space to play it through."
+    },
+    {
+      "do": "Pick Shadow color from Animate a property, then at a later moment change the shadow's colour in the Effects list."
+    },
+    {
+      "do": "Right-click a key on the Shadow distance lane and choose an ease."
+    }
+  ],
+  "evaluate": [
+    "Does the title read as lifting off the page as the shadow is thrown from 2 to 30?",
+    "Is a black shadow on a dark recording strong enough to see the lift, or should keying distance also raise the shadow's opacity?",
+    "Are Shadow distance, direction, color and opacity the names you would look for in Animate a property?",
+    "Does changing a keyed shadow colour in the Effects list at a second moment feel like it adds a key, the way the canvas does for position?"
+  ],
+  "rough": [
+    "A typed title already has two shadows, and Add Effect puts a third at the bottom. Every shadow key moves only the first one, so a shadow you add yourself cannot be keyed yet: task keys-on-a-layer-with-several-shadows-move-the-sh.",
+    "The walk keys the title's own shadow rather than adding a Drop Shadow first, because of the line above: task keys-on-a-layer-with-several-shadows-move-the-sh.",
+    "On this dark recording a black shadow at 30 is subtle; on a light picture it is plain. Nothing was changed for it.",
+    "A title lasts three seconds from where it is typed, so a key at 0:03 on a title typed at 0:00 falls on its last frame and the title is gone. The walk types the title at 0:01.",
+    "The app goes further than the mock here: the video mock lists only Shadow size under Effects, and this adds four more shadow values and two glow values.",
+    "Animate a property now lists 12 values for a title instead of 8, so Shadow color and Shadow opacity sit below the fold of the picker until you scroll or type in Find a property.",
+    "A glow's softness and a shadow's Size (spread) still cannot take keys."
+  ]
+}

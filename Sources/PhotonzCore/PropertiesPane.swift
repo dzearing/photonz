@@ -102,7 +102,8 @@ public enum PropertyPicker {
             switch motion {
             case .position, .scale, .rotation: return "Transform"
             case .opacity, .cornerRadius, .strokeWidth, .color: return "Appearance"
-            case .blur, .shadow, .glow: return "Effects"
+            case .blur, .shadow, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity,
+                 .glow, .glowColor, .glowOpacity: return "Effects"
             case .textSize: return "Text"
             case .cropLeft, .cropTop, .cropRight, .cropBottom: return "Crop"
             }

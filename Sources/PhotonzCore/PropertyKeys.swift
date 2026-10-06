@@ -225,7 +225,9 @@ extension Layer {
         var list: [KeyedProperty] = []
         if !isSoundOnly {
             let order: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
-                                           .strokeWidth, .color, .blur, .shadow, .glow, .textSize]
+                                           .strokeWidth, .color, .blur, .shadow, .shadowDistance,
+                                           .shadowDirection, .shadowColor, .shadowOpacity,
+                                           .glow, .glowColor, .glowOpacity, .textSize]
                 + MotionProperty.cropEdges
             for property in order where keyStill(property) != nil {
                 list.append(.motion(property))

@@ -45,6 +45,21 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// How far the first glow in its Effects list reaches, in document points:
     /// an effect's amount, keyed like any other length.
     case glow
+    /// How far its first shadow is thrown, in document points, the way the
+    /// shadow already points: the Effects panel's Distance. A title lifting
+    /// off the page is this growing.
+    case shadowDistance
+    /// Which way its first shadow is thrown, in degrees clockwise from
+    /// pointing right: the Effects panel's Direction.
+    case shadowDirection
+    /// What its first shadow is painted.
+    case shadowColor
+    /// How strong its first shadow is, as a percentage.
+    case shadowOpacity
+    /// What its first glow is painted.
+    case glowColor
+    /// How strong its first glow is, as a percentage.
+    case glowOpacity
     /// How much of a picture or a clip is cut away from each edge, as a
     /// percent of the picture: Premiere's Crop effect, whose four edges are
     /// keyed one at a time. The picture that is kept stays where it was drawn
@@ -68,6 +83,12 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .shadow: "Shadow size"
         case .textSize: "Text size"
         case .glow: "Glow size"
+        case .shadowDistance: "Shadow distance"
+        case .shadowDirection: "Shadow direction"
+        case .shadowColor: "Shadow color"
+        case .shadowOpacity: "Shadow opacity"
+        case .glowColor: "Glow color"
+        case .glowOpacity: "Glow opacity"
         case .cropLeft: "Crop left"
         case .cropTop: "Crop top"
         case .cropRight: "Crop right"
@@ -84,7 +105,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// A distance in document points, which the panel writes in the app's one
     /// word for a length (`DocumentUnit`).
     public var isLength: Bool {
-        [.strokeWidth, .blur, .cornerRadius, .shadow, .glow, .textSize].contains(self)
+        [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .textSize].contains(self)
     }
 
     /// The order the menu offers them in: where it is, how big, how turned,
@@ -110,13 +131,18 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// reason: they are lengths the growth multiplies, so they are set before
     /// it rather than after. A glow's size is one more of those lengths.
     ///
+    /// A shadow's distance, direction, colour and opacity sit just outside its
+    /// size, so a shadow a size key brings in is thrown and painted by them
+    /// too; the distance is a length the growth multiplies, like the size.
+    ///
     /// The crop is innermost of all: Premiere crops the picture first and
     /// moves, turns and grows what is left, so a crop is a cut in the picture
     /// the growth then magnifies, and the growth keeps its middle where the
     /// whole picture's middle is (`applied`, the scale case).
     public static let nestingOrder: [MotionProperty] =
         [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth,
-         .cornerRadius, .shadow, .glow, .textSize,
+         .cornerRadius, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .shadow,
+         .glowColor, .glowOpacity, .glow, .textSize,
          .cropLeft, .cropTop, .cropRight, .cropBottom]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
@@ -194,6 +220,18 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             return layer.text.map { .number(Double($0.fontSize)) }
         case .glow:
             return layer.style.glowEffects.first.map { .number(Double($0.size)) }
+        case .shadowDistance:
+            return layer.style.shadows.first.map { .number(Double($0.distance)) }
+        case .shadowDirection:
+            return layer.style.shadows.first.map { .number(Double($0.directionDegrees)) }
+        case .shadowColor:
+            return layer.style.shadows.first.map { .color($0.colorHex) }
+        case .shadowOpacity:
+            return layer.style.shadows.first.map { .number($0.opacity * 100) }
+        case .glowColor:
+            return layer.style.glowEffects.first.map { .color($0.colorHex) }
+        case .glowOpacity:
+            return layer.style.glowEffects.first.map { .number($0.opacity * 100) }
         case .cropLeft, .cropTop, .cropRight, .cropBottom:
             // Nothing cut away: a keyed crop is measured from the picture as
             // it is drawn, whatever the Crop tool already took off it.
@@ -226,14 +264,17 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         switch (self, value) {
         case let (.rotation, .number(degrees)): return "\(MotionNumber.text(degrees))°"
         case let (.scale, .number(percent)): return "\(MotionNumber.text(percent))%"
-        case let (.opacity, .number(percent)): return "\(MotionNumber.text(percent))%"
+        case let (.opacity, .number(percent)), let (.shadowOpacity, .number(percent)),
+             let (.glowOpacity, .number(percent)):
+            return "\(MotionNumber.text(percent))%"
+        case let (.shadowDirection, .number(degrees)): return "\(MotionNumber.text(degrees))°"
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
             return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
              let (.shadow, .number(points)), let (.textSize, .number(points)),
-             let (.glow, .number(points)):
+             let (.glow, .number(points)), let (.shadowDistance, .number(points)):
             return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
@@ -1103,6 +1144,30 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: .glow, from: .number(now), to: .number(to),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .shadowDistance:
+            // Thrown further: the title lifting off the page.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(max(now * 2, 12)),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .shadowDirection:
+            // An eighth of a turn round, the light moving across.
+            let now = if case let .number(number) = current ?? .number(90) { number } else { 90.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(now + 45),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .shadowColor, .glowColor:
+            // As with the layer's own colour, the second one is yours to pick.
+            let hex = if case let .color(hex) = current ?? .color("#000000") { hex } else { "#000000" }
+            return LayerMotion(property: property, from: .color(hex), to: .color(hex),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .shadowOpacity, .glowOpacity:
+            // Fades it away, or in where it is already gone.
+            let now = if case let .number(number) = current ?? .number(100) { number } else { 100.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(now > 1 ? 0 : 100),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
         case .cropLeft, .cropTop, .cropRight, .cropBottom:
             // A wipe in from that edge: nothing cut away, then a quarter.
             return LayerMotion(property: property, from: .number(0), to: .number(25),
@@ -1280,6 +1345,35 @@ extension MotionProperty {
             // only offered where one is already there.
             guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
             moved.style.updateGlowEffect(at: index) { $0.size = CGFloat(max(0, points)) * grown }
+        case let (.shadowDistance, .number(points)):
+            // Thrown further the way it already points. Like the size, a key
+            // never brings a shadow in on its own: these rows are offered only
+            // where one is there, or where a size key has just brought one.
+            guard !moved.style.shadows.isEmpty else { break }
+            moved.style.updateShadow(at: 0) { $0.setDistance(CGFloat(max(0, points)) * grown) }
+        case let (.shadowDirection, .number(degrees)):
+            // Turned about the layer, as far away as it was. Worked out here
+            // rather than with the panel's own setter, which steps a shadow
+            // sitting right under its layer one point out so the dial shows
+            // something: a key must not move a shadow nobody threw.
+            guard !moved.style.shadows.isEmpty else { break }
+            moved.style.updateShadow(at: 0) { shadow in
+                let distance = shadow.distance
+                let radians = CGFloat(degrees) * .pi / 180
+                shadow.offset = CGSize(width: distance * cos(radians), height: distance * sin(radians))
+            }
+        case let (.shadowColor, .color(hex)):
+            guard !moved.style.shadows.isEmpty else { break }
+            moved.style.updateShadow(at: 0) { $0.colorHex = hex }
+        case let (.shadowOpacity, .number(percent)):
+            guard !moved.style.shadows.isEmpty else { break }
+            moved.style.updateShadow(at: 0) { $0.opacity = min(max(percent / 100, 0), 1) }
+        case let (.glowColor, .color(hex)):
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            moved.style.updateGlowEffect(at: index) { $0.colorHex = hex }
+        case let (.glowOpacity, .number(percent)):
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .glow }) else { break }
+            moved.style.updateGlowEffect(at: index) { $0.opacity = min(max(percent / 100, 0), 1) }
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
             moved = moved.croppedByKey(self, percent: percent, authored: authored)

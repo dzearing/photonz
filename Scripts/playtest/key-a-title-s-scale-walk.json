@@ -160,7 +160,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 8 properties"
+      "reads": "1 of 12 properties"
     },
     {
       "do": "action",
@@ -304,7 +304,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 8 properties"
+      "reads": "1 of 12 properties"
     },
     {
       "do": "expect",
@@ -349,7 +349,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 8 properties"
+      "reads": "1 of 12 properties"
     },
     {
       "do": "press",
@@ -485,7 +485,7 @@
     {
       "do": "expect",
       "field": "Animating Count",
-      "reads": "1 of 8 properties"
+      "reads": "1 of 12 properties"
     },
     {
       "do": "panel",
