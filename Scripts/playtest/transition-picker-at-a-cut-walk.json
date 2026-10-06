@@ -321,7 +321,7 @@
     {
       "do": "expect",
       "field": "Out",
-      "reads": "Piece 1"
+      "reads": "b-roll"
     },
     {
       "do": "expect",
@@ -331,7 +331,7 @@
     {
       "do": "describe",
       "stage": "8-a-join-inside-one-clip",
-      "note": "THE FIFTH TEST: b-roll cut in two with the blade, and a click on the join inside it opens the same picker at that cut. Its two sides are pieces of one clip, and the panel says Piece 1 and Piece 2"
+      "note": "THE FIFTH TEST: b-roll cut in two with the blade, and a click on the join inside it opens the same picker at that cut. Its two sides are pieces of one clip, and the panel names both b-roll, as both bars do"
     },
     {
       "do": "press",

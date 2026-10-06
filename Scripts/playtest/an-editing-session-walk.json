@@ -182,6 +182,16 @@
       "stage": "4-picker"
     },
     {
+      "do": "expect",
+      "field": "Out",
+      "reads": "Sample Talk"
+    },
+    {
+      "do": "expect",
+      "field": "In",
+      "reads": "Sample Talk"
+    },
+    {
       "do": "press",
       "control": "Cross dissolve",
       "in": "At this cut"

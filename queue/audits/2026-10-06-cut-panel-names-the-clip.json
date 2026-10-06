@@ -1,0 +1,38 @@
+{
+  "feature": "The cut's panel names the clips the timeline shows",
+  "epic": "video-transitions-motion",
+  "summary": "Click a cut you made inside one recording and Edit point now reads Out: Sample Talk and In: Sample Talk, the name both bars carry, instead of Piece 1 and Piece 2, which no bar shows. A cut between two clips still names each clip.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/cut-panel-names-the-clip-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording (File > Open, or the Sample Talk sample)."
+    },
+    {
+      "do": "Press B and click the recording's bar at about two seconds."
+    },
+    {
+      "do": "Press V and click the cut you just made."
+    },
+    {
+      "do": "Read Edit point at the top of the panel: Out and In both name the recording, the same name as the two bars under it.",
+      "shot": "2026-10-06-cut-panel-names-1-sample-talk-sc.png"
+    },
+    {
+      "do": "Do the same on a recording with a long file name: both fields stay on one line and give way in the middle.",
+      "shot": "2026-10-06-cut-panel-names-2-long-name-sc.png"
+    },
+    {
+      "do": "Drop a second clip right after the first and click the cut between them: Out names the first clip, In names the second."
+    }
+  ],
+  "evaluate": [
+    "Does Out and In reading the same name, the clip's, tell you enough at a cut inside one recording, with Out and In saying which side is which?",
+    "On a long name, is 'Quar...l take' still enough to match the field to its bar?",
+    "Does Sample Talk now read whole in both boxes at the panel's usual width?"
+  ],
+  "rough": [
+    "Matches the mock's Edit point section (video-transition-wt.html, #propsCut): two boxes, Out and In, each naming a clip, with the mock's 6 point gap between a box's label and its value. That gap was 16 before this task and cut Sample Talk short in the Out box.",
+    "A long name gives way in the middle in a box about 70 points wide, so very different long names that share a start and an end would read alike. The bar above shows the whole name."
+  ]
+}

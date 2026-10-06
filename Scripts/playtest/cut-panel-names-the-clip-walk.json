@@ -1,0 +1,167 @@
+{
+  "out": "/tmp/photonz-playtest/cut-panel-names-the-clip-walk",
+  "seed": "A cut inside one recording names its two sides the way the timeline does. At Next defaults, nothing switched on by hand: open the sample recording, cut it in two with Command K at a quarter of the way in, click the cut with the pointer, and the panel's Edit point reads Out: Sample Talk and In: Sample Talk, the name both bars on V1 carry (it read Piece 1 and Piece 2 until 2026-10-06, names no bar shows). Then a recording whose name is far longer than a field is opened, cut with the blade (B and a click at two seconds) and its cut clicked with the select tool (V), and both fields still sit on one line, giving way in the middle.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as Quarterly planning review recording final take.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekQuarter"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "pieces": 2
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        546,
+        894
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Out",
+      "reads": "Sample Talk"
+    },
+    {
+      "do": "expect",
+      "field": "In",
+      "reads": "Sample Talk"
+    },
+    {
+      "do": "describe",
+      "stage": "1-cut-names",
+      "note": "THE TEST: the cut inside the recording is in hand, and Edit point names both sides Sample Talk, the name on both bars of V1 under it"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-cut-names"
+    },
+    {
+      "do": "labelsWhole",
+      "stage": "1-cut-names",
+      "words": [
+        "Sample Talk"
+      ]
+    },
+    {
+      "do": "open",
+      "file": "scratch/Quarterly planning review recording final take.mp4"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "b"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        546,
+        894
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Quarterly planning review recording final take",
+      "track": "V1",
+      "pieces": 2
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        546,
+        894
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Out",
+      "reads": "Quarterly planning review recording final take"
+    },
+    {
+      "do": "expect",
+      "field": "In",
+      "reads": "Quarterly planning review recording final take"
+    },
+    {
+      "do": "describe",
+      "stage": "2-long-name",
+      "note": "A LONG NAME: a recording named far wider than a field, cut and its cut clicked, keeps both fields to one line, giving way in the middle with the start and end of the name still showing, the way its bars do"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-long-name"
+    }
+  ]
+}

@@ -34,7 +34,8 @@ public enum TimelineCutPlace: Hashable, Sendable {
 }
 
 /// One cut anywhere on the timeline, with what it can afford worked out and
-/// the names the panel shows for its two sides.
+/// the names the panel shows for its two sides: each side's clip, as its bar
+/// on the timeline names it.
 public struct DocumentCut: Hashable, Sendable {
     public let place: TimelineCutPlace
     /// Where the cut is on the DOCUMENT's clock, the number the ruler shows.
@@ -56,8 +57,10 @@ extension PhotonzDocument {
         case let .join(clip, index):
             guard let layer = layer(id: clip), let start = layer.time?.inMS,
                   let cut = layer.clipPieces?.cut(at: index) else { return nil }
+            // Both sides are named by the clip, the name both bars carry on
+            // the timeline; the panel's Out and In say which side is which.
             return DocumentCut(place: place, atMS: start + cut.atMS, cut: cut,
-                               outgoingName: "Piece \(index)", incomingName: "Piece \(index + 1)")
+                               outgoingName: layer.name, incomingName: layer.name)
         case let .edit(outgoing, incoming):
             guard let cut = editPointCut(outgoing: outgoing, incoming: incoming),
                   let out = layer(id: outgoing), let into = layer(id: incoming) else { return nil }

@@ -278,8 +278,10 @@ struct EditPointTransitionTests {
         let place = TimelineCutPlace.join(clip: id, index: 1)
         let cut = try #require(doc.documentCut(at: place))
         #expect(cut.atMS == 3000)
-        #expect(cut.outgoingName == "Piece 1")
-        #expect(cut.incomingName == "Piece 2")
+        // Both sides are named the way their bars are: by the clip. Out and
+        // In already say which side is which.
+        #expect(cut.outgoingName == "take")
+        #expect(cut.incomingName == "take")
         let did = doc.setTransition(ClipTransition(kind: .push, lengthMS: 400), at: place)
         #expect(did)
         #expect(doc.documentCut(at: place)?.cut.transition?.kind == .push)

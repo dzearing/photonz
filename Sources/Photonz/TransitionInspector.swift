@@ -57,14 +57,18 @@ private struct CutField: View {
     var keepsValueWhole = false
 
     var body: some View {
-        HStack(spacing: 6) {
+        // The mock's gap between key and value is 6 at the least
+        // (`.field`, `gap:6px` with the value pushed right). Spacing on the
+        // stack AND a spacer counted it three times, 16 points, and a clip
+        // called Sample Talk gave way in the Out box (2026-10-06).
+        HStack(spacing: 0) {
             Text(key)
                 .font(.system(size: 10))
                 .foregroundStyle(VideoKit.Palette.faint)
                 .lineLimit(1)
                 .minimumScaleFactor(keepsValueWhole ? 0.8 : 1)
                 .layoutPriority(1)
-            Spacer(minLength: 4)
+            Spacer(minLength: 6)
             Text(value)
                 .font(.system(size: 11.5, weight: .medium))
                 .monospacedDigit()
