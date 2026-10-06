@@ -176,6 +176,23 @@ struct TimelineKeysTests {
         #expect(command(.right, [.option, .shift]) == nil)
     }
 
+    @Test("Command left and right nudge the picked clips a frame, five with Shift, Premiere's Mac keys")
+    func commandArrowsNudge() {
+        #expect(command(.right, .command) == .nudgeClips(frames: 1))
+        #expect(command(.left, .command) == .nudgeClips(frames: -1))
+        #expect(command(.right, [.command, .shift]) == .nudgeClips(frames: 5))
+        #expect(command(.left, [.command, .shift]) == .nudgeClips(frames: -5))
+        // A held key keeps nudging, the way a held arrow keeps stepping.
+        #expect(command(.right, .command, repeating: true) == .nudgeClips(frames: 1))
+        // The picked clips are the timeline's, so only while it has the keyboard.
+        #expect(command(.right, .command, focused: false) == nil)
+        // The plain arrows still step the playhead.
+        #expect(command(.right) == .stepFrames(1))
+        // Nothing with Option or Control on top.
+        #expect(command(.right, [.command, .option]) == nil)
+        #expect(command(.left, [.command, .control]) == nil)
+    }
+
     @Test("Up and down go to the previous and next edit point")
     func upDownEditPoints() {
         #expect(command(.up) == .editPoint(forward: false))

@@ -1,0 +1,28 @@
+{
+  "feature": "Command and an arrow key nudge a picked clip a frame",
+  "epic": "video-beats-premiere",
+  "summary": "With a clip picked on the timeline, Command Left and Right move it one frame earlier or later, five with Shift, each press one undo step. Premiere's Nudge Clip Selection on its Mac keys.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/command-arrows-nudge-a-clip-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, put the playhead at 0:04 and press Command K.", "shot": "2026-10-06-clip-nudge-1-piece-2-picked-sc.png" },
+    { "do": "Click the second piece on the timeline and read its times in Properties (4.0s to 8.0s)." },
+    { "do": "Press Command Right three times: Properties reads 4.1s to 8.1s.", "shot": "2026-10-06-clip-nudge-2-three-frames-later-sc.png" },
+    { "do": "Press Shift Command Left: it goes back five frames and stops at the start." },
+    { "do": "Press Command Z twice: each takes back one press." },
+    { "do": "Open the Clip menu: Nudge Earlier and Nudge Later sit under the ripple trims, with Command Left and Right." },
+    { "do": "Press Escape so nothing is picked, then Command Right: nothing moves and both rows are dimmed.", "shot": "2026-10-06-clip-nudge-7-nothing-picked-sc.png" }
+  ],
+  "evaluate": [
+    "With one piece of a cut clip picked, should a nudge move only that piece (opening a gap like Premiere) rather than the whole clip, as it does now?",
+    "Is stopping at the clip next door and at the start the right feel, or would you rather it refused the whole press?",
+    "Is the Clip menu the place you would look for Nudge Earlier and Nudge Later?",
+    "Does one frame (33ms) feel like one frame on your recordings?"
+  ],
+  "rough": [
+    "The whole clip moves even when one piece of a cut clip is picked, the same as a Command drag on a piece. In Premiere, Command K makes two clips, so nudging the second half opens a gap before it. Here a cut makes pieces of one clip with no gaps between them, so a piece cannot move on its own without breaking off into its own clip. Ask above.",
+    "The five-frame nudges (Shift Command Left and Right) work from the keyboard but have no menu rows of their own. The Clip menu is already close to a laptop screen's height.",
+    "A frame is the app's fixed 33ms step, the same as the arrow keys use, not the recording's own frame rate.",
+    "No mock covers keyboard nudging or these menu rows."
+  ]
+}

@@ -768,6 +768,33 @@ struct EditorCommands: Commands {
         .keyboardShortcut(timelineKeys ? KeyboardShortcut("s", modifiers: []) : nil)
     }
 
+    // Premiere's Nudge Clip Selection Left and Right, on its Mac keys: the
+    // picked clips a frame earlier or later, five with ⇧ held
+    // (`EditorState+ClipNudge`). Printed only while the timeline has the
+    // keyboard, where the keys mean it. A field being typed in (a clip or
+    // track being renamed in the dock) keeps ⌘← and ⌘→ for its caret, the
+    // way Cut, Copy and Paste act on a field that has the keyboard.
+    @ViewBuilder private var nudgeClipRows: some View {
+        Button("Nudge Earlier") {
+            if let fieldEditor {
+                fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.moveToLeftEndOfLine(_:)))
+            } else {
+                editor?.nudgeClips(byFrames: -1)
+            }
+        }
+        .keyboardShortcut(timelineKeys ? KeyboardShortcut(.leftArrow, modifiers: .command) : nil)
+        .disabled(!(editor?.canNudgeClips ?? false))
+        Button("Nudge Later") {
+            if let fieldEditor {
+                fieldEditor.doCommand(by: #selector(NSStandardKeyBindingResponding.moveToRightEndOfLine(_:)))
+            } else {
+                editor?.nudgeClips(byFrames: 1)
+            }
+        }
+        .keyboardShortcut(timelineKeys ? KeyboardShortcut(.rightArrow, modifiers: .command) : nil)
+        .disabled(!(editor?.canNudgeClips ?? false))
+    }
+
     // Final Cut's Break Apart Clip Items, on its key, which is Photoshop's
     // Ungroup too: the one key that takes a thing made of things apart. The
     // row holds it only while a merged clip is in hand, and Layer ▸ Ungroup
@@ -1434,6 +1461,7 @@ struct EditorCommands: Commands {
                 splitAndDeleteRows
                 rippleDeleteRow
                 rippleTrimRows
+                nudgeClipRows
                 breakApartRow
                 Divider()
             }
@@ -1550,6 +1578,7 @@ struct EditorCommands: Commands {
                     rippleDeleteRow
                     splitEverythingRow
                     rippleTrimRows
+                    nudgeClipRows
                     applyDefaultTransitionRow
                     snapRow
                 }

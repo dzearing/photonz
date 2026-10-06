@@ -120,7 +120,7 @@ struct TimelineKeysStartAnEditTests {
             .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift, .rippleDelete,
             .extractMarked, .liftMarked, .rippleTrimToPlayhead(.start), .rippleTrimToPlayhead(.end),
             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
-            .zoomIn, .zoomOut, .zoomToFit,
+            .zoomIn, .zoomOut, .zoomToFit, .nudgeClips(frames: 1), .nudgeClips(frames: -5),
         ]
         for command in editing { #expect(command.startsAnEdit, "\(command)") }
     }

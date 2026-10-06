@@ -1,0 +1,92 @@
+{
+  "out": "/tmp/photonz-playtest/command-arrows-nudge-a-clip-walk",
+  "seed": "Command and an arrow key nudge a picked clip a frame in time (task command-and-an-arrow-key-nudge-a-picked-clip-a-f), Premiere's Nudge Clip Selection on its Mac keys, at Next defaults with no flag touched. The sample recording is cut in two with Command K, piece 2 is clicked with a real press on its bar, and Command Right three times moves the clip three frames later (0.099s), the Clip line reading 4.1s where it read 4.0s. Shift Command Left asks for five frames earlier and stops at the start of the document. One Command Z takes back one press. Plain Right still steps the playhead, and with nothing picked Command Right moves nothing.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.8 },
+    { "comment": "One cut at 0:04 with Command K.", "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2, "startsAt": 0.0, "within": 0.001 },
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "comment": "The middle of piece 2 on V1 in the 1728x990 probe window, clicked the way a hand clicks it.",
+      "do": "windowClick",
+      "at": [1300, 894]
+    },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
+    { "do": "reveal", "control": "Time section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 4.0s → 8.0s · 4.0s · 1.0x" },
+    { "do": "describe", "stage": "1-piece-2-picked", "note": "the recording cut at 0:04 with Command K, piece 2 picked with a click on its bar; the Clip line reads 4.0s to 8.0s" },
+    { "do": "snapshot", "name": "1-piece-2-picked" },
+
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.099, "within": 0.001, "pieces": 2 },
+    { "do": "expect", "field": "Clip line", "reads": "Tutorial Sample 4.1s → 8.1s · 4.0s · 1.0x" },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
+    { "do": "describe", "stage": "2-three-frames-later", "note": "THE FIRST TEST: three presses of Command Right moved the clip three frames later, 0.099s, the pieces and the pick unchanged, and the Clip line reads 4.1s to 8.1s" },
+    { "do": "snapshot", "name": "2-three-frames-later" },
+
+    { "do": "key", "key": "left", "modifiers": ["command", "shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "within": 0.001 },
+    { "do": "describe", "stage": "3-stopped-at-the-start", "note": "THE SECOND TEST: Shift Command Left asked for five frames earlier and stopped at the start of the document, three frames back" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.099, "within": 0.001 },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.066, "within": 0.001 },
+    { "do": "describe", "stage": "4-one-step-each", "note": "THE THIRD TEST: each Command Z took back one press, the Shift Command Left and then one Command Right" },
+
+    { "comment": "The timeline takes the key before the menu does, so the row is picked the way a click picks it.", "do": "menus", "stage": "5-clip-menu", "menu": "Clip", "oneKeyEach": true, "choose": "Clip > Nudge Later" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.099, "within": 0.001 },
+    { "do": "describe", "stage": "5-menu-row", "note": "the Clip menu carries Nudge Earlier and Nudge Later on Command Left and Right, and picking Nudge Later nudged the clip a frame" },
+
+    { "do": "key", "key": "right" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.099, "within": 0.001 },
+    { "do": "describe", "stage": "6-plain-arrow", "note": "plain Right stepped the playhead and left the clip where it was" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimelinePick", "clips": [] },
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.099, "within": 0.001 },
+    { "do": "menus", "stage": "7-clip-menu-nothing-picked", "menu": "Clip" },
+    { "do": "describe", "stage": "7-nothing-picked", "note": "with nothing picked Command Right moved nothing" },
+    { "do": "snapshot", "name": "7-nothing-picked" },
+
+    { "do": "windowClick", "at": [1300, 894] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTimelinePick", "clips": ["Tutorial Sample piece 2"] },
+    { "do": "menus", "stage": "8-rename", "menu": "Clip", "choose": "Clip > Rename…" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "left", "modifiers": ["command"] },
+    { "do": "type", "text": "My " },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "My Tutorial Sample", "startsAt": 0.099, "within": 0.001 },
+    { "do": "describe", "stage": "8-caret-in-a-field", "note": "renaming the clip, Command Left moved the caret to the front of the name and the clip stayed where it was: a field being typed in keeps the key" }
+  ]
+}

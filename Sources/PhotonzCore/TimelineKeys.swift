@@ -84,6 +84,9 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     case playInToOut
     case shuttle(ShuttleKey)
     case stepFrames(Int)
+    /// Premiere's Nudge Clip Selection, ⌘← and ⌘→: the picked clips this
+    /// many frames later, or earlier when negative (`ClipNudge.swift`).
+    case nudgeClips(frames: Int)
     case editPoint(forward: Bool)
     /// Premiere's ⇧M and ⌘⇧M: the playhead to the next marker, or the one
     /// before it.
@@ -180,6 +183,13 @@ public enum TimelineKeys {
         case (.right, []): return .stepFrames(1)
         case (.left, [.shift]): return .stepFrames(-shiftStepFrames)
         case (.right, [.shift]): return .stepFrames(shiftStepFrames)
+        // Premiere's Mac keys for Nudge Clip Selection Left and Right, one
+        // frame and five. They act on clips picked on the timeline, so only
+        // while it has the keyboard, like the arrows they ride on.
+        case (.left, [.command]): return .nudgeClips(frames: -1)
+        case (.right, [.command]): return .nudgeClips(frames: 1)
+        case (.left, [.command, .shift]): return .nudgeClips(frames: -shiftStepFrames)
+        case (.right, [.command, .shift]): return .nudgeClips(frames: shiftStepFrames)
         case (.up, []): return .editPoint(forward: false)
         case (.down, []): return .editPoint(forward: true)
         case (.letter("m"), [.shift]): return .marker(forward: true)

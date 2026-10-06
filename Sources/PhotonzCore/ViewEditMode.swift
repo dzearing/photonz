@@ -120,7 +120,7 @@ extension TimelineKeyCommand {
         case .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
              .rippleDelete, .extractMarked, .liftMarked, .rippleTrimToPlayhead,
              .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
-             .zoomIn, .zoomOut, .zoomToFit:
+             .zoomIn, .zoomOut, .zoomToFit, .nudgeClips:
             return true
         }
     }

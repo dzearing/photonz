@@ -11,7 +11,8 @@ import SwiftUI
 // loses it to a press anywhere else, Premiere's own panel focus. While it does, J/K/L
 // shuttle, I and O mark, ' and ; extract and lift what they mark, Q and W
 // ripple trim the clip under the playhead up to it, S switches snapping, the
-// arrows step frames and edit points, ⇧M goes to the next marker, and V, B and
+// arrows step frames and edit points, ⌘← and ⌘→ nudge the picked clips a
+// frame (`EditorState+ClipNudge`), ⇧M goes to the next marker, and V, B and
 // the zoom keys pick the timeline's tools, where the same letters on the canvas
 // are Photoshop's tools. `TimelineKeyRouter` gets a press here before the
 // toolbar or the menu bar can take it.
@@ -84,6 +85,11 @@ extension EditorState {
             shuttle(key)
         case .stepFrames(let frames):
             stepDocument(byFrames: frames)
+        case .nudgeClips(let frames):
+            // Nothing picked: the press is not the timeline's. Picked but
+            // already against an edge, it still is, and nothing moves.
+            guard canNudgeClips else { return false }
+            nudgeClips(byFrames: frames)
         case .editPoint(let forward):
             goToEditPoint(forward: forward)
         case .marker(let forward):
