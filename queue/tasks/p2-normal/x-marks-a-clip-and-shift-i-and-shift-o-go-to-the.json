@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:35:45.884Z",
-  "updated": "2026-10-06T13:35:58.033Z",
+  "updated": "2026-10-06T18:23:10.033Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Key map: Sources/PhotonzCore/TimelineKeys.swift ~153-233 (pure, test-first in PhotonzCoreTests); dispatch in Sources/Photonz/EditorState+TimelineKeys.swift ~289, which takes presses before the menu bar while the timeline has the keyboard. X today is the fill swap on an invisible tool bar stand-in that answers under every tool (EditorCommands.swift ~140): make sure the timeline's X wins only while the timeline holds the keyboard. Option X (Clear In and Out) already exists (EditorCommands.swift ~888, TimelineMenuKeys.clearInOut) and should sit beside the new rows. Marks and extract: the done task marking-an-in-and-an-out-and-pressing-one-key-ta.\n\nFound by the Premiere key gap check this pass: X, Shift I, Shift O missing, no task or card covers or declined them (searched mark clip, go to in, shift i).",
@@ -29,6 +29,32 @@
     {
       "t": "2026-10-06T13:35:58.032Z",
       "note": "seq 3710 -> 2"
+    },
+    {
+      "t": "2026-10-06T18:05:58.309Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T18:21:36.481Z",
+      "note": "owns these walks: x-marks-the-clip-walk, mark-clip-menu-rows-walk"
+    },
+    {
+      "t": "2026-10-06T18:22:44.156Z",
+      "note": "adversarial review before: a Premiere editor presses X expecting the clip under the playhead marked; here B/Cmd K cut a clip into pieces of one layer, so X marks the PIECE under the playhead (what Premiere does after a razor cut, since each piece is its own clip there). No track targeting here, so: the picked clip under the playhead, else the topmost picture, else the topmost sound (a sound layer added later sits above the picture in layer order, and should not win). Collision: X is the fill swap on an invisible tool bar stand-in; the timeline router takes the press first only while it holds the keyboard, and with nothing under the playhead X is still kept by the timeline so it never swaps fills behind a person's back. No mock draws these; keys + Sequence rows only."
+    },
+    {
+      "t": "2026-10-06T18:22:44.214Z",
+      "note": "review after, on the probe: x-marks-the-clip-walk (no flags, no front) passes: X at 3s marks 2000-4000 on the cuts, Cmd Z takes both marks back in one step, apostrophe extracts to 6s, Shift I/Shift O go to the marks, nothing moves with no marks, five X presses on the timeline never swapped fills, one after a click on the picture did (#000000 -> #FFFFFF in log). mark-clip-menu-rows-walk passes: Sequence reads Mark Clip X, Go to In ⇧I, Go to Out ⇧O (dimmed with nothing marked), one key each. Neighbour walks fill-colours-say-themselves, premiere-keys-on-the-timeline and extract-a-marked-stretch green. Shift O on an Out at the very end lands on the last frame (scrub clamps), which is Premiere's behaviour too. left rough, not filed (no person-visible defect): Mark Clip is not on the clip or ruler right-click menus; Premiere's clip menu has no Mark Clip either."
+    },
+    {
+      "t": "2026-10-06T18:23:10.031Z",
+      "note": "X marks the piece under the playhead (picked clip there, else topmost picture, else topmost sound) while the timeline holds the keyboard, one undo step; Shift I / Shift O go to the In / Out, nothing with no mark; after a click on the picture X swaps fills again. Sequence rows Mark Clip (X), Go to In (⇧I), Go to Out (⇧O). Core in TimelineMarks.swift + TimelineKeys.swift, tests first (MarkClipTests, TimelineKeysTests), full suite 11572 green. Walks x-marks-the-clip-walk (no flags, real captures) and mark-clip-menu-rows-walk pass; neighbours fill-colours-say-themselves, premiere-keys-on-the-timeline, extract-a-marked-stretch green. Audit queue/audits/2026-10-06-mark-clip-and-go-to-marks.json; gap 11 in docs/design/video-vs-premiere.md. Commit deddcec6."
     }
-  ]
+  ],
+  "started": "2026-10-06T18:05:58.305Z",
+  "walks": [
+    "x-marks-the-clip-walk",
+    "mark-clip-menu-rows-walk"
+  ],
+  "completed": "2026-10-06T18:23:10.032Z"
 }
