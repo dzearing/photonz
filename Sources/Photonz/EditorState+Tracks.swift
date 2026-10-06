@@ -314,6 +314,8 @@ extension EditorState {
 
     func renameTrackGroup(_ id: UUID, to name: String) {
         renamingTrackID = nil
+        guard document?.trackGroups.first(where: { $0.id == id })?.name
+                != name.trimmingCharacters(in: .whitespacesAndNewlines) else { return }
         perform { $0.renameTrackGroup(id, to: name) }
     }
 

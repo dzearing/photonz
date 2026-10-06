@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/group-name-double-click-renames-walk",
+  "seed": "A track group's heading has a chevron and a name. A double click on the name only opens it for typing: the group stays as it was, open or folded. A single click on the name still folds and opens the group, a beat later so a double click is never taken for a fold, and the chevron folds at once. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "panelMenu", "menu": "Add Track", "choose": "Video Track" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Track V2", "present": true },
+    { "do": "press", "control": "Track V2" },
+    { "do": "press", "control": "Track V1", "modifiers": ["shift"] },
+    { "do": "action", "action": "tracksGroupPicked" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Group name Group 1", "present": true },
+    { "do": "expect", "control": "Track V2", "present": true },
+    { "do": "describe", "stage": "1-grouped-open", "note": "V2 and V1 gathered under Group 1, open, its chevron pointing down" },
+    { "do": "snapshot", "name": "group-1-open" },
+
+    { "do": "press", "control": "Group name Group 1", "count": 2 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-double-clicked", "note": "THE FIRST TEST: two real clicks on the open group's name opened the name for typing, and the group is still open a second later, V2 and V1 still showing under it" },
+    { "do": "expect", "control": "Track group name", "present": true },
+    { "do": "expect", "control": "Track V2", "present": true },
+    { "do": "expect", "control": "Track V1", "present": true },
+    { "do": "panel", "stage": "2-double-clicked" },
+    { "do": "snapshot", "name": "group-2-renaming-still-open" },
+    { "do": "type", "text": "Screens" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-renamed", "note": "THE SECOND TEST: Return kept the new name, and the group is still open" },
+    { "do": "expect", "control": "Group name Screens", "present": true },
+    { "do": "expect", "control": "Track V2", "present": true },
+    { "do": "snapshot", "name": "group-3-renamed" },
+
+    { "do": "press", "control": "Group name Screens" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "4-folded", "note": "THE THIRD TEST: a single click on the name still folds the group to one row, once the moment for a second click has passed" },
+    { "do": "expect", "control": "Track V2", "present": false },
+    { "do": "snapshot", "name": "group-4-folded" },
+
+    { "do": "press", "control": "Group name Screens", "count": 2 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "5-double-clicked-folded", "note": "THE FOURTH TEST: a double click on the folded group's name opens the name for typing and the group stays folded" },
+    { "do": "expect", "control": "Track group name", "present": true },
+    { "do": "expect", "control": "Track V2", "present": false },
+    { "do": "snapshot", "name": "group-5-renaming-still-folded" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Group name Screens", "present": true },
+
+    { "do": "press", "control": "Track group Screens" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "6-opened", "note": "THE FIFTH TEST: a click on the chevron opens the group again at once, with no wait" },
+    { "do": "expect", "control": "Track V2", "present": true },
+    { "do": "snapshot", "name": "group-6-open-again" }
+  ]
+}

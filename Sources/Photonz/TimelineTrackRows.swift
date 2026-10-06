@@ -1063,6 +1063,7 @@ struct TimelineGroupRow: View {
     static let foldedHeight: CGFloat = 22
 
     @State private var draftName = ""
+    @State private var pendingFold: Task<Void, Never>?
     @FocusState private var isNaming: Bool
 
     var body: some View {
@@ -1087,45 +1088,96 @@ struct TimelineGroupRow: View {
                     .focused($isNaming)
                     .onSubmit { editorState.renameTrackGroup(group.id, to: draftName) }
                     .onExitCommand { editorState.renamingTrackID = nil }
+                    .onChange(of: isNaming) { _, focused in
+                        if !focused, editorState.renamingTrackID == group.id {
+                            editorState.renameTrackGroup(group.id, to: draftName)
+                        }
+                    }
                     .onAppear {
                         draftName = group.name
-                        isNaming = true
+                        // A beat later, once the field is in the window, as a
+                        // track's name field does: asked for in the same pass
+                        // that builds it, the canvas keeps the keyboard.
+                        DispatchQueue.main.async { isNaming = true }
                     }
+                    .playtestControl("Track group name", detail: "Timeline")
+                    .panelReadout("naming \(group.name): \(isNaming ? "typing" : "not holding the keyboard")")
             } else {
-                Button { editorState.toggleTrackGroupCollapsed(group.id) } label: {
-                    HStack(spacing: 4) {
+                HStack(spacing: 0) {
+                    // The chevron folds at once: two clicks on it are two folds.
+                    Button { foldNow() } label: {
                         Image(systemName: "chevron.right")
                             .font(.system(size: 8, weight: .bold))
                             .rotationEffect(.degrees(isCollapsed ? 0 : 90))
                             .animation(.snappy(duration: 0.18), value: isCollapsed)
+                            .frame(width: Self.chevronWidth, height: Self.openHeight, alignment: .leading)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(isCollapsed ? "Open \(group.name)" : "Fold \(group.name)")
+                    .help(isCollapsed ? "Show the tracks in \(group.name)" : "Fold \(group.name) away")
+                    .playtestControl("Track group \(group.name)", detail: "Timeline")
+                    .panelReadout("group \(group.name): \(tracks.count) track\(tracks.count == 1 ? "" : "s")"
+                                  + (isCollapsed ? ", folded" : ""))
+                    // The name folds too, but a double click on it renames, so
+                    // a single click waits out the double click before it
+                    // folds: folding on the first click of two would fold the
+                    // group under the name being typed. A button reading
+                    // AppKit's own click count, as a track's name does; a
+                    // double tap gesture beside a button never fires.
+                    Button { nameClicked() } label: {
                         Text(group.name)
                             .font(.system(size: 10, weight: .semibold))
                             .lineLimit(1)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+                            .contentShape(Rectangle())
                     }
-                    .foregroundStyle(VideoKit.Palette.dim)
-                    .frame(width: TimelineDock.gutter, alignment: .leading)
-                    .contentShape(Rectangle())
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(group.name)
+                    .help(isCollapsed ? "Show the tracks in \(group.name)" : "Fold \(group.name) away")
+                    .playtestControl("Group name \(group.name)", detail: "Timeline")
                 }
-                .buttonStyle(.plain)
-                .simultaneousGesture(TapGesture(count: 2).onEnded {
-                    draftName = group.name
-                    editorState.renamingTrackID = group.id
-                })
-                .accessibilityLabel(isCollapsed ? "Open \(group.name)" : "Fold \(group.name)")
-                .help(isCollapsed ? "Show the tracks in \(group.name)" : "Fold \(group.name) away")
-                .playtestControl("Track group \(group.name)", detail: "Timeline")
-                .panelReadout("group \(group.name): \(tracks.count) track\(tracks.count == 1 ? "" : "s")"
-                              + (isCollapsed ? ", folded" : ""))
+                .foregroundStyle(VideoKit.Palette.dim)
+                .frame(width: TimelineDock.gutter, alignment: .leading)
                 .contextMenu {
-                    Button("Rename…") {
-                        draftName = group.name
-                        editorState.renamingTrackID = group.id
-                    }
+                    Button("Rename…") { beginRenaming() }
                     Button("Ungroup") { editorState.ungroupTracks(group.id) }
                 }
             }
         }
         .frame(width: TimelineDock.gutter, alignment: .leading)
+        .onDisappear { pendingFold?.cancel() }
+    }
+
+    /// The chevron's column: its glyph and the gap before the name.
+    private static let chevronWidth: CGFloat = 12
+
+    private func foldNow() {
+        pendingFold?.cancel()
+        pendingFold = nil
+        editorState.toggleTrackGroupCollapsed(group.id)
+    }
+
+    private func nameClicked() {
+        pendingFold?.cancel()
+        pendingFold = nil
+        if (NSApp.currentEvent?.clickCount ?? 1) >= 2 {
+            beginRenaming()
+            return
+        }
+        let id = group.id
+        pendingFold = Task { @MainActor in
+            try? await Task.sleep(for: .seconds(NSEvent.doubleClickInterval))
+            guard !Task.isCancelled, editorState.renamingTrackID != id else { return }
+            editorState.toggleTrackGroupCollapsed(id)
+        }
+    }
+
+    private func beginRenaming() {
+        pendingFold?.cancel()
+        pendingFold = nil
+        draftName = group.name
+        editorState.renamingTrackID = group.id
     }
 
     @ViewBuilder private var lane: some View {

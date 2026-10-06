@@ -1,0 +1,25 @@
+{
+  "feature": "Double-click a track group's name to rename it",
+  "epic": "video-cutting",
+  "summary": "Double-clicking a track group's name now opens it for typing and leaves the group open or folded as it was. Before, the double-click folded the group and never opened the name.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and add a second video track with the + under the track names." },
+    { "do": "Pick V2, Shift-click V1, then right-click and choose Group 2 Tracks." },
+    { "do": "Double-click the name Group 1, type a new name and press Return.", "shot": "2026-10-05-group-name-rename-1.png" },
+    { "do": "Single-click the group's name and watch it fold a moment later." },
+    { "do": "Double-click the folded group's name: it opens for typing and stays folded. Press Escape.", "shot": "2026-10-05-group-name-rename-2.png" },
+    { "do": "Click the chevron: the group opens at once.", "shot": "2026-10-05-group-name-rename-3.png" }
+  ],
+  "evaluate": [
+    "Does a single click on the name fold soon enough, or does the short wait feel slow?",
+    "Is the chevron easy enough to hit when you want a fold with no wait?",
+    "Does clicking away from the name field keep what you typed, the way it does for a track's name?"
+  ],
+  "rough": [
+    "No mock draws a track group, so there was nothing to compare against.",
+    "A single click on the name now folds only after your Mac's double-click time (about half a second by default), so a double-click is never taken for a fold. The chevron still folds at once.",
+    "The name field now takes the keyboard reliably and keeps the name when you click away, the same as a track's own name field."
+  ]
+}
