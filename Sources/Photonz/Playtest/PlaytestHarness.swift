@@ -2281,9 +2281,9 @@ private final class Run {
         case .dragHandle(let area, let by, let expect, let hold):
             try await dragHandle(area, by: by, expect: expect, hold: hold, number: number)
 
-        case .dragClip(let clip, let byMS, let modifiers, let hold, let tracksUp):
+        case .dragClip(let clip, let byMS, let modifiers, let hold, let tracksUp, let reads):
             try await dragClip(clip, byMS: byMS, modifiers: modifiers, hold: hold,
-                               tracksUp: tracksUp, number: number)
+                               tracksUp: tracksUp, reads: reads, number: number)
 
         case .dragTiming(let bar, let grab, let byMS, let hold, let cancel, let cancelBy):
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
@@ -6948,7 +6948,8 @@ private final class Run {
     /// carried along and let go, through the calls the clip's own press makes
     /// (`TimelineTrackSelect`, `ClipPiecesBar.carry`).
     private func dragClip(_ clip: String, byMS: Int, modifiers: [PlaytestModifier],
-                          hold: String? = nil, tracksUp: Int = 0, number: Int) async throws {
+                          hold: String? = nil, tracksUp: Int = 0, reads: String? = nil,
+                          number: Int) async throws {
         let editor = try requireEditor()
         guard editor.isMotionStripOpen else {
             throw Failure(description: "the window is in View mode, so no clip is on "
@@ -7007,6 +7008,12 @@ private final class Run {
         if let drop = editor.clipTrackDrop {
             let aimed: String = editor.clipTrackDropReading ?? "at a new track"
             caught += ", aimed " + aimed + (drop.allowed ? "" : ", refused")
+        }
+        if let reads, editor.clipTrackDropReading != reads {
+            let said = editor.clipTrackDropReading.map { "\"\($0)\"" } ?? "nothing about a track"
+            editor.cancelClipBarDrag()
+            throw Failure(description: "\(layer.name) in the hand should read \"\(reads)\" "
+                + "about the track it is over; it says \(said)")
         }
         if let hold {
             await sleep(0.35)

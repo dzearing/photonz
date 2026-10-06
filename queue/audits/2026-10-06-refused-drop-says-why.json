@@ -1,0 +1,24 @@
+{
+  "feature": "A refused drop says why",
+  "epic": "video-cutting",
+  "summary": "Carrying a clip onto a track that will not take it now says the real reason under the hand: Audio takes sound only, V2 is locked, or no room on V2 only when something is actually in the way.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording and drop a second clip after it on V1.",
+  "switched": {},
+  "try": [
+    { "do": "Drag a picture clip down onto the Audio track and hold it there: the words under the hand read Audio takes sound only.", "shot": "2026-10-06-refused-drop-says-why-1-wrong-kind-sc.png" },
+    { "do": "Lock V2 with its padlock, then drag a clip up onto V2 clear of anything on it: the words read V2 is locked.", "shot": "2026-10-06-refused-drop-says-why-2-locked-sc.png" },
+    { "do": "Unlock V2 and drag a clip up onto V2 where another clip already sits at that time: the words read no room on V2.", "shot": "2026-10-06-refused-drop-says-why-3-no-room-sc.png" },
+    { "do": "Pick two clips with Command click and drag them down onto Audio together: it reads Audio takes sound only too." },
+    { "do": "Let go in each case: the clip only slides in time and stays on its own track." }
+  ],
+  "evaluate": [
+    "Does each reason tell you what to do next without hunting for a clip that is not there?",
+    "Is takes sound only (or picture only) the wording you would expect, or would you rather see something like Audio track: sound only?",
+    "With several clips picked, when another picked clip is the one refused, is it clear enough that the named track is that clip's, not the one under your hand?"
+  ],
+  "rough": [
+    "No mock draws a refused drop, so there is nothing to put beside it; the words sit in the existing capsule after the move readout, as no room did before.",
+    "The capsule rides on the clip's own bar on its own track while the target lane lights red, so the words are a lane away from the track they name. That was already so before this change.",
+    "A track with a long name (a graphic's track is named after the graphic) can push the words past 30 characters, as no room on <name> could before."
+  ]
+}

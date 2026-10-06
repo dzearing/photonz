@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/several-picked-clips-change-track-walk",
-  "seed": "Several picked clips carried up a track go together (task several-picked-clips-move-onto-another-track-tog). At Next defaults with no flag changed: a recording trimmed to six seconds on V1, a second clip after it on V1, both cut, both picked (click, then Command click), and the second carried half a second later and one track up past the top. Both land on one new track over V1, half a second later, each still with its own sound linked under it, as one undo. Carried one track DOWN, onto the sound track, the lane lights red and on letting go both only slide in time, staying on V1.",
+  "seed": "Several picked clips carried up a track go together (task several-picked-clips-move-onto-another-track-tog). At Next defaults with no flag changed: a recording trimmed to six seconds on V1, a second clip after it on V1, both cut, both picked (click, then Command click), and the second carried half a second later and one track up past the top. Both land on one new track over V1, half a second later, each still with its own sound linked under it, as one undo. Carried one track DOWN, onto the sound track, the lane lights red and on letting go both only slide in time, staying on V1. A refused drop says why under the hand (task a-clip-refused-by-a-track-of-the-wrong-kind-says): onto Audio it reads Audio takes sound only, onto V2 where the recording already sits at that time it reads no room on V2, and onto V2 locked it reads V2 is locked.",
   "setup": {
     "timelineOpen": true,
     "forget": ["all"],
@@ -46,7 +46,7 @@
     { "do": "describe", "stage": "1-two-picked", "note": "both cut clips picked on V1, the recording with a click and b-roll with Command click" },
     { "do": "snapshot", "name": "1-two-picked" },
 
-    { "do": "dragClip", "clip": "b-roll", "byMS": 500, "tracksUp": 1, "hold": "2-carried-up" },
+    { "do": "dragClip", "clip": "b-roll", "byMS": 500, "tracksUp": 1, "hold": "2-carried-up", "reads": "to a new track" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V2", "startsAt": 0.5, "endsAt": 6.5, "count": 1 },
     { "do": "expectClip", "clip": "b-roll", "track": "V2", "startsAt": 6.5, "endsAt": 14.5, "count": 1 },
@@ -65,11 +65,37 @@
 
     { "do": "dragClip", "clip": "Tutorial Sample" },
     { "do": "dragClip", "clip": "b-roll", "modifiers": ["command"] },
-    { "do": "dragClip", "clip": "Tutorial Sample", "byMS": 500, "tracksUp": -1, "hold": "5-refused-on-sound" },
+    { "do": "dragClip", "clip": "Tutorial Sample", "byMS": 500, "tracksUp": -1, "hold": "5-refused-on-sound", "reads": "Audio takes sound only" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.5, "endsAt": 6.5, "count": 1 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.5, "endsAt": 14.5, "count": 1 },
-    { "do": "describe", "stage": "6-slid-only", "note": "THE THIRD TEST: carried down onto the Audio track, which takes no picture, the lane lit red while in the hand, and on letting go both stayed on V1 and only slid half a second later" },
-    { "do": "snapshot", "name": "6-slid-only" }
+    { "do": "describe", "stage": "6-slid-only", "note": "THE THIRD TEST: carried down onto the Audio track, which takes no picture, the lane lit red and the hand read Audio takes sound only, and on letting go both stayed on V1 and only slid half a second later" },
+    { "do": "snapshot", "name": "6-slid-only" },
+
+    { "comment": "The recording alone up onto a new V2, so V2 has something on it for b-roll to meet.", "do": "dragClip", "clip": "Tutorial Sample" },
+    { "do": "dragClip", "clip": "Tutorial Sample", "byMS": 500, "tracksUp": 1, "reads": "to a new track" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V2", "count": 1 },
+
+    { "do": "dragClip", "clip": "b-roll" },
+    { "do": "dragClip", "clip": "b-roll", "byMS": -500, "tracksUp": 1, "hold": "7-no-room-on-v2", "reads": "no room on V2" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "count": 1 },
+    { "do": "describe", "stage": "7-no-room", "note": "THE FOURTH TEST: b-roll carried up onto V2, where the recording already is at that time, read no room on V2 and stayed on V1" },
+
+    { "do": "move", "control": "Track V2" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "press", "control": "Track V2 Lock" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "dragClip", "clip": "b-roll", "byMS": 1500, "tracksUp": 1, "hold": "8-v2-locked", "reads": "V2 is locked" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "count": 1 },
+    { "do": "describe", "stage": "8-locked", "note": "THE FIFTH TEST: b-roll carried up onto V2, locked, clear of the recording in time, read V2 is locked rather than no room, and stayed on V1" },
+
+    { "do": "dragClip", "clip": "b-roll", "byMS": 500, "tracksUp": -1, "hold": "9-alone-onto-sound", "reads": "Audio takes sound only" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "count": 1 },
+    { "do": "describe", "stage": "9-wrong-kind", "note": "THE SIXTH TEST: b-roll alone carried down onto Audio read Audio takes sound only rather than no room, and stayed on V1" },
+    { "do": "snapshot", "name": "9-after-refusals" }
   ]
 }

@@ -4,10 +4,18 @@ import PhotonzCore
 
 /// Where a clip carried up or down the timeline would land, and whether it
 /// may: a track of the wrong kind, a locked one, or one with something already
-/// there at that time says no.
+/// there at that time says no, and `refusal` says which.
 struct ClipTrackDrop: Equatable {
     let target: TrackDrop
     let allowed: Bool
+    let refusal: ClipPlacementRefusal?
+
+    /// `why` is only asked when the drop is refused.
+    init(target: TrackDrop, allowed: Bool, why: () -> ClipPlacementRefusal?) {
+        self.target = target
+        self.allowed = allowed
+        self.refusal = allowed ? nil : why()
+    }
 }
 
 /// One track as the timeline dock draws it: the track, the clips on it, and
@@ -380,20 +388,27 @@ extension EditorState {
             // Several picked clips: every one goes the same number of tracks,
             // and if any of them cannot land, none of them change track.
             let home = document.trackID(ofClip: id).map { TrackDrop.onto($0) }
+            let along = Array(session.along.keys), byMS = session.landing.movedMS
             result = drop == home ? nil
-                : ClipTrackDrop(target: drop, allowed: document.canMoveClips(
-                    Array(session.along.keys), carrying: id, to: drop,
-                    byMS: session.landing.movedMS))
+                : ClipTrackDrop(target: drop,
+                                allowed: document.canMoveClips(along, carrying: id, to: drop, byMS: byMS)) {
+                    document.clipsMoveRefusal(along, carrying: id, to: drop, byMS: byMS)
+                }
             if clipTrackDrop != result { clipTrackDrop = result }
             return
         }
         switch drop {
         case .onto(let track):
             result = track == document.trackID(ofClip: id) || track == home ? nil
-                : ClipTrackDrop(target: drop, allowed: document.canPlace(
-                    id, onTrack: track, atInMS: session.landing.clipStartMS))
+                : ClipTrackDrop(target: drop,
+                                allowed: document.canPlace(id, onTrack: track,
+                                                           atInMS: session.landing.clipStartMS)) {
+                    document.placementRefusal(id, onTrack: track, atInMS: session.landing.clipStartMS)
+                }
         case .newTrack:
-            result = ClipTrackDrop(target: drop, allowed: !document.isClipOnLockedTrack(id))
+            result = ClipTrackDrop(target: drop, allowed: !document.isClipOnLockedTrack(id)) {
+                document.lockRefusal(ofClip: id)
+            }
         }
         if clipTrackDrop != result { clipTrackDrop = result }
     }
@@ -418,9 +433,11 @@ extension EditorState {
         if let track = document?.trackID(ofClip: id) { selectedTrackIDs = [track] }
     }
 
-    /// What the capsule adds while a clip is carried over the tracks.
+    /// What the capsule adds while a clip is carried over the tracks: where
+    /// it goes, or why it may not (`ClipPlacementRefusal.reading`).
     var clipTrackDropReading: String? {
         guard let drop = clipTrackDrop else { return nil }
+        if let refusal = drop.refusal { return refusal.reading }
         switch drop.target {
         case .onto(let id):
             let name = document?.track(id: id)?.name ?? "track"

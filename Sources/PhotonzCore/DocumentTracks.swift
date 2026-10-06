@@ -567,18 +567,10 @@ extension PhotonzDocument {
 
     /// Whether a clip may be put on a track, landing at `atInMS` (or where it
     /// already starts): the right kind of track, nothing locked, and nothing
-    /// already there at that time.
+    /// already there at that time. `placementRefusal` says why not.
     public func canPlace(_ clipID: UUID, onTrack trackID: UUID, atInMS: Int? = nil) -> Bool {
-        guard let clip = layers.first(where: { $0.id == clipID }),
-              let target = track(id: trackID), !target.isLocked,
-              target.kind.accepts(clip.clipTrackKind),
-              !isClipOnLockedTrack(clipID) else { return false }
-        let span = clipSpan(clip, movedTo: atInMS)
-        return !clipIDs(onTrack: trackID).contains { other in
-            guard other != clipID, let layer = layers.first(where: { $0.id == other }) else { return false }
-            let theirs = clipSpan(layer, movedTo: nil)
-            return span.lowerBound < theirs.upperBound && theirs.lowerBound < span.upperBound
-        }
+        guard layers.contains(where: { $0.id == clipID }), track(id: trackID) != nil else { return false }
+        return placementRefusal(clipID, onTrack: trackID, atInMS: atInMS) == nil
     }
 
     /// The stretch a clip covers; a layer with no time of its own covers the

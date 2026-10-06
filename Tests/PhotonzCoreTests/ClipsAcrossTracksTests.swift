@@ -249,4 +249,13 @@ struct ClipsAcrossTracksWalkStepTests {
         // Left out, the clip stays on its track.
         #expect(script.steps[2] == .dragClip(clip: "b-roll", byMS: 500, modifiers: []))
     }
+
+    @Test("dragClip takes reads: the words the capsule says about the track with the clip still in the hand")
+    func reads() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "dragClip", "clip": "b-roll", "tracksUp": -1, "reads": "Audio takes sound only" } ] }
+        """.utf8))
+        #expect(script.steps[0] == .dragClip(clip: "b-roll", byMS: 0, modifiers: [], tracksUp: -1,
+                                             reads: "Audio takes sound only"))
+    }
 }

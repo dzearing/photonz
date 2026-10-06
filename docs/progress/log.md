@@ -20728,3 +20728,10 @@ Next: the first editor window's ~200 ms first build
 - `an-editing-session-walk` now asks for captions from the timeline's + menu (`panelMenu` Add Track, Captions, then `captionsWaitToLand`) instead of the harness's quiet step, and its seed and note say so.
 - Its two Command K presses now cut at 0:04 then 0:08: a cut leaves the piece before it picked, so the old order deleted the opening four seconds rather than the middle, and the dissolve sat on a seamless join. Now it is a real jump cut.
 - Green at Next defaults, 7 real pictures, 57s. Walk-only; no Sources change.
+
+## 2026-10-06 — A refused clip drop says why
+
+- New `ClipPlacementRefusal` (PhotonzCore): wrong kind / locked / no room, with the track that said no and a short reading (`Audio takes sound only`, `V2 is locked`, `no room on V2`). `placementRefusal` (one clip), `clipsMoveRefusal` (several picked), `lockRefusal(ofClip:)`; `canPlace`/`canMoveClips` now sit on the same checks. Kind is said before lock, since unlocking would not help.
+- `ClipTrackDrop` carries the refusal (asked only when refused); `clipTrackDropReading` uses it.
+- `dragClip` walk step takes `reads`; `several-picked-clips-change-track-walk` holds all three refusals and reads the words.
+- Next: nothing open from this; moving one clip of a recording up split the sound onto a new `Audio 2` lane, which is existing behaviour noted in the task log.

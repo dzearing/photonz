@@ -16,7 +16,18 @@ extension PhotonzDocument {
     /// the hand aimed at `drop`, and slid `byMS` in time.
     public func canMoveClips(_ ids: [UUID], carrying hand: UUID, to drop: TrackDrop,
                              byMS delta: Int = 0) -> Bool {
-        carryingClips(ids, hand: hand, to: drop, byMS: delta) != nil
+        if case .carried = carryingClips(ids, hand: hand, to: drop, byMS: delta) { return true }
+        return false
+    }
+
+    /// Why the picked clips may not be carried to `drop`: the first of them,
+    /// the hand's own first, that a track turns away, and that track. Nil
+    /// where the move is allowed, or refused for no reason a track gives (aimed
+    /// at its own track, say).
+    public func clipsMoveRefusal(_ ids: [UUID], carrying hand: UUID, to drop: TrackDrop,
+                                 byMS delta: Int = 0) -> ClipPlacementRefusal? {
+        if case .refused(let refusal) = carryingClips(ids, hand: hand, to: drop, byMS: delta) { return refusal }
+        return nil
     }
 
     /// Carry the picked clips `ids` with `hand` in the hand onto `drop`, and
@@ -26,23 +37,37 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func moveClips(_ ids: [UUID], carrying hand: UUID, to drop: TrackDrop,
                                    byMS delta: Int = 0) -> Bool {
-        guard let carried = carryingClips(ids, hand: hand, to: drop, byMS: delta) else { return false }
+        guard case .carried(let carried) = carryingClips(ids, hand: hand, to: drop, byMS: delta)
+        else { return false }
         self = carried
         return true
     }
 
-    /// The document with the clips carried, or nil where the move is refused.
+    /// The clips carried, or refused, with the track that said no where one did.
+    private enum Carrying {
+        case carried(PhotonzDocument)
+        case refused(ClipPlacementRefusal?)
+    }
+
+    /// The document with the clips carried, or why the move is refused.
     private func carryingClips(_ ids: [UUID], hand: UUID, to drop: TrackDrop,
-                               byMS delta: Int) -> PhotonzDocument? {
-        let picked = Array(Set(ids + [hand]))
+                               byMS delta: Int) -> Carrying {
+        // The hand first, so where it is the one turned away, its track is
+        // the one named.
+        var seen = Set<UUID>()
+        let picked = ([hand] + ids).filter { seen.insert($0).inserted }
         let layout = trackLayout()
         var trackOf: [UUID: UUID] = [:]
         for (track, clips) in layout.clips { for clip in clips { trackOf[clip] = track } }
-        let locked = Set(layout.tracks.filter(\.isLocked).map(\.id))
-        guard let handTrack = trackOf[hand],
-              picked.allSatisfy({ trackOf[$0].map { !locked.contains($0) } ?? false }),
-              let earliest = picked.compactMap({ layer(id: $0)?.time?.inMS }).min()
-        else { return nil }
+        guard let handTrack = trackOf[hand], picked.allSatisfy({ trackOf[$0] != nil })
+        else { return .refused(nil) }
+        for id in picked {
+            if let locked = layout.tracks.first(where: { $0.id == trackOf[id] && $0.isLocked }) {
+                return .refused(ClipPlacementRefusal(reason: .locked, track: locked))
+            }
+        }
+        guard let earliest = picked.compactMap({ layer(id: $0)?.time?.inMS }).min()
+        else { return .refused(nil) }
         let moved = max(delta, -earliest)
 
         var document = self
@@ -53,16 +78,16 @@ extension PhotonzDocument {
         let handRow: Int
         switch drop {
         case .onto(let target):
-            guard target != handTrack, let row = order.firstIndex(of: target) else { return nil }
+            guard target != handTrack, let row = order.firstIndex(of: target) else { return .refused(nil) }
             handRow = row
         case .newTrack(let at):
-            guard let kind = layer(id: hand)?.clipTrackKind else { return nil }
+            guard let kind = layer(id: hand)?.clipTrackKind else { return .refused(nil) }
             let made = document.addTrack(kind, at: at)
             order = document.tracks.map(\.id)
-            guard let row = order.firstIndex(of: made) else { return nil }
+            guard let row = order.firstIndex(of: made) else { return .refused(nil) }
             handRow = row
         }
-        guard let from = order.firstIndex(of: handTrack) else { return nil }
+        guard let from = order.firstIndex(of: handTrack) else { return .refused(nil) }
         let shift = handRow - from
 
         // Each track a picked clip is on, and the row it goes to. Rows over
@@ -70,7 +95,7 @@ extension PhotonzDocument {
         let sources = Set(picked.compactMap { trackOf[$0] })
         var rowOf: [UUID: Int] = [:]
         for source in sources {
-            guard let row = order.firstIndex(of: source) else { return nil }
+            guard let row = order.firstIndex(of: source) else { return .refused(nil) }
             rowOf[source] = row + shift
         }
         var targetOf: [UUID: UUID] = [:]
@@ -80,11 +105,11 @@ extension PhotonzDocument {
         }
         // Over the top: the row furthest up ends up topmost.
         for (source, _) in rowOf.filter({ $0.value < 0 }).sorted(by: { $0.value > $1.value }) {
-            guard let kind = kindOf(source) else { return nil }
+            guard let kind = kindOf(source) else { return .refused(nil) }
             targetOf[source] = document.addTrack(kind, at: 0)
         }
         for (source, _) in rowOf.filter({ $0.value >= order.count }).sorted(by: { $0.value < $1.value }) {
-            guard let kind = kindOf(source) else { return nil }
+            guard let kind = kindOf(source) else { return .refused(nil) }
             targetOf[source] = document.addTrack(kind, at: document.tracks.count)
         }
 
@@ -94,15 +119,18 @@ extension PhotonzDocument {
         let landedLayout = document.trackLayout()
         for id in picked {
             guard let clip = layer(id: id), let source = trackOf[id], let target = targetOf[source],
-                  let track = document.tracks.first(where: { $0.id == target }),
-                  !track.isLocked, track.kind.accepts(clip.clipTrackKind) else { return nil }
+                  let track = document.tracks.first(where: { $0.id == target }) else { return .refused(nil) }
+            guard track.kind.accepts(clip.clipTrackKind) else {
+                return .refused(ClipPlacementRefusal(reason: .wrongKind, track: track))
+            }
+            guard !track.isLocked else { return .refused(ClipPlacementRefusal(reason: .locked, track: track)) }
             let span = clipSpan(clip, movedTo: clip.time.map { $0.inMS + moved })
             let blocked = (landedLayout.clips[target] ?? []).contains { other in
                 guard !moving.contains(other), let layer = layer(id: other) else { return false }
                 let theirs = clipSpan(layer, movedTo: nil)
                 return span.lowerBound < theirs.upperBound && theirs.lowerBound < span.upperBound
             }
-            guard !blocked else { return nil }
+            guard !blocked else { return .refused(ClipPlacementRefusal(reason: .noRoom, track: track)) }
         }
 
         if moved != 0 { document.moveClips(picked, byMS: moved) }
@@ -111,6 +139,6 @@ extension PhotonzDocument {
             document.updateLayer(id: id) { $0.trackID = target }
         }
         document.restackByTracks()
-        return document
+        return .carried(document)
     }
 }

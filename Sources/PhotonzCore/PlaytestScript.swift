@@ -2989,8 +2989,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// many tracks up as well (down when negative), the hand going over the
     /// middle of the lane it lands on, or just over the top track or under the
     /// bottom one when there is no lane that far, which asks for a new track.
+    /// `reads` fails the step unless the capsule's words about the track, with
+    /// the clip still in the hand, are exactly these (`to V2`, `V2 is locked`).
     case dragClip(clip: String, byMS: Int, modifiers: [PlaytestModifier], hold: String? = nil,
-                  tracksUp: Int = 0)
+                  tracksUp: Int = 0, reads: String? = nil)
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
     /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
@@ -4403,7 +4405,8 @@ public enum PlaytestStep: Sendable, Equatable {
                              byMS: Int((try f.optionalNumber("byMS") ?? 0).rounded()),
                              modifiers: try f.modifiers(),
                              hold: try f.optionalString("hold"),
-                             tracksUp: Int((try f.optionalNumber("tracksUp") ?? 0).rounded()))
+                             tracksUp: Int((try f.optionalNumber("tracksUp") ?? 0).rounded()),
+                             reads: try f.optionalString("reads"))
         case "dragTiming":
             let grab: PlaytestTimingGrab = if fields["grab"] == nil {
                 .body
