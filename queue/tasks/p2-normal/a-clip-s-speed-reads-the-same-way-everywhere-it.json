@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:44.185Z",
-  "updated": "2026-10-06T00:44:25.430Z",
+  "updated": "2026-10-06T04:22:30.815Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Badge: ClipPiecesBar.badge (Sources/Photonz/ClipPiecesBar.swift:658-668) writes whole multiples as Nx and everything else as N%. Menu titles: ClipSpeed.title (Sources/PhotonzCore/ClipSpeed.swift:213) gives Normal / Half Speed / Quarter Speed / N% Speed / Nx Speed. The clip line in Properties already reads 1.0x (see /tmp/photonz-playtest/an-editing-session-walk/2-cut-sc.png). Mock: docs/design/mocks/pages/video.html clip face speed badge '1.5x'; video-speed.html. Whether the menu keeps Half Speed as words is the runner's call within the acceptance; the bar and clip line must match. Found by the 2026-10-05 evening manager pass's video.html comparison.",
@@ -36,6 +36,39 @@
     {
       "t": "2026-10-06T00:44:25.429Z",
       "note": "Correction: the picture is at queue/manager/shots/2026-10-05-1744-clip-panel.png."
+    },
+    {
+      "t": "2026-10-06T04:00:40.517Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T04:21:32.732Z",
+      "note": "owns these walks: half-speed-reads-alike-walk, speed-a-stretch-walk, video-panel-order-walk, every-dropdown-opens-on-a-click-walk, timeline-right-click-walk"
+    },
+    {
+      "t": "2026-10-06T04:22:23.085Z",
+      "note": "review before building: a Premiere or Final Cut editor reads speed as a multiple (FCP's retime menu, Premiere's Speed/Duration), and the mock badges 1.5x on the clip and prints 1.0x in the clip line. Keeping Normal as the one word (the speed you go back to); Half Speed and Quarter Speed become 0.5x and 0.25x so the dropdown face, the right-click Speed menu, the menu bar Speed menu and the bar badge all say the same number."
+    },
+    {
+      "t": "2026-10-06T04:22:23.142Z",
+      "note": "built: ClipSpeed.multiple (shortest form, two decimals so 0.25x never rounds to 0.3x), ClipSpeed.badge, ClipSpeed.title = Normal or multiple; ClipLine.speedText uses multiple except 1.0x at normal (the mock's word). ClipPiecesBar.badge now calls ClipSpeed.badge. One unit test checks every stop reads alike on bar, dropdown and clip line. Walks updated: speed-a-stretch, video-panel-order, every-dropdown-opens-on-a-click, timeline-right-click; new half-speed-reads-alike-walk at Next defaults. All five green."
+    },
+    {
+      "t": "2026-10-06T04:22:23.198Z",
+      "note": "left rough, filed: a walk's left click at a point on a piece leaves nothing picked; could not tell whether a person's click does too (Accessibility denied), filed p2 as find-out-whether-a-click-on-a-clip-piece-picks-i with the repro. The new walk cuts twice to put piece 2 in hand instead. Audit rough lines 1 and 2 are matches with the mock, not defects; line 3 is that filed task."
+    },
+    {
+      "t": "2026-10-06T04:22:30.813Z",
+      "note": "A retimed piece reads one multiple everywhere: 0.5x on its bar badge, the Speed dropdown, the right-click and menu bar Speed menus, and the clip line (Normal stays the dropdown word, the clip line keeps the mock's 1.0x at normal). ClipSpeed.multiple/badge/title in PhotonzCore with a test over every stop; Scripts/test.sh green (11,436 tests); speed-a-stretch, video-panel-order, every-dropdown-opens-on-a-click, timeline-right-click and the new half-speed-reads-alike walks green with real captures. Audit queue/audits/2026-10-05-speed-reads-alike.json."
     }
-  ]
+  ],
+  "started": "2026-10-06T04:00:40.516Z",
+  "walks": [
+    "half-speed-reads-alike-walk",
+    "speed-a-stretch-walk",
+    "video-panel-order-walk",
+    "every-dropdown-opens-on-a-click-walk",
+    "timeline-right-click-walk"
+  ],
+  "completed": "2026-10-06T04:22:30.814Z"
 }
