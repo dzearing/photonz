@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/mark-clip-menu-rows-walk",
+  "seed": "Sequence carries Mark Clip (X), Go to In (Shift I) and Go to Out (Shift O) while the timeline has the keyboard, Go to In and Go to Out dimmed with nothing marked. At Next defaults, no flag set. Front, because the menu bar is the key window's.",
+  "setup": { "front": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTimeline", "keyboard": "timeline" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "menus", "stage": "1-nothing-marked", "menu": "Sequence", "oneKeyEach": true },
+
+    { "do": "menus", "stage": "2-mark-clip", "menu": "Sequence", "choose": "Sequence > Mark Clip" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "markInMS": 2000, "markOutMS": 8000 },
+    { "do": "menus", "stage": "3-go-to-in", "menu": "Sequence", "choose": "Sequence > Go to In" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 40 },
+    { "do": "menus", "stage": "4-go-to-out", "menu": "Sequence", "choose": "Sequence > Go to Out" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "describe", "stage": "4-on-the-out", "note": "Sequence, Mark Clip marked the piece after the cut at two seconds, Go to In took the playhead back to two seconds and Go to Out to the last frame" },
+    { "do": "expectTimeline", "playheadMS": 7967, "withinMS": 40 }
+  ]
+}

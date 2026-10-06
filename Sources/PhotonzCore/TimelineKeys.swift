@@ -93,6 +93,11 @@ public enum TimelineKeyCommand: Hashable, Sendable {
     case marker(forward: Bool)
     case goToStart, goToEnd
     case markIn, markOut, clearIn, clearOut
+    /// Premiere's X, Mark Clip: the In and the Out round the clip under the
+    /// playhead (`TimelineMarks.swift`).
+    case markClip
+    /// Premiere's ⇧I and ⇧O: the playhead to the In, or to the Out.
+    case goToIn, goToOut
     /// Escape on the timeline: the In and the Out both go, the range with them.
     case clearMarks
     case addMarker
@@ -193,6 +198,10 @@ public enum TimelineKeys {
         case (.up, []): return .editPoint(forward: false)
         case (.down, []): return .editPoint(forward: true)
         case (.letter("m"), [.shift]): return .marker(forward: true)
+        // Premiere's Go to In and Go to Out. On the canvas the shifted
+        // letters stay the tools', the way I and O do.
+        case (.letter("i"), [.shift]) where !press.isRepeat: return .goToIn
+        case (.letter("o"), [.shift]) where !press.isRepeat: return .goToOut
         case (.delete, []), (.forwardDelete, []): return .lift
         case (.delete, [.shift]), (.forwardDelete, [.shift]): return .rippleDelete
         // The range goes, the way a click beside it drops it. On the canvas
@@ -215,6 +224,8 @@ public enum TimelineKeys {
         case "l": return .shuttle(.forward)
         case "i": return .markIn
         case "o": return .markOut
+        // On the canvas X is Photoshop's swap of the fill colours.
+        case "x": return .markClip
         case "m": return .addMarker
         case "'": return .extractMarked
         case ";": return .liftMarked

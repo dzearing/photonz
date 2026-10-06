@@ -141,6 +141,49 @@ extension PhotonzDocument {
         return true
     }
 
+    // MARK: Mark Clip
+
+    /// The clip X marks at a moment: the picked one where the playhead is on
+    /// it, else the topmost picture under the playhead, else the topmost
+    /// sound. A caption or a title is not a clip. Nil where nothing with media
+    /// runs through the moment.
+    public func markClipTarget(pickedLayerID: UUID?, atMS ms: Int) -> UUID? {
+        func underThePlayhead(_ layer: Layer) -> Bool {
+            guard layer.holdsMedia, layer.clipPieces != nil, let time = layer.time else { return false }
+            return time.inMS <= ms && ms < time.outMS
+        }
+        if let pickedLayerID, let picked = layer(id: pickedLayerID), underThePlayhead(picked) {
+            return pickedLayerID
+        }
+        let clips = allLayers.filter(underThePlayhead)
+        return (clips.last { $0.movie != nil || $0.merged != nil } ?? clips.last)?.id
+    }
+
+    /// Where X puts the In and the Out: the start and end of the piece under
+    /// the playhead in that clip, on the document's clock. On a cut the
+    /// playhead belongs to the piece that starts there.
+    public func markClipRangeMS(pickedLayerID: UUID?, atMS ms: Int) -> Range<Int>? {
+        guard let id = markClipTarget(pickedLayerID: pickedLayerID, atMS: ms),
+              let layer = layer(id: id), let time = layer.time, let pieces = layer.clipPieces,
+              let index = pieces.pieceIndex(atMS: ms - time.inMS),
+              let range = pieces.rangeMS(ofPiece: index) else { return nil }
+        let start = onTheRuler(time.inMS + range.start)
+        let end = onTheRuler(time.inMS + range.end)
+        return end > start ? start..<end : nil
+    }
+
+    /// X, Premiere's Mark Clip: the In and the Out round the clip under the
+    /// playhead, both at once, whatever was marked before. False where there
+    /// is no clip there or the marks already sit round it.
+    @discardableResult
+    public mutating func markClip(pickedLayerID: UUID?, atMS ms: Int) -> Bool {
+        guard let range = markClipRangeMS(pickedLayerID: pickedLayerID, atMS: ms),
+              markInMS != range.lowerBound || markOutMS != range.upperBound else { return false }
+        markInMS = range.lowerBound
+        markOutMS = range.upperBound
+        return true
+    }
+
     /// The stretch the marks enclose, or nil where neither is set. Either one
     /// alone runs to the document's own end on its open side.
     public var markedRangeMS: Range<Int>? {

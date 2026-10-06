@@ -114,10 +114,10 @@ extension TimelineKeyCommand {
     public var startsAnEdit: Bool {
         switch self {
         case .playPause, .playInToOut, .shuttle, .stepFrames, .editPoint, .marker, .goToStart, .goToEnd,
-             .selectTool, .showMode, .toggleViewEdit, .clearMarks:
+             .goToIn, .goToOut, .selectTool, .showMode, .toggleViewEdit, .clearMarks:
             // Escape only clears marks the tracks show, so never from View.
             return false
-        case .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
+        case .markIn, .markOut, .markClip, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift,
              .rippleDelete, .extractMarked, .liftMarked, .rippleTrimToPlayhead,
              .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
              .zoomIn, .zoomOut, .zoomToFit, .nudgeClips:

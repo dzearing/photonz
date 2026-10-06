@@ -87,6 +87,24 @@ struct TimelineKeysTests {
         #expect(command(.letter("x"), .option) == nil)
     }
 
+    @Test("X marks the clip on a focused timeline; Shift-I and Shift-O go to the marks, as in Premiere")
+    func markClipAndGoToMarks() {
+        #expect(command(.letter("x")) == .markClip)
+        #expect(command(.letter("i"), [.shift]) == .goToIn)
+        #expect(command(.letter("o"), [.shift]) == .goToOut)
+        // On the canvas X swaps the fill colours, Photoshop's, and the shifted
+        // letters are left to it too.
+        #expect(command(.letter("x"), focused: false) == nil)
+        #expect(command(.letter("i"), [.shift], focused: false) == nil)
+        #expect(command(.letter("o"), [.shift], focused: false) == nil)
+        // A held X marks once.
+        #expect(command(.letter("x"), repeating: true) == nil)
+        #expect(!TimelineKeys.leavesToTheCanvas("x"))
+        // Shift-I as the keyboard sends it: a capital I.
+        #expect(TimelineKeyPress(characters: "I", keyCode: 34, modifiers: [.shift], isRepeat: false)
+                == TimelineKeyPress(key: .letter("i"), modifiers: [.shift]))
+    }
+
     @Test("Escape on a focused timeline clears the In and the Out; elsewhere it stays the canvas's")
     func escapeClearsMarks() {
         #expect(TimelineKeyPress(characters: "\u{1B}", keyCode: 53, modifiers: [], isRepeat: false)?.key

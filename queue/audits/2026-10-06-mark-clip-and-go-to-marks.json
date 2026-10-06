@@ -1,0 +1,29 @@
+{
+  "feature": "X marks a clip, Shift I and Shift O go to the marks",
+  "epic": "video-beats-premiere",
+  "summary": "With the timeline holding the keyboard, X puts the In and the Out round the piece under the playhead in one key, and Shift I and Shift O take the playhead to the In and the Out, as in Premiere. Sequence lists Mark Clip, Go to In and Go to Out with those keys.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: x-marks-the-clip-walk and mark-clip-menu-rows-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, put the playhead at 2 seconds and press Command K (or B and a click on the clip), then the same at 4 seconds." },
+    { "do": "Put the playhead at 3 seconds and press X: the In and the Out land on the two cuts.", "shot": "2026-10-06-mark-clip-1-x-marks-two-to-four-sc.png" },
+    { "do": "Press Command Z: both marks go in one step. Press X again." },
+    { "do": "Press apostrophe: the marked piece is extracted and the recording reads 6 seconds.", "shot": "2026-10-06-mark-clip-3-extracted-reads-six-seconds-sc.png" },
+    { "do": "Put the playhead in the last piece, press X, then Shift I and Shift O.", "shot": "2026-10-06-mark-clip-4-shift-i-on-the-in-sc.png" },
+    { "do": "Press Escape, then Shift I: nothing moves." },
+    { "do": "Click the picture and press X: the fill colours swap and nothing is marked." },
+    { "do": "Open Sequence with the timeline holding the keyboard and read Mark Clip, Go to In and Go to Out." }
+  ],
+  "evaluate": [
+    "When the playhead is on a clip that is cut into pieces, should X mark just that piece (what it does now, like Premiere after a razor cut) or the whole clip?",
+    "With a title or a second clip stacked above the recording, does X mark the one you expect (the topmost picture, or the clip you picked)?",
+    "Does Shift O landing on the last frame, not one past it, read right when the Out is the end of the recording?",
+    "Is it clear enough that X only marks after a press in the timeline, and swaps fills after a click on the picture?"
+  ],
+  "rough": [
+    "No mock page draws Mark Clip or Go to In and Out; these are keys and Sequence rows only, and the ruler's shaded stretch is the existing one, unchanged.",
+    "Premiere's X marks the clip on the targeted tracks. Photonz has no track targeting, so X takes the picked clip under the playhead, else the topmost picture, else the topmost sound.",
+    "With nothing under the playhead X does nothing and says nothing, but still keeps the press, so it never swaps the fills while the timeline holds the keyboard.",
+    "Not on the ruler's or a clip's right-click menu: the clip menu already acts on the clicked piece, and Mark Clip is a playhead key, so it lives in Sequence."
+  ]
+}

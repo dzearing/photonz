@@ -870,7 +870,8 @@ struct EditorCommands: Commands {
 
     // The ruler's marks, at the playhead. The same rows the ruler's
     // right click offers there; M, I and O are Photoshop's tool keys
-    // on the canvas and the timeline's marks while it has the keyboard.
+    // on the canvas and the timeline's marks while it has the keyboard,
+    // and X, the canvas's fill swap, is Premiere's Mark Clip there.
     @ViewBuilder private var markRows: some View {
         Button("Add Marker") { if let editor { editor.addMarker(atMS: editor.documentTimeMS) } }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("m", modifiers: []) : nil)
@@ -878,6 +879,15 @@ struct EditorCommands: Commands {
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: []) : nil)
         Button("Set Out") { if let editor { editor.setMarkOut(atMS: editor.documentTimeMS) } }
             .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: []) : nil)
+        Button("Mark Clip") { editor?.markClipAtPlayhead() }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("x", modifiers: []) : nil)
+            .disabled(!(editor?.canMarkClipAtPlayhead ?? false))
+        Button("Go to In") { editor?.goToMark(in: true) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("i", modifiers: .shift) : nil)
+            .disabled(editor?.document?.markInMS == nil)
+        Button("Go to Out") { editor?.goToMark(in: false) }
+            .keyboardShortcut(timelineKeys ? KeyboardShortcut("o", modifiers: .shift) : nil)
+            .disabled(editor?.document?.markOutMS == nil)
         Button("Clear In") { editor?.clearMarkIn() }
             .keyboardShortcut("i", modifiers: .option)
             .disabled(editor?.document?.markInMS == nil)

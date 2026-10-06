@@ -108,7 +108,7 @@ struct TimelineKeysStartAnEditTests {
         let watching: [TimelineKeyCommand] = [
             .playPause, .shuttle(.forward), .shuttle(.stop), .stepFrames(1), .stepFrames(-5),
             .editPoint(forward: true), .marker(forward: true), .marker(forward: false),
-            .goToStart, .goToEnd, .selectTool,
+            .goToStart, .goToEnd, .goToIn, .goToOut, .selectTool,
             .showMode(.view), .showMode(.edit), .toggleViewEdit,
         ]
         for command in watching { #expect(command.startsAnEdit == false, "\(command)") }
@@ -117,7 +117,7 @@ struct TimelineKeysStartAnEditTests {
     @Test("editing keys switch to Edit")
     func editingKeys() {
         let editing: [TimelineKeyCommand] = [
-            .markIn, .markOut, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift, .rippleDelete,
+            .markIn, .markOut, .markClip, .clearIn, .clearOut, .addMarker, .splitAtPlayhead, .lift, .rippleDelete,
             .extractMarked, .liftMarked, .rippleTrimToPlayhead(.start), .rippleTrimToPlayhead(.end),
             .applyDefaultTransition, .toggleSnapping, .bladeTool, .trackSelectForwardTool, .rangeTool,
             .zoomIn, .zoomOut, .zoomToFit, .nudgeClips(frames: 1), .nudgeClips(frames: -5),

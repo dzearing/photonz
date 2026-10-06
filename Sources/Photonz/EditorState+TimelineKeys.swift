@@ -9,7 +9,8 @@ import SwiftUI
 // The timeline has the keyboard from the moment it shows up (a recording
 // opening, a clip dropped into a picture) and after any press in the dock, and
 // loses it to a press anywhere else, Premiere's own panel focus. While it does, J/K/L
-// shuttle, I and O mark, ' and ; extract and lift what they mark, Q and W
+// shuttle, I and O mark, X marks the clip under the playhead, ⇧I and ⇧O go
+// to the marks, ' and ; extract and lift what they mark, Q and W
 // ripple trim the clip under the playhead up to it, S switches snapping, the
 // arrows step frames and edit points, ⌘← and ⌘→ nudge the picked clips a
 // frame (`EditorState+ClipNudge`), ⇧M goes to the next marker, and V, B and
@@ -105,6 +106,14 @@ extension EditorState {
             setMarkIn(atMS: documentTimeMS)
         case .markOut:
             setMarkOut(atMS: documentTimeMS)
+        case .markClip:
+            // Nothing under the playhead: still the timeline's press, so X
+            // never swaps the fill colours behind a person's back.
+            markClipAtPlayhead()
+        case .goToIn:
+            goToMark(in: true)
+        case .goToOut:
+            goToMark(in: false)
         case .clearIn:
             clearMarkIn()
         case .clearOut:
@@ -238,6 +247,28 @@ extension EditorState {
     }
 
     // MARK: Marks
+
+    var canMarkClipAtPlayhead: Bool {
+        guard documentHasTime, let document else { return false }
+        return document.markClipRangeMS(pickedLayerID: selectedLayerID, atMS: documentTimeMS) != nil
+    }
+
+    /// X, Premiere's Mark Clip: the In and the Out round the piece of the clip
+    /// under the playhead, in one undo step. The playhead stays where it is.
+    func markClipAtPlayhead() {
+        guard documentHasTime, var trial = document,
+              trial.markClip(pickedLayerID: selectedLayerID, atMS: documentTimeMS) else { return }
+        let picked = selectedLayerID, at = documentTimeMS
+        perform { $0.markClip(pickedLayerID: picked, atMS: at) }
+    }
+
+    /// ⇧I and ⇧O, Premiere's Go to In and Go to Out. With no mark set
+    /// nothing moves and nothing is said.
+    func goToMark(in isIn: Bool) {
+        guard documentHasTime, let mark = isIn ? document?.markInMS : document?.markOutMS else { return }
+        pauseDocument()
+        scrubDocument(toMS: mark)
+    }
 
     func clearMarkIn() {
         guard documentHasTime, document?.markInMS != nil else { return }
