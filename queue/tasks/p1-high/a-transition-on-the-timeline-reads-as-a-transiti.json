@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 50,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:34:52.160Z",
-  "updated": "2026-10-06T15:02:00.935Z",
+  "updated": "2026-10-06T15:02:06.074Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/shared/components/video.css .xband (~line 95): 34px tall, radius 6, linear-gradient(90deg, rgba(18,194,233,.75), rgba(255,157,92,.75)), 1px rgba(255,255,255,.55) border, shadow-2, icon centred; .xband.blk (dip) is a dashed outline, no fill; .gr.l/.gr.r grips straddle the edges. video.html uses it on V1.\n\nApp: /tmp/photonz-playtest/an-editing-session-walk/5-dissolve-sc.png (crop the bottom 330 px): a pale translucent box at the cut with the playhead's cut marker inside, and the S of Sample Talk showing through. Find the band in the timeline clip bar code (search Sources/Photonz for the transition overlay drawn at a cut on the clip bar). Colours go through the design tokens, not new literals, and the contrast check must stay green. Searched: transition band, transition icon: only done design-system tasks.",
@@ -52,6 +52,10 @@
     {
       "t": "2026-10-06T15:02:00.934Z",
       "note": "left rough: transition-picker-at-a-cut-walk failed once at step 27 (picker at the cut not found) while the person was using the Mac, then passed twice on the same code and on HEAD; not reproducible, not filed. Zoomed-in band's gradient middle is muted (mock's own gradient) and a fresh dip's white icon sits under the playhead line; both in the audit, neither clears the follow-up bar."
+    },
+    {
+      "t": "2026-10-06T15:02:06.072Z",
+      "note": "The transition band on the timeline is the mock's .xband: the mock's 75% gradient over a solid dark base (nothing shows through), white edge, 12pt icon centred, a grip on each draggable end, no join grip through it, and the next piece's name starts past it; a dip stays a dashed outline. Picking, grip drags and right-click still work (transition-edge-follows-the-pointer-walk, default-transition-key-walk, an-editing-session-walk green). New transition-band-reads-as-the-mock-walk at Next defaults, dark and light, default zoom and zoomed in. Legibility sheet covers the band. Scripts/test.sh green. Audit queue/audits/2026-10-06-transition-band-reads-as-the-mock.json with the band beside the mock."
     }
   ],
   "started": "2026-10-06T14:07:29.722Z",
@@ -60,5 +64,6 @@
     "an-editing-session-walk",
     "default-transition-key-walk",
     "transition-edge-follows-the-pointer-walk"
-  ]
+  ],
+  "completed": "2026-10-06T15:02:06.073Z"
 }
