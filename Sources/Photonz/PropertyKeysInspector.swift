@@ -464,9 +464,19 @@ private struct AnimatePropertyButton: View {
         .frame(width: 220)
     }
 
+    /// The list goes first and the value arrives on the next run-loop pass.
+    /// Each is a whole redraw of the panel on its own (the list handing focus
+    /// back to the window, then the new row, its lane and the key), and done
+    /// in one pass they held the main thread about 165ms; one after the other
+    /// the longer of the two is about 80ms, and the gap between them is a
+    /// frame nobody can see (`perf/animate-pick-cost-walk.json`, 2026-10-06).
     private func pick(_ property: KeyedProperty) {
-        editorState.startAnimating(property)
         isOpen = false
+        let state = editorState
+        Task { @MainActor in
+            await NextRunLoopPass.start()
+            state.startAnimating(property)
+        }
     }
 }
 

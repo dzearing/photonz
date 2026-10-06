@@ -1,0 +1,391 @@
+{
+ "out": "/tmp/photonz-playtest/animate-pick-cost-walk",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "A STOPWATCH, not a test, which is why it sits in perf/ and the sweep never runs it. It types a title over a recording, then picks Position from Animate a property and undoes it, twelve times over, so the cost of a pick can be read off the wait after each press (mainBusy, longest) and sampled with `sample` on the probe while it loops."
+  },
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "done",
+   "note": "twelve picks of Position, each undone"
+  }
+ ]
+}

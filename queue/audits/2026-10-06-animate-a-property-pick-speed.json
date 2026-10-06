@@ -1,0 +1,25 @@
+{
+  "feature": "Picking a value to animate answers faster",
+  "epic": "video-beats-premiere",
+  "summary": "Choosing a value from Animate a property used to freeze the app for about 200 ms on every pick. It now holds about 80 ms: the list closes first and the value arrives a frame later, and the panel no longer builds and throws away 180 hidden dropdowns each time.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, press T, click the canvas and type a title, then press Command-Return." },
+    { "do": "In the panel's Properties section, click Animate a property." },
+    { "do": "Click Position in the list, and watch the list close, the Position row arrive armed and its lane open on the timeline.", "shot": "2026-10-06-animate-a-property-pick-speed-1.png" },
+    { "do": "Open the list again and pick Scale, then Blur, one after the other at your normal speed." },
+    { "do": "Press Command-Z after a pick and watch the row and its lane go." }
+  ],
+  "evaluate": [
+    "Does a pick now feel like it answers at once, or can you still feel a catch?",
+    "Does the list closing a frame before the row appears ever read as a flicker?",
+    "Is opening the list (still about 110 ms) the slower of the two to your hand?"
+  ],
+  "rough": [
+    "Measured on the loop's probe build, three runs each: Position 71 to 83 ms (was 186 to 237), Scale 79 to 81 ms (was 192), Blur 82 to 86 ms (was 211), Shadow 1 distance 61 ms (was 199 to 210). Not yet under the 50 ms the video success list asks for; the rest is the whole panel laying itself out again whenever focus moves or the document changes, carried by animate-a-property-opens-closes-and-keys-a-value.",
+    "Opening the list still holds about 110 ms; that task covers it too.",
+    "The probe carries walk-only markers and pays for accessibility the harness reads, together roughly a third of these numbers, so the shipping app should feel quicker than the figures above; nothing here measured the shipping build.",
+    "No mock covers how fast a pick is; the list, rows and lanes look exactly as before."
+  ]
+}

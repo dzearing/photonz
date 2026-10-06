@@ -766,15 +766,29 @@ struct DesignedSegments<Value: Hashable>: View {
     }
 
     /// Short of room: the same choices in a dropdown, the picked one ticked.
+    ///
+    /// `ViewThatFits` measures the face the dropdown draws, never the dropdown
+    /// itself: an AppKit view among its candidates is built and torn down
+    /// again on every measure, even while the bar fits and it is never shown.
+    /// A typed title's shadow and glow Kind rows did that 180 times each time
+    /// a value was picked from Animate a property, about 140ms of a 200ms
+    /// hold (2026-10-06). On the face, the real dropdown is built once, when
+    /// the row has actually collapsed.
     private var collapsed: some View {
-        VideoKit.Dropdown(
-            label: label,
-            value: pickedIndex.map { options[$0].title } ?? "",
-            size: size == .large ? .regular : .small,
-            choices: options.map { option in
-                .item(option.title, isOn: option.value == selection,
-                      isEnabled: option.disabledReason == nil) { pick(option.value) }
-            })
+        let value = pickedIndex.map { options[$0].title } ?? ""
+        let faceSize: VideoKit.SelectFace.Size = size == .large ? .regular : .small
+        return VideoKit.SelectFace(value: value, size: faceSize)
+            .hidden()
+            .overlay {
+                VideoKit.Dropdown(
+                    label: label,
+                    value: value,
+                    size: faceSize,
+                    choices: options.map { option in
+                        .item(option.title, isOn: option.value == selection,
+                              isEnabled: option.disabledReason == nil) { pick(option.value) }
+                    })
+            }
     }
 
     static func paint(_ ink: RGBA) -> Color {
