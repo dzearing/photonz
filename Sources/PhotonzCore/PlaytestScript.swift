@@ -1234,6 +1234,24 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Split the second caption's second word from its right click menu, then
     /// merge it back, and fail unless the line reads as it did.
     case captionsWordSplitAndMerge
+    /// Note every caption line's words, for the checks below to compare with.
+    case captionsNoteLines
+    /// Join the first caption line with the second from the line's own right
+    /// click menu on the Captions track, and fail unless one line now reads as
+    /// the two did and every other line is as noted. Fails too unless the last
+    /// line's Join with Next Line is dimmed.
+    case captionsJoinFirstLineWithNext
+    /// Fail unless every caption line reads as noted: what an undo puts back.
+    case captionsExpectLinesAsNoted
+    /// Put the playhead in the second line, right click its first word ON THE
+    /// PICTURE at the word's own spot, and choose Move to Previous Line. Fails
+    /// unless the word went onto the end of the first line and nothing else
+    /// moved, and unless the first line's words offer the row dimmed.
+    case captionsMoveSecondLineWordBack
+    /// Write the captions as an SRT file into the walk's folder and fail
+    /// unless it holds one subtitle per line, the first reading as the first
+    /// line does now.
+    case captionsExpectSRTMatchesLines
     /// Write the film with its picture clean and its captions as an SRT file
     /// beside it, into the walk's own folder, and fail unless both land.
     case captionsWriteFilmWithFileBeside
@@ -1452,6 +1470,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
              .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,
              .captionsWordStretchLastLater, .captionsExpectWordDragsUndone, .captionsWordSplitAndMerge,
+             .captionsNoteLines, .captionsJoinFirstLineWithNext, .captionsExpectLinesAsNoted,
+             .captionsMoveSecondLineWordBack, .captionsExpectSRTMatchesLines,
              .soundExpectPlaying, .soundExportMix, .soundScrubAcrossIt,
              .soundExpectMixOver, .soundExpectMeterReads, .soundExpectCutCarried,
              .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,

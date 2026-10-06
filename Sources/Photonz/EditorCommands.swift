@@ -1399,7 +1399,11 @@ struct EditorCommands: Commands {
                 .disabled(!(word.map { editor?.canMergeCaptionWord($0) ?? false } ?? false))
             Button("Delete Word", role: .destructive) { if let word { editor?.deleteCaptionWord(word) } }
             Divider()
+            Button("Move to Previous Line") { if let word { editor?.moveCaptionWordToPreviousLine(word) } }
+                .disabled(!(word.map { editor?.canMoveCaptionWordToPreviousLine($0) ?? false } ?? false))
             Button("Move to Next Line") { if let word { editor?.moveCaptionWordToNextLine(word) } }
+            Button("Join with Next Line") { if let word { editor?.joinCaptionWithNextLine(word.cueID) } }
+                .disabled(!(word.map { editor?.canJoinCaptionWithNextLine($0.cueID) ?? false } ?? false))
             Button("Play from Here") { if let word { editor?.playFromCaptionWord(word) } }
             Button("Start Here") { editor?.goToStartOfCaptionInHand() }
         }

@@ -193,6 +193,9 @@ extension EditorState {
         }
         rows.append(.command("Delete Word", destructive: true) { self.deleteCaptionWord(ref) })
         rows.append(.separator)
+        rows.append(.command("Move to Previous Line", enabled: canMoveCaptionWordToPreviousLine(ref)) {
+            self.moveCaptionWordToPreviousLine(ref)
+        })
         rows.append(.command("Move to Next Line") { self.moveCaptionWordToNextLine(ref) })
         rows.append(.command("Play from Here") { self.playFromCaptionWord(ref) })
         return rows
@@ -227,6 +230,27 @@ extension EditorState {
     /// **Move to Next Line.**
     func moveCaptionWordToNextLine(_ ref: CaptionWordRef) {
         edit { $0.moveCaptionWordsToNextCue(from: ref) }
+    }
+
+    /// Whether the word's line has a line before it. The first one does not.
+    func canMoveCaptionWordToPreviousLine(_ ref: CaptionWordRef) -> Bool {
+        canEditCaptionWords && document?.canMoveCaptionWordsToPreviousCue(from: ref) == true
+    }
+
+    /// **Move to Previous Line.**
+    func moveCaptionWordToPreviousLine(_ ref: CaptionWordRef) {
+        edit { $0.moveCaptionWordsToPreviousCue(from: ref) }
+    }
+
+    /// Whether a caption has a line after it to join. The last one does not.
+    func canJoinCaptionWithNextLine(_ id: UUID) -> Bool {
+        canEditCaptionWords && document?.canJoinCaptionWithNext(id) == true
+    }
+
+    /// **Join with Next Line**, on a caption's bar on the Captions track: one
+    /// line from two, in one undo step.
+    func joinCaptionWithNextLine(_ id: UUID) {
+        edit { $0.joinCaptionWithNext(id) }
     }
 
     /// **Play from Here.**

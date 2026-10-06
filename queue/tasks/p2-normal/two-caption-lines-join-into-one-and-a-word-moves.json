@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:43:44.292Z",
-  "updated": "2026-10-06T00:44:16.412Z",
+  "updated": "2026-10-06T03:46:02.709Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Word menu: Sources/Photonz/EditorState+CaptionWords.swift:182-197 (Edit Word, Split Here, Merge with Next which merges WORDS inside one line, Delete Word, Move to Next Line -> document.moveCaptionWordsToNextCue). Menu bar rows: EditorCommands.swift:1388-1390. No cue-level join exists (grep join/merge cue finds nothing). Mock: docs/design/mocks/pages/video-captions.html (editing in place). Premiere: Merge Captions. Success item for video-audio: captions 'can be edited in place'. Found by the 2026-10-05 evening manager pass's captions comparison.",
@@ -29,6 +29,30 @@
     {
       "t": "2026-10-06T00:44:16.411Z",
       "note": "seq 3680 -> 4"
+    },
+    {
+      "t": "2026-10-06T03:24:55.639Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-06T03:25:57.349Z",
+      "note": "adversarial review before building: Premiere's own verb is Merge Captions on the caption track's right click, and Premiere has no word-level 'move back' (its text panel lets you cut/paste words). A first-timer who sees Move to Next Line on a word will look for its mirror beside it, so Move to Previous Line sits right under it. Join with Next Line belongs on the line's own menu (the bar on the Captions track) because it acts on the line, not a word; it is also put in the menu bar's Caption Word submenu, acting on the caption at the playhead, since the menu bar has no pointer. Risk: a joined line can be long; it keeps the first line's box and wraps the way a hand-typed long line wraps, no re-split. The mock (video-captions.html) shows editing in place but draws no menu for either verb, so placement follows the existing word menu."
+    },
+    {
+      "t": "2026-10-06T03:45:37.751Z",
+      "note": "owns these walks: caption-lines-join-and-a-word-moves-back-walk"
+    },
+    {
+      "t": "2026-10-06T03:46:02.652Z",
+      "note": "built: PhotonzDocument.moveCaptionWordsToPreviousCue / joinCaptionWithNext (+ can... checks) in CaptionWordEdits.swift, 7 new CaptionWordEditTests; word menu row Move to Previous Line (dimmed on the first line), Join with Next Line on the caption bar's menu (dimmed on the last line), both in Sequence > Caption Word. Walk caption-lines-join-and-a-word-moves-back-walk green at Next defaults (10 lines -> 9 joined, undo/redo, real right click on 'The' on the picture moved it back, SRT 9 subtitles with the joined line first). fix-a-caption-word-walk still green. Scripts/test.sh green (exit 0)."
+    },
+    {
+      "t": "2026-10-06T03:46:02.708Z",
+      "note": "left rough, not filed: a joined line wraps to two rows on the picture even with Lines set to 1 (Lines only decides grouping when captions are written; a hand join is the person's choice). The Join row is run from the menu as built, not a right click at a spot on the track bar; the bar's menu is the same captionCueMenuRows the walk reads. Both are in the audit's rough."
     }
+  ],
+  "started": "2026-10-06T03:24:55.637Z",
+  "walks": [
+    "caption-lines-join-and-a-word-moves-back-walk"
   ]
 }

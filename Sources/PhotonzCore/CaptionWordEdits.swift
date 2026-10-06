@@ -305,6 +305,75 @@ extension PhotonzDocument {
         return true
     }
 
+    /// Whether there is a line before this word's to carry it back to.
+    public func canMoveCaptionWordsToPreviousCue(from ref: CaptionWordRef) -> Bool {
+        captionWordParts(ref) != nil && neighbourCaption(of: ref.cueID, step: -1) != nil
+    }
+
+    /// **Move to Previous Line.** The mirror of Move to Next Line: this word
+    /// and every word before it in its line go onto the end of the line
+    /// before, which runs on to where they end. Every word keeps its time.
+    /// Moving the last word moves the whole line, which then goes. The first
+    /// line has no line before it, and nothing changes.
+    @discardableResult
+    public mutating func moveCaptionWordsToPreviousCue(from ref: CaptionWordRef) -> Bool {
+        guard let (words, string) = captionWordParts(ref), let time = layer(id: ref.cueID)?.time,
+              let previous = neighbourCaption(of: ref.cueID, step: -1),
+              let previousWords = captionWordsAsShown(of: previous.id),
+              case .text(let previousContent) = previous.content, let previousTime = previous.time
+        else { return false }
+        let moved = Array(words[...ref.index])
+        let movedText = CaptionWordEdits.tokens(in: string)[...ref.index]
+            .map { (string as NSString).substring(with: $0) }
+        guard let last = moved.last else { return false }
+        writeCaption(previous.id, words: previousWords + moved,
+                     string: previousContent.string + " " + movedText.joined(separator: " "),
+                     time: LayerTime(inMS: previousTime.inMS, outMS: max(previousTime.outMS, last.endMS)))
+        guard ref.index + 1 < words.count else {
+            removeLayer(id: ref.cueID)
+            return true
+        }
+        let kept = Array(words[(ref.index + 1)...])
+        guard let rewritten = CaptionWordEdits.replacing(tokens: 0, through: ref.index, in: string, with: [])
+        else { return false }
+        writeCaption(ref.cueID, words: kept, string: rewritten,
+                     time: LayerTime(inMS: min(max(time.inMS, kept[0].startMS), time.outMS - LayerTime.shortestMS),
+                                     outMS: time.outMS))
+        return true
+    }
+
+    /// Whether this caption has a line after it to join.
+    public func canJoinCaptionWithNext(_ id: UUID) -> Bool {
+        layer(id: id)?.isCaption == true && captionWordsAsShown(of: id) != nil
+            && neighbourCaption(of: id, step: 1).flatMap { captionWordsAsShown(of: $0.id) } != nil
+    }
+
+    /// **Join with Next Line.** This line and the one after it become one,
+    /// from this one's start to the next one's end, every word keeping its
+    /// time. The joined line keeps this one's look and box. Premiere calls it
+    /// Merge Captions.
+    @discardableResult
+    public mutating func joinCaptionWithNext(_ id: UUID) -> Bool {
+        guard canJoinCaptionWithNext(id), let current = layer(id: id),
+              case .text(let content) = current.content, let time = current.time,
+              let words = captionWordsAsShown(of: id),
+              let next = neighbourCaption(of: id, step: 1), let nextWords = captionWordsAsShown(of: next.id),
+              case .text(let nextContent) = next.content, let nextTime = next.time else { return false }
+        writeCaption(id, words: words + nextWords, string: content.string + " " + nextContent.string,
+                     time: LayerTime(inMS: time.inMS, outMS: max(time.outMS, nextTime.outMS)))
+        removeLayer(id: next.id)
+        return true
+    }
+
+    /// The caption `step` lines on from `id` in time order, if there is one.
+    private func neighbourCaption(of id: UUID, step: Int) -> Layer? {
+        let cues = captionLayers
+        guard let at = cues.firstIndex(where: { $0.id == id }), cues.indices.contains(at + step) else {
+            return nil
+        }
+        return cues[at + step]
+    }
+
     // MARK: - Dragging a word
 
     /// How far this word may be dragged with this grab, earlier (negative) to

@@ -192,6 +192,88 @@ final class CaptionWordEditTests: XCTestCase {
                        "the new line sits on the same Captions track")
     }
 
+    // MARK: - Move to the previous line
+
+    func testMoveToPreviousLineCarriesTheWordAndTheOnesBeforeIt() {
+        var document = document()
+        XCTAssertTrue(document.moveCaptionWordsToPreviousCue(from: ref(document, 1, 1)))
+        XCTAssertEqual(document.captionLayers.count, 3)
+        XCTAssertEqual(text(cue(document, 0)), "Fodons opens alot the video")
+        XCTAssertEqual(text(cue(document, 1)), "captions")
+        XCTAssertEqual(cue(document, 0).time?.inMS, 1_000)
+        XCTAssertEqual(cue(document, 0).time?.outMS, 3_700, "the line before now ends where its last new word does")
+        XCTAssertEqual(cue(document, 1).time?.inMS, 3_700, "the line starts where its first kept word does")
+        XCTAssertEqual(cue(document, 1).time?.outMS, 4_600)
+        XCTAssertEqual(spans(words(document, 0)),
+                       [[1_000, 1_500], [1_500, 1_900], [1_900, 2_400], [3_000, 3_200], [3_200, 3_700]],
+                       "every word keeps its own time")
+        XCTAssertEqual(spans(words(document, 1)), [[3_700, 4_500]])
+    }
+
+    func testMovingTheLastWordBackMovesTheWholeLineIntoTheOneBefore() {
+        var document = document()
+        let id = cue(document, 1).id
+        XCTAssertTrue(document.moveCaptionWordsToPreviousCue(from: ref(document, 1, 2)))
+        XCTAssertNil(document.layer(id: id), "a line with no words left goes")
+        XCTAssertEqual(document.captionLayers.count, 2)
+        XCTAssertEqual(text(cue(document, 0)), "Fodons opens alot the video captions")
+        XCTAssertEqual(cue(document, 0).time, LayerTime(inMS: 1_000, outMS: 4_500))
+    }
+
+    func testTheFirstLineHasNoLineBeforeToMoveTo() {
+        var document = document()
+        let was = document
+        XCTAssertFalse(document.canMoveCaptionWordsToPreviousCue(from: ref(document, 0, 1)))
+        XCTAssertTrue(document.canMoveCaptionWordsToPreviousCue(from: ref(document, 1, 0)))
+        XCTAssertFalse(document.moveCaptionWordsToPreviousCue(from: ref(document, 0, 1)))
+        XCTAssertEqual(document, was)
+    }
+
+    func testMovingBackThenOnUndoesItself() {
+        var document = document()
+        XCTAssertTrue(document.moveCaptionWordsToPreviousCue(from: ref(document, 1, 0)))
+        XCTAssertEqual(text(cue(document, 0)), "Fodons opens alot the")
+        XCTAssertEqual(text(cue(document, 1)), "video captions")
+        XCTAssertTrue(document.moveCaptionWordsToNextCue(from: ref(document, 0, 3)))
+        XCTAssertEqual(text(cue(document, 0)), "Fodons opens alot")
+        XCTAssertEqual(text(cue(document, 1)), "the video captions")
+        XCTAssertEqual(spans(words(document, 1)), [[3_000, 3_200], [3_200, 3_700], [3_700, 4_500]])
+    }
+
+    // MARK: - Join with the next line
+
+    func testJoinWithNextLineMakesOneLineAndKeepsEveryWordsTime() {
+        var document = document()
+        let second = cue(document, 1).id
+        XCTAssertTrue(document.canJoinCaptionWithNext(cue(document, 0).id))
+        XCTAssertTrue(document.joinCaptionWithNext(cue(document, 0).id))
+        XCTAssertNil(document.layer(id: second))
+        XCTAssertEqual(document.captionLayers.count, 2)
+        XCTAssertEqual(text(cue(document, 0)), "Fodons opens alot the video captions")
+        XCTAssertEqual(cue(document, 0).name, CaptionLayers.name(for: "Fodons opens alot the video captions"))
+        XCTAssertEqual(cue(document, 0).time, LayerTime(inMS: 1_000, outMS: 4_600),
+                       "from the first line's start to the second's end, the gap between included")
+        XCTAssertEqual(spans(words(document, 0)),
+                       [[1_000, 1_500], [1_500, 1_900], [1_900, 2_400],
+                        [3_000, 3_200], [3_200, 3_700], [3_700, 4_500]])
+    }
+
+    func testTheLastLineHasNothingToJoin() {
+        var document = document()
+        let was = document
+        XCTAssertFalse(document.canJoinCaptionWithNext(cue(document, 2).id))
+        XCTAssertFalse(document.joinCaptionWithNext(cue(document, 2).id))
+        XCTAssertEqual(document, was)
+    }
+
+    func testJoinedLinesWriteOutAsOneSubtitle() {
+        var document = document()
+        XCTAssertTrue(document.joinCaptionWithNext(cue(document, 0).id))
+        let srt = CaptionFileFormat.srt.text(document.captionCues)
+        XCTAssertTrue(srt.contains("Fodons opens alot the video captions"), srt)
+        XCTAssertEqual(srt.components(separatedBy: " --> ").count - 1, 2, "two subtitles, not three: \(srt)")
+    }
+
     // MARK: - Dragging a word
 
     func testAPlainDragCarriesTheRestOfTheLineAndKeepsTheirSpacing() {

@@ -224,6 +224,13 @@ private final class Run {
     private var openedCaptionWord: (ref: CaptionWordRef, word: TranscribedWord)?
     /// The second caption's words before a walk dragged any of them.
     private var captionWordsBeforeDrags: [TranscribedWord]?
+    /// Every caption line's words, as `captionsNoteLines` found them.
+    private var captionLinesNoted: [String] = []
+
+    /// Every caption line's words, in time order.
+    private func captionLines(_ editor: EditorState) -> [String] {
+        (editor.document?.captionLayers ?? []).map { editor.captionWords(of: $0.id) ?? "" }
+    }
     /// The caption drawn at the playhead when a walk last noted it
     /// (`captionsNoteDrawn`).
     private var notedCaption: [Layer]?
@@ -4596,6 +4603,98 @@ private final class Run {
                 }
                 note(number, step.name, "captions: Split Here made \"\(split)\", Merge with Next put "
                      + "back \"\(line)\"", state: describe())
+            case .captionsNoteLines:
+                captionLinesNoted = captionLines(editor)
+                guard captionLinesNoted.count >= 3 else {
+                    throw Failure(description: "there are \(captionLinesNoted.count) caption lines; this needs three")
+                }
+                note(number, step.name, "captions: \(captionLinesNoted.count) lines: "
+                     + captionLinesNoted.map { "\"\($0)\"" }.joined(separator: " | "), state: describe())
+            case .captionsJoinFirstLineWithNext:
+                let was = captionLines(editor)
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 3, was.count == cues.count, let last = cues.last else {
+                    throw Failure(description: "there are not three caption lines to join two of")
+                }
+                func joinRow(_ id: UUID) -> MenuRow? {
+                    editor.captionCueMenuRows(layerID: id).first { $0.title == "Join with Next Line" }
+                }
+                guard let lastRow = joinRow(last.id), !lastRow.isEnabled else {
+                    throw Failure(description: "the last line's menu offers Join with Next Line as if it could act")
+                }
+                guard let row = joinRow(cues[0].id), row.isEnabled else {
+                    throw Failure(description: "the first line's menu on the Captions track has no live "
+                        + "Join with Next Line")
+                }
+                row.run()
+                let now = captionLines(editor)
+                let expected = [was[0] + " " + was[1]] + was.dropFirst(2)
+                guard now == expected else {
+                    throw Failure(description: "joining made \(now.count) lines reading "
+                        + now.prefix(3).map { "\"\($0)\"" }.joined(separator: " | ")
+                        + ", not \(expected.count) starting \"\(expected[0])\"")
+                }
+                note(number, step.name, "captions: Join with Next Line made \(was.count) lines \(now.count); "
+                     + "the first reads \"\(now[0])\"", state: describe())
+            case .captionsExpectLinesAsNoted:
+                let now = captionLines(editor)
+                guard now == captionLinesNoted else {
+                    throw Failure(description: "the lines read " + now.prefix(3).map { "\"\($0)\"" }
+                        .joined(separator: " | ") + ", not as noted: "
+                        + captionLinesNoted.prefix(3).map { "\"\($0)\"" }.joined(separator: " | "))
+                }
+                note(number, step.name, "captions: all \(now.count) lines read as noted", state: describe())
+            case .captionsMoveSecondLineWordBack:
+                let was = captionLines(editor)
+                let cues = editor.document?.captionLayers ?? []
+                guard cues.count >= 2, let words = editor.document?.captionWordsAsShown(of: cues[1].id),
+                      let word = words.first else {
+                    throw Failure(description: "there is no second caption line")
+                }
+                let firstLineRow = editor.captionWordMenuRows(CaptionWordRef(cueID: cues[0].id, index: 0),
+                                                              place: .canvas)
+                    .first { $0.title == "Move to Previous Line" }
+                guard let firstLineRow, !firstLineRow.isEnabled else {
+                    throw Failure(description: "the first line's words offer Move to Previous Line as if it could act")
+                }
+                editor.moveDocumentPlayhead(toMS: (word.startMS + word.endMS) / 2)
+                await sleep(0.4)
+                guard let shown = editor.canvasGeometryDocument?.canvasLayer(id: cues[1].id),
+                      case .text(let text) = shown.content,
+                      let rect = TextRasterizer.wordRects(text, size: shown.frame.size).first ?? nil else {
+                    throw Failure(description: "the second line's first word is not on the picture")
+                }
+                let point = CGPoint(x: shown.frame.minX + rect.midX, y: shown.frame.minY + rect.midY)
+                try await openRowMenu(nil, at: PlaytestPoint(point), shot: nil, choose: "Move to Previous Line",
+                                      ticked: [], unticked: [], number: number)
+                let now = captionLines(editor)
+                var expected = was
+                let tokens = was[1].split(whereSeparator: \.isWhitespace)
+                let rest = tokens.dropFirst().joined(separator: " ")
+                expected[0] = was[0] + " " + (tokens.first.map(String.init) ?? word.text)
+                if rest.isEmpty { expected.remove(at: 1) } else { expected[1] = rest }
+                guard now == expected else {
+                    throw Failure(description: "after Move to Previous Line the lines read "
+                        + now.prefix(3).map { "\"\($0)\"" }.joined(separator: " | ")
+                        + ", not " + expected.prefix(3).map { "\"\($0)\"" }.joined(separator: " | "))
+                }
+                note(number, step.name, "captions: right clicked \"\(word.text)\" on the picture at "
+                     + "(\(Int(point.x)), \(Int(point.y))) and chose Move to Previous Line; the first line reads "
+                     + "\"\(now[0])\" and the second \"\(now.count > 1 ? now[1] : "")\"", state: describe())
+            case .captionsExpectSRTMatchesLines:
+                let url = out.appendingPathComponent("captions.srt")
+                guard editor.writeCaptionsFile(as: .srt, to: url),
+                      let srt = try? String(contentsOf: url, encoding: .utf8) else {
+                    throw Failure(description: "the SRT file was not written")
+                }
+                let lines = captionLines(editor)
+                let count = srt.components(separatedBy: " --> ").count - 1
+                guard count == lines.count, let first = lines.first, srt.contains(first) else {
+                    throw Failure(description: "the SRT file holds \(count) subtitles for \(lines.count) lines, "
+                        + "or does not read \"\(lines.first ?? "")\"")
+                }
+                note(number, step.name, "captions: wrote captions.srt with \(count) subtitles, the first "
+                     + "reading \"\(first)\"", state: describe())
             case .captionsExpectEditingOnCanvas:
                 guard let id = editor.editingTextLayerID,
                       editor.document?.layer(id: id)?.isCaption == true else {
@@ -5590,7 +5689,9 @@ private final class Run {
                  .captionsWordOpenOnCanvas, .captionsWordOpenInLane, .captionsExpectWordOpen,
                  .captionsExpectWordFixed, .captionsExpectTabbedOn, .captionsWordDragEarlier,
                  .captionsWordStretchLastLater, .captionsExpectWordDragsUndone,
-                 .captionsWordSplitAndMerge: break
+                 .captionsWordSplitAndMerge, .captionsNoteLines, .captionsJoinFirstLineWithNext,
+                 .captionsExpectLinesAsNoted, .captionsMoveSecondLineWordBack,
+                 .captionsExpectSRTMatchesLines: break
             case .copySpecList: editor.copyMeasureSpecList()
             case .copyImage: editor.copyCompositeToClipboard()
             case .copyImageWithCanvas: editor.copyCompositeToClipboard(background: .keep)

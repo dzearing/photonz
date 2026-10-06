@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/caption-lines-join-and-a-word-moves-back-walk",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Automatic captions break a sentence in the wrong place. A line's right click menu on the Captions track offers Join with Next Line, Premiere's Merge Captions, and a word's right click menu offers Move to Previous Line beside Move to Next Line. Every word keeps its time and each is one undo step. Next at its defaults: no flag is set here." },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "captionsNoteLines" },
+    { "do": "snapshot", "name": "1-captions-as-they-wrote-themselves" },
+
+    { "do": "action", "action": "captionsJoinFirstLineWithNext" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "2-the-first-two-lines-joined" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "captionsExpectLinesAsNoted" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command", "shift"], "menuItem": "Redo" },
+    { "do": "wait", "seconds": 0.3 },
+
+    { "do": "action", "action": "captionsMoveSecondLineWordBack" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "3-a-word-moved-back-to-the-line-before" },
+    { "do": "action", "action": "captionsExpectSRTMatchesLines" }
+  ]
+}

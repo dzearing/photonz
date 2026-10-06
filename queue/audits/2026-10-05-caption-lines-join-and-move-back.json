@@ -1,0 +1,27 @@
+{
+  "feature": "Join two caption lines, move a word back a line",
+  "epic": "video-audio",
+  "summary": "A caption broken in the wrong place can now be mended both ways: join a line with the next one, or carry a word (and the words before it) back onto the line before. Every word keeps its time and each fix is one undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a talking screen recording and press Add Captions." },
+    { "do": "On the Captions track, right click the first line's bar and choose Join with Next Line.", "shot": "2026-10-05-caption-lines-join-2.png" },
+    { "do": "Press Command Z, then Command Shift Z: the two lines come apart and join again." },
+    { "do": "Play into the second line, right click its first word on the picture, choose Move to Previous Line.", "shot": "2026-10-05-caption-lines-join-3.png" },
+    { "do": "Right click any word of the first line: Move to Previous Line is there but dimmed." },
+    { "do": "Open Sequence > Caption Word in the menu bar: both rows are there, acting on the caption at the playhead." },
+    { "do": "Right click the Captions track, Export Subtitles > SubRip: the joined line is one subtitle." }
+  ],
+  "evaluate": [
+    "Is Join with Next Line where you reached for it, on the line's own bar, the way Premiere's Merge Captions is?",
+    "Does Move to Previous Line taking the clicked word AND every word before it match what you expected, as the mirror of Move to Next Line?",
+    "After a join, does the longer line read well on the picture, or would you want it split again by itself?",
+    "Is one undo per join or move the right size of step?"
+  ],
+  "rough": [
+    "No mock covers these menus: video-captions.html draws editing in place but no right click menu for a line or a word, so the rows sit beside the existing Move to Next Line and Start Here.",
+    "A joined line keeps the first line's box and wraps onto two rows on the picture when it is long (picture 2), even with the Captions panel's Lines set to 1; nothing re-splits it.",
+    "The walk chooses Move to Previous Line with a real right click on the word on the picture; the Join row is run from the line's menu as built, not by a right click at a spot on the track bar."
+  ]
+}

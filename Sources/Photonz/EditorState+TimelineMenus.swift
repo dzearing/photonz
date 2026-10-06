@@ -382,6 +382,9 @@ extension EditorState {
                 self.selectLayer(layerID)
                 self.moveDocumentPlayhead(toMS: self.document?.layer(id: layerID)?.time?.inMS ?? 0)
             },
+            .command("Join with Next Line", enabled: canJoinCaptionWithNextLine(layerID)) {
+                self.joinCaptionWithNextLine(layerID)
+            },
             .separator,
         ]
         rows.append(contentsOf: captionTrackMenuRows())
