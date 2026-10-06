@@ -484,8 +484,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// picked without unhiding or unlocking it first.
     public func hitTestPath(_ point: CGPoint, zoom: CGFloat = 1,
                             captionPillSize: CaptionPillSizing? = nil) -> [Int]? {
-        func search(_ list: [Layer], _ point: CGPoint, _ prefix: [Int]) -> [Int]? {
-            for index in list.indices.reversed() {
+        func search(_ list: [Layer], _ point: CGPoint, _ prefix: [Int],
+                    order: [Int]? = nil) -> [Int]? {
+            for index in (order ?? Array(list.indices)).reversed() {
                 let layer = list[index]
                 guard layer.isVisible, !layer.isLocked else { continue }
                 if layer.isGroup {
@@ -519,7 +520,10 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             }
             return nil
         }
-        return search(layers, point, [])
+        // The top level is searched in the order it is DRAWN, so a click
+        // lands on the caption that is on top of a title, not under it
+        // (`CaptionsDrawOnTop.swift`).
+        return search(layers, point, [], order: Self.drawingIndices(of: layers))
     }
 
     /// The layers a marquee rubber-band captures: every visible, unlocked layer

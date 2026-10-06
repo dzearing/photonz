@@ -107,7 +107,7 @@ extension EditorState {
     /// asked: a right click on a clip or a sound, the timeline's + menu, the
     /// Video menu, or the Captions section's one button.
     ///
-    /// While it listens a Captions row sits at the top of the tracks with how
+    /// While it listens a Captions row sits under the picture tracks with how
     /// far along it is and a way to cancel (`TimelineCaptionsListeningRow`),
     /// and everything else in the window keeps working.
     ///

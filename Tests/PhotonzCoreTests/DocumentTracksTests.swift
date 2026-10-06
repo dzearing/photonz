@@ -78,15 +78,15 @@ struct DocumentTracksTests {
         #expect(doc.clipIDs(onTrack: id).isEmpty)
     }
 
-    @Test("A new audio track lands under the sound and a captions track above the picture")
+    @Test("A new audio track lands under the sound and a captions track under the picture")
     func addAudioAndCaptions() {
         var (doc, _, _, _) = Self.cut()
         let audio = doc.addTrack(.audio)
         #expect(doc.timelineTracks.last?.id == audio)
         #expect(doc.timelineTracks.last?.name == "Audio 3")
         let captions = doc.addTrack(.captions)
-        #expect(doc.timelineTracks.first?.id == captions)
-        #expect(doc.timelineTracks.first?.name == "Captions")
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "Captions", "Audio", "Audio 2", "Audio 3"])
+        #expect(doc.timelineTracks[2].id == captions)
     }
 
     @Test("A track can be added at a place")

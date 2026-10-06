@@ -50,10 +50,11 @@ final class CaptionTrackTests: XCTestCase {
                        "and the cues on it are every caption, earliest first")
     }
 
-    func testTheCaptionsTrackSitsOverThePicture() {
+    func testTheCaptionsTrackSitsUnderThePictureAndDrawsOverIt() {
         let document = documentWithCaptionTrack()
         let kinds = document.timelineTracks.map(\.kind)
-        XCTAssertEqual(kinds.first, .captions)
+        XCTAssertEqual(kinds.last, .captions, "listed under the picture, the way the mock lists it")
+        XCTAssertEqual(document.drawingOrder.last?.isCaptionsLayer, true, "and drawn over it")
     }
 
     func testWritingAgainReplacesTheTrackRatherThanAddingASecond() {

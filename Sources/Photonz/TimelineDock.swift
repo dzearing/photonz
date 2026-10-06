@@ -363,16 +363,23 @@ struct TimelineDock: View {
                     ScrollView(.vertical) {
                         let order = editorState.timelineTrackRows.map(\.id)
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
-                            if editorState.isWritingCaptions {
-                                TimelineCaptionsListeningRow(laneWidth: laneWidth)
-                            }
                             let rows = editorState.timelineRowZoom
                             // Edit mode arriving from View draws its rows a
                             // pass after the dock starts to slide
                             // (`EditModeArrival`).
                             let carry = editorState.trackRowDrag
-                            ForEach(editorState.editArrival.showsTrackRows
-                                    ? editorState.timelineRows : []) { row in
+                            let drawn = editorState.editArrival.showsTrackRows
+                                ? editorState.timelineRows : []
+                            // While captions are being written, their stand-in
+                            // row stands where the Captions track will land:
+                            // under the picture, over the sound.
+                            let listening = editorState.isWritingCaptions
+                            let listeningBefore = listening
+                                ? editorState.captionsListeningRowID(in: drawn) : nil
+                            ForEach(drawn) { row in
+                                if listening, row.id == listeningBefore {
+                                    TimelineCaptionsListeningRow(laneWidth: laneWidth)
+                                }
                                 Group {
                                     switch row {
                                     case .group(let group, let isCollapsed, let tracks):
@@ -395,6 +402,9 @@ struct TimelineDock: View {
                                     if !carry.isCarrying { carry.rowFrames[row.id] = frame }
                                 }
                                 .modifier(TrackRowDragPlacement(id: row.id, session: carry))
+                            }
+                            if listening, listeningBefore == nil {
+                                TimelineCaptionsListeningRow(laneWidth: laneWidth)
                             }
                             TimelineAddTrackRow(laneWidth: laneWidth)
                         }

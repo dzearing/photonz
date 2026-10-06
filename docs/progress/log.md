@@ -20742,3 +20742,10 @@ Next: the first editor window's ~200 ms first build
 - Picker, Animating rows, lanes, the between-keys curve, Effects-list edits at the playhead and canvas folds are all per shadow. Removing, dragging or inserting an Effects entry carries keys with their entry (`remapEffectMotions` in `ColorStyles.swift`); a removed entry takes its keys.
 - Tests: `KeysOnSeveralEffectsTests`. Walk: new `keys-on-a-later-shadow-walk`. A typed title wears two shadows, so titles now offer 19 keyable values and read "Shadow 1 ..." in four walks.
 - Next: nothing open from this.
+
+## 2026-10-06 — The Captions track sits under the picture tracks
+
+- Captions now list under the last picture track and over the sound (`DocumentTracks.trackLayout`, `captionsPlace`), as video.html lists Title, V1, V2, Captions, Audio; Add Track > Captions lands there too, and the listening row stands there while Add Captions works.
+- Captions are drawn last whatever row they sit in (`CaptionsDrawOnTop.swift`: `drawingOrder`, used by `DocumentRenderer.compositeImage` and the top level of `hitTestPath`); `restackByTracks` keeps them at the top of the stack. A higher picture track still draws in front of a lower one.
+- New walk `captions-sit-under-the-picture-walk`; `an-editing-session-walk` now checks the order.
+- Open: `find-out-why-a-caption-word-opened-for-typing-so` (p2), an intermittent keyboard loss in fix-a-caption-word-walk seen twice.

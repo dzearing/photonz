@@ -1,0 +1,55 @@
+{
+  "out": "/tmp/photonz-playtest/captions-sit-under-the-picture-walk",
+  "seed": "The mock stacks the tracks Title, V1, V2, Captions, Audio (docs/design/mocks/pages/video.html TIMELINE MODEL). At Next defaults with no flag set: a talking recording opens, a title is typed over the lower third, captions are asked for from the timeline's + menu, and the tracks read Title, V1, Captions, Audio from the top, while the captions are still drawn over the picture and over the title in a frame written out of the document.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "action", "action": "videoPause" },
+    { "do": "key", "key": "home" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [560, 600] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster" },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "control": "Track Title", "present": true },
+    { "do": "panelMenu", "menu": "Add Track", "choose": "Captions" },
+    { "do": "action", "action": "captionsWaitToLand" },
+    { "do": "action", "action": "captionsExpectOneTrack" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTracks", "tracks": ["Title", "V1", "Captions", "Audio"] },
+    {
+      "do": "describe",
+      "stage": "1-tracks",
+      "note": "A title typed at one second, then Captions from the timeline's + menu: the tracks read Title, V1, Captions with its Words lane, Audio from the top, the way the mock lists them"
+    },
+    { "do": "snapshot", "name": "1-tracks" },
+    { "do": "writeFrame", "name": "2-captions-over-the-title" },
+    { "do": "dragTrack", "track": "Captions", "onto": "Title", "zone": "above" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTracks", "tracks": ["Captions", "Title", "V1", "Audio"] },
+    {
+      "do": "describe",
+      "stage": "3-carried-to-the-top",
+      "note": "The Captions track carried by its header to the top, where Premiere puts it: it stays there, and the picture is the same, the captions still over the title"
+    },
+    { "do": "snapshot", "name": "3-carried-to-the-top" },
+    { "do": "writeFrame", "name": "4-the-same-picture" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTracks", "tracks": ["Title", "V1", "Captions", "Audio"] },
+    { "do": "describe", "stage": "4-undone", "note": "One Cmd-Z puts the Captions track back under the picture" },
+    { "do": "snapshot", "name": "5-undone" }
+  ]
+}

@@ -274,6 +274,10 @@
       "present": true
     },
     {
+      "do": "expectTracks",
+      "tracks": ["Title", "V1", "Captions", "Audio"]
+    },
+    {
       "do": "reveal",
       "control": "Properties section"
     },

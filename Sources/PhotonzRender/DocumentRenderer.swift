@@ -550,7 +550,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         guard canvas.width >= 1, canvas.height >= 1 else { return nil }
         let extent = CGRect(origin: .zero, size: canvas)
 
-        let output = compositeLayers(document.layers, origin: .zero,
+        // Captions over everything, wherever their row is listed
+        // (`CaptionsDrawOnTop.swift`).
+        let output = compositeLayers(document.drawingOrder, origin: .zero,
                                      onto: CIImage(color: .clear).cropped(to: extent),
                                      underlay: nil, in: document, store: store, clip: extent,
                                      onDesignedSurface: false,

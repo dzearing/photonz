@@ -1,0 +1,26 @@
+{
+  "feature": "The Captions track sits under the picture tracks",
+  "epic": "video-titles-graphics",
+  "summary": "Captions now land on a track under V1 and over Audio, the way video.html lists Title, V1, V2, Captions, Audio. They are still drawn over the picture and over the title, wherever their row sits.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/captions-sit-under-the-picture-walk.json (also checked in an-editing-session-walk).",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording with somebody talking and press Command 2 for Edit.", "shot": "2026-10-06-captions-under-the-picture-1.png" },
+    { "do": "Press T, click low on the picture and type a title, then Command Return." },
+    { "do": "Click + under the track headers and choose Captions. Read the headers top to bottom: Title, V1, Captions with Words, Audio." },
+    { "do": "Choose File > Export, PNG, at a moment with a caption under the title: the caption plate sits over the title.", "shot": "2026-10-06-captions-under-the-picture-2-frame.png" },
+    { "do": "Drag the Captions header above Title: it stays there and the picture does not change.", "shot": "2026-10-06-captions-under-the-picture-3.png" },
+    { "do": "Press Command Z: Captions goes back under V1.", "shot": "2026-10-06-captions-under-the-picture-4.png" }
+  ],
+  "evaluate": [
+    "With Captions under V1, do you still find the captions quickly when you go looking for a line to fix?",
+    "Is it right that captions draw over a title even when the title's track is higher up the list?",
+    "Would you rather a dragged Captions track change what draws in front, the way picture tracks do?",
+    "While Add Captions listens, does its progress row read well sitting under V1 rather than at the top?"
+  ],
+  "rough": [
+    "The Words lane under the Captions track is not in video.html's timeline; it comes from the captions mock and was built by fix-a-caption-one-word-at-a-time-on-the-canvas-a.",
+    "Captions are the one track whose place in the list does not decide what draws in front. A title over the lower third now sits under the caption plate, as in the exported frame here.",
+    "The listening row that shows while Add Captions works now stands under the picture tracks too, but no picture here shows it: the sample is heard too fast to photograph."
+  ]
+}

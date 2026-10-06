@@ -165,6 +165,19 @@ extension EditorState {
         return rows
     }
 
+    /// While Add Captions listens, the row its stand-in stands over: the first
+    /// one under the picture, where a Captions track lands
+    /// (`PhotonzDocument.captionsPlace`). Nil to stand under every row.
+    func captionsListeningRowID(in rows: [TimelineRowModel]) -> UUID? {
+        let underPicture = rows.lastIndex { row in
+            switch row {
+            case .track(let track, _): track.track.kind == .video
+            case .group(_, _, let tracks): tracks.contains { $0.track.kind == .video }
+            }
+        }.map { $0 + 1 } ?? 0
+        return underPicture < rows.count ? rows[underPicture].id : nil
+    }
+
     // MARK: Picking tracks
 
     /// A click on a track's header picks the TRACK, the way Premiere and Final

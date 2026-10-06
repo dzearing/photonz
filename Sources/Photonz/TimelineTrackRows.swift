@@ -1208,7 +1208,7 @@ struct TimelineGroupRow: View {
 
 // MARK: - Captions on their way
 
-/// While Add Captions listens: a Captions row at the top of the tracks, where
+/// While Add Captions listens: a Captions row under the picture tracks, where
 /// the captions will land, with how far along it is and an x to cancel.
 ///
 /// The captions arrive as one undo step when the listening is done, so until

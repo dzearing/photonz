@@ -228,8 +228,18 @@ extension PhotonzDocument {
         // Picture is numbered from the BOTTOM, the way V1 is the bottom track
         // in every editor, so name them bottom first and put them back.
         var picture: [DocumentTrack] = []
+        var looseCaptions: [DocumentTrack] = []
         for layer in loosePicture.reversed() {
             let kind = layer.clipTrackKind
+            // Captions get a row of their own under the picture, over the
+            // sound, the way the mock lists them (`CaptionsDrawOnTop.swift`).
+            if kind == .captions {
+                let name = Self.freeTrackName(kind, used: used)
+                used.insert(name)
+                looseCaptions.insert(DocumentTrack(id: layer.id, name: name, kind: kind), at: 0)
+                clips[layer.id] = [layer.id]
+                continue
+            }
             // Words get a track called Title, the way the mock names the
             // track a title lands on; anything else simply placed in time (a
             // shape, a picture, a lens drawn on the recording) gets a track
@@ -243,6 +253,7 @@ extension PhotonzDocument {
             clips[layer.id] = [layer.id]
         }
         var ids = Set(tracks.map(\.id)).union(looseSound.map(\.id)).union(picture.map(\.id))
+            .union(looseCaptions.map(\.id))
 
         // A clip's own sound, on an audio track under the picture. The bottom
         // picture's sound gets the first audio track, and a sound that would
@@ -308,7 +319,9 @@ extension PhotonzDocument {
             sound.append(DocumentTrack(id: layer.id, name: name, kind: .audio))
             clips[layer.id] = [layer.id]
         }
-        var all = picture + tracks + linkedTracks + sound
+        var all = picture + tracks
+        all.insert(contentsOf: looseCaptions, at: Self.captionsPlace(in: all))
+        all += linkedTracks + sound
         // A video with no sound anywhere still has an Audio track waiting
         // under its picture, the way the mock's blank project does, so there is
         // somewhere to put the music before there is any.
@@ -494,15 +507,28 @@ extension PhotonzDocument {
         }
     }
 
-    /// A new empty track. Picture and captions tracks land on top, sound at
-    /// the bottom, unless a place is given.
+    /// Where a Captions row is listed when nobody has put it anywhere: under
+    /// the last picture track, over the sound, the way the mock lists Title,
+    /// V1, V2, Captions, Audio. At the top when there is no picture at all.
+    static func captionsPlace(in tracks: [DocumentTrack]) -> Int {
+        tracks.lastIndex { $0.kind == .video }.map { $0 + 1 } ?? 0
+    }
+
+    /// A new empty track. Picture tracks land on top, sound at the bottom and
+    /// captions under the picture, unless a place is given.
     @discardableResult
     public mutating func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil, id: UUID? = nil) -> UUID {
         materializeTracks()
         let track = DocumentTrack(id: id ?? UUID(),
                                   name: Self.freeTrackName(kind, used: Set(tracks.map(\.name))),
                                   kind: kind)
-        let place = index ?? (kind == .audio ? tracks.count : 0)
+        let place = index ?? {
+            switch kind {
+            case .audio: tracks.count
+            case .captions: Self.captionsPlace(in: tracks)
+            case .video: 0
+            }
+        }()
         tracks.insert(track, at: min(max(0, place), tracks.count))
         return track.id
     }
@@ -614,6 +640,9 @@ extension PhotonzDocument {
             let place = order.firstIndex(of: track) ?? 0
             for id in ids { rank[id] = place }
         }
+        // Captions stay at the top of the stack wherever their row is listed,
+        // since they are drawn over everything (`CaptionsDrawOnTop.swift`).
+        for layer in layers where layer.isCaptionsLayer && rank[layer.id] != nil { rank[layer.id] = -1 }
         let slots = layers.indices.filter { rank[layers[$0].id] != nil }
         let moving = slots.map { layers[$0] }
         let sorted = moving.enumerated().sorted { a, b in
