@@ -1,0 +1,53 @@
+{
+  "id": "animate-a-property-fits-on-screen-on-a-title-wit-animate-a-property-lists-19-valu",
+  "taskId": "animate-a-property-fits-on-screen-on-a-title-wit",
+  "question": "Animate a property lists 19 values on a typed title, and only 8 show. How should the list fit?",
+  "context": "A typed title wears two shadows, each with five values, so the picker grew from 8 values to 19 in one day. The video mock's list is flat with one shadow value. Folding is a departure from the mock, so it is your call.",
+  "options": [
+    {
+      "id": "a",
+      "label": "One row per shadow and border, opens in place; list grows to fit",
+      "summary": "Each shadow, glow and border is one row (Shadow 1, Shadow 2, Border) with a small arrow. Click it and its values (size, distance, direction, color, opacity) open right under it. The list grows tall enough to show everything without scrolling, up to the window's height. A typed title drops from 19 rows to 10.",
+      "pros": [
+        "A title fits at a glance: every heading and every effect is visible",
+        "Finding Shadow 2 color is one more click, or type it in Find a property",
+        "Reads like Premiere's Effect Controls, where each effect folds"
+      ],
+      "cons": [
+        "Departs from the mock's flat list: an arrow the mock does not draw",
+        "Shadow values take one click more than today"
+      ],
+      "mitigation": "Typing in Find a property still lists the values flat, so a person who knows the name never opens anything."
+    },
+    {
+      "id": "b",
+      "label": "Keep the flat list; it grows tall enough to show every row",
+      "summary": "Nothing is folded. The picker stops at the window's height instead of a fixed short box, so all 19 rows of a title show at once, Shadow 1 and Shadow 2 values included.",
+      "pros": [
+        "Same flat list the mock draws, one click to any value",
+        "No new control to learn"
+      ],
+      "cons": [
+        "A tall list of 19 rows, ten of them shadow values, is hard to read at a glance",
+        "Every shadow added makes it five rows longer, so it scrolls again on a small window"
+      ],
+      "mitigation": "Shadows stay numbered the way the Effects list numbers them, so the rows are still told apart."
+    },
+    {
+      "id": "c",
+      "label": "Leave the picker as it is",
+      "summary": "The list stays a short box that scrolls. A title shows 8 of its 19 values; Shadow 2, Border and Text size are reached by scrolling or typing.",
+      "pros": [
+        "No change; matches the mock's box height"
+      ],
+      "cons": [
+        "Half of a title's values are hidden below the fold"
+      ],
+      "mitigation": "Find a property already finds every value by name.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-06T12:51:55.127Z"
+}
