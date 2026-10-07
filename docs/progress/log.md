@@ -20799,6 +20799,6 @@ Next: the first editor window's ~200 ms first build
   the same switch. On a markerless stand-in build: first pick ~56 ms (was ~80),
   cut ~53 (was ~78), piece after a cut ~25 (was ~40), piece to piece ~11 (18).
 - Probe numbers are unchanged (it still hangs them), so the 50 ms line on the
-  probe is carried by `a-first-clip-pick-and-a-cut-click-answer-inside-50` with
+  probe is carried by `a-first-clip-pick-and-a-cut-click-answer-inside` with
   the measured causes (markers in the probe, SwiftUI's accessibility focus walk,
   section shells redrawn every pass).
