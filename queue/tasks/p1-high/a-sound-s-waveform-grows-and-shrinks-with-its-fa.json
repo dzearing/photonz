@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 50,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:05:42.240Z",
-  "updated": "2026-10-07T22:07:43.715Z",
+  "updated": "2026-10-07T23:11:32.512Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-audio.html ~506, `var h=samp[i]*levelAt(tr,t)*42;` (level x fade x duck). App: Sources/Photonz/ClipPiecesBar.swift ~335-347 passes only gainDB: soundLevel?.clipGainDB to SoundWaveform (Sources/Photonz/SoundLane.swift ~23-48), so fades and level points never reach the drawing. Put the level-at-time sum in PhotonzCore (AudioLevel already holds the points and fades; TDD the per-column scale), and have SoundWaveform take a per-column multiplier rather than one gain. Keep the hairline floor for silence. Duck is out of scope (music-dips-under-the-speech-by-itself waits on a card). Found by the manager pass's mock comparison, 2026-10-07; no task covered it (searched waveform, waveform fade, waveform level, with --all).",
@@ -28,6 +28,26 @@
     {
       "t": "2026-10-07T22:07:43.714Z",
       "note": "seq 530 -> 50"
+    },
+    {
+      "t": "2026-10-07T22:51:42.789Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T23:10:45.360Z",
+      "note": "owns these walks: a-sound-s-waveform-follows-its-level-walk"
+    },
+    {
+      "t": "2026-10-07T23:11:32.453Z",
+      "note": "Pre-build review: the mock multiplies the waveform by level (samp*levelAt); the app's waveform is drawn in dB, so a dB-consistent scale would hide a fade until its last moment. Chose: multiply below unity (mock), add dB above unity (a boost grows like gain, never doubles). Level-line drag state lived inside SoundLevelLine, so it now reports the level in hand to the bar so the waveform follows mid-drag; fade diamond drag already lived in the bar."
+    },
+    {
+      "t": "2026-10-07T23:11:32.511Z",
+      "note": "Verified: WaveformLevelTests (10) and Scripts/test.sh 11743 tests green; walk a-sound-s-waveform-follows-its-level-walk ok with 5 real captures incl. mid-drag pictures of the fade and the level line; sound-fades-in-the-panel, a-clip-s-sound-is-linked-under-it, keyframe-anything walks ok. Mute/solo: track flags (EditorState+Tracks toggleTrackMuted), never in AudioLevel, so the drawing cannot change with them (read in code, not walked). Picture clips: waveform still gated on isSound. Rough items: lane height/smooth shape filed as a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa; fade diamond look folded under existing fade-handles-and-level-points-look-like-the-mock; duck waits on its card. Left rough (no task): 9 dB down draws at about a third of height, asked in the audit's evaluate."
     }
+  ],
+  "started": "2026-10-07T22:51:42.784Z",
+  "walks": [
+    "a-sound-s-waveform-follows-its-level-walk"
   ]
 }

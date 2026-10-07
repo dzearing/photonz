@@ -9969,3 +9969,10 @@
 {"t":"2026-10-07T22:40:29.409Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
 {"t":"2026-10-07T22:40:29.465Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
 {"t":"2026-10-07T22:40:29.529Z","ev":"task_done","id":"a-full-screen-retina-recording-keeps-up-while-it","from":"in_progress","note":"One-pass read ahead of a playing playhead (MovieFrames.swift, MoviePlayPass); playing-a-recording-never-blinks-walk 0/24 late in 4 runs (was 17/24, 16 frames behind) and now fails on lateness; playback and scrub walks green; full suite green; audit queue/audits/2026-10-07-retina-playback-keeps-up.json"}
+{"t":"2026-10-07T22:51:42.633Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":508,"of":793,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-07T22:51:42.795Z","ev":"task_started","id":"a-sound-s-waveform-grows-and-shrinks-with-its-fa","title":"A sound's waveform grows and shrinks with its fades and level","priority":"p1-high"}
+{"t":"2026-10-07T23:10:38.772Z","ev":"task_created","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","priority":"p1-high","title":"A sound lane is as tall as the mock's and its waveform is one smooth shape"}
+{"t":"2026-10-07T23:10:45.303Z","ev":"task_walks","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","walks":[]}
+{"t":"2026-10-07T23:10:45.362Z","ev":"task_walks","id":"a-sound-s-waveform-grows-and-shrinks-with-its-fa","walks":["a-sound-s-waveform-follows-its-level-walk"]}
+{"t":"2026-10-07T23:11:32.455Z","ev":"task_note","id":"a-sound-s-waveform-grows-and-shrinks-with-its-fa"}
+{"t":"2026-10-07T23:11:32.513Z","ev":"task_note","id":"a-sound-s-waveform-grows-and-shrinks-with-its-fa"}

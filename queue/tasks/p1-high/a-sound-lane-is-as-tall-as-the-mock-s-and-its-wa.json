@@ -1,0 +1,33 @@
+{
+  "id": "a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa",
+  "title": "A sound lane is as tall as the mock's and its waveform is one smooth shape",
+  "goal": "On the timeline a sound segment is a 36 point strip with its waveform drawn as a row of thin bars, so a fade or a quiet stretch is hard to read and the level line has little room. The audio mock draws each sound lane about 84 points tall with the waveform as one smooth filled shape. Draw it that way.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 520,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T23:10:38.768Z",
+  "updated": "2026-10-07T23:10:45.302Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
+  "acceptance": [
+    "A sound segment on the timeline is drawn at the mock's lane height (84 points, 72 at the narrow size), and the track header beside it is the same height",
+    "The waveform is one filled shape mirrored about the middle, in the track's colour, as video-audio.html draws it, still following the level and the fades",
+    "The level line keeps its full range of travel in the taller lane, and a drag on it still lands under the pointer",
+    "Try path at Next defaults: open the talk sample and look at its sound under V1. A walk photographs it beside video-audio.html's lanes; audit written under queue/audits/"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T23:10:38.770Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T23:10:45.301Z",
+      "note": "walks a-sound-s-waveform-follows-its-level-walk -> none"
+    }
+  ],
+  "walks": []
+}
