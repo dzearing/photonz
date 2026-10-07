@@ -16,6 +16,10 @@ import SwiftUI
 /// value animating altogether.
 struct PropertyKeysInspector: View {
     @Environment(EditorState.self) private var editorState
+    /// Animate a property's list is open. Held here, because the list opens
+    /// over this whole section (the mock's `.propPick`, under the header),
+    /// not beside its button.
+    @State private var isPicking = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
@@ -36,7 +40,7 @@ struct PropertyKeysInspector: View {
             ForEach(rows, id: \.self) { property in
                 PropertyKeyRow(property: property)
             }
-            AnimatePropertyButton()
+            AnimatePropertyButton(isOpen: $isPicking)
                 .padding(.top, 4)
             // How it gets from one key to the next, once something has two
             // (`video-move-wt.html`, `#secEase`).
@@ -46,6 +50,9 @@ struct PropertyKeysInspector: View {
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
+        .panelPopover(isPresented: $isPicking, height: AnimatePropertyPicker.tallest) {
+            AnimatePropertyPicker(isOpen: $isPicking)
+        }
         .alert(stopTitle, isPresented: asking) {
             Button("Remove Keys", role: .destructive) { editorState.confirmStopKeying() }
             Button("Cancel", role: .cancel) { editorState.cancelStopKeying() }
@@ -387,17 +394,13 @@ private struct AnimatingHeader: View {
     }
 }
 
-/// `+ Animate a property`, and the picker it opens: every value that is not
-/// animating yet, in groups, with a box to find one by name. Picking one
-/// starts it with a key at the playhead holding the value it has now.
+/// `+ Animate a property`. The picker it opens is drawn over the section
+/// (`AnimatePropertyPicker`).
 private struct AnimatePropertyButton: View {
-    @Environment(EditorState.self) private var editorState
-    @State private var isOpen = false
-    @State private var query = ""
+    @Binding var isOpen: Bool
 
     var body: some View {
         Button {
-            query = ""
             isOpen = true
         } label: {
             HStack(spacing: 4) {
@@ -415,21 +418,36 @@ private struct AnimatePropertyButton: View {
         .background(RoundedRectangle(cornerRadius: 5).fill(Color.primary.opacity(0.05)))
         .panelHelp("Pick a value to key at the playhead")
         .playtestControl("Animate a property", detail: "Animating")
-        .popover(isPresented: $isOpen, arrowEdge: .leading) { picker }
     }
+}
 
-    private var picker: some View {
+/// Every value that is not animating yet, in groups, with a box to find one by
+/// name. Picking one starts it with a key at the playhead holding the value it
+/// has now. Drawn over the panel rather than in a popover window beside it
+/// (`PanelPopover`), which is where the mock puts it and what keeps opening
+/// and closing it from redrawing the whole panel.
+private struct AnimatePropertyPicker: View {
+    @Environment(EditorState.self) private var editorState
+    @Binding var isOpen: Bool
+    @State private var query = ""
+
+    /// The find box and the list under it at its longest (`.frame(maxHeight:)`).
+    static let tallest: CGFloat = 8 + 26 + 8 + 1 + 260
+
+    var body: some View {
         let groups = PropertyPicker.groups(all: editorState.keyRows,
                                            keyed: Set(editorState.animatingRows),
                                            query: query, title: editorState.keyTitle)
-        return VStack(alignment: .leading, spacing: 0) {
-            TextField("Find a property", text: $query)
-                .textFieldStyle(.roundedBorder)
-                .controlSize(.small)
+        VStack(alignment: .leading, spacing: 0) {
+            FindBox(query: query)
                 .padding(8)
-                .onSubmit {
-                    if let first = groups.first?.properties.first { pick(first) }
-                }
+                .background(PanelPopoverKeys(onKey: { key in
+                    if key == .submit {
+                        if let first = groups.first?.properties.first { pick(first) }
+                    } else {
+                        PanelDropdown.apply(key, to: &query)
+                    }
+                }, close: { isOpen = false }))
             Divider()
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
@@ -461,15 +479,13 @@ private struct AnimatePropertyButton: View {
             }
             .frame(maxHeight: 260)
         }
-        .frame(width: 220)
     }
 
     /// The list goes first and the value arrives on the next run-loop pass.
-    /// Each is a whole redraw of the panel on its own (the list handing focus
-    /// back to the window, then the new row, its lane and the key), and done
-    /// in one pass they held the main thread about 165ms; one after the other
-    /// the longer of the two is about 80ms, and the gap between them is a
-    /// frame nobody can see (`perf/animate-pick-cost-walk.json`, 2026-10-06).
+    /// Each is a redraw of its own (the list leaving, then the new row, its
+    /// lane and the key), and done in one pass they held the main thread far
+    /// longer than either does alone (`perf/animate-pick-cost-walk.json`,
+    /// 2026-10-06).
     private func pick(_ property: KeyedProperty) {
         isOpen = false
         let state = editorState
@@ -477,6 +493,42 @@ private struct AnimatePropertyButton: View {
             await NextRunLoopPass.start()
             state.startAnimating(property)
         }
+    }
+}
+
+/// The mock's `.pick-q`, ready for typing the moment the list opens: what has
+/// been typed, or Find a property, and the caret after it. It reads its keys
+/// through the list (`PanelPopoverKeys`) rather than as a text box holding the
+/// window's keyboard, which is what lets the list open and close without the
+/// whole window noticing.
+private struct FindBox: View {
+    let query: String
+
+    var body: some View {
+        HStack(spacing: 1) {
+            if !query.isEmpty {
+                Text(query).foregroundStyle(.primary)
+            }
+            Rectangle()
+                .fill(Color.accentColor)
+                .frame(width: 1, height: 13)
+            if query.isEmpty {
+                Text("Find a property").foregroundStyle(.tertiary)
+            }
+            Spacer(minLength: 0)
+        }
+        .font(.system(size: 11))
+        .lineLimit(1)
+        .padding(.horizontal, 8)
+        .frame(height: 26)
+        .background(VideoKit.Palette.panel2, in: RoundedRectangle(cornerRadius: 6))
+        .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Color.accentColor))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("Find a property")
+        .accessibilityValue(query)
+        .accessibilityAddTraits(.isSearchField)
+        .panelReadout(query.isEmpty ? "Find a property" : query)
+        .playtestField("Find a property")
     }
 }
 
@@ -541,22 +593,13 @@ private struct PropertyKeyRow: View {
     var body: some View {
         // One line, or the value under the name when the dock is too narrow
         // for both: in the narrowest dock Position's two boxes left its name
-        // four points, and it read "P" (2026-09-24).
-        ViewThatFits(in: .horizontal) {
-            HStack(spacing: 2) {
-                head
-                Spacer(minLength: 6)
-                PropertyKeyValue(property: property)
-                stopButton
-            }
-            VStack(alignment: .trailing, spacing: 2) {
-                HStack(spacing: 2) {
-                    head
-                    Spacer(minLength: 0)
-                    stopButton
-                }
-                PropertyKeyValue(property: property)
-            }
+        // four points, and it read "P" (2026-09-24). One copy of each piece,
+        // moved: the two candidates of a `ViewThatFits` built the value's
+        // boxes twice over, on the pass a picked value arrives in.
+        KeyRowLayout {
+            head
+            PropertyKeyValue(property: property)
+            stopButton
         }
         .frame(minHeight: 24)
         .contentShape(Rectangle())
@@ -635,6 +678,53 @@ private struct PropertyKeyRow: View {
         .panelHelp(forward ? "Next key" : "Previous key")
         .accessibilityLabel(forward ? "Next \(title) key" : "Previous \(title) key")
         .playtestControl(forward ? "Next Key" : "Previous Key", detail: "Animating, \(title)")
+    }
+}
+
+/// `‹ ◆ › name`, the value and the cross on one line, or the value under them
+/// when they do not fit (`KeyRowLine`), decided from the width in one pass.
+private struct KeyRowLayout: Layout {
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        guard subviews.count == 3 else { return .zero }
+        let head = subviews[0].sizeThatFits(.unspecified)
+        let value = subviews[1].sizeThatFits(.unspecified)
+        let stop = subviews[2].sizeThatFits(.unspecified)
+        let oneLine = KeyRowLine.oneLineWidth(head: head.width, value: value.width, stop: stop.width)
+        guard let width = proposal.width else {
+            return CGSize(width: oneLine, height: max(head.height, value.height, stop.height))
+        }
+        if oneLine <= width {
+            return CGSize(width: width, height: max(head.height, value.height, stop.height))
+        }
+        return CGSize(width: width,
+                      height: max(head.height, stop.height) + KeyRowLine.gap + value.height)
+    }
+
+    func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews,
+                       cache: inout ()) {
+        guard subviews.count == 3 else { return }
+        let head = subviews[0].sizeThatFits(.unspecified)
+        let value = subviews[1].sizeThatFits(.unspecified)
+        let stop = subviews[2].sizeThatFits(.unspecified)
+        let gap = KeyRowLine.gap
+        if KeyRowLine.fitsOnOneLine(head: head.width, value: value.width, stop: stop.width,
+                                    width: bounds.width) {
+            subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.midY), anchor: .leading,
+                              proposal: .unspecified)
+            subviews[2].place(at: CGPoint(x: bounds.maxX, y: bounds.midY), anchor: .trailing,
+                              proposal: .unspecified)
+            subviews[1].place(at: CGPoint(x: bounds.maxX - stop.width - gap, y: bounds.midY),
+                              anchor: .trailing, proposal: .unspecified)
+            return
+        }
+        let line = max(head.height, stop.height)
+        subviews[0].place(at: CGPoint(x: bounds.minX, y: bounds.minY + line / 2), anchor: .leading,
+                          proposal: ProposedViewSize(width: max(0, bounds.width - stop.width - gap),
+                                                     height: nil))
+        subviews[2].place(at: CGPoint(x: bounds.maxX, y: bounds.minY + line / 2), anchor: .trailing,
+                          proposal: .unspecified)
+        subviews[1].place(at: CGPoint(x: bounds.maxX, y: bounds.minY + line + gap),
+                          anchor: .topTrailing, proposal: .unspecified)
     }
 }
 

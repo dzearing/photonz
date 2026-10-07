@@ -10,7 +10,7 @@
   {
    "do": "describe",
    "stage": "why",
-   "note": "A STOPWATCH, not a test, which is why it sits in perf/ and the sweep never runs it. It types a title over a recording, then picks Position from Animate a property and undoes it, twelve times over, so the cost of a pick can be read off the wait after each press (mainBusy, longest) and sampled with `sample` on the probe while it loops."
+   "note": "A STOPWATCH, not a test, which is why it sits in perf/ and the sweep never runs it. It types a title over a recording, then picks Position from Animate a property and undoes it, twelve times over, then opens it and closes it with Escape six times, so the cost of a pick can be read off the wait after each press (mainBusy, longest) and sampled with `sample` on the probe while it loops."
   },
   {
    "do": "action",
@@ -383,9 +383,105 @@
    "seconds": 0.5
   },
   {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
    "do": "describe",
    "stage": "done",
-   "note": "twelve picks of Position, each undone"
+   "note": "twelve picks of Position, each undone, then six opens closed with Escape"
   }
  ]
 }

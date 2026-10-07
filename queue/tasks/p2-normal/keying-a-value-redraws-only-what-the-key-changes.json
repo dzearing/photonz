@@ -1,0 +1,31 @@
+{
+  "id": "keying-a-value-redraws-only-what-the-key-changes",
+  "title": "Keying a value redraws only what the key changes",
+  "goal": "Adding or removing a key, by picking a value in Animate a property or by Undo, still holds the app about 60 ms the first time and 45 to 70 ms after, because the change redraws about eighty kinds of view across the window (every panel section, the canvas overlays, the title bar, the timeline) when only one row and one lane changed. Bring the first pick of a session and Undo under the 50 ms the video success list asks for.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3720,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T04:56:35.176Z",
+  "updated": "2026-10-07T04:56:35.179Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from animate-a-property-opens-closes-and-keys-a-value (2026-10-06), whose log has every measurement. After that task: open 25-47 ms, Escape close 17-20, picks after the first 45-51, FIRST pick 57-63 (Position), undo 63-69 (stopwatch medians). The list itself costs nothing now; what is left is the document-change pass.\\n\\nMeasured with a temporary body counter on every View in Sources/Photonz (ViewBuildMeter): one pick re-runs InspectorPanel twice, every CollapsibleSection/SectionFoldWindow/SectionBodyHost, EffectsListInspector, TextInspector, ShadowInspector x2, ColorStyleControl x3, PartsInspector, CaptionsInspector, SpeedInspector, EditorCanvasSurface x4, CanvasFootStack x3, the title bar items, ToolModeButton x2, TimelineDock, TimelineTrackRow x3, the transport. EditorView itself does NOT re-run (its .equatable() holds).\\n\\nInspectorPanel re-runs because its body reads orderedAvailableSections, sectionChip, sectionTitle, showsLayersList, panelSectionSituation and document != nil, all of which read the whole document (found with withObservationTracking probes). Freezing all six cut one of the two InspectorPanel runs and only ~2 ms of a pick, so the panel shell is NOT the main cost. Whole-section ablations: Effects -4 ms on a pick and -10 on undo, timeline -4, the new row -7, Text/Appearance/Time/Motion ~0.\\n\\nxctrace (Time Profiler attached to the probe): the pass is ~25% accessibility (AccessibilityNode.updateFocus walking every responder in the window, plus AX property updates; on because the walk harness reads accessibility in-process, and for any user running an assistive app), ~12% the dock scroller re-measuring, ~10% SectionRevealLayout re-measuring the Properties body, the rest spread across layout. Ideas not tried: give each section an Equatable input read from the document so unrelated sections skip; make the timeline lanes read only the picked layer keys; check whether the first pick is dearer because of cold caches (first pick is ~10 ms over later ones).",
+  "acceptance": [
+    "The first value picked from Animate a property in a session (Position on a typed title) holds the main thread under 50 ms in three runs each of keyframe-anything-walk and an-editing-session-walk",
+    "Undoing that pick holds under 50 ms in Scripts/playtest/perf/animate-pick-cost-walk.json (median of twelve)",
+    "Picking a value no longer re-runs the bodies of panel sections it does not change (Effects, Text, Appearance, Time), shown by a body count on the pick step"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T04:56:35.178Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "keyframe-anything-walk",
+    "an-editing-session-walk"
+  ]
+}

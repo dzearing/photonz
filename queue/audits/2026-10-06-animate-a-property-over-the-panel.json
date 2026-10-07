@@ -1,0 +1,27 @@
+{
+  "feature": "Animate a property opens over the panel, at once",
+  "epic": "video-beats-premiere",
+  "summary": "Animate a property's list now opens over the Properties section, where the mock puts it, instead of in a popover out over the canvas. It opens in about 35 ms (was 110) and closes in about 18 (was 70), and you can type to find a value the moment it opens.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A recording with a typed title picked.",
+  "switched": {},
+  "try": [
+    { "do": "Type a title on a recording, press Cmd-Return, and pick it with the Select tool." },
+    { "do": "Click Animate a property in the Properties section.", "shot": "2026-10-06-animate-property-over-panel-1.png" },
+    { "do": "Without clicking anything, type sca.", "shot": "2026-10-06-animate-property-over-panel-2.png" },
+    { "do": "Press Delete three times, type blu, then press Return." },
+    { "do": "Open the list again and press Escape." },
+    { "do": "Open it once more and click anywhere outside it." }
+  ],
+  "evaluate": [
+    "Does the list opening over the section, rather than out over the canvas, feel like the right place?",
+    "Is it obvious you can type straight away, with the caret drawn in the box?",
+    "Does opening and closing it now feel instant?",
+    "With the list open, does B or V typed into it ever change a tool? (It should not.)"
+  ],
+  "rough": [
+    "Picking a value still holds about 60 ms the first time in a session and 45 to 51 after, over the 50 ms line, because the change redraws most of the window. Carried, with the measurements, by keying-a-value-redraws-only-what-the-key-changes.",
+    "The mock draws a colour value with a swatch of its colour; the list still draws the same diamond on every row. Filed as a-colour-in-animate-a-property-shows-its-swatch.",
+    "The find box reads keys itself rather than holding the keyboard, so it has a caret but no selection: you cannot drag-select or arrow through what you typed. Paste (Cmd-V) and Delete work.",
+    "The list sits at the top of the section, under its header, so it covers the rows above Animate a property while it is open, as the mock's does."
+  ]
+}

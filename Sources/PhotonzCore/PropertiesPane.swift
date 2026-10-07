@@ -136,3 +136,21 @@ public enum PropertyPicker {
                                : "Nothing matches \u{201C}\(trimmed)\u{201D}."
     }
 }
+
+/// An Animating row in the Properties pane: `‹ ◆ › Position`, the value, and
+/// the cross that stops it animating. One line while all three fit with the
+/// mock's gaps (2pt between pieces, at least 6pt before the value); otherwise
+/// the value goes under the name, so a narrow dock never cuts the name to a
+/// letter ("P", 2026-09-24).
+public enum KeyRowLine {
+    public static let gap: Double = 2
+    public static let beforeValue: Double = 6
+
+    public static func oneLineWidth(head: Double, value: Double, stop: Double) -> Double {
+        head + gap + beforeValue + gap + value + gap + stop
+    }
+
+    public static func fitsOnOneLine(head: Double, value: Double, stop: Double, width: Double) -> Bool {
+        oneLineWidth(head: head, value: value, stop: stop) <= width
+    }
+}

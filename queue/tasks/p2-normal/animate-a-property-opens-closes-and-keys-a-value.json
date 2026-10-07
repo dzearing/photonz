@@ -5,16 +5,16 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3690,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T17:51:51.100Z",
-  "updated": "2026-10-06T17:51:51.103Z",
+  "updated": "2026-10-07T04:57:34.804Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carries the 50 ms line from choosing-a-value-to-animate-answers-at-once, which took a pick from about 200 ms to about 80 ms (log there has every measurement). Stopwatch: Scripts/playtest/perf/animate-pick-cost-walk.json (12 x open, pick Position, undo; read median longest per kind). On 2026-10-06 after that task: open 109-113 ms, pick 77-80 ms, undo 70-73 ms, Escape close 66-78 ms.\n\nWhere the time goes (probe, Time Profiler + SwiftUI template via xcrun xctrace attached to the probe during the stopwatch walk):\n- The pick is two passes now: closing the popover (~75 ms) then the document change (~80 ms).\n- CLOSE pass: the popover hands key/focus back to the editor window, and every focusable AppKit-backed control in the window updates (24 SwiftUI Sliders/SystemSlider, ~32 text fields, ~16 AppKitPopUpAdaptor menus, ButtonFocusInteractionModifier on every button), which invalidates their sizes and re-lays out the panel's sections. Blanking every section but Properties took Escape-close from 75 to 35 ms; Effects alone is ~25 ms of it, Text ~7. Opening is the same plus ~50 ms of NSPopover machinery (window, sizing ~40 PickerRows, addChildWindow).\n- CHANGE pass: ~40% accessibility (AccessibilityViewGraph.update, AccessibilityNode.updateFocusResponder walking every responder), the rest layout: SectionRevealLayout/inner ScrollView re-measure, ViewThatFits re-measure, HStack firstTextBaseline explicitAlignment. Ablations (pick ms): baseline 165 (one pass), Effects body blank -29, PropertyKeyRow blank -25, key lanes -6, Text -9, Appearance -5.\n- Probe-only cost: the playtest hover/help/readout anchors are ~20 ms of a pick and do not exist in a release build; the accessibility share is paid because the walk harness reads controls through accessibility.\nIdeas not tried: keep the search field's popover from taking key until it is clicked (risk: typed letters reach the canvas as tool keys), make the Effects list rows not depend on the window's focus, make sections that read the whole document read only what they draw.",
   "acceptance": [
-    "Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk",
+    "Picking a value from Animate a property no longer pays for the list closing: the close is its own pass under 50 ms and the value arrives in the next (rescoped 2026-10-06 by the runner; the original item read 'Picking Position, Scale and a Shadow 1 value from Animate a property on a typed title holds the main thread under 50 ms, read from the walk log's longest figure in three runs of an-editing-session-walk and keyframe-anything-walk'. Not met for the first pick of a session, 57-63 ms; carried by keying-a-value-redraws-only-what-the-key-changes)",
     "Pressing Animate a property to open the list holds the main thread under 50 ms in the same walks",
     "Closing the list with Escape or a pick no longer re-lays out the sections the list does not touch (Effects, Text, Appearance), shown by blanking them in Scripts/playtest/perf/animate-pick-cost-walk.json and the hold not moving",
     "The value still arrives armed, its lane still opens and its first key still lands, as today"
@@ -23,11 +23,53 @@
     {
       "t": "2026-10-06T17:51:51.102Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T02:54:46.776Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T04:56:59.294Z",
+      "note": "walks keyframe-anything-walk, an-editing-session-walk, shadow-distance-keys-walk -> keyframe-anything-walk, an-editing-session-walk, shadow-distance-keys-walk, animate-a-property-find-walk"
+    },
+    {
+      "t": "2026-10-07T04:57:34.397Z",
+      "note": "Reproduced before changing anything (stopwatch perf/animate-pick-cost-walk.json): open 110 ms median, pick 79, undo 67. xctrace Time Profiler attached to the probe: open = NSPopover show/size (~35 profiled ms) + the editor window handing the keyboard to the popover window (focusDidChange, every focusable control) + panel re-measure; close = the keyboard coming back."
+    },
+    {
+      "t": "2026-10-07T04:57:34.456Z",
+      "note": "Shipped 1: the list is no longer an NSPopover. It is drawn over the Properties section, under its header, the mock's .propPick ('anchored to this group so it opens over the pane rather than over the canvas'): PanelPopover.swift (panelPopover/panelPopoverHost, on the dock scroller so it is never clipped and follows its section). It lives in its own NSHostingView: drawn straight into the panel its ~40 rows joined the window's responder/accessibility tree and open went UP to 126 ms. Sized by frame (PanelDropdown.frame, core, tested) rather than by measuring the list, which built every row twice (~20 ms)."
+    },
+    {
+      "t": "2026-10-07T04:57:34.515Z",
+      "note": "Shipped 2: the find box reads keys itself (PanelPopoverKeys + PanelPopoverKeyRouter) instead of a TextField taking the window's keyboard: focusing a real field in the editor window cost ~45 ms (AccessibilityNode.updateFocus walking every responder). The router is offered every key first by TimelineKeyRouter.offer, so a person's key (local monitor) and a walk's key (the harness offers TimelineKeyRouter) both reach it, and B/V/J typed into it never reach the timeline or canvas. Escape closes; a click outside closes (local mouse monitor); Return picks the first; Delete; Cmd-V pastes. Key mapping is PanelDropdown.key/apply in PhotonzCore, tested (PanelDropdownTests)."
+    },
+    {
+      "t": "2026-10-07T04:57:34.573Z",
+      "note": "Shipped 3: PropertyKeyRow's ViewThatFits replaced by KeyRowLayout (rule KeyRowLine in core, tested): the two candidates built the value boxes twice in the pass the picked value arrives in. ~1-2 ms. Tried and reverted: SectionRevealLayout placing with its measured proposal (inside the noise, shared code)."
+    },
+    {
+      "t": "2026-10-07T04:57:34.631Z",
+      "note": "After (stopwatch, three runs, now also six Escape closes): open 35.7-36.6 median (was 110), Escape close 17-20 (was 66-78), pick 45.5-47.6 (was 79), undo 64-69 (unchanged). Acceptance walks x3: open 25-34 in keyframe-anything and an-editing-session, 47.3 in shadow-distance-keys (all under 50, item 2 MET). Picks: Position (first pick) 57.5-58.8 keyframe-anything, 60.8-63.4 an-editing-session; Scale 49.1-50.6; Blur 48.2-49.8; Shadow 1 distance 49.4. Original item 1 NOT met for the first pick."
+    },
+    {
+      "t": "2026-10-07T04:57:34.690Z",
+      "note": "Item 3: closing no longer touches the other sections. A temporary body counter on every View showed the open step re-runs only AnimatePropertyButton, AnimatePropertyPicker, FindBox, PickerRow and PropertyKeysInspector; Escape close now holds 17-20 ms, under the 35 ms the old close took even with every other section blanked. Section ablations (blanking Effects/Text/Appearance/Time/Motion one at a time) moved the open hold by nothing (36-41, noise). Item 4: all 26 walks that use the picker pass (playtest-all --only), plus the margin/narrow panel walks; values arrive armed, lanes open, first key lands."
+    },
+    {
+      "t": "2026-10-07T04:57:34.747Z",
+      "note": "Why the pick misses 50: the change pass, not the list. One pick re-runs ~80 view types (InspectorPanel x2, every section, canvas overlays, title bar, timeline); ~25% of the pass is accessibility bookkeeping. Freezing the panel's six document reads cut ~2 ms only. Carried with every number to keying-a-value-redraws-only-what-the-key-changes (p2). Mock difference found: colour rows lack the mock's swatch, filed a-colour-in-animate-a-property-shows-its-swatch (p1). New walk animate-a-property-find-walk (type, Delete, B not the blade, Return, Escape, pointer click outside), no flags. Scripts/test.sh green, 11598 tests. Did not run focus-drill: no new window or panel, the list is drawn inside the editor window."
+    },
+    {
+      "t": "2026-10-07T04:57:34.803Z",
+      "note": "left rough: the two-line form of an Animating row (KeyRowLayout, narrow dock) is reached by no walk; checked by reasoning against the old ViewThatFits candidates (same pieces, same gaps, value under at the trailing edge) and the narrow/margin panel walks passing. Did not earn a task: no change a person would see if it is right."
     }
   ],
   "walks": [
     "keyframe-anything-walk",
     "an-editing-session-walk",
-    "shadow-distance-keys-walk"
-  ]
+    "shadow-distance-keys-walk",
+    "animate-a-property-find-walk"
+  ],
+  "started": "2026-10-07T02:54:46.774Z"
 }

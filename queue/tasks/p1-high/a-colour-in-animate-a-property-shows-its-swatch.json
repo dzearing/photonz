@@ -1,0 +1,30 @@
+{
+  "id": "a-colour-in-animate-a-property-shows-its-swatch",
+  "title": "A colour in Animate a property shows its swatch",
+  "goal": "In the Animate a property list, a colour value (Color, Shadow 1 color, Border color) shows a small swatch of the colour it has now, the way the mock draws it, instead of the same diamond every number gets.",
+  "epic": "video-beats-premiere",
+  "priority": "p1-high",
+  "seq": 510,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T04:56:41.582Z",
+  "updated": "2026-10-07T04:56:41.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video.html renderPicker: colour entries draw <span class=\"sw\" style=\"background:still\"> (.pick-i .sw 12x12, radius 3, 1px --edge-lo) where others draw ic-keyframe. App: PickerRow in Sources/Photonz/PropertyKeysInspector.swift draws Image(systemName: \"diamond\") for every row. Found while comparing the list with the mock in animate-a-property-opens-closes-and-keys-a-value (2026-10-06). The mock says colour in the unit column; the app says color, which is the app spelling everywhere else (Shadow 1 color), so that one is not a difference to fix.",
+  "acceptance": [
+    "Every colour row in Animate a property shows a 12pt rounded swatch of its current colour where number rows show the diamond",
+    "The swatch has the low edge round it, so a white or black colour still reads on the list in light and dark",
+    "animate-a-property-list-walk photographs a list with a colour row and the swatch is in the picture"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T04:56:41.584Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "animate-a-property-list-walk"
+  ]
+}

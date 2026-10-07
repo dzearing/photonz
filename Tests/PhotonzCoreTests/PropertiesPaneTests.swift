@@ -143,3 +143,23 @@ struct PropertiesPaneTests {
         #expect(PropertyPicker.emptyText(query: "zz") == "Nothing matches \u{201C}zz\u{201D}.")
     }
 }
+
+/// An Animating row (`‹ ◆ › Position  [x] [y]  ×`): one line while the name,
+/// the value and the cross all fit with the mock's gaps, otherwise the value
+/// drops under the name.
+@Suite("An Animating row's one line or two")
+struct KeyRowLineTests {
+    @Test func oneLineWhenEverythingFitsWithItsGaps() {
+        // 80 + 2 + 6 + 2 + 120 + 2 + 16 = 228
+        #expect(KeyRowLine.fitsOnOneLine(head: 80, value: 120, stop: 16, width: 228))
+        #expect(KeyRowLine.fitsOnOneLine(head: 80, value: 120, stop: 16, width: 300))
+    }
+
+    @Test func twoLinesWhenAPointShort() {
+        #expect(!KeyRowLine.fitsOnOneLine(head: 80, value: 120, stop: 16, width: 227))
+    }
+
+    @Test func theOneLineWidthIsTheSumWithItsGaps() {
+        #expect(KeyRowLine.oneLineWidth(head: 80, value: 120, stop: 16) == 228)
+    }
+}

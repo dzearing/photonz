@@ -466,6 +466,9 @@ struct InspectorPanel: View {
                     // their own explicit `withAnimation`, so they still animate.
                 }
                 .coordinateSpace(.named(inspectorDockSpace))
+                // A list a section opens over itself (Animate a property),
+                // drawn over the scroller so the scroller never cuts it off.
+                .panelPopoverHost()
                 .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                     reveal.viewportHeight = $0
                     budget.viewportHeight = $0
@@ -1847,3 +1850,4 @@ private struct PanelTimeFactsWatcher: View {
             .accessibilityHidden(true)
     }
 }
+

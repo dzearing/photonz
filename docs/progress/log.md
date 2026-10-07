@@ -20757,3 +20757,12 @@ Next: the first editor window's ~200 ms first build
 - The Captions section brings its lower rows in a pass at a time (`PanelRowsArrival`; `CaptionWordsInspector(part:)`), holding their last drawn height while they wait. The ~120 ms pass after a click back onto a clip was SwiftUI's accessibility focus walk over every control Captions had just added; in pieces it is 34-73 ms.
 - New walk `clip-click-cost-walk` (five minute Retina talk, captions, two cuts, rounds of clicks; ends by checking the panel follows a piece after a cut). Audit `queue/audits/2026-10-06-clip-click-answers.json`.
 - Open: `picking-a-cut-or-a-first-clip-on-the-timeline-an` (p2), the 50 ms line for a cut click and a first pick: the panel swapping section sets in the click's own frame.
+
+## 2026-10-06 — Animate a property opens over the panel, at once
+
+- The list is no longer a popover out over the canvas: it opens over the Properties section, under its header, as video.html's `.propPick` does (`PanelPopover.swift`: `panelPopover` / `panelPopoverHost` on the dock scroller; placement `PanelDropdown.frame` in PhotonzCore). It sits in its own hosting view, since its rows inside the window's own view tree cost ~45 ms of accessibility walking.
+- The find box reads keys through `PanelPopoverKeyRouter` (offered every key first by `TimelineKeyRouter.offer`, so walks and people take the same road) rather than taking the window's keyboard, which cost ~45 ms. Escape and a click outside close it; Return picks the first; B/V/J typed into it never reach the timeline.
+- `PropertyKeyRow` lays out with `KeyRowLayout` (`KeyRowLine` in core) instead of `ViewThatFits`.
+- Stopwatch: open 110 -> 36 ms, Escape close 70 -> 18, pick 79 -> 47. First pick of a session is still 57-63 ms.
+- New walk `animate-a-property-find-walk`; stopwatch now also times Escape. Audit `queue/audits/2026-10-06-animate-a-property-over-the-panel.json`.
+- Open: `keying-a-value-redraws-only-what-the-key-changes` (p2), the 50 ms line for a pick and Undo: one key change re-runs ~80 view types. `a-colour-in-animate-a-property-shows-its-swatch` (p1), the mock's colour swatch in the list.

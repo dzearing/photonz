@@ -344,6 +344,9 @@ enum TimelineKeyRouter {
 
     /// Offer a press to the timeline in `window`. True when it took it.
     static func offer(_ event: NSEvent, in window: NSWindow) -> Bool {
+        // A list open over the panel is being typed into: it has every key
+        // first (`PanelPopoverKeyRouter`).
+        if PanelPopoverKeyRouter.offer(event, in: window) { return true }
         guard let route = routes[ObjectIdentifier(window)], let editor = route.editor else { return false }
         // A field being typed in keeps every key: that is typing, never a
         // shortcut. So does a sheet up over the window.
