@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T10:55:00.152Z",
-  "updated": "2026-10-07T13:59:13.551Z",
+  "updated": "2026-10-07T16:30:22.795Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from picking-a-cut-or-a-first-clip-on-the-timeline-an (2026-10-07), whose log has every number. Shipped there: markers hang only in a probe launched with --playtest (AppFlavor.hangsWalkMarkers, PlaytestMarkers.areHung), so the dev app sheds ~800 marker views. Markerless stand-in (all markers off but the walk's timeline ones): first pick 48-60 (median ~56), cut 47-60 (~53). Probe with markers: first 78-86, cut 73-81. Levers measured, none shipped: (a) probe marker teardown deferred 0.3 s (retain the marker view and its AppKitPlatformViewHost in a static dismantleNSView) cut 75 -> 67; (b) CollapsibleSection header as an EquatableView keyed on title/chip, -2..3 ms; needs the onReorder/onReorderEnd closures to read the live section list (reveal.drawnSections) and the accessory (EditPoint/Transition header notes) in its key. (c) The big remaining cost of a first pick is SwiftUI's accessibility focus walk: AccessibilityNode.updateFocusResponder ~50 times per pick (lldb breakpoint count), each visiting every responder (ViewRendererHost.focusResponder, swift_conformsToProtocol); fewer AppKit-backed views in the window shrinks every run. An out-of-process accessibility client is live on this Mac, so it is real for users. Marker redesign idea for (2): markers that are not SwiftUI platform views (a few per-scroll-view hosts holding plain NSView markers positioned from onGeometryChange) keep the harness's NSView reads but take ~800 views out of SwiftUI's bookkeeping; the harness reads frames, visibleRect, enclosing scroll views and isHiddenOrHasHiddenAncestor off them (PlaytestPanelPress.fieldViews/scrollAreas), so every nested ScrollView needs its own host. Profiling recipe: xcrun xctrace record --template 'Time Profiler' --attach <probe pid> during the walk; a walk of only first picks or only cuts makes every heavy window one of them.\n\nFolded in from undoing-a-key-and-the-first-key-of-a-session-ans (daily digest 2026-10-07, same root cause):\nCarried from keying-a-value-redraws-only-what-the-key-changes (2026-10-07), whose log has every number. Shipped there: Text, Appearance, Effects, Time and Captions watch EditorState.lookRowsRevision (moves for anything but a key on position/scale/rotation/crop, PhotonzDocument.sameApartFromPlacementKeys) through readingForTheLookRows, so a Position pick builds none of them (expectBuilds in keyframe-anything-walk); perform/undo/redo/discardDragPreview no longer write unchanged previews or selection. Result: stopwatch pick 46-47 -> 44, first pick in keyframe-anything 57-59 -> 53-55, an-editing-session 59-65 (unchanged), undo 63-68 (unchanged within noise).\n\nWhat is left is not view bodies (<10% of the pass by Time Profiler: xctrace record --attach <probe pid> --template 'Time Profiler', export the time-profile table, group main-thread samples by burst). It is AttributeGraph propagation (ObservationGraphMutation.apply, Subgraph::update), layout of the whole window, and SwiftUI's accessibility focus walk, the same root cause a-first-clip-pick-and-a-cut-click-answer-inside names. Ruled out by measurement: walk markers (all but four off: pick 47, undo 61, no change), the canvas refit when the timeline grows (deferred a pass: no change), Effects/Text/Appearance/Time bodies (now skipped: ~2 ms), restoreSelectionFromHistory/publishSharedComponents/TutorialController on undo (switched off: no change). Measured but not shipped: the timeline keeping its height when a key lane opens (it grows 25pt, the dock shrinks and the picture refits 74% -> 71%): pick -7 ms, keyframe-anything first pick 48-49, an-editing-session 52-54, undo still ~55; that is a visible behaviour change and would need a decision card. Undo and a pick take the same ~85-90 ms from the change to the main thread next sleeping (CFRunLoop beforeWaiting observer); the walk's 'longest pass' is lower for a pick only because that work is cut into more passes. First-pick extra (~10 ms over later picks) shows as Swift metadata/conformance lookups on first use of the row and lane views.",
@@ -34,11 +34,29 @@
     {
       "t": "2026-10-07T13:59:13.550Z",
       "note": "seq 3730 -> 130"
+    },
+    {
+      "t": "2026-10-07T14:00:37.135Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T15:09:28.451Z",
+      "note": "Measured 2026-10-07 07:00-08:00. Probe with markers: first pick 80-84, cut 76-84. Built setup timedWithoutMarkers (markers taken down around each timed press/action, walk notes what the teardown cost): first pick 33-48, cut 46-72, deselect 40-62 depending on machine load. Profile with markers: 18% of the heavy pass is SwiftUI's accessibility focus walk, half of it over the markers' platform views; without markers the focus walk mostly goes. Tried and reverted: sections leaving a pass later (kept built, drawn as nothing): interleaved A/B/C showed it SLOWER for cuts (64-72 vs 46-60) because moving/hiding eight built sections costs as much as tearing them down. Noise between rounds is 15-20ms (an xctrace SwiftUI recording in the background); only interleaved runs compare."
+    },
+    {
+      "t": "2026-10-07T16:30:22.724Z",
+      "note": "No audit: nothing a person sees changed; this is the walks' stopwatch. Left rough, folded into the carried task's notes: tutorial anchors hang in every build even with no guide running (-2 to -3 ms a cut if hung only while one runs); a dropdown's face is a nested NSHostingView (~2 ms of a cut's teardown for nine)."
+    },
+    {
+      "t": "2026-10-07T16:30:22.793Z",
+      "note": "PARTLY MET. Shipped (7b28f474): walk setup timedWithoutMarkers (core, tested), which times each press/action with the probe's walk markers down; the four timed walks use it, so their numbers are what a person gets (acceptance 2). keyframe-anything-walk keeps its build counts, it, an-editing-session-walk and clip-click-cost-walk are green, Scripts/test.sh passes (11681 tests). NOT met: the 50 ms bar. Measured without markers: first pick 33-50, cut 54-76 (median ~68), Position pick 40-63, undo median ~71. A/B attribution: the panel is ~44 ms of a cut, nearly all tearing down the nine sections a cut drops (Captions 11 ms); three ways of keeping leaving sections built a pass were all slower and were reverted. Carried with every number to clicking-a-cut-keying-a-value-and-undoing-it-ans."
     }
   ],
   "walks": [
     "clip-click-cost-walk",
     "an-editing-session-walk",
     "keyframe-anything-walk"
-  ]
+  ],
+  "started": "2026-10-07T14:00:37.134Z",
+  "completed": "2026-10-07T16:30:22.794Z"
 }
