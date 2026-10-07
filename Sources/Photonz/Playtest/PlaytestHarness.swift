@@ -399,6 +399,8 @@ private final class Run {
         }
         // Nothing an earlier walk in this probe saw counts against this one.
         TutorialController.shared.clearAnchorVerdicts()
+        PanelBuildsEverything.shared.isOn = false
+        PanelBuildsEverything.shared.rowsHaveWaited = false
         expectNoControl = Set(script.setup.expectNoControl)
         holdsTheFront = script.setup.front
         if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
@@ -413,7 +415,18 @@ private final class Run {
             do {
                 await holdTheFront()
                 await putTheMarkersBackUp()
-                try await perform(step, number: number)
+                do {
+                    try await perform(step, number: number)
+                } catch let failure where !(failure is LockedOut)
+                            && PanelBuildsEverything.shared.buildWhatWaits() {
+                    // What the step looked for may be in a dock section still
+                    // waiting below the fold, which a person would have
+                    // scrolled to. Built now, and for the rest of the walk.
+                    note(number, step.name, "looked again with every dock section built "
+                         + "(some waited below the fold): \(failure)")
+                    await sleep(0.4)
+                    try await perform(step, number: number)
+                }
                 PlaytestHarness.sendWindowsBehindThePerson()
                 completed = number
             } catch let lockedOut as LockedOut {
@@ -14863,6 +14876,9 @@ private final class Run {
         var last: Error?
         while true {
             do { return try look() } catch { last = error }
+            // A control in a dock section still waiting below the fold is not
+            // built yet (`PanelBuildsEverything`): build them all, look again.
+            PanelBuildsEverything.shared.buildWhatWaits()
             guard CACurrentMediaTime() < deadline else { break }
             await sleep(0.05)
         }

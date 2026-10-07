@@ -296,6 +296,11 @@ struct InspectorPanel: View {
     /// Bumped to draw the pass that mounts the sections held back above. The
     /// value means nothing; changing it is the whole point.
     @State private var arrivalPass = 0
+    /// Which sections wait unbuilt below the fold (`PanelBodyReach`). Held by
+    /// reference, like `arrivals`: it is written on every pass and read on
+    /// every scroll tick. Each section reads whether it waits from its own
+    /// cell, so building one redraws that section and not the dock.
+    @State private var bodies = DockBodyReach()
     /// What each section costs the dock, and how tall the dock is. Together
     /// these are the whole input to `DockHeightBudget`; see `dockBudget`.
     @State private var budget = DockBudgetScratch()
@@ -339,6 +344,9 @@ struct InspectorPanel: View {
         let _ = foldBudgetPass
         let _ = folds.syncs
         let _ = (folds.onFoldFromAnotherWindow = { checkFoldBudget() })
+        // Before `drawnSections` moves on: a section new to the dock is placed
+        // by where the one above it ended LAST pass.
+        let _ = bodies.draw(sections, after: reveal, holding: holdsBodiesOutOfSight)
         let _ = (reveal.drawnSections = sections)
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.note(
@@ -387,7 +395,14 @@ struct InspectorPanel: View {
                                     onHeaderHeight: { record(headerHeight: $0, for: id) },
                                     onBodyFrame: { reveal.bodyFrames[id] = $0 }
                                 ) {
-                                    sectionContent(id, ceiling: ceilings[id])
+                                    if bodies.cell(id).isHeld {
+                                        // Nothing built yet, at the height it
+                                        // was last drawn, so the dock under it
+                                        // and the scroller's length stay put.
+                                        Color.clear.frame(height: budget.bodies[id] ?? Self.unmeasuredBody)
+                                    } else {
+                                        sectionContent(id, ceiling: ceilings[id])
+                                    }
                                 }
                                 // The hairline belongs to the section above it, so
                                 // a section lifted off the panel takes its line
@@ -411,6 +426,9 @@ struct InspectorPanel: View {
                             } action: { frame in
                                 recordInspectorSection(id, title: sectionTitle(id), frame: frame)
                                 reveal.sectionFrames[id] = frame
+                                if bodies.comesNear(id, top: frame.minY, viewport: reveal.viewportHeight) {
+                                    buildBodies()
+                                }
                                 // Mid-drag a section is standing somewhere it does
                                 // not live, so its measurement is worth nothing:
                                 // the spans a reorder reads were taken before it
@@ -615,6 +633,33 @@ struct InspectorPanel: View {
             // three seconds, and no catch-up was ever asked for. When the
             // action does run, `isCatchingUp` makes this second ask a no-op.
             DispatchQueue.main.async { catchUp() }
+        }
+    }
+
+    /// Whether sections that arrive below the fold wait to be built
+    /// (`PanelBodyReach`). Only on a video, whose dock is the long one, and
+    /// never while a guide is running: a guide points at controls, and one
+    /// that is not built yet is nothing to point at. A scripted walk that
+    /// looks for a control in a section still waiting turns it off for the
+    /// rest of the walk (`PanelBuildsEverything`).
+    private var holdsBodiesOutOfSight: Bool {
+        PanelBuildsEverything.dockMayWait && editorState.documentHasTime
+    }
+
+    /// The height a waiting section stands at before it has ever been drawn.
+    private static let unmeasuredBody: CGFloat = 160
+
+    /// Builds the waiting sections that have come within reach, the highest
+    /// first, one per pass, so a long scroll down a clip's dock never pays for
+    /// two sections in one frame.
+    private func buildBodies() {
+        guard !bodies.isBuilding else { return }
+        bodies.isBuilding = true
+        Task { @MainActor in
+            await NextRunLoopPass.start()
+            bodies.isBuilding = false
+            guard bodies.buildNext() else { return }
+            if bodies.hasMoreNear { buildBodies() }
         }
     }
 
@@ -1733,6 +1778,91 @@ private struct SectionDrag: Equatable {
 @MainActor private final class SectionDragScratch {
     var frames: [InspectorSectionID: CGRect] = [:]
     var escapeWatch: Any?
+}
+
+/// Which dock sections wait unbuilt below the fold, over `PanelBodyReach`.
+///
+/// Deliberately NOT observed, for the reason `DockArrivals` is not: it is
+/// written on every body pass and read on every scroll tick. What a section
+/// draws comes from its own `DockBodyCell`, the way its fold does.
+@MainActor private final class DockBodyReach {
+    private var reach = PanelBodyReach()
+    private var cells: [InspectorSectionID: DockBodyCell] = [:]
+    /// Waiting sections that have come within reach and are owed a build.
+    private var near: Set<String> = []
+    /// A build pass is on its way, so a second one is not asked for.
+    var isBuilding = false
+
+    /// Notes this pass's sections, deciding the new ones from where the
+    /// sections drawn last pass ended. With `holding` off, nothing waits.
+    func draw(_ sections: [InspectorSectionID], after reveal: DockRevealScratch, holding: Bool) {
+        guard holding else {
+            reach.draw(sections.map(\.rawValue), bottoms: [:], viewport: nil)
+            reach.buildAll()
+            near.removeAll()
+            PanelBuildsEverything.shared.somethingWaits = false
+            settle(sections)
+            return
+        }
+        var bottoms: [String: CGFloat] = [:]
+        for id in reveal.drawnSections {
+            if let frame = reveal.sectionFrames[id] { bottoms[id.rawValue] = frame.maxY }
+        }
+        let viewport: CGFloat? = reveal.viewportHeight > 0 ? reveal.viewportHeight : nil
+        reach.draw(sections.map(\.rawValue), bottoms: bottoms, viewport: viewport)
+        // The sections that measure their own room, and Effects, whose open
+        // pane the dock scrolls to the moment it is added, are always built.
+        for id in sections where !Self.mayWait(id) { reach.build(id.rawValue) }
+        near.formIntersection(reach.held)
+        PanelBuildsEverything.shared.somethingWaits = !reach.held.isEmpty
+        settle(sections)
+    }
+
+    /// The cell a section reads whether it waits from.
+    func cell(_ id: InspectorSectionID) -> DockBodyCell {
+        if let cell = cells[id] { return cell }
+        let cell = DockBodyCell()
+        cells[id] = cell
+        return cell
+    }
+
+    /// Hands each section its answer, writing only the cells that change: a
+    /// section arriving is told before anything has drawn it.
+    private func settle(_ sections: some Sequence<InspectorSectionID>) {
+        for id in sections {
+            let held = reach.isHeld(id.rawValue)
+            let cell = cell(id)
+            if cell.isHeld != held { cell.isHeld = held }
+        }
+    }
+
+    private static func mayWait(_ id: InspectorSectionID) -> Bool {
+        !InspectorPanel.boundsItself(id) && id != .effects
+    }
+
+    /// True when `id` is waiting and has just come within reach.
+    func comesNear(_ id: InspectorSectionID, top: CGFloat, viewport: CGFloat) -> Bool {
+        guard reach.comesNear(id.rawValue, top: top, viewport: viewport) else { return false }
+        near.insert(id.rawValue)
+        return true
+    }
+
+    /// Builds the highest section owed one. False when none is.
+    func buildNext() -> Bool {
+        guard let next = reach.nextToBuild(among: near) else { return false }
+        reach.build(next)
+        near.remove(next)
+        PanelBuildsEverything.shared.somethingWaits = !reach.held.isEmpty
+        if let id = InspectorSectionID(rawValue: next) { settle([id]) }
+        return true
+    }
+
+    var hasMoreNear: Bool { reach.nextToBuild(among: near) != nil }
+}
+
+/// Whether one dock section waits unbuilt, read by that section alone.
+@MainActor @Observable private final class DockBodyCell {
+    var isHeld = false
 }
 
 /// Which dock sections have actually been built, so a brand new one can wait a

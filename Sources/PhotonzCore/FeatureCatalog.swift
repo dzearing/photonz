@@ -267,6 +267,9 @@ public enum FeatureCatalog {
     public static let dockHeadersFlag = "next-dock-headers"
 
     public static let noticesSayWhatHappenedFlag = "next-notices-say-what-happened"
+    /// The dock builds a section's settings only once they are near enough to
+    /// be seen (`PanelBodyReach`).
+    public static let panelBuildsWhatYouSeeFlag = "next-panel-builds-what-you-see"
 
     // MARK: - Definitions
 
@@ -1493,6 +1496,16 @@ public enum FeatureCatalog {
                     title: "Notices say what happened",
                     description: "No line of instructions stands over the canvas for the Pen, Measure or a path, and notices report results with Undo instead of advice. Off means the hint lines and the advice come back.",
                     area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: panelBuildsWhatYouSeeFlag,
+                    title: "The panel builds what you can see",
+                    description: "On a video, panel sections far below the bottom of the panel are built when you scroll near them, so clicking from a clip to a cut answers sooner. Off builds every section at once.",
+                    area: .panel,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

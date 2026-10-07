@@ -1,3 +1,4 @@
+import PhotonzCore
 import SwiftUI
 
 /// Rows of a dock section that are built a run-loop pass or more after the
@@ -15,8 +16,16 @@ import SwiftUI
 /// own controls.
 ///
 /// While they wait the rows hold the height they were last drawn at, so
-/// nothing under them moves when they land, and they arrive once: a section
-/// that stays on screen never waits again.
+/// nothing under them moves when they land.
+///
+/// On a video, with `next-panel-builds-what-you-see` on, they also wait for
+/// the section to come near the view, and they are let go again once a pick
+/// has carried them far out of it for `PanelBodyReach.letGoAfter`. A clip pick
+/// after nothing was picked carries Captions from the middle of the dock to
+/// 1400pt down; its rows were still built when the next click, on a cut, took
+/// the section away, and pulling them down was most of that cut's extra 10ms
+/// (`clip-click-cost-walk`, 2026-10-07). Coming back near, they arrive the
+/// same way they first did, a pass at a time.
 struct PanelRowsArrival<Content: View>: View {
     /// How many passes after the section appears these rows are built.
     let after: Int
@@ -24,20 +33,49 @@ struct PanelRowsArrival<Content: View>: View {
     let remembering: String
     @ViewBuilder let content: () -> Content
     @State private var isHere = false
+    /// Within reach of the view, as last measured. True until measured, so a
+    /// dock that cannot say builds them as it always has.
+    @State private var isNear = true
 
     var body: some View {
-        if isHere {
-            content()
-                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
-                    PanelRowsArrivalHeights.drawn[remembering] = $0
-                }
-        } else {
-            Color.clear
-                .frame(height: PanelRowsArrivalHeights.drawn[remembering] ?? 0)
-                .task {
-                    for _ in 0..<after { await NextRunLoopPass.start() }
-                    isHere = true
-                }
+        let mayWait = PanelBuildsEverything.dockMayWait
+        let wanted = isNear || !mayWait
+        Group {
+            if isHere {
+                content()
+                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
+                        PanelRowsArrivalHeights.drawn[remembering] = $0
+                    }
+            } else {
+                Color.clear
+                    .frame(height: PanelRowsArrivalHeights.drawn[remembering] ?? 0)
+                    .task(id: wanted) {
+                        guard wanted else { return }
+                        for _ in 0..<after { await NextRunLoopPass.start() }
+                        guard !Task.isCancelled else { return }
+                        isHere = true
+                    }
+            }
+        }
+        .onGeometryChange(for: Bool.self) { proxy in
+            guard let visible = proxy.bounds(of: .scrollView) else { return true }
+            return PanelBodyReach.isWithinReach(top: -visible.minY,
+                                                bottom: proxy.size.height - visible.minY,
+                                                viewport: visible.height)
+        } action: { near in
+            isNear = near
+            if !near { letGoSoon() }
+        }
+    }
+
+    /// Lets the rows go once they have stayed out of reach for a moment.
+    private func letGoSoon() {
+        guard isHere, PanelBuildsEverything.dockMayWait else { return }
+        Task { @MainActor in
+            try? await Task.sleep(for: .seconds(PanelBodyReach.letGoAfter))
+            guard isHere, !isNear, PanelBuildsEverything.dockMayWait else { return }
+            PanelBuildsEverything.shared.rowsHaveWaited = true
+            isHere = false
         }
     }
 }

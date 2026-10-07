@@ -900,6 +900,7 @@ extension Experiments {
     /// says what happened and stops, with Undo where it applies. Off, the
     /// hint pills and the advice on the end of a notice come back.
     var noticesSayWhatHappenedEnabled: Bool { isEnabled(FeatureCatalog.noticesSayWhatHappenedFlag) }
+    var panelBuildsWhatYouSeeEnabled: Bool { isEnabled(FeatureCatalog.panelBuildsWhatYouSeeFlag) }
 
     /// `next-cut-says-what-it-cannot-do`: whether ⌘X, ⌫, ⌥⌫ and the bucket
     /// refuse, out loud, when the marquee is over a layer no piece can be
