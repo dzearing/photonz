@@ -1,0 +1,36 @@
+{
+  "id": "zooming-the-canvas-shows-a-small-zoom-control-th",
+  "title": "Zooming the canvas shows a small zoom control that fades away by itself",
+  "goal": "Whenever the person zooms the canvas (pinch, keys, menu, scroll), a small zoom control fades in over the canvas showing the zoom percent, with zoom out and zoom in buttons and Fit. It fades out after 5 seconds without zooming and fades back in when the pointer comes over its spot. Double clicking the percent goes straight to actual size (100%). This applies in both the picture editor and the video editor.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 18,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T16:33:08.542Z",
+  "updated": "2026-10-07T16:33:08.631Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-07): \"when I zoom in, I would like a zoom toolbar to appear briefly, and then fade out after 5s of not zooming, or fade back in on hover. I want to be able to quickly double click the zoom to get to actual size (100%)\" and \"the canvas zoom, which also lives in either view, but not talking about the video track zoom feature\".\n\nContext: on 2026-09-29 the user ruled 'zoom isn't a tool' and the IA contract (UX-PATTERNS.md line ~23 Tool bar row, ~31 View row, ~247 ruling) removed zoom from bars in Next. This is a transient canvas overlay, which the user is now explicitly asking for; record it as a named exception, do not put zoom back in the tool bar.\nReuse: the zoom readout menu and double click lid (Sources/Photonz/EditorView.swift ~2120-2170, ZoomReadoutClickLid.swift, EditorState.zoomToActualSize EditorState.swift:4242 in point terms so 100% is on-screen size for Retina captures, zoomToFit, zoomStops). Trap: the double click window (EditorChromeLayout.zoomReadoutDoubleClickWindow) delays a single click's menu; keep it. Trap: the zoom-change trigger must come from the viewport's zoom value changing, not only from commands, or pinch will miss it. Trap: during walks the control must not take key or activate the probe (focus drill must read clean).",
+  "acceptance": [
+    "Placement, decided here and not by the runner: floating over the canvas at its bottom right corner, 12 pt in from the canvas edges, above the timeline in the video editor, never covering the floating tool bar or the panel; Liquid Glass like the other floating canvas controls. The IA placement contract (docs/design/mocks/shared/UX-PATTERNS.md, View row and the 2026-09-29 ruling) gains a named exception for this transient canvas zoom control, quoting the user's words below; the tool bar still carries no zoom control",
+    "Contents: zoom out, the percent, zoom in, Fit. Single click on the percent opens the existing zoom stops menu (stops, Fit, Actual Size with keys); double click on the percent goes to 100% at once, reusing the existing double click behaviour (ZoomReadoutClickLid)",
+    "It appears (fade in about 0.2 s) on every zoom change from any source: pinch, Cmd +/-/0/1, View menu, double click, scroll zoom; it does not appear on opening a document or on scroll-panning",
+    "It fades out (about 0.3 s) 5 seconds after the last zoom change; hovering its spot (even while hidden) fades it back in and keeps it while hovered; using any of its buttons restarts the 5 seconds",
+    "While hidden it takes no clicks, so drawing in that corner works; MEASURED and written in the audit: the hidden control is hit-test transparent",
+    "Text and icons legible against whatever canvas content is behind it, in light and dark",
+    "Behaves the same in the picture and video editors at Next defaults; a walk zooms, photographs it shown, waits past 5 s, photographs it gone, hovers, photographs it back, double clicks the percent and checks the zoom is 100%",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T16:33:08.544Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-07T16:33:08.630Z",
+      "note": "seq 520 -> 18"
+    }
+  ]
+}
