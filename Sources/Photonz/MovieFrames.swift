@@ -97,6 +97,32 @@ final class MovieLibrary {
         if let sound = movie.soundRef { SoundLibrary.shared.link(sound, to: standardized) }
     }
 
+    /// Every recording this run plays from `old`, played from `new` from now
+    /// on: a save into history keeps the recording as it was made in the
+    /// originals folder and is about to write the edit over the file the
+    /// window opened (`HistoryVideoSave`). The two files are the same bytes
+    /// when this runs, so nothing on screen changes, and the readers already
+    /// open on the old path are let go so none of them reads the edit.
+    func relocate(from old: URL, to new: URL) {
+        let from = old.standardizedFileURL
+        let to = new.standardizedFileURL
+        let moved = urls.filter { $0.value == from }.map(\.key)
+        guard !moved.isEmpty else { return }
+        for id in moved {
+            urls[id] = to
+            Task { await MovieDecoder.shared.forget(id) }
+        }
+        if let movie = refsByURL.removeValue(forKey: from) { refsByURL[to] = movie }
+        // A recording's sound is the same file, filed under the same id.
+        SoundLibrary.shared.relocate(from: from, to: to)
+    }
+
+    /// Whether any recording this run plays is the file at `url`.
+    func plays(_ url: URL, in document: PhotonzDocument) -> Bool {
+        let file = url.standardizedFileURL
+        return urls(in: document).values.contains(file)
+    }
+
     /// The same question asked with an id on its own, which is what a
     /// recording's SOUND has: a clip's sound shares the recording's identity
     /// because it is the same file (`SoundClip.swift`).
@@ -146,6 +172,17 @@ actor MovieDecoder {
 
     private var generators: [Key: [AVAssetImageGenerator]] = [:]
     private var nextLane: [Key: Int] = [:]
+
+    /// Let go of every reader open on a recording, so the next frame asked
+    /// for opens its file afresh where `MovieLibrary` now says it is.
+    func forget(_ movie: UUID) {
+        for key in generators.keys where key.movie == movie {
+            generators[key] = nil
+            nextLane[key] = nil
+        }
+        pictureGenerators[movie] = nil
+        nextPictureLane[movie] = nil
+    }
 
     /// One frame of one recording, or nil where the file will not give it up.
     ///

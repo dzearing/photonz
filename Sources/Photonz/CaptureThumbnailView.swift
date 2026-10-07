@@ -1,5 +1,6 @@
 import PhotonzCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// Shared capture thumbnail for the overlays (phase 11.4 / 11.7 / 12.4): the
 /// screenshot or a recording's poster frame, with a play badge + duration pill
@@ -37,14 +38,14 @@ struct CaptureThumbnailView: View {
                     // as the picture's own shape asks for (up to the ratio cap).
                     CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
                                           available: CGSize(width: .infinity, height: fixedHeight),
-                                          ringed: ringed)
+                                          ringed: ringed, store: store)
                         .frame(height: fixedHeight)
                 } else {
                     // The card: fill what we are given, but still never draw the
                     // capture bigger than it really is.
                     GeometryReader { geo in
                         CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
-                                              available: geo.size, ringed: ringed)
+                                              available: geo.size, ringed: ringed, store: store)
                             .frame(width: geo.size.width, height: geo.size.height)
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -64,7 +65,29 @@ struct CaptureThumbnailView: View {
         .modifier(TapActions(onActivate: onActivate, onDoubleClick: onDoubleClick))
         .help(onActivate != nil ? "Play" : "")
         // Drag the capture's media (PNG or MP4) straight out to Finder / apps.
-        .onDrag { NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider() }
+        // An edit still being written over a recording is handed over when it
+        // lands, never the recording it is replacing.
+        .onDrag {
+            if store.isWritingVideo(entry.url) { return Self.whenWritten(entry.url, store: store) }
+            return NSItemProvider(contentsOf: store.fileURL(for: entry)) ?? NSItemProvider()
+        }
+    }
+
+    /// A drag of a tile whose edited video is still being written: the file
+    /// is promised, and handed over the moment it is the finished video.
+    private static func whenWritten(_ url: URL, store: CaptureStore) -> NSItemProvider {
+        let provider = NSItemProvider()
+        provider.suggestedName = url.deletingPathExtension().lastPathComponent
+        provider.registerFileRepresentation(forTypeIdentifier: UTType.mpeg4Movie.identifier,
+                                            fileOptions: [], visibility: .all) { done in
+            Task { @MainActor in
+                store.whenLanded(url) { landed in
+                    done(landed?.url, false, landed == nil ? CocoaError(.fileNoSuchFile) : nil)
+                }
+            }
+            return nil
+        }
+        return provider
     }
 }
 
@@ -83,6 +106,9 @@ struct CaptureThumbnailImage: View {
     /// Accent ring on the PICTURE (the focused or just-captured history tile),
     /// rather than on the wider hit target around a small capture.
     var ringed: Bool = false
+    /// Where to read whether a recording's tile is an edit, and how far along
+    /// its video is while one is written (`HistoryVideoSave`).
+    var store: CaptureStore? = nil
 
     var body: some View {
         let fit = ThumbnailFit.fit(pixelSize: thumbnail.pixelSize ?? .zero,
@@ -108,7 +134,9 @@ struct CaptureThumbnailImage: View {
         .overlay(croppedEdge(fit.croppedEdge))
         .overlay {
             if entry.kind == .video {
-                VideoBadgeOverlay(duration: thumbnail.duration)
+                VideoBadgeOverlay(duration: thumbnail.duration,
+                                  saving: store?.writingVideos[entry.url],
+                                  edited: store?.editedVideos.contains(entry.url) == true)
             }
         }
         .overlay {
@@ -142,6 +170,10 @@ struct CaptureThumbnailImage: View {
 /// the history tiles and the capture toasts so videos read the same everywhere.
 struct VideoBadgeOverlay: View {
     let duration: TimeInterval?
+    /// An edit being written over this recording's file, when one is.
+    var saving: VideoSaveProgress? = nil
+    /// The tile is an edit of the recording, kept beside it as a project.
+    var edited: Bool = false
 
     var body: some View {
         ZStack {
@@ -149,22 +181,39 @@ struct VideoBadgeOverlay: View {
                 .font(.system(size: 34))
                 .foregroundStyle(.white, .black.opacity(0.45))
                 .shadow(radius: 3)
-            if let duration {
-                VStack {
-                    Spacer()
-                    HStack {
-                        Spacer()
-                        Text(RecordingClock.elapsedString(duration))
-                            .font(.caption2.weight(.semibold).monospacedDigit())
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 2)
-                            .background(.black.opacity(0.55), in: Capsule())
-                            .foregroundStyle(.white)
-                            .padding(5)
+            VStack(spacing: 0) {
+                Spacer()
+                HStack {
+                    if let saving {
+                        pill("Saving \(Int((min(1, max(0, saving.fraction)) * 100).rounded()))%")
+                    } else if edited {
+                        pill("Edited")
                     }
+                    Spacer()
+                    if let shown = saving?.seconds ?? duration { pill(RecordingClock.elapsedString(shown)) }
+                }
+                if let saving {
+                    // How far along, along the bottom edge of the picture.
+                    GeometryReader { geo in
+                        Rectangle().fill(Color.accentColor)
+                            .frame(width: geo.size.width * min(1, max(0, saving.fraction)))
+                    }
+                    .frame(height: 3)
+                    .background(.black.opacity(0.45))
                 }
             }
         }
+    }
+
+    /// White on a dark capsule: readable over any recording's poster.
+    private func pill(_ text: String) -> some View {
+        Text(text)
+            .font(.caption2.weight(.semibold).monospacedDigit())
+            .padding(.horizontal, 5)
+            .padding(.vertical, 2)
+            .background(.black.opacity(0.55), in: Capsule())
+            .foregroundStyle(.white)
+            .padding(5)
     }
 }
 

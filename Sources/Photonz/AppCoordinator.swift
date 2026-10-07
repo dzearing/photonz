@@ -277,6 +277,27 @@ final class AppCoordinator {
             onCopyGIF: isVideo ? { [weak self] in self?.copyRecording(entry, as: .gif) } : nil)
     }
 
+    /// An edited recording saved into history: the same corner card a
+    /// capture gets, saying Saving while its video is written and Copied once
+    /// it is on the clipboard, so record, edit, save and paste is the whole
+    /// of it (`HistoryVideoSave`).
+    func showSavedVideoToast(_ url: URL) {
+        guard let entry = capture.store.entries.first(where: { $0.url == url }) else { return }
+        capture.store.whenLanded(url) { [weak self] landed in
+            guard let self, let landed, !capture.store.failedVideoWrites.contains(url) else { return }
+            capture.store.copyToPasteboard(landed)
+        }
+        if historyOverlay.isShown { highlightedCaptureURL = url }
+        toasts.present(
+            entry: entry, store: capture.store,
+            message: "Copied to clipboard!", on: activeScreen(),
+            whileSaving: "Saving…",
+            editAction: captureToastEditAction,
+            onEdit: { [weak self] in self?.openRecording(url) },
+            onCopyVideo: { [weak self] in self?.copyRecording(entry, as: .mp4) },
+            onCopyGIF: { [weak self] in self?.copyRecording(entry, as: .gif) })
+    }
+
     // MARK: - Recordings (phase 12.4 / 12.5)
 
     /// Open a recording in the in-app video editor (phase 13.3): open/focus a

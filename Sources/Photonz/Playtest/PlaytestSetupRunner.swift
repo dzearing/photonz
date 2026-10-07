@@ -280,6 +280,25 @@ struct PlaytestSetupRunner {
         return placed
     }
 
+    /// Lends one more file part way through a walk, one the app had to make
+    /// first: the same rules as the setup's own lending, and taken back with it.
+    mutating func lendMade(_ source: URL) throws -> URL {
+        let folder = CaptureStore.defaultDirectory
+        let destination = folder.appendingPathComponent(source.lastPathComponent)
+        guard !FileManager.default.fileExists(atPath: destination.path) else {
+            throw PlaytestSetupError(
+                description: "a walk would lend \"\(source.lastPathComponent)\" to \(folder.path), "
+                    + "but a file of that name is already there")
+        }
+        try FileManager.default.copyItem(at: source, to: destination)
+        let now = Date()
+        try? FileManager.default.setAttributes([.creationDate: now, .modificationDate: now],
+                                               ofItemAtPath: destination.path)
+        lentCaptures.append(destination)
+        PlaytestLentCaptures.remember(destination)
+        return destination
+    }
+
     /// Makes the walk an empty folder of its own and copies its files into it.
     ///
     /// Fresh every run, so a walk that writes beside the picture it opened —
@@ -409,7 +428,10 @@ struct PlaytestSetupRunner {
     mutating func returnCaptures() -> String? {
         guard !lentCaptures.isEmpty else { return nil }
         let names = lentCaptures.map(\.lastPathComponent)
-        for url in lentCaptures { try? FileManager.default.removeItem(at: url) }
+        for url in lentCaptures {
+            try? FileManager.default.removeItem(at: url)
+            PlaytestLentCaptures.removeCompanions(of: url)
+        }
         lentCaptures = []
         PlaytestLentCaptures.forget()
         return "took back \(names.joined(separator: ", "))"

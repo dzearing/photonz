@@ -1,0 +1,271 @@
+{
+  "out": "/tmp/photonz-playtest/an-edited-recording-saves-into-history-walk",
+  "seed": "The user, 2026-10-07: 'When I open a video, make some edits, save, and close, I really wanted to have it save a copy and put it in history... i want to be able to record a video, make some edits and save and use it in teams really fast.' At Next defaults with no flag touched: a recording lent to history opens from history, Command S on it untouched writes nothing, an edit (two seconds trimmed off the front, a cut, a zoom) saved with Command S and closed at once lands in history as an MP4 of the edit's length under the same tile, the recording as made kept behind it and the edit beside it, and Copy on the tile pastes that file. Opening the tile again opens the edit, a second edit saved replaces the same tile, and Revert to Original saved puts the recording back.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "captures": [
+      "sample-recording"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "editLastCapture"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 1,
+      "seconds": 8.0
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoUntouched"
+    },
+    {
+      "do": "describe",
+      "stage": "0-untouched",
+      "note": "Command S on a recording nobody has changed writes nothing: the tile is the recording as made, with nothing beside it"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "q"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectEdited",
+      "edited": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-edited",
+      "note": "THE EDIT: two seconds trimmed off the front with Q, a cut at the middle with Command K, and a zoom added at the playhead"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-edited"
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "describe",
+      "stage": "2-saved-and-closed",
+      "note": "Command S and the window closed at once: the edited video carries on being written into history without it"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoEdit"
+    },
+    {
+      "do": "action",
+      "action": "editLastCapture"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 2,
+      "seconds": 6.0
+    },
+    {
+      "do": "expectEdited",
+      "edited": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-reopened-as-the-edit",
+      "note": "opening the tile again opens the edit, in its two pieces, not the flattened video"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-reopened-as-the-edit"
+    },
+    {
+      "do": "shortcut",
+      "key": "h",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Show History",
+      "checked": false
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "snapshot",
+      "name": "3-history-shows-the-edit",
+      "window": "Capture History"
+    },
+    {
+      "do": "shortcut",
+      "key": "h",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Show History",
+      "checked": true
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "q"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectEdited",
+      "edited": true
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoEdit"
+    },
+    {
+      "do": "describe",
+      "stage": "5-saved-again-in-place",
+      "note": "a second edit saved replaces the same tile: still one tile, now the shorter edit"
+    },
+    {
+      "do": "action",
+      "action": "videoRevertToOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 1,
+      "seconds": 8.0
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoUntouched"
+    },
+    {
+      "do": "describe",
+      "stage": "6-reverted",
+      "note": "Revert to Original and Command S put the recording as made back on the tile and take the edit away"
+    }
+  ]
+}

@@ -83,6 +83,31 @@ struct DocumentMovieWriterTests {
         #expect(late.b > 200 && late.r < 60)
     }
 
+    @Test("A written MP4 re-wrapped as a QuickTime movie is the same pictures in a .mov, nothing re-encoded")
+    func rewrapsAsQuickTime() async throws {
+        let plan = DocumentVideoExport.plan(durationMS: 2000,
+                                            canvasSize: CGSize(width: 320, height: 240),
+                                            format: .mp4, quality: .standard)
+        let written = Self.folder.appendingPathComponent("rewrap-source.mp4")
+        try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: written,
+                                            frames: Self.twoHalves(plan: plan))
+        let wrapped = Self.folder.appendingPathComponent("rewrapped.mov")
+        try await DocumentMovieWriter.rewrap(written, to: wrapped, as: .mov)
+
+        let type = try wrapped.resourceValues(forKeys: [.contentTypeKey]).contentType
+        #expect(type?.identifier == "com.apple.quicktime-movie")
+        let header = try FileHandle(forReadingFrom: wrapped).read(upToCount: 12) ?? Data()
+        // A QuickTime file says "qt  " where an MP4 says "isom" or "mp42".
+        #expect(String(decoding: header.suffix(4), as: UTF8.self) == "qt  ")
+        let seconds = try await AVURLAsset(url: wrapped).load(.duration).seconds
+        #expect(abs(seconds - 2) < 0.15)
+        let late = try await Self.colour(of: wrapped, atSeconds: 1.7)
+        #expect(late.b > 200 && late.r < 60)
+        let sourceBytes = try written.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+        let wrappedBytes = try wrapped.resourceValues(forKeys: [.fileSizeKey]).fileSize ?? 0
+        #expect(abs(sourceBytes - wrappedBytes) < sourceBytes / 10)
+    }
+
     @Test("A marked stretch writes a file as long as the stretch, starting at the In")
     func aMarkedStretchStartsAtTheIn() async throws {
         // A four second document, red for its first three seconds and blue

@@ -356,6 +356,14 @@ enum LegibilityCatalogue {
             Specimen(control: "Video badge", state: "on a picture", ground: .anything, inks: 2) {
                 AnyView(VideoBadgeOverlay(duration: 83).frame(width: 160, height: 100))
             },
+            Specimen(control: "Video badge", state: "an edit", ground: .anything, inks: 2) {
+                AnyView(VideoBadgeOverlay(duration: 83, edited: true).frame(width: 160, height: 100))
+            },
+            Specimen(control: "Video badge", state: "saving an edit", ground: .anything, inks: 2) {
+                let saving = VideoSaveProgress()
+                saving.fraction = 0.42
+                return AnyView(VideoBadgeOverlay(duration: 83, saving: saving).frame(width: 160, height: 100))
+            },
             Specimen(control: "Title bar mode chip", state: "rest", ground: .panel, inks: 2) {
                 AnyView(TitlebarModeChip().fixedSize())
             },

@@ -904,6 +904,26 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// lends `sample-recording` to the capture folder, which is the only way to
     /// drive the real history door with a real recording in it.
     case editLastCapture
+    /// After Command S on an edited recording from history: waits for its
+    /// video to be written (`HistoryVideoSave`), then opens the tile's file
+    /// and checks it is an MP4 as long as the edit that was saved, that it is
+    /// the only tile of that name, that the recording as made is kept, that
+    /// the project is beside it, that the tile is marked as an edit, and that
+    /// Copy on the tile puts that very file on the clipboard. Says how long it
+    /// took from the save to a file that would paste.
+    case expectHistoryVideoEdit
+    /// After Command S on a recording from history that is (again) exactly as
+    /// recorded: nothing is kept beside the tile and it is not marked edited.
+    case expectHistoryVideoUntouched
+    /// Lend history the five minute talk at the size a Retina screen records
+    /// at (`PlaytestLongTalk.retina`), as the newest recording in it, taken
+    /// back at the end of the walk like any lent capture: what timing a save
+    /// of a real length of screen recording into history needs.
+    case lendLongRetinaTalk
+    /// Stop every edited video being written the way quitting stops it, then
+    /// do what the next launch does (`CaptureStore.resumeVideoWrites`): the
+    /// write must be finished from the project left beside the tile.
+    case historyWritesCutShortByQuit
     /// A capture shortcut pressed the way the system hands it to the app:
     /// through the same dispatcher the global hotkey calls, so the corner is
     /// cleared exactly as a person's ⇧⌘3, ⇧⌘4, ⇧⌘5 or ⇧⌘6 clears it. The probe

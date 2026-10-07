@@ -64,8 +64,10 @@ enum PlaytestLentCaptures {
         let paths = written()
         guard !paths.isEmpty else { return }
         var taken: [String] = []
-        for path in paths where FileManager.default.fileExists(atPath: path) {
-            guard (try? FileManager.default.removeItem(atPath: path)) != nil else { continue }
+        for path in paths {
+            removeCompanions(of: URL(fileURLWithPath: path))
+            guard FileManager.default.fileExists(atPath: path),
+                  (try? FileManager.default.removeItem(atPath: path)) != nil else { continue }
             taken.append(URL(fileURLWithPath: path).lastPathComponent)
         }
         forget()
@@ -73,6 +75,21 @@ enum PlaytestLentCaptures {
         recoveryNote = "a run before this one was killed with captures still lent, so "
             + taken.joined(separator: ", ") + " was taken back out of "
             + CaptureStore.defaultDirectory.path + " before this walk started"
+    }
+
+    /// What a walk's saves leave beside a lent capture: its layers or edit
+    /// kept as a project, and a recording as made kept in the originals
+    /// folder before an edit was written over it (`HistoryVideoSave`). They
+    /// were never the person's, so they go with the capture.
+    static func removeCompanions(of url: URL) {
+        let fm = FileManager.default
+        for companion in [HistoryVideoSave.projectURL(for: url),
+                          VideoOriginals.url(for: url),
+                          PointerTrackSidecar.url(for: VideoOriginals.url(for: url)),
+                          HistoryVideoSave.writingURL(for: url)]
+        where fm.fileExists(atPath: companion.path) {
+            try? fm.removeItem(at: companion)
+        }
     }
 
     private static func written() -> [String] {

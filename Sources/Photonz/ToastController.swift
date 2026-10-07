@@ -502,7 +502,8 @@ struct ToastSaying {
     /// the moment the file lands.
     var state: State {
         guard whileSaving != nil, let entry else { return .done }
-        if store.isSaving(entry.url) { return .underWay }
+        if store.isSaving(entry.url) || store.isWritingVideo(entry.url) { return .underWay }
+        if store.failedVideoWrites.contains(entry.url) { return .failed }
         return store.entries.contains { $0.url == entry.url } ? .done : .failed
     }
 
@@ -512,7 +513,8 @@ struct ToastSaying {
         switch state {
         case .underWay: whileSaving ?? message
         case .done: message
-        case .failed: "Recording not saved"
+        case .failed: entry.map { store.failedVideoWrites.contains($0.url) } == true
+            ? "Video not saved" : "Recording not saved"
         }
     }
 
@@ -606,7 +608,7 @@ private struct ToastView: View {
                 // cropped rather than squeezed into a sliver inside this box,
                 // and a small one is shown at its own size rather than blown up.
                 CaptureThumbnailImage(entry: entry, thumbnail: thumbnail,
-                                      available: Self.thumbnailSize, cornerRadius: 10)
+                                      available: Self.thumbnailSize, cornerRadius: 10, store: store)
             } else {
                 ZStack {
                     Rectangle().fill(.quaternary)

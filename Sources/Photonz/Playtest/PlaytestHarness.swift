@@ -222,6 +222,9 @@ private final class Run {
     private var hovered: HintAnchorView?
     /// The document the last `saveProjectAs` wrote, for `expectReopenedAsSaved`.
     private var savedProjectDocument: PhotonzDocument?
+    /// The last Command S on a recording in history: its tile, how long the
+    /// edit was, and when the save was pressed (`expectHistoryVideoEdit`).
+    private var historySave: (video: URL, editMS: Int, at: Date)?
     /// The export `startExportAt1080p` began and when, for `awaitExport`.
     private var startedExport: (url: URL, began: Date)?
     /// When `copyVideo` or `copyAsGIF` began, for `awaitCopy`.
@@ -3378,6 +3381,114 @@ private final class Run {
         // (⇧⌘6). With a recording lent to the capture folder by the walk's
         // setup, this is the real history door: newest first, a video goes to
         // the recording window rather than the picture one.
+        case .action(.expectHistoryVideoEdit):
+            guard let saved = historySave else {
+                throw Failure(description: "no recording in history has been saved in this walk")
+            }
+            let store = coordinator.capture.store
+            let video = saved.video
+            try await poll("the edited video to be written", within: 600) { !store.isWritingVideo(video) }
+            let tookSeconds = Date().timeIntervalSince(saved.at)
+            guard !store.failedVideoWrites.contains(video) else {
+                throw Failure(description: "writing the edited video over \(video.lastPathComponent) failed")
+            }
+            let name = video.deletingPathExtension().lastPathComponent
+            let tiles = store.entries.filter { $0.url.deletingPathExtension().lastPathComponent == name }
+            guard tiles.count == 1, let tile = tiles.first else {
+                throw Failure(description: "history holds \(tiles.count) tiles called \(name), not one")
+            }
+            // The container itself, read off the file's own header rather than
+            // its name: an MP4, or a QuickTime movie where the tile is a .mov.
+            let header = (try? FileHandle(forReadingFrom: video).read(upToCount: 12)) ?? Data()
+            let brand = String(decoding: header.suffix(4), as: UTF8.self)
+            let wantsQuickTime = video.pathExtension.lowercased() == "mov"
+            guard header.count == 12, wantsQuickTime ? brand == "qt  " : brand != "qt  " else {
+                throw Failure(description: "the tile's file says \"\(brand)\" in its header, not "
+                              + (wantsQuickTime ? "a QuickTime movie" : "an MP4"))
+            }
+            let fileMS = Int((await VideoExporter.duration(of: video) * 1000).rounded())
+            guard VideoClipboardCopy.runsAsLong(fileMS: fileMS, asEditMS: saved.editMS,
+                                                fps: DocumentVideoExport.movieFPS) else {
+                throw Failure(description: "the tile's file runs \(fileMS) ms and the edit saved runs "
+                              + "\(saved.editMS) ms: it is not the edit")
+            }
+            let original = VideoOriginals.url(for: video)
+            guard FileManager.default.fileExists(atPath: original.path) else {
+                throw Failure(description: "the recording as made was not kept at \(original.path)")
+            }
+            let originalMS = Int((await VideoExporter.duration(of: original) * 1000).rounded())
+            let project = HistoryVideoSave.projectURL(for: video)
+            guard FileManager.default.fileExists(atPath: project.path) else {
+                throw Failure(description: "the edit was not kept beside the tile at \(project.path)")
+            }
+            guard store.editedVideos.contains(video) else {
+                throw Failure(description: "the tile is not marked as an edit")
+            }
+            coordinator.copyRecording(tile, as: .mp4)
+            let pasted = (NSPasteboard.general.readObjects(forClasses: [NSURL.self]) as? [URL])?.first
+            guard pasted?.standardizedFileURL == video.standardizedFileURL else {
+                throw Failure(description: "Copy on the tile put \(pasted?.path ?? "nothing") on the clipboard, "
+                              + "not \(video.path)")
+            }
+            note(number, step.name,
+                 "the tile \(video.lastPathComponent) is \(wantsQuickTime ? "a QuickTime movie" : "an MP4") "
+                     + "(\(brand.trimmingCharacters(in: .whitespaces))) of \(fileMS) ms, the edit's length "
+                     + "(\(saved.editMS) ms), written "
+                     + String(format: "%.2fs", tookSeconds) + " after Command S; the recording as made "
+                     + "(\(originalMS) ms) is kept, the project is beside it, the tile is marked Edited, "
+                     + "and Copy on it puts that file on the clipboard",
+                 state: describe())
+
+        case .action(.historyWritesCutShortByQuit):
+            let store = coordinator.capture.store
+            let cut = store.writingVideos.map { "\($0.key.lastPathComponent) at \(Int($0.value.fraction * 100))%" }
+            guard !cut.isEmpty else {
+                throw Failure(description: "no edited video is being written, so there is nothing to cut short")
+            }
+            store.playtestCutShortVideoWrites()
+            await sleep(0.5)
+            store.resumeVideoWrites()
+            let resumed = store.writingVideos.keys.map(\.lastPathComponent)
+            guard !resumed.isEmpty else {
+                throw Failure(description: "the writes cut short (\(cut.joined(separator: ", "))) were not "
+                              + "taken up again as a launch would")
+            }
+            note(number, step.name,
+                 "cut short \(cut.joined(separator: ", ")) as a quit would; taken up again from the project: "
+                     + resumed.joined(separator: ", "),
+                 state: describe())
+
+        case .action(.lendLongRetinaTalk):
+            guard let made = await PlaytestLongTalk.freshRetina() else {
+                throw Failure(description: "couldn't write the Retina talking sample")
+            }
+            let lent = try setupRunner.lendMade(made)
+            coordinator.capture.store.reload()
+            note(number, step.name, "lent history \(lent.lastPathComponent), five minutes at Retina size",
+                 state: describe())
+
+        case .action(.expectHistoryVideoUntouched):
+            guard let video = historySave?.video ?? editor?.historyVideoURL else {
+                throw Failure(description: "no recording in history has been saved in this walk")
+            }
+            let store = coordinator.capture.store
+            try await poll("nothing to be writing", within: 30) { !store.isWritingVideo(video) }
+            var kept: [String] = []
+            if VideoOriginals.exists(for: video) { kept.append("a kept original") }
+            if FileManager.default.fileExists(atPath: HistoryVideoSave.projectURL(for: video).path) {
+                kept.append("a project")
+            }
+            if store.editedVideos.contains(video) { kept.append("the Edited mark") }
+            guard kept.isEmpty else {
+                throw Failure(description: "the tile is the recording as made, yet it has "
+                              + kept.joined(separator: ", "))
+            }
+            let fileMS = Int((await VideoExporter.duration(of: video) * 1000).rounded())
+            note(number, step.name,
+                 "\(video.lastPathComponent) is the recording as made (\(fileMS) ms) with nothing kept "
+                     + "beside it and no Edited mark",
+                 state: describe())
+
         case .action(.editLastCapture):
             guard let newest = coordinator.lastCapture else {
                 throw Failure(description: "history is empty, so there is no last capture to edit; "
@@ -3645,7 +3756,14 @@ private final class Run {
             // never writes over the recording, so the file is weighed before
             // and after, byte for byte.
             let savingEditor = recording == nil ? editor : nil
-            let recordingFile = savingEditor?.isRecordingDocument == true ? savingEditor?.recordingURL : nil
+            // A recording in history saves into history, with no save box at
+            // all: `expectHistoryVideoEdit` checks what lands.
+            let historyVideo = savingEditor?.isRecordingDocument == true ? savingEditor?.historyVideoURL : nil
+            let recordingFile = savingEditor?.isRecordingDocument == true && historyVideo == nil
+                ? savingEditor?.recordingURL : nil
+            if let historyVideo, let savingEditor {
+                historySave = (historyVideo, savingEditor.documentLengthMS, Date())
+            }
             let projectURL = out.appendingPathComponent("project.photonz")
             let recordingBefore = recordingFile.flatMap { try? Data(contentsOf: $0) }
             if recordingFile != nil {
@@ -3678,6 +3796,13 @@ private final class Run {
                     + (table.isEmpty ? "no files" : table.map(\.name).joined(separator: ", "))
                     + ", and \(recordingFile.lastPathComponent) is byte for byte what it was "
                     + "(\(recordingBefore.count) bytes)"
+            }
+            if let historyVideo {
+                let store = coordinator.capture.store
+                landed = "; saved into history as \(historyVideo.lastPathComponent)"
+                    + (store.isWritingVideo(historyVideo) ? ", its edited video being written" : ", nothing to write")
+                    + (FileManager.default.fileExists(atPath: HistoryVideoSave.projectURL(for: historyVideo).path)
+                       ? ", the edit kept beside it as a project" : ", no project beside it")
             }
             note(number, step.name,
                  "save: the \(kind) was \(before.rawValue), now \(target.saveAffordance.rawValue)" + landed,
@@ -5681,7 +5806,9 @@ private final class Run {
             switch action {
             // Handled in full above, where they can refuse the walk. Named
             // here only because this switch covers every action.
-            case .holdColorRow, .paintHeldColorRow, .save: break
+            case .holdColorRow, .paintHeldColorRow, .save,
+                 .expectHistoryVideoEdit, .expectHistoryVideoUntouched, .lendLongRetinaTalk,
+                 .historyWritesCutShortByQuit: break
             // Sound, handled in full above with the rest of the timeline, where
             // each one can refuse the walk rather than quietly doing nothing.
             case .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,

@@ -88,6 +88,19 @@ final class CaptureStore {
         let image: CGImage
     }
 
+    /// Edited recordings whose finished video is being written over their
+    /// file, with how far along each is (`CaptureStore+VideoSaves`). Their
+    /// tiles show it, and a copy of one waits for it.
+    var writingVideos: [URL: VideoSaveProgress] = [:]
+    /// Recordings whose tile is an edit, with the edit kept beside it as a
+    /// project and the recording as made kept in the originals folder.
+    var editedVideos: Set<URL> = []
+    /// Videos whose last write failed, so the corner card can say so.
+    var failedVideoWrites: Set<URL> = []
+    /// The write running for each video, to be stopped by a newer save of the
+    /// same one or by its tile being deleted.
+    @ObservationIgnored var videoWriteTasks: [URL: Task<Void, Never>] = [:]
+
     @ObservationIgnored private var watcher: DispatchSourceFileSystemObject?
     @ObservationIgnored private var watchedFD: Int32 = -1
     @ObservationIgnored private var reloadDebounce: DispatchWorkItem?
@@ -110,6 +123,7 @@ final class CaptureStore {
         ensureDirectory()
         reload()
         startWatching()
+        resumeVideoWrites()
     }
 
     // MARK: - Folder listing
@@ -150,6 +164,16 @@ final class CaptureStore {
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
 
         entries = CaptureLibrary.merging(listed: sorted, saving: Array(saving.values))
+        // An edited recording is one with its project beside it and the
+        // recording as made kept: the names are already in hand, so only those
+        // few ask the disk anything.
+        let projects = Set(urls.filter { $0.pathExtension == "photonz" }
+            .map { $0.deletingPathExtension().lastPathComponent })
+        let edited = Set(sorted.filter {
+            $0.kind == .video && projects.contains($0.url.deletingPathExtension().lastPathComponent)
+                && VideoOriginals.exists(for: $0.url)
+        }.map(\.url))
+        if edited != editedVideos { editedVideos = edited }
         warmRecordings()
     }
 
@@ -301,14 +325,16 @@ final class CaptureStore {
     /// it already is, or when its recording lands. It gets nil when the
     /// recording never landed (it failed, or was deleted while saving).
     func whenLanded(_ url: URL, _ action: @escaping (CaptureEntry?) -> Void) {
-        guard saving[url] != nil else {
+        // An edit being written over the file is landing too: what is there
+        // now is the recording before the edit.
+        guard saving[url] != nil || writingVideos[url] != nil else {
             action(entries.first { $0.url == url })
             return
         }
         landingWaiters[url, default: []].append(action)
     }
 
-    private func land(_ url: URL, as entry: CaptureEntry?) {
+    func land(_ url: URL, as entry: CaptureEntry?) {
         let waiters = landingWaiters.removeValue(forKey: url) ?? []
         for waiter in waiters { waiter(entry) }
     }
@@ -440,6 +466,7 @@ final class CaptureStore {
             reload()
             return
         }
+        stopWritingVideo(entry.url)
         try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
         trashSidecar(for: entry.url)
         thumbnails[entry.url] = nil
@@ -454,6 +481,7 @@ final class CaptureStore {
                 discardedWhileSaving.insert(entry.url)
                 continue
             }
+            stopWritingVideo(entry.url)
             try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
             trashSidecar(for: entry.url)
         }
@@ -469,7 +497,9 @@ final class CaptureStore {
         for sidecar in [EditorState.sidecarURL(for: url),
                         VideoEditsSidecar.url(for: url),
                         PointerTrackSidecar.url(for: url),
-                        VideoOriginals.url(for: url)]
+                        VideoOriginals.url(for: url),
+                        PointerTrackSidecar.url(for: VideoOriginals.url(for: url)),
+                        HistoryVideoSave.writingURL(for: url)]
         where FileManager.default.fileExists(atPath: sidecar.path) {
             try? FileManager.default.trashItem(at: sidecar, resultingItemURL: nil)
         }
@@ -570,9 +600,9 @@ final class CaptureStore {
     }
 
     func copyToPasteboard(_ entry: CaptureEntry) {
-        // A file that is still being closed cannot be pasted yet: copy it the
-        // moment it lands.
-        if saving[entry.url] != nil {
+        // A file that is still being closed, or written over with an edit,
+        // cannot be pasted yet: copy it the moment it lands.
+        if saving[entry.url] != nil || writingVideos[entry.url] != nil {
             whenLanded(entry.url) { [weak self] landed in
                 if let landed { self?.copyToPasteboard(landed) }
             }

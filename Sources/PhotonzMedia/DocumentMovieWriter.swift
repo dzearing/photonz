@@ -293,6 +293,18 @@ public enum DocumentMovieWriter {
         try await session.export(to: destination, as: .mp4)
     }
 
+    /// The same pictures and sound in another container, copied rather than
+    /// encoded again: an edit saved over a QuickTime recording in history is
+    /// written as an MP4 and handed over as a `.mov`, so the file is what its
+    /// name says (`HistoryVideoSave`).
+    public static func rewrap(_ movie: URL, to destination: URL, as fileType: AVFileType) async throws {
+        try? FileManager.default.removeItem(at: destination)
+        guard let session = AVAssetExportSession(asset: AVURLAsset(url: movie),
+                                                 presetName: AVAssetExportPresetPassthrough)
+        else { throw WriteError.writerFailed("the movie could not be put in another file") }
+        try await session.export(to: destination, as: fileType)
+    }
+
     /// Write the same frames out as an animated GIF or HEIC.
     ///
     /// The picture half of the recording export's animated path, aimed at a

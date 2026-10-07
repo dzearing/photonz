@@ -364,16 +364,21 @@ struct EditorCommands: Commands {
             }
             .keyboardShortcut("s", modifiers: [.command, .shift])
             .disabled(editor?.document == nil && !(video?.isReady ?? false))
-            Button("Save to Capture History") {
-                if let editor, let image = editor.compositeImage(),
-                   let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
-                                                           image: image,
-                                                           scale: editor.documentPixelScale) {
-                    editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
+            // A picture only. It flattens the window into one PNG, which for a
+            // video is a single still frame; a recording in history is saved
+            // into history by Save itself (`HistoryVideoSave`).
+            if editor?.documentHasTime != true {
+                Button("Save to Capture History") {
+                    if let editor, let image = editor.compositeImage(),
+                       let url = coordinator.saveEditedCapture(sourceURL: editor.sourceCaptureURL,
+                                                               image: image,
+                                                               scale: editor.documentPixelScale) {
+                        editor.savedToCaptureHistory(at: url) // sidecar + clean baseline
+                    }
                 }
+                .keyboardShortcut("s", modifiers: [.command, .option])
+                .disabled(editor?.document == nil)
             }
-            .keyboardShortcut("s", modifiers: [.command, .option])
-            .disabled(editor?.document == nil)
             Divider()
             // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
             // One Export command for both editors: a picture and a recording

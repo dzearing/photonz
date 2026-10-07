@@ -20766,3 +20766,9 @@ Next: the first editor window's ~200 ms first build
 - Stopwatch: open 110 -> 36 ms, Escape close 70 -> 18, pick 79 -> 47. First pick of a session is still 57-63 ms.
 - New walk `animate-a-property-find-walk`; stopwatch now also times Escape. Audit `queue/audits/2026-10-06-animate-a-property-over-the-panel.json`.
 - Open: `keying-a-value-redraws-only-what-the-key-changes` (p2), the 50 ms line for a pick and Undo: one key change re-runs ~80 view types. `a-colour-in-animate-a-property-shows-its-swatch` (p1), the mock's colour swatch in the list.
+
+## 2026-10-07 — An edited recording saves into history
+
+- Command S on a recording opened from history (Next) no longer asks where: it keeps the edit as `<name>.photonz` beside the tile, clones the recording as made into `.photonz-originals/`, and writes the finished video (High, full size, whole edit) over the tile's file in the background (`HistoryVideoSave` in PhotonzCore, `EditorState+HistoryVideoSave`, `CaptureStore+VideoSaves`). The corner card says Saving with progress, then copies the file. Tiles show Saving N% and an Edited mark; Copy and drag wait for the write. Opening the tile opens the project; Revert to Original + Save puts the recording back. `.mov` tiles get a QuickTime rewrap (`DocumentMovieWriter.rewrap`). Unfinished writes resume at launch. Save to Capture History is hidden for videos.
+- Walks: `an-edited-recording-saves-into-history-walk`, `saving-a-long-edit-into-history-timing-walk` (30 s Retina edit pasteable in 15.5 s, 3 min in ~75 s). Lent captures now take their project and kept original back with them.
+- Next: the cut-only fast path (`cutting-a-recording-and-exporting-it-copies-the`) would make the common save near instant.

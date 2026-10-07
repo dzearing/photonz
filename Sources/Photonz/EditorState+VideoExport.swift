@@ -321,8 +321,24 @@ extension EditorState {
                     captions: CaptionExport = .burnedIn,
                     range: VideoExportRange = .marked,
                     onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
-        guard let document = document?.forExport(captions: captions), document.hasTime
-        else { throw CocoaError(.fileNoSuchFile) }
+        guard let document else { throw CocoaError(.fileNoSuchFile) }
+        try await Self.writeVideo(of: document, pictures: store, format: format, quality: quality,
+                                  size: size, to: url, captions: captions, range: range,
+                                  onProgress: onProgress)
+    }
+
+    /// The same write for a document no window is holding: what a save into
+    /// history runs, which carries on after its window has closed
+    /// (`CaptureStore+VideoSaves`). `pictures` is where the document's own
+    /// pictures are, a snapshot of the window's store when one had it.
+    static func writeVideo(of document: PhotonzDocument, pictures store: ImageStore,
+                           format: RecordingFormat, quality: VideoExportQuality,
+                           size: VideoExportSize? = nil, to url: URL,
+                           captions: CaptionExport = .burnedIn,
+                           range: VideoExportRange = .marked,
+                           onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
+        let document = document.forExport(captions: captions)
+        guard document.hasTime else { throw CocoaError(.fileNoSuchFile) }
         // The In to the Out where they are set, and all of it otherwise
         // (`VideoExportRange`): a stretch is the window's own pictures and mix
         // over it, on a clock that starts at the In.

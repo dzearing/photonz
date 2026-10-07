@@ -55,6 +55,7 @@ struct ImageEditorRootView: View {
                     coordinator.openRecording(url)
                 }
                 editorState.showCaptureHistory = { [coordinator] in coordinator.showHistory() }
+                editorState.onSavedIntoHistory = { [coordinator] url in coordinator.showSavedVideoToast(url) }
                 // From here on this window takes the shared shelf's edits as
                 // they happen (`EditorState+SharedComponents`).
                 editorState.followSharedShelf()

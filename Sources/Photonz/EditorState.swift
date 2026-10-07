@@ -1846,7 +1846,7 @@ final class EditorState {
 
     /// The agent's capture center, captured at seed time so ⌘S on a history
     /// capture can save back into its file through the store (cache + reload).
-    @ObservationIgnored private weak var captureCenter: CaptureCenter?
+    @ObservationIgnored private(set) weak var captureCenter: CaptureCenter?
 
     /// The file this window was opened from (screenshot/image/package), for the
     /// window title. Distinct from `documentURL`, which is only set once saved as
@@ -1985,6 +1985,9 @@ final class EditorState {
         // recording on disk is never written over.
         // Stopped a moment ago and macOS is still closing the file: open on
         // the frame it ended on rather than waiting for it.
+        // A tile saved with an edit opens as that edit, ready to change and
+        // save over the same tile again.
+        if shape == nil, openHistoryVideoProject(at: url) { return }
         if shape == nil, Experiments.shared.recordingReadyAtStop, let store = captureCenter?.store,
            openClosingRecording(at: url, from: store) {
             return
@@ -2088,6 +2091,11 @@ final class EditorState {
     /// after all. Set by the window root, which is the only thing that can both
     /// say so in the corner and close the window this was going to fill.
     @ObservationIgnored var onRecordingWouldNotOpen: ((URL) -> Void)?
+
+    /// An edited recording was saved into history and its video is being
+    /// written: the corner says so, and copies it the moment it lands. Set by
+    /// the window root.
+    @ObservationIgnored var onSavedIntoHistory: ((URL) -> Void)?
 
     /// Opens a recording somewhere that is not this window. Set by the window
     /// root, for the same reason as the two above: the editor knows a recording
@@ -3202,8 +3210,10 @@ final class EditorState {
         // Command S on a video saves the project, and a recording never saved
         // as one gets the save box first. Never the capture write-back below:
         // that flattens a picture over the file, and the file is a video.
+        // A recording in history saves into history: the edit beside the
+        // tile and the finished video over it (`EditorState+HistoryVideoSave`).
         if isRecordingDocument {
-            saveDocumentAs()
+            if !saveRecordingIntoHistory() { saveDocumentAs() }
         } else if let documentURL {
             save(to: documentURL)
         } else if let sourceCaptureURL, let store = captureCenter?.store,
@@ -3263,25 +3273,9 @@ final class EditorState {
     func openPackage(at url: URL) {
         do {
             let document = try PackageIO.read(from: url, into: store)
-            // A saved video: every recording and sound goes back on file under
-            // the id the project holds it by, BEFORE the install, so the first
-            // frame asked for already knows where to come from. One that is
-            // nowhere to be found leaves its clips blank and is named, rather
-            // than the whole project refusing to open.
-            let found = ProjectMedia.resolve((try? PackageIO.readMedia(from: url)) ?? [],
-                                             project: url) {
-                FileManager.default.fileExists(atPath: $0.path)
-            }
-            for media in ProjectMedia.references(in: document) {
-                switch media {
-                case .recording(let movie):
-                    if let file = found.located[movie.id] { MovieLibrary.shared.adopt(movie, at: file) }
-                case .sound(let sound):
-                    if let file = found.located[sound.id] { SoundLibrary.shared.link(sound, to: file) }
-                }
-            }
+            let missing = Self.fileProjectMedia(of: document, project: url)
             installDocument(document, url: url)
-            missingMediaNames = found.missing.map(\.name)
+            missingMediaNames = missing
             if document.hasTime {
                 // The first frame, fetched before anybody presses anything,
                 // exactly as a recording opened on its own does.
@@ -3293,6 +3287,27 @@ final class EditorState {
         }
     }
 
+    /// A saved video: every recording and sound goes back on file under the id
+    /// the project holds it by, BEFORE the install, so the first frame asked
+    /// for already knows where to come from. One that is nowhere to be found
+    /// leaves its clips blank and is named, rather than the whole project
+    /// refusing to open. Returns the names of those.
+    static func fileProjectMedia(of document: PhotonzDocument, project url: URL) -> [String] {
+        let found = ProjectMedia.resolve((try? PackageIO.readMedia(from: url)) ?? [],
+                                         project: url) {
+            FileManager.default.fileExists(atPath: $0.path)
+        }
+        for media in ProjectMedia.references(in: document) {
+            switch media {
+            case .recording(let movie):
+                if let file = found.located[movie.id] { MovieLibrary.shared.adopt(movie, at: file) }
+            case .sound(let sound):
+                if let file = found.located[sound.id] { SoundLibrary.shared.link(sound, to: file) }
+            }
+        }
+        return found.missing.map(\.name)
+    }
+
     #if PHOTONZ_PLAYTEST
     /// Where Save As writes while a walk is driving (see `saveDocumentAs`).
     static var playtestSaveAsURL: URL?
@@ -3301,7 +3316,7 @@ final class EditorState {
     /// Say which of a project's files could not be found, once, as a sheet on
     /// its window: a clip with nothing in it is otherwise a mystery. Waits for
     /// the window, which a project that has just been opened may not have yet.
-    private func tellAboutMissingMedia(attempt: Int = 0) {
+    func tellAboutMissingMedia(attempt: Int = 0) {
         guard let message = ProjectMedia.missingMessage(names: missingMediaNames) else { return }
         guard let window = hostWindow, window.isVisible, window.alphaValue >= 1 else {
             guard attempt < 40 else { return }
@@ -3510,7 +3525,7 @@ final class EditorState {
         showCopyConfirmation(.image(measurements: listed))
     }
 
-    private func presentError(_ message: String, _ error: Error) {
+    func presentError(_ message: String, _ error: Error) {
         let alert = NSAlert()
         alert.messageText = message
         alert.informativeText = String(describing: error)

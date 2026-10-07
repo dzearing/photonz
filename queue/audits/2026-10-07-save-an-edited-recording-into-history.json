@@ -1,0 +1,32 @@
+{
+  "feature": "Saving an edited recording puts the finished video in history",
+  "epic": "video-share",
+  "summary": "Command S on a recording you opened from history now writes the edited video over that same history tile, in the background, and copies it to the clipboard when it lands, so record, edit, save, paste into Teams is the whole job. The edit stays re-openable and the recording as made is kept behind it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: an-edited-recording-saves-into-history-walk (the flow) and saving-a-long-edit-into-history-timing-walk (timings on a real-size Retina recording, and a write cut short by quitting).",
+  "switched": {},
+  "try": [
+    { "do": "Record something, then press Shift Command 6 to open it from history." },
+    { "do": "Trim the front with Q, cut with Command K, add a zoom from the Clip menu.", "shot": "2026-10-07-save-into-history-1-edited-sc.png" },
+    { "do": "Press Command S, then close the window straight away. No save box appears." },
+    { "do": "Watch the corner card: it says Saving with the edit's length, then Copied to clipboard.", "shot": "2026-10-07-save-into-history-2-saving-sc.png" },
+    { "do": "Paste into Teams or Slack: the edited video attaches." },
+    { "do": "Press Shift Command H: the same tile, now marked Edited, with the edit's length.", "shot": "2026-10-07-save-into-history-3-history-sc.png" },
+    { "do": "Open the tile again: you get the edit with its pieces and zoom, not a flattened video. Change it and press Command S: the same tile updates.", "shot": "2026-10-07-save-into-history-4-reopened-sc.png" },
+    { "do": "Video menu, Revert to Original, then Command S: the tile is the recording as made again." }
+  ],
+  "evaluate": [
+    "Is copying the finished video to the clipboard on its own when the save lands what you want, or should Save leave the clipboard alone and only offer Copy on the card?",
+    "Is one tile per recording right (the edit replaces the tile, the raw recording kept out of sight and back with Revert to Original), or do you want the raw recording as its own tile too?",
+    "Is about 15 seconds for a 30 second Retina edit, and about 75 seconds for 3 minutes, quick enough to save and paste, or does the cut-only fast path need to come first?",
+    "Does the small Edited pill on the tile read clearly enough, and is Saving with a percent and a bar the right thing to see while it writes?"
+  ],
+  "rough": [
+    "No mock covers saving into history or the Edited mark; the flow follows the capture walkthrough's model (the card says it is on the clipboard and it lands in history).",
+    "Measured on the probe, Retina 2880 by 1800 at High and full size: a 30 second edit was pasteable 15.5 s after Command S (15.9 s when cut short and resumed), a 3 minute edit 74.6 to 76.8 s; the 8 second sample took 1.1 to 1.5 s. Every edit is drawn frame by frame; the cut-only fast path is the open task cutting-a-recording-and-exporting-it-copies-the.",
+    "The bar sits at 0 to 1 percent for the first few seconds of a long save, while the writer weighs the picture before it starts writing.",
+    "A recording that is a .mov (what the Mac's own Shift Command 5 writes) gets the same edit in a QuickTime .mov under its own name, not an .mp4, so the tile keeps its name; Teams and Slack take .mov.",
+    "A recording that is not in history (opened from Finder) still saves as a project through the save box, as before. Save to Capture History is hidden for videos, since it could only ever save one still frame.",
+    "Quitting mid-save leaves the recording on the tile and finishes the save from the project at the next launch; it was proved by cutting a write short inside a walk, not by quitting the app for real.",
+    "Export is unchanged and separate: it writes a copy where you pick and does not touch the tile. A drag of the tile while it is still saving hands over the file when it lands."
+  ]
+}

@@ -79,6 +79,15 @@ final class SoundLibrary {
         refsByURL[standardized] = ref
     }
 
+    /// Every sound filed against `old` is filed against `new` instead: a
+    /// recording's own sound, when the recording is kept in the originals
+    /// folder before a save into history writes over its file
+    /// (`MovieLibrary.relocate`).
+    func relocate(from old: URL, to new: URL) {
+        for (id, url) in urls where url == old { urls[id] = new }
+        if let ref = refsByURL.removeValue(forKey: old) { refsByURL[new] = ref }
+    }
+
     /// Where this sound lives. A recording's own sound is looked up among the
     /// recordings, because it IS the recording.
     func url(for ref: SoundRef) -> URL? {

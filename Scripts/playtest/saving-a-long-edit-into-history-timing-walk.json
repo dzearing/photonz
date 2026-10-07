@@ -1,0 +1,186 @@
+{
+  "out": "/tmp/photonz-playtest/saving-a-long-edit-into-history-timing-walk",
+  "seed": "How long from Command S to a video in history that would paste, for a 30 second and a 3 minute edit of a real Retina screen recording (2880 by 1800, talking all the way), at Next defaults with no flag touched. The five minute talk is lent to history, opened from it, cut down with W to 30 seconds with a zoom on it, saved and closed; then reopened, put back with Revert to Original, cut to 3 minutes and saved. expectHistoryVideoEdit says the seconds each took. Four seconds into the 30 second write it is cut short the way quitting cuts it, and must be finished from the project left beside the tile, as the next launch does.",
+  "clock": 480,
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "lendLongRetinaTalk"
+    },
+    {
+      "do": "action",
+      "action": "editLastCapture"
+    },
+    {
+      "do": "wait",
+      "seconds": 3.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 30.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "w"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 1,
+      "seconds": 30.0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 10.0
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectToast",
+      "says": "Saving"
+    },
+    {
+      "do": "snapshot",
+      "name": "1a-the-card-says-saving",
+      "window": "Toast"
+    },
+    {
+      "do": "wait",
+      "seconds": 4.0
+    },
+    {
+      "do": "action",
+      "action": "historyWritesCutShortByQuit"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoEdit"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectToast",
+      "says": "Copied to clipboard"
+    },
+    {
+      "do": "snapshot",
+      "name": "1b-the-card-says-copied",
+      "window": "Toast"
+    },
+    {
+      "do": "describe",
+      "stage": "1-thirty-seconds",
+      "note": "a 30 second edit of a Retina recording, saved into history and closed at once: the seconds to a file that pastes are in the line above"
+    },
+    {
+      "do": "action",
+      "action": "editLastCapture"
+    },
+    {
+      "do": "wait",
+      "seconds": 3.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "expectRecording",
+      "seconds": 30.0
+    },
+    {
+      "do": "action",
+      "action": "videoRevertToOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 180.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "w"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectRecording",
+      "pieces": 1,
+      "seconds": 180.0
+    },
+    {
+      "do": "action",
+      "action": "save"
+    },
+    {
+      "do": "action",
+      "action": "closeDocument"
+    },
+    {
+      "do": "action",
+      "action": "expectHistoryVideoEdit"
+    },
+    {
+      "do": "describe",
+      "stage": "2-three-minutes",
+      "note": "a 3 minute edit of the same recording, saved over the same tile"
+    }
+  ]
+}
