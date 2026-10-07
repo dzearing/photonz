@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T13:35:45.963Z",
-  "updated": "2026-10-06T13:35:58.203Z",
+  "updated": "2026-10-07T02:00:08.936Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the audit queue/audits/2026-10-05-several-clips-change-track.json rough list: \"While in the hand only the lane under the pointer lights up; the other picked clips do not show where they will land until you let go\" and \"Option dragging several picked clips still leaves copies on their own tracks and only slides them in time.\" The second is a gesture that now behaves differently with and without Option, which a person will hit.\n\nCode: the multi-clip carry in Sources/Photonz/EditorState+ClipBar.swift (~510, clipTrackDrop) and the landing rule landClip; reuse that rule for the Option copies rather than writing a second one, and reuse the single drop's lane highlight. What happens on a busy spot is the open card on a-clip-landing-where-another-sits-does-the-same: follow whatever the app does today for a busy spot and do not settle that question here. Walk to extend: the several-clips-change-track walk (needs-the-Mac rules apply to real drags; see CLAUDE.md).",
@@ -28,6 +28,36 @@
     {
       "t": "2026-10-06T13:35:58.202Z",
       "note": "seq 3720 -> 5"
+    },
+    {
+      "t": "2026-10-07T01:34:15.977Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T01:59:49.935Z",
+      "note": "owns these walks: several-clips-show-where-each-lands-walk, several-picked-clips-change-track-walk"
+    },
+    {
+      "t": "2026-10-07T02:00:00.237Z",
+      "note": "Adversarial review before building: a Premiere user expects every clip in a multi-clip drag to show its destination, and Option copies to follow the same track rule as a move. All-or-nothing refusals light ONLY the refusing lane(s) red, since nothing changes track (lighting the others would promise a landing that does not happen). Busy spots for copies follow today's rule: refused, they land at home and lift off overlaps (card on a-clip-landing-where-another-sits-does-the-same not settled here)."
+    },
+    {
+      "t": "2026-10-07T02:00:00.294Z",
+      "note": "Built: core clipsCarryLandings (ClipsAcrossTracks.swift, the same plan canMoveClips/moveClips use, now per clip), ClipTrackDrop.lights(track:) + newTrackPlaces drive the lane highlight and new-track lines (TimelineTrackRows), several Option copies aimed via severalCopiesTrackDrop and landed with moveClips (EditorState+Tracks/ClipBar). Harness dragClip takes Option and lights:[...]; new walk several-clips-show-where-each-lands-walk green with 6 real captures; several-picked-clips-change-track, a-locked-track-keeps-its-clip, empty-track-slot, track-select-forward, library-clip-onto-a-track green; option-drag-copies-a-clip failed once at its Option-hover badge wait (before any drag) and passed on rerun. Scripts/test.sh: 11586 tests passed."
+    },
+    {
+      "t": "2026-10-07T02:00:00.351Z",
+      "note": "left rough: the carried clips stay drawn on their own lanes while target lanes light (no ghost on the target lane); same as the single drop, not filed. Mid-drag lifted row for Option copies folded into a-clip-landing-where-another-sits-does-the-same."
+    },
+    {
+      "t": "2026-10-07T02:00:08.934Z",
+      "note": "Each carried clip's landing lane lights (red on the lane that refuses); Option copies of several change track by the same rule as a move. Core clipsCarryLandings + tests, lane highlight in TimelineTrackRows, walk several-clips-show-where-each-lands-walk green at Next defaults with 6 real captures, neighbouring walks green, Scripts/test.sh 11586 passed. Audit queue/audits/2026-10-06-several-clips-show-where-each-lands.json. Commit 31f43814."
     }
-  ]
+  ],
+  "started": "2026-10-07T01:34:15.975Z",
+  "walks": [
+    "several-clips-show-where-each-lands-walk",
+    "several-picked-clips-change-track-walk"
+  ],
+  "completed": "2026-10-07T02:00:08.935Z"
 }

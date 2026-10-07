@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-06T12:04:49.851Z",
-  "updated": "2026-10-06T12:05:09.213Z",
+  "updated": "2026-10-07T01:59:49.864Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the daily digest 2026-10-06 from the docs and the audits, not by running anything new. File drop overwrites: docs/design/video-audio.md 'Let go on the TIMELINE instead', Overwrite by default, Command inserts. Paste goes up a track: queue/audits/2026-10-05-paste-a-clip-at-the-playhead.json rough ('this one puts the copy on a new track over it when the track is busy'). Option-drag goes up a track: queue/audits/2026-10-05-option-drag-copies-a-clip.json, whose evaluate question already asks the user this for Option-drag alone. Dragging a clip is refused: queue/audits/2026-10-06-refused-drop-says-why.json ('no room on V2') and 2026-10-05-several-clips-change-track. Add Media at Playhead lands on a free track or a new one on top (2026-10-05-add-media-at-playhead). Premiere overwrites in every one of these cases. The landing rule lives in ClipLanding.swift and the paste rule reuses Add Media's (a48ef47a), so one rule is a small change once chosen.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-06T12:05:09.210Z",
       "note": "waiting on the card: when a clip lands on a spot that already holds a clip, what should happen?"
+    },
+    {
+      "t": "2026-10-07T01:59:49.863Z",
+      "note": "also seen 2026-10-06 (task several-clips-carried-together-show-where-each-o): while Option copies are in the hand, every copy that overlaps its original is drawn on a lifted row with a track name of its own (a 'V3' between V2 and V1), even while the hand is aiming them at V2 and V2 is lit. Whatever this card decides for a busy spot decides that mid-drag row too; picture: queue/audits/2026-10-06-several-clips-show-where-each-lands-1-copies-carried-up-sc.png"
     }
   ]
 }
