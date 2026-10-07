@@ -1,0 +1,31 @@
+{
+  "id": "picking-a-cut-or-a-first-clip-on-the-timeline-an",
+  "title": "Picking a cut or a first clip on the timeline answers inside 50 ms",
+  "goal": "A click on a cut between two pieces, or the first click on a clip when nothing was picked, still keeps the app busy for about 75 ms while the right hand panel swaps one set of sections for another. Bring both under the video success line of 50 ms without changing what the panel shows.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3710,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T01:18:42.229Z",
+  "updated": "2026-10-07T01:18:42.232Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from clicking-a-clip-on-the-timeline-answers-at-once (2026-10-06), which brought a cut click from 95-131 ms to 70-85 and a piece after a cut from ~121 (once the panel followed the pick) to 34-73, and left these. Measured by ablation on the five minute Retina talk with captions (Scripts/playtest/perf/clip-click-cost-walk.json, front): a cut click is one pass of ~70 ms: removing the clip's 9 sections (~40 ms of section contents, spread with no single culprit: each group of sections ~5 ms, Captions ~12-15; ~20 ms the section shells: CollapsibleSection chrome, headers, geometry readers) plus ~12-25 ms of pick, timeline and menu bar (EditorCommands body). A first pick from nothing (canvas sections Canvas/Time/Captions to the clip's) is ~75-85 ms in the click's pass: nopanel 35, blank section bodies 58-61. Tried and rejected: keeping departed sections built but hidden (worse: 120-145 ms, the layout and accessibility cost follows the controls); dock height budget by reference (no change). The trailing accessibility pass (AccessibilityNode.updateFocus walking every AppKit-backed control) scales with controls added or removed in a pass; PanelRowsArrival is the tool that split it for Captions. Probe/dev walk markers (one NSView per playtestField/Control) add ~15-30 ms to those passes. Profile with xcrun xctrace record --template \"Time Profiler\" --attach <probe pid>.",
+  "acceptance": [
+    "A click on a cut and a first pick of a clip each hold the main thread under 50 ms in nine of ten clicks of clip-click-cost-walk over three runs, none over 100 ms",
+    "The panel still shows the cut (Edit point, Transition) after a cut click and the clip after a piece click, in the click's own frame",
+    "an-editing-session-walk and clip-click-cost-walk stay green"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T01:18:42.231Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "clip-click-cost-walk",
+    "an-editing-session-walk"
+  ]
+}
