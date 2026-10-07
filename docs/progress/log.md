@@ -20868,3 +20868,10 @@ Next: the first editor window's ~200 ms first build
 - Shipped: on a video in Next, a panel section that arrives well below the fold waits as a same-height space and builds when scrolled near (`PanelBodyReach`, flag `next-panel-builds-what-you-see`, on in Next); Captions' late rows are let go after half a second far out of sight. Walk harness builds everything when a lookup misses (`PanelBuildsEverything`).
 - Measured (clip-click-cost-walk, interleaved): cut 70 -> 57 ms, first clip pick 49 -> 40, deselect 55 -> 51. Keying Position and its undo unchanged (~50-63, undo ~69).
 - Open: decision card on whether keying a property may grow the timeline and shrink the picture (74% -> 71%); the rest of a cut is diffuse (menu bar commands re-evaluating ~3 ms, a header menu ~2.5 ms, window layout, accessibility).
+
+## 2026-10-07 — a sound's waveform follows its fades and level (a-sound-s-waveform-grows-and-shrinks-with-its-fa)
+
+- Shipped: the waveform on a sound's bar is drawn at the level it plays at, as video-audio.html does (`samp*levelAt`). A fade in rises out of a hairline, a fade out sinks into one, the fader and level points scale it, and it follows the hand while a fade diamond, the level line or a level dot is dragged. Mute and Solo do not touch it (they live on the track).
+- Core: `Waveform.drawnHeights(ofPeaks:level:fromLayerMS:toLayerMS:)` in `PhotonzCore/AudioNormalize.swift`, tested in `WaveformLevelTests`. Below unity the dB drawing is multiplied by the level (so a fade reads as one); above unity the boost adds decibels the way gain does.
+- App: `SoundWaveform` takes heights; `ClipPiecesBar` reads the level from the document, a level-line drag (`SoundLevelLine.onLevelInHand`) or a fade-diamond drag. Shared files, so Current draws the same.
+- Walk: `a-sound-s-waveform-follows-its-level-walk` (needs the Mac to itself: windowClick, dragGrip, windowDrag). Follow-up filed: `a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa` (84 pt lanes, one smooth waveform shape).

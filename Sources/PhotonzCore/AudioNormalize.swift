@@ -219,3 +219,36 @@ extension Waveform {
         return Float(min(max(0, through), 1))
     }
 }
+
+extension Waveform {
+
+    /// How tall each column of a sound's waveform draws once its level is
+    /// applied, for columns spread evenly across the layer from `fromLayerMS`
+    /// to `toLayerMS` (each standing for the moment at its middle).
+    ///
+    /// The mock draws `samp[i]*levelAt(tr,t)`: the waveform at the level it
+    /// plays at, so a fade in rises out of nothing and pulling the level line
+    /// down shrinks the drawing with it (`pages/video-audio.html`). Below the
+    /// level it was recorded at, the drawing is scaled straight by the level,
+    /// as the mock does, because a fade drawn in decibels would sit near full
+    /// height until its last moment and read as no fade at all. Above it, the
+    /// level is a boost and draws the way gain does, so twice as loud never
+    /// draws twice as tall.
+    public static func drawnHeights(ofPeaks columns: [Float], level: AudioLevel,
+                                    fromLayerMS: Int, toLayerMS: Int) -> [Float] {
+        guard !columns.isEmpty else { return [] }
+        let span = Double(max(0, toLayerMS - fromLayerMS))
+        let count = Double(columns.count)
+        return columns.enumerated().map { index, peak in
+            let ms = fromLayerMS + Int((span * (Double(index) + 0.5) / count).rounded())
+            return drawnHeight(ofPeak: peak, gainDB: level.clipGainDB, level: level.gain(atLayerMS: ms))
+        }
+    }
+
+    /// One column: its peak, the segment's gain, and the level at its moment.
+    static func drawnHeight(ofPeak peak: Float, gainDB: Double, level: Double) -> Float {
+        guard level > 0, level.isFinite else { return 0 }
+        guard level < 1 else { return drawnHeight(ofPeak: peak, gainDB: gainDB + 20 * log10(level)) }
+        return drawnHeight(ofPeak: peak, gainDB: gainDB) * Float(level)
+    }
+}

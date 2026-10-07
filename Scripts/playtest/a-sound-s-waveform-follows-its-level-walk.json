@@ -1,0 +1,28 @@
+{
+  "out": "/tmp/photonz-playtest/a-sound-s-waveform-follows-its-level-walk",
+  "seed": "The talking sample at Next defaults, nothing switched. Its sound is picked on the timeline, the diamond at the start of the sound is dragged right to about a second, and the waveform rises out of a hairline across that second, while the hand is still down and after it lets go. Then the level line is dragged down and the whole waveform shrinks with it. The drawing is the waveform at the level it plays at, as video-audio.html's lanes draw it.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "windowClick", "at": [600, 945] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-picked", "note": "The talking sample's sound picked: a diamond at each top corner of its segment, and the waveform at full height end to end" },
+    { "do": "snapshot", "name": "1-picked" },
+
+    { "do": "dragGrip", "control": "Sample Talk sound fade in", "by": 90, "steps": 10, "hold": "2-fading-in-held" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Fade in", "reads": "1.0s ±0.15" },
+    { "do": "describe", "stage": "2-faded-in", "note": "The left diamond dragged to about a second: across that second the waveform rises from a hairline to full height, under the level line rising out of silence. The held picture shows the same while the button was still down" },
+    { "do": "snapshot", "name": "2-faded-in" },
+
+    { "do": "windowDrag", "from": [700, 926], "to": [700, 933], "steps": 8, "hold": "3-turning-down-held" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-turned-down", "note": "The level line dragged down: the line drops and the whole waveform shrinks with it, the fade in still rising out of a hairline at its start. The held picture shows the waveform already smaller while the button was still down" },
+    { "do": "panel", "stage": "3-turned-down" },
+    { "do": "snapshot", "name": "3-turned-down" }
+  ]
+}

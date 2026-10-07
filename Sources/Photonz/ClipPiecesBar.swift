@@ -53,6 +53,9 @@ struct ClipPiecesBar: View {
     @State private var fadeDrag: FadeDrag?
     /// A picture fade handle in the hand, on a clip, a title or a shape.
     @State private var pictureFadeDrag: FadeDrag?
+    /// The level while the level line or one of its dots is in a hand, before
+    /// it is let go, so the waveform follows the drag.
+    @State private var levelInHand: AudioLevel?
 
     private struct FadeDrag: Equatable {
         let isIn: Bool
@@ -338,12 +341,18 @@ struct ClipPiecesBar: View {
                 if isSound, let item, item.playsSound, let wave = waveform,
                    shown.width >= 2 {
                     let file = Double(item.sourceOutMS - item.sourceInMS)
-                    SoundWaveform(columns: wave.columns(
-                        count: Int(shown.width),
-                        fromSourceMS: item.sourceInMS + Int(file * Double(shown.startFraction)),
-                        toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))),
-                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55),
-                        gainDB: soundLevel?.clipGainDB ?? 0)
+                    let span = Double(length)
+                    SoundWaveform(heights: Waveform.drawnHeights(
+                        ofPeaks: wave.columns(
+                            count: Int(shown.width),
+                            fromSourceMS: item.sourceInMS + Int(file * Double(shown.startFraction)),
+                            toSourceMS: item.sourceInMS + Int(file * Double(shown.endFraction))),
+                        // Drawn at the level it plays at, fades and all, read
+                        // across the same stretch of the layer the columns are.
+                        level: drawnSoundLevel(lengthMS: pieces.totalLengthMS),
+                        fromLayerMS: start + Int(span * Double(shown.startFraction)),
+                        toLayerMS: start + Int(span * Double(shown.endFraction))),
+                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55))
                         .padding(.vertical, 2)
                 }
             }
@@ -469,6 +478,18 @@ struct ClipPiecesBar: View {
         editorState.document?.layer(id: layerID)?.soundLevel
     }
 
+    /// The level the waveform is drawn at: what the document says, or what a
+    /// hand on the level line or on a fade handle is making it, so the drawing
+    /// moves with the drag rather than after it.
+    private func drawnSoundLevel(lengthMS: Int) -> AudioLevel {
+        var level = levelInHand ?? soundLevel ?? AudioLevel()
+        if let fadeDrag {
+            if fadeDrag.isIn { level.setFadeIn(fadeDrag.ms, lengthMS: lengthMS) }
+            else { level.setFadeOut(fadeDrag.ms, lengthMS: lengthMS) }
+        }
+        return level
+    }
+
     /// The shape of this layer's sound, once it has been read off the file.
     /// Asked for every time the bar draws, and asked for in the background the
     /// first time, so a bar with no waveform in it yet is a bar rather than a
@@ -505,7 +526,8 @@ struct ClipPiecesBar: View {
                            toMS: Int(Double(pieces.totalLengthMS) * Double(shown.endFraction)),
                            width: shown.width, height: barHeight,
                            lineColor: kind == nil ? .white.opacity(0.95)
-                               : Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255))
+                               : Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255),
+                           onLevelInHand: { levelInHand = $0 })
                 .offset(x: shown.x)
         }
     }

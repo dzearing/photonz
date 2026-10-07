@@ -18,26 +18,26 @@ import SwiftUI
 ///
 /// Drawn in decibels (`Waveform.drawnHeight`), as Premiere's logarithmic
 /// waveforms are: a straight scale drew a screen recording's system audio,
-/// forty decibels down, as a flat line. `gainDB` is the segment's gain, so a
-/// Normalize grows the drawing with it.
+/// forty decibels down, as a flat line. Then scaled by the level it plays at,
+/// as the mock draws it, so a fade in rises out of nothing and a sound turned
+/// down draws smaller (`Waveform.drawnHeights`). `heights` is one nought-to-one
+/// height per column, worked out already.
 struct SoundWaveform: View {
-    let columns: [Float]
+    let heights: [Float]
     /// The mock's `.wave i` on the dock (the audio ink at .7), white elsewhere.
     var color: Color = .white.opacity(0.55)
-    var gainDB: Double = 0
 
     var body: some View {
         Canvas { context, size in
-            guard columns.count > 0, size.width > 0 else { return }
-            let step = size.width / CGFloat(columns.count)
+            guard heights.count > 0, size.width > 0 else { return }
+            let step = size.width / CGFloat(heights.count)
             let middle = size.height / 2
             var path = Path()
-            for (index, column) in columns.enumerated() {
+            for (index, height) in heights.enumerated() {
                 // Never nothing at all: a hairline through the quiet parts is
                 // what makes a stretch of silence read as silence rather than
                 // as a gap in the drawing.
-                let half = max(0.5, CGFloat(Waveform.drawnHeight(ofPeak: column, gainDB: gainDB))
-                               * (middle - 1))
+                let half = max(0.5, CGFloat(height) * (middle - 1))
                 let x = CGFloat(index) * step
                 path.addRect(CGRect(x: x, y: middle - half,
                                     width: max(0.75, step - 0.35), height: half * 2))
@@ -71,6 +71,10 @@ struct SoundLevelLine: View {
     let height: CGFloat
     /// The mock's duck line colour on the dock, white on the icon strip.
     var lineColor: Color = .white.opacity(0.95)
+    /// Told the level as drawn while a drag is under way, and nil when it is
+    /// let go, so the waveform under the line shrinks and grows with the hand
+    /// rather than jumping when the drag lands.
+    var onLevelInHand: (AudioLevel?) -> Void = { _ in }
 
     /// The fader while the line is being dragged up or down, before it is
     /// let go, so the whole drag is one step to undo.
@@ -163,6 +167,7 @@ struct SoundLevelLine: View {
                 let shape = level.shape(atLayerMS: held)
                 guard shape > 0 else { return }
                 draggedGain = AudioLevel.bounded(gain(atY: value.location.y) / shape)
+                onLevelInHand(shownLevel)
             }
             .onEnded { _ in
                 if let draggedGain {
@@ -171,6 +176,7 @@ struct SoundLevelLine: View {
                 }
                 draggedGain = nil
                 heldAtMS = nil
+                onLevelInHand(nil)
             }
     }
 
@@ -225,9 +231,11 @@ struct SoundLevelLine: View {
         DragGesture(minimumDistance: 1)
             .onChanged { value in
                 movingPoint = (point.atMS, landing(at: value.location))
+                onLevelInHand(shownLevel)
             }
             .onEnded { value in
                 movingPoint = nil
+                onLevelInHand(nil)
                 editorState.setSoundLevelPoint(onLayer: layerID, fromMS: point.atMS,
                                                to: landing(at: value.location))
             }
