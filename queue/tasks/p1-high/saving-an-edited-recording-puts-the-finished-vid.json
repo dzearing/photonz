@@ -1,0 +1,38 @@
+{
+  "id": "saving-an-edited-recording-puts-the-finished-vid",
+  "title": "Saving an edited recording puts the finished video in history, ready to paste",
+  "goal": "Record, make a few edits, press Save and close: the finished video is in history straight away as a real MP4, so copying or dragging its tile into Teams or Slack gives the edited video, not the raw recording. The edit itself stays re-openable, and the original recording is never lost.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T03:55:55.627Z",
+  "updated": "2026-10-07T03:55:55.712Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"one very key thing. When I open a video, make some edits, save, and close, I really wanted to have it save a copy and put it in history. However, I think i need to export it to get an mp4 that can be embedded in another app. ... i want to be able to record a video, make some edits and save and use it in teams really fast. ... if that is always slow, then I guess just having the exported file in history is good\".\n\nFrom code reading (not run): Next opens recordings as an EditorState timeline document (NextExperience.swift:29-30). Command-S -> EditorState.saveDocument (EditorState.swift:3198-3222) -> saveDocumentAs (:3227-3242) writes a .photonz package referencing the recording (ProjectMedia.table :3244-3262), never rewrites the mp4 (EditorState+RevertRecording.swift:7-12), no CaptureStore call. Export: EditorState+VideoExport.swift:94-180, 318-367, no history entry; verbatim copy only for an untouched whole recording (:338-346), any edit is a full re-encode via DocumentFrames + DocumentMovieWriter (:348-366). Copy Video already renders edits to $TMPDIR/PhotonzClipboard/<name>.mp4 and pastes it (EditorState+VideoExport.swift:255-301, EditorCommands.swift:438-446); reuse that writer. History tile Copy/drag give the stored raw mp4 (AppCoordinator.swift:423-455, CaptureThumbnailView.swift:67, HistoryOverlay.swift:643-650). Save to Capture History (AppCoordinator.swift:888-910) only stores a flattened PNG. Measured export speed: queue/audits/2026-09-27-fast-video-export.json, 5 min Retina at 1080p in 72-83 s (0.23-0.26x running time). Companion task filed the same day: 'Cutting a recording and exporting it copies the pieces instead of re-encoding' makes the common cut-only case near instant.",
+  "acceptance": [
+    "Reproduce first at Next defaults: record, cut a piece out and add a zoom, Command-S, close. Record in the audit what history shows and what Copy on the tile pastes into a text editor/Finder (expected today: the raw recording; Save writes only a .photonz project)",
+    "Command-S on an edited recording keeps the editable project AND writes the edited MP4 in the background (High quality, the recording's own size, matching the Export sheet's MP4); its history tile shows the edited version with a small mark that it was edited, and the raw recording stays available (as its own entry or behind the edited one, the audit says which and why, using IA rules)",
+    "While the MP4 is being written the tile shows progress, the window can be closed at once, and quitting mid-write finishes or resumes it rather than losing it",
+    "Copy, drag-out and the toast's Copy on that tile give the edited MP4 file, so pasting into Teams or Slack attaches the edited video; MEASURED: time from Save to a pasteable file for a 30 s and a 3 min recording, written in the audit",
+    "Opening the tile opens the editable project, not the flattened MP4, so editing again and saving again replaces the edited MP4 in place (one tile, not a new one per save)",
+    "An untouched recording still saves nothing new and its tile is unchanged",
+    "Save to Capture History on a video no longer puts a single still frame into history; it does the same as above or is hidden for video",
+    "Export keeps working and, if the user exports instead, the exported file can also be the tile's file; say in the audit how the two relate",
+    "A walk at Next defaults records (or opens the sample recording), edits, saves, closes, and checks the history tile's file is an MP4 whose length matches the edit",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T03:55:55.629Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-07T03:55:55.711Z",
+      "note": "seq 510 -> 2"
+    }
+  ]
+}

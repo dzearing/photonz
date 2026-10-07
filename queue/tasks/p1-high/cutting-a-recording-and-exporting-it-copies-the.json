@@ -1,0 +1,36 @@
+{
+  "id": "cutting-a-recording-and-exporting-it-copies-the",
+  "title": "Cutting a recording and exporting it copies the pieces instead of re-encoding",
+  "goal": "When the only edits to a recording are cuts and trims (pieces taken out or kept), exporting or saving it to MP4 should take a second or two, not a quarter of its running time, because the kept pieces can be copied across as they are instead of every frame being drawn and encoded again. Anything drawn on top (zooms, titles, captions, transitions, speed changes) still goes through the full render.",
+  "epic": "video-share",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T03:55:55.785Z",
+  "updated": "2026-10-07T03:55:55.881Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User asked: \"is exporting to mp4 really that slow? ... i want to be able to record a video, make some edits and save and use it in teams really fast.\"\n\nFrom code reading (not run): the only fast path is a byte-for-byte copy of an untouched whole recording at High, unshrunk (EditorState+VideoExport.swift:338-346); any edit re-encodes every frame through DocumentFrames + DocumentMovieWriter (:348-366). Measured today: 5 min recording at 1080p in 72-83 s (queue/audits/2026-09-27-fast-video-export.json). Approach: AVMutableComposition of the kept time ranges with AVAssetExportPresetPassthrough (or AVAssetWriter passthrough of compressed samples) for the cut-only case; non-keyframe cut points need smart rendering (re-encode the GOP head) or accept snapping and say so. Trap: the recording's colour tags (MovieColour, 2026-10-04) must survive passthrough. Trap: held frames and speed changes are NOT cut-only. Companion: 'Saving an edited recording puts the finished video in history, ready to paste' (filed same day) uses this path for its background MP4.",
+  "acceptance": [
+    "Measure first: export a 3 min recording with three pieces cut out, today, and record the time in the audit",
+    "With cut/trim-only edits, MP4 export (and the save-to-history MP4 and Copy Video) copies the kept stretches without re-encoding, MEASURED under 3 s for a 3 min recording on this Mac, written in the audit",
+    "Cuts land on the exact frames the timeline shows: if a cut is not on a keyframe, only the frames from the cut to the next keyframe are re-encoded (smart render) or the audit shows why whole-segment re-encode is needed; the exported file's length and first/last frame of each piece match the timeline within one frame, MEASURED",
+    "Sound stays in sync across every cut (MEASURED drift under one frame at the end) and has no click at the joins",
+    "As soon as anything else is on the timeline (zoom, title, caption burned in, transition, speed, crop, click effects) the export uses today's full path, unchanged",
+    "The Export sheet's size estimate stays right for the fast path",
+    "Unit tests for deciding when the fast path applies; a walk exports a cut-only recording and checks duration and the time it took",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T03:55:55.787Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-07T03:55:55.880Z",
+      "note": "seq 510 -> 3"
+    }
+  ]
+}
