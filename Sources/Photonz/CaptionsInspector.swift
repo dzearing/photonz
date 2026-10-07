@@ -20,6 +20,12 @@ struct CaptionsInspector: View {
     @State private var languages: [Locale] = []
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         // Read so a change to the language draws the rows again.
         let _ = editorState.captionSettingsTick
         VStack(alignment: .leading, spacing: 6) {

@@ -115,3 +115,61 @@ extension PhotonzDocument {
         }
     }
 }
+
+// MARK: - What the look rows can tell apart
+
+extension Layer {
+
+    /// This layer with every key on where it is, how big and how turned left
+    /// out, its children's too, and the keys on how it looks kept. No keys
+    /// and an empty list of them are the same thing here.
+    var withoutPlacementKeys: Layer {
+        var layer = self
+        if let motions {
+            let looks = motions.filter { MotionProperty.lookSet.contains($0.property) }
+            layer.motions = looks.isEmpty ? nil : looks
+        }
+        if isGroup { layer.children = children.map(\.withoutPlacementKeys) }
+        return layer
+    }
+}
+
+extension MotionProperty {
+    /// `looks`, for asking of every key on every layer.
+    static let lookSet = Set(looks)
+}
+
+extension PhotonzDocument {
+
+    /// Whether the two are the same apart from keys on where a layer is, how
+    /// big and how turned (task `keying-a-value-redraws-only-what-the-key-changes`).
+    ///
+    /// The panel's look sections (Text, Appearance, Effects, Time) read the
+    /// layers as they are, and their look values at the playhead
+    /// (`lookPosed`), and nothing else about keys. A key on Position changes
+    /// none of that, so a document that differs from the last one only there
+    /// is one those sections have already drawn.
+    ///
+    /// Layer by layer, so a layer nothing touched costs one comparison, and
+    /// only a layer that differs is compared again with its placement keys
+    /// left out.
+    public func sameApartFromPlacementKeys(_ other: PhotonzDocument) -> Bool {
+        guard Self.layersMatchApartFromPlacementKeys(layers, other.layers),
+              Self.layersMatchApartFromPlacementKeys(componentOriginals, other.componentOriginals)
+        else { return false }
+        var mine = self, theirs = other
+        mine.layers = []
+        theirs.layers = []
+        mine.componentOriginals = []
+        theirs.componentOriginals = []
+        return mine == theirs
+    }
+
+    private static func layersMatchApartFromPlacementKeys(_ a: [Layer], _ b: [Layer]) -> Bool {
+        guard a.count == b.count else { return false }
+        for index in a.indices where a[index] != b[index] {
+            guard a[index].withoutPlacementKeys == b[index].withoutPlacementKeys else { return false }
+        }
+        return true
+    }
+}

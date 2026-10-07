@@ -36,6 +36,12 @@ struct EffectStyleRow: View {
     private var isNaming: Bool { editorState.isNamingEffectStyle(row: row) }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if editorState.effectStylesEnabled, !editorState.effectStyleSelection(row: row).isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline, spacing: ColorPartLayout.spacing) {
@@ -133,6 +139,12 @@ private struct EffectStyleControl: View {
     let row: LayerEffectRow
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let selection = editorState.effectStyleSelection(row: row)
         let style = editorState.boundEffectStyle(row: row)
         // Only this kind. A menu on a Shadow row that could turn it into a

@@ -219,6 +219,12 @@ struct MeasureRoleRow: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if Experiments.shared.measureRolesEnabled,
            let c = editorState.selectedMeasureLayer?.measure, c.alignment == nil {
             HStack(spacing: 8) {

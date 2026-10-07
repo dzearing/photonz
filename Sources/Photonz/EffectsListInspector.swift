@@ -44,6 +44,15 @@ struct EffectsListInspector: View {
     @State private var panes: [Int: DockHeightBudget.Block] = [:]
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.effectsSection)
+        #endif
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let rows = editorState.layerEffectRows
         VStack(alignment: .leading, spacing: Self.paneSpacing) {
             if rows.isEmpty {
@@ -227,6 +236,12 @@ private struct EffectColorRow: View {
     let row: LayerEffectRow
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if let target = ColorTarget(effect: row) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
                 Text("Color")
@@ -581,6 +596,12 @@ private struct ShadowKindRow: View {
     let ids: [UUID]
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         EffectChoiceRow(
             name: "Kind",
             reading: editorState.layerStyleSelection.shadows(at: index)
@@ -661,6 +682,12 @@ struct AddEffectButton: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         Menu {
             ForEach(AddableEffect.allCases) { kind in
                 Button(kind.title) { editorState.addEffect(kind) }

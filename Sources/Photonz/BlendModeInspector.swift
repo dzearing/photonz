@@ -44,6 +44,12 @@ struct BlendModeRow: View {
     }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         // Nothing to mix, no row. A control that cannot do anything, with a
         // line under it explaining that there is no control, is worse than
         // either on its own — and that is exactly what a highlight got until
@@ -193,6 +199,12 @@ struct FixedMixingNote: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let all = editorState.layerStyleSelection
         if !all.isEmpty, all.mixable.isEmpty {
             // One short line: a highlighter has no Blending to set because

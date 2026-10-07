@@ -1105,6 +1105,12 @@ struct InstanceStyleRevert: View {
     }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         // Only ever for ONE copy: over a selection there is no single copy for
         // it to answer for.
         if let layerID = soleLayerID(editorState.layerIDs(reaching: reach)),

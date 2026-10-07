@@ -37,6 +37,12 @@ struct TextStyleControl: View {
     private var selection: TextStyleSelection { editorState.textStyleSelection }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if editorState.textStylesEnabled, !selection.isEmpty {
             let selection = selection
             let style = editorState.boundTextStyle
@@ -156,6 +162,12 @@ struct TextStyleRow: View {
     private var isNaming: Bool { editorState.isNamingTextStyle }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if editorState.textStylesEnabled, !editorState.textStyleSelection.isEmpty {
             VStack(alignment: .leading, spacing: 6) {
                 Group {

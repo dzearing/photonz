@@ -26,6 +26,15 @@ struct PartsInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.appearanceSection)
+        #endif
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let rows = editorState.layerPartRows
         let corners = editorState.corneredRadiusSelection
         // Wider than the gap inside a part (6), so the eye groups a part with
@@ -217,6 +226,12 @@ private struct PartRowView: View {
     private var showsColor: Bool { row.showsSettings }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
                 // The tick and then the name, in that order, from the one place

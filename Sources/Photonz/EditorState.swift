@@ -27,7 +27,29 @@ final class EditorState {
         didSet {
             let has = history != nil
             if hasDocument != has { hasDocument = has }
+            noteWhatTheLookRowsSee()
         }
+    }
+    /// Moves on only when the document changes in a way the panel's look
+    /// sections could show: anything at all apart from keys on where a layer
+    /// is, how big and how turned (`sameApartFromPlacementKeys`). What those
+    /// sections watch instead of the whole document; see `readingForTheLookRows`.
+    private(set) var lookRowsRevision = 0
+    /// The document `lookRowsRevision` last answered for.
+    @ObservationIgnored private var lookRowsSaw: PhotonzDocument?
+    /// True while a look section is building its body, so that every read of
+    /// `document` in it watches `lookRowsRevision` rather than `history`
+    /// (`readingForTheLookRows`).
+    static var readsForTheLookRows = false
+
+    private func noteWhatTheLookRowsSee() {
+        let now = history?.current
+        switch (lookRowsSaw, now) {
+        case (nil, nil): return
+        case let (saw?, now?) where saw.sameApartFromPlacementKeys(now): break
+        default: lookRowsRevision &+= 1
+        }
+        lookRowsSaw = now
     }
     /// Whether a document is open, changing only when that answer does. The
     /// window's shell asks this in a dozen places; asking `document != nil`
@@ -1831,7 +1853,15 @@ final class EditorState {
 
     var zoom: CGFloat { viewport?.zoom ?? 1 }
 
-    var document: PhotonzDocument? { history?.current }
+    var document: PhotonzDocument? {
+        // A look section reads the document as it is, and is told it changed
+        // only when something it could show did (`readingForTheLookRows`).
+        if Self.readsForTheLookRows {
+            _ = lookRowsRevision
+            return _history?.current
+        }
+        return history?.current
+    }
     var canUndo: Bool { history?.canUndo ?? false }
     var canRedo: Bool { history?.canRedo ?? false }
 
@@ -3821,9 +3851,9 @@ final class EditorState {
     /// until the re-render lands, so nothing flashes.
     func discardDragPreview() {
         dragPreviewGeneration += 1
-        dragPreview = nil
-        clearPreviewAfterNextFrame = false
-        cornerRadiiPreview = nil
+        if dragPreview != nil { dragPreview = nil }
+        if clearPreviewAfterNextFrame { clearPreviewAfterNextFrame = false }
+        if cornerRadiiPreview != nil { cornerRadiiPreview = nil }
     }
 
     /// The corners a canvas drag is showing RIGHT NOW, before it has been
@@ -4279,13 +4309,16 @@ final class EditorState {
                  openingTheTimeline: Bool = true,
                  _ mutate: (inout PhotonzDocument) -> Void) {
         // Anything recorded supersedes a colour drag's live frames, including
-        // the release that ends one.
-        paintPreview = nil
+        // the release that ends one. Each of these is written only when there
+        // is something to clear: `@Observable` tells every reader about a
+        // write whether or not the value moved, and every edit comes through
+        // here (`keying-a-value-redraws-only-what-the-key-changes`).
+        if paintPreview != nil { paintPreview = nil }
         // A tool owed back by a paste is owed back for exactly one step. Any
         // other edit landing on top means undo will step over that edit first,
         // and a tool reappearing several presses later is its own surprise.
         // The paste path re-arms this itself, right after its own edit lands.
-        pasteToolReturn = nil
+        if pasteToolReturn != nil { pasteToolReturn = nil }
         // A pill offering Undo is about the step it reported; once another
         // lands on top its button would take off the wrong one, so it goes.
         if canvasNoticeUndoes != nil, copyConfirmation?.action == .undo {
@@ -4401,8 +4434,8 @@ final class EditorState {
     /// replaced.
     private func restoreSelectionFromHistory() {
         guard Experiments.shared.selectionUndoEnabled, let snapshot = history?.selection else { return }
-        selection = snapshot.region
-        selectionTargetsPixels = snapshot.targetsPixels
+        if selection != snapshot.region { selection = snapshot.region }
+        if selectionTargetsPixels != snapshot.targetsPixels { selectionTargetsPixels = snapshot.targetsPixels }
         // ...and the layers that were picked under it, so the step after an
         // undo is the work rather than a re-pick: undo a stack and the two
         // things the band caught are picked again, undo a delete and ⌫
@@ -4431,8 +4464,8 @@ final class EditorState {
 
     func undo() {
         discardDragPreview() // undone edits may invalidate a held sprite
-        stylePreview = nil
-        paintPreview = nil
+        if stylePreview != nil { stylePreview = nil }
+        if paintPreview != nil { paintPreview = nil }
         dropStaleBreakNotice()
         let returning = pasteToolReturn
         let pastedWasThere = returning.map { document?.layer(id: $0.layer) != nil } ?? false
@@ -4459,8 +4492,8 @@ final class EditorState {
 
     func redo() {
         discardDragPreview()
-        stylePreview = nil
-        paintPreview = nil
+        if stylePreview != nil { stylePreview = nil }
+        if paintPreview != nil { paintPreview = nil }
         dropStaleBreakNotice()
         let returning = pasteToolReturn
         let pastedWasGone = returning.map { document?.layer(id: $0.layer) == nil } ?? false

@@ -31,6 +31,12 @@ struct ShapePartSettings: View {
     let row: LayerPartRow
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let ids = reach
         let selection = shapes(ids)
         if row.part == .arrowHead, !selection.isEmpty {
@@ -149,6 +155,12 @@ struct ArrowStyleRow: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let arrows = editorState.shapeSelection.members.filter { $0.content.shape == .arrow }
         if Experiments.shared.arrowStylesEnabled, !arrows.isEmpty {
             let styles = Set(arrows.map(\.content.arrowStyle))
@@ -222,6 +234,12 @@ struct ArrowLabelSettings: View {
     let leadsWithColumn: Bool
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let selection = editorState.shapeSelection
         // ONE arrow only. A single field over three arrows could only give all
         // three the same words, and a caption is what the arrow says.
@@ -292,6 +310,12 @@ struct ArrowLabelPlacementReset: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let pinned = editorState.shapeSelection.pinnedCaptionIDs
         if !pinned.isEmpty, Experiments.shared.arrowCaptionsEnabled {
             Button(pinned.count > 1 ? "Reset Label Positions" : "Reset Label Position") {

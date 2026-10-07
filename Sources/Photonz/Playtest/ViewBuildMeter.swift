@@ -45,6 +45,15 @@ final class ViewBuildMeter {
         case wordsLane
         /// One track of the timeline, header and lane.
         case trackRow
+        /// The bodies of the panel's sections, for the claim that a key on
+        /// where a layer is builds only the section that shows keys
+        /// (`keying-a-value-redraws-only-what-the-key-changes`): Properties
+        /// must build, and Text, Appearance, Effects and Time must not.
+        case keysSection
+        case textSection
+        case appearanceSection
+        case effectsSection
+        case timeSection
         /// One capture tile of the history strip. A filter switch builds the
         /// tiles it brings on screen and no others (`history-filter-switch-speed-walk`).
         case historyTile

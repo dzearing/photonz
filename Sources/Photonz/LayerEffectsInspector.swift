@@ -106,6 +106,12 @@ struct ShadowInspector: View {
     var index = 0
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         // The layers that have a shadow to talk about. A label whose halo its
         // surface draws for it is not one of them: a switch reading "on" there
         // would be describing a shadow nobody can see, so off is the truth and

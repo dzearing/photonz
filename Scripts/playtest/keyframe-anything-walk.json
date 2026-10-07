@@ -98,6 +98,40 @@
    "in": "Animate a property"
   },
   {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "pick-builds",
+   "note": "A key on Position builds the Properties section and none of the sections that show how the title looks: Text, Appearance, Effects and Time read the document apart from placement keys (keying-a-value-redraws-only-what-the-key-changes)."
+  },
+  {
+   "do": "expectBuilds",
+   "view": "keysSection",
+   "atLeast": 1
+  },
+  {
+   "do": "expectBuilds",
+   "view": "textSection",
+   "atMost": 0
+  },
+  {
+   "do": "expectBuilds",
+   "view": "appearanceSection",
+   "atMost": 0
+  },
+  {
+   "do": "expectBuilds",
+   "view": "effectsSection",
+   "atMost": 0
+  },
+  {
+   "do": "expectBuilds",
+   "view": "timeSection",
+   "atMost": 0
+  },
+  {
    "do": "press",
    "control": "Animate a property"
   },

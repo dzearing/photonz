@@ -17,6 +17,15 @@ struct SpeedInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.timeSection)
+        #endif
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         VStack(alignment: .leading, spacing: 6) {
             // Words placed on a document with time: an in, an out and a fade,
             // and nothing about frames (`TitleTime.swift`).

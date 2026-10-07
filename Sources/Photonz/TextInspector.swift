@@ -63,6 +63,15 @@ struct TextInspector: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.textSection)
+        #endif
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         let selection = editorState.textSelection
         let ids = selection.layerIDs
         if !selection.isEmpty {

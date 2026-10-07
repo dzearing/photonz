@@ -154,6 +154,12 @@ struct MaskedByRow: View {
     private var selection: LayerStyleSelection { editorState.maskableSelection }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if !selection.isEmpty { rows }
     }
 

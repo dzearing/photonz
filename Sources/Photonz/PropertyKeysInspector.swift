@@ -22,6 +22,9 @@ struct PropertyKeysInspector: View {
     @State private var isPicking = false
 
     var body: some View {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.keysSection)
+        #endif
         VStack(alignment: .leading, spacing: 2) {
             if let line = editorState.keyClipLine {
                 ClipLineRow(line: line)

@@ -108,6 +108,12 @@ struct ColorStyleControl: View, Equatable {
     private var borrowed: [BorrowedColor] { editorState.borrowedColors(for: target) }
 
     var body: some View {
+        readingForTheLookRows { lookBody }
+    }
+
+    /// The body, built by `readingForTheLookRows`: nothing in it shows a
+    /// key on where a layer is.
+    @ViewBuilder private var lookBody: some View {
         if Experiments.shared.colorStylesEnabled, !selection.isEmpty {
             let selection = selection
             // Looked up in the WHOLE shelf, not in the offer list below: a
