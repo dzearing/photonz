@@ -359,7 +359,8 @@ extension EditorState {
             // in one pass and kept small; anything else reads exact frames.
             let handMoving = playheadInHand && !playheadSettled && !isDocumentPlaying
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
-                              handMoving: handMoving, backward: playheadTravel == .backward)
+                              handMoving: handMoving, backward: playheadTravel == .backward,
+                              playing: isDocumentPlaying)
         }
         submit(document)
     }

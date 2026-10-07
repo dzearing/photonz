@@ -4,6 +4,7 @@ import CoreImage
 import Foundation
 import PhotonzCore
 import PhotonzRender
+import Synchronization
 
 // Where a clip's pixels actually come from (`docs/design/video.md` §4).
 //
@@ -288,7 +289,12 @@ enum MovieSweeper {
     /// the task is cancelled. Answers false when the recording cannot be read
     /// this way at all (a turn that is not a right angle), so the caller goes
     /// back to reading exact frames.
+    ///
+    /// `waitsAt` is told, before each sample is read, the first grid frame not
+    /// handed over yet, and answers whether to wait before reading on: a pass
+    /// playing ahead of the playhead waits there for it (`MoviePlayPass`).
     static func sweep(movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize,
+                      waitsAt: (@Sendable (Int) -> Bool)? = nil,
                       deliver: @escaping @Sendable (Int, CGImage) -> Void) async -> Bool {
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .video).first,
@@ -319,7 +325,12 @@ enum MovieSweeper {
         }
         // Stopped between samples only: `cancelReading` from another thread
         // while a sample is being read crashes (tried 2026-09-27).
-        while !Task.isCancelled, let sample = output.copyNextSampleBuffer() {
+        while !Task.isCancelled {
+            if let waitsAt, waitsAt(grid.nextFrame) {
+                try? await Task.sleep(for: .milliseconds(4))
+                continue
+            }
+            guard let sample = output.copyNextSampleBuffer() else { break }
             guard let buffer = CMSampleBufferGetImageBuffer(sample) else { continue }
             let ms = CMSampleBufferGetPresentationTimeStamp(sample).seconds * 1000
             hand(grid.arrived(atMS: ms), previous)
@@ -410,6 +421,40 @@ final class MovieFrameFetcher {
     /// hand reads frame by frame as before.
     private var unsweepable = Set<UUID>()
 
+    /// Where a pass playing ahead of the playhead has got to, and where the
+    /// playhead is, shared with the pass as it reads off the main actor.
+    private final class PlayMark: Sendable {
+        private let state: Mutex<(playhead: Int, reached: Int)>
+        init(playhead: Int) { state = Mutex((playhead, playhead)) }
+        var playhead: Int {
+            get { state.withLock { $0.playhead } }
+            set { state.withLock { $0.playhead = newValue } }
+        }
+        var reached: Int {
+            get { state.withLock { $0.reached } }
+            set { state.withLock { $0.reached = newValue } }
+        }
+        /// Note how far the pass has got, and answer whether it is far enough
+        /// ahead of the playhead to wait.
+        func passed(_ next: Int) -> Bool {
+            state.withLock {
+                $0.reached = next
+                return MoviePlayPass.shouldWait(next: next, playhead: $0.playhead)
+            }
+        }
+    }
+
+    /// The pass reading ahead of a playing playhead in each recording, at the
+    /// size the canvas shows it (`MoviePlayPass`).
+    private struct PlayPass {
+        let token: UUID
+        let frames: ClosedRange<Int>
+        let width: Int
+        let mark: PlayMark
+        let task: Task<Void, Never>
+    }
+    private var playPasses: [UUID: PlayPass] = [:]
+
     private let store: ImageStore
     /// Decoded frames, in the order they landed.
     private var resident: [Resident] = []
@@ -477,9 +522,17 @@ final class MovieFrameFetcher {
     /// hand at any size is good enough until the hand holds still. Any other
     /// call stops those passes, so the sharp frame it asks for has the decoder
     /// to itself.
+    ///
+    /// While the clock plays it forwards (`playing`), the frames ahead of the
+    /// playhead are read in one pass that keeps a little ahead of it, sharp,
+    /// rather than one at a time (`MoviePlayPass`); only a frame the pass will
+    /// not reach soon, across a cut, is read on its own. Any other call stops
+    /// those passes.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
-               handMoving: Bool = false, backward: Bool = false) {
+               handMoving: Bool = false, backward: Bool = false, playing: Bool = false) {
         if !handMoving { stopSweeps() }
+        let playsAhead = playing && !handMoving && !backward
+        if !playsAhead { stopPlayPasses() }
         var wanted: [Read] = []
         var asked = Set<UUID>()
         var focused = Set<UUID>()
@@ -495,9 +548,17 @@ final class MovieFrameFetcher {
                     sweep(request.movie, url: url, around: frame, backward: backward,
                           size: MovieSweep.roughSize(for: width))
                 }
+                if playsAhead, !unsweepable.contains(request.movie.id) {
+                    play(request.movie, url: url, at: frame, size: width)
+                }
             }
             if handMoving, !unsweepable.contains(request.movie.id) { continue }
             if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
+            if playsAhead, let pass = playPasses[request.movie.id],
+               pass.width >= Int(width.width.rounded()) - 1,
+               MoviePlayPass.covers(frame: request.movie.frameIndex(atSourceMS: request.sourceMS),
+                                    running: pass.frames, reached: pass.mark.reached,
+                                    playhead: pass.mark.playhead) { continue }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
@@ -539,6 +600,70 @@ final class MovieFrameFetcher {
     private func stopSweeps() {
         for sweep in sweeps.values { sweep.task.cancel() }
         sweeps.removeAll()
+    }
+
+    // MARK: Reading ahead of a playing playhead
+
+    /// Keep a pass reading ahead of a playhead on `frame`: the one running, if
+    /// it still serves it, told where the playhead is now; else a new one
+    /// from here.
+    private func play(_ movie: MovieRef, url: URL, at frame: Int, size: CGSize) {
+        let width = Int(size.width.rounded())
+        if let pass = playPasses[movie.id], pass.width == width,
+           MoviePlayPass.serves(running: pass.frames, reached: pass.mark.reached, playhead: frame,
+                                inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) }) {
+            pass.mark.playhead = frame
+            return
+        }
+        playPasses[movie.id]?.task.cancel()
+        let frames = MoviePlayPass.window(from: frame, movie: movie)
+        let token = UUID()
+        let mark = PlayMark(playhead: frame)
+        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+            self?.filePlayed(image, movie: movie, frameIndex: index)
+        }
+        let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
+            guard let self, playPasses[movie.id]?.token == token else { return }
+            if swept {
+                // Read to the end: it stays, so the playhead running out the
+                // last frames does not start a pass over them again.
+                mark.reached = frames.upperBound + 1
+            } else {
+                unsweepable.insert(movie.id)
+                playPasses[movie.id] = nil
+            }
+        }
+        let task = Task.detached(priority: .userInitiated) {
+            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
+                                                 waitsAt: { mark.passed($0) }) { index, image in
+                Task { @MainActor in file(index, image) }
+            }
+            if !Task.isCancelled { await finished(swept) }
+        }
+        playPasses[movie.id] = PlayPass(token: token, frames: frames, width: width, mark: mark, task: task)
+    }
+
+    /// Stop every pass reading ahead of a playhead: it stopped, or turned
+    /// round, or a hand took it.
+    private func stopPlayPasses() {
+        for pass in playPasses.values { pass.task.cancel() }
+        playPasses.removeAll()
+    }
+
+    /// A frame a pass ahead of the playhead reached, filed sharp like any
+    /// exact read. Only one at or behind the playhead redraws the canvas: the
+    /// clock's next tick draws a frame read ahead when it gets there, and
+    /// thirty redraws a second of a picture that did not change is a core
+    /// spent on nothing.
+    private func filePlayed(_ image: CGImage, movie: MovieRef, frameIndex: Int) {
+        let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
+        if let filed = filedWidth(ref), filed >= CGFloat(image.width) - 1 { return }
+        let first = !resident.contains { $0.movie == movie.id }
+        store.register(image, as: ref)
+        resident.removeAll { $0.ref.id == ref.id }
+        resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex))
+        keepInsideBudget()
+        if first || frameIndex <= focus[movie.id] ?? frameIndex { onFrameLanded?() }
     }
 
     /// A frame a one-pass read reached. Filed unless something at least as

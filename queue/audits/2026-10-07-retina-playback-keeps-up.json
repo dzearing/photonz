@@ -1,0 +1,27 @@
+{
+  "feature": "A full-screen Retina recording keeps up while it plays",
+  "epic": "video-editing",
+  "summary": "Playing a 3456x2234 recording now shows the frame under the playhead every time. Before, 17 of 24 looks showed a frame up to 16 frames (half a second) old, so the picture stuck and jumped.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open 'Full screen Retina recording 3456x2234.mp4' (Scripts/playtest/fixtures).", "shot": "2026-10-07-retina-playback-keeps-up-1.png" },
+    { "do": "Press Space and watch the first second: the coloured line should sweep smoothly." },
+    { "do": "Press Space to pause, then Space again to play on." },
+    { "do": "While it plays, drag the playhead back to the start and let go." },
+    { "do": "Open a recording with cuts in it and play across a cut." },
+    { "do": "Press J, then L twice, to play backwards and at double speed." }
+  ],
+  "evaluate": [
+    "Does the full-screen recording move as smoothly as a small one from the first second?",
+    "When you pause, is the paused frame as sharp and the same colours as it was before this change?",
+    "After a scrub while playing, does the picture pick up straight away from where you let go?",
+    "Does playing across a cut ever show a frame from before the cut for a moment?"
+  ],
+  "rough": [
+    "Before and after, same walk, same machine: before 17, 21 and 19 of 24 looks late, by up to 16 or 18 frames; after 0 of 24 in four runs in a row, and 0 of 24 with ten cores busy with other work.",
+    "Playing backwards (J) still reads frame by frame, the old slow way, so a full-screen recording played backwards can still lag. No mock covers backward playback, and nobody has reported it.",
+    "A cut that jumps to another part of the same recording, or a dissolve between two parts of one recording, reads the far side frame by frame. The editing-session walk plays across its cuts and dissolve with every frame in time, but a very short piece of a full-screen recording could still be a frame or two late.",
+    "The picture attached is the real window after playing to the end. The walk's 'while playing' snapshot is taken after its own check has already played to 3.0s of a 3.6s file, so it lands at the end. No mock covers this surface: nothing on screen changed, only how quickly frames arrive."
+  ]
+}

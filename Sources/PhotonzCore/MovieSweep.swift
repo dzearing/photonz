@@ -98,6 +98,11 @@ public struct MovieSweepGrid: Sendable {
         self.next = frames.lowerBound
     }
 
+    /// The first grid frame no sample has filled yet: everything before it
+    /// has been handed over. What a pass playing ahead of the playhead paces
+    /// itself by (`MoviePlayPass`).
+    public var nextFrame: Int { next }
+
     /// A sample starting at `ms` arrived. Answers the grid frames the sample
     /// BEFORE it fills, which are the ones this one starts too late for. None
     /// before the first sample: those grid frames show something the pass

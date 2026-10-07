@@ -9085,7 +9085,7 @@ private final class Run {
         var looks: [CGImage] = []
         var empty: [Int] = []
         var gaps = 0
-        var late = 0
+        var late: [Int] = []
         var worstLag = 0
         var seen = Set<String>()
         for moment in 1...moments {
@@ -9100,7 +9100,7 @@ private final class Run {
                 seen.insert(clip.name)
                 let index = movie.frameIndex(atSourceMS: wanted)
                 let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
-                if shown != index { late += 1 }
+                if shown != index, late.last != moment { late.append(moment) }
                 if let shown { worstLag = max(worstLag, abs(index - shown)) }
             }
             guard let picture = editor.renderedImage,
@@ -9120,9 +9120,10 @@ private final class Run {
         for (index, look) in looks.enumerated() {
             try writePNG(look, name: "\(name)-\(index + 1)")
         }
-        let lateness = late == 0
+        let lateness = late.isEmpty
             ? "every frame was read before the playhead reached it"
-            : "\(late) caught a frame still being read and held one \(worstLag) frame(s) back instead"
+            : "\(late.count) caught a frame still being read and held one \(worstLag) frame(s) back instead "
+                + "(look \(late.map(String.init).joined(separator: ", ")))"
         guard empty.isEmpty else {
             throw Failure(description: "the clip area was EMPTY at \(empty.count) of \(moments) moments "
                 + "(\(empty.map(String.init).joined(separator: ", "))) while playing; \(lateness)")
@@ -9130,6 +9131,11 @@ private final class Run {
         guard !seen.isEmpty else {
             throw Failure(description: "no clip was on at any of the \(moments) moments looked at, "
                 + "so nothing was checked")
+        }
+        // Held is not blank, but it is a stutter: a picture that sticks and
+        // jumps while the sound goes on (`PlaybackKeepsUp`).
+        if let behind = PlaybackKeepsUp.problem(lateLooks: late, framesBehind: worstLag, looks: moments) {
+            throw Failure(description: "the picture did not keep up while it played: \(behind)")
         }
         let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })
         let gapNote = gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design"

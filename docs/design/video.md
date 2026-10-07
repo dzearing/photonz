@@ -138,7 +138,23 @@ What keeps it now:
    3456x2234 frame, longer than the 33ms it is on screen, and reading smaller
    does not help because the time is in the decode. `MovieDecoder.lanes` = 4
    side by side read one every 14ms or so; `MovieFrameFetcher.playAheadFrames`
-   = 8 keeps them busy.
+   = 8 keeps them busy. **Superseded for playing forwards on 2026-10-07**
+   (`a-full-screen-retina-recording-keeps-up-while-it`): measured again on the
+   fixture, the four lanes read 90 frames in 6.0s, about 15 a second against
+   the 30 the grid shows, so the picture held one up to 16 frames old. While
+   the clock plays forwards, ONE `AVAssetReader` pass (`MovieSweeper`, the same
+   reader item 11 uses for a hand) reads from the playhead at the size the
+   canvas shows it and files every frame sharp; the same three seconds read and
+   converted in 0.45s. It paces itself `MoviePlayPass.aheadFrames` (8) ahead of
+   the playhead and waits there, and is started over when the playhead goes
+   somewhere it is not (a scrub, a cut back in the same recording, a pass
+   fallen 4 frames behind). A frame further past the playhead than the pass
+   will go, which is a frame across a cut, is still read exactly by the lanes,
+   and so is everything played backwards. Only a frame at or behind the
+   playhead redraws when it lands. The colours match the exact read (mean
+   difference 0.4 of 255, same colour space). The lateness the walk measures
+   now fails it (`PlaybackKeepsUp`: more than 2 of its looks late, or any look
+   more than 2 frames behind).
 6. **Frames are read at the size they are shown**, in eighths of the
    recording's size (`MovieRef.decodePixelSize`), which is what lets the
    16-frame budget stay small. Zooming in reads the frame on screen again; the
