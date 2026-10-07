@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:05:12.387Z",
-  "updated": "2026-10-07T22:07:44.125Z",
+  "updated": "2026-10-07T22:40:29.528Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-07 by the manager pass on the probe built 12:19 from HEAD 8cfad4ee, machine load 2.6 on 16 cores:\n  Scripts/playtest-all.sh --no-build playing-a-recording-never-blinks-walk  (three runs)\n  -> 'played 3.0s (3456x2234), looked 24 times ... 15 caught a frame still being read and held one 9 frame(s) back instead' (12:36 rotating check)\n  -> '21 caught a frame still being read and held one 18 frame(s) back instead'\n  -> '19 caught a frame still being read and held one 15 frame(s) back instead'\nControl, same machine, also behind other apps: a scratch walk (/tmp/mgr-walks/talk-playback-lag.json: openSampleTalk, expectPlaybackNeverBlank 3 s, 24 moments) on the 1280x800 talk sample read every frame in time, twice. So it is the frame size, not the probe being in the background.\nHistory: playing-a-recording-never-blinks (done) shipped hold-the-last-frame plus 4 decoders per recording, 8 ahead, at canvas size, and left rough 'a frame can still be up to ~3 frames late under load'. It is now 9 to 18 frames late in most looks, so something has slowed since (check whether frames are still read at the canvas size the window shows, whether the decoder count and look-ahead survived the editor path becoming the default, and whether the new panel or timeline work competes for the main actor during playback). The lateness counter is checkPlaybackNeverBlank in Sources/Photonz/Playtest/PlaytestHarness.swift ~9060-9125 (frameIndexToShow in MovieFramesInHand). The walk only reports lateness today; making it fail is part of this task.\nFocus success line: 'Playback of a full-screen Retina recording never blinks or stutters'. Renderer change: include a perf note in the commit.",
@@ -32,9 +32,35 @@
     {
       "t": "2026-10-07T22:07:44.124Z",
       "note": "owns these walks: playing-a-recording-never-blinks-walk"
+    },
+    {
+      "t": "2026-10-07T22:08:32.965Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T22:40:29.287Z",
+      "note": "Reproduced on HEAD bda59739: 17 of 24 looks late, 16 frames behind. Measured cause: the 4 exact-read lanes read the fixture at ~15 frames/s (90 frames in 6.0s); one AVAssetReader pass reads and converts the same 3s in 0.45s. Nothing had regressed in the lanes; the old 0.36s/60-frame figure did not hold on this file."
+    },
+    {
+      "t": "2026-10-07T22:40:29.346Z",
+      "note": "Fix (592bca7d): while the clock plays forwards, MovieFrameFetcher runs one MovieSweeper pass per recording from the playhead at canvas size, filed sharp, paced 8 frames ahead (MoviePlayPass, PhotonzCore, tested). Restarts on scrub, jump back, or falling 4 behind. Frames across a cut and backward play still use the lanes. Walk now FAILS on more than 2 late looks or more than 2 frames behind (PlaybackKeepsUp, tested)."
+    },
+    {
+      "t": "2026-10-07T22:40:29.407Z",
+      "note": "Verified: owned walk clean 4 runs in a row plus once under bounded 10-core load; an-editing-session, a-video-edit-saves-as-a-project, copy-and-paste-a-range, merge-a-range, the-ninety-second-cut, a-faded-title, scrub-never-blacks-out, scrubbing-shows-the-zoom, hear-the-scrub, first-press-of-play, play-in-to-out, motion-one-play-rule all green; 1280x800 talk control clean; Scripts/test.sh 11733 tests green."
+    },
+    {
+      "t": "2026-10-07T22:40:29.463Z",
+      "note": "left rough (none clears the follow-up bar, nobody has seen them): backward play (J) still reads frame by frame; a cut to another part of the same recording reads its far side by lanes; the walk's '2-while-playing' snapshot lands at the end of the 3.6s file because its check already played to 3.0s."
+    },
+    {
+      "t": "2026-10-07T22:40:29.526Z",
+      "note": "One-pass read ahead of a playing playhead (MovieFrames.swift, MoviePlayPass); playing-a-recording-never-blinks-walk 0/24 late in 4 runs (was 17/24, 16 frames behind) and now fails on lateness; playback and scrub walks green; full suite green; audit queue/audits/2026-10-07-retina-playback-keeps-up.json"
     }
   ],
   "walks": [
     "playing-a-recording-never-blinks-walk"
-  ]
+  ],
+  "started": "2026-10-07T22:08:32.964Z",
+  "completed": "2026-10-07T22:40:29.527Z"
 }

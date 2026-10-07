@@ -9962,3 +9962,10 @@
 {"t":"2026-10-07T22:07:44.069Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":3780,"to":130}
 {"t":"2026-10-07T22:07:44.126Z","ev":"task_walks","id":"a-full-screen-retina-recording-keeps-up-while-it","walks":["playing-a-recording-never-blinks-walk"]}
 {"t":"2026-10-07T22:08:16.566Z","ev":"manager","filed":8,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-10-07-1507.md"}
+{"t":"2026-10-07T22:08:32.908Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-10-07T22:08:32.972Z","ev":"task_started","id":"a-full-screen-retina-recording-keeps-up-while-it","title":"A full-screen Retina recording keeps up while it plays","priority":"p1-high"}
+{"t":"2026-10-07T22:40:29.289Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
+{"t":"2026-10-07T22:40:29.348Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
+{"t":"2026-10-07T22:40:29.409Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
+{"t":"2026-10-07T22:40:29.465Z","ev":"task_note","id":"a-full-screen-retina-recording-keeps-up-while-it"}
+{"t":"2026-10-07T22:40:29.529Z","ev":"task_done","id":"a-full-screen-retina-recording-keeps-up-while-it","from":"in_progress","note":"One-pass read ahead of a playing playhead (MovieFrames.swift, MoviePlayPass); playing-a-recording-never-blinks-walk 0/24 late in 4 runs (was 17/24, 16 frames behind) and now fails on lateness; playback and scrub walks green; full suite green; audit queue/audits/2026-10-07-retina-playback-keeps-up.json"}
