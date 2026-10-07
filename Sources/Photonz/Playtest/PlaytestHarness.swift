@@ -20,7 +20,7 @@ import PhotonzRender
 @MainActor
 enum PlaytestHarness {
     /// `Photonz Probe.app --playtest <script.json>` (via `open --args`).
-    static let argument = "--playtest"
+    static let argument = AppFlavor.walkArgument
 
     private static var editors: [EditorState] = []
     private static var run: Run?

@@ -135,6 +135,26 @@ public enum AppFlavor: String, Sendable, CaseIterable, Codable {
     /// the sweep on 2026-09-06, where both passed on their own minutes later.
     public var claimsInputOutsideItself: Bool { self != .probe }
 
+    /// The flag a walk script follows on the probe's command line.
+    public static let walkArgument = "--playtest"
+
+    /// Whether this run hangs the invisible markers a scripted walk finds the
+    /// panel's controls by: only a probe that was launched with a walk.
+    ///
+    /// Every marker is an AppKit view of its own, and on a captioned video
+    /// they were about half the window's views, roughly 800 of 1600 with a
+    /// clip picked. SwiftUI pays for each one whenever the panel swaps its
+    /// sections (adding and removing it, and its accessibility focus walk,
+    /// which visits every view in the window), so a cut click or a first
+    /// clip pick held the window 20 to 25ms longer with them than without
+    /// (2026-10-07, `clip-click-cost-walk`). The dev app carries the walk
+    /// code but no walk ever drives it, so there they were all cost.
+    public func hangsWalkMarkers(arguments: [String]) -> Bool {
+        guard self == .probe,
+              let flag = arguments.firstIndex(of: Self.walkArgument) else { return false }
+        return flag + 1 < arguments.count
+    }
+
     /// What this flavor adds to the end of the app's name, or nil for the one
     /// that is just "Photonz".
     public var nameSuffix: String? {

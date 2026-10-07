@@ -80,13 +80,18 @@ private struct PanelEdgeProbeModifier: ViewModifier {
     @State private var token = UUID()
 
     func body(content: Content) -> some View {
-        content
-            .background(GeometryReader { proxy in
-                Color.clear
-                    .onAppear { record(proxy.frame(in: .global)) }
-                    .onChange(of: proxy.frame(in: .global)) { _, frame in record(frame) }
-            })
-            .onDisappear { PanelEdgeProbe.shared.forget(token: token) }
+        // Nothing reads these but a walk (`PlaytestMarkers`).
+        if PlaytestMarkers.areHung {
+            content
+                .background(GeometryReader { proxy in
+                    Color.clear
+                        .onAppear { record(proxy.frame(in: .global)) }
+                        .onChange(of: proxy.frame(in: .global)) { _, frame in record(frame) }
+                })
+                .onDisappear { PanelEdgeProbe.shared.forget(token: token) }
+        } else {
+            content
+        }
     }
 
     private func record(_ frame: CGRect) {

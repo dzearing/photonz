@@ -43,6 +43,15 @@ extension EnvironmentValues {
 
 #if PHOTONZ_PLAYTEST
 
+/// Whether this run hangs the markers at all: only when a walk is driving the
+/// probe (`AppFlavor.hangsWalkMarkers`). The dev app carries this code, and
+/// without the switch it carried every marker too, about half the window's
+/// views, which nothing there ever reads. Read once: a walk is handed to the
+/// probe as it launches, never later.
+@MainActor enum PlaytestMarkers {
+    static let areHung = AppInfo.flavor.hangsWalkMarkers(arguments: CommandLine.arguments)
+}
+
 /// What sort of thing in the panel a marker stands for. A walk names these in
 /// its steps, so they are words, not ids.
 enum PanelTargetKind: String {
@@ -140,8 +149,12 @@ extension View {
     func playtestTarget(_ name: String, kind: PanelTargetKind, detail: String = "",
                         steady: [String] = [],
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View {
-        background(PanelTargetAnchor(name: name, kind: kind, detail: detail,
-                                     steady: steady, payload: payload))
+        background {
+            if PlaytestMarkers.areHung {
+                PanelTargetAnchor(name: name, kind: kind, detail: detail,
+                                  steady: steady, payload: payload)
+            }
+        }
     }
 
     /// Names a control in the panel by the words on it, so a `press` step can

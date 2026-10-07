@@ -640,6 +640,19 @@ struct AppFlavorTests {
         #expect(!AppFlavor.probe.isShipping)
     }
 
+    @Test func onlyAProbeDrivenByAWalkHangsTheWalkMarkers() {
+        let walk = ["Photonz Probe", "--playtest", "/tmp/walk.json"]
+        #expect(AppFlavor.probe.hangsWalkMarkers(arguments: walk))
+        // The dev app carries the harness but no walk ever drives it, so the
+        // markers would be views a person pays for and nothing reads.
+        #expect(!AppFlavor.dev.hangsWalkMarkers(arguments: walk))
+        #expect(!AppFlavor.release.hangsWalkMarkers(arguments: walk))
+        // A probe opened by hand, or with the flag and no walk after it, is
+        // not being walked either: the harness only starts with a script.
+        #expect(!AppFlavor.probe.hangsWalkMarkers(arguments: ["Photonz Probe"]))
+        #expect(!AppFlavor.probe.hangsWalkMarkers(arguments: ["Photonz Probe", "--playtest"]))
+    }
+
     @Test func onlyTheReleaseFlavorHasNoNameSuffix() {
         #expect(AppFlavor.release.nameSuffix == nil)
         #expect(AppFlavor.dev.nameSuffix == "(Dev)")

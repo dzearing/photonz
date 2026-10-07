@@ -20788,3 +20788,17 @@ Next: the first editor window's ~200 ms first build
 - Renderer: a picture's crop is read against the bitmap in hand (`ref.pixelSize`, `contentScale`), fixing cropped clips read small and cropped pictures drawn at 2x (both came out wrong or empty). Click ripples map through the clip's crop.
 - App: the box, its dim and its hit area sit on `zoomStageInHand.onCanvas`.
 - Walks: `a-zoom-on-a-cropped-{canvas,clip}-shows-its-box-walk`, `a-zoom-on-a-clip-cropped-by-keys-shows-its-box-walk`; audit `queue/audits/2026-10-07-zoom-on-a-cropped-video.json`.
+
+## 2026-10-07 — walk markers hang only while a walk drives the app
+
+- `picking-a-cut-or-a-first-clip-on-the-timeline-an`: the dev app carried every
+  walk marker (about 800 AppKit views of ~1600 with a clip picked) though no walk
+  ever drives it. `AppFlavor.hangsWalkMarkers(arguments:)` (PhotonzCore, tested)
+  and `PlaytestMarkers.areHung` now hang them only in a probe launched with
+  `--playtest`; the two GeometryReader probes (panel start, panel edge) follow
+  the same switch. On a markerless stand-in build: first pick ~56 ms (was ~80),
+  cut ~53 (was ~78), piece after a cut ~25 (was ~40), piece to piece ~11 (18).
+- Probe numbers are unchanged (it still hangs them), so the 50 ms line on the
+  probe is carried by `a-first-clip-pick-and-a-cut-click-answer-inside-50` with
+  the measured causes (markers in the probe, SwiftUI's accessibility focus walk,
+  section shells redrawn every pass).

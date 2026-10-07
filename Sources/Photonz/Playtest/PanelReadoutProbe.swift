@@ -71,7 +71,7 @@ extension View {
     /// expression, so what the walk reads and what the person reads cannot
     /// drift apart.
     func panelReadout(_ text: String) -> some View {
-        background(ReadoutAnchor(text: text))
+        background { if PlaytestMarkers.areHung { ReadoutAnchor(text: text) } }
     }
 }
 
