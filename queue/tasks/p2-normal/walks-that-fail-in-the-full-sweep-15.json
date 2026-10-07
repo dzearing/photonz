@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 3700,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-06T22:42:51.750Z",
-  "updated": "2026-10-06T22:42:51.755Z",
+  "updated": "2026-10-07T09:24:02.469Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-06T22:42:51Z: 778 of 782 walks passed in 214 minutes.\n\nFailing walks (4): copy-a-range-from-its-menu-walk, fix-a-caption-word-walk, section-fold-motion-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  fix-a-caption-word-walk -> find-out-why-a-caption-word-opened-for-typing-so (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 2: copy-a-range-from-its-menu-walk, section-fold-motion-walk\n\nFull output: queue/sweep/2026-10-06-120853.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -22,7 +22,37 @@
     {
       "t": "2026-10-06T22:42:51.752Z",
       "note": "created (sweep)"
+    },
+    {
+      "t": "2026-10-07T09:15:53.462Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T09:16:02.371Z",
+      "note": "owns these walks: copy-a-range-from-its-menu-walk, section-fold-motion-walk"
+    },
+    {
+      "t": "2026-10-07T09:24:02.298Z",
+      "note": "copy-a-range-from-its-menu-walk: could not reproduce. Passed 4 runs of 4 on HEAD 61e6bc36 (Scripts/playtest.sh ... --no-build; status ok, 3 real captures, menu read 23 rows with Copy). Its sweep history: ok 10-03, 10-04, 10-05, FAILED once 10-06 at step 9. The failing menu (Add Marker, Set In, Set Out, Clear In and Out, Play In to Out, Extract, Lift, Split Everything Here, Add Zoom) is the ruler menu for a moment OUTSIDE the 0:02-0:04 range (onTheStretch false in timelineRulerMenuRows), though step 7 had confirmed marks 2000/4000 and playhead 3000. Theory, unconfirmed: TimelineRulerRow and the scrub bar keep pointerMS from onContinuousHover and never clear it on .ended, so a real pointer that ever hovered the probe's ruler during the sweep (person away, probe window exposed) wins over the playhead fallback the walk relies on. Tried to reproduce with a move step over the ruler (/tmp/hover-repro.json): the move step only reaches the canvas ('nothing under the pointer watches for one'), so the theory could not be driven in-process. Not filed: unreproduced, one failure in five sweeps; if it recurs this is where to start."
+    },
+    {
+      "t": "2026-10-07T09:24:02.355Z",
+      "note": "section-fold-motion-walk: could not reproduce. Passed 4 runs of 4 on HEAD 61e6bc36 (status ok, ~57s, step 36 'Speed is all on screen, 24 pt'). Sweep history: ok 10-04, 10-05, FAILED once 10-06 at step 36 at 16-18s in, the same moment it reaches in a passing run, so not a slow machine: the second Time header press inside filmWindow left Time shut (step 33 had confirmed it shut). No fold-related source changed since the sweep's build (git diff e1d3eba6 HEAD -- Sources). Not filed: unreproduced, one failure in four sweeps."
+    },
+    {
+      "t": "2026-10-07T09:24:02.411Z",
+      "note": "Neither walk was wrong: both still check what the app does, so neither script was rewritten. No code changed. The next full sweep re-checks both; no sweep requested."
+    },
+    {
+      "t": "2026-10-07T09:24:02.467Z",
+      "note": "Both owned walks (copy-a-range-from-its-menu-walk, section-fold-motion-walk) pass 4 of 4 runs each on HEAD; each failed once in the 10-06 sweep and not in the sweeps before. Neither reproduces; theories and attempts are in the log. No walk or app change."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-07T09:15:53.459Z",
+  "walks": [
+    "copy-a-range-from-its-menu-walk",
+    "section-fold-motion-walk"
+  ],
+  "completed": "2026-10-07T09:24:02.468Z"
 }
