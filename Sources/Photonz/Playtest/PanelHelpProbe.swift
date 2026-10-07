@@ -90,7 +90,7 @@ extension View {
     /// pass the very expression the tooltip is built from: one text, two
     /// readers, so they can never disagree.
     func panelHelp(_ text: String) -> some View {
-        help(text).background { if PlaytestMarkers.areHung { HelpAnchor(text: text) } }
+        help(text).background { if PlaytestMarkers.areHung { WhileMarkersHang(marker: HelpAnchor(text: text)) } }
     }
 }
 

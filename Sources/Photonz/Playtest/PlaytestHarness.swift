@@ -259,6 +259,35 @@ private final class Run {
     private var expectNoControl: Set<String> = []
     /// `setup.front`: the probe is the active app for the whole walk.
     private var holdsTheFront = false
+    /// `setup.timedWithoutMarkers`: a timed press or action takes the walk's
+    /// markers down for its own length.
+    private var timesWithoutMarkers = false
+    /// What the markers last cost to take down, for the step's log line.
+    private var markersDownCost = ""
+
+    /// Takes the walk's markers down before a timed click, once the walk has
+    /// found what it will click, and waits for the window to settle without
+    /// them, so the stopwatch zeroed next reads the click and not the
+    /// teardown (`PlaytestSetup.timedWithoutMarkers`). The next step puts them
+    /// back up before it looks for anything (`putTheMarkersBackUp`).
+    private func takeTheMarkersDownForATimedStep() async {
+        guard timesWithoutMarkers, PlaytestMarkers.areHung, !PlaytestMarkerHold.shared.isDown else { return }
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
+        PlaytestMarkerHold.shared.isDown = true
+        await sleep(0.35)
+        markersDownCost = String(format: "timed with the walk's markers down (taking them down held the "
+                                 + "main thread %.0fms, not counted)", MainThreadMeter.shared.longestMS)
+    }
+
+    /// Puts back up whatever a timed step took down, and waits for them to be
+    /// hung again: every way a walk finds something by name reads them.
+    private func putTheMarkersBackUp() async {
+        markersDownCost = ""
+        guard PlaytestMarkerHold.shared.isDown else { return }
+        PlaytestMarkerHold.shared.isDown = false
+        await sleep(0.35)
+    }
     /// When the last `press` really clicked, on the host clock a film reads.
     /// A press first waits for the panel to stop moving, which next to a
     /// shelf of animated previews can be its whole patience, so a film set
@@ -373,11 +402,17 @@ private final class Run {
         expectNoControl = Set(script.setup.expectNoControl)
         holdsTheFront = script.setup.front
         if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
+        timesWithoutMarkers = script.setup.timedWithoutMarkers
+        if timesWithoutMarkers {
+            note(0, "setup", "every timed press and action is timed with the walk's markers taken down, "
+                 + "so its number is what a person's click costs (setup timedWithoutMarkers)")
+        }
         var completed = 0
         for (index, step) in script.steps.enumerated() {
             let number = index + 1
             do {
                 await holdTheFront()
+                await putTheMarkersBackUp()
                 try await perform(step, number: number)
                 PlaytestHarness.sendWindowsBehindThePerson()
                 completed = number
@@ -5803,6 +5838,7 @@ private final class Run {
 
         case .action(let action):
             let editor = try requireEditor()
+            await takeTheMarkersDownForATimedStep()
             // Zeroed here so `showInspector` reports the cost of the panel
             // ARRIVING: the number of layer rows the list builds when it comes
             // back on screen, which is the thing a lazy list is claiming.
@@ -6575,6 +6611,7 @@ private final class Run {
             await sleep(0.2)
             let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)
                 + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report
+                + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
             actionDetail = nil
             note(number, step.name, detail, state: describe())
         }
@@ -6743,6 +6780,7 @@ private final class Run {
                 + " Bring it in with a \"reveal\" step first. A `panel` step lists every control, "
                 + "and says of each one it cannot reach why not.")
         }
+        await takeTheMarkersDownForATimedStep()
         let flags = eventFlags(modifiers)
         // A double click is two clicks, the way a hand sends it: the first
         // counted one, the second counted two. One event counted two with no
@@ -6833,7 +6871,8 @@ private final class Run {
              + "\(count == 1 ? "one click" : "\(count) clicks")" + along
              + (modifiers.isEmpty ? "" : " with \(modifiers.map(\.rawValue).joined(separator: "+"))")
              + (effort.isEmpty ? "" : "; " + effort)
-             + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report,
+             + "; " + MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
+             + (markersDownCost.isEmpty ? "" : "; " + markersDownCost),
              state: describe())
     }
 

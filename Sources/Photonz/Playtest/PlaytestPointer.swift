@@ -94,7 +94,7 @@ extension View {
     func playtestHover(_ name: String = "", perform: @escaping (Bool) -> Void) -> some View {
         #if PHOTONZ_PLAYTEST
         return onHover(perform: perform)
-            .background { if PlaytestMarkers.areHung { HoverTargetAnchor(name: name, perform: perform) } }
+            .background { if PlaytestMarkers.areHung { WhileMarkersHang(marker: HoverTargetAnchor(name: name, perform: perform)) } }
             .modifier(ShownHover(perform: perform))
         #else
         return onHover(perform: perform)

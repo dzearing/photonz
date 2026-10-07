@@ -20822,3 +20822,24 @@ Next: the first editor window's ~200 ms first build
   SwiftUI graph, layout and accessibility work across the window. Walk markers
   and the canvas refit were measured and are not it. Carried with every number
   to `undoing-a-key-and-the-first-key-of-a-session-ans`.
+
+## 2026-10-07 — stopwatch walks time what a person gets
+
+- `a-first-clip-pick-and-a-cut-click-answer-inside`: new walk setup
+  `timedWithoutMarkers` (core `PlaytestSetup`, tested). A timed `press` or
+  `action` takes the probe's walk markers down once it has found its target,
+  waits for the window to settle, times the click, and the next step puts them
+  back up. The hold (`PlaytestMarkerHold`) is read only inside
+  `WhileMarkersHang`, so lowering and raising redraws the markers alone and the
+  build-count claims in `keyframe-anything-walk` still hold.
+  `clip-click-cost-walk`, `keyframe-anything-walk`, `an-editing-session-walk`
+  and `perf/animate-pick-cost-walk` say it. Documented in
+  `docs/design/playtest-harness.md`.
+- Honest numbers (markers were ~25 ms of every click): first clip pick 33-50,
+  cut 54-76 (median ~68), Position pick 40-63, undo median ~71. Not under 50.
+- Attribution, A/B interleaved: the panel is ~44 ms of a cut, almost all of it
+  tearing down the nine sections a cut drops; Captions alone is 11 ms. Keeping
+  leaving sections built for a pass (three variants) was slower every time.
+  Everything measured is carried to `clicking-a-cut-keying-a-value-and-undoing-it-ans`.
+- Next: that task; the lever left is building only panel sections near the
+  viewport.

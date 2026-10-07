@@ -217,11 +217,26 @@ public struct PlaytestSetup: Sendable, Equatable {
     /// folder: its numbers must not depend on whose Mac it ran on, and lending
     /// 500 files into somebody's Screenshots folder is not on.
     public var history: Int?
+    /// Every timed press and action is timed with the walk's own markers
+    /// taken down, so its number is what a person's click costs.
+    ///
+    /// The probe hangs an invisible AppKit marker behind every control a walk
+    /// can find by name, about half the window's views with a clip picked, and
+    /// SwiftUI pays for each of them whenever the panel changes: adding and
+    /// removing it, and an accessibility focus walk that visits every one. A
+    /// first clip pick read 80ms in the probe and about 55ms without them
+    /// (2026-10-07), so a stopwatch with the markers up times the harness as
+    /// much as the app. They come down once the walk has found what it will
+    /// click, and are back up, settled, before the next step looks for
+    /// anything. A walk that is not a stopwatch has no reason to say this: it
+    /// costs a few hundred milliseconds a click.
+    public var timedWithoutMarkers: Bool
 
     public init(forget: [PlaytestMemory] = [], captures: [String] = [],
                 scratch: [String] = [], expectNoControl: [String] = [],
                 flags: [PlaytestFlagChoice] = [], timelineOpen: Bool? = nil, front: Bool = false,
-                history: Int? = nil) {
+                history: Int? = nil, timedWithoutMarkers: Bool = false) {
+        self.timedWithoutMarkers = timedWithoutMarkers
         self.history = history
         self.timelineOpen = timelineOpen
         self.front = front
@@ -234,7 +249,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     public var isEmpty: Bool {
         forget.isEmpty && captures.isEmpty && scratch.isEmpty && expectNoControl.isEmpty
-            && flags.isEmpty && timelineOpen == nil && !front && history == nil
+            && flags.isEmpty && timelineOpen == nil && !front && history == nil && !timedWithoutMarkers
     }
 
     /// The kind of each capture in a generated history, newest first: every
@@ -245,7 +260,7 @@ public struct PlaytestSetup: Sendable, Equatable {
 
     /// The known keys, named in the error when a walk uses another one.
     static let knownKeys = ["captures", "expectNoControl", "flags", "forget", "front", "history", "scratch",
-                            "timelineOpen"]
+                            "timedWithoutMarkers", "timelineOpen"]
 
     /// The word a walk writes in `forget` to start from a machine that has
     /// never run Photonz.
@@ -290,7 +305,9 @@ public struct PlaytestSetup: Sendable, Equatable {
                   flags: try Self.choices(fields["flags"]),
                   timelineOpen: try Self.yesOrNo(fields["timelineOpen"], field: "timelineOpen"),
                   front: try Self.yesOrNo(fields["front"], field: "front") ?? false,
-                  history: try Self.count(fields["history"], field: "history"))
+                  history: try Self.count(fields["history"], field: "history"),
+                  timedWithoutMarkers: try Self.yesOrNo(fields["timedWithoutMarkers"],
+                                                        field: "timedWithoutMarkers") ?? false)
     }
 
     private static func count(_ raw: Any?, field: String) throws -> Int? {

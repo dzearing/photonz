@@ -4,13 +4,14 @@
   "front": true,
   "forget": [
    "all"
-  ]
+  ],
+  "timedWithoutMarkers": true
  },
  "steps": [
   {
    "do": "describe",
    "stage": "why",
-   "note": "A stopwatch, and one guard: the try path of clicking-a-clip-on-the-timeline-answers-at-once. The five minute Retina talk with its captions written, cut twice with Command K at ruler clicks (a walk-posted click on the Blade target does not land while the probe is not the active app), then four rounds of: nothing picked, click piece 1 (a first pick), its first cut, piece 2, the second cut, piece 3, piece 1. Every press line carries the longest main thread hold of that click. The guard is the end: a click on a piece after a cut gives the panel back to the clip (Piece reads 2 of 3); until 2026-10-06 the cut stayed picked and the panel kept showing Edit point."
+   "note": "A stopwatch, and one guard: the try path of clicking-a-clip-on-the-timeline-answers-at-once. The five minute Retina talk with its captions written, cut twice with Command K at ruler clicks (a walk-posted click on the Blade target does not land while the probe is not the active app), then four rounds of: nothing picked, click piece 1 (a first pick), its first cut, piece 2, the second cut, piece 3, piece 1. Every press line carries the longest main thread hold of that click. The guard is the end: a click on a piece after a cut gives the panel back to the clip (Piece reads 2 of 3); until 2026-10-06 the cut stayed picked and the panel kept showing Edit point. Timed with the walk's own markers down (setup timedWithoutMarkers): with them up the probe carries about 800 more AppKit views than the app a person runs, and a first pick read 80ms against their 35 to 50 (2026-10-07)."
   },
   {
    "do": "action",

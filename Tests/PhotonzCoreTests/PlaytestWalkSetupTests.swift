@@ -266,6 +266,39 @@ struct PlaytestFrontSetupTests {
     }
 }
 
+/// A stopwatch walk times what a person gets: the probe's walk markers, about
+/// half the window's views, come down for the length of each timed click and
+/// go back up before the walk looks for anything again.
+@Suite("A walk times its clicks without its own markers")
+struct PlaytestTimedWithoutMarkersSetupTests {
+
+    @Test("it reads a yes")
+    func reads() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "timedWithoutMarkers": true }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.timedWithoutMarkers == true)
+        #expect(PlaytestSetup(timedWithoutMarkers: true).isEmpty == false)
+    }
+
+    @Test("saying nothing keeps the markers up")
+    func unsaid() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "setup": { "forget": ["all"] }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+        """.utf8))
+        #expect(script.setup.timedWithoutMarkers == false)
+    }
+
+    @Test("it is a yes or a no")
+    func onlyABool() {
+        #expect(throws: PlaytestScriptError.self) {
+            try PlaytestScript.decode(Data("""
+            { "setup": { "timedWithoutMarkers": 1 }, "steps": [ { "do": "wait", "seconds": 0 } ] }
+            """.utf8))
+        }
+    }
+}
+
 /// A walk about how history copes with a big folder asks for one of its own:
 /// `"history": 500` swaps the person's Screenshots folder for a generated one
 /// of 500 captures, so its numbers do not depend on whose Mac it ran on.

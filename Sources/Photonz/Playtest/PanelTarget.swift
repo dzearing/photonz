@@ -50,6 +50,29 @@ extension EnvironmentValues {
 /// probe as it launches, never later.
 @MainActor enum PlaytestMarkers {
     static let areHung = AppInfo.flavor.hangsWalkMarkers(arguments: CommandLine.arguments)
+
+}
+
+/// A marker that comes down while a stopwatch walk times a click
+/// (`PlaytestSetup.timedWithoutMarkers`). The hold is read in this view's own
+/// body, so taking the markers down and putting them back redraws the
+/// markers and nothing around them: read where the marker is hung, it tied
+/// every panel section to the hold and rebuilt the lot each time.
+struct WhileMarkersHang<Marker: View>: View {
+    let marker: Marker
+
+    var body: some View {
+        if !PlaytestMarkerHold.shared.isDown { marker }
+    }
+}
+
+/// The markers taken down for the length of one timed click, so the walk's
+/// stopwatch reads what a person's click costs. Watched only by
+/// `WhileMarkersHang`, so putting them down and back up redraws the markers
+/// and nothing else.
+@MainActor @Observable final class PlaytestMarkerHold {
+    static let shared = PlaytestMarkerHold()
+    var isDown = false
 }
 
 /// What sort of thing in the panel a marker stands for. A walk names these in
@@ -151,8 +174,8 @@ extension View {
                         payload: (@MainActor () -> NSItemProvider)? = nil) -> some View {
         background {
             if PlaytestMarkers.areHung {
-                PanelTargetAnchor(name: name, kind: kind, detail: detail,
-                                  steady: steady, payload: payload)
+                WhileMarkersHang(marker: PanelTargetAnchor(name: name, kind: kind, detail: detail,
+                                                           steady: steady, payload: payload))
             }
         }
     }
