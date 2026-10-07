@@ -469,7 +469,8 @@ private struct AnimatePropertyPicker: View {
                             .padding(.top, 8)
                             .padding(.bottom, 2)
                         ForEach(group.properties, id: \.self) { property in
-                            PickerRow(property: property, title: editorState.keyTitle(property)) {
+                            PickerRow(property: property, title: editorState.keyTitle(property),
+                                      swatch: swatch(property)) {
                                 pick(property)
                             }
                         }
@@ -479,6 +480,14 @@ private struct AnimatePropertyPicker: View {
             }
             .frame(maxHeight: 260)
         }
+    }
+
+    /// The colour a colour value has now, which its row shows in place of the
+    /// diamond (the mock's `.pick-i .sw`); nil for every other kind of value.
+    private func swatch(_ property: KeyedProperty) -> String? {
+        guard PickerRow.isColour(property),
+              case let .color(hex)? = editorState.keyedValue(property) else { return nil }
+        return hex
     }
 
     /// The list goes first and the value arrives on the next run-loop pass.
@@ -538,15 +547,15 @@ private struct PickerRow: View {
     /// Its name on the picked layer, which says which shadow on a title with
     /// several (`KeyedProperty.title(on:)`).
     let title: String
+    /// A colour value's colour now, drawn where a number has its diamond.
+    let swatch: String?
     let action: () -> Void
     @State private var isHovering = false
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
-                Image(systemName: "diamond")
-                    .font(.system(size: 8, weight: .semibold))
-                    .foregroundStyle(.tertiary)
+                mark
                     .frame(width: 12)
                 Text(title)
                     .font(.system(size: 11))
@@ -567,14 +576,35 @@ private struct PickerRow: View {
         .playtestControl(title, detail: "Animate a property")
     }
 
+    /// The mock's `.sw` for a colour, 12 points with its low edge round it so
+    /// a white or a black still reads on the list, and the diamond otherwise.
+    @ViewBuilder private var mark: some View {
+        if let swatch {
+            RoundedRectangle(cornerRadius: 3)
+                .fill(Color(hex: swatch))
+                .overlay(RoundedRectangle(cornerRadius: 3).strokeBorder(VideoKit.Palette.edgeLo))
+                .frame(width: 12, height: 12)
+                .accessibilityHidden(true)
+                .playtestControl("Swatch", detail: "Animate a property, \(title)")
+        } else {
+            Image(systemName: "diamond")
+                .font(.system(size: 8, weight: .semibold))
+                .foregroundStyle(.tertiary)
+        }
+    }
+
     /// The mock's `.mt`: px, %, °, dB, or colour.
     private var unit: String {
         switch property {
         case .volume: "dB"
         case let .motion(motion, _):
-            [.color, .shadowColor, .glowColor, .borderColor].contains(motion)
-                ? "color" : (MotionEntry.suffix(motion) ?? DocumentUnit.word)
+            Self.isColour(property) ? "color" : (MotionEntry.suffix(motion) ?? DocumentUnit.word)
         }
+    }
+
+    static func isColour(_ property: KeyedProperty) -> Bool {
+        guard case let .motion(motion, _) = property else { return false }
+        return [.color, .shadowColor, .glowColor, .borderColor].contains(motion)
     }
 }
 

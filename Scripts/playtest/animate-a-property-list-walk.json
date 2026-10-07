@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/animate-a-property-list-walk",
-  "seed": "How long Animate a property's list is, at Next defaults with no flag changed: a title typed on the sample recording at 0:01 (it wears two shadows) opens the picker, and the list is photographed; then the recording itself is picked, given a Border from the Effects plus, and its picker is photographed too. Every group heading the layer has is in the list, and the values the audits found below the fold (Shadow 2 color, Border color, Text size) are still in it, so the pictures show how much a person has to scroll.",
+  "seed": "How long Animate a property's list is, at Next defaults with no flag changed: a title typed on the sample recording at 0:01 (it wears two shadows) opens the picker, and the list is photographed; then the recording itself is picked, given a Border from the Effects plus, and its picker is photographed too. Every group heading the layer has is in the list, and the values the audits found below the fold (Shadow 2 color, Border color, Text size) are still in it, so the pictures show how much a person has to scroll. A colour value (Color, Shadow 2 color, Border color) wears a swatch of its colour where a number wears the diamond, and the first picture shows the title's white Color swatch.",
   "setup": { "timelineOpen": true, "forget": ["all"] },
   "steps": [
     { "do": "action", "action": "openSampleRecording" },
@@ -25,6 +25,9 @@
     { "do": "expect", "control": "Opacity", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Blur", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Shadow 2 color", "in": "Animate a property", "present": true },
+    { "do": "expect", "control": "Swatch", "in": "Color", "present": true },
+    { "do": "expect", "control": "Swatch", "in": "Shadow 2 color", "present": true },
+    { "do": "expect", "control": "Swatch", "in": "Opacity", "present": false },
     { "do": "expect", "control": "Text size", "in": "Animate a property", "present": true },
     { "do": "snapshot", "name": "1-title-two-shadows" },
     { "do": "key", "key": "escape" },
@@ -43,6 +46,8 @@
     { "do": "expect", "control": "Position", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Border width", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Border color", "in": "Animate a property", "present": true },
+    { "do": "expect", "control": "Swatch", "in": "Border color", "present": true },
+    { "do": "expect", "control": "Swatch", "in": "Border width", "present": false },
     { "do": "snapshot", "name": "2-recording-with-border" },
     { "do": "key", "key": "escape" }
   ]

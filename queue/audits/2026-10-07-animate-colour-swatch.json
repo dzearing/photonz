@@ -1,0 +1,23 @@
+{
+  "feature": "Colour swatches in Animate a property",
+  "epic": "video-beats-premiere",
+  "summary": "In the Animate a property list, a colour value (Color, Shadow color, Border color) now shows a small swatch of the colour it has now, where number values show the diamond.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording.",
+  "switched": {},
+  "try": [
+    { "do": "Press T and click the canvas, type a word, then press Command Return." },
+    { "do": "In Properties, click Animate a property.", "shot": "2026-10-07-animate-colour-swatch-1.png" },
+    { "do": "Look at the Color row under Appearance: a white square stands where the other rows have a diamond." },
+    { "do": "Scroll to Shadow 2 color and check its swatch is the shadow's colour." },
+    { "do": "Change the title's colour in the panel, open the list again, and check the swatch follows." }
+  ],
+  "evaluate": [
+    "Can you tell at a glance which values in the list are colours?",
+    "Does a white or black swatch still read as a square against the list, in light and in dark?",
+    "Is the swatch the same size and weight as the diamonds beside it, or does it shout?"
+  ],
+  "rough": [
+    "Matches the mock's swatch (video.html, Animate a property list: 12 point square, 3 point corners, the low edge round it).",
+    "In light mode a white swatch on the white list is told apart only by the faint low edge, as the mock draws it; walks cannot switch to light mode, so that case was judged from the colours rather than photographed."
+  ]
+}
