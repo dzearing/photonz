@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "docs",
   "created": "2026-10-07T13:59:09.175Z",
-  "updated": "2026-10-07T13:59:13.608Z",
+  "updated": "2026-10-07T17:38:04.829Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the daily digest 2026-10-07 design review. The behaviour shipped in c7a04159 (CaptionsDrawOnTop.swift: drawingOrder, used by DocumentRenderer.compositeImage and hitTestPath; restackByTracks keeps captions on top). Audit: queue/audits/2026-10-06-captions-under-the-picture.json. Only docs/progress/log.md records it today.",
@@ -26,6 +26,29 @@
     {
       "t": "2026-10-07T13:59:13.607Z",
       "note": "seq 3750 -> 140"
+    },
+    {
+      "t": "2026-10-07T17:31:39.369Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T17:37:48.569Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-07T17:37:48.629Z",
+      "note": "Docs only. video-surface.md §2: D18 bullet now says a higher picture track draws in front, plus a new bullet naming Captions as the one exception (drawn over every picture and title wherever listed, click follows drawing order); the region table row says the same. video-captions.md: §0 listening row now 'under the picture tracks' (was 'at the top', stale since c7a04159); §1 clarifies the Captions row is an ordinary track; new §5 subsection 'Where the Captions track sits' (lands under last picture track over the sound, top when no picture; dragged elsewhere stays, per CaptionsTrackPlaceTests.movedStaysPut; draws on top); §8 table names captionsPlace, CaptionsDrawOnTop, the two test files and the walk. Scripts/test.sh green (11701 tests)."
+    },
+    {
+      "t": "2026-10-07T17:38:04.768Z",
+      "note": "Pushed 169ad66d. The pull's autostash of the queue's own files reported a conflict on re-apply; it applied cleanly by hand and was dropped, nothing lost."
+    },
+    {
+      "t": "2026-10-07T17:38:04.827Z",
+      "note": "169ad66d, docs only: video-surface.md §2 names Captions as the one track whose row does not decide what draws in front (drawn over every picture and title); video-captions.md says a new Captions track lands under the last picture track and over the sound, a dragged one stays put, and fixes the stale 'listening row at the top'. Claims checked against CaptionsTrackPlaceTests; Scripts/test.sh green (11701 tests)."
     }
-  ]
+  ],
+  "started": "2026-10-07T17:31:39.366Z",
+  "walks": [],
+  "completed": "2026-10-07T17:38:04.828Z"
 }

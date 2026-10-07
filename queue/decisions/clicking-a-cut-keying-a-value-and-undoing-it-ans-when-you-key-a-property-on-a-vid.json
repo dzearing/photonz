@@ -1,0 +1,38 @@
+{
+  "id": "clicking-a-cut-keying-a-value-and-undoing-it-ans-when-you-key-a-property-on-a-vid",
+  "taskId": "clicking-a-cut-keying-a-value-and-undoing-it-ans",
+  "question": "When you key a property on a video, should the picture shrink to make room for the new key lane?",
+  "context": "Measured on 2026-10-07 in animate-pick-cost-walk: the picture reads 74% before Position is keyed, 71% after, 74% again after Undo. A key and its undo both hold the app about 70 ms; keeping the timeline height was measured by an earlier runner at about 7 ms less per key and undo (undo near 55 ms).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Timeline grows, picture shrinks a little",
+      "summary": "As today: picking Position from Animate a property opens a key lane under the clip, the timeline grows by one lane and the picture above it shrinks from 74% to 71%. Undo grows it back.",
+      "pros": [
+        "Every track stays in view without scrolling the timeline"
+      ],
+      "cons": [
+        "The picture jumps on every first key and every undo of it",
+        "Keying a value and undoing it each take about 70 ms, over the 50 ms the video goals ask for"
+      ],
+      "mitigation": "A later task could animate the resize so the jump reads as motion, but that adds frames rather than removing work."
+    },
+    {
+      "id": "b",
+      "label": "Timeline keeps its height, picture stays put",
+      "summary": "Picking Position opens the key lane inside the timeline as it is: the tracks under it move down and the timeline scrolls if they no longer fit. The picture never changes size when you key or undo.",
+      "pros": [
+        "The picture you are animating never moves under your pointer",
+        "Matches Premiere and Final Cut, where keyframing never resizes the program monitor",
+        "About 7 ms less per key and per undo, measured on 2026-10-07"
+      ],
+      "cons": [
+        "On a short timeline, the bottom track can slide out of view until you scroll or drag the divider up"
+      ],
+      "mitigation": "The timeline already scrolls and its divider already drags; the lane only takes room while a key exists."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-10-07T19:16:58.762Z"
+}

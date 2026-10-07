@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 18,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T16:33:08.542Z",
-  "updated": "2026-10-07T16:33:08.631Z",
+  "updated": "2026-10-07T17:20:35.583Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-07): \"when I zoom in, I would like a zoom toolbar to appear briefly, and then fade out after 5s of not zooming, or fade back in on hover. I want to be able to quickly double click the zoom to get to actual size (100%)\" and \"the canvas zoom, which also lives in either view, but not talking about the video track zoom feature\".\n\nContext: on 2026-09-29 the user ruled 'zoom isn't a tool' and the IA contract (UX-PATTERNS.md line ~23 Tool bar row, ~31 View row, ~247 ruling) removed zoom from bars in Next. This is a transient canvas overlay, which the user is now explicitly asking for; record it as a named exception, do not put zoom back in the tool bar.\nReuse: the zoom readout menu and double click lid (Sources/Photonz/EditorView.swift ~2120-2170, ZoomReadoutClickLid.swift, EditorState.zoomToActualSize EditorState.swift:4242 in point terms so 100% is on-screen size for Retina captures, zoomToFit, zoomStops). Trap: the double click window (EditorChromeLayout.zoomReadoutDoubleClickWindow) delays a single click's menu; keep it. Trap: the zoom-change trigger must come from the viewport's zoom value changing, not only from commands, or pinch will miss it. Trap: during walks the control must not take key or activate the probe (focus drill must read clean).",
@@ -31,6 +31,32 @@
     {
       "t": "2026-10-07T16:33:08.630Z",
       "note": "seq 520 -> 18"
+    },
+    {
+      "t": "2026-10-07T16:39:28.824Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T16:42:17.666Z",
+      "note": "Pre-build review: (1) a first-time user gets the percent exactly when they zoomed, where it does not cover the work in the middle; double click for 100% is only discoverable through the tooltip, which already says it (zoomMenuHelp). (2) Photoshop shows zoom in its status bar, Figma permanently bottom right; a transient corner readout beats both for a screenshot editor since it is gone while you work. (3) Collisions found: the measure legend picks a free canvas corner (could be bottom right) so the zoom slot is reserved for it the way the notice slot is; on a narrow canvas the centred tool bar or tool settings capsule can reach the right corner, so the control lifts above them; the canvas notice pill is bottom centre and transient so it is not reserved. (4) Pinch/smart-magnify arrive through setViewport, menu/keys through zoomIn/zoomOut/zoomToFit/zoomToActualSize; window resize refits and document open go through other paths and must NOT show it. (5) Hover while hidden: the control is non-hit-testable when hidden, so hover comes from a tracking-area lid that never hit tests (and a playtest hover marker for walks). (6) No mock draws this control; the user's own words are the spec, so the audit has no mock frame to compare against."
+    },
+    {
+      "t": "2026-10-07T16:42:17.724Z",
+      "note": "owns these walks: canvas-zoom-control-walk, canvas-zoom-control-video-walk"
+    },
+    {
+      "t": "2026-10-07T17:20:35.518Z",
+      "note": "Left rough, not filed (no open task covers it and none clears the bar alone; the audit asks the user): the control sits 12 pt in, so its centre is a few points below the tool bar's; light appearance not photographed; Fit already-fitted still brings the control up by design. Focus drill not run: the control adds no window or panel, and its menu opens in-process under walks."
+    },
+    {
+      "t": "2026-10-07T17:20:35.581Z",
+      "note": "Shipped in 8f29798a: Next flag next-canvas-zoom-control (on by default) shows a glass zoom control (zoom out, percent, zoom in, Fit) in the canvas's bottom right corner on any zoom, fading 5 s after the last one, back on hover, double click on the percent = 100%. Pure clock + placement tested in PhotonzCore; walks canvas-zoom-control-walk and canvas-zoom-control-video-walk green at Next defaults (no flags), with expectClickReaches proving the hidden corner reaches the picture; UX-PATTERNS named exception; audit queue/audits/2026-10-07-canvas-zoom-control.json; Scripts/test.sh 11701 passed."
     }
-  ]
+  ],
+  "started": "2026-10-07T16:39:28.822Z",
+  "walks": [
+    "canvas-zoom-control-walk",
+    "canvas-zoom-control-video-walk"
+  ],
+  "completed": "2026-10-07T17:20:35.582Z"
 }

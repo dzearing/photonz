@@ -1,0 +1,37 @@
+{
+  "id": "option-delete-ripple-deletes-on-the-timeline-as-on-a-video-should-option-delete",
+  "taskId": "option-delete-ripple-deletes-on-the-timeline-as",
+  "question": "On a video, should Option Delete ripple delete the way it does in Premiere on the Mac?",
+  "context": "Premiere on the Mac uses Option Delete for Ripple Delete. In Photonz, Option Delete is Photoshop's Fill with Foreground, and on a video clip it does nothing (checked on 2026-10-07 with In and Out marked and with a piece picked). Ripple Delete is on Shift Delete.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Option Delete ripple deletes on the timeline; Fill keeps it elsewhere",
+      "summary": "With the timeline in use and a clip or a marked stretch picked, Option Delete takes it out and closes the gap, as Shift Delete does. On a title, a shape or a picture it still fills with the foreground colour, as in Photoshop.",
+      "pros": [
+        "A Premiere editor on a Mac gets the key their hands already press",
+        "Today the press does nothing at all on a clip, so nothing a person relies on changes"
+      ],
+      "cons": [
+        "One key does two things depending on what is picked"
+      ],
+      "mitigation": "It only ripple deletes where Fill has nothing to fill (a clip or a stretch of time), and the menu keeps showing Shift Delete as the one printed key."
+    },
+    {
+      "id": "b",
+      "label": "Leave it: Shift Delete only",
+      "summary": "Option Delete stays Fill with Foreground everywhere and does nothing on a clip. Ripple delete stays on Shift Delete, as the menu shows.",
+      "pros": [
+        "Every key means one thing"
+      ],
+      "cons": [
+        "A Premiere editor on a Mac presses Option Delete and nothing happens, with no hint why"
+      ],
+      "mitigation": "The Sequence menu shows Shift Delete beside Ripple Delete.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-07T22:07:24.837Z"
+}

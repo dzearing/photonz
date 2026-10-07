@@ -1,0 +1,33 @@
+{
+  "id": "the-t-tool-reads-title-on-a-video",
+  "title": "The T tool reads Title on a video",
+  "goal": "On a video the tool you press T for is still called Text, while the title walkthrough mock calls it the Title tool (its tooltip reads Title / Text). A video editor looking for a title tool should find it by that name. Name it Title on a document with time and keep Text on a picture.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:06:11.669Z",
+  "updated": "2026-10-07T22:07:43.888Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html ~132 `<button class=\"tool\" id=\"tTitle\" title=\"Title / Text (T)\">`, steps ~415 'Pick up the Title tool'. App: Sources/Photonz/ToolGroupButton.swift ~40 and Sources/Photonz/EditorView.swift ~1498 return \"Text\" for .text in every document. The name should follow the document (hasTime), not the release, so it is shared code; no flag needed. Keep the playtest control names stable or add the new one alongside (Scripts/playtest/*.json grep '\"Text\"'). Found by the manager pass's mock comparison 2026-10-07.",
+  "acceptance": [
+    "On a document with time the T tool's tooltip reads 'Title / Text (T)', and its name in the tool bar's flyout and in any menu row that names the tool says Title",
+    "On a picture with no time everything still says Text, unchanged",
+    "Walks that find the tool by name still pass (search the walks for the tool's name and update or alias them)",
+    "Try path at Next defaults: open the talk sample, rest the pointer on the T tool, read the tooltip. Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:06:11.671Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:43.887Z",
+      "note": "seq 560 -> 80"
+    }
+  ]
+}

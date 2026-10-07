@@ -1,0 +1,33 @@
+{
+  "id": "fade-handles-and-level-points-look-like-the-mock",
+  "title": "Fade handles and level points look like the mock's",
+  "goal": "On a sound segment the fade handles are tiny cyan squares that only appear when you hover or pick the segment, and the level points are small accent-coloured dots. The mock draws a 12 point white diamond at each fade, ringed in the track's own colour and always visible, and 11 point level points filled in the track's colour. Match the mock so the handles are easy to find and grab.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:05:42.324Z",
+  "updated": "2026-10-07T22:07:43.773Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-audio.html ~48 `.fade{width:12px;height:12px;background:#fff;border:1.5px solid #12c2e9}` drawn on every lane; ~45 `.anode{width:11px;height:11px;background:#12c2e9;border:1.5px solid var(--panel)}`. App: Sources/Photonz/ClipPiecesBar.swift ~179 draws fadeHandles only when isPicked || isHovered, and ~725-730 draws them 7x7 with a 1.2 stroke in a fixed cyan; Sources/Photonz/SoundLane.swift ~87 dotSize 9, ~207-209 fills Color.accentColor with a white ring. Hover-only came in with 0127d85b (2026-09-23) with no recorded reason; before changing it, grep the task logs and audits for 'hover' near fade handles, and if the user asked for hover-only, keep that part and say so in the log (the rest still matches the mock). Found by the manager pass's mock comparison, 2026-10-07; searched fade handle, fade diamond, level point with --all, nothing covered it.",
+  "acceptance": [
+    "Every sound segment shows its two fade diamonds at all times, 12 points, white with a 1.5 point ring in the track's colour (cyan on a clip's own sound, purple on a voiceover, as video-audio.html colours them)",
+    "Level points are 11 points, filled in the track's colour with a 1.5 point ring in the panel colour",
+    "Grabbing a diamond or a point works exactly as today, and the larger diamond does not steal a click meant for the level line or a trim edge (a walk drags each)",
+    "Try path at Next defaults: open the talk sample and look at its sound under V1 without hovering. A walk photographs it beside the mock in light and dark; audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:05:42.326Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:43.772Z",
+      "note": "seq 540 -> 60"
+    }
+  ]
+}

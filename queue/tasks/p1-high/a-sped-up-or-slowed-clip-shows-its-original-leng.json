@@ -1,0 +1,33 @@
+{
+  "id": "a-sped-up-or-slowed-clip-shows-its-original-leng",
+  "title": "A sped-up or slowed clip shows its original length beside it",
+  "goal": "When you change a clip's speed, nothing on the timeline shows how long the clip was before, so you cannot see what the change did. The speed mock draws a Source row with a striped ghost bar at the original length right above the retimed clip, the before and after the user asked to keep. Draw that row for a picked clip whose speed is not 100%.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:06:11.581Z",
+  "updated": "2026-10-07T22:07:43.830Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-speed.html ~47 (.srcbar style) and ~375-376 (a 'Source' track row holding .srcbar above the 'Retimed' row). docs/design/video-surface.md ~316: 'video-speed's Source/Retimed pair is the user's before-and-after and stays as drawn', and a row may be 'a track, or a property lane under one'. Build it the way key lanes already open under a picked clip (property lane), labelled Source with the image icon, rather than as a real track in the document: it is a view of the clip, not something you edit. If it cannot fit as a lane (the placement table in docs/design/mocks/shared/UX-PATTERNS.md has no row for it), open a decision card and block. Out of scope: the speed curve with stops, which video-surface.md section 11 drops on purpose, and the Slow-mo/Normal/Fast legend. The striped look is already used by the empty track slot (7a15b411), so reuse that drawing. Found by the manager pass's mock comparison 2026-10-07; searched source retimed, ghost bar, before and after speed with --all, nothing covered it.",
+  "acceptance": [
+    "Picking a clip whose speed is not 100% shows a Source lane next to it with a dashed, striped bar at the clip's length at 100%, starting where the clip starts, as video-speed.html draws it (16 point bar, 45 degree stripes in the line colour at 60%, dashed strong-line edge)",
+    "The lane goes away when the clip is not picked or its speed is set back to 100%, and it never takes a drop or a click meant for the tracks",
+    "Changing the speed from the Speed dropdown or Command R resizes the retimed clip while the ghost stays put, so the before and after read at a glance",
+    "Try path at Next defaults: open the talk sample, pick it, press Command R and choose 50%, and the Source lane shows the original length. A walk photographs it beside the mock; audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:06:11.583Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:43.829Z",
+      "note": "seq 550 -> 70"
+    }
+  ]
+}

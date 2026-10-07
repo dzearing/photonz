@@ -1,0 +1,37 @@
+{
+  "id": "option-delete-ripple-deletes-on-the-timeline-as",
+  "title": "Option Delete ripple deletes on the timeline, as in Premiere on the Mac",
+  "goal": "Premiere on the Mac ripple deletes with Option Delete, so an editor presses it on every unwanted stretch. On a video here it falls through to Fill with Foreground, which does nothing to a clip, so the press is silently lost. Let Option Delete ripple delete while the timeline has the keyboard and a clip or a marked stretch is picked, and keep it as Fill everywhere else.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 130,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:07:24.772Z",
+  "updated": "2026-10-07T22:07:44.068Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 by the manager pass, probe from HEAD 8cfad4ee, /tmp/mgr-walks/option-delete.json: openSampleTalk, I at a quarter, O at the middle, Option Delete -> 'option+delete is Edit > Fill with Foreground ... nothing else took the press' (the timeline does not take it). Running the row's action directly on a picked Sample Talk piece (fillWithForeground) changed nothing on screen and left the clip in 2 pieces, so for a person the press is a no-op either way.\nWhy it is this way: the-menu-bar-reads-like-a-professional-mac-edito moved Ripple Delete off Option Delete to Shift Delete because the one-key-each check found it on two printed rows (EditorCommands.swift ~720-731, comment 'one key on two rows lies on one of them'). TimelineKeys.swift ~211-212 maps only Delete and Shift Delete. Fill.filled has no clip check (Fill.swift ~22-25), FillColors.swift ~23 enables it for any picked layer.\nShape: decide in TimelineKeys (PhotonzCore, TDD) that Option Delete is ripple delete when the timeline has the keyboard AND (a ruler or track range is held, or the picked layers are all clips with picture or sound); otherwise fall through. Stale comments promising Option Delete: EditorState+RulerRange.swift ~15, EditorState+TrackRange.swift ~16.\nBlocked on a card because it gives a Photoshop key a second meaning (the user's Photoshop-parity rule).",
+  "acceptance": [
+    "With the timeline holding the keyboard and In and Out marked, Option Delete removes the stretch and closes it up, exactly as Shift Delete does, in one undo step",
+    "With a clip piece picked on the timeline, Option Delete ripple deletes that piece, as Shift Delete does",
+    "On a title, shape or picture layer, and anywhere the timeline does not hold the keyboard, Option Delete is still Edit > Fill with Foreground, unchanged",
+    "The menu bar keeps printing Shift Delete beside Ripple Delete; Option Delete is an unprinted second key, and the one-key-each menu check still passes",
+    "Try path at Next defaults: open the talk sample, mark I and O, press Option Delete; a walk with front true does it and checks the pieces. Audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:07:24.774Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:32.373Z",
+      "note": "waiting on the card: should Option Delete ripple delete on the timeline"
+    },
+    {
+      "t": "2026-10-07T22:07:44.067Z",
+      "note": "seq 3780 -> 130"
+    }
+  ]
+}

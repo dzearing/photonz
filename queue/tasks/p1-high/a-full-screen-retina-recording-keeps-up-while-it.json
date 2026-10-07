@@ -1,0 +1,40 @@
+{
+  "id": "a-full-screen-retina-recording-keeps-up-while-it",
+  "title": "A full-screen Retina recording keeps up while it plays",
+  "goal": "Playing a full-screen Retina recording at Next defaults shows a frame that is up to half a second old at most moments, so the picture sticks and jumps instead of moving smoothly. A smaller recording plays smoothly on the same machine. Make the big recording keep up too, so playback never stutters.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:05:12.387Z",
+  "updated": "2026-10-07T22:07:44.125Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 by the manager pass on the probe built 12:19 from HEAD 8cfad4ee, machine load 2.6 on 16 cores:\n  Scripts/playtest-all.sh --no-build playing-a-recording-never-blinks-walk  (three runs)\n  -> 'played 3.0s (3456x2234), looked 24 times ... 15 caught a frame still being read and held one 9 frame(s) back instead' (12:36 rotating check)\n  -> '21 caught a frame still being read and held one 18 frame(s) back instead'\n  -> '19 caught a frame still being read and held one 15 frame(s) back instead'\nControl, same machine, also behind other apps: a scratch walk (/tmp/mgr-walks/talk-playback-lag.json: openSampleTalk, expectPlaybackNeverBlank 3 s, 24 moments) on the 1280x800 talk sample read every frame in time, twice. So it is the frame size, not the probe being in the background.\nHistory: playing-a-recording-never-blinks (done) shipped hold-the-last-frame plus 4 decoders per recording, 8 ahead, at canvas size, and left rough 'a frame can still be up to ~3 frames late under load'. It is now 9 to 18 frames late in most looks, so something has slowed since (check whether frames are still read at the canvas size the window shows, whether the decoder count and look-ahead survived the editor path becoming the default, and whether the new panel or timeline work competes for the main actor during playback). The lateness counter is checkPlaybackNeverBlank in Sources/Photonz/Playtest/PlaytestHarness.swift ~9060-9125 (frameIndexToShow in MovieFramesInHand). The walk only reports lateness today; making it fail is part of this task.\nFocus success line: 'Playback of a full-screen Retina recording never blinks or stutters'. Renderer change: include a perf note in the commit.",
+  "acceptance": [
+    "playing-a-recording-never-blinks-walk reports 'every frame was read before the playhead reached it', or at most 2 of 24 looks late and never more than 2 frames behind, in three runs in a row with the probe behind other apps",
+    "The walk fails (not just says) when more than 2 of its looks are late or any look is more than 2 frames behind, so a regression turns it red",
+    "an-editing-session-walk and the scrubbing walks stay green, and a 1280x800 recording still reads every frame in time",
+    "Try path at Next defaults: open the fixture 'Full screen Retina recording 3456x2234.mp4', press Space, and the picture moves smoothly from the first second. Audit written under queue/audits/ with the before and after numbers",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:05:12.389Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:43.652Z",
+      "note": "seq 520 -> 40"
+    },
+    {
+      "t": "2026-10-07T22:07:44.124Z",
+      "note": "owns these walks: playing-a-recording-never-blinks-walk"
+    }
+  ],
+  "walks": [
+    "playing-a-recording-never-blinks-walk"
+  ]
+}

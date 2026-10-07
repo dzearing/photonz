@@ -1,0 +1,33 @@
+{
+  "id": "undo-and-redo-on-a-video-answer-at-once",
+  "title": "Undo and Redo on a video answer at once",
+  "goal": "On a video, Command Z and Shift Command Z hold the app for about a fifth of a second after a cut, a ripple delete or a clip drop, which an editor feels on every undo while cutting. Bring Undo and Redo on the timeline under the 50 ms the video goals ask for.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:05:25.907Z",
+  "updated": "2026-10-07T22:07:43.952Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 by the manager pass, probe from HEAD 8cfad4ee, timedWithoutMarkers, two runs of /tmp/mgr-walks/undo-cost.json (openSampleTalk, Add Track > Captions, Command K at a quarter, undo, Command K twice, Delete, undo, redo, drop b-roll at 12.9 s, undo, redo):\n  undo of a cut:            longest 165.8 / 168.3 ms, from ~236 ms after the press\n  undo of a ripple delete:  221.5 / 217.2 ms, from ~249 ms\n  redo of it:               207.1 / 207.8 ms, from ~260 ms\n  undo of a clip drop:      200.0 / 205.9 ms, from ~240 ms\n  redo of it:               202.6 / 207.7 ms\nFor scale, the presses themselves: Command K 73-85 ms, Delete 23-30 ms. The hold starts about a quarter second AFTER the undo, so it is deferred work, not the undo itself. Start by finding what runs ~240 ms after History undo/redo on a video (a debounced job: thumbnails, waveform, captions re-layout, autosave, panel sections built a frame at a time?).\nSame shape in the 12:36 an-editing-session-walk (probe in front): after clicking Animate a property, longest 288 ms from 408 ms in; after picking Position, 311 ms from 485 ms in. If one deferred job explains both, say so in clicking-a-cut-keying-a-value-and-undoing-it-ans's log (that task, blocked on a card, owns the key and its undo).\nUndo of a KEY is that task's, not this one's. The digest's process note applies: if the cause sits outside the code this task touches, stop and say so rather than filing the next speed task.",
+  "acceptance": [
+    "A timed walk (new, or an extension of an existing perf walk) undoes and redoes a cut, a ripple delete and a clip drop on the talk sample with captions, and each holds the main thread under 50 ms in nine of ten presses over three runs, none over 100 ms",
+    "The picture, the timeline and the panel after each Undo and Redo are the same as today (the walk checks the clip pieces and the captions' last line)",
+    "an-editing-session-walk and clip-click-cost-walk stay green",
+    "If the cost turns out to be something a person would see change (a lane or the picture resizing), stop, open a decision card with the measurements, and block, rather than filing another speed task",
+    "Audit written under queue/audits/ with before and after numbers; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:05:25.909Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:43.951Z",
+      "note": "seq 3760 -> 5"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "a-gap-between-clips-closes-with-a-click-and-dele",
+  "title": "A gap between clips closes with a click and Delete",
+  "goal": "Lifting a stretch out with semicolon, or dragging a clip away, leaves an empty gap on the track, and the only way to close it is to drag a range over it and press Shift Delete. In Premiere and Final Cut you click the gap and press Delete, or right-click it and choose Ripple Delete. Make a gap something you can click and close the same way.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T22:06:24.837Z",
+  "updated": "2026-10-07T22:07:44.009Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the manager pass's Premiere gap check 2026-10-07. Today: no gap-picking concept; closeGap is private in Sources/PhotonzCore/TimelineMenuEdits.swift ~41-56 and used only by ripple delete of a clip. A drag on empty track space draws a box (TrackRange). Lift is ; (TimelineKeys.swift ~231-237). Core first (TDD): a TimelineGap value (track, startMS, lengthMS) found from the track's clips at a time, and a closeGap edit that moves later clips, their linked sound and their captions, refusing when it would overlap. The click and its picked tint live in the timeline view; reuse the ruler/track range tint, add no new style, and add Ripple Delete to the gap's right-click menu per the 'Actions live where you click' rule. Placement: right-click row on the thing it acts on, plus the existing Sequence > Ripple Delete row; no new control. Searched pick a gap, close gap, ripple delete a gap (--all): nothing covers it, and no card declined it.",
+  "acceptance": [
+    "Clicking the empty stretch between two clips on a track picks that gap, drawn with the same picked tint the app already uses for a picked time range, and a click anywhere else lets it go",
+    "With a gap picked, Delete, Shift Delete and the Sequence menu's Ripple Delete close it: everything after it on that track moves earlier by the gap's length, together with its own sound and its captions, in one undo step",
+    "Right-clicking a gap opens a menu whose first row is Ripple Delete, and it is dimmed when closing the gap would push a clip into another (a locked track, or a later clip on a track that moves with it)",
+    "A drag that starts in empty track space still draws a box as today, and a click on empty space after the last clip picks nothing",
+    "Try path at Next defaults: open the talk sample, cut twice with Command K, press semicolon on the middle piece, click the gap, press Delete. A walk does this and checks the pieces and the captions; audit written under queue/audits/. Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T22:06:24.839Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-07T22:07:44.008Z",
+      "note": "seq 3770 -> 6"
+    }
+  ]
+}
