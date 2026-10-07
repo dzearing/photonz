@@ -2163,7 +2163,8 @@ private final class Run {
 
         case .writeVideo(let name, let format, let quality, let seconds, let within,
                          let width, let height, let sound, let copied, let size,
-                         let estimateFactor, let range, let startsAtMS, let paceShare):
+                         let estimateFactor, let range, let startsAtMS, let paceShare,
+                         let piecesCopied, let drawn):
             note(number, step.name,
                  try await writeVideoFile(name: name, format: format, quality: quality,
                                           seconds: seconds, within: within,
@@ -2171,7 +2172,8 @@ private final class Run {
                                           sound: sound, copied: copied, size: size,
                                           estimateFactor: estimateFactor,
                                           range: range, startsAtMS: startsAtMS,
-                                          paceShare: paceShare),
+                                          paceShare: paceShare, piecesCopied: piecesCopied,
+                                          drawn: drawn),
                  state: describe())
 
         case .measureFade(let name, let atMS, let within, let smooth):
@@ -13574,10 +13576,10 @@ private final class Run {
     /// lands, at `estimateWithin: 0`, since an animated export written twice
     /// lands at the same size (`AnimatedExportWeighTests`).
     private func weighAnimated(_ format: RecordingFormat, quality: VideoExportQuality,
-                               size: VideoExportSize? = nil,
+                               size: VideoExportSize? = nil, writesTheFile: Bool = false,
                                write: @escaping ExportWeigh.Write) async throws
         -> RecordingExport.Weighing? {
-        guard format.isAnimatedImage else { return nil }
+        guard format.isAnimatedImage || writesTheFile else { return nil }
         let weigher = ExportWeigh()
         weigher.weigh(format: format, quality: quality, size: size, write: write)
         defer { weigher.stop() }
@@ -13839,7 +13841,8 @@ private final class Run {
                                 width: Double?, height: Double?,
                                 sound: Bool?, copied: Bool?, size: String? = nil,
                                 estimateFactor: Double? = nil, range: String? = nil,
-                                startsAtMS: Int? = nil, paceShare: Double? = nil) async throws -> String {
+                                startsAtMS: Int? = nil, paceShare: Double? = nil,
+                                piecesCopied: Bool? = nil, drawn: Bool = false) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document, document.hasTime else {
             throw Failure(description: "this window holds no document with time in it, "
@@ -13886,15 +13889,21 @@ private final class Run {
         }
         let chosenSize = pickedSize.offeredOrFull(for: source.sourceSize, format: recordingFormat)
         let destination = out.appendingPathComponent("\(name).\(recordingFormat.fileExtension)")
-        let animation = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize) {
+        // An edit copied in pieces is weighed the way the sheet weighs it: by
+        // writing the copy, which is the file Export then puts in place.
+        let copiesPieces = !drawn && RecordingExport.copiesPieces(format: recordingFormat,
+                                                                  quality: preset, source: source,
+                                                                  size: chosenSize)
+        let animation = try await weighAnimated(recordingFormat, quality: preset, size: chosenSize,
+                                                writesTheFile: copiesPieces) {
             [editor] url, onProgress in
             try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
                                         to: url, range: stretch, onProgress: onProgress)
         }
         let movie = try await weighMovie(recordingFormat, quality: preset, size: chosenSize,
-                        copied: RecordingExport.copiesVerbatim(format: recordingFormat,
-                                                               quality: preset, source: source,
-                                                               size: chosenSize)) {
+                        copied: copiesPieces || RecordingExport.copiesVerbatim(
+                            format: recordingFormat, quality: preset, source: source,
+                            size: chosenSize)) {
             [editor] onProgress in
             try await editor.weighVideo(quality: preset, size: chosenSize, range: stretch,
                                         onProgress: onProgress)
@@ -13910,9 +13919,11 @@ private final class Run {
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
         let started = Date()
+        let route: VideoWriteRoute
         do {
-            try await editor.writeVideo(format: recordingFormat, quality: preset, size: chosenSize,
-                                        to: destination, range: stretch)
+            route = try await editor.writeVideo(format: recordingFormat, quality: preset,
+                                                size: chosenSize, to: destination, range: stretch,
+                                                mayCopyPieces: !drawn)
         } catch {
             throw Failure(description: "writing the document as \(format) failed: \(error)")
         }
@@ -13926,6 +13937,24 @@ private final class Run {
                      + "\(ExportQuality.fileSize(bytes: landed)) (\(landed) bytes), "
                      + "written in \(took) ms"]
         var wrong: [String] = []
+        switch route {
+        case .copiedWhole: facts.append("copied whole from the recording")
+        case .copiedPieces(let copiedFrames, let renderedFrames):
+            facts.append("copied in pieces: \(copiedFrames) frames copied as they were, "
+                         + "\(renderedFrames) encoded again at the cuts")
+        case .drawn: facts.append("drawn frame by frame")
+        }
+        if let piecesCopied {
+            let didCopy: Bool
+            if case .copiedPieces = route { didCopy = true } else { didCopy = false }
+            if piecesCopied != didCopy {
+                wrong.append(piecesCopied
+                    ? "this edit is nothing but cuts and should have been copied in pieces, "
+                        + "and it was \(route == .drawn ? "drawn frame by frame" : "copied whole")"
+                    : "this edit has something drawn in it and was copied in pieces, so what "
+                        + "was drawn is missing from the file")
+            }
+        }
 
         if recordingFormat == .mp4 {
             let asset = AVURLAsset(url: destination)
@@ -13986,7 +14015,7 @@ private final class Run {
             let identical = landed == sourceBytes && sourceBytes > 0
             facts.append(identical
                 ? "byte for byte the recording itself, so nothing was re-encoded"
-                : "made frame by frame from the document")
+                : "not the recording byte for byte")
             if copied != identical {
                 wrong.append(copied
                     ? "this was supposed to be the fast path, a verbatim copy, and the file that "

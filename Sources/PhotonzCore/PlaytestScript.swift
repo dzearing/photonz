@@ -2803,13 +2803,19 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the file's first picture is the document's at that moment, which is
     /// what proves a marked export starts at the In rather than at nought.
     /// `paceShare` fails the step when the write took longer than that share
-    /// of the file's running time (`VideoWritePace`).
+    /// of the file's running time (`VideoWritePace`). `piecesCopied` claims an
+    /// edit that is nothing but cuts went out by copying the stretches it
+    /// keeps (true) or was drawn frame by frame (false) (`CutCopy.swift`).
+    /// `drawn` writes it frame by frame even where it could be copied, the way
+    /// every edit was written before the copy existed: what the copy is timed
+    /// and compared against.
     case writeVideo(name: String, format: String, quality: String?,
                     seconds: Double?, within: Double,
                     width: Double?, height: Double?, sound: Bool?, copied: Bool?,
                     size: String? = nil, estimateFactor: Double? = nil,
                     range: String? = nil, startsAtMS: Int? = nil,
-                    paceShare: Double? = nil)
+                    paceShare: Double? = nil, piecesCopied: Bool? = nil,
+                    drawn: Bool = false)
     /// Write ONE FRAME of the document out as a picture, exactly as choosing
     /// PNG on that same sheet and picking a place would, then read the file
     /// back and check it (`EditorState.exportStillFrame`).
@@ -4321,7 +4327,9 @@ public enum PlaytestStep: Sendable, Equatable {
                                estimateFactor: try f.optionalNumber("estimateFactor"),
                                range: try f.optionalString("range"),
                                startsAtMS: try f.optionalNumber("startsAtMS").map { Int($0) },
-                               paceShare: try f.optionalNumber("paceShare"))
+                               paceShare: try f.optionalNumber("paceShare"),
+                               piecesCopied: try f.optionalFlag("piecesCopied"),
+                               drawn: try f.optionalFlag("drawn") ?? false)
         case "measureFade":
             self = .measureFade(name: try f.string("name"),
                                 atMS: try f.optionalNumbers("atMS").map { Int($0) },

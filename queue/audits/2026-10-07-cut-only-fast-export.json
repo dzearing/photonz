@@ -1,0 +1,31 @@
+{
+  "feature": "A cut recording exports in about a second",
+  "epic": "video-share",
+  "summary": "When the only edits are cuts and trims, Export to MP4, Copy Video and Command S into history copy the kept stretches instead of drawing every frame again. A 3 minute Retina recording with three pieces cut out went from 73.5 to 75.0 seconds to 0.78 seconds.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: a-cut-recording-copies-its-pieces-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Record a minute or more of your screen and open it.", "shot": "2026-10-07-cut-copy-1-three-pieces-cut-out-sc.png" },
+    { "do": "Cut out two or three fumbles with the blade, then delete those pieces." },
+    { "do": "Press Command E and leave MP4, Full, High as they are.", "shot": "2026-10-07-cut-copy-2-the-sheet-sc.png" },
+    { "do": "Watch the size line settle on an exact size in about a second, then press Export." },
+    { "do": "Choose Edit, Copy Video and paste the file into Teams.", "shot": "2026-10-07-cut-copy-3-copied-sc.png" },
+    { "do": "Play the exported file across each cut and listen at the joins." },
+    { "do": "Draw a box over the picture and export again: it takes as long as it used to." }
+  ],
+  "evaluate": [
+    "Does the export land fast enough that you no longer wait for it before sending?",
+    "Does every cut in the file land on the frame the timeline showed?",
+    "Is the sound in step at the end of the file, with no click at any join?",
+    "Is it clear enough why adding a box or a zoom makes the export slow again?"
+  ],
+  "rough": [
+    "Measured on this Mac, the 3 minute Retina edit: 783 ms and 807 ms copied against 73,493 ms and 74,961 ms drawn (two runs); Copy Video 843 ms; Command S into history 1.16 s from the key to a file that pastes.",
+    "Frames, measured on a recording whose every frame carries its number: all 450 frames of the copied file are within one frame of the drawn file (358 identical), and each cut lands on the exact frame the timeline shows at that moment.",
+    "Sound, measured on the 3 minute edit: decoded, it is identical to the drawn file at every join and at the end (0 ms apart), and no join steps more than ordinary audio does.",
+    "Only frames from a cut to the next key frame are encoded again (33 of 5,400 frames on the 3 minute edit), at twice the recording's own bit rate so a join never looks softer.",
+    "The copy keeps the recording's own colour tags (the Mac's 709 set), where a drawn export is tagged sRGB, the same difference the untouched copy has always had. Not seen on screen; filed nowhere because it matches the existing whole-file copy.",
+    "Standard, Small, 1080p and 720p still draw every frame: those ask for a smaller file, and copying cannot make one.",
+    "No mock covers the Export sheet; its look is unchanged. A copied edit's lines now drop the frame rate and give an exact size, as the untouched recording's already did."
+  ]
+}

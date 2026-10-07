@@ -42,14 +42,27 @@ enum TestClip {
     }
 
     /// Write an H.264 MP4 of `seconds` at `size`, 30fps.
-    static func write(to url: URL, seconds: Double, size: CGSize = CGSize(width: 160, height: 120)) async throws {
+    ///
+    /// `likeAScreenRecording` stores it the way the Mac stores a screen
+    /// recording: a key frame every second and frames reordered (an I, then
+    /// the P it shows later, then the Bs between), which leaves its pictures
+    /// stamped late in the file with an edit list pulling them back.
+    static func write(to url: URL, seconds: Double, size: CGSize = CGSize(width: 160, height: 120),
+                      likeAScreenRecording: Bool = false) async throws {
         try? FileManager.default.removeItem(at: url)
         let writer = try AVAssetWriter(outputURL: url, fileType: .mp4)
-        let settings: [String: Any] = [
+        var settings: [String: Any] = [
             AVVideoCodecKey: AVVideoCodecType.h264,
             AVVideoWidthKey: Int(size.width),
             AVVideoHeightKey: Int(size.height),
         ]
+        if likeAScreenRecording {
+            settings[AVVideoCompressionPropertiesKey] = [
+                AVVideoAllowFrameReorderingKey: true,
+                AVVideoMaxKeyFrameIntervalDurationKey: 1,
+                AVVideoProfileLevelKey: AVVideoProfileLevelH264HighAutoLevel,
+            ] as [String: Any]
+        }
         let input = AVAssetWriterInput(mediaType: .video, outputSettings: settings)
         input.expectsMediaDataInRealTime = false
         let adaptor = AVAssetWriterInputPixelBufferAdaptor(

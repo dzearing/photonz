@@ -1,0 +1,63 @@
+{
+  "out": "/tmp/photonz-playtest/a-cut-recording-copies-its-pieces-walk",
+  "clock": 480,
+  "seed": "An edit that is nothing but cuts goes out by copying the stretches it keeps, at Next defaults with no flag touched. The five minute talk recorded at Retina size (2880 by 1800, talking all the way) opens; three pieces are cut out of it (40s to 55s, 100s to 112s, 150s to 160s of the recording) and W trims it to three minutes. Export as MP4 at the sheet's first choice must then land in under 3 seconds (a share of 0.0166 of the three minutes), three minutes long to the frame, with its sound, copied in pieces rather than drawn; Copy Video does the same; and the same edit written the old way, every frame drawn, is timed beside it as the measure of what it replaced.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "Record, cut the fumbles out, send it to Teams: every export of an edited recording used to draw and encode every frame again, about seventy five seconds for three minutes at Retina size. A cut-only edit is stretches of the file it came from, already compressed, so they are copied across and only the frames between a cut and the next key frame are encoded again" },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "clickRuler", "seconds": 40.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "clickRuler", "seconds": 55.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "clickRuler", "seconds": 85.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "clickRuler", "seconds": 97.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "clickRuler", "seconds": 123.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "clickRuler", "seconds": 133.0 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "action", "action": "clipDeletePiece" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "clickRuler", "seconds": 180.0 },
+    { "do": "key", "key": "w" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectRecording", "pieces": 4, "seconds": 180.0 },
+    { "do": "clickRuler", "seconds": 60.0 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-three-pieces-cut-out", "note": "Three pieces thrown away and the end trimmed: four pieces, three minutes" },
+    { "do": "snapshot", "name": "1-three-pieces-cut-out" },
+
+    { "do": "action", "action": "exportDialogAsVideo" },
+    { "do": "waitFor", "condition": "exportSizeWeighed", "timeout": 10 },
+    { "do": "describe", "stage": "2-the-sheet", "note": "Export on MP4 at its first choice: the size line says what the copy weighs, to the byte once the sheet has written it, and the pixel line names the recording's own size with no frame rate, since nothing is re-timed" },
+    { "do": "snapshot", "name": "2-the-sheet" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.6 },
+
+    { "do": "writeVideo", "name": "three-minutes-copied", "format": "mp4", "seconds": 180.0, "within": 0.05, "sound": true, "copied": false, "piecesCopied": true, "width": 2880, "height": 1800, "estimateFactor": 1.25, "paceShare": 0.0166 },
+
+    { "do": "action", "action": "copyVideo" },
+    { "do": "action", "action": "awaitCopy" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "3-copied", "note": "Edit, Copy Video: the same copy, on the clipboard as a file, in a second or two" },
+    { "do": "snapshot", "name": "3-copied" },
+
+    { "do": "writeVideo", "name": "three-minutes-drawn", "format": "mp4", "seconds": 180.0, "within": 0.05, "sound": true, "copied": false, "piecesCopied": false, "drawn": true, "width": 2880, "height": 1800 }
+  ]
+}

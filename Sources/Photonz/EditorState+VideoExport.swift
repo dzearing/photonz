@@ -66,7 +66,17 @@ extension EditorState {
                                       footageBytesPerSecond: untouched == nil
                                         ? RecordingExport.footageBytesPerSecond(footage, at: canvas)
                                         : nil,
-                                      captionedSeconds: document?.captionedSeconds(in: span) ?? 0)
+                                      captionedSeconds: document?.captionedSeconds(in: span) ?? 0,
+                                      isCutOnly: copyablePieces(range: range) != nil)
+    }
+
+    /// The stretches of one recording this edit is made of, where it is
+    /// nothing but those, for the stretch `range` picks and with the captions
+    /// going out as `captions` (`PhotonzDocument.copyablePieces`).
+    func copyablePieces(captions: CaptionExport = .burnedIn,
+                        range: VideoExportRange = .marked) -> CopyablePieces? {
+        guard let document = document?.forExport(captions: captions), document.hasTime else { return nil }
+        return document.copyablePieces(in: document.exportRangeMS(range))
     }
 
     /// Every recording file the document's clips play, weighed once each.
@@ -133,9 +143,12 @@ extension EditorState {
         guard videoExport == nil else { return }
         // Already written, to answer what it would weigh: move it into place
         // and there is nothing to watch.
-        if captions == .burnedIn, let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
+        // The sheet writes it with the captions it shows, burned in or not, so
+        // a file of words beside it is all that is left to write.
+        if let weighed, AppCoordinator.putWeighedFileInPlace(weighed, at: url) {
             keptByExport()
             raiseCanvasNotice(.videoWritten(file: url.lastPathComponent))
+            if let file = captions.file { writeCaptionsBeside(film: url, as: file, range: range) }
             return
         }
         pauseDocument()
@@ -316,27 +329,34 @@ extension EditorState {
     /// The part both the sheet and a scripted walk need, so a walk can check
     /// the file that actually lands rather than trusting what the app says it
     /// wrote.
+    @discardableResult
     func writeVideo(format: RecordingFormat, quality: VideoExportQuality,
                     size: VideoExportSize? = nil, to url: URL,
                     captions: CaptionExport = .burnedIn,
                     range: VideoExportRange = .marked,
-                    onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
+                    mayCopyPieces: Bool = true,
+                    onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> VideoWriteRoute {
         guard let document else { throw CocoaError(.fileNoSuchFile) }
-        try await Self.writeVideo(of: document, pictures: store, format: format, quality: quality,
-                                  size: size, to: url, captions: captions, range: range,
-                                  onProgress: onProgress)
+        return try await Self.writeVideo(of: document, pictures: store, format: format,
+                                         quality: quality, size: size, to: url, captions: captions,
+                                         range: range, mayCopyPieces: mayCopyPieces,
+                                         onProgress: onProgress)
     }
 
     /// The same write for a document no window is holding: what a save into
     /// history runs, which carries on after its window has closed
     /// (`CaptureStore+VideoSaves`). `pictures` is where the document's own
     /// pictures are, a snapshot of the window's store when one had it.
+    /// `mayCopyPieces` false draws an edit that could have been copied, which
+    /// only a walk timing the two against each other asks for.
+    @discardableResult
     static func writeVideo(of document: PhotonzDocument, pictures store: ImageStore,
                            format: RecordingFormat, quality: VideoExportQuality,
                            size: VideoExportSize? = nil, to url: URL,
                            captions: CaptionExport = .burnedIn,
                            range: VideoExportRange = .marked,
-                           onProgress: (@Sendable (Double) -> Void)? = nil) async throws {
+                           mayCopyPieces: Bool = true,
+                           onProgress: (@Sendable (Double) -> Void)? = nil) async throws -> VideoWriteRoute {
         let document = document.forExport(captions: captions)
         guard document.hasTime else { throw CocoaError(.fileNoSuchFile) }
         // The In to the Out where they are set, and all of it otherwise
@@ -359,7 +379,29 @@ extension EditorState {
             try? FileManager.default.removeItem(at: url)
             try FileManager.default.copyItem(at: source, to: url)
             onProgress?(1)
-            return
+            return .copiedWhole
+        }
+
+        // An edit that is nothing but cuts is the stretches of the recording
+        // it keeps, already compressed: copy them across, and encode again
+        // only the few frames between a cut and the next key frame
+        // (`PieceCopyWriter`). Same choice as the whole copy, for the same
+        // reasons. A file it cannot copy from is drawn the ordinary way.
+        if mayCopyPieces, format == .mp4, quality == .high,
+           !(size?.shrinks(document.canvasSize) ?? false),
+           let pieces = document.copyablePieces(in: span),
+           let source = MovieLibrary.shared.url(for: pieces.movie) {
+            let mix = AudioMixSegment.windowed(document.audioMix(), to: span)
+            let soundURLs = await SoundLibrary.shared.readyURLs(for: mix)
+            do {
+                let outcome = try await PieceCopyWriter.write(
+                    source: source, ranges: pieces.sourceRangesMS, mix: mix, soundURLs: soundURLs,
+                    to: url, onProgress: onProgress)
+                return .copiedPieces(copiedFrames: outcome.copiedFrames,
+                                     renderedFrames: outcome.renderedFrames)
+            } catch let error as PieceCopyWriter.CopyError {
+                NSLog("Copying the kept pieces did not work (\(error)); drawing the edit instead")
+            }
         }
 
         let plan = DocumentVideoExport.plan(range: span,
@@ -385,6 +427,7 @@ extension EditorState {
             try await DocumentMovieWriter.writeAnimated(plan: plan, format: format, to: url,
                                                         frames: frames, onProgress: onProgress)
         }
+        return .drawn
     }
 }
 
@@ -414,6 +457,17 @@ extension EditorState {
             frames: { ms in await pictures.frame(atMS: ms) },
             onProgress: onProgress)
     }
+}
+
+/// How a video was written, which a walk checks against what it expected.
+enum VideoWriteRoute: Equatable, Sendable {
+    /// The recording nobody touched, copied byte for byte.
+    case copiedWhole
+    /// An edit that is nothing but cuts, its stretches copied across and only
+    /// the frames between a cut and the next key frame encoded again.
+    case copiedPieces(copiedFrames: Int, renderedFrames: Int)
+    /// Every frame drawn and encoded.
+    case drawn
 }
 
 /// An export that is running: what it is called and how far along it is.

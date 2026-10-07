@@ -71,6 +71,10 @@ public enum RecordingExport {
         /// cost far more than the footage under them suggests. Zero when the
         /// captions leave as a file beside the film instead.
         public var captionedSeconds: TimeInterval
+        /// Whether the edit is nothing but stretches of one recording laid
+        /// back to back, so the top choice copies them rather than drawing
+        /// every frame (`PhotonzDocument.copyablePieces`, `copiesPieces`).
+        public var isCutOnly: Bool
 
         public init(sourceDuration: TimeInterval, keptDuration: TimeInterval,
                     sourceSize: CGSize, cropSize: CGSize? = nil,
@@ -78,7 +82,9 @@ public enum RecordingExport {
                     sourceFPS: Double = 30, hasAudio: Bool = false,
                     playheadTime: TimeInterval = 0,
                     footageBytesPerSecond: Double? = nil,
-                    captionedSeconds: TimeInterval = 0) {
+                    captionedSeconds: TimeInterval = 0,
+                    isCutOnly: Bool = false) {
+            self.isCutOnly = isCutOnly
             self.sourceDuration = sourceDuration
             self.keptDuration = keptDuration
             self.sourceSize = sourceSize
@@ -264,6 +270,27 @@ public enum RecordingExport {
             && !(size?.shrinks(source.cropSize ?? source.sourceSize) ?? false)
     }
 
+    /// Whether an edit that is nothing but cuts goes out by copying the
+    /// stretches it keeps rather than being drawn frame by frame
+    /// (`CutCopy.swift`).
+    ///
+    /// The same choice that copies an untouched recording: MP4 at the top
+    /// preset, the whole picture. A smaller file or a smaller picture has to be
+    /// encoded, which is what asking for one means.
+    public static func copiesPieces(format: RecordingFormat, quality: VideoExportQuality,
+                                    source: Source, size: VideoExportSize? = nil) -> Bool {
+        format == .mp4 && quality == .high && source.isEdited && source.isCutOnly
+            && !(size?.shrinks(source.cropSize ?? source.sourceSize) ?? false)
+    }
+
+    /// Whether the file is copied out of what the recording holds, whole or in
+    /// pieces, rather than encoded at the choice's budget.
+    static func copiesAsRecorded(format: RecordingFormat, quality: VideoExportQuality,
+                                 source: Source, size: VideoExportSize?) -> Bool {
+        copiesVerbatim(format: format, quality: quality, source: source, size: size)
+            || copiesPieces(format: format, quality: quality, source: source, size: size)
+    }
+
     /// The pixel size the written file will really have.
     public static func outputSize(format: RecordingFormat, quality: VideoExportQuality,
                                   source: Source, size: VideoExportSize? = nil) -> CGSize {
@@ -271,7 +298,7 @@ public enum RecordingExport {
         guard base.width > 0, base.height > 0 else { return base }
         // An untouched recording going out as MP4 is copied, so its picture is
         // whatever it already was, whichever choice the row is showing.
-        if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
+        if copiesAsRecorded(format: format, quality: quality, source: source, size: size) {
             return base
         }
         return recipe(format: format, quality: quality, source: source, size: size).size
@@ -314,6 +341,18 @@ public enum RecordingExport {
         }
         if copiesVerbatim(format: format, quality: quality, source: source, size: size) {
             return source.fileBytes > 0 ? .exact(source.fileBytes) : .unknown
+        }
+        // Copied in pieces: what the recording already costs for the seconds
+        // kept, and the very file once the sheet has written it to find out.
+        if copiesPieces(format: format, quality: quality, source: source, size: size) {
+            if let weighing, weighing.answers(format: format, quality: quality, size: size),
+               let bytes = weighing.bytes, bytes > 0 {
+                return .exact(bytes)
+            }
+            if let measured = measuredCost(format: format, quality: quality, source: source,
+                                           size: size), measured > 0 {
+                return .about(measured)
+            }
         }
         // Stretches of it written at this very choice, where the sheet has
         // written them: what the encoder really spends on this picture, which
@@ -437,7 +476,7 @@ public enum RecordingExport {
         // frame rate is whatever it was recorded at and no choice touched it.
         if format.isAnimatedImage {
             parts.append("\(Int(quality.targetFPS.rounded())) fps")
-        } else if !copiesVerbatim(format: format, quality: quality, source: source, size: chosen),
+        } else if !copiesAsRecorded(format: format, quality: quality, source: source, size: chosen),
                   size.width >= 1, size.height >= 1 {
             let fps = recipe(format: format, quality: quality, source: source, size: chosen).fps
             parts.append("\(Int(fps.rounded())) fps")

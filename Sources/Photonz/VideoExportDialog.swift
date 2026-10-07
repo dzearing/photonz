@@ -94,10 +94,15 @@ struct VideoExportDialog: View {
     }
 
     /// What the lines are worked out from: the document, with its captions
-    /// counted only where they go into the picture rather than beside it.
+    /// counted only where they go into the picture rather than beside it. With
+    /// the captions beside it, an edit that is otherwise nothing but cuts is
+    /// copied rather than drawn, and says so.
     private var described: RecordingExport.Source {
         var described = source
-        if choice == .video(.mp4), captions != .burnedIn { described.captionedSeconds = 0 }
+        if choice == .video(.mp4), captions != .burnedIn {
+            described.captionedSeconds = 0
+            described.isCutOnly = editor.copyablePieces(captions: captions, range: range) != nil
+        }
         return described
     }
 
@@ -291,6 +296,18 @@ struct VideoExportDialog: View {
                                                   source: described, size: size)
             else { weigh.stop(); return }
             let captions = captions
+            // Copied in pieces, the file itself is a second or two of work:
+            // write it, say what it weighs to the byte, and Export moves it
+            // into place rather than writing it again.
+            if RecordingExport.copiesPieces(format: format, quality: quality,
+                                            source: described, size: size) {
+                weigh.weigh(format: format, quality: quality, size: size) { [editor] url, onProgress in
+                    try await editor.writeVideo(format: format, quality: quality, size: size,
+                                                to: url, captions: captions, range: range,
+                                                onProgress: onProgress)
+                }
+                return
+            }
             weigh.measure(format: format, quality: quality, size: size) { [editor] onProgress in
                 try await editor.weighVideo(quality: quality, size: size, captions: captions,
                                             range: range, onProgress: onProgress)

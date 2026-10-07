@@ -264,7 +264,7 @@ public enum DocumentMovieWriter {
     }
 
     /// The picture and the sound in one file, neither of them re-encoded.
-    private static func join(picture: URL, sound: URL, to destination: URL) async throws {
+    static func join(picture: URL, sound: URL, to destination: URL) async throws {
         let composition = AVMutableComposition()
         let pictureAsset = AVURLAsset(url: picture)
         guard let source = try? await pictureAsset.loadTracks(withMediaType: .video).first,
