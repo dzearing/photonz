@@ -198,16 +198,21 @@ extension Layer {
         guard box.width > 0, box.height > 0 else { return nil }
         let picture = movie.pixelSize
         let window = zoomWindow ?? CGRect(x: 0, y: 0, width: 1, height: 1)
-        guard window.width > 0, window.height > 0 else { return nil }
+        // The part of the recording the clip's picture holds: all of it, or
+        // what its crop kept.
+        let kept = pictureInRecording
+        guard window.width > 0, window.height > 0, kept.width > 0, kept.height > 0 else { return nil }
         // Where the click is in the part of the picture shown, as fractions.
-        let shown = CGPoint(x: (click.point.x / picture.width - window.minX) / window.width,
-                            y: (click.point.y / picture.height - window.minY) / window.height)
+        let inPicture = CGPoint(x: (click.point.x / picture.width - kept.minX) / kept.width,
+                                y: (click.point.y / picture.height - kept.minY) / kept.height)
+        let shown = CGPoint(x: (inPicture.x - window.minX) / window.width,
+                            y: (inPicture.y - window.minY) / window.height)
         guard shown.x >= 0, shown.x <= 1, shown.y >= 0, shown.y <= 1 else { return nil }
         let centre = CGPoint(x: box.minX + shown.x * box.width, y: box.minY + shown.y * box.height)
         // How wide it grows: a share of the recording, in the clip's points,
         // and bigger in a zoom, since it marks the picture.
         let reach = effect.size.share * min(picture.width, picture.height)
-            * (box.width / picture.width) / window.width
+            * (box.width / (picture.width * kept.width)) / window.width
         guard reach > 0 else { return nil }
         let id = Self.clickMarkID(of: click.id)
         let spread = 1 - pow(1 - t, 3)

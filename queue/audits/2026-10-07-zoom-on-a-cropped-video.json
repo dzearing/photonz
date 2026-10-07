@@ -1,0 +1,48 @@
+{
+  "feature": "A zoom on a cropped video shows exactly the box you drew",
+  "epic": "video-transitions-motion",
+  "summary": "On a cropped recording, the zoom's box is now drawn on the part of the video you can see, in that picture's shape, and when it plays it fills that picture with exactly what was in the box. The percent on the box is how far in it really goes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the Crop tool (C) with nothing selected, drag the crop to part of the recording, and press Return.",
+      "shot": "2026-10-07-zoom-on-a-cropped-video-0.png"
+    },
+    {
+      "do": "Right-click the clip on the timeline and choose Add Zoom."
+    },
+    {
+      "do": "Press beside the box on the picture and drag a new box round some text.",
+      "shot": "2026-10-07-zoom-on-a-cropped-video-1.png"
+    },
+    {
+      "do": "Press Space, or click the ruler in the middle of the zoom's bar.",
+      "shot": "2026-10-07-zoom-on-a-cropped-video-2.png"
+    },
+    {
+      "do": "Undo the crop, select the clip, press C and crop again: the clip's own crop. Add a zoom and play it."
+    },
+    {
+      "do": "Undo, then add Crop Left, Top, Right and Bottom under Animate a property. Add a zoom and play it.",
+      "shot": "2026-10-07-zoom-on-a-cropped-video-3.png"
+    },
+    {
+      "do": "Crop the video again after placing a zoom, and play it."
+    }
+  ],
+  "evaluate": [
+    "When the zoom plays, is what fills the picture exactly what was inside your box?",
+    "Does the percent on the box match how far in it feels when it plays?",
+    "When you crop again after placing a zoom, should it stay on the same text (it does now), or keep its place in the frame?",
+    "Does Follow Cursor keep the pointer in view on a cropped recording?"
+  ],
+  "rough": [
+    "No mock covers the zoom box; this matches the box the app already draws on an uncropped recording.",
+    "Before the fix (2026-10-07-zoom-on-a-cropped-video-before.png, today's code with the canvas cropped): the box was the whole recording's shape, and it said 533% but really went to 333%.",
+    "Measured by the three walks (a-zoom-on-a-cropped-canvas/-clip/-clip-cropped-by-keys-shows-its-box-walk): for every kind of crop the box's corners land on the picture's edges within 0.0 px at the zoom's full point, a box labelled 370% really goes 370% across and down, and only 2 to 3.4% of pixels differ from the box's contents, all from resampling. Before the fix, the canvas crop missed by up to 458 px (box said 533%, really 333%) and the keyed crop missed by up to 416 px.",
+    "The clip's own crop already drew right on this Mac. It could go wrong, though, in a window small enough that the app reads the video's frames at a smaller size: the crop then cut the wrong part of the frame, or nothing. A picture cropped this way and exported at 2x came out empty. Both are fixed and covered by unit tests, but no walk shows them, because the walk's window reads full-size frames.",
+    "Zooms saved before this fix open showing what their box showed: a zoom on an uncropped clip is unchanged, and one on a cropped clip or a cropped canvas is converted when the document opens.",
+    "The zoom's percent always means 'how far into what you can see'. So cropping tighter after placing a zoom keeps the same text in the middle but shows less of it around."
+  ]
+}

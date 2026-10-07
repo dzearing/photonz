@@ -1005,6 +1005,23 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// out, and fail unless the picture goes in a little further at every
     /// frame in, and back out a little at every frame out.
     case expectZoomEasesFrameByFrame
+    /// Crop the recording the way the Crop tool does with nothing picked: the
+    /// canvas, to a 4:3 piece off the middle of the recording.
+    case zoomCropCanvas
+    /// Crop the recording the way the Crop tool does with the clip picked:
+    /// the clip itself, to the same piece.
+    case zoomCropClip
+    /// Crop the recording by keying its four crop edges in on its Motion list,
+    /// to the same piece.
+    case zoomCropByKeys
+    /// Draw the picked zoom's box round a spot of the part of the recording a
+    /// person can see, with a press beside the box, a drag and a let go.
+    case zoomDrawBoxOnVisiblePicture
+    /// With the zoom's box up, fail unless at the zoom's full point the
+    /// exported frame is exactly what was inside the box, filling the visible
+    /// picture: the box's corners land within 2 px of the picture's, the
+    /// box's percent is how far in it really is, and the pixels match.
+    case expectZoomShowsItsBox
     /// Fail unless the recording's clicks are drawn as a ripple: at three
     /// moments across its first scripted click there is a ring centred on the
     /// click, growing and fading, and nothing just before or after
@@ -1477,6 +1494,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,
              .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+             .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,

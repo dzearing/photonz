@@ -35,9 +35,12 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// How long the way in and the way out take.
     public var easeInMS: Int
     public var easeOutMS: Int
-    /// How far in: 2 shows half the picture's width across the whole frame.
+    /// How far in: 2 shows half the width of the picture you can see across
+    /// the whole of it (`ZoomStage.swift`).
     public var scale: Double
-    /// The middle of the spot, as fractions of the picture from its top-left.
+    /// The middle of the spot, a point of the recording as fractions of the
+    /// whole recording from its top-left, so a crop made afterwards leaves the
+    /// zoom on what it was on.
     public var center: CGPoint
     /// Whether the region rides along with the recorded pointer rather than
     /// staying on `center`.
@@ -47,6 +50,12 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// here rather than read from beside the file, so an export, a copy of the
     /// document and a machine without the record all draw the same thing.
     public var cursor: PointerTrack?
+    /// True on every zoom aimed at the part of the clip that is seen: its spot
+    /// a point of the recording and its scale against the picture seen. Nil
+    /// on a zoom written before, whose numbers were fractions of the clip's
+    /// whole frame; a document is read into these on opening
+    /// (`PhotonzDocument.aimingZoomsAtWhatIsSeen`).
+    public var aimedAtWhatIsSeen: Bool?
 
     public init(id: UUID = UUID(), startMS: Int, endMS: Int,
                 easeInMS: Int = ClipZoom.defaultEaseMS, easeOutMS: Int = ClipZoom.defaultEaseMS,
@@ -61,6 +70,7 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
         self.center = center
         self.followsCursor = followsCursor
         self.cursor = cursor
+        self.aimedAtWhatIsSeen = true
     }
 
     // MARK: The numbers
@@ -93,10 +103,15 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
 
     public var lengthMS: Int { endMS - startMS }
 
-    /// The spot itself, as fractions of the picture: square in those fractions,
-    /// which is the frame's own shape once it is laid over the picture, and
-    /// slid back inside the picture where the middle is too near an edge.
-    public var region: CGRect { Self.region(scale: scale, center: center) }
+    /// The spot itself on a clip seen whole, as fractions of the picture.
+    public var region: CGRect { region(on: .whole) }
+
+    /// The spot itself, as fractions of the picture SEEN: square in those
+    /// fractions, which is the seen picture's own shape once it is laid over
+    /// it, and slid back inside it where the middle is too near an edge.
+    public func region(on stage: ZoomStage) -> CGRect {
+        Self.region(scale: scale, center: stage.toStage(center))
+    }
 
     public static func region(scale: Double, center: CGPoint) -> CGRect {
         let size = CGFloat(1 / max(1, scale))
@@ -158,10 +173,10 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// shrunk about ONE fixed point, the one the two line up on, so the spot
     /// never slides sideways as it arrives. The size closes geometrically, so
     /// the zoom feels as quick at the end as at the start.
-    public func window(atMS ms: Int) -> CGRect? {
+    public func window(atMS ms: Int, on stage: ZoomStage = .whole) -> CGRect? {
         let progress = amount(atMS: ms)
         guard progress > 0, scale > 1.001 else { return nil }
-        let goal = target(atMS: ms)
+        let goal = target(atMS: ms, on: stage)
         let factor = pow(scale, progress)
         let shrink = 1 - 1 / CGFloat(scale)
         guard shrink > 0 else { return nil }
@@ -170,11 +185,12 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
         return CGRect(x: anchor.x * (1 - size), y: anchor.y * (1 - size), width: size, height: size)
     }
 
-    /// The region the zoom is on at a moment once it has arrived: where a
-    /// following zoom has the pointer, and the spot otherwise. This is the
-    /// box the picture shows when the zoom is picked.
-    public func target(atMS ms: Int) -> CGRect {
-        followsCursor ? (followedRegion(atMS: ms) ?? region) : region
+    /// The region the zoom is on at a moment once it has arrived, as
+    /// fractions of the picture seen: where a following zoom has the pointer,
+    /// and the spot otherwise. This is the box the picture shows when the zoom
+    /// is picked.
+    public func target(atMS ms: Int, on stage: ZoomStage = .whole) -> CGRect {
+        followsCursor ? (followedRegion(atMS: ms, on: stage) ?? region(on: stage)) : region(on: stage)
     }
 
     // MARK: Following the pointer
@@ -197,7 +213,7 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
         cursor = PointerTrack(pixelSize: track.pixelSize, samples: kept, clicks: [])
     }
 
-    /// Where the pointer was, as fractions of the picture.
+    /// Where the pointer was, as fractions of the recording.
     func pointer(atMS ms: Int) -> CGPoint? {
         guard let cursor, cursor.pixelSize.width > 0, cursor.pixelSize.height > 0,
               let p = cursor.position(atMS: ms) else { return nil }
@@ -208,14 +224,14 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// path averaged over a moment either side, so the frame glides through
     /// the pointer's jitters instead of copying them, then pushed only as far
     /// as keeps the pointer itself clear of the frame's edge.
-    func followedRegion(atMS ms: Int) -> CGRect? {
-        guard let now = pointer(atMS: ms) else { return nil }
+    func followedRegion(atMS ms: Int, on stage: ZoomStage = .whole) -> CGRect? {
+        guard let now = pointer(atMS: ms).map(stage.toStage) else { return nil }
         let sigma = Double(Self.followSmoothingMS)
         var sum = CGPoint.zero
         var weights = 0.0
         for step in -8...8 {
             let offset = Double(step) * sigma / 4
-            guard let p = pointer(atMS: ms + Int(offset.rounded())) else { continue }
+            guard let p = pointer(atMS: ms + Int(offset.rounded())).map(stage.toStage) else { continue }
             let w = exp(-(offset * offset) / (2 * sigma * sigma))
             sum.x += p.x * w
             sum.y += p.y * w
@@ -248,9 +264,13 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// close together in time, framing all of them, arriving just before the
     /// first and leaving after the last. None lands on a zoom already in
     /// `existing`, and every one stays inside `sourceRange`.
+    ///
+    /// Framed on the picture seen (`stage`): the box fits round the clicks as
+    /// they are on screen, at the picture seen's shape.
     public static func suggestions(clicks: [PointerClick], pixelSize: CGSize,
                                    sourceRange: ClosedRange<Int>,
-                                   keepingClearOf existing: [ClipZoom]) -> [ClipZoom] {
+                                   keepingClearOf existing: [ClipZoom],
+                                   on stage: ZoomStage = .whole) -> [ClipZoom] {
         guard pixelSize.width > 0, pixelSize.height > 0 else { return [] }
         let sorted = clicks.filter { sourceRange.contains($0.downMS) }.sorted { $0.downMS < $1.downMS }
         var runs: [[PointerClick]] = []
@@ -265,7 +285,9 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
         var made: [ClipZoom] = []
         for run in runs {
             guard let first = run.first, let last = run.last else { continue }
-            let points = run.map { CGPoint(x: $0.point.x / pixelSize.width, y: $0.point.y / pixelSize.height) }
+            let points = run.map {
+                stage.toStage(CGPoint(x: $0.point.x / pixelSize.width, y: $0.point.y / pixelSize.height))
+            }
             let xs = points.map(\.x)
             let ys = points.map(\.y)
             let box = CGRect(x: (xs.min() ?? 0.5) - suggestedPadding,
@@ -277,8 +299,9 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
             let start = max(sourceRange.lowerBound, first.downMS - suggestedLeadMS)
             let end = min(sourceRange.upperBound, last.downMS + suggestedTailMS)
             guard end - start >= shortestMS else { continue }
+            let middle = region(scale: scale, center: CGPoint(x: box.midX, y: box.midY))
             let zoom = ClipZoom(startMS: start, endMS: end, scale: scale,
-                                center: CGPoint(x: box.midX, y: box.midY))
+                                center: stage.fromStage(CGPoint(x: middle.midX, y: middle.midY)))
             guard !taken.contains(where: { $0.startMS < zoom.endMS && zoom.startMS < $0.endMS }) else { continue }
             taken.append(zoom)
             made.append(zoom)
@@ -308,12 +331,14 @@ extension Layer {
         zooms?.first { ms >= $0.startMS && ms < $0.endMS }
     }
 
-    /// The window a zoom shows at a moment of the DOCUMENT's clock, or nil
-    /// when the clip shows its whole picture then.
-    public func zoomWindow(atDocumentTimeMS ms: Int) -> CGRect? {
+    /// The part of the clip's picture a zoom fills its frame with at a moment
+    /// of the DOCUMENT's clock, or nil when the clip shows its whole picture
+    /// then. `stage` is the part of the clip seen at that moment, which is
+    /// what the zoom's box is drawn on and fills (`ZoomStage.swift`).
+    public func zoomWindow(atDocumentTimeMS ms: Int, on stage: ZoomStage = .whole) -> CGRect? {
         guard let zooms, !zooms.isEmpty, takesAZoom else { return nil }
         let clock = motionClockMS(atDocumentTimeMS: ms)
-        return zoom(atSourceMS: clock)?.window(atMS: clock)
+        return zoom(atSourceMS: clock)?.window(atMS: clock, on: stage).map(stage.pictureWindow(forStageWindow:))
     }
 
     /// How much bigger than its share of the frame the picture is drawn at a
@@ -342,12 +367,20 @@ extension Layer {
     }
 
     /// The clip with the window its zoom shows at a moment of the document's
-    /// clock put on it, for drawing.
-    func withZoomShown(atDocumentTimeMS ms: Int) -> Layer {
+    /// clock put on it, for drawing. This is the clip as DRAWN at that moment,
+    /// put at `origin` by its parents on a canvas `canvas` big, which is what
+    /// says how much of it is seen.
+    func withZoomShown(atDocumentTimeMS ms: Int, origin: CGPoint, canvas: CGSize) -> Layer {
         var shown = self
-        if isVisible, let window = zoomWindow(atDocumentTimeMS: ms) { shown.zoomWindow = window }
+        if isVisible, zooms?.isEmpty == false, takesAZoom,
+           let window = zoomWindow(atDocumentTimeMS: ms, on: ZoomStage.of(self, origin: origin, canvas: canvas)) {
+            shown.zoomWindow = window
+        }
         if shown.isGroup {
-            shown.children = shown.children.map { $0.withZoomShown(atDocumentTimeMS: ms) }
+            let inside = CGPoint(x: origin.x + frame.origin.x, y: origin.y + frame.origin.y)
+            shown.children = shown.children.map {
+                $0.withZoomShown(atDocumentTimeMS: ms, origin: inside, canvas: canvas)
+            }
         }
         return shown
     }
@@ -419,7 +452,9 @@ extension PhotonzDocument {
         let end = min(start + ClipZoom.defaultLengthMS, piece.sourceOutMS, range.upperBound, nextStart)
         guard end - start >= ClipZoom.shortestMS else { return nil }
         var zoom = ClipZoom(startMS: start, endMS: end)
-        if let point { zoom.center = ClipZoom.region(scale: zoom.scale, center: point).center }
+        // On the pointer where it was, or the middle of what is seen.
+        let stage = zoomStage(ofClip: id, atTimeMS: ms) ?? .whole
+        zoom.center = zoom.keptOn(stage, center: point ?? stage.fromStage(CGPoint(x: 0.5, y: 0.5)))
         updateLayer(id: id) { $0.zooms = (zooms + [zoom]).sorted { $0.startMS < $1.startMS } }
         return zoom
     }
@@ -464,7 +499,10 @@ extension PhotonzDocument {
         zoom.easeInMS = min(max(0, zoom.easeInMS), ClipZoom.longestEaseMS)
         zoom.easeOutMS = min(max(0, zoom.easeOutMS), ClipZoom.longestEaseMS)
         zoom.scale = min(max(1, zoom.scale), ClipZoom.mostScale)
-        zoom.center = ClipZoom.region(scale: zoom.scale, center: zoom.center).center
+        // Its box inside the picture seen where it starts.
+        let start = layer.timelineSpanMS(of: zoomID).map(\.start)
+        let stage = zoomStage(ofClip: id, atTimeMS: start) ?? .whole
+        zoom.center = zoom.keptOn(stage, center: zoom.center)
         if zoom.followsCursor, let cursorTrack,
            !before.followsCursor || zoom.startMS != before.startMS || zoom.endMS != before.endMS
             || zoom.cursor == nil {
@@ -491,13 +529,19 @@ extension PhotonzDocument {
         guard let layer = layer(id: id), layer.takesAZoom, let movie = layer.movie,
               let range = layer.zoomSourceRange else { return [] }
         let made = ClipZoom.suggestions(clicks: clicks, pixelSize: movie.pixelSize,
-                                        sourceRange: range, keepingClearOf: layer.zooms ?? [])
+                                        sourceRange: range, keepingClearOf: layer.zooms ?? [],
+                                        on: zoomStage(ofClip: id, atTimeMS: layer.time?.inMS) ?? .whole)
         guard !made.isEmpty else { return [] }
         updateLayer(id: id) { $0.zooms = (($0.zooms ?? []) + made).sorted { $0.startMS < $1.startMS } }
         return made
     }
 }
 
-extension CGRect {
-    fileprivate var center: CGPoint { CGPoint(x: midX, y: midY) }
+extension ClipZoom {
+    /// `center` (a point of the recording) moved as little as keeps this
+    /// zoom's box inside the picture seen.
+    func keptOn(_ stage: ZoomStage, center: CGPoint) -> CGPoint {
+        let box = Self.region(scale: scale, center: stage.toStage(center))
+        return stage.fromStage(CGPoint(x: box.midX, y: box.midY))
+    }
 }

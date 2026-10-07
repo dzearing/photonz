@@ -332,6 +332,189 @@ enum PlaytestZoom {
             + "over \(outOf.count) (\(widths(outOf)))"
     }
 
+    // MARK: A zoom on a cropped recording
+
+    /// The three ways a recording gets cropped, each the way the app does it:
+    /// the Crop tool with nothing picked crops the canvas, the Crop tool with
+    /// the clip picked crops the clip itself, and Crop Left and Crop Top keyed
+    /// on the clip's Motion list cut its edges in. The region kept is the same
+    /// share of the recording each time: a 4:3 piece off-centre, so the
+    /// picture left is neither the recording's shape nor in its middle, and it
+    /// keeps the sample's tile, the one part of it with something to read.
+    static let croppedShare = CGRect(x: 0.03, y: 0.1, width: 0.625, height: 0.75)
+
+    static func cropCanvas(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        guard let canvas = editor.document?.canvasSize else { throw Failure(description: "no document") }
+        editor.selectLayer(nil)
+        editor.setTool(.crop)
+        let rect = CGRect(x: canvas.width * croppedShare.minX, y: canvas.height * croppedShare.minY,
+                          width: canvas.width * croppedShare.width, height: canvas.height * croppedShare.height)
+        editor.setCropRect(rect)
+        editor.commitCrop()
+        editor.selectLayer(clip.id)
+        guard let after = editor.document?.canvasSize, abs(after.width - rect.width) < 1 else {
+            throw Failure(description: "the Crop tool did not crop the canvas to \(rect.integral)")
+        }
+        return "the canvas is cropped to \(rect.integral) of the recording"
+    }
+
+    static func cropClip(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        editor.selectLayer(clip.id)
+        editor.setTool(.crop)
+        let frame = clip.frame.standardized
+        let rect = CGRect(x: frame.minX + frame.width * croppedShare.minX,
+                          y: frame.minY + frame.height * croppedShare.minY,
+                          width: frame.width * croppedShare.width, height: frame.height * croppedShare.height)
+        editor.setCropRect(rect)
+        editor.commitCrop()
+        guard let cropped = editor.document?.layer(id: clip.id), cropped.crop != nil else {
+            throw Failure(description: "the Crop tool did not crop the clip")
+        }
+        return "the clip is cropped to \(cropped.frame.integral), its picture to \(cropped.crop?.integral ?? .zero)"
+    }
+
+    static func cropByKeys(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        editor.selectLayer(clip.id)
+        let edges: [(MotionProperty, Double)] = [
+            (.cropLeft, Double(croppedShare.minX) * 100), (.cropTop, Double(croppedShare.minY) * 100),
+            (.cropRight, Double(1 - croppedShare.maxX) * 100), (.cropBottom, Double(1 - croppedShare.maxY) * 100),
+        ]
+        for (edge, percent) in edges {
+            editor.addMotion(edge)
+            guard let motion = editor.document?.layer(id: clip.id)?.motions?.first(where: { $0.property == edge })
+            else { throw Failure(description: "\(edge.title) did not go on the clip's Motion list") }
+            editor.updateMotion(id: motion.id) {
+                $0.from = .number(percent)
+                $0.to = .number(percent)
+            }
+        }
+        editor.pauseMotionPreview()
+        editor.pauseDocument()
+        guard let shown = editor.document?.drawn(atTimeMS: editor.documentTimeMS).layer(id: clip.id),
+              shown.crop != nil else {
+            throw Failure(description: "the keyed crop edges did not crop the clip as drawn")
+        }
+        return "the clip's four edges are keyed in, drawing it at \(shown.frame.integral)"
+    }
+
+    /// The part of the clip a person can see at a moment, in document points:
+    /// the clip as drawn, inside the canvas. Read off the document, not the
+    /// zoom's own idea of it.
+    static func visiblePicture(_ document: PhotonzDocument, clip: UUID, atMS ms: Int) -> CGRect? {
+        var unzoomed = document
+        unzoomed.updateLayer(id: clip) { $0.zooms = nil }
+        let drawn = unzoomed.drawn(atTimeMS: ms)
+        guard let frame = drawn.canvasFrame(of: clip)?.standardized else { return nil }
+        let seen = frame.intersection(CGRect(origin: .zero, size: document.canvasSize))
+        return seen.isNull || seen.width < 1 || seen.height < 1 ? nil : seen
+    }
+
+    /// Draw the picked zoom's box round a spot of the picture a person can see,
+    /// the way a hand does: a press beside the box, a drag, a let go.
+    static func drawBoxOnVisiblePicture(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        guard let document = editor.document,
+              let seen = visiblePicture(document, clip: clip.id, atMS: editor.documentTimeMS) else {
+            throw Failure(description: "none of the recording is on the canvas")
+        }
+        guard editor.zoomBoxInDocument != nil else { throw Failure(description: "the zoom's box is not up") }
+        func at(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: seen.minX + seen.width * x, y: seen.minY + seen.height * y)
+        }
+        // Round the tile's count, the part of the sample with detail in it.
+        let from = at(0.05, 0.2), to = at(0.32, 0.45)
+        guard editor.zoomBoxDown(at: from) else { throw Failure(description: "the box did not take the press") }
+        for step in 1...8 {
+            let t = CGFloat(step) / 8
+            editor.zoomBoxDragged(to: CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t))
+        }
+        editor.zoomBoxReleased(at: to)
+        guard let box = editor.zoomBoxInDocument else {
+            throw Failure(description: "the box went down when the drag let go")
+        }
+        let label = editor.zoomInHand.map { ZoomLane.label($0.zoom) } ?? "nothing"
+        return "the box drawn from (\(Int(from.x)), \(Int(from.y))) to (\(Int(to.x)), \(Int(to.y))) on the "
+            + "visible picture \(seen.integral) lands at \(box.integral), labelled \(label)"
+    }
+
+    /// The test the user asked for: with the box up, read where it is and what
+    /// it says; then at the zoom's full point the exported frame must be what
+    /// was inside the box, filling the visible picture. Measured three ways:
+    /// where the box's corners land (within 2 px of the picture's own), how far
+    /// in it really is against the box's percent, and the pixels themselves.
+    static func expectShowsItsBox(_ editor: EditorState) async throws -> String {
+        let (clip, zoom, start, end) = try theZoom(editor)
+        guard let document = editor.document else { throw Failure(description: "no document") }
+        guard let box = editor.zoomBoxInDocument else {
+            throw Failure(description: "the zoom's box is not up to read")
+        }
+        let percent = EditorState.zoomPercent(zoom)
+        let hold = (start + zoom.eases.inMS + end - zoom.eases.outMS) / 2
+        guard let seen = visiblePicture(document, clip: clip.id, atMS: hold) else {
+            throw Failure(description: "none of the recording is on the canvas")
+        }
+        editor.letGoOfZoom()
+
+        // Where the box's corners go: the drawn clip's frame and the part of
+        // its picture the zoom cuts out, the renderer's own two numbers.
+        let drawn = document.drawn(atTimeMS: hold)
+        guard let frame = drawn.canvasFrame(of: clip.id)?.standardized,
+              let window = drawn.layer(id: clip.id)?.zoomWindow, window.width > 0, window.height > 0 else {
+            throw Failure(description: "at \(hold) ms, the zoom's full point, the clip is not zoomed")
+        }
+        func landed(_ p: CGPoint) -> CGPoint {
+            let u = CGPoint(x: (p.x - frame.minX) / frame.width, y: (p.y - frame.minY) / frame.height)
+            return CGPoint(x: frame.minX + (u.x - window.minX) / window.width * frame.width,
+                           y: frame.minY + (u.y - window.minY) / window.height * frame.height)
+        }
+        let pairs = [(CGPoint(x: box.minX, y: box.minY), CGPoint(x: seen.minX, y: seen.minY)),
+                     (CGPoint(x: box.maxX, y: box.minY), CGPoint(x: seen.maxX, y: seen.minY)),
+                     (CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: seen.maxX, y: seen.maxY)),
+                     (CGPoint(x: box.minX, y: box.maxY), CGPoint(x: seen.minX, y: seen.maxY))]
+        let miss = pairs.map { hypot(landed($0.0).x - $0.1.x, landed($0.0).y - $0.1.y) }.max() ?? .infinity
+        let really = Double(seen.width / box.width)
+        let reallyTall = Double(seen.height / box.height)
+
+        // The pixels: the zoomed frame's visible picture against the
+        // unzoomed frame's box, blown up to the same size.
+        let frames = DocumentFrames(document: document, store: editor.store,
+                                    movieURLs: MovieLibrary.shared.urls(in: document))
+        defer { frames.putTheStoreBack() }
+        var unzoomed = document
+        unzoomed.updateLayer(id: clip.id) { $0.zooms = nil }
+        let flat = DocumentFrames(document: unzoomed, store: editor.store,
+                                  movieURLs: MovieLibrary.shared.urls(in: unzoomed))
+        defer { flat.putTheStoreBack() }
+        guard let zoomed = await frames.frame(atMS: hold), let whole = await flat.frame(atMS: hold) else {
+            throw Failure(description: "at \(hold) ms a picture could not be made")
+        }
+        let k = CGFloat(zoomed.width) / document.canvasSize.width
+        func pixels(_ r: CGRect) -> CGRect {
+            CGRect(x: r.minX * k, y: r.minY * k, width: r.width * k, height: r.height * k).integral
+        }
+        guard let shown = zoomed.cropping(to: pixels(seen)), let inBox = whole.cropping(to: pixels(box)) else {
+            throw Failure(description: "the frames could not be cut to the picture and the box")
+        }
+        let apart = pixelsApart(shown, inBox)
+        let detail = spread(inBox)
+        let said = "box \(box.integral) on the visible picture \(seen.integral), labelled \(percent)%; at its full "
+            + "point (\(hold) ms) its corners land within \(String(format: "%.1f", miss)) px of the picture's, it is "
+            + "really \(String(format: "%.0f", really * 100))% across and \(String(format: "%.0f", reallyTall * 100))% "
+            + "down, and \(pct(apart)) of the frame's pixels differ from the box's contents"
+        var wrong: [String] = []
+        if miss > 2 { wrong.append("the box's corners miss the picture's by up to \(String(format: "%.1f", miss)) px") }
+        if abs(really * 100 - Double(percent)) > max(2, Double(percent) * 0.01) {
+            wrong.append("the box says \(percent)% and the zoom is really \(String(format: "%.0f", really * 100))%")
+        }
+        if apart > 0.05 { wrong.append("the zoomed frame is not what was inside the box") }
+        if detail < 0.05 { wrong.append("the box is on a part of the picture with nothing in it to compare") }
+        guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ") + ": " + said) }
+        return said
+    }
+
     /// The share of two pictures' pixels, nought to one, that differ by more
     /// than a tenth in any channel, read at 320 x 200.
     static func pixelsApart(_ a: CGImage, _ b: CGImage) -> Double {
@@ -343,6 +526,19 @@ enum PlaytestZoom {
             if most > 25 { apart += 1 }
         }
         return Double(apart) / Double(x.count / 4)
+    }
+
+    /// The share of a picture's pixels, nought to one, more than a tenth away
+    /// from its average colour: how much there is in it to compare.
+    static func spread(_ image: CGImage) -> Double {
+        guard let x = small(image, width: 160, height: 100), !x.isEmpty else { return 0 }
+        let count = x.count / 4
+        let mean = (0..<3).map { c in stride(from: c, to: x.count, by: 4).reduce(0) { $0 + Int(x[$1]) } / count }
+        var off = 0
+        for i in stride(from: 0, to: x.count, by: 4) where (0..<3).contains(where: { abs(Int(x[i + $0]) - mean[$0]) > 25 }) {
+            off += 1
+        }
+        return Double(off) / Double(count)
     }
 
     /// The mean difference of two pictures, nought to one, read at 64 x 36.

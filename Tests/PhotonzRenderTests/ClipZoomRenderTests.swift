@@ -107,4 +107,63 @@ struct ClipZoomRenderTests {
         let seen = ink(zoomed, at: CGPoint(x: 10, y: 10))
         #expect(seen.r > 230 && seen.g > 230 && seen.b > 230, "the corner read \(seen)")
     }
+
+    // MARK: - A cropped clip
+
+    /// The recording's frames, read at `readWidth` of its 200 pixels across.
+    private func croppedClip(store: ImageStore, readWidth: Int) -> (PhotonzDocument, UUID) {
+        let movie = MovieRef(pixelSize: CGSize(width: 200, height: 100), durationMS: 4000)
+        let picture = quarters(width: readWidth, height: readWidth / 2)
+        for ms in stride(from: 0, through: 4000, by: MovieRef.frameStepMS) {
+            store.register(picture, as: movie.frameRef(atSourceMS: ms))
+        }
+        var document = PhotonzDocument.recording(movie, name: "Clip")
+        let id = document.layers[0].id
+        // Keep the right half: green over white.
+        document.updateLayer(id: id) { $0.cropContent(to: CGRect(x: 100, y: 0, width: 100, height: 100)) }
+        return (document, id)
+    }
+
+    @Test(arguments: [200, 150, 100])
+    func aCroppedClipReadSmallStillShowsWhatItKept(readWidth: Int) throws {
+        // A window shows a recording's frames read at the size it shows them,
+        // well under the recording's own for a small window. The crop is in
+        // the recording's pixels, so it has to be read against the frame's.
+        let store = ImageStore()
+        let (document, _) = croppedClip(store: store, readWidth: readWidth)
+        let image = try #require(DocumentRenderer().render(document.drawn(atTimeMS: 1000), store: store, scale: 1))
+        let top = ink(image, at: CGPoint(x: 150, y: 20))
+        let bottom = ink(image, at: CGPoint(x: 150, y: 80))
+        #expect(top.g > 230 && top.r < 25 && top.b < 25 && top.a > 250, "read \(readWidth): top \(top)")
+        #expect(bottom.r > 230 && bottom.g > 230 && bottom.b > 230, "read \(readWidth): bottom \(bottom)")
+    }
+
+    @Test func aCroppedPictureDrawnAtTwiceShowsWhatItKept() throws {
+        // An export at 2x, and a canvas zoomed in, draw the document magnified.
+        let store = ImageStore()
+        let ref = store.register(quarters(width: 200, height: 100))
+        var layer = Layer(name: "Picture", content: .image(ref), frame: CGRect(x: 0, y: 0, width: 200, height: 100))
+        layer.cropContent(to: CGRect(x: 100, y: 0, width: 100, height: 100))
+        let document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 100), layers: [layer])
+        let image = try #require(DocumentRenderer().render(document, store: store, scale: 2))
+        let top = ink(image, at: CGPoint(x: 300, y: 40))
+        let bottom = ink(image, at: CGPoint(x: 300, y: 160))
+        #expect(top.g > 230 && top.r < 25 && top.b < 25 && top.a > 250, "top \(top)")
+        #expect(bottom.r > 230 && bottom.g > 230 && bottom.b > 230, "bottom \(bottom)")
+    }
+
+    @Test func aZoomOnACroppedClipReadSmallLandsOnItsSpot() throws {
+        // The zoom on the kept right half's bottom half: white.
+        let store = ImageStore()
+        var (document, id) = croppedClip(store: store, readWidth: 100)
+        document.updateLayer(id: id) {
+            $0.zooms = [ClipZoom(startMS: 0, endMS: 4000, easeInMS: 0, easeOutMS: 0,
+                                 scale: 2, center: CGPoint(x: 0.75, y: 0.75))]
+        }
+        let image = try #require(DocumentRenderer().render(document.drawn(atTimeMS: 2000), store: store, scale: 1))
+        for point in [CGPoint(x: 105, y: 5), CGPoint(x: 195, y: 95), CGPoint(x: 150, y: 50)] {
+            let seen = ink(image, at: point)
+            #expect(seen.r > 230 && seen.g > 230 && seen.b > 230, "at \(point): \(seen)")
+        }
+    }
 }

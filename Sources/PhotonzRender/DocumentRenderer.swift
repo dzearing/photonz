@@ -1111,11 +1111,24 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = ChromaKeyFilter.keyed(image, with: key)
         }
 
-        // Layer-local crop. The crop is in the same unit as the frame, and the
-        // raster it cuts may have been drawn in document points, so bring it
-        // back to the raster's own unit first.
+        // Layer-local crop. On a picture the crop is in the picture's own
+        // pixels (`Layer.cropContent`), stated `contentScale` times bigger by a
+        // magnified document, and the bitmap in hand need not be the picture's
+        // own size: a recording's frames are read at the size the window shows
+        // them, well under the recording's for a small window. So the crop is
+        // brought back to the bitmap's own pixels first. Read against the
+        // frame instead, a cropped picture drawn at 2x, or a cropped clip read
+        // small, cut the wrong part of the bitmap or none of it.
         if var crop = layer.crop {
-            if contentScale != 1, image.extent.width > 0, layer.frame.width > 0 {
+            if case .image(let ref) = layer.content, ref.pixelSize.width > 0, ref.pixelSize.height > 0,
+               image.extent.width > 0, image.extent.height > 0 {
+                let across = image.extent.width / (ref.pixelSize.width * contentScale)
+                let down = image.extent.height / (ref.pixelSize.height * contentScale)
+                if across != 1 || down != 1 {
+                    crop = CGRect(x: crop.minX * across, y: crop.minY * down,
+                                  width: crop.width * across, height: crop.height * down)
+                }
+            } else if contentScale != 1, image.extent.width > 0, layer.frame.width > 0 {
                 crop = crop.magnified(by: image.extent.width / layer.frame.width)
             }
             let flipped = CGRect(x: crop.origin.x,

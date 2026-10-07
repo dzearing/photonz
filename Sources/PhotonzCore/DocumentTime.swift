@@ -243,7 +243,9 @@ extension PhotonzDocument {
         // ...and a clip inside a zoom shows the part of its picture the zoom
         // is on (`ClipZoom.swift`): its box stays put, the picture in it moves.
         if hasZooms {
-            shown.layers = shown.layers.map { $0.withZoomShown(atDocumentTimeMS: moment) }
+            shown.layers = shown.layers.map {
+                $0.withZoomShown(atDocumentTimeMS: moment, origin: .zero, canvas: canvasSize)
+            }
         }
         // ...and a clip that shows its clicks draws the effect of each one
         // playing now over itself (`ClickEffect.swift`). After the zoom, so a

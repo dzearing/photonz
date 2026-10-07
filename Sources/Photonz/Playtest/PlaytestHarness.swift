@@ -4260,7 +4260,9 @@ private final class Run {
                      state: describe())
             case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
-                 .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame:
+                 .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+                 .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
+                 .expectZoomShowsItsBox:
                 do {
                     let said = switch action {
                     case .zoomScriptPointerPath: try PlaytestZoom.scriptPointerPath(editor)
@@ -4273,6 +4275,11 @@ private final class Run {
                     case .expectZoomBoxDown: try PlaytestZoom.expectBoxDown(editor)
                     case .expectZoomScrubMatchesExport: try await PlaytestZoom.expectScrubMatchesExport(editor)
                     case .expectZoomEasesFrameByFrame: try await PlaytestZoom.expectEasesFrameByFrame(editor)
+                    case .zoomCropCanvas: try PlaytestZoom.cropCanvas(editor)
+                    case .zoomCropClip: try PlaytestZoom.cropClip(editor)
+                    case .zoomCropByKeys: try PlaytestZoom.cropByKeys(editor)
+                    case .zoomDrawBoxOnVisiblePicture: try PlaytestZoom.drawBoxOnVisiblePicture(editor)
+                    case .expectZoomShowsItsBox: try await PlaytestZoom.expectShowsItsBox(editor)
                     default: try await PlaytestZoom.expectExportMatches(editor)
                     }
                     note(number, step.name, said, state: describe())
@@ -5828,6 +5835,8 @@ private final class Run {
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+                 .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
+                 .expectZoomShowsItsBox,
                  .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
                  .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords,
                  .captionsTrimFirstEnd, .captionsStyleCaption, .captionsStyleLowerThird,

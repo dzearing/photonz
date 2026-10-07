@@ -20779,3 +20779,12 @@ Next: the first editor window's ~200 ms first build
 - `PieceCopyWriter` (PhotonzMedia) copies compressed frames and re-encodes only the partial groups, on the timeline's clock (the recording's edit-list offset is applied), keeping the source colour tags; the sound is the document mix through the same `AudioMixdown` + join as the drawn path.
 - Wired into `EditorState.writeVideo` (Export, Copy Video, Command S into history) at MP4 / High / Full; falls back to drawing on any file it cannot copy. The Export sheet writes the copy in the background and quotes its exact size.
 - Measured: 3 min Retina edit 0.78 s copied vs 73.5 s drawn; history save 1.16 s. Walk `a-cut-recording-copies-its-pieces-walk`; audit `queue/audits/2026-10-07-cut-only-fast-export.json`.
+
+## 2026-10-07 — A zoom on a cropped video shows exactly the box
+
+- Reproduced first with three new walks on the old code: canvas crop missed by up to 458 px (box said 533%, really 333%), keyed crop edges by up to 416 px; the clip's own crop drew right on this Mac.
+- `ZoomStage` (PhotonzCore/ZoomStage.swift): the part of a clip's recording that is seen (its crop, keyed or not, inside the canvas). `ClipZoom.center` is now a point of the RECORDING and `scale` is how far into the picture SEEN; `region/target/window(on:)` work in the seen picture's fractions and `pictureWindow(forStageWindow:)` turns that into the window the renderer cuts. `withZoomShown` reads the stage off the drawn clip; Follow Cursor and Suggest Zooms aim through it; `updateZoom`/`addZoom` keep the box inside it.
+- Old files: `ClipZoom.aimedAtWhatIsSeen` nil = written before; `PhotonzDocument.aimingZoomsAtWhatIsSeen()` converts on decode so the box covers what it covered.
+- Renderer: a picture's crop is read against the bitmap in hand (`ref.pixelSize`, `contentScale`), fixing cropped clips read small and cropped pictures drawn at 2x (both came out wrong or empty). Click ripples map through the clip's crop.
+- App: the box, its dim and its hit area sit on `zoomStageInHand.onCanvas`.
+- Walks: `a-zoom-on-a-cropped-{canvas,clip}-shows-its-box-walk`, `a-zoom-on-a-clip-cropped-by-keys-shows-its-box-walk`; audit `queue/audits/2026-10-07-zoom-on-a-cropped-video.json`.

@@ -32,13 +32,13 @@ enum ZoomGrab: Hashable {
     /// The box on the picture, carried.
     case boxMove
     /// The box drawn again from a corner that stays put, as fractions of the
-    /// picture. A press beside the box draws a new one from where it landed;
+    /// picture seen. A press beside the box draws a new one from where it landed;
     /// a press on a corner handle resizes from the opposite corner.
     case boxFrom(CGPoint)
 }
 
 /// A press the zoom's box took: where it landed, as fractions of the picture
-/// and in document points, what it took hold of, and whether it has become a
+/// seen and in document points, what it took hold of, and whether it has become a
 /// drag yet.
 struct ZoomBoxPress {
     let start: CGPoint
@@ -112,7 +112,7 @@ extension EditorState {
     }
 
     /// Where the recorded pointer was at a moment of a clip's recording, as
-    /// fractions of its picture.
+    /// fractions of the recording.
     func pointerUnitPoint(onClip id: UUID, atSourceMS ms: Int) -> CGPoint? {
         guard let track = recordedPointerTrack(ofClip: id), track.pixelSize.width > 0,
               track.pixelSize.height > 0, let p = track.position(atMS: ms) else { return nil }
@@ -284,24 +284,27 @@ extension EditorState {
     }
 
     /// The hand on the picture moved: `from` is where it pressed and `to`
-    /// where it is, both as fractions of the clip's picture.
+    /// where it is, both as fractions of the part of the clip that is seen
+    /// (`ZoomStage.swift`). The zoom keeps its spot as a point of the
+    /// recording, so it is written back through the same stage.
     func updateZoomBox(from: CGPoint, to: CGPoint) {
-        guard var session = zoomDrag else { return }
+        guard var session = zoomDrag, let stage = zoomStageInHand else { return }
         let before = session.before
         var zoom = before
         switch session.grab {
         case .boxMove:
-            zoom.center = CGPoint(x: before.region.midX + to.x - from.x,
-                                  y: before.region.midY + to.y - from.y)
+            let region = before.region(on: stage)
+            zoom.center = stage.fromStage(CGPoint(x: region.midX + to.x - from.x,
+                                                  y: region.midY + to.y - from.y))
         case .boxFrom(let anchor):
-            // Square in the picture's fractions, which is the frame's own
-            // shape: the larger of the two distances, so the box always
-            // reaches the hand on one side.
+            // Square in the seen picture's fractions, which is its own shape:
+            // the larger of the two distances, so the box always reaches the
+            // hand on one side.
             let size = min(1, max(abs(to.x - anchor.x), abs(to.y - anchor.y), 1 / ClipZoom.mostScale))
             let x = to.x >= anchor.x ? anchor.x : anchor.x - size
             let y = to.y >= anchor.y ? anchor.y : anchor.y - size
             zoom.scale = Double(1 / size)
-            zoom.center = CGPoint(x: x + size / 2, y: y + size / 2)
+            zoom.center = stage.fromStage(CGPoint(x: x + size / 2, y: y + size / 2))
         default:
             return
         }
@@ -372,8 +375,16 @@ extension EditorState {
     /// box up: the zoom owns the picture, its box is down, and the press is
     /// on its clip.
     func zoomFramesOnPress(at p: CGPoint) -> Bool {
-        guard zoomOwnsPicture, !zoomFraming, let frame = zoomInHand?.layer.frame.standardized else { return false }
-        return frame.contains(p)
+        guard zoomOwnsPicture, !zoomFraming, let seen = zoomStageInHand?.onCanvas else { return false }
+        return seen.contains(p)
+    }
+
+    /// The part of the picked zoom's clip a person can see at the playhead:
+    /// what its box is drawn on and fills (`ZoomStage.swift`). The canvas, the
+    /// clip's own crop and its keyed crop edges all take part of a clip away.
+    var zoomStageInHand: ZoomStage? {
+        guard let ref = selectedZoom else { return nil }
+        return document?.zoomStage(ofClip: ref.layerID, atTimeMS: documentTimeMS)
     }
 
     /// A drawn document with the picked zoom's clip shown whole, so its box
@@ -387,19 +398,17 @@ extension EditorState {
 
     /// The picked zoom's box at the playhead, in document points: where the
     /// zoom is on once it has arrived (for a following zoom, where the
-    /// pointer has it now).
+    /// pointer has it now). Always on the part of the clip that is seen.
     var zoomBoxInDocument: CGRect? {
-        guard showsZoomBox, let (layer, zoom) = zoomInHand else { return nil }
-        let box = zoom.target(atMS: layer.motionClockMS(atDocumentTimeMS: documentTimeMS))
-        let frame = layer.frame.standardized
-        return CGRect(x: frame.minX + box.minX * frame.width, y: frame.minY + box.minY * frame.height,
-                      width: box.width * frame.width, height: box.height * frame.height)
+        guard showsZoomBox, let (layer, zoom) = zoomInHand, let stage = zoomStageInHand else { return nil }
+        return stage.onCanvas(zoom.target(atMS: layer.motionClockMS(atDocumentTimeMS: documentTimeMS), on: stage))
     }
 
-    /// The picked zoom's clip, in document points.
+    /// The part of the picked zoom's clip that is seen, in document points:
+    /// what the box is drawn over and kept inside.
     var zoomClipFrameInDocument: CGRect? {
         guard showsZoomBox else { return nil }
-        return zoomInHand?.layer.frame.standardized
+        return zoomStageInHand?.onCanvas
     }
 
     // MARK: A hand on the box
@@ -488,9 +497,9 @@ extension EditorState {
         return true
     }
 
-    /// A point of the document as fractions of the picked zoom's picture.
+    /// A point of the document as fractions of the part of the picked zoom's
+    /// clip that is seen.
     func zoomUnitPoint(fromDocument p: CGPoint) -> CGPoint? {
-        guard let frame = zoomInHand?.layer.frame.standardized, frame.width > 0, frame.height > 0 else { return nil }
-        return CGPoint(x: (p.x - frame.minX) / frame.width, y: (p.y - frame.minY) / frame.height)
+        zoomStageInHand?.stagePoint(fromDocument: p)
     }
 }

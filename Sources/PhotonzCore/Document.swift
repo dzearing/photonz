@@ -220,6 +220,12 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             .map { $0.retiringItsOutline() } ?? []
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
+        // A zoom written before zooms were aimed at what is seen opens showing
+        // what its box showed (`ZoomStage.swift`). Last, once the canvas and
+        // the clock it is read against are both in.
+        if allLayers.contains(where: { $0.zooms?.contains { $0.aimedAtWhatIsSeen != true } == true }) {
+            self = aimingZoomsAtWhatIsSeen()
+        }
     }
 
     /// A new document built around a base image, which becomes the bottom layer.

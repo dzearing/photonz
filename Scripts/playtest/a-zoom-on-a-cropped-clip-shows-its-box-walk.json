@@ -1,0 +1,31 @@
+{
+  "out": "/tmp/photonz-playtest/a-zoom-on-a-cropped-clip-shows-its-box-walk",
+  "seed": "A zoom on a cropped recording (the clip cropped with the Crop tool, the clip picked) fills the picture you can see with exactly what was inside the box you drew: its corners land on the picture's edges, its percent is how far in it really is, and the canvas shows what the export writes. Reported by the user on 2026-10-06: on a cropped video the zoom went far further in than the box and showed a different part of the picture.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "zoomCropClip" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "0-cropped" },
+    { "do": "action", "action": "zoomAddAtPlayhead" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "zoomDrawBoxOnVisiblePicture" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-box", "note": "The zoom's box drawn round a spot of the cropped picture, its percent beside its corner" },
+    { "do": "snapshot", "name": "1-box-on-the-cropped-picture" },
+    { "do": "action", "action": "expectZoomShowsItsBox" },
+    { "do": "clickRuler", "seconds": 3.5 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-played", "note": "At the zoom's full point the picture you can see is exactly what was inside the box" },
+    { "do": "snapshot", "name": "2-zoomed-at-its-full-point" },
+    { "do": "action", "action": "expectZoomScrubMatchesExport" }
+  ]
+}
