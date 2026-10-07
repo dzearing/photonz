@@ -1,0 +1,29 @@
+{
+  "feature": "Canvas zoom control that fades by itself",
+  "epic": "measure-redline",
+  "summary": "Zooming the canvas now brings up a small glass zoom control in the canvas's bottom right corner (zoom out, the percent, zoom in, Fit). It fades 5 seconds after the last zoom, comes back when you point at its spot, and a double click on the percent goes to 100%. Same in the picture and video editors.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot and press Command plus.", "shot": "2026-10-07-canvas-zoom-control-1.png" },
+    { "do": "Take your hands off for 5 seconds and watch the corner.", "shot": "2026-10-07-canvas-zoom-control-2.png" },
+    { "do": "Rest the pointer on the bottom right corner where it was." },
+    { "do": "Double click the percent." },
+    { "do": "Single click the percent and pick 400% from its list.", "shot": "2026-10-07-canvas-zoom-control-3.png" },
+    { "do": "Pinch on the trackpad, then try its zoom out, zoom in and Fit buttons." },
+    { "do": "Open a recording, switch to Edit, and press Command minus.", "shot": "2026-10-07-canvas-zoom-control-4.png" }
+  ],
+  "evaluate": [
+    "Is 5 seconds the right time before it fades, now that you have used it?",
+    "Does resting the pointer on its spot bring it back when you want it, without popping up when you are only drawing near the corner?",
+    "It sits 12 pt in from the corner, so it is a few points lower than the tool bar beside it: should it line up with the tool bar's centre instead?",
+    "Is the quarter second wait before a single click opens the stops list (so a double click can be told apart) quick enough?"
+  ],
+  "rough": [
+    "No mock draws this control; your words of 2026-10-07 are the spec, so there is no mock frame to compare against.",
+    "Resting the pointer on its exact spot brings it back, and from then on a click there goes to the control, not the picture. Hidden, it is click-through: measured by the walk, a real click at its spot reaches the picture while it is gone and the percent menu takes it while it is up. A drag that starts on the picture and passes through the corner does not bring it up.",
+    "Every zoom command brings it up, including Fit when the picture is already fitted, so the key always answers. Window resizes that refit the picture do not.",
+    "Pictures are the dark appearance only, over the dark surround and over a white picture at 400% (legible on both, the glass greys behind white). Light appearance was not photographed.",
+    "The single click on the percent waits a quarter second before opening its list, the same as the tool bar's percent in Current, so a double click can mean 100%."
+  ]
+}

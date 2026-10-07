@@ -78,6 +78,8 @@ public enum FeatureCatalog {
 
     public static let oneGlassToolBarFlag = "next-one-glass-tool-bar"
 
+    public static let canvasZoomControlFlag = "next-canvas-zoom-control"
+
     public static let toolTipsFlag = "next-tool-tips"
 
     public static let designedSegmentedFlag = "next-designed-segmented"
@@ -571,6 +573,16 @@ public enum FeatureCatalog {
                     title: "The tool bar is one glass bar",
                     description: "The tools, More, the colour pair and the zoom sit in one glass bar with a hairline between each, on pictures and videos alike. Off means each is its own glass capsule.",
                     area: .tools,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: canvasZoomControlFlag,
+                    title: "Zooming shows a zoom control",
+                    description: "Zooming brings up a small zoom control in the canvas's bottom right corner that fades 5 seconds after the last zoom and returns when you point at it. Off means zoom shows no control.",
+                    area: .canvas,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

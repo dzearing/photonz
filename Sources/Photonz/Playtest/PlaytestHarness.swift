@@ -15432,6 +15432,8 @@ private final class Run {
         case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
         case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
+        case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
+        case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
         case .clipsOfOneRecording(let count):
             (Dictionary(grouping: editor.document?.timelineClipLayers.compactMap(\.movie) ?? [], by: { $0 })
                 .values.map(\.count).max() ?? 0) == count
@@ -16572,6 +16574,8 @@ private final class Run {
             // are how a walk proves a zoom kept its place instead of jumping
             // the picture somewhere else.
             "displayZoom": Int((editor.displayZoom * 100).rounded()),
+            // Whether the canvas zoom control is up (Next).
+            "zoomControl": editor.canvasZoomControl.isShown ? "shown" : "hidden",
             "viewCentre": editor.viewport.map { viewport in
                 short(viewport.documentPoint(fromView: CGPoint(x: viewport.viewSize.width / 2,
                                                                y: viewport.viewSize.height / 2)))

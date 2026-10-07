@@ -531,7 +531,15 @@ extension EditorState {
         // outright — except the icon previews strip, which owns the top left
         // while you are drawing in an icon frame (`next-icon-previews`) and is
         // the one piece of corner chrome the legend still has to walk around.
-        let blocked = chrome + (iconPreviewsReservedRect.map { [$0] } ?? [])
+        //
+        // And the zoom control's corner, reserved like the notice's slot is,
+        // whether or not it is up: it comes up on every zoom, and a legend
+        // that jumped corners each time somebody pinched would be worse.
+        let zoomCorner = Experiments.shared.canvasZoomControlEnabled
+            ? [CanvasZoomControl.reservedFrame(canvasSize: viewport.viewSize,
+                                               avoiding: canvasZoomControlAvoids(canvasSize: viewport.viewSize))]
+            : []
+        let blocked = chrome + (iconPreviewsReservedRect.map { [$0] } ?? []) + zoomCorner
         return PanelPlacement.firstClear(size: Self.measureLegendSize(rows: rows),
                                           in: viewport.viewSize,
                                           inset: Self.measureLegendInset,

@@ -4043,6 +4043,44 @@ struct PlaytestScriptTests {
         #expect(condition == .clipsOfOneRecording(2))
     }
 
+    /// The canvas zoom control coming up and going away: what a walk waits on
+    /// across its fades rather than guessing at a delay.
+    @Test func waitForReadsTheCanvasZoomControl() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 1 },
+            { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 7 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let up, _) = script.steps[0],
+              case .waitFor(let gone, let timeout) = script.steps[1] else { Issue.record("waitFor"); return }
+        #expect(up == .zoomControl(shown: true))
+        #expect(gone == .zoomControl(shown: false) && timeout == 7)
+    }
+
+    /// Anything but shown or hidden is a walk with a typo in it.
+    @Test func waitForRefusesAZoomControlStateItDoesNotKnow() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "zoomControl", "value": "up" }
+        ] }
+        """
+        #expect(throws: (any Error).self) { try PlaytestScript.decode(Data(json.utf8)) }
+    }
+
+    /// The zoom as the percent reads it, as a whole number.
+    @Test func waitForReadsTheDisplayZoom() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "displayZoom", "value": 100 }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .displayZoom(100))
+    }
+
     @Test func waitForReadsTheClipCopyBadge() {
         let json = """
         { "out": "/tmp/x", "steps": [

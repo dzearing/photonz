@@ -541,6 +541,15 @@ struct EditorView: View {
                 // resized the canvas, moved the viewport and rebuilt the whole
                 // editor, panel and timeline included (`MeasureLegendOverlay`).
                 .overlay { MeasureLegendOverlay() }
+                // The zoom control that comes up in the bottom right corner
+                // while somebody is zooming and goes by itself (Next). Its own
+                // view, because it reads the zoom: read out here, every frame
+                // of a pinch would rebuild the editor.
+                .overlay {
+                    if Experiments.shared.canvasZoomControlEnabled {
+                        CanvasZoomControlOverlay()
+                    }
+                }
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsMeasureHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPenHint)
                 .animation(.easeInOut(duration: 0.2), value: editorState.showsPathEditHint)
@@ -2109,7 +2118,7 @@ struct EditorView: View {
         }
     }
 
-    private static let zoomStops: [Double] = [0.25, 0.5, 1, 2, 4, 8]
+    static let zoomStops: [Double] = [0.25, 0.5, 1, 2, 4, 8]
 
     /// What the zoom readout says on a hover: both of the things a click on it
     /// can mean, since the second one has nothing else to announce it.

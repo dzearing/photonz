@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/canvas-zoom-control",
+  "seed": "Zooming the canvas brings up a small zoom control in its bottom right corner, at Next defaults with no flag touched. Opening a picture does not bring it up. Command plus does, it goes by itself five seconds after the last zoom, and with it gone a real click in that corner reaches the picture. Resting the pointer on its spot brings it back. A double click on its percent goes to 100%, its own buttons zoom, a pinch brings it up, and its percent's menu still picks a stop.",
+  "setup": { "forget": ["grid", "tools", "panel"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 0.5 },
+    { "do": "describe", "stage": "1-opened", "note": "opened at 100 in a 1015 by 808 canvas: zoomControl must read hidden, opening is not zooming" },
+    { "do": "expectClickReaches", "at": [930, 779], "space": "view", "what": "canvas" },
+
+    { "do": "action", "action": "zoomIn" },
+    { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 1 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "describe", "stage": "2-zoomed-in", "note": "Command plus: the control is up in the bottom right corner" },
+    { "do": "expectClickReaches", "at": [930, 779], "space": "view", "what": "chrome" },
+    { "do": "snapshot", "name": "1-shown" },
+
+    { "do": "wait", "seconds": 4, "onTheClock": true },
+    { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 0.2 },
+    { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 2 },
+    { "do": "wait", "seconds": 0.5, "onTheClock": true },
+    { "do": "describe", "stage": "3-gone", "note": "still up at four seconds, gone by itself just after five" },
+    { "do": "expectClickReaches", "at": [930, 779], "space": "view", "what": "canvas" },
+    { "do": "expectClickReaches", "at": [990, 790], "space": "view", "what": "canvas" },
+    { "do": "snapshot", "name": "2-gone" },
+
+    { "do": "move", "at": [930, 779], "space": "view" },
+    { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 1 },
+    { "do": "wait", "seconds": 6, "onTheClock": true },
+    { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 0.2 },
+    { "do": "describe", "stage": "4-back-on-hover", "note": "the pointer resting on its spot brought it back, and it is still up six seconds later because the pointer is still there" },
+    { "do": "snapshot", "name": "3-back-on-hover" },
+
+    { "do": "press", "control": "Zoom level", "count": 2 },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 1 },
+    { "do": "describe", "stage": "5-actual-size", "note": "double clicking the percent: displayZoom must read 100" },
+    { "do": "snapshot", "name": "4-actual-size" },
+
+    { "do": "press", "control": "Zoom In" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 125, "timeout": 1 },
+    { "do": "press", "control": "Zoom Out" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 1 },
+    { "do": "press", "control": "Zoom to Fit" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 134, "timeout": 1 },
+    { "do": "describe", "stage": "6-its-buttons", "note": "zoom in to 125, zoom out back to 100, Fit fills the 1015 by 808 canvas above the tool bar, which for this picture is 134" },
+
+    { "do": "move", "at": [400, 300], "space": "view" },
+    { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 7 },
+    { "do": "pinch", "to": 1.5 },
+    { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 1 },
+    { "do": "describe", "stage": "7-pinched", "note": "the pointer left, it went five seconds later, and a pinch brought it back" },
+
+    { "do": "panelMenu", "menu": "300%", "clicking": "Zoom level", "choose": "400%" },
+    { "do": "waitFor", "condition": "displayZoom", "value": 400, "timeout": 1 },
+    { "do": "describe", "stage": "8-picked-400", "note": "one click on the percent opened its stops and 400% was picked" },
+    { "do": "snapshot", "name": "5-at-400" }
+  ]
+}

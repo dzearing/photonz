@@ -311,6 +311,7 @@ extension Experiments {
     /// zoom (`EditorChromeLayout.toolBarSections`). Next only, so Current keeps
     /// its separate capsules.
     var oneGlassToolBarEnabled: Bool { isEnabled(FeatureCatalog.oneGlassToolBarFlag) }
+    var canvasZoomControlEnabled: Bool { isEnabled(FeatureCatalog.canvasZoomControlFlag) }
 
     /// `next-designed-segmented`: whether every segmented choice is the design
     /// system's drawn control (`SegmentedControl`) rather than the system's.

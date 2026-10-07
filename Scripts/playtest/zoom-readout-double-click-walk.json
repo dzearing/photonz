@@ -1,8 +1,8 @@
 {
   "out": "/tmp/photonz-playtest/zoom-double-click",
-  "setup": { "forget": ["grid", "tools", "panel"], "flags": { "next-one-glass-tool-bar": false } },
+  "setup": { "forget": ["grid", "tools", "panel"], "flags": { "next-one-glass-tool-bar": false, "next-canvas-zoom-control": false } },
   "steps": [
-    { "do": "describe", "stage": "why", "note": "The zoom percentage is a control only the separate capsules Current ships still carry. Next's one glass bar holds tools only, and zoom there is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu (the user, 2026-09-29: zoom isn't a tool), so this walk turns the one bar off to reach the readout" },
+    { "do": "describe", "stage": "why", "note": "The zoom percentage is a control only the separate capsules Current ships still carry. Next's one glass bar holds tools only, and zoom there is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu (the user, 2026-09-29: zoom isn't a tool), so this walk turns the one bar off to reach the readout, and turns off the corner zoom control Next shows instead (canvas-zoom-control-walk), so the tool bar's readout is the only one on screen" },
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
     { "do": "wait", "seconds": 1.2 },
     { "do": "describe", "stage": "1-opened", "note": "the picture as it opens, fitted: displayZoom is whatever fit gave it" },

@@ -20843,3 +20843,22 @@ Next: the first editor window's ~200 ms first build
   Everything measured is carried to `clicking-a-cut-keying-a-value-and-undoing-it-ans`.
 - Next: that task; the lever left is building only panel sections near the
   viewport.
+
+## 2026-10-07 — zooming shows a corner zoom control that fades by itself
+
+- Next, `next-canvas-zoom-control` (on by default): any person zoom (pinch,
+  double tap, Cmd +/-/0/1, View menu, its own buttons) brings up a glass control
+  in the canvas's bottom right corner: zoom out, the percent (one click: stops
+  menu; double click: 100%, via `ZoomReadoutClickLid`), zoom in, Fit. Fades 5 s
+  after the last zoom, comes back while the pointer rests on its spot, held up
+  while its menu is open. Gone, it is out of the tree, so the corner is
+  click-through (measured with `expectClickReaches`).
+- Pure halves in `PhotonzCore/CanvasZoomControl.swift` (clock + placement that
+  lifts over the tool bar / tool settings capsule on a narrow canvas), tested.
+  App side `Sources/Photonz/CanvasZoomControlView.swift`; hooks in
+  `EditorState.setViewport` (only when zoom changed), `zoomTowardCenter`,
+  `zoomToFit`. The measure legend reserves the corner.
+- Walk conditions `zoomControl` (shown/hidden) and `displayZoom`. Walks:
+  `canvas-zoom-control-walk`, `canvas-zoom-control-video-walk`.
+  `zoom-readout-double-click-walk` now turns the new flag off as well.
+- UX-PATTERNS placement contract: named exception for it, quoting the user.

@@ -1853,6 +1853,11 @@ final class EditorState {
 
     var zoom: CGFloat { viewport?.zoom ?? 1 }
 
+    /// The zoom control that comes up in the canvas's corner while somebody
+    /// is zooming (`CanvasZoomControlView`). Its own observable object, so its
+    /// fades redraw that one control and not the editor.
+    let canvasZoomControl = CanvasZoomControlModel()
+
     var document: PhotonzDocument? {
         // A look section reads the document as it is, and is told it changed
         // only when something it could show did (`readingForTheLookRows`).
@@ -3612,7 +3617,11 @@ final class EditorState {
 
     /// Gesture-driven camera updates from the canvas (already clamped by Viewport).
     func setViewport(_ vp: Viewport) {
+        // A pinch or a double tap zooms through here, and a two-finger scroll
+        // pans through here: only the first is somebody zooming.
+        let zoomed = vp.zoom != viewport?.zoom
         viewport = vp
+        if zoomed { canvasZoomControl.zoomed() }
     }
 
     /// Selection result from the canvas (document coords). `captureLayers`
@@ -4234,6 +4243,7 @@ final class EditorState {
         guard let viewport else { return }
         self.viewport = fittedViewport(documentSize: viewport.documentSize, in: viewport.viewSize)
         appPlaced(self.viewport, fitted: true)
+        canvasZoomControl.zoomed()
     }
 
     /// Actual size = the image at its on-screen POINT size (Preview-style): a
@@ -4279,6 +4289,10 @@ final class EditorState {
         guard let viewport else { return }
         let center = CGPoint(x: viewport.viewSize.width / 2, y: viewport.viewSize.height / 2)
         self.viewport = viewport.zoomed(to: newZoom, anchorInView: center)
+        // Every zoom command ends here (the keys, the View menu, the zoom
+        // stops), so the control comes up for each, even one that was already
+        // at that zoom: it is the answer to having asked.
+        canvasZoomControl.zoomed()
     }
 
     // MARK: - One undoable edit, and undo/redo

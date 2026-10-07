@@ -31,6 +31,10 @@ struct ZoomReadoutClickLid: NSViewRepresentable {
     var isLive: Bool
     /// Take the picture back to a hundred percent.
     var onActualSize: () -> Void
+    /// Told true as the stops menu opens and false once it has closed, for a
+    /// control that must stay up for as long as its menu is open
+    /// (`CanvasZoomControl.Hold.menu`).
+    var onMenuOpen: (Bool) -> Void = { _ in }
 
     func makeNSView(context: Context) -> ZoomReadoutLidView {
         let view = ZoomReadoutLidView()
@@ -45,11 +49,13 @@ struct ZoomReadoutClickLid: NSViewRepresentable {
     private func update(_ view: ZoomReadoutLidView) {
         view.isLive = isLive
         view.onActualSize = onActualSize
+        view.onMenuOpen = onMenuOpen
     }
 }
 
 final class ZoomReadoutLidView: NSView {
     var onActualSize: () -> Void = {}
+    var onMenuOpen: (Bool) -> Void = { _ in }
     var isLive = true
 
     /// The menu this click is going to open, unless a second click gets here
@@ -107,7 +113,11 @@ final class ZoomReadoutLidView: NSView {
             return
         }
         recordZoomReadoutMenu(found: true, rows: button.menu?.items.map(\.title) ?? [])
+        // A pop up button runs its menu inside the click and returns once the
+        // menu has closed, so the two calls bracket the menu being open.
+        onMenuOpen(true)
         button.performClick(nil)
+        onMenuOpen(false)
     }
 
     /// The pop up button SwiftUI drew for the readout's `Menu`: the one under

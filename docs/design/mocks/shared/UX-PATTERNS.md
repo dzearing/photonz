@@ -42,6 +42,23 @@ tool options capsule AND, with the panel open, in the panel's section for that
 tool (the user chose "Leave it in both places", 2026-09); two doors to one
 setting are allowed otherwise only where §3 "One setting, two doors" says so.
 
+**Named exception: the canvas zoom control** (the user, 2026-10-07: "when I
+zoom in, I would like a zoom toolbar to appear briefly, and then fade out after
+5s of not zooming, or fade back in on hover. I want to be able to quickly
+double click the zoom to get to actual size (100%)", and "the canvas zoom,
+which also lives in either view"). Zoom stays out of every bar, the tool bar
+included. What it gets instead is a small piece of canvas furniture that is
+there only while zooming is what you are doing: it floats over the canvas's
+bottom right corner, 12 pt in from both edges (above the timeline on a video,
+lifted clear of the tool bar and the tool settings capsule when a narrow canvas
+brings them into the corner), Liquid Glass, holding zoom out, the percent, zoom
+in and Fit. Any zoom brings it up (pinch, the keys, the View menu, a double
+tap), opening a document or scrolling does not, and it fades out five seconds
+after the last zoom; the pointer resting on its spot brings it back and keeps
+it. Gone, it takes no clicks. One click on the percent opens the zoom stops, a
+double click goes to 100%. Picture and video alike, Next only
+(`next-canvas-zoom-control`, `CanvasZoomControl`).
+
 **A request that names a system look gets one filmed card, not a second
 build.** When a request names a system look or material (Liquid Glass, "the
 Mac's own control", "like Finder's"), build it once, then film the system's own
@@ -246,7 +263,10 @@ not switch experiences mid-document; you open a different document.
    permanent options-bar row.
    **Ruled by the user, 2026-09-29:** the app's bar carries **no zoom control**
    ("zoom isn't a tool"): the mocks' `.zoomctl` is not built. Zoom is pinch,
-   Cmd +/-, Cmd 0, Cmd 1 and the View menu. The bar shows **every tool that
+   Cmd +/-, Cmd 0, Cmd 1 and the View menu, plus the transient canvas zoom
+   control the user asked for on 2026-10-07, which floats in the canvas's
+   bottom right corner only while zooming (the placement contract's named
+   exceptions) and is never part of this bar. The bar shows **every tool that
    fits** the canvas, folding only the rest from the far end into More, and More
    is there only while something is in it; a document with time puts the
    video's own tools first so they fold last (`ToolBarFold`).

@@ -709,6 +709,12 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// without putting the menu on screen, which would take every key on the
     /// Mac, so this asks the dropdown rather than the screen.
     case panelMenuOpen(String)
+    /// The canvas zoom control is up (or has gone), as the fade leaves it:
+    /// what a walk waits on across the five seconds rather than a delay.
+    case zoomControl(shown: Bool)
+    /// The zoom the canvas's percent reads, as a whole percent: how a walk
+    /// proves a double click on it went to 100.
+    case displayZoom(Int)
 }
 
 /// A direct call on the editor, for when a shortcut is not honoured by a
@@ -4188,7 +4194,14 @@ public enum PlaytestStep: Sendable, Equatable {
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
             case "panelMenuOpen": .panelMenuOpen(try f.string("value"))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp, dialogGone or panelMenuOpen")
+            case "zoomControl":
+                switch try f.string("value") {
+                case "shown": .zoomControl(shown: true)
+                case "hidden": .zoomControl(shown: false)
+                case let other: throw f.invalid("value", "zoomControl is \"shown\" or \"hidden\", not \"\(other)\"")
+                }
+            case "displayZoom": .displayZoom(Int(try f.number("value")))
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":
