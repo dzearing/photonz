@@ -63,7 +63,13 @@ extension EditorState {
     /// timeline are talking about the same thing.
     func selectClipPiece(layerID: UUID, index: Int?) {
         if selectedLayerID != layerID { selectLayer(layerID) }
-        selectedClipPieceIndex = index
+        // ...and lets go of a cut picked on the same clip, as picking a cut
+        // lets go of the piece. Kept, the panel went on showing the cut's
+        // Edit point and Transition with the ring round the piece.
+        if selectedClipCutIndex != nil { selectedClipCutIndex = nil }
+        // Written only when it moves: `@Observable` tells every reader about a
+        // write whether or not the value changed.
+        if selectedClipPieceIndex != index { selectedClipPieceIndex = index }
     }
 
     /// Put the Trim tool down before cutting, because the two cannot both be

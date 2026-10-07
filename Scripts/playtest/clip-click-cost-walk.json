@@ -1,0 +1,430 @@
+{
+ "out": "/tmp/photonz-playtest/clip-click-cost-walk",
+ "setup": {
+  "front": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "A stopwatch, and one guard: the try path of clicking-a-clip-on-the-timeline-answers-at-once. The five minute Retina talk with its captions written, cut twice with Command K at ruler clicks (a walk-posted click on the Blade target does not land while the probe is not the active app), then four rounds of: nothing picked, click piece 1 (a first pick), its first cut, piece 2, the second cut, piece 3, piece 1. Every press line carries the longest main thread hold of that click. The guard is the end: a click on a piece after a cut gives the panel back to the clip (Piece reads 2 of 3); until 2026-10-06 the cut stayed picked and the panel kept showing Edit point."
+  },
+  {
+   "do": "action",
+   "action": "openLongRetinaTalk"
+  },
+  {
+   "do": "action",
+   "action": "captionsWriteQuietly"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "key",
+   "key": "2",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 100
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 200
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectClip",
+   "clip": "Long Talk Retina",
+   "pieces": 3
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 1"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 2"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 3"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 3"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 1"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 2"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 3"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 3"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 1"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 2"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 3"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 3"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "selectCanvas"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 1"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 2"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 3"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 3"
+   ]
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 1"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina join 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Long Talk Retina piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Long Talk Retina piece 2"
+   ]
+  },
+  {
+   "do": "expectTimeline",
+   "keyboard": "timeline"
+  },
+  {
+   "do": "reveal",
+   "control": "Time section"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Piece",
+   "reads": "2 of 3"
+  },
+  {
+   "do": "describe",
+   "stage": "1-piece-2-after-a-cut",
+   "note": "a click on the second cut and then on the second piece: the ring is round piece 2, the panel is the clip's again with Piece reading 2 of 3, and the keyboard is still on the timeline"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-piece-2-after-a-cut"
+  }
+ ]
+}

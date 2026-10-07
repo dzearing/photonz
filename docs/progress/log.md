@@ -20749,3 +20749,11 @@ Next: the first editor window's ~200 ms first build
 - Captions are drawn last whatever row they sit in (`CaptionsDrawOnTop.swift`: `drawingOrder`, used by `DocumentRenderer.compositeImage` and the top level of `hitTestPath`); `restackByTracks` keeps them at the top of the stack. A higher picture track still draws in front of a lower one.
 - New walk `captions-sit-under-the-picture-walk`; `an-editing-session-walk` now checks the order.
 - Open: `find-out-why-a-caption-word-opened-for-typing-so` (p2), an intermittent keyboard loss in fix-a-caption-word-walk seen twice.
+
+## 2026-10-06 — Clicking a clip on the timeline answers sooner
+
+- Bug: a click on a piece after a cut left the cut picked, so the panel kept showing Edit point and Transition with the ring on the piece. `selectClipPiece` now lets go of the cut (and writes the piece only when it moves).
+- A click on a join opens the transition tiles one run-loop pass after picking the cut (`NextRunLoopPass`), so the popover no longer shares the pick's frame: cut click 95-131 ms -> 70-85.
+- The Captions section brings its lower rows in a pass at a time (`PanelRowsArrival`; `CaptionWordsInspector(part:)`), holding their last drawn height while they wait. The ~120 ms pass after a click back onto a clip was SwiftUI's accessibility focus walk over every control Captions had just added; in pieces it is 34-73 ms.
+- New walk `clip-click-cost-walk` (five minute Retina talk, captions, two cuts, rounds of clicks; ends by checking the panel follows a piece after a cut). Audit `queue/audits/2026-10-06-clip-click-answers.json`.
+- Open: `picking-a-cut-or-a-first-clip-on-the-timeline-an` (p2), the 50 ms line for a cut click and a first pick: the panel swapping section sets in the click's own frame.

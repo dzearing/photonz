@@ -10,33 +10,50 @@ import SwiftUI
 struct CaptionWordsInspector: View {
     @Environment(EditorState.self) private var editorState
 
+    /// The style tiles, how the words either side show, the colours of the
+    /// word being said, and the rest of its look. Parts so the Captions
+    /// section can bring them in a pass apart (`PanelRowsArrival`).
+    enum Part { case styles, shading, wordColours, wordLook }
+    let part: Part
+
     var body: some View {
         let _ = editorState.captionSettingsTick
         let look = editorState.captionLook
         VStack(alignment: .leading, spacing: 6) {
-            heading("Caption style")
-            CaptionStyleTiles(look: look)
-            VideoKit.DropdownRow(
-                label: "Show", value: look.show.title,
-                choices: .picking(CaptionGrouping.allCases, current: look.show, title: \.title) { show in
-                    set(.show, .grouping(show))
-                })
-            .playtestField("Show")
-            .panelHelp("How many words are on screen at a time.")
-            if look.show.usesLines {
-                VideoKit.FieldRow(label: "Lines") {
-                    SegmentedControl("Lines", selection: look.lines, options: [.init(1, "1"), .init(2, "2")],
-                                     fallsBackToSystem: false) { lines in
-                        set(.lines, .count(lines))
-                    }
-                    .playtestControl("Caption lines", detail: "the Captions section")
-                    .panelHelp("The most lines a caption fills.")
-                }
+            switch part {
+            case .styles: styles(look)
+            case .shading: shading(look)
+            case .wordColours: wordColours(look)
+            case .wordLook: wordLook(look)
             }
-            shadeRow(.said, value: look.said, choices: CaptionWordShade.saidChoices)
-            shadeRow(.coming, value: look.coming, choices: CaptionWordShade.comingChoices)
-            currentWord(look)
         }
+    }
+
+    @ViewBuilder private func styles(_ look: CaptionLook) -> some View {
+        heading("Caption style")
+        CaptionStyleTiles(look: look)
+    }
+
+    @ViewBuilder private func shading(_ look: CaptionLook) -> some View {
+        VideoKit.DropdownRow(
+            label: "Show", value: look.show.title,
+            choices: .picking(CaptionGrouping.allCases, current: look.show, title: \.title) { show in
+                set(.show, .grouping(show))
+            })
+        .playtestField("Show")
+        .panelHelp("How many words are on screen at a time.")
+        if look.show.usesLines {
+            VideoKit.FieldRow(label: "Lines") {
+                SegmentedControl("Lines", selection: look.lines, options: [.init(1, "1"), .init(2, "2")],
+                                 fallsBackToSystem: false) { lines in
+                    set(.lines, .count(lines))
+                }
+                .playtestControl("Caption lines", detail: "the Captions section")
+                .panelHelp("The most lines a caption fills.")
+            }
+        }
+        shadeRow(.said, value: look.said, choices: CaptionWordShade.saidChoices)
+        shadeRow(.coming, value: look.coming, choices: CaptionWordShade.comingChoices)
     }
 
     private func heading(_ title: String) -> some View {
@@ -61,13 +78,16 @@ struct CaptionWordsInspector: View {
 
     // MARK: - The word being said
 
-    @ViewBuilder private func currentWord(_ look: CaptionLook) -> some View {
-        let word = look.word
+    @ViewBuilder private func wordColours(_ look: CaptionLook) -> some View {
         heading("Current word").padding(.top, 6)
         CaptionColourWellRow(control: .wordColour, name: "Word colour", look: look)
         CaptionColourWellRow(control: .wordPill, name: "Word pill", look: look)
         CaptionColourWellRow(control: .wordGlow, name: "Word glow", look: look)
         CaptionColourWellRow(control: .wordStroke, name: "Word stroke", look: look)
+    }
+
+    @ViewBuilder private func wordLook(_ look: CaptionLook) -> some View {
+        let word = look.word
         VideoKit.FieldRow(label: CaptionLookControl.wordShadow.title) {
             Toggle("Shadow", isOn: Binding(get: { word.shadow },
                                            set: { on in set(.wordShadow, .on(on)) }))

@@ -33,10 +33,28 @@ struct CaptionsInspector: View {
                 generate
                 CaptionCueInFocusRows()
                 Divider().padding(.vertical, 2)
-                CaptionWordsInspector()
+                // The rest arrives a pass at a time, top down: built in one
+                // pass with the rows above, the controls below held a click
+                // for ~120 ms (`PanelRowsArrival`).
+                PanelRowsArrival(after: 1, remembering: "captions styles") {
+                    CaptionWordsInspector(part: .styles)
+                }
+                PanelRowsArrival(after: 2, remembering: "captions shading") {
+                    CaptionWordsInspector(part: .shading)
+                }
+                PanelRowsArrival(after: 3, remembering: "captions word colours") {
+                    CaptionWordsInspector(part: .wordColours)
+                }
+                PanelRowsArrival(after: 4, remembering: "captions word look") {
+                    CaptionWordsInspector(part: .wordLook)
+                }
                 Divider().padding(.vertical, 2)
-                timing
-                file
+                PanelRowsArrival(after: 5, remembering: "captions timing") {
+                    VStack(alignment: .leading, spacing: 6) {
+                        timing
+                        file
+                    }
+                }
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)

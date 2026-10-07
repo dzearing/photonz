@@ -1025,7 +1025,18 @@ struct ClipPiecesBar: View {
                 .onTapGesture {
                     guard edge > 0, edge < pieces.count else { return }
                     editorState.selectClipCut(layerID: layerID, index: edge)
-                    if kind != nil, !isLinkedSound {
+                    guard kind != nil, !isLinkedSound else { return }
+                    // The tiles open a pass after the pick, so the ring and
+                    // the panel answer the click in its own frame and the
+                    // popover builds in the next. Together they held one
+                    // pass for ~100 ms on a captioned five minute recording,
+                    // ~30 of it the popover (2026-10-06, `clip-click-cost-walk`).
+                    let editorState = editorState, layerID = layerID
+                    Task { @MainActor in
+                        await NextRunLoopPass.start()
+                        // Not if the hand has moved on in the meantime.
+                        guard editorState.selectedLayerID == layerID,
+                              editorState.selectedClipCutIndex == edge else { return }
                         editorState.openTransitionPicker(at: .join(clip: layerID, index: edge))
                     }
                 }

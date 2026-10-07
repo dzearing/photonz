@@ -1,0 +1,28 @@
+{
+  "feature": "Clicking a clip on the timeline answers sooner",
+  "epic": "video-beats-premiere",
+  "summary": "A click on a cut on a captioned five minute recording now holds the app 70-85 ms instead of 95-131, and a click back onto a piece after it 34-73 ms instead of about 121. A click on a piece after a cut now really gives the panel back to the clip; before, the cut stayed picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: clip-click-cost-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a five minute screen recording with talking in it and choose Add Track, Captions." },
+    { "do": "Press Command 2, click the ruler at 1:40 and press Command K, then at 3:20 and press Command K again." },
+    { "do": "Click the middle piece on V1, then the first, then the last." },
+    { "do": "Click the join between the first two pieces: the panel shows Edit point and the tiles open at the cut." },
+    { "do": "Click the second piece: the ring moves to it and the panel reads Piece 2 of 3.", "shot": "2026-10-06-clip-click-answers-1.png" },
+    { "do": "Scroll the panel down to Captions while clicking between a cut and a piece a few times." }
+  ],
+  "evaluate": [
+    "Does a click on a cut feel as instant as a click from piece to piece, or can you still feel it think?",
+    "When you click a piece after a cut, does the panel come back to the clip without a flicker?",
+    "With Captions in view, do its rows filling in over a few frames read as one arrival or as a stutter?",
+    "Do the transition tiles opening a frame after the cut is picked feel joined to the click?"
+  ],
+  "rough": [
+    "Before and after, longest main thread hold per click, probe in front, clip-click-cost-walk: piece to piece 10-18 ms before, 17-20 after; first pick of a clip from nothing 74-85 before, 73-86 after; a cut 98-121 before, 70-85 after; a piece after a cut 10-18 before only because the panel never left the cut (the walk's panel check fails on the old build), about 121 once it did, 34-73 after. an-editing-session-walk's cut click: 116-131 before, 67-71 after in three runs. None over 100 ms.",
+    "Not met: the 50 ms line for a cut click and for a first pick. Both are the panel swapping one set of sections for another in the click's own frame, spread across every section with no single culprit; carried by picking-a-cut-or-a-first-clip-on-the-timeline-an.",
+    "The Captions section now builds its lower rows a frame at a time (styles, shading, word colours, word look, timing). Once seen it holds their height while they wait, so nothing below moves; the very first time in a session the section grows over about five frames.",
+    "The probe and dev builds carry one invisible marker view per named control for the walks, and they add 15-30 ms to the slowest passes; the shipping build has none, so these numbers are a little worse than what the released app does.",
+    "No mock covers this: it is speed and one wrong-panel bug, nothing on screen was redesigned."
+  ]
+}
