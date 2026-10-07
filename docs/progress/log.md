@@ -20862,3 +20862,9 @@ Next: the first editor window's ~200 ms first build
   `canvas-zoom-control-walk`, `canvas-zoom-control-video-walk`.
   `zoom-readout-double-click-walk` now turns the new flag off as well.
 - UX-PATTERNS placement contract: named exception for it, quoting the user.
+
+## 2026-10-07 — the panel builds what you can see (clicking-a-cut-keying-a-value-and-undoing-it-ans)
+
+- Shipped: on a video in Next, a panel section that arrives well below the fold waits as a same-height space and builds when scrolled near (`PanelBodyReach`, flag `next-panel-builds-what-you-see`, on in Next); Captions' late rows are let go after half a second far out of sight. Walk harness builds everything when a lookup misses (`PanelBuildsEverything`).
+- Measured (clip-click-cost-walk, interleaved): cut 70 -> 57 ms, first clip pick 49 -> 40, deselect 55 -> 51. Keying Position and its undo unchanged (~50-63, undo ~69).
+- Open: decision card on whether keying a property may grow the timeline and shrink the picture (74% -> 71%); the rest of a cut is diffuse (menu bar commands re-evaluating ~3 ms, a header menu ~2.5 ms, window layout, accessibility).
