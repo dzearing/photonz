@@ -575,15 +575,15 @@ extension EditorState {
         guard landing.movedMS != 0 || toTrack != nil else { return }
         var landed: [UUID] = []
         perform { document in
-            for copy in session.copies {
-                let start = copy.layer.id == session.layerID
-                    ? landing.clipStartMS
-                    : (session.along[copy.layer.id] ?? 0) + landing.movedMS
-                if document.placeClipCopy(copy.layer, over: copy.original, atInMS: start) {
-                    landed.append(copy.layer.id)
-                }
+            for copy in session.copies
+            where document.placeClipCopy(copy.layer, over: copy.original, atInMS: session.copyStartMS(copy)) {
+                landed.append(copy.layer.id)
             }
             switch toTrack {
+            case let target? where !session.along.isEmpty:
+                // Several copies change track by the rule several clips moved
+                // do (`ClipsAcrossTracks.swift`); refused, they land at home.
+                document.moveClips(Array(session.along.keys), carrying: session.layerID, to: target)
             case .onto(let track): document.moveClip(session.layerID, toTrack: track)
             case .newTrack(let at): document.moveClipToNewTrack(session.layerID, at: at)
             case nil: break
@@ -799,6 +799,12 @@ struct ClipBarDragSession {
     /// for every other drag. The one in the hand is `layerID`, and any others
     /// are in `along`.
     var copies: [ClipBarCopySource] = []
+
+    /// Where a copy starts with the hand where it is: the one in the hand
+    /// where the landing says, the rest by as much as it went.
+    func copyStartMS(_ copy: ClipBarCopySource) -> Int {
+        copy.layer.id == layerID ? landing.clipStartMS : (along[copy.layer.id] ?? 0) + landing.movedMS
+    }
 }
 
 /// A copy an ⌥ drag carries out of a clip (`ClipDragCopy.swift`).

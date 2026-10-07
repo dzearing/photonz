@@ -9,12 +9,48 @@ struct ClipTrackDrop: Equatable {
     let target: TrackDrop
     let allowed: Bool
     let refusal: ClipPlacementRefusal?
+    /// Where each of several picked clips carried together lands, the hand's
+    /// first (`clipsCarryLandings`). Empty for a clip carried on its own.
+    let landings: [ClipCarryLanding]
 
     /// `why` is only asked when the drop is refused.
-    init(target: TrackDrop, allowed: Bool, why: () -> ClipPlacementRefusal?) {
+    init(target: TrackDrop, allowed: Bool, landings: [ClipCarryLanding] = [],
+         why: () -> ClipPlacementRefusal?) {
         self.target = target
         self.allowed = allowed
+        self.landings = landings
         self.refusal = allowed ? nil : why()
+    }
+
+    /// How `track`'s lane is lit while this is in the air: true where a
+    /// carried clip lands on it, false (red) where it turns one away, nil
+    /// where it is not lit at all.
+    ///
+    /// Several clips light every lane one of them lands on. Refused, only
+    /// the lanes that turned a clip away light, in red, since nothing changes
+    /// track and those lanes are the reason why.
+    func lights(track: UUID) -> Bool? {
+        let refusing = landings.filter { !$0.fits }
+        if landings.isEmpty || (!allowed && refusing.isEmpty) {
+            return target == .onto(track) ? allowed : nil
+        }
+        if allowed { return landings.contains { $0.place == .track(track) } ? true : nil }
+        return refusing.contains { $0.place == .track(track) } ? false : nil
+    }
+
+    /// The places a new track would be made, in the timeline's list of
+    /// tracks: where the hand is between two, and over the top or under the
+    /// bottom where a clip carried along goes past either end.
+    var newTrackPlaces: Set<Int> {
+        guard allowed else { return [] }
+        guard !landings.isEmpty else {
+            if case .newTrack(let at) = target { return [at] }
+            return []
+        }
+        return Set(landings.compactMap { landing -> Int? in
+            if case .newTrack(let at) = landing.place { return at }
+            return nil
+        })
     }
 }
 
@@ -365,10 +401,7 @@ extension EditorState {
     /// down, so a sideways slide started near the top of a lane never makes a
     /// track by accident.
     func updateClipTrackDrop(pointerY: CGFloat, travelledY: CGFloat) {
-        // Several copies carried out at once with ⌥ stay on their own tracks:
-        // they slide in time only. Several clips moved go up or down together.
         guard let session = clipBarDrag, case .body = session.grab,
-              session.along.isEmpty || session.copies.isEmpty,
               abs(travelledY) >= 8 else {
             if clipTrackDrop != nil { clipTrackDrop = nil }
             return
@@ -378,8 +411,11 @@ extension EditorState {
             // A place between two rows ON SCREEN, said as a place in the whole
             // list of tracks, which also holds any a folded group hides.
             guard case .newTrack(let at) = resolved else { return resolved }
+            // A row the document does not have yet (the one ⌥ copies are
+            // shown lifted onto) is passed over for the next one it has.
             let order = document?.timelineTracks.map(\.id) ?? []
-            if at < rows.count, let index = order.firstIndex(of: rows[at].trackID) {
+            if at < rows.count,
+               let index = rows[at...].lazy.compactMap({ order.firstIndex(of: $0.trackID) }).first {
                 return .newTrack(at: index)
             }
             if let last = rows.last, let index = order.firstIndex(of: last.trackID) {
@@ -394,6 +430,11 @@ extension EditorState {
     func setClipTrackDrop(_ drop: TrackDrop?) {
         guard let session = clipBarDrag, var document, let drop else {
             if clipTrackDrop != nil { clipTrackDrop = nil }
+            return
+        }
+        if !session.along.isEmpty, !session.copies.isEmpty {
+            let result = severalCopiesTrackDrop(drop, session: session, in: document)
+            if clipTrackDrop != result { clipTrackDrop = result }
             return
         }
         // A copy carried out with ⌥ is not in the document yet, so it is asked
@@ -412,7 +453,8 @@ extension EditorState {
             let along = Array(session.along.keys), byMS = session.landing.movedMS
             result = drop == home ? nil
                 : ClipTrackDrop(target: drop,
-                                allowed: document.canMoveClips(along, carrying: id, to: drop, byMS: byMS)) {
+                                allowed: document.canMoveClips(along, carrying: id, to: drop, byMS: byMS),
+                                landings: document.clipsCarryLandings(along, carrying: id, to: drop, byMS: byMS)) {
                     document.clipsMoveRefusal(along, carrying: id, to: drop, byMS: byMS)
                 }
             if clipTrackDrop != result { clipTrackDrop = result }
@@ -434,6 +476,43 @@ extension EditorState {
         if clipTrackDrop != result { clipTrackDrop = result }
     }
 
+    /// Several copies carried out with ⌥, aimed at `drop`: the same rule as
+    /// several clips moved, every copy going the same number of tracks, asked
+    /// of the document with the copies where the hand has them. Shown there
+    /// over the clips they came out of and never lifted, so the tracks are the
+    /// document's own and the originals, which stay, are what a copy can meet.
+    /// Aimed back at their own track, or at the row they are shown lifted
+    /// onto, the copies land at home as they always have.
+    private func severalCopiesTrackDrop(_ drop: TrackDrop, session: ClipBarDragSession,
+                                        in document: PhotonzDocument) -> ClipTrackDrop? {
+        let placed = documentWithCopiesPlaced(session, in: document, withSound: false)
+        let hand = session.layerID
+        if case .onto(let track) = drop,
+           placed.track(id: track) == nil || track == placed.trackID(ofClip: hand) {
+            return nil
+        }
+        let along = Array(session.along.keys)
+        return ClipTrackDrop(target: drop,
+                             allowed: placed.canMoveClips(along, carrying: hand, to: drop),
+                             landings: placed.clipsCarryLandings(along, carrying: hand, to: drop)) {
+            placed.clipsMoveRefusal(along, carrying: hand, to: drop)
+        }
+    }
+
+    /// `document` with every copy of an ⌥ drag over the clip it came out of,
+    /// starting where the hand has it. Without its sound when asked only
+    /// where it would land, so a copy's sound never adds a row to count.
+    func documentWithCopiesPlaced(_ session: ClipBarDragSession, in document: PhotonzDocument,
+                                  withSound: Bool) -> PhotonzDocument {
+        var placed = document
+        for copy in session.copies {
+            var layer = copy.layer
+            if !withSound { layer.soundDetached = true }
+            placed.placeClipCopy(layer, over: copy.original, atInMS: session.copyStartMS(copy))
+        }
+        return placed
+    }
+
     /// Let go of several picked clips carried onto a track with `id` in the
     /// hand: the slide and every change of track are one step to undo.
     func landClips(_ id: UUID, along: [UUID], movedMS: Int, on drop: ClipTrackDrop) {
@@ -452,6 +531,23 @@ extension EditorState {
             }
         }
         if let track = document?.trackID(ofClip: id) { selectedTrackIDs = [track] }
+    }
+
+    /// Every lane lit with clips in the hand, said the way a walk names them:
+    /// a track's name where a clip lands, with ` red` where one is refused,
+    /// and `new track at top`, `new track at bottom` or `new track over V1`
+    /// where one would be made.
+    var clipTrackDropLanes: [String] {
+        guard let drop = clipTrackDrop, let tracks = document?.timelineTracks else { return [] }
+        var lanes = tracks.compactMap { track in
+            drop.lights(track: track.id).map { $0 ? track.name : "\(track.name) red" }
+        }
+        for at in drop.newTrackPlaces.sorted() {
+            lanes.append(at <= 0 ? "new track at top"
+                : at >= tracks.count ? "new track at bottom"
+                : "new track over \(tracks[at].name)")
+        }
+        return lanes
     }
 
     /// What the capsule adds while a clip is carried over the tracks: where

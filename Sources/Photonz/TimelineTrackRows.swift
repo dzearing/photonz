@@ -405,7 +405,7 @@ struct TimelineTrackRow: View {
             // An empty track says where a clip goes before anything is
             // carried (`TimelineEmptySlot`). A carried clip lights the whole
             // lane instead, as the mock swaps `.lane.empty` for `.lane.drop`.
-            if row.showsEmptySlot, editorState.clipTrackDrop?.target != .onto(track.id) {
+            if row.showsEmptySlot, editorState.clipTrackDrop?.lights(track: track.id) == nil {
                 TimelineEmptySlot()
             }
             // A click on the bare lane puts the playhead there; a drag draws a
@@ -536,10 +536,11 @@ struct TimelineTrackRow: View {
     }
 
     /// The lane lit as the place a carried clip would land, in red where it
-    /// cannot.
+    /// cannot. Several clips carried together light every lane one of them
+    /// lands on, not only the one under the hand.
     @ViewBuilder private var dropMark: some View {
-        if let drop = editorState.clipTrackDrop, drop.target == .onto(track.id) {
-            let tint = drop.allowed ? VideoKit.Palette.accent : VideoKit.Palette.crit.color(colorScheme)
+        if let lands = editorState.clipTrackDrop?.lights(track: track.id) {
+            let tint = lands ? VideoKit.Palette.accent : VideoKit.Palette.crit.color(colorScheme)
             RoundedRectangle(cornerRadius: VideoKit.Metrics.clipCornerRadius)
                 .fill(tint.opacity(0.12))
                 .overlay(RoundedRectangle(cornerRadius: VideoKit.Metrics.clipCornerRadius)
@@ -550,8 +551,8 @@ struct TimelineTrackRow: View {
 
     /// The line a drop BETWEEN tracks draws, where the new track would go.
     @ViewBuilder private func insertionLine(atTop: Bool) -> some View {
-        if let at = newTrackPlace,
-           atTop ? at == index : (at == trackCount && index == trackCount - 1) {
+        let places = newTrackPlaces
+        if atTop ? places.contains(index) : (places.contains(trackCount) && index == trackCount - 1) {
             Capsule()
                 .fill(VideoKit.Palette.accent)
                 .frame(height: 2)
@@ -561,16 +562,15 @@ struct TimelineTrackRow: View {
         }
     }
 
-    /// Where a new track would be made by what is in the air: a clip carried
-    /// between two tracks, or a file let go there.
-    private var newTrackPlace: Int? {
-        if let drop = editorState.clipTrackDrop, drop.allowed, case .newTrack(let at) = drop.target {
-            return at
-        }
+    /// Where new tracks would be made by what is in the air: a clip carried
+    /// between two tracks, several carried past either end, or a file let go
+    /// there.
+    private var newTrackPlaces: Set<Int> {
+        var places = editorState.clipTrackDrop?.newTrackPlaces ?? []
         if let hover = editorState.timelineFileHover, case .newTrack(let at) = hover.landing.target {
-            return at
+            places.insert(at)
         }
-        return nil
+        return places
     }
 
     // MARK: The mock's words for kinds

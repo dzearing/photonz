@@ -1,0 +1,28 @@
+{
+  "feature": "Several carried clips show where each one lands, and Option copies change track",
+  "epic": "video-cutting",
+  "summary": "Carry several picked clips up or down and every lane one of them will land on lights, not only the one under the pointer; when one is refused, its own lane lights red. Option dragging several picked clips now lands the copies on the tracks above or below by the same rule, leaving the originals where they were.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk is several-clips-show-where-each-lands-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, trim it to six seconds with W, and drop a second file on V1 right after it." },
+    { "do": "Add Track > Video Track, so an empty V2 sits over V1." },
+    { "do": "Click the first clip, Command click the second, then hold Option and drag the second up onto V2: V2 lights.", "shot": "2026-10-06-several-clips-show-where-each-lands-1-copies-carried-up-sc.png" },
+    { "do": "Let go: copies of both sit on V2, the originals stay on V1.", "shot": "2026-10-06-several-clips-show-where-each-lands-2-copies-on-v2-sc.png" },
+    { "do": "Press Command Z, put the second clip alone on V2, add another Video Track, pick both, and drag the first up one: V2 and V3 both light.", "shot": "2026-10-06-several-clips-show-where-each-lands-3-two-lanes-lit-sc.png" },
+    { "do": "Undo, pick both, and drag the second clip down onto V1: only the Audio lane lights, in red, because the first clip would land there.", "shot": "2026-10-06-several-clips-show-where-each-lands-4-refused-on-its-own-lane-sc.png" },
+    { "do": "Do the same holding Option: the same red Audio lane, and the copies land on their own tracks.", "shot": "2026-10-06-several-clips-show-where-each-lands-5-copies-refused-sc.png" }
+  ],
+  "evaluate": [
+    "With two lanes lit at once, can you tell which clip goes where without letting go?",
+    "When the move is refused, is lighting only the lane that refuses (and not the one under your pointer) clear, or would you rather see every target lane, the bad one in red?",
+    "Does Option dragging several clips up now land where a Premiere user would expect?",
+    "Is a line over the top track enough to say a clip carried along will get a new track there?"
+  ],
+  "rough": [
+    "While Option copies are in the hand, copies over their originals are drawn on a row of their own between the tracks (named V3 in the first picture) even while V2 is the lit target; on letting go that row goes away. A single copy already did this; folded into a-clip-landing-where-another-sits-does-the-same, whose open card decides busy-spot landings.",
+    "The lanes light, but the clips themselves stay drawn on their own lanes until you let go, the way a single clip's drop already works; nothing draws a ghost of each clip on its target lane.",
+    "Copies with sound add an Audio 2 track for the copies' sound, as a single copy does.",
+    "No mock frame draws several clips carried between tracks; the cues are the single drop's lit lane and new-track line."
+  ]
+}

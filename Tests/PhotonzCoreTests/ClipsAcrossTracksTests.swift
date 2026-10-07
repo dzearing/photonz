@@ -233,6 +233,135 @@ struct ClipsAcrossTracksTests {
     }
 }
 
+/// **Where each carried clip lands, said clip by clip** (`clipsCarryLandings`),
+/// so the timeline can light every lane a carried clip is headed for, and put
+/// the refusal on the lane that refuses rather than on the one under the hand.
+@Suite("Several clips across tracks: where each one lands")
+struct ClipsCarryLandingsTests {
+
+    /// The first clip on V1 and the second on V2 over it, at the same time.
+    static func oneOnEach() throws -> (doc: PhotonzDocument, first: UUID, second: UUID, v1: UUID, v2: UUID) {
+        var (doc, first, second, v1) = try ClipsAcrossTracksTests.twoOnV1()
+        let v2 = doc.addTrack(.video, at: 0)
+        doc.updateLayer(id: second) { $0.time = LayerTime(inMS: 0, outMS: 3000, sourceLengthMS: 6000) }
+        let moved = doc.moveClip(second, toTrack: v2)
+        #expect(moved)
+        return (doc, first, second, v1, v2)
+    }
+
+    @Test("Carried up one, each clip names its own landing: the hand on V2, the other on a new track over the top")
+    func eachNamesItsOwn() throws {
+        let (doc, first, second, _, v2) = try Self.oneOnEach()
+        let landings = doc.clipsCarryLandings([first, second], carrying: first, to: .onto(v2))
+        #expect(landings == [
+            ClipCarryLanding(clip: first, place: .track(v2), refusal: nil),
+            ClipCarryLanding(clip: second, place: .newTrack(at: 0), refusal: nil),
+        ])
+        #expect(landings.allSatisfy { $0.fits })
+    }
+
+    @Test("Carried up onto an existing track over each, both lanes are named")
+    func twoLanes() throws {
+        var (doc, first, second, _, v2) = try Self.oneOnEach()
+        let v3 = doc.addTrack(.video, at: 0)
+        let landings = doc.clipsCarryLandings([first, second], carrying: first, to: .onto(v2), byMS: 250)
+        #expect(landings.map(\.place) == [.track(v2), .track(v3)])
+        #expect(landings.allSatisfy { $0.fits })
+    }
+
+    @Test("A clip that cannot land is refused on ITS lane, while the hand's own lane is clear")
+    func refusedOnItsOwnLane() throws {
+        var (doc, first, second, _, v2) = try Self.oneOnEach()
+        let v3 = doc.addTrack(.video, at: 0)
+        doc.addLayer(ClipsAcrossTracksTests.title("In the way", 1000, 2000))
+        let inTheWay = try #require(doc.layers.last?.id)
+        let moved = doc.moveClip(inTheWay, toTrack: v3)
+        #expect(moved)
+        let landings = doc.clipsCarryLandings([first, second], carrying: first, to: .onto(v2))
+        #expect(landings.count == 2)
+        #expect(landings[0] == ClipCarryLanding(clip: first, place: .track(v2), refusal: nil))
+        #expect(landings[1].place == .track(v3))
+        #expect(landings[1].refusal?.reason == .noRoom)
+        #expect(landings[1].refusal?.track.id == v3)
+        // And the move as a whole is refused, naming that lane.
+        #expect(!doc.canMoveClips([first, second], carrying: first, to: .onto(v2)))
+        #expect(doc.clipsMoveRefusal([first, second], carrying: first, to: .onto(v2))?.track.id == v3)
+    }
+
+    @Test("Dropped between two tracks, both clips on V1 are named at the new track made there")
+    func between() throws {
+        var (doc, first, second, _) = try ClipsAcrossTracksTests.twoOnV1()
+        _ = doc.addTrack(.video, at: 0)
+        let landings = doc.clipsCarryLandings([first, second], carrying: first, to: .newTrack(at: 1))
+        #expect(landings.map(\.place) == [.newTrack(at: 1), .newTrack(at: 1)])
+    }
+
+    @Test("Sound carried down past the bottom is named at a new track under the last")
+    func belowTheBottom() throws {
+        var doc = PhotonzDocument.recording(ClipsAcrossTracksTests.movie, name: "take")
+        let music = doc.addSound(SoundRef(durationMS: 2000), name: "music", atMS: 0)
+        let sting = doc.addSound(SoundRef(durationMS: 1000), name: "sting", atMS: 3000)
+        let musicTrack = try #require(doc.trackID(ofClip: music))
+        let moved = doc.moveClip(sting, toTrack: musicTrack)
+        #expect(moved)
+        let count = doc.timelineTracks.count
+        let landings = doc.clipsCarryLandings([music, sting], carrying: music, to: .newTrack(at: count))
+        #expect(landings.map(\.place) == [.newTrack(at: count), .newTrack(at: count)])
+    }
+
+    @Test("Aimed at the hand's own track, no clip is named anywhere")
+    func ownTrackNamesNothing() throws {
+        let (doc, first, second, v1) = try ClipsAcrossTracksTests.twoOnV1()
+        #expect(doc.clipsCarryLandings([first, second], carrying: first, to: .onto(v1)).isEmpty)
+    }
+
+    @Test("Asking where they land writes nothing")
+    func asksOnly() throws {
+        let (doc, first, second, _, v2) = try Self.oneOnEach()
+        let before = doc
+        _ = doc.clipsCarryLandings([first, second], carrying: first, to: .onto(v2))
+        #expect(doc == before)
+    }
+
+    // MARK: - Copies carried with ⌥
+
+    @Test("Copies of two clips on V1, carried up onto V2, land there by the same rule and the originals stay")
+    func copiesChangeTrack() throws {
+        var (doc, first, second, v1) = try ClipsAcrossTracksTests.twoOnV1()
+        let v2 = doc.addTrack(.video, at: 0)
+        let copyA = try #require(doc.clipDragCopy(of: first))
+        let copyB = try #require(doc.clipDragCopy(of: second))
+        let placed1 = doc.placeClipCopy(copyA, over: first, atInMS: 200)
+        #expect(placed1)
+        let placed2 = doc.placeClipCopy(copyB, over: second, atInMS: 3200)
+        #expect(placed2)
+        #expect(doc.canMoveClips([copyB.id], carrying: copyA.id, to: .onto(v2)))
+        let moved = doc.moveClips([copyB.id], carrying: copyA.id, to: .onto(v2))
+        #expect(moved)
+        #expect(Set(doc.clipIDs(onTrack: v2)) == [copyA.id, copyB.id])
+        #expect(Set(doc.clipIDs(onTrack: v1)) == [first, second])
+        #expect(doc.layer(id: copyA.id)?.time?.inMS == 200)
+        #expect(doc.layer(id: first)?.time?.inMS == 0)
+    }
+
+    @Test("A copy carried onto a track where an original sits at that time is refused there")
+    func copyMeetsAnOriginal() throws {
+        var (doc, first, second, _, v2) = try Self.oneOnEach()
+        let copyA = try #require(doc.clipDragCopy(of: first))
+        let copyB = try #require(doc.clipDragCopy(of: second))
+        let placed3 = doc.placeClipCopy(copyA, over: first, atInMS: 0)
+        #expect(placed3)
+        let placed4 = doc.placeClipCopy(copyB, over: second, atInMS: 0)
+        #expect(placed4)
+        // The copy off V1 carried up onto V2, where the second clip's original
+        // stays put at the same time.
+        let landings = doc.clipsCarryLandings([copyB.id], carrying: copyA.id, to: .onto(v2))
+        #expect(landings.first?.place == .track(v2))
+        #expect(landings.first?.refusal?.reason == .noRoom)
+        #expect(!doc.canMoveClips([copyB.id], carrying: copyA.id, to: .onto(v2)))
+    }
+}
+
 /// The walk step that carries a clip up or down tracks as well as along.
 @Suite("Several clips across tracks: the walk step")
 struct ClipsAcrossTracksWalkStepTests {
@@ -248,6 +377,20 @@ struct ClipsAcrossTracksWalkStepTests {
         #expect(script.steps[1] == .dragClip(clip: "b-roll", byMS: 0, modifiers: [], tracksUp: -2))
         // Left out, the clip stays on its track.
         #expect(script.steps[2] == .dragClip(clip: "b-roll", byMS: 500, modifiers: []))
+    }
+
+    @Test("dragClip takes lights: the lanes lit with the clips still in the hand, red where one is refused")
+    func lights() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "dragClip", "clip": "b-roll", "tracksUp": 1, "lights": ["V2", "V3 red"] },
+                     { "do": "dragClip", "clip": "b-roll", "tracksUp": 1, "lights": [] },
+                     { "do": "dragClip", "clip": "b-roll", "tracksUp": 1 } ] }
+        """.utf8))
+        #expect(script.steps[0] == .dragClip(clip: "b-roll", byMS: 0, modifiers: [], tracksUp: 1,
+                                             lights: ["V2", "V3 red"]))
+        // An empty list says no lane lights at all; left out, lanes are not checked.
+        #expect(script.steps[1] == .dragClip(clip: "b-roll", byMS: 0, modifiers: [], tracksUp: 1, lights: []))
+        #expect(script.steps[2] == .dragClip(clip: "b-roll", byMS: 0, modifiers: [], tracksUp: 1))
     }
 
     @Test("dragClip takes reads: the words the capsule says about the track with the clip still in the hand")
