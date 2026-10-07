@@ -19,8 +19,8 @@ struct CaptionWordField: NSViewRepresentable {
 
     func makeCoordinator() -> Coordinator { Coordinator(editorState: editorState) }
 
-    func makeNSView(context: Context) -> NSTextField {
-        let field = NSTextField(string: session.original)
+    func makeNSView(context: Context) -> CaptionWordTextField {
+        let field = CaptionWordTextField(string: session.original)
         field.isBordered = false
         field.drawsBackground = false
         field.focusRingType = .none
@@ -33,7 +33,7 @@ struct CaptionWordField: NSViewRepresentable {
         return field
     }
 
-    func updateNSView(_ field: NSTextField, context: Context) {
+    func updateNSView(_ field: CaptionWordTextField, context: Context) {
         field.font = font
         field.textColor = ink
         // Tab opened another word in the same field: take its letters and
@@ -44,7 +44,7 @@ struct CaptionWordField: NSViewRepresentable {
         }
     }
 
-    static func dismantleNSView(_ field: NSTextField, coordinator: Coordinator) {
+    static func dismantleNSView(_ field: CaptionWordTextField, coordinator: Coordinator) {
         coordinator.session = nil
     }
 
@@ -58,19 +58,11 @@ struct CaptionWordField: NSViewRepresentable {
 
         init(editorState: EditorState) { self.editorState = editorState }
 
-        func opened(_ session: CaptionWordEditSession, in field: NSTextField) {
+        func opened(_ session: CaptionWordEditSession, in field: CaptionWordTextField) {
             self.session = session
             settled = false
-            // The word is offered ready to be replaced, the way double clicking
-            // a word does everywhere else.
-            // Asked only when the field does not already have the keyboard:
-            // after Tab it still does, and asking again ends its editing,
-            // which would keep the next word and close the field at once.
-            DispatchQueue.main.async { [weak field] in
-                guard let field, let window = field.window else { return }
-                if field.currentEditor() == nil { window.makeFirstResponder(field) }
-                field.currentEditor()?.selectAll(nil)
-            }
+            field.takesKeyboardWhenPlaced = true
+            DispatchQueue.main.async { [weak field] in field?.takeKeyboard() }
         }
 
         func control(_ control: NSControl, textView: NSTextView, doCommandBy selector: Selector) -> Bool {
@@ -104,6 +96,31 @@ struct CaptionWordField: NSViewRepresentable {
                   let field = notification.object as? NSTextField else { return }
             editorState.commitCaptionWordEdit(field.stringValue)
         }
+    }
+}
+
+/// The field itself. It holds on to the request for the keyboard until it is
+/// in a window: SwiftUI makes the view in one pass and sometimes puts it in
+/// the window a pass or two later, and a request made in between found no
+/// window, gave up, and left the keys going to the canvas behind the open word
+/// (`find-out-why-a-caption-word-opened-for-typing-so`).
+final class CaptionWordTextField: NSTextField {
+    var takesKeyboardWhenPlaced = false
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        takeKeyboard()
+    }
+
+    /// The word is offered ready to be replaced, the way double clicking a word
+    /// does everywhere else. Asked only when the field does not already have
+    /// the keyboard: after Tab it still does, and asking again ends its
+    /// editing, which would keep the next word and close the field at once.
+    func takeKeyboard() {
+        guard takesKeyboardWhenPlaced, let window else { return }
+        takesKeyboardWhenPlaced = false
+        if currentEditor() == nil { window.makeFirstResponder(self) }
+        currentEditor()?.selectAll(nil)
     }
 }
 
