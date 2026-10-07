@@ -20802,3 +20802,23 @@ Next: the first editor window's ~200 ms first build
   probe is carried by `a-first-clip-pick-and-a-cut-click-answer-inside` with
   the measured causes (markers in the probe, SwiftUI's accessibility focus walk,
   section shells redrawn every pass).
+
+## 2026-10-07 — keying a value redraws only what the key changes
+
+- `keying-a-value-redraws-only-what-the-key-changes`: Text, Appearance, Effects,
+  Time and Captions build their bodies through `readingForTheLookRows`
+  (`Sources/Photonz/LookRowsReading.swift`), so `EditorState.document` inside
+  them watches `lookRowsRevision`, which moves for every change except keys on
+  position, scale, rotation or crop (`PhotonzDocument.sameApartFromPlacementKeys`,
+  core, `PlacementKeysTests`). A Position pick builds Properties and none of the
+  four (`keyframe-anything-walk` asserts it with `expectBuilds`; new
+  `ViewBuildMeter` subjects `keysSection`, `textSection`, `appearanceSection`,
+  `effectsSection`, `timeSection`). Undo, redo and every edit write previews and
+  the selection only when they change.
+- The rule for the new scope: only a view that shows nothing a placement key
+  decides. Properties, the timeline and the canvas stay on the whole document.
+- Numbers: picks 46 -> 44 ms, keyframe-anything first pick 57-59 -> 53-55,
+  undo ~63 unchanged. View bodies are now under a tenth of the pass; the rest is
+  SwiftUI graph, layout and accessibility work across the window. Walk markers
+  and the canvas refit were measured and are not it. Carried with every number
+  to `undoing-a-key-and-the-first-key-of-a-session-ans`.
