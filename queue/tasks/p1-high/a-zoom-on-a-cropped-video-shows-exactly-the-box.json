@@ -1,0 +1,36 @@
+{
+  "id": "a-zoom-on-a-cropped-video-shows-exactly-the-box",
+  "title": "A zoom on a cropped video shows exactly the box you drew",
+  "goal": "On a video that has been cropped, drawing a zoom box around something and playing it should fill the visible picture with exactly what was inside the box. Today it zooms far further in than the box and shows a different part of the picture, so the zoom cannot be aimed on a cropped recording.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T03:18:46.002Z",
+  "updated": "2026-10-07T03:18:46.091Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"I make a zoom track on a video.. The video was cropped. I position the zoom on some text. When I play it, rather than zooming in on the rect around text, it zooms way too far in, not matching at all what the rect was\". Screenshots 2026-10-06 20.16.40 (box over 'The Role of AI vs. Humans in Code', label 517%, box about half the visible picture's width) and 20.17.42 (played: only 'Role of AI vs. Hu' / 'Code Generation' / 'AI tools like GitHub', far tighter than the box, in a smaller square).\n\nSUSPECT from code reading, not reproduced: the box is kept as a fraction of the clip layer's whole frame (EditorState+Zoom.swift:390-396, and pointer mapping :493-494), and the renderer cuts that fraction out of the picture and scales it to fill the layer frame (DocumentRenderer.swift:1127-1143, after the layer-local crop at :1114-1125). If 'cropped' here is a canvas/document crop, the layer frame is still the whole recording and the canvas shows only part of it: the box percent (517%) is measured against the whole recording, and the zoom fills the whole frame of which only the middle is visible, so it reads as zooming far too far in. If it is the clip's own layer crop, check that layer.frame and the post-crop image agree (fraction of frame vs fraction of cropped image). Model: ClipZoom window(atMS:) and Layer.zoomWindow (PhotonzCore/ClipZoom.swift:313-350). Fix likely: map the box against the VISIBLE picture (frame intersected with the canvas, or the crop) and convert to the window in the picture's own fractions. Related, done: a-zoom-region-that-frames-a-spot-and-can-follow, scrubbing-a-recording-shows-what-the-zoom-does-a.",
+  "acceptance": [
+    "Reproduce first at Next defaults with the user's steps: crop a recording (try each way the app offers to crop a video: the canvas/document crop and the clip's own crop), add a zoom, place its box around a block of text, play. Photograph the box and the played frame for each crop kind, and record the box's percent label against the measured magnification",
+    "For every crop kind, the played (and scrubbed and exported) frame at the zoom's full point shows exactly the box's contents filling the visible picture: the box's four corners land on the picture's four edges within 2 px, MEASURED and written in the audit",
+    "The percent on the box equals the real magnification of the visible picture (visible width / box width), MEASURED",
+    "If the box's aspect differs from the visible picture's, the zoom behaves the same documented way it does on an uncropped video (fit or fill), and the box shows that shape while dragging",
+    "Follow Cursor and Suggest Zooms aim at the same visible picture on a cropped video",
+    "Existing zooms on uncropped videos are unchanged; zooms already saved on cropped videos are migrated or read so they show what their box showed, and the audit says which",
+    "Unit tests in PhotonzCore for the box to window mapping with each crop kind; a walk at Next defaults crops, zooms on a marked spot and checks the played frame",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T03:18:46.004Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-07T03:18:46.090Z",
+      "note": "seq 510 -> 4"
+    }
+  ]
+}
