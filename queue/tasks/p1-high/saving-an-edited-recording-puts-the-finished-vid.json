@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T03:55:55.627Z",
-  "updated": "2026-10-07T03:55:55.712Z",
+  "updated": "2026-10-07T07:34:53.256Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"one very key thing. When I open a video, make some edits, save, and close, I really wanted to have it save a copy and put it in history. However, I think i need to export it to get an mp4 that can be embedded in another app. ... i want to be able to record a video, make some edits and save and use it in teams really fast. ... if that is always slow, then I guess just having the exported file in history is good\".\n\nFrom code reading (not run): Next opens recordings as an EditorState timeline document (NextExperience.swift:29-30). Command-S -> EditorState.saveDocument (EditorState.swift:3198-3222) -> saveDocumentAs (:3227-3242) writes a .photonz package referencing the recording (ProjectMedia.table :3244-3262), never rewrites the mp4 (EditorState+RevertRecording.swift:7-12), no CaptureStore call. Export: EditorState+VideoExport.swift:94-180, 318-367, no history entry; verbatim copy only for an untouched whole recording (:338-346), any edit is a full re-encode via DocumentFrames + DocumentMovieWriter (:348-366). Copy Video already renders edits to $TMPDIR/PhotonzClipboard/<name>.mp4 and pastes it (EditorState+VideoExport.swift:255-301, EditorCommands.swift:438-446); reuse that writer. History tile Copy/drag give the stored raw mp4 (AppCoordinator.swift:423-455, CaptureThumbnailView.swift:67, HistoryOverlay.swift:643-650). Save to Capture History (AppCoordinator.swift:888-910) only stores a flattened PNG. Measured export speed: queue/audits/2026-09-27-fast-video-export.json, 5 min Retina at 1080p in 72-83 s (0.23-0.26x running time). Companion task filed the same day: 'Cutting a recording and exporting it copies the pieces instead of re-encoding' makes the common cut-only case near instant.",
@@ -33,6 +33,36 @@
     {
       "t": "2026-10-07T03:55:55.711Z",
       "note": "seq 510 -> 2"
+    },
+    {
+      "t": "2026-10-07T05:11:42.388Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T05:14:46.093Z",
+      "note": "Reproduced at Next defaults (probe walk /tmp/repro/save-edited-repro.json: lend sample-recording to history, Shift Command 6, Command K at the middle, Command S): Command S wrote project.photonz where the save box pointed and 'Tutorial Sample.mp4 is byte for byte what it was (151020 bytes)'. So history kept the raw recording and its Copy pastes the raw file."
+    },
+    {
+      "t": "2026-10-07T06:08:23.787Z",
+      "note": "owns these walks: an-edited-recording-saves-into-history-walk, saving-a-long-edit-into-history-timing-walk"
+    },
+    {
+      "t": "2026-10-07T06:13:46.429Z",
+      "note": "IA decision: ONE tile per recording. The tile's file becomes the edited video (Copy/drag/card Copy give it for free), the recording as made is cloned into the existing hidden .photonz-originals folder (already trashed with the tile, and how Revert puts it back), the edit is <name>.photonz beside the tile, the same shape as a screenshot's flattened PNG + layers sidecar. Command S on a recording in history no longer asks where; one not in history still gets the save box. Rough edges kept here: progress bar sits at 0-1% for the first seconds of a long save while the writer weighs; the toast shows the Saving pill and a Saving caption at once (redundant but harmless). Neither earned a task."
+    },
+    {
+      "t": "2026-10-07T06:13:52.757Z",
+      "note": "Command S on an edited recording from history writes the finished video over the same tile in the background (project beside it, raw kept in .photonz-originals), corner card says Saving then copies it; tile shows Saving %/Edited; reopen opens the edit; revert+save restores; quit resumes at launch; Save to Capture History hidden for video. Verified: Scripts/test.sh green (11609), an-edited-recording-saves-into-history-walk and saving-a-long-edit-into-history-timing-walk green at Next defaults (30 s Retina 15.5 s, 3 min ~75 s), 7 related walks green. Audit queue/audits/2026-10-07-save-an-edited-recording-into-history.json. Commit 1f6a9962."
+    },
+    {
+      "t": "2026-10-07T07:34:53.255Z",
+      "note": "Since 7c564f4f a cut/trim-only edit saved with Command S copies its pieces: saving-a-long-edit-into-history-timing-walk measured the 3 minute trim at 1.16 s from Command S to a pasteable file (was ~75 s); the 30 s edit with a zoom still draws (16.3 s)."
     }
-  ]
+  ],
+  "started": "2026-10-07T05:11:42.387Z",
+  "walks": [
+    "an-edited-recording-saves-into-history-walk",
+    "saving-a-long-edit-into-history-timing-walk"
+  ],
+  "completed": "2026-10-07T06:13:52.758Z"
 }

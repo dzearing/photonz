@@ -1,0 +1,31 @@
+{
+  "id": "the-video-design-docs-say-captions-draw-on-top-w",
+  "title": "The video design docs say captions draw on top whatever row they sit in",
+  "goal": "The video design docs say the timeline is the layer list, so a track higher up draws in front. Since 2026-10-06 the Captions track sits under the picture tracks, as the mock lists it, but captions still draw over everything, titles included. A runner reading the docs today would get that wrong; write the one exception down where the rule lives.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 140,
+  "status": "pending",
+  "release": "next",
+  "area": "docs",
+  "created": "2026-10-07T13:59:09.175Z",
+  "updated": "2026-10-07T13:59:13.608Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the daily digest 2026-10-07 design review. The behaviour shipped in c7a04159 (CaptionsDrawOnTop.swift: drawingOrder, used by DocumentRenderer.compositeImage and hitTestPath; restackByTracks keeps captions on top). Audit: queue/audits/2026-10-06-captions-under-the-picture.json. Only docs/progress/log.md records it today.",
+  "acceptance": [
+    "docs/design/video-surface.md, where it says the timeline is the layer list (D18), names Captions as the one track whose row does not decide what draws in front, and says captions draw over every picture and title",
+    "docs/design/video-captions.md says where a new Captions track lands (under the last picture track, over the sound) and that dragging it elsewhere keeps it there",
+    "Nothing in the app changes; the commit touches docs only"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T13:59:09.177Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T13:59:13.607Z",
+      "note": "seq 3750 -> 140"
+    }
+  ]
+}

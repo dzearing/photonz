@@ -1,0 +1,44 @@
+{
+  "id": "a-first-clip-pick-and-a-cut-click-answer-inside",
+  "title": "Picking a clip, clicking a cut and keying or undoing a value answer inside 50 ms",
+  "goal": "On a video, a first click on a clip, a click on a cut, the first value picked to animate in a session, and Undo of that key each still keep the app busy for a little over 50 ms (about 53 to 63 ms), against the 50 ms the video goals ask for. Both measurements point at the same cost: the whole window laying itself out and the Mac's accessibility bookkeeping walking every view. Bring all four under 50 ms, and make the loop's test copy report what a person actually gets.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 130,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T10:55:00.152Z",
+  "updated": "2026-10-07T13:59:13.551Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from picking-a-cut-or-a-first-clip-on-the-timeline-an (2026-10-07), whose log has every number. Shipped there: markers hang only in a probe launched with --playtest (AppFlavor.hangsWalkMarkers, PlaytestMarkers.areHung), so the dev app sheds ~800 marker views. Markerless stand-in (all markers off but the walk's timeline ones): first pick 48-60 (median ~56), cut 47-60 (~53). Probe with markers: first 78-86, cut 73-81. Levers measured, none shipped: (a) probe marker teardown deferred 0.3 s (retain the marker view and its AppKitPlatformViewHost in a static dismantleNSView) cut 75 -> 67; (b) CollapsibleSection header as an EquatableView keyed on title/chip, -2..3 ms; needs the onReorder/onReorderEnd closures to read the live section list (reveal.drawnSections) and the accessory (EditPoint/Transition header notes) in its key. (c) The big remaining cost of a first pick is SwiftUI's accessibility focus walk: AccessibilityNode.updateFocusResponder ~50 times per pick (lldb breakpoint count), each visiting every responder (ViewRendererHost.focusResponder, swift_conformsToProtocol); fewer AppKit-backed views in the window shrinks every run. An out-of-process accessibility client is live on this Mac, so it is real for users. Marker redesign idea for (2): markers that are not SwiftUI platform views (a few per-scroll-view hosts holding plain NSView markers positioned from onGeometryChange) keep the harness's NSView reads but take ~800 views out of SwiftUI's bookkeeping; the harness reads frames, visibleRect, enclosing scroll views and isHiddenOrHasHiddenAncestor off them (PlaytestPanelPress.fieldViews/scrollAreas), so every nested ScrollView needs its own host. Profiling recipe: xcrun xctrace record --template 'Time Profiler' --attach <probe pid> during the walk; a walk of only first picks or only cuts makes every heavy window one of them.\n\nFolded in from undoing-a-key-and-the-first-key-of-a-session-ans (daily digest 2026-10-07, same root cause):\nCarried from keying-a-value-redraws-only-what-the-key-changes (2026-10-07), whose log has every number. Shipped there: Text, Appearance, Effects, Time and Captions watch EditorState.lookRowsRevision (moves for anything but a key on position/scale/rotation/crop, PhotonzDocument.sameApartFromPlacementKeys) through readingForTheLookRows, so a Position pick builds none of them (expectBuilds in keyframe-anything-walk); perform/undo/redo/discardDragPreview no longer write unchanged previews or selection. Result: stopwatch pick 46-47 -> 44, first pick in keyframe-anything 57-59 -> 53-55, an-editing-session 59-65 (unchanged), undo 63-68 (unchanged within noise).\n\nWhat is left is not view bodies (<10% of the pass by Time Profiler: xctrace record --attach <probe pid> --template 'Time Profiler', export the time-profile table, group main-thread samples by burst). It is AttributeGraph propagation (ObservationGraphMutation.apply, Subgraph::update), layout of the whole window, and SwiftUI's accessibility focus walk, the same root cause a-first-clip-pick-and-a-cut-click-answer-inside names. Ruled out by measurement: walk markers (all but four off: pick 47, undo 61, no change), the canvas refit when the timeline grows (deferred a pass: no change), Effects/Text/Appearance/Time bodies (now skipped: ~2 ms), restoreSelectionFromHistory/publishSharedComponents/TutorialController on undo (switched off: no change). Measured but not shipped: the timeline keeping its height when a key lane opens (it grows 25pt, the dock shrinks and the picture refits 74% -> 71%): pick -7 ms, keyframe-anything first pick 48-49, an-editing-session 52-54, undo still ~55; that is a visible behaviour change and would need a decision card. Undo and a pick take the same ~85-90 ms from the change to the main thread next sleeping (CFRunLoop beforeWaiting observer); the walk's 'longest pass' is lower for a pick only because that work is cut into more passes. First-pick extra (~10 ms over later picks) shows as Swift metadata/conformance lookups on first use of the row and lane views.",
+  "acceptance": [
+    "On clip-click-cost-walk, a cut click and a first clip pick each hold the main thread under 50 ms in nine of ten clicks over three runs, none over 100 ms",
+    "The number the walk reports is within a few ms of what the same clicks cost without the walk's markers (they are about 20-25 ms today), or the walk says how much of its number is its own markers",
+    "The panel still shows the cut (Edit point, Transition) after a cut click and the clip after a piece click, in the click's own frame",
+    "The first value picked from Animate a property in a session (Position on a typed title) holds the main thread under 50 ms in three runs each of keyframe-anything-walk and an-editing-session-walk",
+    "Undoing that pick holds under 50 ms in Scripts/playtest/perf/animate-pick-cost-walk.json (median of twelve)",
+    "keyframe-anything-walk keeps its body-count claims: a Position key builds Properties and none of Text, Appearance, Effects or Time",
+    "an-editing-session-walk and clip-click-cost-walk stay green"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T10:55:00.154Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T13:58:47.951Z",
+      "note": "daily digest 2026-10-07: merged undoing-a-key-and-the-first-key-of-a-session-ans into this task. Both runners traced the rest of the cost to the same place (AttributeGraph propagation, whole-window layout, SwiftUI's accessibility focus walk), so one runner attacking that cause should measure all four presses. Its acceptance items and notes are now here; title and goal widened to match."
+    },
+    {
+      "t": "2026-10-07T13:59:13.550Z",
+      "note": "seq 3730 -> 130"
+    }
+  ],
+  "walks": [
+    "clip-click-cost-walk",
+    "an-editing-session-walk",
+    "keyframe-anything-walk"
+  ]
+}

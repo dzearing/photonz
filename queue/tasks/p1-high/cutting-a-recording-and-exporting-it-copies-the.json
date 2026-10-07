@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T03:55:55.785Z",
-  "updated": "2026-10-07T03:55:55.881Z",
+  "updated": "2026-10-07T07:34:53.702Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User asked: \"is exporting to mp4 really that slow? ... i want to be able to record a video, make some edits and save and use it in teams really fast.\"\n\nFrom code reading (not run): the only fast path is a byte-for-byte copy of an untouched whole recording at High, unshrunk (EditorState+VideoExport.swift:338-346); any edit re-encodes every frame through DocumentFrames + DocumentMovieWriter (:348-366). Measured today: 5 min recording at 1080p in 72-83 s (queue/audits/2026-09-27-fast-video-export.json). Approach: AVMutableComposition of the kept time ranges with AVAssetExportPresetPassthrough (or AVAssetWriter passthrough of compressed samples) for the cut-only case; non-keyframe cut points need smart rendering (re-encode the GOP head) or accept snapping and say so. Trap: the recording's colour tags (MovieColour, 2026-10-04) must survive passthrough. Trap: held frames and speed changes are NOT cut-only. Companion: 'Saving an edited recording puts the finished video in history, ready to paste' (filed same day) uses this path for its background MP4.",
@@ -31,6 +31,37 @@
     {
       "t": "2026-10-07T03:55:55.880Z",
       "note": "seq 510 -> 3"
+    },
+    {
+      "t": "2026-10-07T06:08:23.730Z",
+      "note": "Also applies to Command S into history (saving-an-edited-recording-puts-the-finished-vid): CaptureStore.writeEditedVideo calls EditorState.writeVideo(of:pictures:...) at HistoryVideoSave.choice; a cut-only fast path in that static writer speeds both. Measured full re-encode, Retina 2880x1800 High full size: 30 s edit 15.5 s, 3 min edit ~75 s."
+    },
+    {
+      "t": "2026-10-07T06:30:05.371Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T07:34:14.204Z",
+      "note": "owns these walks: a-cut-recording-copies-its-pieces-walk, an-edited-recording-comes-out-as-a-video-walk, saving-a-long-edit-into-history-timing-walk"
+    },
+    {
+      "t": "2026-10-07T07:34:53.140Z",
+      "note": "Adversarial pass: the mock has no export surface; a Premiere user expects Export to be instant when nothing is rendered (smart rendering), which this now is. Traps found by measurement: the recording's edit list puts its frames 70 ms late in the file (cuts are moved onto the timeline's clock); the loop's Long Talk .mov counts decode times ahead of show times (planner slides the decode clock back); Apple's encoder makes 29-frame closed groups with B-frames."
+    },
+    {
+      "t": "2026-10-07T07:34:53.198Z",
+      "note": "left rough: a copied file keeps the recording's 709 colour tags while a drawn one says sRGB; same as the untouched whole-file copy has always done, not seen on screen, so no task. Standard/Small/1080p/720p still draw every frame by design (they ask for a smaller file)."
+    },
+    {
+      "t": "2026-10-07T07:34:53.700Z",
+      "note": "Cut/trim-only edits now export, Copy Video and save into history by copying the kept stretches (PhotonzCore/CutCopy.swift, PhotonzMedia/PieceCopyWriter.swift, wired in EditorState.writeVideo, commit 7c564f4f). Measured on a 3 min 2880x1800 edit with three pieces cut: 0.78 s copied vs 73.5 s drawn; Copy Video 0.84 s; history save 1.16 s; sheet size exact. Frames within one of the drawn file and exact at cuts; sound identical at every join and the end. 26+ unit tests, 4 media tests, full suite green (11,646), walk a-cut-recording-copies-its-pieces-walk plus 10 neighbouring walks green. Audit queue/audits/2026-10-07-cut-only-fast-export.json."
     }
-  ]
+  ],
+  "started": "2026-10-07T06:30:05.370Z",
+  "walks": [
+    "a-cut-recording-copies-its-pieces-walk",
+    "an-edited-recording-comes-out-as-a-video-walk",
+    "saving-a-long-edit-into-history-timing-walk"
+  ],
+  "completed": "2026-10-07T07:34:53.701Z"
 }

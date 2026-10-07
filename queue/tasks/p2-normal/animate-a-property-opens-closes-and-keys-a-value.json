@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3690,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T17:51:51.100Z",
-  "updated": "2026-10-07T04:57:34.804Z",
+  "updated": "2026-10-07T04:58:07.201Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carries the 50 ms line from choosing-a-value-to-animate-answers-at-once, which took a pick from about 200 ms to about 80 ms (log there has every measurement). Stopwatch: Scripts/playtest/perf/animate-pick-cost-walk.json (12 x open, pick Position, undo; read median longest per kind). On 2026-10-06 after that task: open 109-113 ms, pick 77-80 ms, undo 70-73 ms, Escape close 66-78 ms.\n\nWhere the time goes (probe, Time Profiler + SwiftUI template via xcrun xctrace attached to the probe during the stopwatch walk):\n- The pick is two passes now: closing the popover (~75 ms) then the document change (~80 ms).\n- CLOSE pass: the popover hands key/focus back to the editor window, and every focusable AppKit-backed control in the window updates (24 SwiftUI Sliders/SystemSlider, ~32 text fields, ~16 AppKitPopUpAdaptor menus, ButtonFocusInteractionModifier on every button), which invalidates their sizes and re-lays out the panel's sections. Blanking every section but Properties took Escape-close from 75 to 35 ms; Effects alone is ~25 ms of it, Text ~7. Opening is the same plus ~50 ms of NSPopover machinery (window, sizing ~40 PickerRows, addChildWindow).\n- CHANGE pass: ~40% accessibility (AccessibilityViewGraph.update, AccessibilityNode.updateFocusResponder walking every responder), the rest layout: SectionRevealLayout/inner ScrollView re-measure, ViewThatFits re-measure, HStack firstTextBaseline explicitAlignment. Ablations (pick ms): baseline 165 (one pass), Effects body blank -29, PropertyKeyRow blank -25, key lanes -6, Text -9, Appearance -5.\n- Probe-only cost: the playtest hover/help/readout anchors are ~20 ms of a pick and do not exist in a release build; the accessibility share is paid because the walk harness reads controls through accessibility.\nIdeas not tried: keep the search field's popover from taking key until it is clicked (risk: typed letters reach the canvas as tool keys), make the Effects list rows not depend on the window's focus, make sections that read the whole document read only what they draw.",
@@ -63,6 +63,10 @@
     {
       "t": "2026-10-07T04:57:34.803Z",
       "note": "left rough: the two-line form of an Animating row (KeyRowLayout, narrow dock) is reached by no walk; checked by reasoning against the old ViewThatFits candidates (same pieces, same gaps, value under at the trailing edge) and the narrow/margin panel walks passing. Did not earn a task: no change a person would see if it is right."
+    },
+    {
+      "t": "2026-10-07T04:58:07.199Z",
+      "note": "Animate a property's list now opens over the Properties section (the mock's place) in its own hosting view, with a find box that reads keys without taking the window's keyboard: open 110 -> 36 ms, Escape close 70 -> 18, pick 79 -> 47 (stopwatch medians); acceptance walks x3 open 25-47. First pick of a session still 57-63 ms (item 1 rescoped; carried by keying-a-value-redraws-only-what-the-key-changes). New walk animate-a-property-find-walk; all 26 picker walks pass; tests green; audit 2026-10-06-animate-a-property-over-the-panel."
     }
   ],
   "walks": [
@@ -71,5 +75,6 @@
     "shadow-distance-keys-walk",
     "animate-a-property-find-walk"
   ],
-  "started": "2026-10-07T02:54:46.774Z"
+  "started": "2026-10-07T02:54:46.774Z",
+  "completed": "2026-10-07T04:58:07.200Z"
 }

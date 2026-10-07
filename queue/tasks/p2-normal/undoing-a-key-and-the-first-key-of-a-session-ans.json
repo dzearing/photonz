@@ -1,0 +1,35 @@
+{
+  "id": "undoing-a-key-and-the-first-key-of-a-session-ans",
+  "title": "Undoing a key and the first key of a session answer inside 50 ms",
+  "goal": "Taking a key back with Undo still holds the app about 60 ms, and the first value picked from Animate a property in a session 53 to 62 ms, against the 50 ms the video success list asks for. Find what the rest of the window costs on each and bring both under 50 ms.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3740,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-07T13:42:08.435Z",
+  "updated": "2026-10-07T13:58:48.009Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from keying-a-value-redraws-only-what-the-key-changes (2026-10-07), whose log has every number. Shipped there: Text, Appearance, Effects, Time and Captions watch EditorState.lookRowsRevision (moves for anything but a key on position/scale/rotation/crop, PhotonzDocument.sameApartFromPlacementKeys) through readingForTheLookRows, so a Position pick builds none of them (expectBuilds in keyframe-anything-walk); perform/undo/redo/discardDragPreview no longer write unchanged previews or selection. Result: stopwatch pick 46-47 -> 44, first pick in keyframe-anything 57-59 -> 53-55, an-editing-session 59-65 (unchanged), undo 63-68 (unchanged within noise).\n\nWhat is left is not view bodies (<10% of the pass by Time Profiler: xctrace record --attach <probe pid> --template 'Time Profiler', export the time-profile table, group main-thread samples by burst). It is AttributeGraph propagation (ObservationGraphMutation.apply, Subgraph::update), layout of the whole window, and SwiftUI's accessibility focus walk, the same root cause a-first-clip-pick-and-a-cut-click-answer-inside names. Ruled out by measurement: walk markers (all but four off: pick 47, undo 61, no change), the canvas refit when the timeline grows (deferred a pass: no change), Effects/Text/Appearance/Time bodies (now skipped: ~2 ms), restoreSelectionFromHistory/publishSharedComponents/TutorialController on undo (switched off: no change). Measured but not shipped: the timeline keeping its height when a key lane opens (it grows 25pt, the dock shrinks and the picture refits 74% -> 71%): pick -7 ms, keyframe-anything first pick 48-49, an-editing-session 52-54, undo still ~55; that is a visible behaviour change and would need a decision card. Undo and a pick take the same ~85-90 ms from the change to the main thread next sleeping (CFRunLoop beforeWaiting observer); the walk's 'longest pass' is lower for a pick only because that work is cut into more passes. First-pick extra (~10 ms over later picks) shows as Swift metadata/conformance lookups on first use of the row and lane views.",
+  "acceptance": [
+    "The first value picked from Animate a property in a session (Position on a typed title) holds the main thread under 50 ms in three runs each of keyframe-anything-walk and an-editing-session-walk",
+    "Undoing that pick holds under 50 ms in Scripts/playtest/perf/animate-pick-cost-walk.json (median of twelve)",
+    "keyframe-anything-walk keeps its body-count claims: a Position key builds Properties and none of Text, Appearance, Effects or Time"
+  ],
+  "log": [
+    {
+      "t": "2026-10-07T13:42:08.437Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T13:58:48.008Z",
+      "note": "duplicate of a-first-clip-pick-and-a-cut-click-answer-inside (same root cause; acceptance, walks and notes folded in)"
+    }
+  ],
+  "walks": [
+    "keyframe-anything-walk",
+    "an-editing-session-walk"
+  ]
+}

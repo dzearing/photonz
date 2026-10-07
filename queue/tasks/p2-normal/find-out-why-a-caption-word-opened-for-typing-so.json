@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 3680,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T15:44:49.943Z",
-  "updated": "2026-10-06T15:44:49.946Z",
+  "updated": "2026-10-07T02:42:04.111Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen twice with the same signature: the 2026-10-05 12:00 sweep (queue/sweep/2026-10-05-120028.log) and on 2026-10-06 in the captions-track-order task run: `Scripts/playtest-all.sh --no-build captions caption-` printed `fix-a-caption-word-walk 11s FAILED step 11 (type): no text field has the keyboard (first responder is CanvasNSView)`. Step 8 (captionsExpectWordOpen) had passed, so the word field was open but not first responder. Re-run on its own straight after: ok. walks-that-fail-in-the-full-sweep-13 saw the first one and left it unfiled (4 of 4 passes alone). The walk sets front:true; the 2026-10-06 failure came mid-batch, right after the probe relaunch, so suspect the field asking for first responder before the window is key. Not reproduced on demand, hence p2.",
@@ -22,9 +22,27 @@
     {
       "t": "2026-10-06T15:44:49.945Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T02:12:32.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T02:41:57.819Z",
+      "note": "Cause: the word field asked for the keyboard one main-queue turn after SwiftUI made it, and gave up for good when it was not in a window yet. SwiftUI sometimes makes the view in one pass and adds it to the window a pass later, so the request found window=nil and the canvas kept the keys. Shown with temporary logging in CaptionWordField (since removed): 6 runs of Scripts/playtest.sh Scripts/playtest/fix-a-caption-word-walk.json on 2026-10-06 19:1x, 2 failed with 'step 11 (type): no text field has the keyboard (first responder is CanvasNSView)'; the failing run logged 'opened sync window=nil' then 'async field=true window=nil visible=false', the passing runs found the window and made=true. Not walk-only: a person's double click runs the same code and the same SwiftUI timing, so a busy frame could drop their keystrokes too."
+    },
+    {
+      "t": "2026-10-07T02:41:57.879Z",
+      "note": "Fix: CaptionWordTextField (NSTextField subclass in CaptionWordField.swift) holds the request until it is in a window, and takes the keyboard from viewDidMoveToWindow if the async ask came too early. Covers the picture and the Words lane (same field). Verified: fix-a-caption-word-walk 10 of 10 in a row (first after a fresh probe build), the word shows selected in 1-one-word-open-on-the-picture-sc.png; 'captions caption-' batch 28 passed 0 failed; Scripts/test.sh 11586 tests passed."
+    },
+    {
+      "t": "2026-10-07T02:42:04.109Z",
+      "note": "Cause: the caption word field asked for the keyboard once, one turn after SwiftUI made it, and gave up when SwiftUI had not put it in the window yet (logged window=nil in the failing run). A person's double click takes the same path. Fixed in CaptionWordField.swift (9c68212f): the field keeps the request and takes the keyboard when it lands in its window. fix-a-caption-word-walk 10 of 10 in a row (2 of 6 failed before), caption walks 28/28, Scripts/test.sh green."
     }
   ],
   "walks": [
     "fix-a-caption-word-walk"
-  ]
+  ],
+  "started": "2026-10-07T02:12:32.429Z",
+  "completed": "2026-10-07T02:42:04.110Z"
 }

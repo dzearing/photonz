@@ -4,12 +4,12 @@
   "goal": "The list you choose a value to animate from has grown in one day from 8 values to 19 for a plain title, mostly five rows for each of its shadows, and on a normal window only about half of it shows before you have to scroll. Someone looking for Shadow color or Border color has to know to scroll or type. The list should stay short enough to read at a glance, as the video mock's is, while every value stays reachable.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 110,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T12:03:53.237Z",
-  "updated": "2026-10-06T12:52:29.717Z",
+  "updated": "2026-10-07T13:59:13.430Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in three audits on 2026-10-06, each listing it as rough: 2026-10-06-shadow-glow-keys (8 -> 12 values for a title), 2026-10-06-border-keys (14 values, Border color below the fold), 2026-10-06-keys-on-a-later-shadow (a typed title wears two shadows, so 19 values with ten shadow rows). Picture: queue/audits/2026-10-06-keys-on-a-later-shadow-1-picker-sc.png shows the popover reaching the top of the window with the list cut at Shadow 1 distance. The mock's catalogue lists 13 values for a picture layer and only one shadow value (Shadow size). Folding each effect's values under its name is one way to do it; a departure from the mock's flat list is a decision card, not a quiet change.",
@@ -47,6 +47,14 @@
     {
       "t": "2026-10-06T12:52:29.715Z",
       "note": "Reproduced (new animate-a-property-list-walk: a typed title shows 8 of 19 values; Shadow 2, Border, Text size below the fold). Folding the shadows departs from the mock's flat list, so a decision card asks how the list should fit (recommend one row per shadow/border that opens in place, list grows to fit)."
+    },
+    {
+      "t": "2026-10-07T13:59:01.365Z",
+      "note": "daily digest 2026-10-07, left rough from audit 2026-10-06-animate-a-property-over-the-panel: the list's find box reads keys itself rather than holding the keyboard, so you cannot select or arrow through what you typed (Paste and Delete work). Whatever reshapes this list should keep that in view; it did not earn a task of its own."
+    },
+    {
+      "t": "2026-10-07T13:59:13.429Z",
+      "note": "seq 120 -> 110"
     }
   ],
   "started": "2026-10-06T12:49:22.014Z",

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T14:58:43.448Z",
-  "updated": "2026-10-06T12:04:09.614Z",
+  "updated": "2026-10-07T13:59:01.309Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows the-slide-into-edit-mode-draws-every-frame-like, which moved every stage after the key pass to wait for the slide (EditModeArrival.nextWaitsForTheSlide). Profiled 2026-09-30 with xctrace Time Profiler against the probe, samples cut to the 500ms after each Cmd-2: about 480ms busy per switch either way; about 270ms of it is per-frame NSHostingView.layout while canvas/panel/dock frames animate. Into Edit, SwiftUI AccessibilityNode.updateFocusResponder was about 28ms per switch (walks the whole responder tree after every render, grows with every view built), AccessibilityViewGraph.update about 10ms more. Per frame the canvas updateNSView runs CanvasNSView.apply → refreshOverlaysInsideTransaction, refreshLayerSelectionDisplay, canvasNameLabels because canvasViewSizeChanged writes a new viewport each frame. Stage costs: key pass ~50ms, timeline+tool bar ~80, track rows ~90 (captions lane with 191 cues and words lane), panel sections 15 to 45ms each (CaptionStylePreview, PanelFieldRowLayout, SystemSegments.sizeThatFits). Measure with a filmWindow step (docs/design/playtest-harness.md) rather than mainBusy alone.",
@@ -106,6 +106,10 @@
     {
       "t": "2026-10-06T12:04:09.613Z",
       "note": "seq 50 -> 40"
+    },
+    {
+      "t": "2026-10-07T13:59:01.308Z",
+      "note": "daily digest 2026-10-07: view-to-edit-on-a-long-recording-walk failed in the 10-06 full sweep and a 10-06 rotating check (step 17 or 23: the main thread froze about 135 ms against the walk's 100 ms). Re-ran it twice on HEAD bf90e855 with the current probe (Scripts/playtest-all.sh --no-build view-to-edit-on-a-long-recording-walk): ok in 42 s and 41 s. It fails now and then rather than every time; the failing runs stopped early at about 23 s. Whoever takes this task after the card is answered should run it several times before and after."
     }
   ],
   "walks": [

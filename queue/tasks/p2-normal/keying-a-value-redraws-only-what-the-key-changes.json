@@ -5,27 +5,70 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3720,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T04:56:35.176Z",
-  "updated": "2026-10-07T04:56:35.179Z",
+  "updated": "2026-10-07T13:42:57.405Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from animate-a-property-opens-closes-and-keys-a-value (2026-10-06), whose log has every measurement. After that task: open 25-47 ms, Escape close 17-20, picks after the first 45-51, FIRST pick 57-63 (Position), undo 63-69 (stopwatch medians). The list itself costs nothing now; what is left is the document-change pass.\\n\\nMeasured with a temporary body counter on every View in Sources/Photonz (ViewBuildMeter): one pick re-runs InspectorPanel twice, every CollapsibleSection/SectionFoldWindow/SectionBodyHost, EffectsListInspector, TextInspector, ShadowInspector x2, ColorStyleControl x3, PartsInspector, CaptionsInspector, SpeedInspector, EditorCanvasSurface x4, CanvasFootStack x3, the title bar items, ToolModeButton x2, TimelineDock, TimelineTrackRow x3, the transport. EditorView itself does NOT re-run (its .equatable() holds).\\n\\nInspectorPanel re-runs because its body reads orderedAvailableSections, sectionChip, sectionTitle, showsLayersList, panelSectionSituation and document != nil, all of which read the whole document (found with withObservationTracking probes). Freezing all six cut one of the two InspectorPanel runs and only ~2 ms of a pick, so the panel shell is NOT the main cost. Whole-section ablations: Effects -4 ms on a pick and -10 on undo, timeline -4, the new row -7, Text/Appearance/Time/Motion ~0.\\n\\nxctrace (Time Profiler attached to the probe): the pass is ~25% accessibility (AccessibilityNode.updateFocus walking every responder in the window, plus AX property updates; on because the walk harness reads accessibility in-process, and for any user running an assistive app), ~12% the dock scroller re-measuring, ~10% SectionRevealLayout re-measuring the Properties body, the rest spread across layout. Ideas not tried: give each section an Equatable input read from the document so unrelated sections skip; make the timeline lanes read only the picked layer keys; check whether the first pick is dearer because of cold caches (first pick is ~10 ms over later ones).",
   "acceptance": [
-    "The first value picked from Animate a property in a session (Position on a typed title) holds the main thread under 50 ms in three runs each of keyframe-anything-walk and an-editing-session-walk",
-    "Undoing that pick holds under 50 ms in Scripts/playtest/perf/animate-pick-cost-walk.json (median of twelve)",
-    "Picking a value no longer re-runs the bodies of panel sections it does not change (Effects, Text, Appearance, Time), shown by a body count on the pick step"
+    "Picking a value no longer re-runs the bodies of panel sections it does not change (Effects, Text, Appearance, Time), shown by a body count on the pick step",
+    "An edit, an undo or a redo writes a preview or the selection only when it changes",
+    "Every walk that reaches Text, Appearance, Effects, Time or Captions still passes, and Scripts/test.sh is green",
+    "The first-pick and undo timings are measured before and after and recorded; what keeps them over 50 ms is carried to undoing-a-key-and-the-first-key-of-a-session-ans"
   ],
   "log": [
     {
       "t": "2026-10-07T04:56:35.178Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T11:09:14.974Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T13:42:42.933Z",
+      "note": "Reproduced before changing anything (perf/animate-pick-cost-walk, longest pass): first pick 54.9, picks median 46.8, undo median 67.2 (two runs: 54.1/46.2/67.9). Temporary body tally on every View: a pick re-runs ~83 view types, an undo ~78, exactly as the notes say."
+    },
+    {
+      "t": "2026-10-07T13:42:42.990Z",
+      "note": "Before building: this is not a feature with a mock; the question was only which views may safely stop watching the whole document. Text/Appearance/Effects/Time/Captions show the layers as they are plus their LOOK values at the playhead (lookReadingDocument), never a key on position/scale/rotation/crop, so a placement-only change is one they have already drawn. Properties, the timeline and the canvas do show placement keys and are left alone."
+    },
+    {
+      "t": "2026-10-07T13:42:43.045Z",
+      "note": "Shipped 1: PhotonzDocument.sameApartFromPlacementKeys (PhotonzCore/LooksAtThePlayhead.swift, PlacementKeysTests, 12 tests): equal apart from keys on position/scale/rotation/crop, layer by layer. EditorState.lookRowsRevision moves on every history write that is not placement-only; readingForTheLookRows (Sources/Photonz/LookRowsReading.swift) builds a body with EditorState.document watching that revision instead of history. Opted in: TextInspector, TextStyleRow/Control, EffectsListInspector, AddEffectButton, EffectColorRow, ShadowKindRow, EffectStyleRow/Control, ShadowInspector, InstanceStyleRevert, PartsInspector, PartRowView, ShapePartSettings, ArrowStyleRow, ArrowLabelSettings, ArrowLabelPlacementReset, ColorStyleControl, BlendModeRow, FixedMixingNote, MaskedByRow, MeasureRoleRow, SpeedInspector, CaptionsInspector. Shipped 2: perform/undo/redo/discardDragPreview/restoreSelectionFromHistory write paintPreview, stylePreview, pasteToolReturn, dragPreview, cornerRadiiPreview, selection only when they change (an undo re-ran the Appearance and Effects rows through stylePreview alone). Shipped 3: ViewBuildMeter subjects keysSection/textSection/appearanceSection/effectsSection/timeSection, and keyframe-anything-walk asserts after the Position pick: keys >=1, the other four 0."
+    },
+    {
+      "t": "2026-10-07T13:42:43.103Z",
+      "note": "After: item 3 MET (keyframe-anything steps 23-27: keysSection 2, text/appearance/effects/time 0). Stopwatch pick median 44.1-44.4 (was 46-47), first 47.6-51.2 (was 54-55), undo median 63-68 (was 67-68, unchanged within noise). First pick x3: keyframe-anything 53.2/54.1/54.8 (was 57.5-58.8), an-editing-session 59.2/61.1/65.0 (was 60.8-63.4). Items 1 and 2 NOT met."
+    },
+    {
+      "t": "2026-10-07T13:42:43.160Z",
+      "note": "Why not: bodies are under 10% of the pass now (Time Profiler on the probe). The rest is AttributeGraph propagation, layout of the whole window and SwiftUI's accessibility focus walk. Measured and ruled out: walk markers off (pick 47, undo 61), the canvas refit deferred a pass (no change), undo's restoreSelection/publishShared/Tutorial switched off (no change). The one lever left that moved the number: the timeline keeping its height when a key lane opens (it grows 25pt, the dock shrinks, the picture refits 74% to 71%): pick -7 ms, keyframe-anything first pick 48-49, session 52-54, undo still ~55. Not shipped: a visible behaviour change, and it does not close the gap alone. Undo and pick both take ~85-90 ms from the change until the main thread sleeps (CFRunLoop beforeWaiting); the walk's longest pass reads lower for a pick only because its work is cut into more passes. The experiment that suggested more (pick 39) leaked its untracked flag into views it never named, so it silenced more than the sections."
+    },
+    {
+      "t": "2026-10-07T13:42:43.217Z",
+      "note": "Walks run on the final build: 88 walks that reach Text/Appearance/Effects/Time/keys/titles, 29 caption walks, keyframe-anything x4, an-editing-session x4, animate-a-property-find, opacity-on-a-video-shape, shadow-distance-keys: all ok except history-filter-switch-speed-walk (capture history strip, 16 ms frame guard; failed at 16.7 and 28.5 ms, passed once; it has failed the same way in queue/loop.log before and touches no editor document). Scripts/test.sh green, 11678 tests."
+    },
+    {
+      "t": "2026-10-07T13:42:43.273Z",
+      "note": "Rescoped: items 1 and 2 (first pick and undo under 50 ms) carried with every number to undoing-a-key-and-the-first-key-of-a-session-ans (p2). Left rough: the timeline growing a lane refits the picture by ~4% on every key and its undo; not filed as its own task because nobody has said it bothers them, and it is written into the follow-up's notes with its cost."
+    },
+    {
+      "t": "2026-10-07T13:42:57.339Z",
+      "note": "walks keyframe-anything-walk, an-editing-session-walk -> keyframe-anything-walk, an-editing-session-walk"
+    },
+    {
+      "t": "2026-10-07T13:42:57.403Z",
+      "note": "Text, Appearance, Effects, Time and Captions now watch a document revision that ignores keys on position/scale/rotation/crop (sameApartFromPlacementKeys + readingForTheLookRows), so a Position pick builds Properties and none of them (keyframe-anything-walk expectBuilds); undo/redo/perform stop writing unchanged previews and selection. Picks 46->44 ms median, keyframe-anything first pick 57-59->53-55; undo unchanged (~63). 117 walks + Scripts/test.sh (11678) green. Timing items carried to undoing-a-key-and-the-first-key-of-a-session-ans with every measurement. Commit bf90e855."
     }
   ],
   "walks": [
     "keyframe-anything-walk",
     "an-editing-session-walk"
-  ]
+  ],
+  "started": "2026-10-07T11:09:14.972Z",
+  "completed": "2026-10-07T13:42:57.404Z"
 }

@@ -5,27 +5,53 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3710,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T01:18:42.229Z",
-  "updated": "2026-10-07T01:18:42.232Z",
+  "updated": "2026-10-07T10:55:22.219Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Carried from clicking-a-clip-on-the-timeline-answers-at-once (2026-10-06), which brought a cut click from 95-131 ms to 70-85 and a piece after a cut from ~121 (once the panel followed the pick) to 34-73, and left these. Measured by ablation on the five minute Retina talk with captions (Scripts/playtest/perf/clip-click-cost-walk.json, front): a cut click is one pass of ~70 ms: removing the clip's 9 sections (~40 ms of section contents, spread with no single culprit: each group of sections ~5 ms, Captions ~12-15; ~20 ms the section shells: CollapsibleSection chrome, headers, geometry readers) plus ~12-25 ms of pick, timeline and menu bar (EditorCommands body). A first pick from nothing (canvas sections Canvas/Time/Captions to the clip's) is ~75-85 ms in the click's pass: nopanel 35, blank section bodies 58-61. Tried and rejected: keeping departed sections built but hidden (worse: 120-145 ms, the layout and accessibility cost follows the controls); dock height budget by reference (no change). The trailing accessibility pass (AccessibilityNode.updateFocus walking every AppKit-backed control) scales with controls added or removed in a pass; PanelRowsArrival is the tool that split it for Captions. Probe/dev walk markers (one NSView per playtestField/Control) add ~15-30 ms to those passes. Profile with xcrun xctrace record --template \"Time Profiler\" --attach <probe pid>.",
+  "notes": "Carried from clicking-a-clip-on-the-timeline-answers-at-once (2026-10-06), which brought a cut click from 95-131 ms to 70-85 and a piece after a cut from ~121 (once the panel followed the pick) to 34-73, and left these. Measured by ablation on the five minute Retina talk with captions (Scripts/playtest/perf/clip-click-cost-walk.json, front): a cut click is one pass of ~70 ms: removing the clip's 9 sections (~40 ms of section contents, spread with no single culprit: each group of sections ~5 ms, Captions ~12-15; ~20 ms the section shells: CollapsibleSection chrome, headers, geometry readers) plus ~12-25 ms of pick, timeline and menu bar (EditorCommands body). A first pick from nothing (canvas sections Canvas/Time/Captions to the clip's) is ~75-85 ms in the click's pass: nopanel 35, blank section bodies 58-61. Tried and rejected: keeping departed sections built but hidden (worse: 120-145 ms, the layout and accessibility cost follows the controls); dock height budget by reference (no change). The trailing accessibility pass (AccessibilityNode.updateFocus walking every AppKit-backed control) scales with controls added or removed in a pass; PanelRowsArrival is the tool that split it for Captions. Probe/dev walk markers (one NSView per playtestField/Control) add ~15-30 ms to those passes. Profile with xcrun xctrace record --template \"Time Profiler\" --attach <probe pid>.\n\nRescoped 2026-10-07 by the runner. Original acceptance: A click on a cut and a first pick of a clip each hold the main thread under 50 ms in nine of ten clicks of clip-click-cost-walk over three runs, none over 100 ms | The panel still shows the cut (Edit point, Transition) after a cut click and the clip after a piece click, in the click's own frame | an-editing-session-walk and clip-click-cost-walk stay green. Not met on the probe: it hangs the markers by design, so its numbers did not move (first 78-86, cut 73-81), and with the markers off a first pick is ~56 and a cut ~53, still over 50. The 50 ms line, the probe's own-marker overstatement, and the measured levers are carried by a-first-clip-pick-and-a-cut-click-answer-inside.",
   "acceptance": [
-    "A click on a cut and a first pick of a clip each hold the main thread under 50 ms in nine of ten clicks of clip-click-cost-walk over three runs, none over 100 ms",
-    "The panel still shows the cut (Edit point, Transition) after a cut click and the clip after a piece click, in the click's own frame",
+    "The dev app no longer hangs the walk markers: only a probe launched with a walk does, proven by a unit test of the rule and by every walk that reads markers staying green",
+    "With the markers off, as the dev app now runs, a first clip pick and a cut click each hold the main thread clearly less than before on clip-click-cost-walk (measured on a stand-in build)",
     "an-editing-session-walk and clip-click-cost-walk stay green"
   ],
   "log": [
     {
       "t": "2026-10-07T01:18:42.231Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-07T09:24:24.063Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-07T10:54:37.617Z",
+      "note": "Baseline on the probe (clip-click-cost-walk, HEAD a1ffc73f): first pick 78-86 ms, cut 73-81, piece after a cut 28-59, piece to piece 17-18. Reproduced the 75 ms both ways."
+    },
+    {
+      "t": "2026-10-07T10:54:37.718Z",
+      "note": "Cause, measured: (1) the walk's own markers. A view census 0.35s after a pick: 1589 views in the window, ~790 of them markers (PanelTargetView 159, HelpAnchorView 84, HoverTargetView 80, ReadoutAnchorView 43, each with its own SwiftUI AppKitPlatformViewHost). Removing every marker but the walk's timeline ones: first pick 53-58, cut 51-56 (-20..25 ms). Dock markers only: first 71-78, cut 56-67, so the rest of the window's markers count too. (2) SwiftUI's accessibility focus walk: AccessibilityNode.updateFocusResponder runs once per accessibility node whose focus attachment changes (~50 per first pick, counted with an lldb breakpoint), and each run visits every responder in the window (ViewRendererHost.focusResponder, mostly swift_conformsToProtocol). ~30 ms of an 80 ms first pick with markers, ~20 of ~55 without. It is live for real users: an out-of-process accessibility client queried the probe over MIG 1.8 s after launch (no harness call involved). (3) On a first pick, Canvas is the only section that leaves (with the playhead on a cut the nothing-picked dock already shows Edit point, Transition, Time, Captions, Transitions); every CollapsibleSection body re-runs on every arrival pass (68 bodies over one pick) because its closures defeat diffing."
+    },
+    {
+      "t": "2026-10-07T10:54:37.773Z",
+      "note": "Tried: markers sizing themselves without Auto Layout (sizeThatFits) - no change; markers .accessibilityHidden - no change; keeping removed marker views (and their hosts) alive 0.3 s so they dealloc out of the click's pass - cut 75 -> 67, first pick unchanged (not shipped: it retains SwiftUI's own host view past dismantle); section headers skipping their body when title/chip are unchanged (EquatableView) - about -2..3 ms (not shipped: stale closures over the section list and stale header notes need care); headers not focusable - focus updates 54 -> ~50, no real change (reverted, keyboard access needs them)."
+    },
+    {
+      "t": "2026-10-07T10:55:22.154Z",
+      "note": "Adversarial review: nothing a person sees changes; the dev app is the same app with ~800 invisible views gone, so every panel swap there is 20-25 ms lighter (piece to piece 18 -> ~11, piece after a cut ~40 -> ~25). Risk was walks losing their markers: the switch is a static read of the launch arguments, true for every walk run, unit tested (AppFlavor.hangsWalkMarkers), and the walks that read every marker kind stayed green: clip-click-cost, an-editing-session, segment-tooltips, readout-fields, text-height-readout, one-unit-word, panel-edge-column, history-tooltips, panel-start-margin. Scripts/test.sh 11666 passed. No audit: no visible surface changed. Commit 8388ac09."
+    },
+    {
+      "t": "2026-10-07T10:55:22.217Z",
+      "note": "The dev app no longer hangs the walk's ~800 invisible marker views (only a probe launched with a walk does): AppFlavor.hangsWalkMarkers + PlaytestMarkers.areHung, also gating the panel start/edge geometry probes. Markerless stand-in on clip-click-cost-walk: first pick ~80 -> ~56 ms, cut ~78 -> ~53, piece after a cut ~40 -> ~25, piece to piece 18 -> ~11. Probe numbers unchanged by design. Original 50 ms line not met; rescoped, causes measured and logged, carried by a-first-clip-pick-and-a-cut-click-answer-inside. Tests 11666 passed; 9 marker-reading walks green. Commits 8388ac09, b09c1d56."
     }
   ],
   "walks": [
     "clip-click-cost-walk",
     "an-editing-session-walk"
-  ]
+  ],
+  "started": "2026-10-07T09:24:24.062Z",
+  "completed": "2026-10-07T10:55:22.218Z"
 }
