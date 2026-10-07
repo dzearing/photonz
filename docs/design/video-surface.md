@@ -99,7 +99,18 @@ the whole of it, and everything else follows.
   `Title`), renamable, groupable, each holding many clips, and a clip can be
   dragged from one track to another. Where there is a timeline, the timeline is
   the layer list, and the video docks carry no Layers group (`video.html`'s own
-  caption, "Resolved - what the dock is for").
+  caption, "Resolved - what the dock is for"). A higher picture track draws in
+  front of a lower one.
+- **Captions are the one exception to "higher draws in front"** (since
+  2026-10-06). The Captions row is listed under the picture tracks and over the
+  sound, the way the mock lists Title, V1, V2, Captions, Audio, but captions
+  draw over every picture and every title whichever row they sit in, the way
+  Premiere's caption tracks and Resolve's subtitle tracks do. Moving the
+  Captions row changes where it is listed and nothing about the frame; a click
+  on the canvas lands on a caption before the title under it. Where it is:
+  `CaptionsDrawOnTop.swift` (`drawingOrder`, read by the composite and by
+  `hitTestPath`), and `restackByTracks` keeps captions at the top of the layer
+  stack. Pinned by `CaptionsTrackPlaceTests` and `CaptionsDrawOnTopRenderTests`.
 - *Withdrawn 2026-09-23:* "a row in the timeline is a layer", "there are no
   numbered tracks" and "a row carries a bar when the layer occupies time". The
   rows are tracks, and the timeline is the one `video.html` draws rather than
@@ -129,7 +140,7 @@ already names.
 | Play, scrub, timecodes | `.transport`, bottom dock, top row | D8 stands: volume · skip · play · loop · timecode · scrubber · timecode, nothing else. |
 | Tracks, clips, cuts, waveforms, property lanes | `.timeline`, bottom dock, under the transport | The timeline `video.html` draws: track headers, clips as bars, a ruler in seconds, a red playhead. Not the icon timing strip. |
 | Timeline zoom, blade, and what is scoped to the timeline | `.tlbar`, the timeline's own local bar | D8's last row. The zoom is built, §13. The blade is not: cutting is the playhead and B. |
-| Which layers exist, their order, their eyes | The timeline's tracks and their headers | Where there is a timeline, the timeline is the layer list (D18). The video dock has no Layers group. |
+| Which layers exist, their order, their eyes | The timeline's tracks and their headers | Where there is a timeline, the timeline is the layer list (D18): a higher track draws in front, except Captions, which draw over everything wherever their row is listed (§2). The video dock has no Layers group. |
 | What the thing you picked IS | the section named after it, in the one dock | Clip · Transition · Caption · Title. It REPLACES Text, it does not stack on it. |
 | What it looks like | Appearance, Effects | Unchanged. A clip takes a drop shadow like anything else. |
 | What moves, and by how much | Motion | Unchanged, as the pane-load study settled. |

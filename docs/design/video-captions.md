@@ -20,7 +20,7 @@ timeline at the moments they were said. It runs only when somebody asks (the
 user, 2026-09-28): a right click on a clip or a sound, the timeline's + menu
 (Captions), Video > Add Captions, or the Captions section's one button. Nothing
 listens as a recording opens, and there is no Auto switch; while it listens a
-Captions row at the top of the tracks fills with its progress and an x cancels. Each line is an ordinary text layer with
+Captions row under the picture tracks fills with its progress and an x cancels. Each line is an ordinary text layer with
 an in and an out, so correcting one is typing, restyling one is the Text
 section, moving one is dragging its bar, and all of it undoes. A long recording
 is heard in overlapping pieces so the panel can say how far along it is and Stop
@@ -38,9 +38,12 @@ the film without anything being written to put them there.
 | `Layer.captionWords` | `Layer.swift` | The words a caption layer was written from. Nil for everything else, so a document written before captions existed reads back byte for byte the same. |
 | `HeardWords` | `SpeechTranscription.swift` | What came back from listening: the words, how much was listened to, and whether it was stopped. |
 
-There is no caption object, no caption track and no caption mode. A caption is
+There is no caption object, no caption track type and no caption mode. A caption is
 `content: .text` plus a `LayerTime` plus `captionWords`, and the third of those
-is a record of where the words came from rather than a new kind of thing.
+is a record of where the words came from rather than a new kind of thing. The
+lines do land on a timeline row of their own named Captions (§5, "Where the
+Captions track sits"), but that row is an ordinary track holding ordinary text
+layers.
 
 **Why keep the word timings at all**, when the layer's own in and out already
 say when the line is on screen: a line can be re-cut at a word rather than at a
@@ -139,6 +142,31 @@ text layer over a picture gets (`TextBuilder.autoContrastShadow`). The size is a
 share of the picture's height rather than a number of points, so a caption on a
 phone-sized recording and one on a 4K recording read the same size to the eye.
 
+### Where the Captions track sits, and why it still draws on top
+
+Since 2026-10-06 (`c7a04159`), the way the mock lists the tracks: Title, V1,
+V2, Captions, Audio.
+
+- **A new Captions track lands under the last picture track and over the
+  sound.** That holds for captions Add Captions writes, for an empty Captions
+  track from the timeline's + menu, and for the listening row that stands in
+  for the track while it is being written. With no picture track at all it
+  lands at the top. (`PhotonzDocument.captionsPlace`, used by `addTrack` and by
+  the tracks a document works out for itself.)
+- **Dragging it elsewhere keeps it there.** Once somebody carries the Captions
+  row to another place it stays where they put it through later edits, new
+  tracks included; nothing puts it back under the picture.
+- **Where it is listed never changes what you see.** Everywhere else on the
+  timeline a higher track draws in front of a lower one (`video-surface.md`
+  §2, D18). Captions are the one exception: they draw over every picture and
+  every title whichever row they sit in, and a title typed after the captions
+  still sits under them, the way Premiere's caption tracks and Resolve's
+  subtitle tracks draw over every video track. A canvas click follows what is
+  drawn, so it picks the caption before the title beneath it.
+  (`CaptionsDrawOnTop.swift`: `drawingOrder` for the composite and
+  `hitTestPath`; `restackByTracks` keeps captions at the top of the layer
+  stack.)
+
 ---
 
 ## 6. The ways out
@@ -182,8 +210,9 @@ phone-sized recording and one on a 4K recording read the same size to the eye.
 | The panel section | `Sources/Photonz/CaptionsInspector.swift` |
 | The menu | `Sources/Photonz/EditorCommands.swift`, Video menu |
 | A voice to caption | `Sources/Photonz/Tutorials/TutorialSampleVoiceover.swift` |
-| Tests | `Tests/PhotonzCoreTests/CaptionsTests.swift`, `Tests/PhotonzMediaTests/SpeechTranscriptionTests.swift` |
-| Walk | `Scripts/playtest/captions-from-the-sound-walk.json` |
+| Where the track sits, drawn on top | `Sources/PhotonzCore/DocumentTracks.swift` (`captionsPlace`), `Sources/PhotonzCore/CaptionsDrawOnTop.swift` |
+| Tests | `Tests/PhotonzCoreTests/CaptionsTests.swift`, `Tests/PhotonzCoreTests/CaptionsTrackPlaceTests.swift`, `Tests/PhotonzRenderTests/CaptionsDrawOnTopRenderTests.swift`, `Tests/PhotonzMediaTests/SpeechTranscriptionTests.swift` |
+| Walk | `Scripts/playtest/captions-from-the-sound-walk.json`, `Scripts/playtest/captions-sit-under-the-picture-walk.json` |
 
 The forty minute case is far too slow for every commit, so it runs on demand:
 
