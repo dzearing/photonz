@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:06:11.669Z",
-  "updated": "2026-10-07T22:07:43.888Z",
+  "updated": "2026-10-08T01:33:07.217Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html ~132 `<button class=\"tool\" id=\"tTitle\" title=\"Title / Text (T)\">`, steps ~415 'Pick up the Title tool'. App: Sources/Photonz/ToolGroupButton.swift ~40 and Sources/Photonz/EditorView.swift ~1498 return \"Text\" for .text in every document. The name should follow the document (hasTime), not the release, so it is shared code; no flag needed. Keep the playtest control names stable or add the new one alongside (Scripts/playtest/*.json grep '\"Text\"'). Found by the manager pass's mock comparison 2026-10-07.",
@@ -28,6 +28,51 @@
     {
       "t": "2026-10-07T22:07:43.887Z",
       "note": "seq 560 -> 80"
+    },
+    {
+      "t": "2026-10-08T00:58:34.325Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T01:32:32.500Z",
+      "note": "owns these walks: video-tool-bar-walk, t-tool-says-text-on-a-picture-walk, one-glass-tool-bar-walk, tool-bar-fills-its-room-walk, tutorial-a-title-that-moves-walk"
+    },
+    {
+      "t": "2026-10-08T01:33:02.491Z",
+      "note": "Reproduced at HEAD: video-tool-bar-walk's toolBar probe listed slots [Select, Blade, Text, ...] on the sample recording; tooltip code already said Title / Text but the More menu, Edit > Tools, the under-More note and the title guide's first card all said Text."
+    },
+    {
+      "t": "2026-10-08T01:33:02.549Z",
+      "note": "Adversarial review before: a Final Cut/Premiere editor looks for a Title tool; the mock names it Title in its menu row and tooltip Title / Text (T). Risk: the name flipping between windows; kept it to the bar's own condition (a document with time on Next's video tool bar, the same condition that already put Title / Text in the tip), so Current and pictures are untouched. Walks that name the slot updated to Title."
+    },
+    {
+      "t": "2026-10-08T01:33:02.606Z",
+      "note": "Built: PhotonzCore ToolName (tested, ToolNameTests) is the one rule; EditorState.hasVideoToolBar is the one condition; EditorView slot names, More rows, probes, under-More note, EditorCommands Edit > Tools row, TutorialController card subject, and the a-title-that-moves guide step (Pick the Title tool) all read it."
+    },
+    {
+      "t": "2026-10-08T01:33:02.663Z",
+      "note": "Found while verifying: no tooltip on a video's bar could be read or photographed by any walk, because walks keep a video's window at alpha 0 and the tooltip copies its window's alpha (instrumented: show() ran, panelAlpha=0, winAlpha=0). Not an app bug: a person's window is opaque. Fixed in the harness: visibleDescription counts a tip over an invisible window, and the snapshot lifts the tip with the window. Video walk now reads 'Title / Text (T) above at (522, 427) 87x31' and photographs it."
+    },
+    {
+      "t": "2026-10-08T01:33:02.721Z",
+      "note": "Verified: Scripts/test.sh 11756 tests pass; walks green: video-tool-bar, t-tool-says-text-on-a-picture (new), one-glass-tool-bar, tool-bar-fills-its-room, tutorial-a-title-that-moves, notices-say-what-happened, marquee-answers-to-m, history-tooltips. All at Next defaults, no flags."
+    },
+    {
+      "t": "2026-10-08T01:33:02.778Z",
+      "note": "left rough (no task, under the bar): VoiceOver reads the video bar's T button as 'Title / Text' (the tip's words) rather than 'Title'; a picture walk not in front sees Edit > Tools rows dimmed, so the picture walk reads the menu and picks with T instead of choosing the row."
+    },
+    {
+      "t": "2026-10-08T01:33:07.215Z",
+      "note": "On a video (Next video tool bar, Next defaults) the T tool is named Title on the bar, in More, Edit > Tools, the under-More note and the title guide card; tooltip reads Title / Text (T) per the mock; pictures still say Text. Rule in PhotonzCore ToolName (ToolNameTests). Harness now reads/photographs tooltips over a walk's hidden video window. Verified: Scripts/test.sh 11756 pass; walks video-tool-bar, t-tool-says-text-on-a-picture (new), one-glass-tool-bar, tool-bar-fills-its-room, tutorial-a-title-that-moves, notices-say-what-happened, marquee-answers-to-m, history-tooltips green. Audit queue/audits/2026-10-07-the-t-tool-reads-title-on-a-video.json."
     }
-  ]
+  ],
+  "started": "2026-10-08T00:58:34.324Z",
+  "walks": [
+    "video-tool-bar-walk",
+    "t-tool-says-text-on-a-picture-walk",
+    "one-glass-tool-bar-walk",
+    "tool-bar-fills-its-room-walk",
+    "tutorial-a-title-that-moves-walk"
+  ],
+  "completed": "2026-10-08T01:33:07.216Z"
 }

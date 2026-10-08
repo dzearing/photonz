@@ -9994,3 +9994,13 @@
 {"t":"2026-10-08T00:48:30.964Z","ev":"task_note","id":"a-sped-up-or-slowed-clip-shows-its-original-leng"}
 {"t":"2026-10-08T00:48:31.024Z","ev":"task_note","id":"a-sped-up-or-slowed-clip-shows-its-original-leng"}
 {"t":"2026-10-08T00:48:38.221Z","ev":"task_done","id":"a-sped-up-or-slowed-clip-shows-its-original-leng","from":"in_progress","note":"Picking a clip whose speed is not 100% opens a Source lane under it with the mock's dashed, striped ghost at the clip's 100% length (Sources/Photonz/ClipSourceLane.swift over tested PhotonzCore/ClipSourceGhost.swift); the ruler widens to the ghost's end while a retimed clip is picked. Verified: a-retimed-clip-shows-its-source-walk at Next defaults (6 real captures, dark and light), 10 neighbouring walks green, Scripts/test.sh 11751 tests green. Audit: queue/audits/2026-10-07-retimed-source-ghost.json"}
+{"t":"2026-10-08T00:58:34.168Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":413,"of":796,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T00:58:34.331Z","ev":"task_started","id":"the-t-tool-reads-title-on-a-video","title":"The T tool reads Title on a video","priority":"p1-high"}
+{"t":"2026-10-08T01:32:32.502Z","ev":"task_walks","id":"the-t-tool-reads-title-on-a-video","walks":["video-tool-bar-walk","t-tool-says-text-on-a-picture-walk","one-glass-tool-bar-walk","tool-bar-fills-its-room-walk","tutorial-a-title-that-moves-walk"]}
+{"t":"2026-10-08T01:33:02.493Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:02.551Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:02.608Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:02.665Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:02.723Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:02.780Z","ev":"task_note","id":"the-t-tool-reads-title-on-a-video"}
+{"t":"2026-10-08T01:33:07.218Z","ev":"task_done","id":"the-t-tool-reads-title-on-a-video","from":"in_progress","note":"On a video (Next video tool bar, Next defaults) the T tool is named Title on the bar, in More, Edit > Tools, the under-More note and the title guide card; tooltip reads Title / Text (T) per the mock; pictures still say Text. Rule in PhotonzCore ToolName (ToolNameTests). Harness now reads/photographs tooltips over a walk's hidden video window. Verified: Scripts/test.sh 11756 pass; walks video-tool-bar, t-tool-says-text-on-a-picture (new), one-glass-tool-bar, tool-bar-fills-its-room, tutorial-a-title-that-moves, notices-say-what-happened, marquee-answers-to-m, history-tooltips green. Audit queue/audits/2026-10-07-the-t-tool-reads-title-on-a-video.json."}
