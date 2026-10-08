@@ -280,13 +280,45 @@ private final class Run {
                                  + "main thread %.0fms, not counted)", MainThreadMeter.shared.longestMS)
     }
 
+    /// What putting the markers back up last cost, for the next step's log
+    /// line: none of it is the app's.
+    private var markersUpCost = ""
+
     /// Puts back up whatever a timed step took down, and waits for them to be
     /// hung again: every way a walk finds something by name reads them.
+    ///
+    /// The re-hang is the walk's own work and is taken back off the meter,
+    /// and it waits for the app to finish what the timed step set off first,
+    /// so work the app does a beat after a click still counts against it.
+    /// Until 2026-10-08 the re-hang was counted: after an Undo on a video it
+    /// held the main thread about 200ms, a quarter second after the press,
+    /// and read as the app's. Delaying it by a second moved that hold by a
+    /// second, and a step that changed nothing paid under 2ms for it.
     private func putTheMarkersBackUp() async {
         markersDownCost = ""
+        markersUpCost = ""
         guard PlaytestMarkerHold.shared.isDown else { return }
+        await quietDown(within: 0.5)
+        let before = MainThreadMeter.shared.mark()
         PlaytestMarkerHold.shared.isDown = false
         await sleep(0.35)
+        await quietDown(within: 0.5)
+        let (busy, longest) = MainThreadMeter.shared.reading(since: before)
+        MainThreadMeter.shared.forget(since: before)
+        markersUpCost = String(format: "the walk's markers went back up first (that held the main thread "
+                               + "%.0fms, longest pass %.0fms, not counted)", busy * 1000, longest * 1000)
+    }
+
+    /// Waits, at most `seconds`, for two slices in a row in which the main
+    /// thread did next to nothing.
+    private func quietDown(within seconds: Double) async {
+        let began = CACurrentMediaTime()
+        var quiet = 0
+        _ = MainThreadMeter.shared.takeBusy()
+        while quiet < 2, CACurrentMediaTime() - began < seconds {
+            await sleep(0.05)
+            quiet = MainThreadMeter.shared.takeBusy() < 0.002 ? quiet + 1 : 0
+        }
     }
     /// When the last `press` really clicked, on the host clock a film reads.
     /// A press first waits for the panel to stop moving, which next to a
@@ -895,6 +927,7 @@ private final class Run {
             // A guarded wait also says what was rebuilt, so a freeze names
             // the views that cost it rather than only its length.
             note(number, step.name, "\(said); \(MainThreadMeter.shared.report)"
+                 + (markersUpCost.isEmpty ? "" : "; " + markersUpCost)
                  + (longestUnderMS == nil ? "" : "; \(ViewBuildMeter.shared.report)"))
             if let longestUnderMS, MainThreadMeter.shared.longestMS >= longestUnderMS {
                 throw Failure(description: String(
@@ -16968,8 +17001,15 @@ final class MainThreadMeter {
         Mark(busy: busy, passes: passes, longest: longest, longestEndedAt: longestEndedAt)
     }
 
+    /// What the meter has counted since `mark`: the time, and the longest
+    /// pass when one since then outran every pass before it (zero otherwise).
+    func reading(since mark: Mark) -> (busy: CFTimeInterval, longest: CFTimeInterval) {
+        (max(0, busy - mark.busy), longest > mark.longest ? longest : 0)
+    }
+
     /// Takes back everything the meter read since `mark`, which the walk
-    /// caused rather than the app: a film's camera stopping (`filmWindow`).
+    /// caused rather than the app: a film's camera stopping (`filmWindow`),
+    /// the walk's markers going back up (`putTheMarkersBackUp`).
     /// What a wait reads slice by slice is left alone.
     func forget(since mark: Mark) {
         busy = mark.busy

@@ -1,0 +1,367 @@
+{
+ "out": "/tmp/photonz-playtest/undo-redo-cost-walk",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "scratch": [
+   "sample:recording as b-roll.mp4"
+  ],
+  "timedWithoutMarkers": true
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "A stopwatch, and a guard on what Undo and Redo give back: the try path of undo-and-redo-on-a-video-answer-at-once. The talk sample with its captions written, then Undo and Redo of a cut, of a ripple delete and of a b-roll clip let go on V1, ten presses in all. Each press line carries the longest main thread hold of that press, and the wait after it fails at 100ms. After every press the clip's pieces are counted and every caption line is read against the lines noted before the first edit (and, once the ripple has taken its stretch of words, against the lines noted after it). Timed with the walk's markers down (setup timedWithoutMarkers); the harness puts them back up before the next step and leaves that out of the reading, since until 2026-10-08 the re-hang read as a 200ms hold a quarter second after every Undo."
+  },
+  {
+   "do": "action",
+   "action": "openSampleTalk"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Add Track",
+   "choose": "Captions"
+  },
+  {
+   "do": "action",
+   "action": "captionsWaitToLand"
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "action",
+   "action": "captionsNoteLines"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekQuarter"
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 1
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekMiddle"
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 3
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 3
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "action",
+   "action": "captionsNoteLines"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 3
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "dropOnTimeline",
+   "file": "scratch/b-roll.mp4",
+   "track": "V1",
+   "seconds": 12.9
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "expectClip",
+   "clip": "b-roll",
+   "count": 1
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "b-roll",
+   "count": 0
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "b-roll",
+   "count": 1
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "b-roll",
+   "count": 0
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command",
+    "shift"
+   ],
+   "menuItem": "Redo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6,
+   "longestUnderMS": 100
+  },
+  {
+   "do": "expectClip",
+   "clip": "b-roll",
+   "count": 1
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 2
+  },
+  {
+   "do": "action",
+   "action": "captionsExpectLinesAsNoted"
+  },
+  {
+   "do": "describe",
+   "stage": "1-after-the-last-redo",
+   "note": "after the last Redo: the talk in two pieces with the middle stretch rippled out, the b-roll back on V1 at 12.9s, and every caption line as it read after the ripple"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-after-the-last-redo"
+  }
+ ]
+}
