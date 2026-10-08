@@ -165,6 +165,107 @@ struct TimelineGapTests {
         #expect(doc == before)
     }
 
+    // MARK: Saying why
+
+    /// A talk that speaks, lifted from 4.0s to 8.0s: its own sound is drawn
+    /// on an Audio track under it, gap and all.
+    static func liftedSpeaking() throws -> (doc: PhotonzDocument, tail: UUID, track: UUID, audio: UUID) {
+        var doc = PhotonzDocument.recording(
+            MovieRef(pixelSize: CGSize(width: 1920, height: 1080), durationMS: 12_000, hasSound: true),
+            name: "Talk")
+        doc.liftStretch(fromMS: 4000, toMS: 8000)
+        doc.materializeTracks()
+        let head = try #require(doc.allLayers.first { $0.isClip })
+        let track = try #require(doc.trackID(ofClip: head.id))
+        let tail = try #require(doc.allLayers.first { $0.isClip && $0.id != head.id })
+        let audio = try #require(doc.tracks.first { $0.kind == .audio })
+        #expect(doc.linkedSoundClipIDs(onTrack: audio.id).contains(tail.id))
+        return (doc, tail.id, track, audio.id)
+    }
+
+    @Test("A gap that closes has nothing to say")
+    func noRefusalWhenItCloses() throws {
+        let (doc, _, track, _) = try Self.liftedSpeaking()
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.canCloseGap(gap))
+        #expect(doc.gapCloseRefusal(gap) == nil)
+    }
+
+    @Test("A locked track the clips have to move on is named")
+    func lockedTrackIsNamed() throws {
+        var (doc, _, _, track, _) = try Self.lifted()
+        doc.materializeTracks()
+        doc.updateTrack(track) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.gapCloseRefusal(gap) == .locked("V1"))
+        #expect(doc.gapCloseRefusal(gap)?.reading == "V1 is locked")
+    }
+
+    @Test("A clip whose own sound is on a locked track does not move, and the sound's track is named")
+    func lockedSoundTrackKeepsTheGapOpen() throws {
+        var (doc, tail, track, audio) = try Self.liftedSpeaking()
+        doc.updateTrack(audio) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(!doc.canCloseGap(gap))
+        #expect(doc.gapCloseRefusal(gap)?.reading == "Audio is locked")
+        let before = doc
+        let closed = doc.closeGap(gap)
+        #expect(!closed)
+        #expect(doc == before)
+        #expect(doc.layer(id: tail)?.time?.inMS == 8000)
+        // The same gap picked on the sound's own row says the same.
+        let soundGap = try #require(doc.gap(onTrack: audio, atMS: 5000))
+        #expect(doc.gapCloseRefusal(soundGap)?.reading == "Audio is locked")
+    }
+
+    @Test("Captions on a locked Captions track name that track")
+    func lockedCaptionsTrackIsNamed() throws {
+        var (doc, _, _, track, captions) = try Self.lifted()
+        let captionsTrack = try #require(doc.trackID(ofClip: captions["after"] ?? UUID()))
+        doc.materializeTracks()
+        doc.updateTrack(captionsTrack) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.gapCloseRefusal(gap)?.reading == "Captions is locked")
+    }
+
+    @Test("A locked clip that has to move is named")
+    func lockedClipIsNamed() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        doc.updateLayer(id: tail) { $0.isLocked = true; $0.name = "Demo" }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.gapCloseRefusal(gap) == .locked("Demo"))
+    }
+
+    @Test("A caption landing on a caption still in the gap is what is in the way")
+    func captionInTheWayIsNamed() throws {
+        var (doc, head, _) = MarkedStretchTests.talk()
+        let track = try #require(doc.trackID(ofClip: head))
+        doc.liftStretch(fromMS: 4000, toMS: 8000, onTracks: [track])
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.gapCloseRefusal(gap)?.reading == "A caption is in the way")
+    }
+
+    @Test("A long name is cut short so the line stays a label")
+    func longNamesStayInTheBudget() {
+        let locked = GapCloseRefusal.locked("A recording with a very long name indeed")
+        let inTheWay = GapCloseRefusal.inTheWay("A recording with a very long name indeed")
+        for refusal in [locked, inTheWay] {
+            #expect(refusal.reading.count <= CopyBudget.chromeLine)
+            #expect(CopyBudget.chromeFaults(refusal.reading).isEmpty)
+        }
+        #expect(locked.reading.hasSuffix("\u{2026} is locked"))
+    }
+
+    @Test("The notice says Not closed and what is in the way, inside the chrome budget")
+    func theNoticeNamesIt() {
+        let notice = CopyConfirmation(subject: .gapNotClosed(.locked("Audio")), shownAt: Date())
+        #expect(notice.title == "Not closed")
+        #expect(notice.detail == "Audio is locked")
+        for line in [notice.title, notice.detail] {
+            #expect(CopyBudget.chromeFaults(line).isEmpty)
+        }
+    }
+
     @Test("A gap that has since filled up, or moved, does not close")
     func staleGapRefuses() throws {
         var (doc, _, tail, track, _) = try Self.lifted()

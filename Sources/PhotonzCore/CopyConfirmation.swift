@@ -202,6 +202,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// playhead, or a title picked. A key that does nothing reads as a
         /// key that is broken, so it says what it needs.
         case speedNeedsAClip
+        /// Delete on a gap closed nothing (`TimelineGap.swift`): a track or a
+        /// layer that has to move is locked, or something would be landed on.
+        /// The gap is still there either way, so without a word the key reads
+        /// as broken and the person goes hunting for what is in the way.
+        case gapNotClosed(GapCloseRefusal)
         /// A transition asked of a clip went on one end and not the other:
         /// the cut at `atMS` has no spare frames to pay for it
         /// (`TransitionTargets.swift`). "No transition added" would be false,
@@ -395,6 +400,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
         case .speedNeedsAClip: return "No clip picked"
+        case .gapNotClosed: return "Not closed"
         case .transitionCutSkipped: return "1 cut skipped"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
         case .mediaWouldNotOpen: return "Not added"
@@ -465,6 +471,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "No spare frames on that side"
         case .speedNeedsAClip:
             return "Pick a clip to set its speed"
+        case .gapNotClosed(let refusal):
+            return refusal.reading
         case .clipAdded(let name):
             return "\(name) is on the timeline at the playhead"
         case .clickAdded(let ms):

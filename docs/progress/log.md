@@ -20901,3 +20901,11 @@ Next: the first editor window's ~200 ms first build
 - Cut click: departing panel sections now linger one pass, unseen, when the pick stays on the same clip (`PanelSectionDeparture`, core, 10 tests; `DockDepartures` in InspectorPanel), so their teardown leaves the click's frame. `clip-click-cost-walk` three runs: 27/27 cut clicks 31.7-49.2ms (was 47-59, median ~56). Commit 1d21775e.
 - Undo/Redo still 51-71ms: split to `undo-and-redo-on-a-video-answer-inside-50-ms` with findings (6-8 header Menus rebuilt per Undo, driven by something round them, not their content; harness take-down flow reads ~20ms more than a press without it, unexplained, not App Nap).
 - Method: `xctrace record --template 'Time Profiler' --attach <pid>`, export, group main-thread bursts around a named frame; lldb `BreakpointCreateByRegex` with a Python callback to name which platform views update. Note Time Profiler bursts keyed on the mouse-UP handler miss the cut's real work, which runs on mouse-down (`selectClipCut`).
+
+## 2026-10-08 — A gap that cannot close says why
+
+- `PhotonzCore/TimelineGap.swift`: `GapCloseRefusal` (`locked(name)`, `inTheWay(name)`, `gone`) and `gapCloseRefusal(_:)`; `closeGap`/`canCloseGap` share one `closingGap` path. A clip whose own sound is drawn on a locked audio track now counts as locked (before, the gap closed and the sound moved on its locked track: reproduced in the probe with the talk sample).
+- `CopyConfirmation.Subject.gapNotClosed`: pill "Not closed" + "Audio is locked" / "A caption is in the way", names cut to the 30-character chrome budget.
+- App: `closeGap` raises the pill (beep kept); Shift Delete on a refused gap now answers too instead of falling through silently.
+- Walk `a-gap-that-cannot-close-says-why-walk` (Next defaults). Audit `queue/audits/2026-10-08-gap-refusal.json`.
+- Next: nothing queued from this; the right-click row's dimming is not photographed by any walk.

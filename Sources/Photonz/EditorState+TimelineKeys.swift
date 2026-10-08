@@ -141,6 +141,11 @@ extension EditorState {
             }
             return liftInHand()
         case .rippleDelete:
+            // A gap picked and refused still answers, with what is in the way.
+            if timelineGapHeld != nil {
+                closeGapInHand()
+                return true
+            }
             guard canRippleDeleteInHand else { return false }
             rippleDeleteInHand()
         case .extractMarked:

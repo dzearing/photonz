@@ -53,10 +53,13 @@ extension EditorState {
     }
 
     /// Close `gap`, picked or not: what its right-click menu does. A gap that
-    /// cannot close says so with the system's beep and changes nothing.
+    /// cannot close changes nothing and says what is in the way under the
+    /// canvas (`GapCloseRefusal`): a key that did nothing reads as broken.
     func closeGap(_ gap: TimelineGap) {
-        guard canCloseGap(gap) else {
+        guard documentHasTime, let document else { return }
+        if let refusal = document.gapCloseRefusal(gap) {
             NSSound.beep()
+            raiseCanvasNotice(.gapNotClosed(refusal))
             return
         }
         endTrimBeforeCutting()

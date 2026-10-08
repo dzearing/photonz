@@ -1,0 +1,272 @@
+{
+  "out": "/tmp/photonz-playtest/a-gap-that-cannot-close-says-why-walk",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it: a four second gap on V1, with the talk's own sound under it on Audio. Lock Audio from its header, pick the gap on V1 and press Delete: nothing moves, and the pill under the canvas says Not closed, Audio is locked. Shift Delete says the same. Unlock Audio and Delete closes the gap as a-gap-between-clips-closes-walk expects.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 8.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "pieces": 3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.0
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "key",
+      "key": ";"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "move",
+      "control": "Track Audio"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Track Audio Lock"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "V1",
+      "from": 6.0,
+      "toTrack": "V1",
+      "to": 6.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Gap on V1"
+      ],
+      "from": 4.0,
+      "to": 8.0
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectNotice",
+      "says": "Audio is locked"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 17253,
+      "withinMS": 60
+    },
+    {
+      "do": "describe",
+      "stage": "1-delete-refused",
+      "note": "Audio locked from its header: Delete on the gap on V1 changes nothing, and the pill under the canvas says Not closed, Audio is locked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-delete-says-audio-is-locked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "V1",
+      "from": 5.0,
+      "toTrack": "V1",
+      "to": 5.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Gap on V1"
+      ],
+      "from": 4.0,
+      "to": 8.0
+    },
+    {
+      "do": "key",
+      "key": "delete",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectNotice",
+      "says": "Audio is locked"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "describe",
+      "stage": "2-shift-delete-refused",
+      "note": "Shift Delete on the picked gap is refused the same way and says the same"
+    },
+    {
+      "do": "move",
+      "control": "Track Audio"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "press",
+      "control": "Track Audio Lock"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "V1",
+      "from": 6.0,
+      "toTrack": "V1",
+      "to": 6.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Gap on V1"
+      ],
+      "from": 4.0,
+      "to": 8.0
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 13.25
+    },
+    {
+      "do": "expectTimeline",
+      "lengthMS": 13253,
+      "withinMS": 60
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOverClips"
+    },
+    {
+      "do": "describe",
+      "stage": "3-unlocked-closes",
+      "note": "Audio unlocked: Delete on the gap closes it, the last piece slides back to 0:04 with its sound and captions"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-unlocked-delete-closes"
+    }
+  ]
+}

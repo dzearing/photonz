@@ -1,0 +1,26 @@
+{
+  "feature": "A gap that cannot close says why",
+  "epic": "video-cutting",
+  "summary": "Delete or Shift Delete on a gap that cannot close now puts a pill under the canvas naming what is in the way, such as Audio is locked or A caption is in the way, instead of only beeping. A clip whose own sound sits on a locked track now stays put too: before, the gap closed and the sound moved on its locked track.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the talk sample from the Welcome window." },
+    { "do": "Click the ruler at 0:04 and press I, click at 0:08 and press O, then press semicolon to lift it." },
+    { "do": "Lock the Audio track with the lock switch in its header." },
+    { "do": "Click the gap on V1 and press Delete.", "shot": "2026-10-08-gap-refusal-1-audio-locked-sc.png" },
+    { "do": "Press Shift Delete on the same gap: the same pill." },
+    { "do": "Unlock Audio, click the gap and press Delete: it closes.", "shot": "2026-10-08-gap-refusal-2-unlocked-closes-sc.png" }
+  ],
+  "evaluate": [
+    "Does the pill land where your eye already is when Delete seems to do nothing?",
+    "Is Not closed, then the name of what is in the way, the right pair of words, or would the reason alone read better?",
+    "Should a locked Audio track keep the talk on V1 from sliding back, as it now does, the way a locked track holds everything on it?",
+    "Is the system beep alongside the pill welcome, or is the pill enough on its own?"
+  ],
+  "rough": [
+    "No mock draws a refused gap close; the pill is the existing notice under the canvas, the same one Command R uses when no clip is picked.",
+    "The right-click Ripple Delete row is dimmed when the gap cannot close, as before, but no walk photographs that menu (an open menu needs the Mac to itself); the dimming reads the same answer the pill does, and unit tests cover that answer.",
+    "Music in the way of a clip's own sound never refuses a close: the sound moves onto a free audio track instead, so in practice only a caption is ever named as in the way."
+  ]
+}
