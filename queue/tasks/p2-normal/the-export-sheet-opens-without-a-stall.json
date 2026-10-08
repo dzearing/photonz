@@ -5,11 +5,11 @@
   "epic": "video-share",
   "priority": "p2-normal",
   "seq": 7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T06:07:05.584Z",
-  "updated": "2026-10-08T06:10:03.998Z",
+  "updated": "2026-10-08T10:44:59.515Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in every walk that opens Export, across three manager passes: an-editing-session-walk step 82 at 2026-10-07 22:42, 'exportDialogAsVideo; editorBody bodies 1; mainBusy 446.9ms over 21 passes, longest 359.8ms from 11ms in'; 363-379 ms on 2026-10-07 15:07; 419-496 ms on 2026-10-06. The task count-the-ninety-second-cut-against-premiere-aga logged 310-370 ms on every document from 900x700 stills to 2880x1800 video (35 readings) and guessed it was the sheet's presentation counted as one pass, unconfirmed. Suspects to check: VideoExportDialog.swift building its size estimate on appear (it writes a scratch GIF or HEIC to weigh, :289-321), and the sheet's first layout. Trigger in walks: action exportDialogAsVideo (PlaytestHarness.swift:6461).",
@@ -29,6 +29,48 @@
     {
       "t": "2026-10-08T06:10:03.997Z",
       "note": "seq 3810 -> 7"
+    },
+    {
+      "t": "2026-10-08T09:14:58.896Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Measured first (probe, Next defaults). Old meter: open 349-370 ms on a 1280x900 still, 370-381 ms on the 5 min Retina talk; close 271-279 ms everywhere. A thread recording the main run loop's mode showed both open and close run ~258 ms inside _NSMoveTimerRunLoopMode, AppKit's sheet slide (NSMoveHelper _doAnimation, a nested CFRunLoopRun). The meter observed commonModes only, so it never saw the thread sleep between slide frames and counted the whole slide as one pass. `sample` on the close confirmed: NSSheetMoveHelper closeSheet > _doAnimation > nested run loop, display link frames, dimming mask rebuild per step."
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Real part: the pass BEFORE the slide begins is 75-122 ms (still 75-107, talk 94-113, Retina 88-122). Time Profiler (xctrace attach, 1 ms) per open on the talk: ~45 ms SwiftUI SheetBridge.createSheet building the sheet's graph, ~18 ms other SwiftUI update, ~9 ms NSWindow init, ~4 ms FocusBridge key-view loop, ~10 ms walk harness. App code itself ~0. Bare `Text` sheet floor: 29-58 ms. Without any segmented control: 53-71 ms. So the segmented rows are ~40 ms."
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Experiments (10 opens, talk, markers down, medians): baseline 109; skip ViewThatFits in Export rows 99; drop wordsOnChip 82; drop chip too 85 (chip itself free); drop colorScheme override 95; wordsOnChip only once chipRect exists 92; also drop hidden sizing Text 91 (no gain, reverted); move .sheet into its own modifier so EditorView body is not rebuilt 97 (no gain, reverted); seed VideoExportDialog state in init instead of onAppear: no gain, reverted. Dropdown fallback content in ViewThatFits is not the cost; ViewThatFits' measuring is."
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Shipped: (1) MainThreadMeter also observes WindowSlideSpan.mode (_NSMoveTimerRunLoopMode, observe only, never made common) so slide frames are separate passes, and the step line says ', Nms of it a sheet or window sliding, counted frame by frame'. Core WindowSlideSpan + tests in MainThreadPassClockTests.swift. (2) EnvironmentValues.segmentedRowAlwaysFits, set by ExportSheetRow, skips ViewThatFits for Export sheet rows (fixed 380 pt sheet, short words). (3) DesignedSegments builds wordsOnChip only when chipRect exists (it is masked to the chip, so nothing visible changes). Shared files: Current gets (1)-(3) too; Current's segmented control is the system picker unless fallsBackToSystem is false, so (2)/(3) only reach Current's few drawn rows."
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Verified: Scripts/test.sh green (11809 tests). Walks ok: an-editing-session-walk (exportDialogAsVideo longest 77.5 ms, was 359.8), export-a-video-at-1080p, svg-export-size, export-webp, png-export-size, export-quality, tutorial-export-the-video, export-keeps-to-the-in-and-out, a-frame-of-a-video-comes-out-as-a-picture, segmented-thumb-glass, segmented-chip-refraction-film, segmented-history-film, segment-tooltips. Captures checked by eye: chip words intact, sheet unchanged."
+    },
+    {
+      "t": "2026-10-08T10:44:44.535Z",
+      "note": "Left rough (not filed: under the 100 ms people read as instant, nothing a person would notice): after the change the open still reads 83-103 ms, one in ten just over 100. ~45 ms is SwiftUI's own sheet creation; going further means keeping the sheet's hosting view alive between opens (an AppKit-presented sheet) or making DesignedSegments cheaper app-wide (it builds each word 3x per row plus a masked copy). Also seen: the slide's dimming view re-renders the parent window into a bitmap every frame (NSSheetEffectDimmingView _rebuildMask), AppKit's own cost."
+    },
+    {
+      "t": "2026-10-08T10:44:59.412Z",
+      "note": "owns these walks: an-editing-session-walk, export-a-video-at-1080p-walk"
+    },
+    {
+      "t": "2026-10-08T10:44:59.513Z",
+      "note": "The 360 ms Export 'hold' was mostly AppKit's sheet slide (~258 ms in _NSMoveTimerRunLoopMode, unseen by the walk meter). Meter now counts slide frames separately and says so (WindowSlideSpan, tested). Real pre-slide cost cut from 109 to 92 ms median (Export rows skip ViewThatFits; segmented on-chip words built only with a chip). an-editing-session-walk Export step 359.8 -> 77.5 ms. Scripts/test.sh green; 13 walks ok; audit queue/audits/2026-10-08-the-export-sheet-opens-without-a-stall.json. One open in ten still reads just over 100 ms (logged)."
     }
-  ]
+  ],
+  "started": "2026-10-08T09:14:58.894Z",
+  "walks": [
+    "an-editing-session-walk",
+    "export-a-video-at-1080p-walk"
+  ],
+  "completed": "2026-10-08T10:44:59.514Z"
 }

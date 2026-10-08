@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T06:00:57.190Z",
-  "updated": "2026-10-08T06:10:04.176Z",
+  "updated": "2026-10-08T07:30:59.495Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-07 22:59 by the manager, scratch walk /tmp/mgr-walks/cutplay.json: open the Retina fixture, videoPause, select tool, videoSeekQuarter + command K, videoSeekMiddle + command K, delete, then expectPlaybackNeverBlank seconds 2.5 moments 20. Run 1: 'the picture fell behind the playhead at 4 of 20 looks (8, 9, 10, 11), at most 2 may, and was up to 27 frame(s) behind'. Run 2: same looks, up to 26 frames. Cause named by commit 592bca7d: forward play reads each recording in one AVAssetReader pass from the playhead (MoviePlayPass, Sources/PhotonzCore/MoviePlayPass.swift; Sources/Photonz/MovieFrames.swift) but 'frames across a cut and backward play still use the lanes', which manage about 15 frames a second on this fixture. Rough line from audit 2026-10-07-retina-playback-keeps-up.json. Likely shape: open the next piece's play pass ahead of the cut (the piece list is known), so the far side is read before the playhead reaches it. Backward play is a separate task.",
@@ -33,9 +33,27 @@
     {
       "t": "2026-10-08T06:10:04.175Z",
       "note": "owns these walks: playing-a-recording-never-blinks-walk"
+    },
+    {
+      "t": "2026-10-08T06:11:35.388Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T07:30:43.052Z",
+      "note": "Reproduced before fixing: across a cut 3/20 late up to 23 frames; across a dissolve 6/20 up to 20 (check widened to watch the incoming shot). Cause 1: far side read only on arrival, pass from cold decodes from key frame 0. Cause 2 (dissolve): budget evicted by plain distance, dropping the outgoing pass's read-ahead and restarting it. Fix: MoviePlayLookahead finds stretches coming within 1.5s (1 new look per tick, was 22ms/tick debug when re-scanned), MoviePlayPass.plan keeps up to 3 passes per recording, primed 4 frames in; budget grows per pass and weights frames gone by x3 while playing forward. After: 0/20 both, 7 runs, and under 8-core load. 11 neighbouring walks green; Scripts/test.sh green (11799)."
+    },
+    {
+      "t": "2026-10-08T07:30:43.109Z",
+      "note": "left rough: a recording with key frames further apart than 1.5s and cuts closer than that could still be a frame or two late; not seen, no task (would need a repro). Backward play is playing-backwards-with-j-keeps-up-on-a-full-scre."
+    },
+    {
+      "t": "2026-10-08T07:30:59.493Z",
+      "note": "Playback across a cut and across a dissolve keeps up: far side of each cut opened 1.5s ahead in its own pass, budget favours read-ahead while playing (commit f72bc93a). Retina fixture: cut 3/20 late up to 23 frames -> 0/20; dissolve 6/20 up to 20 -> 0/20, seven runs each and under load. playing-a-recording-never-blinks-walk now covers cut and dissolve at Next defaults; 11 neighbouring walks green; Scripts/test.sh green. Audit queue/audits/2026-10-08-playback-across-a-cut.json."
     }
   ],
   "walks": [
     "playing-a-recording-never-blinks-walk"
-  ]
+  ],
+  "started": "2026-10-08T06:11:35.387Z",
+  "completed": "2026-10-08T07:30:59.494Z"
 }

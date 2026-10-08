@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T06:02:18.285Z",
-  "updated": "2026-10-08T06:10:04.058Z",
+  "updated": "2026-10-08T12:39:53.391Z",
   "deps": [
     "a-full-screen-recording-keeps-up-as-it-plays-acr"
   ],
@@ -31,6 +31,47 @@
     {
       "t": "2026-10-08T06:10:04.057Z",
       "note": "seq 3800 -> 8"
+    },
+    {
+      "t": "2026-10-08T11:04:30.798Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T12:39:09.005Z",
+      "note": "owns these walks: playing-a-recording-backwards-keeps-up-walk"
+    },
+    {
+      "t": "2026-10-08T12:39:22.455Z",
+      "note": "Adversarial review before building: Premiere and Final Cut users press End then J, then J J to go faster. On long-GOP footage they get a short pre-roll before reverse starts. Backwards plays silent here (playsSoundAtRate), so holding the clock briefly costs nothing in sound. No mock covers backward play; the transport is unchanged."
+    },
+    {
+      "t": "2026-10-08T12:39:22.512Z",
+      "note": "Harness bug found while measuring: expectPlaybackNeverBlank judged the shown frame with forward travel, but the canvas sets inHand.travel = playheadTravel (EditorState.swift:4697). Played backwards, it counted a frame from the far end as shown. Fixed: the step now sets travel the canvas way and its failure names the worst look (wanted frame, shown frame, time)."
+    },
+    {
+      "t": "2026-10-08T12:39:22.570Z",
+      "note": "BEFORE (corrected step, Retina fixture, Next defaults, 2.5s at 20 looks): End then J 14/20 late, up to 17-18 frames; J J 15/20 late, up to 38 frames (2.0s). Forward 0/20. Cause: backward fetch read every frame through the 4 exact generator lanes, each seeking from the key frame (key frames at 0s and 2.0s, 60fps source)."
+    },
+    {
+      "t": "2026-10-08T12:39:22.629Z",
+      "note": "AFTER: J 0/20 and J J 0/20 in 9 of 9 runs, plus 1 run under 4 CPU burners. Backwards across a cut 0/20 in 6 of 6 runs once the far side was read ahead (before that, 2 of 5 runs had the cut look 22 frames late). Block timings: 115-250ms per 10-12 frame block; the first block from rest about 215ms, which is the pre-roll."
+    },
+    {
+      "t": "2026-10-08T12:39:22.687Z",
+      "note": "Design: MoviePlayBackward (Sources/PhotonzCore/MoviePlayPass.swift). Blocks of 10 grid frames (20 at 2x) read in one AVAssetReader pass, lowest first, kept 10 frames (20 at 2x) behind the playhead. At most 2 per place and 3 per recording, and a block right behind the playhead reads alone. PhotonzDocument.moviePlayBackPlaces looks reach+block+1 steps back in time, so a stretch stops at a cut and the far side gets its own place. Pre-roll: EditorState.preRollBackward waits up to 500ms for readyToPlayBackward. Budget: 1+reach+block per place + 4; frames already shown (above the playhead) weigh 8x in eviction (MovieFrameQueue.backwardBehindWeight). App side: MovieFrameFetcher.playBack/openBack in Sources/Photonz/MovieFrames.swift."
+    },
+    {
+      "t": "2026-10-08T12:39:22.743Z",
+      "note": "Left rough, not filed: (1) J from rest holds the playhead about 0.2s (bounded at 0.5s). That is a deliberate choice and an evaluate question in the audit, not a defect. (2) 4x and 8x backwards read no further than 2x, to bound memory; not measured, and nobody has reported a problem. (3) A dissolve played backwards was not measured. Neither 2 nor 3 has a reproduction, so neither clears the follow-up bar."
+    },
+    {
+      "t": "2026-10-08T12:39:53.389Z",
+      "note": "J and J J now keep up on the full-screen Retina fixture, across a cut too (commit c4c0eb94). Backward play reads the stretch behind the playhead in one-pass blocks (MoviePlayBackward), opens the far side of a cut early, and waits about 0.2s from rest (at most 0.5s) for the frame behind. Before: J 14/20 looks late, up to 18 frames; J J 15/20, up to 38. After: 0/20 for both in 9 of 9 runs, also under load; across a cut 0/20 in 6 of 6. The step judges playback with the playhead's direction and takes a shuttle rate. playing-a-recording-backwards-keeps-up-walk covers it at Next defaults with real End/J/K keys. 10 neighbouring walks green, Scripts/test.sh green (11,825 tests). Audit queue/audits/2026-10-08-playing-backwards-keeps-up.json."
     }
-  ]
+  ],
+  "started": "2026-10-08T11:04:30.796Z",
+  "walks": [
+    "playing-a-recording-backwards-keeps-up-walk"
+  ],
+  "completed": "2026-10-08T12:39:53.390Z"
 }

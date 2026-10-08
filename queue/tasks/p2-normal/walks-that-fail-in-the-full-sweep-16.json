@@ -1,0 +1,60 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-16",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 160,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-08T08:44:07.533Z",
+  "updated": "2026-10-08T13:03:05.348Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-08T08:44:07Z, not by a full sweep: it ran 40 of 805 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): tutorial-component-versions-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-08-013353.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log",
+    "The four walks that still look for a clip called Sample Talk copy after a lift (the two gap walks, the held-frame walk and the quiet-under-a-hold walk) look for Sample Talk instead, and each passes twice in a row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T08:44:07.536Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-08T08:44:07.539Z",
+      "note": "rotating check 2026-10-08T08:44:07Z, 40 walks run from 709 onward in the rotation: tutorial-component-versions-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-08T11:02:17.591Z",
+      "note": "rotating check 2026-10-08T11:02:17Z, 40 walks run from 783 onward in the rotation: a-gap-between-clips-closes-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-08T12:53:01.618Z",
+      "note": "rotating check 2026-10-08T12:53:01Z, 39 walks run from 16 onward in the rotation: a-gap-is-drawn-as-a-slot-walk, a-held-frame-reads-as-a-still-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-08T13:03:05.055Z",
+      "note": "daily digest 2026-10-08: three of the four are stale walks, not a broken app. 44dec046 (Lift keeps both halves under the clip's own name) stopped Lift naming the tail 'Sample Talk copy', and a-gap-between-clips-closes-walk, a-gap-is-drawn-as-a-slot-walk and a-held-frame-reads-as-a-still-walk still expect 'Sample Talk copy' at step 18. Ran Scripts/playtest.sh Scripts/playtest/a-gap-is-drawn-as-a-slot-walk.json --no-build on HEAD c4c0eb94: failed, step 18 (expectClip): no clip called \"Sample Talk copy\" is on V1, starting at 8.0s, ending at 17.25s; the timeline: ... Sample Talk on V1 8.00s to 17.25s. A fourth walk has the same stale name and has not come round in the rotation yet: the-quiet-under-a-hold-is-a-bare-slot-walk (expectClip and a rightClick on 'Sample Talk copy clip'). Fix: point all four at 'Sample Talk' (the tail is the second clip of that name, 8.0s to 17.25s). The fourth failure, tutorial-component-versions-walk (step 66: no text field has the keyboard), passed when I re-ran it twice on its own on the same build; treat it as a one-off unless it fails again."
+    },
+    {
+      "t": "2026-10-08T13:03:05.114Z",
+      "note": "owns these walks: a-gap-between-clips-closes-walk, a-gap-is-drawn-as-a-slot-walk, a-held-frame-reads-as-a-still-walk, the-quiet-under-a-hold-is-a-bare-slot-walk, tutorial-component-versions-walk"
+    },
+    {
+      "t": "2026-10-08T13:03:05.347Z",
+      "note": "seq 3790 -> 160"
+    }
+  ],
+  "standing": "walk-sweep",
+  "walks": [
+    "a-gap-between-clips-closes-walk",
+    "a-gap-is-drawn-as-a-slot-walk",
+    "a-held-frame-reads-as-a-still-walk",
+    "the-quiet-under-a-hold-is-a-bare-slot-walk",
+    "tutorial-component-versions-walk"
+  ]
+}

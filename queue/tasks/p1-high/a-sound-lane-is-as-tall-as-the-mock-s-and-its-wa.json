@@ -4,12 +4,12 @@
   "goal": "On the timeline a sound segment is a 36 point strip with its waveform drawn as a row of thin bars, so a fade or a quiet stretch is hard to read and the level line has little room. The audio mock draws each sound lane about 84 points tall with the waveform as one smooth filled shape. Draw it that way.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 520,
+  "seq": 40,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T23:10:38.768Z",
-  "updated": "2026-10-08T02:31:41.516Z",
+  "updated": "2026-10-08T13:03:05.173Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
@@ -56,6 +56,10 @@
     {
       "t": "2026-10-08T02:31:41.513Z",
       "note": "Waveform shape, lane-coloured level line and the sound name tag shipped and verified; the 84pt lane height waits on decision a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b, because video.html draws sound lanes 28pt and the taller lane takes 50pt from the picture on every recording with sound."
+    },
+    {
+      "t": "2026-10-08T13:03:05.172Z",
+      "note": "seq 520 -> 40"
     }
   ],
   "walks": [
