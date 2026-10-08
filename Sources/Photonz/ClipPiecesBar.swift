@@ -357,8 +357,9 @@ struct ClipPiecesBar: View {
                         level: drawnSoundLevel(lengthMS: pieces.totalLengthMS),
                         fromLayerMS: start + Int(span * Double(shown.startFraction)),
                         toLayerMS: start + Int(span * Double(shown.endFraction))),
-                        color: kind.map { $0.ink.opacity(0.7) } ?? .white.opacity(0.55))
-                        .padding(.vertical, 2)
+                        color: kind == nil ? .white.opacity(0.55) : soundTint.opacity(0.55),
+                        isShape: kind != nil)
+                        .padding(.vertical, kind == nil ? 2 : 0)
                 }
             }
             .overlay(alignment: .bottomLeading) {
@@ -530,8 +531,8 @@ struct ClipPiecesBar: View {
                            fromMS: Int(Double(pieces.totalLengthMS) * Double(shown.startFraction)),
                            toMS: Int(Double(pieces.totalLengthMS) * Double(shown.endFraction)),
                            width: shown.width, height: barHeight,
-                           lineColor: kind == nil ? .white.opacity(0.95)
-                               : Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255),
+                           lineColor: kind == nil ? .white.opacity(0.95) : soundTint.opacity(0.95),
+                           lineWidth: kind == nil ? 2 : 1.5,
                            pointColor: kind == nil ? .accentColor : soundTint,
                            onLevelInHand: { levelInHand = $0 })
                 .offset(x: shown.x)

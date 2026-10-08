@@ -22,14 +22,31 @@ import SwiftUI
 /// as the mock draws it, so a fade in rises out of nothing and a sound turned
 /// down draws smaller (`Waveform.drawnHeights`). `heights` is one nought-to-one
 /// height per column, worked out already.
+///
+/// On the dock it is one filled shape, the top edge along and the bottom edge
+/// back, as video-audio.html's lanes draw it (`SoundLaneShape.outline`). The
+/// icon strip keeps its row of thin bars.
 struct SoundWaveform: View {
     let heights: [Float]
-    /// The mock's `.wave i` on the dock (the audio ink at .7), white elsewhere.
+    /// The sound lane's own colour at .55 on the dock, white elsewhere.
     var color: Color = .white.opacity(0.55)
+    /// One smooth shape rather than a bar per column.
+    var isShape = false
 
     var body: some View {
         Canvas { context, size in
             guard heights.count > 0, size.width > 0 else { return }
+            if isShape {
+                let outline = SoundLaneShape.outline(heights: heights, width: size.width,
+                                                     height: size.height)
+                guard let first = outline.first else { return }
+                var shape = Path()
+                shape.move(to: first)
+                for point in outline.dropFirst() { shape.addLine(to: point) }
+                shape.closeSubpath()
+                context.fill(shape, with: .color(color))
+                return
+            }
             let step = size.width / CGFloat(heights.count)
             let middle = size.height / 2
             var path = Path()
@@ -69,8 +86,11 @@ struct SoundLevelLine: View {
     let toMS: Int
     let width: CGFloat
     let height: CGFloat
-    /// The mock's duck line colour on the dock, white on the icon strip.
+    /// The sound lane's own colour on the dock, as video-audio.html strokes
+    /// it, white on the icon strip.
     var lineColor: Color = .white.opacity(0.95)
+    /// The mock's 1.5 on the dock, 2 on the icon strip.
+    var lineWidth: CGFloat = 2
     /// The sound lane's own colour on the dock (`.anode`), the accent on the
     /// icon strip.
     var pointColor: Color = .accentColor
@@ -199,7 +219,7 @@ struct SoundLevelLine: View {
             path.move(to: first)
             for point in points.dropFirst() { path.addLine(to: point) }
         }
-        .stroke(lineColor, style: StrokeStyle(lineWidth: 2, lineJoin: .round))
+        .stroke(lineColor, style: StrokeStyle(lineWidth: lineWidth, lineJoin: .round))
         .shadow(color: .black.opacity(0.6), radius: 1.5)
         .allowsHitTesting(false)
     }
