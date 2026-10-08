@@ -18,7 +18,8 @@ import PhotonzCore
 // track is left exactly as it was.
 //
 // A click on empty space moves the playhead there and lets go of what was
-// picked, the way a click beside the clips does in both editors.
+// picked, the way a click beside the clips does in both editors. A click in
+// the gap between two clips also picks that gap (`EditorState+TimelineGap`).
 
 extension EditorState {
 
@@ -93,7 +94,7 @@ extension EditorState {
         let draft = laneBoxDraft
         laneBoxDraft = nil
         guard moved || press.hasMoved else {
-            clickEmptyTrackSpace(atMS: ms)
+            clickEmptyTrackSpace(atMS: ms, y: press.atY)
             return
         }
         guard let draft else { return }
@@ -112,12 +113,13 @@ extension EditorState {
     }
 
     /// A click on empty track space: the playhead goes there and whatever was
-    /// picked on the timeline is let go.
-    private func clickEmptyTrackSpace(atMS ms: Int) {
+    /// picked on the timeline is let go. A click in a gap picks the gap.
+    private func clickEmptyTrackSpace(atMS ms: Int, y: CGFloat) {
         guard documentHasTime else { return }
         letGoOfTimelinePicks()
         if selectedLayerID != nil || !multiSelectedLayerIDs.isEmpty { selectLayer(nil) }
         if selectedEditPoint != nil { selectedEditPoint = nil }
+        pickTimelineGap(atMS: ms, y: y)
         pauseDocument()
         scrubDocument(toMS: min(max(0, ms), lastDocumentTimeMS))
     }
@@ -155,10 +157,11 @@ extension EditorState {
         trackRangeInHand = range
     }
 
-    /// Put down a box's pieces and a range on some tracks.
+    /// Put down a box's pieces, a range on some tracks and a picked gap.
     func letGoOfTimelinePicks() {
         if !timelinePicks.isEmpty { timelinePicks = [] }
         if trackRangeInHand != nil { trackRangeInHand = nil }
+        if timelineGapInHand != nil { timelineGapInHand = nil }
     }
 
     /// The range on some tracks while it is still the thing in hand: nothing

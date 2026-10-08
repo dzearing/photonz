@@ -1760,6 +1760,8 @@ final class EditorState {
     var laneBoxDraft: LaneBox?
     /// A stretch of time on some tracks, picked with ⌥ held or the Range tool.
     var trackRangeInHand: TrackRange?
+    /// The gap between two clips a click on it picked (`EditorState+TimelineGap`).
+    var timelineGapInHand: TimelineGap?
     /// The pieces of cut clips a box picked, where it picked more than one
     /// piece and not every piece of a clip.
     var timelinePicks: [TimelinePick] = []

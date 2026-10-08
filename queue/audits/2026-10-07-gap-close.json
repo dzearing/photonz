@@ -1,0 +1,45 @@
+{
+  "feature": "Close a gap between clips with a click and Delete",
+  "epic": "video-cutting",
+  "summary": "A gap left on a track by a lift or a dragged clip can now be clicked to pick it and closed with Delete, Shift Delete, Sequence > Ripple Delete or Ripple Delete on its own right-click menu. The clips after it slide back with their sound and their captions, in one undo step.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording with someone talking in it and add its captions (right-click the clip, Add Captions). The walk a-gap-between-clips-closes-walk does all of this on its own sample talk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click the ruler at 0:04 and press Command K, then at 0:08 and press Command K again."
+    },
+    {
+      "do": "Click the ruler at 0:06, press X, then press semicolon: a four second gap opens on V1.",
+      "shot": "2026-10-07-gap-close-1-lifted-leaves-a-gap-sc.png"
+    },
+    {
+      "do": "Click inside the gap on V1: it lights in the band a range on a track wears.",
+      "shot": "2026-10-07-gap-close-2-gap-picked-sc.png"
+    },
+    {
+      "do": "Press Delete: the last piece slides back to 0:04 and its captions come with it.",
+      "shot": "2026-10-07-gap-close-3-delete-closes-the-gap-sc.png"
+    },
+    {
+      "do": "Press Command Z, click the gap again and press Shift Delete: same result."
+    },
+    {
+      "do": "Press Command Z, then right-click inside the gap: Ripple Delete is the first row."
+    },
+    {
+      "do": "Drag from inside the gap onto the next clip: a box still draws and picks that clip."
+    }
+  ],
+  "evaluate": [
+    "Did you expect the picked gap to look like a range on the track, or like a picked clip?",
+    "Is it right that a click in a gap still moves the playhead there, as a click in empty track space always has?",
+    "When a gap cannot close (say the Captions track is locked), is a beep and a dimmed Ripple Delete enough of an answer?",
+    "Would you look for Ripple Delete on the gap's right-click menu without being told it is there?"
+  ],
+  "rough": [
+    "Before it is picked a gap is bare lane; the cut walkthrough mock (video-cut-wt, step 7) draws it as a dashed, hatched slot. Filed as a-gap-on-a-track-looks-like-an-empty-slot-dashed.",
+    "Only the clips after the gap on that track, and the captions over them, move. A title or music on another track stays put, as in Premiere with sync lock off, so it can end up over a different frame.",
+    "The second half of a lifted clip is named Sample Talk copy, not Sample Talk; that comes from Lift, not from this feature.",
+    "A refused close only beeps; nothing on screen says why."
+  ]
+}

@@ -1215,6 +1215,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless there are captions and every one starts inside the marked
     /// In and Out: what Add Captions for Range writes (`RulerRange.swift`).
     case captionsExpectInsideMarks
+    /// Fail unless there are captions and every one runs over a clip that
+    /// plays a recording or a sound: none over a gap or past the last frame,
+    /// which is where captions left behind by a moved clip end up
+    /// (`TimelineGap.swift`).
+    case captionsExpectOverClips
     /// Fail unless exactly one caption is picked: what a real click on a cue
     /// of the Captions track must do (`CaptionCuesLayer`).
     case captionsExpectOnePicked
@@ -1523,7 +1528,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsAddVoiceover, .captionsWrite, .captionsWriteHearingNothing,
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
-             .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand, .captionsExpectOneTrack, .captionsExpectInsideMarks,
+             .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand, .captionsExpectOneTrack, .captionsExpectInsideMarks, .captionsExpectOverClips,
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
@@ -2734,7 +2739,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// What is picked on the timeline, and FAIL when it is not so: `clips` by
     /// name, a piece of a cut clip as "<name> piece <n>" counting from one, an
     /// empty list for nothing; `rangeOn` the tracks a range on some tracks
-    /// covers, empty for none, with `from` and `to` its ends in seconds.
+    /// covers, empty for none, with `from` and `to` its ends in seconds. A
+    /// gap a click picked is the clip "Gap on <track>", and `from` and `to`
+    /// are its ends.
     case expectTimelinePick(clips: [String]?, rangeOn: [String]?, from: Double?, to: Double?)
     /// Where a clip on the timeline is, by its name, and FAIL when it is not
     /// so: which track it is on, when it starts and when it ends, in seconds,

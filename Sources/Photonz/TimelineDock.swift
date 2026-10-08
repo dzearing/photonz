@@ -1305,6 +1305,11 @@ struct TimelineLaneBoxView: View {
                 band(held.range, tracks: Array(held.trackIDs))
                     .panelReadout("track range \(held.range.lowerBound)ms to \(held.range.upperBound)ms on "
                                   + "\(held.trackIDs.count) tracks")
+            } else if let gap = editorState.timelineGapHeld {
+                // A picked gap wears the range's band: it is a stretch of
+                // time picked on one track (`EditorState+TimelineGap`).
+                band(gap.range, tracks: [gap.trackID])
+                    .panelReadout("gap \(gap.range.lowerBound)ms to \(gap.range.upperBound)ms")
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)

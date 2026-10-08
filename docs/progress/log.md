@@ -20881,3 +20881,10 @@ Next: the first editor window's ~200 ms first build
 - Found: the 166-222 ms hold a quarter second after Undo/Redo on a video was the walk harness putting its marker views back up, not the app (no-op actions read under 2 ms; delaying the re-hang 1 s moved the hold 1 s; markers left up showed none). The same artifact made the 288/311 ms holds after keying in an-editing-session-walk.
 - Shipped (a226b321): `putTheMarkersBackUp` lets the app go quiet first, then takes the re-hang off the meter and names it on the wait line. New `undo-redo-cost-walk`: undo/redo of a cut, a ripple delete and a b-roll drop, waits fail at 100 ms, pieces and caption lines checked.
 - Open: the presses themselves are 46-77 ms, the editor-wide cost of any edit (app code ~10 ms, ~20% SwiftUI accessibility upkeep, the rest SwiftUI update/layout). Folded into `clicking-a-cut-keying-a-value-and-undoing-it-ans` as an acceptance item; this task dropped. Export sheet opening holds 363 ms (logged, not filed).
+
+## 2026-10-07 — A gap between clips closes with a click and Delete
+
+- Core `TimelineGap.swift`: find a gap on a track, list a track's gaps, close one (later clips on that track plus the captions over them slide back; refused on a lock or any landing overlap). 12 tests.
+- App: a click in a gap picks it (range band), Delete / Shift Delete / Ripple Delete / Edit > Delete Gap close it, and each gap has its own right-click menu leading with Ripple Delete.
+- Walk `a-gap-between-clips-closes-walk` at Next defaults; harness reads a picked gap as "Gap on <track>" and gains `captionsExpectOverClips`.
+- Next: the mock's dashed, hatched look for an unpicked gap (filed).

@@ -134,6 +134,11 @@ extension EditorState {
             // ...and a range on some tracks, or pieces a box picked
             // (`EditorState+TrackRange`).
             if trackRangeHeld != nil || timelinePicksHeld != nil { return liftTrackThing() }
+            // ...and a gap a click picked: Delete closes it, as in Premiere.
+            if timelineGapHeld != nil {
+                closeGapInHand()
+                return true
+            }
             return liftInHand()
         case .rippleDelete:
             guard canRippleDeleteInHand else { return false }

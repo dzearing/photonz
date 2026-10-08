@@ -401,6 +401,9 @@ struct TimelineTrackRow: View {
 
     // MARK: The lane
 
+    /// The lane's own space, which a press on a gap is read in.
+    static func laneSpace(_ track: UUID) -> String { "timeline-lane-\(track.uuidString)" }
+
     private var lane: some View {
         let ruler = editorState.motionStripRuler
         return ZStack(alignment: .topLeading) {
@@ -423,6 +426,24 @@ struct TimelineTrackRow: View {
                 .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
                                                      trackID: track.id))
                 .contextMenu { TimelineTrackMenu(track: track, index: index) }
+            // Each gap between two clips is the same empty space, with its own
+            // right-click menu that leads with Ripple Delete, as Premiere's
+            // does (`EditorState+TimelineGap`). The press is read in the
+            // lane's space, so a click or a box starting here is the lane's.
+            ForEach(editorState.timelineGaps(onTrack: track), id: \.range.lowerBound) { gap in
+                let x0 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.lowerBound))), 1)
+                let x1 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.upperBound))), 1)
+                if x1 - x0 >= 1 {
+                    Color.clear
+                        .contentShape(Rectangle())
+                        .frame(width: x1 - x0, height: laneHeight)
+                        .offset(x: x0)
+                        .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
+                                                             trackID: track.id,
+                                                             in: .named(Self.laneSpace(track.id))))
+                        .contextMenu { TimelineTrackMenu(track: track, index: index, gap: gap) }
+                }
+            }
             let alternates = alternateClips
             // A Captions track paints the cues nobody is working on as one
             // layer (`CaptionCuesLayer`) and draws only the rest as bars.
@@ -504,6 +525,7 @@ struct TimelineTrackRow: View {
             }
         }
         .frame(width: laneWidth, height: laneHeight, alignment: .topLeading)
+        .coordinateSpace(name: Self.laneSpace(track.id))
         .opacity(row.isOff ? 0.4 : 1)
         .clipShape(TimelineEdgeClip())
         .overlay(alignment: .top) { insertionLine(atTop: true) }
@@ -715,10 +737,17 @@ struct TimelineTrackMenu: View {
     @Environment(EditorState.self) private var editorState
     let track: DocumentTrack
     let index: Int
+    /// The gap between two clips the right click landed in, whose Ripple
+    /// Delete leads (`EditorState+TimelineGap`).
+    var gap: TimelineGap?
 
     var body: some View {
         let acted = editorState.tracksActedOn(from: track.id)
         let isEmpty = editorState.isTrackEmpty(track.id)
+        if let gap {
+            MenuRowsView(rows: editorState.timelineGapMenuRows(gap))
+            Divider()
+        }
         // A range on this track, or pieces a box picked: what they act on
         // leads (`EditorState+TrackRange`).
         if editorState.trackRangeHeld?.trackIDs.contains(track.id) == true
@@ -977,12 +1006,13 @@ enum TimelineLaneScrub {
 /// moves the playhead, a drag draws a box over the tracks, and a drag with ⌥
 /// held or the Range tool in hand picks a stretch of time on the tracks it
 /// crosses. The press is read along the lane for time and down the tracks'
-/// own space for which tracks it crosses.
+/// own space for which tracks it crosses. `space` is the lane's, for a view
+/// that covers only part of it (a gap).
 enum TimelineLaneMarquee {
     @MainActor
     static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
-                        trackID: UUID) -> some Gesture {
-        DragGesture(minimumDistance: 0)
+                        trackID: UUID, in space: CoordinateSpace = .local) -> some Gesture {
+        DragGesture(minimumDistance: 0, coordinateSpace: space)
             .onChanged { value in
                 let top = editorState.trackDropRows[trackID]?.minY ?? 0
                 let startMS = ms(value.startLocation.x, laneWidth, ruler)

@@ -686,14 +686,18 @@ struct EditorCommands: Commands {
         let trackHeld = onTimeline && !rangeHeld
             && (editor?.trackRangeHeld != nil || editor?.timelinePicksHeld != nil)
         let trackRange = trackHeld && editor?.trackRangeHeld != nil
+        // ...and a gap a click picked, which ⌫ closes (`EditorState+TimelineGap`).
+        let gapHeld = onTimeline && !rangeHeld && !trackHeld && editor?.timelineGapHeld != nil
         Button(keysPicked ? "Delete Keys" : rangeHeld || trackRange ? "Delete Range"
-               : trackHeld ? "Delete Pieces" : "Delete This Piece") {
+               : trackHeld ? "Delete Pieces" : gapHeld ? "Delete Gap" : "Delete This Piece") {
             if keysPicked {
                 editor?.deletePickedKeys()
             } else if rangeHeld {
                 editor?.liftMarkedStretch()
             } else if trackHeld {
                 editor?.liftTrackThing()
+            } else if gapHeld {
+                editor?.closeGapInHand()
             } else {
                 onTimeline ? editor?.deleteClipPieceInHand() : video?.deleteSelectedPiece()
             }
@@ -709,6 +713,7 @@ struct EditorCommands: Commands {
         .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
         .disabled(!(keysPicked || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
                     || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
+                    || (gapHeld && (editor?.canCloseGapInHand ?? false))
                     || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
                                               : (video?.canDeleteSelectedPiece ?? false))))
     }

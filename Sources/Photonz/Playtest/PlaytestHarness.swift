@@ -4412,6 +4412,20 @@ private final class Run {
                 }
                 note(number, step.name, "captions: \(cues.count) cues, every one starting between "
                      + "\(range.lowerBound) and \(range.upperBound) ms", state: describe())
+            case .captionsExpectOverClips:
+                guard let document = editor.document else { throw Failure(description: "no document") }
+                let cues = document.captionCues
+                guard !cues.isEmpty else { throw Failure(description: "there are no captions") }
+                let clips = document.allLayers.filter { $0.movie != nil || $0.sound != nil }.compactMap(\.time)
+                let stray = cues.filter { cue in
+                    !clips.contains { $0.inMS <= cue.inMS && cue.outMS <= $0.outMS }
+                }
+                guard stray.isEmpty else {
+                    throw Failure(description: "\(stray.count) of \(cues.count) captions run over no clip, the "
+                        + "first from \(stray[0].inMS) to \(stray[0].outMS) ms; the clips run "
+                        + clips.map { "\($0.inMS) to \($0.outMS) ms" }.joined(separator: ", "))
+                }
+                note(number, step.name, "captions: \(cues.count) cues, every one over a clip", state: describe())
             case .captionsExpectEndWithRecording:
                 guard let document = editor.document else { throw Failure(description: "no document") }
                 let recording = document.allLayers.first {
@@ -5913,7 +5927,8 @@ private final class Run {
                  .captionsNudgeEarlier, .captionsCorrectFirstWord, .captionsClear,
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
-                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .expectAddedClick,
+                 .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .captionsExpectOverClips,
+                 .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
@@ -15972,7 +15987,8 @@ private final class Run {
 
     /// What is picked on the timeline, by name, a piece of a cut clip as
     /// "<name> piece <n>" from one, and the tracks a range on some tracks
-    /// covers, by name.
+    /// covers, by name. A picked gap reads as the clip "Gap on <track>", with
+    /// its stretch as the range (`EditorState+TimelineGap`).
     private func timelinePickReading(_ editor: EditorState) -> (clips: [String], rangeOn: [String], range: Range<Int>?) {
         guard let document = editor.document else { return ([], [], nil) }
         func name(_ id: UUID, _ piece: Int?) -> String {
@@ -15987,6 +16003,10 @@ private final class Run {
             clips = [name(id, count > 1 ? editor.selectedClipPieceIndex : nil)]
         } else {
             clips = editor.multiSelectedLayerIDs.map { name($0, nil) }
+        }
+        if let gap = editor.timelineGapHeld {
+            let track = document.track(id: gap.trackID)?.name ?? "?"
+            return (clips + ["Gap on \(track)"], [], gap.range)
         }
         guard let held = editor.trackRangeHeld else { return (clips, [], nil) }
         let rangeOn = document.timelineTracks.filter { held.trackIDs.contains($0.id) }.map(\.name)

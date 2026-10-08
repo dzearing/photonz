@@ -346,6 +346,7 @@ extension EditorState {
     var canRippleDeleteInHand: Bool {
         if rulerRangeHeld != nil { return canTakeOutMarkedStretch }
         if trackRangeHeld != nil || timelinePicksHeld != nil { return canTakeOutTrackThing }
+        if timelineGapHeld != nil { return canCloseGapInHand }
         guard documentHasTime, let id = selectedLayerID, document?.layer(id: id)?.time != nil else { return false }
         return !isClipLocked(id)
     }
@@ -360,6 +361,11 @@ extension EditorState {
         // A range on some tracks, or pieces a box picked: the gap closes on
         // their own tracks (`EditorState+TrackRange`).
         if extractTrackThing() { return }
+        // A gap a click picked closes (`EditorState+TimelineGap`).
+        if timelineGapHeld != nil {
+            closeGapInHand()
+            return
+        }
         guard canRippleDeleteInHand, let id = selectedLayerID else { return }
         let count = document?.layer(id: id)?.clipPieces?.count ?? 1
         rippleDelete(layerID: id, piece: count > 1 ? selectedClipPieceIndex : nil)

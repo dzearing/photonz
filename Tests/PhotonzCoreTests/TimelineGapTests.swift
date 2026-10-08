@@ -1,0 +1,177 @@
+import CoreGraphics
+import Foundation
+import PhotonzCore
+import Testing
+
+/// **A gap between clips**: picked with a click, closed with Delete or Ripple
+/// Delete, the way Premiere and Final Cut close one (`TimelineGap.swift`).
+///
+/// Written before the code, which is the rule for `PhotonzCore`.
+@Suite("Pick a gap on a track and close it")
+struct TimelineGapTests {
+
+    /// The talk from `MarkedStretchTests`, with 4.0s to 8.0s lifted out: two
+    /// clips on one track and a four second gap between them.
+    static func lifted() throws -> (doc: PhotonzDocument, head: UUID, tail: UUID, track: UUID,
+                                    captions: [String: UUID]) {
+        var (doc, head, captions) = MarkedStretchTests.talk()
+        doc.liftStretch(fromMS: 4000, toMS: 8000)
+        let track = try #require(doc.trackID(ofClip: head))
+        let tail = try #require(doc.allLayers.first { $0.isClip && $0.id != head })
+        return (doc, head, tail.id, track, captions)
+    }
+
+    // MARK: Finding one
+
+    @Test("A moment between two clips on a track is in the gap between them")
+    func findsTheGap() throws {
+        let (doc, _, _, track, _) = try Self.lifted()
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(gap.trackID == track)
+        #expect(gap.range == 4000..<8000)
+        #expect(gap.lengthMS == 4000)
+        // Any moment in it names the same gap, its first one included.
+        #expect(doc.gap(onTrack: track, atMS: 4000) == gap)
+        #expect(doc.gap(onTrack: track, atMS: 7999) == gap)
+    }
+
+    @Test("A track lists its gaps, and each is the one a moment in it finds")
+    func listsTheGaps() throws {
+        var (doc, head, tail, track, _) = try Self.lifted()
+        doc.updateLayer(id: head) { $0.time = $0.time?.moved(toInMS: 1000) }
+        let gaps = doc.gaps(onTrack: track)
+        #expect(gaps.map(\.range) == [0..<1000, 5000..<8000])
+        for gap in gaps { #expect(doc.gap(onTrack: track, atMS: gap.range.lowerBound) == gap) }
+        _ = tail
+    }
+
+    @Test("On a clip, and after the last clip, there is no gap")
+    func noGapOnAClipOrAfterTheEnd() throws {
+        var (doc, _, _, track, _) = try Self.lifted()
+        #expect(doc.gap(onTrack: track, atMS: 2000) == nil)
+        #expect(doc.gap(onTrack: track, atMS: 9000) == nil)
+        // A document longer than its last clip: the space after it is not a gap.
+        _ = doc.addSound(SoundRef(durationMS: 20_000), name: "music", atMS: 0)
+        #expect(doc.gap(onTrack: track, atMS: 15_000) == nil)
+    }
+
+    @Test("The space before the first clip on a track is a gap from 0:00")
+    func gapBeforeTheFirstClip() throws {
+        var (doc, clip, _) = MarkedStretchTests.talk()
+        doc.updateLayer(id: clip) { $0.time = $0.time?.moved(toInMS: 2000) }
+        let track = try #require(doc.trackID(ofClip: clip))
+        #expect(doc.gap(onTrack: track, atMS: 500)?.range == 0..<2000)
+    }
+
+    @Test("The pauses between lines on a Captions track are not gaps")
+    func captionsTrackHasNoGaps() throws {
+        let (doc, _, _, _, captions) = try Self.lifted()
+        let line = try #require(captions["before"])
+        let track = try #require(doc.trackID(ofClip: line))
+        #expect(doc.track(id: track)?.kind == .captions)
+        #expect(doc.gap(onTrack: track, atMS: 3200) == nil)
+    }
+
+    // MARK: Closing it
+
+    @Test("Closing the gap slides the next clip and its captions back by the gap's length")
+    func closesTheGap() throws {
+        var (doc, head, tail, track, captions) = try Self.lifted()
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.canCloseGap(gap))
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: head)?.time?.inMS == 0)
+        #expect(doc.layer(id: tail)?.time?.inMS == 4000)
+        #expect(doc.layer(id: tail)?.time?.outMS == 8000)
+        #expect(doc.documentDurationMS == 8000)
+        // Captions over the clip that moved, moved with it, words and all.
+        let past = try #require(doc.layer(id: captions["past"] ?? UUID()))
+        #expect(past.time?.inMS == 4000)
+        #expect(past.time?.outMS == 5200)
+        #expect(past.captionWords?.first?.startMS == 4000)
+        let after = try #require(doc.layer(id: captions["after"] ?? UUID()))
+        #expect(after.time?.inMS == 5500)
+        #expect(after.captionWords?.last?.endMS == 7000)
+        // Captions before the gap are where they were.
+        #expect(doc.layer(id: captions["before"] ?? UUID())?.time?.inMS == 1000)
+        #expect(doc.layer(id: captions["over"] ?? UUID())?.time?.outMS == 4000)
+        // And the gap has gone.
+        #expect(doc.gap(onTrack: track, atMS: 4000) == nil)
+    }
+
+    @Test("A sound on another track stays where it is")
+    func otherTracksStay() throws {
+        var (doc, _, _, track, _) = try Self.lifted()
+        let music = doc.addSound(SoundRef(durationMS: 3000), name: "music", atMS: 9000)
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: music)?.time?.inMS == 9000)
+    }
+
+    @Test("A gap between two sounds on one audio track closes the same way")
+    func closesAGapBetweenSounds() throws {
+        var doc = PhotonzDocument.recording(MarkedStretchTests.movie(), name: "Talk")
+        let first = doc.addSound(SoundRef(durationMS: 2000), name: "one", atMS: 0)
+        let second = doc.addSound(SoundRef(durationMS: 1000), name: "two", atMS: 5000)
+        doc.materializeTracks()
+        let track = try #require(doc.trackID(ofClip: first))
+        _ = doc.moveClip(second, toTrack: track)
+        #expect(doc.trackID(ofClip: second) == track)
+        let gap = try #require(doc.gap(onTrack: track, atMS: 3000))
+        #expect(gap.range == 2000..<5000)
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: second)?.time?.inMS == 2000)
+    }
+
+    // MARK: When it cannot close
+
+    @Test("A gap on a locked track does not close, and nothing changes")
+    func lockedTrackRefuses() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        doc.updateTrack(track) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(!doc.canCloseGap(gap))
+        let before = doc
+        let closed = doc.closeGap(gap)
+        #expect(!closed)
+        #expect(doc == before)
+        #expect(doc.layer(id: tail)?.time?.inMS == 8000)
+    }
+
+    @Test("Captions that would have to move on a locked Captions track keep the gap open")
+    func lockedCaptionsRefuse() throws {
+        var (doc, _, _, track, captions) = try Self.lifted()
+        let captionsTrack = try #require(doc.trackID(ofClip: captions["after"] ?? UUID()))
+        doc.materializeTracks()
+        doc.updateTrack(captionsTrack) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(!doc.canCloseGap(gap))
+    }
+
+    @Test("A caption that would land on a caption still in the gap keeps the gap open")
+    func captionCollisionRefuses() throws {
+        var (doc, head, _) = MarkedStretchTests.talk()
+        let track = try #require(doc.trackID(ofClip: head))
+        // Lifted off the picture's track alone: the captions over it stay.
+        doc.liftStretch(fromMS: 4000, toMS: 8000, onTracks: [track])
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(!doc.canCloseGap(gap))
+        let before = doc
+        let closed = doc.closeGap(gap)
+        #expect(!closed)
+        #expect(doc == before)
+    }
+
+    @Test("A gap that has since filled up, or moved, does not close")
+    func staleGapRefuses() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        doc.updateLayer(id: tail) { $0.time = $0.time?.moved(toInMS: 6000) }
+        let closed = doc.closeGap(gap)
+        #expect(!closed)
+        #expect(doc.layer(id: tail)?.time?.inMS == 6000)
+    }
+}
