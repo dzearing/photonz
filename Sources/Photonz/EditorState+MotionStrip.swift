@@ -84,7 +84,28 @@ extension EditorState {
         // ...and room past the end for a file in the air over the timeline
         // (`EditorState+TimelineDrop`).
         if let room = timelineDropRoomMS { return max(1, (shownDocument?.timelineLengthMS ?? 0) + room) }
-        return max(1, shownDocument?.timelineLengthMS ?? 1)
+        let length = max(1, shownDocument?.timelineLengthMS ?? 1)
+        // ...and room for a picked clip's Source ghost where a speed-up left
+        // its original length running past the end (`ClipSourceLane`): the
+        // mock's before and after reads only with both ends on screen.
+        return max(length, clipSourceGhostsEndMS ?? 0)
+    }
+
+    /// The Source ghost a picked clip shows under it, nil where its lane stays
+    /// shut: not picked, at 100%, or in the hand (a clip in flight is not the
+    /// clip as it stands, and the ruler is held while it travels).
+    func clipSourceGhost(for layerID: UUID) -> ClipSourceGhost? {
+        guard isLayerSelected(layerID), clipBarDrag == nil,
+              let layer = shownDocument?.layer(id: layerID),
+              let time = layer.time, let pieces = layer.clipPieces else { return nil }
+        return ClipSourceGhost(pieces: pieces, startMS: time.inMS)
+    }
+
+    /// Where the furthest Source ghost on screen ends.
+    private var clipSourceGhostsEndMS: Int? {
+        guard shownDocument?.hasTime == true else { return nil }
+        let picked = [selectedLayerID].compactMap { $0 } + multiSelectedLayerIDs
+        return picked.compactMap { clipSourceGhost(for: $0)?.endMS }.max()
     }
 
     /// Whether this document finishes rather than repeating. A recording has a

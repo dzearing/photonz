@@ -63,6 +63,12 @@ struct TimelineTrackRow: View {
                 }
                 .frame(height: CaptionWordsLane.height)
             }
+            // A picked clip played faster or slower than recorded shows how
+            // long it was at 100%, right under it (`ClipSourceLane`). Only the
+            // picked clips are asked, so a track of plain clips reads nothing.
+            ForEach(row.clips.filter { editorState.isLayerSelected($0.layerID) }) { clip in
+                ClipSourceLane(layerID: clip.layerID, laneWidth: laneWidth, indent: indent)
+            }
             // A keyed value is a lane of keys, opened and closed by the arrow
             // on the header (`KeyLanesView`); anything else that moves keeps
             // its timing bar. Which values are keyed does not change while a

@@ -170,10 +170,15 @@ struct TimelineEmptySlot: View {
     /// a stripe 6 points wide every 12, measured across the stripes.
     static let stripe: CGFloat = 6
     /// `border-radius: var(--r2)`, a lane's corner rather than a clip's.
-    static let cornerRadius: CGFloat = 8
+    static let laneCornerRadius: CGFloat = 8
+
+    /// The same stripes and dashes draw a retimed clip's Source ghost
+    /// (`ClipSourceLane`), on a clip's smaller corner.
+    var cornerRadius: CGFloat = Self.laneCornerRadius
+    var readout = "empty slot"
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: Self.cornerRadius)
+        let shape = RoundedRectangle(cornerRadius: cornerRadius)
         let stripes = VideoKit.Palette.line.color(colorScheme).opacity(0.6)
         Canvas { context, size in
             // Across the stripes is 45 degrees, so along the lane a stripe
@@ -195,7 +200,7 @@ struct TimelineEmptySlot: View {
         .overlay(shape.strokeBorder(VideoKit.Palette.lineStrong,
                                     style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
         .allowsHitTesting(false)
-        .panelReadout("empty slot")
+        .panelReadout(readout)
     }
 }
 

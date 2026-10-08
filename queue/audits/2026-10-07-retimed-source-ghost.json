@@ -1,0 +1,29 @@
+{
+  "feature": "A retimed clip shows its original length",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a clip whose speed is not 100% and a Source lane opens right under it, with a dashed, striped bar at the clip's length at 100%, starting where the clip starts. Change the speed and the clip grows or shrinks while the ghost stays at the old length, so you can see what the change did.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: a-retimed-clip-shows-its-source-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open any screen recording (the walk uses the talk sample the captions tutorial opens) and click its clip on V1. No Source lane yet: it plays at 100%.", "shot": "2026-10-07-retimed-source-ghost-1-picked-normal-sc.png" },
+    { "do": "Press Command R and choose 0.5x. The clip doubles and a Source lane opens under it, its striped bar half the clip's length.", "shot": "2026-10-07-retimed-source-ghost-2-half-speed-sc.png" },
+    { "do": "Choose 2x from the Speed dropdown. The clip shrinks; the ghost keeps the original length and runs past the clip's end, and the timeline widens so both ends show.", "shot": "2026-10-07-retimed-source-ghost-3-double-speed-sc.png" },
+    { "do": "Press Escape to pick nothing. The Source lane shuts and the timeline fits the video again." },
+    { "do": "Click the clip again, then choose Normal. The lane shuts, since there is no before and after any more." },
+    { "do": "Press Command Z. 2x comes back, and the ghost with it. Try it in light appearance too.", "shot": "2026-10-07-retimed-source-ghost-6-undone-light-sc.png" }
+  ],
+  "evaluate": [
+    "Can you tell at a glance how much shorter or longer the clip got?",
+    "Does the lane sitting under the clip, rather than above it as the mock draws it, still read as before and after?",
+    "When a sped-up clip is picked, does the timeline widening to show the whole ghost feel right, or does it feel like the timeline jumped?",
+    "Is the ghost easy enough to see in dark appearance, at the mock's stripe strength?"
+  ],
+  "rough": [
+    "Side by side with video-speed.html (Retime dock, mock picture 2026-10-07-retimed-source-ghost-mock-video-speed.png): the Source row sits under the clip, not above it. Settled by UX-PATTERNS §D18, rule 6: lanes about a clip open under its track, indented and quieter, and opening under means picking a clip never moves it under the pointer.",
+    "The retimed clip's row is called V1, the track's name, not Retimed as in the mock. Settled by UX-PATTERNS §D18, rule 1: a track carries its own name.",
+    "The mock's Playhead 1.00x @ 0.00s pill in the timeline bar is not drawn: your call on 2026-09-25 turned that pill down as unprofessional.",
+    "The mock's speed curve, the coloured speed bands inside the clip and the Slow-mo/Normal/Fast/Freeze legend are not built: speed varies across a clip by cutting it into pieces instead, as decided in speed-a-stretch-up-slow-a-moment-down.",
+    "Picking a sped-up clip whose original length runs past the end of the video widens the timeline to the ghost's end, and picking nothing fits it back. The change lands when you let go of the click, not mid-press, so a drag never jumps.",
+    "The ghost hides while the clip is being dragged or trimmed, and comes back when you let go. It has no tooltip: it takes no clicks, so nothing lands on it by mistake."
+  ]
+}
