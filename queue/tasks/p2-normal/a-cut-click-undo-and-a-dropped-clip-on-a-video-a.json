@@ -5,17 +5,17 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:30:03.219Z",
-  "updated": "2026-10-08T13:36:24.695Z",
+  "updated": "2026-10-08T16:15:18.859Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Split out of clicking-a-cut-keying-a-value-and-undoing-it-ans, which stays blocked on its key-lane card for the keying and its undo only. Numbers today (that task log): cut click 57 ms after db5108a9; Undo/Redo of cut, ripple delete, drop 46-77 ms (median ~62) in Scripts/playtest/undo-redo-cost-walk.json, about 20% of each is SwiftUI accessibility upkeep and app code about 10 ms; second-clip drop 68-73 ms when replayed (manager 2026-10-07). The 760 ms: rotating check 2026-10-07 22:42 and again 2026-10-08 06:15, /tmp/photonz-playtest/an-editing-session-walk/log.json step 27: wait 1.0s, mainBusy 1016.6ms over 332 passes, longest 761.8ms from 1278ms in, right after step 26 dropOnTimeline b-roll.mp4 at 12.9s. Manager 2026-10-07 could not reproduce it with steps 1-28 minus the snapshots, so start by running the full walk three times. Pieces likely shared: the panel section building on video (db5108a9), the timeline rebuilding every lane on a document change. No new control, no card needed.",
+  "notes": "Split out of clicking-a-cut-keying-a-value-and-undoing-it-ans, which stays blocked on its key-lane card for the keying and its undo only. Numbers today (that task log): cut click 57 ms after db5108a9; Undo/Redo of cut, ripple delete, drop 46-77 ms (median ~62) in Scripts/playtest/undo-redo-cost-walk.json, about 20% of each is SwiftUI accessibility upkeep and app code about 10 ms; second-clip drop 68-73 ms when replayed (manager 2026-10-07). The 760 ms: rotating check 2026-10-07 22:42 and again 2026-10-08 06:15, /tmp/photonz-playtest/an-editing-session-walk/log.json step 27: wait 1.0s, mainBusy 1016.6ms over 332 passes, longest 761.8ms from 1278ms in, right after step 26 dropOnTimeline b-roll.mp4 at 12.9s. Manager 2026-10-07 could not reproduce it with steps 1-28 minus the snapshots, so start by running the full walk three times. Pieces likely shared: the panel section building on video (db5108a9), the timeline rebuilding every lane on a document change. No new control, no card needed. | Runner 2026-10-08: cut click fixed by PanelSectionDeparture (1d21775e); the 760ms was the walk's labelsWhole step, fixed in the harness (32879672); Undo/Redo split to undo-and-redo-on-a-video-answer-inside-50-ms.",
   "acceptance": [
     "On clip-click-cost-walk a cut click holds the main thread under 50 ms in nine of ten clicks over three runs, none over 100 ms",
-    "Undo and Redo of a cut, a ripple delete and a clip drop hold under 50 ms in nine of ten presses over three runs of undo-redo-cost-walk, none over 100 ms",
+    "Undo and Redo: measured and handed on with the evidence to undo-and-redo-on-a-video-answer-inside-50-ms (split 2026-10-08: still 51-71 ms after this task; the menus and harness findings are in its notes)",
     "Dropping the b-roll on V1 in an-editing-session-walk (step 26 and the wait after it) holds under 100 ms in three runs of the whole walk; if the 760 ms hold is the walk (its snapshot or labelsWhole steps just before the drop), the walk measures it the way a person gets it and the log says which it was",
     "The panel still shows the cut after a cut click and the clip after a piece click in the click own frame; an-editing-session-walk, clip-click-cost-walk and keyframe-anything-walk stay green",
     "At Next defaults, no switch. Try: open the talk sample (Help > Tutorials), press Command K twice, click the cut, press Command Z and Shift Command Z; nothing hitches. Audit written under queue/audits/ with the before and after numbers",
@@ -33,11 +33,37 @@
     {
       "t": "2026-10-08T13:36:24.694Z",
       "note": "seq 3790 -> 5"
+    },
+    {
+      "t": "2026-10-08T13:40:38.173Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T15:06:29.580Z",
+      "note": "The 760ms hold is the walk, not the app: labelsWhole (step 25) photographs the window and reads its words on the main thread (~700ms) without leaving that off the meter. Reproduced 3/3 (770-783ms); dropping only step 25 read 72ms, dropping only the snapshot still 792ms. Fixed in the harness: labelsWhole excludes its own time, and dropOnTimeline is timed like a press (markers down, meter zeroed at release) so the drop line names the drop's own cost: 67ms (an-editing-session-walk), 75ms (undo-redo-cost-walk)."
+    },
+    {
+      "t": "2026-10-08T16:15:05.828Z",
+      "note": "Cut click: shipped 1d21775e (PanelSectionDeparture: sections leaving while the pick stays on the same clip linger one pass unseen, pulled down the next). clip-click-cost-walk x3: 27/27 cuts 31.7-49.2ms, none over 100 (baseline 47.3-58.7, median ~56). One more run on a build that also carried a since-reverted menu change read 41.6-52.1 (3 of 9 just over 50). Piece clicks unchanged ~20ms. Measured dead ends (not shipped): no-teardown-ever upper bound saves ~12ms on the cut but costs the piece click; dropping the cut's playhead move saves ~3ms; Equatable header menus changed nothing (rebuilds are environment-driven); App Nap opt-out changed nothing."
+    },
+    {
+      "t": "2026-10-08T16:15:05.886Z",
+      "note": "Undo/Redo not met (Undo 59-71, Redo 44-57): split to undo-and-redo-on-a-video-answer-inside-50-ms with the evidence. Left rough, not filed: EditorCommands' canAddZoom/canSuggestZooms run trial edits on a document copy on every pick (~1-2ms); a pure predicate in core would drop it. Audit: queue/audits/2026-10-08-cut-click-undo-drop-speed.json."
+    },
+    {
+      "t": "2026-10-08T16:15:05.945Z",
+      "note": "walks clip-click-cost-walk, undo-redo-cost-walk, an-editing-session-walk -> clip-click-cost-walk, an-editing-session-walk, keyframe-anything-walk"
+    },
+    {
+      "t": "2026-10-08T16:15:18.857Z",
+      "note": "Cut click under 50ms (1d21775e, PanelSectionDeparture: clip-click-cost-walk x3, 27/27 cuts 31.7-49.2ms, was median ~56). The 760ms after the drop was the walk's labelsWhole step; harness fixed (32879672), drop now 64-67ms over 3 runs of an-editing-session-walk. Undo/Redo (51-71ms) split to undo-and-redo-on-a-video-answer-inside-50-ms with findings. Walks green incl. 10 panel/cut walks; Scripts/test.sh 11835 pass. Audit queue/audits/2026-10-08-cut-click-undo-drop-speed.json."
     }
   ],
   "walks": [
     "clip-click-cost-walk",
-    "undo-redo-cost-walk",
-    "an-editing-session-walk"
-  ]
+    "an-editing-session-walk",
+    "keyframe-anything-walk"
+  ],
+  "started": "2026-10-08T13:40:38.172Z",
+  "completed": "2026-10-08T16:15:18.858Z"
 }

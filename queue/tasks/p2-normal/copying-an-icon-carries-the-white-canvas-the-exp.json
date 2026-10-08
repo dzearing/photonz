@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-17T05:51:54.319Z",
-  "updated": "2026-10-06T12:04:09.781Z",
+  "updated": "2026-10-08T19:37:51.914Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while finishing an-icon-exported-as-a-picture-can-come-out-with (2026-09-17). Repro of the composite that Copy puts on the clipboard: PHOTONZ_ALLOW_LOCKED_WALK=1 Scripts/playtest.sh /tmp/tmp-png-bg-forced.json --no-build wrote png-export-background-3-file-with-canvas.png, which is the same render EditorState.copyCompositeToClipboard uses (previewRenderer.render(document, store:), no background answer anywhere on that path), and reading its corner back gave top-left (5,5) rgba [255, 255, 255, 255]. The export path in the same walk wrote [0, 0, 0, 0]. The smallest fix is to let the copy take the same SVGExport.Background answer the sheet holds, through PhotonzDocument.drawn(with:flatImages:) (PhotonzCore) the way ExportSizer does; the open question is whether a copy should ask at all or simply always leave a flat canvas out, which is a UX call worth a decision card rather than a guess. PNG and TIFF both go on the pasteboard and both hold alpha.",
@@ -170,6 +170,10 @@
     {
       "t": "2026-10-06T12:04:09.780Z",
       "note": "seq 80 -> 70"
+    },
+    {
+      "t": "2026-10-08T19:37:51.913Z",
+      "note": "2026-10-08: copies now carry SVG too (copying-an-icon-puts-its-svg-on-the-clipboard-to). The SVG follows the picture's background (Copy Merged drops the canvas when the picture does), and a picked frame's SVG carries the frame's own white surface, exactly as Export writes it. Whatever answer this card gets applies to the SVG as well."
     }
   ],
   "started": "2026-09-30T10:33:28.595Z",

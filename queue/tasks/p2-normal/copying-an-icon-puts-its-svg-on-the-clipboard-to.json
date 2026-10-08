@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 11,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:39:41.953Z",
-  "updated": "2026-10-08T13:39:46.180Z",
+  "updated": "2026-10-08T19:38:04.783Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager review 2026-10-08 of icon-svg: success line icon-export 3 (Copying an icon puts the same clean SVG on the clipboard) is not met. Copy is Sources/Photonz/EditorState.swift copyCompositeToClipboard (PNG, TIFF, then .string spec list when measurePanelEnabled) with CompositeCopy.representations (Sources/PhotonzCore/CompositeCopy.swift lines ~17-19). SVG writing: SVGExport / SVGHandoff (the web destination). Separate from the blocked copying-an-icon-carries-the-white-canvas-the-exp (whether the white canvas comes along); if that card is answered first, the SVG follows the same background answer. Related check: find-out-whether-the-redline-copy-pastes-as-a-pi (what Chromium takes when text and picture are both there).",
@@ -30,6 +30,35 @@
     {
       "t": "2026-10-08T13:39:46.179Z",
       "note": "seq 3800 -> 11"
+    },
+    {
+      "t": "2026-10-08T19:11:55.312Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T19:37:51.677Z",
+      "note": "owns these walks: copy-an-icon-as-svg-walk"
+    },
+    {
+      "t": "2026-10-08T19:37:51.737Z",
+      "note": "Pre-build review: Command C at Next defaults copies the PICKED layer, and after drawing, the circle is picked. So the SVG rides on the whole-picture copies (Shift Command C, Command C with nothing picked and no marquee) and on Command C with a frame picked (that frame's SVG, the same thing Export writes for it). A single picked shape gets none because Export never writes one. Photoshop has Copy SVG on a layer's right-click; that idea went into the follow-up card."
+    },
+    {
+      "t": "2026-10-08T19:37:51.796Z",
+      "note": "Measured with the real copy: Chrome 153 gives a page image/svg+xml and image/png (paste event and clipboard.read), and a contenteditable box takes the PNG. WebKit and NSTextView (rich and plain) never see the SVG type, and a textarea gets nothing. Markup as plain text is the only way into a code editor, and that slot holds the measurement list, so per the acceptance it went to a card on a follow-up task, an-icon-svg-pastes-into-a-code-editor (blocked on that card). The clipboard was saved and put back afterwards."
+    },
+    {
+      "t": "2026-10-08T19:37:51.855Z",
+      "note": "Rough items: the code editor gap became a task with a card; the white surface folds into copying-an-icon-carries-the-white-canvas-the-exp; the single-shape copy and the untried Figma/VS Code stay in this log and the audit."
+    },
+    {
+      "t": "2026-10-08T19:38:04.781Z",
+      "note": "Copy Merged, Command C with nothing picked and Command C on a picked frame now put the Export (web page) SVG on the clipboard as public.svg-image after PNG and TIFF. Screenshots, photos and videos are unchanged. Verified: CompositeCopy and SVGWholeUnits tests, full suite green (11,893 tests); copy-an-icon-as-svg-walk at Next defaults matches the copy byte for byte against writeSVG in whole units and checks a screenshot carries no SVG; Chrome 153, WebKit and NSTextView measured with the real copy (docs/design/references/svg-copy-check). Getting the SVG code into code editors as text is a card on an-icon-svg-pastes-into-a-code-editor. Audit queue/audits/2026-10-08-copy-an-icon-as-svg.json"
     }
-  ]
+  ],
+  "started": "2026-10-08T19:11:55.311Z",
+  "walks": [
+    "copy-an-icon-as-svg-walk"
+  ],
+  "completed": "2026-10-08T19:38:04.782Z"
 }

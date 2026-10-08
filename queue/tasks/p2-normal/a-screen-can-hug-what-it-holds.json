@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:35:59.737Z",
-  "updated": "2026-10-08T13:36:24.814Z",
+  "updated": "2026-10-08T17:24:23.972Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager review 2026-10-08 of ui-building. Today: Sources/PhotonzCore/GroupLayout.swift width/height doc says Ignored on a screen; Sources/Photonz/ArrangementInspector.swift around line 255 hides the size rows when the pick holds a screen (offersASizeOfItsOwn). docs/design/ui-building.md around line 2542 calls hug for a screen deliberate (a runner note, never a decision of the user; the reason, that something hanging off its edge must never resize it, is kept by offering Hug only on an arranged screen and never by default). Mock: docs/design/mocks/pages/ui-autolayout.html Frame size segmented Hug (lines ~281-301, status text Frame hugs its content). Epic success: ui-building a) and ui-layout 1. Flags: next-auto-layout, on at Next defaults. Mock draws it, so no card.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-10-08T13:36:24.813Z",
       "note": "seq 3830 -> 7"
+    },
+    {
+      "t": "2026-10-08T17:02:27.478Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T17:04:14.424Z",
+      "note": "Pre-build review: a person from Figma expects Hug on an auto-layout frame's W/H; the app's Width/Height Hug|Fixed rows are the same control a group already has. Risks: an empty hugging screen would collapse to padding (decided: an empty screen holds its last size, there is nothing to hug); dragging or typing a size on a hugging axis should turn that axis Fixed, as a group does. Storage: two new flags on the layout (written only when on) so every saved screen opens fixed."
+    },
+    {
+      "t": "2026-10-08T17:23:54.691Z",
+      "note": "owns these walks: a-screen-hugs-what-it-holds-walk"
+    },
+    {
+      "t": "2026-10-08T17:23:54.749Z",
+      "note": "Built: GroupLayout.screenHugsWidth/Height (written only when on), GroupFlow resizes a hugging arranged screen's frame from its top left, Layer.resized turns a hugged axis Fixed on a hand/typed size, ContentsSelection.offersHug + hug readings, ArrangementInspector shows Width/Height on arranged screens (no limits, no clip row). ScreenHugTests (13) + full suite 11856 green. Walk a-screen-hugs-what-it-holds-walk green at Next defaults with 5 real captures: empty 400x300 holds, Button -> 78x36, Card -> 260x219, delete -> 78x36, undo -> 260x219, Fixed + H 400 -> 260x400."
+    },
+    {
+      "t": "2026-10-08T17:23:54.809Z",
+      "note": "Left rough (not filed): in the walk, the Delete key after selectRow did nothing while the Position and Size popover was still open; Edit > Delete worked. Not reproduced as a person would do it (a real click on a row closes the popover), so it stays here. Also: the Position and Size popover's white title on light grey glass looked faint in the capture; existing surface, not touched here. Empty screen made into a column starts at 0 padding so a hugging screen sits flush on its contents; in the audit rough for the user to react to. Mock difference (one Frame size row vs Width/Height) filed as the-size-rows-in-the-layout-section-match-the-au with a decision card."
+    },
+    {
+      "t": "2026-10-08T17:24:23.970Z",
+      "note": "A screen set to Stack (row/column) or Grid offers Width and Height Hug|Fixed like a group; Hug closes the screen around its contents and padding, add/remove/resize is one undo step, saved screens open fixed, free screens never hug. Core in GroupLayout/GroupFlow/ContentsSelection/AnnotationEditing, rows in ArrangementInspector. ScreenHugTests + full suite (11856) green; a-screen-hugs-what-it-holds-walk green at Next defaults with 5 real captures. Audit queue/audits/2026-10-08-screen-hug.json. Mock's single Frame size row raised as a decision on the-size-rows-in-the-layout-section-match-the-au. Commit d1de61a6."
     }
-  ]
+  ],
+  "started": "2026-10-08T17:02:27.475Z",
+  "walks": [
+    "a-screen-hugs-what-it-holds-walk"
+  ],
+  "completed": "2026-10-08T17:24:23.971Z"
 }

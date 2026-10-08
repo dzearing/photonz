@@ -1,0 +1,30 @@
+{
+  "id": "undo-and-redo-on-a-video-answer-inside-50-ms",
+  "title": "Undo and Redo on a video answer inside 50 ms",
+  "goal": "On a video, pressing Undo or Redo after a cut, a ripple delete or a dropped clip still holds the app for 51 to 71 ms, over the 50 ms the Premiere goal sets. Bring both under it, so stepping back and forth through edits never hitches.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3790,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T16:14:33.782Z",
+  "updated": "2026-10-08T16:14:33.785Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of a-cut-click-undo-and-a-dropped-clip-on-a-video-a (2026-10-08), which shipped the cut click and the drop. Numbers on 1d21775e, undo-redo-cost-walk / a 4-press copy: Undo 59-71 ms, Redo 44-57 ms. Findings: (1) The undo pass is ~68% SwiftUI graph update in flushObservers; each Undo moves the pick (clip -> nothing), so the clip sections are torn down at once (PanelSectionDeparture only lingers when the pick stays). (2) Every Undo rebuilds 6-8 panel header SwiftUI Menus (Properties Menu, Add Effect, Add Audio Effect, Add transition; Redo 21), ~6 ms an Undo in AppKitPopUpAdaptor.updateNSView plus item accessibility. Making the four menus Equatable (handed their values) changed NOTHING (lldb count identical), so the rebuild is driven by something round them, likely an environment value that changes on a document edit: find which. lldb recipe: breakpoint regex AppKitPopUpAdaptor.*PlatformView.*updateNSView, print [x0 accessibilityLabel]. (3) Harness gap, unexplained: the same Undo reads 23-50 ms when the walk does not take its markers down first (timedWithoutMarkers off, or areHung false) and 50-58 ms with the take-down flow, even with every marker view compiled out (6 sites). Not App Nap (beginActivity userInitiated changed nothing), not one long sleep vs polling, not the geometry probes. A 1.5 s idle before the press with the flow off reads 36-52, so part is idle-before-press. Settle which one a person gets before trusting the 50 ms line. Profiling recipe: xctrace record --template Time Profiler --attach <probe pid>, export time-profile, group main-thread bursts around frames containing EditorState.undo().",
+  "acceptance": [
+    "Undo and Redo of a cut, a ripple delete and a clip drop hold under 50 ms in nine of ten presses over three runs of undo-redo-cost-walk, none over 100 ms",
+    "undo-redo-cost-walk, an-editing-session-walk and keyframe-anything-walk stay green",
+    "Before and after numbers in the task log, measured the same way"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T16:14:33.784Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "undo-redo-cost-walk"
+  ]
+}

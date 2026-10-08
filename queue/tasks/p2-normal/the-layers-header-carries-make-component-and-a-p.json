@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:35:59.822Z",
-  "updated": "2026-10-08T13:36:24.872Z",
+  "updated": "2026-10-08T18:12:20.743Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager review 2026-10-08 of ui-components. Mock: docs/design/mocks/pages/component-configure-wt.html lines ~272-276 (dgrp-h: ttl Layers, cnt, btnMakeComp ic-component, ic-more data-menu layerMenu) and components.html lines ~425-430 (layerMenu items). App: Sources/Photonz/InspectorPanel.swift dock headers (around 1173-1291) have no Layers case; Make Component lives in LayerCommandMenu.swift ~194 and the Layer menu with Option Command K. The done dock-headers work only covered Properties and the Library. Placement: a panel header verb that the mock places, so no card.",
@@ -34,6 +34,35 @@
     {
       "t": "2026-10-08T13:36:24.871Z",
       "note": "seq 3840 -> 8"
+    },
+    {
+      "t": "2026-10-08T17:38:54.266Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T17:42:30.509Z",
+      "note": "owns these walks: layers-header-make-component-walk"
+    },
+    {
+      "t": "2026-10-08T18:12:20.559Z",
+      "note": "Adversarial review before build: a Photoshop user expects a Layers flyout menu (Photoshop has one), so the panel menu meets expectation; the header already hosts buttons (Motion play, Effects plus) so a button inside the collapse/reorder gesture is proven. No mock assumption the app cannot deliver."
+    },
+    {
+      "t": "2026-10-08T18:12:20.617Z",
+      "note": "left rough (below the bar): a walk's key step cannot press menu-bar chords on a background probe (harness says so), so the walk groups with action group; and panelMenu logs show a leading '—' for every pull-down (the hidden title slot), same on the Properties menu, harmless."
+    },
+    {
+      "t": "2026-10-08T18:12:20.676Z",
+      "note": "Audit rough lines all describe matches; nothing to file. Walks run: layers-header-make-component, dock-headers, component-walk, component-whole-path, shared-component, tutorial-make-a-component all ok."
+    },
+    {
+      "t": "2026-10-08T18:12:20.741Z",
+      "note": "Layers header shows count, Make Component button (dimmed when it cannot act, same as Option Command K) and a panel menu (Group Selection, Make Component, Hide This Panel) in Next at defaults. Core words in PhotonzCore/LayersPanelHeader (tested), view in LayersPanelHeaderControls.swift. Verified: Scripts/test.sh 11862 passed, layers-header-make-component-walk green with real captures light and dark, audit queue/audits/2026-10-08-layers-header.json. Commit 9916955e."
     }
-  ]
+  ],
+  "started": "2026-10-08T17:38:54.265Z",
+  "walks": [
+    "layers-header-make-component-walk"
+  ],
+  "completed": "2026-10-08T18:12:20.742Z"
 }
