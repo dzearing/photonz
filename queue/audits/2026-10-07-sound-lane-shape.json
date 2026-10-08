@@ -1,0 +1,50 @@
+{
+  "feature": "A sound's waveform is one smooth shape in its lane's colour",
+  "epic": "video-audio",
+  "task": "a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa",
+  "summary": "A sound's waveform on the timeline is now one smooth filled shape instead of a row of thin bars, and it and the level line over it are drawn in the lane's own colour: cyan on the first sound track, purple on the second. A sound on its own track wears its name in the mock's dark tag. The lane is still 34 points tall; how tall it should be is on a card for you.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: Scripts/playtest/fade-diamonds-and-level-points-look-like-the-mock-walk.json and a-sound-s-waveform-follows-its-level-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the talk sample from the captions tutorial and look at the Audio lane under V1.",
+      "shot": "2026-10-07-sound-lane-shape-1-dark-sc.png"
+    },
+    {
+      "do": "Switch the Mac to light appearance and look again.",
+      "shot": "2026-10-07-sound-lane-shape-2-light-sc.png"
+    },
+    {
+      "do": "Pick the sound and drag the diamond at its top left to about one second.",
+      "shot": "2026-10-07-sound-lane-shape-3-faded-in-sc.png"
+    },
+    {
+      "do": "Drag the level line down a little and let go.",
+      "shot": "2026-10-07-sound-lane-shape-4-turned-down-sc.png"
+    },
+    {
+      "do": "Add the sample music from the Audio menu so it lands on a second sound track, and read its name at its top left.",
+      "shot": "2026-10-07-sound-lane-shape-5-second-track-sc.png"
+    },
+    {
+      "do": "Compare with the lanes in the audio mock.",
+      "shot": "2026-10-07-sound-waveform-follows-level-mock-lanes.png"
+    }
+  ],
+  "evaluate": [
+    "Does the smooth shape read as the sound better than the bars did?",
+    "Is the cyan level line easy enough to find over the cyan waveform, or should it stand out more than the mock draws it?",
+    "Does the purple on the second track make it obvious which line belongs to which sound?",
+    "Does the music's name in its dark tag read at a glance over the purple waveform?",
+    "Having seen it at 34 points, how tall do you want the lane? The card asks."
+  ],
+  "rough": [
+    "The mock's sound lane is 84 points tall (72 in a narrow window); ours is still 34, because video.html draws it 28 and the extra 50 points come out of the picture on every recording. Waiting on decision a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b.",
+    "At 34 points the fade diamond still sits on the level line at normal level, which the taller lane would fix. Same decision, a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b.",
+    "The mock's track name sits at the top of a tall lane; ours is centred, which only matters once the lane is taller. Same decision, a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b.",
+    "The audio mock draws the lane in the neutral panel colour with a thin edge in the lane's colour; ours keeps the shared kit's green sound clip from video.html. Covered by a-sound-clip-on-the-timeline-wears-its-file-name.",
+    "The sound under V1 still shows no name: the picture right above names it, as decided before this task. A sound on its own track shows its name in the mock's .cliptag, which is how video-audio.html's own lanes are drawn. Matches.",
+    "The level line keeps a faint dark shadow the mock does not draw, so it stays visible where it crosses the same-coloured waveform. The app goes further than the mock here.",
+    "The icon strip (the timing strip on a picture) keeps its bars and white line; only the video timeline changed."
+  ]
+}

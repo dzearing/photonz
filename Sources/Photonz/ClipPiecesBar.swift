@@ -184,6 +184,9 @@ struct ClipPiecesBar: View {
                 levelLine(pieces, x0: x0, ruler: ruler)
                 // Always there, as the mock draws them on every lane: a handle
                 // you have to hover to find is a handle nobody finds.
+                if kind != nil, !isLinkedSound {
+                    soundTag(pieces, x0: x0, ruler: ruler)
+                }
                 if kind != nil {
                     fadeHandles(pieces, x0: x0, ruler: ruler)
                 }
@@ -539,6 +542,33 @@ struct ClipPiecesBar: View {
         }
     }
 
+    /// A sound's name, as the mock's `.cliptag` wears it: white in a dark tag
+    /// at the top left of the clip, over the waveform and the level line,
+    /// because both are drawn in the lane's own colour and a name in a tint
+    /// of it sank into them. Once per clip, kept in sight on a zoomed
+    /// timeline, and clear of the fade in diamond at the clip's start.
+    @ViewBuilder
+    private func soundTag(_ pieces: ClipPieces, x0: CGFloat, ruler: MotionStripRuler) -> some View {
+        let whole = laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS))
+        let shown = TimelineSpan.drawn(x: x0, width: whole, across: laneWidth)
+        if shown.width > 40 {
+            Text(layerName)
+                .font(.system(size: 9, weight: .semibold))
+                .foregroundStyle(.white)
+                .lineLimit(1)
+                .truncationMode(.tail)
+                .padding(.horizontal, 7)
+                .padding(.vertical, 2)
+                .background(RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.4)))
+                .padding(.leading, x0 >= 0 ? SoundFadeDiamond.reach + 4 : 4)
+                .padding(.trailing, 8)
+                .padding(.top, 3)
+                .frame(width: shown.width, height: barHeight, alignment: .topLeading)
+                .offset(x: shown.x)
+                .allowsHitTesting(false)
+        }
+    }
+
     // MARK: Pictures along the clip
 
     /// The recording this bar is a clip of, where it is a video clip on the
@@ -602,26 +632,26 @@ struct ClipPiecesBar: View {
                     Spacer(minLength: 0)
                 }
                 // A clip's own sound is named by the picture right above it,
-                // and the mock's sound segment carries no words.
+                // and the mock's sound segment carries no words. A sound of
+                // its own wears its name above its level line (`soundTag`).
                 if width - hiddenLeading > 40, !isLinkedSound {
-                    Text(layerName)
-                        .font(.system(size: isSound ? 9 : 9.5, weight: .semibold))
-                        .foregroundStyle(kind.ink(colorScheme))
-                        .lineLimit(1)
-                        .truncationMode(.tail)
-                        .shadow(color: .black.opacity(0.35), radius: 1)
-                        // Over pictures the name sits in a dark pill, so it
-                        // reads on a white window as well as on a dark one.
-                        .padding(.horizontal, pictures > 0 ? 5 : 0)
-                        .padding(.vertical, pictures > 0 ? 1 : 0)
-                        .background(Capsule().fill(Color.black.opacity(0.55 * pictures)))
-                        // A sound's name starts clear of its fade in diamond,
-                        // which is always drawn at the segment's start.
-                        .padding(.leading, isSound ? SoundFadeDiamond.reach + 4 : (pictures > 0 ? 4 : 8))
-                        .padding(.trailing, 8)
-                        .padding(.top, isSound ? 3 : 0)
-                        .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)
-                        .padding(.leading, hiddenLeading)
+                    if !isSound {
+                        Text(layerName)
+                            .font(.system(size: 9.5, weight: .semibold))
+                            .foregroundStyle(kind.ink(colorScheme))
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .shadow(color: .black.opacity(0.35), radius: 1)
+                            // Over pictures the name sits in a dark pill, so it
+                            // reads on a white window as well as on a dark one.
+                            .padding(.horizontal, pictures > 0 ? 5 : 0)
+                            .padding(.vertical, pictures > 0 ? 1 : 0)
+                            .background(Capsule().fill(Color.black.opacity(0.55 * pictures)))
+                            .padding(.leading, pictures > 0 ? 4 : 8)
+                            .padding(.trailing, 8)
+                            .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)
+                            .padding(.leading, hiddenLeading)
+                    }
                 }
             }
             .allowsHitTesting(false)

@@ -1,0 +1,56 @@
+{
+  "id": "a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b",
+  "taskId": "a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa",
+  "question": "How tall should a sound's lane be on the timeline?",
+  "context": "The audio mock (video-audio.html) draws sound lanes 84 points tall; the main editing mock (video.html) draws every lane, sound included, 28 points tall. The smooth waveform and the lane-coloured level line from this task have shipped at today's 34 point height. Only the height is open.",
+  "options": [
+    {
+      "id": "a",
+      "label": "84 points, as the audio mock: the timeline grows 50 points and the picture shrinks by that on every recording with sound",
+      "summary": "Every sound lane is drawn 84 points tall (72 in a window 880 points wide or narrower), as video-audio.html draws it. The track name sits at the top of the lane. The timeline opens 50 points taller on any recording with sound, so the picture above it is that much shorter.",
+      "pros": [
+        "Matches the audio mock exactly",
+        "A fade, a quiet stretch and the level line all have room, and the fade diamond no longer sits on the line",
+        "Dragging the level line has more than twice the travel"
+      ],
+      "cons": [
+        "The picture is about 50 points shorter on every recording with sound, including ones where you never touch the sound",
+        "Two sound tracks fill most of the timeline before any scrolling"
+      ],
+      "mitigation": "The timeline top edge still drags lower, and the lanes scroll inside it when it is pulled short."
+    },
+    {
+      "id": "b",
+      "label": "Compact, as the editing mock: sound lanes stay 34 points, taller only when you pinch the rows",
+      "summary": "Sound lanes stay the height they are today, as video.html draws every lane. They keep the new smooth waveform and the level line in the lane colour. To work on sound in detail you pinch the timeline with Shift held, which grows every row together.",
+      "pros": [
+        "The picture keeps its height",
+        "Matches the main editing mock, where sound lanes are as tall as the video lane",
+        "Nothing moves on screen"
+      ],
+      "cons": [
+        "The level line has little room to drag and the fade diamond still sits on it at normal level",
+        "Does not match the audio mock"
+      ],
+      "mitigation": "Shift and pinch already makes every row up to four times taller.",
+      "declines": true
+    },
+    {
+      "id": "c",
+      "label": "34 points until you pick a sound, then 84 while it is picked: the timeline grows and shrinks as you pick",
+      "summary": "A sound lane is compact until you click its clip. While it is picked it opens to 84 points, as the audio mock draws it, and closes again when you pick something else. The timeline grows 50 points while a sound is picked.",
+      "pros": [
+        "The picture keeps its height until you work on sound",
+        "When you do, you get the audio mock lane"
+      ],
+      "cons": [
+        "The timeline and the picture change height each time you pick or unpick a sound, which can feel jumpy",
+        "The lane you are aiming at moves under the pointer as it opens"
+      ],
+      "mitigation": "The lane grows downward with a short animation, keeping the clip you clicked under the pointer."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-08T02:13:55.605Z"
+}
