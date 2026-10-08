@@ -31,7 +31,7 @@
 
     { "do": "rightClick", "at": [640, 400], "shot": "push-1b-freeze-frame-menu", "choose": "Freeze Frame > Freeze for 5s" },
     { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "2-everything-waits", "note": "THE FIRST TEST. The frame is held for five seconds and everything waits with it: both sound bars carry a five second block badged silence, exactly under the hold, and what was being said at three and a half seconds is still being said at three and a half seconds of picture afterwards. Nothing has drifted, and the timeline shows why" },
+    { "do": "describe", "stage": "2-everything-waits", "note": "THE FIRST TEST. The frame is held for five seconds and everything waits with it: both sound bars carry a five second empty dashed slot, exactly under the hold, and what was being said at three and a half seconds is still being said at three and a half seconds of picture afterwards. Nothing has drifted, and the timeline shows why" },
     { "do": "expect", "menu": "Hold", "reads": "5s" },
     { "do": "expect", "field": "While held", "reads": "Everything waits" },
     { "do": "panel", "stage": "2-everything-waits" },

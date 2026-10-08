@@ -437,6 +437,18 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         return pieces[..<index].reduce(0) { $0 + $1.lengthMS }
     }
 
+    /// Where the clip holds a frame, from its own start, in order. On a sound
+    /// these are the quiet a hold pushed in.
+    public var heldSpansMS: [Range<Int>] {
+        var start = 0
+        var spans: [Range<Int>] = []
+        for piece in pieces {
+            if piece.isHeld { spans.append(start..<(start + piece.lengthMS)) }
+            start += piece.lengthMS
+        }
+        return spans
+    }
+
     /// Where a piece begins and ends, or nil for an index that is not there.
     public func rangeMS(ofPiece index: Int) -> (start: Int, end: Int)? {
         guard pieces.indices.contains(index) else { return nil }

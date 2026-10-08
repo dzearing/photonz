@@ -631,4 +631,18 @@ struct ClipPiecesTests {
         // knew how to read (`DocumentTime.swift`).
         #expect(clip.playback.map(\.lengthMS) == cuts.layerTimes().map(\.lengthMS))
     }
+
+    /// Where the clip holds a frame, measured from its own start: on a sound,
+    /// those are the stretches of quiet a hold pushed in, which the timeline
+    /// draws as an empty slot and keeps the level line out of.
+    @Test func heldSpansAreWhereTheClipHoldsAFrame() {
+        let clip = ClipPieces(pieces: [
+            ClipPiece(sourceInMS: 0, lengthMS: 4_000),
+            ClipPiece(sourceInMS: 4_000, lengthMS: 2_000, speedPercent: 0),
+            ClipPiece(sourceInMS: 4_000, lengthMS: 3_000),
+            ClipPiece(sourceInMS: 7_000, lengthMS: 1_000, speedPercent: 0),
+        ])
+        #expect(clip.heldSpansMS == [4_000..<6_000, 9_000..<10_000])
+        #expect(ClipPieces(pieces: [ClipPiece(sourceInMS: 0, lengthMS: 4_000)]).heldSpansMS.isEmpty)
+    }
 }

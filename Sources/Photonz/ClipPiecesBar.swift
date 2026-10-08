@@ -379,7 +379,7 @@ struct ClipPiecesBar: View {
                 // cleaned sound is being made, how far along that is (an EQ
                 // or a compressor is made the same way, so it shows too).
                 let progress = editorState.soundCleaningProgress(of: layerID)
-                if isSound, shown.width > 48, soundLevel?.clipGainLabel != nil
+                if isSound, !(item.map(isQuiet) ?? false), shown.width > 48, soundLevel?.clipGainLabel != nil
                     || soundLevel?.activeNoiseReduction != nil || progress != nil {
                     soundBadge(gain: soundLevel?.clipGainLabel, cleaned: soundLevel?.activeNoiseReduction != nil,
                                progress: progress)
@@ -394,7 +394,7 @@ struct ClipPiecesBar: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                if kind != nil, !(item.map(isStill) ?? false),
+                if kind != nil, !(item.map(isStill) ?? false), !(item.map(isQuiet) ?? false),
                    let badge = Self.badge(item, isSound: isSound), shown.width > 30 {
                     kitBadge(badge)
                 }
@@ -546,8 +546,33 @@ struct ClipPiecesBar: View {
                            lineWidth: kind == nil ? 2 : 1.5,
                            pointColor: kind == nil ? .accentColor : soundTint,
                            onLevelInHand: { levelInHand = $0 })
+                .mask { quietMask(pieces, fromFraction: shown.startFraction,
+                                  toFraction: shown.endFraction, width: shown.width) }
                 .offset(x: shown.x)
         }
+    }
+
+    /// The level line kept out of the quiet a hold pushed in, which the
+    /// freeze walkthrough draws as an empty slot (`#audGap`): there is no
+    /// sound there to set a level on. Only the drawing is masked; the line
+    /// still answers a press anywhere along it.
+    private func quietMask(_ pieces: ClipPieces, fromFraction: CGFloat, toFraction: CGFloat,
+                           width: CGFloat) -> some View {
+        let total = Double(max(1, pieces.totalLengthMS))
+        let from = Double(fromFraction) * total
+        let span = max(1, Double(toFraction - fromFraction) * total)
+        let quiet = kind == nil ? [] : pieces.heldSpansMS
+        return Canvas { context, size in
+            context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.black))
+            context.blendMode = .clear
+            for range in quiet {
+                let x0 = CGFloat((Double(range.lowerBound) - from) / span) * width
+                let x1 = CGFloat((Double(range.upperBound) - from) / span) * width
+                context.fill(Path(CGRect(x: x0, y: 0, width: x1 - x0, height: size.height)),
+                             with: .color(.black))
+            }
+        }
+        .allowsHitTesting(false)
     }
 
     /// A sound's name, as the mock's `.cliptag` wears it: white in a dark tag
@@ -626,7 +651,9 @@ struct ClipPiecesBar: View {
     /// sliding out with the clip's start.
     @ViewBuilder private func kitFace(_ piece: ClipPiece?, width: CGFloat,
                                       hiddenLeading: CGFloat, pictures: Double = 0) -> some View {
-        if let kind {
+        if kind != nil, let piece, isQuiet(piece) {
+            quietFace
+        } else if let kind {
             ZStack(alignment: isSound ? .topLeading : .leading) {
                 if soundOnThePanelGround {
                     RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(soundTint.opacity(0.35), lineWidth: 1)
@@ -671,10 +698,28 @@ struct ClipPiecesBar: View {
     }
 
     /// A held frame of the picture, on the dock's timeline. A hold on a sound
-    /// is the quiet it pushed in, not a picture standing still, and keeps its
-    /// own badge.
+    /// is the quiet it pushed in, not a picture standing still (`isQuiet`).
     private func isStill(_ piece: ClipPiece) -> Bool {
         kind != nil && !isSound && piece.isHeld
+    }
+
+    /// The quiet a hold pushed into a sound, on the dock's timeline.
+    private func isQuiet(_ piece: ClipPiece) -> Bool {
+        kind != nil && isSound && piece.isHeld
+    }
+
+    /// The quiet drawn as `video-freeze-wt.html` draws `#audGap` under its
+    /// still (`.gapmark`): an empty slot with a dashed edge in the strong line
+    /// colour and nothing inside, so the sound visibly stops where the picture
+    /// does. A gap left by a lift is the same dashes over stripes, so the two
+    /// are kin and still tell apart: a hole in the edit is hatched, a pause in
+    /// the sound is bare.
+    private var quietFace: some View {
+        RoundedRectangle(cornerRadius: cornerRadius)
+            .strokeBorder(VideoKit.Palette.lineStrong, style: StrokeStyle(lineWidth: 1, dash: [4, 3]))
+            .allowsHitTesting(false)
+            .panelReadout("quiet")
+            .playtestField("\(fieldName) quiet")
     }
 
     /// A held frame drawn as `video-freeze-wt.html` draws its still
@@ -734,6 +779,7 @@ struct ClipPiecesBar: View {
     }
 
     private func fill(_ piece: ClipPiece?, picked: Bool) -> AnyShapeStyle {
+        if let piece, isQuiet(piece) { return AnyShapeStyle(Color.clear) }
         if soundOnThePanelGround {
             return AnyShapeStyle(VideoKit.Palette.panel2.color(colorScheme).mix(with: .white, by: 0.03))
         }

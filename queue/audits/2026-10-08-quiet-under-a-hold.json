@@ -1,0 +1,45 @@
+{
+  "feature": "The quiet a held frame pushes into the sound is an empty slot",
+  "epic": "video-transitions-motion",
+  "summary": "When a frame is held and everything waits, the sound under the still is now drawn as the freeze walkthrough draws it: an empty slot with a dashed edge, with no fill, no silence badge and no level line through it, so the sound visibly stops where the picture stops.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/the-quiet-under-a-hold-is-a-bare-slot-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the talk sample (Help, Samples) and open the timeline.",
+      "shot": "2026-10-08-quiet-slot-mock.png"
+    },
+    {
+      "do": "Put the playhead at 0:04 and press Command K, then at 0:08 and press Command K."
+    },
+    {
+      "do": "Click inside the middle piece, press X then ; to lift it and leave a gap."
+    },
+    {
+      "do": "Put the playhead at 0:12, right-click the clip after the gap and choose Freeze Frame, Freeze for 2s.",
+      "shot": "2026-10-08-quiet-slot-1-dark-sc.png"
+    },
+    {
+      "do": "Switch the Mac to Light appearance and compare the gap and the quiet on the Audio lane.",
+      "shot": "2026-10-08-quiet-slot-2-light-sc.png"
+    },
+    {
+      "do": "Click the still and choose 5s in the panel's Hold menu.",
+      "shot": "2026-10-08-quiet-slot-3-five-seconds-sc.png"
+    },
+    {
+      "do": "Press Command Z twice: the hold and the quiet under it are gone."
+    }
+  ],
+  "evaluate": [
+    "Do you read the empty slot under the still as no sound, at a glance?",
+    "Can you tell the quiet (bare dashes) from the gap a lift left (dashes over stripes), in both appearances?",
+    "In Light appearance, is the dashed edge of the quiet strong enough to see, or does it fade into the lane?",
+    "Is it right that the level line stops at the quiet instead of running through it?"
+  ],
+  "rough": [
+    "It matches the mock, video-freeze-wt.html step 3 (#audGap): an empty slot a clip's height and corner, edged in dashes of the strong line colour.",
+    "The level line is only hidden over the quiet; pressing where it would run still sets the level, as it does anywhere along the sound. No mock covers that.",
+    "The older motion strip outside the dock timeline still writes silence on a held sound piece; no mock covers that strip."
+  ]
+}
