@@ -5,16 +5,16 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T06:01:14.982Z",
-  "updated": "2026-10-08T06:10:03.934Z",
+  "updated": "2026-10-08T09:03:06.971Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-07 23:00 by the manager, scratch walk /tmp/mgr-walks/lift.json: openSampleTalk, videoPause, tool select, videoSeekQuarter, key i, videoSeekMiddle, key o, key ';', wait 0.6, expectClip Sample Talk pieces 2 -> FAILED as quoted. With apostrophe (Extract) instead, Sample Talk is in 2 pieces, 0.00s to 12.94s, correct. The ' copy' suffix comes from Layer duplication (Sources/PhotonzCore/Layer.swift:1833, name + \" copy\"); Lift probably duplicates the layer for the tail instead of splitting it the way Command K does (ClipPieces.swift). Rough line from audit 2026-10-07-gap-close.json ('The second half of a lifted clip is named Sample Talk copy, not Sample Talk; that comes from Lift').",
   "acceptance": [
-    "Open the sample talk at Next defaults, I at a quarter, O at the middle, semicolon: expectClip Sample Talk pieces 2 passes, and no clip is named Sample Talk copy (today: 'Sample Talk is in 1 pieces, not 2; the timeline: Sample Talk copy on V1 8.63s to 17.25s; Sample Talk on V1 0.00s to 4.31s')",
+    "Open the sample talk at Next defaults, I at a quarter, O at the middle, semicolon: two clips called Sample Talk on V1 (0.00s to 4.31s and 8.63s to 17.25s) and none called Sample Talk copy (before: 'Sample Talk copy on V1 8.63s to 17.25s; Sample Talk on V1 0.00s to 4.31s'). Rewritten 2026-10-08 from 'expectClip pieces 2': a clip's pieces sit back to back and cannot hold a gap (ClipPieces rule), so a lifted clip is necessarily two clips with the same name, exactly as Premiere leaves two clip items of one name",
     "The gap stays where the stretch was; undo puts the clip back whole",
     "Lift across several tracks (a range over V1 and its sound) leaves pieces on each, same rule",
     "Check the other edits that split a clip in two (Lift from the range right-click menu, a range Delete without ripple, paste over the middle of a clip) and give them the same rule, or note in the log why one differs",
@@ -30,6 +30,39 @@
     {
       "t": "2026-10-08T06:10:03.933Z",
       "note": "seq 3790 -> 2"
+    },
+    {
+      "t": "2026-10-08T08:46:21.252Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T09:02:04.884Z",
+      "note": "Cause: liftStretch duplicated the clip for the part after the gap with Layer.duplicated, which names it '<name> copy'. Every other edit that cuts one clip into two (overwrite landing ClipLanding.replace, breakClip at a cut, merge/break apart, range paste) already resets the copy's name; Lift was the one that did not. Fix: MarkedStretch.liftStretch renames the tail back to the clip's name. That one path serves the semicolon, Lift from the ruler range's right-click menu, a range Delete on some tracks (onTracks), Delete on a picked piece (liftPicks) and paste over the middle of a caption line (pasteCaptions), so all of them now follow the rule. A paste over the middle of a CLIP goes through ClipLanding.replace, which already kept the name."
+    },
+    {
+      "t": "2026-10-08T09:02:04.941Z",
+      "note": "Acceptance 1 reworded: 'pieces 2' cannot hold, since ClipPieces cannot write a gap between pieces of one clip (its header rule); two same-named clips is also what Premiere's Lift leaves. Both halves now share a name, so Layer.joined (which requires equal names) can rejoin them where they read straight on again."
+    },
+    {
+      "t": "2026-10-08T09:02:05.000Z",
+      "note": "Verified: tests first (MarkedStretchTests liftKeepsTheName, liftOnTracksKeepsTheName; TrackRangeTests liftMiddlePieceKeepsTheName) failed with 'Talk copy', pass after. New walk lift-keeps-one-clip-walk (no flags, no front): FAILED on the unfixed build with 'Sample Talk copy on V1 8.63s to 17.25s', ok on the fixed one, including undo back to one whole clip and a lift over V1 plus the detached sound on Audio (Sample Talk x2, Sample Talk sound x2). Scripts/test.sh: 11804 tests passed."
+    },
+    {
+      "t": "2026-10-08T09:02:05.058Z",
+      "note": "owns these walks: lift-keeps-one-clip-walk"
+    },
+    {
+      "t": "2026-10-08T09:02:14.011Z",
+      "note": "Adversarial review: a Premiere editor expects Lift to leave the same clip either side of the hole under one name; that is what ships. Clicking one half picks that half alone, as Premiere does. What still reads differently: the cut walkthrough mock (video-cut-wt step 'the second half, screen-recording · 2') labels the part after a cut with a number; the app labels every piece and half with the plain clip name, for Command K and now Lift alike. That is a mock difference older than this task, raised as a decision card (see follow-up)."
+    },
+    {
+      "t": "2026-10-08T09:03:06.969Z",
+      "note": "Lift now leaves both halves of a clip under the clip's own name, never '<name> copy' (MarkedStretch.liftStretch). The same path serves the semicolon, Lift from the range right-click menu, a range Delete on some tracks, Delete on a picked piece and paste over a caption line; overwrite paste over a clip already kept the name. Tests written first (3 new, failed with 'Talk copy', now pass); new walk lift-keeps-one-clip-walk at Next defaults failed on the unfixed build and passes on the fixed one, covering undo and a lift over the picture and its detached sound; Scripts/test.sh 11804 passed. Audit 2026-10-08-lift-keeps-one-clip.json. Mock label difference (· 2) raised as a decision card on the-part-after-a-cut-is-labelled-the-way-the-cut."
     }
-  ]
+  ],
+  "started": "2026-10-08T08:46:21.251Z",
+  "walks": [
+    "lift-keeps-one-clip-walk"
+  ],
+  "completed": "2026-10-08T09:03:06.970Z"
 }

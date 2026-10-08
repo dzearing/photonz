@@ -1,0 +1,40 @@
+{
+  "id": "the-part-after-a-cut-is-labelled-the-way-the-cut-after-you-cut-a-clip-or-lift-a-s",
+  "taskId": "the-part-after-a-cut-is-labelled-the-way-the-cut",
+  "question": "After you cut a clip, or lift a stretch out of it, what does the part after the cut say on the timeline?",
+  "context": "The cut walkthrough mock labels the second half of a blade cut screen-recording · 2. The app labels every part with the plain clip name, for Command K and, since today, for Lift too (it used to say Sample Talk copy).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Both parts show the clip name",
+      "summary": "Both parts read Sample Talk, the way the app shows it today. Premiere and Final Cut do the same.",
+      "pros": [
+        "What a Premiere or Final Cut editor already sees",
+        "Nothing changes when you cut, so the timeline stays calm"
+      ],
+      "cons": [
+        "Not what the cut mock draws",
+        "Two parts with the same name cannot be told apart by their label"
+      ],
+      "mitigation": "Picking a part still shows its own in and out in the panel.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "The part after the cut adds a number",
+      "summary": "The first part reads Sample Talk and the part after the cut reads Sample Talk · 2, then · 3, as the cut mock draws it, for Command K, Lift and Extract alike.",
+      "pros": [
+        "Matches the cut mock",
+        "Each part can be told apart and talked about"
+      ],
+      "cons": [
+        "The numbers can look like separate copies, which is the confusion this task fixed",
+        "Numbers shift when parts are reordered or deleted"
+      ],
+      "mitigation": "The number is only a label on the bar; the clip keeps one name everywhere else."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-08T09:02:21.010Z"
+}

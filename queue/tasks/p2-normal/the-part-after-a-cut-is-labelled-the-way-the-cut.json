@@ -1,0 +1,32 @@
+{
+  "id": "the-part-after-a-cut-is-labelled-the-way-the-cut",
+  "title": "The part after a cut is labelled the way the cut mock labels it",
+  "goal": "The cut walkthrough mock labels the second half of a cut clip with a number (screen-recording · 2), while the app labels every piece and every half with the plain clip name. Decide which the timeline should show, then make cuts, Lift and Extract all follow it.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3800,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T09:02:14.070Z",
+  "updated": "2026-10-08T09:02:29.447Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-cut-wt.html line ~298 (#clipB, label \"screen-recording · 2\") and step text line ~393. App: ClipPiecesBar draws Text(layerName) on every piece (around line 678). Since 2026-10-08 Lift keeps the clip name on both halves (lifting-a-stretch-keeps-both-halves-as-pieces-of), so the difference is now the same for Command K and Lift. Premiere labels both halves with the plain clip name.",
+  "acceptance": [
+    "The user has picked how the part after a cut is labelled on the timeline",
+    "Command K, Lift, Extract and Delete on a picked piece all label the part after the cut that way",
+    "A walk at Next defaults reads the labels after a Command K and after a Lift"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T09:02:14.072Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T09:02:29.444Z",
+      "note": "waiting on the label decision card"
+    }
+  ],
+  "walks": []
+}

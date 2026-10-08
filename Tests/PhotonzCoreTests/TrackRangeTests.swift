@@ -221,6 +221,15 @@ struct TrackRangeTests {
         #expect(Self.span(doc, music) == 1000..<11_000)
     }
 
+    @Test("Delete on the middle piece leaves two pieces of the one clip, both called what it is called")
+    func liftMiddlePieceKeepsTheName() throws {
+        var (doc, clip, _, v1, _) = try Self.edit()
+        let did = doc.liftPicks([TimelinePick(layerID: clip, piece: 1)])
+        #expect(did)
+        #expect(Self.spans(doc, track: v1) == [0..<4000, 8000..<12_000])
+        #expect(doc.clipIDs(onTrack: v1).compactMap { doc.layer(id: $0)?.name } == ["Talk", "Talk"])
+    }
+
     @Test("Delete on two pieces side by side leaves one gap")
     func liftNeighbouringPicks() throws {
         var (doc, clip, _, v1, _) = try Self.edit()

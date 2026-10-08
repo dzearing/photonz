@@ -1,0 +1,40 @@
+{
+  "feature": "Lift keeps both halves as the same clip",
+  "epic": "video-cutting",
+  "summary": "Lifting a marked stretch out of a clip now leaves both halves called what the clip is called, the way Command K and Extract do. Before, the half after the gap came back as Sample Talk copy.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screen recording with sound and open the timeline. The walk lift-keeps-one-clip-walk does all of this on its own sample talk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Move the playhead to about 0:04 and press I, then to about 0:08 and press O.",
+      "shot": "2026-10-08-lift-keeps-one-clip-1-marked-sc.png"
+    },
+    {
+      "do": "Press semicolon: the stretch goes, the gap stays, and both halves on V1 carry the clip's name.",
+      "shot": "2026-10-08-lift-keeps-one-clip-2-lifted-sc.png"
+    },
+    {
+      "do": "Press Command Z: the clip is whole again."
+    },
+    {
+      "do": "Right-click the clip on V1, choose Detach Audio, then mark the same stretch and press semicolon again."
+    },
+    {
+      "do": "Look at Audio: both halves of the sound keep the sound's name, and both halves on V1 keep the clip's name.",
+      "shot": "2026-10-08-lift-keeps-one-clip-3-picture-and-sound-sc.png"
+    },
+    {
+      "do": "Pick the middle piece of a clip you cut twice with Command K and press Delete: both sides keep the clip name."
+    }
+  ],
+  "evaluate": [
+    "Does a lifted clip now read as one clip with a hole in it rather than as two different clips?",
+    "With two halves showing the same name, can you still tell which one you have picked?",
+    "Would you expect the half after the gap to carry a number (Sample Talk \u00b7 2), as the cut mock draws it?"
+  ],
+  "rough": [
+    "The cut walkthrough mock labels the part after a blade cut screen-recording \u00b7 2; the app shows the plain clip name on both parts, for Command K and now Lift. Open as decision card the-part-after-a-cut-is-labelled-the-way-the-cut-after-you-cut-a-clip-or-lift-a-s on task the-part-after-a-cut-is-labelled-the-way-the-cut.",
+    "A lifted clip is two clips that share a name, not one clip in two pieces: a clip's pieces sit back to back and cannot hold a gap. Premiere's Lift leaves the same two clip items.",
+    "The canvas is black straight after the lift because the playhead sits at the In, which is now the start of the gap."
+  ]
+}

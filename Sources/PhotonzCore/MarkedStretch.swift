@@ -133,8 +133,9 @@ extension PhotonzDocument {
 
     /// Take the stretch from `start` to `end` out of every unlocked track and
     /// leave the gap: Premiere's Lift. Nothing after it moves. A clip or a
-    /// title across the whole stretch becomes two, on the same track, with
-    /// the gap between them. Answers whether anything changed.
+    /// title across the whole stretch becomes two, on the same track and
+    /// under the same name, with the gap between them. Answers whether
+    /// anything changed.
     ///
     /// `onTracks` limits it to those tracks; `onlyLayers` to those layers,
     /// which is how one picked piece of a clip is lifted and nothing beside it.
@@ -161,6 +162,9 @@ extension PhotonzDocument {
                 continue
             }
             if time.inMS < from, time.outMS > end, let copy = duplicateLayer(id: layer.id) {
+                // The part after the gap is the same clip, not a copy of it,
+                // so it is called what the clip is called, as a cut leaves it.
+                updateLayer(id: copy.id) { $0.name = layer.name }
                 if !keep(copy.id, fromMS: end, toMS: time.outMS) { gone.insert(copy.id) }
             }
             let keepFrom = time.inMS < from ? time.inMS : end

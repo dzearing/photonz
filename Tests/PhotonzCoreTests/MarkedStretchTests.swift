@@ -264,6 +264,39 @@ struct MarkedStretchTests {
         #expect(rest.first?.outMS == 10_000)
     }
 
+    @Test("Both halves of a lifted clip keep its name: Lift copies nothing, it cuts")
+    func liftKeepsTheName() throws {
+        var (doc, clip, _, _) = Self.talkWithTitle()
+        doc.liftStretch(fromMS: 4000, toMS: 8000)
+        #expect(doc.layer(id: clip)?.name == "Talk")
+        let halves = doc.allLayers.filter(\.isClip)
+        #expect(halves.count == 2)
+        #expect(halves.allSatisfy { $0.name == "Talk" })
+        #expect(doc.allLayers.filter { $0.name == "Across" }.count == 2)
+        #expect(!doc.allLayers.contains { $0.name.hasSuffix(" copy") })
+    }
+
+    @Test("A range Delete on some tracks, and Delete on a picked piece, name both halves the same")
+    func liftOnTracksKeepsTheName() throws {
+        var (doc, clip, across, _) = Self.talkWithTitle()
+        let track = try #require(doc.trackID(ofClip: clip))
+        doc.liftStretch(fromMS: 4000, toMS: 8000, onTracks: [track])
+        #expect(doc.allLayers.filter(\.isClip).allSatisfy { $0.name == "Talk" })
+        doc.liftStretch(fromMS: 5000, toMS: 6000, onlyLayers: [across])
+        #expect(doc.allLayers.filter { $0.name == "Across" }.count == 2)
+        #expect(!doc.allLayers.contains { $0.name.hasSuffix(" copy") })
+    }
+
+    /// The talk with a title across the whole of 4.0s to 8.0s, as written down
+    /// tracks, so a lift has a clip and a title to cut in two.
+    static func talkWithTitle() -> (doc: PhotonzDocument, clip: UUID, title: UUID, captions: [String: UUID]) {
+        var (doc, clip, captions) = talk()
+        let across = title("Across", 2000, 10_000)
+        doc.addLayer(across)
+        doc.materializeTracks()
+        return (doc, clip, across.id, captions)
+    }
+
     @Test("Lift on a marked stretch spends the marks")
     func liftMarked() {
         var (doc, _, _) = Self.talk()
