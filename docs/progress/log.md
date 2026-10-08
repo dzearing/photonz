@@ -20888,3 +20888,9 @@ Next: the first editor window's ~200 ms first build
 - App: a click in a gap picks it (range band), Delete / Shift Delete / Ripple Delete / Edit > Delete Gap close it, and each gap has its own right-click menu leading with Ripple Delete.
 - Walk `a-gap-between-clips-closes-walk` at Next defaults; harness reads a picked gap as "Gap on <track>" and gains `captionsExpectOverClips`.
 - Next: the mock's dashed, hatched look for an unpicked gap (filed).
+
+## 2026-10-08 — the Export sheet "stall" was mostly its own slide (the-export-sheet-opens-without-a-stall)
+
+- Found: the 360 ms open / 275 ms close every walk reported was AppKit's sheet slide (~258 ms) run in `_NSMoveTimerRunLoopMode`, which the walk meter did not observe, so the slide counted as one pass. The real cost is the ~110 ms before the slide starts: about 45 ms SwiftUI making any sheet, the rest mostly the segmented rows.
+- Shipped: the meter watches that mode and says how much of a step was a slide (`WindowSlideSpan`, tested); Export rows skip `ViewThatFits` (`segmentedRowAlwaysFits`); the segmented control builds its on-chip words only once a chip exists. Open now 92 ms median (was 109), editing-session walk 77.5 ms (was 359.8).
+- Open: one open in ten still reads just over 100 ms; further gains need a persisted sheet or a cheaper segmented control app-wide (logged on the task, not filed).

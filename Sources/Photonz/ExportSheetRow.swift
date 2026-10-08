@@ -28,6 +28,10 @@ struct ExportSheetRow<Control: View>: View {
                 .fixedSize()
                 .frame(minWidth: 56, alignment: .leading)
             control
+                // The sheet is always `ExportSheetMetrics.width` and its rows
+                // are short words, so a segmented row never has to be measured
+                // against its dropdown before the sheet can slide in.
+                .environment(\.segmentedRowAlwaysFits, true)
         }
     }
 }

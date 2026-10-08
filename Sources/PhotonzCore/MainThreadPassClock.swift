@@ -75,3 +75,45 @@ public struct MainThreadPassClock: Sendable, Equatable {
         openSince.map { max(0, time - $0 - excluded) }
     }
 }
+
+/// How long the main thread spent inside AppKit's slide of a sheet or window.
+///
+/// AppKit slides a sheet in and out inside a run of its own private run loop
+/// mode, which is not one of the common modes, so an observer on the common
+/// modes never sees the thread sleep between the slide's frames and counts the
+/// whole slide as one pass (`the-export-sheet-opens-without-a-stall`,
+/// 2026-10-08: 360ms opening, 275ms closing, on every document). The meter
+/// watches `mode` as well, which cuts the slide into its frames, and keeps this
+/// tally so a walk can say how much of a step was the slide.
+public struct WindowSlideSpan: Sendable, Equatable {
+
+    /// The run loop mode AppKit runs a sheet's slide in.
+    public static let mode = "_NSMoveTimerRunLoopMode"
+
+    private var since: Double?
+    public private(set) var total: Double = 0
+
+    public init() {}
+
+    public mutating func entered(at time: Double) {
+        if since == nil { since = time }
+    }
+
+    public mutating func left(at time: Double) {
+        guard let since else { return }
+        total += max(0, time - since)
+        self.since = nil
+    }
+
+    /// The total, with a slide still under way counted up to `time`.
+    public func total(at time: Double) -> Double {
+        total + (since.map { max(0, time - $0) } ?? 0)
+    }
+
+    /// Starts the tally again at `time`. A slide under way keeps going, and
+    /// counts from here.
+    public mutating func reset(at time: Double) {
+        if since != nil { since = time }
+        total = 0
+    }
+}

@@ -220,6 +220,17 @@ struct SegmentedControl<Value: Hashable>: View {
     }
 }
 
+extension EnvironmentValues {
+    /// Set where every segmented row is known to fit its words, so the row is
+    /// drawn as a bar without first being measured against its dropdown.
+    ///
+    /// That measuring lays each row out a second time. An Export sheet is
+    /// always the same width and its rows are short words, and measuring its
+    /// three or four rows cost about 10ms of the 110ms the sheet took to start
+    /// sliding in (`the-export-sheet-opens-without-a-stall`, 2026-10-08).
+    @Entry var segmentedRowAlwaysFits = false
+}
+
 // MARK: - The drawn control
 
 /// The row of segments, the space the chip, a slot and a drag are measured in.
@@ -275,6 +286,7 @@ struct DesignedSegments<Value: Hashable>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.colorScheme) private var scheme
     @Environment(\.appearsActive) private var appearsActive
+    @Environment(\.segmentedRowAlwaysFits) private var alwaysFits
 
     /// Every segment's box in the row, where the chip is placed and what a
     /// drag is measured against.
@@ -299,7 +311,7 @@ struct DesignedSegments<Value: Hashable>: View {
 
     var body: some View {
         Group {
-            if showsTitles {
+            if showsTitles, !alwaysFits {
                 // Every word whole on one row, or a dropdown of the same
                 // choices: a bar whose words do not fit is the wrong control
                 // for the room, and a wrapped or cut-short one reads as broken.
@@ -346,8 +358,11 @@ struct DesignedSegments<Value: Hashable>: View {
         // ...and the words again ON TOP of the glass, crisp, in the chip's
         // ink, seen only through a window the chip's own shape and edges:
         // laid out exactly as the row lays them, so a word never moves while
-        // the glass slides over it.
-        .overlay(alignment: .topLeading) { wordsOnChip }
+        // the glass slides over it. Built only once there is a chip to show
+        // them through: before that the mask is empty and they draw nothing,
+        // and building them anyway was about 7ms of every Export sheet's open
+        // (2026-10-08).
+        .overlay(alignment: .topLeading) { if chipRect != nil { wordsOnChip } }
         .simultaneousGesture(chipDrag)
         .onChange(of: pickedIndex) { _, picked in setOff(to: picked) }
         .onChange(of: slots) { settleChip() }

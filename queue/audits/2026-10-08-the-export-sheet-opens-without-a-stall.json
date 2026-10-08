@@ -1,0 +1,24 @@
+{
+  "feature": "The Export sheet opens without a stall",
+  "epic": "video-share",
+  "summary": "The third of a second the walks reported every time Export opened was mostly the sheet's own slide, which they counted as one frozen moment. They now count the slide frame by frame, and the sheet starts sliding about 10 to 15 ms sooner than it did.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any video, for example the sample talk from the Tutorials window.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and press Command E.", "shot": "2026-10-08-export-sheet-opens-1-sc.png" },
+    { "do": "Watch the sheet slide down from the title bar: it should start at once and slide smoothly." },
+    { "do": "Press Escape and watch it slide back up." },
+    { "do": "Press Command E again several times in a row, on a still picture as well as a video." }
+  ],
+  "evaluate": [
+    "Does the sheet start to move as soon as you press the key, with no beat before it?",
+    "Is the slide smooth both ways, with no hitch at the start or the end?",
+    "Do the Format, Size and Quality rows look exactly as they did, the picked word crisp on its glass chip?"
+  ],
+  "rough": [
+    "Before: walks read 360 to 370 ms on every open and about 275 ms on every close. Of that, about 260 ms was AppKit sliding the sheet in a run loop mode the meter did not watch; the thread slept between frames and every frame was on time.",
+    "Measured with the corrected meter on the sample talk, ten opens each: before the change the sheet started sliding after 109 ms at the median (84 to 126); after, 92 ms (83 to 103). The editing-session walk's Export step reads 77.5 ms, down from 359.8 ms. Closing reads about 30 ms.",
+    "About 45 ms of what is left is SwiftUI making any sheet at all (a sheet holding one word took 30 to 58 ms), and most of the rest is the three or four segmented rows. One open in ten can still read just over 100 ms.",
+    "No mock covers how fast the sheet opens; its look is unchanged."
+  ]
+}

@@ -17127,6 +17127,10 @@ final class MainThreadMeter {
                 clock.drop()
                 return
             }
+            if moment == .enteredARun || moment == .leftARun,
+               CFRunLoopCopyCurrentMode(CFRunLoopGetMain())?.rawValue as String? == WindowSlideSpan.mode {
+                if moment == .enteredARun { slide.entered(at: now) } else { slide.left(at: now) }
+            }
             guard let d = clock.record(moment, at: now) else { return }
             busy += d
             sinceAsked += d
@@ -17139,11 +17143,23 @@ final class MainThreadMeter {
         }
         self.observer = observer
         CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
+        // A sheet slides in and out inside a run of AppKit's own mode, which
+        // is not a common one: unwatched, the whole slide read as one pass
+        // (`WindowSlideSpan`). Watched only, never made common, so nothing of
+        // the app's own runs while a sheet slides that did not before.
+        CFRunLoopAddObserver(CFRunLoopGetMain(), observer,
+                             CFRunLoopMode(WindowSlideSpan.mode as CFString))
     }
+
+    /// How long AppKit spent sliding a sheet (or animating a window's frame,
+    /// which runs in the same mode) since the meter was zeroed. Its frames are
+    /// passes like any other; this is only so a step can say so.
+    private var slide = WindowSlideSpan()
 
     func reset() {
         busy = 0; passes = 0; longest = 0; menuBarLeftOut = 0
         zeroedAt = CACurrentMediaTime()
+        slide.reset(at: zeroedAt)
         clock.restart(at: CACurrentMediaTime())
         sinceAsked = 0
         passesSinceAsked = 0
@@ -17189,6 +17205,10 @@ final class MainThreadMeter {
         total += clock.running(at: CACurrentMediaTime()) ?? 0
         return String(format: "mainBusy %.1fms over %d passes, longest %.1fms from %.0fms in",
                       total * 1000, passes, longest * 1000, longestBeganMS)
+            + (slide.total(at: CACurrentMediaTime()) > 0
+               ? String(format: ", %.0fms of it a sheet or window sliding, counted frame by frame",
+                        slide.total(at: CACurrentMediaTime()) * 1000)
+               : "")
             + (menuBarLeftOut > 0
                ? String(format: ", %.1fms left out that the menu bar spent on the pointer resting over it",
                         menuBarLeftOut * 1000)

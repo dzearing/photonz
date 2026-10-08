@@ -102,3 +102,71 @@ struct MainThreadPassClockTests {
         #expect(clock.record(.fallingAsleep, at: 1) == nil)
     }
 }
+
+/// A sheet slides in and out inside a run of AppKit's own private mode
+/// (`_NSMoveTimerRunLoopMode`), and the meter used to watch only the common
+/// modes. It never saw that run begin, sleep between frames or end, so every
+/// Export sheet read as one pass the length of its slide: 360ms opening and
+/// 275ms closing on a still picture and a five minute video alike (measured
+/// 2026-10-08, the-export-sheet-opens-without-a-stall). The meter watches that
+/// mode too now, and says how much of a step was the slide.
+@Suite("A window's slide is counted frame by frame")
+struct WindowSlideSpanTests {
+
+    @Test("The mode AppKit slides a sheet in is the one the meter watches")
+    func modeName() {
+        #expect(WindowSlideSpan.mode == "_NSMoveTimerRunLoopMode")
+    }
+
+    @Test("Time from entering the slide's run to leaving it is the slide")
+    func spanIsCounted() {
+        var span = WindowSlideSpan()
+        span.entered(at: 1.0)
+        span.left(at: 1.258)
+        #expect(abs(span.total - 0.258) < 1e-9)
+        span.entered(at: 2.0)
+        span.left(at: 2.25)
+        #expect(abs(span.total - 0.508) < 1e-9)
+    }
+
+    @Test("Leaving a slide never entered counts nothing")
+    func unmatched() {
+        var span = WindowSlideSpan()
+        span.left(at: 5)
+        #expect(span.total == 0)
+        span.entered(at: 6)
+        #expect(abs(span.total(at: 6.1) - 0.1) < 1e-9)
+    }
+
+    @Test("A reset forgets the total, and a slide under way counts on from the reset")
+    func reset() {
+        var span = WindowSlideSpan()
+        span.entered(at: 1)
+        span.left(at: 1.2)
+        span.reset(at: 2)
+        #expect(span.total == 0)
+        span.entered(at: 3)
+        span.reset(at: 3.1)
+        span.left(at: 3.3)
+        #expect(abs(span.total - 0.2) < 1e-9)
+    }
+
+    @Test("With the slide's run seen, its sleeps cut the pass: only the work before it is long")
+    func slideFramesAreSeparatePasses() {
+        var clock = MainThreadPassClock()
+        var longest = 0.0
+        func feed(_ m: MainThreadPassClock.Moment, _ t: Double) {
+            if let d = clock.record(m, at: t) { longest = max(longest, d) }
+        }
+        feed(.woke, 0)
+        feed(.enteredARun, 0.110)        // the sheet's slide begins
+        for frame in 0..<30 {             // a frame drawn, then asleep till the next
+            let t = 0.110 + Double(frame) * 0.0083
+            feed(.woke, t)
+            feed(.fallingAsleep, t + 0.001)
+        }
+        feed(.leftARun, 0.368)
+        feed(.fallingAsleep, 0.370)
+        #expect(abs(longest - 0.110) < 1e-9)
+    }
+}
