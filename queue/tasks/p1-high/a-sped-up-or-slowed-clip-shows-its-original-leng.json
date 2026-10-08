@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:06:11.581Z",
-  "updated": "2026-10-07T22:07:43.830Z",
+  "updated": "2026-10-08T00:48:38.220Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-speed.html ~47 (.srcbar style) and ~375-376 (a 'Source' track row holding .srcbar above the 'Retimed' row). docs/design/video-surface.md ~316: 'video-speed's Source/Retimed pair is the user's before-and-after and stays as drawn', and a row may be 'a track, or a property lane under one'. Build it the way key lanes already open under a picked clip (property lane), labelled Source with the image icon, rather than as a real track in the document: it is a view of the clip, not something you edit. If it cannot fit as a lane (the placement table in docs/design/mocks/shared/UX-PATTERNS.md has no row for it), open a decision card and block. Out of scope: the speed curve with stops, which video-surface.md section 11 drops on purpose, and the Slow-mo/Normal/Fast legend. The striped look is already used by the empty track slot (7a15b411), so reuse that drawing. Found by the manager pass's mock comparison 2026-10-07; searched source retimed, ghost bar, before and after speed with --all, nothing covered it.",
@@ -28,6 +28,31 @@
     {
       "t": "2026-10-07T22:07:43.829Z",
       "note": "seq 550 -> 70"
+    },
+    {
+      "t": "2026-10-08T00:21:38.691Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T00:46:53.322Z",
+      "note": "owns these walks: a-retimed-clip-shows-its-source-walk"
+    },
+    {
+      "t": "2026-10-08T00:48:30.962Z",
+      "note": "Adversarial pass before building: the mock puts Source ABOVE Retimed, but a row opening above the picked clip would push the clip down under the pointer at the moment of the click, so it opens under the track like Zoom and key lanes (UX-PATTERNS D18 rule 6). Found in the first build: at 2x the timeline fits the shorter video, so the ghost ran off the right edge and the before/after did not read. Fixed by letting the ruler cover the ghost's end while a retimed clip is picked (same mechanism as drop room); held off during a clip drag so nothing rescales under the hand."
+    },
+    {
+      "t": "2026-10-08T00:48:31.022Z",
+      "note": "Left rough, no task (does not clear the bar): picking a sped-up last clip widens the timeline on mouse-up and unpicking fits it back; the ghost has no tooltip because it takes no clicks. Both are in the audit for the user to react to. Speed curve and legend stay out per speed-a-stretch-up-slow-a-moment-down."
+    },
+    {
+      "t": "2026-10-08T00:48:38.218Z",
+      "note": "Picking a clip whose speed is not 100% opens a Source lane under it with the mock's dashed, striped ghost at the clip's 100% length (Sources/Photonz/ClipSourceLane.swift over tested PhotonzCore/ClipSourceGhost.swift); the ruler widens to the ghost's end while a retimed clip is picked. Verified: a-retimed-clip-shows-its-source-walk at Next defaults (6 real captures, dark and light), 10 neighbouring walks green, Scripts/test.sh 11751 tests green. Audit: queue/audits/2026-10-07-retimed-source-ghost.json"
     }
-  ]
+  ],
+  "started": "2026-10-08T00:21:38.690Z",
+  "walks": [
+    "a-retimed-clip-shows-its-source-walk"
+  ],
+  "completed": "2026-10-08T00:48:38.219Z"
 }
