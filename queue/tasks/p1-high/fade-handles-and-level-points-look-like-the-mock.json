@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:05:42.324Z",
-  "updated": "2026-10-07T22:07:43.773Z",
+  "updated": "2026-10-08T00:06:28.291Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-audio.html ~48 `.fade{width:12px;height:12px;background:#fff;border:1.5px solid #12c2e9}` drawn on every lane; ~45 `.anode{width:11px;height:11px;background:#12c2e9;border:1.5px solid var(--panel)}`. App: Sources/Photonz/ClipPiecesBar.swift ~179 draws fadeHandles only when isPicked || isHovered, and ~725-730 draws them 7x7 with a 1.2 stroke in a fixed cyan; Sources/Photonz/SoundLane.swift ~87 dotSize 9, ~207-209 fills Color.accentColor with a white ring. Hover-only came in with 0127d85b (2026-09-23) with no recorded reason; before changing it, grep the task logs and audits for 'hover' near fade handles, and if the user asked for hover-only, keep that part and say so in the log (the rest still matches the mock). Found by the manager pass's mock comparison, 2026-10-07; searched fade handle, fade diamond, level point with --all, nothing covered it.",
@@ -28,6 +28,40 @@
     {
       "t": "2026-10-07T22:07:43.772Z",
       "note": "seq 540 -> 60"
+    },
+    {
+      "t": "2026-10-07T23:23:00.065Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T00:05:22.935Z",
+      "note": "owns these walks: fade-diamonds-and-level-points-look-like-the-mock-walk, a-sound-s-waveform-follows-its-level-walk"
+    },
+    {
+      "t": "2026-10-08T00:06:16.371Z",
+      "note": "Hover-only check: nobody asked for hover-only. 0127d85b gave no reason, and its own audit (2026-09-23-linked-sound) asked 'Are the fade handles findable when they only show on a picked or hovered segment?'. No answer to that is on record, so the diamonds are now always shown, as in the mock."
+    },
+    {
+      "t": "2026-10-08T00:06:16.429Z",
+      "note": "Review before building: (1) the app has no voiceover track type, so 'track colour' is by sound-track order (first cyan, second purple), which is how the mock gives its two lanes their colours; a clip's own sound lands on Audio 1, so it is cyan. (2) fades are stored as level points, so at normal level the fade's end point sits under the diamond in the 36pt lane. The diamond's hit area is only the diamond itself, and the point shows again once the level moves. The taller lane task separates them. (3) the always-shown diamond covered the first letter of a sound's name, so the name now starts after the diamond. Premiere and Final Cut show fade handles on a clip at all times, so this matches what their users expect."
+    },
+    {
+      "t": "2026-10-08T00:06:16.487Z",
+      "note": "Built: SoundFadeDiamond (ClipPiecesBar.swift) is 12pt, white, 1.5pt ring in soundTint, 0 1 4 shadow, lighter on hover, warn ring while held, diamond-shaped hit area, centre 8.5pt down at the fade end and kept inside the segment. LevelPointDot (SoundLane.swift) is 11pt, filled pointColor, 1.5pt panel-colour ring, inset kept at 5.5 so the line sits where it did. Colour: [DocumentTrack].soundTrackNumber(of:) in PhotonzCore (SoundTrackColourTests, written first), then TimelineTrackRowModel.soundNumber, then VideoKit.Palette.soundTrack(n). Verified: new walk fade-diamonds-and-level-points-look-like-the-mock-walk is green (dark and light at rest, trim under the diamond, diamond drag, line drag beside the diamond, point pin and drag, purple on a second track); also green: a-sound-s-waveform-follows-its-level, a-clip-s-sound-is-linked-under-it, sound-fades-in-the-panel, sound-on-the-timeline, drop-a-sound-or-a-video, hold-pushes-the-sound. Scripts/test.sh: 11746 tests pass."
+    },
+    {
+      "t": "2026-10-08T00:06:16.544Z",
+      "note": "Follow-ups: the level line in the lane colour was added to a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (log and acceptance). Filed a-sound-s-trim-grip-trims-wherever-you-grab-it (p2, reproduced: at normal level the volume line's grab band covers the middle of a sound's trim grip, and that was already so before this change). Left rough, not filed: picture fade handles on video clips and titles are still hover-only, and that is outside this task."
+    },
+    {
+      "t": "2026-10-08T00:06:28.289Z",
+      "note": "Sound fade diamonds are always shown: 12pt, white, ringed in the lane colour (cyan for the first sound track, purple for the second). Level points are 11pt, filled in the lane colour, ringed in the panel colour. Code is in ClipPiecesBar, SoundLane and DocumentTracks (soundTrackNumber, tested first). The new walk fade-diamonds-and-level-points-look-like-the-mock-walk is green at Next defaults: dark and light, trim, diamond, line beside the diamond, level point, purple second track. Six neighbouring sound walks are green and 11746 tests pass. Audit 2026-10-07-fade-handles-and-level-points-look-like-the-mock.json, with mock pictures beside it. Committed 79665c45."
     }
-  ]
+  ],
+  "started": "2026-10-07T23:23:00.057Z",
+  "walks": [
+    "fade-diamonds-and-level-points-look-like-the-mock-walk",
+    "a-sound-s-waveform-follows-its-level-walk"
+  ],
+  "completed": "2026-10-08T00:06:28.290Z"
 }

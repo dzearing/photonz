@@ -1,0 +1,32 @@
+{
+  "id": "a-sound-s-trim-grip-trims-wherever-you-grab-it",
+  "title": "A sound's trim grip trims wherever you grab it",
+  "goal": "On a picked sound segment, pressing the middle of the white trim grip at either end changes the sound's volume instead of trimming it, because the volume line passes through the grip at normal level. Only the bottom part of the grip trims. The whole grip should trim, and the volume line should still be grabbable everywhere else.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3760,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T00:05:17.047Z",
+  "updated": "2026-10-08T00:05:22.877Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 while building fade-handles-and-level-points-look-like-the-mock. The first version of fade-diamonds-and-level-points-look-like-the-mock-walk did `windowClick [600,945]` (pick the talk sample's sound) then `{\"do\":\"dragGrip\",\"control\":\"Sample Talk sound clip start\",\"by\":45}`. grip-trace-17.json: gripX stayed 163.5 at every step while pointerX went 169 -> 208.5; the held capture showed the level line dropped about 5pt and the clip was not trimmed (timeline still 0.00s to 17.25s). Grabbing the same grip lower, windowDrag (166,943)->(211,943), trims it (0.00s to 16.75s). Cause: SoundLevelLine is laid over the grips in ClipPiecesBar's ZStack and its contentShape is LevelBand, the line stroked 12pt wide with round caps; at unity the line is ~12pt down a 34pt bar (SoundLane.y(forGain:), inset 5.5), so the band covers y 6..18 across the grip (grip centre ~17pt). dragGrip presses the grip's centre, so it lands on the band. Not caused by the fade diamonds: the line and grip code are unchanged; the diamond's hit shape is the diamond itself and ends above the grip centre. Fix idea: subtract the grip rects from the band, or draw grips above the level line. The taller lane in a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa moves the line but does not remove the overlap at every level.",
+  "acceptance": [
+    "Dragging a sound segment's start or end grip from its middle trims the clip, at normal level and with the level turned up or down",
+    "The volume line still moves the level when grabbed anywhere along the segment that is not a grip or a fade diamond",
+    "A walk drags the grip of the talk sample's sound from its middle (dragGrip on 'Sample Talk sound clip start') and the clip is shorter afterwards, at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T00:05:17.049Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T00:05:22.876Z",
+      "note": "walks fade-diamonds-and-level-points-look-like-the-mock-walk -> none"
+    }
+  ],
+  "walks": []
+}
