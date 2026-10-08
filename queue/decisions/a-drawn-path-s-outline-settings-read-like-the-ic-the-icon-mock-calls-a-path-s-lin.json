@@ -1,0 +1,67 @@
+{
+  "id": "a-drawn-path-s-outline-settings-read-like-the-ic-the-icon-mock-calls-a-path-s-lin",
+  "taskId": "a-drawn-path-s-outline-settings-read-like-the-ic",
+  "question": "The icon mock calls a path's line settings Width and Caps, and the app calls them Thickness and Ends everywhere. Which words and controls should the outline settings use?",
+  "context": "Picked closed and open paths were photographed against the Stroke section of the icon drawing mock. Align already matches. The section heading (Outline row instead of a Stroke section) follows your 2026-09-06 call on parts. Thickness and Ends are used by lines and arrows too, so renaming them for paths alone splits the words.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Width and Caps on every shape, Caps as words",
+      "summary": "Every outline in the app, on paths, lines, arrows and boxes, says Width where it says Thickness today, and Caps where it says Ends. Width keeps its slider and typed number. Caps shows the words Butt, Round and Square instead of three little pictures. Caps still only appears where a line has ends you can see.",
+      "pros": [
+        "Matches the icon mock word for word",
+        "One set of words across the whole app",
+        "Figma, Illustrator and Sketch users already know Width and Caps"
+      ],
+      "cons": [
+        "Arrows and lines change words people have learned for redlining",
+        "Butt is jargon a screenshot user may not know"
+      ],
+      "mitigation": "Each Caps word carries a tip saying what it does to the end of the line."
+    },
+    {
+      "id": "b",
+      "label": "Width and Caps on paths only",
+      "summary": "A path drawn with the Pen says Width and Caps with the words Butt, Round and Square, exactly as the icon mock draws it. Lines and arrows keep Thickness and the end pictures.",
+      "pros": [
+        "Icon drawing matches the mock exactly",
+        "Redline arrows and lines do not change at all"
+      ],
+      "cons": [
+        "The same setting has two names depending on what you picked",
+        "Picking a path and an arrow together shows two words for one control"
+      ],
+      "mitigation": "With both picked, the panel uses one word for the shared row."
+    },
+    {
+      "id": "c",
+      "label": "Width as a dropdown of icon weights, Caps as words",
+      "summary": "Everything in option A, and for a path Width becomes a dropdown of the common icon weights (1, 1.5, 1.75, 2, 2.5, 3) you can also type into, the way the mock draws it, instead of a slider.",
+      "pros": [
+        "Closest to the mock, control and words",
+        "Picking an icon weight is one click"
+      ],
+      "cons": [
+        "A dropdown is slower than a slider for trying weights by eye",
+        "A path would then work differently from an arrow"
+      ],
+      "mitigation": "The dropdown keeps a typed number, so any weight still goes in."
+    },
+    {
+      "id": "d",
+      "label": "Keep Thickness and Ends",
+      "summary": "Nothing changes. A path keeps the Thickness slider and the Ends pictures, and the icon mock stays different on these two rows.",
+      "pros": [
+        "No words change for anyone"
+      ],
+      "cons": [
+        "The icon panel does not match the mock"
+      ],
+      "mitigation": "Align, which the mock also shows, already matches.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-08T19:10:40.805Z"
+}

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p1-high",
   "seq": 540,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T18:52:37.115Z",
-  "updated": "2026-10-08T18:52:37.118Z",
+  "updated": "2026-10-08T19:11:22.274Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Align row (task a-drawn-path-takes-an-outline-inside-centred-or, 2026-10-08). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 411 (#secStroke: Width select reading 1.75, Caps seg Butt/Round/Square with Round on, Align select Center). App: Sources/Photonz/ShapePartSettings.swift .stroke slot (thickness slider labelled Thickness) and Sources/Photonz/PathLineStylePickers.swift (Pattern, Ends, Corners picture segments, Align dropdown). Ends is hidden on a closed solid path by design (PathContent.showsLineEnds) while the mock always shows Caps. Thickness and Ends are the words lines and arrows use too, so renaming for paths alone splits the vocabulary: that is a card for the user, not a runner guess. Pattern and Corners go further than the mock and are not differences.",
@@ -22,6 +22,30 @@
     {
       "t": "2026-10-08T18:52:37.117Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T19:08:27.442Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T19:11:00.816Z",
+      "note": "owns these walks: path-outline-align-walk"
+    },
+    {
+      "t": "2026-10-08T19:11:22.127Z",
+      "note": "Compared side by side: ran path-outline-align-walk at Next defaults (no flags), photographed a closed path (1-center-sc.png) and an open path (8-open-path-sc.png) against icon-draw-wt.html #secStroke. Differences: Width dropdown vs Thickness slider; Caps words Butt/Round/Square vs Ends pictures; Caps always shown vs Ends hidden on closed solid path. Matches: Align dropdown Center. Heading Outline row vs Stroke section is settled by decision one-way-to-add-colour-and-remove-any-part-of-a-s-how-should-a-shape-s-parts-its-f (user, 2026-09-06). Pattern and Corners go further than the mock. Units (mock units vs app px) belong to the icon grid work, not this row."
+    },
+    {
+      "t": "2026-10-08T19:11:22.186Z",
+      "note": "Adversarial review: a Figma/Illustrator user looks for Width and Caps; a redline user has learned Thickness and Ends on arrows (12 walks read Thickness, 2 read Ends). Renaming for paths only splits one setting into two names, so the vocabulary is the user's call. Nothing decidable to build ahead of the answer: every difference is the word or control the card asks about. Opened decision card (recommend A: Width and Caps everywhere, Caps as words, still hidden where there are no ends). Brief with cropped panel pictures in queue/decisions/."
+    },
+    {
+      "t": "2026-10-08T19:11:22.271Z",
+      "note": "Waiting on the card: Width and Caps (mock) or Thickness and Ends (app's shared words) for the outline settings. Comparison pictures are in the brief."
     }
+  ],
+  "started": "2026-10-08T19:08:27.440Z",
+  "walks": [
+    "path-outline-align-walk"
   ]
 }
