@@ -1,0 +1,28 @@
+{
+  "id": "a-sound-clip-on-the-timeline-wears-its-file-name",
+  "title": "A sound clip on the timeline wears the background the user picks between the two mocks",
+  "goal": "A sound clip on the timeline has a flat green background, as the main editing mock draws it. The audio mock draws the same lane in the neutral panel colour with a thin edge in the lane's own colour, so the sound reads as the coloured shape. Ask which the user wants, then draw that.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3770,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T02:14:36.504Z",
+  "updated": "2026-10-08T02:14:36.507Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-10-07). App: ClipPiecesBar.fill returns kind.fill, VideoKit ClipKind.audio fill is the DS .clip.aud gradient #26463A to #1C3A30 (photonz-ds.css:927, used by video.html). video-audio.html ~44 .lane.alane background var(--panel-2) with a clip rect fill rgba(255,255,255,.03) stroke col at .35 (~500), and .cliptag (~65, left 8 top 6, 9px 640 white on black .4). The name half of this was settled in the same task: a sound on its own track now wears the mock's .cliptag (ClipPiecesBar.soundTag), and a linked sound carries no words on purpose. Searched: cliptag, sound clip name, lane ground, clip.aud (--all); nothing covered it.",
+  "acceptance": [
+    "A decision card shows both backgrounds side by side on the talk sample and the music track, in light and dark, and the user picks one",
+    "The sound clip wears the picked background, with the waveform, level line and name still legible over it in light and dark",
+    "A walk at Next defaults photographs it beside video-audio.html's lanes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T02:14:36.506Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

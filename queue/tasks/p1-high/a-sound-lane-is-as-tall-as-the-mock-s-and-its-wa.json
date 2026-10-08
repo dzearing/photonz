@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 520,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T23:10:38.768Z",
-  "updated": "2026-10-08T00:05:06.197Z",
+  "updated": "2026-10-08T02:31:41.516Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
@@ -32,7 +32,35 @@
     {
       "t": "2026-10-08T00:05:06.196Z",
       "note": "Also from fade-handles-and-level-points-look-like-the-mock (2026-10-07): the level line is still the mint #BFF3E4 on every lane, where video-audio.html strokes it in the lane's own colour (col, 1.5pt). The lane colour now exists: ClipPiecesBar.soundTint / VideoKit.Palette.soundTrack(n) (cyan first sound track, purple second), already used by the fade diamonds and level points. In the 36pt lane the fade diamond (centre 8.5pt down) sits right on the line at normal level and covers the fade's own end point; the taller lane separates them as the mock does."
+    },
+    {
+      "t": "2026-10-08T01:46:41.837Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T02:01:36.336Z",
+      "note": "Review before building: reproduced on the talk sample (Audio lane under V1 is 34pt, mint bars, mint level line). Built the 84pt lane first (SoundLaneShape.height(windowWidth:) in PhotonzCore, threaded through the dock as an environment value, header pinned to the top band as the mock's .tl does). Measured it on the probe: lane 864-948 = 84pt, level line 26.5pt in. But the dock grows to fit, so every row above the sound lane rises 50pt on any recording with sound, including the tutorial sample 169 walks open: 6 of 9 sampled dock walks then failed on shifted coordinates (a-click-on-a-clip-piece, command-arrows-nudge, draw-a-range-by-hand, timeline-right-click, transitions-where-clips-meet, a-clip-s-sound-is-linked). And the user's own mocks disagree: video.html draws every lane, sound included, at 28pt (.tlgrid .track .lane{height:28px}, DS .clip.aud), video-audio.html draws sound lanes at 84. The timeline growing 50pt and the picture shrinking by that on every recording is a visible tradeoff for the user, so the height goes to a decision card; the height plumbing is backed out until it is answered."
+    },
+    {
+      "t": "2026-10-08T02:14:52.593Z",
+      "note": "walks none -> a-sound-s-waveform-follows-its-level-walk, fade-diamonds-and-level-points-look-like-the-mock-walk"
+    },
+    {
+      "t": "2026-10-08T02:31:41.388Z",
+      "note": "Shipped (2bdafbf3, d6ae2ff4): the dock's waveform is one filled path mirrored about the middle (SoundLaneShape.outline in PhotonzCore, tested first) in the lane colour at .55; the level line is stroked in the lane colour at 1.5pt (cyan first sound track, purple second); a sound on its own track wears its name in the mock's .cliptag above the line (ClipPiecesBar.soundTag), because the tinted name sank into the purple waveform. Icon strip unchanged. Verified: Scripts/test.sh 11765 passed; 13 sound walks green incl. fade-diamonds-and-level-points-look-like-the-mock-walk and a-sound-s-waveform-follows-its-level-walk; audit queue/audits/2026-10-07-sound-lane-shape.json."
+    },
+    {
+      "t": "2026-10-08T02:31:41.448Z",
+      "note": "For whoever applies option a (84pt): SoundLaneShape.height(windowWidth:) is already in PhotonzCore and tested. What I had working and backed out: TimelineDock takes windowWidth from EditorView (geo.size.width), sets an @Entry EnvironmentValues.timelineSoundLaneHeight on the AsleepBehindView stack, uses it in naturalBodyHeight/height(of:soundLane:); TimelineTrackRow and TimelineInnerRow read it in place of TimelineDock.soundLaneHeight; bodyFloor stays at the kit 34; header name/twist/switches go in a top band of rows.height(laneHeight) then .frame(height: laneHeight, alignment: .top), as the mock's .tl{align-self:flex-start}. Measured: lane 864-948 (84pt), level line 26.5pt in. Cost: every row above a sound lane rises 50pt on any recording with sound (the tutorial sample too), so coordinate walks need re-measuring: 6 of 9 sampled failed (a-click-on-a-clip-piece-picks-it, command-arrows-nudge-a-clip, draw-a-range-by-hand, timeline-right-click, transitions-where-clips-meet, a-clip-s-sound-is-linked-under-it); expect most of the ~190 walks opening the sample or the talk to need it. Filed a-sound-clip-on-the-timeline-wears-its-file-name (p2) for the neutral-vs-green lane ground the two mocks disagree on."
+    },
+    {
+      "t": "2026-10-08T02:31:41.513Z",
+      "note": "Waveform shape, lane-coloured level line and the sound name tag shipped and verified; the 84pt lane height waits on decision a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b, because video.html draws sound lanes 28pt and the taller lane takes 50pt from the picture on every recording with sound."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-sound-s-waveform-follows-its-level-walk",
+    "fade-diamonds-and-level-points-look-like-the-mock-walk"
+  ],
+  "started": "2026-10-08T01:46:41.836Z"
 }
