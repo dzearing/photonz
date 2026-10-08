@@ -89,7 +89,7 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "startsAt": 8.0,
       "endsAt": 17.25
@@ -104,7 +104,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Sample Talk copy clip",
+      "on": "Sample Talk clip",
       "choose": "Freeze Frame > Freeze for 2s"
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "pieces": 3,
       "startsAt": 8.0,
@@ -121,7 +121,7 @@
     },
     {
       "do": "expect",
-      "field": "Sample Talk copy still",
+      "field": "Sample Talk still",
       "reads": "Still · 0:12"
     },
     {
@@ -168,7 +168,7 @@
     },
     {
       "do": "press",
-      "control": "Sample Talk copy piece 2"
+      "control": "Sample Talk piece 2"
     },
     {
       "do": "wait",
@@ -199,14 +199,14 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "pieces": 3,
       "endsAt": 22.25
     },
     {
       "do": "expect",
-      "field": "Sample Talk copy still",
+      "field": "Sample Talk still",
       "reads": "Still · 0:12"
     },
     {
@@ -244,14 +244,14 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "pieces": 1,
       "endsAt": 17.25
     },
     {
       "do": "expect",
-      "field": "Sample Talk copy still",
+      "field": "Sample Talk still",
       "present": false
     },
     {

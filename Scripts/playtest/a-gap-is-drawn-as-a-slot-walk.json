@@ -89,7 +89,7 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "startsAt": 8.0,
       "endsAt": 17.25
@@ -173,7 +173,7 @@
     },
     {
       "do": "expectClip",
-      "clip": "Sample Talk copy",
+      "clip": "Sample Talk",
       "track": "V1",
       "startsAt": 4.0,
       "endsAt": 13.25
