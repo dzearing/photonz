@@ -1,0 +1,23 @@
+{
+  "feature": "A sound's trim grip trims wherever you grab it",
+  "epic": "video-audio",
+  "summary": "Pressing anywhere on the white trim grip at either end of a picked sound now trims it. Before, a press in the grip's middle caught the volume line running across it and nudged the volume instead.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the Sample Talk recording (File > Open Sample) with the timeline open.",
+  "switched": {},
+  "try": [
+    { "do": "Click the middle of the sound under V1 to pick it." },
+    { "do": "Press the white grip at the sound's start in its middle, where the volume line crosses it, and drag right.", "shot": "2026-10-07-sound-trim-grip-1.png" },
+    { "do": "Press ⌘Z, then drag the volume line down from the middle of the segment." },
+    { "do": "Press the start grip in its middle again and drag right.", "shot": "2026-10-07-sound-trim-grip-2.png" },
+    { "do": "Press ⌘Z, drag the volume line all the way up, then drag the end grip left from its middle.", "shot": "2026-10-07-sound-trim-grip-3.png" }
+  ],
+  "evaluate": [
+    "Does every press on a grip trim, wherever on the grip you press?",
+    "Can you still grab the volume line easily everywhere between the two grips?",
+    "Does the volume line passing under the white grip, rather than over it, look right to you?"
+  ],
+  "rough": [
+    "No mock covers this: video-audio.html draws no trim grip on a sound segment, so there is no frame to set this beside.",
+    "Within about five points either side of a grip the grip now wins over the volume line, so the line cannot be grabbed right at the clip's very edge; the fade diamond and the rest of the line are unchanged."
+  ]
+}

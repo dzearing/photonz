@@ -148,6 +148,14 @@ struct ClipPiecesBar: View {
             ForEach(editorState.holdDrifts(onBarOf: layerID), id: \.atMS) { drift in
                 driftMark(drift, ruler: ruler)
             }
+            // The level line, UNDER the grips: its band is twelve points
+            // tall and at most levels it runs straight across a grip's middle,
+            // so drawn above them it took the press a grip is there for and a
+            // trim became a nudge to the volume (2026-10-07). Everywhere else
+            // along the segment it is still the line that answers.
+            if isSound {
+                levelLine(pieces, x0: x0, ruler: ruler)
+            }
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
             }
@@ -181,7 +189,6 @@ struct ClipPiecesBar: View {
                 }
             }
             if isSound {
-                levelLine(pieces, x0: x0, ruler: ruler)
                 // Always there, as the mock draws them on every lane: a handle
                 // you have to hover to find is a handle nobody finds.
                 if kind != nil, !isLinkedSound {
