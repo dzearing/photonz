@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:33:31.472Z",
-  "updated": "2026-10-08T18:28:04.895Z",
+  "updated": "2026-10-08T18:28:18.788Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a 2026-10-08 manager review of measure-redline. Copy code: Sources/Photonz/EditorState.swift copyCompositeToClipboard (PNG, TIFF, then .string when Experiments measurePanelEnabled; CompositeCopy.representations). Original task one-copy-hands-off-both-the-redlined-picture-and (done); its audit queue/audits/2026-09-02-copy-image-spec-list.json rough 1 says Messages, Slack and Discord were never tried by a person; a WebKit field, a rich NSTextView and plain fields behaved as intended. Chromium was not tried. Do not paste into any real chat or web service: anything pasted there is published. A copied spreadsheet range (text plus picture) pasting as text in Slack is the known pattern behind the worry; unverified for this clipboard. Redlining is the user primary use, so a wrong paste matters.",
@@ -57,8 +57,13 @@
     {
       "t": "2026-10-08T18:28:04.894Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-08T18:28:18.786Z",
+      "note": "Checked on this Mac with the real Shift Command C clipboard (redline-walk): Chrome 153 and Edge 154 hand a local page both text/plain and image.png; a contenteditable box takes the picture alone, a textarea takes the list; WebKit and a TextEdit-style rich text view match. No app change, no decision card. Kit in docs/design/references/redline-paste-check, audit queue/audits/2026-10-08-redline-paste.json. Slack/Discord/Teams paste code untried (never paste into a real chat): left to the user as an unsent paste in the audit."
     }
   ],
   "started": "2026-10-08T18:23:24.504Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-08T18:28:18.787Z"
 }
