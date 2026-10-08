@@ -110,7 +110,11 @@ final class HintTooltipController {
 
     /// What is on screen, for a walk's log: "Arrow (A) above (x, y)".
     var visibleDescription: String? {
-        guard let current, let panel, panel.isVisible, panel.alphaValue > 0 else { return nil }
+        // A label takes its window's alpha, and a walk keeps a video's window
+        // at zero, so one that is up over an invisible window still counts as
+        // showing: it is as visible as the window it labels.
+        guard let current, let panel, panel.isVisible,
+              panel.alphaValue > 0 || parent?.alphaValue == 0 else { return nil }
         let key = current.key.map { " (\($0))" } ?? ""
         let f = panel.frame
         let detail = current.detail.map { " · \($0)" } ?? ""

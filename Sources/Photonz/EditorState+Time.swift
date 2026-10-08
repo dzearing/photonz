@@ -21,6 +21,13 @@ extension EditorState {
     /// frame fetching out of the way of everything else.
     var documentHasTime: Bool { document?.hasTime ?? false }
 
+    /// Whether this window's tool bar is a video's: a document with time on
+    /// Next's families bar, where the video's own tools lead and the T tool
+    /// goes by Title (`ToolName`).
+    var hasVideoToolBar: Bool {
+        documentHasTime && Experiments.shared.videoToolBarEnabled && Experiments.shared.toolGroupsEnabled
+    }
+
     /// How long it runs for.
     ///
     /// The document AS IT IS BEING SHOWN, which is the same thing except

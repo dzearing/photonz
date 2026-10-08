@@ -1103,8 +1103,8 @@ struct EditorView: View {
         // the image instead of picking the tool. (`toolBarGroup` gives the
         // capsule that shape, or the one bar it is a section of.)
         .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
-        .toolBarSlotsProbe(shown: toolbarSlots.map(\.title), more: [],
-                           lit: activeSlot?.title)
+        .toolBarSlotsProbe(shown: toolbarSlots.map(name), more: [],
+                           lit: activeSlot.map(name))
         // One spring drives every toolbar transition: the accent circle
         // sliding between tools, conditional segments, and the capsule resize.
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
@@ -1177,7 +1177,7 @@ struct EditorView: View {
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
         .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
-        .toolBarSlotsProbe(shown: visible.map(\.title), more: overflow.map(\.title),
+        .toolBarSlotsProbe(shown: visible.map(name), more: overflow.map(name),
                            lit: active?.title)
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
     }
@@ -1233,8 +1233,8 @@ struct EditorView: View {
         .background { magnifyShortcut }
         .buttonStyle(.borderless)
         .toolBarGroup("Tools", padding: 18, isSection: isOneGlassBar)
-        .toolBarSlotsProbe(shown: families.flatMap { $0 }.map(\.title), more: more.map(\.title),
-                           lit: litUnderMore ? "More" : lit.map { ToolbarSlot($0).title })
+        .toolBarSlotsProbe(shown: families.flatMap { $0 }.map(name), more: more.map(name),
+                           lit: litUnderMore ? "More" : lit.map { name(ToolbarSlot($0)) })
         .animation(.spring(duration: 0.3), value: editorState.activeTool)
         .animation(.spring(duration: 0.3), value: editorState.isTimelineBlade)
         .animation(.spring(duration: 0.3), value: fold)
@@ -1266,9 +1266,12 @@ struct EditorView: View {
 
     /// Whether this is a document with time on the families bar: the video's
     /// own tools lead it and the Blade is on it.
-    private var isVideoBar: Bool {
-        Experiments.shared.videoToolBarEnabled && Experiments.shared.toolGroupsEnabled
-            && editorState.documentHasTime
+    private var isVideoBar: Bool { editorState.hasVideoToolBar }
+
+    /// What the bar calls a slot here: its video name on a video's bar (the T
+    /// tool is Title), its usual one everywhere else.
+    private func name(_ slot: ToolbarSlot) -> String {
+        slot.tool.flatMap { ToolName.renamed($0, inTime: isVideoBar) } ?? slot.title
     }
 
     /// The room the tool row has: the bar's budget inside the canvas, less
@@ -1347,7 +1350,7 @@ struct EditorView: View {
                 Button {
                     activateSlot(slot)
                 } label: {
-                    Label(slot.title, systemImage: slot.menuSymbol)
+                    Label(name(slot), systemImage: slot.menuSymbol)
                 }
                 // The row prints the same letter the button's tooltip does, so
                 // the collapsed bar still TEACHES the keyboard instead of
@@ -1369,8 +1372,8 @@ struct EditorView: View {
         .fixedSize()
         .toolTip("More tools")
         .toolBarMarkProbe(tool: "More")
-        .toolBarMoreProbe(slots.map(\.title)) { title in
-            if let slot = slots.first(where: { $0.title == title }) { activateSlot(slot) }
+        .toolBarMoreProbe(slots.map(name)) { title in
+            if let slot = slots.first(where: { name($0) == title }) { activateSlot(slot) }
         }
         // Where a guide's ring lands when the tool a step names has been
         // pushed off the bar by a narrow window. Only on the bar while
@@ -1607,7 +1610,7 @@ struct EditorView: View {
     /// Inline button for a slot in the compact bar — same widgets the full bar
     /// uses, so the two stay visually identical for the tools that show.
     private func slotButton(_ slot: ToolbarSlot) -> some View {
-        slotButtonBody(slot).toolBarMarkProbe(tool: slot.title)
+        slotButtonBody(slot).toolBarMarkProbe(tool: name(slot))
     }
 
     @ViewBuilder private func slotButtonBody(_ slot: ToolbarSlot) -> some View {
@@ -1627,7 +1630,7 @@ struct EditorView: View {
         case .rectangle: toolButton(.rectangle, "rectangle", "Rectangle")
         case .ellipse: toolButton(.ellipse, "circle", "Ellipse")
         case .highlight: toolButton(.highlight, "highlighter", "Highlight")
-        case .text: toolButton(.text, "character.cursor.ibeam", isVideoBar ? "Title / Text" : "Text")
+        case .text: toolButton(.text, "character.cursor.ibeam", ToolName.textTip(inTime: isVideoBar))
         case .crop: cropToolButton
         case .resize: resizeButton
         case .zoomCallout: toolButton(.zoomCallout, "plus.magnifyingglass", "Zoom Callout")
@@ -1682,7 +1685,7 @@ struct EditorView: View {
         // A tool in hand swaps into the row whenever there is room for it, so
         // the pill only speaks for one that really is still under More.
         guard groupedFold?.isFolded(editorState.activeTool) ?? true else { return }
-        editorState.raiseCanvasNotice(.toolUnderMore(tool: editorState.activeTool.barTitle))
+        editorState.raiseCanvasNotice(.toolUnderMore(tool: editorState.activeTool.barTitle(onVideoBar: isVideoBar)))
     }
 
     /// Z, once the Zoom Callout has become the Lens set to Magnify.

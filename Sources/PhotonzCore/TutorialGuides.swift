@@ -2268,7 +2268,7 @@ public enum TutorialGuides {
             TutorialStep(
                 id: "pick-text",
                 anchor: .tool(.text),
-                title: "Pick the Text tool",
+                title: "Pick the Title tool",
                 body: "Click it, or press T. On a video, words start out as a big white title.",
                 advance: .waitsFor(.toolPicked(.text))),
             TutorialStep(

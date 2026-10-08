@@ -1,0 +1,20 @@
+{
+  "out": "/tmp/photonz-playtest/t-tool-says-text-on-a-picture-walk",
+  "seed": "The T tool goes by its video name, Title, only in a document with time. On a picture at Next defaults it is the Text tool it has always been: its tip, its Edit > Tools row and the bar all say Text.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "hover", "label": "Text" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-text-tip", "note": "a picture at Next defaults: the T tool's tip reads Text (T), not the video's Title / Text" },
+    { "do": "snapshot", "name": "1-text-tip" },
+    { "do": "hover", "at": [640, 400], "space": "view" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "menus", "stage": "2-tools-menu", "menu": "Edit" },
+    { "do": "key", "key": "t" },
+    { "do": "waitFor", "condition": "tool", "value": "text", "timeout": 2 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "toolBar", "stage": "2-text-by-its-key", "lit": "Text" }
+  ]
+}

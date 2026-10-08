@@ -1083,7 +1083,7 @@ struct EditorCommands: Commands {
                     ToolMenu.printedKey(for: tool, among: tools, active: editor.activeTool,
                                         remembered: { editor.lastTool(in: $0) })
                 }
-                Toggle(tool.barTitle, isOn: Binding(
+                Toggle(tool.barTitle(onVideoBar: editor?.hasVideoToolBar ?? false), isOn: Binding(
                     get: { editor?.activeTool == tool && !(editor?.isTimelineBlade ?? false) },
                     set: { _ in pickTool(tool, key: key, among: tools) }))
                 .keyboardShortcut(key.flatMap { key in
@@ -1092,7 +1092,7 @@ struct EditorCommands: Commands {
                 })
             }
             // The timeline's Blade, on a video, where the bar shows it too.
-            if timed, Experiments.shared.videoToolBarEnabled, Experiments.shared.toolGroupsEnabled {
+            if editor?.hasVideoToolBar ?? false {
                 Divider()
                 Toggle("Blade", isOn: Binding(
                     get: { editor?.isTimelineBlade ?? false },

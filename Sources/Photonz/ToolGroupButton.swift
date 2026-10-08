@@ -49,6 +49,12 @@ extension Tool {
         case .pen: "Pen"
         }
     }
+
+    /// The tool's name in this document: the video name where it has one (the
+    /// T tool is Title on a video's bar), `barTitle` everywhere else.
+    func barTitle(onVideoBar: Bool) -> String {
+        ToolName.renamed(self, inTime: onVideoBar) ?? barTitle
+    }
 }
 
 /// The tiny wedge in a tool button's corner that says "there is more inside

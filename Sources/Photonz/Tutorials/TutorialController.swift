@@ -618,13 +618,15 @@ final class TutorialController {
                                     concealment: TutorialConcealment?,
                                     frame: CGRect)) -> String? {
         guard let concealment = standIn.concealment, let run else { return nil }
-        return concealment.sentence(for: Self.subject(of: run.step.anchor))
+        return concealment.sentence(for: Self.subject(of: run.step.anchor,
+                                                     onVideoBar: (host as? EditorState)?.hasVideoToolBar ?? false))
     }
 
     /// What the card calls the thing the step is really about. The tool's own
-    /// name where there is one, and the family's where a step names the slot.
-    private static func subject(of anchor: TutorialAnchor) -> String {
-        if let tool = anchor.tool { return tool.barTitle }
+    /// name where there is one (as the bar names it in this document), and the
+    /// family's where a step names the slot.
+    private static func subject(of anchor: TutorialAnchor, onVideoBar: Bool) -> String {
+        if let tool = anchor.tool { return tool.barTitle(onVideoBar: onVideoBar) }
         if let group = anchor.toolGroup { return "\(group.title) button" }
         return "control"
     }

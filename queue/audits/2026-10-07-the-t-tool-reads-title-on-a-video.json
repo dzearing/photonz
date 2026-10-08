@@ -1,0 +1,37 @@
+{
+  "feature": "The T tool reads Title on a video",
+  "epic": "video-titles-graphics",
+  "summary": "On a video the T tool now goes by Title wherever it is named: the bar, More, Edit > Tools, the note when it is folded and the title guide's card. Its tooltip reads Title / Text (T), the mock's words. A picture still says Text everywhere.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose Help > Tutorials > All Tutorials... and start A title that moves: the sample recording opens and the first card reads Pick the Title tool.",
+      "shot": "2026-10-07-title-tool-guide-card.png"
+    },
+    {
+      "do": "Rest the pointer on the ringed tool, third on the bar, and read the tooltip: Title / Text  T.",
+      "shot": "2026-10-07-title-tool-tip-on-a-video.png"
+    },
+    {
+      "do": "Open Edit > Tools and find the row Title with T beside it; pick it and watch the T tool light."
+    },
+    {
+      "do": "Open any screenshot and rest on the same tool: the tip reads Text  T.",
+      "shot": "2026-10-07-text-tool-tip-on-a-picture.png"
+    },
+    {
+      "do": "In that screenshot open Edit > Tools: the row says Text."
+    }
+  ],
+  "evaluate": [
+    "Would you go looking for Title on a video, the way you would in Final Cut, and does finding it under that name help?",
+    "Does the tooltip saying both names (Title / Text) read well, or would you rather it said just Title on a video?",
+    "Does the name changing between a picture and a video ever surprise you, for example when you switch windows?"
+  ],
+  "rough": [
+    "The tooltip text matches the mock (video-title-wt.html, tTitle: Title / Text (T)), and the Edit > Tools row matches the mock's menu row (Title, T).",
+    "VoiceOver reads the bar button as Title / Text on a video, the tooltip's words, rather than just Title.",
+    "Walks could not read or photograph any tooltip on a video's bar until now, because a walk keeps a video's window invisible and a tooltip takes its window's see-through-ness; the walk harness now counts and photographs it."
+  ]
+}

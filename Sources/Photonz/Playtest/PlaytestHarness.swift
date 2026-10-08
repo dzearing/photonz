@@ -16145,10 +16145,15 @@ private final class Run {
             // still invisible is shown for the length of one photograph and
             // put straight back.
             let hidden = window.alphaValue == 0
+            // A tooltip up over the window takes its alpha, so it is shown for
+            // the photograph along with it (a video's window stays hidden all
+            // walk, which is the only place a walk can rest on its tool bar).
+            let tip = hidden ? HintTooltipController.shared.panel(over: window) : nil
             if hidden {
                 MainThreadMeter.shared.setAsidePasses()
                 Self.keepBehindThePerson(window)
                 window.alphaValue = 1
+                tip?.alphaValue = 1
                 // A whole window drawn at once because the harness hid it, not
                 // anything the app chose to do: kept off the app's account,
                 // or a walk reading the main thread counts the photograph.
@@ -16159,10 +16164,10 @@ private final class Run {
             do {
                 image = try await photograph(window, as: scWindow)
             } catch {
-                if hidden { window.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+                if hidden { window.alphaValue = 0; tip?.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
                 throw error
             }
-            if hidden { window.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
+            if hidden { window.alphaValue = 0; tip?.alphaValue = 0; MainThreadMeter.shared.countPassesAgain() }
             let rep = NSBitmapImageRep(cgImage: image)
             guard let png = harnessWork({ rep.representation(using: .png, properties: [:]) }) else {
                 captureFailed(name, "the window came back but would not encode as a PNG")
