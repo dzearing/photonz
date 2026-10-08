@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:33:31.472Z",
-  "updated": "2026-10-08T13:36:24.929Z",
+  "updated": "2026-10-08T18:28:04.895Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a 2026-10-08 manager review of measure-redline. Copy code: Sources/Photonz/EditorState.swift copyCompositeToClipboard (PNG, TIFF, then .string when Experiments measurePanelEnabled; CompositeCopy.representations). Original task one-copy-hands-off-both-the-redlined-picture-and (done); its audit queue/audits/2026-09-02-copy-image-spec-list.json rough 1 says Messages, Slack and Discord were never tried by a person; a WebKit field, a rich NSTextView and plain fields behaved as intended. Chromium was not tried. Do not paste into any real chat or web service: anything pasted there is published. A copied spreadsheet range (text plus picture) pasting as text in Slack is the known pattern behind the worry; unverified for this clipboard. Redlining is the user primary use, so a wrong paste matters.",
@@ -29,6 +29,36 @@
     {
       "t": "2026-10-08T13:36:24.928Z",
       "note": "seq 3820 -> 9"
+    },
+    {
+      "t": "2026-10-08T18:23:24.505Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T18:28:04.604Z",
+      "note": "Reproduced the real clipboard: Scripts/playtest.sh Scripts/playtest/redline-walk.json (passed, screen unlocked, Screen Recording granted) ends on Copy Merged (Shift Command C) with 5 measurements; board dump: public.png 120422 B, public.tiff 5.5 MB, public.utf8-plain-text 173 B. User's clipboard saved before and restored after."
+    },
+    {
+      "t": "2026-10-08T18:28:04.662Z",
+      "note": "Chromium, local file:// page with a textarea and a contenteditable box, Command V sent as the editor Paste command over the DevTools protocol (docs/design/references/redline-paste-check/cdp.mjs). Chrome 153 and Edge 154 (headed, throwaway profiles, opened with open -g, closed after): paste event types [text/plain, Files], items [string text/plain, file image/png], files [image.png image/png 120422 B]. Textarea got the spec list. Contenteditable got one <img> (data:image/png) and no text. Headless Chrome is useless here: it has its own empty clipboard (types [])."
+    },
+    {
+      "t": "2026-10-08T18:28:04.719Z",
+      "note": "Comparison: WKWebView on the same page: types [Files, text/plain] (picture listed first), textarea = list, contenteditable = 1 image, no text. NSTextView rich+importsGraphics (TextEdit rich document) = 1 image, no text; plain NSTextView (TextEdit plain) = list; rich without graphics = list. Matches the 2026-09-02 audit. Real TextEdit not driven (no Automation permission; would prompt)."
+    },
+    {
+      "t": "2026-10-08T18:28:04.778Z",
+      "note": "Verdict per acceptance: the picture lands everywhere a picture can go at the platform level, so no change and no decision card. Not settled: Slack/Discord/Teams composers run their own paste handlers on top of Chromium; not tried because pasting into a real chat is publishing. Tried reading Discord's local cached client JS for its paste handler: cache is compressed, nothing readable, stopped. That last check is a person's (paste into a message box without sending) and sits in the audit's try/evaluate for the user, not filed as a loop task (the loop cannot do it). Left rough (log only): Chromium orders text before the file in DataTransfer, so a first-match handler would take the list; speculative, nothing observed does that."
+    },
+    {
+      "t": "2026-10-08T18:28:04.836Z",
+      "note": "Kit and steps committed under docs/design/references/redline-paste-check/ (README, page, CDP driver, clipboard save/restore, WebKit/NSTextView probe). Note added to docs/design/next-measure.md section 7. Audit queue/audits/2026-10-08-redline-paste.json."
+    },
+    {
+      "t": "2026-10-08T18:28:04.894Z",
+      "note": "owns no walks; the ones it names are examples"
     }
-  ]
+  ],
+  "started": "2026-10-08T18:23:24.504Z",
+  "walks": []
 }

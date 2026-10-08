@@ -485,6 +485,14 @@ field. The "Copied" notice gains an `image(measurements:)` subject: "Image",
 or "Image and spec list with N measurements". A document without
 measurements copies exactly what it did before, and Current is untouched.
 
+Checked 2026-10-08 in Chromium (Chrome 153, Edge 154) with a local page
+(`docs/design/references/redline-paste-check/`): a paste event sees both
+`text/plain` and an `image/png` file, listed text first (WebKit lists the file
+first). A textarea takes the list; a contenteditable box takes the picture
+alone, as WebKit and a rich `NSTextView` do. What Slack, Discord and Teams do is
+their own paste handler's choice and was not tried: nothing is pasted into a
+real chat by the loop.
+
 Changed 2026-09-07 (`next-copy-picks-your-layer`): ⇧⌘C is now **Copy
 Merged**, and it sits in the Edit menu directly under Copy rather than in File
 as Copy Image. With no marquee up it is exactly the hand-off copy described

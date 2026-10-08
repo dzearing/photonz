@@ -20916,3 +20916,9 @@ Next: the first editor window's ~200 ms first build
 - `ContentsSelection.offersHug`; `ArrangementInspector` shows Width/Height on arranged screens with no limits chevron and no clip row. Spread and Wrap are not offered on a hugging screen.
 - `ScreenHugTests` (13). Walk `a-screen-hugs-what-it-holds-walk` (Next defaults): 400x300 empty holds, Button 78x36, + Card 260x219, delete back to 78x36, undo, Fixed + H 400. Audit `queue/audits/2026-10-08-screen-hug.json`.
 - Open question to the user: the mock's one Frame size row (Hug/Narrow/Wide) vs Width/Height rows, card on `the-size-rows-in-the-layout-section-match-the-au`.
+
+## 2026-10-08 — A redline copy pastes as the picture in Chromium
+
+- Checked whether Shift Command C (picture + spec list on one clipboard) pastes as text in Chromium. Real clipboard from `redline-walk`; local page pasted over the DevTools protocol in Chrome 153 and Edge 154: the page gets `text/plain` and `image.png`; a textarea takes the list, a contenteditable box takes the picture alone. WebKit and a TextEdit-style rich `NSTextView` match. No app change.
+- Kit: `docs/design/references/redline-paste-check/`. Note in `docs/design/next-measure.md` §7. Audit `queue/audits/2026-10-08-redline-paste.json`.
+- Open: Slack/Discord/Teams run their own paste code; one paste into a message box without sending is the user's check (in the audit).

@@ -1,0 +1,25 @@
+{
+  "feature": "A redline copy pastes as the picture in Chromium",
+  "epic": "measure-redline",
+  "summary": "Checked on this Mac, nothing sent anywhere: Shift Command C pastes the redlined picture into a rich box in Chrome and Edge, and the spec list into a plain text box, the same as Safari's engine and TextEdit. No change to the app.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The local test page is docs/design/references/redline-paste-check/index.html; open it in Chrome.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, add two measurements with the Measure tool (press i), and press Shift Command C.", "shot": "2026-10-08-redline-paste-1-copied-sc.png" },
+    { "do": "Open docs/design/references/redline-paste-check/index.html in Chrome." },
+    { "do": "Click the rich box and press Command V. The picture lands, with no text.", "shot": "2026-10-08-redline-paste-2-chrome.png" },
+    { "do": "Click the plain textarea and press Command V. The spec list lands." },
+    { "do": "Read the record under the boxes: the page was handed both the text and image.png." },
+    { "do": "In Slack or Discord, paste into a message box and do not press Return. Note whether it shows the picture as an attachment or the list as text, then clear the box." }
+  ],
+  "evaluate": [
+    "When you paste into a Slack or Discord message box (without sending), do you get the picture?",
+    "If a chat ever pastes the list instead, would you rather Shift Command C carry the picture alone, with the list on its own command?",
+    "Is a picture-only paste into a rich box what you expect from a redline hand-off?"
+  ],
+  "rough": [
+    "Slack, Discord and Teams were not tried: each decides with its own paste code, and the loop never pastes into a real chat. Chromium hands them both the picture and the list, so the last step above is the one check left, and it is yours.",
+    "Chromium lists the text before the picture in what it hands a page (WebKit lists the picture first). A chat that takes the first thing it finds would pick the list there; nothing seen so far does that.",
+    "TextEdit itself was not driven: the loop has no permission to control other apps. A rich text view set up the way TextEdit's rich document is took the picture; a plain one took the list. No mock covers this surface."
+  ]
+}
