@@ -40,6 +40,9 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
         running = max(0, running - 1)
     }
 
+    /// How much farther a frame gone by counts than one ahead, playing forwards.
+    public static var behindWeight: Int { 3 }
+
     /// Which of the frames in hand to let go when there are too many: the one
     /// farthest from where its recording's playhead is, so the frames either
     /// side of the playhead stay and a hand reversing finds the ones it just
@@ -49,6 +52,30 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
         var worst: (index: Int, distance: Int)?
         for (index, entry) in resident.enumerated() {
             let distance = focus[entry.movie].map { abs($0 - entry.frame) } ?? Int.max
+            if worst == nil || distance > (worst?.distance ?? 0) {
+                worst = (index, distance)
+            }
+        }
+        return worst?.index
+    }
+
+    /// The same with more than one place being played in a recording (a cut
+    /// coming up, a dissolve between two parts of it): the frame let go is
+    /// the one farthest from the nearest of them.
+    ///
+    /// Played `forward`, a frame gone by counts `behindWeight` times as far
+    /// as one the same distance ahead: the frames read ahead are the next
+    /// ones shown, and letting one go to keep a frame already shown starts
+    /// its pass again from the key frame (a dissolve stuck that way,
+    /// 2026-10-07).
+    public static func farthest(_ resident: [(movie: UUID, frame: Int)],
+                                from foci: [UUID: [Int]], forward: Bool = false) -> Int? {
+        func distance(_ frame: Int, _ focus: Int) -> Int {
+            frame < focus && forward ? (focus - frame) * behindWeight : abs(frame - focus)
+        }
+        var worst: (index: Int, distance: Int)?
+        for (index, entry) in resident.enumerated() {
+            let distance = foci[entry.movie]?.map { distance(entry.frame, $0) }.min() ?? Int.max
             if worst == nil || distance > (worst?.distance ?? 0) {
                 worst = (index, distance)
             }

@@ -365,9 +365,13 @@ extension EditorState {
             // A hand still moving is fed the stretch it is heading into, read
             // in one pass and kept small; anything else reads exact frames.
             let handMoving = playheadInHand && !playheadSettled && !isDocumentPlaying
+            // A clock playing forwards also opens the far side of each cut
+            // coming up, so the picture does not stick there (`MoviePlayPass`).
+            let playing = isDocumentPlaying && playheadTravel != .backward
+                ? moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS) : nil
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
                               handMoving: handMoving, backward: playheadTravel == .backward,
-                              playing: isDocumentPlaying)
+                              playing: playing)
         }
         submit(document)
     }

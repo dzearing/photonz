@@ -1522,6 +1522,10 @@ final class EditorState {
     /// Where a clip's pixels come from (`MovieFrames.swift`). Made on demand,
     /// so a window holding a screenshot never makes one.
     @ObservationIgnored var movieFramesStorage: MovieFrameFetcher?
+    /// What a playing clock has looked over ahead of the playhead, kept from
+    /// tick to tick so each one looks only at what is new (`MoviePlayPass`).
+    /// Written every tick, so outside the observation graph.
+    @ObservationIgnored var moviePlayLookahead = MoviePlayLookahead()
 
     /// Where this window's sound is played from, made the first time something
     /// asks to be heard (`EditorState+Audio.swift`). Held rather than made per

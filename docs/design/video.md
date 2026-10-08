@@ -148,9 +148,24 @@ What keeps it now:
    converted in 0.45s. It paces itself `MoviePlayPass.aheadFrames` (8) ahead of
    the playhead and waits there, and is started over when the playhead goes
    somewhere it is not (a scrub, a cut back in the same recording, a pass
-   fallen 4 frames behind). A frame further past the playhead than the pass
-   will go, which is a frame across a cut, is still read exactly by the lanes,
-   and so is everything played backwards. Only a frame at or behind the
+   fallen 4 frames behind). **Across a cut (2026-10-08,
+   `a-full-screen-recording-keeps-up-as-it-plays-acr`)** a pass started on the
+   far side decodes from the key frame before it, most of a second on the
+   fixture, so the picture stuck at every cut (3 of 20 looks late by up to 23
+   frames; 6 of 20 by up to 20 across a dissolve). The clock now keeps a
+   `MoviePlayLookahead` that finds every stretch coming on within
+   `MoviePlayPass.comingLeadMS` (1.5s: a cut's far side, a dissolve's incoming
+   shot, a clip starting), looking only at the one new moment each tick. Each
+   recording holds up to `passesPerRecording` (3) passes, planned per tick by
+   `MoviePlayPass.plan`: one per frame under the playhead (two during a
+   dissolve) and one opened `primeFrames` (4) into each stretch coming, which
+   simply carries on when the playhead arrives. The budget grows to fit the
+   passes (`MoviePlayPass.frameBudget`) and, while playing forwards, lets a
+   frame gone by go before one read ahead (`MovieFrameQueue.farthest`,
+   `behindWeight` 3): plain distance had been dropping the outgoing shot's
+   read-ahead during a dissolve and restarting its pass from the key frame.
+   Only a frame further than any pass will go is read exactly by the lanes, and
+   so is everything played backwards. Only a frame at or behind its nearest
    playhead redraws when it lands. The colours match the exact read (mean
    difference 0.4 of 255, same colour space). The lateness the walk measures
    now fails it (`PlaybackKeepsUp`: more than 2 of its looks late, or any look

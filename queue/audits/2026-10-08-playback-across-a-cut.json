@@ -1,0 +1,28 @@
+{
+  "feature": "A full-screen recording keeps up as it plays across a cut",
+  "epic": "video-editing",
+  "summary": "Playing a cut-down full-screen Retina recording no longer sticks at the cut. The far side of each cut, and the shot coming in over a dissolve, is read before the playhead gets there, so the picture arrives on time while the sound goes on.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open 'Full screen Retina recording 3456x2234.mp4' (Scripts/playtest/fixtures) and press Space to pause." },
+    { "do": "Move the playhead a quarter of the way in and press Command K, then to the middle and press Command K again." },
+    { "do": "Click the middle piece and press Delete.", "shot": "2026-10-08-playback-across-a-cut-1.png" },
+    { "do": "Press Home, then Space, and watch the picture as the playhead crosses the cut." },
+    { "do": "Click the cut, pick Cross dissolve in the panel, press Home and play it again.", "shot": "2026-10-08-playback-across-a-cut-2.png" },
+    { "do": "Cut your own five-minute recording down to a minute or two and play it through." }
+  ],
+  "evaluate": [
+    "Does the picture change at the cut at the same moment the sound does, with no freeze?",
+    "During the dissolve, do both shots move smoothly, with neither one stopping for a moment?",
+    "On a long recording with many cuts, does any cut still stick?",
+    "Does playing feel as smooth with cuts as it did before you cut anything?"
+  ],
+  "rough": [
+    "Before and after, same walk, same machine. Across a cut: before 3 of 20 looks late by up to 23 frames (the manager saw 4 of 20, up to 27); after 0 of 20 in seven runs in a row, and 0 of 20 with eight cores busy with other work.",
+    "Across a dissolve on that cut: before 6 of 20 looks late by up to 20 frames; after 0 of 20 in seven runs in a row, and under load. The check now also watches the incoming shot during a dissolve, which it did not before.",
+    "The far side of a cut is opened a second and a half ahead. A recording whose key frames are further apart than that, played with cuts closer together than that, could still be a frame or two late at a cut. Nothing has shown it yet.",
+    "Playing backwards with J still reads frame by frame and can lag on a full-screen recording; that is task playing-backwards-with-j-keeps-up-on-a-full-scre.",
+    "No mock covers this surface: nothing on screen changed, only how quickly frames arrive. Both pictures are the real window after playing to the end."
+  ]
+}

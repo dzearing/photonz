@@ -9146,10 +9146,15 @@ private final class Run {
                 guard let movie = clip.movie, let wanted = clip.movieFrameSourceMS(atTimeMS: playhead)
                 else { continue }
                 seen.insert(clip.name)
-                let index = movie.frameIndex(atSourceMS: wanted)
-                let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
-                if shown != index, late.last != moment { late.append(moment) }
-                if let shown { worstLag = max(worstLag, abs(index - shown)) }
+                // ...and the shot coming in over it while a dissolve runs,
+                // which is a second picture on screen and as late as either.
+                let incoming = clip.incomingMovieFrameSourceMS(atTimeMS: playhead)
+                for sourceMS in [wanted] + (incoming.map { [$0] } ?? []) {
+                    let index = movie.frameIndex(atSourceMS: sourceMS)
+                    let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
+                    if shown != index, late.last != moment { late.append(moment) }
+                    if let shown { worstLag = max(worstLag, abs(index - shown)) }
+                }
             }
             guard let picture = editor.renderedImage,
                   let look = Self.quarter(of: picture) else {

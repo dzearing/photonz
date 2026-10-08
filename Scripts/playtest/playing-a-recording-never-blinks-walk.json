@@ -17,6 +17,28 @@
     { "do": "snapshot", "name": "2-while-playing" },
     { "do": "key", "key": "space" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "snapshot", "name": "3-paused" }
+    { "do": "snapshot", "name": "3-paused" },
+
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-cut", "note": "cut at a quarter and at the middle, and the middle deleted: the commonest edit there is. The far side of the cut is nearly two seconds into the recording, past no key frame since the start, so reading it from cold takes most of a second" },
+    { "do": "expectPlaybackNeverBlank", "name": "across-a-cut", "seconds": 2.5, "moments": 20 },
+    { "do": "describe", "stage": "5-played-across-the-cut", "note": "THE SECOND TEST: played from the start across the cut, and the picture on the far side arrived on time. It used to stick for a third of a second, three looks late by up to 23 frames, while the sound went on" },
+    { "do": "snapshot", "name": "4-cut" },
+
+    { "do": "action", "action": "clipPickFirstCut" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "clipTransitionDissolve" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPlaybackNeverBlank", "name": "across-a-dissolve", "seconds": 2.5, "moments": 20 },
+    { "do": "describe", "stage": "6-played-across-the-dissolve", "note": "THE THIRD TEST: a cross dissolve on that cut, two parts of one recording on screen at once, and both kept up. It used to fall behind at six looks of twenty, by up to 20 frames" },
+    { "do": "snapshot", "name": "5-dissolve" }
   ]
 }

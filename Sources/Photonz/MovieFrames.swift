@@ -424,36 +424,44 @@ final class MovieFrameFetcher {
     /// Where a pass playing ahead of the playhead has got to, and where the
     /// playhead is, shared with the pass as it reads off the main actor.
     private final class PlayMark: Sendable {
-        private let state: Mutex<(playhead: Int, reached: Int)>
-        init(playhead: Int) { state = Mutex((playhead, playhead)) }
-        var playhead: Int {
-            get { state.withLock { $0.playhead } }
-            set { state.withLock { $0.playhead = newValue } }
+        private let state: Mutex<(aim: MoviePlayPass.Aim, reached: Int)>
+        init(_ aim: MoviePlayPass.Aim) { state = Mutex((aim, aim.playhead)) }
+        /// The frame the pass keeps ahead of, and how far ahead: the
+        /// playhead, or the first frame of a stretch about to come on.
+        var aim: MoviePlayPass.Aim {
+            get { state.withLock { $0.aim } }
+            set { state.withLock { $0.aim = newValue } }
         }
         var reached: Int {
             get { state.withLock { $0.reached } }
             set { state.withLock { $0.reached = newValue } }
         }
         /// Note how far the pass has got, and answer whether it is far enough
-        /// ahead of the playhead to wait.
+        /// ahead of where it is aimed to wait.
         func passed(_ next: Int) -> Bool {
             state.withLock {
                 $0.reached = next
-                return MoviePlayPass.shouldWait(next: next, playhead: $0.playhead)
+                return MoviePlayPass.shouldWait(next: next, playhead: $0.aim.playhead, reach: $0.aim.reach)
             }
         }
     }
 
-    /// The pass reading ahead of a playing playhead in each recording, at the
-    /// size the canvas shows it (`MoviePlayPass`).
+    /// The passes reading ahead of a playing playhead in each recording, at
+    /// the size the canvas shows it: the stretch playing, and any about to
+    /// come on (`MoviePlayPass`).
     private struct PlayPass {
         let token: UUID
         let frames: ClosedRange<Int>
         let width: Int
         let mark: PlayMark
         let task: Task<Void, Never>
+
+        var running: MoviePlayPass.Running {
+            let aim = mark.aim
+            return .init(running: frames, reached: mark.reached, playhead: aim.playhead, reach: aim.reach)
+        }
     }
-    private var playPasses: [UUID: PlayPass] = [:]
+    private var playPasses: [UUID: [PlayPass]] = [:]
 
     private let store: ImageStore
     /// Decoded frames, in the order they landed.
@@ -472,8 +480,12 @@ final class MovieFrameFetcher {
     /// decoder, so a read asked for now starts the moment a lane is free
     /// rather than queuing inside the decoder behind one the hand has left.
     private var queue = MovieFrameQueue<Read>(capacity: MovieDecoder.lanes)
-    /// Which frame each recording's playhead is on, last anybody asked.
-    private var focus: [UUID: Int] = [:]
+    /// Which frame each recording's playhead is on, last anybody asked: two
+    /// while a dissolve runs between parts of it.
+    private var focus: [UUID: [Int]] = [:]
+    /// ...and the first frames of the stretches about to come on, which the
+    /// budget keeps as close as the playhead (`MoviePlayPass`).
+    private var coming: [UUID: [Int]] = [:]
 
     /// Called on the main actor whenever a frame lands, so the canvas can
     /// redraw with a picture it did not have a moment ago.
@@ -523,16 +535,19 @@ final class MovieFrameFetcher {
     /// call stops those passes, so the sharp frame it asks for has the decoder
     /// to itself.
     ///
-    /// While the clock plays it forwards (`playing`), the frames ahead of the
+    /// While the clock plays it forwards (`playing`, the frames under the
+    /// playhead and the stretches about to come on), the frames ahead of the
     /// playhead are read in one pass that keeps a little ahead of it, sharp,
-    /// rather than one at a time (`MoviePlayPass`); only a frame the pass will
-    /// not reach soon, across a cut, is read on its own. Any other call stops
-    /// those passes.
+    /// rather than one at a time (`MoviePlayPass`), and the far side of a cut
+    /// or the shot coming in over a dissolve has a pass of its own, opened
+    /// before the playhead gets there. Only a frame no pass will reach soon is
+    /// read on its own. Any other call stops those passes.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
-               handMoving: Bool = false, backward: Bool = false, playing: Bool = false) {
+               handMoving: Bool = false, backward: Bool = false, playing: MoviePlayPoints? = nil) {
         if !handMoving { stopSweeps() }
-        let playsAhead = playing && !handMoving && !backward
+        let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
+        coming = [:]
         var wanted: [Read] = []
         var asked = Set<UUID>()
         var focused = Set<UUID>()
@@ -543,27 +558,44 @@ final class MovieFrameFetcher {
             // which is what the budget keeps the frames around.
             if focused.insert(request.movie.id).inserted {
                 let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
-                focus[request.movie.id] = frame
+                focus[request.movie.id] = [frame]
                 if handMoving, !unsweepable.contains(request.movie.id) {
                     sweep(request.movie, url: url, around: frame, backward: backward,
                           size: MovieSweep.roughSize(for: width))
                 }
-                if playsAhead, !unsweepable.contains(request.movie.id) {
-                    play(request.movie, url: url, at: frame, size: width)
+                if playsAhead, let playing, !unsweepable.contains(request.movie.id) {
+                    play(request.movie, url: url, points: playing, size: width)
                 }
             }
             if handMoving, !unsweepable.contains(request.movie.id) { continue }
             if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
-            if playsAhead, let pass = playPasses[request.movie.id],
-               pass.width >= Int(width.width.rounded()) - 1,
-               MoviePlayPass.covers(frame: request.movie.frameIndex(atSourceMS: request.sourceMS),
-                                    running: pass.frames, reached: pass.mark.reached,
-                                    playhead: pass.mark.playhead) { continue }
+            if playsAhead, coveredByPlay(request, width: width) { continue }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
+        // A recording not on screen yet but about to come on (a clip that
+        // starts in a moment) is opened too.
+        if playsAhead, let playing {
+            for request in playing.coming where focused.insert(request.movie.id).inserted {
+                guard !unsweepable.contains(request.movie.id),
+                      let url = MovieLibrary.shared.url(for: request.movie) else { continue }
+                play(request.movie, url: url, points: playing, size: size(request))
+            }
+        }
         queue.replace(with: wanted)
         startReads()
+    }
+
+    /// Whether a pass reading ahead of the playhead will reach this frame, so
+    /// nothing reads it on its own.
+    private func coveredByPlay(_ request: MovieFrameRequest, width: CGSize) -> Bool {
+        let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
+        return (playPasses[request.movie.id] ?? []).contains { pass in
+            let aim = pass.mark.aim
+            return pass.width >= Int(width.width.rounded()) - 1
+                && MoviePlayPass.covers(frame: frame, running: pass.frames, reached: pass.mark.reached,
+                                        playhead: aim.playhead, reach: aim.reach)
+        }
     }
 
     // MARK: Reading a stretch in one pass
@@ -604,33 +636,58 @@ final class MovieFrameFetcher {
 
     // MARK: Reading ahead of a playing playhead
 
-    /// Keep a pass reading ahead of a playhead on `frame`: the one running, if
-    /// it still serves it, told where the playhead is now; else a new one
-    /// from here.
-    private func play(_ movie: MovieRef, url: URL, at frame: Int, size: CGSize) {
+    /// Keep the passes this recording's playing playhead needs: one under
+    /// each frame it shows, told where the playhead is now, and one opened a
+    /// few frames into each stretch about to come on (`MoviePlayPass.plan`).
+    /// Passes nobody needs any more stop.
+    private func play(_ movie: MovieRef, url: URL, points: MoviePlayPoints, size: CGSize) {
         let width = Int(size.width.rounded())
-        if let pass = playPasses[movie.id], pass.width == width,
-           MoviePlayPass.serves(running: pass.frames, reached: pass.mark.reached, playhead: frame,
-                                inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) }) {
-            pass.mark.playhead = frame
-            return
+        func frames(_ requests: [MovieFrameRequest]) -> [Int] {
+            requests.filter { $0.movie.id == movie.id }.map { movie.frameIndex(atSourceMS: $0.sourceMS) }
         }
-        playPasses[movie.id]?.task.cancel()
-        let frames = MoviePlayPass.window(from: frame, movie: movie)
+        let now = frames(points.now), next = frames(points.coming)
+        if !now.isEmpty { focus[movie.id] = now }
+        coming[movie.id] = next
+        let passes = (playPasses[movie.id] ?? []).filter { pass in
+            if pass.width == width { return true }
+            pass.task.cancel()
+            return false
+        }
+        let plan = MoviePlayPass.plan(now: now, coming: next, passes: passes.map(\.running),
+                                      inHand: { [self] in has(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)) })
+        var kept: [PlayPass] = []
+        for (index, pass) in passes.enumerated() {
+            if let aim = plan.aim[index] {
+                pass.mark.aim = aim
+                kept.append(pass)
+            } else {
+                pass.task.cancel()
+            }
+        }
+        playPasses[movie.id] = kept
+        for aim in plan.open { open(movie, url: url, aim: aim, size: size) }
+        keepInsideBudget()
+    }
+
+    /// Start a pass over `movie` from `aim`'s frame, reading as far ahead of
+    /// it as the aim says and waiting there.
+    private func open(_ movie: MovieRef, url: URL, aim: MoviePlayPass.Aim, size: CGSize) {
+        let width = Int(size.width.rounded())
+        let frames = MoviePlayPass.window(from: aim.playhead, movie: movie)
         let token = UUID()
-        let mark = PlayMark(playhead: frame)
+        let mark = PlayMark(aim)
         let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
             self?.filePlayed(image, movie: movie, frameIndex: index)
         }
         let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
-            guard let self, playPasses[movie.id]?.token == token else { return }
+            guard let self, playPasses[movie.id]?.contains(where: { $0.token == token }) == true else { return }
             if swept {
                 // Read to the end: it stays, so the playhead running out the
                 // last frames does not start a pass over them again.
                 mark.reached = frames.upperBound + 1
             } else {
                 unsweepable.insert(movie.id)
-                playPasses[movie.id] = nil
+                stopPlayPasses(of: movie.id)
             }
         }
         let task = Task.detached(priority: .userInitiated) {
@@ -640,14 +697,21 @@ final class MovieFrameFetcher {
             }
             if !Task.isCancelled { await finished(swept) }
         }
-        playPasses[movie.id] = PlayPass(token: token, frames: frames, width: width, mark: mark, task: task)
+        playPasses[movie.id, default: []].append(
+            PlayPass(token: token, frames: frames, width: width, mark: mark, task: task))
     }
 
     /// Stop every pass reading ahead of a playhead: it stopped, or turned
     /// round, or a hand took it.
     private func stopPlayPasses() {
-        for pass in playPasses.values { pass.task.cancel() }
+        for pass in playPasses.values.joined() { pass.task.cancel() }
         playPasses.removeAll()
+        coming.removeAll()
+    }
+
+    private func stopPlayPasses(of movie: UUID) {
+        for pass in playPasses[movie] ?? [] { pass.task.cancel() }
+        playPasses[movie] = nil
     }
 
     /// A frame a pass ahead of the playhead reached, filed sharp like any
@@ -663,7 +727,11 @@ final class MovieFrameFetcher {
         resident.removeAll { $0.ref.id == ref.id }
         resident.append(Resident(ref: ref, movie: movie.id, frameIndex: frameIndex))
         keepInsideBudget()
-        if first || frameIndex <= focus[movie.id] ?? frameIndex { onFrameLanded?() }
+        // With two shots of one recording playing, a frame belongs to the
+        // nearer of them: the outgoing shot's frames are all before the
+        // incoming one's, and must not redraw the canvas for it.
+        let nearest = (focus[movie.id] ?? []).min { abs($0 - frameIndex) < abs($1 - frameIndex) }
+        if first || frameIndex <= nearest ?? frameIndex { onFrameLanded?() }
     }
 
     /// A frame a one-pass read reached. Filed unless something at least as
@@ -748,11 +816,17 @@ final class MovieFrameFetcher {
     /// Let go of the frames farthest from the playhead until the sharp ones
     /// and the small ones are each inside their own budget.
     private func keepInsideBudget() {
-        for (rough, budget) in [(false, Self.frameBudget), (true, MovieSweep.roughBudget)] {
+        // Every place being played counts as the playhead: the stretch
+        // playing, the shot coming in, the far side of the next cut.
+        let foci = focus.merging(coming) { $0 + $1 }
+        let sharp = MoviePlayPass.frameBudget(base: Self.frameBudget,
+                                              reaches: playPasses.values.joined().map { $0.mark.aim.reach })
+        for (rough, budget) in [(false, sharp), (true, MovieSweep.roughBudget)] {
             while resident.count(where: { $0.rough == rough }) > budget {
                 let kind = resident.indices.filter { resident[$0].rough == rough }
                 guard let farthest = MovieFrameQueue<Read>.farthest(
-                    kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: focus) else { break }
+                    kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: foci,
+                    forward: !playPasses.isEmpty) else { break }
                 let gone = resident.remove(at: kind[farthest]).ref
                 store.remove(gone)
                 dropped.append(gone.id)
