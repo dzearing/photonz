@@ -1,0 +1,32 @@
+{
+  "id": "a-gap-on-a-track-looks-like-an-empty-slot-dashed",
+  "title": "A gap on a track looks like an empty slot, dashed and hatched as the mock draws it",
+  "goal": "After a lift or a trim opens a gap between two clips, the gap is just bare lane today, so it is easy to miss. The cut walkthrough mock draws it as a dashed, softly hatched slot the height of a clip, so a person sees there is a hole to close.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3780,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T04:18:13.320Z",
+  "updated": "2026-10-08T04:18:18.813Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building click-to-pick-a-gap (task a-gap-between-clips-closes-with-a-click-and-dele). Mock: docs/design/mocks/pages/video-cut-wt.html .gap style line 53, #theGap line 297. Gaps per track come from PhotonzDocument.gaps(onTrack:) (Sources/PhotonzCore/TimelineGap.swift); the lane already lays a hit area over each gap in TimelineTrackRows.lane, so the drawing can sit in the same ForEach. Text-free, so no legibility risk.",
+  "acceptance": [
+    "A gap between two clips on a video or audio track is drawn as the mock video-cut-wt step 7 draws #theGap: a dashed outline and diagonal hatch, clip height, rounded like a clip",
+    "A picked gap still wears the range band over that drawing, and a Captions track draws no gap",
+    "A walk at Next defaults photographs a lifted gap beside the mock frame and the audit lists every difference"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T04:18:13.322Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T04:18:18.812Z",
+      "note": "walks a-gap-between-clips-closes-walk -> none"
+    }
+  ],
+  "walks": []
+}

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-07T22:06:24.837Z",
-  "updated": "2026-10-07T22:07:44.009Z",
+  "updated": "2026-10-08T04:19:13.644Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the manager pass's Premiere gap check 2026-10-07. Today: no gap-picking concept; closeGap is private in Sources/PhotonzCore/TimelineMenuEdits.swift ~41-56 and used only by ripple delete of a clip. A drag on empty track space draws a box (TrackRange). Lift is ; (TimelineKeys.swift ~231-237). Core first (TDD): a TimelineGap value (track, startMS, lengthMS) found from the track's clips at a time, and a closeGap edit that moves later clips, their linked sound and their captions, refusing when it would overlap. The click and its picked tint live in the timeline view; reuse the ruler/track range tint, add no new style, and add Ripple Delete to the gap's right-click menu per the 'Actions live where you click' rule. Placement: right-click row on the thing it acts on, plus the existing Sequence > Ripple Delete row; no new control. Searched pick a gap, close gap, ripple delete a gap (--all): nothing covers it, and no card declined it.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-07T22:07:44.008Z",
       "note": "seq 3770 -> 6"
+    },
+    {
+      "t": "2026-10-08T03:42:53.844Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T04:18:18.869Z",
+      "note": "owns these walks: a-gap-between-clips-closes-walk"
+    },
+    {
+      "t": "2026-10-08T04:19:04.093Z",
+      "note": "adversarial review: a Premiere editor clicks a gap and presses Delete, or right-clicks it for Ripple Delete; both now work. A SwiftUI context menu cannot see where it was opened, so each gap gets its own hit area on the lane carrying the same press gesture (read in the lane's coordinate space) and its own menu. Captions are standalone layers, so 'its captions' = caption lines starting over a clip that moves. Captions-track spaces are pauses, not gaps: no gap picking there. The mock (video-cut-wt step 7) draws an unpicked gap dashed and hatched; the app draws bare lane: filed a-gap-on-a-track-looks-like-an-empty-slot-dashed."
+    },
+    {
+      "t": "2026-10-08T04:19:04.152Z",
+      "note": "built: PhotonzCore/TimelineGap.swift (TimelineGap, gap(onTrack:atMS:), gaps(onTrack:), canCloseGap, closeGap; refuses on a locked layer or track, or any landing overlap), 12 tests in TimelineGapTests. App: EditorState+TimelineGap.swift; a click in a gap picks it (EditorState+TrackRange); Delete, Shift Delete, Sequence Ripple Delete and Edit 'Delete Gap' close it; the picked gap is drawn with the track-range band (TimelineDock); the gap's right-click menu leads with Ripple Delete (TimelineTrackRows). Harness: a picked gap reads as 'Gap on <track>' in expectTimelinePick; new action captionsExpectOverClips."
+    },
+    {
+      "t": "2026-10-08T04:19:04.210Z",
+      "note": "verified: Scripts/test.sh 11777 tests green; a-gap-between-clips-closes-walk green at Next defaults (Delete, Shift Delete and right-click Ripple Delete each close the 4.0-8.0s gap, tail lands 4.00-13.25, every caption over a clip); marquee-and-track-range, extract-a-marked-stretch and draw-a-range-on-the-ruler walks green."
+    },
+    {
+      "t": "2026-10-08T04:19:04.269Z",
+      "note": "left rough (not filed): a lifted clip's second half is named '<name> copy' (Lift's naming, not this task); a refused close only beeps; only the gap's own track ripples, so titles and music elsewhere stay (Premiere with sync lock off). 'A click after the last clip picks nothing' is proven by marquee-and-track-range-walk's click at 0:11."
+    },
+    {
+      "t": "2026-10-08T04:19:13.642Z",
+      "note": "A click on the empty stretch between two clips picks the gap (range band); Delete, Shift Delete, Sequence Ripple Delete and the gap's right-click Ripple Delete close it, moving later clips on that track with their sound and captions in one undo step, refused on locks or overlaps. Core TimelineGap.swift + 12 tests; walk a-gap-between-clips-closes-walk green at Next defaults; full suite 11777 green; audit queue/audits/2026-10-07-gap-close.json. Commit ecae225a."
     }
-  ]
+  ],
+  "started": "2026-10-08T03:42:53.841Z",
+  "walks": [
+    "a-gap-between-clips-closes-walk"
+  ],
+  "completed": "2026-10-08T04:19:13.643Z"
 }

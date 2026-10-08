@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 3760,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T00:05:17.047Z",
-  "updated": "2026-10-08T00:05:22.877Z",
+  "updated": "2026-10-08T04:43:32.990Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-07 while building fade-handles-and-level-points-look-like-the-mock. The first version of fade-diamonds-and-level-points-look-like-the-mock-walk did `windowClick [600,945]` (pick the talk sample's sound) then `{\"do\":\"dragGrip\",\"control\":\"Sample Talk sound clip start\",\"by\":45}`. grip-trace-17.json: gripX stayed 163.5 at every step while pointerX went 169 -> 208.5; the held capture showed the level line dropped about 5pt and the clip was not trimmed (timeline still 0.00s to 17.25s). Grabbing the same grip lower, windowDrag (166,943)->(211,943), trims it (0.00s to 16.75s). Cause: SoundLevelLine is laid over the grips in ClipPiecesBar's ZStack and its contentShape is LevelBand, the line stroked 12pt wide with round caps; at unity the line is ~12pt down a 34pt bar (SoundLane.y(forGain:), inset 5.5), so the band covers y 6..18 across the grip (grip centre ~17pt). dragGrip presses the grip's centre, so it lands on the band. Not caused by the fade diamonds: the line and grip code are unchanged; the diamond's hit shape is the diamond itself and ends above the grip centre. Fix idea: subtract the grip rects from the band, or draw grips above the level line. The taller lane in a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa moves the line but does not remove the overlap at every level.",
@@ -26,7 +26,27 @@
     {
       "t": "2026-10-08T00:05:22.876Z",
       "note": "walks fade-diamonds-and-level-points-look-like-the-mock-walk -> none"
+    },
+    {
+      "t": "2026-10-08T04:31:00.910Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T04:32:08.996Z",
+      "note": "walks none -> a-sound-s-trim-grip-trims-from-its-middle-walk"
+    },
+    {
+      "t": "2026-10-08T04:43:28.667Z",
+      "note": "Reproduced first with the new walk on the old build: dragGrip 'Sample Talk sound clip start' by 45 left the grip 45pt off the pointer and the clip at 0.00s to 17.25s. Fix: ClipPiecesBar draws the level line BEFORE the grips in its ZStack (it was after), so the grip's hit rect wins; fade diamonds stay on top of both. Walk a-sound-s-trim-grip-trims-from-its-middle-walk now passes at Next defaults: trims at 0.0 dB, at -15.9 dB and at +6.0 dB (end grip), and the line dragged mid-segment moves the level each time. Also green: fade-diamonds-and-level-points-look-like-the-mock-walk, a-sound-s-waveform-follows-its-level-walk, sound-fades-in-the-panel-walk, a-clip-s-sound-is-linked-under-it-walk, keyframe-anything-walk, keys-copy-between-layers-walk; Scripts/test.sh 11777 passed. Rough items stay in the audit only: no mock frame, and the 5pt grip slop over the line's very edge is intended."
+    },
+    {
+      "t": "2026-10-08T04:43:32.988Z",
+      "note": "Level line now drawn under the trim grips in ClipPiecesBar, so a press anywhere on a sound's grip trims; line still drags everywhere else. Proven by a-sound-s-trim-grip-trims-from-its-middle-walk at Next defaults (0 dB, -15.9 dB, +6 dB), six neighbouring sound walks green, Scripts/test.sh green. Audit queue/audits/2026-10-07-sound-trim-grip.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-sound-s-trim-grip-trims-from-its-middle-walk"
+  ],
+  "started": "2026-10-08T04:31:00.909Z",
+  "completed": "2026-10-08T04:43:32.989Z"
 }
