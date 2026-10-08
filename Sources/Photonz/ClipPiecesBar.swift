@@ -627,16 +627,20 @@ struct ClipPiecesBar: View {
                                       hiddenLeading: CGFloat, pictures: Double = 0) -> some View {
         if let kind {
             ZStack(alignment: isSound ? .topLeading : .leading) {
-                if let border = kind.border {
+                if soundOnThePanelGround {
+                    RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(soundTint.opacity(0.35), lineWidth: 1)
+                } else if let border = kind.border {
                     RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(border)
                 }
                 if piece?.isHeld == true {
                     Color.black.opacity(0.4)
                 }
-                VStack(spacing: 0) {
-                    Rectangle().fill(Color.white.opacity(0.18)).frame(height: 1)
-                        .padding(.horizontal, cornerRadius / 2)
-                    Spacer(minLength: 0)
+                if !soundOnThePanelGround {
+                    VStack(spacing: 0) {
+                        Rectangle().fill(Color.white.opacity(0.18)).frame(height: 1)
+                            .padding(.horizontal, cornerRadius / 2)
+                        Spacer(minLength: 0)
+                    }
                 }
                 // A clip's own sound is named by the picture right above it,
                 // and the mock's sound segment carries no words. A sound of
@@ -679,7 +683,18 @@ struct ClipPiecesBar: View {
             .allowsHitTesting(false)
     }
 
+    /// A sound drawn as `video-audio.html` draws its clip: the panel's own
+    /// ground, a breath lighter, with a thin edge in the lane's colour, so the
+    /// waveform is the coloured thing in the lane
+    /// (`next-sound-on-the-panel-ground`). Off, it wears `video.html`'s green.
+    private var soundOnThePanelGround: Bool {
+        kind == .audio && Experiments.shared.soundOnThePanelGroundEnabled
+    }
+
     private func fill(_ piece: ClipPiece?, picked: Bool) -> AnyShapeStyle {
+        if soundOnThePanelGround {
+            return AnyShapeStyle(VideoKit.Palette.panel2.color(colorScheme).mix(with: .white, by: 0.03))
+        }
         if let kind { return kind.fill }
         // A HELD frame is drawn as itself rather than as a short clip: it is
         // the one piece that plays no time of the recording at all, and a

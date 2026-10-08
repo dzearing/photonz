@@ -1,0 +1,24 @@
+{
+  "out": "/tmp/photonz-playtest/sound-clip-ground-green-walk",
+  "seed": "The talking sample and the sample music at Next defaults, nothing switched: each sound clip on the timeline wears video.html's green, photographed in dark and in light so it can sit beside the other mock's look on the decision card.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "appearance", "value": "dark" },
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-dark", "note": "Dark: the talking sample's own sound under V1 and the sample music on its own track, neither picked, each wearing the green look" },
+    { "do": "snapshot", "name": "1-dark" },
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-light", "note": "Light: the same two sounds, waveform, level line and the music's name still legible" },
+    { "do": "snapshot", "name": "2-light" },
+    { "do": "appearance", "value": "dark" }
+  ]
+}

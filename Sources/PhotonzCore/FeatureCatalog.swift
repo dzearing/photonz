@@ -64,6 +64,10 @@ public enum FeatureCatalog {
     /// come in with the slide rather than just after it (`EditModeArrival`).
     public static let panelWithTheSlideFlag = "next-panel-with-the-slide"
 
+    /// A sound clip drawn as video-audio.html draws it: the panel's own ground
+    /// with a thin edge in its lane's colour, instead of video.html's green.
+    public static let soundOnThePanelGroundFlag = "next-sound-on-the-panel-ground"
+
     public static let edgeGrabFlag = "next-edge-grab"
 
     public static let toolOptionsFlag = "next-tool-options"
@@ -1480,6 +1484,16 @@ public enum FeatureCatalog {
                     parameters: []),
                 releases: [.next],
                 enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: soundOnThePanelGroundFlag,
+                    title: "Sound clips on the panel colour",
+                    description: "A sound clip on the timeline is drawn in the panel's own colour with a thin edge in its track's colour, so the waveform is the coloured shape. Off means sound clips are green.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: []),
             Definition(
                 flag: FeatureFlag(
                     name: panelWithTheSlideFlag,

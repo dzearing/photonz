@@ -433,6 +433,16 @@ struct FeatureCatalogTests {
             .isEnabled(FeatureCatalog.measureReadoutSlideFlag))
     }
 
+    @Test func theSoundOnThePanelGroundFlagIsNextOnlyAndOffByDefault() {
+        // video-audio.html draws a sound on the panel's own ground with a thin
+        // edge in its lane's colour; video.html draws it green. Off (green)
+        // until the user picks between the two mocks (2026-10-07).
+        #expect(FeatureCatalog.soundOnThePanelGroundFlag == "next-sound-on-the-panel-ground")
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.soundOnThePanelGroundFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.soundOnThePanelGroundFlag))
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.soundOnThePanelGroundFlag })
+    }
+
     @Test func thePanelWithTheSlideFlagIsNextOnlyAndOffByDefault() {
         // Edit's panel built behind View too, so it comes in with the slide:
         // everything lands at once, and the slide draws about 50 pictures a

@@ -1,0 +1,40 @@
+{
+  "id": "a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound",
+  "taskId": "a-sound-clip-on-the-timeline-wears-its-file-name",
+  "question": "Which background should a sound clip wear on the timeline?",
+  "context": "The main editing mock (video.html) and the audio mock (video-audio.html) draw the same sound lane two ways. Both are built; the pictures in the brief show each on the talk sample and the sample music, in dark and light.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Panel colour, coloured waveform",
+      "summary": "Sound clips sit on the panel colour with a thin edge in their track colour, as the audio mock draws them. The waveform is the coloured thing you see: cyan on the first sound track, purple on the second.",
+      "pros": [
+        "Matches the audio mock, which is the page about sound",
+        "Two sound tracks tell apart by colour at a glance",
+        "The waveform reads as the sound itself, not as a pattern on a green bar"
+      ],
+      "cons": [
+        "A sound clip is a quieter shape than a picture clip, so the timeline looks less like a row of solid blocks",
+        "In light appearance the clip edge is faint"
+      ],
+      "mitigation": "The track colour edge and the coloured waveform still mark where each clip starts and ends, and a picked clip keeps its blue ring."
+    },
+    {
+      "id": "b",
+      "label": "Green clip, as today",
+      "summary": "Sound clips stay solid dark green, as the main editing mock draws them, with the coloured waveform on top.",
+      "pros": [
+        "Every clip is a solid block, like Premiere and Final Cut",
+        "No change from what you use now"
+      ],
+      "cons": [
+        "The green fights the cyan and purple waveforms",
+        "Differs from the audio mock"
+      ],
+      "mitigation": "The waveform and level line already carry the track colour over the green."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-08T05:05:53.617Z"
+}

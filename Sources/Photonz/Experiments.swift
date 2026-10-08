@@ -250,6 +250,11 @@ extension Experiments {
     var grabCueEnabled: Bool { isEnabled(FeatureCatalog.grabCueFlag) }
     var panelWithTheSlideEnabled: Bool { isEnabled(FeatureCatalog.panelWithTheSlideFlag) }
 
+    /// `next-sound-on-the-panel-ground`: whether a sound clip on the timeline
+    /// wears the panel's colour with an edge in its track's colour
+    /// (video-audio.html) rather than the kit's green (video.html).
+    var soundOnThePanelGroundEnabled: Bool { isEnabled(FeatureCatalog.soundOnThePanelGroundFlag) }
+
     /// `next-a-box-says-what-it-picks`: whether a rubber band on the canvas
     /// shows, while it is being drawn, whether it is picking up layers or
     /// picking a piece of the picture. Exists only in the Next release's
