@@ -176,14 +176,19 @@ struct TimelineEmptySlot: View {
     /// (`ClipSourceLane`), on a clip's smaller corner.
     var cornerRadius: CGFloat = Self.laneCornerRadius
     var readout = "empty slot"
+    /// A gap between two clips (`TimelineGapSlot`) draws its own stripes.
+    var stripeWidth: CGFloat = Self.stripe
+    var stripeTone: VideoKit.Tone = VideoKit.Palette.line
+    var stripeOpacity: Double = 0.6
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
-        let stripes = VideoKit.Palette.line.color(colorScheme).opacity(0.6)
+        let stripes = stripeTone.color(colorScheme).opacity(stripeOpacity)
+        let stripeWidth = stripeWidth
         Canvas { context, size in
             // Across the stripes is 45 degrees, so along the lane a stripe
-            // and its gap each take 6 times root 2.
-            let step = Self.stripe * 2.squareRoot()
+            // and its gap each take the stripe's width times root 2.
+            let step = stripeWidth * 2.squareRoot()
             var path = Path()
             var x: CGFloat = -size.height
             while x < size.width {
@@ -201,6 +206,20 @@ struct TimelineEmptySlot: View {
                                     style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
         .allowsHitTesting(false)
         .panelReadout(readout)
+    }
+}
+
+// MARK: - A gap
+
+/// A gap between two clips, drawn as the cut walkthrough draws `#theGap`
+/// (`video-cut-wt.html`, `.gap`): a slot the height of a clip, on a clip's
+/// corner, with a dashed edge and `repeating-linear-gradient(45deg,
+/// transparent 5px, panel-2 5px 10px)` inside, so a hole left by a lift or a
+/// trim reads as one.
+struct TimelineGapSlot: View {
+    var body: some View {
+        TimelineEmptySlot(cornerRadius: VideoKit.Metrics.clipCornerRadius, readout: "gap slot",
+                          stripeWidth: 5, stripeTone: VideoKit.Palette.panel2, stripeOpacity: 1)
     }
 }
 

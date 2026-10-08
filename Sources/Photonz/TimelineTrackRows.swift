@@ -434,6 +434,11 @@ struct TimelineTrackRow: View {
                 let x0 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.lowerBound))), 1)
                 let x1 = laneWidth * min(max(0, ruler.fraction(ofMS: Double(gap.range.upperBound))), 1)
                 if x1 - x0 >= 1 {
+                    // Drawn as an empty slot the height of a clip, so a hole
+                    // left by a lift or a trim is plain to see.
+                    TimelineGapSlot()
+                        .frame(width: x1 - x0, height: laneHeight)
+                        .offset(x: x0)
                     Color.clear
                         .contentShape(Rectangle())
                         .frame(width: x1 - x0, height: laneHeight)
