@@ -1,0 +1,26 @@
+{
+  "feature": "A cut click and a dropped clip answer inside the Premiere budget",
+  "epic": "video-beats-premiere",
+  "summary": "Clicking one of a clip's cuts now answers in 32 to 49 ms (was 47 to 59, median about 56), and letting a second clip go on the timeline reads 64 to 67 ms. The 760 ms freeze reported after the drop was the walk's own word check, not the app.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open Help > Tutorials and open the talk sample." },
+    { "do": "Click the ruler at about 0:04 and press Command K, then at 0:08 and press Command K again." },
+    { "do": "Click the first cut on V1: the panel switches to Edit point at once." },
+    { "do": "Click the middle piece, then the cut again, a few times quickly." , "shot": "2026-10-08-cut-click-undo-drop-speed-2.png" },
+    { "do": "Drag a second recording from the Finder onto the end of V1 and let go.", "shot": "2026-10-08-cut-click-undo-drop-speed-1.png" },
+    { "do": "Press Command Z, then Shift Command Z." }
+  ],
+  "evaluate": [
+    "Does clicking between a piece and its cut feel instant, with no stutter in the panel?",
+    "When the clip's sections leave on a cut click, do you ever catch them for a frame (a flash at the bottom of the panel)?",
+    "Does letting go of the second clip feel immediate?",
+    "Do Undo and Redo still feel a beat slow next to the clicks? They measure 51 to 71 ms and are the next task."
+  ],
+  "rough": [
+    "Undo and Redo still hold 51 to 71 ms, over the 50 ms line: handed on as undo-and-redo-on-a-video-answer-inside-50-ms with what was found (panel header menus rebuilt on every Undo, and a gap in how the walks time a press).",
+    "No mock covers this: it changes speed only, nothing a person sees, so there is no side by side.",
+    "The cut click is under 50 ms with little room (most clicks 45 to 49 ms); the first cut of a session is the slowest because it builds the cut's sections for the first time."
+  ]
+}
