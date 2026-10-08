@@ -20875,3 +20875,9 @@ Next: the first editor window's ~200 ms first build
 - Core: `Waveform.drawnHeights(ofPeaks:level:fromLayerMS:toLayerMS:)` in `PhotonzCore/AudioNormalize.swift`, tested in `WaveformLevelTests`. Below unity the dB drawing is multiplied by the level (so a fade reads as one); above unity the boost adds decibels the way gain does.
 - App: `SoundWaveform` takes heights; `ClipPiecesBar` reads the level from the document, a level-line drag (`SoundLevelLine.onLevelInHand`) or a fade-diamond drag. Shared files, so Current draws the same.
 - Walk: `a-sound-s-waveform-follows-its-level-walk` (needs the Mac to itself: windowClick, dragGrip, windowDrag). Follow-up filed: `a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa` (84 pt lanes, one smooth waveform shape).
+
+## 2026-10-08 — the "hold after Undo" was the walk's own markers (undo-and-redo-on-a-video-answer-at-once)
+
+- Found: the 166-222 ms hold a quarter second after Undo/Redo on a video was the walk harness putting its marker views back up, not the app (no-op actions read under 2 ms; delaying the re-hang 1 s moved the hold 1 s; markers left up showed none). The same artifact made the 288/311 ms holds after keying in an-editing-session-walk.
+- Shipped (a226b321): `putTheMarkersBackUp` lets the app go quiet first, then takes the re-hang off the meter and names it on the wait line. New `undo-redo-cost-walk`: undo/redo of a cut, a ripple delete and a b-roll drop, waits fail at 100 ms, pieces and caption lines checked.
+- Open: the presses themselves are 46-77 ms, the editor-wide cost of any edit (app code ~10 ms, ~20% SwiftUI accessibility upkeep, the rest SwiftUI update/layout). Folded into `clicking-a-cut-keying-a-value-and-undoing-it-ans` as an acceptance item; this task dropped. Export sheet opening holds 363 ms (logged, not filed).

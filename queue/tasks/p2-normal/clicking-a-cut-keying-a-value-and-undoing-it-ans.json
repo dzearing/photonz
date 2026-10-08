@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-07T16:30:00.588Z",
-  "updated": "2026-10-07T22:05:25.994Z",
+  "updated": "2026-10-08T03:28:19.570006Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Carried from a-first-clip-pick-and-a-cut-click-answer-inside (2026-10-07), whose log has the measurements. The four timed walks now say setup timedWithoutMarkers, so their numbers are the dev app's, not the probe's (probe markers were ~25 ms of every click). Numbers on 2026-10-07 without markers: cut 54-76 (median ~68), first clip pick 33-50 (median ~48), deselect ~58, Position pick 40-53 in animate-pick-cost, 57 in keyframe-anything, 63 in an-editing-session; undo median 71.\n\nAttribution for the cut (A/B interleaved, temp switches, all reverted): panel switched off entirely -> cut 24, first pick 20, so the panel is ~44 ms of a cut. Blanking the nine sections a cut drops (keys,speed,color,effects,sound,fades,gain,soundEffects,captions) -> 42; blanking the three that stay (editPoint,transition,transitions) -> 66, so it is the TEARDOWN of the leaving sections. One at a time: captions -11 ms (710pt form, below the fold), keys/speed/color/gain/effects/sound/fades 1-3 ms each. In the cut pass ~23% is accessibility (AX graph update 8%, focus walk 8%, needsUpdate 7%), ~12% AppKit view removal/dealloc, ~9% PlatformViewChild updates. A transition picker popover opens a pass later (fine); the previous popover's window is released inside the cut pass (~1.5 ms).\n\nTried and measured, NOT shipped: (1) sections leaving a pass later, kept built and drawn as nothing (zero-height frame, out-of-sight placement, or visible at the end): every variant was slower (64-86 vs 46-60 interleaved) because the kept sections re-render for the new selection, and a zero-height frame re-lays out their forms. (2) tutorial anchors hung only while a guide runs: -2 to -3 ms. (3) a dropdown face drawn without its nested NSHostingView: profile says ~2 ms of nine dropdowns' teardown. Structural lever left: build only the panel sections near the viewport (a clip's twelve sections, ~600pt visible of ~1800pt; the dropped ones below the fold are ~18 ms of the cut), which needs the walk harness to scroll-search for controls in unbuilt sections. Noise between rounds is 15-20 ms; only interleaved runs compare (an xctrace SwiftUI recording in the background inflated one round).",
@@ -18,7 +18,8 @@
     "The first value picked from Animate a property (Position on a typed title) holds under 50 ms in three runs each of keyframe-anything-walk and an-editing-session-walk",
     "Undoing that pick holds under 50 ms in Scripts/playtest/perf/animate-pick-cost-walk.json (median of twelve)",
     "The panel shows the cut after a cut click and the clip after a piece click, in the click's own frame, and keyframe-anything-walk keeps its build-count claims",
-    "an-editing-session-walk and clip-click-cost-walk stay green"
+    "an-editing-session-walk and clip-click-cost-walk stay green",
+    "Undo and Redo of a cut, a ripple delete and a clip drop hold under 50 ms in nine of ten presses over three runs of undo-redo-cost-walk, none over 100 ms (carried from undo-and-redo-on-a-video-answer-at-once, 46-77 ms on 2026-10-08)"
   ],
   "log": [
     {
@@ -56,12 +57,21 @@
     {
       "t": "2026-10-07T22:05:25.993Z",
       "note": "Manager pass 2026-10-07: the 12:36 an-editing-session-walk shows a deferred hold after keying as well as the press itself: Animate a property click, longest 288 ms from 408 ms in; Position pick, 311 ms from 485 ms in. Undo of a cut, a ripple delete and a drop hold 166-222 ms from ~240 ms in (filed as undo-and-redo-on-a-video-answer-at-once). One deferred job may explain both."
+    },
+    {
+      "t": "2026-10-08T03:28:10.847Z",
+      "note": "The deferred holds the manager saw here (Animate a property 288ms from 408ms in, Position 311ms from 485ms in) were the walk's own markers going back up, not the app: fixed in a226b321. an-editing-session-walk now reads Animate a property 35.8ms, Position 59.5ms, with the re-hang (298ms, 324ms) named and left out. Also carried in from undo-and-redo-on-a-video-answer-at-once: Undo/Redo of a cut, ripple delete and clip drop are 46-77ms (median ~62) in Scripts/playtest/undo-redo-cost-walk.json, same editor-wide cost as the cut click; ~20% of each is SwiftUI accessibility upkeep, app code ~10ms."
+    },
+    {
+      "t": "2026-10-08T03:28:19.542Z",
+      "note": "walks clip-click-cost-walk, an-editing-session-walk, keyframe-anything-walk -> clip-click-cost-walk, an-editing-session-walk, keyframe-anything-walk, undo-redo-cost-walk"
     }
   ],
   "walks": [
     "clip-click-cost-walk",
     "an-editing-session-walk",
-    "keyframe-anything-walk"
+    "keyframe-anything-walk",
+    "undo-redo-cost-walk"
   ],
   "started": "2026-10-07T17:38:18.021Z"
 }

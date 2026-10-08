@@ -10013,3 +10013,13 @@
 {"t":"2026-10-08T02:31:41.391Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
 {"t":"2026-10-08T02:31:41.450Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
 {"t":"2026-10-08T02:31:41.517Z","ev":"task_blocked","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":"in_progress","note":"Waveform shape, lane-coloured level line and the sound name tag shipped and verified; the 84pt lane height waits on decision a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa-how-tall-should-a-sound-s-lane-b, because video.html draws sound lanes 28pt and the taller lane takes 50pt from the picture on every recording with sound."}
+{"t":"2026-10-08T02:42:55.461Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":497,"of":797,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T02:42:55.624Z","ev":"task_started","id":"undo-and-redo-on-a-video-answer-at-once","title":"Undo and Redo on a video answer at once","priority":"p2-normal"}
+{"t":"2026-10-08T03:28:10.617Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-at-once"}
+{"t":"2026-10-08T03:28:10.676Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-at-once"}
+{"t":"2026-10-08T03:28:10.734Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-at-once"}
+{"t":"2026-10-08T03:28:10.790Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-at-once"}
+{"t":"2026-10-08T03:28:10.849Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-08T03:28:19.544Z","ev":"task_walks","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","walks":["clip-click-cost-walk","an-editing-session-walk","keyframe-anything-walk","undo-redo-cost-walk"]}
+{"t":"2026-10-08T03:28:22.962Z","ev":"task_walks","id":"undo-and-redo-on-a-video-answer-at-once","walks":["undo-redo-cost-walk"]}
+{"t":"2026-10-08T03:28:31.018Z","ev":"task_dropped","id":"undo-and-redo-on-a-video-answer-at-once","from":"in_progress","note":"The hold this was filed on was the walk harness, not the app: the 166-222ms after every Undo/Redo was the walk's markers going back up (delaying the re-hang 1s moved the hold 1s; no-op actions read <2ms). Fixed in the harness and guarded by the new undo-redo-cost-walk (a226b321): no deferred hold after any press, none over 100ms, pieces and caption lines unchanged, 3 runs green, plus an-editing-session, clip-click-cost, keyframe-anything and animate-pick-cost green, 11765 tests. What is left, presses of 46-77ms, is the cost every edit on a video pays (Command K costs more), not undo's, so per the process note it is folded into clicking-a-cut-keying-a-value-and-undoing-it-ans as an acceptance item rather than filed again. No audit: nothing a person sees changed."}
