@@ -120,6 +120,14 @@ The machine you run on is the user's. Anything you start, you finish.
   Scripts/playtest.sh Scripts/playtest/<name>.json --no-build
   Scripts/playtest-all.sh --no-build <name-fragment>   # a handful at once
   ```
+  The walks your change affects include ones you never opened. When you change
+  what something is called, what it says, or what kind of control it is, look
+  for walks that still expect the old way, update them in the same commit, and
+  run them: `grep -l '<the old words>' Scripts/playtest/*.json`. Four times
+  between 2026-10-03 and 2026-10-08 a change left other walks expecting the old
+  shape (a title's single Fade row, a shadow's Kind as a dropdown twice, a lifted
+  clip called Sample Talk copy). Each one turned rotating checks red and cost a
+  separate task to fix walks that were wrong, not the app.
   The whole set is about 770 walks and about 210 minutes, which is 21 times the 600s ceiling
   on your background work, so starting it inside a task ends with you
   terminated and your task handed back unfinished. That is not hypothetical:
