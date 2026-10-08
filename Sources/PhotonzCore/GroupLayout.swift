@@ -102,7 +102,9 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     /// How wide this group is, or nil for a group that is as wide as whatever
     /// is inside it. A number here is what lets a menu be 320 points wide and
     /// every row stretch to that width without building it on a screen.
-    /// Ignored on a screen, whose box is its own frame.
+    /// Ignored on a screen, whose box is its own frame: a screen says Hug with
+    /// `screenHugsWidth` instead, because nil here is what every screen ever
+    /// saved holds and every one of those is the size it was drawn.
     public var width: CGFloat?
     /// How tall this group is, or nil for a group as tall as its contents.
     public var height: CGFloat?
@@ -117,6 +119,16 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var minHeight: CGFloat?
     /// The tallest this group may ever get, or nil where nothing stops it.
     public var maxHeight: CGFloat?
+    /// Whether a SCREEN that arranges its contents is as wide as them plus its
+    /// padding, instead of the width it was drawn. Off unless somebody picks
+    /// Hug, so a screen keeps its drawn size and every screen saved before this
+    /// opens exactly as it was. Means nothing on a group, whose nil `width` is
+    /// its hug, and nothing on a screen that arranges nothing: a free screen's
+    /// box is the box you drew, and something hanging off its edge must never
+    /// resize it (`screenHugs(horizontal:)`).
+    public var screenHugsWidth: Bool = false
+    /// The same, down the screen.
+    public var screenHugsHeight: Bool = false
 
     /// The gap a layout starts with when nothing suggests another: the same 12
     /// points the starter components are built on.
@@ -237,6 +249,34 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     public var hugsWidth: Bool { usedWidth == nil }
     public var hugsHeight: Bool { usedHeight == nil }
 
+    /// Whether a screen with this layout takes the size of its contents on one
+    /// axis: only one that arranges them, and only where somebody picked Hug.
+    public func screenHugs(horizontal: Bool) -> Bool {
+        arranges && (horizontal ? screenHugsWidth : screenHugsHeight)
+    }
+
+    /// What the Width or Height row reads, for a screen or a group: the two
+    /// keep the answer in different places, and the row should not have to
+    /// know that.
+    public func hugs(onAScreen: Bool, horizontal: Bool) -> Bool {
+        if onAScreen { return screenHugs(horizontal: horizontal) }
+        return horizontal ? hugsWidth : hugsHeight
+    }
+
+    /// Hug or Fixed, picked on one axis. A group that stops hugging holds the
+    /// size it is at that moment, rounded, so nothing moves when Fixed is
+    /// pressed; a screen already holds its size in its own frame, so only the
+    /// switch changes.
+    public mutating func setHugging(_ hugging: Bool, horizontal: Bool, onAScreen: Bool,
+                                    holding size: CGFloat) {
+        if onAScreen {
+            if horizontal { screenHugsWidth = hugging } else { screenHugsHeight = hugging }
+            return
+        }
+        let side: CGFloat? = hugging ? nil : size.rounded()
+        if horizontal { width = side } else { height = side }
+    }
+
     // MARK: - The smallest and the largest it may get
 
     /// The limits actually kept, read the same forgiving way as every other
@@ -339,6 +379,7 @@ public struct GroupLayout: Hashable, Codable, Sendable {
     private enum CodingKeys: String, CodingKey {
         case kind, direction, columns, gap, spreadsGap, wraps, rowGap, padding, width, height
         case minWidth, maxWidth, minHeight, maxHeight
+        case screenHugsWidth, screenHugsHeight
     }
 
     /// Read forgivingly: a layout saved by an older build that knew fewer
@@ -373,6 +414,10 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         maxWidth = try c.decodeIfPresent(CGFloat.self, forKey: .maxWidth)
         minHeight = try c.decodeIfPresent(CGFloat.self, forKey: .minHeight)
         maxHeight = try c.decodeIfPresent(CGFloat.self, forKey: .maxHeight)
+        // A screen saved before a screen could hug opens the size it was
+        // drawn, which is what it was.
+        screenHugsWidth = try c.decodeIfPresent(Bool.self, forKey: .screenHugsWidth) ?? false
+        screenHugsHeight = try c.decodeIfPresent(Bool.self, forKey: .screenHugsHeight) ?? false
     }
 
     /// Written by hand for one reason: a stack that holds one gap writes
@@ -397,6 +442,8 @@ public struct GroupLayout: Hashable, Codable, Sendable {
         try c.encodeIfPresent(maxWidth, forKey: .maxWidth)
         try c.encodeIfPresent(minHeight, forKey: .minHeight)
         try c.encodeIfPresent(maxHeight, forKey: .maxHeight)
+        if screenHugsWidth { try c.encode(true, forKey: .screenHugsWidth) }
+        if screenHugsHeight { try c.encode(true, forKey: .screenHugsHeight) }
     }
 }
 

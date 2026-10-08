@@ -252,17 +252,18 @@ struct ArrangementInspector: View {
                 editorState.updateArrangement(ids: ids) { $0.columns = Int(value.rounded()) }
             }
         }
-        // A screen is a box you were given; a group either takes the size its
-        // contents make or holds a size of its own, which is what lets a menu
-        // be 320 wide before there is a screen to build it on. One screen in
-        // the pick takes these away rather than showing a size it cannot set.
-        if contents.offersASizeOfItsOwn {
+        // A group either takes the size its contents make or holds a size of
+        // its own, which is what lets a menu be 320 wide before there is a
+        // screen to build it on. A screen is the box you drew, so it is offered
+        // Hug only while it arranges its contents: a free screen in the pick
+        // takes these away rather than showing a size it would not keep.
+        if contents.offersHug {
             sizeRows(.width)
             sizeRows(.height)
             // Right under the number that caused the overflow, and in the same
             // two words a screen uses. A screen's own switch is in the Frame
             // section, so it is never offered twice.
-            clipRow()
+            if contents.offersASizeOfItsOwn { clipRow() }
         }
         // A gap is the space the flow leaves BETWEEN things, so it belongs to
         // the two arrangements that put things one after another.
@@ -563,8 +564,10 @@ struct ArrangementInspector: View {
     private func sizeRows(_ axis: SizeAxis) -> some View {
         let reading = axis == .width ? contents.hugsWidth : contents.hugsHeight
         let hugs = reading.value ?? true
-        let open = showsLimits(axis)
-        row(axis.title, chevron: { setLimitsOpen(axis, !open) }, open: open,
+        // The smallest and largest are a group's: a screen has no limits.
+        let limited = contents.offersASizeOfItsOwn
+        let open = limited && showsLimits(axis)
+        row(axis.title, chevron: limited ? { setLimitsOpen(axis, !open) } : nil, open: open,
             chevronHelp: open
                 ? "Hide the smallest and largest \(axis.noun), and keep the numbers they were given."
                 : "Give this \(noun) a smallest and a largest \(axis.noun).",
@@ -575,9 +578,10 @@ struct ArrangementInspector: View {
                 // borrowed by the rest, which is why the change is handed the
                 // layer as well as the layout.
                 editorState.updateArrangement(ids: ids) { layout, layer in
-                    let size = hugging ? nil : (axis == .width ? layer.localBounds.width
-                                                               : layer.localBounds.height).rounded()
-                    if axis == .width { layout.width = size } else { layout.height = size }
+                    layout.setHugging(hugging, horizontal: axis == .width,
+                                      onAScreen: layer.isFrame,
+                                      holding: axis == .width ? layer.localBounds.width
+                                                              : layer.localBounds.height)
                 }
             }
             .controlSize(.small)

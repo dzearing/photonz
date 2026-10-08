@@ -63,11 +63,15 @@ enum GroupFlow {
         static let hugging = Bounds(width: nil, height: nil)
 
         /// The box this group flows inside. A screen's frame wins, because a
-        /// screen is a real box you build on and its size is the size it is.
+        /// screen is a real box you build on and its size is the size it is,
+        /// except on an axis it was told to hug, which is then as open as a
+        /// group's. An empty screen has nothing to hug and keeps its frame.
         static func of(_ layer: Layer, _ group: GroupContent, _ layout: GroupLayout) -> Bounds {
             guard !group.isFrame else {
                 let box = layer.frame.standardized
-                return Bounds(width: box.width, height: box.height)
+                let hugs = !group.children.isEmpty
+                return Bounds(width: hugs && layout.screenHugs(horizontal: true) ? nil : box.width,
+                              height: hugs && layout.screenHugs(horizontal: false) ? nil : box.height)
             }
             return Bounds(width: layout.usedWidth, height: layout.usedHeight)
         }
@@ -93,11 +97,22 @@ enum GroupFlow {
             }
             return out
         }
+        let bounds = Bounds.of(layer, group, layout)
         let settled = placed(out.children, layout: layout,
                              contentPlacement: group.contentPlacement,
-                             bounds: Bounds.of(layer, group, layout),
-                             onAScreen: group.isFrame)
+                             bounds: bounds, onAScreen: group.isFrame)
         out.children = settled.children
+        // A screen that hugs keeps its own size in its frame, so the frame is
+        // what grows and shrinks around the contents, from its top left corner.
+        if group.isFrame, bounds.width == nil || bounds.height == nil {
+            let hugged = size(of: settled.children, layout: layout,
+                              contentPlacement: group.contentPlacement,
+                              bounds: bounds, onAScreen: true)
+            let box = out.frame.standardized
+            out.frame = CGRect(origin: box.origin,
+                               size: CGSize(width: bounds.width ?? hugged.width,
+                                            height: bounds.height ?? hugged.height))
+        }
         // Room on a group that arranges nothing grows the box OUTWARD around
         // what is inside it. The contents had to move inside the group to make
         // space at the near edges, so the group moves back by exactly as much

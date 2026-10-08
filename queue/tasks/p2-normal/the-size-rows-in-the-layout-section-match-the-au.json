@@ -1,0 +1,31 @@
+{
+  "id": "the-size-rows-in-the-layout-section-match-the-au",
+  "title": "The size rows in the Layout section match the auto-layout mock, or the mock is changed by your answer",
+  "goal": "The auto-layout mock gives a frame one Frame size row with Hug, Narrow and Wide. The app gives a group or an arranging screen two rows, Width and Height, each Hug or Fixed, with the number typed in W and H. Decide which one the Layout section should show.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 3800,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T17:22:51.629Z",
+  "updated": "2026-10-08T17:23:08.385Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Raised by a-screen-can-hug-what-it-holds (2026-10-08): its audit compares the shipped Width/Height rows against ui-autolayout.html lines ~281-288 (Frame size: Hug | Narrow | Wide). The group rows have had this shape since auto layout landed; no decision ever settled it. Sources/Photonz/ArrangementInspector.swift sizeRows.",
+  "acceptance": [
+    "A decision card on this task is answered by the user",
+    "If the answer is the mock row, the Layout section shows one Frame size row as ui-autolayout.html draws it, for groups and arranging screens alike, and the walks that press Hug or Fixed in Width or Height are updated",
+    "If the answer keeps Width and Height, this task closes with nothing built"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T17:22:51.631Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T17:23:08.383Z",
+      "note": "Waiting on the size rows decision the-size-rows-in-the-layout-section-match-the-au-how-should-the-layout-section-le"
+    }
+  ]
+}

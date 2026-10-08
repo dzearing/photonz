@@ -139,6 +139,15 @@ public struct ContentsSelection: Hashable, Sendable {
     /// rather than showing a control that would do nothing to it.
     public var offersASizeOfItsOwn: Bool { !groups.isEmpty && groups.allSatisfy { !$0.isFrame } }
 
+    /// Whether the Width and Height rows, Hug or Fixed, are a question for the
+    /// whole pick. Every group takes them; a screen takes them only while it
+    /// arranges its contents in a row, a column or a grid, because a free
+    /// screen is the box somebody drew and something hanging off its edge must
+    /// never resize it. The limits behind the rows stay a group's alone.
+    public var offersHug: Bool {
+        !groups.isEmpty && groups.allSatisfy { !$0.isFrame || $0.arrangement?.arranges == true }
+    }
+
     /// Whether clipping is a question: every picked group has a box its
     /// contents could hang out of. A switch that reached only two of three
     /// picked groups would be worse than no switch.
@@ -148,14 +157,18 @@ public struct ContentsSelection: Hashable, Sendable {
 
     /// Whether every picked stack has room left over to share out.
     public var canSpread: Bool {
-        !groups.isEmpty && groups.allSatisfy { $0.isFrame || $0.layout.couldSpread }
+        !groups.isEmpty && groups.allSatisfy {
+            $0.isFrame ? !$0.layout.screenHugs(horizontal: $0.layout.flowsHorizontally)
+                       : $0.layout.couldSpread
+        }
     }
 
     /// Whether every picked group is a row with a width to wrap against. A
     /// screen is a box somebody drew, so a row on one always has a width.
     public var canWrap: Bool {
         !groups.isEmpty && groups.allSatisfy {
-            $0.layout.flowsHorizontally && ($0.isFrame || $0.layout.couldWrap)
+            $0.layout.flowsHorizontally
+                && ($0.isFrame ? !$0.layout.screenHugs(horizontal: true) : $0.layout.couldWrap)
         }
     }
 
@@ -190,8 +203,12 @@ public struct ContentsSelection: Hashable, Sendable {
     public var spreads: PlacementReading<Bool> { .across(groups.map(\.layout.spreadsGap)) }
     public var wraps: PlacementReading<Bool> { .across(groups.map(\.layout.wraps)) }
     public var padding: PlacementReading<GroupPadding> { .across(groups.map(\.layout.usedPadding)) }
-    public var hugsWidth: PlacementReading<Bool> { .across(groups.map(\.layout.hugsWidth)) }
-    public var hugsHeight: PlacementReading<Bool> { .across(groups.map(\.layout.hugsHeight)) }
+    public var hugsWidth: PlacementReading<Bool> {
+        .across(groups.map { $0.layout.hugs(onAScreen: $0.isFrame, horizontal: true) })
+    }
+    public var hugsHeight: PlacementReading<Bool> {
+        .across(groups.map { $0.layout.hugs(onAScreen: $0.isFrame, horizontal: false) })
+    }
     public var minWidth: PlacementReading<CGFloat?> { .across(groups.map(\.layout.usedMinWidth)) }
     public var maxWidth: PlacementReading<CGFloat?> { .across(groups.map(\.layout.usedMaxWidth)) }
     public var minHeight: PlacementReading<CGFloat?> { .across(groups.map(\.layout.usedMinHeight)) }

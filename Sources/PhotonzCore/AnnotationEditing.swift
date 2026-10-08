@@ -274,7 +274,21 @@ extension Layer {
             if group.instanceOf != nil, !placedByContainer {
                 return LayerScaling.resizingCopy(self, to: frame)
             }
-            if group.isFrame { return LayerScaling.refitting(self, to: frame) }
+            if group.isFrame {
+                // A screen that hugs, given a size on that axis by a hand or a
+                // field, holds the size it was given: that axis turns Fixed, the
+                // way a hugging group's does, and the other keeps hugging.
+                var refit = self
+                if !placedByContainer, var layout = group.layout,
+                   layout.screenHugsWidth || layout.screenHugsHeight {
+                    let current = self.frame.standardized
+                    let next = frame.standardized
+                    if abs(next.width - current.width) > 0.01 { layout.screenHugsWidth = false }
+                    if abs(next.height - current.height) > 0.01 { layout.screenHugsHeight = false }
+                    refit.setGroupLayout(layout)
+                }
+                return LayerScaling.refitting(refit, to: frame)
+            }
             // A group that arranges itself takes the size it is given: its flow
             // fills the new box, so typing a width on a stack makes the stack
             // that wide rather than magnifying everything in it.

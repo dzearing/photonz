@@ -1,0 +1,27 @@
+{
+  "feature": "A screen can hug what it holds",
+  "epic": "ui-layout",
+  "summary": "A screen set to a row or a column now has Width and Height rows with Hug or Fixed, the same as a group. With Hug picked the screen closes around what you drop into it and shrinks back when you take something out.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-screen-hugs-what-it-holds-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "New Window, Blank canvas, then pick the Frame tool and drag out a screen." },
+    { "do": "In the Layout section press Stack, then Column." },
+    { "do": "Press Hug on Width and Hug on Height. The empty screen keeps its size.", "shot": "2026-10-08-screen-hug-1-empty.png" },
+    { "do": "Open the Library, Comps, and drag the Button tile onto the screen.", "shot": "2026-10-08-screen-hug-2-button.png" },
+    { "do": "Drag the Card tile onto the screen as well.", "shot": "2026-10-08-screen-hug-3-card.png" },
+    { "do": "Pick the Card in the Layers list, choose Edit > Delete, then press Command Z.", "shot": "2026-10-08-screen-hug-4-card-gone.png" },
+    { "do": "Pick the screen, press Fixed on Height and type 400 in H.", "shot": "2026-10-08-screen-hug-5-fixed-height.png" }
+  ],
+  "evaluate": [
+    "When the first Button lands, is a screen snapping down to exactly the button's size what you expected from Hug?",
+    "Should a screen that starts hugging get some padding by default, so its edge does not sit right on the button?",
+    "Does an empty screen keeping its drawn size after Hug read as right, or as Hug doing nothing?",
+    "Is it clear that dragging a handle or typing a size turns that side back to Fixed?"
+  ],
+  "rough": [
+    "The mock draws one Frame size row (Hug, Narrow, Wide); the app shows Width and Height rows, each Hug or Fixed, as it already does for groups. Waiting on your answer in decision the-size-rows-in-the-layout-section-match-the-au-how-should-the-layout-section-le.",
+    "A screen made into a column while empty starts with 0 padding, so after Hug its edge sits flush on what it holds. Type a Padding to get room around the contents.",
+    "Screens get no Smallest or Largest size under Width and Height. Those stay a group's."
+  ]
+}

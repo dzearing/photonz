@@ -1,0 +1,38 @@
+{
+  "id": "the-size-rows-in-the-layout-section-match-the-au-how-should-the-layout-section-le",
+  "taskId": "the-size-rows-in-the-layout-section-match-the-au",
+  "question": "How should the Layout section let you size a frame or group: Width and Height rows, or one Frame size row like the mock?",
+  "context": "The auto-layout mock draws one Frame size row (Hug, Narrow, Wide). Groups have shipped Width and Height rows (Hug or Fixed) since auto layout landed, and screens that arrange their contents now get the same two rows. Nobody ever settled the difference.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep Width and Height rows",
+      "summary": "Two rows, Width and Height, each with Hug or Fixed. Fixed holds the current size and you type the number in W and H or drag a handle.",
+      "pros": [
+        "Hug one axis and fix the other, which a column 375 wide that grows down needs",
+        "Matches Figma, which sizes width and height separately"
+      ],
+      "cons": [
+        "Two rows where the mock draws one"
+      ],
+      "mitigation": "The two rows sit together right under Direction, so they read as one block."
+    },
+    {
+      "id": "b",
+      "label": "One Frame size row: Hug, Narrow, Wide",
+      "summary": "One row as the mock draws it: Hug closes the frame around its contents, Narrow and Wide set two preset widths.",
+      "pros": [
+        "Exactly the mock",
+        "One row instead of two"
+      ],
+      "cons": [
+        "No way to hug the height while fixing the width",
+        "Narrow and Wide are two fixed numbers the app would have to pick for you"
+      ],
+      "mitigation": "Any other width is still typed in W."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-08T17:23:08.315Z"
+}

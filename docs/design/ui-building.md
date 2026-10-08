@@ -2540,7 +2540,9 @@ for Free. Tested in `GroupHugTests`, walked by
 `Scripts/playtest/button-hug-walk.json`.
 
 Not in this slice: hug for a SCREEN, which is deliberate — a screen's box is
-the box you drew, and something hanging off its edge must never resize it. Nor
+the box you drew, and something hanging off its edge must never resize it.
+(Since 2026-10-08 a screen that arranges its contents can be told to hug; a
+free screen still never does. See "A screen can hug what it holds".) Nor
 a minimum or maximum size, so a hugging button with one letter in it is as
 narrow as one letter plus its room.
 
@@ -4135,3 +4137,36 @@ there, every copy of the component it lives in follows.
 
 Tests: `Tests/PhotonzCoreTests/ComponentSwapTests.swift`. Walk:
 `Scripts/playtest/point-a-copy-at-another-walk.json`.
+
+## Landed: a screen can hug what it holds (Next, `next-auto-layout`, 2026-10-08)
+
+A screen set to a row, a column or a grid now shows the same **Width** and
+**Height** rows a group has, each Hug or Fixed. Pick Hug and the screen closes
+around its contents plus its padding, from its top left corner: drop a Button
+in and it is the button's size, drop a Card and it grows, delete the Card and
+it shrinks back. Each of those is one undo step, because the resize happens in
+the reflow that `History.perform` already runs.
+
+- **Off unless picked.** A screen keeps the size it was drawn. The switch is
+  two flags on the layout, `GroupLayout.screenHugsWidth` and
+  `screenHugsHeight`, written only when on, so every screen ever saved opens
+  fixed and saves byte for byte the same. A group's hug stays what it always
+  was, a nil `width` or `height`; `GroupLayout.hugs(onAScreen:horizontal:)`
+  and `setHugging(_:horizontal:onAScreen:holding:)` hide the difference from
+  the inspector.
+- **Only on a screen that arranges.** `screenHugs(horizontal:)` is false on a
+  free screen even with the flag set, and the rows are not offered there
+  (`ContentsSelection.offersHug`), which keeps the reason screens never hugged:
+  something hanging off a free screen's edge must never resize it.
+- **An empty screen holds its size.** With nothing in it there is nothing to
+  hug, so it does not collapse to its padding (`GroupFlow.Bounds.of`).
+- **A hand or a typed size turns that axis Fixed**, the way a hugging group's
+  does: dragging a handle or typing H on a hugging screen sets
+  `screenHugsHeight` off and leaves the width hugging (`Layer.resized(to:)`).
+- **No limits and no clip row for a screen.** The smallest and largest sizes
+  stay a group's, and a screen's Clip contents lives in its Frame section.
+- A hugging screen has no room left over along its flow, so Spread and Wrap
+  are not offered on it (`ContentsSelection.canSpread`, `canWrap`).
+
+Tested in `ScreenHugTests`, walked by
+`Scripts/playtest/a-screen-hugs-what-it-holds-walk.json` at Next defaults.
