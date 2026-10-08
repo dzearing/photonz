@@ -69,6 +69,10 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// On an audio track: the clips whose own sound is drawn here, linked to
     /// them, so every one is that clip's bar a second time, as sound.
     var linked: [MotionStripGroup] = []
+    /// On an audio track: which sound track it is from the top, which picks
+    /// the colour its fade diamonds and level points wear
+    /// (`VideoKit.Palette.soundTrack`).
+    var soundNumber = 0
     /// On a Captions track: no hold anywhere pushed the picture alone, so no
     /// cue can carry a drift mark and an unpicked one can be drawn as the
     /// light `CaptionCueBar`.
@@ -174,6 +178,7 @@ extension EditorState {
                 : track.isHidden || (soloPicture && !track.isSolo)
             var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
                                             linked: linked)
+            row.soundNumber = tracks.soundTrackNumber(of: track.id) ?? 0
             if Experiments.shared.zoomRegionsEnabled {
                 row.zoomedClips = clips.map(\.layerID).filter {
                     document.layer(id: $0)?.zooms?.isEmpty == false

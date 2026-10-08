@@ -75,6 +75,13 @@ extension VideoKit {
         /// Components, and anything keyed: key diamonds, animating rows.
         static let comp = Tone(light: rgb(0x9A5CFF), dark: rgb(0xB98CFF))
         static let compLine = Tone(light: rgb(0xD8C4FF), dark: rgb(0x3D2F63))
+        /// A sound lane's own colour, by which sound track it is from the top
+        /// (`video-audio.html`'s `col`): cyan for the first, purple for the
+        /// second, and round again. Its fade diamonds are ringed in it and its
+        /// level points filled with it.
+        static func soundTrack(_ number: Int) -> Color {
+            number % 2 == 0 ? rgb(0x12C2E9) : rgb(0xC56CFF)
+        }
         /// The playhead.
         static let crit = Tone(light: rgb(0xD0453B), dark: rgb(0xF0685C))
         /// A picked cut or transition.

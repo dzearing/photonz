@@ -71,6 +71,9 @@ struct SoundLevelLine: View {
     let height: CGFloat
     /// The mock's duck line colour on the dock, white on the icon strip.
     var lineColor: Color = .white.opacity(0.95)
+    /// The sound lane's own colour on the dock (`.anode`), the accent on the
+    /// icon strip.
+    var pointColor: Color = .accentColor
     /// Told the level as drawn while a drag is under way, and nil when it is
     /// let go, so the waveform under the line shrinks and grows with the hand
     /// rather than jumping when the drag lands.
@@ -87,13 +90,15 @@ struct SoundLevelLine: View {
     /// drag is one step to undo.
     @State private var movingPoint: (fromMS: Int, to: AudioLevelPoint)?
 
-    /// How big the dot you drag is.
-    private static let dotSize: CGFloat = 9
+    /// How big the dot you drag is: the mock's `.anode`.
+    private static let dotSize: CGFloat = 11
     /// How far either side of the line still counts as on it.
     private static let bandWidth: CGFloat = 12
     /// Room left at the top and the bottom so a dot at either extreme is drawn
-    /// whole rather than sliced in half by the edge of the bar.
-    private static var inset: CGFloat { dotSize / 2 + 1 }
+    /// whole rather than sliced in half by the edge of the bar. Held where it
+    /// was when the dot was nine points, so the line sits at the height it
+    /// always has for every level.
+    private static let inset: CGFloat = 5.5
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -210,9 +215,7 @@ struct SoundLevelLine: View {
 
     private func dot(_ stored: AudioLevelPoint) -> some View {
         let point = drawn(stored)
-        return Circle()
-            .fill(Color.accentColor)
-            .overlay(Circle().strokeBorder(.white.opacity(0.9), lineWidth: 1.5))
+        return LevelPointDot(color: pointColor)
             .frame(width: Self.dotSize, height: Self.dotSize)
             .position(x: x(atMS: point.atMS),
                       y: y(forGain: shownLevel.gain(atLayerMS: point.atMS)))
@@ -290,6 +293,24 @@ struct SoundLevelLine: View {
         guard usable > 0 else { return AudioLevel.unityGain }
         let through = 1 - Double(min(max(0, y - Self.inset), usable)) / Double(usable)
         return AudioLevel.bounded(through * through * AudioLevel.loudestGain)
+    }
+}
+
+/// A level point as the mock's `.anode` draws one: filled in the lane's own
+/// colour, ringed in the panel's so it stands off the waveform under it, and a
+/// little lighter under the pointer.
+private struct LevelPointDot: View {
+    let color: Color
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isHovered = false
+
+    var body: some View {
+        Circle()
+            .fill(color)
+            .overlay { if isHovered { Circle().fill(.white.opacity(0.22)) } }
+            .overlay(Circle().strokeBorder(VideoKit.Palette.panel.color(colorScheme), lineWidth: 1.5))
+            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+            .playtestHover { isHovered = $0 }
     }
 }
 

@@ -840,3 +840,15 @@ public struct TrackDeletion: Equatable, Sendable {
 
     public var isEmpty: Bool { clips.isEmpty && sounds.isEmpty }
 }
+
+extension Array where Element == DocumentTrack {
+    /// Which sound track this is, counting only sound tracks from the top:
+    /// nought for the first. The timeline colours a sound lane's fade diamonds
+    /// and level points by it, cyan for the first and purple for the second,
+    /// as `video-audio.html` colours its two lanes. Nil for a picture or
+    /// captions track, or one that is not in the list.
+    public func soundTrackNumber(of id: UUID) -> Int? {
+        let sound = filter { $0.kind == .audio }
+        return sound.firstIndex { $0.id == id }
+    }
+}

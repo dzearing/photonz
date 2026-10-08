@@ -43,6 +43,9 @@ struct ClipPiecesBar: View {
     /// clip and LINKED to it: every drag on it is a drag on the clip, so the
     /// two move, trim and cut as one until Detach Audio parts them.
     var isLinkedSound = false
+    /// The sound lane's own colour (`VideoKit.Palette.soundTrack`): the ring
+    /// round its fade diamonds and the fill of its level points.
+    var soundTint: Color = VideoKit.Palette.soundTrack(0)
 
     /// What a walk and the help call this bar's parts: the clip's name, or
     /// "<clip> sound" for its linked sound, so the two are never confused.
@@ -179,7 +182,9 @@ struct ClipPiecesBar: View {
             }
             if isSound {
                 levelLine(pieces, x0: x0, ruler: ruler)
-                if kind != nil, isPicked || isHovered {
+                // Always there, as the mock draws them on every lane: a handle
+                // you have to hover to find is a handle nobody finds.
+                if kind != nil {
                     fadeHandles(pieces, x0: x0, ruler: ruler)
                 }
             }
@@ -527,6 +532,7 @@ struct ClipPiecesBar: View {
                            width: shown.width, height: barHeight,
                            lineColor: kind == nil ? .white.opacity(0.95)
                                : Color(red: 0xBF / 255, green: 0xF3 / 255, blue: 0xE4 / 255),
+                           pointColor: kind == nil ? .accentColor : soundTint,
                            onLevelInHand: { levelInHand = $0 })
                 .offset(x: shown.x)
         }
@@ -608,7 +614,9 @@ struct ClipPiecesBar: View {
                         .padding(.horizontal, pictures > 0 ? 5 : 0)
                         .padding(.vertical, pictures > 0 ? 1 : 0)
                         .background(Capsule().fill(Color.black.opacity(0.55 * pictures)))
-                        .padding(.leading, isSound ? 14 : (pictures > 0 ? 4 : 8))
+                        // A sound's name starts clear of its fade in diamond,
+                        // which is always drawn at the segment's start.
+                        .padding(.leading, isSound ? SoundFadeDiamond.reach + 4 : (pictures > 0 ? 4 : 8))
                         .padding(.trailing, 8)
                         .padding(.top, isSound ? 3 : 0)
                         .frame(maxWidth: width - hiddenLeading - 4, alignment: .leading)
@@ -709,9 +717,12 @@ struct ClipPiecesBar: View {
 
     // MARK: The fades
 
-    /// A diamond at each top corner of a sound's segment: drag the left one in
-    /// to fade in, the right one in to fade out. The level line draws the
-    /// fade itself, because a fade IS the level falling to silence.
+    /// A diamond at the top of a sound's segment where each fade ends: drag
+    /// the left one in to fade in, the right one in to fade out. The level
+    /// line draws the fade itself, because a fade IS the level falling to
+    /// silence. Placed as the mock's `.fade` is, centred on the fade's end
+    /// eight points down, and held inside the segment so a diamond on a fade
+    /// of nothing never hangs over the clip before it.
     @ViewBuilder
     private func fadeHandles(_ pieces: ClipPieces, x0: CGFloat,
                              ruler: MotionStripRuler) -> some View {
@@ -722,7 +733,8 @@ struct ClipPiecesBar: View {
         let whole = laneWidth * ruler.fraction(spanningMS: Double(length))
         let inWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeIn))
         let outWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeOut))
-        if whole >= Self.smallestGrabbablePiece * 2 {
+        let half = SoundFadeDiamond.reach / 2
+        if whole >= SoundFadeDiamond.reach * 2 + 4 {
             if let drag = fadeDrag {
                 // The fade the hand is making, before it is let go.
                 FadeWedge(isIn: drag.isIn)
@@ -730,28 +742,21 @@ struct ClipPiecesBar: View {
                     .frame(width: drag.isIn ? inWidth : outWidth, height: barHeight)
                     .offset(x: drag.isIn ? x0 : x0 + whole - outWidth)
                     .allowsHitTesting(false)
-                capsule(ClipBarCopy.length(drag.ms), x: drag.isIn ? x0 + inWidth : x0 + whole - outWidth - 90)
+                capsule(ClipBarCopy.length(drag.ms), x: drag.isIn ? x0 + inWidth + half : x0 + whole - outWidth - 90 - half)
                     .frame(height: barHeight)
             }
             fadeHandle(isIn: true, fromMS: level.fadeInMS, lengthMS: length, ruler: ruler)
-                .offset(x: min(x0 + whole - 9, x0 + max(1, inWidth - 4)))
+                .offset(x: x0 + min(max(half, inWidth), whole - half) - half,
+                        y: SoundFadeDiamond.centreY - half)
             fadeHandle(isIn: false, fromMS: level.fadeOutMS(lengthMS: length), lengthMS: length, ruler: ruler)
-                .offset(x: max(x0, x0 + whole - max(9, outWidth + 4)))
+                .offset(x: x0 + whole - min(max(half, outWidth), whole - half) - half,
+                        y: SoundFadeDiamond.centreY - half)
         }
     }
 
     private func fadeHandle(isIn: Bool, fromMS: Int, lengthMS: Int,
                             ruler: MotionStripRuler) -> some View {
-        // A diamond, as the mock's `.fade` is and as the Fades section's
-        // header calls it: white, ringed in the sound's own colour.
-        RoundedRectangle(cornerRadius: 1.5)
-            .fill(Color.white)
-            .overlay { RoundedRectangle(cornerRadius: 1.5).strokeBorder(Color(red: 0x12 / 255, green: 0xC2 / 255, blue: 0xE9 / 255), lineWidth: 1.2) }
-            .frame(width: 7, height: 7)
-            .rotationEffect(.degrees(45))
-            .frame(width: 8, height: 8)
-            .padding(.top, 1)
-            .contentShape(Rectangle().inset(by: -4))
+        SoundFadeDiamond(tint: soundTint, isInHand: fadeDrag?.isIn == isIn)
             .gesture(DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
                 .onChanged { value in
                     let moved = Self.ms(value.translation.width, laneWidth: laneWidth, ruler: ruler)
@@ -1309,6 +1314,53 @@ struct ClipPiecesBar: View {
             words += ", dragging the transition to \(readout)"
         }
         return words
+    }
+}
+
+/// A sound's fade handle, as `video-audio.html` draws its `.fade`: a 12 point
+/// white square turned on its corner, ringed in the lane's own colour, lighter
+/// under the pointer and ringed in the picked colour while it is in the hand.
+///
+/// Only the diamond takes a press, not the square it sits in, so the level
+/// line and the trim grip beside it keep every click that misses it.
+struct SoundFadeDiamond: View {
+    /// The mock's side.
+    static let side: CGFloat = 12
+    /// How far it reaches corner to corner, turned: what it is laid out in.
+    static let reach: CGFloat = (side * 2.squareRoot()).rounded(.up)
+    /// The mock's `top:8px`: where its middle sits down from the lane's top.
+    static let centreY: CGFloat = reach / 2
+
+    let tint: Color
+    var isInHand = false
+    @State private var isHovered = false
+
+    var body: some View {
+        let face = RoundedRectangle(cornerRadius: 2)
+        face
+            .fill(isInHand ? VideoKit.rgb(0xFFF6E6) : (isHovered ? VideoKit.rgb(0xEAF7FF) : .white))
+            .overlay {
+                face.strokeBorder(isInHand ? VideoKit.Palette.warn.dark : tint, lineWidth: 1.5)
+            }
+            .frame(width: Self.side, height: Self.side)
+            .rotationEffect(.degrees(45))
+            .shadow(color: .black.opacity(0.4), radius: 2, y: 1)
+            .frame(width: Self.reach, height: Self.reach)
+            .contentShape(Diamond())
+            .playtestHover { isHovered = $0 }
+    }
+
+    /// The turned square's own outline, for what a press lands on.
+    private struct Diamond: Shape {
+        func path(in rect: CGRect) -> Path {
+            var path = Path()
+            path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+            path.addLine(to: CGPoint(x: rect.minX, y: rect.midY))
+            path.closeSubpath()
+            return path
+        }
     }
 }
 

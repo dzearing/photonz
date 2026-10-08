@@ -1,0 +1,49 @@
+{
+  "feature": "Fade diamonds and level points look like the mock's",
+  "epic": "video-audio",
+  "task": "fade-handles-and-level-points-look-like-the-mock",
+  "summary": "Every sound segment now shows its fade diamonds all the time, 12 points, white with a ring in its track's colour, and level points are 11 point dots filled in that colour. You can find and grab a fade without hovering first.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: fade-diamonds-and-level-points-look-like-the-mock-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording with sound (the walk uses the tutorials' talking sample), open the timeline, and do not click or hover it.",
+      "shot": "2026-10-07-fade-diamonds-1-dark-sc.png"
+    },
+    {
+      "do": "Look at the sound under V1: a white diamond ringed in cyan sits at its start. Switch the Mac to light.",
+      "shot": "2026-10-07-fade-diamonds-2-light-sc.png"
+    },
+    {
+      "do": "Drag that diamond right to about one second.",
+      "shot": "2026-10-07-fade-diamonds-4-faded-in-sc.png"
+    },
+    {
+      "do": "Drag the level line down just to the right of the diamond: the level drops, the fade stays at one second."
+    },
+    {
+      "do": "Click the line further along to pin a level point, then drag the point down.",
+      "shot": "2026-10-07-fade-diamonds-7-point-sc.png"
+    },
+    {
+      "do": "Drag the sound's start grip from its lower half: the clip trims and the diamond does not take the press."
+    },
+    {
+      "do": "Drop a music file on the timeline: it lands on a second sound track and its diamonds are ringed in purple.",
+      "shot": "2026-10-07-fade-diamonds-8-second-track-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Do you find the fade diamonds at a glance now that they are always shown, or do they clutter a timeline full of sounds?",
+    "Is cyan for the first sound track and purple for the second the right rule? The app has no voiceover track of its own, so a voiceover is purple only when it sits on the second sound track.",
+    "When the level is at normal, the fade diamond sits right on the level line's corner. Does that read as one handle, or as two things stacked?",
+    "Is the sound's name, moved a few points right to clear the diamond, still where you look for it?"
+  ],
+  "rough": [
+    "Side by side with video-audio.html's lanes (2026-10-07-fade-diamonds-mock-dark.png and 2026-10-07-fade-diamonds-mock-light.png), the diamonds and level points match the mock in size, fill, ring, shadow and place, and they take the lane's colour by track order, cyan then purple, as the mock's two lanes do.",
+    "The mock's level line and waveform are drawn in the lane's colour; here they stay the mint and green of the video.html timeline. That belongs to a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa, which now also asks for the line in the lane's colour.",
+    "The mock's lanes are 84 points tall, so its diamonds sit clear above the line. In the app's 36 point lane, at normal level, the diamond sits on the line and covers the level point that ends the fade. That point shows again once the level is moved. The taller lane in a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa separates them as the mock does.",
+    "Only the lower half of a sound's trim grip trims. Its middle is under the volume line's grab band, and that was already true before this change. Filed as a-sound-s-trim-grip-trims-wherever-you-grab-it.",
+    "Picture fade handles on video clips and titles still show only on hover or when picked. This task covered the sound's handles only."
+  ]
+}

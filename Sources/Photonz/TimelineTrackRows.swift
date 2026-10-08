@@ -431,7 +431,8 @@ struct TimelineTrackRow: View {
             let paintedIDs = Set(painted.map(\.id))
             ForEach(row.clips.filter { !paintedIDs.contains($0.id) }) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
-                                 alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions)
+                                 alternate: alternates.contains(clip.id), isCaptionCue: row.isCaptions,
+                                 soundNumber: row.soundNumber)
                     .allowsHitTesting(!track.isLocked)
                     .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
             }
@@ -458,7 +459,7 @@ struct TimelineTrackRow: View {
             // until Detach Audio.
             ForEach(row.linked) { clip in
                 TimelineClipView(group: clip, laneWidth: laneWidth, height: laneHeight,
-                                 isLinkedSound: true)
+                                 isLinkedSound: true, soundNumber: row.soundNumber)
                     .allowsHitTesting(!track.isLocked)
                     .playtestField("Timing \(clip.layerName) sound")
                 if isBlade, !track.isLocked {
@@ -797,6 +798,9 @@ struct TimelineClipView: View {
     var isCaptionCue = false
     /// This bar is a clip's own sound on the audio track under it.
     var isLinkedSound = false
+    /// Which sound track the bar is on, for the colour its fades and level
+    /// points wear.
+    var soundNumber = 0
 
     var body: some View {
         let ruler = editorState.motionStripRuler
@@ -810,7 +814,8 @@ struct TimelineClipView: View {
             } else {
                 ClipPiecesBar(layerID: group.layerID, layerName: group.layerName,
                               bar: bar, laneWidth: laneWidth, isSound: group.isSound,
-                              kind: kind, height: height, isLinkedSound: isLinkedSound)
+                              kind: kind, height: height, isLinkedSound: isLinkedSound,
+                              soundTint: VideoKit.Palette.soundTrack(soundNumber))
             }
         } else {
             // A layer that is there the whole way through: one clip the
