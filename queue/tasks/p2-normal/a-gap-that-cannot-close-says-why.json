@@ -1,0 +1,33 @@
+{
+  "id": "a-gap-that-cannot-close-says-why",
+  "title": "A gap that cannot close says why",
+  "goal": "Clicking a gap and pressing Delete, or choosing Ripple Delete from its right-click menu, closes it. When it cannot (a track or a layer that has to move is locked, or a clip would land on something already there) the app only beeps, and the person is left guessing whether the key did anything and what is in the way. Say it in a short canvas notice, the way a clip refused by a track of the wrong kind already does, naming the thing in the way.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:30:58.493Z",
+  "updated": "2026-10-08T13:36:24.753Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Sources/Photonz/EditorState+TimelineGap.swift closeGap(_:) does NSSound.beep() and returns when canCloseGap is false. The reasons are in Sources/PhotonzCore/TimelineGap.swift (header comment: a clip or caption on a locked track, a locked layer, or a moved clip, sound or caption landing on something on its own track); the core should return which one so the app can name it (tests first). Precedent for the notice: done task a-clip-refused-by-a-track-of-the-wrong-kind-says, raiseCanvasNotice. Chrome copy rule: label, 30 characters at most, no sentence (runner-prompt.md). Seen as a rough line in the gap-close audit (queue/audits/2026-10-07-gap-close.json), in the 2026-10-08 digest and in the 2026-10-07 23:10 manager open threads. Uses the existing notice, so no card.",
+  "acceptance": [
+    "A refused gap close (Delete, Shift Delete, and Ripple Delete from the gap right-click menu) raises one canvas notice of at most 30 characters naming what is in the way, for example Audio is locked or Music is in the way, and changes nothing",
+    "The right-click row stays dimmed when it cannot close, as today, and the notice explains a press that was refused",
+    "A walk at Next defaults locks the sound track under a lifted gap, presses Delete on the gap and reads the notice; then unlocks it and the gap closes as a-gap-between-clips-closes-walk expects",
+    "Try: open the talk sample, mark 0:04 to 0:08 with I and O, press semicolon, lock the Audio track from its header, click the gap and press Delete. Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:30:58.495Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:36:24.752Z",
+      "note": "seq 3810 -> 6"
+    }
+  ]
+}

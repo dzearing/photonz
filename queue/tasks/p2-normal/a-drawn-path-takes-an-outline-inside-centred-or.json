@@ -1,0 +1,34 @@
+{
+  "id": "a-drawn-path-takes-an-outline-inside-centred-or",
+  "title": "A drawn path takes an outline inside, centred or outside",
+  "goal": "A drawn path has an outline width, caps and joins in the panel but no way to say where the outline sits. The icon drawing mock has an Align row under Stroke (Center for a glyph), and a Figma or Illustrator user expects inside, center and outside. The document and the drawing already know where an outline sits; only the control is missing. Add the mock Align row so a person can keep an outline inside a shape or centred on the path.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:39:41.872Z",
+  "updated": "2026-10-08T13:39:46.121Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager review 2026-10-08 of icon-svg. Model: PathContent.strokePosition (Sources/PhotonzCore, BorderPosition .inside/.center/.outside with displayName Inside/Center/Outside), drawn through BorderPosition.swift around line 103 (strokePosition.outset); annotation defaults set it in AnnotationStyles.swift. Nothing in Sources/Photonz sets it for a path (grep strokePosition). Reuse the picker the Border effect already uses: EffectsListInspector.swift BorderPositionRow (around 333-440) and EditorState+ColorStyles.swift setBorderEffectPosition. Mock: docs/design/mocks/pages/icon-draw-wt.html around line 421 (Stroke section: Width, Caps, Align Center). Line style pickers: PathLineStylePickers.swift. The mock draws it, so no card. Check SVG export handles inside/outside (SVG has no stroke alignment; an inside stroke is usually written as a clip or a doubled width with a clip).",
+  "acceptance": [
+    "A picked drawn path shows Align with Inside, Center and Outside in its outline settings, beside Width, Caps and Joins, as icon-draw-wt.html draws it (a dropdown reading Center)",
+    "Changing it redraws the outline at once, on several picked paths together, as one undo step; an open path offers Center only or says why the others do not apply",
+    "Exported SVG and the picture export agree with the canvas for each choice (an inside or outside outline on a closed path comes out where it shows); a test in PhotonzCore or PhotonzRender pins the SVG",
+    "Existing documents open unchanged",
+    "At Next defaults, no switch. A walk draws a closed path with the pen, sets Align to Outside and checks the readout and a picture. Try: draw a closed shape with P, pick it, set the outline width to 4, change Align. Audit written under queue/audits/ side by side with the mock Stroke section",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:39:41.874Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:39:46.120Z",
+      "note": "seq 3790 -> 10"
+    }
+  ]
+}

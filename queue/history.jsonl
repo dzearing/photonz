@@ -10119,3 +10119,29 @@
 {"t":"2026-10-08T13:03:05.407Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":3800,"to":170}
 {"t":"2026-10-08T13:07:29.829Z","ev":"triage","summary":"merged 0, moved 0, reset 0, resequenced 5 (p1 1, p2 4), groomed 1 (walk task: diagnosis, owned walks, one acceptance item), runner prompt: stale-walk rule"}
 {"t":"2026-10-08T13:07:29.857Z","ev":"digest","file":"2026-10-08.md"}
+{"t":"2026-10-08T13:08:00.998Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-16","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-10-08T13:12:22.143Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-16"}
+{"t":"2026-10-08T13:12:27.935Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-16","from":"in_progress","note":"Four lift walks updated to the tail's new name Sample Talk (commit 3f4806ac); each passes twice in a row on the probe. tutorial-component-versions-walk was a one-off and passed twice on its own with no change."}
+{"t":"2026-10-08T13:24:32.205Z","ev":"slice_pass","walks":37,"passed":37,"failed":0,"seconds":579,"of":807,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T13:30:03.223Z","ev":"task_created","id":"a-cut-click-undo-and-a-dropped-clip-on-a-video-a","priority":"p2-normal","title":"A cut click, Undo and a dropped clip on a video answer inside 50 ms"}
+{"t":"2026-10-08T13:30:08.544Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-08T13:30:11.628Z","ev":"task_walks","id":"a-cut-click-undo-and-a-dropped-clip-on-a-video-a","walks":["clip-click-cost-walk","undo-redo-cost-walk","an-editing-session-walk"]}
+{"t":"2026-10-08T13:30:28.841Z","ev":"task_created","id":"music-longer-than-the-edit-stops-where-the-pictu","priority":"p2-normal","title":"Music longer than the edit stops where the picture stops"}
+{"t":"2026-10-08T13:30:38.633Z","ev":"decision_opened","id":"music-longer-than-the-edit-stops-where-the-pictu-a-song-runs-past-the-end-of-your","taskId":"music-longer-than-the-edit-stops-where-the-pictu","question":"A song runs past the end of your cut. How long should the video be?"}
+{"t":"2026-10-08T13:30:58.434Z","ev":"task_blocked","id":"music-longer-than-the-edit-stops-where-the-pictu","from":"pending","note":"waits on the card: how long the video is when a song runs past the cut"}
+{"t":"2026-10-08T13:30:58.497Z","ev":"task_created","id":"a-gap-that-cannot-close-says-why","priority":"p2-normal","title":"A gap that cannot close says why"}
+{"t":"2026-10-08T13:33:31.476Z","ev":"task_created","id":"find-out-whether-the-redline-copy-pastes-as-a-pi","priority":"p2-normal","title":"Find out whether the redline copy pastes as a picture in a Chromium chat"}
+{"t":"2026-10-08T13:35:59.741Z","ev":"task_created","id":"a-screen-can-hug-what-it-holds","priority":"p2-normal","title":"A screen can hug what it holds"}
+{"t":"2026-10-08T13:35:59.826Z","ev":"task_created","id":"the-layers-header-carries-make-component-and-a-p","priority":"p2-normal","title":"The Layers header carries Make Component and a panel menu, as the mocks draw it"}
+{"t":"2026-10-08T13:36:10.528Z","ev":"task_note","id":"the-layers-header-carries-make-component-and-a-p"}
+{"t":"2026-10-08T13:36:24.696Z","ev":"task_resequenced","id":"a-cut-click-undo-and-a-dropped-clip-on-a-video-a","from":3790,"to":5}
+{"t":"2026-10-08T13:36:24.754Z","ev":"task_resequenced","id":"a-gap-that-cannot-close-says-why","from":3810,"to":6}
+{"t":"2026-10-08T13:36:24.815Z","ev":"task_resequenced","id":"a-screen-can-hug-what-it-holds","from":3830,"to":7}
+{"t":"2026-10-08T13:36:24.873Z","ev":"task_resequenced","id":"the-layers-header-carries-make-component-and-a-p","from":3840,"to":8}
+{"t":"2026-10-08T13:36:24.930Z","ev":"task_resequenced","id":"find-out-whether-the-redline-copy-pastes-as-a-pi","from":3820,"to":9}
+{"t":"2026-10-08T13:36:24.996Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":3800,"to":180}
+{"t":"2026-10-08T13:39:41.876Z","ev":"task_created","id":"a-drawn-path-takes-an-outline-inside-centred-or","priority":"p2-normal","title":"A drawn path takes an outline inside, centred or outside"}
+{"t":"2026-10-08T13:39:41.957Z","ev":"task_created","id":"copying-an-icon-puts-its-svg-on-the-clipboard-to","priority":"p2-normal","title":"Copying an icon puts its SVG on the clipboard too"}
+{"t":"2026-10-08T13:39:46.122Z","ev":"task_resequenced","id":"a-drawn-path-takes-an-outline-inside-centred-or","from":3790,"to":10}
+{"t":"2026-10-08T13:39:46.181Z","ev":"task_resequenced","id":"copying-an-icon-puts-its-svg-on-the-clipboard-to","from":3800,"to":11}
+{"t":"2026-10-08T13:40:20.211Z","ev":"manager","filed":8,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-10-08-0639.md"}

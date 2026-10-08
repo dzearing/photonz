@@ -1,0 +1,34 @@
+{
+  "id": "find-out-whether-the-redline-copy-pastes-as-a-pi",
+  "title": "Find out whether the redline copy pastes as a picture in a Chromium chat",
+  "goal": "Shift Command C puts the redlined picture and its spec list on the clipboard together, so one paste hands off both. Slack, Discord and Teams are built on Chromium, and Chromium apps that see text and a picture on the clipboard together often paste the text, the way a copied spreadsheet range pastes as text in Slack. If that happens here, a person handing off a redline pastes a block of numbers instead of the picture. The check the original task asked a person to make was never made. Find out on this Mac without sending anything anywhere, and act on what it shows.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:33:31.472Z",
+  "updated": "2026-10-08T13:36:24.929Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From a 2026-10-08 manager review of measure-redline. Copy code: Sources/Photonz/EditorState.swift copyCompositeToClipboard (PNG, TIFF, then .string when Experiments measurePanelEnabled; CompositeCopy.representations). Original task one-copy-hands-off-both-the-redlined-picture-and (done); its audit queue/audits/2026-09-02-copy-image-spec-list.json rough 1 says Messages, Slack and Discord were never tried by a person; a WebKit field, a rich NSTextView and plain fields behaved as intended. Chromium was not tried. Do not paste into any real chat or web service: anything pasted there is published. A copied spreadsheet range (text plus picture) pasting as text in Slack is the known pattern behind the worry; unverified for this clipboard. Redlining is the user primary use, so a wrong paste matters.",
+  "acceptance": [
+    "A local page (file:// or 127.0.0.1, never a real chat service) with a textarea and a contenteditable box, opened in a Chromium browser on this Mac, records what a paste of the Shift Command C clipboard delivers: the clipboardData types and files, and what lands in each box by default",
+    "The same paste is tried in TextEdit and in a WebKit editable field, for comparison with the 2026-09-02 audit",
+    "The findings, with the page and the exact steps, are written into this task log and an audit under queue/audits/",
+    "If the picture lands everywhere a picture can go: the task closes, no change",
+    "If Chromium takes the text over the picture: a decision card asks how the hand-off should work (for example the picture alone on Shift Command C with the list on its own command, or the list only when there are measurements), and the task is blocked on it",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:33:31.474Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:36:24.928Z",
+      "note": "seq 3820 -> 9"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "copying-an-icon-puts-its-svg-on-the-clipboard-to",
+  "title": "Copying an icon puts its SVG on the clipboard too",
+  "goal": "The icon epic promises that copying an icon puts the same clean SVG the export writes on the clipboard, so a paste into Figma, a browser tool or a code editor gives shapes, not pixels. Today Copy puts only a picture (and the measurement list) there. Add the SVG for vector documents, so pasting into an app that takes SVG gets the drawing while pasting into chat still gets the picture.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:39:41.953Z",
+  "updated": "2026-10-08T13:39:46.180Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager review 2026-10-08 of icon-svg: success line icon-export 3 (Copying an icon puts the same clean SVG on the clipboard) is not met. Copy is Sources/Photonz/EditorState.swift copyCompositeToClipboard (PNG, TIFF, then .string spec list when measurePanelEnabled) with CompositeCopy.representations (Sources/PhotonzCore/CompositeCopy.swift lines ~17-19). SVG writing: SVGExport / SVGHandoff (the web destination). Separate from the blocked copying-an-icon-carries-the-white-canvas-the-exp (whether the white canvas comes along); if that card is answered first, the SVG follows the same background answer. Related check: find-out-whether-the-redline-copy-pastes-as-a-pi (what Chromium takes when text and picture are both there).",
+  "acceptance": [
+    "Copying on a document drawn in vector (an icon frame, drawn paths and shapes) puts the same SVG the Export sheet writes for the web on the clipboard as an SVG type, beside the PNG and TIFF that are there today",
+    "A screenshot, a photograph or a video copies exactly as today",
+    "Pasting into TextEdit and into a local web page that reads the clipboard (never a real web service) shows which type each one takes; the picture still wins where a picture is expected, and both results are in the audit",
+    "If putting the SVG markup on as plain text is the only way Figma or a code editor will take it, and that clashes with the measurement list text, the task opens a decision card on which text Copy carries instead of guessing",
+    "Tests first for the representation list (CompositeCopy); a walk at Next defaults draws a 24 unit icon, copies it and checks the clipboard holds the SVG with whole-unit coordinates",
+    "Try: New Frame, Icon 24, draw a circle, Command C, paste into a text editor that takes SVG. Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:39:41.955Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:39:46.179Z",
+      "note": "seq 3800 -> 11"
+    }
+  ]
+}

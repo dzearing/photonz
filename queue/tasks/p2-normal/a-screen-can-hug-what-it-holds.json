@@ -1,0 +1,35 @@
+{
+  "id": "a-screen-can-hug-what-it-holds",
+  "title": "A screen can hug what it holds",
+  "goal": "A screen (a frame you draw to build UI on) that arranges its contents in a row or a column keeps the size it was drawn, whatever goes in or comes out. The auto-layout mock gives a frame a size of Hug or a fixed number, and the UI epic is done only when a frame resizes around what it holds. Give a screen that choice on its Width and Height, the same Hug rows a group already has, so dropping a component into a hugging screen grows it and taking one out shrinks it. A screen you drew by hand stays the size you drew until you pick Hug.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:35:59.737Z",
+  "updated": "2026-10-08T13:36:24.814Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager review 2026-10-08 of ui-building. Today: Sources/PhotonzCore/GroupLayout.swift width/height doc says Ignored on a screen; Sources/Photonz/ArrangementInspector.swift around line 255 hides the size rows when the pick holds a screen (offersASizeOfItsOwn). docs/design/ui-building.md around line 2542 calls hug for a screen deliberate (a runner note, never a decision of the user; the reason, that something hanging off its edge must never resize it, is kept by offering Hug only on an arranged screen and never by default). Mock: docs/design/mocks/pages/ui-autolayout.html Frame size segmented Hug (lines ~281-301, status text Frame hugs its content). Epic success: ui-building a) and ui-layout 1. Flags: next-auto-layout, on at Next defaults. Mock draws it, so no card.",
+  "acceptance": [
+    "A screen that arranges its contents (row or column) shows Width and Height with Hug and a fixed number, as a group does today and as ui-autolayout.html draws its Frame size row",
+    "With Hug picked, adding, removing or resizing a child grows and shrinks the screen around its contents plus padding, and the change is one undo step",
+    "A screen left on a fixed size, and every screen in a saved document, behaves exactly as today (nil stays fixed for screens, so old files open unchanged)",
+    "A free screen (no arrangement) offers no Hug, so something hanging off its edge never resizes it",
+    "Tests first in PhotonzCore (GroupHugTests or a sibling); a walk at Next defaults draws a screen, turns on Column, picks Hug, drags a component from the Library into it and checks the screen grew, then deletes it and checks it shrank",
+    "Side by side with ui-autolayout.html Frame size row in the audit. Try: New Window, Blank canvas, draw a screen, Layout section, Column, Width Hug, then drop a Button from the Library into it. Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:35:59.739Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:36:24.813Z",
+      "note": "seq 3830 -> 7"
+    }
+  ]
+}

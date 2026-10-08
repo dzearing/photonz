@@ -1,0 +1,43 @@
+{
+  "id": "a-cut-click-undo-and-a-dropped-clip-on-a-video-a",
+  "title": "A cut click, Undo and a dropped clip on a video answer inside 50 ms",
+  "goal": "On a video, clicking a cut, pressing Undo or Redo, and letting a second clip go on the timeline each still keep the app busy for 57 to 77 ms, over the 50 ms the Premiere goal sets for every press on the timeline. Bring these three under it. This is the part of the edit-speed work that does not wait on the key lane card, so it can be done now. It also finds out whether the 760 ms hold seen right after the second clip lands in the scripted editing session is the app or the walk, and fixes it if it is the app.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:30:03.219Z",
+  "updated": "2026-10-08T13:36:24.695Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of clicking-a-cut-keying-a-value-and-undoing-it-ans, which stays blocked on its key-lane card for the keying and its undo only. Numbers today (that task log): cut click 57 ms after db5108a9; Undo/Redo of cut, ripple delete, drop 46-77 ms (median ~62) in Scripts/playtest/undo-redo-cost-walk.json, about 20% of each is SwiftUI accessibility upkeep and app code about 10 ms; second-clip drop 68-73 ms when replayed (manager 2026-10-07). The 760 ms: rotating check 2026-10-07 22:42 and again 2026-10-08 06:15, /tmp/photonz-playtest/an-editing-session-walk/log.json step 27: wait 1.0s, mainBusy 1016.6ms over 332 passes, longest 761.8ms from 1278ms in, right after step 26 dropOnTimeline b-roll.mp4 at 12.9s. Manager 2026-10-07 could not reproduce it with steps 1-28 minus the snapshots, so start by running the full walk three times. Pieces likely shared: the panel section building on video (db5108a9), the timeline rebuilding every lane on a document change. No new control, no card needed.",
+  "acceptance": [
+    "On clip-click-cost-walk a cut click holds the main thread under 50 ms in nine of ten clicks over three runs, none over 100 ms",
+    "Undo and Redo of a cut, a ripple delete and a clip drop hold under 50 ms in nine of ten presses over three runs of undo-redo-cost-walk, none over 100 ms",
+    "Dropping the b-roll on V1 in an-editing-session-walk (step 26 and the wait after it) holds under 100 ms in three runs of the whole walk; if the 760 ms hold is the walk (its snapshot or labelsWhole steps just before the drop), the walk measures it the way a person gets it and the log says which it was",
+    "The panel still shows the cut after a cut click and the clip after a piece click in the click own frame; an-editing-session-walk, clip-click-cost-walk and keyframe-anything-walk stay green",
+    "At Next defaults, no switch. Try: open the talk sample (Help > Tutorials), press Command K twice, click the cut, press Command Z and Shift Command Z; nothing hitches. Audit written under queue/audits/ with the before and after numbers",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:30:03.221Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:30:11.626Z",
+      "note": "owns these walks: clip-click-cost-walk, undo-redo-cost-walk, an-editing-session-walk"
+    },
+    {
+      "t": "2026-10-08T13:36:24.694Z",
+      "note": "seq 3790 -> 5"
+    }
+  ],
+  "walks": [
+    "clip-click-cost-walk",
+    "undo-redo-cost-walk",
+    "an-editing-session-walk"
+  ]
+}

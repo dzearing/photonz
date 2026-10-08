@@ -1,0 +1,39 @@
+{
+  "id": "the-layers-header-carries-make-component-and-a-p",
+  "title": "The Layers header carries Make Component and a panel menu, as the mocks draw it",
+  "goal": "The Layers panel header shows only its title. Both component mocks draw a count of layers, a Make Component button and a panel menu there (Group Selection, Make Component, Hide this panel), which is the one-click way to turn a picked group into a component that the components epic asks for. Today it is only in the right-click menu, the Layer menu and Option Command K.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T13:35:59.822Z",
+  "updated": "2026-10-08T13:36:24.872Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Manager review 2026-10-08 of ui-components. Mock: docs/design/mocks/pages/component-configure-wt.html lines ~272-276 (dgrp-h: ttl Layers, cnt, btnMakeComp ic-component, ic-more data-menu layerMenu) and components.html lines ~425-430 (layerMenu items). App: Sources/Photonz/InspectorPanel.swift dock headers (around 1173-1291) have no Layers case; Make Component lives in LayerCommandMenu.swift ~194 and the Layer menu with Option Command K. The done dock-headers work only covered Properties and the Library. Placement: a panel header verb that the mock places, so no card.",
+  "acceptance": [
+    "The Layers header shows the layer count, a Make Component icon button (tooltip Make Component with its shortcut) and a panel menu button, as component-configure-wt.html and components.html draw them, using the same header row the Properties and Library headers use",
+    "Make Component is dimmed when the pick cannot become a component and does exactly what Option Command K does when it can",
+    "The panel menu holds Group Selection, Make Component and Hide this panel, each doing what its menu bar twin does",
+    "Shown in Next at defaults wherever the Layers panel shows; Current is unchanged unless the header file is shared, in which case it follows the porting rule",
+    "A walk at Next defaults picks a group, presses the header button, and checks the group wears the component ring and badge in Layers and on the canvas; undo takes it back",
+    "Side by side with both mocks in the audit, light and dark. Try: draw two shapes, group them with Command G, press the component button in the Layers header. Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T13:35:59.824Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T13:36:10.526Z",
+      "note": "Placement: UX-PATTERNS.md line ~362 says a dock group header is chevron + title + optional count + optional buttons, so a header button is within the contract. The open card on the-panel-shows-what-the-picked-thing-is-and-its (how many buttons the panel keeps) is about buttons inside sections, not group headers; if it is answered with no buttons at all, re-read it before building."
+    },
+    {
+      "t": "2026-10-08T13:36:24.871Z",
+      "note": "seq 3840 -> 8"
+    }
+  ]
+}

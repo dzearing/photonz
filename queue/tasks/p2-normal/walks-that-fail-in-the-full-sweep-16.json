@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 160,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-08T08:44:07.533Z",
-  "updated": "2026-10-08T13:03:05.348Z",
+  "updated": "2026-10-08T13:12:27.934Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-08T08:44:07Z, not by a full sweep: it ran 40 of 805 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): tutorial-component-versions-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-08-013353.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -47,6 +47,18 @@
     {
       "t": "2026-10-08T13:03:05.347Z",
       "note": "seq 3790 -> 160"
+    },
+    {
+      "t": "2026-10-08T13:08:00.992Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T13:12:22.141Z",
+      "note": "The four lift walks were wrong, not the app: 44dec046 made Lift keep the tail's own name, so a-gap-between-clips-closes-walk, a-gap-is-drawn-as-a-slot-walk, a-held-frame-reads-as-a-still-walk and the-quiet-under-a-hold-is-a-bare-slot-walk now look for Sample Talk (clip, still, sound quiet, piece 2, timeline pick). Every expectClip already pins start/end so the two same-named clips cannot be confused; the right-click on 'Sample Talk clip' lands on the tail (window x 1299) and the freeze then reads 3 pieces from 8.0s, so it picked the right one. Each walk ran twice with --no-build on the probe built from c4c0eb94: all walk complete, rc 0, real captures taken. tutorial-component-versions-walk was a one-off: it passed twice more on its own (four clean runs today), no change. No other walk still expects a 'copy' name after a lift (lift-keeps-one-clip-walk checks that count is 0, as intended)."
+    },
+    {
+      "t": "2026-10-08T13:12:27.932Z",
+      "note": "Four lift walks updated to the tail's new name Sample Talk (commit 3f4806ac); each passes twice in a row on the probe. tutorial-component-versions-walk was a one-off and passed twice on its own with no change."
     }
   ],
   "standing": "walk-sweep",
@@ -56,5 +68,7 @@
     "a-held-frame-reads-as-a-still-walk",
     "the-quiet-under-a-hold-is-a-bare-slot-walk",
     "tutorial-component-versions-walk"
-  ]
+  ],
+  "started": "2026-10-08T13:08:00.991Z",
+  "completed": "2026-10-08T13:12:27.933Z"
 }
