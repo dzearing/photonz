@@ -301,6 +301,10 @@ extension EditorState {
         // Forwards it runs to the end, or to the Out on a Play In to Out.
         let end = rate > 0 ? min(documentPlaybackStopMS ?? lastDocumentTimeMS, lastDocumentTimeMS) : lastDocumentTimeMS
         documentPlaybackTask = Task { @MainActor [weak self] in
+            // Backwards, it waits a moment for the frame behind it: the first
+            // block decodes from the key frame before it, and a playhead that
+            // ran on meanwhile leaves the picture stuck (`MoviePlayBackward`).
+            if rate < 0 { await self?.preRollBackward() }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(MovieRef.frameStepMS))
                 guard let self, isDocumentPlaying, let started = documentPlaybackStartedAt else { return }
@@ -324,6 +328,21 @@ extension EditorState {
                 documentMomentChanged()
             }
         }
+    }
+
+    /// Hold a clock about to play backwards where it is until the frame
+    /// behind the playhead is in hand, at most `MoviePlayBackward.preRollMS`,
+    /// then start it from there. Silent, since backwards plays no sound.
+    private func preRollBackward() async {
+        let deadline = Date().addingTimeInterval(Double(MoviePlayBackward.preRollMS) / 1000)
+        documentMomentChanged()
+        while !Task.isCancelled, isDocumentPlaying, Date() < deadline,
+              let document = shownDocument,
+              !document.readyToPlayBackward(atTimeMS: documentTimeMS, inHand: movieFrames.inHand) {
+            try? await Task.sleep(for: .milliseconds(4))
+        }
+        documentPlaybackStartedAt = Date()
+        documentPlaybackStartedAtMS = documentTimeMS
     }
 
     // MARK: Drawing the moment
@@ -369,9 +388,16 @@ extension EditorState {
             // coming up, so the picture does not stick there (`MoviePlayPass`).
             let playing = isDocumentPlaying && playheadTravel != .backward
                 ? moviePlayLookahead.points(in: document, atTimeMS: documentTimeMS) : nil
+            // ...and a clock playing backwards reads the stretch behind it a
+            // block at a time (`MoviePlayBackward`).
+            let playingBackward = isDocumentPlaying && playheadTravel == .backward
+                ? abs(documentPlaybackRate) : nil
+            let backPlaces = playingBackward.map {
+                document.moviePlayBackPlaces(atTimeMS: documentTimeMS, speed: $0)
+            } ?? []
             movieFrames.fetch(wanted, size: movieDecodeSize(in: document),
                               handMoving: handMoving, backward: playheadTravel == .backward,
-                              playing: playing)
+                              playing: playing, playingBackward: playingBackward, backPlaces: backPlaces)
         }
         submit(document)
     }

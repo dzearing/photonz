@@ -3005,7 +3005,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play", "seconds": 3, "moments": 24 } ] }
         """)
-        guard case .expectPlaybackNeverBlank(let name, let seconds, let moments) = script.steps[0] else {
+        guard case .expectPlaybackNeverBlank(let name, let seconds, let moments, _) = script.steps[0] else {
             Issue.record("expectPlaybackNeverBlank"); return
         }
         #expect(name == "play")
@@ -3075,11 +3075,37 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "play" } ] }
         """)
-        guard case .expectPlaybackNeverBlank(_, let seconds, let moments) = script.steps[0] else {
+        guard case .expectPlaybackNeverBlank(_, let seconds, let moments, let rate) = script.steps[0] else {
             Issue.record("expectPlaybackNeverBlank"); return
         }
         #expect(seconds == 3)
         #expect(moments == 20)
+        #expect(rate == 1)
+    }
+
+    // J played a recording backwards a frame at a time, the slow way, and no
+    // walk could see it because the step only ever played forwards from the
+    // start (`playing-backwards-with-j-keeps-up-on-a-full-scre`). A rate says
+    // how it plays: the shuttle's own ladder, negative for J, which starts
+    // from the end the way an editor presses End and then J.
+    @Test("An expectPlaybackNeverBlank step can play backwards at a shuttle rate")
+    func expectPlaybackNeverBlankPlaysBackwards() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPlaybackNeverBlank", "name": "back", "rate": -1 },
+                     { "do": "expectPlaybackNeverBlank", "name": "back-twice", "rate": -2, "seconds": 2 } ] }
+        """)
+        guard case .expectPlaybackNeverBlank(_, _, _, let once) = script.steps[0],
+              case .expectPlaybackNeverBlank(_, let seconds, _, let twice) = script.steps[1] else {
+            Issue.record("expectPlaybackNeverBlank"); return
+        }
+        #expect(once == -1)
+        #expect(twice == -2)
+        #expect(seconds == 2)
+        for rate in ["0", "-3", "0.5", "16"] {
+            #expect(throws: (any Error).self) {
+                try decode(#"{ "steps": [ { "do": "expectPlaybackNeverBlank", "name": "x", "rate": \#(rate) } ] }"#)
+            }
+        }
     }
 
     @Test("An expectPlaybackNeverBlank step that looks fewer than twice is refused")

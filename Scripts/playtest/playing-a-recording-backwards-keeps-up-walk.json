@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/playing-a-recording-backwards-keeps-up-walk",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "open", "file": "fixtures/Full screen Retina recording 3456x2234.mp4", "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "1-opened", "note": "a full-screen Retina recording, 3456 by 2234, its key frames two seconds apart, opened in the ordinary editor at Next defaults" },
+
+    { "do": "key", "key": "end" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "j" },
+    { "do": "wait", "seconds": 0.8, "onTheClock": true },
+    { "do": "expectTimeline", "rate": -1 },
+    { "do": "snapshot", "name": "1-playing-backwards" },
+    { "do": "key", "key": "j" },
+    { "do": "expectTimeline", "rate": -2 },
+    { "do": "key", "key": "k" },
+    { "do": "expectTimeline", "rate": 0 },
+    { "do": "describe", "stage": "2-shuttled", "note": "End, then J played it backwards and J again doubled the speed, by the keys a Premiere editor uses; K stopped it" },
+
+    { "do": "expectPlaybackNeverBlank", "name": "backwards", "seconds": 2.5, "moments": 20, "rate": -1 },
+    { "do": "describe", "stage": "3-played-backwards", "note": "THE TEST: End then J, watched 2.5 seconds at 20 looks, and the picture kept up with the playhead going backwards. It used to fall behind at 14 looks of 20, by up to 18 frames" },
+
+    { "do": "expectPlaybackNeverBlank", "name": "backwards-twice", "seconds": 2, "moments": 20, "rate": -2 },
+    { "do": "describe", "stage": "4-played-backwards-twice", "note": "THE SECOND TEST: J J, twice as fast backwards, kept up too. It used to fall behind at 15 looks of 20, by up to 38 frames" },
+    { "do": "snapshot", "name": "2-back-at-the-start" },
+
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "delete" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPlaybackNeverBlank", "name": "backwards-across-a-cut", "seconds": 2, "moments": 20, "rate": -1 },
+    { "do": "describe", "stage": "5-played-backwards-across-a-cut", "note": "THE THIRD TEST: cut at a quarter and at the middle, the middle deleted, then played backwards from the end across the cut, and the picture on the near side arrived on time" },
+    { "do": "snapshot", "name": "3-cut" }
+  ]
+}

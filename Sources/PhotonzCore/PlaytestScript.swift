@@ -3547,7 +3547,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// A snapshot or two cannot see a frame that is empty for 33ms, which is
     /// how playing a full-screen recording flickered while every walk that
     /// played one passed (`playing-a-recording-never-blinks`).
-    case expectPlaybackNeverBlank(name: String, seconds: Double, moments: Int)
+    ///
+    /// `rate` is the shuttle's: 1 plays from the start the way Space does, a
+    /// faster one the way L L does, and a negative one from the end the way
+    /// End then J does (`playing-backwards-with-j-keeps-up-on-a-full-scre`).
+    case expectPlaybackNeverBlank(name: String, seconds: Double, moments: Int, rate: Double)
     /// Plays the document from wherever the playhead is, the way Space does,
     /// and at `moments` looks over `seconds` reads what one layer (by its name
     /// or its words) is doing in the picture the canvas was handed: whether it
@@ -5086,8 +5090,14 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("moments", "a playback is looked at a whole number of times, "
                     + "at least twice, not \(moments)")
             }
+            let rate = try f.optionalNumber("rate") ?? 1
+            guard TimelineShuttle.ladder.contains(abs(rate)) else {
+                throw f.invalid("rate", "a playback is played at a rate J or L can reach, "
+                    + "\(TimelineShuttle.ladder.map { "\(Int($0))" }.joined(separator: ", ")) "
+                    + "or the same backwards, not \(rate)")
+            }
             self = .expectPlaybackNeverBlank(name: try f.string("name"), seconds: seconds,
-                                             moments: Int(moments))
+                                             moments: Int(moments), rate: rate)
         case "expectPlaybackShows":
             let seconds = try f.optionalNumber("seconds") ?? 3
             let moments = try f.optionalNumber("moments") ?? 20

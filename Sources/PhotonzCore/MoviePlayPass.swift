@@ -312,3 +312,190 @@ public struct MoviePlayLookahead: Sendable {
         return (high, found)
     }
 }
+
+// Playing backwards keeps up on a full-screen recording
+// (`playing-backwards-with-j-keeps-up-on-a-full-scre`).
+//
+// J read each frame on its own, four at a time, the way a still playhead is
+// read, and each of those reads decodes from the key frame before it. Going
+// backwards that is every frame, and on the 3456x2234 fixture End then J held
+// a frame up to 22 behind at 14 of 20 looks, J J up to 38 at 15 of 20
+// (measured 2026-10-08). A file is read forwards only, so a playhead going
+// backwards is fed in blocks: the stretch just behind it read in one pass,
+// lowest first, every frame decoded once, and the next block below started
+// while the playhead is still a reach above it. Two blocks may read at once,
+// so the one that has to decode from a key frame far back does not leave the
+// playhead waiting.
+
+/// Which stretch behind a playhead playing backwards to read next, in one
+/// pass, and when a block being read has stopped serving it.
+public enum MoviePlayBackward {
+
+    /// How many grid frames behind the playhead are kept in hand or being
+    /// read, at normal speed: a third of a second, which covers a block that
+    /// decodes from a key frame two seconds back (about 240ms on the fixture).
+    public static let leadFrames = 10
+    /// How many grid frames one block reads, at normal speed. Each block
+    /// decodes from its key frame again, so fewer than about five a block and
+    /// reading falls behind the clock; more and the window holds more.
+    public static let blockFrames = 10
+    /// The fastest the reach grows for: J J reads twice as far behind, and a
+    /// faster shuttle no further, so the window's memory stays bounded and a
+    /// shuttle at 4x or 8x is late rather than holding a gigabyte.
+    public static let fastestScale = 2.0
+    /// How many blocks read at once behind one place in a recording...
+    public static let blocksAtOnce = 2
+    /// ...and in the whole recording: the stretch playing, and the far side
+    /// of a cut coming up.
+    public static let blocksPerRecording = 3
+    /// A block reaching this close behind the playhead is one it is waiting
+    /// on, and reads alone: a second block beside it decodes the same stretch
+    /// from the same key frame and halves the speed of both.
+    public static let urgentFrames = 2
+    /// The longest the clock waits, starting backwards from rest, for the
+    /// frame behind the playhead (`PhotonzDocument.readyToPlayBackward`). The
+    /// first block decodes from the key frame before it, about a quarter of a
+    /// second on the fixture; a playhead that ran on meanwhile would leave the
+    /// picture stuck while it moved. Backwards plays silent, so holding it a
+    /// moment puts nothing out of step with the sound.
+    public static let preRollMS = 500
+
+    private static func scale(_ speed: Double) -> Double { min(max(1, speed), fastestScale) }
+
+    /// How far behind the playhead every frame must be in hand or being read.
+    public static func reach(speed: Double) -> Int {
+        Int((Double(leadFrames) * scale(speed)).rounded())
+    }
+
+    /// How many frames one block reads at this speed.
+    public static func blockLength(speed: Double) -> Int {
+        Int((Double(blockFrames) * scale(speed)).rounded())
+    }
+
+    /// The block to start reading for a playhead going backwards on
+    /// `playhead`, or nil when nothing new needs reading: every frame within
+    /// reach behind it is in hand or in a block being read (`running`), or
+    /// `blocksAtOnce` are reading already. The block ends on the first frame
+    /// missing, counting down from the playhead, and stops short of the first
+    /// frame and of any block already being read below it.
+    ///
+    /// `floor` is the lowest frame of the stretch the playhead will show, the
+    /// frame before a cut it is about to cross: nothing below it is read for
+    /// this place, since the playhead jumps from there to somewhere else.
+    public static func next(playhead: Int, floor stretchFloor: Int = 0, speed: Double, movie: MovieRef,
+                            inHand: (Int) -> Bool, running: [ClosedRange<Int>]) -> ClosedRange<Int>? {
+        let last = movie.frameIndex(atSourceMS: movie.durationMS)
+        let head = min(max(0, playhead), last)
+        let bottom = min(max(0, stretchFloor), head)
+        // Only the blocks reading behind this place count: one for the other
+        // side of a cut is nothing to wait for.
+        let mine = running.filter { serves($0, playhead: head, speed: speed) }
+        guard mine.count < blocksAtOnce,
+              !mine.contains(where: { $0.upperBound >= head - urgentFrames }) else { return nil }
+        let floor = max(bottom, head - reach(speed: speed))
+        guard let top = stride(from: head, through: floor, by: -1).first(where: { frame in
+            !inHand(frame) && !running.contains { $0.contains(frame) }
+        }) else { return nil }
+        var low = max(bottom, top - blockLength(speed: speed) + 1)
+        for block in running where block.upperBound < top && block.upperBound >= low {
+            low = block.upperBound + 1
+        }
+        return low...top
+    }
+
+    /// Whether a block being read still serves a playhead going backwards on
+    /// `playhead`: some of it is still to come, and not so far below that
+    /// the playhead jumped away from it.
+    public static func serves(_ block: ClosedRange<Int>, playhead: Int, speed: Double) -> Bool {
+        block.lowerBound <= playhead
+            && block.upperBound >= playhead - reach(speed: speed) - blocksAtOnce * blockLength(speed: speed)
+    }
+
+    /// Whether a running block will read `frame`, so nothing reads it on its own.
+    public static func covers(frame: Int, running: [ClosedRange<Int>]) -> Bool {
+        running.contains { $0.contains(frame) }
+    }
+
+    /// How many sharp frames a window keeps while it plays backwards: the
+    /// frame under the playhead, the reach, one block below it, and a few
+    /// already shown. A second block only starts once the first is a reach
+    /// above the playhead, so between them they never hold more than one
+    /// block below the reach. At 2420 pixels wide (the fixture at 35% on a
+    /// Retina screen) that is 25 frames, about 375MB, at normal speed: what a
+    /// forward pass holds across a cut.
+    ///
+    /// With the far side of a cut coming up (`places` above one), as much
+    /// again for each.
+    public static func frameBudget(base: Int, speed: Double, places: Int = 1) -> Int {
+        let place = 1 + reach(speed: speed) + blockLength(speed: speed)
+        return max(base, max(1, places) * place + MoviePlayPass.fallenBehindFrames)
+    }
+}
+
+extension PhotonzDocument {
+
+    /// Whether every frame a playhead on `ms` shows next going backwards, one
+    /// grid frame back, is in hand: what the clock waits for, at most
+    /// `MoviePlayBackward.preRollMS`, before it starts backwards from rest.
+    /// True where nothing is behind it to show.
+    public func readyToPlayBackward(atTimeMS ms: Int, inHand: MovieFramesInHand) -> Bool {
+        let behind = ms - MovieRef.frameStepMS
+        guard behind >= 0 else { return true }
+        return movieFrames(atTimeMS: behind).allSatisfy {
+            inHand.contains(movie: $0.movie.id, frameIndex: $0.movie.frameIndex(atSourceMS: $0.sourceMS))
+        }
+    }
+}
+
+/// A place a playhead going backwards needs reading behind, in one
+/// recording: the frame it shows first there (`head`), and the lowest frame
+/// of that stretch it shows before a cut takes it somewhere else (`floor`).
+public struct MovieBackPlace: Sendable, Equatable {
+    /// What the clock asks for at the head: which layer, which recording.
+    public var request: MovieFrameRequest
+    public var head: Int
+    public var floor: Int
+
+    public var movie: MovieRef { request.movie }
+
+    public init(request: MovieFrameRequest, floor: Int) {
+        self.request = request
+        self.head = request.movie.frameIndex(atSourceMS: request.sourceMS)
+        self.floor = floor
+    }
+}
+
+extension PhotonzDocument {
+
+    /// Where a playhead playing backwards from `ms` at `speed` needs reading
+    /// behind, as far back in time as the reads reach: the stretch under it,
+    /// down to the cut it crosses, and the far side of that cut. Played
+    /// backwards across a cut, a block opened only on arrival left the
+    /// picture 22 frames behind there, and the stretch playing read on past
+    /// the cut into frames never shown (2026-10-08).
+    public func moviePlayBackPlaces(atTimeMS ms: Int, speed: Double) -> [MovieBackPlace] {
+        // A step further than the reads reach: the clock's step is a hair
+        // shorter than a grid frame, so twenty steps fall short of twenty frames.
+        let span = MoviePlayBackward.reach(speed: speed) + MoviePlayBackward.blockLength(speed: speed) + 1
+        var places: [MovieBackPlace] = []
+        var previous: [Int] = []
+        for step in 0...span {
+            let moment = ms - step * MovieRef.frameStepMS
+            guard moment >= 0 else { break }
+            for request in movieFrames(atTimeMS: moment) {
+                let frame = request.movie.frameIndex(atSourceMS: request.sourceMS)
+                if let index = places.indices.first(where: {
+                    places[$0].movie.id == request.movie.id
+                        && (previous[$0] - MoviePlayBackward.urgentFrames...previous[$0]).contains(frame)
+                }) {
+                    places[index].floor = min(places[index].floor, frame)
+                    previous[index] = frame
+                } else if !places.contains(where: { $0.movie.id == request.movie.id && $0.head == frame }) {
+                    places.append(MovieBackPlace(request: request, floor: frame))
+                    previous.append(frame)
+                }
+            }
+        }
+        return places
+    }
+}

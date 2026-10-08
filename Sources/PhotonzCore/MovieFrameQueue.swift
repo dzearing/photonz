@@ -42,6 +42,7 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
 
     /// How much farther a frame gone by counts than one ahead, playing forwards.
     public static var behindWeight: Int { 3 }
+    public static var backwardBehindWeight: Int { 8 }
 
     /// Which of the frames in hand to let go when there are too many: the one
     /// farthest from where its recording's playhead is, so the frames either
@@ -67,11 +68,17 @@ public struct MovieFrameQueue<Item: Sendable>: Sendable {
     /// as one the same distance ahead: the frames read ahead are the next
     /// ones shown, and letting one go to keep a frame already shown starts
     /// its pass again from the key frame (a dissolve stuck that way,
-    /// 2026-10-07).
+    /// 2026-10-07). Played `backward`, the frames gone by are the ones above
+    /// it, and they count `backwardBehindWeight` times as far: the window
+    /// holds a reach and a block below the playhead, and a frame shown a
+    /// moment ago must go before the bottom of that block (`MoviePlayBackward`).
     public static func farthest(_ resident: [(movie: UUID, frame: Int)],
-                                from foci: [UUID: [Int]], forward: Bool = false) -> Int? {
+                                from foci: [UUID: [Int]], forward: Bool = false,
+                                backward: Bool = false) -> Int? {
         func distance(_ frame: Int, _ focus: Int) -> Int {
-            frame < focus && forward ? (focus - frame) * behindWeight : abs(frame - focus)
+            if frame < focus && forward { return (focus - frame) * behindWeight }
+            if frame > focus && backward { return (frame - focus) * backwardBehindWeight }
+            return abs(frame - focus)
         }
         var worst: (index: Int, distance: Int)?
         for (index, entry) in resident.enumerated() {

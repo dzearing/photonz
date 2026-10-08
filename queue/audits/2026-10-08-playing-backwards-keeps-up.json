@@ -1,0 +1,25 @@
+{
+  "feature": "Playing backwards with J keeps up on a full-screen recording",
+  "epic": "video-beats-premiere",
+  "summary": "J and J J now play a full-screen Retina recording backwards with the picture keeping up with the playhead, across a cut too. It used to stick and jump at most of the moments looked at.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open Scripts/playtest/fixtures/Full screen Retina recording 3456x2234.mp4 (or any long full-screen recording of your own). Walk: playing-a-recording-backwards-keeps-up-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Click the timeline so it has the keyboard, then press End.", "shot": "2026-10-08-playing-backwards-1.png" },
+    { "do": "Press J and watch the picture play backwards to the start." },
+    { "do": "Press End, then J twice, for double speed backwards." },
+    { "do": "Press K to stop, then L and J a few times, turning round mid-play." },
+    { "do": "Cut the clip at a quarter and at the middle (Cmd K twice), delete the middle, then End and J back across the cut.", "shot": "2026-10-08-playing-backwards-2.png" }
+  ],
+  "evaluate": [
+    "Does the picture move smoothly backwards, with no stick-and-jump while the playhead runs?",
+    "From a stop, J now waits about a fifth of a second before the playhead moves, so the picture and playhead stay together. Does that start feel quick enough?",
+    "Does J J (double speed backwards) look as smooth as J?",
+    "Played backwards across a cut, does the shot before the cut appear right on time?"
+  ],
+  "rough": [
+    "No mock covers playing backwards; the transport and its -1x and -2x readouts are unchanged.",
+    "From a stop, J holds the playhead at most half a second (about 0.2s measured on the fixture) until the frame behind it is read. Backwards plays silent, so nothing goes out of step, but the playhead does not move on the instant you press J.",
+    "J J J (4x) and faster backwards read no further ahead than 2x does, so the window's memory stays bounded. At those speeds the picture can fall behind, holding the last frame rather than going blank. Not measured, and no task filed for it."
+  ]
+}

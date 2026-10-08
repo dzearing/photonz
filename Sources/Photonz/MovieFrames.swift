@@ -463,6 +463,21 @@ final class MovieFrameFetcher {
     }
     private var playPasses: [UUID: [PlayPass]] = [:]
 
+    /// A block of frames being read behind a playhead playing backwards, in
+    /// one pass, at the size the canvas shows it (`MoviePlayBackward`).
+    private struct BackBlock {
+        let token: UUID
+        let frames: ClosedRange<Int>
+        let width: Int
+        let task: Task<Void, Never>
+    }
+    private var backBlocks: [UUID: [BackBlock]] = [:]
+    /// How many places each recording is being read behind: the playhead,
+    /// and the far side of a cut coming up.
+    private var backPlaces: [UUID: Int] = [:]
+    /// How fast the clock is playing backwards, while it is.
+    private var backSpeed: Double?
+
     private let store: ImageStore
     /// Decoded frames, in the order they landed.
     private var resident: [Resident] = []
@@ -542,11 +557,21 @@ final class MovieFrameFetcher {
     /// or the shot coming in over a dissolve has a pass of its own, opened
     /// before the playhead gets there. Only a frame no pass will reach soon is
     /// read on its own. Any other call stops those passes.
+    ///
+    /// While the clock plays it backwards (`playingBackward`, at that speed),
+    /// the stretch just behind the playhead is read in blocks, each in one
+    /// pass, rather than one frame at a time from its key frame, and so is
+    /// the far side of a cut it is about to cross (`backPlaces`,
+    /// `MoviePlayBackward`). Any other call stops those blocks.
     func fetch(_ requests: [MovieFrameRequest], size: (MovieFrameRequest) -> CGSize,
-               handMoving: Bool = false, backward: Bool = false, playing: MoviePlayPoints? = nil) {
+               handMoving: Bool = false, backward: Bool = false, playing: MoviePlayPoints? = nil,
+               playingBackward: Double? = nil, backPlaces: [MovieBackPlace] = []) {
         if !handMoving { stopSweeps() }
         let playsAhead = playing != nil && !handMoving && !backward
         if !playsAhead { stopPlayPasses() }
+        let playsBack = playingBackward != nil && !handMoving
+        if !playsBack { stopBackBlocks() }
+        backSpeed = playsBack ? playingBackward : nil
         coming = [:]
         var wanted: [Read] = []
         var asked = Set<UUID>()
@@ -566,10 +591,17 @@ final class MovieFrameFetcher {
                 if playsAhead, let playing, !unsweepable.contains(request.movie.id) {
                     play(request.movie, url: url, points: playing, size: width)
                 }
+                if playsBack, let speed = playingBackward, !unsweepable.contains(request.movie.id) {
+                    let places = backPlaces.filter { $0.movie.id == request.movie.id }
+                    playBack(request.movie, url: url,
+                             places: places.isEmpty ? [MovieBackPlace(request: request, floor: 0)] : places,
+                             speed: speed, size: width)
+                }
             }
             if handMoving, !unsweepable.contains(request.movie.id) { continue }
             if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
             if playsAhead, coveredByPlay(request, width: width) { continue }
+            if playsBack, coveredByBack(request, width: width) { continue }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
@@ -580,6 +612,15 @@ final class MovieFrameFetcher {
                 guard !unsweepable.contains(request.movie.id),
                       let url = MovieLibrary.shared.url(for: request.movie) else { continue }
                 play(request.movie, url: url, points: playing, size: size(request))
+            }
+        }
+        // Played backwards, so is one only across a cut behind.
+        if playsBack, let speed = playingBackward {
+            for place in backPlaces where focused.insert(place.movie.id).inserted {
+                guard !unsweepable.contains(place.movie.id),
+                      let url = MovieLibrary.shared.url(for: place.movie) else { continue }
+                playBack(place.movie, url: url, places: backPlaces.filter { $0.movie.id == place.movie.id },
+                         speed: speed, size: size(place.request))
             }
         }
         queue.replace(with: wanted)
@@ -596,6 +637,14 @@ final class MovieFrameFetcher {
                 && MoviePlayPass.covers(frame: frame, running: pass.frames, reached: pass.mark.reached,
                                         playhead: aim.playhead, reach: aim.reach)
         }
+    }
+
+    /// Whether a block being read behind a playhead playing backwards will
+    /// reach this frame, so nothing reads it on its own.
+    private func coveredByBack(_ request: MovieFrameRequest, width: CGSize) -> Bool {
+        let blocks = (backBlocks[request.movie.id] ?? []).filter { $0.width >= Int(width.width.rounded()) - 1 }
+        return MoviePlayBackward.covers(frame: request.movie.frameIndex(atSourceMS: request.sourceMS),
+                                        running: blocks.map(\.frames))
     }
 
     // MARK: Reading a stretch in one pass
@@ -701,6 +750,69 @@ final class MovieFrameFetcher {
             PlayPass(token: token, frames: frames, width: width, mark: mark, task: task))
     }
 
+    // MARK: Reading behind a playhead playing backwards
+
+    /// Keep the blocks a playhead going backwards needs, behind each of
+    /// `places` (the playhead, then the far side of a cut coming up): the
+    /// ones it has not gone past, and a new one below them when a frame
+    /// within reach behind is neither in hand nor being read
+    /// (`MoviePlayBackward.next`).
+    private func playBack(_ movie: MovieRef, url: URL, places: [MovieBackPlace], speed: Double, size: CGSize) {
+        let width = Int(size.width.rounded())
+        coming[movie.id] = places.dropFirst().map(\.head)
+        backPlaces[movie.id] = places.count
+        var blocks = (backBlocks[movie.id] ?? []).filter { block in
+            if block.width == width,
+               places.contains(where: { MoviePlayBackward.serves(block.frames, playhead: $0.head, speed: speed) }) {
+                return true
+            }
+            block.task.cancel()
+            return false
+        }
+        let sharp: (Int) -> Bool = { [self] in
+            filedWidth(movie.frameRef(atSourceMS: $0 * MovieRef.frameStepMS)).map { $0 >= CGFloat(width) - 1 } ?? false
+        }
+        for place in places where blocks.count < MoviePlayBackward.blocksPerRecording {
+            if let frames = MoviePlayBackward.next(playhead: place.head, floor: place.floor, speed: speed,
+                                                   movie: movie, inHand: sharp, running: blocks.map(\.frames)) {
+                blocks.append(openBack(movie, url: url, frames: frames, size: size))
+            }
+        }
+        backBlocks[movie.id] = blocks
+        keepInsideBudget()
+    }
+
+    /// Start reading `frames` of `movie` in one pass, lowest first.
+    private func openBack(_ movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize) -> BackBlock {
+        let token = UUID()
+        let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
+            self?.filePlayed(image, movie: movie, frameIndex: index, backward: true)
+        }
+        let finished: @MainActor @Sendable (Bool) -> Void = { [weak self] swept in
+            guard let self else { return }
+            backBlocks[movie.id]?.removeAll { $0.token == token }
+            if !swept {
+                unsweepable.insert(movie.id)
+                stopBackBlocks()
+            }
+        }
+        let task = Task.detached(priority: .userInitiated) {
+            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size) { index, image in
+                Task { @MainActor in file(index, image) }
+            }
+            if !Task.isCancelled { await finished(swept) }
+        }
+        return BackBlock(token: token, frames: frames, width: Int(size.width.rounded()), task: task)
+    }
+
+    /// Stop every block reading behind a playhead: it stopped, turned round,
+    /// or a hand took it.
+    private func stopBackBlocks() {
+        for block in backBlocks.values.joined() { block.task.cancel() }
+        backBlocks.removeAll()
+        backPlaces.removeAll()
+    }
+
     /// Stop every pass reading ahead of a playhead: it stopped, or turned
     /// round, or a hand took it.
     private func stopPlayPasses() {
@@ -719,7 +831,10 @@ final class MovieFrameFetcher {
     /// clock's next tick draws a frame read ahead when it gets there, and
     /// thirty redraws a second of a picture that did not change is a core
     /// spent on nothing.
-    private func filePlayed(_ image: CGImage, movie: MovieRef, frameIndex: Int) {
+    ///
+    /// Played `backward`, the frames gone by are the ones above the playhead,
+    /// so it is one at or above it that redraws.
+    private func filePlayed(_ image: CGImage, movie: MovieRef, frameIndex: Int, backward: Bool = false) {
         let ref = movie.frameRef(atSourceMS: frameIndex * MovieRef.frameStepMS)
         if let filed = filedWidth(ref), filed >= CGFloat(image.width) - 1 { return }
         let first = !resident.contains { $0.movie == movie.id }
@@ -731,7 +846,8 @@ final class MovieFrameFetcher {
         // nearer of them: the outgoing shot's frames are all before the
         // incoming one's, and must not redraw the canvas for it.
         let nearest = (focus[movie.id] ?? []).min { abs($0 - frameIndex) < abs($1 - frameIndex) }
-        if first || frameIndex <= nearest ?? frameIndex { onFrameLanded?() }
+        let due = backward ? frameIndex >= nearest ?? frameIndex : frameIndex <= nearest ?? frameIndex
+        if first || due { onFrameLanded?() }
     }
 
     /// A frame a one-pass read reached. Filed unless something at least as
@@ -819,14 +935,16 @@ final class MovieFrameFetcher {
         // Every place being played counts as the playhead: the stretch
         // playing, the shot coming in, the far side of the next cut.
         let foci = focus.merging(coming) { $0 + $1 }
-        let sharp = MoviePlayPass.frameBudget(base: Self.frameBudget,
+        let ahead = MoviePlayPass.frameBudget(base: Self.frameBudget,
                                               reaches: playPasses.values.joined().map { $0.mark.aim.reach })
+        let places = backPlaces.values.reduce(0, +)
+        let sharp = backSpeed.map { MoviePlayBackward.frameBudget(base: ahead, speed: $0, places: places) } ?? ahead
         for (rough, budget) in [(false, sharp), (true, MovieSweep.roughBudget)] {
             while resident.count(where: { $0.rough == rough }) > budget {
                 let kind = resident.indices.filter { resident[$0].rough == rough }
                 guard let farthest = MovieFrameQueue<Read>.farthest(
                     kind.map { (resident[$0].movie, resident[$0].frameIndex) }, from: foci,
-                    forward: !playPasses.isEmpty) else { break }
+                    forward: !playPasses.isEmpty, backward: backSpeed != nil) else { break }
                 let gone = resident.remove(at: kind[farthest]).ref
                 store.remove(gone)
                 dropped.append(gone.id)
@@ -835,4 +953,3 @@ final class MovieFrameFetcher {
         }
     }
 }
-

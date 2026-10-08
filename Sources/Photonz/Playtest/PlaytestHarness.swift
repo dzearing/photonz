@@ -2583,9 +2583,9 @@ private final class Run {
         case .expectTimeline(let claim):
             note(number, step.name, try checkTimeline(claim), state: describe())
 
-        case .expectPlaybackNeverBlank(let name, let seconds, let moments):
+        case .expectPlaybackNeverBlank(let name, let seconds, let moments, let rate):
             note(number, step.name,
-                 try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments),
+                 try await checkPlaybackNeverBlank(name: name, seconds: seconds, moments: moments, rate: rate),
                  state: describe())
 
         case .expectPlaybackShows(let layer, let name, let seconds, let moments):
@@ -9106,6 +9106,7 @@ private final class Run {
 
     /// Plays the document from the start and looks at the picture the canvas
     /// was handed `moments` times along the way (`expectPlaybackNeverBlank`).
+    /// At a negative `rate` it plays from the end backwards, End then J.
     ///
     /// Each look is shrunk to a quarter on the spot and written out only once
     /// the playing stops: encoding a full-screen PNG on the main actor while
@@ -9117,7 +9118,8 @@ private final class Run {
     /// most of that. A moment with no clip on at all (a gap somebody left in
     /// the timeline) is black by design, so it is counted and said, never
     /// failed; a run that never once had a clip on is refused.
-    private func checkPlaybackNeverBlank(name: String, seconds: Double, moments: Int) async throws -> String {
+    private func checkPlaybackNeverBlank(name: String, seconds: Double, moments: Int,
+                                         rate: Double = 1) async throws -> String {
         let editor = try requireEditor()
         guard let document = editor.shownDocument, document.hasTime else {
             throw Failure(description: "there is no recording in this document to play")
@@ -9126,15 +9128,16 @@ private final class Run {
         guard !clips.isEmpty else {
             throw Failure(description: "there is no recording in this document to play")
         }
-        editor.goToDocumentStart()
+        if rate < 0 { editor.goToDocumentEnd() } else { editor.goToDocumentStart() }
         await sleep(0.3)
-        editor.playDocument()
+        editor.playDocument(rate: rate)
         let started = Date()
         var looks: [CGImage] = []
         var empty: [Int] = []
         var gaps = 0
         var late: [Int] = []
         var worstLag = 0
+        var worstLook = ""
         var seen = Set<String>()
         for moment in 1...moments {
             let due = seconds * Double(moment) / Double(moments)
@@ -9142,6 +9145,12 @@ private final class Run {
             if wait > 0 { await sleep(wait) }
             let playhead = editor.documentTimeMS
             let on = clips.filter { $0.movieFrameSourceMS(atTimeMS: playhead) != nil }
+            // The stand-in the canvas draws for a frame still being read is
+            // the nearest on the side it came from, which played backwards is
+            // the frame above: asked the forward way, a frame from the far
+            // end of the recording was counted as shown.
+            var inHand = editor.movieFrames.inHand
+            inHand.travel = editor.playheadTravel
             for clip in on {
                 guard let movie = clip.movie, let wanted = clip.movieFrameSourceMS(atTimeMS: playhead)
                 else { continue }
@@ -9151,9 +9160,13 @@ private final class Run {
                 let incoming = clip.incomingMovieFrameSourceMS(atTimeMS: playhead)
                 for sourceMS in [wanted] + (incoming.map { [$0] } ?? []) {
                     let index = movie.frameIndex(atSourceMS: sourceMS)
-                    let shown = editor.movieFrames.inHand.frameIndexToShow(index, of: movie.id)
+                    let shown = inHand.frameIndexToShow(index, of: movie.id)
                     if shown != index, late.last != moment { late.append(moment) }
-                    if let shown { worstLag = max(worstLag, abs(index - shown)) }
+                    if let shown, abs(index - shown) > worstLag {
+                        worstLag = abs(index - shown)
+                        worstLook = " (worst at look \(moment), \(String(format: "%.2fs", Double(playhead) / 1000)): "
+                            + "frame \(index) wanted, frame \(shown) shown)"
+                    }
                 }
             }
             guard let picture = editor.renderedImage,
@@ -9188,11 +9201,12 @@ private final class Run {
         // Held is not blank, but it is a stutter: a picture that sticks and
         // jumps while the sound goes on (`PlaybackKeepsUp`).
         if let behind = PlaybackKeepsUp.problem(lateLooks: late, framesBehind: worstLag, looks: moments) {
-            throw Failure(description: "the picture did not keep up while it played: \(behind)")
+            throw Failure(description: "the picture did not keep up while it played: \(behind)\(worstLook)")
         }
         let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })
         let gapNote = gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design"
-        return "played \(seconds)s (\(sizes.sorted().joined(separator: ", "))), "
+        let how = rate == 1 ? "" : " at \(rate < 0 ? "-" : "")\(Int(abs(rate)))x" + (rate < 0 ? " from the end" : "")
+        return "played \(seconds)s\(how) (\(sizes.sorted().joined(separator: ", "))), "
             + "looked \(moments) times (\(name)-1.png to \(name)-\(looks.count).png), "
             + "the clip on screen was drawn in every one (\(seen.sorted().joined(separator: ", "))); "
             + lateness + gapNote
