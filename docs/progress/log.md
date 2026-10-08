@@ -20922,3 +20922,10 @@ Next: the first editor window's ~200 ms first build
 - Checked whether Shift Command C (picture + spec list on one clipboard) pastes as text in Chromium. Real clipboard from `redline-walk`; local page pasted over the DevTools protocol in Chrome 153 and Edge 154: the page gets `text/plain` and `image.png`; a textarea takes the list, a contenteditable box takes the picture alone. WebKit and a TextEdit-style rich `NSTextView` match. No app change.
 - Kit: `docs/design/references/redline-paste-check/`. Note in `docs/design/next-measure.md` §7. Audit `queue/audits/2026-10-08-redline-paste.json`.
 - Open: Slack/Discord/Teams run their own paste code; one paste into a message box without sending is the user's check (in the audit).
+
+## 2026-10-08 — A drawn path's outline takes Align (inside, center, outside)
+
+- Added the icon mock's Align dropdown under a path's outline settings (`PathStrokeAlignRow`, `PathLineStylePickers.swift`), after Corners. Closed paths take Inside/Center/Outside; open paths read Center with the other two dimmed.
+- Core: `PhotonzDocument.setPathStrokePosition`, `PathLineStyleSelection.alignReading`/`hasAnInside`, tested in `PathStrokeAlignTests.swift` (including the SVG words). Rendering and SVG export already handled all three.
+- Walks: `path-outline-align-walk`, `path-outline-align-click-walk`. Audit `queue/audits/2026-10-08-path-outline-align.json`.
+- Next: p1 `a-drawn-path-s-outline-settings-read-like-the-ic` for the rest of the mock's Stroke section.

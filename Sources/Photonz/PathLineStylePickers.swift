@@ -186,6 +186,8 @@ struct PathLineStyleSettings: View {
                              help: { Self.cornerHelp($0) },
                              pick: { state.setPathLineCorner(ids: state.layerIDs(reaching: reach), $0) })
                 .equatable()
+            PathStrokeAlignRow(selection: selection,
+                               pick: { state.setPathStrokePosition(ids: state.layerIDs(reaching: reach), $0) })
         }
     }
 
@@ -215,6 +217,52 @@ struct PathLineStyleSettings: View {
 }
 
 
+/// Which side of the edge the outline sits on: Inside, Center or Outside, the
+/// Align row the icon drawing mock puts under its Stroke
+/// (`docs/design/mocks/pages/icon-draw-wt.html`), in the dropdown it draws and
+/// the order Figma and Illustrator list them.
+///
+/// A dropdown rather than three pictures like the rows above it, because that
+/// is the control the mock uses, and the Border effect asks the same question
+/// with the same dropdown in the same words.
+///
+/// Only open paths picked: Center is the one answer offered and the other two
+/// are dimmed, with the reason on the control, because a line has no inside
+/// to be within (`PathContent.effectiveStrokePosition`).
+struct PathStrokeAlignRow: View {
+    let selection: PathLineStyleSelection
+    let pick: @MainActor (BorderPosition) -> Void
+
+    var body: some View {
+        let reading = selection.alignReading
+        let hasAnInside = selection.hasAnInside
+        let help = Self.alignHelp(hasAnInside: hasAnInside)
+        let value = reading.isMixed ? LayerStyleSelection.mixedText : (reading.value ?? .center).title
+        HStack(alignment: .center, spacing: ColorPartLayout.spacing) {
+            Text("Align")
+                .panelRowName()
+                .frame(width: ColorPartLayout.nameWidth, alignment: .leading)
+            VideoKit.Dropdown(
+                label: "Align",
+                value: value,
+                valueStyle: reading.isMixed ? MixedLook.style : nil,
+                help: help,
+                choices: .picking(BorderPosition.allCases,
+                                  current: reading.isMixed ? nil : reading.value,
+                                  title: \.title,
+                                  isEnabled: { hasAnInside || $0 == .center },
+                                  pick: pick))
+                .frame(maxWidth: .infinity)
+                .panelHelp(help)
+                .playtestControl("Align", detail: reading.isMixed ? "mixed" : value)
+        }
+    }
+
+    private static func alignHelp(hasAnInside: Bool) -> String {
+        if hasAnInside { return "Inside keeps the outline within the shape. Outside grows it past the edge." }
+        return "An open path is a line, so the outline runs down the middle of it"
+    }
+}
 
 // MARK: - The same question, asked of a line or an arrow
 

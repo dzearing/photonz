@@ -1,0 +1,149 @@
+{
+  "out": "/tmp/photonz-playtest/path-outline-align-click",
+  "seed": "The Align dropdown under a drawn path's outline has to open to a person's click, not just to a walk pressing it by name. The walk draws a closed shape with the Pen at Next defaults, gives it an outline, clicks the middle of the dropdown's face and picks Outside.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "frames",
+      "tools"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "p"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        560,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        430,
+        470
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.2
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        260
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": true,
+      "width": 0
+    },
+    {
+      "do": "action",
+      "action": "togglePathOutline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": true,
+      "width": 4
+    },
+    {
+      "do": "action",
+      "action": "paintSelectionColor"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Thickness",
+      "reads": "4"
+    },
+    {
+      "do": "expect",
+      "control": "Align",
+      "reads": "Center"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Align",
+      "at": [
+        "centre"
+      ],
+      "choose": "Outside"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Align",
+      "reads": "Outside"
+    },
+    {
+      "do": "describe",
+      "stage": "1-clicked",
+      "note": "THE TEST: a pointer click on the Align dropdown's face opens its list, and Outside picked from it moves the outline. A press by name only proves the control exists"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-clicked"
+    }
+  ]
+}

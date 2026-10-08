@@ -39,6 +39,13 @@ extension EditorState {
         perform { _ = $0.setPathLinePattern(layerIDs: ids, to: pattern) }
     }
 
+    /// Inside, centred on or outside the edge, on every picked closed path.
+    func setPathStrokePosition(ids: [UUID], _ position: BorderPosition) {
+        guard !ids.isEmpty else { return }
+        discardDragPreview()
+        perform { _ = $0.setPathStrokePosition(layerIDs: ids, to: position) }
+    }
+
     /// What the ends of a LINE or an ARROW look like. The same three answers
     /// and the same one step, on a shape the Pen did not draw.
     func setShapeLineEnd(ids: [UUID], _ end: PathLineEnd) {

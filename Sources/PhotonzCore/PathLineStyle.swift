@@ -253,6 +253,21 @@ extension PhotonzDocument {
         changePaths(layerIDs) { $0.linePattern = pattern }
     }
 
+    /// Which side of the edge the outline sits on: inside the shape, centred
+    /// on its edge, or outside it (the Align row, `icon-draw-wt.html`).
+    ///
+    /// Closed paths only. An open path is a line with no inside to be within,
+    /// so it is drawn centred whatever it carries
+    /// (`PathContent.effectiveStrokePosition`), and handing it a side it cannot
+    /// use would only surprise whoever closes it later.
+    @discardableResult
+    public mutating func setPathStrokePosition(layerIDs: [UUID], to position: BorderPosition) -> Int {
+        changePaths(layerIDs) { path in
+            guard path.isClosed else { return }
+            path.strokePosition = position
+        }
+    }
+
     /// Gives every picked path an outline, or takes it away.
     ///
     /// A path IS its stroke, so "no outline" is a width of nought rather than a
@@ -355,6 +370,21 @@ public struct PathLineStyleSelection: Hashable, Sendable {
     /// Whether there is a line to talk about at all. A path with no outline
     /// shows no line style, exactly as it shows no colour and no thickness.
     public var hasALine: Bool { members.contains { $0.content.strokeWidth > 0 } }
+
+    /// Whether Inside and Outside mean anything here: as soon as ONE of them
+    /// is closed. Only open paths and the outline can only be centred.
+    public var hasAnInside: Bool { members.contains { $0.content.isClosed } }
+
+    /// Where the outline sits, read off the CLOSED paths alone, since those are
+    /// the only ones a choice moves; an open path picked beside them would
+    /// otherwise make the row read Mixed after every pick. Only open paths read
+    /// Center, which is where their line is drawn.
+    public var alignReading: StyleReading<BorderPosition> {
+        let closed = members.filter { $0.content.isClosed }
+        guard !closed.isEmpty else { return StyleReading(value: .center, isMixed: false) }
+        return PathLineStyleSelection(members: closed, selectionCount: selectionCount)
+            .reading(\.strokePosition)
+    }
 }
 
 extension PhotonzDocument {

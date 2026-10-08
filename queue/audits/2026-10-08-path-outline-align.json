@@ -1,0 +1,28 @@
+{
+  "feature": "A drawn path's outline sits inside, centred or outside",
+  "epic": "icon-vector",
+  "summary": "A closed shape drawn with the Pen now has an Align dropdown under its outline settings, as the icon drawing mock's Stroke section draws it: Inside, Center or Outside. The canvas, picture export and SVG all put the outline where you picked.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: path-outline-align-walk (by name) and path-outline-align-click-walk (opens Align with a pointer click on its face).",
+  "switched": {},
+  "try": [
+    { "do": "Press P and click three points, then click the first again to close a triangle. Press V.", "shot": "2026-10-08-path-outline-align-1-center.png" },
+    { "do": "In Appearance, tick Outline. Thickness reads 4 and Align reads Center under Corners." },
+    { "do": "Click Align and pick Outside: the outline moves wholly past the shape's edge.", "shot": "2026-10-08-path-outline-align-2-outside.png" },
+    { "do": "Pick Inside: the outline's outer edge lands on the path.", "shot": "2026-10-08-path-outline-align-3-inside.png" },
+    { "do": "Draw a second closed shape, give it an outline, Shift-click both in Layers: Align reads Mixed. Pick Outside, then press Cmd-Z once: both go back together.", "shot": "2026-10-08-path-outline-align-6-both.png" },
+    { "do": "Draw an open path (press Return before closing it): Align reads Center, Inside and Outside are dimmed, and its tip says why.", "shot": "2026-10-08-path-outline-align-8-open.png" },
+    { "do": "File > Export…, choose SVG with Outside picked, and open the file in a browser: the outline sits outside there too." }
+  ],
+  "evaluate": [
+    "Is Align where you look for it, last under the outline settings, after Corners?",
+    "Is a dropdown right here, or would three pictures like Pattern and Corners above it read better?",
+    "On an open path, is a dimmed Inside and Outside with a tip clearer than hiding the row?",
+    "At 4pt on a big canvas the move between Center and Outside is subtle: does the default weight make the choice hard to see?"
+  ],
+  "rough": [
+    "Matches the mock: Align is a dropdown reading Center, in the mock's word, after the caps row.",
+    "The rest of the mock's Stroke section differs: Width is Thickness as a slider, Caps is Ends as pictures and hidden on a closed solid shape, and the settings sit under an Outline row rather than a Stroke section. Settled by task a-drawn-path-s-outline-settings-read-like-the-ic.",
+    "The app goes further than the mock with Pattern and Corners rows above Align.",
+    "Picking Inside or Outside on a mix of open and closed paths changes only the closed ones; the open ones stay centred, since a line has no inside."
+  ]
+}

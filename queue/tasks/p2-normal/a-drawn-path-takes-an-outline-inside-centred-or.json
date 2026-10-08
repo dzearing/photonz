@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:39:41.872Z",
-  "updated": "2026-10-08T13:39:46.121Z",
+  "updated": "2026-10-08T18:53:20.095Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager review 2026-10-08 of icon-svg. Model: PathContent.strokePosition (Sources/PhotonzCore, BorderPosition .inside/.center/.outside with displayName Inside/Center/Outside), drawn through BorderPosition.swift around line 103 (strokePosition.outset); annotation defaults set it in AnnotationStyles.swift. Nothing in Sources/Photonz sets it for a path (grep strokePosition). Reuse the picker the Border effect already uses: EffectsListInspector.swift BorderPositionRow (around 333-440) and EditorState+ColorStyles.swift setBorderEffectPosition. Mock: docs/design/mocks/pages/icon-draw-wt.html around line 421 (Stroke section: Width, Caps, Align Center). Line style pickers: PathLineStylePickers.swift. The mock draws it, so no card. Check SVG export handles inside/outside (SVG has no stroke alignment; an inside stroke is usually written as a clip or a doubled width with a clip).",
@@ -29,6 +29,35 @@
     {
       "t": "2026-10-08T13:39:46.120Z",
       "note": "seq 3790 -> 10"
+    },
+    {
+      "t": "2026-10-08T18:28:48.003Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T18:52:52.848Z",
+      "note": "owns these walks: path-outline-align-walk, path-outline-align-click-walk"
+    },
+    {
+      "t": "2026-10-08T18:53:19.917Z",
+      "note": "Before building: model (PathContent.strokePosition), PathRasterizer and SVG export already handled all three (inside = double width clipped, outside = double width masked); SVGExportRenderTests already matched pictures. Gap was only the control. Figma/Illustrator users expect Inside/Center/Outside in that order; the Border effect asks the same question with the same dropdown, so reused it. Open paths: kept the row (mock shows Align on a glyph), Inside/Outside dimmed with the reason in the tip."
+    },
+    {
+      "t": "2026-10-08T18:53:19.976Z",
+      "note": "Built: PhotonzDocument.setPathStrokePosition (closed paths only, one undo step via perform), PathLineStyleSelection.alignReading/hasAnInside (reads closed paths only so an open one beside them never reads Mixed), PathStrokeAlignRow in PathLineStylePickers.swift after Corners. Tests: Tests/PhotonzCoreTests/PathStrokeAlignTests.swift (setter, reading, old files open centred, SVG words for each choice). Full suite 11876 green."
+    },
+    {
+      "t": "2026-10-08T18:53:20.035Z",
+      "note": "Walks: path-outline-align-walk (Center, Outside, Inside, undo; two paths together and one undo; open path reads Center; 5 real captures; renders differ from Center in the shape's box; SVGs carry mask/clip) and path-outline-align-click-walk (pointer click on the dropdown face opens it and Outside lands). Both green at Next defaults. path-line-style-walk and path-arrives-with-no-edge-walk still green."
+    },
+    {
+      "t": "2026-10-08T18:53:20.094Z",
+      "note": "Mock differences outside this task (Width vs Thickness, Caps vs Ends, Stroke section vs Outline row) filed as p1 a-drawn-path-s-outline-settings-read-like-the-ic. Left rough, no task: at the default 4pt on a large canvas the move between Center and Outside is subtle to see; that is the weight, not the control."
     }
+  ],
+  "started": "2026-10-08T18:28:48.002Z",
+  "walks": [
+    "path-outline-align-walk",
+    "path-outline-align-click-walk"
   ]
 }
