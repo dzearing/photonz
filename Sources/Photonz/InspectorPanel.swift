@@ -301,6 +301,11 @@ struct InspectorPanel: View {
     /// every scroll tick. Each section reads whether it waits from its own
     /// cell, so building one redraws that section and not the dock.
     @State private var bodies = DockBodyReach()
+    /// Which sections have left the screen and wait a pass to be pulled down
+    /// (`PanelSectionDeparture`). By reference, like `arrivals`.
+    @State private var departures = DockDepartures()
+    /// Bumped to draw the pass that pulls the lingering sections down.
+    @State private var departurePass = 0
     /// What each section costs the dock, and how tall the dock is. Together
     /// these are the whole input to `DockHeightBudget`; see `dockBudget`.
     @State private var budget = DockBudgetScratch()
@@ -327,9 +332,17 @@ struct InspectorPanel: View {
             !editorState.editArrival.panelMayFill || editorState.secondsUntilTheSlideLands > 0
         }
         let _ = arrivalPass // the catch-up pass reads its own trigger
+        // Sections this pass leaves out stay built, unseen, for one more pass
+        // when the pick has not moved: a cut clicked on the clip in hand
+        // shows its own sections in the click's frame and pulls the clip's
+        // down in the next (`PanelSectionDeparture`).
+        let _ = departurePass
+        let lingering = departures.draw(sections, pick: editorState.selectedLayerID,
+                                        lingers: holdsBodiesOutOfSight)
+        let _ = departures.releaseNextPass { departurePass &+= 1 }
         // How tall each list section may be drawn, so that the forms under it
         // stay where they are instead of being carried off the bottom.
-        let ceilings = layout.ceilings(for: sections)
+        let ceilings = departures.ceilings(layout.ceilings(for: sections))
         let _ = (reveal.drawnCeilings = ceilings)
         // Folds are NOT read here for the rows: each section reads its own
         // from `PanelSectionFoldStore`, so a fold redraws one section. This
@@ -363,7 +376,8 @@ struct InspectorPanel: View {
             ScrollViewReader { proxy in
                 ScrollView {
                     VStack(alignment: .leading, spacing: 0) {
-                        ForEach(sections, id: \.self) { id in
+                        ForEach(sections + lingering, id: \.self) { id in
+                            let isLingering = lingering.contains(id)
                             VStack(alignment: .leading, spacing: 0) {
                                 CollapsibleSection(
                                     title: sectionTitle(id),
@@ -410,6 +424,10 @@ struct InspectorPanel: View {
                                 // gap it left behind.
                                 Divider().opacity(drag.section == id ? 0 : 0.4)
                             }
+                            // A lingering section takes no room and shows
+                            // nothing; it is only waiting to be pulled down.
+                            .frame(height: isLingering ? 0 : nil, alignment: .top)
+                            .opacity(isLingering ? 0 : 1)
                             // Named for a tutorial off the section's id, never off
                             // its heading, so renaming a section cannot break a
                             // guide that points at it (`TutorialAnchorRegistry`).
@@ -424,6 +442,7 @@ struct InspectorPanel: View {
                             .onGeometryChange(for: CGRect.self) {
                                 $0.frame(in: .named(inspectorDockSpace))
                             } action: { frame in
+                                guard !isLingering else { return }
                                 recordInspectorSection(id, title: sectionTitle(id), frame: frame)
                                 reveal.sectionFrames[id] = frame
                                 if bodies.comesNear(id, top: frame.minY, viewport: reveal.viewportHeight) {
@@ -1858,6 +1877,45 @@ private struct SectionDrag: Equatable {
     }
 
     var hasMoreNear: Bool { reach.nextToBuild(among: near) != nil }
+}
+
+/// Which dock sections have left the screen and are still built, over
+/// `PanelSectionDeparture`, and the pass that pulls them down.
+@MainActor private final class DockDepartures {
+    private var state = PanelSectionDeparture()
+    /// The height each section was last allowed, so a lingering one is drawn
+    /// exactly as it was and nothing in it is laid out afresh.
+    private var lastCeilings: [InspectorSectionID: CGFloat] = [:]
+    private var isReleasing = false
+
+    /// The sections lingering this pass, after the ones shown.
+    func draw(_ sections: [InspectorSectionID], pick: UUID?, lingers: Bool) -> [InspectorSectionID] {
+        state.draw(sections.map(\.rawValue), pick: pick?.uuidString, lingers: lingers)
+            .compactMap(InspectorSectionID.init(rawValue:))
+    }
+
+    /// `ceilings` for the sections shown, and the last ceiling of each one
+    /// lingering.
+    func ceilings(_ ceilings: [InspectorSectionID: CGFloat]) -> [InspectorSectionID: CGFloat] {
+        var all = lastCeilings.filter { state.lingering.contains($0.key.rawValue) }
+        all.merge(ceilings) { _, shown in shown }
+        lastCeilings = all
+        return all
+    }
+
+    /// Asks once for the pass after this one's commit, which lets every
+    /// lingering section go and redraws the dock without them.
+    func releaseNextPass(_ redraw: @escaping @MainActor () -> Void) {
+        guard state.isHolding, !isReleasing else { return }
+        isReleasing = true
+        Task { @MainActor in
+            await NextRunLoopPass.start()
+            isReleasing = false
+            guard state.isHolding else { return }
+            state.release()
+            redraw()
+        }
+    }
 }
 
 /// Whether one dock section waits unbuilt, read by that section alone.
