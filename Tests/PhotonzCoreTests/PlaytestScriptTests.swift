@@ -21,8 +21,8 @@ struct PlaytestScriptTests {
                      { "do": "readClipboard", "stage": "b", "behind": "empty" },
                      { "do": "action", "action": "copyImageWithCanvas" } ] }
         """)
-        guard case .readClipboard(let first, let unclaimed, _) = script.steps[0],
-              case .readClipboard(_, let claimed, _) = script.steps[1],
+        guard case .readClipboard(let first, let unclaimed, _, _) = script.steps[0],
+              case .readClipboard(_, let claimed, _, _) = script.steps[1],
               case .action(let action) = script.steps[2] else {
             Issue.record("readClipboard"); return
         }
@@ -30,6 +30,34 @@ struct PlaytestScriptTests {
         #expect(unclaimed == nil)
         #expect(claimed == .empty)
         #expect(action == .copyImageWithCanvas)
+    }
+
+    @Test("A readClipboard step can claim the copy carries the drawing as SVG")
+    func readClipboardCanClaimTheSVG() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "readClipboard", "stage": "a" },
+                     { "do": "readClipboard", "stage": "b", "svg": true },
+                     { "do": "readClipboard", "stage": "c", "svgSameAs": "icon" },
+                     { "do": "readClipboard", "stage": "d", "svg": false } ] }
+        """)
+        let claims = script.steps.map { step -> ClipboardSVGClaim?? in
+            guard case .readClipboard(_, _, _, let svg) = step else { return .none }
+            return .some(svg)
+        }
+        #expect(claims[0] == .some(nil))
+        #expect(claims[1] == .some(ClipboardSVGClaim(carries: true)))
+        // Naming the file it must match is a claim that it is there.
+        #expect(claims[2] == .some(ClipboardSVGClaim(carries: true, sameAs: "icon")))
+        #expect(claims[3] == .some(ClipboardSVGClaim(carries: false)))
+    }
+
+    @Test("A readClipboard step cannot claim no SVG and name one to match")
+    func readClipboardRefusesAContradictorySVGClaim() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "readClipboard", "stage": "a", "svg": false, "svgSameAs": "icon" } ] }
+            """)
+        }
     }
 
     @Test("A toolBar step can claim the bar is clear of the fitted picture")
@@ -845,7 +873,7 @@ struct PlaytestScriptTests {
         guard case .describe(let stage, let note) = script.steps[14] else { Issue.record("describe"); return }
         #expect(stage == "3-distance" && note == "after two clicks")
         guard case .clearClipboard = script.steps[15] else { Issue.record("clearClipboard"); return }
-        guard case .readClipboard(let clipStage, _, _) = script.steps[16] else { Issue.record("readClipboard"); return }
+        guard case .readClipboard(let clipStage, _, _, _) = script.steps[16] else { Issue.record("readClipboard"); return }
         #expect(clipStage == "8-spec")
         guard case .action(let action) = script.steps[17] else { Issue.record("action"); return }
         #expect(action == .copySpecList)

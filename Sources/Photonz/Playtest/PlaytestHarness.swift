@@ -845,6 +845,39 @@ private final class Run {
     /// and where no drawing ever reaches. Read off the FILE rather than off the
     /// render that made it, because a format that cannot hold transparency
     /// quietly fills it in and that is the thing worth catching.
+    /// Holds the clipboard to a `readClipboard` step's SVG claim: there or
+    /// not, whole units throughout, and byte for byte the file a `writeSVG`
+    /// step of that name wrote when the walk names one.
+    private func claimClipboardSVG(_ svg: String?, _ claim: ClipboardSVGClaim) throws {
+        guard claim.carries else {
+            guard svg == nil else {
+                throw Failure(description: "readClipboard claimed no SVG on the clipboard, "
+                              + "and the copy carried one")
+            }
+            return
+        }
+        guard let svg else {
+            throw Failure(description: "readClipboard claimed the copy carries the drawing as SVG, "
+                          + "and there is no \(EditorState.svgPasteboardType.rawValue) on the clipboard")
+        }
+        let offGrid = SVGWholeUnits.fractionalCoordinates(in: svg)
+        guard offGrid.isEmpty else {
+            throw Failure(description: "the copied SVG puts \(offGrid.count) place(s) off whole units: "
+                          + offGrid.prefix(8).joined(separator: ", "))
+        }
+        if let name = claim.sameAs {
+            let file = out.appendingPathComponent("\(name).svg")
+            guard let exported = try? String(contentsOf: file, encoding: .utf8) else {
+                throw Failure(description: "readClipboard was to match the copied SVG against "
+                              + "\(name).svg, and no writeSVG step wrote one")
+            }
+            guard exported == svg else {
+                throw Failure(description: "the copied SVG (\(svg.utf8.count) bytes) is not the file "
+                              + "Export wrote as \(name).svg (\(exported.utf8.count) bytes)")
+            }
+        }
+    }
+
     private func cornersOf(_ data: Data, named file: String,
                            claim: PictureCorners?) throws -> String {
         guard let source = CGImageSourceCreateWithData(data as CFData, nil),
@@ -2822,9 +2855,11 @@ private final class Run {
             NSPasteboard.general.clearContents()
             note(number, step.name, "cleared")
 
-        case .readClipboard(let stage, let behind, let movie):
+        case .readClipboard(let stage, let behind, let movie, let svgClaim):
             let types = NSPasteboard.general.types?.map(\.rawValue) ?? []
             if movie { try await claimClipboardMovieIsTheEdit(number: number, stage: stage) }
+            let svg = NSPasteboard.general.string(forType: EditorState.svgPasteboardType)
+            if let svgClaim { try claimClipboardSVG(svg, svgClaim) }
             let text = NSPasteboard.general.string(forType: .string)
             // The picture's corners, read off the PNG that went on the
             // clipboard: what an app that pastes it would get.
@@ -2835,9 +2870,12 @@ private final class Run {
                 throw Failure(description: "readClipboard was to read the copied picture's corners, "
                               + "and there is no picture on the clipboard")
             }
+            let svgNote = svg.map { ", an SVG of \($0.utf8.count) bytes" } ?? ""
             note(number, stage, "clipboard types \(types)"
-                 + (corners.map { ", picture with \($0)" } ?? "") + "; text:\n\(text ?? "nil")",
-                 state: ["types": types, "text": text ?? NSNull(), "corners": corners ?? NSNull()])
+                 + (corners.map { ", picture with \($0)" } ?? "") + svgNote
+                 + "; text:\n\(text ?? "nil")",
+                 state: ["types": types, "text": text ?? NSNull(), "corners": corners ?? NSNull(),
+                         "svg": svg ?? NSNull()])
 
         case .appearance(let which):
             // This app only. The machine's own setting is left alone, because a

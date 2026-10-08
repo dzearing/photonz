@@ -1,0 +1,46 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Redline paste check</title>
+<style>
+ body { font: 14px -apple-system, sans-serif; margin: 20px; }
+ textarea, #rich { width: 600px; height: 160px; border: 1px solid #888; display: block; margin: 8px 0 20px; overflow: auto; }
+ #rich img { max-width: 580px; }
+ pre { background: #f4f4f4; padding: 8px; }
+</style>
+<h1>Redline paste check (local page, nothing leaves this Mac)</h1>
+<p>Click a box and press Command V. Each paste is recorded below.</p>
+<label>Plain textarea</label><textarea id="plain"></textarea>
+<label>Rich box (contenteditable, like a chat composer)</label><div id="rich" contenteditable="true"></div>
+<pre id="out"></pre>
+<script>
+window.records = [];
+function describe(el) {
+  if (el.tagName === 'TEXTAREA') return { text: el.value };
+  return { images: [...el.querySelectorAll('img')].map(i => i.src.slice(0, 40) + '…'), text: el.innerText, html: el.innerHTML.slice(0, 300) };
+}
+for (const el of [document.getElementById('plain'), document.getElementById('rich')]) {
+  el.addEventListener('paste', e => {
+    const dt = e.clipboardData;
+    const rec = {
+      box: el.id,
+      ua: navigator.userAgent,
+      types: [...dt.types],
+      items: [...dt.items].map(i => ({ kind: i.kind, type: i.type })),
+      files: [...dt.files].map(f => ({ name: f.name, type: f.type, size: f.size })),
+      textPlain: dt.getData('text/plain'),
+      textHtml: dt.getData('text/html'),
+    };
+    window.records.push(rec);
+    setTimeout(() => { rec.landed = describe(el); document.getElementById('out').textContent = JSON.stringify(window.records, null, 2); }, 300);
+  });
+}
+
+window.asyncRead = async () => {
+  try {
+    const items = await navigator.clipboard.read({unsanitized: ['image/svg+xml']}).catch(() => navigator.clipboard.read());
+    const out = [];
+    for (const it of items) for (const t of it.types) { const b = await it.getType(t); out.push({ type: t, size: b.size, head: t.startsWith('text') || t.includes('svg') ? (await b.text()).slice(0, 80) : '' }); }
+    return out;
+  } catch (e) { return 'error: ' + e; }
+};
+</script>

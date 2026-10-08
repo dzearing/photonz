@@ -72,6 +72,23 @@ extension EditorState {
         }
     }
 
+    /// The system's own type for an SVG file, which Chromium hands a page as
+    /// `image/svg+xml` (`docs/design/references/svg-copy-check`).
+    static let svgPasteboardType = NSPasteboard.PasteboardType(UTType.svg.identifier)
+
+    /// `target` as the SVG the Export sheet writes for a web page, or nil
+    /// where a copy of it carries no SVG: SVG export is off, or it holds a
+    /// photograph, a screenshot or time (`CompositeCopy.carriesSVG`).
+    func clipboardSVG(of target: PhotonzDocument, background: SVGExport.Background) -> String? {
+        guard Experiments.shared.svgExportEnabled,
+              CompositeCopy.carriesSVG(target, flatImages: FlatBitmap.colors(in: target, store: store))
+        else { return nil }
+        let animation = CompositeCopy.svgAnimation(
+            for: target, motionOn: Experiments.shared.animatedSVGExportEnabled)
+        return SVGExporter.export(target, store: store, renderer: previewRenderer,
+                                  animation: animation, background: background).text
+    }
+
     /// The whole picked layer, as a layer.
     private func copyWholeLayer(_ id: UUID) -> Bool {
         guard let layer = document?.layer(id: id) else { return false }
@@ -93,7 +110,19 @@ extension EditorState {
         if let document, let line = MeasureSpecList.specLine(for: layer, in: document) {
             pasteboard.setString(line, forType: .string)
         }
+        // A picked frame is what Export narrows to, so it also travels as the
+        // SVG Export writes for it: pick the icon, ⌘C, paste the shapes.
+        if layer.isFrame, let frame = document?.frameDocument(id: id),
+           let svg = clipboardSVG(of: frame, background: copyBackground) {
+            pasteboard.setString(svg, forType: Self.svgPasteboardType)
+        }
         return true
+    }
+
+    /// What a copy does with the canvas a drawing was made on, as Copy Merged
+    /// does it (`copyCompositeToClipboard`).
+    private var copyBackground: SVGExport.Background {
+        Experiments.shared.copyLeavesTheCanvasOutEnabled ? .drop : .keep
     }
 
     /// The picked layer's pixels inside the marquee, and nothing from the
@@ -133,15 +162,18 @@ extension EditorState {
         guard !frame.isNull, frame.width >= 1, frame.height >= 1,
               let composite = previewRenderer.rasterize(region: canvas, of: document, store: store),
               let clipped = RegionOps.extracted(composite, path: path) else { return false }
+        // The whole canvas, with nothing marqueed, is the whole drawing: it
+        // carries its SVG, canvas and all, the same picture the PNG is.
+        let svg = selection == nil ? clipboardSVG(of: document, background: .keep) : nil
         return put(Layer(name: "Copied Selection", content: .image(ImageRef(pixelSize: frame.size)),
                          frame: frame),
-                   picture: clipped)
+                   picture: clipped, svg: svg)
     }
 
     /// A copied piece of picture on the pasteboard: the Photonz payload first,
     /// so ⌘V lands it back as a layer over the spot it came from, then PNG and
     /// TIFF so it pastes into other apps as the picture it is.
-    private func put(_ layer: Layer, picture image: CGImage) -> Bool {
+    private func put(_ layer: Layer, picture image: CGImage, svg: String? = nil) -> Bool {
         guard let png = ImageCodec.encode(image, format: .png),
               let payload = try? JSONEncoder().encode(LayerTransfer(layer: layer, imageData: png))
         else { return false }
@@ -152,6 +184,7 @@ extension EditorState {
         // TIFF for the long tail of AppKit apps that ask for nothing else.
         let tiffSource = NSImage(cgImage: image, size: NSSize(width: image.width, height: image.height))
         if let tiff = tiffSource.tiffRepresentation { pasteboard.setData(tiff, forType: .tiff) }
+        if let svg { pasteboard.setString(svg, forType: Self.svgPasteboardType) }
         return true
     }
 

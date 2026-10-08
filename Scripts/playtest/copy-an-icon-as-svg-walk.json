@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/copy-an-icon-as-svg-walk",
+  "seed": "The icon epic promises that copying an icon puts the same clean SVG Export writes on the clipboard, so a paste into an app that reads shapes gets shapes. The walk makes a 24 unit icon frame at Next defaults, draws a circle in it, picks the frame and presses Command C, then copies everything with Shift Command C and holds that SVG to the file Export writes, byte for byte and in whole units; last it copies a screenshot, which must carry no SVG at all.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [792, 542], "to": [806, 556] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "copy-svg-1-icon-drawn" },
+
+    { "do": "click", "at": [810, 560] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "copy-svg-2-frame-picked" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "3-the-frame-copied", "svg": true },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "writeSVG", "name": "icon" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "4-everything-copied", "behind": "empty", "svgSameAs": "icon" },
+    { "do": "snapshot", "name": "copy-svg-4-copied" },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "5-a-screenshot-copies-a-picture", "behind": "painted", "svg": false }
+  ]
+}

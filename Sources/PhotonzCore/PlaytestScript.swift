@@ -2263,6 +2263,18 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
 /// Read off the four corners of the file itself, because that is where a
 /// canvas that should have been left out shows up and where a drawing never
 /// reaches.
+/// What a `readClipboard` step claims about the drawing as SVG on the
+/// clipboard: whether it is there, and which `writeSVG` file it must match.
+public struct ClipboardSVGClaim: Sendable, Equatable {
+    public var carries: Bool
+    public var sameAs: String?
+
+    public init(carries: Bool, sameAs: String? = nil) {
+        self.carries = carries
+        self.sameAs = sameAs
+    }
+}
+
 public enum PictureCorners: String, Sendable, Equatable, CaseIterable {
     /// Every corner see-through, so the icon sits on any colour.
     case empty
@@ -3761,7 +3773,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that runs as long as the front editor's edit (the stretch Export would
     /// write), within one of the file's frames: the edit, not the recording
     /// it was cut from.
-    case readClipboard(stage: String, behind: PictureCorners?, movie: Bool = false)
+    ///
+    /// `svg` claims whether the copy carries the drawing as SVG
+    /// (`CompositeCopy.carriesSVG`); a carried one must also say every place
+    /// in whole units (`SVGWholeUnits`), and with `svgSameAs` it must be byte
+    /// for byte the file an earlier `writeSVG` step of that name wrote.
+    case readClipboard(stage: String, behind: PictureCorners?, movie: Bool = false,
+                       svg: ClipboardSVGClaim? = nil)
     /// Write the app's own menu bar to the log and to `menus-<stage>.json`:
     /// every menu, item, shortcut and enabled state, exactly as it reads on
     /// screen. `menu` narrows it to one top-level menu by title.
@@ -5266,10 +5284,20 @@ public enum PlaytestStep: Sendable, Equatable {
         case "clearClipboard":
             self = .clearClipboard
         case "readClipboard":
+            let carriesSVG = try f.optionalFlag("svg")
+            let svgSameAs = try f.optionalString("svgSameAs")
+            if carriesSVG == false, svgSameAs != nil {
+                throw PlaytestScriptError.invalidField(index: index, step: "readClipboard",
+                                                       field: "svgSameAs",
+                                                       reason: "names a file to match while svg claims there is none")
+            }
+            let svgClaim = carriesSVG != nil || svgSameAs != nil
+                ? ClipboardSVGClaim(carries: carriesSVG ?? true, sameAs: svgSameAs) : nil
             self = .readClipboard(stage: try f.string("stage"),
                                   behind: f.has("behind")
                                       ? try f.enumValue("behind", PictureCorners.self) : nil,
-                                  movie: try f.optionalFlag("movie") ?? false)
+                                  movie: try f.optionalFlag("movie") ?? false,
+                                  svg: svgClaim)
         case "menus":
             let choose = (try f.optionalString("choose"))?
                 .components(separatedBy: ">").map { $0.trimmingCharacters(in: .whitespaces) } ?? []

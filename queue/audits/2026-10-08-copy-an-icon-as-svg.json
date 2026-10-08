@@ -1,0 +1,27 @@
+{
+  "feature": "Copying an icon puts its SVG on the clipboard",
+  "epic": "icon-export",
+  "summary": "Copying a drawing now puts the same SVG Export writes for a web page on the clipboard, beside the picture. Pasting into a Chrome-based app hands it the shapes; pasting into a chat or TextEdit still gives the picture.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "On a blank canvas choose New Frame, pick 24 under Icons, click Add Frame.", "shot": "2026-10-08-copy-svg-icon-drawn-sc.png" },
+    { "do": "Press E for the ellipse tool and drag a circle inside the frame." },
+    { "do": "Click the frame inside, outside the circle, so the frame is picked, then press Command C.", "shot": "2026-10-08-copy-svg-frame-picked-sc.png" },
+    { "do": "Paste into a Chrome page that reads the clipboard: it is offered image/svg+xml, a 24 by 24 file with whole-unit numbers." },
+    { "do": "Press Escape, then Shift Command C, and paste into TextEdit (rich): the picture lands, as before." },
+    { "do": "Open a screenshot and press Shift Command C: the clipboard holds the picture only, with no SVG." }
+  ],
+  "evaluate": [
+    "Does Command C on a picked icon frame feel like the natural way to copy an icon?",
+    "Is it right that Shift Command C on a whole canvas copies a 1600 by 1100 SVG with the icon placed where it sits, rather than just the icon?",
+    "Would you expect Figma to take the shapes on paste from this clipboard? It could not be tried here without pasting into a real web service."
+  ],
+  "rough": [
+    "No mock covers the clipboard, so there is no side by side; the shot is the canvas at the moment of copying.",
+    "A code editor, a plain text box and Safari never see the SVG file type, so pasting there gives nothing. Putting the code on as text would take the slot the measurement list uses: decision card an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c, task an-icon-svg-pastes-into-a-code-editor.",
+    "Command C on a single picked shape (the circle alone) carries no SVG: only a frame, or the whole drawing, is something Export writes. The circle copies as a layer, as before.",
+    "A picked frame copies with its own white surface in the SVG, exactly as Export writes that frame; whether an icon should keep that white is the open card on task copying-an-icon-carries-the-white-canvas-the-exp.",
+    "Figma, VS Code and the real TextEdit app were not driven by hand: Figma is a web service, and driving the other two would have taken the keyboard from whoever is at the Mac. Chrome 153, WebKit and TextEdit's own text view were measured instead (docs/design/references/svg-copy-check)."
+  ]
+}

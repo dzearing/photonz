@@ -110,8 +110,8 @@ struct VideoClipboardCopyTests {
                      { "do": "action", "action": "copyAsGIF" },
                      { "do": "action", "action": "awaitCopy" } ] }
         """.utf8))
-        guard case .readClipboard(_, _, let claimed) = script.steps[0],
-              case .readClipboard(_, _, let unclaimed) = script.steps[1],
+        guard case .readClipboard(_, _, let claimed, _) = script.steps[0],
+              case .readClipboard(_, _, let unclaimed, _) = script.steps[1],
               case .action(let video) = script.steps[2],
               case .action(let gif) = script.steps[3],
               case .action(let wait) = script.steps[4] else {

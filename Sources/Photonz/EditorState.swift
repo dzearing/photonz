@@ -3531,6 +3531,12 @@ final class EditorState {
     /// default, so the icon you paste and the icon you save agree. A
     /// screenshot or a photograph is never a blank canvas and copies whole.
     /// `background: .keep` is the copy WITH the canvas.
+    ///
+    /// Next (`next-export-svg`): a drawing also goes on as the SVG the Export
+    /// sheet writes for a web page, under the system's SVG type and beside the
+    /// picture (`CompositeCopy.carriesSVG`), so a paste into an app that reads
+    /// shapes gets the shapes. It leaves the canvas out exactly when the
+    /// picture does.
     func copyCompositeToClipboard(background: SVGExport.Background? = nil) {
         let background = background
             ?? (Experiments.shared.copyLeavesTheCanvasOutEnabled ? .drop : .keep)
@@ -3540,9 +3546,10 @@ final class EditorState {
         let carriesSpecList = Experiments.shared.measurePanelEnabled
         let specList = carriesSpecList
             ? CompositeCopy.specListText(document: document, name: specListName) : nil
+        let svg = clipboardSVG(of: document, background: background)
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
-        for representation in CompositeCopy.representations(specList: specList) {
+        for representation in CompositeCopy.representations(specList: specList, svg: svg) {
             switch representation {
             case .png:
                 if let png = ImageCodec.encode(image, format: .png) {
@@ -3553,6 +3560,8 @@ final class EditorState {
                 if let tiff = nsImage.tiffRepresentation {
                     pasteboard.setData(tiff, forType: .tiff)
                 }
+            case .svg(let svg):
+                pasteboard.setString(svg, forType: Self.svgPasteboardType)
             case .text(let text):
                 pasteboard.setString(text, forType: .string)
             }

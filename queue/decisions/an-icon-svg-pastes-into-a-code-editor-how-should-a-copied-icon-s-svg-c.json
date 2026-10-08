@@ -1,0 +1,52 @@
+{
+  "id": "an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c",
+  "taskId": "an-icon-svg-pastes-into-a-code-editor",
+  "question": "How should a copied icon's SVG code reach a code editor or a plain text box?",
+  "context": "Copy now puts a drawing on the clipboard as a picture and as an SVG file. Chrome-based apps can read the SVG file; code editors, plain text boxes and Safari read only text, and the text slot already carries the measurement list when a drawing has measurements.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Copy Merged also pastes the SVG code as text",
+      "summary": "Shift Command C on a drawing puts the SVG code on as text too. Pasting into a code editor or any plain text box gives the code. A drawing with measurements on it pastes the measurement list there instead, as today.",
+      "pros": [
+        "No new command to learn",
+        "One copy pastes the picture into a chat, shapes into Figma and code into an editor"
+      ],
+      "cons": [
+        "Every plain text box gets the code, including a plain chat box or a terminal",
+        "A drawing with measurements never pastes its code anywhere"
+      ],
+      "mitigation": "Screenshots and photos carry no SVG, so a redline on a screenshot pastes exactly as today."
+    },
+    {
+      "id": "b",
+      "label": "A Copy SVG row in Edit and in right-click",
+      "summary": "A new Copy SVG row sits under Copy Merged in Edit and in the right-click menu of a layer, a frame and the canvas. It puts the SVG code on as text. Copy and Copy Merged keep the text slot for the measurement list.",
+      "pros": [
+        "What Photoshop does (right-click a layer, Copy SVG) and what Figma does (Copy as SVG)",
+        "Nothing changes in a chat or a plain text box unless you ask for code"
+      ],
+      "cons": [
+        "One more row to find, and no key for it"
+      ],
+      "mitigation": "It sits right under Copy Merged and on the right-click of the thing it copies, where a Photoshop user looks first."
+    },
+    {
+      "id": "c",
+      "label": "Leave it: code editors use Export",
+      "summary": "Copy keeps the picture and the SVG file type only. To get the code into an editor, export the SVG and open the file.",
+      "pros": [
+        "Nothing new in any menu",
+        "Plain text boxes never change"
+      ],
+      "cons": [
+        "The icon epic promise of copying the SVG holds only for Chrome-based apps"
+      ],
+      "mitigation": "Export already writes the identical file.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-10-08T19:29:54.306Z"
+}
