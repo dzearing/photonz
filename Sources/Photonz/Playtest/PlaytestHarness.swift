@@ -2761,6 +2761,13 @@ private final class Run {
             note(number, step.name, verdict, state: margins)
 
         case .labelsWhole(let stage, let wanted, let reportOnly):
+            // The walk's own errand: a picture of the whole window and every
+            // word read off it, about 700ms on the main thread on a video.
+            // Left out of the meter, or the next wait reads it as the app's:
+            // until 2026-10-08 `an-editing-session-walk` read a 770ms freeze
+            // "after the b-roll drop" that was this step, three runs of three.
+            let readingBegan = CACurrentMediaTime()
+            defer { MainThreadMeter.shared.exclude(CACurrentMediaTime() - readingBegan) }
             let window = try requireWindow()
             guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
             // A pane of Liquid Glass stops everything round it drawing into
@@ -17433,6 +17440,13 @@ extension Run {
             return "\(url.lastPathComponent) held over \(track) at \(seconds)s, saying \"\(sentence)\"\(held)"
         }
         let before = document.allLayers.count
+        // Letting go is the press a person makes, so it is timed like one:
+        // the walk's markers down and the meter zeroed here, so the wait
+        // after a drop reads what the drop cost and nothing the walk did
+        // before it (`labelsWhole` above it in `an-editing-session-walk`).
+        await takeTheMarkersDownForATimedStep()
+        MainThreadMeter.shared.install()
+        MainThreadMeter.shared.reset()
         let took = taker.performDragOperation(info)
         guard took else {
             throw Failure(description: "the timeline would not take \(url.lastPathComponent), "
@@ -17445,7 +17459,8 @@ extension Run {
         }
         return "\(url.lastPathComponent) let go over \(track) at \(seconds)s (\(insert ? "⌘ held" : "no keys")), "
             + "saying \"\(sentence)\"\(held); the document now holds "
-            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before)"
+            + "\(editor.document?.allLayers.count ?? 0) layers, was \(before); \(MainThreadMeter.shared.report)"
+            + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
     }
 
     /// Carries a title tile off the Library shelf onto a track at a moment,
