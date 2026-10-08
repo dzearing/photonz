@@ -1,0 +1,50 @@
+{
+  "feature": "Make Component and a panel menu on the Layers header",
+  "epic": "ui-components",
+  "summary": "The Layers header now carries a layer count, a Make Component button and a panel menu (Group Selection, Make Component, Hide This Panel), as both component mocks draw it. Picking a group and pressing the button does exactly what Option Command K does.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/layers-header-make-component-walk.json",
+  "switched": {},
+  "try": [
+    {
+      "do": "File > New, Blank canvas. Draw a rectangle and an ellipse."
+    },
+    {
+      "do": "Select both and press Command G. The Layers header reads 4 and its component button lights up.",
+      "shot": "2026-10-08-layers-header-1-lit.png"
+    },
+    {
+      "do": "Press the four-diamond button at the right end of the Layers header.",
+      "shot": "2026-10-08-layers-header-2-component.png"
+    },
+    {
+      "do": "Check the row now reads Component, Copy with the violet mark, the canvas shows the badge, and the Library opened on the new tile."
+    },
+    {
+      "do": "Press Command Z. It is a plain group again and the count is back to 4."
+    },
+    {
+      "do": "Click the three dots on the Layers header and read the three rows and their keys.",
+      "shot": "2026-10-08-layers-header-4-menu.png"
+    },
+    {
+      "do": "Switch to the light scheme and look at the header again.",
+      "shot": "2026-10-08-layers-header-3-light.png"
+    },
+    {
+      "do": "Pick Hide This Panel from the three dots. Option Command L brings the panel back."
+    }
+  ],
+  "evaluate": [
+    "Is the four-diamond button on the header the place you would reach for to make a component, after picking a group?",
+    "Does the count beside LAYERS mean what you expect: every layer, the contents of groups included?",
+    "Is it clear enough when the button is dimmed (nothing picked, or a copy picked) that it cannot act right now?",
+    "Is Hide This Panel worth having in this menu when the title bar button and Option Command L already do it?"
+  ],
+  "rough": [
+    "Side by side with component-configure-wt.html (#gLayersH, picture 2026-10-08-layers-header-mock-configure.png) and components.html (#layerMenu, 2026-10-08-layers-header-mock-components.png): title, count chip, button and dots sit in the mock's order and match it in dark and light (crops in 2026-10-08-layers-header-crops.png).",
+    "The count chip matches the mock (#layerCount); it counts every layer the list could show, groups' contents included, the same total the find field counts against.",
+    "The button's icon matches the mock's line icon: the app's four-diamond component glyph in outline, in the header's ink.",
+    "The menu rows match the mock's #layerMenu: its three icons, its keys and a divider above Hide This Panel.",
+    "Make Component from this button behaves exactly as Option Command K does, including opening the Library on the new tile with its name ready to type."
+  ]
+}

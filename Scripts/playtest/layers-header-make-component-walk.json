@@ -1,0 +1,226 @@
+{
+  "out": "/tmp/photonz-playtest/layers-header-make-component-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1360,
+      "height": 1000,
+      "comment": "Next at its defaults, no flags: draw two shapes, group them (the Layer menu's Group), press the component button on the Layers header (real mouse events at the button), and check the group became a component; undo takes it back. Then read the header's panel menu and hide the panel from it."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Make Component",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Layers Menu",
+      "present": true
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        240,
+        200
+      ],
+      "to": [
+        560,
+        360
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        640,
+        220
+      ],
+      "to": [
+        860,
+        400
+      ],
+      "steps": 8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        180,
+        150
+      ],
+      "to": [
+        920,
+        460
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "group",
+      "comment": "The menu bar is frozen for a probe in the background, so Command G is pressed through the same command the Layer menu runs."
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Layers Count",
+      "reads": "4"
+    },
+    {
+      "do": "describe",
+      "stage": "1-grouped",
+      "note": "two shapes in one group, picked; the Layers header reads 4 and its component button is lit"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-grouped"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Layers Menu",
+      "comment": "Read without opening: three rows, one divider above Hide This Panel, Make Component lit for a picked group."
+    },
+    {
+      "do": "press",
+      "control": "Make Component"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expect",
+      "field": "Layers Count",
+      "reads": "2"
+    },
+    {
+      "do": "expect",
+      "control": "Edit Original",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-component",
+      "note": "the header button did what Option Command K does: the group is a copy of a new component, wearing the violet mark in Layers and on the canvas, and the Library opened on its tile"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-component"
+    },
+    {
+      "do": "render",
+      "name": "2-component-doc"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Layers Count",
+      "reads": "4"
+    },
+    {
+      "do": "expect",
+      "control": "Edit Original",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "3-undone",
+      "note": "one undo: a plain group again, the count back to 4"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-undone"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "3b-light",
+      "note": "the same header in the light scheme: count, lit component button and the three dots all legible"
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Layers Menu",
+      "choose": "Hide This Panel"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Layers Menu",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "4-hidden",
+      "note": "Hide This Panel put the whole panel away, as View > Show Panel would"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-hidden"
+    }
+  ]
+}

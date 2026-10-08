@@ -1193,6 +1193,11 @@ struct InspectorPanel: View {
         guard Experiments.shared.dockHeadersEnabled else { return nil }
         let text: String?
         switch id {
+        case .layers:
+            // Every layer the list could show, the total the find field
+            // counts against (`component-configure-wt.html`, `#layerCount`).
+            text = LayersPanelHeader.countChip(layerCount: editorState.searchableLayerCount)
+            return text.map { .init(text: $0, field: "Layers Count") }
         case .keys:
             text = DockGroupHeader.chip(editorState.keyLayerKind)
             return text.map { .init(text: $0, field: "Properties Kind") }
@@ -1218,6 +1223,10 @@ struct InspectorPanel: View {
     /// collapsed Library still says what it is set to.
     private func sectionFurniture(_ id: InspectorSectionID) -> AnyView? {
         switch id {
+        case .layers where Experiments.shared.dockHeadersEnabled:
+            // The mock's Make Component button and panel menu
+            // (`component-configure-wt.html`, `#gLayersH`).
+            return AnyView(LayersHeaderControls())
         case .effects where Experiments.shared.shapePartsEnabled:
             // The plus that makes Effects a list you add to. It rides the
             // HEADER rather than the foot of the list, because the dock gives a
