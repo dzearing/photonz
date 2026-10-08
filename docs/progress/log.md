@@ -20909,3 +20909,10 @@ Next: the first editor window's ~200 ms first build
 - App: `closeGap` raises the pill (beep kept); Shift Delete on a refused gap now answers too instead of falling through silently.
 - Walk `a-gap-that-cannot-close-says-why-walk` (Next defaults). Audit `queue/audits/2026-10-08-gap-refusal.json`.
 - Next: nothing queued from this; the right-click row's dimming is not photographed by any walk.
+
+## 2026-10-08 — A screen can hug what it holds
+
+- `GroupLayout.screenHugsWidth/Height` (written only when on, so saved screens open fixed), `screenHugs(horizontal:)` (needs an arrangement), `hugs(onAScreen:horizontal:)`, `setHugging(...)`. `GroupFlow.Bounds.of` opens a hugged screen axis unless the screen is empty; `GroupFlow.flowing` sets the screen's frame size from `GroupFlow.size`. `Layer.resized(to:)` turns a hugged screen axis Fixed on a hand or typed size.
+- `ContentsSelection.offersHug`; `ArrangementInspector` shows Width/Height on arranged screens with no limits chevron and no clip row. Spread and Wrap are not offered on a hugging screen.
+- `ScreenHugTests` (13). Walk `a-screen-hugs-what-it-holds-walk` (Next defaults): 400x300 empty holds, Button 78x36, + Card 260x219, delete back to 78x36, undo, Fixed + H 400. Audit `queue/audits/2026-10-08-screen-hug.json`.
+- Open question to the user: the mock's one Frame size row (Hug/Narrow/Wide) vs Width/Height rows, card on `the-size-rows-in-the-layout-section-match-the-au`.
