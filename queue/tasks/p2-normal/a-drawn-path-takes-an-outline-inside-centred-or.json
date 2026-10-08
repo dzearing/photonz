@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T13:39:41.872Z",
-  "updated": "2026-10-08T18:53:20.095Z",
+  "updated": "2026-10-08T18:53:25.376Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Manager review 2026-10-08 of icon-svg. Model: PathContent.strokePosition (Sources/PhotonzCore, BorderPosition .inside/.center/.outside with displayName Inside/Center/Outside), drawn through BorderPosition.swift around line 103 (strokePosition.outset); annotation defaults set it in AnnotationStyles.swift. Nothing in Sources/Photonz sets it for a path (grep strokePosition). Reuse the picker the Border effect already uses: EffectsListInspector.swift BorderPositionRow (around 333-440) and EditorState+ColorStyles.swift setBorderEffectPosition. Mock: docs/design/mocks/pages/icon-draw-wt.html around line 421 (Stroke section: Width, Caps, Align Center). Line style pickers: PathLineStylePickers.swift. The mock draws it, so no card. Check SVG export handles inside/outside (SVG has no stroke alignment; an inside stroke is usually written as a clip or a doubled width with a clip).",
@@ -53,11 +53,16 @@
     {
       "t": "2026-10-08T18:53:20.094Z",
       "note": "Mock differences outside this task (Width vs Thickness, Caps vs Ends, Stroke section vs Outline row) filed as p1 a-drawn-path-s-outline-settings-read-like-the-ic. Left rough, no task: at the default 4pt on a large canvas the move between Center and Outside is subtle to see; that is the weight, not the control."
+    },
+    {
+      "t": "2026-10-08T18:53:25.374Z",
+      "note": "Align dropdown (Inside/Center/Outside) under a drawn path's outline settings, after Corners (PathLineStylePickers.swift PathStrokeAlignRow; core setPathStrokePosition + alignReading in PathLineStyle.swift). Closed paths only; open paths read Center with Inside/Outside dimmed and the reason in the tip. One undo step across several paths. Verified: PathStrokeAlignTests (incl. SVG words), full suite 11876 green, path-outline-align-walk and path-outline-align-click-walk green at Next defaults with real captures. Audit queue/audits/2026-10-08-path-outline-align.json. Rest of the mock Stroke section filed as p1 a-drawn-path-s-outline-settings-read-like-the-ic."
     }
   ],
   "started": "2026-10-08T18:28:48.002Z",
   "walks": [
     "path-outline-align-walk",
     "path-outline-align-click-walk"
-  ]
+  ],
+  "completed": "2026-10-08T18:53:25.375Z"
 }
