@@ -10038,3 +10038,28 @@
 {"t":"2026-10-08T04:32:08.998Z","ev":"task_walks","id":"a-sound-s-trim-grip-trims-wherever-you-grab-it","walks":["a-sound-s-trim-grip-trims-from-its-middle-walk"]}
 {"t":"2026-10-08T04:43:28.669Z","ev":"task_note","id":"a-sound-s-trim-grip-trims-wherever-you-grab-it"}
 {"t":"2026-10-08T04:43:32.991Z","ev":"task_done","id":"a-sound-s-trim-grip-trims-wherever-you-grab-it","from":"in_progress","note":"Level line now drawn under the trim grips in ClipPiecesBar, so a press anywhere on a sound's grip trims; line still drags everywhere else. Proven by a-sound-s-trim-grip-trims-from-its-middle-walk at Next defaults (0 dB, -15.9 dB, +6 dB), six neighbouring sound walks green, Scripts/test.sh green. Audit queue/audits/2026-10-07-sound-trim-grip.json."}
+{"t":"2026-10-08T04:58:18.146Z","ev":"slice_pass","walks":39,"passed":39,"failed":0,"seconds":723,"of":800,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T04:58:18.313Z","ev":"task_started","id":"a-sound-clip-on-the-timeline-wears-its-file-name","title":"A sound clip on the timeline wears the background the user picks between the two mocks","priority":"p2-normal"}
+{"t":"2026-10-08T05:05:53.618Z","ev":"decision_opened","id":"a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound","taskId":"a-sound-clip-on-the-timeline-wears-its-file-name","question":"Which background should a sound clip wear on the timeline?"}
+{"t":"2026-10-08T05:11:57.085Z","ev":"task_walks","id":"a-sound-clip-on-the-timeline-wears-its-file-name","walks":["sound-clip-ground-green-walk","sound-clip-ground-panel-walk"]}
+{"t":"2026-10-08T05:11:57.144Z","ev":"task_note","id":"a-sound-clip-on-the-timeline-wears-its-file-name"}
+{"t":"2026-10-08T05:12:03.785Z","ev":"task_blocked","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":"in_progress","note":"Both looks built (audio mock's behind next-sound-on-the-panel-ground, off) and photographed in dark and light; waiting on which background the user picks (a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound)."}
+{"t":"2026-10-08T05:24:13.154Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":578,"of":802,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T05:24:13.321Z","ev":"task_started","id":"a-gap-on-a-track-looks-like-an-empty-slot-dashed","title":"A gap on a track looks like an empty slot, dashed and hatched as the mock draws it","priority":"p2-normal"}
+{"t":"2026-10-08T05:40:11.896Z","ev":"task_walks","id":"a-gap-on-a-track-looks-like-an-empty-slot-dashed","walks":["a-gap-is-drawn-as-a-slot-walk"]}
+{"t":"2026-10-08T05:40:25.324Z","ev":"task_note","id":"a-gap-on-a-track-looks-like-an-empty-slot-dashed"}
+{"t":"2026-10-08T05:40:36.867Z","ev":"task_done","id":"a-gap-on-a-track-looks-like-an-empty-slot-dashed","from":"in_progress","note":"Each gap on a video or audio track is drawn as the mock's #theGap: dashed edge, 5pt diagonal panel-2 hatch, clip height and corner (TimelineGapSlot in TimelineLaneDrop.swift, drawn in TimelineTrackRows.lane). Picked gap keeps the range band on top; Captions draw none. Verified by walk a-gap-is-drawn-as-a-slot-walk at Next defaults (5 real captures, dark and light), side by side with the mock frame in audit 2026-10-07-gap-slot.json; Scripts/test.sh green. Commit 9db4ed6b."}
+{"t":"2026-10-08T05:51:46.846Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":512,"of":803,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-08T06:00:57.194Z","ev":"task_created","id":"a-full-screen-recording-keeps-up-as-it-plays-acr","priority":"p1-high","title":"A full-screen recording keeps up as it plays across a cut"}
+{"t":"2026-10-08T06:01:14.986Z","ev":"task_created","id":"lifting-a-stretch-keeps-both-halves-as-pieces-of","priority":"p2-normal","title":"Lifting a stretch keeps both halves as pieces of one clip"}
+{"t":"2026-10-08T06:01:27.849Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-08T06:02:18.289Z","ev":"task_created","id":"playing-backwards-with-j-keeps-up-on-a-full-scre","priority":"p2-normal","title":"Playing backwards with J keeps up on a full-screen recording"}
+{"t":"2026-10-08T06:07:05.588Z","ev":"task_created","id":"the-export-sheet-opens-without-a-stall","priority":"p2-normal","title":"The Export sheet opens without a stall"}
+{"t":"2026-10-08T06:08:44.470Z","ev":"task_created","id":"a-held-frame-on-the-timeline-looks-like-the-free","priority":"p1-high","title":"A held frame on the timeline looks like the freeze mock's Still clip"}
+{"t":"2026-10-08T06:10:03.816Z","ev":"task_resequenced","id":"a-full-screen-recording-keeps-up-as-it-plays-acr","from":530,"to":4}
+{"t":"2026-10-08T06:10:03.876Z","ev":"task_resequenced","id":"a-held-frame-on-the-timeline-looks-like-the-free","from":540,"to":8}
+{"t":"2026-10-08T06:10:03.935Z","ev":"task_resequenced","id":"lifting-a-stretch-keeps-both-halves-as-pieces-of","from":3790,"to":2}
+{"t":"2026-10-08T06:10:03.999Z","ev":"task_resequenced","id":"the-export-sheet-opens-without-a-stall","from":3810,"to":7}
+{"t":"2026-10-08T06:10:04.059Z","ev":"task_resequenced","id":"playing-backwards-with-j-keeps-up-on-a-full-scre","from":3800,"to":8}
+{"t":"2026-10-08T06:10:04.177Z","ev":"task_walks","id":"a-full-screen-recording-keeps-up-as-it-plays-acr","walks":["playing-a-recording-never-blinks-walk"]}
+{"t":"2026-10-08T06:11:09.335Z","ev":"manager","filed":5,"readyBefore":2,"readyAfter":6,"report":"queue/manager/2026-10-07-2310.md"}

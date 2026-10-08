@@ -1,0 +1,35 @@
+{
+  "id": "lifting-a-stretch-keeps-both-halves-as-pieces-of",
+  "title": "Lifting a stretch keeps both halves as pieces of one clip",
+  "goal": "Lift (semicolon) takes a marked stretch out and leaves a gap, as in Premiere, but the half after the gap comes back named Sample Talk copy and the app treats it as a different clip. Command K and Extract keep both sides as pieces of the same clip with the same name. An editor sees a clip they never copied, and anything that works on a clip's pieces (the cut's names, joining, the clip panel) stops seeing the two halves as one. Lift should leave two pieces of the one clip, named as the clip.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T06:01:14.982Z",
+  "updated": "2026-10-08T06:10:03.934Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 23:00 by the manager, scratch walk /tmp/mgr-walks/lift.json: openSampleTalk, videoPause, tool select, videoSeekQuarter, key i, videoSeekMiddle, key o, key ';', wait 0.6, expectClip Sample Talk pieces 2 -> FAILED as quoted. With apostrophe (Extract) instead, Sample Talk is in 2 pieces, 0.00s to 12.94s, correct. The ' copy' suffix comes from Layer duplication (Sources/PhotonzCore/Layer.swift:1833, name + \" copy\"); Lift probably duplicates the layer for the tail instead of splitting it the way Command K does (ClipPieces.swift). Rough line from audit 2026-10-07-gap-close.json ('The second half of a lifted clip is named Sample Talk copy, not Sample Talk; that comes from Lift').",
+  "acceptance": [
+    "Open the sample talk at Next defaults, I at a quarter, O at the middle, semicolon: expectClip Sample Talk pieces 2 passes, and no clip is named Sample Talk copy (today: 'Sample Talk is in 1 pieces, not 2; the timeline: Sample Talk copy on V1 8.63s to 17.25s; Sample Talk on V1 0.00s to 4.31s')",
+    "The gap stays where the stretch was; undo puts the clip back whole",
+    "Lift across several tracks (a range over V1 and its sound) leaves pieces on each, same rule",
+    "Check the other edits that split a clip in two (Lift from the range right-click menu, a range Delete without ripple, paste over the middle of a clip) and give them the same rule, or note in the log why one differs",
+    "A walk covers it (extend an existing lift walk if one exists); Scripts/test.sh green, with a PhotonzCore test first",
+    "Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T06:01:14.984Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T06:10:03.933Z",
+      "note": "seq 3790 -> 2"
+    }
+  ]
+}

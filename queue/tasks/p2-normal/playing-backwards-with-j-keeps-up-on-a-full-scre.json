@@ -1,0 +1,36 @@
+{
+  "id": "playing-backwards-with-j-keeps-up-on-a-full-scre",
+  "title": "Playing backwards with J keeps up on a full-screen recording",
+  "goal": "J plays a recording backwards, the way an editor shuttles back to find a spot. Forward playback was made fast on full-screen Retina recordings today, but backwards still reads one frame at a time the old way, so the picture probably sticks and jumps while the playhead runs. Measure it first, then make backward play keep up as forward play does. If the measure shows it already keeps up, say so in the log and close the task.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T06:02:18.285Z",
+  "updated": "2026-10-08T06:10:04.058Z",
+  "deps": [
+    "a-full-screen-recording-keeps-up-as-it-plays-acr"
+  ],
+  "blockedBy": [],
+  "notes": "Not yet reproduced: the step only plays forward (checkPlaybackNeverBlank in Sources/Photonz/Playtest/PlaytestHarness.swift ~9120 calls editor.playDocument from the start), so nobody has measured backward play. Source: audit 2026-10-07-retina-playback-keeps-up.json rough 2 ('Playing backwards (J) still reads frame by frame, the old slow way, so a full-screen recording played backwards can still lag') and commit 592bca7d ('frames across a cut and backward play still use the lanes', about 15 frames a second on this fixture). Forward fix: MoviePlayPass (Sources/PhotonzCore/MoviePlayPass.swift) plus Sources/Photonz/MovieFrames.swift. A backward pass could read a window of frames behind the playhead in one AVAssetReader pass and hand them out in reverse. Runs after a-full-screen-recording-keeps-up-as-it-plays-acr, which touches the same frame supply.",
+  "acceptance": [
+    "The walk step that watches playback (expectPlaybackNeverBlank) can watch it play backwards (a direction or rate option), so it can be measured; PhotonzCore parse test first",
+    "Measured on Scripts/playtest/fixtures/Full screen Retina recording 3456x2234.mp4 at Next defaults: End, then J, watched 2.5 s at 20 looks. Before and after numbers in the log",
+    "After: no more than 2 looks late and none more than 2 frames behind, the same bar as forward play (PlaybackKeepsUp); J J (double speed back) stays smooth or degrades without going blank",
+    "A walk keeps it covered in the rotating check; Scripts/test.sh green; perf note in the commit",
+    "Audit written under queue/audits/",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T06:02:18.287Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T06:10:04.057Z",
+      "note": "seq 3800 -> 8"
+    }
+  ]
+}

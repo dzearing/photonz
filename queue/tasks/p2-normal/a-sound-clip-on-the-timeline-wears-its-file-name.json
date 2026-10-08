@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 3770,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T02:14:36.504Z",
-  "updated": "2026-10-08T02:14:36.507Z",
+  "updated": "2026-10-08T05:12:03.784Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-10-07). App: ClipPiecesBar.fill returns kind.fill, VideoKit ClipKind.audio fill is the DS .clip.aud gradient #26463A to #1C3A30 (photonz-ds.css:927, used by video.html). video-audio.html ~44 .lane.alane background var(--panel-2) with a clip rect fill rgba(255,255,255,.03) stroke col at .35 (~500), and .cliptag (~65, left 8 top 6, 9px 640 white on black .4). The name half of this was settled in the same task: a sound on its own track now wears the mock's .cliptag (ClipPiecesBar.soundTag), and a linked sound carries no words on purpose. Searched: cliptag, sound clip name, lane ground, clip.aud (--all); nothing covered it.",
@@ -22,7 +22,27 @@
     {
       "t": "2026-10-08T02:14:36.506Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T04:58:18.305Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T05:11:57.083Z",
+      "note": "walks none -> sound-clip-ground-green-walk, sound-clip-ground-panel-walk"
+    },
+    {
+      "t": "2026-10-08T05:11:57.142Z",
+      "note": "Built the audio mock's look (panel colour + 1pt edge in the track colour at .35, no lit top line) behind next-sound-on-the-panel-ground, off by default so the green stays until the user picks (ClipPiecesBar.soundOnThePanelGround, test in ExperimentsTests). Walks sound-clip-ground-green-walk / -panel-walk photograph talk sample + sample music in dark and light; crops and the mock's lanes are on the card's brief. If A wins: turn the flag on by default (or fold it in), update the test, ship an audit beside video-audio.html. Full suite green (11778)."
+    },
+    {
+      "t": "2026-10-08T05:12:03.781Z",
+      "note": "Both looks built (audio mock's behind next-sound-on-the-panel-ground, off) and photographed in dark and light; waiting on which background the user picks (a-sound-clip-on-the-timeline-wears-its-file-name-which-background-should-a-sound)."
     }
   ],
-  "walks": []
+  "walks": [
+    "sound-clip-ground-green-walk",
+    "sound-clip-ground-panel-walk"
+  ],
+  "started": "2026-10-08T04:58:18.304Z"
 }

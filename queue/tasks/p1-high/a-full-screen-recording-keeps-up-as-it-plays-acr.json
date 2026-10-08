@@ -1,0 +1,41 @@
+{
+  "id": "a-full-screen-recording-keeps-up-as-it-plays-acr",
+  "title": "A full-screen recording keeps up as it plays across a cut",
+  "goal": "After you cut a full-screen Retina recording down, playing it back sticks for most of a second at every cut: the sound goes on and the picture freezes, then jumps. That is the whole focus workflow, cutting five minutes to ninety seconds, so every cut in the edit stutters. Make the picture on the far side of a cut, and across a dissolve between two parts of one recording, arrive on time, the way plain forward playback now does.",
+  "epic": "video-editing",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T06:00:57.190Z",
+  "updated": "2026-10-08T06:10:04.176Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-07 22:59 by the manager, scratch walk /tmp/mgr-walks/cutplay.json: open the Retina fixture, videoPause, select tool, videoSeekQuarter + command K, videoSeekMiddle + command K, delete, then expectPlaybackNeverBlank seconds 2.5 moments 20. Run 1: 'the picture fell behind the playhead at 4 of 20 looks (8, 9, 10, 11), at most 2 may, and was up to 27 frame(s) behind'. Run 2: same looks, up to 26 frames. Cause named by commit 592bca7d: forward play reads each recording in one AVAssetReader pass from the playhead (MoviePlayPass, Sources/PhotonzCore/MoviePlayPass.swift; Sources/Photonz/MovieFrames.swift) but 'frames across a cut and backward play still use the lanes', which manage about 15 frames a second on this fixture. Rough line from audit 2026-10-07-retina-playback-keeps-up.json. Likely shape: open the next piece's play pass ahead of the cut (the piece list is known), so the far side is read before the playhead reaches it. Backward play is a separate task.",
+  "acceptance": [
+    "Open Scripts/playtest/fixtures/Full screen Retina recording 3456x2234.mp4 at Next defaults, Command K at a quarter and at the middle, Delete the middle piece, play from the start: expectPlaybackNeverBlank (2.5 s, 20 looks) passes, no more than 2 looks late and none more than 2 frames behind (today: looks 8 to 11 late, up to 27 frames behind, two runs out of two)",
+    "The same with a cross dissolve on that cut keeps up too",
+    "A new walk (or a step added to playing-a-recording-never-blinks-walk) plays across a cut on the Retina fixture, so the rotating check keeps it honest",
+    "Forward playback without a cut still passes playing-a-recording-never-blinks-walk; Scripts/test.sh green; perf note in the commit (frame supply path)",
+    "Audit written under queue/audits/ with the before and after numbers",
+    "Anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T06:00:57.192Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-08T06:10:03.814Z",
+      "note": "seq 530 -> 4"
+    },
+    {
+      "t": "2026-10-08T06:10:04.175Z",
+      "note": "owns these walks: playing-a-recording-never-blinks-walk"
+    }
+  ],
+  "walks": [
+    "playing-a-recording-never-blinks-walk"
+  ]
+}

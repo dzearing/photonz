@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 3780,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T04:18:13.320Z",
-  "updated": "2026-10-08T04:18:18.813Z",
+  "updated": "2026-10-08T05:40:36.866Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building click-to-pick-a-gap (task a-gap-between-clips-closes-with-a-click-and-dele). Mock: docs/design/mocks/pages/video-cut-wt.html .gap style line 53, #theGap line 297. Gaps per track come from PhotonzDocument.gaps(onTrack:) (Sources/PhotonzCore/TimelineGap.swift); the lane already lays a hit area over each gap in TimelineTrackRows.lane, so the drawing can sit in the same ForEach. Text-free, so no legibility risk.",
@@ -26,7 +26,27 @@
     {
       "t": "2026-10-08T04:18:18.812Z",
       "note": "walks a-gap-between-clips-closes-walk -> none"
+    },
+    {
+      "t": "2026-10-08T05:24:13.314Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T05:40:11.894Z",
+      "note": "walks none -> a-gap-is-drawn-as-a-slot-walk"
+    },
+    {
+      "t": "2026-10-08T05:40:25.322Z",
+      "note": "adversarial: Premiere leaves a gap bare and easy to miss, Final Cut fills it with a grey gap clip; the mock's dashed hatched slot sits between and reads as a hole without looking like a clip. Mock assumes nothing the app lacks. Built TimelineGapSlot (TimelineLaneDrop.swift, reusing TimelineEmptySlot with stripe width/tone params) drawn under each gap's hit area in TimelineTrackRows.lane; Captions draw none (timelineGaps already empty there). Walk a-gap-is-drawn-as-a-slot-walk green at defaults, 5 real captures, dark+light, picked band over slot. Left rough (no task): leading gap before first clip is drawn too; gridlines show through the stripes."
+    },
+    {
+      "t": "2026-10-08T05:40:36.863Z",
+      "note": "Each gap on a video or audio track is drawn as the mock's #theGap: dashed edge, 5pt diagonal panel-2 hatch, clip height and corner (TimelineGapSlot in TimelineLaneDrop.swift, drawn in TimelineTrackRows.lane). Picked gap keeps the range band on top; Captions draw none. Verified by walk a-gap-is-drawn-as-a-slot-walk at Next defaults (5 real captures, dark and light), side by side with the mock frame in audit 2026-10-07-gap-slot.json; Scripts/test.sh green. Commit 9db4ed6b."
     }
   ],
-  "walks": []
+  "walks": [
+    "a-gap-is-drawn-as-a-slot-walk"
+  ],
+  "started": "2026-10-08T05:24:13.311Z",
+  "completed": "2026-10-08T05:40:36.865Z"
 }
