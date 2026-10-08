@@ -102,6 +102,15 @@ extension VideoKit {
         static let transitionTo = Tone(light: rgb(0xFF9D5C, 0.75), dark: rgb(0xFF9D5C, 0.75))
         static let transitionBase = Tone(light: rgb(0x14161D), dark: rgb(0x14161D))
         static let transitionInk = Tone(light: rgb(0x0B0D18), dark: rgb(0x0B0D18))
+        /// A held frame on the timeline (`video-freeze-wt.html`, `.clip.frz`):
+        /// blue stripes on a deeper blue, a solid blue edge and pale blue
+        /// words. The mock's own values in both appearances, because the
+        /// still carries its own dark ground under its words, as the
+        /// transition band does.
+        static let stillStripe = Tone(light: rgb(0x3A4A7D), dark: rgb(0x3A4A7D))
+        static let stillGround = Tone(light: rgb(0x2B3763), dark: rgb(0x2B3763))
+        static let stillEdge = Tone(light: rgb(0x55689F), dark: rgb(0x55689F))
+        static let stillInk = Tone(light: rgb(0xDBE4FF), dark: rgb(0xDBE4FF))
         static let glassThin = Tone(light: rgb(0xFFFFFF, 0.58), dark: rgb(0x1E222D, 0.6))
         static let glassChrome = Tone(light: rgb(0xFAFBFD, 0.88), dark: rgb(0x161922, 0.78))
         static let edgeLo = Tone(light: rgb(0x161A2A, 0.10), dark: rgb(0x000000, 0.45))

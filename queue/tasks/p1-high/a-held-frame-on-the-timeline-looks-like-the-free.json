@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T06:08:44.466Z",
-  "updated": "2026-10-08T06:10:03.875Z",
+  "updated": "2026-10-08T08:03:34.571Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-freeze-wt.html lines 41-46 (still clip CSS and canvas badge), 111, 337 (the Still label). App: Sources/Photonz/ClipPiecesBar.swift:635-637, 699-705, 755 (40 percent black veil, layer name, hold corner badge); canvas badge Sources/Photonz/EditorView.swift:3452-3466 (snowflake on a glass capsule). hold-on-a-frame (done) left the hatch out on purpose ('a second visual language costs a lesson'); that predates the gap slot (9db4ed6b, TimelineGapSlot in TimelineLaneDrop.swift), which now gives stripes a meaning of their own, and mocks are the floor. Reuse the gap slot's stripe drawing (TimelineEmptySlot takes stripe width and tone) with the mock's blue tones. Found by the manager's mock sweep 2026-10-07.",
@@ -29,6 +29,36 @@
     {
       "t": "2026-10-08T06:10:03.874Z",
       "note": "seq 540 -> 8"
+    },
+    {
+      "t": "2026-10-08T07:44:41.163Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-08T08:02:57.472Z",
+      "note": "owns these walks: a-held-frame-reads-as-a-still-walk, hold-on-a-frame-walk"
+    },
+    {
+      "t": "2026-10-08T08:03:23.520Z",
+      "note": "adversarial pass before building: a Premiere/FCP editor reads a freeze as its own clip (FCP's Hold segment is striped-free but labelled), so a hatched labelled still is what they expect; the mock's still is a whole clip while the app's hold is a piece of one clip, which changes nothing visible since pieces draw with their own edges. Label follows the mock (the frame it holds, Still · 0:12) not the acceptance's 'its length': mock line 39 says 'labelled with the frame it holds' and its label and badge both read 0:06; the length is the still's width and the Hold row."
+    },
+    {
+      "t": "2026-10-08T08:03:23.578Z",
+      "note": "built: ClipPiece.stillLabel (PhotonzCore/HeldFrame.swift, test in HeldFrameTests); TimelineStripes shared by empty slot, gap slot and the still (TimelineLaneDrop.swift); stillFace + still palette tones (VideoKit.Palette.still*) in ClipPiecesBar kit path only, filmstrip and hold chip skipped on a still; canvas badge snowflake -> pause.fill. Walk a-held-frame-reads-as-a-still-walk (no flags) green with 5 real captures; all 10 *hold* walks green; Scripts/test.sh green (11800 tests, legibility sheet clean)."
+    },
+    {
+      "t": "2026-10-08T08:03:23.636Z",
+      "note": "rough, filed: sound under a still differs from mock #audGap -> the-quiet-a-held-frame-pushes-into-the-sound-loo (p1). left rough, not filed: picked accent ring sits right beside the still's blue edge, reads fine in the captures but is the closest call; a still under ~72pt drops its words to the pause sign alone."
+    },
+    {
+      "t": "2026-10-08T08:03:34.569Z",
+      "note": "A held frame on the V1 timeline is drawn as video-freeze-wt.html's still: 45 degree #3a4a7d/#2b3763 stripes, #55689f edge, #dbe4ff pause sign and 'Still · 0:12' (the frame it holds, as the mock labels it); the canvas badge wears the pause sign. Verified by a-held-frame-reads-as-a-still-walk at Next defaults (still beside a gap in dark and light, picked, lengthened to 5s, undone; 5 real captures), all 10 hold walks green, Scripts/test.sh green. Audit queue/audits/2026-10-08-held-frame-still.json with the mock beside the app; sound-under-a-still difference filed as the-quiet-a-held-frame-pushes-into-the-sound-loo."
     }
-  ]
+  ],
+  "started": "2026-10-08T07:44:41.161Z",
+  "walks": [
+    "a-held-frame-reads-as-a-still-walk",
+    "hold-on-a-frame-walk"
+  ],
+  "completed": "2026-10-08T08:03:34.570Z"
 }

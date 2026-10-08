@@ -158,6 +158,24 @@ struct HeldFrameTests {
         #expect(held.lengthSentence == "One frame, on screen for 2s.")
     }
 
+    /// `video-freeze-wt.html`'s `.clip.frz`: "a still is a clip whose in and
+    /// out are the same frame, so it gets its own read on the timeline:
+    /// hatched, and labelled with the frame it holds".
+    @Test("A held piece on the timeline is labelled Still and the frame it holds, as the canvas names it")
+    func theStillLabelNamesTheFrame() throws {
+        let (doc, id) = Self.held()
+        let pieces = try #require(doc.layer(id: id)?.clipPieces)
+        let index = try #require(pieces.pieceIndex(atMS: 5000))
+        let piece = try #require(pieces.piece(at: index))
+        #expect(piece.stillLabel == "Still · 0:04")
+        // The canvas and the timeline name the same frame.
+        let held = try #require(doc.heldFrame(atTimeMS: 5000))
+        #expect(held.badge.hasSuffix(try #require(piece.stillLabel?.split(separator: " ").last)))
+        // A piece that plays is not a still, and says nothing.
+        #expect(try #require(pieces.piece(at: 0)).stillLabel == nil)
+        #expect(ClipPiece.held(atSourceMS: 65_400, forMS: 2000).stillLabel == "Still · 1:05")
+    }
+
     // MARK: - Drawing on a held frame
 
     @Test("A shape drawn while the playhead stands in a hold is on screen for exactly the hold")

@@ -183,8 +183,25 @@ struct TimelineEmptySlot: View {
 
     var body: some View {
         let shape = RoundedRectangle(cornerRadius: cornerRadius)
-        let stripes = stripeTone.color(colorScheme).opacity(stripeOpacity)
-        let stripeWidth = stripeWidth
+        TimelineStripes(width: stripeWidth, color: stripeTone.color(colorScheme).opacity(stripeOpacity))
+        .clipShape(shape)
+        .overlay(shape.strokeBorder(VideoKit.Palette.lineStrong,
+                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
+        .allowsHitTesting(false)
+        .panelReadout(readout)
+    }
+}
+
+/// `repeating-linear-gradient(45deg, …)`: one stripe of `color`, `width`
+/// across, then as much again of whatever is underneath. The empty slot, a gap
+/// and a held frame all draw theirs with it, in their own tones.
+struct TimelineStripes: View {
+    let width: CGFloat
+    let color: Color
+
+    var body: some View {
+        let stripeWidth = width
+        let color = color
         Canvas { context, size in
             // Across the stripes is 45 degrees, so along the lane a stripe
             // and its gap each take the stripe's width times root 2.
@@ -199,13 +216,8 @@ struct TimelineEmptySlot: View {
                 path.closeSubpath()
                 x += step * 2
             }
-            context.fill(path, with: .color(stripes))
+            context.fill(path, with: .color(color))
         }
-        .clipShape(shape)
-        .overlay(shape.strokeBorder(VideoKit.Palette.lineStrong,
-                                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])))
-        .allowsHitTesting(false)
-        .panelReadout(readout)
     }
 }
 

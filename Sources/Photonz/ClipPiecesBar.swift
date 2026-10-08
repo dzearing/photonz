@@ -394,7 +394,8 @@ struct ClipPiecesBar: View {
                 }
             }
             .overlay(alignment: .topTrailing) {
-                if kind != nil, let badge = Self.badge(item, isSound: isSound), shown.width > 30 {
+                if kind != nil, !(item.map(isStill) ?? false),
+                   let badge = Self.badge(item, isSound: isSound), shown.width > 30 {
                     kitBadge(badge)
                 }
             }
@@ -605,7 +606,7 @@ struct ClipPiecesBar: View {
     private func filmstrip(_ item: ClipPiece?, index: Int, pieceWidth: CGFloat,
                            shown: TimelineSpan, pictures: Double) -> some View {
         ZStack(alignment: .topLeading) {
-            if pictures > 0, let item, let movie = pictureMovie {
+            if pictures > 0, let item, let movie = pictureMovie, !isStill(item) {
                 ClipFilmstripStrip(layerID: layerID, pieceIndex: index, movie: movie, piece: item,
                                    pieceWidth: pieceWidth,
                                    visibleFrom: shown.startFraction * pieceWidth,
@@ -618,8 +619,8 @@ struct ClipPiecesBar: View {
     }
 
     /// What the dock draws inside a piece: the lit top edge every clip in the
-    /// mock has, a veil over a held frame, and the clip's name where there is
-    /// room to read it.
+    /// mock has, and the clip's name where there is room to read it. A held
+    /// frame wears the freeze walkthrough's still instead (`stillFace`).
     /// `hiddenLeading` is how much of the piece is off the left edge of the
     /// window, so the name stays in sight on a zoomed timeline rather than
     /// sliding out with the clip's start.
@@ -632,8 +633,8 @@ struct ClipPiecesBar: View {
                 } else if let border = kind.border {
                     RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(border)
                 }
-                if piece?.isHeld == true {
-                    Color.black.opacity(0.4)
+                if let piece, isStill(piece) {
+                    stillFace(piece, width: width, hiddenLeading: hiddenLeading)
                 }
                 if !soundOnThePanelGround {
                     VStack(spacing: 0) {
@@ -645,7 +646,7 @@ struct ClipPiecesBar: View {
                 // A clip's own sound is named by the picture right above it,
                 // and the mock's sound segment carries no words. A sound of
                 // its own wears its name above its level line (`soundTag`).
-                if width - hiddenLeading > 40, !isLinkedSound {
+                if width - hiddenLeading > 40, !isLinkedSound, !(piece.map(isStill) ?? false) {
                     if !isSound {
                         Text(layerName)
                             .font(.system(size: 9.5, weight: .semibold))
@@ -666,6 +667,47 @@ struct ClipPiecesBar: View {
                 }
             }
             .allowsHitTesting(false)
+        }
+    }
+
+    /// A held frame of the picture, on the dock's timeline. A hold on a sound
+    /// is the quiet it pushed in, not a picture standing still, and keeps its
+    /// own badge.
+    private func isStill(_ piece: ClipPiece) -> Bool {
+        kind != nil && !isSound && piece.isHeld
+    }
+
+    /// A held frame drawn as `video-freeze-wt.html` draws its still
+    /// (`.clip.frz`): 45 degree stripes, four points of each blue, inside a
+    /// solid blue edge, and a pause sign with Still and the frame it holds.
+    /// The stripes are the gap slot's, so a still and a hole read as kin
+    /// that are plainly not the same: a gap is grey with a dashed edge and
+    /// says nothing.
+    @ViewBuilder private func stillFace(_ piece: ClipPiece, width: CGFloat,
+                                        hiddenLeading: CGFloat) -> some View {
+        let room = width - hiddenLeading
+        ZStack(alignment: .leading) {
+            TimelineStripes(width: 4, color: VideoKit.Palette.stillStripe.color(colorScheme))
+            RoundedRectangle(cornerRadius: cornerRadius).strokeBorder(VideoKit.Palette.stillEdge)
+            if room > 18, let label = piece.stillLabel {
+                HStack(spacing: 5) {
+                    Image(systemName: "pause.fill")
+                        .font(.system(size: 8, weight: .bold))
+                    if room > 72 {
+                        Text(label)
+                            .font(.system(size: 9.5, weight: .semibold))
+                            .monospacedDigit()
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                    }
+                }
+                .foregroundStyle(VideoKit.Palette.stillInk)
+                .padding(.horizontal, 7)
+                .frame(maxWidth: room, alignment: .leading)
+                .padding(.leading, hiddenLeading)
+                .panelReadout(label)
+                .playtestField("\(fieldName) still")
+            }
         }
     }
 
@@ -695,6 +737,7 @@ struct ClipPiecesBar: View {
         if soundOnThePanelGround {
             return AnyShapeStyle(VideoKit.Palette.panel2.color(colorScheme).mix(with: .white, by: 0.03))
         }
+        if let piece, isStill(piece) { return AnyShapeStyle(VideoKit.Palette.stillGround) }
         if let kind { return kind.fill }
         // A HELD frame is drawn as itself rather than as a short clip: it is
         // the one piece that plays no time of the recording at all, and a

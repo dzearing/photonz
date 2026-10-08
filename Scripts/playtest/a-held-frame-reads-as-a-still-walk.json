@@ -1,0 +1,267 @@
+{
+  "out": "/tmp/photonz-playtest/a-held-frame-reads-as-a-still-walk",
+  "seed": "The talk sample, nothing switched from its default. Cut at 0:04 and 0:08 and lift the middle so V1 has a gap, then hold the frame at 0:12 for two seconds from the clip's right-click menu. The held piece is drawn as video-freeze-wt.html draws its still (blue stripes, solid blue edge, pause sign and Still with the frame it holds), it never reads as the grey dashed gap beside it in dark or light, and it still picks, lengthens and undoes.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 8.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "pieces": 3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.0
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "key",
+      "key": ";"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk copy",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 12.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "rightClick",
+      "on": "Sample Talk copy clip",
+      "choose": "Freeze Frame > Freeze for 2s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk copy",
+      "track": "V1",
+      "pieces": 3,
+      "startsAt": 8.0,
+      "endsAt": 19.25
+    },
+    {
+      "do": "expect",
+      "field": "Sample Talk copy still",
+      "reads": "Still · 0:12"
+    },
+    {
+      "do": "expect",
+      "field": "Held frame badge",
+      "reads": "Held frame · 0:12"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-still-beside-a-gap",
+      "note": "V1 holds a gap from 0:04 to 0:08 and a two second still at 0:12. The still is drawn as the freeze walkthrough draws it: blue stripes inside a solid blue edge, a pause sign and Still · 0:12. The gap stays a grey dashed slot that says nothing, and the canvas badge wears the same pause sign"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-still-beside-a-gap-dark"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "2-still-beside-a-gap-light"
+    },
+    {
+      "do": "press",
+      "control": "Sample Talk copy piece 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Hold",
+      "reads": "2s"
+    },
+    {
+      "do": "describe",
+      "stage": "3-still-picked",
+      "note": "a click picks the still as it picked a held piece before: the accent ring sits round the stripes and the panel's Hold reads 2s"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-still-picked-light"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Hold",
+      "choose": "5s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk copy",
+      "track": "V1",
+      "pieces": 3,
+      "endsAt": 22.25
+    },
+    {
+      "do": "expect",
+      "field": "Sample Talk copy still",
+      "reads": "Still · 0:12"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-held-longer",
+      "note": "held for five seconds instead of two, the still grows and keeps naming the frame it holds"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-still-five-seconds-dark"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk copy",
+      "track": "V1",
+      "pieces": 1,
+      "endsAt": 17.25
+    },
+    {
+      "do": "expect",
+      "field": "Sample Talk copy still",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "undo takes the hold away and the stripes with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-undone-dark"
+    }
+  ]
+}

@@ -67,6 +67,18 @@ public struct HeldFrame: Hashable, Sendable {
     }
 }
 
+extension ClipPiece {
+
+    /// What the timeline writes on a held piece (`video-freeze-wt.html`,
+    /// `.clip.frz`): "a still is a clip whose in and out are the same frame,
+    /// so it gets its own read on the timeline: hatched, and labelled with the
+    /// frame it holds". The same frame the canvas badge names, said the same
+    /// way. Nil on a piece that plays.
+    public var stillLabel: String? {
+        isHeld ? "Still · \(MotionStripRuler.timecode(Double(sourceInMS)))" : nil
+    }
+}
+
 extension PhotonzDocument {
 
     /// What is being held at this moment, or nil where the picture is playing.

@@ -3451,8 +3451,10 @@ private struct HeldFrameBadgeOverlay: View {
     /// is the same wherever the playhead has got to inside the hold.
     @ViewBuilder private func badge(_ held: HeldFrame) -> some View {
         HStack(spacing: 6) {
-            Image(systemName: "snowflake")
-                .font(.system(size: 11, weight: .semibold))
+            // `video-freeze-wt.html`'s `.frzBadge` wears a pause sign, the
+            // one the still on the timeline wears too.
+            Image(systemName: "pause.fill")
+                .font(.system(size: 10, weight: .semibold))
             Text(held.badge)
                 .font(.system(size: 11, weight: .medium))
                 .monospacedDigit()

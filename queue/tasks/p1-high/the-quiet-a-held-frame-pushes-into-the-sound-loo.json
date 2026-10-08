@@ -1,0 +1,31 @@
+{
+  "id": "the-quiet-a-held-frame-pushes-into-the-sound-loo",
+  "title": "The quiet a held frame pushes into the sound looks like the freeze mock draws it",
+  "goal": "When a frame is held and everything waits, the sound under the still is drawn as a filled dark piece with a small silence badge. The freeze walkthrough draws that stretch of the sound lane as an empty slot with a dashed edge, so the sound visibly stops where the picture stops. Draw it the mock's way so a person reads it as no sound at a glance.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 530,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-08T08:03:13.325Z",
+  "updated": "2026-10-08T08:03:13.328Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-freeze-wt.html line 59 (.gapmark: 1px dashed --line-strong, radius 6, height 34) and line 346 (#audGap under the still, shown on step 3, data line 387). App: Sources/Photonz/ClipPiecesBar.swift, a held piece on a sound (isSound && piece.isHeld) draws the audio kind fill plus kitBadge(\"silence\"). Found while building a-held-frame-on-the-timeline-looks-like-the-free (2026-10-08), whose audit names this task for the difference.",
+  "acceptance": [
+    "Hold a frame on the talk sample at Next defaults with While held set to Everything waits: the sound lane under the still is drawn as video-freeze-wt.html step 3 draws #audGap, a dashed edge with no fill and no badge",
+    "It still reads apart from a gap slot left by a lift, in dark and light, in one picture",
+    "Undo, trim and the Hold menu still work on the held piece; hold-pushes-the-sound-walk passes",
+    "A walk photographs it and an audit puts it beside the mock"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T08:03:13.327Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "hold-pushes-the-sound-walk"
+  ]
+}

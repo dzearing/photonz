@@ -1,0 +1,51 @@
+{
+  "feature": "A held frame looks like the freeze mock's Still clip",
+  "epic": "video-transitions-motion",
+  "summary": "A held frame on the timeline is now drawn as the freeze walkthrough draws it: blue diagonal stripes inside a solid blue edge, a pause sign and Still with the frame it holds. It can no longer be mistaken for a gap, which is grey and dashed, and the canvas badge wears the same pause sign.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/a-held-frame-reads-as-a-still-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the talk sample (Help, Samples) and open the timeline.",
+      "shot": "2026-10-08-held-still-mock.png"
+    },
+    {
+      "do": "Put the playhead at 0:04 and press Command K, then at 0:08 and press Command K."
+    },
+    {
+      "do": "Click inside the middle piece, press X then ; to lift it and leave a gap."
+    },
+    {
+      "do": "Put the playhead at 0:12, right-click the clip after the gap, choose Freeze Frame, Freeze for 2s, then press Escape.",
+      "shot": "2026-10-08-held-still-1-dark-sc.png"
+    },
+    {
+      "do": "Switch the Mac to Light appearance and look at the gap and the still side by side.",
+      "shot": "2026-10-08-held-still-2-light-sc.png"
+    },
+    {
+      "do": "Click the still to pick it.",
+      "shot": "2026-10-08-held-still-3-picked-sc.png"
+    },
+    {
+      "do": "In the panel's Hold menu choose 5s.",
+      "shot": "2026-10-08-held-still-4-five-seconds-sc.png"
+    },
+    {
+      "do": "Press Command Z twice: the hold and its stripes are gone."
+    }
+  ],
+  "evaluate": [
+    "Can you tell the still from the gap at a glance, in both appearances?",
+    "Does Still · 0:12 (the frame it holds, as the mock writes it) tell you what you need, or would you rather it said how long it holds?",
+    "With the still picked, is the accent ring clear enough against the still's own blue edge?",
+    "Does the pause sign on the canvas badge read as the same idea as the still on the timeline?"
+  ],
+  "rough": [
+    "The task asked for the label to say how long the still holds; the mock writes the frame it holds (its CSS says 'labelled with the frame it holds', and its own label and badge both read 0:06), so the label follows the mock and matches the canvas badge. The length is the still's width and the panel's Hold row.",
+    "The canvas badge keeps its top right corner on its glass capsule rather than the mock's bottom left dark plate: hold-on-a-frame settled that the bottom carries the tool bar.",
+    "Zoomed in far enough to show pictures, the clips either side show their frames and the still keeps its stripes; the mock never zooms in, so this goes further than it rather than away from it.",
+    "On a still narrower than about 72 points the words drop and only the pause sign stays; narrower than 18 points it is stripes alone. No mock covers a still that narrow.",
+    "The quiet a hold pushes into the clip's sound still wears a filled piece with a silence badge where the mock draws an empty dashed slot (#audGap); task the-quiet-a-held-frame-pushes-into-the-sound-loo covers it."
+  ]
+}
