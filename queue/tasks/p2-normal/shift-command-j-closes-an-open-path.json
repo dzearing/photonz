@@ -1,0 +1,34 @@
+{
+  "id": "shift-command-j-closes-an-open-path",
+  "title": "Shift Command J closes an open path",
+  "goal": "Closing a path drawn with the Pen today means finding Close Path in a menu, because Shift Command J is New Layer via Cut. That command only does anything with a marquee up, so when an open path is picked and no marquee is up, let Shift Command J close the path, as the icon success list asks.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:23.288Z",
+  "updated": "2026-10-09T03:31:28.849Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "icon-vector success item 1: 'every anchor and handle stays draggable, and Shift Cmd J closes the path'. Open thread in manager report 2026-10-08-0639: 'Close Path has no key (Shift Cmd J is New Layer via Cut)'. Today: EditorCommands.swift:1745 New Layer via Cut, .keyboardShortcut(\"j\", [.command,.shift]), disabled unless canCutSelectionToLayer (needs a marquee). Close Path is the retitled Turn Into Path row (EditorCommands.swift ~1825-1837, turnSelectionIntoPathMenuItem; EditorState+LayerOps.swift:634 Close Path; PathClosing.swift). Pattern for a key that moves by context: the timed ? shortcut : nil idiom at EditorCommands.swift:1359. Photoshop parity memory: keep Photoshop's meaning wherever Photoshop has one, which is why the marquee case keeps New Layer via Cut.",
+  "acceptance": [
+    "At Next defaults, draw an open path with the Pen, switch to Select with it picked and no marquee up, press Shift Command J: the path closes on its own two ends in one undo step",
+    "With a marquee up on a picture, Shift Command J is still New Layer via Cut, exactly as before",
+    "The menu bar shows Shift Command J against whichever of the two rows it will run right now, never against both at once",
+    "A walk covering both cases runs green at Next defaults",
+    "If the two rows cannot share the key cleanly, stop, open a decision card on where Close Path's key goes, and mark this task blocked",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:23.290Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.848Z",
+      "note": "seq 3890 -> 6"
+    }
+  ]
+}

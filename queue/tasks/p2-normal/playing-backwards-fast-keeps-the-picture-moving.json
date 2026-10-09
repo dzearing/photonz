@@ -1,0 +1,38 @@
+{
+  "id": "playing-backwards-fast-keeps-the-picture-moving",
+  "title": "Playing backwards fast keeps the picture moving on a full-screen recording",
+  "goal": "Pressing J two or three times plays a recording backwards at 4x or 8x. On a full-screen Retina recording nobody has checked whether the picture keeps up at those speeds or sits on one frame while the playhead runs. Measure it, and if the picture falls behind, make it keep moving the way it now does at 1x and 2x.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:22.950Z",
+  "updated": "2026-10-09T03:31:28.964Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the rough list of queue/audits/2026-10-08-playing-backwards-keeps-up.json: 'J J J (4x) and faster backwards read no further ahead than 2x does, so the window's memory stays bounded. At those speeds the picture can fall behind, holding the last frame rather than going blank. Not measured, and no task filed for it.' Measure first: if the numbers come back clean, write them in the log and mark done with no code change. Prior work: tasks playing-backwards-with-j-keeps-up-on-a-full-scre, a-full-screen-retina-recording-keeps-up-while-it. Fixture action openLongRetinaTalk; expectPlaybackNeverBlank-style looks exist in the harness. Walks with setup front:true need the Mac to itself; prefer a non-front walk if the timing allows.",
+  "acceptance": [
+    "A walk on the long full-screen Retina talk plays backwards at 4x and at 8x (J J J and J J J J from a stop) and looks at the canvas at least 20 times each, recording how many looks show a frame more than 3 frames from the playhead; the numbers are written into this task's log before any change",
+    "If any look is late, the fix brings both speeds to 0 late looks in three runs in a row, with the window's memory still bounded (state the peak in the log)",
+    "No main thread pass over 50 ms while shuttling backwards at either speed",
+    "Playing forwards and backwards at 1x and 2x stay at 0 late looks (the walks from the playback tasks stay green)",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:22.952Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.618Z",
+      "note": "seq 3850 -> 2"
+    },
+    {
+      "t": "2026-10-09T03:31:28.963Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}

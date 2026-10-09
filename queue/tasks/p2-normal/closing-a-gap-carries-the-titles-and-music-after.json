@@ -1,0 +1,33 @@
+{
+  "id": "closing-a-gap-carries-the-titles-and-music-after",
+  "title": "Closing a gap carries the titles and music after it along",
+  "goal": "Deleting a piece of a clip slides every caption, title and song after it back with the picture, but closing a gap left by Lift or a dragged-away clip only moves that one track, so a title or a music cue later in the edit ends up over a different moment than the one it was placed on. Make closing a gap move the rest of the edit the same way deleting a piece does, as Premiere does with its default sync lock.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:22.863Z",
+  "updated": "2026-10-09T03:31:28.560Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Source: log of done task a-gap-between-clips-closes-with-a-click-and-dele (2026-10-08 04:19): 'only the gap's own track ripples, so titles and music elsewhere stay (Premiere with sync lock off)'; also listed in digest 2026-10-08 under 'What a user will hit'. Piece delete already does the all-tracks version: EditorState+ClipBar.swift deleteClipPieceInHand -> rippleDeleteClipPiece, which uses StretchRemoval.swift. Gap close lives in PhotonzCore TimelineGap.swift (+12 tests) and EditorState+TimelineGap.swift (closeGapInHand). TDD in core: extend TimelineGap tests first. Locked tracks stay put as today. Walks to keep green: a-gap-between-clips-closes-walk, gap-refusal walk (2026-10-08 audit gap-refusal), extract-a-marked-stretch, marquee-and-track-range. No new flag needed if it is a fix to the gap close behaviour; if the runner prefers one, it ships on in Next.",
+  "acceptance": [
+    "On a video at Next defaults: lift 0:04 to 0:08 with I, O and semicolon on a recording that has a title at 0:10 and a music bed on its own track, click the gap, press Delete: the clips after it, the title and the music all move back 4 seconds, in one undo step, and Command Z puts all of them back",
+    "A title or song that would land on something already on its own track does not move into it; the close is refused the way a refused close already is, with the notice naming what is in the way",
+    "Right-click Ripple Delete on the gap and Shift Delete do exactly what Delete does",
+    "A walk covering the title and music case runs green at Next defaults, and the existing gap walks stay green",
+    "Audit written under queue/audits/ with a before and after picture of the timeline; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:22.865Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.559Z",
+      "note": "seq 3840 -> 1"
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+{
+  "id": "capture-to-a-pasted-redline-takes-no-more-steps",
+  "title": "Capture to a pasted redline takes no more steps than CleanShot or Shottr",
+  "goal": "Redlining screenshots is what Photonz is used for most, and its success list promises that someone used to CleanShot X or Shottr gets from a capture to a redline pasted into a chat in no more steps than there. Nobody has counted. Count both sides, and remove the one biggest extra step if Photonz takes more.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:23.371Z",
+  "updated": "2026-10-09T03:31:28.908Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "measure-redline success item 4; no count exists (searched queue and docs/design/next-measure.md, 2026-10-08). User memory: primary use is UX redlining (measure gaps and sizes). Recent related: redline copy pastes as a picture in Chromium (task find-out-whether-the-redline-copy-pastes-as-a-pi, audit 2026-10-08-redline-paste.json); one-shot copy Shift Cmd C. Example walk: Scripts/playtest/redline-walk.json. Competitor counts come from their public documentation; nothing is installed and no account is made.",
+  "acceptance": [
+    "A table in docs/design/next-measure.md counts every press, click and drag from starting a region capture to having the picture with a size and a gap measured on the clipboard, for Photonz at Next defaults (counted by a walk), CleanShot X and Shottr (counted from their own documentation and release notes, cited, never installed)",
+    "If Photonz takes more steps than either, the single biggest extra step is removed in the app when that is under about an hour of work, with the walk recount in the table; otherwise it is filed as a follow-up task with the count",
+    "The walk that counts Photonz runs green at Next defaults",
+    "Audit written under queue/audits/ if the app changed; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:23.373Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.907Z",
+      "note": "seq 3900 -> 7"
+    }
+  ]
+}

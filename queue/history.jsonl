@@ -10211,3 +10211,46 @@
 {"t":"2026-10-08T19:37:51.857Z","ev":"task_note","id":"copying-an-icon-puts-its-svg-on-the-clipboard-to"}
 {"t":"2026-10-08T19:37:51.915Z","ev":"task_note","id":"copying-an-icon-carries-the-white-canvas-the-exp"}
 {"t":"2026-10-08T19:38:04.784Z","ev":"task_done","id":"copying-an-icon-puts-its-svg-on-the-clipboard-to","from":"in_progress","note":"Copy Merged, Command C with nothing picked and Command C on a picked frame now put the Export (web page) SVG on the clipboard as public.svg-image after PNG and TIFF. Screenshots, photos and videos are unchanged. Verified: CompositeCopy and SVGWholeUnits tests, full suite green (11,893 tests); copy-an-icon-as-svg-walk at Next defaults matches the copy byte for byte against writeSVG in whole units and checks a screenshot carries no SVG; Chrome 153, WebKit and NSTextView measured with the real copy (docs/design/references/svg-copy-check). Getting the SVG code into code editors as text is a card on an-icon-svg-pastes-into-a-code-editor. Audit queue/audits/2026-10-08-copy-an-icon-as-svg.json"}
+{"t":"2026-10-08T23:29:15.494Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-17","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-10-08T23:29:15.589Z","ev":"sweep_pass","walks":813,"passed":812,"failed":1,"seconds":13832,"complete":true,"total":813}
+{"t":"2026-10-08T23:29:15.745Z","ev":"task_started","id":"undo-and-redo-on-a-video-answer-inside-50-ms","title":"Undo and Redo on a video answer inside 50 ms","priority":"p2-normal"}
+{"t":"2026-10-09T01:59:11.929Z","ev":"task_created","id":"redo-that-hands-a-clip-back-to-the-panel-answers","priority":"p2-normal","title":"Redo that hands a clip back to the panel answers inside 50 ms"}
+{"t":"2026-10-09T01:59:43.177Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-inside-50-ms"}
+{"t":"2026-10-09T01:59:43.242Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-inside-50-ms"}
+{"t":"2026-10-09T01:59:43.301Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-inside-50-ms"}
+{"t":"2026-10-09T01:59:43.358Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-inside-50-ms"}
+{"t":"2026-10-09T01:59:43.416Z","ev":"task_note","id":"undo-and-redo-on-a-video-answer-inside-50-ms"}
+{"t":"2026-10-09T01:59:43.472Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-09T02:00:04.195Z","ev":"task_done","id":"undo-and-redo-on-a-video-answer-inside-50-ms","from":"in_progress","note":"Shipped e64b20a3. Walks now time presses with the scheduling role of the app in front (PlaytestSchedulingRole): the background probe was starting every press 26-36 ms on an efficiency core, which a person's frontmost app never does. The four dock header menus became VideoKit.HeaderMenu, which rebuilds its menu only when a row changes (SwiftUI's Menu rebuilt all four on every edit). undo-redo-cost-walk: 1/10 under 50 ms before; after, every Undo and ripple press under 50 in three runs of three, max 56, none over 100. The two Redos that hand a clip back to the panel (50-56 ms) are split out to redo-that-hands-a-clip-back-to-the-panel-answers with A/B numbers. an-editing-session-walk, keyframe-anything-walk, 10 menu walks green; 11893 tests pass."}
+{"t":"2026-10-09T02:15:58.651Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":669,"of":813,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T02:15:58.842Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-17","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-10-09T02:17:34.655Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-17","walks":["canvas-zoom-control-video-walk","canvas-zoom-control-walk"]}
+{"t":"2026-10-09T02:29:11.046Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-17"}
+{"t":"2026-10-09T02:29:11.105Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-17"}
+{"t":"2026-10-09T02:29:11.166Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-17"}
+{"t":"2026-10-09T02:29:14.770Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-17","from":"in_progress","note":"canvas-zoom-control-video-walk was a timing-edge walk, not an app bug: its 4s 'still up' check came after a snapshot and landed ~0.1s before the 5s fade. Both zoom control walks (video + picture) now check at 3s and allow 3s for the fade; each passed twice in a row on its own; Scripts/test.sh green; commit 2ef0cb6d pushed to main."}
+{"t":"2026-10-09T02:39:56.208Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":500,"of":813,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T02:39:56.382Z","ev":"task_started","id":"redo-that-hands-a-clip-back-to-the-panel-answers","title":"Redo that hands a clip back to the panel answers inside 50 ms","priority":"p2-normal"}
+{"t":"2026-10-09T03:07:43.424Z","ev":"task_note","id":"redo-that-hands-a-clip-back-to-the-panel-answers"}
+{"t":"2026-10-09T03:07:43.483Z","ev":"task_note","id":"redo-that-hands-a-clip-back-to-the-panel-answers"}
+{"t":"2026-10-09T03:07:43.545Z","ev":"task_note","id":"redo-that-hands-a-clip-back-to-the-panel-answers"}
+{"t":"2026-10-09T03:07:43.604Z","ev":"task_note","id":"redo-that-hands-a-clip-back-to-the-panel-answers"}
+{"t":"2026-10-09T03:07:50.768Z","ev":"task_done","id":"redo-that-hands-a-clip-back-to-the-panel-answers","from":"in_progress","note":"Undo/Redo on a video that moves the pick between two clips lands the step first and hands the pick (and the panel refill) over a pass later (UndoPickFollows + EditorState, commit c4e5d4eb). undo-redo-cost-walk 3/3 runs: first-cut Redo 31.8/41.6/41.2 ms (was 52.7/49.7/51.6), drop Redos 27.6-43.2 ms (was up to 53.4); every press under 50. an-editing-session-walk, keyframe-anything-walk and 14 more video walks green; 11900 tests green."}
+{"t":"2026-10-09T03:20:13.191Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":588,"of":813,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T03:31:22.867Z","ev":"task_created","id":"closing-a-gap-carries-the-titles-and-music-after","priority":"p2-normal","title":"Closing a gap carries the titles and music after it along"}
+{"t":"2026-10-09T03:31:22.954Z","ev":"task_created","id":"playing-backwards-fast-keeps-the-picture-moving","priority":"p2-normal","title":"Playing backwards fast keeps the picture moving on a full-screen recording"}
+{"t":"2026-10-09T03:31:23.039Z","ev":"task_created","id":"the-empty-window-can-start-a-ui-design","priority":"p2-normal","title":"The empty window can start a UI design"}
+{"t":"2026-10-09T03:31:23.124Z","ev":"task_created","id":"an-instance-s-properties-match-the-variants-mock","priority":"p2-normal","title":"An instance's Properties match the variants mock"}
+{"t":"2026-10-09T03:31:23.208Z","ev":"task_created","id":"mirror-across-center-copies-a-shape-about-the-mi","priority":"p2-normal","title":"Mirror across center copies a shape about the middle of its icon"}
+{"t":"2026-10-09T03:31:23.292Z","ev":"task_created","id":"shift-command-j-closes-an-open-path","priority":"p2-normal","title":"Shift Command J closes an open path"}
+{"t":"2026-10-09T03:31:23.375Z","ev":"task_created","id":"capture-to-a-pasted-redline-takes-no-more-steps","priority":"p2-normal","title":"Capture to a pasted redline takes no more steps than CleanShot or Shottr"}
+{"t":"2026-10-09T03:31:28.561Z","ev":"task_resequenced","id":"closing-a-gap-carries-the-titles-and-music-after","from":3840,"to":1}
+{"t":"2026-10-09T03:31:28.620Z","ev":"task_resequenced","id":"playing-backwards-fast-keeps-the-picture-moving","from":3850,"to":2}
+{"t":"2026-10-09T03:31:28.678Z","ev":"task_resequenced","id":"the-empty-window-can-start-a-ui-design","from":3860,"to":3}
+{"t":"2026-10-09T03:31:28.736Z","ev":"task_resequenced","id":"an-instance-s-properties-match-the-variants-mock","from":3870,"to":4}
+{"t":"2026-10-09T03:31:28.794Z","ev":"task_resequenced","id":"mirror-across-center-copies-a-shape-about-the-mi","from":3880,"to":5}
+{"t":"2026-10-09T03:31:28.850Z","ev":"task_resequenced","id":"shift-command-j-closes-an-open-path","from":3890,"to":6}
+{"t":"2026-10-09T03:31:28.909Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":3900,"to":7}
+{"t":"2026-10-09T03:31:28.965Z","ev":"task_walks","id":"playing-backwards-fast-keeps-the-picture-moving","walks":[]}
+{"t":"2026-10-09T03:31:34.501Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
+{"t":"2026-10-09T03:32:16.852Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-10-08-2030.md"}

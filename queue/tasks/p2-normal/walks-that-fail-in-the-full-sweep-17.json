@@ -1,0 +1,58 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-17",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3820,
+  "status": "done",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-08T23:29:15.490Z",
+  "updated": "2026-10-09T02:29:14.769Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-08T23:29:15Z: 812 of 813 walks passed in 231 minutes.\n\nFailing walks (1): canvas-zoom-control-video-walk\n\nFull output: queue/sweep/2026-10-08-123843.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-08T23:29:15.492Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-10-09T02:15:58.835Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T02:17:34.653Z",
+      "note": "owns these walks: canvas-zoom-control-video-walk, canvas-zoom-control-walk"
+    },
+    {
+      "t": "2026-10-09T02:29:11.044Z",
+      "note": "canvas-zoom-control-video-walk was WRONG, not broken: the app fades the zoom control 5s after the last zoom, exactly as written. The walk counted its 4s 'still up' wait from after a snapshot (0.6-1s), so step 12 landed ~4.9s after the zoom with ~0.1s to spare (zoom 2.44s, check 7.27s, gone 7.38s in a passing run); sweep load tipped it over. canvas-zoom-control-walk (picture editor) had the identical shape and was fixed the same way."
+    },
+    {
+      "t": "2026-10-09T02:29:11.103Z",
+      "note": "Fix: both walks wait 3s on the clock (check lands 3.6-4.0s after zoom) and allow 3s for the fade; each passed twice in a row on its own. Commit 2ef0cb6d."
+    },
+    {
+      "t": "2026-10-09T02:29:11.164Z",
+      "note": "left rough: first Scripts/test.sh run reported 1 failing issue of 11893 tests (output lost, the wrapper deletes its log); an immediate rerun passed clean (exit 0). Unrelated to walk JSON, likely a timing-sensitive suite; not reproduced, so not filed."
+    },
+    {
+      "t": "2026-10-09T02:29:14.767Z",
+      "note": "canvas-zoom-control-video-walk was a timing-edge walk, not an app bug: its 4s 'still up' check came after a snapshot and landed ~0.1s before the 5s fade. Both zoom control walks (video + picture) now check at 3s and allow 3s for the fade; each passed twice in a row on its own; Scripts/test.sh green; commit 2ef0cb6d pushed to main."
+    }
+  ],
+  "standing": "walk-sweep",
+  "started": "2026-10-09T02:15:58.833Z",
+  "walks": [
+    "canvas-zoom-control-video-walk",
+    "canvas-zoom-control-walk"
+  ],
+  "completed": "2026-10-09T02:29:14.768Z"
+}

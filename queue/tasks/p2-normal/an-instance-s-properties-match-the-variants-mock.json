@@ -1,0 +1,33 @@
+{
+  "id": "an-instance-s-properties-match-the-variants-mock",
+  "title": "An instance's Properties match the variants mock",
+  "goal": "The variants mock draws what you see when you pick a component instance: a Component row saying it is linked with a Detach button, the variant and size as segmented choices, and the instance's own toggles under Instance properties. Nobody has put the app beside that mock yet. Do it, and make the app match wherever it differs.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:23.120Z",
+  "updated": "2026-10-09T03:31:28.735Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ui-building success item 2 names ui-variants.html; no audit has ever compared against it (grep queue/audits for ui-variants: only passing mentions in 2026-10-04-one-instance-drop.json). Mock page docs/design/mocks/pages/ui-variants.html, rendered from the dashboard at http://127.0.0.1:8791/pages/ui-variants.html. Mock's Properties: header 'PROPERTIES · Instance', a 'Component' sub-header with 'linked' badge, a row 'Button >' with 'Detach', VARIANT segmented Primary | Secondary | Ghost, SIZE segmented Small | Medium | Large, 'Instance properties' sub-header with a diamond, 'Show icon' switch. Segmented controls are the app's own (see task every-segmented-control-is-apple-s-own-liquid-gl). The variant matrix on the canvas (every cell a real specimen) is a separate surface: compare it too, but if building it is more than polish, file it as a follow-up rather than growing this task. Placement contract: docs/design/mocks/shared/UX-PATTERNS.md top table; Properties rows only.",
+  "acceptance": [
+    "A picture of the app with a Button instance picked sits beside ui-variants.html in the audit, in dark and light, and every difference in layout, control type, wording, spacing and colour is listed",
+    "Each difference is fixed in the app, or, where matching would undo something the user decided, written in rough with the decision it comes from",
+    "Picking Secondary or Large in the panel changes the instance on the canvas at once, and the Show icon toggle hides and shows its icon, in one undo step each",
+    "A walk photographing the picked instance runs green at Next defaults",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:23.122Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.734Z",
+      "note": "seq 3870 -> 4"
+    }
+  ]
+}

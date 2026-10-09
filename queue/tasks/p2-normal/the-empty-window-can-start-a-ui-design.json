@@ -1,0 +1,33 @@
+{
+  "id": "the-empty-window-can-start-a-ui-design",
+  "title": "The empty window can start a UI design",
+  "goal": "Someone who wants to design a screen today has to pick Blank canvas, choose a size, draw a frame and lay it out before placing anything. Give the empty window a Design UI start, as the UI entry mock draws it, that opens a 1280 by 800 canvas already holding a Login starter frame laid out as a column, so the next step is dragging a component from the Library onto it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T03:31:23.035Z",
+  "updated": "2026-10-09T03:31:28.677Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "ui-building success item 1 ('start a UI canvas from New Window ... without being taught (ui-entry-wt.html)'). Mock: docs/design/mocks/pages/ui-entry-wt.html steps 3 to 7 (tile #tileUI 'Design UI · Components, tokens, auto-layout', button 'New UI canvas', result 'untitled-ui · 1280 x 800, seeded with a Login starter frame ... The template gave you real layers, not a wizard'; Properties: Auto layout vertical, Gap 12, Padding 24). Today's empty card: EditorView.swift emptyState (~line 727), EmptyEditorStart enum (open, capture, paste, blank, video) and onboardingRow; Blank video is the pattern to copy (blankVideoEnabled, isBlankVideoDialogPresented). The mock's front door is a grid of four template tiles; this task keeps the existing card of rows and adds one row, so the tile grid is NOT built here (note it in rough). Seeding the frame goes through History.perform; frame layout model from the ui-layout work (task a-screen-can-hug-what-it-holds, commit d1de61a6). Starter components already ship (task the-library-has-components-in-it-the-first-time). Ship behind a new Next flag on by default in Next (FeatureCatalog), named for the row. Keep the tutorial anchor pattern: a new EmptyEditorStart case.",
+  "acceptance": [
+    "At Next defaults, a new empty window lists a Design UI start beside Blank canvas and Blank video, in the same card and the same row style",
+    "Choosing it opens a document named untitled-ui at 1280 x 800 holding one frame named Login, laid out as a column with gap 12 and padding 24 as the mock's Properties show, and nothing else; the Login frame is an ordinary frame you can select, resize and delete, and Command Z after the first edit does not remove the frame",
+    "The Library is open at Components after it opens, so the starter Button can be dragged onto the Login frame straight away, and it lands as a linked instance inside the column",
+    "A walk from the empty window through Design UI to a Button dropped on the frame runs green at Next defaults",
+    "Audit written under queue/audits/ with the app beside ui-entry-wt.html steps 3 to 7; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T03:31:23.037Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-09T03:31:28.676Z",
+      "note": "seq 3860 -> 3"
+    }
+  ]
+}
