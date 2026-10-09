@@ -428,12 +428,28 @@ extension EditorState {
                                    from: document?.layer(id: id)?.componentVersionID)
     }
 
+    /// `property` is the variant question the new drawing gives a fresh answer
+    /// to, on a component asking more than one: "Another Size" keeps the
+    /// Variant of the drawing it came from (`ComponentVariantProperty`). Nil is
+    /// the first question, the one every component asks.
     @discardableResult
-    func addComponentVersion(componentID: UUID, from version: UUID? = nil) -> UUID? {
+    func addComponentVersion(componentID: UUID, from version: UUID? = nil,
+                             property: UUID? = nil) -> UUID? {
         guard componentsEnabled else { return nil }
         discardDragPreview()
         var added: UUID?
-        perform { added = $0.addComponentVersion(componentID: componentID, from: version) }
+        let onPage = isEditingOriginal
+        perform {
+            if let property {
+                added = $0.addComponentVariantOption(componentID: componentID, property: property,
+                                                     from: version)
+            } else {
+                added = $0.addComponentVersion(componentID: componentID, from: version)
+            }
+            // On the Edit Original page a component asking two questions is a
+            // grid, and the new drawing takes its cell in it.
+            if added != nil, onPage { $0.layOutComponentVariantGridOnPage(componentID: componentID) }
+        }
         guard let added, let document,
               let main = document.mainComponent(componentID: componentID, version: added)
         else { return nil }
@@ -487,6 +503,64 @@ extension EditorState {
     func renameComponentVariantProperty(of componentID: UUID, to name: String) {
         guard componentsEnabled else { return }
         perform { $0.renameComponentVariantProperty(of: componentID, to: name) }
+    }
+
+    /// Asks a second (or third) variant question of a component, Size beside
+    /// Variant, in one undo step: every drawing answers Default and one new
+    /// drawing, made from `version`, answers Size 2. The new drawing is picked,
+    /// so its answer is the field waiting to be typed over.
+    func addComponentVariantProperty(componentID: UUID, from version: UUID? = nil) {
+        guard componentsEnabled else { return }
+        discardDragPreview()
+        var added: (property: UUID, version: UUID)?
+        let onPage = isEditingOriginal
+        perform {
+            added = $0.addComponentVariantProperty(componentID: componentID, from: version)
+            if added != nil, onPage { $0.layOutComponentVariantGridOnPage(componentID: componentID) }
+        }
+        guard let added, let document,
+              let main = document.mainComponent(componentID: componentID, version: added.version)
+        else { return }
+        selectLayer(main.id, inGroup: document.parentID(of: main.id))
+        componentVariantPropertyAwaitingName = added.property
+        if let box = document.canvasBounds(of: main.id) { bringIntoView(box, alongside: nil) }
+    }
+
+    /// Renames one of a component's variant questions.
+    func renameComponentVariantProperty(of componentID: UUID, property: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform { $0.renameComponentVariantProperty(of: componentID, property: property, to: name) }
+    }
+
+    /// Types a word over one drawing's answer to one question: a word another
+    /// answer has moves the drawing into it, any other renames the answer
+    /// everywhere it is given (`setComponentVariantOption`).
+    func setComponentVariantOption(componentID: UUID, drawing: UUID, property: UUID, to name: String) {
+        guard componentsEnabled else { return }
+        perform {
+            $0.setComponentVariantOption(componentID: componentID, drawing: drawing,
+                                         property: property, to: name)
+        }
+    }
+
+    /// The drawing nearest to the one picked that gives `option` to `property`:
+    /// where a row's other answer takes you on the original's panel.
+    func selectComponentVariantOption(componentID: UUID, from layerID: UUID,
+                                      property: UUID, option: String) {
+        guard let document,
+              let here = document.componentVersions(of: componentID).first(where: { $0.layerID == layerID })
+        else { return }
+        var wanted = document.componentVariantAnswers(of: componentID, drawing: here)
+        wanted[property] = option
+        guard let drawing = document.nearestComponentDrawing(of: componentID, answers: wanted,
+                                                             keeping: property) else { return }
+        selectComponentVersion(componentID: componentID, version: drawing.id)
+    }
+
+    /// Gives every picked copy one answer to one question, in one undo step.
+    func setInstanceVariantAnswer(instances: [UUID], property: UUID, option: String) {
+        guard componentsEnabled, !instances.isEmpty else { return }
+        perform { $0.setInstanceVariantAnswer(instances: instances, property: property, option: option) }
     }
 
     /// Which version a copy is showing, resolved: the one it was set to while

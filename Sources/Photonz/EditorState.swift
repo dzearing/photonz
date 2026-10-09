@@ -2949,6 +2949,10 @@ final class EditorState {
     /// of typing.
     var componentVersionAwaitingName: UUID?
 
+    /// A variant question the author just added beside the first and has not
+    /// named yet, so its name field takes the focus with "Size" selected.
+    var componentVariantPropertyAwaitingName: UUID?
+
     /// The piece somebody last tried to type over and could not, when the
     /// original could still be given a knob for it. It puts the offer on the
     /// copy's own section, which is what the notice tells them to look at: the

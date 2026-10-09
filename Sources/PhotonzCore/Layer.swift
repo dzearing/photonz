@@ -817,6 +817,20 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// Nil is a component nobody has renamed it on, which is every component
     /// saved before a variant was a property.
     public var variantName: String?
+    /// Set on a **main component** whose component asks more than one variant
+    /// question: this drawing's answers to every question AFTER the first, Size
+    /// beside Variant (`ComponentVariantProperty`). The first question keeps
+    /// its answer in `versionName` and its name in `variantName`, so a
+    /// component asking only one writes nothing here and a document saved
+    /// before a second question existed is byte for byte what it was.
+    public var variantAnswers: [ComponentVariantAnswer] = []
+    /// Set on an **instance**: the combination of answers this copy asked for,
+    /// when nobody drew that combination. The copy shows the nearest drawing
+    /// that was drawn (`instanceVersion`) and keeps asking for this, so its
+    /// rows on the panel say what was picked. Empty is a copy showing exactly
+    /// the drawing it asked for, which is every copy of a one-question
+    /// component.
+    public var instanceAnswers: [ComponentVariantAnswer] = []
     /// Set on an **instance**: the component this copy follows
     /// (`docs/design/ui-building.md`, step C5). Its children are not its own —
     /// the document keeps them equal to the main's, so editing the main is the
@@ -906,7 +920,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
-        case variantName, captions
+        case variantName, captions, variantAnswers, instanceAnswers
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -926,12 +940,17 @@ public struct GroupContent: Hashable, Codable, Sendable {
             // writes this one, so one still calling it Variant is byte for byte
             // what it was.
             try c.encodeIfPresent(variantName, forKey: .variantName)
+            // ...and only one asking a second question writes its answers.
+            if !variantAnswers.isEmpty { try c.encode(variantAnswers, forKey: .variantAnswers) }
             // Only a component somebody put on the shared shelf writes this, so
             // one that belongs to its document alone is byte for byte what it
             // always was.
             if isShared { try c.encode(true, forKey: .shared) }
         }
         if instanceOf != nil { try c.encodeIfPresent(instanceVersion, forKey: .instanceVersion) }
+        if instanceOf != nil, !instanceAnswers.isEmpty {
+            try c.encode(instanceAnswers, forKey: .instanceAnswers)
+        }
         // A group that exposes nothing and answers nothing writes neither key,
         // so a document saved before knobs existed is byte for byte what it was.
         if !properties.isEmpty { try c.encode(properties, forKey: .properties) }
@@ -984,6 +1003,10 @@ public struct GroupContent: Hashable, Codable, Sendable {
         versionID = try c.decodeIfPresent(UUID.self, forKey: .versionID)
         versionName = try c.decodeIfPresent(String.self, forKey: .versionName)
         variantName = try c.decodeIfPresent(String.self, forKey: .variantName)
+        variantAnswers = try c.decodeIfPresent([ComponentVariantAnswer].self,
+                                               forKey: .variantAnswers) ?? []
+        instanceAnswers = try c.decodeIfPresent([ComponentVariantAnswer].self,
+                                                forKey: .instanceAnswers) ?? []
         instanceVersion = try c.decodeIfPresent(UUID.self, forKey: .instanceVersion)
         properties = try c.decodeIfPresent([ComponentProperty].self, forKey: .properties) ?? []
         overrides = try c.decodeIfPresent([ComponentOverride].self, forKey: .overrides) ?? []
@@ -1064,6 +1087,7 @@ public enum LayerContent: Hashable, Codable, Sendable {
             // the component it was copied from are not its.
             group.versionID = nil
             group.versionName = nil
+            group.variantAnswers = []
         }
         // `instanceOf` is deliberately kept: a copy of a copy is another copy
         // of the same component, which is what ⌘J on an instance has to mean,

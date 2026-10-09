@@ -602,6 +602,7 @@ extension PhotonzDocument {
               ga.backgroundHex == gb.backgroundHex, ga.componentID == gb.componentID,
               ga.instanceOf == gb.instanceOf, ga.instanceVersion == gb.instanceVersion,
               ga.versionID == gb.versionID, ga.versionName == gb.versionName,
+              ga.variantAnswers == gb.variantAnswers, ga.instanceAnswers == gb.instanceAnswers,
               ga.properties == gb.properties,
               ga.overrides == gb.overrides, ga.pieceTextStyles == gb.pieceTextStyles,
               ga.instanceSize == gb.instanceSize,
@@ -699,6 +700,7 @@ extension PhotonzDocument {
                         var group = copy.group ?? GroupContent()
                         group.instanceOf = nil
                         group.instanceVersion = nil
+                        group.instanceAnswers = []
                         group.overrides = []
                         // The type it chose for its own words is already
                         // written onto them, so letting go of the record

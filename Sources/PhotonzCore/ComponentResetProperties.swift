@@ -15,6 +15,7 @@ extension PhotonzDocument {
         guard let copy = layer(id: instance), let componentID = copy.instanceOf, !copy.isLocked
         else { return false }
         if !copy.componentOverrides.isEmpty { return true }
+        if copy.group?.instanceAnswers.isEmpty == false { return true }
         let first = componentVersions(of: componentID).first?.id
         return first != nil && instanceVersion(of: instance) != first
     }
@@ -35,6 +36,7 @@ extension PhotonzDocument {
             updateLayer(id: id) { layer in
                 guard var group = layer.group else { return }
                 group.overrides.removeAll()
+                group.instanceAnswers.removeAll()
                 layer.content = .group(group)
             }
             if let first, instanceVersion(of: id) != first {

@@ -87,6 +87,10 @@ public struct ComponentKnobSelection: Hashable, Sendable {
     /// The version every picked copy is showing. Nil when they show different
     /// ones, which is what puts Mixed in the Version row.
     public let version: UUID?
+    /// One row per variant question that has a choice in it, in the
+    /// component's order: Variant, then Size (`ComponentVariantProperty`).
+    /// Each reads the answer every picked copy gives, nil when they differ.
+    public let variantRows: [ComponentVariantRowReading]
 
     private let readings: [UUID: ComponentKnobReading]
 
@@ -94,7 +98,9 @@ public struct ComponentKnobSelection: Hashable, Sendable {
                 selectionCount: Int, capableCount: Int, properties: [ComponentProperty],
                 overriddenProperties: Set<UUID>, hasDifferentComponents: Bool,
                 readings: [UUID: ComponentKnobReading],
-                versions: [ComponentVersion] = [], version: UUID? = nil) {
+                versions: [ComponentVersion] = [], version: UUID? = nil,
+                variantRows: [ComponentVariantRowReading] = []) {
+        self.variantRows = variantRows
         self.versions = versions
         self.version = version
         self.componentID = componentID
@@ -218,7 +224,22 @@ extension PhotonzDocument {
             instances: instances, selectionCount: layerIDs.count, capableCount: copies.count,
             properties: properties, overriddenProperties: overridden,
             hasDifferentComponents: false, readings: readings,
-            versions: versions, version: version)
+            versions: versions, version: version,
+            variantRows: variantRows(of: componentID, over: instances))
+    }
+
+    /// The variant rows the copies' panel shows: one per question with two or
+    /// more answers, each reading the answer the copies share.
+    private func variantRows(of componentID: UUID,
+                             over instances: [UUID]) -> [ComponentVariantRowReading] {
+        let answers = instances.map { instanceVariantAnswers(of: $0) }
+        return componentVariantProperties(of: componentID).compactMap { property in
+            guard property.options.count > 1 else { return nil }
+            let given = Set(answers.compactMap { $0[property.id] })
+            return ComponentVariantRowReading(id: property.id, name: property.name,
+                                              options: property.options.map(\.name),
+                                              chosen: given.count == 1 ? given.first : nil)
+        }
     }
 
     /// What one knob reads over the copies: the answer they share, or Mixed.

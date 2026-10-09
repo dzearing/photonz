@@ -23,32 +23,8 @@ enum ComponentGlyph {
 
     /// Four diamonds on the compass points of `rect`, each a quarter of its
     /// short side, which is the shape at any size the app asks for.
-    static func path(in rect: CGRect) -> CGPath {
-        let side = min(rect.width, rect.height)
-        let radius = side * 0.22
-        let reach = side * 0.28
-        let center = CGPoint(x: rect.midX, y: rect.midY)
-        let path = CGMutablePath()
-        for offset in [CGPoint(x: 0, y: -reach), CGPoint(x: 0, y: reach),
-                       CGPoint(x: -reach, y: 0), CGPoint(x: reach, y: 0)] {
-            let point = CGPoint(x: center.x + offset.x, y: center.y + offset.y)
-            path.move(to: CGPoint(x: point.x, y: point.y - radius))
-            path.addLine(to: CGPoint(x: point.x + radius, y: point.y))
-            path.addLine(to: CGPoint(x: point.x, y: point.y + radius))
-            path.addLine(to: CGPoint(x: point.x - radius, y: point.y))
-            path.closeSubpath()
-        }
-        return path
-    }
+    static func path(in rect: CGRect) -> CGPath { VideoKit.componentMarkPath(in: rect) }
 
-    /// The mark a COPY wears: one diamond, in the middle of the same box.
-    ///
-    /// Not the four-diamond glyph drawn hollow. At the sizes this appears —
-    /// nine points on a shelf tile, twelve in a layers row, ten on the canvas —
-    /// each of the four diamonds is under three points across, and an outline
-    /// at that size is a smudge that reads exactly like the filled one. One
-    /// diamond against four is a different SHAPE, so it survives being small,
-    /// and it is the distinction a design tool user already has in their eye.
     static func instancePath(in rect: CGRect) -> CGPath {
         let side = min(rect.width, rect.height)
         let radius = side * 0.34
@@ -1208,7 +1184,15 @@ extension NSResponder {
 /// it — which is why the row that takes you to one simply selects it.
 private struct ComponentVariantPropertyRow: View {
     @Environment(EditorState.self) private var editorState
+    let componentID: UUID
     let property: ComponentVariantProperty
+    /// Where it sits among the component's questions: the first carries the
+    /// apply row under it, and the walks' names for its fields stay what they
+    /// always were.
+    let index: Int
+    /// Whether the component asks more than one question, which turns the
+    /// rows under the name from drawings into answers.
+    let isOneOfMany: Bool
     /// The drawing that is selected, so the list can say which one you are on.
     let layerID: UUID
 
@@ -1218,7 +1202,7 @@ private struct ComponentVariantPropertyRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 6) {
-                TextField("Property name", text: $draft)
+                TextField(index == 0 ? "Property name" : "Property name \(index + 1)", text: $draft)
                     .textFieldStyle(.roundedBorder)
                     .font(.caption)
                     .focused($focused)
@@ -1228,7 +1212,7 @@ private struct ComponentVariantPropertyRow: View {
                     .panelHelp("What this question is called on every copy. Call it State, or Type, or Size")
                     // The states guide has you type State over it, and nothing
                     // could check that landed while the box answered to nothing.
-                    .playtestField("Property name")
+                    .playtestField(index == 0 ? "Property name" : "Property name \(index + 1)")
                 Text("variant")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -1237,18 +1221,41 @@ private struct ComponentVariantPropertyRow: View {
                     .background(Capsule().fill(.quaternary))
             }
             VStack(alignment: .leading, spacing: 6) {
-                ForEach(property.options) { option in
-                    ComponentVersionRow(componentID: property.id, version: option,
-                                        isShown: option.layerID == layerID)
+                if isOneOfMany {
+                    ForEach(property.options) { option in
+                        ComponentVariantOptionRow(componentID: componentID, property: property,
+                                                  option: option, layerID: layerID)
+                    }
+                } else {
+                    ForEach(property.options.flatMap(\.drawings)) { drawing in
+                        ComponentVersionRow(componentID: componentID, version: drawing,
+                                            isShown: drawing.layerID == layerID)
+                    }
                 }
                 // The way one edit reaches the drawings listed above it, right
                 // under the list that names them.
-                ComponentVersionApplyRow()
+                if index == 0 { ComponentVersionApplyRow() }
             }
             .padding(.leading, 10)
         }
-        .onAppear { draft = property.name }
+        .onAppear {
+            draft = property.name
+            claimNameIfJustAdded()
+        }
         .onChange(of: property.name) { _, name in if !focused { draft = name } }
+        .onChange(of: editorState.componentVariantPropertyAwaitingName) { _, _ in claimNameIfJustAdded() }
+    }
+
+    /// Takes the focus a new question hands over, once, with its name selected
+    /// so the first keystroke replaces it.
+    private func claimNameIfJustAdded() {
+        guard editorState.componentVariantPropertyAwaitingName == property.id else { return }
+        editorState.componentVariantPropertyAwaitingName = nil
+        draft = property.name
+        DispatchQueue.main.async {
+            focused = true
+            DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+        }
     }
 
     private func commit() {
@@ -1257,7 +1264,80 @@ private struct ComponentVariantPropertyRow: View {
             return
         }
         guard name != property.name else { return }
-        editorState.renameComponentVariantProperty(of: property.id, to: name)
+        editorState.renameComponentVariantProperty(of: componentID, property: property.id, to: name)
+        // Refused (another question already has the name): put it back.
+        if editorState.componentVariantProperties(of: componentID)
+            .first(where: { $0.id == property.id })?.name != name {
+            draft = property.name
+        }
+    }
+}
+
+/// One answer to one question, on the original of a component asking more than
+/// one: the answer the drawing you are on gives is a field, and every other is
+/// a press that takes you to the nearest drawing giving it.
+///
+/// Typing a word another answer already has moves this drawing into it; any
+/// other word renames the answer on every drawing giving it
+/// (`setComponentVariantOption`).
+private struct ComponentVariantOptionRow: View {
+    @Environment(EditorState.self) private var editorState
+    let componentID: UUID
+    let property: ComponentVariantProperty
+    let option: ComponentVariantOption
+    let layerID: UUID
+
+    @State private var draft = ""
+    @FocusState private var focused: Bool
+
+    private var isShown: Bool { option.drawings.contains { $0.layerID == layerID } }
+
+    var body: some View {
+        HStack(spacing: 6) {
+            ComponentMark(size: 10)
+                .opacity(isShown ? 1 : 0.35)
+            if isShown {
+                TextField("\(property.name) name", text: $draft)
+                    .textFieldStyle(.roundedBorder)
+                    .font(.caption)
+                    .focused($focused)
+                    .onSubmit(commit)
+                    .nameFieldKeys(commit: commit, revert: { draft = option.name })
+                    .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                    .panelHelp("Type another \(property.name)'s name to move this drawing there")
+                    .playtestField("\(property.name) answer")
+                Text("showing")
+                    .font(.caption2)
+                    .foregroundStyle(.secondary)
+                    .padding(.horizontal, 5)
+                    .padding(.vertical, 1)
+                    .background(Capsule().fill(.quaternary))
+            } else {
+                Button(option.name) {
+                    editorState.selectComponentVariantOption(componentID: componentID, from: layerID,
+                                                             property: property.id, option: option.name)
+                }
+                .buttonStyle(.link)
+                .font(.caption)
+                .lineLimit(1)
+                .truncationMode(.middle)
+                .panelHelp("Selects the nearest drawing that is \(option.name)")
+                .playtestControl(option.name, detail: property.name)
+                Spacer(minLength: 0)
+            }
+        }
+        .onAppear { draft = option.name }
+        .onChange(of: option.name) { _, name in if !focused { draft = name } }
+    }
+
+    private func commit() {
+        guard let name = ComponentNaming.normalized(draft) else {
+            draft = option.name
+            return
+        }
+        guard name != option.name else { return }
+        editorState.setComponentVariantOption(componentID: componentID, drawing: layerID,
+                                              property: property.id, to: name)
     }
 }
 
@@ -1485,8 +1565,10 @@ struct ComponentPropertyList: View {
                     .fixedSize(horizontal: false, vertical: true)
                     .panelHelp("What you add here is what a copy may set")
             } else {
-                ForEach(variants) { variant in
-                    ComponentVariantPropertyRow(property: variant, layerID: layerID)
+                ForEach(Array(variants.enumerated()), id: \.element.id) { index, variant in
+                    ComponentVariantPropertyRow(componentID: componentID, property: variant,
+                                                index: index, isOneOfMany: variants.count > 1,
+                                                layerID: layerID)
                 }
                 ForEach(properties) { property in
                     ComponentPropertyRow(componentID: componentID, version: version,
@@ -1507,8 +1589,27 @@ struct ComponentPropertyList: View {
             // component whose question is called State offers "Another State"
             // rather than a second name for it (`ComponentVariantWording`).
             Section {
-                Button(wording.addRow(hasAny: !variants.isEmpty)) {
-                    editorState.addComponentVersion(componentID: componentID, from: version)
+                if variants.count > 1 {
+                    // A component asking several questions adds a drawing for
+                    // ONE of them: Another Size keeps the Variant it came from.
+                    ForEach(variants) { variant in
+                        Button(ComponentVariantWording(variant.name).addRow(hasAny: true)) {
+                            editorState.addComponentVersion(componentID: componentID, from: version,
+                                                            property: variant.id == componentID
+                                                                ? nil : variant.id)
+                        }
+                    }
+                } else {
+                    Button(wording.addRow(hasAny: !variants.isEmpty)) {
+                        editorState.addComponentVersion(componentID: componentID, from: version)
+                    }
+                }
+                // A second question beside the first, Size beside Variant. Only
+                // once there is a first: one drawing is not a question yet.
+                if !variants.isEmpty {
+                    Button(ComponentVariantWording.addPropertyRow) {
+                        editorState.addComponentVariantProperty(componentID: componentID, from: version)
+                    }
                 }
             }
             if candidates.isEmpty {
@@ -1700,7 +1801,32 @@ struct ComponentInstanceProperties: View {
     /// every other row on this panel does, and choosing one puts all of them on
     /// it.
     @ViewBuilder private var versionRow: some View {
-        if selection.hasVersions {
+        if selection.variantRows.count > 1 {
+            // A component asking more than one question: the mock's Variant
+            // and Size, each its own row, each picked on its own
+            // (`#segVariant`, `#segSize`). A combination nobody drew shows the
+            // nearest drawing that was, and the rows still say what was picked.
+            ForEach(selection.variantRows) { row in
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(row.name.uppercased())
+                        .font(.system(size: 9, weight: .bold))
+                        .tracking(0.7)
+                        .foregroundStyle(VideoKit.Palette.faint)
+                        .padding(.top, 4)
+                    SegmentedControl(row.name,
+                                     selection: row.chosen,
+                                     options: row.options.map { .init($0, $0) },
+                                     form: .fill,
+                                     systemHelp: Self.versionHelp) {
+                        editorState.setInstanceVariantAnswer(instances: instances, property: row.id,
+                                                             option: $0)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .panelHelp(Self.versionHelp)
+                }
+                .playtestField(row.name)
+            }
+        } else if selection.hasVersions {
             // The mock's `.mlabel` over a `.seg.stack`: the property's name in
             // small capitals, and its looks as one segmented control across
             // the panel. The control turns itself into a dropdown holding the

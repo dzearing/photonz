@@ -191,6 +191,7 @@ extension PhotonzDocument {
             guard var group = layer.group else { return }
             group.instanceOf = componentID
             group.instanceVersion = newMain.componentVersionID
+            group.instanceAnswers = []
             // Every answer is re-applied below against the new original, which
             // is the only thing that can say whether it fits.
             group.overrides = []

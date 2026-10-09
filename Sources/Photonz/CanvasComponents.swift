@@ -70,6 +70,56 @@ extension CanvasNSView {
         let chips = canvasNameChips().filter { $0.kind != .screen }
         for chip in chips where !chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
         for chip in chips where chip.spelledOut { drawNameChip(chip, into: componentChromeLayer) }
+        drawVariantGridEdges(into: componentChromeLayer)
+    }
+
+    /// The answers along the edges of a component laid out as a grid on its
+    /// Edit Original page: the first question's down the left, the rest along
+    /// the top, the way the variants mock prints its matrix
+    /// (`ui-variants.html`, `.pmatrix .rv` and `.mh`). Read off where the
+    /// drawings stand (`ComponentVariantGrid`), so a drawing dragged out of
+    /// line turns them off rather than leaving them naming the wrong row.
+    ///
+    /// On the plain grey plate a screen's name wears, white on it, because they
+    /// are read over whatever the page is painted and are names, not handles.
+    private func drawVariantGridEdges(into target: CALayer) {
+        guard let viewport, let document else { return }
+        var seen: Set<UUID> = []
+        for main in markedComponents {
+            guard let componentID = main.componentID, seen.insert(componentID).inserted,
+                  let grid = document.componentVariantGrid(of: componentID) else { continue }
+            let whole = viewRect(forDocRect: grid.bounds, in: viewport)
+            let height = CanvasNameLabels.height
+            for row in grid.rows {
+                let box = viewRect(forDocRect: row.box, in: viewport)
+                let width = Self.captionWidth(row.name)
+                drawGridEdge(row.name, frame: CGRect(x: whole.minX - Self.gridEdgeGap - width,
+                                                     y: (box.midY - height / 2).rounded(),
+                                                     width: width, height: height), into: target)
+            }
+            // Above the names each drawing wears over its own corner, so the
+            // two lines of chrome never land on each other.
+            let top = whole.minY - CanvasNameLabels.gap - height - Self.gridEdgeGap - height
+            for column in grid.columns {
+                let box = viewRect(forDocRect: column.box, in: viewport)
+                let width = Self.captionWidth(column.name)
+                drawGridEdge(column.name, frame: CGRect(x: (box.midX - width / 2).rounded(), y: top,
+                                                        width: width, height: height), into: target)
+            }
+        }
+    }
+
+    /// The air between a grid and the answers printed along its edges.
+    static let gridEdgeGap: CGFloat = 12
+
+    private func drawGridEdge(_ word: String, frame: CGRect, into target: CALayer) {
+        let plate = CALayer()
+        plate.frame = frame.insetBy(dx: -CanvasNameLabels.platePadding, dy: -1)
+        plate.cornerRadius = 4
+        plate.contentsScale = window?.backingScaleFactor ?? 2
+        plate.backgroundColor = Self.screenPlateColor
+        target.addSublayer(plate)
+        target.addSublayer(nameTextLayer(word, color: Self.plateInkColor, frame: frame))
     }
 
     /// The plate a name is drawn on at rest: the component violet, taken down

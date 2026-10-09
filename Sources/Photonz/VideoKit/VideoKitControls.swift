@@ -151,7 +151,7 @@ extension VideoKit {
                         RoundedRectangle(cornerRadius: 4).fill(swatch).frame(width: 14, height: 14)
                     }
                     if showsComponentMark {
-                        ComponentGlyphShape().fill(ComponentGlyph.color).frame(width: 11, height: 11)
+                        VideoKit.ComponentMarkShape().fill(Palette.comp).frame(width: 11, height: 11)
                     }
                     Text(value)
                         .font(.system(size: size == .small ? 11 : 11.5, weight: .medium))
@@ -604,5 +604,33 @@ extension [VideoKit.Choice] {
         values.map { value in
             .item(title(value), isOn: value == current, isEnabled: isEnabled(value)) { pick(value) }
         }
+    }
+}
+
+extension VideoKit {
+
+    /// The four-diamond mark a component wears, drawn by the kit itself so a
+    /// kit control can carry it and the kit still stands on its own. The app's
+    /// own `ComponentGlyph` draws the same path.
+    struct ComponentMarkShape: Shape {
+        func path(in rect: CGRect) -> Path { Path(VideoKit.componentMarkPath(in: rect)) }
+    }
+
+    static func componentMarkPath(in rect: CGRect) -> CGPath {
+        let side = min(rect.width, rect.height)
+        let radius = side * 0.22
+        let reach = side * 0.28
+        let center = CGPoint(x: rect.midX, y: rect.midY)
+        let path = CGMutablePath()
+        for offset in [CGPoint(x: 0, y: -reach), CGPoint(x: 0, y: reach),
+                       CGPoint(x: -reach, y: 0), CGPoint(x: reach, y: 0)] {
+            let point = CGPoint(x: center.x + offset.x, y: center.y + offset.y)
+            path.move(to: CGPoint(x: point.x, y: point.y - radius))
+            path.addLine(to: CGPoint(x: point.x + radius, y: point.y))
+            path.addLine(to: CGPoint(x: point.x, y: point.y + radius))
+            path.addLine(to: CGPoint(x: point.x - radius, y: point.y))
+            path.closeSubpath()
+        }
+        return path
     }
 }

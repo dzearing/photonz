@@ -37,6 +37,10 @@ public struct ComponentVariantWording: Hashable, Sendable {
         hasAny ? "Another \(one)" : "A second \(one)"
     }
 
+    /// The row on the component's Add menu that asks a second question beside
+    /// the first, the way Size sits beside Variant on the variants mock.
+    public static let addPropertyRow = "New Variant Property"
+
     /// The same errand on the Layer menu, where there is no list above it to
     /// lean on, so it carries the verb.
     public var addCommand: String { "Add \(one)" }

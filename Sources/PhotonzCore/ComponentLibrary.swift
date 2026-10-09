@@ -176,6 +176,7 @@ extension PhotonzDocument {
         group.versionID = nil
         group.versionName = nil
         group.variantName = nil
+        group.variantAnswers = []
         group.properties = []
         group.isShared = false
         group.instanceOf = componentID
@@ -252,6 +253,10 @@ extension PhotonzDocument {
         space.markInMS = nil
         space.markOutMS = nil
         space.durationMS = nil
+        // A component asking two questions opens as the grid the variants mock
+        // draws: a row per answer to the first, a column per answer to the
+        // rest, with room above and to the left for the names along its edges.
+        space.layOutComponentVariantGridOnPage(componentID: componentID)
         return space
     }
 

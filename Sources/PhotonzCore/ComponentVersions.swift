@@ -36,15 +36,30 @@ public struct ComponentVersion: Hashable, Sendable, Identifiable {
     /// there the layer's own id stands in: nothing can be pointing at it under
     /// another name, because there was never another name.
     public var id: UUID
-    /// What the menu on a copy calls it.
+    /// What the menu on a copy calls it: its answer to every variant question
+    /// the component asks, "Primary · Large", which is just "Primary" on a
+    /// component asking one.
     public var name: String
     /// The main on the canvas that draws it.
     public var layerID: UUID
+    /// Its answer to the component's FIRST variant question, which is what is
+    /// written to the file as its version name.
+    public var option: String
 
-    public init(id: UUID, name: String, layerID: UUID) {
+    public init(id: UUID, name: String, layerID: UUID, option: String? = nil) {
         self.id = id
         self.name = name
         self.layerID = layerID
+        self.option = option ?? name
+    }
+
+    /// The drawing one main is, `index` places into its component's list.
+    static func of(_ main: Layer, at index: Int) -> ComponentVersion {
+        let option = main.componentVersionName ?? ComponentNaming.versionName(at: index)
+        let rest = main.group?.variantAnswers.map(\.option) ?? []
+        return ComponentVersion(id: main.componentVersionID ?? main.id,
+                                name: ([option] + rest).joined(separator: ComponentNaming.answerSeparator),
+                                layerID: main.id, option: option)
     }
 }
 
@@ -78,10 +93,7 @@ extension PhotonzDocument {
     public func componentVersions(of componentID: UUID) -> [ComponentVersion] {
         var found: [ComponentVersion] = []
         for main in mainComponents where main.componentID == componentID {
-            found.append(ComponentVersion(id: main.componentVersionID ?? main.id,
-                                          name: main.componentVersionName
-                                            ?? ComponentNaming.versionName(at: found.count),
-                                          layerID: main.id))
+            found.append(.of(main, at: found.count))
         }
         return found
     }
@@ -130,11 +142,24 @@ extension PhotonzDocument {
     /// than inside whatever holds the one it came from, so adding a version to
     /// a button that lives on a screen never drops a stray button into the
     /// screen.
+    ///
+    /// `answer` is for a component asking more than one variant question: the
+    /// new drawing gives that answer to that question and keeps every other
+    /// answer of the drawing it came from, its first one included
+    /// (`addComponentVariantOption`).
     @discardableResult
     public mutating func addComponentVersion(componentID: UUID, from version: UUID? = nil,
-                                             name: String? = nil) -> UUID? {
+                                             name: String? = nil,
+                                             answer: ComponentVariantAnswer? = nil) -> UUID? {
         guard let source = mainComponent(componentID: componentID, version: version) else { return nil }
         let existing = componentVersions(of: componentID)
+        // The answers the first question already has, each once: on a
+        // component asking two questions Primary is drawn twice, and the next
+        // look is still Variant 3.
+        var firstAnswers: [String] = []
+        for drawing in existing where !firstAnswers.contains(drawing.option) {
+            firstAnswers.append(drawing.option)
+        }
         // From here on every version of this component says which one it is and
         // every copy says which one it shows, so what a copy draws can never
         // depend on the order the layers happen to sit in.
@@ -143,8 +168,8 @@ extension PhotonzDocument {
         var copy = settled.reidentified()
         guard var group = copy.group else { return nil }
         let chosen = ComponentNaming.normalized(name)
-            ?? ComponentNaming.freshVersionName(taken: existing.map(\.name),
-                                                count: existing.count,
+            ?? ComponentNaming.freshVersionName(taken: firstAnswers,
+                                                count: firstAnswers.count,
                                                 property: componentVariantName(of: componentID))
         // `reidentified` mints a component of its own, because duplicating a
         // main is how you get a second component. This is the other errand:
@@ -153,6 +178,15 @@ extension PhotonzDocument {
         let versionID = UUID()
         group.versionID = versionID
         group.versionName = chosen
+        // The answers to every other question come along, so a new look only
+        // differs on the one question it was added for.
+        group.variantAnswers = settled.group?.variantAnswers ?? []
+        if let answer {
+            group.versionName = settled.componentVersionName ?? chosen
+            if let index = group.variantAnswers.firstIndex(where: { $0.property == answer.property }) {
+                group.variantAnswers[index].option = answer.option
+            }
+        }
         copy.content = .group(group)
         copy.name = settled.name
         copy.isLocked = false
@@ -245,7 +279,7 @@ extension PhotonzDocument {
     /// this is written down: a component with one version has nothing to tell
     /// apart, and a document saved before versions existed is byte for byte
     /// what it was.
-    private mutating func settleComponentVersionIdentities(componentID: UUID) {
+    mutating func settleComponentVersionIdentities(componentID: UUID) {
         let versions = componentVersions(of: componentID)
         guard let first = versions.first else { return }
         for version in versions {
@@ -284,9 +318,24 @@ extension PhotonzDocument {
 
     /// Renames a version. A blank name is refused rather than leaving a
     /// nameless row in the menu on every copy.
+    ///
+    /// On a component asking more than one variant question the name IS the
+    /// answers, "Primary · Large", so a name typed with one part per question
+    /// answers each question, and anything else answers the first.
     public mutating func renameComponentVersion(componentID: UUID, version: UUID, to name: String) {
         guard let match = componentVersion(of: componentID, id: version),
               let chosen = ComponentNaming.normalized(name) else { return }
+        let properties = componentVariantProperties(of: componentID)
+        if properties.count > 1 {
+            let parts = chosen.components(separatedBy: ComponentNaming.answerSeparator.trimmingCharacters(in: .whitespaces))
+                .compactMap { ComponentNaming.normalized($0) }
+            let answers = parts.count == properties.count ? parts : [chosen]
+            for (property, answer) in zip(properties, answers) {
+                setComponentVariantOption(componentID: componentID, drawing: match.layerID,
+                                          property: property.id, to: answer)
+            }
+            return
+        }
         updateLayer(id: match.layerID) { layer in
             guard var group = layer.group else { return }
             group.versionName = chosen
@@ -331,6 +380,9 @@ extension PhotonzDocument {
         updateLayer(id: instance) { layer in
             guard var group = layer.group else { return }
             group.instanceVersion = version
+            // A whole drawing picked is a whole combination picked, so any
+            // combination nobody drew that this copy was asking for is let go.
+            group.instanceAnswers = []
             layer.content = .group(group)
         }
         return true
@@ -401,10 +453,7 @@ extension PhotonzDocument {
         for main in mains {
             guard let componentID = main.componentID else { continue }
             var versions = byComponent[componentID] ?? []
-            versions.append(ComponentVersion(id: main.componentVersionID ?? main.id,
-                                             name: main.componentVersionName
-                                               ?? ComponentNaming.versionName(at: versions.count),
-                                             layerID: main.id))
+            versions.append(.of(main, at: versions.count))
             byComponent[componentID] = versions
         }
         return byComponent.filter { $0.value.count > 1 }
