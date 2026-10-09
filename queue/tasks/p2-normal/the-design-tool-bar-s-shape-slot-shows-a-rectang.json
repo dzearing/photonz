@@ -1,0 +1,30 @@
+{
+  "id": "the-design-tool-bar-s-shape-slot-shows-a-rectang",
+  "title": "The Design tool bar's Shape slot shows a rectangle until you pick another shape",
+  "goal": "In the Design mode the UI mock draws the Shape tool as a square with the tip Shape (R). Photonz shows the shapes family's first member, the Line, until you have used another shape, so a person building a screen sees a line where the mock promises a rectangle.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 3930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T17:03:44.704Z",
+  "updated": "2026-10-09T17:03:44.707Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Seen in /tmp/photonz-playtest/design-mode-tool-strip-walk/1-design-tool-strip-sc.png. ToolGroup.shapes.tools is [.line, .rectangle, .ellipse]; member(from:) falls back to tools[0]. EditorState.swift:3912 reads the remembered member. Mock: ui-entry-wt.html tShape ic-square \"Shape (R)\".",
+  "acceptance": [
+    "In a fresh Design mode window the Shape slot shows the Rectangle and its tip reads Rectangle (R) or Shape (R)",
+    "Once a person picks another shape the slot remembers it, as it does today",
+    "The picture tool bar outside Design keeps its own default"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T17:03:44.706Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "design-mode-tool-strip-walk"
+  ]
+}

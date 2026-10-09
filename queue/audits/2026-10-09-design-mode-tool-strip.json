@@ -1,0 +1,29 @@
+{
+  "feature": "Design mode puts the UI tools in the tool bar",
+  "epic": "ui-building",
+  "summary": "A new UI design from the front door now opens with a tool bar for building screens: Select, then Frame, Shapes, Pen and Text, then Measure. Every other tool waits under More with its key, and leaving Design gives the full bar back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/design-mode-tool-strip-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press Command N, pick the Design UI tile and press New UI canvas.", "shot": "2026-10-09-design-tool-strip-1.png" },
+    { "do": "Rest the pointer on each tool in the bar to read its name and key." },
+    { "do": "Press F, then R, then T: each picks its tool on the bar." },
+    { "do": "Press C: Crop is picked from under More, and More lights.", "shot": "2026-10-09-design-tool-strip-2.png" },
+    { "do": "Press Escape, then choose Show Everything from the mode chip.", "shot": "2026-10-09-design-tool-strip-3.png" },
+    { "do": "Choose Design from the chip again: the UI tools come back." }
+  ],
+  "evaluate": [
+    "Is this the bar you expect when you start a UI design?",
+    "When you press C in Design, does a lit More tell you enough about where Crop went?",
+    "Should a picture tool you pick by its key in Design join the bar for a while instead of staying under More?",
+    "Does it feel right that a recording opened while in Design keeps the video tool bar?"
+  ],
+  "rough": [
+    "The mock's Component insert tool is not there yet: Photonz has no such tool, and its letter C is Crop's. Filed as a-component-tool-places-a-component-from-the-too.",
+    "The mock's Hand tool is not there yet: Photonz pans with space-drag, and H is Highlight's. Filed as a-hand-tool-pans-the-canvas-from-the-tool-bar.",
+    "The mock's Zoom button is left out: zoom is not a tool, your call on 2026-09-29.",
+    "The Shape slot shows a line until you have used another shape, where the mock draws a square. Filed as the-design-tool-bar-s-shape-slot-shows-a-rectang.",
+    "The mock folds Shape, Pen, Text and Measure first when the window is narrow and keeps Hand; Photonz folds the strip from its far end. Matches once Hand exists only if the fold order is revisited; covered by a-hand-tool-pans-the-canvas-from-the-tool-bar.",
+    "A document with time keeps the video's tool bar in Design, because the mode is app-wide and a recording still needs its Blade."
+  ]
+}

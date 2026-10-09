@@ -1,0 +1,35 @@
+{
+  "id": "a-hand-tool-pans-the-canvas-from-the-tool-bar",
+  "title": "A Hand tool pans the canvas from the tool bar",
+  "goal": "The UI design mock (and Photoshop) has a Hand tool at the end of the tool bar: pick it and dragging the canvas scrolls the view instead of moving things. Photonz pans only with space-drag or the trackpad, so the Design mode tool bar is missing the mock's Hand.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 3910,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T17:03:36.505Z",
+  "updated": "2026-10-09T17:09:11.263Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tHand, title \"Hand (H)\"; UX-PATTERNS D4 lists Hand as a shared tool in every app strip. ToolBarFold.videoLeading earlier left Hand out as \"not a tool in this app\": a runner's call, not the user's; the user's 2026-09-29 rule is only that zoom is not a tool. Add .tool(.hand) to WindowModes.designStrip in its own family after Measure. Memory: Photoshop shortcut parity says relocate the non-PS feature on conflict, so Highlight would move, which changes picture users' keys: card it.",
+  "acceptance": [
+    "A Hand tool exists and sits at the end of the Design mode tool bar, after Measure, as the mock draws it",
+    "With it in hand a drag on the canvas pans the view and never moves or picks a layer",
+    "It has a key that collides with no other tool (Photoshop and the mock say H, which Highlight owns here; who keeps H is a decision card)",
+    "A walk at Next defaults drags the canvas with it by pointer and the view moves"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T17:03:36.507Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T17:09:11.262Z",
+      "note": "When Hand joins the Design strip, check the narrow-window fold order: the mock (ovf class) folds Shape, Pen, Text and Measure first and keeps Select, Frame, Component and Hand. ToolBarFold's strip init folds from the far end, so Hand would fold first unless priority is split from draw order."
+    }
+  ],
+  "walks": [
+    "design-mode-tool-strip-walk"
+  ]
+}

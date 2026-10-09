@@ -286,8 +286,15 @@ Measurements list is offered only once the document holds a measurement. So
 Redline pinning Measurements ON did precisely nothing, watched on 2026-09-22.
 Every shipped preset is folds only, and `WindowMode.preset` says why.
 
-Still to build, and filed as the second slice: tool groups folding into the
-overflow, and a mode being a record somebody can write rather than a list in
+Tool groups folding into the overflow landed for Design on 2026-10-09: a mode
+may carry a `toolStrip`, the slots it puts in front of the bar in families, and
+`ToolBarFold.init(_:strip:room:metrics:keeping:)` folds every other slot under
+More with its key. Design's strip is the UI entry mock's Select | Frame, Shapes,
+Pen, Text | Measure; its Component insert and Hand are filed as tools to build,
+its Zoom is not a tool. A document with time keeps the video's bar in any mode.
+A tool from outside the strip picked by its key stays under More and More lights.
+
+Still to build, and filed as the second slice: a mode being a record somebody can write rather than a list in
 Swift (section 4). Also unbuilt: two windows onto one file in two different
 modes, which needs the panel's choices to become per-window first — they are one
 app-wide setting today, and so is the mode.

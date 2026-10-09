@@ -1285,6 +1285,15 @@ struct EditorView: View {
                                        withPen: Experiments.shared.penEnabled)
         let lit: ToolBarLayout.Entry? = isVideoBar && editorState.isTimelineBlade
             ? .blade : layout.entry(for: editorState.activeTool)
+        // A mode with tools of its own (Design) puts them in front and folds
+        // the rest under More. A document with time keeps the video's bar: the
+        // mode is app-wide, and a recording opened while in Design still needs
+        // its Blade.
+        if !isVideoBar, Experiments.shared.windowModesEnabled,
+           let strip = WindowModeStore.shared.mode.toolStrip {
+            return ToolBarFold(layout, strip: strip, room: toolRowRoom,
+                               metrics: toolRowMetrics(layout), keeping: lit)
+        }
         return ToolBarFold(layout, leading: isVideoBar ? ToolBarFold.videoLeading : [],
                            room: toolRowRoom, metrics: toolRowMetrics(layout), keeping: lit)
     }

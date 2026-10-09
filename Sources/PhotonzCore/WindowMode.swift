@@ -11,9 +11,9 @@ import Foundation
 ///
 /// What a mode is made of is deliberately small: a bundle of
 /// `PanelSectionVisibility.Choices`, which is already a per-section yes/no the
-/// app saves and reads back. That is the first slice. Folding tool groups into
-/// the overflow, and writing modes down as data so a new one needs no Swift,
-/// are later slices and are filed separately.
+/// app saves and reads back, and optionally the tools it puts in front of the
+/// tool bar (`toolStrip`), the rest folding under More. Writing modes down as
+/// data so a new one needs no Swift is a later slice, filed separately.
 public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// The id written to settings. Stable; the title may be reworded.
     public let id: String
@@ -46,13 +46,25 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// different feature and not this one.
     public let preset: PanelSectionVisibility.Choices
 
+    /// The tools this mode puts in front of the tool bar, in families, or nil
+    /// for a mode that leaves the window's own bar as it is.
+    ///
+    /// **Folds only, never removes.** Every tool the bar holds that is not in
+    /// the strip goes under More and keeps its key and its row there
+    /// (`ToolBarFold.init(_:strip:room:metrics:keeping:)`), so a mode changes
+    /// what is in front and never what you can reach. A strip tool the release
+    /// has not switched on is simply not drawn.
+    public let toolStrip: [[ToolBarLayout.Entry]]?
+
     public init(id: String, title: String, summary: String, symbol: String,
-                preset: PanelSectionVisibility.Choices) {
+                preset: PanelSectionVisibility.Choices,
+                toolStrip: [[ToolBarLayout.Entry]]? = nil) {
         self.id = id
         self.title = title
         self.summary = summary
         self.symbol = symbol
         self.preset = preset
+        self.toolStrip = toolStrip
     }
 }
 
@@ -104,7 +116,19 @@ public enum WindowModes {
             title: "Design",
             summary: "Building screens out of components.",
             symbol: "square.on.square",
-            preset: choices(["measurements": false, "motion": false])),
+            preset: choices(["measurements": false, "motion": false]),
+            toolStrip: designStrip),
+    ]
+
+    /// The tools for building screens, as the UI entry mock draws them
+    /// (`ui-entry-wt.html` step 4, UX-PATTERNS D4 "UI design"):
+    /// Select | Frame, Shape, Pen, Text | Measure. The mock's Component insert
+    /// and Hand are not tools in this app yet, and its Zoom is not a tool at
+    /// all (the user, 2026-09-29), so they are not here.
+    public static let designStrip: [[ToolBarLayout.Entry]] = [
+        [.tool(.select)],
+        [.tool(.frame), .group(.shapes), .tool(.pen), .tool(.text)],
+        [.tool(.measure)],
     ]
 
     /// The one mode that folds nothing.

@@ -1,0 +1,31 @@
+{
+  "id": "a-component-tool-places-a-component-from-the-too",
+  "title": "A Component tool places a component from the tool bar",
+  "goal": "The UI design mock puts a Component tool in the tool bar right after Frame: pick it, click or drag on the canvas, and a component from the library lands there. Photonz has no such tool yet, so the Design mode tool bar is one short of the mock and placing a component means dragging from the Library.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 3900,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T17:03:36.419Z",
+  "updated": "2026-10-09T17:03:36.422Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tool strip id tComp, title \"Component insert (C)\", style color:var(--comp); UX-PATTERNS D4 UI design. Strip lives in WindowModes.designStrip (Sources/PhotonzCore/WindowMode.swift): add .tool(.component) after .tool(.frame) once the Tool case exists. Key conflict: Tool.shortcutKey gives C to crop/trim. Acceptance of the strip task says every tool keeps its key in every mode, so no mode-dependent C.",
+  "acceptance": [
+    "A Component tool exists, sits between Frame and Shapes in the Design mode tool bar, and is drawn in the component colour as the mock draws it",
+    "Picking it and clicking the canvas places the component the Library has picked (or asks which one) at the click",
+    "It has a key that collides with no other tool (the mock says C, which is Crop here and in Photoshop; if C cannot be shared, the letter is a decision card)",
+    "Its row is under More and in Edit > Tools in every other mode, and a walk at Next defaults places a component with it by pointer"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T17:03:36.421Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "design-mode-tool-strip-walk"
+  ]
+}

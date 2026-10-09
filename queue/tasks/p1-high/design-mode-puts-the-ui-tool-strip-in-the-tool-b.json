@@ -1,0 +1,49 @@
+{
+  "id": "design-mode-puts-the-ui-tool-strip-in-the-tool-b",
+  "title": "Design mode puts the UI tool strip in the tool bar",
+  "goal": "When a window is in the Design mode (which the front door's Design UI template now puts it in), the tool bar should hold the tools the UI entry mock draws for building screens: Select, Frame, Component, Shape, Pen, Text, Measure and Hand. Today a mode only folds panel sections, so a new UI design opens with the ordinary picture tool bar.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 3890,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T16:31:10.566Z",
+  "updated": "2026-10-09T17:09:11.202Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found finishing new-window-opens-a-front-door-with-a-starting-te (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html step 4, tool strip ids tSelect, tFrame, tComp, tShape, tPen, tText, tMeasure, tHand (tZoom is in the mock too, but zoom is not a tool: the user, 2026-09-29, and UX-PATTERNS placement contract). WindowMode (Sources/PhotonzCore/WindowMode.swift) says folding tool groups is a later slice; ToolBarLayout/ToolBarFold is where the bar is built. Seen: Scripts/playtest/front-door-walk.json front-door-2-editor-sc.png shows the Design chip over the ordinary bar (select, marquee, crop, measure, arrow, line, pen, text, shapes, frame, path, fill).",
+  "acceptance": [
+    "At Next defaults, a window in the Design mode shows the mock's UI tools in the tool bar, in the mock's order, with their keys",
+    "Leaving Design (or Show Everything) brings back the tool bar the window had",
+    "Every tool still has its key and its row under More in every mode; nothing is removed",
+    "A walk starts from the front door's Design UI tile and reads the tool bar by pointer at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T16:31:10.568Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T16:31:17.827Z",
+      "note": "walks front-door-walk -> none"
+    },
+    {
+      "t": "2026-10-09T16:51:11.637Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T16:52:29.369Z",
+      "note": "Adversarial review before building. (1) The mock's strip (ui-entry-wt step 4, UX-PATTERNS D4 UI design) is Select | Frame, Component insert, Shape, Pen, Text | Measure | Hand, Zoom. The app has Select, Frame, the Shapes family, Pen, Text and Measure at Next defaults (next-frames, next-pen on). It has NO Component insert tool and NO Hand tool; Zoom is not a tool (user, 2026-09-29). (2) Both missing tools collide with keys people already use: the mock gives Component insert C (Crop's key, Photoshop's) and Hand H (Highlight's key here; Photoshop's Hand). The acceptance says every tool keeps its key in every mode, so a mode-dependent C is out. Those are prerequisites to file, not things to fake as dead buttons. (3) A Photoshop/Figma user expects V, F, R, P, T and I to work exactly as they do now: they do, the strip only changes what is in front. (4) Modes are app-wide; a recording opened while in Design still needs the Blade, so a document with time keeps the video's bar. (5) A tool outside the strip picked by its key (C for Crop) stays under More and More lights, the same rule the fold already has."
+    },
+    {
+      "t": "2026-10-09T17:09:11.201Z",
+      "note": "walks none -> design-mode-tool-strip-walk, front-door-walk"
+    }
+  ],
+  "walks": [
+    "design-mode-tool-strip-walk",
+    "front-door-walk"
+  ],
+  "started": "2026-10-09T16:51:11.636Z"
+}

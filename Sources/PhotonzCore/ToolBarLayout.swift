@@ -146,7 +146,7 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
 /// slot per family, last member remembered) rather than its literal sequence,
 /// because it has no arrow, highlight or zoom callout to place.
 public struct ToolBarLayout: Hashable, Sendable {
-    public enum Entry: Hashable, Sendable {
+    public enum Entry: Hashable, Sendable, Codable {
         case tool(Tool)
         case group(ToolGroup)
         /// The timeline's Blade. Not a canvas tool (a click on the picture has
@@ -309,13 +309,47 @@ public struct ToolBarFold: Hashable, Sendable {
     /// More and More lights.
     public init(_ layout: ToolBarLayout, leading: [[ToolBarLayout.Entry]] = [],
                 room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry? = nil) {
-        let draw = Self.drawingOrder(layout, leading: leading)
+        self.init(drawing: Self.drawingOrder(layout, leading: leading), folding: [],
+                  room: room, metrics: metrics, keeping: lit)
+    }
+
+    /// Folds `layout` to a mode's `strip` (`WindowMode.toolStrip`): only the
+    /// strip's slots can be in front, in the strip's order and families, as
+    /// many as fit the `room`; every other slot of the bar is under More in the
+    /// bar's own order, with its key and its row.
+    ///
+    /// A strip slot the layout does not hold (a tool this release has not
+    /// switched on) is left out rather than drawn dead. `lit` swaps in only
+    /// from the strip: a tool from outside it stays under More and More lights,
+    /// because the mode chose what is in front.
+    public init(_ layout: ToolBarLayout, strip: [[ToolBarLayout.Entry]],
+                room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry? = nil) {
+        var seen: Set<ToolBarLayout.Entry> = []
+        var draw: [[ToolBarLayout.Entry]] = []
+        for family in strip {
+            var kept: [ToolBarLayout.Entry] = []
+            for entry in family {
+                let slot = Self.slot(for: entry, in: layout)
+                guard layout.entries.contains(slot) else { continue }
+                if seen.insert(slot).inserted { kept.append(slot) }
+            }
+            if !kept.isEmpty { draw.append(kept) }
+        }
+        self.init(drawing: draw, folding: layout.entries.filter { !seen.contains($0) },
+                  room: room, metrics: metrics, keeping: lit)
+    }
+
+    /// The fold both public room-based folds share: `draw` is every slot that
+    /// may be in front, in families and priority order; `rest` is under More
+    /// whatever the room.
+    private init(drawing draw: [[ToolBarLayout.Entry]], folding rest: [ToolBarLayout.Entry],
+                 room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry?) {
         let priority = draw.flatMap { $0 }
         func row(_ keep: Set<ToolBarLayout.Entry>) -> [[ToolBarLayout.Entry]] {
             draw.map { $0.filter(keep.contains) }.filter { !$0.isEmpty }
         }
         func fits(_ keep: Set<ToolBarLayout.Entry>) -> Bool {
-            metrics.width(of: row(keep), more: keep.count < priority.count) <= room
+            metrics.width(of: row(keep), more: keep.count < priority.count || !rest.isEmpty) <= room
         }
         var count = priority.count
         while count > 0, !fits(Set(priority.prefix(count))) { count -= 1 }
@@ -329,7 +363,7 @@ public struct ToolBarFold: Hashable, Sendable {
             }
         }
         self.shown = row(keep)
-        self.folded = priority.filter { !keep.contains($0) }
+        self.folded = priority.filter { !keep.contains($0) } + rest
     }
 
     /// The families the bar draws in, left to right: `leading`'s, then the
