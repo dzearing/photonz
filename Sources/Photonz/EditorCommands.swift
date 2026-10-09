@@ -1765,6 +1765,15 @@ struct EditorCommands: Commands {
             // duplicate-selected-layer case when no region is marqueed).
             Button("Duplicate Layer") { editor?.duplicateSelectedLayers() }
                 .disabled(!hasLayerSelection)
+            // A copy reflected about the middle of its frame, so the second
+            // half of a symmetrical icon is exact (`MirrorAcrossCenter.swift`).
+            // Pictures and icons only: on a video ⇧⌘M is Go to Previous
+            // Marker, and the row is absent there.
+            if Experiments.shared.mirrorAcrossCenterEnabled && !timed {
+                Button(MirrorAcrossCenter.title) { editor?.mirrorSelectionAcrossCenter() }
+                    .keyboardShortcut("m", modifiers: [.command, .shift])
+                    .disabled(!(editor?.canMirrorSelectionAcrossCenter ?? false))
+            }
             if Experiments.shared.proMenuBarEnabled {
                 layerListRows
             }

@@ -20985,3 +20985,11 @@ Next: the first editor window's ~200 ms first build
 - The starter accent and quiet text are the design system's (#4C6FFF, #5C6371). Documents that already took a Button keep their one-look Button.
 - Walks: new `starter-button-looks-walk`; 16 walks that used the Button as a one-look component moved to the Badge or Text Field, or now read the nine looks.
 - Next: `the-starter-button-primary-shines-like-the-mock` (gloss and the Icon face glyph), `edit-original-draws-a-two-question-component-ins` (now p1: the nine looks crowd the grid), decision card on dark-mode colours.
+
+## 2026-10-09 — Mirror Across Center
+
+- Layer ▸ Mirror Across Center (⇧⌘M, pictures and icons only) copies the picked layers reflected about the vertical middle of the frame they sit on (the canvas middle on no frame), each directly above its original, picked, one undo step. Also in the Layers panel menu under Group Selection (icon-draw-wt.html `#layerMenu`) and on a shape's right-click under Duplicate. Flag `next-mirror-across-center`, on in Next.
+- Core in `MirrorAcrossCenter.swift` (tested): a path reflects point for point with handles, a line/arrow its ends and bend side, a rounded box swaps left/right corners, pictures and text flip; turns run the other way; the look (shadows) is kept. "Shoulder left" mirrors to "Shoulder right".
+- On a video the row is absent and ⇧⌘M stays Go to Previous Marker; walks get a ⇧⌘M stand-in (`PlaytestMenuStandIn`) and a `mirrorAcrossCenter` action.
+- Walks: `mirror-across-center-walk`, `mirror-across-center-right-click-walk`.
+- Next: `the-layers-panel-menu-carries-the-icon-mock-s-ce` (the mock's Center on the artboard, Union, Outline stroke rows).

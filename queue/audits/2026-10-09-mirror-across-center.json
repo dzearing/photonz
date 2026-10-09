@@ -1,0 +1,31 @@
+{
+  "feature": "Mirror Across Center",
+  "epic": "icon-vector",
+  "summary": "Draw one half of a symmetrical icon, press Shift Command M, and the other half appears reflected about the middle of the frame, exact to the unit, picked and one undo away. Beside icon-draw-wt.html step 7: the shoulder at 9, 10 is copied to 15, 10.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: mirror-across-center-walk and mirror-across-center-right-click-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Layer > New Frame, pick 24 in Icons, Add Frame.", "shot": "2026-10-09-mirror-1-one-shoulder.png" },
+    { "do": "Draw a circle and set it to X 6, Y 7, W 6, H 6 in Position and Size (Option Command P)." },
+    { "do": "Press Shift Command M.", "shot": "2026-10-09-mirror-2-by-key.png" },
+    { "do": "Press Command Z, then pick the circle and choose Mirror Across Center from the three dots on the Layers header.", "shot": "2026-10-09-mirror-3-layers-menu.png" },
+    { "do": "Right click the circle and choose Mirror Across Center.", "shot": "2026-10-09-mirror-4-right-click.png" },
+    { "do": "Switch to the light appearance and look at both shoulders and the picked one.", "shot": "2026-10-09-mirror-5-light.png" },
+    { "do": "Name a shape \"Wing left\" and mirror it: the copy is called \"Wing right\"." },
+    { "do": "Open a video: Shift Command M still goes to the previous marker, and Mirror is not in the Layer menu." }
+  ],
+  "evaluate": [
+    "Is the middle of the frame the line you expected the copy to reflect about, rather than the middle of the shape or the canvas?",
+    "Is it right that the copy, not the original, ends up picked?",
+    "Is Layer > Mirror Across Center, right under Duplicate Layer, where you would look for it in the menu bar?",
+    "Should a shadow on the copy stay cast the same way (it does now), or flip with the shape?"
+  ],
+  "rough": [
+    "The mock's Layers menu also draws Center on the artboard, Union and Outline stroke under Mirror Across Center; none is in the panel menu yet. Filed as the-layers-panel-menu-carries-the-icon-mock-s-ce.",
+    "The mock prints Center on the artboard on Option Command C; that key stays Canvas Size (Photoshop parity), and the-layers-panel-menu-carries-the-icon-mock-s-ce must pick another key or ask.",
+    "The copy's name matches the mock: \"Shoulder left\" mirrors to \"Shoulder right\". A shape the app named (\"Ellipse\") mirrors to \"Ellipse 2\", as a duplicate does.",
+    "Pictures and text are mirrored by flipping them, so mirrored words read backwards, as a reflection does in any drawing app.",
+    "Not offered on a video at all: there Shift Command M is Go to Previous Marker, and a copy would carry its movement unreflected.",
+    "The panel menu opens to the right of its three dots and runs past the window edge in the walk's picture; that is how the Layers menu has always opened, not new here."
+  ]
+}

@@ -113,6 +113,8 @@ public enum FeatureCatalog {
 
     public static let iconPreviewsFlag = "next-icon-previews"
 
+    public static let mirrorAcrossCenterFlag = "next-mirror-across-center"
+
     public static let libraryFlag = "next-library"
 
     public static let componentsFlag = "next-components"
@@ -1211,6 +1213,16 @@ public enum FeatureCatalog {
                     name: iconPreviewsFlag,
                     title: "See an icon at the size it will be used",
                     description: "Working in an icon frame shows it at 16 to 64 pixels in the corner of the canvas, playing when it moves. Off means no preview row.",
+                    area: .icons,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: mirrorAcrossCenterFlag,
+                    title: "Mirror a shape across the center",
+                    description: "Layer ▸ Mirror Across Center (⇧⌘M) copies the picked shape reflected about the middle of its frame, so a symmetrical icon is exact. Off means no Mirror command.",
                     area: .icons,
                     isEnabled: false,
                     parameters: []),

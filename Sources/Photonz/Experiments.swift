@@ -752,6 +752,13 @@ extension Experiments {
         iconFramesEnabled && isEnabled(FeatureCatalog.iconPreviewsFlag)
     }
 
+    /// `next-mirror-across-center`: whether Mirror Across Center is offered in
+    /// the Layer menu, the Layers panel menu and a shape's right-click menu.
+    /// It needs nothing else: a shape on no frame mirrors about the canvas.
+    var mirrorAcrossCenterEnabled: Bool {
+        isEnabled(FeatureCatalog.mirrorAcrossCenterFlag)
+    }
+
     /// `next-library`: whether the right dock offers the Library shelf and the
     /// View menu its Show Library row. The Library exists to hold reusable
     /// pieces, and the first of those is a group you promote, so this needs

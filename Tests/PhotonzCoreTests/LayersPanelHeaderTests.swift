@@ -18,12 +18,14 @@ import Testing
         #expect(LayersPanelHeader.makeComponentHelp == "Make Component (\u{2325}\u{2318}K)")
     }
 
-    @Test func theMenuIsTheMocksThreeRowsInItsOrder() {
+    @Test func theMenuIsTheMocksRowsInItsOrder() {
+        // Mirror Across Center under Group Selection, as `icon-draw-wt.html`
+        // draws the same menu.
         #expect(LayersPanelHeader.MenuRow.allCases.map(\.title)
-            == ["Group Selection", "Make Component", "Hide This Panel"])
-        // A divider before Hide: the first two act on the layers, the last on
-        // the window.
-        #expect(LayersPanelHeader.MenuRow.allCases.map(\.startsSection) == [false, false, true])
+            == ["Group Selection", "Mirror Across Center", "Make Component", "Hide This Panel"])
+        // A divider before Hide: the rest act on the layers, the last on the
+        // window.
+        #expect(LayersPanelHeader.MenuRow.allCases.map(\.startsSection) == [false, false, false, true])
     }
 
     @Test func eachRowCarriesTheKeyItsMenuBarTwinAnswersTo() {

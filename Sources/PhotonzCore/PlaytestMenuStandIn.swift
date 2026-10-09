@@ -116,5 +116,9 @@ public enum PlaytestMenuStandIn {
         // Layer ▸ Move the Pivot, plain Y: the Around menu's Somewhere else
         // in the menu bar. Window-scoped like undo.
         Chord(key: "y", modifiers: []): .moveThePivot,
+        // Layer ▸ Mirror Across Center, on a picture or an icon. Window-scoped
+        // like undo. On a video the same chord is Go to Previous Marker, which
+        // the timeline answers itself before the menu is asked.
+        Chord(key: "m", modifiers: [.command, .shift]): .mirrorAcrossCenter,
     ]
 }

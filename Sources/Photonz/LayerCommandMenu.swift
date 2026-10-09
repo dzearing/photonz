@@ -85,6 +85,13 @@ enum LayerCommandList {
         let duplicateKey: MenuShortcut = Experiments.shared.menuKeysDoWhatTheySayEnabled
             ? .command("j") : .command("d")
         rows.append(.command("Duplicate", duplicateKey) { editorState.duplicateLayer(id: id) })
+        // Its reflected copy, right under the plain one: the second half of
+        // a symmetrical drawing, placed by arithmetic (`MirrorAcrossCenter`).
+        if editorState.canMirrorRowAcrossCenter(id: id) {
+            rows.append(.command(MirrorAcrossCenter.title, .commandShift("m")) {
+                editorState.mirrorRowAcrossCenter(id: id)
+            })
+        }
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one
         // right click away (`EditorState+Look.swift`).

@@ -37,14 +37,16 @@ public enum LayersPanelHeader {
         }
     }
 
-    /// The panel menu, top down.
+    /// The panel menu, top down. Mirror Across Center sits under Group
+    /// Selection, where `icon-draw-wt.html` `#layerMenu` puts it.
     public enum MenuRow: CaseIterable, Sendable {
-        case groupSelection, makeComponent, hidePanel
+        case groupSelection, mirrorAcrossCenter, makeComponent, hidePanel
 
         /// The mock's words in the menu bar's Title Case.
         public var title: String {
             switch self {
             case .groupSelection: "Group Selection"
+            case .mirrorAcrossCenter: MirrorAcrossCenter.title
             case .makeComponent: LayersPanelHeader.makeComponent
             case .hidePanel: "Hide This " + PanelCopy.noun
             }
@@ -54,13 +56,16 @@ public enum LayersPanelHeader {
         public var shortcut: Shortcut? {
             switch self {
             case .groupSelection: Shortcut(key: "g", modifiers: [.command])
+            // On a picture or an icon only: on a video ⇧⌘M is Go to Previous
+            // Marker, and the app leaves this row out there.
+            case .mirrorAcrossCenter: Shortcut(key: "m", modifiers: [.shift, .command])
             case .makeComponent: Shortcut(key: "k", modifiers: [.option, .command])
             // Show Panel is a setting with a checkmark; this row only hides.
             case .hidePanel: nil
             }
         }
 
-        /// Whether a divider goes above the row: the first two act on the
+        /// Whether a divider goes above the row: the others act on the
         /// layers, the last on the window.
         public var startsSection: Bool { self == .hidePanel }
     }

@@ -46,9 +46,10 @@ private struct MakeComponentHeaderButton: View {
     }
 }
 
-/// The three dots at the end of the Layers header (`components.html`,
-/// `#layerMenu`): Group Selection, Make Component, and Hide This Panel. Each
-/// is its menu bar twin, under the same name and on the same key.
+/// The three dots at the end of the Layers header (`components.html` and
+/// `icon-draw-wt.html`, `#layerMenu`): Group Selection, Mirror Across Center,
+/// Make Component, and Hide This Panel. Each is its menu bar twin, under the
+/// same name and on the same key.
 private struct LayersPanelMenu: View {
     @Environment(EditorState.self) private var editorState
 
@@ -69,7 +70,7 @@ private struct LayersPanelMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .accessibilityLabel(LayersPanelHeader.menuName)
-        .panelHelp("Group, make a component, or hide")
+        .panelHelp("Group, mirror, make a component, or hide")
         .playtestControl(LayersPanelHeader.menuName, detail: "the three dots on the Layers header")
     }
 
@@ -88,6 +89,7 @@ private struct LayersPanelMenu: View {
         LayersPanelHeader.MenuRow.allCases.filter { row in
             switch row {
             case .groupSelection: Experiments.shared.layerGroupsEnabled
+            case .mirrorAcrossCenter: editorState.offersMirrorAcrossCenter
             case .makeComponent: editorState.componentsEnabled
             case .hidePanel: true
             }
@@ -97,6 +99,7 @@ private struct LayersPanelMenu: View {
     private func canPerform(_ row: LayersPanelHeader.MenuRow) -> Bool {
         switch row {
         case .groupSelection: editorState.canGroupSelection
+        case .mirrorAcrossCenter: editorState.canMirrorSelectionAcrossCenter
         case .makeComponent: editorState.canMakeComponent
         case .hidePanel: true
         }
@@ -105,15 +108,19 @@ private struct LayersPanelMenu: View {
     private func perform(_ row: LayersPanelHeader.MenuRow) {
         switch row {
         case .groupSelection: editorState.groupSelection()
+        case .mirrorAcrossCenter: editorState.mirrorSelectionAcrossCenter()
         case .makeComponent: editorState.makeComponent()
         case .hidePanel: editorState.setInspectorVisible(false)
         }
     }
 
-    /// The mock's `ic-group`, `ic-component` and `ic-sidebar`.
+    /// The mock's `ic-group`, `ic-flip-horizontal`, `ic-component` and
+    /// `ic-sidebar`.
     private static func icon(_ row: LayersPanelHeader.MenuRow) -> Image {
         switch row {
         case .groupSelection: Image(systemName: "rectangle.3.group")
+        // The mock's `ic-flip-horizontal`.
+        case .mirrorAcrossCenter: Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
         case .makeComponent: Image(nsImage: componentIcon)
         case .hidePanel: Image(systemName: "sidebar.right")
         }

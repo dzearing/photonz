@@ -6617,6 +6617,11 @@ private final class Run {
                 }
                 editor.beginPlacingMotionPivot()
                 actionDetail = "the next press on the canvas puts the pivot down"
+            case .mirrorAcrossCenter:
+                guard editor.canMirrorSelectionAcrossCenter else {
+                    throw Failure(description: "nothing picked can be mirrored across the center")
+                }
+                editor.mirrorSelectionAcrossCenter()
             case .pasteLook: editor.pasteLook()
             case .toggleTimingStrip:
                 editor.toggleMotionStrip()

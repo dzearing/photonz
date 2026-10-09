@@ -1872,6 +1872,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// picked turn's pivot down. A window-scoped row like the two above.
     /// Fails where nothing picked is turning.
     case moveThePivot
+    /// Layer ▸ Mirror Across Center (⇧⌘M): a copy of the picked layers,
+    /// reflected about the middle of their frame. A window-scoped row like the
+    /// two above. Fails where nothing picked can be mirrored.
+    case mirrorAcrossCenter
     /// View ▸ Show Timing (⌥⌘T): the timing strip under the canvas, opened or
     /// put away. A window-scoped row like the two above.
     case toggleTimingStrip

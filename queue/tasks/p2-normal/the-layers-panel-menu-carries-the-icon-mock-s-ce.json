@@ -1,0 +1,28 @@
+{
+  "id": "the-layers-panel-menu-carries-the-icon-mock-s-ce",
+  "title": "The Layers panel menu carries the icon mock's Center on the artboard, Union and Outline stroke rows",
+  "goal": "The icon drawing mock puts five commands in the Layers panel menu; after Mirror Across Center landed the menu has the first two (Group Selection, Mirror Across Center) but not Center on the artboard, Union or Outline stroke, so someone following the icon walkthrough cannot find them there.",
+  "epic": "icon-vector",
+  "priority": "p2-normal",
+  "seq": 3910,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T14:22:50.271Z",
+  "updated": "2026-10-09T14:22:50.274Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while doing mirror-across-center-copies-a-shape-about-the-mi (2026-10-09). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 491 #layerMenu. Union already exists as right-click Combine Shapes > Join (PathCombining.swift); Outline stroke (stroke to filled path) does not exist anywhere yet. Center on the artboard = align to the containing frame centre both ways; Arrange already aligns in Frame. Rows live in Sources/PhotonzCore/LayersPanelHeader.swift MenuRow + Sources/Photonz/LayersPanelHeaderControls.swift.",
+  "acceptance": [
+    "The Layers panel menu shows Center on the artboard, then a divider, then Union and Outline stroke, below Mirror Across Center, as icon-draw-wt.html #layerMenu draws it",
+    "Each row is also in the menu bar and on the shape right-click menu under the same name",
+    "Center on the artboard does not take Option Command C (that is Canvas Size, Photoshop parity); it gets a free key or none, and the choice is a decision card if no key fits",
+    "A walk at Next defaults runs each row and reads the result"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T14:22:50.273Z",
+      "note": "created (manual)"
+    }
+  ]
+}
