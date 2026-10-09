@@ -123,12 +123,14 @@ extension CanvasNSView {
         for main in markedComponents {
             guard let componentID = main.componentID, seen.insert(componentID).inserted,
                   let grid = document.componentVariantGrid(of: componentID) else { continue }
-            let drawings = viewRect(forDocRect: grid.bounds, in: viewport)
+            let drawings = viewRect(forDocRect: grid.cellBounds, in: viewport)
             let rowWidth = grid.rows.map { Self.gridRowNameWidth($0.name) }.max() ?? 0
             let panel = ComponentVariantGrid.Panel(around: drawings, rowNameWidth: rowWidth,
                                                    columnNameHeight: Self.gridColumnNameHeight)
             panels.addSublayer(gridPanelLayer(panel.frame, surface: surface, lightInk: light))
             panels.isHidden = false
+            drawLiveCopy(of: componentID, grid: grid, panel: panel.frame, surface: surface,
+                         lightInk: light, panels: panels, into: target)
 
             // Zoomed out far enough, narrow columns come closer together than
             // their names are wide. A name that would run into the one before
@@ -155,6 +157,197 @@ extension CanvasNSView {
                 target.addSublayer(gridNameLayer(word, frame: frame))
             }
         }
+    }
+
+    /// The mock's Live instance block over its matrix (`ui-variants.html`,
+    /// `.cvblock`, `.instwrap`, `.pmcell.on`): the picked look's cell lit in
+    /// the component violet, and above the grid one copy of that look, on a
+    /// stage as wide as the grid's panel, with the component ring round it,
+    /// the instance badge over it and each block's header above it.
+    ///
+    /// The copy is chrome, not a layer: anything loose on an Edit Original
+    /// page is folded into the component on Done, so a copy put on the page
+    /// would become part of it. It is the picked drawing's own pixels, cut out
+    /// of the picture the canvas is already showing, so it follows every edit
+    /// to that drawing the moment the picture does and costs no render.
+    ///
+    /// The stage is painted the Surface like the grid's panel, where the mock
+    /// leaves it bare on its dark sheet: on the canvas's own backdrop a Ghost
+    /// look's quiet words would not read.
+    private func drawLiveCopy(of componentID: UUID, grid: ComponentVariantGrid, panel: CGRect,
+                              surface: RGBA, lightInk: Bool, panels: CALayer, into target: CALayer) {
+        guard let viewport, let document, !grid.cells.isEmpty else { return }
+        let shown = liveCopyDrawing(of: componentID, in: grid, document: document)
+        guard let cell = grid.cellBox(of: shown),
+              let drawing = document.canvasBounds(of: shown) else { return }
+
+        // The lit cell, under the picture with the panel.
+        let apart = PhotonzDocument.variantGridGap * viewport.zoom
+        let lit = ComponentVariantGrid.Panel.litCell(viewRect(forDocRect: cell, in: viewport), apart: apart)
+        panels.addSublayer(litCellLayer(lit))
+
+        // The stage, sized for the tallest look so a pick never moves it.
+        let tallest = grid.cells.compactMap { document.canvasBounds(of: $0.layerID)?.height }.max() ?? 0
+        let look = viewRect(forDocRect: drawing, in: viewport)
+        let stage = ComponentVariantGrid.LiveStage(above: panel, tallest: tallest * viewport.zoom,
+                                                   copy: look.size)
+        panels.addSublayer(gridPanelLayer(stage.frame, surface: surface, lightInk: lightInk))
+
+        // The look itself, with the room round it its glow and shadow need:
+        // half the gap to its neighbours, which no neighbour reaches into.
+        let room = PhotonzDocument.variantGridGap / 2
+        let source = drawing.insetBy(dx: -room, dy: -room)
+            .intersection(CGRect(origin: .zero, size: document.canvasSize))
+        if let image, !source.isNull, document.canvasSize.width > 0, document.canvasSize.height > 0 {
+            let copy = CALayer()
+            copy.contents = image
+            let size = document.canvasSize
+            // Unit space, top down like the flipped canvas it sits in.
+            copy.contentsRect = CGRect(x: source.minX / size.width,
+                                       y: source.minY / size.height,
+                                       width: source.width / size.width,
+                                       height: source.height / size.height)
+            copy.contentsGravity = .resize
+            copy.magnificationFilter = viewport.zoom >= 2 ? .nearest : .linear
+            copy.minificationFilter = .linear
+            copy.frame = stage.copy.offsetBy(dx: (source.minX - drawing.minX) * viewport.zoom,
+                                             dy: (source.minY - drawing.minY) * viewport.zoom)
+            copy.frame.size = CGSize(width: source.width * viewport.zoom,
+                                     height: source.height * viewport.zoom)
+            target.addSublayer(copy)
+        }
+
+        // `.previnst .cring`: the selection frame's shape in the component
+        // colour, which is what says this is a copy and not a drawing.
+        let ring = CAShapeLayer()
+        ring.frame = stage.ring
+        ring.path = CGPath(roundedRect: CGRect(origin: .zero, size: stage.ring.size),
+                           cornerWidth: 2, cornerHeight: 2, transform: nil)
+        ring.fillColor = nil
+        ring.strokeColor = Self.liveRingColor
+        ring.lineWidth = 1.5
+        ring.contentsScale = window?.backingScaleFactor ?? 2
+        target.addSublayer(ring)
+
+        // `.cbadge`, centred over the copy: the copy mark and whose copy it is.
+        let name = document.layers.first { $0.componentID == componentID && $0.isMainComponent }?.name
+            ?? markedComponents.first { $0.componentID == componentID }?.name ?? "Component"
+        drawLiveBadge("instance of \(name)", centredAt: stage.copy.midX, top: stage.badgeTop, into: target)
+
+        // `.cv-h`, one over each block.
+        let questions = document.componentVariantProperties(of: componentID).map(\.name)
+        drawBlockHeader("Live instance", in: stage.header, into: target)
+        drawBlockHeader(questions.joined(separator: " \u{00D7} "), in: stage.gridHeader, into: target)
+    }
+
+    /// Which drawing a gridded component's live copy shows: the one picked
+    /// now, or inside the one picked now; else the one last picked; else the
+    /// look a copy shows when nobody has said otherwise.
+    private func liveCopyDrawing(of componentID: UUID, in grid: ComponentVariantGrid,
+                                 document: PhotonzDocument) -> UUID {
+        let drawings = Set(grid.cells.map(\.layerID))
+        var walk = selectedLayerID
+        while let id = walk, !drawings.contains(id) { walk = document.parentID(of: id) }
+        if let picked = walk { liveCopyPicks[componentID] = picked }
+        if let kept = liveCopyPicks[componentID], drawings.contains(kept) { return kept }
+        if let first = document.componentVersions(of: componentID).first?.layerID,
+           drawings.contains(first) { return first }
+        return grid.cells[0].layerID
+    }
+
+    /// `--comp`, `#9a5cff`: the component violet the ring and the lit cell
+    /// are drawn in.
+    static let liveRingColor = CGColor(srgbRed: 0x9A / 255.0, green: 0x5C / 255.0, blue: 0xFF / 255.0, alpha: 1)
+
+    /// `.pmcell.on`: the violet at a fifth behind the look, a violet hairline
+    /// round it and a soft ring past that.
+    private func litCellLayer(_ frame: CGRect) -> CALayer {
+        let cell = CALayer()
+        cell.frame = frame
+        cell.cornerRadius = ComponentVariantGrid.Panel.litCellCornerRadius
+        cell.cornerCurve = .continuous
+        cell.contentsScale = window?.backingScaleFactor ?? 2
+        cell.backgroundColor = Self.liveRingColor.copy(alpha: 0.22)
+        cell.borderWidth = 1
+        cell.borderColor = Self.liveRingColor
+        // `box-shadow: 0 0 0 1px`, a second line just outside the first.
+        cell.shadowColor = Self.liveRingColor
+        cell.shadowOpacity = 0.3
+        cell.shadowRadius = 0
+        cell.shadowOffset = .zero
+        cell.shadowPath = CGPath(roundedRect: frame.insetBy(dx: -1, dy: -1)
+                                    .offsetBy(dx: -frame.minX, dy: -frame.minY),
+                                 cornerWidth: ComponentVariantGrid.Panel.litCellCornerRadius + 1,
+                                 cornerHeight: ComponentVariantGrid.Panel.litCellCornerRadius + 1,
+                                 transform: nil)
+        return cell
+    }
+
+    /// `.cbadge`: ten point semibold white words and the copy's one diamond
+    /// on the component plate, a six point corner.
+    private func drawLiveBadge(_ words: String, centredAt midX: CGFloat, top: CGFloat, into target: CALayer) {
+        let font = NSFont.systemFont(ofSize: 10, weight: .semibold)
+        let text = NSAttributedString(string: words, attributes: [
+            .font: font, .foregroundColor: NSColor.white,
+        ])
+        let textSize = CGSize(width: text.size().width.rounded(.up), height: text.size().height.rounded(.up))
+        let glyph = Self.componentGlyphSize
+        let width = 8 + glyph + 5 + textSize.width + 8
+        let height = textSize.height + 4
+        let plate = CALayer()
+        plate.frame = CGRect(x: (midX - width / 2).rounded(), y: top, width: width, height: height)
+        plate.cornerRadius = 6
+        plate.backgroundColor = Self.componentPlateColor
+        plate.contentsScale = window?.backingScaleFactor ?? 2
+        target.addSublayer(plate)
+        let mark = CAShapeLayer()
+        mark.frame = CGRect(x: 8, y: (height - glyph) / 2, width: glyph, height: glyph)
+        mark.path = ComponentGlyph.instancePath(in: CGRect(x: 0, y: 0, width: glyph, height: glyph))
+        mark.fillColor = Self.plateInkColor
+        mark.contentsScale = plate.contentsScale
+        plate.addSublayer(mark)
+        let label = CATextLayer()
+        label.string = text
+        label.contentsScale = plate.contentsScale
+        label.frame = CGRect(x: 8 + glyph + 5, y: 2, width: textSize.width, height: textSize.height)
+        plate.addSublayer(label)
+    }
+
+    /// `.cv-h`: the component mark and the block's name in small spaced
+    /// capitals, at the left of the block. Inked for the canvas backdrop it
+    /// sits on, which follows the Mac's light or dark setting.
+    private func drawBlockHeader(_ words: String, in band: CGRect, into target: CALayer) {
+        var ink = NSColor.secondaryLabelColor.cgColor
+        var dark = false
+        effectiveAppearance.performAsCurrentDrawingAppearance {
+            ink = NSColor.secondaryLabelColor.cgColor
+            dark = effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
+        }
+        let glyph = Self.componentGlyphSize
+        let mark = CAShapeLayer()
+        mark.frame = CGRect(x: band.minX, y: (band.midY - glyph / 2).rounded(), width: glyph, height: glyph)
+        mark.path = ComponentGlyph.path(in: CGRect(x: 0, y: 0, width: glyph, height: glyph))
+        // `.cv-h .di`, the light violet on the mock's dark sheet; the full
+        // violet on a light backdrop, where the light one washes out.
+        mark.fillColor = dark
+            ? CGColor(srgbRed: 0xC8 / 255.0, green: 0xA8 / 255.0, blue: 0xFF / 255.0, alpha: 1)
+            : Self.liveRingColor
+        mark.contentsScale = window?.backingScaleFactor ?? 2
+        target.addSublayer(mark)
+        let text = NSAttributedString(string: words.uppercased(), attributes: [
+            .font: NSFont.systemFont(ofSize: 10, weight: .semibold),
+            .kern: 10 * 0.06,
+            .foregroundColor: NSColor(cgColor: ink) ?? NSColor.secondaryLabelColor,
+        ])
+        let size = text.size()
+        let label = CATextLayer()
+        label.string = text
+        label.contentsScale = window?.backingScaleFactor ?? 2
+        label.frame = CGRect(x: band.minX + glyph + 8, y: (band.midY - size.height / 2).rounded(),
+                             width: min(size.width.rounded(.up), max(band.width - glyph - 8, 0)),
+                             height: size.height.rounded(.up))
+        label.truncationMode = .end
+        target.addSublayer(label)
     }
 
     /// How dark the picture's drop shadow is. It is shaped like the whole

@@ -1,0 +1,31 @@
+{
+  "feature": "Edit Original shows a live copy above the variant grid and lights the picked cell",
+  "epic": "ui-components",
+  "summary": "Edit Original on a Button now looks like the variants mock top to bottom: a LIVE INSTANCE stage above the grid shows one copy of the look you picked, and that look's cell in the grid is lit violet. Click another look and both move; edit the look and the copy changes with it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: starter-button-looks-walk (steps 9 to 11).",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library shelf and drag the Button onto a blank canvas, then make it Large in the panel." },
+    { "do": "Choose Layer > Edit Original.", "shot": "2026-10-09-live-copy-1-open-dark-sc.png" },
+    { "do": "Check the copy above the grid is the Primary Large look and its cell is lit." },
+    { "do": "Click the Secondary Small button in the grid.", "shot": "2026-10-09-live-copy-2-picked-dark-sc.png" },
+    { "do": "Switch the Mac to light mode and look at both headers and the badge.", "shot": "2026-10-09-live-copy-3-picked-light-sc.png" },
+    { "do": "Type 40 into Opacity in the panel and press Return.", "shot": "2026-10-09-live-copy-4-edited-light-sc.png" },
+    { "do": "Click empty canvas: the lit cell and the copy stay on the last look you picked." },
+    { "do": "Compare with the mock's canvas.", "shot": "2026-10-09-live-copy-mock.png" }
+  ],
+  "evaluate": [
+    "Does the live copy read as a copy of the component, not a tenth drawing you could click into?",
+    "Is it right that the lit cell stays on the last look you picked when you click away, as the mock always keeps one cell lit?",
+    "Is the white stage behind the copy right in dark mode, or should it go with whatever the open dark-mode card decides for the grid?",
+    "Does the page still open framed well now that it is about 200 points taller?"
+  ],
+  "rough": [
+    "The live copy sits on a white stage like the grid's panel, where the mock leaves it on the bare dark sheet: on the canvas backdrop a Ghost look's grey words would not read (UX-PATTERNS §10, Text is always legible). Whether the stage and the panel turn dark in dark mode rides on decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho.",
+    "The mock's hint after each header (edit the properties on the right and this updates instantly; every cell is a real specimen, click one to load it above) is left out: both are sentences over the chrome's 30 characters (UX-PATTERNS §4), and a canvas header has no question mark to move them behind.",
+    "The mock's sheet caption (Component sheet, Button, every variant across every size) is not drawn: it is over the chrome budget (UX-PATTERNS §4), and the title bar already names the component.",
+    "The badge is the deeper violet plate every component name on the canvas wears, where the mock uses its lighter violet, because white words on the lighter one read too faintly (UX-PATTERNS §10).",
+    "The mock's cells each sit on a light card inside a dark matrix; ours is one white panel, the choice waiting on decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho.",
+    "The live copy is a picture of the picked drawing at the canvas's own resolution, so zoomed in past 100% it is as soft as the grid is before the canvas sharpens it."
+  ]
+}

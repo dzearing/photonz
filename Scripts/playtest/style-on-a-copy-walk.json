@@ -284,7 +284,7 @@
       "seconds": 0.4
     },
     {
-      "comment": "Originals live in the Library since 2026-10-04: Edit Original opens the Button's original in its own space, centred on a page the document's size. Since 2026-10-09 the starter Button is nine looks in a Variant by Size grid there, so the drop aims at the words of the Ghost · Large drawing.",
+      "comment": "Originals live in the Library since 2026-10-04: Edit Original opens the Button's original in its own space, centred on a page the document's size. Since 2026-10-09 the starter Button is nine looks in a Variant by Size grid there, so the drop aims at the words of the Ghost · Large drawing, lower since the live copy's stage went in above the grid.",
       "do": "action",
       "action": "selectComponentOriginal"
     },
@@ -296,8 +296,8 @@
       "do": "dragTile",
       "tile": "Heading",
       "to": [
-        485,
-        296
+        520,
+        486
       ],
       "expect": "takes",
       "says": "Sets this text in Heading",

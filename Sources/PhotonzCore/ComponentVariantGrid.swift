@@ -31,11 +31,60 @@ public struct ComponentVariantGrid: Hashable, Sendable {
     public var columns: [Edge]
     /// Around every drawing in the grid.
     public var bounds: CGRect
+    /// Which row and column each drawing stands in, indexing `rows` and
+    /// `columns`.
+    public var cells: [Cell]
 
-    public init(rows: [Edge], columns: [Edge], bounds: CGRect) {
+    /// One drawing and the cell it stands in.
+    public struct Cell: Hashable, Sendable {
+        public var layerID: UUID
+        public var row: Int
+        public var column: Int
+
+        public init(layerID: UUID, row: Int, column: Int) {
+            self.layerID = layerID
+            self.row = row
+            self.column = column
+        }
+    }
+
+    public init(rows: [Edge], columns: [Edge], bounds: CGRect, cells: [Cell] = []) {
         self.rows = rows
         self.columns = columns
         self.bounds = bounds
+        self.cells = cells
+    }
+
+    /// The cell a drawing stands in: its column across and its row down, the
+    /// way the mock's `.pmcell` fills its share of the width and its row. Every
+    /// column is as wide as the others (`repeat(3, 1fr)`), so a cell is the
+    /// shared width centred on its column, not the width of what is in it. Nil
+    /// for a drawing that is not in the grid.
+    public func cellBox(of layerID: UUID) -> CGRect? {
+        guard let cell = cells.first(where: { $0.layerID == layerID }),
+              rows.indices.contains(cell.row), columns.indices.contains(cell.column) else { return nil }
+        let across = columns[cell.column].box
+        let down = rows[cell.row].box
+        return CGRect(x: across.midX - columnWidth / 2, y: down.minY,
+                      width: columnWidth, height: down.height)
+    }
+
+    /// Around every cell: wider than `bounds` when a column's drawings are
+    /// narrower than the width the columns share. What the panel goes round,
+    /// so a lit cell never pokes out of it.
+    public var cellBounds: CGRect {
+        cells.compactMap { cellBox(of: $0.layerID) }.reduce(bounds) { $0.union($1) }
+    }
+
+    /// The width every column shares: the room between neighbouring columns'
+    /// middles less the gap between them, and never narrower than the widest
+    /// drawing.
+    var columnWidth: CGFloat {
+        let widest = columns.map(\.box.width).max() ?? 0
+        let middles = columns.map(\.box.midX)
+        let spacing = zip(middles, middles.dropFirst()).map { abs($1 - $0) }.min()
+        guard let spacing else { return widest }
+        return max(widest, spacing - PhotonzDocument.variantGridGap)
     }
 
     /// The soft panel the variants mock draws round its matrix (`.pmatrix`):
@@ -76,6 +125,79 @@ public struct ComponentVariantGrid: Hashable, Sendable {
             let top = columnNameBand.minY - pad
             frame = CGRect(x: left, y: top,
                            width: cells.maxX + pad - left, height: cells.maxY + pad - top)
+        }
+
+        /// `.pmcell`'s corner.
+        public static let litCellCornerRadius: CGFloat = 8
+
+        /// The picked cell, lit like `.pmcell.on`: the cell with the mock's
+        /// padding round it, or less when the drawings stand closer than
+        /// `apart` allows, so two cells never touch however far out the grid
+        /// is zoomed.
+        public static func litCell(_ cell: CGRect, apart: CGFloat) -> CGRect {
+            let room = min(gap, max(0, (apart - gap) / 2))
+            return cell.insetBy(dx: -room, dy: -room)
+        }
+    }
+
+    /// The mock's Live instance block above its matrix (`.cvblock`,
+    /// `.instwrap`, `.previnst`): a stage as wide as the grid's panel holding
+    /// one copy of the picked look, centred, with the component ring round it
+    /// and the instance badge over it, each block under its own header
+    /// (`.cv-h`). In view points, like the panel it sits over.
+    public struct LiveStage: Hashable, Sendable {
+        /// `.instwrap`'s `min-height`.
+        public static let minHeight: CGFloat = 132
+        /// `.cvblock`'s `margin-bottom`, `--s6`, between the two blocks.
+        public static let blockGap: CGFloat = 32
+        /// `.cv-h`'s `margin-bottom`, `--pad-sm`, between a header and its block.
+        public static let headerGap: CGFloat = 12
+        /// A header's line: ten point capitals.
+        public static let headerHeight: CGFloat = 13
+        /// `.previnst .cring`'s `inset`, the ring's distance out from the copy.
+        public static let ringInset: CGFloat = 12
+        /// `.previnst .cbadge`'s `top`, the badge's rise above the copy.
+        public static let badgeRise: CGFloat = 32
+
+        /// The stage itself.
+        public var frame: CGRect
+        /// Where the copy is drawn, centred on the stage.
+        public var copy: CGRect
+        /// The component ring round the copy.
+        public var ring: CGRect
+        /// Where the badge's top edge sits, centred over the copy.
+        public var badgeTop: CGFloat
+        /// The live block's header line, above the stage.
+        public var header: CGRect
+        /// The grid block's header line, above the grid's panel.
+        public var gridHeader: CGRect
+
+        /// The stage over a grid whose panel is `panel`, for a component whose
+        /// tallest look is `tallest`, showing a look `copy` big. The stage is
+        /// sized for the tallest look, so picking a smaller one never moves
+        /// anything else.
+        public init(above panel: CGRect, tallest: CGFloat, copy size: CGSize) {
+            gridHeader = CGRect(x: panel.minX, y: panel.minY - Self.headerGap - Self.headerHeight,
+                                width: panel.width, height: Self.headerHeight)
+            // Room above and below the look for the badge, and a little air
+            // past it, so a tall look still wears its badge inside the stage.
+            let height = max(Self.minHeight, (tallest + (Self.badgeRise + Self.headerGap) * 2).rounded(.up))
+            frame = CGRect(x: panel.minX, y: gridHeader.minY - Self.blockGap - height,
+                           width: panel.width, height: height)
+            header = CGRect(x: panel.minX, y: frame.minY - Self.headerGap - Self.headerHeight,
+                            width: panel.width, height: Self.headerHeight)
+            copy = CGRect(x: (frame.midX - size.width / 2).rounded(),
+                          y: (frame.midY - size.height / 2).rounded(),
+                          width: size.width, height: size.height)
+            ring = copy.insetBy(dx: -Self.ringInset, dy: -Self.ringInset)
+            badgeTop = copy.minY - Self.badgeRise
+        }
+
+        /// How far above the grid's panel the live block and both headers
+        /// reach, for a component whose tallest look is `tallest`.
+        public static func room(tallest: CGFloat) -> CGFloat {
+            let stage = LiveStage(above: .zero, tallest: tallest, copy: .zero)
+            return -stage.header.minY
         }
     }
 
@@ -180,7 +302,22 @@ extension PhotonzDocument {
         }
         guard apart(rows.map { ($0.box.minY, $0.box.maxY) }),
               apart(columns.map { ($0.box.minX, $0.box.maxX) }) else { return nil }
-        return ComponentVariantGrid(rows: rows, columns: columns, bounds: all)
+        // Rows and columns nobody drew in are not edges, so a cell counts
+        // only the ones that are.
+        func shown(_ boxes: [CGRect?]) -> [Int] {
+            var index = 0
+            return boxes.map { box in
+                defer { if box != nil { index += 1 } }
+                return index
+            }
+        }
+        let rowIndex = shown(rowBoxes)
+        let columnIndex = shown(columnBoxes)
+        let cells = layout.cells.map {
+            ComponentVariantGrid.Cell(layerID: $0.0.layerID, row: rowIndex[$0.row],
+                                      column: columnIndex[$0.column])
+        }
+        return ComponentVariantGrid(rows: rows, columns: columns, bounds: all, cells: cells)
     }
 
     /// Puts a component's drawings into the grid: a row per answer to its
@@ -258,17 +395,22 @@ extension PhotonzDocument {
         return true
     }
 
-    /// The same, at the top left of an Edit Original page, leaving the margin
-    /// and the room the names along the edges need. Used when the page opens
+    /// The same, at the top left of an Edit Original page, leaving the margin,
+    /// the room the names along the edges need and the live copy's stage. Used when the page opens
     /// and after a drawing is added on it, so the grid stays a grid.
     @discardableResult
     public mutating func layOutComponentVariantGridOnPage(componentID: UUID) -> Bool {
         let rows = componentVariantProperties(of: componentID).first?.options.map(\.name) ?? []
         let labels = Self.variantGridLabelRoom(rows: rows)
         let margin = Self.editingSpaceMargin
+        // Above the grid, the live copy of the picked look on its stage, sized
+        // for the tallest look (`ComponentVariantGrid.LiveStage`).
+        let tallest = componentVersions(of: componentID)
+            .compactMap { canvasBounds(of: $0.layerID)?.height }.max() ?? 0
+        let live = ComponentVariantGrid.LiveStage.room(tallest: tallest)
         guard layOutComponentVariantGrid(componentID: componentID,
                                          origin: CGPoint(x: margin + labels.width,
-                                                         y: margin + labels.height)),
+                                                         y: margin + labels.height + live)),
               let grid = componentVariantGrid(of: componentID) else { return false }
         // The page is the grid and its margin, so it opens framed on the grid
         // rather than small in the corner of a page the document's size. Only

@@ -876,6 +876,10 @@ final class CanvasNSView: NSView {
     /// page, UNDER the picture so the drawings are on it rather than behind
     /// it (`CanvasComponents.swift`, `drawVariantGridPanels`).
     let variantGridPanelLayer = CALayer()
+    /// The look each gridded component's live copy shows, by component: the
+    /// drawing last picked in its grid, kept when the pick moves off the grid
+    /// so one cell is always lit, the way the mock keeps one `.pmcell.on`.
+    var liveCopyPicks: [UUID: UUID] = [:]
     /// Snap guides shown while a move drag is captured by an edge/center.
     let snapGuideLayer = CAShapeLayer()
     /// Hover snap dot: while the measure tool is active and idle, a dot follows

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/starter-button-looks",
-  "seed": "The starter Button the way the variants mock draws it (ui-variants.html, the .pmatrix cells and the Properties group): Primary, Secondary or Ghost, Small, Medium or Large, with a leading icon a copy can hide and swap. This walk drops a Button at Next defaults and reads its panel (Variant, Size, Show icon with its On word, the Label box with the T glyph, Icon), makes it Large with the pointer and reads its height, undoes that in one step, walks it through Secondary and Ghost, turns its icon off and reads the row closing up, picks Wand from the Icon menu with a click, carries the Wand across to Large, picks No icon, and opens Edit Original to photograph the nine looks in their panel, framed on opening.",
+  "seed": "The starter Button the way the variants mock draws it (ui-variants.html, the .pmatrix cells and the Properties group): Primary, Secondary or Ghost, Small, Medium or Large, with a leading icon a copy can hide and swap. This walk drops a Button at Next defaults and reads its panel (Variant, Size, Show icon with its On word, the Label box with the T glyph, Icon), makes it Large with the pointer and reads its height, undoes that in one step, walks it through Secondary and Ghost, turns its icon off and reads the row closing up, picks Wand from the Icon menu with a click, carries the Wand across to Large, picks No icon, opens Edit Original to photograph the nine looks in their panel, framed on opening, with the live copy of the picked look above the grid, then clicks Secondary · Small with the pointer and photographs its cell lit and the live copy showing it.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
@@ -91,10 +91,35 @@
 
     { "do": "action", "action": "selectComponentOriginal" },
     { "do": "wait", "seconds": 1.5 },
-    { "do": "describe", "stage": "9-grid", "note": "Edit Original, opened framed on the grid with no Fit pressed: the nine looks inside one rounded panel painted the document's Surface, SMALL, MEDIUM and LARGE in small capitals across the top, Primary, Secondary and Ghost beside their rows, the Ghost row's grey words readable, and no name chip on any drawing" },
+    { "do": "describe", "stage": "9-grid", "note": "Edit Original, opened framed on the grid with no Fit pressed: the nine looks inside one rounded panel painted the document's Surface, SMALL, MEDIUM and LARGE in small capitals across the top, Primary, Secondary and Ghost beside their rows, the Ghost row's grey words readable, no name chip on any drawing, and above the grid a LIVE INSTANCE stage the panel's width holding one copy of the picked look (Primary · Large) in a violet ring under an 'instance of Button' badge, with that look's cell lit violet in the grid and VARIANT × SIZE over the grid" },
     { "do": "snapshot", "name": "9-grid-dark" },
     { "do": "appearance", "value": "light" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "snapshot", "name": "9-grid-light" }
+    { "do": "snapshot", "name": "9-grid-light" },
+    { "do": "appearance", "value": "dark" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "click", "at": [232, 422] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "panel", "stage": "10-picked" },
+    { "do": "describe", "stage": "10-picked", "note": "Secondary · Small clicked with the pointer: its cell lights violet, Primary · Large's goes out, and the live copy above the grid is now the small white Secondary capsule" },
+    { "do": "snapshot", "name": "10-picked-dark" },
+    { "do": "appearance", "value": "light" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "snapshot", "name": "10-picked-light" },
+
+    { "do": "focus", "field": "Opacity" },
+    { "do": "type", "text": "40" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "11-edited", "note": "Secondary · Small's opacity typed down to 40: the drawing in its lit cell fades, and so does the live copy above the grid, at once" },
+    { "do": "snapshot", "name": "11-edited-light" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "click", "at": [40, 40] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectPicked", "layers": [] },
+    { "do": "describe", "stage": "12-clicked-away", "note": "empty page clicked: nothing is picked, and Secondary · Small's cell stays lit with the live copy still showing it, the way the mock always keeps one cell on" },
+    { "do": "snapshot", "name": "12-clicked-away-light" }
   ]
 }

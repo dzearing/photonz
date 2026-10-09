@@ -430,4 +430,105 @@ struct ComponentVariantGridTests {
         #expect(abs(below.minY - primary.maxY - PhotonzDocument.variantGridGap) <= 1)
         #expect(PhotonzDocument.variantGridGap < PhotonzDocument.editingSpaceGap)
     }
+
+    // MARK: - The live copy and the lit cell
+
+    /// The grid knows which cell each drawing stands in, and a cell is its
+    /// column across by its row down, the way the mock's `.pmcell` fills its
+    /// `1fr` column and its row.
+    @Test func theGridKnowsWhichCellEachDrawingIsIn() throws {
+        let b = buttonWithSize()
+        let space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        let grid = try #require(space.componentVariantGrid(of: b.componentID))
+        let drawings = space.componentVersions(of: b.componentID)
+        let large = try #require(drawings.first { $0.id == b.primaryLarge })
+        let secondary = try #require(drawings.first { $0.id == b.secondary })
+        #expect(grid.cells.count == 3)
+        #expect(grid.cells.first { $0.layerID == large.layerID }.map { [$0.row, $0.column] } == [0, 1])
+        #expect(grid.cells.first { $0.layerID == secondary.layerID }.map { [$0.row, $0.column] } == [1, 0])
+        let cell = try #require(grid.cellBox(of: large.layerID))
+        #expect(cell.midX == grid.columns[1].box.midX)
+        #expect(cell.minY == grid.rows[0].box.minY)
+        #expect(cell.height == grid.rows[0].box.height)
+        #expect(grid.cellBox(of: UUID()) == nil)
+        // Every cell is the one shared column width, however narrow the
+        // drawing in it: the columns' spacing less the gap between them.
+        let spacing = grid.columns[1].box.midX - grid.columns[0].box.midX
+        let primary = try #require(grid.cellBox(of: drawings[0].layerID))
+        #expect(abs(cell.width - (spacing - PhotonzDocument.variantGridGap)) <= 0.5)
+        #expect(primary.width == cell.width)
+        #expect(primary.midX == grid.columns[0].box.midX)
+        // The panel goes round the cells, so a lit cell in a column of
+        // narrow drawings stays inside it, clear of the row names.
+        for drawing in drawings {
+            let box = try #require(grid.cellBox(of: drawing.layerID))
+            #expect(grid.cellBounds.contains(box))
+        }
+        #expect(grid.cellBounds.contains(grid.bounds))
+    }
+
+    /// The picked cell is lit like `.pmcell.on`: its box with the cell's
+    /// padding, never so much that two neighbouring cells touch when the grid
+    /// is zoomed out and the drawings come closer together.
+    @Test func aLitCellIsTheCellWithItsPadding() {
+        let cell = CGRect(x: 100, y: 100, width: 120, height: 40)
+        #expect(ComponentVariantGrid.Panel.litCell(cell, apart: 24) == cell.insetBy(dx: -8, dy: -8))
+        let close = ComponentVariantGrid.Panel.litCell(cell, apart: 12)
+        #expect(close == cell.insetBy(dx: -2, dy: -2))
+        #expect(ComponentVariantGrid.Panel.litCell(cell, apart: 4) == cell)
+        #expect(ComponentVariantGrid.Panel.litCellCornerRadius == 8)
+    }
+
+    /// The mock's Live instance block (`.cvblock`, `.instwrap`): as wide as
+    /// the grid's panel, its header above it, the whole of it a block's gap
+    /// above the grid's own header, at least 132 tall, the copy centred in
+    /// it with its ring twelve out and its badge thirty two above.
+    @Test func theLiveStageSitsAboveTheGridPanel() {
+        let panel = CGRect(x: 200, y: 400, width: 500, height: 300)
+        let stage = ComponentVariantGrid.LiveStage(above: panel, tallest: 40,
+                                                   copy: CGSize(width: 97, height: 32))
+        typealias L = ComponentVariantGrid.LiveStage
+        #expect(stage.gridHeader.maxY + L.headerGap == panel.minY)
+        #expect(stage.gridHeader.minX == panel.minX)
+        #expect(stage.frame.maxY + L.blockGap == stage.gridHeader.minY)
+        #expect(stage.header.maxY + L.headerGap == stage.frame.minY)
+        #expect(stage.frame.minX == panel.minX)
+        #expect(stage.frame.width == panel.width)
+        #expect(stage.frame.height == L.minHeight)
+        #expect(L.minHeight == 132)
+        #expect(abs(stage.copy.midX - stage.frame.midX) <= 0.5)
+        #expect(abs(stage.copy.midY - stage.frame.midY) <= 0.5)
+        #expect(stage.copy.size == CGSize(width: 97, height: 32))
+        #expect(stage.ring == stage.copy.insetBy(dx: -12, dy: -12))
+        #expect(stage.badgeTop == stage.copy.minY - 32)
+        // The badge clears the top of the stage.
+        #expect(stage.badgeTop > stage.frame.minY)
+        // A tall component grows the stage, so the badge still fits above it.
+        let tall = L(above: panel, tallest: 200, copy: CGSize(width: 80, height: 200))
+        #expect(tall.frame.height > 200 + 64)
+        #expect(tall.badgeTop > tall.frame.minY)
+        // The stage holds the same height whichever look is in it, so picking
+        // a smaller look does not move the grid.
+        let small = L(above: panel, tallest: 200, copy: CGSize(width: 60, height: 24))
+        #expect(small.frame == tall.frame)
+    }
+
+    /// The Edit Original page leaves room above the grid for the live copy,
+    /// its header and the grid's header, inside the margin, so the page opens
+    /// framed on both.
+    @Test func theEditOriginalPageLeavesRoomForTheLiveCopy() throws {
+        let b = buttonWithSize()
+        let space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        let grid = try #require(space.componentVariantGrid(of: b.componentID))
+        let tallest = space.componentVersions(of: b.componentID)
+            .compactMap { space.canvasBounds(of: $0.layerID)?.height }.max() ?? 0
+        let panel = ComponentVariantGrid.Panel(around: grid.bounds,
+                                               rowNameWidth: CGFloat("Secondary".count) * 7,
+                                               columnNameHeight: 12)
+        let stage = ComponentVariantGrid.LiveStage(above: panel.frame, tallest: tallest,
+                                                   copy: CGSize(width: 120, height: tallest))
+        #expect(stage.header.minY >= PhotonzDocument.editingSpaceMargin - 0.5)
+        // ...and no more than that: the page does not open on empty space.
+        #expect(stage.header.minY <= PhotonzDocument.editingSpaceMargin + 1)
+    }
 }
