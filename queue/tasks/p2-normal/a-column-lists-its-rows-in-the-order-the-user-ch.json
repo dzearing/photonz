@@ -1,0 +1,34 @@
+{
+  "id": "a-column-lists-its-rows-in-the-order-the-user-ch",
+  "title": "A column lists its rows in the order the user chooses in Layers",
+  "goal": "In a frame laid out as a column, the Layers list shows the bottom row first, because it lists whatever is on top first, the way Photoshop and Figma do. The UI entry mock lists the same column top to bottom in reading order. The user picks which one the Layers list should follow for rows and columns, and the app follows it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 3850,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T05:49:21.682Z",
+  "updated": "2026-10-09T05:49:36.497Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the-empty-window-can-start-a-ui-design (2026-10-08). Mock: docs/design/mocks/pages/ui-entry-wt.html, Layers group (#lrLogin then Headline, Subhead, Email field, Password field, Button · Primary). App today: Login, Password field, Email field, Subhead, Headline (top of the stack first), checked by design-ui-start-walk expectRows. Figma lists auto-layout children last-first as the app does; the mock does not. Layer list building: PhotonzCore/LayerPanelTree.swift. If the answer is reading order, design-ui-start-walk and a-screen-hugs-what-it-holds-walk expectRows change in the same commit.",
+  "acceptance": [
+    "The user has answered the decision card on this task",
+    "At Next defaults, the Layers list for the Design UI starter reads in the order the answer chose, before and after a Button is dropped into Login",
+    "Dragging a row in the Layers list still moves it the matching way in the column"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T05:49:21.684Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T05:49:36.494Z",
+      "note": "Waiting on the user: which order the Layers list follows inside a column or row"
+    }
+  ],
+  "walks": [
+    "design-ui-start-walk"
+  ]
+}

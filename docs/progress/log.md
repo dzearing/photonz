@@ -20935,3 +20935,17 @@ Next: the first editor window's ~200 ms first build
 - Walks kept the probe behind every app, with the darwin role UI_NON_FOCAL, and every timed press started 26-36 ms on an efficiency core (Time Profiler core column); the probe held in front never did. `PlaytestSchedulingRole` takes UI_FOCAL before every step. About 18 ms off each Undo/Redo reading, so every timed walk now reads closer to what a person gets. Residual: ~10 ms on an E core at press start that a front app does not pay.
 - The four dock header menus (Properties, Add Effect, Add Audio Effect, Add transition) were SwiftUI Menus that rebuilt their NSMenu on every document change. Now `VideoKit.HeaderMenu` (`VideoKit/VideoKitHeaderMenu.swift`), which rebuilds only when a row changes; same glyph, same pixels. `VideoKit.Choice` gained `help` (row tooltip).
 - undo-redo-cost-walk: 1/10 presses under 50 ms before, 7-10/10 after. Still over: Redo of the first cut and of the dropped clip (pick moves onto a clip, 50-56 ms), filed as `redo-that-hands-a-clip-back-to-the-panel-answers` with A/B numbers and profile.
+
+## 2026-10-08 — The empty window can start a UI design
+
+- Empty window card gains **Design UI**; File gains **New UI Design**. Opens
+  `untitled-ui`, 1280 × 800, holding a Login column (gap 12, padding 24) with
+  the mock's headline, subhead and two fields, Library on Components
+  (`PhotonzCore/UIStarter.swift`, flag `next-design-ui-start`, on in Next).
+- Placing a copy that a column stretches no longer says "Updated 1 copy"
+  (`ComponentSyncReport.excluding`).
+- Walk step `startFromEmpty` clicks an empty window's card row by pointer;
+  `design-ui-start-walk` covers the flow.
+- Next: the front door with template tiles
+  (`new-window-opens-a-front-door-with-a-starting-te`); Layers order in a
+  column waits on a decision card.

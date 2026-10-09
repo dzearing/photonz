@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:22.950Z",
-  "updated": "2026-10-09T03:31:28.964Z",
+  "updated": "2026-10-09T05:00:45.615Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the rough list of queue/audits/2026-10-08-playing-backwards-keeps-up.json: 'J J J (4x) and faster backwards read no further ahead than 2x does, so the window's memory stays bounded. At those speeds the picture can fall behind, holding the last frame rather than going blank. Not measured, and no task filed for it.' Measure first: if the numbers come back clean, write them in the log and mark done with no code change. Prior work: tasks playing-backwards-with-j-keeps-up-on-a-full-scre, a-full-screen-retina-recording-keeps-up-while-it. Fixture action openLongRetinaTalk; expectPlaybackNeverBlank-style looks exist in the harness. Walks with setup front:true need the Mac to itself; prefer a non-front walk if the timing allows.",
@@ -32,7 +32,39 @@
     {
       "t": "2026-10-09T03:31:28.963Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-09T04:06:09.488Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T04:38:16.563Z",
+      "note": "Measured before any change to the reading (walk playing-backwards-fast-keeps-moving-walk, long Retina talk 2880x1800, 24 looks over 2s from the end): 4x (J J J) 0 of 24 looks late in every run. 8x (J J J J) 12 of 24 late up to 13 frames; then 8 of 24 more than 3 frames behind (up to 12) and 9 of 24 (up to 12) in two more runs. Main thread longest pass while shuttling: 4.8ms at 4x, 2.9ms at 8x."
+    },
+    {
+      "t": "2026-10-09T04:38:16.624Z",
+      "note": "Found on the way: J J J from a stop at the end STOPPED playback on the third J (rate 0, reproduced 3 times on the long Retina talk). Cause: a speed change cancels the clock task mid-sleep, try? Task.sleep swallows the cancel, and the stale task read the new clock's start with nothing elapsed: landing == last frame == 'reached the end' -> pause. Fixed in EditorState+Time.swift (stale clock stands down; each direction checks only its own boundary; a cancelled pre-roll leaves the start alone)."
+    },
+    {
+      "t": "2026-10-09T05:00:20.315Z",
+      "note": "walks none -> playing-backwards-fast-keeps-moving-walk"
+    },
+    {
+      "t": "2026-10-09T05:00:20.371Z",
+      "note": "After the fix (every third frame kept at 8x, MoviePlayBackward.stride; same frame budget as 4x, 45 frames): 8x 0 of 24 looks more than 3 behind in 5 runs in a row (an every-second-frame try had 1 look 4 behind in 1 of 5 runs, so went to every third); 4x 0 of 24 in every run. Main thread longest pass while shuttling 2.4ms at 4x, 4.1ms at 8x. Memory: probe peak RSS 1880MB, plateau 1.7-1.8GB at both 4x and 8x vs 1.15GB idle with the 5-min Retina talk open. Regression walks green: playing-a-recording-backwards-keeps-up (-1x, -2x 0 late), playing-a-recording-never-blinks (1x 0 late), play-in-to-out, play-in-to-out-from-the-ruler, premiere-keys-on-the-timeline, timeline-keys-on-open, first-press-of-play-answers-at-once, shift-m-jumps-between-markers, x-marks-the-clip, view-to-edit-on-a-long-recording, transport-volume. Scripts/test.sh: 11910 tests passed."
+    },
+    {
+      "t": "2026-10-09T05:00:20.427Z",
+      "note": "left rough: forward 2x from a cold stop on the long Retina talk, the first look (0.1s in) showed frame 0 with frame 3 wanted; the other 23 looks were on time (2 runs, temp walk). Pre-existing start-up of the forward pass, untouched by this work; a 0.1s start nobody is likely to see, so not filed. Audit rough lines: no-mock, 8x granularity and memory are statements, not defects; nothing filed."
+    },
+    {
+      "t": "2026-10-09T05:00:45.613Z",
+      "note": "8x backwards (J J J J) now keeps up on the 5-min Retina talk: 0 of 24 looks more than 3 frames behind in 5 runs (was 8-12 of 24, up to 13 frames); 4x was already clean and stays 0. Blocks read behind the playhead keep every third frame at 8x (MoviePlayBackward.stride), same 45-frame budget as 4x, peak RSS 1.88GB. Also fixed J J J from a stop at the end stopping on the third press (stale clock task, EditorState+Time.swift). Main thread under 5ms while shuttling. Walk playing-backwards-fast-keeps-moving-walk; 11 playback/JKL walks green; Scripts/test.sh 11910 passed. Commit e415e9d5. Audit queue/audits/2026-10-08-playing-backwards-fast.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "playing-backwards-fast-keeps-moving-walk"
+  ],
+  "started": "2026-10-09T04:06:09.487Z",
+  "completed": "2026-10-09T05:00:45.614Z"
 }

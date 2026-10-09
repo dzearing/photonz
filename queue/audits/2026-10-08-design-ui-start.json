@@ -1,0 +1,44 @@
+{
+  "feature": "Start a UI design from an empty window",
+  "epic": "ui-building",
+  "summary": "An empty window now offers Design UI. One click opens untitled-ui: a 1280 x 800 canvas holding a Login screen laid out as a column, with the Library already on Components, so the next thing you do is drag a Button onto it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a new window with nothing in it (Shift Command N). Walk: design-ui-start-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "In a new empty window, click Design UI, the last row of the card.",
+      "shot": "2026-10-08-design-ui-start-1-card.png"
+    },
+    {
+      "do": "Look at what opened: the Login screen in the middle of the canvas, Layers showing Login, the Library open on Comps.",
+      "shot": "2026-10-08-design-ui-start-2-opened.png"
+    },
+    {
+      "do": "Click the Login screen and resize it by a corner handle, then press Command Z."
+    },
+    {
+      "do": "Drag the Button tile from the Library onto the bottom of the Login screen.",
+      "shot": "2026-10-08-design-ui-start-4-button.png"
+    },
+    {
+      "do": "Press Command Z twice: the Button goes, the Login screen stays."
+    },
+    {
+      "do": "With that window in front, choose File > New UI Design: a second window, untitled-ui 2, opens."
+    }
+  ],
+  "evaluate": [
+    "Is Design UI the row you would look for when you want to build a screen, or would you have tried Blank canvas first?",
+    "Does the Button landing as a full-width bar at the bottom of the column feel like it went where you dropped it?",
+    "Is a Login screen the right thing to start with, or would you rather start from an empty column of the same size?",
+    "Should File > New UI Design have a shortcut, given every Command N is already taken?"
+  ],
+  "rough": [
+    "The mock's front door (a window with a prompt bar, four template tiles and Recent, where Design UI turns the main button into New UI canvas) is not built; this is one row of today's empty card. Filed as new-window-opens-a-front-door-with-a-starting-te.",
+    "The tool bar is the full set, not the mock's UI strip of Select, Frame, Component, Shape, Pen, Text, Measure, Hand and Zoom; the window opens in Everything. Covered by new-window-opens-a-front-door-with-a-starting-te, where the template sets the Design mode.",
+    "Layers lists Login's rows bottom first (top of the stack first, as everywhere in the app), where the mock lists them in reading order. Decision card on a-column-lists-its-rows-in-the-order-the-user-ch.",
+    "The dropped Button reads Button, and its Properties show a Label row and no Variant row; the mock's step 7 shows Button · Primary with Variant Primary and Label Sign in. Covered by an-instance-s-properties-match-the-variants-mock.",
+    "The Login screen closes around its rows and grows when the Button lands, which matches the mock's drawing of it.",
+    "The title bar shows the mode chip and no name, the shell every still picture already has; the 1280 x 800 reads in Layers as Canvas. The window is named untitled-ui, which the Window menu and a walk both read."
+  ]
+}

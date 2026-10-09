@@ -1,0 +1,39 @@
+{
+  "id": "a-column-lists-its-rows-in-the-order-the-user-ch-in-a-column-or-row-which-row-sho",
+  "taskId": "a-column-lists-its-rows-in-the-order-the-user-ch",
+  "question": "In a column or row, which row should the Layers list show first?",
+  "context": "The UI entry mock (ui-entry-wt.html) lists the Login column in reading order. The app lists the top of the stack first, as Photoshop and Figma do. Mocks are the floor, so a departure needs your answer.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Top of the stack first, as today",
+      "summary": "Layers keeps listing whatever sits on top first, everywhere. In the Login column the Password field is listed above the Headline, and a Button dropped at the bottom of the column appears at the top of the list.",
+      "pros": [
+        "Matches Photoshop and Figma, which list auto-layout children this way",
+        "One rule for every group, free or laid out"
+      ],
+      "cons": [
+        "The list reads upside down against the screen it describes",
+        "Differs from the UI entry mock"
+      ],
+      "mitigation": "Selecting a row still rings the piece on the canvas, so where it sits is never in doubt."
+    },
+    {
+      "id": "b",
+      "label": "Reading order in rows and columns",
+      "summary": "A group laid out as a column lists top to bottom, a row left to right, matching the mock: Login, Headline, Subhead, Email field, Password field, then the Button you drop. Free groups and the canvas keep top of the stack first.",
+      "pros": [
+        "The list reads like the screen",
+        "Matches the UI entry mock"
+      ],
+      "cons": [
+        "Two orders in one list: a free group and a column read opposite ways",
+        "Dragging a row up in a column moves it up on screen, but up in a free group moves it in front"
+      ],
+      "mitigation": "The two orders only differ inside laid out groups, where front and behind rarely matter."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-09T05:49:29.034Z"
+}

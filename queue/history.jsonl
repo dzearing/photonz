@@ -10261,3 +10261,22 @@
 {"t":"2026-10-09T03:53:10.953Z","ev":"task_note","id":"closing-a-gap-carries-the-titles-and-music-after"}
 {"t":"2026-10-09T03:53:11.013Z","ev":"task_note","id":"closing-a-gap-carries-the-titles-and-music-after"}
 {"t":"2026-10-09T03:53:15.411Z","ev":"task_done","id":"closing-a-gap-carries-the-titles-and-music-after","from":"in_progress","note":"Closing a gap (Delete, Shift Delete, right-click Ripple Delete) now moves everything after it on every track back by its length, titles and music included, in one undo step; things starting before the gap end and locked tracks/layers stay put; a collision refuses with the pill naming it. PhotonzCore TimelineGap.swift (+5 tests), walk closing-a-gap-carries-the-title-and-music-walk green at Next defaults with the existing gap walks, suite 11904 green, audit 2026-10-08-gap-close-sync."}
+{"t":"2026-10-09T04:06:09.332Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":609,"of":814,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T04:06:09.494Z","ev":"task_started","id":"playing-backwards-fast-keeps-the-picture-moving","title":"Playing backwards fast keeps the picture moving on a full-screen recording","priority":"p2-normal"}
+{"t":"2026-10-09T04:38:16.565Z","ev":"task_note","id":"playing-backwards-fast-keeps-the-picture-moving"}
+{"t":"2026-10-09T04:38:16.626Z","ev":"task_note","id":"playing-backwards-fast-keeps-the-picture-moving"}
+{"t":"2026-10-09T05:00:20.317Z","ev":"task_walks","id":"playing-backwards-fast-keeps-the-picture-moving","walks":["playing-backwards-fast-keeps-moving-walk"]}
+{"t":"2026-10-09T05:00:20.373Z","ev":"task_note","id":"playing-backwards-fast-keeps-the-picture-moving"}
+{"t":"2026-10-09T05:00:20.429Z","ev":"task_note","id":"playing-backwards-fast-keeps-the-picture-moving"}
+{"t":"2026-10-09T05:00:45.616Z","ev":"task_done","id":"playing-backwards-fast-keeps-the-picture-moving","from":"in_progress","note":"8x backwards (J J J J) now keeps up on the 5-min Retina talk: 0 of 24 looks more than 3 frames behind in 5 runs (was 8-12 of 24, up to 13 frames); 4x was already clean and stays 0. Blocks read behind the playhead keep every third frame at 8x (MoviePlayBackward.stride), same 45-frame budget as 4x, peak RSS 1.88GB. Also fixed J J J from a stop at the end stopping on the third press (stale clock task, EditorState+Time.swift). Main thread under 5ms while shuttling. Walk playing-backwards-fast-keeps-moving-walk; 11 playback/JKL walks green; Scripts/test.sh 11910 passed. Commit e415e9d5. Audit queue/audits/2026-10-08-playing-backwards-fast.json."}
+{"t":"2026-10-09T05:10:50.414Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":449,"of":815,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T05:10:50.593Z","ev":"task_started","id":"the-empty-window-can-start-a-ui-design","title":"The empty window can start a UI design","priority":"p2-normal"}
+{"t":"2026-10-09T05:14:14.661Z","ev":"task_note","id":"the-empty-window-can-start-a-ui-design"}
+{"t":"2026-10-09T05:14:14.717Z","ev":"task_walks","id":"the-empty-window-can-start-a-ui-design","walks":["design-ui-start-walk"]}
+{"t":"2026-10-09T05:48:58.797Z","ev":"task_created","id":"new-window-opens-a-front-door-with-a-starting-te","priority":"p2-normal","title":"New Window opens a front door with a starting template for each job"}
+{"t":"2026-10-09T05:49:21.686Z","ev":"task_created","id":"a-column-lists-its-rows-in-the-order-the-user-ch","priority":"p2-normal","title":"A column lists its rows in the order the user chooses in Layers"}
+{"t":"2026-10-09T05:49:29.035Z","ev":"decision_opened","id":"a-column-lists-its-rows-in-the-order-the-user-ch-in-a-column-or-row-which-row-sho","taskId":"a-column-lists-its-rows-in-the-order-the-user-ch","question":"In a column or row, which row should the Layers list show first?"}
+{"t":"2026-10-09T05:49:36.498Z","ev":"task_blocked","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":"pending","note":"Waiting on the user: which order the Layers list follows inside a column or row"}
+{"t":"2026-10-09T05:50:30.185Z","ev":"task_note","id":"the-empty-window-can-start-a-ui-design"}
+{"t":"2026-10-09T05:50:30.244Z","ev":"task_note","id":"the-empty-window-can-start-a-ui-design"}
+{"t":"2026-10-09T05:50:30.301Z","ev":"task_note","id":"the-empty-window-can-start-a-ui-design"}
