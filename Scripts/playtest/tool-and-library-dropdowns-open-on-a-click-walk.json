@@ -533,7 +533,7 @@
     },
     {
       "do": "dragTile",
-      "tile": "Button",
+      "tile": "Badge",
       "to": [
         360,
         220
@@ -637,7 +637,7 @@
     },
     {
       "do": "dragTile",
-      "tile": "Button",
+      "tile": "Badge",
       "to": [
         760,
         620

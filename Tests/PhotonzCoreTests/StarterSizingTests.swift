@@ -289,7 +289,7 @@ struct StarterSizingTests {
         // quietly turns a card into something else fails here.
         #expect(said[.button] == "As wide as its label with the room either side, "
                 + "and as tall as it with the room above and below, "
-                + "never under 36 points tall.")
+                + "never under 32 points tall.")
         #expect(said[.card] == "260 points wide, and as tall as everything on it "
                 + "with the room above and below.")
         #expect(said[.navBar] == "A box 320 points wide and 48 points tall.")

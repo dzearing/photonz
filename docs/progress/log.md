@@ -20976,3 +20976,12 @@ Next: the first editor window's ~200 ms first build
 - A component can ask more than one variant question: Add > New Variant Property on an original adds Size beside Variant. Each copy picks each answer on its own segmented row; an undrawn combination shows the nearest drawing; Edit Original lays a two-question component out as a grid with the answers along its edges. Model in `ComponentVariantProperty.swift` / `ComponentVariantGrid.swift`; one-question files save byte for byte as before.
 - Fixed the video kit standalone typecheck broken by 3061dbe0 (the component mark's path now lives in VideoKit).
 - Next: `edit-original-draws-a-two-question-component-ins` (the mock's matrix panel), and the starter Button's nine looks (`the-starter-button-comes-as-primary-secondary-or`).
+
+## 2026-10-09 — The starter Button comes in the mock's nine looks
+
+- A Button dropped from the Library is now Primary, Secondary or Ghost in Small, Medium or Large (24, 32, 40 tall, capsule, the design system's room and type), with a leading icon (Sparkle, Wand, Swatch, Layers, Brush drawn from `icons.mjs` path data via the new `IconPathData`). A copy starts on Primary · Medium (`componentDefaultVersion`).
+- A copy's Properties: Variant and Size rows, then Show icon (with its On/Off word), Label (the mock's full-width box with the T glyph) and Icon (each row with its picture, and No icon at the foot, which is the Show icon switch's own answer).
+- Fixed on the way: an Icon (or any choice) picked on one look carries to the copy's other looks by name; a copy on any look but the first can be typed over and take a text style on its words (piece lookups read the copy's own look).
+- The starter accent and quiet text are the design system's (#4C6FFF, #5C6371). Documents that already took a Button keep their one-look Button.
+- Walks: new `starter-button-looks-walk`; 16 walks that used the Button as a one-look component moved to the Badge or Text Field, or now read the nine looks.
+- Next: `the-starter-button-primary-shines-like-the-mock` (gloss and the Icon face glyph), `edit-original-draws-a-two-question-component-ins` (now p1: the nine looks crowd the grid), decision card on dark-mode colours.

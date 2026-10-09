@@ -494,6 +494,9 @@ extension PhotonzDocument {
     public mutating func insertComponentInstance(of componentID: UUID, at point: CGPoint,
                                                  inside context: UUID? = nil,
                                                  version: UUID? = nil) -> UUID? {
+        // Told nothing, a copy shows the look its component offers first: the
+        // starter Button's Primary · Medium (`componentDefaultVersion`).
+        let version = version ?? componentDefaultVersion(of: componentID)
         guard let main = mainComponent(componentID: componentID, version: version) else { return nil }
         // The one answer, asked once: the same call the canvas draws its
         // outline from, so what a drag in the air promised is what the drop

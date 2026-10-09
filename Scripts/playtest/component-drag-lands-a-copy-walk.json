@@ -23,16 +23,10 @@
       "seconds": 1.2
     },
     {
-      "do": "action",
-      "action": "pickFirstComponent"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
-      "do": "dropComponent",
-      "at": [
+      "comment": "The Badge rather than the first tile: since 2026-10-09 the Button is nine looks with a Variant and Size panel, too tall for the shelf to come back under it in this window.",
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
         520,
         420
       ]
@@ -63,13 +57,13 @@
     {
       "do": "expectPicked",
       "layers": [
-        "Button"
+        "Badge"
       ]
     },
     {
       "do": "expectLayers",
       "count": 4,
-      "comment": "The Background plus ONE Button of two pieces. Before 2026-10-04 the first drop also stood the original beside it: 7."
+      "comment": "The Background plus ONE Badge of two pieces. Before 2026-10-04 the first drop also stood the original beside it: 7."
     },
     {
       "do": "panel",
@@ -125,16 +119,10 @@
       "seconds": 0.8
     },
     {
-      "do": "action",
-      "action": "pickFirstComponent"
-    },
-    {
-      "do": "wait",
-      "seconds": 0.5
-    },
-    {
-      "do": "dropComponent",
-      "at": [
+      "comment": "The Badge rather than the first tile: since 2026-10-09 the Button is nine looks with a Variant and Size panel, too tall for the shelf to come back under it in this window.",
+      "do": "dragTile",
+      "tile": "Badge",
+      "to": [
         900,
         700
       ]

@@ -234,8 +234,11 @@ struct ComponentPieceEditingTests {
         _ = doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 300))
         let copy = doc.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300))!
         let componentID = StarterComponent.button.componentID
-        let main = doc.mainComponent(componentID: componentID)!
-        let label = main.children.first { $0.name == "Label" }!
+        // The drawing of the look the copy shows (Primary · Medium), not the
+        // component's first.
+        let main = doc.mainComponent(componentID: componentID,
+                                     version: doc.instanceVersion(of: copy))!
+        let label = main.selfAndDescendants.first { $0.name == "Label" }!
         let piece = ComponentIdentity.derived(instance: copy, source: label.id)
         guard case .knob(_, let property) = doc.wordingEdit(of: piece) else {
             Issue.record("a starter button arrives with a wording knob on its label")

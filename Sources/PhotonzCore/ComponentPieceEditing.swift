@@ -157,8 +157,15 @@ extension PhotonzDocument {
     /// Ids inside a copy are derived from the copy and the layer they came
     /// from, and that derivation is one-way, so the match is made by deriving
     /// the original's layers forward and looking for this one.
+    ///
+    /// It is the drawing of the look THIS copy shows: a Button copy showing
+    /// Primary · Medium is a picture of that drawing's label, not the first
+    /// drawing's, so reading the first missed every piece of every copy on
+    /// any other look (found on 2026-10-09, when the starter Button's copies
+    /// stopped taking a style on their words).
     private func sourceOfPiece(_ id: UUID, instance: UUID, componentID: UUID) -> UUID? {
-        guard let main = mainComponent(componentID: componentID) else { return nil }
+        guard let main = mainComponent(componentID: componentID,
+                                       version: instanceVersion(of: instance)) else { return nil }
         return main.selfAndDescendants
             .first { ComponentIdentity.derived(instance: instance, source: $0.id) == id }?.id
     }
@@ -207,12 +214,15 @@ extension PhotonzDocument {
             return .refused(refusal(for: piece, remedy: .unlock))
         }
         if !piece.isNested,
-           let property = componentProperties(of: piece.componentID)
+           let property = componentProperties(of: piece.componentID,
+                                              version: instanceVersion(of: piece.instance))
             .first(where: { $0.kind == .text && $0.target == piece.source }) {
             return .knob(piece, property)
         }
         let canExpose = !piece.isNested
-            && canAddComponentProperty(componentID: piece.componentID, target: piece.source, kind: .text)
+            && canAddComponentProperty(componentID: piece.componentID,
+                                       version: instanceVersion(of: piece.instance),
+                                       target: piece.source, kind: .text)
         return .refused(refusal(for: piece, remedy: canExpose ? .exposeWording : .detach))
     }
 

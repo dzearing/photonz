@@ -1872,33 +1872,7 @@ struct ComponentInstanceProperties: View {
             }
             Spacer(minLength: 0)
         case .variant:
-            // Labels rather than raw names: two rectangles drawn in a row are
-            // both called "Rectangle", and a menu of identical rows is a menu
-            // nobody can choose from.
-            let options = editorState.componentVariantOptionLabels(
-                componentID: selection.componentID ?? UUID(), version: selection.version,
-                propertyID: property.id)
-            // The face is where a dropdown shows its value, so that is where
-            // Mixed goes: a row the copies disagree on reads the word, one
-            // step quieter, rather than picking one copy's shape and printing
-            // it as if it were everybody's. Mixed is a report about the
-            // selection, not a row anybody can pick.
-            let picked = reading.optionValue ?? options.first?.id
-            let value = isMixed ? MixedValue.text : (options.first { $0.id == picked }?.label ?? "")
-            VideoKit.Dropdown(
-                label: property.name,
-                value: value,
-                valueStyle: isMixed ? MixedLook.style : nil,
-                help: Self.variantHelp,
-                choices: options.map { option in
-                    .item(option.label, isOn: !isMixed && option.id == picked) {
-                        editorState.setInstanceOverride(instances: instances, property: property.id,
-                                                        value: .variant(option.id))
-                    }
-                })
-                .frame(maxWidth: .infinity)
-                .panelHelp(Self.variantHelp)
-                .playtestControl(property.name, detail: value)
+            choiceKnob(property, reading: reading)
         case .color:
             InstanceColorKnob(instances: instances, property: property)
         case .number where property.numberSlot?.isFourSided == true:
@@ -1916,6 +1890,78 @@ struct ComponentInstanceProperties: View {
                                value: isMixed ? nil : reading.numberValue)
             Spacer(minLength: 0)
         }
+    }
+
+    /// A choice knob on the copies: a dropdown of the shapes the original
+    /// holds, each with its picture.
+    @ViewBuilder private func choiceKnob(_ property: ComponentProperty,
+                                         reading: ComponentKnobReading) -> some View {
+        let menu = choiceMenu(property, reading: reading)
+        VideoKit.Dropdown(
+            label: property.name,
+            value: menu.value,
+            valueStyle: menu.undecided ? MixedLook.style : nil,
+            help: Self.variantHelp,
+            choices: menu.choices)
+            .frame(maxWidth: .infinity)
+            .panelHelp(Self.variantHelp)
+            .playtestControl(property.name, detail: menu.value)
+    }
+
+    /// What a choice knob's dropdown says and offers.
+    private func choiceMenu(_ property: ComponentProperty, reading: ComponentKnobReading)
+        -> (value: String, undecided: Bool, choices: [VideoKit.Choice]) {
+        // Labels rather than raw names: two rectangles drawn in a row are
+        // both called "Rectangle", and a menu of identical rows is a menu
+        // nobody can choose from.
+        let options = editorState.componentVariantOptionLabels(
+            componentID: selection.componentID ?? UUID(), version: selection.version,
+            propertyID: property.id)
+        // The face is where a dropdown shows its value, so that is where
+        // Mixed goes: a row the copies disagree on reads the word, one
+        // step quieter, rather than picking one copy's shape and printing
+        // it as if it were everybody's. Mixed is a report about the
+        // selection, not a row anybody can pick.
+        let picked = reading.optionValue ?? options.first?.id
+        // A show-or-hide knob on the same piece makes "none of them" one of
+        // the answers: the variants mock's Icon menu ends in No icon. It is
+        // the same fact as the switch, so picking it turns the switch off and
+        // picking a shape turns it back on, in one step.
+        let shows = properties.first { $0.kind == .visible && $0.target == property.target }
+        let showing = shows.map { selection.reading($0.id) }
+        let hidden = showing?.boolValue == false
+        let undecided = reading == .mixed || showing == .mixed
+        let none = "No \(property.name.lowercased())"
+        let value = undecided ? MixedValue.text
+            : hidden ? none : (options.first { $0.id == picked }?.label ?? "")
+        let instances = self.instances
+        var choices: [VideoKit.Choice] = options.map { option in
+            .item(option.label, isOn: !undecided && !hidden && option.id == picked,
+                  image: choicePicture(option.id)) { [editorState] in
+                var answers: [(UUID, ComponentPropertyValue)] = [(property.id, .variant(option.id))]
+                if let shows, hidden || showing == .mixed { answers.append((shows.id, .visible(true))) }
+                editorState.setInstanceOverrides(instances: instances, answers: answers)
+            }
+        }
+        if let shows {
+            choices.append(.divider)
+            choices.append(.item(none, isOn: !undecided && hidden) { [editorState] in
+                editorState.setInstanceOverride(instances: instances, property: shows.id,
+                                                value: .visible(false))
+            })
+        }
+        return (value, undecided, choices)
+    }
+
+    /// A choice's shape as a menu picture: drawn as a template, so the menu
+    /// paints it in its own ink and a white icon from a Primary button reads
+    /// on a white menu.
+    private func choicePicture(_ id: UUID) -> NSImage? {
+        guard let shape = editorState.document?.layer(id: id),
+              let image = editorState.thumbnail(for: shape) else { return nil }
+        let picture = NSImage(cgImage: image, size: NSSize(width: 14, height: 14))
+        picture.isTemplate = true
+        return picture
     }
 
     /// How wide the word beside a control is, so every knob's control starts in
@@ -1996,8 +2042,18 @@ private struct InstanceShowKnob: View {
                 .opacity(isMixed ? MixedLook.controlOpacity : 1)
             // The word goes beside the switch rather than inside it: there is
             // no room in the control, and this row has no trailing column for
-            // it to collide with.
-            if isMixed { MixedWord() }
+            // it to collide with. The variants mock says On or Off there too
+            // (`ui-variants.html`, `#swState`), so the switch is never the only
+            // thing saying which way it is.
+            if isMixed {
+                MixedWord()
+            } else {
+                Text(isOn ? "On" : "Off")
+                    .font(.system(size: 11.5, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.dim)
+                    .monospacedDigit()
+                    .accessibilityHidden(true)
+            }
         }
     }
 }
@@ -2413,14 +2469,36 @@ private struct InstanceTextKnob: View {
     @FocusState private var focused: Bool
 
     var body: some View {
+        // The variants mock's `.input`: a well the width of the row with the
+        // text glyph in front (`ui-variants.html`, `#txtLabel`).
+        HStack(spacing: 6) {
+            TextGlyphShape()
+                .stroke(focused ? AnyShapeStyle(VideoKit.Palette.dim) : AnyShapeStyle(VideoKit.Palette.faint),
+                        style: StrokeStyle(lineWidth: 1.1, lineCap: .round, lineJoin: .round))
+                .frame(width: 14, height: 14)
+                .accessibilityHidden(true)
+            field
+        }
+        .padding(.horizontal, 8)
+        .frame(maxWidth: .infinity)
+        .frame(height: VideoKit.Metrics.controlSmall)
+        .background(RoundedRectangle(cornerRadius: 6).fill(VideoKit.Palette.well))
+        .overlay(RoundedRectangle(cornerRadius: 6)
+            .strokeBorder(focused ? AnyShapeStyle(VideoKit.Palette.accent) : AnyShapeStyle(VideoKit.Palette.line)))
+        .contentShape(RoundedRectangle(cornerRadius: 6))
+        // The glyph and the room round the words are the field's too.
+        .onTapGesture { focused = true }
+    }
+
+    private var field: some View {
         // The knob's own name is the placeholder, so an emptied field still
         // says what it is, and a scripted playtest can reach the field by name.
         // While the copies differ the box holds the word instead: a field that
         // went blank would say "they differ" and "nothing is set here" in
         // exactly the same way, and those are different answers.
         TextField(isMixed ? "" : property.name, text: $draft)
-            .textFieldStyle(.roundedBorder)
-            .font(.caption)
+            .textFieldStyle(.plain)
+            .font(.system(size: 11, weight: .medium))
             .focused($focused)
             // The knob's name, whatever is in the box. While the copies differ
             // the placeholder is gone (the word is there instead), and a field
@@ -2462,6 +2540,23 @@ private struct InstanceTextKnob: View {
         guard draft != live else { return }
         editorState.setInstanceOverride(instances: instances, property: property.id,
                                         value: .text(draft))
+    }
+}
+
+/// The design system's text glyph (`icons.mjs`, `text`): a T on the 24 point
+/// grid, drawn as a line.
+private struct TextGlyphShape: Shape {
+    func path(in rect: CGRect) -> Path {
+        let s = min(rect.width, rect.height) / 24
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint {
+            CGPoint(x: rect.minX + x * s, y: rect.minY + y * s)
+        }
+        var path = Path()
+        path.move(to: p(5.4, 6.6)); path.addLine(to: p(5.4, 4.4))
+        path.addLine(to: p(18.6, 4.4)); path.addLine(to: p(18.6, 6.6))
+        path.move(to: p(12, 4.4)); path.addLine(to: p(12, 19.6))
+        path.move(to: p(9, 19.6)); path.addLine(to: p(15, 19.6))
+        return path
     }
 }
 

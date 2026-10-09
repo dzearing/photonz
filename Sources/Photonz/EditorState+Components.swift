@@ -366,7 +366,10 @@ extension EditorState {
         guard versions.count > 1 else { return nil }
         if let chosen = shelfComponentVersionChoice[componentID],
            let match = versions.first(where: { $0.id == chosen }) { return match }
-        return versions.first
+        // Unchosen, the look a fresh copy shows: the starter Button's
+        // Primary · Medium rather than the Small at the top of its grid.
+        let preferred = document?.componentDefaultVersion(of: componentID)
+        return versions.first { $0.id == preferred } ?? versions.first
     }
 
     /// Sets the version a tile places. Nothing in the picture changes: copies
@@ -784,6 +787,18 @@ extension EditorState {
         guard componentsEnabled, !instances.isEmpty else { return }
         perform(announcing: false) {
             _ = $0.setInstanceOverride(instances: instances, property: property, value: value)
+        }
+    }
+
+    /// Sets several knobs on every picked copy at once, in ONE undo step: an
+    /// icon picked from a menu that was set to No icon is the icon AND the
+    /// switch turned back on, and undoing it is one press.
+    func setInstanceOverrides(instances: [UUID], answers: [(UUID, ComponentPropertyValue)]) {
+        guard componentsEnabled, !instances.isEmpty, !answers.isEmpty else { return }
+        perform(announcing: false) { doc in
+            for (property, value) in answers {
+                _ = doc.setInstanceOverride(instances: instances, property: property, value: value)
+            }
         }
     }
 

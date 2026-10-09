@@ -24,7 +24,7 @@
     },
     {
       "do": "dragTile",
-      "tile": "Button",
+      "tile": "Badge",
       "to": [
         340,
         240

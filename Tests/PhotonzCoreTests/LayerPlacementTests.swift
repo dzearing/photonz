@@ -141,26 +141,33 @@ struct LayerPlacementTests {
     func aStarterButtonSurvivesBeingWidened() {
         let button = StarterComponents.layer(.button)
         let start = button.localBounds
-        // It arrives as wide as its label plus the room either side, not at
-        // some width somebody picked: 16, the word, 16.
-        let words = button.children.last.map { $0.frame.width - StarterComponents.textSlack } ?? 0
-        #expect(start.width == 16 + words + 16)
-        #expect(start.height == 36)
-        for width in [96.0, 128.0, 260.0] as [CGFloat] {
+        // It arrives as wide as its icon and label plus the room either side,
+        // not at some width somebody picked: 16, the icon, 8, the word, 16.
+        // The icon and the word are a row of their own in the middle of it
+        // (`StarterButtonLooksTests.aWidenedButtonKeepsItsRowCentred`).
+        let row = button.children.first { $0.name == "Content" }
+        let words = row.map { piece($0, "Label").width - StarterComponents.textSlack } ?? 0
+        #expect(start.width == 16 + 15 + 8 + words + 16)
+        #expect(start.height == 32)
+        for width in [128.0, 160.0, 260.0] as [CGFloat] {
             let resized = button.resized(to: CGRect(x: 0, y: 0, width: width, height: start.height))
             let background = piece(resized, "Background")
-            let label = piece(resized, "Label")
             #expect(background == CGRect(x: 0, y: 0, width: width, height: start.height))
-            // The label is centred on its INK, which is its frame less the
-            // measuring slack, exactly as the starter drew it at 128.
-            let ink = label.width - StarterComponents.textSlack
-            #expect(abs(label.minX - ((width - ink) / 2).rounded()) <= 1)
+            // The row is centred on its INK: from the icon's leading edge to
+            // the label's frame less the measuring slack.
+            guard let row = resized.children.first(where: { $0.name == "Content" }) else {
+                Issue.record("no row"); return
+            }
+            let icon = piece(row, "Icon").minX + row.frame.minX
+            let ink = piece(row, "Label").maxX + row.frame.minX - StarterComponents.textSlack
+            #expect(abs((icon + ink) / 2 - width / 2) <= 1, "\(width)")
             // ...and its type never changed size.
-            guard case .text(let content)? = resized.children.last?.content else {
+            let label = resized.selfAndDescendants.first { $0.name == "Label" }
+            guard case .text(let content)? = label?.content else {
                 Issue.record("the label stopped being text")
                 return
             }
-            #expect(content.fontSize == 14)
+            #expect(content.fontSize == 12.5)
         }
     }
 

@@ -112,9 +112,13 @@ struct StarterComponentRenderTests {
         for (kind, piece) in [(StarterComponent.button, "Label"), (.badge, "Count"),
                               (.textField, "Placeholder"), (.navBar, "Title")] {
             let built = StarterComponents.layer(kind, measure: measure)
-            let label = try #require(built.children.first { $0.name == piece },
+            // The Button's words sit in a row of their own inside it, so the
+            // row's own place is added on.
+            let row = built.children.first { $0.name == "Content" }
+            let holder = row ?? built
+            let label = try #require(holder.children.first { $0.name == piece },
                                      "\(kind.name) has no \(piece)")
-            let middle = label.contentBounds.midY
+            let middle = label.contentBounds.midY + (row?.frame.minY ?? 0)
             #expect(abs(middle - built.localBounds.midY) <= 0.5,
                     "\(kind.name) puts its \(piece) at \(middle), not \(built.localBounds.midY)")
         }

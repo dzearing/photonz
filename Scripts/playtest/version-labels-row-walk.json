@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/version-labels-row",
-  "seed": "Four variants of one button standing side by side. Every variant of a component carries the component's name, so a label reading \"Button . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the box that opens stands on the letters it is going to replace: the component's name stays printed in front of it and only the variant sits inside the box. Since 2026-09-22 a drag off the shelf hands back a COPY with the ORIGINAL one gap to its right, so the drop is aimed a button and a gap to the left of where the original is wanted and the copy is deleted straight after: what is left is one drawing at (900, 650), which is what this walk has always been about.",
+  "seed": "Four variants of one button standing side by side. Every variant of a component carries the component's name, so a label reading \"Text Field . Disabled\" on every drawing repeats the useless word four times and is two and a half times the width of the drawing it names. This walk photographs the row at 100% and at 50%, and then double clicks one of the labels to prove the box that opens stands on the letters it is going to replace: the component's name stays printed in front of it and only the variant sits inside the box. Since 2026-09-22 a drag off the shelf hands back a COPY with the ORIGINAL one gap to its right, so the drop is aimed a button and a gap to the left of where the original is wanted and the copy is deleted straight after: what is left is one drawing at (900, 650), which is what this walk has always been about.",
   "setup": {
     "forget": [
       "panel",
@@ -25,7 +25,7 @@
     },
     {
       "do": "dragTile",
-      "tile": "Button",
+      "tile": "Text Field",
       "to": [
         798,
         650
@@ -37,7 +37,7 @@
       "seconds": 1.0
     },
     {
-      "comment": "Since 2026-10-04 the drop puts down one copy and the original lives in the Library, so its versions are built in Edit Original's space, where the Button stands in the middle of a page the document's size.",
+      "comment": "Since 2026-10-04 the drop puts down one copy and the original lives in the Library, so its versions are built in Edit Original's space, where the Text Field stands in the middle of a page the document's size.",
       "do": "action",
       "action": "selectComponentOriginal"
     },
@@ -61,7 +61,7 @@
     {
       "do": "describe",
       "stage": "one-alone",
-      "note": "one Button with the whole canvas around it: it wears its own name, exactly as it always did"
+      "note": "one Text Field with the whole canvas around it: it wears its own name, exactly as it always did"
     },
     {
       "do": "snapshot",
@@ -70,8 +70,8 @@
     {
       "do": "click",
       "at": [
-        975,
-        671
+        908,
+        673
       ],
       "space": "document",
       "count": 2
@@ -219,8 +219,8 @@
     {
       "do": "click",
       "at": [
-        1085,
-        671
+        1152,
+        673
       ],
       "space": "document",
       "count": 2
@@ -257,7 +257,7 @@
     {
       "do": "describe",
       "stage": "renamed",
-      "note": "the VERSION is now called Off; the component is still called Button"
+      "note": "the VERSION is now called Off; the component is still called Text Field"
     },
     {
       "do": "snapshot",
@@ -293,8 +293,8 @@
     {
       "do": "move",
       "at": [
-        1020,
-        710
+        1000,
+        700
       ],
       "space": "document"
     },

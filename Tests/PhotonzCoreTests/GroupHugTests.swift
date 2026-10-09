@@ -336,19 +336,26 @@ struct GroupHugTests {
         // The ORIGINAL: a drag off the shelf hands back an instance, and an
         // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
         let buttonID = history.current
-            .mainComponent(componentID: StarterComponent.button.componentID)?.id
+            .mainComponent(componentID: StarterComponent.button.componentID,
+                           version: history.current.componentDefaultVersion(
+                            of: StarterComponent.button.componentID))?.id
         guard let buttonID, let before = history.current.layer(id: buttonID) else {
             Issue.record("no button")
             return
         }
         let room = before.group?.layout?.usedPadding ?? .none
         #expect(before.group?.layout?.hugsWidth == true)
-        let label = before.children.first { $0.name == "Label" }
-        #expect(label?.frame.minX == room.left)
+        // The icon and the words are a row of their own inside the capsule:
+        // the icon, the gap, then the words.
+        let row = before.children.first { $0.name == "Content" }
+        let label = row?.children.first { $0.name == "Label" }
+        let icon = row?.children.first { $0.name == "Icon" }?.frame.width ?? 0
+        let lead = room.left + icon + (row?.group?.layout?.gap ?? 0)
+        #expect((row?.frame.minX ?? 0) + (label?.frame.minX ?? 0) == lead)
         // A measured text box carries its slack on the far edge, so the room
         // that shows is the room around the WORDS.
         let words = (label?.frame.width ?? 0) - TextMeasurement.slack
-        #expect(before.localBounds.width == room.left + words + room.right)
+        #expect(before.localBounds.width == lead + words + room.right)
 
         // Re-word it, the way typing over the word in the canvas does.
         guard let labelID = label?.id else { Issue.record("no label"); return }
@@ -357,18 +364,21 @@ struct GroupHugTests {
                 guard case .text(var content) = piece.content else { return }
                 content.string = "Save all the changes now"
                 piece.content = .text(content)
-                piece = piece.textRefitted(hugging: true, anchor: .center)
+                // From its leading edge, as the words in the button's row are
+                // lined up (`StarterComponents.button`).
+                piece = piece.textRefitted(hugging: true, anchor: .left)
             }
         }
         guard let after = history.current.layer(id: buttonID),
-              let grown = after.children.first(where: { $0.name == "Label" }),
+              let grownRow = after.children.first(where: { $0.name == "Content" }),
+              let grown = grownRow.children.first(where: { $0.name == "Label" }),
               let surface = after.children.first(where: { $0.name == "Background" })
         else { Issue.record("the button lost a piece"); return }
         #expect(grown.frame.width > (label?.frame.width ?? 0))
         // The pill grew with the words and kept exactly the room it had.
-        #expect(grown.frame.minX == room.left)
+        #expect(grownRow.frame.minX + grown.frame.minX == lead)
         #expect(after.localBounds.width
-                == room.left + grown.frame.width - TextMeasurement.slack + room.right)
+                == lead + grown.frame.width - TextMeasurement.slack + room.right)
         #expect(surface.frame == CGRect(origin: .zero, size: after.localBounds.size))
         // ...and it did not have to be dragged to get there.
         #expect(after.localBounds.height == before.localBounds.height)
@@ -381,14 +391,17 @@ struct GroupHugTests {
         // The ORIGINAL: a drag off the shelf hands back an instance, and an
         // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
         let mainID = history.current
-            .mainComponent(componentID: StarterComponent.button.componentID)?.id
+            .mainComponent(componentID: StarterComponent.button.componentID,
+                           version: history.current.componentDefaultVersion(
+                            of: StarterComponent.button.componentID))?.id
         var copyID: UUID?
         history.perform {
             copyID = $0.insertComponentInstance(of: StarterComponent.button.componentID,
                                                 at: CGPoint(x: 200, y: 400))
         }
         guard let mainID, let copyID,
-              let property = history.current.instanceProperties(instance: copyID).first
+              let property = history.current.instanceProperties(instance: copyID)
+                .first(where: { $0.kind == .text })
         else { Issue.record("no copy with a knob"); return }
         let before = history.current.layer(id: copyID)?.localBounds.width ?? 0
         history.perform {
@@ -434,14 +447,17 @@ struct GroupHugTests {
         // The ORIGINAL: a drag off the shelf hands back an instance, and an
         // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
         let buttonID = history.current
-            .mainComponent(componentID: StarterComponent.button.componentID)?.id
+            .mainComponent(componentID: StarterComponent.button.componentID,
+                           version: history.current.componentDefaultVersion(
+                            of: StarterComponent.button.componentID))?.id
         guard let buttonID, let before = history.current.layer(id: buttonID),
-              let label = before.children.first(where: { $0.name == "Label" })
+              let label = before.selfAndDescendants.first(where: { $0.name == "Label" })
         else { Issue.record("no button"); return }
         let room = before.group?.layout?.usedPadding ?? .none
         setType(&history, label.id, size: 32)
         guard let after = history.current.layer(id: buttonID),
-              let grown = after.children.first(where: { $0.name == "Label" }),
+              let grownRow = after.children.first(where: { $0.name == "Content" }),
+              let grown = grownRow.children.first(where: { $0.name == "Label" }),
               let surface = after.children.first(where: { $0.name == "Background" })
         else { Issue.record("the button lost a piece"); return }
         #expect(grown.contentBounds.height > label.contentBounds.height)
@@ -449,8 +465,8 @@ struct GroupHugTests {
         #expect(after.localBounds.height
                 == room.top + grown.contentBounds.height + room.bottom)
         // ...so no part of the words is outside it, which is the whole bug.
-        #expect(grown.contentBounds.maxY <= after.localBounds.height)
-        #expect(grown.contentBounds.minY >= 0)
+        #expect(grownRow.frame.minY + grown.contentBounds.maxY <= after.localBounds.height)
+        #expect(grownRow.frame.minY + grown.contentBounds.minY >= 0)
         // ...and the surface behind them took the new box.
         #expect(surface.frame == CGRect(origin: .zero, size: after.localBounds.size))
     }
@@ -458,24 +474,26 @@ struct GroupHugTests {
     /// ...and the floor under it still holds, so a button does not shrink to
     /// the height of one small word. The starter arrives at exactly the size
     /// it always did.
-    @Test("A starter button still arrives 36 tall")
+    @Test("A starter button still arrives 32 tall")
     func theButtonStillArrivesAtItsOwnHeight() {
         var history = History(document: document())
         history.perform { _ = $0.insertStarterComponent(.button, at: CGPoint(x: 400, y: 300)) }
         // The ORIGINAL: a drag off the shelf hands back an instance, and an
         // instance's pieces belong to its original (`FirstDropIsAnInstanceTests`).
         let buttonID = history.current
-            .mainComponent(componentID: StarterComponent.button.componentID)?.id
+            .mainComponent(componentID: StarterComponent.button.componentID,
+                           version: history.current.componentDefaultVersion(
+                            of: StarterComponent.button.componentID))?.id
         guard let buttonID, let button = history.current.layer(id: buttonID)
         else { Issue.record("no button"); return }
-        #expect(button.localBounds.height == 36)
+        #expect(button.localBounds.height == 32)
         #expect(button.group?.layout?.hugsHeight == true)
-        #expect(button.group?.layout?.usedMinHeight == 36)
+        #expect(button.group?.layout?.usedMinHeight == 32)
         // Smaller words cannot pull it under the floor either.
-        guard let label = button.children.first(where: { $0.name == "Label" })
+        guard let label = button.selfAndDescendants.first(where: { $0.name == "Label" })
         else { Issue.record("no label"); return }
         setType(&history, label.id, size: 8)
-        #expect(history.current.layer(id: buttonID)?.localBounds.height == 36)
+        #expect(history.current.layer(id: buttonID)?.localBounds.height == 32)
     }
 
     /// The badge is the same shape of thing — a word in a pill — so it answers

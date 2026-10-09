@@ -229,22 +229,6 @@
       "seconds": 0.8
     },
     {
-      "do": "action",
-      "action": "addComponentVersion"
-    },
-    {
-      "do": "wait",
-      "seconds": 1.0
-    },
-    {
-      "do": "type",
-      "text": "Pressed"
-    },
-    {
-      "do": "key",
-      "key": "return"
-    },
-    {
       "do": "wait",
       "seconds": 1.2
     },
@@ -259,7 +243,7 @@
     {
       "do": "describe",
       "stage": "version-word",
-      "note": "the Button now has two drawings, so each says which variant it is rather than repeating the component's name"
+      "note": "the starter Button arrives as nine drawings (Primary, Secondary, Ghost by Small, Medium, Large), so each says which look it is rather than repeating the component's name"
     },
     {
       "do": "snapshot",

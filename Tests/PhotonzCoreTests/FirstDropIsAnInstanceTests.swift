@@ -17,6 +17,9 @@ import Testing
 /// and you got the authoring wall instead of the two rows a placed component
 /// is for. That is the report this answers
 /// (`a-copy-of-a-component-is-configured-not-authored`).
+/// Read with the Badge, a starter with ONE drawing: the Button arrives as
+/// nine looks since 2026-10-09 (`StarterButtonLooksTests`), and "one original"
+/// is the claim here.
 struct FirstDropIsAnInstanceTests {
 
     private func document(_ size: CGFloat = 1200) -> PhotonzDocument {
@@ -29,21 +32,21 @@ struct FirstDropIsAnInstanceTests {
 
     @Test func theFirstDropOfAStarterIsAnInstance() {
         var doc = document()
-        guard let placed = doc.insertStarterComponent(.button, at: drop) else {
+        guard let placed = doc.insertStarterComponent(.badge, at: drop) else {
             Issue.record("nothing placed"); return
         }
         #expect(doc.layer(id: placed)?.isComponentInstance == true)
         #expect(doc.layer(id: placed)?.isMainComponent == false)
         #expect(doc.mainComponents.count == 1)
-        #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 1)
+        #expect(doc.instanceCount(of: StarterComponent.badge.componentID) == 1)
     }
 
     /// The instance is the thing under your pointer, and the only thing the
     /// drop put on the canvas: the original is in the component library.
     @Test func theInstanceTakesTheDropAndTheOriginalStaysOffTheCanvas() {
         var doc = document()
-        guard let placed = doc.insertStarterComponent(.button, at: drop),
-              let main = doc.mainComponent(componentID: StarterComponent.button.componentID),
+        guard let placed = doc.insertStarterComponent(.badge, at: drop),
+              let main = doc.mainComponent(componentID: StarterComponent.badge.componentID),
               let instanceBox = doc.canvasBounds(of: placed)
         else { Issue.record("nothing placed"); return }
         #expect(abs(instanceBox.midX - drop.x) <= 1)
@@ -68,11 +71,11 @@ struct FirstDropIsAnInstanceTests {
     /// original. What was history-dependent is now the same both times.
     @Test func theSecondDropIsAnotherInstanceAndTheOriginalIsNotDuplicated() {
         var doc = document()
-        doc.insertStarterComponent(.button, at: drop)
-        let second = doc.insertStarterComponent(.button, at: CGPoint(x: 800, y: 800))
+        doc.insertStarterComponent(.badge, at: drop)
+        let second = doc.insertStarterComponent(.badge, at: CGPoint(x: 800, y: 800))
         #expect(doc.mainComponents.count == 1)
         #expect(doc.layer(id: second ?? UUID())?.isComponentInstance == true)
-        #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 2)
+        #expect(doc.instanceCount(of: StarterComponent.badge.componentID) == 2)
     }
 
     /// Dropped into a group you have stepped inside, the INSTANCE joins the
@@ -110,8 +113,8 @@ struct FirstDropIsAnInstanceTests {
         var doc = PhotonzDocument(canvasSize: canvas, layers: [clip])
         doc.durationMS = 8000
 
-        guard let placed = doc.insertStarterComponent(.button, at: drop, atTimeMS: 4000),
-              let main = doc.mainComponent(componentID: StarterComponent.button.componentID)
+        guard let placed = doc.insertStarterComponent(.badge, at: drop, atTimeMS: 4000),
+              let main = doc.mainComponent(componentID: StarterComponent.badge.componentID)
         else { Issue.record("nothing placed"); return }
         #expect(doc.layer(id: placed)?.time?.inMS == 4000)
         #expect(main.id != placed)
@@ -123,8 +126,8 @@ struct FirstDropIsAnInstanceTests {
 
     @Test func theFirstDropOfASharedComponentIsAnInstance() {
         var source = document()
-        source.insertStarterComponent(.button, at: drop)
-        guard let shared = source.shareComponent(componentID: StarterComponent.button.componentID)
+        source.insertStarterComponent(.badge, at: drop)
+        guard let shared = source.shareComponent(componentID: StarterComponent.badge.componentID)
         else { Issue.record("nothing to publish"); return }
 
         var doc = document()

@@ -349,7 +349,10 @@ struct SharedComponentTests {
         // It is the same component it always was, so the app's shelf still
         // knows it and there is no second mechanism.
         #expect(StarterComponent(componentID: componentID) == .button)
-        #expect(shared?.colorStyles.map(\.name).sorted() == ["Accent", "Surface"])
+        // All five: the Button's Secondary and Ghost looks paint from Text,
+        // Muted and Border too.
+        #expect(shared?.colorStyles.map(\.name).sorted()
+                == ["Accent", "Border", "Muted", "Surface", "Text"])
     }
 
     @Test func theShelfDoesNotOfferWhatTheDocumentAlreadyHas() {

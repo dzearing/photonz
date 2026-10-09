@@ -62,10 +62,13 @@ public enum StarterStyle: String, CaseIterable, Hashable, Sendable {
     /// What it is painted before anybody changes it.
     public var colorHex: String {
         switch self {
-        case .accent: return "#3B7DF5"
+        // The design system's accent and its quiet text
+        // (`docs/design/mocks/shared/components/tokens.css`, `--accent` and
+        // `--dim`), so a starter Button is the blue the variants mock draws.
+        case .accent: return "#4C6FFF"
         case .surface: return "#FFFFFF"
         case .text: return "#1C1C1E"
-        case .muted: return "#8A8A8E"
+        case .muted: return "#5C6371"
         case .border: return "#D8D8DE"
         }
     }
@@ -148,7 +151,7 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
     /// not what it is made of.
     public var summary: String {
         switch self {
-        case .button: return "A filled button with a label you can change."
+        case .button: return "A button in three looks and three sizes, with an icon."
         case .textField: return "An empty field with placeholder wording."
         case .card: return "A picture, a title and a line of supporting text."
         case .navBar: return "A title bar with a back label you can hide."
@@ -171,8 +174,12 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
     /// one everybody reaches for.
     public var knobs: [StarterKnob] {
         switch self {
+        // The variants mock's three, in its order: the icon switch, the
+        // wording, and which icon (`ui-variants.html`, Instance properties).
         case .button:
-            return [StarterKnob(name: "Label", kind: .text, target: "Label")]
+            return [StarterKnob(name: "Show icon", kind: .visible, target: "Icon"),
+                    StarterKnob(name: "Label", kind: .text, target: "Label"),
+                    StarterKnob(name: "Icon", kind: .variant, target: "Icon")]
         case .textField:
             return [StarterKnob(name: "Placeholder", kind: .text, target: "Placeholder")]
         case .card:
@@ -194,7 +201,7 @@ public enum StarterComponent: String, CaseIterable, Identifiable, Hashable, Send
         var found: [StarterStyle] = []
         let byID = Dictionary(StarterStyle.allCases.map { ($0.styleID, $0) },
                               uniquingKeysWith: { first, _ in first })
-        for layer in StarterComponents.layer(self).selfAndDescendants {
+        for layer in StarterComponents.looks(self).flatMap(\.layer.selfAndDescendants) {
             for binding in layer.colorStyleBindings ?? [] {
                 guard let style = byID[binding.styleID], !found.contains(style) else { continue }
                 found.append(style)
@@ -269,6 +276,132 @@ public struct StarterKnob: Hashable, Sendable {
     }
 }
 
+// MARK: - The Button's looks
+
+/// One answer to the starter Button's Variant question, graded the way the
+/// design system grades its buttons: by how much the thing asks to be pressed
+/// (`docs/design/mocks/shared/components/button.css`).
+public enum StarterButtonVariant: String, CaseIterable, Hashable, Sendable {
+    /// The one thing on screen to press: the accent, with light words on it.
+    case primary
+    /// An ordinary command: a surface with a hairline round it.
+    case secondary
+    /// A quiet command: nothing behind its words until somebody points at it.
+    case ghost
+
+    public var name: String {
+        switch self {
+        case .primary: return "Primary"
+        case .secondary: return "Secondary"
+        case .ghost: return "Ghost"
+        }
+    }
+
+    /// What is painted behind the words, nil for nothing at all.
+    var fill: StarterStyle? {
+        switch self {
+        case .primary: return .accent
+        case .secondary: return .surface
+        case .ghost: return nil
+        }
+    }
+
+    /// The hairline round it, nil for none.
+    var edge: StarterStyle? { self == .secondary ? .border : nil }
+
+    /// What the words and the icon are painted.
+    var ink: StarterStyle {
+        switch self {
+        case .primary: return .surface
+        case .secondary: return .text
+        case .ghost: return .muted
+        }
+    }
+}
+
+/// One answer to the starter Button's Size question: the design system's
+/// three control heights and everything that scales with them
+/// (`button.css`, `.btn.sm`, `.btn`, `.btn.lg`).
+public enum StarterButtonSize: String, CaseIterable, Hashable, Sendable {
+    case small
+    case medium
+    case large
+
+    public var name: String {
+        switch self {
+        case .small: return "Small"
+        case .medium: return "Medium"
+        case .large: return "Large"
+        }
+    }
+
+    /// How tall the control is, in points.
+    public var height: CGFloat {
+        switch self {
+        case .small: return 24
+        case .medium: return 32
+        case .large: return 40
+        }
+    }
+
+    /// The room either side of what it says.
+    public var padding: CGFloat {
+        switch self {
+        case .small: return 12
+        case .medium: return 16
+        case .large: return 20
+        }
+    }
+
+    /// The size its words are set at.
+    public var fontSize: CGFloat {
+        switch self {
+        case .small: return 11.5
+        case .medium: return 12.5
+        case .large: return 14
+        }
+    }
+
+    /// How big the icon is, square.
+    public var iconSize: CGFloat {
+        switch self {
+        case .small: return 13
+        case .medium: return 15
+        case .large: return 17
+        }
+    }
+
+    /// The room between the icon and the words.
+    public var gap: CGFloat {
+        switch self {
+        case .small: return 6
+        case .medium: return 8
+        case .large: return 12
+        }
+    }
+}
+
+/// One drawing of a starter, and what it answers to the questions its
+/// component asks: nothing, for the four that have one look, and a Variant
+/// and a Size for the Button.
+public struct StarterLook: Sendable {
+    public var layer: Layer
+    public var variant: StarterButtonVariant?
+    public var size: StarterButtonSize?
+}
+
+extension StarterComponent {
+
+    /// The look a fresh copy shows, by question name: the variants mock's
+    /// live instance, Primary and Medium, rather than whichever drawing comes
+    /// first in the grid (the grid runs Small to Large, so that is Small).
+    var defaultLook: [String: String]? {
+        guard self == .button else { return nil }
+        return [ComponentNaming.defaultVariantPropertyName: StarterButtonVariant.primary.name,
+                StarterComponents.sizeQuestionName: StarterButtonSize.medium.name]
+    }
+}
+
 // MARK: - Drawing one
 
 /// How wide a piece of text will be. The app hands in the real thing
@@ -298,9 +431,10 @@ public enum StarterComponents {
                              palette: StarterPalette = .standard,
                              measure: @escaping StarterTextMeasure = estimatedTextSize) -> Layer {
         let pen = Pen(scale: max(scale, 0.01), palette: palette, measure: measure)
+        if kind == .button { return button(pen, .primary, .medium) }
         let children: [Layer]
         switch kind {
-        case .button: children = button(pen)
+        case .button: children = []
         case .textField: children = textField(pen)
         case .card: children = card(pen)
         case .navBar: children = navBar(pen)
@@ -315,6 +449,43 @@ public enum StarterComponents {
         // canvas are all the same size before anything has been edited.
         return GroupFlow.flowing(Layer(name: kind.name, content: .group(content), frame: .zero))
     }
+
+    /// Every drawing a starter brings, in the order its component holds them:
+    /// one for four of the five, and nine for the Button, Primary to Ghost
+    /// down and Small to Large across, as the variants mock lays its matrix
+    /// out (`ui-variants.html`, `.pmatrix`).
+    ///
+    /// The Button's drawings already say which look each one is, so a drop
+    /// brings in a component that asks Variant and Size from the start.
+    public static func looks(_ kind: StarterComponent, scale: CGFloat = 1,
+                             palette: StarterPalette = .standard,
+                             measure: @escaping StarterTextMeasure = estimatedTextSize) -> [StarterLook] {
+        guard kind == .button else {
+            return [StarterLook(layer: layer(kind, scale: scale, palette: palette, measure: measure))]
+        }
+        let pen = Pen(scale: max(scale, 0.01), palette: palette, measure: measure)
+        var looks: [StarterLook] = []
+        for variant in StarterButtonVariant.allCases {
+            for size in StarterButtonSize.allCases {
+                var drawing = button(pen, variant, size)
+                guard var group = drawing.group else { continue }
+                group.versionID = fixedID(kind: 0x03, index: UInt8(looks.count + 1))
+                group.versionName = variant.name
+                group.variantName = ComponentNaming.defaultVariantPropertyName
+                group.variantAnswers = [ComponentVariantAnswer(property: sizeQuestionID,
+                                                               option: size.name,
+                                                               propertyName: sizeQuestionName)]
+                drawing.content = .group(group)
+                looks.append(StarterLook(layer: drawing, variant: variant, size: size))
+            }
+        }
+        return looks
+    }
+
+    /// The Button's second question: what it is called and the id it keeps,
+    /// the same in every document.
+    static let sizeQuestionName = "Size"
+    static let sizeQuestionID = fixedID(kind: 0x03, index: 0)
 
     /// How a starter sizes itself: which of its sides is a number somebody
     /// chose, and which is the size of what is inside it.
@@ -346,18 +517,12 @@ public enum StarterComponents {
     /// card 520 pixels wide rather than a half-size one.
     private static func layout(_ kind: StarterComponent, _ pen: Pen) -> GroupLayout? {
         switch kind {
-        // A button is 36 tall the way a real one is: that is the SHORTEST it
-        // ever gets, not a lid on it. Set its label in 32 point and the pill
-        // grows around the words the same way a longer label makes it wider,
-        // instead of leaving the words hanging out of the top and the bottom
-        // (reported 2026-09-09). The room above and below is what decides the
-        // height once the words outgrow the floor, so it is the room a 36 tall
-        // button has: with the label it arrives with, both answers are 36 and
-        // nothing about the starter has changed.
+        // A button is as tall as its size's control is (32 for Medium): that
+        // is the SHORTEST it ever gets, not a lid on it. Set its label in 32
+        // point and the capsule grows around the words the same way a longer
+        // label makes it wider (`buttonLayout`).
         case .button:
-            .free(padding: GroupPadding(top: pen.px(9), right: pen.px(16),
-                                        bottom: pen.px(9), left: pen.px(16)),
-                  minHeight: pen.px(36))
+            buttonLayout(.medium, pen)
         case .badge:
             .free(padding: GroupPadding(top: pen.px(2), right: pen.px(8),
                                         bottom: pen.px(2), left: pen.px(8)),
@@ -503,7 +668,10 @@ public enum StarterComponents {
         func label(_ name: String, _ string: String, x: CGFloat, centerY: CGFloat,
                    size: CGFloat, weight: TextWeight = .regular, color: StarterStyle,
                    align: TextAlign? = nil, placement: LayerPlacement? = nil) -> Layer {
-            var content = TextContent(string: string, fontSize: px(size),
+            // Not rounded like the other numbers: the design system sets a
+            // button's words at 12.5, and a whole point bigger reads as a
+            // different control.
+            var content = TextContent(string: string, fontSize: size * scale,
                                       colorHex: palette.style(color).colorHex, weight: weight)
             content.alignment = align
             let natural = measure(content)
@@ -536,17 +704,76 @@ public enum StarterComponents {
 
     // MARK: The five drawings
 
-    /// A word with 16 points either side of it, 36 tall. The fill behind the
-    /// word stretches both ways, which makes it the SURFACE: it takes whatever
-    /// box the word and its room add up to rather than deciding that box. So a
-    /// longer label makes a wider button on its own, and dragging the button
-    /// wider still keeps the word in the middle of a full-width pill.
-    private static func button(_ pen: Pen) -> [Layer] {
-        [pen.box("Background", x: 0, y: 0, width: 128, height: 36, radius: 8, fill: .accent,
-                 placement: .fill),
-         pen.label("Label", "Button", x: pen.px(16), centerY: 18, size: 14,
-                   weight: .semibold, color: .surface)]
+    /// An icon and a word in a capsule, one of the variants mock's nine
+    /// (`ui-variants.html`, `.pmatrix`): the design system's control height for
+    /// the size, its room either side, and the variant's paint.
+    ///
+    /// The icon and the word are a ROW of their own inside the capsule, so
+    /// hiding the icon closes the row up round the word rather than leaving an
+    /// empty slot, and a longer label makes a wider button on its own. The
+    /// capsule centres that row, so dragging the button wider keeps the icon
+    /// and the word together in the middle of a full-width capsule, the way it
+    /// always kept its word there. The fill behind stretches both ways, which
+    /// makes it the SURFACE: it takes whatever box the row and its room add up
+    /// to rather than deciding it.
+    ///
+    /// The Icon piece holds all five of the mock's icons with one showing,
+    /// which is what lets a copy's Icon knob swap it for another.
+    private static func button(_ pen: Pen, _ variant: StarterButtonVariant,
+                               _ size: StarterButtonSize) -> Layer {
+        let height = size.height
+        let ink = pen.palette.style(variant.ink)
+        var glyphs = StarterIcon.allCases.map {
+            $0.layer(size: pen.px(size.iconSize), colorHex: ink.colorHex, styleID: ink.id)
+        }
+        for index in glyphs.indices { glyphs[index].isVisible = index == 0 }
+        var icons = GroupContent(children: glyphs)
+        icons.layout = .free(width: pen.px(size.iconSize), height: pen.px(size.iconSize))
+        let icon = Layer(name: "Icon", content: .group(icons),
+                         frame: CGRect(x: 0, y: 0,
+                                       width: pen.px(size.iconSize), height: pen.px(size.iconSize)))
+        let label = pen.label("Label", "Button", x: icon.frame.maxX + pen.px(size.gap),
+                              centerY: size.iconSize / 2, size: size.fontSize,
+                              weight: .semibold, color: variant.ink)
+        // Lined up from the left as well as down the middle: the row decides
+        // where its pieces sit across, but a word that gets longer grows from
+        // its leading edge, which keeps it after the icon rather than reaching
+        // back past it (a row reads its order off where its pieces sit).
+        var row = GroupContent(children: [icon, label],
+                               contentPlacement: LayerPlacement(horizontal: .left, vertical: .center))
+        row.layout = GroupLayout(kind: .stack, direction: .row, gap: pen.px(size.gap))
+        let content = GroupFlow.flowing(Layer(name: buttonContentName, content: .group(row),
+                                              frame: CGRect(x: pen.px(size.padding), y: 0,
+                                                            width: 0, height: 0)))
+        let width = (content.localBounds.width + 2 * pen.px(size.padding)) / max(pen.scale, 0.01)
+        let background = pen.box("Background", x: 0, y: 0, width: width, height: height,
+                                 radius: height / 2, fill: variant.fill, stroke: variant.edge,
+                                 strokeWidth: 1, placement: .fill)
+        var group = GroupContent(children: [background, content],
+                                 componentID: StarterComponent.button.componentID,
+                                 contentPlacement: StarterComponent.button.contentPlacement)
+        group.layout = buttonLayout(size, pen)
+        return GroupFlow.flowing(Layer(name: StarterComponent.button.name,
+                                       content: .group(group), frame: .zero))
     }
+
+    /// What the row holding a button's icon and words is called.
+    static let buttonContentName = "Content"
+
+    /// A button's capsule: the room either side of its row, and the control's
+    /// height as its floor. A label set much bigger than the size grows the
+    /// capsule round it instead of hanging out of the top and the bottom
+    /// (reported 2026-09-09), which is what the little room above and below is
+    /// for.
+    private static func buttonLayout(_ size: StarterButtonSize, _ pen: Pen) -> GroupLayout {
+        .free(padding: GroupPadding(top: pen.px(buttonRoomAbove), right: pen.px(size.padding),
+                                    bottom: pen.px(buttonRoomAbove), left: pen.px(size.padding)),
+              minHeight: pen.px(size.height))
+    }
+
+    /// The room above and below a button's words, which only comes into it
+    /// once the words are taller than the control.
+    static let buttonRoomAbove: CGFloat = 2
 
     /// 220 wide, and as tall as its wording needs. A hairline box with quiet
     /// words sitting in from the left; the words stretch across the room
@@ -697,12 +924,22 @@ extension PhotonzDocument {
             return insertComponentInstance(of: kind.componentID, at: point, inside: context)
         }
         let palette = adoptStarterStyles(kind.usedStyles)
-        let main = StarterComponents.layer(kind, scale: max(pixelScale, 1),
-                                           palette: palette, measure: measure)
+        let looks = StarterComponents.looks(kind, scale: max(pixelScale, 1),
+                                            palette: palette, measure: measure)
+        guard let main = looks.first?.layer else { return nil }
         // The original goes into the component library, not the picture: the
         // drop puts down one instance and nothing else (`ComponentLibrary`).
         addOriginal(main)
         addStarterKnobs(kind, to: main.id)
+        // Every other look offers the same knobs under the same ids, aimed at
+        // its own pieces, so a copy keeps its wording and its icon when it is
+        // switched from one look to another (`addComponentVersion` does the
+        // same for a look somebody adds by hand).
+        if let knobbed = layer(id: main.id) {
+            for look in looks.dropFirst() {
+                addOriginal(look.layer.offeringKnobs(of: knobbed))
+            }
+        }
         return insertComponentInstance(of: kind.componentID, at: point, inside: context)
     }
 
@@ -743,9 +980,53 @@ extension PhotonzDocument {
     private mutating func addStarterKnobs(_ kind: StarterComponent, to mainID: UUID) {
         guard let main = layer(id: mainID) else { return }
         for knob in kind.knobs {
-            guard let target = main.children.first(where: { $0.name == knob.target }) else { continue }
+            guard let target = main.selfAndDescendants.dropFirst()
+                .first(where: { $0.name == knob.target }) else { continue }
             addComponentProperty(componentID: kind.componentID, target: target.id,
                                  kind: knob.kind, name: knob.name)
         }
+    }
+}
+
+extension Layer {
+
+    /// This drawing offering the knobs `other` offers, each aimed at the piece
+    /// of this drawing called what the piece it reaches there is called (the
+    /// first such piece, which for the starters is the only one). A knob with
+    /// no such piece here is left off.
+    func offeringKnobs(of other: Layer) -> Layer {
+        guard var group = self.group else { return self }
+        group.properties = other.componentProperties.compactMap { property in
+            guard let name = other.selfAndDescendants.first(where: { $0.id == property.target })?.name,
+                  let mine = selfAndDescendants.dropFirst().first(where: { $0.name == name })
+            else { return nil }
+            var aimed = property
+            aimed.target = mine.id
+            return aimed
+        }
+        var copy = self
+        copy.content = .group(group)
+        return copy
+    }
+}
+
+// MARK: - The look a fresh copy shows
+
+extension PhotonzDocument {
+
+    /// The drawing a copy placed without being told which shows: the starter's
+    /// own pick where it has one and its drawings still give it (the Button's
+    /// Primary · Medium), and nil, meaning the component's first, otherwise.
+    public func componentDefaultVersion(of componentID: UUID) -> UUID? {
+        guard let wanted = StarterComponent(componentID: componentID)?.defaultLook else { return nil }
+        let questions = componentVariantProperties(of: componentID)
+        guard !questions.isEmpty else { return nil }
+        return componentVersions(of: componentID).first { drawing in
+            let given = componentVariantAnswers(of: componentID, drawing: drawing)
+            return wanted.allSatisfy { name, answer in
+                guard let question = questions.first(where: { $0.name == name }) else { return false }
+                return given[question.id] == answer
+            }
+        }?.id
     }
 }

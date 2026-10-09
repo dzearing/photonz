@@ -25,7 +25,7 @@
     },
     {
       "do": "dragTile",
-      "tile": "Button",
+      "tile": "Badge",
       "to": [
         300,
         300
@@ -66,7 +66,7 @@
     {
       "do": "describe",
       "stage": "one-button",
-      "note": "one Button on the canvas, zoomed in so the canvas is wider than the window"
+      "note": "one Badge on the canvas, zoomed in so the canvas is wider than the window"
     },
     {
       "do": "snapshot",
@@ -228,7 +228,7 @@
     },
     {
       "do": "expect",
-      "row": "Button",
+      "row": "Badge",
       "present": true
     }
   ]

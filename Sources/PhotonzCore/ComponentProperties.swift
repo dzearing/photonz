@@ -1068,7 +1068,29 @@ extension PhotonzDocument {
            slot.isFourSided, let answer = own.value.asRoomAnswer {
             return .room(answer.resolved(over: original?.asRoom ?? .none))
         }
+        if case .variant(let option) = own.value,
+           let shape = componentChoiceShape(option, componentID: componentID, version: version,
+                                            propertyID: propertyID) {
+            return .variant(shape)
+        }
         return own.value
+    }
+
+    /// The shape a choice answer stands for in one look of its component.
+    ///
+    /// A choice names a shape the look it was made on holds, and every look is
+    /// a whole drawing with shapes of its own, so a Wand picked on a Medium
+    /// button names the MEDIUM Wand. Shown Large, the copy wants the Large one:
+    /// the shape of the same name in that look's choice. Nil when that look
+    /// has nothing of the name, which leaves the look's own picture standing
+    /// and the answer kept for the way back.
+    public func componentChoiceShape(_ option: UUID, componentID: UUID, version: UUID?,
+                                     propertyID: UUID) -> UUID? {
+        let shapes = componentVariantOptions(componentID: componentID, version: version,
+                                             propertyID: propertyID)
+        if shapes.contains(where: { $0.id == option }) { return option }
+        guard let name = layer(id: option)?.name else { return nil }
+        return shapes.first { $0.name == name }?.id
     }
 
     /// The sides of a room knob this copy has typed for ITSELF, as opposed to
@@ -1215,6 +1237,11 @@ extension PhotonzDocument {
                 // What a saved colour paints TODAY, so a copy pointing at one
                 // follows every edit to it without storing the colour twice.
                 value = .color(resolvedColorAnswer(answer, slot: slot))
+            }
+            if case .variant(let option) = value,
+               let shape = componentChoiceShape(option, componentID: componentID, version: version,
+                                                propertyID: property.id) {
+                value = .variant(shape)
             }
             if property.kind == .number {
                 // A number the original has stopped having — a stack turned

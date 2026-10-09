@@ -1,15 +1,15 @@
 {
   "out": "/tmp/photonz-playtest/variant-and-size",
-  "seed": "A component can ask two variant questions at once, the way the variants mock's Button is Primary or Secondary AND Small, Medium or Large (ui-variants.html, #segVariant, #segSize and the .pmatrix grid). This walk drops a Button at Next defaults, opens its original, gives it a Secondary look, then adds a Size property from the Add menu and calls the new drawing's size Large. Edit Original then shows the drawings as a Variant by Size grid with the answers along its edges, one cell empty because nobody drew Default Large. On a copy the panel shows a VARIANT row and a SIZE row; Large is clicked with the pointer and shows the nearest drawing that exists, undo puts it back in one step, and Secondary then Large lands on the drawing that was drawn.",
+  "seed": "A component can ask two variant questions at once, the way the variants mock's Button is Primary or Secondary AND Small, Medium or Large (ui-variants.html, #segVariant, #segSize and the .pmatrix grid). This walk drops a Badge at Next defaults, opens its original, gives it a Secondary look, then adds a Size property from the Add menu and calls the new drawing's size Large. Edit Original then shows the drawings as a Variant by Size grid with the answers along its edges, one cell empty because nobody drew Default Large. On a copy the panel shows a VARIANT row and a SIZE row; Large is clicked with the pointer and shows the nearest drawing that exists, undo puts it back in one step, and Secondary then Large lands on the drawing that was drawn.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
     { "do": "appearance", "value": "dark" },
     { "do": "action", "action": "showComponentShelf" },
     { "do": "wait", "seconds": 1.2 },
-    { "do": "dragTile", "tile": "Button", "to": [420, 300] },
+    { "do": "dragTile", "tile": "Badge", "to": [420, 300] },
     { "do": "wait", "seconds": 1.5 },
-    { "do": "expectPicked", "layers": ["Button"] },
+    { "do": "expectPicked", "layers": ["Badge"] },
 
     { "do": "action", "action": "selectComponentOriginal" },
     { "do": "wait", "seconds": 0.8 },
@@ -32,7 +32,7 @@
     { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expect", "field": "Size name", "reads": "Large" },
-    { "do": "describe", "stage": "1-original", "note": "the original of a Button asking two questions: Variant with Default and Secondary, Size with Default and Large, and the drawings as a grid with Default and Secondary down the left and Default and Large along the top" },
+    { "do": "describe", "stage": "1-original", "note": "the original of a Badge asking two questions: Variant with Default and Secondary, Size with Default and Large, and the drawings as a grid with Default and Secondary down the left and Default and Large along the top" },
     { "do": "panel", "stage": "1-original" },
     { "do": "snapshot", "name": "1-grid-dark" },
     { "do": "appearance", "value": "light" },
@@ -43,13 +43,13 @@
     { "do": "action", "action": "doneEditingOriginal" },
     { "do": "wait", "seconds": 1.2 },
 
-    { "do": "dragTile", "tile": "Button", "to": [760, 620] },
+    { "do": "dragTile", "tile": "Badge", "to": [760, 620] },
     { "do": "wait", "seconds": 1.2 },
     { "do": "click", "at": [760, 620] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "control": "Secondary", "present": true },
     { "do": "expect", "control": "Large", "present": true },
-    { "do": "describe", "stage": "3-copy", "note": "a copy of the Button: VARIANT over Default | Secondary and SIZE over Default | Large, each its own row" },
+    { "do": "describe", "stage": "3-copy", "note": "a copy of the Badge: VARIANT over Default | Secondary and SIZE over Default | Large, each its own row" },
     { "do": "panel", "stage": "3-copy" },
     { "do": "snapshot", "name": "3-copy-dark" },
 

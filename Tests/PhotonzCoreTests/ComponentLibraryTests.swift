@@ -232,7 +232,8 @@ struct ComponentLibraryTests {
     @Test func theEditingSpaceHoldsOnlyThatComponentsDrawings() {
         var c = withMadeComponent()
         c.doc.parkOriginals()
-        c.doc.insertStarterComponent(.button, at: CGPoint(x: 600, y: 500))
+        // One drawing of another component, kept in the space's library.
+        c.doc.insertStarterComponent(.badge, at: CGPoint(x: 600, y: 500))
         guard let space = c.doc.editingSpace(forComponent: c.componentID) else {
             Issue.record("no space"); return
         }
@@ -259,8 +260,9 @@ struct ComponentLibraryTests {
         #expect(space?.canvasBounds(of: c.group) == stood)
 
         var doc = document(1000)
-        doc.insertStarterComponent(.button, at: drop)
-        guard let starterSpace = doc.editingSpace(forComponent: StarterComponent.button.componentID),
+        // A starter of one drawing: the Button's nine stand in a grid instead.
+        doc.insertStarterComponent(.badge, at: drop)
+        guard let starterSpace = doc.editingSpace(forComponent: StarterComponent.badge.componentID),
               let id = starterSpace.layers.first?.id,
               let box = starterSpace.canvasBounds(of: id)
         else { Issue.record("no starter space"); return }

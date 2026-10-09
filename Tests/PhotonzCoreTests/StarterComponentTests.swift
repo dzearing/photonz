@@ -108,8 +108,10 @@ struct StarterComponentTests {
     }
 
     @Test func aStarterOnlyNamesTheColorsItActuallyUses() {
-        #expect(StarterComponent.button.usedStyles.contains(.accent))
-        #expect(!StarterComponent.button.usedStyles.contains(.border))
+        #expect(StarterComponent.badge.usedStyles.contains(.accent))
+        #expect(!StarterComponent.badge.usedStyles.contains(.border))
+        // The Button's Secondary look has a hairline, so it brings Border.
+        #expect(StarterComponent.button.usedStyles.contains(.border))
         #expect(StarterComponent.textField.usedStyles.contains(.border))
     }
 
@@ -119,7 +121,9 @@ struct StarterComponentTests {
         var doc = document()
         let placed = doc.insertStarterComponent(.button, at: centre)
         #expect(placed != nil)
-        #expect(doc.mainComponents.count == 1)
+        // One component, in its nine looks (`StarterButtonLooksTests`).
+        #expect(Set(doc.mainComponents.compactMap(\.componentID)).count == 1)
+        #expect(doc.componentVersions(of: StarterComponent.button.componentID).count == 9)
         #expect(doc.mainComponent(componentID: StarterComponent.button.componentID) != nil)
     }
 
@@ -133,7 +137,7 @@ struct StarterComponentTests {
 
     @Test func droppingOneBringsItsNamedColorsWithIt() {
         var doc = document()
-        doc.insertStarterComponent(.button, at: centre)
+        doc.insertStarterComponent(.badge, at: centre)
         let names = doc.colorStyles.map(\.name)
         #expect(names.contains(StarterStyle.accent.name))
         #expect(names.contains(StarterStyle.surface.name))
@@ -161,13 +165,13 @@ struct StarterComponentTests {
         let mine = doc.addColorStyle(name: StarterStyle.accent.name, colorHex: "#FF0000")
         doc.insertStarterComponent(.button, at: centre)
         #expect(doc.colorStyles.filter { $0.name == StarterStyle.accent.name }.count == 1)
-        // Two: the pill of the instance the drop handed back and the pill of
-        // the original it is filled from, kept in the component library
-        // (`ComponentLibraryTests`). Both wear the color the document already
-        // kept under that name, which is the point.
+        // Four: the pill of the instance the drop handed back and the pills of
+        // the three Primary looks it is filled from, kept in the component
+        // library (`ComponentLibraryTests`). All wear the color the document
+        // already kept under that name, which is the point.
         let everything = doc.allLayers + doc.componentOriginals.flatMap(\.selfAndDescendants)
         let painted = everything.filter { $0.colorStyleID(for: .fill) == mine }
-        #expect(painted.count == 2)
+        #expect(painted.count == 4)
         #expect(painted.allSatisfy { $0.colorHex(for: .fill) == "#FF0000" })
     }
 
@@ -179,7 +183,7 @@ struct StarterComponentTests {
         var doc = document()
         doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200))
         let second = doc.insertStarterComponent(.button, at: CGPoint(x: 500, y: 500))
-        #expect(doc.mainComponents.count == 1)
+        #expect(doc.componentVersions(of: StarterComponent.button.componentID).count == 9)
         #expect(second != nil)
         #expect(doc.layer(id: second ?? UUID())?.isComponentInstance == true)
         #expect(doc.instanceCount(of: StarterComponent.button.componentID) == 2)
@@ -199,7 +203,8 @@ struct StarterComponentTests {
         var doc = document()
         doc.insertStarterComponent(.button, at: CGPoint(x: 200, y: 200))
         guard let copy = doc.insertStarterComponent(.button, at: CGPoint(x: 500, y: 500)),
-              let knob = doc.componentProperties(of: StarterComponent.button.componentID).first
+              let knob = doc.componentProperties(of: StarterComponent.button.componentID)
+                .first(where: { $0.kind == .text })
         else { Issue.record("no copy or no knob"); return }
         let took = doc.setInstanceOverride(instance: copy, property: knob.id, value: .text("Save"))
         #expect(took)
