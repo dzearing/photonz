@@ -20949,3 +20949,24 @@ Next: the first editor window's ~200 ms first build
 - Next: the front door with template tiles
   (`new-window-opens-a-front-door-with-a-starting-te`); Layers order in a
   column waits on a decision card.
+
+## 2026-10-09 — An instance's Properties match the variants mock
+
+- A picked component instance reads like `ui-variants.html`: `◆ linked` on the
+  Component header (mock note behind its question mark), the main as a select
+  face with the component mark and a right chevron (press opens the original;
+  with other components in the document it is a dropdown with Edit Original
+  first, then Swap To), Make Unique as a link beside it, the variant as a
+  segmented control under a small caps label, knobs under "Instance
+  properties", and a Reset section with Reset Props
+  (`PhotonzCore/ComponentResetProperties.swift`, TDD).
+- `VideoKit.SelectFace` / `Dropdown` gained `showsComponentMark`/`isComponent`
+  and `chevron`.
+- Audit `queue/audits/2026-10-09-instance-properties-variants-mock.json`, walk
+  `instance-properties-variants-mock-walk`.
+- Next: Size, Show icon and the Icon swap need two variant properties on a
+  component (`a-component-can-have-a-variant-and-a-size-at-onc`) and a starter
+  Button with looks, sizes and an icon
+  (`the-starter-button-comes-as-primary-secondary-or`). Bug filed: a tile
+  dropped into the original you are editing becomes part of it
+  (`dropping-a-button-into-the-button-original-you-a`).

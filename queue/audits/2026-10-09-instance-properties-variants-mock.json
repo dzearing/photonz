@@ -1,0 +1,59 @@
+{
+  "feature": "An instance's Properties, matched to the variants mock",
+  "epic": "ui-components",
+  "summary": "Pick a component instance and its panel now reads the way ui-variants.html draws it: Component says linked, the main is a field you press to open it with Make Unique beside it, the variant is a segmented control, the instance's knobs sit under Instance properties, and Reset Props puts everything back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/instance-properties-variants-mock-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag a Button from Library > Comps onto the canvas and look at the Component section.",
+      "shot": "2026-10-09-instance-properties-1-instance-dark-sc.png"
+    },
+    {
+      "do": "Switch the Mac to Light appearance and look again.",
+      "shot": "2026-10-09-instance-properties-2-instance-light-sc.png"
+    },
+    {
+      "do": "Press the Button field to open the original, add two looks called Secondary and Ghost, and press Done."
+    },
+    {
+      "do": "Pick the copy and click Secondary in the VARIANT control.",
+      "shot": "2026-10-09-instance-properties-4-secondary-dark-sc.png"
+    },
+    {
+      "do": "Press Command Z, then pick Ghost and press Reset Props.",
+      "shot": "2026-10-09-instance-properties-6-reset-dark-sc.png"
+    },
+    {
+      "do": "Drag a Card onto the canvas, pick the Button copy again and click its field: Edit Original is first, then Swap To."
+    },
+    {
+      "do": "Compare the app with the mock, side by side.",
+      "shot": "2026-10-09-instance-properties-beside-mock-dark.png"
+    },
+    {
+      "do": "The same side by side in Light.",
+      "shot": "2026-10-09-instance-properties-beside-mock-light.png"
+    }
+  ],
+  "evaluate": [
+    "Does the one word linked on the header tell you this is still following its main, without the sentence that used to sit under the name?",
+    "Is pressing the Button field the way you expect to get to the original, and is Edit Original first in its menu once there are other components to swap to?",
+    "Does Make Unique as a blue link beside the field read as the way out, rather than as a second button you might press by mistake?",
+    "Is a segmented VARIANT control better than the dropdown it replaced for a component with two or three looks?",
+    "Is Reset Props worth its own row at the foot of the section, or should it only live in the right-click menu?"
+  ],
+  "rough": [
+    "Size, Show icon, the Icon dropdown and the mock's Primary label are missing because the app's Button has one look and no icon, and a component can hold only one variant property: covered by a-component-can-have-a-variant-and-a-size-at-onc and the-starter-button-comes-as-primary-secondary-or.",
+    "The variant matrix the mock draws on the canvas (every look across every size, labelled) is not built; it is acceptance item 4 of a-component-can-have-a-variant-and-a-size-at-onc.",
+    "The mock's Label box is full width with a T glyph in front and its Show icon switch says On beside it; ours is a narrower rounded field with no glyph. Folded into the-starter-button-comes-as-primary-secondary-or.",
+    "The mock says Detach; the app says Make Unique, the user's word in their answer on 2026-09-20 (card a-copy-of-a-component-is-configured-not-authored-when-you-drag-a-component-onto-t).",
+    "The mock's main field only goes to the main; ours also opens a short menu to swap component when the document holds others, because the user chose this line for swapping (2026-09-23, audit 2026-09-23-point-a-copy-at-another-component).",
+    "The mock nests a Component sub-section inside one Properties · Instance group; the app heads it COMPONENT as its own dock section, named after what you picked, per the user's answer on 2026-09-13 (card picking-a-text-layer-leaves-its-settings-below-t-when-you-pick-something-on-the-c).",
+    "The mock draws the picked segment as a plain raised chip; ours is the tinted Liquid Glass chip, the user's call on 2026-10-02 (back to the drawn glass, every-segmented-control-is-apple-s-own-liquid-gl). In these pictures the chip is grey because a walk keeps the window in the back, which is how the system draws a picked segment there.",
+    "The mock's In the API section (a code block of the same props) is not built: it belongs to the agent-api epic, which the user's objectives stage later (epic added 2026-08-22), and only epics staged now may hold work.",
+    "The mock's component mark is a hollow four-diamond outline; ours is filled, the one mark the app uses for components on the canvas, in Layers and on the Library (UX-PATTERNS §8: one concept is one icon, app-wide; ComponentGlyph).",
+    "The mock's note under the instance properties moved behind the question mark beside linked, in the mock's words with the main's name in it. Its first sentence, about swapping the leading icon, waits for an icon to swap (the-starter-button-comes-as-primary-secondary-or).",
+    "Make Unique and Reset Props are one-shot buttons in the panel, as the mock draws them; whether one-shot buttons leave the panel is the open question on the-panel-shows-what-the-picked-thing-is-and-its."
+  ]
+}

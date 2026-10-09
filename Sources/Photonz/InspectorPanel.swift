@@ -1244,6 +1244,17 @@ struct InspectorPanel: View {
                 MotionPreviewButton()
                 AddMotionButton()
             })
+        case .component:
+            // The variants mock's `Component  ◆ linked` (`ui-variants.html`,
+            // `#gProps`): an instance says it still follows its main in one
+            // word on the header, where a collapsed section still says it.
+            guard selectedLayer?.isMainComponent != true else { return nil }
+            let selection = editorState.componentKnobSelection
+            guard selection.isPresent, !selection.hasDifferentComponents,
+                  let componentID = selection.componentID,
+                  let main = editorState.document?.mainComponent(componentID: componentID)
+            else { return nil }
+            return AnyView(ComponentLinkedBadge(mainName: main.name))
         case .measurements:
             return AnyView(MeasurementsSectionAccessory(
                 showsCount: !Experiments.shared.dockHeadersEnabled))

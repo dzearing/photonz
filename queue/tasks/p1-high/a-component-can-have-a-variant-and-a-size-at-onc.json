@@ -1,0 +1,29 @@
+{
+  "id": "a-component-can-have-a-variant-and-a-size-at-onc",
+  "title": "A component can have a Variant and a Size at once",
+  "goal": "Today a component holds one set of looks, so a Button can be Primary or Secondary but cannot also be Small or Large. Let a component carry two or more named variant questions (Variant and Size), with each drawing answering all of them, so an instance picks each one on its own and the original lays its drawings out as a labelled grid, the way the variants mock draws it.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 100,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T06:07:22.493Z",
+  "updated": "2026-10-09T06:07:22.496Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Prerequisite for an-instance-s-properties-match-the-variants-mock (acceptance 3: picking Secondary or Large). Model today: Sources/PhotonzCore/ComponentVariantProperty.swift, componentVariantProperties(of:) returns [] or exactly one property whose id is the componentID; drawings are ComponentVersion (ComponentVersions.swift), group.variantName / versionID / versionName in the file. The doc comment there already sketches the plan: drawings stay a flat list, each carries an answer per variant property, nearest fallback. Panel: ComponentInstanceProperties.versionRow (ComponentPanel.swift) renders one row; since 2026-10-09 it is a SegmentedControl under a small caps label (falls back to a dropdown when the words do not fit), so a second row is the same view again. Mock: docs/design/mocks/pages/ui-variants.html, #segVariant / #segSize and the .pmatrix grid on the component sheet. TDD in PhotonzCore.",
+  "acceptance": [
+    "The original of a component can add a second variant property (for example Size) beside Variant, and name both",
+    "An instance offers each variant property as its own row in Properties, and picking one changes only that answer, in one undo step",
+    "A combination nobody drew shows the nearest drawing that was, and never a blank",
+    "Edit Original lays the drawings out as a Variant by Size grid with the option names along its edges, as ui-variants.html draws its matrix",
+    "A file saved before this opens with its one variant property unchanged"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T06:07:22.495Z",
+      "note": "created (manual)"
+    }
+  ]
+}

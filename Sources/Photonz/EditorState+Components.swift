@@ -503,6 +503,20 @@ extension EditorState {
         perform { $0.setInstanceVersion(instances: instances, to: version) }
     }
 
+    /// Whether any of these copies has an answer of its own, or a variant
+    /// other than the first, for Reset Props to put back.
+    func canResetInstanceProperties(instances: [UUID]) -> Bool {
+        guard componentsEnabled, let document else { return false }
+        return document.canResetInstanceProperties(instances: instances)
+    }
+
+    /// The variants mock's Reset props: every answer these copies gave
+    /// themselves, and their variant, back to the main's, in one undo step.
+    func resetInstanceProperties(instances: [UUID]) {
+        guard canResetInstanceProperties(instances: instances) else { return }
+        perform { $0.resetInstanceProperties(instances: instances) }
+    }
+
     /// Puts every selected copy on the NEXT version its component holds,
     /// wrapping round at the end. The Version row is a menu in the dock, which
     /// a scripted walk cannot open, so this is how it asks for one.

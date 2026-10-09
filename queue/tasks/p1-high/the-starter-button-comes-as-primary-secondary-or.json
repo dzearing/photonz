@@ -1,0 +1,35 @@
+{
+  "id": "the-starter-button-comes-as-primary-secondary-or",
+  "title": "The starter Button comes as Primary, Secondary or Ghost, in three sizes, with an icon",
+  "goal": "The Button on the Library shelf is one blue button with a label. Ship it the way the variants mock draws it: Primary, Secondary and Ghost looks in Small, Medium and Large, with a leading icon that an instance can show or hide and swap for another, so dropping a Button gives somebody a real, configurable button straight away.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 101,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T06:07:33.822Z",
+  "updated": "2026-10-09T06:22:56.249Z",
+  "deps": [
+    "a-component-can-have-a-variant-and-a-size-at-onc"
+  ],
+  "blockedBy": [],
+  "notes": "Prerequisite for an-instance-s-properties-match-the-variants-mock (acceptance 3). Depends on the two-variant-property model task. Starter shapes: Sources/PhotonzCore/StarterComponents.swift (StarterComponent.button, button(pen), layout). Properties a copy can set: ComponentProperty kinds .visible (Show icon, already a switch on the instance: InstanceShowKnob), .text (Label), .variant (a piece swap among the original's children: the Icon dropdown). Mock specimens: docs/design/mocks/pages/ui-variants.html .pmatrix cells (btn primary/secondary/ghost x sm/md/lg with ic-sparkle) and its Icon menu (Sparkle, Wand, Swatch, Layers, Brush, No icon). Existing documents that already hold a starter Button keep theirs.",
+  "acceptance": [
+    "A Button dropped from the Library at Next defaults offers Variant (Primary, Secondary, Ghost) and Size (Small, Medium, Large) in its Properties",
+    "Picking Secondary or Large changes the instance on the canvas at once, in one undo step each",
+    "The instance has a Show icon switch that hides and shows its leading icon, and an Icon dropdown that swaps it, in one undo step each",
+    "Each of the nine looks matches its cell in the ui-variants.html matrix in colour, height and padding, in light and dark",
+    "On the picked instance, the Show icon switch carries its On or Off word beside it and the Label field is the mock's full-width box with the T glyph in front, as ui-variants.html draws them"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T06:07:33.824Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T06:22:56.248Z",
+      "note": "Added from an-instance-s-properties-match-the-variants-mock (2026-10-09): the mock's Show icon switch says On beside it and its Label field is a full-width input with a T glyph; the app's text knob is a narrower rounded field with no glyph. Fold that into this task since it is the Button instance's knobs."
+    }
+  ]
+}

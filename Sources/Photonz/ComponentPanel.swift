@@ -776,16 +776,31 @@ struct ComponentInstanceInspector: View {
                 .fixedSize(horizontal: false, vertical: true)
                 .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
                 .padding(.vertical, 4)
-        } else if let componentID = selection.componentID, let main {
+        } else if selection.componentID != nil, let main {
             VStack(alignment: .leading, spacing: 8) {
-                HStack(spacing: 6) {
-                    ComponentMark(size: 12, isInstance: true)
+                // The variants mock's first row (`ui-variants.html`, `#gProps`):
+                // the main this instance is linked to, as a field you press to
+                // go there, and the way out beside it as a link. The header
+                // above says it is linked, so no sentence here says it again.
+                HStack(spacing: 10) {
                     follows(main)
+                    // Make Unique is here as well as in the right-click menu,
+                    // because a command that lives only in a menu is a command
+                    // nobody finds. It is the user's word for the mock's Detach
+                    // (their note on 2026-09-20: "you can right click and make
+                    // unique"). Nothing is deleted, the copy simply stops
+                    // following, and undo is the way back.
+                    Button("Make Unique") { editorState.detachInstance() }
+                        .buttonStyle(.plain)
+                        .font(.system(size: 10.5, weight: .semibold))
+                        .foregroundStyle(VideoKit.Palette.accent)
+                        .fixedSize()
+                        .playtestControl("Make Unique")
+                        .disabled(!editorState.canDetachInstance)
+                        .panelHelp(CrowdWords.all(selection.count).map {
+                                  "Turns \($0) copies into ordinary layers that no longer follow the original"
+                              } ?? "Turns this copy into ordinary layers that no longer follow the original")
                 }
-                Text(summary)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
                 // How many of the picked layers these rows reach, when it is
                 // not all of them: a locked copy, or something picked
                 // alongside that is not a copy at all.
@@ -800,76 +815,89 @@ struct ComponentInstanceInspector: View {
                 ownSize
                 ownType
                 ownLook
-                HStack(spacing: 6) {
-                    Button("Edit Original") {
-                        // The version this copy is SHOWING, or the button takes
-                        // you to a drawing you were not looking at.
-                        editorState.editOriginal(componentID: componentID, version: selection.version)
-                    }
-                    .controlSize(.small)
-                    .panelHelp("Opens the original on its own. Every copy takes the change when you press Done")
-                    .playtestControl("Edit Original")
-                    // Detach is here as well as in the Layer menu, because a
-                    // command that lives only in a menu is a command nobody
-                    // finds. It is not destructive styling: nothing is deleted,
-                    // the copy simply stops following, and undo is the way back.
-                    Button("Make Unique") { editorState.detachInstance() }
-                        .controlSize(.small)
-                        .playtestControl("Make Unique")
-                        .disabled(!editorState.canDetachInstance)
-                        .panelHelp(CrowdWords.all(selection.count).map {
-                                  "Turns \($0) copies into ordinary layers that no longer follow the original"
-                              } ?? "Turns this copy into ordinary layers that no longer follow the original")
-                }
+                reset
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
             .padding(.vertical, 4)
         }
     }
 
-    /// The line that names the component this copy follows, and the way to
-    /// point it at a different one (`ComponentSwap`).
+    /// The main this copy follows, drawn as the variants mock draws it: a field
+    /// with the component mark, the name and a chevron pointing on.
     ///
-    /// It is the SAME line either way. The panel already had to say which
-    /// component this is, so the shortest honest version of "let me change my
-    /// mind" is that line becoming something you can press, rather than a
-    /// second row underneath it saying the same word twice. A document holding
-    /// one component has nothing to offer, so there it stays a plain name: a
-    /// menu with one row in it is a control that lies about what it can do.
+    /// Pressing it opens the original, which is where the mock's chevron goes.
+    /// When the document holds other components it can point at, the same
+    /// field opens a short menu instead: Edit Original first, then the
+    /// components to swap to (`ComponentSwap`), because the user chose this
+    /// line as the place a copy changes component (2026-09-23). A document
+    /// holding one component has nothing to swap to, and a menu with one row
+    /// in it is a control that lies about what it can do, so there the field
+    /// is a plain press.
     @ViewBuilder private func follows(_ main: Layer) -> some View {
         let choices = editorState.componentSwapChoices(instances: selection.instances)
-        if choices.isEmpty {
-            Text(main.name)
-                .font(.subheadline.weight(.medium))
-                .lineLimit(2)
-                .truncationMode(.middle)
-        } else {
-            Menu {
-                ForEach(choices) { choice in
-                    // A Toggle rather than a Button, so the one it follows now
-                    // wears a tick: "which one is this" is the question the
-                    // line answers, and an open menu must not stop answering
-                    // it. The ticked row is dimmed because pressing it would
-                    // be a swap to where you already are.
-                    Toggle(isOn: Binding(
-                        get: { choice.isCurrent },
-                        set: { _ in editorState.swapInstances(instances: selection.instances,
-                                                              to: choice.id) })) {
-                        Text(choice.name)
-                    }
-                    .disabled(!choice.canTake)
-                }
-            } label: {
-                Text(main.name)
-                    .font(.subheadline.weight(.medium))
-                    .lineLimit(1)
-                    .truncationMode(.middle)
-            }
-            .menuStyle(.borderlessButton)
-            .fixedSize()
-            .panelHelp(swapHelp)
-            .playtestField("Component")
+        let open: @MainActor () -> Void = { [selection, editorState] in
+            // The version this copy is SHOWING, or the field takes you to a
+            // drawing you were not looking at.
+            guard let componentID = selection.componentID else { return }
+            editorState.editOriginal(componentID: componentID, version: selection.version)
         }
+        if choices.isEmpty {
+            Button(action: open) {
+                VideoKit.SelectFace(value: main.name, size: .regular, isComponent: true,
+                                    showsComponentMark: true, chevron: "chevron.right")
+            }
+            .buttonStyle(.plain)
+            .frame(maxWidth: .infinity)
+            .panelHelp("Main component: \(main.name). Opens it on its own")
+            .playtestControl("Edit Original", detail: main.name)
+        } else {
+            // The one it follows now wears a tick: "which one is this" is the
+            // question the field answers, and an open menu must not stop
+            // answering it. That row is dimmed because pressing it would be a
+            // swap to where you already are.
+            let swaps: [VideoKit.Choice] = choices.map { choice in
+                .item(choice.name, isOn: choice.isCurrent, isEnabled: choice.canTake && !choice.isCurrent) {
+                    editorState.swapInstances(instances: selection.instances, to: choice.id)
+                }
+            }
+            VideoKit.Dropdown(label: "Component", value: main.name, size: .regular, help: swapHelp,
+                              isComponent: true, chevron: "chevron.right",
+                              choices: [.item("Edit Original", action: open), .divider, .heading("Swap To")] + swaps)
+                .frame(maxWidth: .infinity)
+                .panelHelp(swapHelp)
+                .playtestControl("Component", detail: main.name)
+        }
+    }
+
+    /// The mock's Reset section (`ui-variants.html`, `#reset2`): every answer
+    /// this copy gave itself, its variant included, back to the main's. Its
+    /// own size, type and look each keep their own way back above, because
+    /// none of those is an answer to anything the main asked.
+    @ViewBuilder private var reset: some View {
+        let canReset = editorState.canResetInstanceProperties(instances: selection.instances)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 6) {
+                Text("Reset")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(VideoKit.Palette.ink)
+                Spacer(minLength: 0)
+                Text("back to the main defaults")
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .lineLimit(1)
+            }
+            Button {
+                editorState.resetInstanceProperties(instances: selection.instances)
+            } label: {
+                Label("Reset Props", systemImage: "arrow.uturn.backward")
+                    .frame(maxWidth: .infinity)
+            }
+            .controlSize(.small)
+            .disabled(!canReset)
+            .panelHelp("Every property back to what the main says, the variant too")
+            .playtestControl("Reset Props")
+        }
+        .padding(.top, 4)
     }
 
     /// What the line says under the pointer: the rule for what survives, in
@@ -879,14 +907,6 @@ struct ComponentInstanceInspector: View {
         return "Points \(what) at a different component. Where it sits, a size you gave it "
             + "and every knob the new one also has come with it; a knob it does not have is "
             + "dropped, and the app says which"
-    }
-
-    /// What the section says the selection IS, in the same place for one copy
-    /// and for five.
-    private var summary: String {
-        selection.count == 1
-            ? "A copy. Editing the original changes this one too."
-            : "\(selection.count) copies. Editing the original changes them all."
     }
 
     /// The way out of a refused edit, on the copy you were trying to edit.
@@ -1010,6 +1030,37 @@ struct ComponentInstanceInspector: View {
                 .panelHelp("Follow the original's look again, every part of it")
             }
         }
+    }
+}
+
+/// The variants mock's `◆ linked` on the Component header, for a picked
+/// instance, and behind the question mark beside it the mock's note about
+/// what linked means, which is longer than the panel's line budget
+/// (UX-PATTERNS §4, "When the mock prints a sentence longer than the budget").
+struct ComponentLinkedBadge: View {
+    let mainName: String
+
+    var body: some View {
+        HStack(spacing: 6) {
+            HStack(spacing: 4) {
+                ComponentGlyphShape().frame(width: 9, height: 9)
+                Text("linked")
+                    .font(.system(size: 10.5, weight: .medium))
+            }
+            .foregroundStyle(VideoKit.Palette.comp)
+            .accessibilityElement(children: .combine)
+            .panelReadout("linked")
+            .playtestField("Component header")
+            SectionHelpMark(section: "Component", text: Self.help(mainName))
+        }
+    }
+
+    /// The mock's note under its instance properties, in its own words, with
+    /// the main's real name where the mock says Button. Its first sentence,
+    /// about swapping the leading icon, joins it once a component has an icon
+    /// property to swap.
+    static func help(_ mainName: String) -> String {
+        "The instance stays linked to the main \(mainName), so a change to the main still flows through."
     }
 }
 
@@ -1593,13 +1644,22 @@ struct ComponentInstanceProperties: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            if selection.hasVersions || !properties.isEmpty {
-                Divider().padding(.vertical, 2)
-                Text("Properties")
-                    .font(.callout)
-                    .foregroundStyle(.secondary)
-            }
+            // The variants mock keeps the variant with the component it
+            // belongs to, above the instance's own knobs (`ui-variants.html`,
+            // `#segVariant`), and heads those knobs "Instance properties" in
+            // the component colour, with the component mark at the end.
             versionRow
+            if !properties.isEmpty {
+                HStack(spacing: 6) {
+                    Text("Instance properties")
+                        .font(.system(size: 11, weight: .semibold))
+                    Spacer(minLength: 0)
+                    ComponentGlyphShape().frame(width: 10, height: 10)
+                }
+                .foregroundStyle(VideoKit.Palette.comp)
+                .padding(.top, selection.hasVersions ? 6 : 2)
+                .accessibilityElement(children: .combine)
+            }
             if properties.isEmpty, !selection.hasVersions {
                 Text("No properties")
                     .font(.caption)
@@ -1641,32 +1701,31 @@ struct ComponentInstanceProperties: View {
     /// it.
     @ViewBuilder private var versionRow: some View {
         if selection.hasVersions {
-            HStack(spacing: 6) {
-                Text(variantName)
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .frame(width: 74, alignment: .leading)
-                // The panel's dropdown. Copies showing different looks read
-                // Mixed on its face, in the quieter ink every Mixed wears.
-                let shown = selection.versions.first { $0.id == selection.version }
-                let value = selection.hasMixedVersions ? MixedValue.text
-                    : (shown?.name ?? selection.versions.first?.name ?? "")
-                VideoKit.Dropdown(
-                    label: variantName,
-                    value: value,
-                    valueStyle: selection.hasMixedVersions ? MixedLook.style : nil,
-                    help: Self.versionHelp,
-                    choices: .picking(selection.versions,
-                                      current: selection.hasMixedVersions ? nil : shown,
-                                      title: \.name) {
-                        editorState.setInstanceVersion(instances: instances, to: $0.id)
-                    })
-                    .frame(maxWidth: .infinity)
-                    .panelHelp(Self.versionHelp)
-                    .playtestControl(variantName, detail: value)
+            // The mock's `.mlabel` over a `.seg.stack`: the property's name in
+            // small capitals, and its looks as one segmented control across
+            // the panel. The control turns itself into a dropdown holding the
+            // same looks when their names will not fit, so a component with
+            // six looks still gets a list rather than words cut short.
+            VStack(alignment: .leading, spacing: 3) {
+                Text(variantName.uppercased())
+                    .font(.system(size: 9, weight: .bold))
+                    .tracking(0.7)
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .padding(.top, 4)
+                // Copies showing different looks light no segment: Mixed is a
+                // report about the selection, not a look anybody can pick.
+                SegmentedControl(variantName,
+                                 selection: selection.hasMixedVersions ? nil : selection.version,
+                                 options: selection.versions.map { .init($0.id, $0.name) },
+                                 form: .fill,
+                                 systemHelp: Self.versionHelp) {
+                    editorState.setInstanceVersion(instances: instances, to: $0)
+                }
+                .frame(maxWidth: .infinity)
+                .panelHelp(Self.versionHelp)
             }
             // Named by its row, not by the look it happens to be showing: a
-            // walk that called this menu "Default" would be naming the very
+            // walk that called this control "Default" would be naming the very
             // thing its next step changes.
             .playtestField(variantName)
         }

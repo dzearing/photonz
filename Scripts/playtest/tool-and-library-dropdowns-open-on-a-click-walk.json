@@ -668,18 +668,13 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Disabled"
+      "control": "Disabled",
+      "reads": "Variant, already on Disabled, tooltip none"
     },
     {
-      "do": "panelMenu",
-      "menu": "Variant",
-      "at": [
-        "centre",
-        "start",
-        "end"
-      ],
-      "choose": "Default"
+      "comment": "The copy's Variant row is a segmented control since 2026-10-09 (ui-variants.html #segVariant): pressed at a point on its face with the pointer.",
+      "do": "press",
+      "control": "Default"
     },
     {
       "do": "wait",
@@ -687,13 +682,13 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Default"
+      "control": "Default",
+      "reads": "Variant, already on Default, tooltip none"
     },
     {
       "do": "describe",
       "stage": "10-variant",
-      "note": "the copy's Variant row, the panel's dropdown, switched back to Default with the pointer"
+      "note": "the copy's Variant row, the panel's segmented control, switched back to Default with the pointer"
     },
     {
       "do": "snapshot",
@@ -709,8 +704,8 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Disabled"
+      "control": "Disabled",
+      "reads": "Variant, already on Disabled, tooltip none"
     },
     {
       "do": "blank",

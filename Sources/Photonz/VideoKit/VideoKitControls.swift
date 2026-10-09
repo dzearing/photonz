@@ -120,6 +120,12 @@ extension VideoKit {
         /// that is not a dropdown: the preset sizes at the end of the Size
         /// box. The value is still the button's title, so a walk reads it.
         var isBare = false
+        /// The component mark in front of the value: the variants mock's
+        /// main-component field (`ui-variants.html`, `.select.comp`).
+        var showsComponentMark = false
+        /// The chevron at the end. Down for a list; right for a field that
+        /// takes you somewhere, as the variants mock's main-component field does.
+        var chevron = "chevron.down"
 
         @State private var isHovering = false
 
@@ -144,6 +150,9 @@ extension VideoKit {
                     if let swatch {
                         RoundedRectangle(cornerRadius: 4).fill(swatch).frame(width: 14, height: 14)
                     }
+                    if showsComponentMark {
+                        ComponentGlyphShape().fill(ComponentGlyph.color).frame(width: 11, height: 11)
+                    }
                     Text(value)
                         .font(.system(size: size == .small ? 11 : 11.5, weight: .medium))
                         .foregroundStyle(valueStyle ?? AnyShapeStyle(Palette.ink))
@@ -151,7 +160,7 @@ extension VideoKit {
                         .truncationMode(.tail)
                 }
                 Spacer(minLength: 0)
-                Image(systemName: "chevron.down")
+                Image(systemName: chevron)
                     .font(.system(size: 8, weight: .bold))
                     .foregroundStyle(Palette.faint)
             }
@@ -281,6 +290,11 @@ extension VideoKit {
         var help: String?
         /// Just the chevron (`SelectFace.isBare`).
         var isBare = false
+        /// The component's own face: its mark in front and its colour on the
+        /// edge (`SelectFace.showsComponentMark`, `isComponent`).
+        var isComponent = false
+        /// The chevron the face ends in (`SelectFace.chevron`).
+        var chevron = "chevron.down"
         let choices: [Choice]
         /// The app is asking for this list open, the way ⌘R asks for the
         /// Speed list (`EditorState+SpeedKey`). It opens once the dropdown is
@@ -291,6 +305,7 @@ extension VideoKit {
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
              valueStyle: AnyShapeStyle? = nil, help: String? = nil, isBare: Bool = false,
+             isComponent: Bool = false, chevron: String = "chevron.down",
              choices: [Choice], opensWhenAsked: Bool = false, opened: @escaping @MainActor () -> Void = {}) {
             self.label = label
             self.value = value
@@ -299,13 +314,17 @@ extension VideoKit {
             self.valueStyle = valueStyle
             self.help = help
             self.isBare = isBare
+            self.isComponent = isComponent
+            self.chevron = chevron
             self.choices = choices
             self.opensWhenAsked = opensWhenAsked
             self.opened = opened
         }
 
         private var face: SelectFace {
-            SelectFace(value: value, swatch: swatch, size: size, valueStyle: valueStyle, isBare: isBare)
+            SelectFace(value: value, swatch: swatch, size: size, isComponent: isComponent,
+                       valueStyle: valueStyle, isBare: isBare, showsComponentMark: isComponent,
+                       chevron: chevron)
         }
 
         func makeNSView(context: Context) -> DropdownButton {

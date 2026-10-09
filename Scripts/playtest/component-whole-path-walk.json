@@ -446,8 +446,8 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Default"
+      "control": "Default",
+      "reads": "Variant, already on Default, tooltip none"
     },
     {
       "do": "expect",
@@ -706,8 +706,8 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Disabled"
+      "control": "Disabled",
+      "reads": "Variant, already on Disabled, tooltip none"
     },
     {
       "do": "describe",
@@ -735,8 +735,8 @@
     },
     {
       "do": "expect",
-      "menu": "Variant",
-      "reads": "Default"
+      "control": "Default",
+      "reads": "Variant, already on Default, tooltip none"
     },
     {
       "do": "press",

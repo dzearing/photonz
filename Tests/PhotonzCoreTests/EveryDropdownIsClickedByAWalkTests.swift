@@ -34,14 +34,15 @@ struct EveryDropdownIsClickedByAWalkTests {
         // A saved effect style's Kind and Position (`EffectStylePanel.picker`)
         // were here for a day; they are segmented controls since 2026-10-05.
         // A Library text style's Font, Size and Weight share one builder
-        // (`LibraryTextStyleInspector.dropdown`), names as above. A copy's
-        // look is named after its component's variant property, Variant
-        // until an author renames it, and a choice property after itself:
-        // the walk's is Shape (tool-and-library-dropdowns-open-on-a-click-walk).
-        "Variant", "Shape",
+        // (`LibraryTextStyleInspector.dropdown`), names as above. A choice
+        // property on a copy is named after itself: the walk's is Shape
+        // (tool-and-library-dropdowns-open-on-a-click-walk). A copy's look
+        // was a dropdown named after its variant property until 2026-10-09;
+        // it is a segmented control now, as ui-variants.html draws it.
+        "Shape",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 8
+    static let builtSites = 7
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run
