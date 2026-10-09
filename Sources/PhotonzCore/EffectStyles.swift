@@ -419,7 +419,8 @@ public enum EffectStyleNaming {
     public static func effectText(_ effect: LayerEffect) -> String {
         switch effect {
         case .blur(let blur):
-            return "Blur • \(points(blur.radius))"
+            return blur.kind == .background ? "Background blur • \(points(blur.radius))"
+                                            : "Blur • \(points(blur.radius))"
         case .shadow(let shadow):
             return "\(shadow.kind.title) shadow • \(points(shadow.radius)) • \(percent(shadow.opacity))"
         case .border(let border):

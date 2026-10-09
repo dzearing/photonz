@@ -514,6 +514,8 @@ struct LibraryEffectStyleInspector: View {
                 $0.border?.width = $1
             }
         case .blur(let blur):
+            picker(style, "Kind", BlurKind.allCases, current: blur.kind,
+                   title: \.title) { $0.blur?.kind = $1 }
             slider(style, "Amount", blur.radius, 0...50, .points) { $0.blur?.radius = $1 }
         }
     }

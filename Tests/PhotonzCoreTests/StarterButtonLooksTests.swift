@@ -281,6 +281,24 @@ struct StarterButtonLooksTests {
         #expect(piece(look(doc, "Primary", "Medium"), "Background")?.style.opacity == 1)
     }
 
+    /// ...and frosted, the way the mock's glass is (`.btn`, `--lg-blur-sm`,
+    /// `blur(12px)`): what sits under a Secondary button is softened, so busy
+    /// detail behind it cannot fight its words. Primary is solid and Ghost has
+    /// no surface, so neither wears it.
+    @Test func secondaryFrostsWhatIsBehindIt() {
+        let (doc, _) = dropped()
+        for size in ["Small", "Medium", "Large"] {
+            let background = piece(look(doc, "Secondary", size), "Background")
+            #expect(background?.style.backgroundBlurRadius == StarterComponents.glassBlur, "\(size)")
+            #expect(background?.style.blurRadius == 0, "\(size)")
+        }
+        #expect(StarterComponents.glassBlur == 12)
+        for variant in ["Primary", "Ghost"] {
+            #expect(piece(look(doc, variant, "Medium"), "Background")?.style.backgroundBlurRadius == 0,
+                    "\(variant)")
+        }
+    }
+
     /// The colours are the design system's: its accent, and its quiet text.
     @Test func theKitPaintsInTheDesignSystemsColours() {
         #expect(StarterStyle.accent.colorHex == "#4C6FFF")

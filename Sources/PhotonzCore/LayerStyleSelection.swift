@@ -192,6 +192,13 @@ public struct LayerStyleSelection: Hashable, Sendable {
                             selectionCount: selectionCount)
     }
 
+    /// The picked layers whose list holds a blur at this place: the ones a
+    /// Blur row's Kind and Amount speak for.
+    public func blurs(at index: Int) -> LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { $0.style.blurEffect(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
     /// The picked layers with a GLOW in a given place in their list, which is
     /// what one Glow row's settings speak for. A place holding a shadow on one
     /// of them simply leaves that layer out, so a Softness drag can never turn

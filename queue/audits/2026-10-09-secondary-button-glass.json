@@ -1,0 +1,28 @@
+{
+  "feature": "The Secondary button frosts what is behind it",
+  "epic": "ui-components",
+  "summary": "A Secondary Button dropped over a screenshot now softens what is behind it, like the mock's glass, so busy detail no longer shows through sharp behind its words. Any shape can do the same: add a Blur and set its Kind to Background.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/secondary-button-glass-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a busy screenshot (code, a web page, anything with small text).", "shot": "2026-10-09-secondary-glass-1.png" },
+    { "do": "Drag the Button from the Library's Comps onto the busiest part and pick Secondary in Variant." },
+    { "do": "Zoom in on the button: the text under it should be a soft wash, the text around it sharp." },
+    { "do": "Try it over the dark artboard too: the glass picks up the colour behind it.", "shot": "2026-10-09-secondary-glass-2.png" },
+    { "do": "Draw a rectangle, set its Opacity to 20, press the plus on Effects and choose Blur.", "shot": "2026-10-09-secondary-glass-3.png" },
+    { "do": "Click Background on the Blur row's Kind: the rectangle goes crisp and what is under it goes soft.", "shot": "2026-10-09-secondary-glass-4.png" },
+    { "do": "Export the picture as PNG and compare it with the canvas." }
+  ],
+  "evaluate": [
+    "Does the Secondary button over a busy screenshot read as glass rather than a pale sticker?",
+    "Are the button's words easy to read over the busiest part of your screenshots?",
+    "Is Kind with Layer and Background on the Blur row where you would look for frosted glass, or would you expect a separate Background Blur in the plus menu, as Figma has?",
+    "Is 12 points of softness right for a button, or should it be softer or sharper?"
+  ],
+  "rough": [
+    "Matches the variants mock's glass (ui-variants.html, the Secondary cells; button.css .btn and --lg-blur-sm): white at 74% over the backdrop, blurred by 12 with saturation at 180%.",
+    "The layer's Opacity fades its paint, not the glass, so a fade-in on a frosted layer shows the blur at full strength from the first frame. Lower the blur's Amount to fade the glass.",
+    "A copy of the Button placed before this change keeps the Button it was saved with, so it has no glass until it is swapped or the Button is dropped again.",
+    "SVG export has no way to say 'blur what is behind', so an exported SVG shows the 74% white without the glass. PNG and every other picture export match the canvas."
+  ]
+}

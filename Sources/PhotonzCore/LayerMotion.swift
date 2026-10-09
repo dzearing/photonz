@@ -269,7 +269,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // menu says what the layer HAS, and offering a blur to a layer
             // with none would be offering to animate a thing that is not
             // there.
-            guard layer.style.effects.contains(where: { $0.kind == .blur }) else { return nil }
+            // A layer BLUR, that is: the glass behind a layer is not the
+            // layer's softness, and a key here moves only the layer's own.
+            guard layer.style.effects.contains(where: { $0.blur?.kind == .layer }) else { return nil }
             return .number(Double(layer.style.blurRadius))
         case .cornerRadius:
             guard layer.hasRoundableCorners else { return nil }

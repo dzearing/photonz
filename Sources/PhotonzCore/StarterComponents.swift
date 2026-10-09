@@ -780,6 +780,8 @@ public enum StarterComponents {
             children = [background, wash, content]
         case .secondary:
             background.style.opacity = glassOpacity
+            background.style.effects.append(.blur(BlurEffect(radius: pen.px(glassBlur),
+                                                             kind: .background)))
             children[0] = background
         case .ghost:
             break
@@ -816,6 +818,12 @@ public enum StarterComponents {
     /// How solid Secondary's surface is: the mock's glass (`--glass`, white at
     /// 74%), so a backdrop shows through it the way the mock's stage does.
     static let glassOpacity = 0.74
+
+    /// How soft what is behind Secondary's glass becomes: the mock's
+    /// `--lg-blur-sm` (`blur(12px)`, a gaussian of twelve), so a busy
+    /// screenshot under the button reads as a wash rather than as detail
+    /// fighting its words.
+    static let glassBlur: CGFloat = 12
 
     /// What the row holding a button's icon and words is called.
     static let buttonContentName = "Content"

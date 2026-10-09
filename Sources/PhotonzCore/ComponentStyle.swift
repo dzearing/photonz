@@ -67,7 +67,9 @@ extension LayerStyle {
     public static func differences(_ a: LayerStyle, _ b: LayerStyle) -> Set<LayerStyleField> {
         var fields: Set<LayerStyleField> = []
         if a.opacity != b.opacity { fields.insert(.opacity) }
-        if a.blurRadius != b.blurRadius { fields.insert(.blur) }
+        if a.blurRadius != b.blurRadius || a.backgroundBlurRadius != b.backgroundBlurRadius {
+            fields.insert(.blur)
+        }
         if a.cornerRadii != b.cornerRadii { fields.insert(.cornerRadius) }
         if a.borderWidth != b.borderWidth { fields.insert(.border) }
         if a.borderColorHex != b.borderColorHex { fields.insert(.borderColor) }
@@ -83,7 +85,22 @@ extension LayerStyle {
         var style = self
         switch field {
         case .opacity: style.opacity = other.opacity
-        case .blur: style.blurRadius = other.blurRadius
+        // Both softnesses are one part, "the blur": the layer's own and the
+        // glass behind it (`BlurKind`), so a copy that turned its glass into a
+        // layer blur keeps the one it chose rather than gaining both.
+        case .blur:
+            style.blurRadius = other.blurRadius
+            let mine = style.effects.firstIndex { $0.blur?.kind == .background }
+            let theirs = other.effects.first { $0.blur?.kind == .background }
+            switch (mine, theirs) {
+            case let (mine?, theirs?): style.effects[mine] = theirs
+            case let (mine?, nil): style.effects.remove(at: mine)
+            case let (nil, theirs?): style.effects.insert(theirs, at: style.insertionIndex(for: .blur))
+            case (nil, nil): break
+            }
+            if other.blurRadius == 0, other.effects.contains(where: { $0.blur?.kind == .background }) {
+                style.effects.removeAll { $0.blur?.kind == .layer }
+            }
         case .cornerRadius: style.cornerRadii = other.cornerRadii
         case .border: style.borderWidth = other.borderWidth
         case .borderColor: style.borderColorHex = other.borderColorHex

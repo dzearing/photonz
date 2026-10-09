@@ -277,7 +277,9 @@ extension Layer {
     /// drag preview (which cannot sprite a layer whose picture changes as it
     /// moves) and the dirty region (which has to redraw it when something
     /// under it changes).
-    public var readsBackdrop: Bool { content.readsBackdrop }
+    /// A layer wearing a background blur is a reader too: what it draws
+    /// under its own paint is the picture behind it, softened.
+    public var readsBackdrop: Bool { content.readsBackdrop || style.backgroundBlurRadius > 0 }
 
     /// The canvas region this layer reads, so a change touching it means this
     /// layer must be drawn again. Nil for everything that draws itself.
@@ -296,7 +298,16 @@ extension Layer {
                 : frame.standardized.applying(transform.affineTransform(around: turnPivot))
             return box.insetBy(dx: -reach, dy: -reach)
         default:
-            return nil
+            // Glass reads the canvas under the box it is drawn in, and a
+            // blur's reach past that: three sigma, the same tail every other
+            // blur reserves room for.
+            let glass = style.backgroundBlurRadius
+            guard glass > 0 else { return nil }
+            let box = transform.isIdentity
+                ? localBounds.standardized
+                : localBounds.standardized.applying(transform.affineTransform(around: turnPivot))
+            let reach = (glass * 3).rounded(.up)
+            return box.insetBy(dx: -reach, dy: -reach)
         }
     }
 }

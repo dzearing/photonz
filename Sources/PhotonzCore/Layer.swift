@@ -1139,13 +1139,18 @@ public struct LayerStyle: Hashable, Codable, Sendable {
     /// in the list is switched off, because off has to look off. Setting it
     /// tunes the entry that is there and adds one when there is not, so
     /// `style.blurRadius = 8` still means what it always meant.
+    ///
+    /// Only a LAYER blur: a background blur softens what is behind the layer,
+    /// never the layer, and reads as `backgroundBlurRadius` instead. So a
+    /// transition blurring a clip through a cut tunes a layer blur of its own
+    /// rather than turning somebody's frosted glass into a fuzzy card.
     public var blurRadius: CGFloat {
         get {
-            guard let blur = effects.compactMap(\.blur).first else { return 0 }
+            guard let blur = effects.compactMap(\.blur).first(where: { $0.kind == .layer }) else { return 0 }
             return blur.isOn ? blur.radius : 0
         }
         set {
-            if let index = effects.firstIndex(where: { $0.kind == .blur }) {
+            if let index = effects.firstIndex(where: { $0.blur?.kind == .layer }) {
                 effects[index].blur?.radius = newValue
                 if newValue > 0 { effects[index].blur?.isOn = true }
             } else if newValue > 0 {
@@ -1153,6 +1158,15 @@ public struct LayerStyle: Hashable, Codable, Sendable {
                                at: insertionIndex(for: .blur))
             }
         }
+    }
+
+    /// How much what is BEHIND the layer is softened where the layer paints:
+    /// frosted glass (`BlurKind.background`). Nought when there is none or it
+    /// is switched off.
+    public var backgroundBlurRadius: CGFloat {
+        guard let blur = effects.compactMap(\.blur).first(where: { $0.kind == .background }),
+              blur.isOn else { return 0 }
+        return max(0, blur.radius)
     }
 
     /// The layer's ring, as a plain number: the Border nearest the eye.
@@ -1458,7 +1472,7 @@ extension LayerStyle {
     /// during a resize — the stroke would stretch, the blur/shadow would bloat —
     /// so a resize of a layer with any of it must re-render the frame instead.
     var hasNoFixedSizeDecoration: Bool {
-        !cornerRadii.isRound && blurRadius == 0
+        !cornerRadii.isRound && blurRadius == 0 && backgroundBlurRadius == 0
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
     }
 
@@ -1467,7 +1481,7 @@ extension LayerStyle {
     /// like this is a container rather than an object, so its children can draw
     /// straight onto the canvas and grouping changes no pixels.
     public var isPlain: Bool {
-        opacity >= 1 && blurRadius <= 0 && !cornerRadii.isRound
+        opacity >= 1 && blurRadius <= 0 && backgroundBlurRadius <= 0 && !cornerRadii.isRound
             && paintedShadows.isEmpty && paintedBorders.isEmpty && paintedGlows.isEmpty
             && blendMode == .normal
             // A key and a matte are both cuts taken out of the whole layer, so

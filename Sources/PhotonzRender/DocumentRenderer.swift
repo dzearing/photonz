@@ -773,9 +773,11 @@ public final class DocumentRenderer: @unchecked Sendable {
             image = image.transformed(by: mirrored.affineTransform(
                 around: CGPoint(x: box.midX + offset.x, y: box.midY - offset.y)))
         }
+        let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
-        return faded(image, opacity: layer.style.opacity)
+        return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
+                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius)
     }
 
     /// A region of the composite as pixels ("promote selection to layer").
@@ -1281,9 +1283,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
         // undrawn: a label on a control is not a caption over a screenshot.
+        let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
-        return faded(image, opacity: layer.style.opacity)
+        return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
+                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius)
     }
 
     // MARK: - Style pieces
@@ -1321,6 +1325,51 @@ public final class DocumentRenderer: @unchecked Sendable {
         let reach = (radius * 3).rounded(.up)
         return image.applyingGaussianBlur(sigma: radius)
             .cropped(to: image.extent.insetBy(dx: -reach, dy: -reach))
+    }
+
+    /// How much richer the colour behind glass comes through: the mock's 180%.
+    static let glassSaturation: CGFloat = 1.8
+
+    /// Frosted glass (`BlurKind.background`): the picture BEHIND the layer,
+    /// softened, laid under the finished layer wherever it paints.
+    ///
+    /// `drawn` is the layer as it ends up, shadows and fade included;
+    /// `silhouette` is its paint before either, which is where the glass goes.
+    /// The glass is not faded with the layer: Opacity fades the paint, so a
+    /// white pane at 74% over glass is the mock's `--glass` over its
+    /// `backdrop-filter`, and a pane at nought is clear frosted glass. Any
+    /// paint at all counts as the pane, however faint (a fill at 8% frosts as
+    /// much as a solid one), the way a CSS box frosts its whole box.
+    ///
+    /// The backdrop is read wider than the pane and held at its own edge
+    /// before blurring, as a lens does it (`LensFilter`), so the glass has no
+    /// dark rim where the canvas stops.
+    private func glazed(_ drawn: CIImage, silhouette: CIImage, backdrop: CIImage,
+                        radius: CGFloat) -> CIImage {
+        guard radius > 0 else { return drawn }
+        let pane = silhouette.extent
+        guard !pane.isInfinite, !pane.isEmpty else { return drawn }
+        let reach = (radius * 3).rounded(.up)
+        let sampled = backdrop.cropped(to: pane.insetBy(dx: -reach, dy: -reach))
+        guard !sampled.extent.isEmpty else { return drawn }
+        // ...and richer, the way the design system's glass is everywhere it
+        // appears (`--lg-blur-sm`: `saturate(180%) blur(12px)`): a blur alone
+        // averages colours towards grey, and the boost gives them back.
+        let softened = sampled.clampedToExtent()
+            .applyingGaussianBlur(sigma: radius)
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: Self.glassSaturation])
+            .cropped(to: pane.intersection(backdrop.extent))
+        let mask = silhouette
+            .applyingFilter("CIColorMatrix", parameters: [
+                "inputRVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+                "inputGVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+                "inputBVector": CIVector(x: 0, y: 0, z: 0, w: 0),
+                "inputAVector": CIVector(x: 0, y: 0, z: 0, w: 16),
+            ])
+            .applyingFilter("CIColorClamp")
+        let glass = softened.applyingFilter("CISourceInCompositing",
+                                            parameters: [kCIInputBackgroundImageKey: mask])
+        return drawn.composited(over: glass)
     }
 
     /// Clips to a rounded rect, which is also what makes a group with rounded

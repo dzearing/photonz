@@ -90,24 +90,71 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     }
 }
 
-/// The layer's own softness. One number and a switch, so it behaves like every
-/// other entry in the list rather than being a slider that is secretly always
-/// there.
+/// What a blur softens: the layer itself, or what is behind it.
+///
+/// One effect with a Kind on it rather than two effects, the same split as a
+/// shadow's Drop and Inner and a glow's Outer and Inner: a person reaching for
+/// frosted glass looks for Blur, and the row they get carries the Kind that
+/// turns it round. Figma calls the two Layer blur and Background blur, which is
+/// where the words come from.
+public enum BlurKind: String, CaseIterable, Hashable, Codable, Sendable {
+    /// The layer's own softness, laid over everything it is made of.
+    case layer
+    /// What is under the layer, softened wherever the layer paints: the
+    /// frosted glass of a control over a busy screenshot (`backdrop-filter`
+    /// in the mocks). The layer itself stays sharp.
+    case background
+
+    public var title: String {
+        switch self {
+        case .layer: return "Layer"
+        case .background: return "Background"
+        }
+    }
+}
+
+/// The layer's own softness, or the softness of what is behind it. One number,
+/// a switch and a kind, so it behaves like every other entry in the list
+/// rather than being a slider that is secretly always there.
 public struct BlurEffect: Hashable, Codable, Sendable {
     /// Gaussian sigma, in document points.
     public var radius: CGFloat
     /// Whether it paints at all. Off keeps the number, exactly as a shadow's
     /// tick does.
     public var isOn: Bool
+    /// Whether it softens the layer or what is behind it.
+    public var kind: BlurKind
 
     /// What a blur looks like the moment it is added: enough to read as blurred
     /// without hiding what is under it, so the next thing you do is tune it
     /// rather than discover that nothing happened.
     public static let startingRadius: CGFloat = 8
 
-    public init(radius: CGFloat = BlurEffect.startingRadius, isOn: Bool = true) {
+    public init(radius: CGFloat = BlurEffect.startingRadius, isOn: Bool = true,
+                kind: BlurKind = .layer) {
         self.radius = radius
         self.isOn = isOn
+        self.kind = kind
+    }
+
+    private enum CodingKeys: String, CodingKey { case radius, isOn, kind }
+
+    /// A blur written before it had a Kind softened the layer, so that is what
+    /// it reads back as.
+    public init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        radius = try c.decode(CGFloat.self, forKey: .radius)
+        isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
+        kind = try c.decodeIfPresent(BlurKind.self, forKey: .kind) ?? .layer
+    }
+
+    /// A layer blur is written exactly as it was before blur had a Kind, so a
+    /// file saved here still opens in a build that has never heard of one.
+    public func encode(to encoder: Encoder) throws {
+        var c = encoder.container(keyedBy: CodingKeys.self)
+        try c.encode(radius, forKey: .radius)
+        try c.encode(isOn, forKey: .isOn)
+        if kind != .layer { try c.encode(kind, forKey: .kind) }
     }
 }
 
@@ -671,6 +718,18 @@ extension LayerStyle {
     /// that is the number a row in the panel already knows.
     public func glowEffect(at index: Int) -> GlowEffect? { effect(at: index)?.glow }
 
+    /// The blur at a place in the list, or nil when the entry there is
+    /// something else.
+    public func blurEffect(at index: Int) -> BlurEffect? { effect(at: index)?.blur }
+
+    /// Changes one blur in place, and does nothing at all when the entry there
+    /// is not a blur.
+    public mutating func updateBlurEffect(at index: Int, _ mutate: (inout BlurEffect) -> Void) {
+        guard var blur = blurEffect(at: index) else { return }
+        mutate(&blur)
+        effects[index] = .blur(blur)
+    }
+
     /// Changes one glow in place, and does nothing at all when the entry there
     /// is not a glow.
     public mutating func updateGlowEffect(at index: Int,
@@ -979,6 +1038,21 @@ extension PhotonzDocument {
             guard let layer = layer(id: id), !layer.isLocked,
                   layer.style.borderEffect(at: index) != nil else { continue }
             updateLayer(id: id) { $0.style.updateBorderEffect(at: index, mutate) }
+            changed += 1
+        }
+        return changed
+    }
+
+    /// One blur's settings (its Kind and its Amount), on every picked layer
+    /// whose list holds a blur at that place.
+    @discardableResult
+    public mutating func updateBlurEffect(layerIDs: [UUID], at index: Int,
+                                          _ mutate: (inout BlurEffect) -> Void) -> Int {
+        var changed = 0
+        for id in layerIDs {
+            guard let layer = layer(id: id), !layer.isLocked,
+                  layer.style.blurEffect(at: index) != nil else { continue }
+            updateLayer(id: id) { $0.style.updateBlurEffect(at: index, mutate) }
             changed += 1
         }
         return changed

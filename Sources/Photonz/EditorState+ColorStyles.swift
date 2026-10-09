@@ -685,6 +685,16 @@ extension EditorState {
     /// Turns one glow outside the layer's edge or inside it, over every picked
     /// layer with a glow at that place. The same move the shadow's Kind makes:
     /// one effect drawn somewhere else, never a second row.
+    /// A blur's Kind: the layer's own softness, or frosted glass over what is
+    /// behind it. One undo.
+    func setBlurKind(at index: Int, ids: [UUID], to kind: BlurKind) {
+        guard !ids.isEmpty else { return }
+        stylePreview = nil
+        discardDragPreview()
+        perform { _ = $0.updateBlurEffect(layerIDs: ids, at: index) { $0.kind = kind } }
+        rememberStyleDefault(of: ids)
+    }
+
     func setGlowKind(at index: Int, ids: [UUID], to kind: GlowKind) {
         guard !ids.isEmpty else { return }
         stylePreview = nil

@@ -568,19 +568,36 @@ private struct GlowSlidersRow: View {
     }
 }
 
-/// How soft the layer is. One number, because a layer has one softness: adding
-/// a second blur would be two answers to one question, so the plus offers it
-/// once and then stops.
+/// How soft the layer is, or what is behind it. One blur, because a layer has
+/// one softness: adding a second would be two answers to one question, so the
+/// plus offers it once and then stops. Its Kind turns it round, from the
+/// layer's own softness to frosted glass over whatever is under it, the way a
+/// shadow's Kind turns it inner.
 private struct BlurEffectRow: View {
     @Environment(EditorState.self) private var editorState
     let row: LayerEffectRow
 
     var body: some View {
-        let selection = editorState.layerStyleSelection
-        LayerStyleSlider(layerIDs: row.switchIDs, label: "Amount",
-                         reading: selection.number { $0.blurRadius }, range: 0...50,
+        let blurs = editorState.layerStyleSelection.blurs(at: row.index)
+        let ids = blurs.layerIDs
+        let index = row.index
+        EffectChoiceRow(
+            name: "Kind",
+            reading: blurs.reading { $0.blurEffect(at: index)?.kind ?? .layer },
+            otherwise: .layer,
+            options: [.init(.layer, BlurKind.layer.title, help: "Softens the layer itself"),
+                      .init(.background, BlurKind.background.title,
+                            help: "Softens what is behind the layer, like frosted glass")],
+            isEnabled: !ids.isEmpty) { new in
+                editorState.setBlurKind(at: index, ids: ids, to: new)
+            }
+        LayerStyleSlider(layerIDs: ids, label: "Amount",
+                         reading: blurs.number { $0.blurEffect(at: index)?.radius ?? 0 }, range: 0...50,
                          field: .blur) { style, v in
-            style.blurRadius = CGFloat(v)
+            style.updateBlurEffect(at: index) {
+                $0.radius = CGFloat(v)
+                if v > 0 { $0.isOn = true }
+            }
         }
     }
 }
