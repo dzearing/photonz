@@ -15,11 +15,11 @@
     { "do": "describe", "stage": "2-zoomed-in", "note": "Command plus: the control is up in the canvas's bottom right corner, above the transport" },
     { "do": "snapshot", "name": "1-video-shown" },
 
-    { "do": "wait", "seconds": 4, "onTheClock": true },
+    { "do": "wait", "seconds": 3, "onTheClock": true },
     { "do": "waitFor", "condition": "zoomControl", "value": "shown", "timeout": 0.2 },
-    { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 2 },
+    { "do": "waitFor", "condition": "zoomControl", "value": "hidden", "timeout": 3 },
     { "do": "wait", "seconds": 0.5, "onTheClock": true },
-    { "do": "describe", "stage": "3-gone", "note": "still up at four seconds, gone by itself just after five" },
+    { "do": "describe", "stage": "3-gone", "note": "still up at three seconds, gone by itself just after five (three, not four: the snapshot before the wait eats up to a second of the five)" },
     { "do": "snapshot", "name": "2-video-gone" },
 
     { "do": "action", "action": "zoomIn" },
