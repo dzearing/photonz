@@ -1,0 +1,44 @@
+{
+  "feature": "The starter Button Primary shines like the mock and its Icon field shows the icon",
+  "epic": "ui-components",
+  "summary": "A dropped Button's Primary look now has the mock's soft gloss, a lighter top edge and an accent glow under it, and still turns whatever colour you make Accent. Secondary is the mock's glass, so a backdrop shows through it, and a copy's Icon field shows the icon in front of its name.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: Scripts/playtest/starter-button-shine-walk.json (on a dark artboard like the mock's) and starter-button-looks-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a dark picture, open the Library and drag Button onto it, then zoom in with Command +.",
+      "shot": "2026-10-09-starter-button-shine-1-primary-sc.png"
+    },
+    {
+      "do": "Look at the Icon field in Properties: the sparkle sits before Sparkle.",
+      "shot": "2026-10-09-starter-button-shine-3-icon-field-sc.png"
+    },
+    {
+      "do": "Click Secondary under Variant.",
+      "shot": "2026-10-09-starter-button-shine-2-secondary-sc.png"
+    },
+    {
+      "do": "Click Primary, open the Icon menu and pick Wand, then switch the Mac to light.",
+      "shot": "2026-10-09-starter-button-shine-4-wand-light-sc.png"
+    },
+    {
+      "do": "In the Library's Styles, recolour Accent green: the capsule and its glow turn green and the gloss stays."
+    },
+    {
+      "do": "Click the component field and choose Edit Original to see the nine looks.",
+      "shot": "2026-10-09-starter-button-shine-5-grid-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Does the Primary gloss read as the mock's, or is it too faint at normal zoom?",
+    "Is the glow under Primary welcome on a design, or would you rather drop it?",
+    "Does the Secondary glass look right over your own screenshots, or should it stay a solid white surface?",
+    "Does the icon in the Icon field help you pick, the way the mock's does?"
+  ],
+  "rough": [
+    "Secondary glass does not blur what is behind it, where the mock's glass does: over a soft backdrop it reads the same, over a sharp screenshot the detail shows through; the-starter-secondary-button-frosts-what-is-behi covers it.",
+    "In dark mode the Button keeps its light colours where the mock also draws dark cells: decision card decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho.",
+    "The Shine is a piece of its own over the accent, so it shows in the original's layer list as Shine; the app goes further than the mock by keeping Accent one recolourable name.",
+    "On Edit Original the nine looks are still crowded by their name chips: edit-original-draws-a-two-question-component-ins."
+  ]
+}

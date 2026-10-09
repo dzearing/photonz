@@ -1,0 +1,30 @@
+{
+  "id": "the-starter-secondary-button-frosts-what-is-behi",
+  "title": "The starter Secondary button frosts what is behind it like the mock glass",
+  "goal": "The Secondary look of the Library Button is now a three quarters solid white surface, so over a busy screenshot the detail behind it shows through sharp, where the variants mock blurs what is behind its glass controls. Give a shape a way to blur what is under it and use it on the Secondary button so it reads as glass over anything.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 3890,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T10:33:44.302Z",
+  "updated": "2026-10-09T10:33:44.305Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the-starter-button-primary-shines-like-the-mock (2026-10-09). Secondary Background now has LayerStyle.opacity 0.74 (StarterComponents.glassOpacity) to match --glass rgba(255,255,255,.74); the renderer has no backdrop blur (BlurEffect blurs the layer itself). Needs a backdrop/background-blur effect in LayerEffects + DocumentRenderer, then add it to the Secondary look. Seen on Scripts/playtest/starter-button-shine-walk.json (dark artboard fixture), where over a soft backdrop it already reads like the mock; the gap shows over sharp content.",
+  "acceptance": [
+    "A Secondary Button dropped over a screenshot shows what is behind it softened, as the mock glass does (button.css .btn.secondary, backdrop-filter)",
+    "Its words stay legible over any backdrop, in light and dark",
+    "Exported pictures look the same as the canvas"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T10:33:44.304Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "starter-button-shine-walk"
+  ]
+}

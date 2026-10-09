@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 550,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T09:54:04.266Z",
-  "updated": "2026-10-09T09:54:04.269Z",
+  "updated": "2026-10-09T10:34:18.062Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the-starter-button-comes-as-primary-secondary-or (2026-10-09). Starter looks: Sources/PhotonzCore/StarterComponents.swift button(pen,variant,size), paints from named styles (StarterStyle), so a gradient means either a gradient Paint on the Background fill bound to Accent (Paint supports gradients, check ColorStyleBinding with a gradient) or a highlight layer. Icon face: Sources/Photonz/ComponentPanel.swift choiceMenu/choiceKnob passes no glyph to VideoKit.Dropdown; SelectFace has swatch and showsComponentMark only, so it needs a leading image. Menu rows already carry template pictures (choicePicture). Mock: docs/design/mocks/pages/ui-variants.html .pmatrix and #iconTrigger; docs/design/mocks/shared/components/button.css .btn.primary/.btn.secondary.",
@@ -23,9 +23,32 @@
     {
       "t": "2026-10-09T09:54:04.268Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T10:08:52.348Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T10:11:53.143Z",
+      "note": "Adversarial pass: the mock's Primary is a white wash over the accent (accent 84%/white 16% at top to accent), a 1px white .45 inset top edge and an accent glow. Making the Background fill a gradient would break its Accent binding (reconcile compares paints), so the gloss goes on as a separate unbound white Shine piece over the accent, the top edge as an inner shadow, and the glow as a drop shadow whose colour is bound to Accent. Recolouring Accent then repaints fill and glow and the wash stays white. Secondary: no backdrop blur exists in the renderer, so glass can only be translucency (white 74%, the mock's --glass); will judge it over a coloured backdrop before deciding vs a card. Icon face: SelectFace has no leading picture; adding one fed from the same template picture the menu rows use."
+    },
+    {
+      "t": "2026-10-09T10:34:08.323Z",
+      "note": "walks starter-button-looks-walk -> starter-button-looks-walk, starter-button-shine-walk"
+    },
+    {
+      "t": "2026-10-09T10:34:08.383Z",
+      "note": "Built: Primary gets an unbound white Shine piece (linear 180deg, #FFFFFF14 to clear), an inner white top edge (30%, 1pt, sharp) and an accent drop glow (6 down, 8 soft, -6 spread, 60%) whose colour is bound to Accent; Secondary Background at 74% opacity (mock --glass); Icon field face shows the picked icon as a template picture (SelectFace.leadImage), nil when Mixed or No icon. Numbers are smaller than the mock's (16%/45%) because the renderer mixes in linear light; StarterComponentRenderTests.thePrimaryButtonShinesLikeTheMock holds rendered rows to the mock's sRGB sums. New walk starter-button-shine-walk on a new dark-artboard fixture; 17 other walks that drop a Button all green; full suite 11968 tests green. Filed the-starter-secondary-button-frosts-what-is-behi (p2) for backdrop blur. Left rough, not filed: the Shine is a visible piece in the original's layer list."
+    },
+    {
+      "t": "2026-10-09T10:34:18.060Z",
+      "note": "Primary now has the mock's gloss (white wash piece over Accent), lighter top edge and Accent-bound glow; recolouring Accent repaints capsule and glow. Secondary is the mock's 74% glass. The Icon field shows the picked icon before its name in light and dark. Core tests (StarterButtonLooksTests, render test against the mock's colours) and the full suite (11968) green; starter-button-looks-walk and new starter-button-shine-walk photograph all three at Next defaults; 17 other Button walks green. Audit queue/audits/2026-10-09-starter-button-shine.json."
     }
   ],
   "walks": [
-    "starter-button-looks-walk"
-  ]
+    "starter-button-looks-walk",
+    "starter-button-shine-walk"
+  ],
+  "started": "2026-10-09T10:08:52.347Z",
+  "completed": "2026-10-09T10:34:18.061Z"
 }
