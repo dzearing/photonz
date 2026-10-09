@@ -20970,3 +20970,9 @@ Next: the first editor window's ~200 ms first build
   (`the-starter-button-comes-as-primary-secondary-or`). Bug filed: a tile
   dropped into the original you are editing becomes part of it
   (`dropping-a-button-into-the-button-original-you-a`).
+
+## 2026-10-09 — A component can have a Variant and a Size at once
+
+- A component can ask more than one variant question: Add > New Variant Property on an original adds Size beside Variant. Each copy picks each answer on its own segmented row; an undrawn combination shows the nearest drawing; Edit Original lays a two-question component out as a grid with the answers along its edges. Model in `ComponentVariantProperty.swift` / `ComponentVariantGrid.swift`; one-question files save byte for byte as before.
+- Fixed the video kit standalone typecheck broken by 3061dbe0 (the component mark's path now lives in VideoKit).
+- Next: `edit-original-draws-a-two-question-component-ins` (the mock's matrix panel), and the starter Button's nine looks (`the-starter-button-comes-as-primary-secondary-or`).

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 100,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T06:07:22.493Z",
-  "updated": "2026-10-09T07:21:27.997Z",
+  "updated": "2026-10-09T08:11:27.621Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Prerequisite for an-instance-s-properties-match-the-variants-mock (acceptance 3: picking Secondary or Large). Model today: Sources/PhotonzCore/ComponentVariantProperty.swift, componentVariantProperties(of:) returns [] or exactly one property whose id is the componentID; drawings are ComponentVersion (ComponentVersions.swift), group.variantName / versionID / versionName in the file. The doc comment there already sketches the plan: drawings stay a flat list, each carries an answer per variant property, nearest fallback. Panel: ComponentInstanceProperties.versionRow (ComponentPanel.swift) renders one row; since 2026-10-09 it is a SegmentedControl under a small caps label (falls back to a dropdown when the words do not fit), so a second row is the same view again. Mock: docs/design/mocks/pages/ui-variants.html, #segVariant / #segSize and the .pmatrix grid on the component sheet. TDD in PhotonzCore.",
@@ -28,7 +28,39 @@
     {
       "t": "2026-10-09T07:21:27.992Z",
       "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T08:11:27.200Z",
+      "note": "Review before building: the mock assumes a copy can ask for a combination nobody drew; the model keeps the drawings a flat list, each drawing answers every question, and a copy remembers the combination it asked for (instanceAnswers) while showing the nearest drawing (it keeps the answer just picked). A Figma user expects per-variant property values; here typing an existing answer moves the drawing into it and a new word renames that answer everywhere, which covers both Figma moves from one field. A second question needs a first one, so New Variant Property only appears once the component has two looks."
+    },
+    {
+      "t": "2026-10-09T08:11:27.260Z",
+      "note": "Built: PhotonzCore ComponentVariantProperty (questions, answers, nearest drawing, copy answers), ComponentVariantGrid (grid layout and edges), Layer variantAnswers/instanceAnswers (unwritten for one-question components). Panel: a row per question on the original with answer fields, Add > Another <Question> per question and New Variant Property; a segmented row per question on a copy. Canvas: answers on plates along the grid edges on Edit Original. Tests: ComponentVariantGridTests (18). Walk: variant-and-size-walk, green with 6 real captures; 38 other component walks green."
+    },
+    {
+      "t": "2026-10-09T08:11:27.320Z",
+      "note": "Also fixed: the full suite failed on main since 3061dbe0 because the video kit stopped compiling on its own (VideoKitControls used the app's ComponentGlyphShape). The mark's path now lives in VideoKit."
+    },
+    {
+      "t": "2026-10-09T08:11:27.378Z",
+      "note": "left rough: no way to remove a second question; a copy on an undrawn combination keeps the nearest drawing after the exact one is drawn, until picked again; tutorial-component-versions-walk failed once at step 66 (focus on a new look's name field) inside a 34-walk batch and passed when run alone, so read as timing, not this change."
+    },
+    {
+      "t": "2026-10-09T08:11:27.434Z",
+      "note": "Filed edit-original-draws-a-two-question-component-ins (p2) for the mock's matrix panel and camera framing; default answer names fold into the-starter-button-comes-as-primary-secondary-or."
+    },
+    {
+      "t": "2026-10-09T08:11:27.499Z",
+      "note": "owns these walks: variant-and-size-walk"
+    },
+    {
+      "t": "2026-10-09T08:11:27.619Z",
+      "note": "Shipped dbf55248: a component asks Variant and Size at once (New Variant Property on the original), a copy picks each on its own segmented row in one undo step, an undrawn combination shows the nearest drawing, Edit Original lays the drawings out as a labelled Variant by Size grid, and one-question files save unchanged. Verified by ComponentVariantGridTests, the full suite (11945 green) and variant-and-size-walk at Next defaults with real captures. Audit: queue/audits/2026-10-09-variant-and-size.json."
     }
   ],
-  "started": "2026-10-09T07:21:27.990Z"
+  "started": "2026-10-09T07:21:27.990Z",
+  "walks": [
+    "variant-and-size-walk"
+  ],
+  "completed": "2026-10-09T08:11:27.620Z"
 }

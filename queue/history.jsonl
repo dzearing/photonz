@@ -10296,3 +10296,11 @@
 {"t":"2026-10-09T07:21:27.821Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":587,"of":817,"couldNotRun":0,"timedOut":false,"rotating":true}
 {"t":"2026-10-09T07:21:27.998Z","ev":"task_started","id":"a-component-can-have-a-variant-and-a-size-at-onc","title":"A component can have a Variant and a Size at once","priority":"p1-high"}
 {"t":"2026-10-09T08:10:49.009Z","ev":"task_created","id":"edit-original-draws-a-two-question-component-ins","priority":"p2-normal","title":"Edit Original draws a two-question component inside the mock's matrix panel"}
+{"t":"2026-10-09T08:11:27.202Z","ev":"task_note","id":"a-component-can-have-a-variant-and-a-size-at-onc"}
+{"t":"2026-10-09T08:11:27.262Z","ev":"task_note","id":"a-component-can-have-a-variant-and-a-size-at-onc"}
+{"t":"2026-10-09T08:11:27.322Z","ev":"task_note","id":"a-component-can-have-a-variant-and-a-size-at-onc"}
+{"t":"2026-10-09T08:11:27.380Z","ev":"task_note","id":"a-component-can-have-a-variant-and-a-size-at-onc"}
+{"t":"2026-10-09T08:11:27.436Z","ev":"task_note","id":"a-component-can-have-a-variant-and-a-size-at-onc"}
+{"t":"2026-10-09T08:11:27.501Z","ev":"task_walks","id":"a-component-can-have-a-variant-and-a-size-at-onc","walks":["variant-and-size-walk"]}
+{"t":"2026-10-09T08:11:27.558Z","ev":"task_note","id":"an-instance-s-properties-match-the-variants-mock"}
+{"t":"2026-10-09T08:11:27.622Z","ev":"task_done","id":"a-component-can-have-a-variant-and-a-size-at-onc","from":"in_progress","note":"Shipped dbf55248: a component asks Variant and Size at once (New Variant Property on the original), a copy picks each on its own segmented row in one undo step, an undrawn combination shows the nearest drawing, Edit Original lays the drawings out as a labelled Variant by Size grid, and one-question files save unchanged. Verified by ComponentVariantGridTests, the full suite (11945 green) and variant-and-size-walk at Next defaults with real captures. Audit: queue/audits/2026-10-09-variant-and-size.json."}

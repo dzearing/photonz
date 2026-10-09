@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.120Z",
-  "updated": "2026-10-09T07:09:05.588Z",
+  "updated": "2026-10-09T08:11:27.557Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ui-building success item 2 names ui-variants.html; no audit has ever compared against it (grep queue/audits for ui-variants: only passing mentions in 2026-10-04-one-instance-drop.json). Mock page docs/design/mocks/pages/ui-variants.html, rendered from the dashboard at http://127.0.0.1:8791/pages/ui-variants.html. Mock's Properties: header 'PROPERTIES · Instance', a 'Component' sub-header with 'linked' badge, a row 'Button >' with 'Detach', VARIANT segmented Primary | Secondary | Ghost, SIZE segmented Small | Medium | Large, 'Instance properties' sub-header with a diamond, 'Show icon' switch. Segmented controls are the app's own (see task every-segmented-control-is-apple-s-own-liquid-gl). The variant matrix on the canvas (every cell a real specimen) is a separate surface: compare it too, but if building it is more than polish, file it as a follow-up rather than growing this task. Placement contract: docs/design/mocks/shared/UX-PATTERNS.md top table; Properties rows only.",
@@ -56,6 +56,10 @@
     {
       "t": "2026-10-09T07:09:05.585Z",
       "note": "Shipped 3061dbe0 (Next): a picked instance's panel matches ui-variants.html where the app has the parts: linked badge (mock note behind its ?), main as a select face with mark + right chevron (Edit Original; swap menu when other components exist), Make Unique link, variant as a segmented control under a small caps label, Instance properties heading, Reset Props (new PhotonzCore resetInstanceProperties, TDD). Verified: instance-properties-variants-mock-walk green at Next defaults with 7 real captures in dark and light (Secondary pressed by pointer, Cmd-Z back in one step, Reset back to Default); 24 component walks + 31 copy/version/starter walks green; Scripts/test.sh green (11,927). Audit queue/audits/2026-10-09-instance-properties-variants-mock.json with side-by-side pictures; every mock difference names its settler. Size, Show icon and Icon need prerequisites now filed p1: a-component-can-have-a-variant-and-a-size-at-onc, the-starter-button-comes-as-primary-secondary-or (they carry acceptance 3's Large/Show icon check). Bug filed: dropping-a-button-into-the-button-original-you-a."
+    },
+    {
+      "t": "2026-10-09T08:11:27.556Z",
+      "note": "Its prerequisite landed in dbf55248: a component can ask Variant and Size at once, and a copy shows a VARIANT row and a SIZE row. Picking Secondary or Large now works once the starter Button has those looks (the-starter-button-comes-as-primary-secondary-or)."
     }
   ],
   "started": "2026-10-09T06:01:59.534Z",
