@@ -6723,6 +6723,7 @@ private final class Run {
             await sleep(0.2)
             let detail = (actionDetail.map { "\(action.rawValue) · \($0)" } ?? action.rawValue)
                 + "; " + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report
+                + (ViewBuildMeter.shared.traced.isEmpty ? "" : "; " + ViewBuildMeter.shared.traced)
                 + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
             actionDetail = nil
             note(number, step.name, detail, state: describe())

@@ -522,6 +522,10 @@ final class EditorState {
     /// still record the outline that is really on screen — which is the whole
     /// promise the old eager write was keeping.
     private func flushSelectionToHistory() {
+        // A pick an Undo or Redo still owes is handed over before anything
+        // else reaches the stack, so the stack never records the clip it was
+        // about to leave (`UndoPickFollows`).
+        settleFollowingPick()
         guard let pending = selectionAwaitingHistory else { return }
         selectionAwaitingHistory = nil
         history?.syncSelection(pending)
@@ -4462,9 +4466,61 @@ final class EditorState {
     /// anything — get to look at the restored outline rather than the one it
     /// replaced.
     private func restoreSelectionFromHistory() {
+        followingPick = nil
         guard Experiments.shared.selectionUndoEnabled, let snapshot = history?.selection else { return }
         if selection != snapshot.region { selection = snapshot.region }
         if selectionTargetsPixels != snapshot.targetsPixels { selectionTargetsPixels = snapshot.targetsPixels }
+        // On a video, a step that moves the pick from one clip to another
+        // lands in this pass and the pick follows in the next, so the panel
+        // refilling for the other clip is not paid for in the same frame as
+        // the timeline and the picture (`UndoPickFollows`).
+        let leaving = selectedLayerID
+        if UndoPickFollows.aPassLater(
+            from: leaving, to: snapshot.picked.primary, restoredMulti: snapshot.picked.multi,
+            leavingStillStands: leaving.map { document?.layer(id: $0) != nil } ?? false,
+            documentHasTime: documentHasTime) {
+            selectionAwaitingHistory = nil
+            history?.syncSelection(snapshot)
+            let owed = FollowingPick(leaving: leaving, snapshot: snapshot)
+            followingPick = owed
+            Task { @MainActor [weak self] in
+                await NextRunLoopPass.start()
+                guard let self, self.followingPick == owed else { return }
+                self.settleFollowingPick()
+            }
+            return
+        }
+        restorePick(snapshot)
+    }
+
+    /// A pick an Undo or Redo has put on the stack and not yet in hand
+    /// (`UndoPickFollows`). Cleared by the pass that hands it over, by the
+    /// next step, and by anything that picks something else first.
+    private struct FollowingPick: Equatable {
+        let id = UUID()
+        let leaving: UUID?
+        let snapshot: SelectionSnapshot
+        static func == (a: Self, b: Self) -> Bool { a.id == b.id }
+    }
+    @ObservationIgnored private var followingPick: FollowingPick?
+
+    /// Hands over the pick an Undo or Redo still owes, now. A no-op when
+    /// nothing is owed, and when something else has been picked meanwhile:
+    /// a click wins over a pick the stack was bringing back.
+    private func settleFollowingPick() {
+        guard let owed = followingPick else { return }
+        followingPick = nil
+        guard selectedLayerID == owed.leaving, let document else { return }
+        restorePick(owed.snapshot)
+        // Where you are follows what you are holding, as `rerender` has it.
+        if Experiments.shared.layerGroupsEnabled, let id = selectedLayerID,
+           groupContextID != document.parentID(of: id) {
+            groupContextID = document.parentID(of: id)
+        }
+    }
+
+    /// The layers a step picked, back in hand.
+    private func restorePick(_ snapshot: SelectionSnapshot) {
         // ...and the layers that were picked under it, so the step after an
         // undo is the work rather than a re-pick: undo a stack and the two
         // things the band caught are picked again, undo a delete and ⌫
