@@ -3669,10 +3669,14 @@ private final class Run {
                     + "screen when \(hotkey.rawValue) began, so \(seen == 1 ? "it" : "they") "
                     + "would be in the picture")
             }
-            if hotkey == .editLastCapture, let newest, newest.kind == .video {
-                try await adoptRecordingDocument(at: newest.url, within: 20, step: step.name,
-                                                 subject: "the newest recording in history",
-                                                 number: number)
+            if hotkey == .editLastCapture, let newest {
+                if newest.kind == .video {
+                    try await adoptRecordingDocument(at: newest.url, within: 20, step: step.name,
+                                                     subject: "the newest recording in history",
+                                                     number: number)
+                } else {
+                    try await adoptCapturedPicture(at: newest.url, step: step.name, number: number)
+                }
             }
             note(number, step.name,
                  "pressed \(hotkey.rawValue): the corner was empty when the capture began",
@@ -13288,6 +13292,24 @@ private final class Run {
             throw Failure(description: "asking for \(url.lastPathComponent) opened no editor")
         }
         try await adopt(landed, window: nil, step: step, subject: subject, number: number)
+    }
+
+    /// Waits for the editor a picture in history opened in (⇧⌘6 on a
+    /// screenshot), and moves the walk into it, so a walk can go from a
+    /// capture to the canvas the way a person does instead of opening the
+    /// file by name.
+    private func adoptCapturedPicture(at url: URL, step: String, number: Int) async throws {
+        let wanted = url.standardizedFileURL
+        var landed: EditorState?
+        try await poll("\(url.lastPathComponent) to open in an editor", within: 10) {
+            landed = PlaytestHarness.readyEditors.last { $0.openedFileURL?.standardizedFileURL == wanted }
+            return landed != nil
+        }
+        guard let landed else {
+            throw Failure(description: "asking for \(url.lastPathComponent) opened no editor")
+        }
+        try await adopt(landed, window: nil, step: step,
+                        subject: "the newest capture in history", number: number)
     }
 
     /// Take over the window a video guide opened for itself.

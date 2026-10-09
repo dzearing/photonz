@@ -850,3 +850,75 @@ wobble is half a point, not a misalignment):
   cover it; exports bake the guide.
 - All of it: flags appear only in the Next release's Experiments list; Current
   behavior is byte-identical with flags absent/off; `Scripts/test.sh` green.
+
+## 13. Capture to a pasted redline: the step count (2026-10-09)
+
+The success list for `measure-redline` promises that someone used to CleanShot X
+or Shottr gets from a capture to a redline on the clipboard in no more steps
+than there. Counted here: every press, click and drag from starting a region
+capture to having **the picture, with one element's size (width and height)
+and one gap measured on it, on the clipboard**. Moving the pointer is not a
+step; a one-time setup (a preference, disabling the system's own ⇧⌘4) is not
+a step either.
+
+Each column is that app's own steps in order, so row 7 is each app's seventh
+step, not the same action.
+
+| # | Photonz, Next defaults (counted by a walk) | Shottr (its own site) | CleanShot X (its own site) |
+| --- | --- | --- | --- |
+| 1 | ⇧⌘4 | ⌘⇧2, area capture | its capture area shortcut |
+| 2 | drag the region | drag the region; the editor opens by itself | drag the region; the Quick Access Overlay appears |
+| 3 | ⇧⌘6, or Edit on the toast: the editor opens | → (ruler, horizontal) | stops here: CleanShot X has no measuring tool |
+| 4 | I: Measure, in Distance | click: the width is imprinted | |
+| 5 | I: Size | ↓ (ruler, vertical) | |
+| 6 | click the element: width and height in one step | click: the height is imprinted | |
+| 7 | **I: Measure again, because a landed measurement hands back to Select** | an arrow key with the pointer between two objects | |
+| 8 | I: Gap | click: the gap is imprinted | |
+| 9 | click the space between: the gap | ⌘C | |
+| 10 | ⇧⌘C, Copy Merged | | |
+| **Total** | **10** | **9** | **cannot do it alone; with PixelSnap 2, at least 5 (below)** |
+
+**Photonz** is counted by `Scripts/playtest/capture-to-redline-steps-walk.json`,
+green at Next defaults with no flag set. A walk cannot cover the person's screen
+with the capture overlay, so step 1 goes through the dispatcher the global
+hotkey calls and step 2 is a lent capture with its toast (what the drag ends
+in); every step after that is the real key or click. The walk waits for the
+tool to read Select after the Size click before it presses I, so if the
+hand-back ever changes the walk fails and this table needs recounting.
+
+**Shottr**, from [shottr.cc](https://shottr.cc/) (Tips and Tricks, release
+notes): "Press ↑ or ↓ key and move your mouse to measure vertical size, ← or →
+for horizontal size. Click to imprint the measurement on the screenshot";
+"Measure distance between objects: move your mouse in between two objects on a
+screenshot and press an arrow key"; "Added Cmd+Shift+2 shortcut to grab a part
+of the screen"; "A setting to show Preview instead of the Editor after the Area
+Capture" (so the editor is the default); "Now Shottr copies PNG instead of TIFF
+on Esc or Cmd+C"; and "Shottr keeps selected tool after the object is created".
+Shottr's ruler reads one axis per arrow key, so a size a developer would type
+(width and height) is two imprints where Photonz's Size is one click.
+
+**CleanShot X**, from [cleanshot.com/features](https://cleanshot.com/features)
+and [its changelog](https://cleanshot.com/changelog): Annotate offers arrows,
+shapes, text, blur, counters and highlights, and neither page names a ruler or
+a measuring tool. Measuring belongs to its sister app PixelSnap 2 ("Added
+PixelSnap 2 integration", CleanShot 2.5), which measures the live screen rather
+than a capture. [PixelSnap's own page](https://pixelsnap.com/) and
+[changelog](https://pixelsnap.com/changelog) document a global hotkey, "drag an
+area around" an object to measure it, distances between elements, a screenshot
+tool for the measurements and "Copy screenshot to clipboard by pressing C", but
+not the keys that hold a distance on screen or whether a held size and a held
+gap both land in one screenshot. So with PixelSnap it is at least 5 steps
+(hotkey, drag around the element, hold the gap, take the screenshot, C), if the
+two measurements can share one picture at all; that is not countable from
+either app's own documentation, and nothing was installed to find out.
+
+**Where Photonz loses its step to Shottr.** Photonz spends one step Shottr does
+not (opening the editor, step 3), and gets one back with Size measuring width
+and height in a single click. Then step 7: after the Size click lands,
+the Measure tool hands back to Select (`finishCreating`, the 2026-08-22 and
+2026-09-15 rule that every tool that makes something hands you the thing it
+made), so measuring a second thing starts by picking the tool up again. Shottr's
+release notes say it made the opposite choice on purpose. Keeping Measure in
+hand after a Size or Gap click would make Photonz 9, level with Shottr; it
+reverses a rule the user asked for, so it is the user's decision, not a quiet
+change (task `capture-to-a-pasted-redline-takes-no-more-steps`, decision card).
