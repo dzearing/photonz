@@ -1,0 +1,29 @@
+{
+  "feature": "A component can have a Variant and a Size at once",
+  "epic": "ui-components",
+  "summary": "A component can now ask a second variant question beside the first, Size beside Variant. A copy picks each one on its own row, a combination nobody drew shows the nearest drawing, and Edit Original lays the drawings out as a Variant by Size grid.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/variant-and-size-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Drop a Button from the Library, right-click it and choose Edit Original." },
+    { "do": "In Properties choose Add > A second Variant and type Secondary." },
+    { "do": "Choose Add > New Variant Property. A Size row appears and a new drawing is picked; type Large over its Size 2.", "shot": "2026-10-09-variant-and-size-1-grid-dark-sc.png" },
+    { "do": "Look at the canvas: Default and Secondary down the left, Default and Large along the top, one cell empty. Press Done." },
+    { "do": "Drop another Button and pick it. Properties shows a VARIANT row and a SIZE row.", "shot": "2026-10-09-variant-and-size-3-copy-dark-sc.png" },
+    { "do": "Click Large. Nobody drew Default Large, so the copy shows the Large drawing nearest to it and the rows still read Default and Large.", "shot": "2026-10-09-variant-and-size-4-large-dark-sc.png" },
+    { "do": "Press Command Z once, then click Secondary and Large.", "shot": "2026-10-09-variant-and-size-6-secondary-large-dark-sc.png" }
+  ],
+  "evaluate": [
+    "Is New Variant Property where you would look for adding Size beside Variant?",
+    "When you type a word over an answer, is it clear that a new word renames it everywhere and an existing word moves this drawing into that answer?",
+    "When a copy shows the nearest drawing for a combination nobody drew, is the canvas label (which names the drawing shown) helpful or confusing beside rows that name what you picked?",
+    "Does the grid on Edit Original read as the mock's matrix, or does it need the mock's panel before it is useful?"
+  ],
+  "rough": [
+    "The grid prints its answers on small grey plates, and each drawing still wears its own name chip, where the mock draws one glass panel with small-caps headings; filed as edit-original-draws-a-two-question-component-ins.",
+    "Edit Original does not move the camera to the grid, so it opens small in the top-left corner of a large page; filed as edit-original-draws-a-two-question-component-ins.",
+    "New answers start as Default and Size 2 rather than the mock's Small, Medium and Large; the starter Button shipping those looks is the-starter-button-comes-as-primary-secondary-or.",
+    "There is no way yet to take a second question away again; it stays in this task's log until somebody asks for it.",
+    "A copy picked for an undrawn combination keeps showing the nearest drawing even after somebody draws the exact one, until it is picked again; noted in this task's log."
+  ]
+}

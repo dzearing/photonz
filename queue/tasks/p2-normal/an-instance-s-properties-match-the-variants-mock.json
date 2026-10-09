@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.120Z",
-  "updated": "2026-10-09T03:31:28.735Z",
+  "updated": "2026-10-09T07:09:05.588Z",
   "deps": [],
   "blockedBy": [],
   "notes": "ui-building success item 2 names ui-variants.html; no audit has ever compared against it (grep queue/audits for ui-variants: only passing mentions in 2026-10-04-one-instance-drop.json). Mock page docs/design/mocks/pages/ui-variants.html, rendered from the dashboard at http://127.0.0.1:8791/pages/ui-variants.html. Mock's Properties: header 'PROPERTIES · Instance', a 'Component' sub-header with 'linked' badge, a row 'Button >' with 'Detach', VARIANT segmented Primary | Secondary | Ghost, SIZE segmented Small | Medium | Large, 'Instance properties' sub-header with a diamond, 'Show icon' switch. Segmented controls are the app's own (see task every-segmented-control-is-apple-s-own-liquid-gl). The variant matrix on the canvas (every cell a real specimen) is a separate surface: compare it too, but if building it is more than polish, file it as a follow-up rather than growing this task. Placement contract: docs/design/mocks/shared/UX-PATTERNS.md top table; Properties rows only.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-09T03:31:28.734Z",
       "note": "seq 3870 -> 4"
+    },
+    {
+      "t": "2026-10-09T06:01:59.537Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T06:07:11.043Z",
+      "note": "Adversarial pass 1 (before building), app vs ui-variants.html, picked Button instance photographed dark+light at Next defaults (/tmp/photonz-playtest/instance-props-before). App today: COMPONENT header; '◆ Button' plain line; sentence 'A copy. Editing the original changes this one too.'; 'Properties' sub-heading with Label field; bordered Edit Original + Make Unique buttons. Mock: header 'Component ◆ linked' (violet), a select-style field [◆ Button >] with a Detach text link beside it, VARIANT and SIZE as full-width segmented controls under small caps labels, 'Instance properties ◆' (violet) with Show icon switch (+On word), Label field, Icon swap dropdown, a long note, an 'In the API' code block, and a Reset props button. What the mock assumes that the app cannot deliver: (1) a component holds at most ONE variant property today (componentVariantProperties returns 0 or 1), so Variant AND Size cannot both exist; (2) the starter Button has one drawing, no icon, no Show icon/Icon properties, so there is nothing to put Secondary/Large/Show icon on. Both become prerequisite tasks; acceptance item 3 waits for them. Decided-by-user items that stay: 'Make Unique' not 'Detach' (card a-copy-of-a-component-is-configured-not-authored, answered 2026-09-20: 'you can right click and make unique'); the name row is the swap menu (2026-09-23 audit: user chose the row). First-time-user stop: nothing in the panel today says the instance is still linked except a sentence; the mock's 'linked' badge says it in one word. Building this run: linked badge in the header, mock-style component field (Edit Original on press, swap choices in its menu), Make Unique as a link beside it, sentence removed, variant as a segmented control under a small caps label, 'Instance properties' heading, Reset properties button, mock note behind the header question mark."
+    },
+    {
+      "t": "2026-10-09T07:00:18.301Z",
+      "note": "owns these walks: instance-properties-variants-mock-walk"
+    },
+    {
+      "t": "2026-10-09T07:08:21.910Z",
+      "note": "Built (Next, ComponentPanel.swift + InspectorPanel.swift + VideoKit SelectFace/Dropdown): Component header carries '◆ linked' in the component violet with a question mark holding the mock's note (UX-PATTERNS §4 move); the explanatory sentence under the name is gone; the main is a regular-height select face with the component mark and a right chevron (press = Edit Original; when other components exist it is a dropdown: Edit Original, divider, Swap To + components, current ticked and dimmed); Make Unique is a blue text link beside it (user's word for Detach); the variant row is a SegmentedControl (.fill) under a 9pt small caps label, falling back to a dropdown when words do not fit, Mixed lights nothing; knobs are headed 'Instance properties' in violet with the mark; Reset section with 'back to the main defaults' and a full-width Reset Props (new PhotonzCore resetInstanceProperties/canResetInstanceProperties, TDD: ComponentResetPropertiesTests, 5 tests; clears property overrides and puts the copy on the first variant, one undo step, skips locked copies; own size/type/look keep their own reverts)."
+    },
+    {
+      "t": "2026-10-09T07:08:21.968Z",
+      "note": "Adversarial pass 2 (built thing, probe, unlocked screen, real captures): the field + link fit at panel width and truncate a long name; Reset Props sits dimmed most of the time and costs ~60pt, kept because the mock draws it; segmented chip reads grey in walk captures because walks keep the window in the back (system behaviour; black on that grey measured ~3.9:1, legible, not filed; same on the Library's Comps chip). Found and filed: dropping a tile into the original you are editing becomes part of it, including a copy of the same component (dropping-a-button-into-the-button-original-you-a, p2, reproduced). My first walk draft hit exactly that: it dropped tiles while the original's space was open; fixed with doneEditingOriginal. Walks updated for the variant row becoming segmented: component-whole-path-walk (expect menu Variant -> segment control), tool-and-library-dropdowns-open-on-a-click-walk (panelMenu Variant -> press the segment with the pointer); EveryDropdownIsClickedByAWalkTests builtSites 8 -> 7 and Variant removed from builtNames; the new Component dropdown is opened by pointer in instance-properties-variants-mock-walk. Walks green on the final build: instance-properties-variants-mock (7 real captures), all 24 '*component*' walks, 31 copy-/version-/starter- walks, button-states-journey, component-whole-path. Scripts/test.sh green, 11,927 tests."
+    },
+    {
+      "t": "2026-10-09T07:08:22.025Z",
+      "note": "Acceptance 3 split: picking a look in the panel changes the instance at once and undoes in one step (walk: Secondary pressed with the pointer, Cmd-Z back to Default, Reset Props back to Default). Large and Show icon need the app to have them first: a component can hold only one variant property, and the starter Button has no sizes or icon. Those are now a-component-can-have-a-variant-and-a-size-at-onc (p1, seq 100) and the-starter-button-comes-as-primary-secondary-or (p1, seq 101, depends on it), whose checklists carry exactly that check plus the mock's Label T glyph and Show icon On word. Left rough, not filed (below the bar): the Reset row is dimmed most of the time; the version labels in the original's space overlap ('Button · Default' over 'Secondary'), already the subject of the done version-labels task and only seen inside the edit space."
+    },
+    {
+      "t": "2026-10-09T07:09:05.585Z",
+      "note": "Shipped 3061dbe0 (Next): a picked instance's panel matches ui-variants.html where the app has the parts: linked badge (mock note behind its ?), main as a select face with mark + right chevron (Edit Original; swap menu when other components exist), Make Unique link, variant as a segmented control under a small caps label, Instance properties heading, Reset Props (new PhotonzCore resetInstanceProperties, TDD). Verified: instance-properties-variants-mock-walk green at Next defaults with 7 real captures in dark and light (Secondary pressed by pointer, Cmd-Z back in one step, Reset back to Default); 24 component walks + 31 copy/version/starter walks green; Scripts/test.sh green (11,927). Audit queue/audits/2026-10-09-instance-properties-variants-mock.json with side-by-side pictures; every mock difference names its settler. Size, Show icon and Icon need prerequisites now filed p1: a-component-can-have-a-variant-and-a-size-at-onc, the-starter-button-comes-as-primary-secondary-or (they carry acceptance 3's Large/Show icon check). Bug filed: dropping-a-button-into-the-button-original-you-a."
     }
-  ]
+  ],
+  "started": "2026-10-09T06:01:59.534Z",
+  "walks": [
+    "instance-properties-variants-mock-walk"
+  ],
+  "completed": "2026-10-09T07:09:05.587Z"
 }

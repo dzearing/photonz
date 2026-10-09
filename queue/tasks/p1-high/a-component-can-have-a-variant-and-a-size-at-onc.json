@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 100,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T06:07:22.493Z",
-  "updated": "2026-10-09T06:07:22.496Z",
+  "updated": "2026-10-09T07:21:27.997Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Prerequisite for an-instance-s-properties-match-the-variants-mock (acceptance 3: picking Secondary or Large). Model today: Sources/PhotonzCore/ComponentVariantProperty.swift, componentVariantProperties(of:) returns [] or exactly one property whose id is the componentID; drawings are ComponentVersion (ComponentVersions.swift), group.variantName / versionID / versionName in the file. The doc comment there already sketches the plan: drawings stay a flat list, each carries an answer per variant property, nearest fallback. Panel: ComponentInstanceProperties.versionRow (ComponentPanel.swift) renders one row; since 2026-10-09 it is a SegmentedControl under a small caps label (falls back to a dropdown when the words do not fit), so a second row is the same view again. Mock: docs/design/mocks/pages/ui-variants.html, #segVariant / #segSize and the .pmatrix grid on the component sheet. TDD in PhotonzCore.",
@@ -24,6 +24,11 @@
     {
       "t": "2026-10-09T06:07:22.495Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T07:21:27.992Z",
+      "note": "claimed by go loop"
     }
-  ]
+  ],
+  "started": "2026-10-09T07:21:27.990Z"
 }
