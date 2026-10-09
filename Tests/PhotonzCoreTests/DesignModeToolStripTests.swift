@@ -5,15 +5,16 @@ import Testing
 /// A mode can put its own tools in front. The Design mode puts the tools the
 /// UI entry mock draws for building screens (`ui-entry-wt.html` step 4,
 /// UX-PATTERNS D4 "UI design"): Select | Frame, Component insert, Shape, Pen,
-/// Text | Measure.
+/// Text | Measure | Hand.
 /// Every other tool folds under More and keeps its key and its row there, so
 /// nothing is removed; leaving the mode gives the bar back.
 @Suite("Design mode tool strip")
 struct DesignModeToolStripTests {
 
-    /// The bar at Next defaults: frames, lens, pen and components all on.
+    /// The bar at Next defaults: frames, lens, pen, components and the Hand
+    /// all on.
     private let bar = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
-                                        withComponent: true)
+                                        withComponent: true, withHand: true)
 
     private let metrics = ToolBarFold.Metrics(slot: 28, gap: 4, hairline: 5, more: 28)
 
@@ -24,7 +25,8 @@ struct DesignModeToolStripTests {
     private func strip(_ room: CGFloat = .greatestFiniteMagnitude,
                        layout: ToolBarLayout? = nil,
                        lit: ToolBarLayout.Entry? = nil) -> ToolBarFold {
-        ToolBarFold(layout ?? bar, strip: design.toolStrip ?? [], room: room,
+        ToolBarFold(layout ?? bar, strip: design.toolStrip ?? [],
+                    priority: design.toolStripPriority, room: room,
                     metrics: metrics, keeping: lit)
     }
 
@@ -37,6 +39,7 @@ struct DesignModeToolStripTests {
             [.tool(.select)],
             [.tool(.frame), .tool(.component), .group(.shapes), .tool(.pen), .tool(.text)],
             [.tool(.measure)],
+            [.tool(.hand)],
         ])
     }
 
@@ -83,21 +86,47 @@ struct DesignModeToolStripTests {
         let fold = strip(layout: noFrameNoPen)
         #expect(fold.shown == [[.tool(.select)], [.group(.shapes), .tool(.text)],
                                [.tool(.measure)]])
+        #expect(!fold.shownEntries.contains(.tool(.hand)))
         #expect(!fold.shownEntries.contains(.tool(.frame)))
         #expect(!fold.folded.contains(.tool(.frame)))
         #expect(!fold.shownEntries.contains(.tool(.component)))
     }
 
-    @Test("A narrow window folds the strip from its far end, then the rest follows")
-    func narrowFoldsFromTheEnd() {
-        // Room for Select | Frame Component and More.
-        let room = metrics.width(of: [[.tool(.select)], [.tool(.frame), .tool(.component)]],
-                                 more: true)
+    @Test("A narrow window folds Shape, Pen, Text and Measure first and keeps the Hand, as the mock does")
+    func narrowFoldsInTheMocksOrder() {
+        #expect(design.toolStripPriority == [.tool(.select), .tool(.frame), .tool(.component),
+                                             .tool(.hand), .group(.shapes), .tool(.pen),
+                                             .tool(.text), .tool(.measure)])
+        // Room for Select | Frame Component | Hand and More: the mock's
+        // narrow bar (its `ovf` slots folded).
+        let room = metrics.width(of: [[.tool(.select)], [.tool(.frame), .tool(.component)],
+                                      [.tool(.hand)]], more: true)
         let fold = strip(room)
-        #expect(fold.shown == [[.tool(.select)], [.tool(.frame), .tool(.component)]])
+        #expect(fold.shown == [[.tool(.select)], [.tool(.frame), .tool(.component)],
+                               [.tool(.hand)]])
         #expect(Array(fold.folded.prefix(4)) == [.group(.shapes), .tool(.pen), .tool(.text),
                                                  .tool(.measure)])
-        #expect(fold.folded.count == bar.entries.count - 3)
+        #expect(fold.folded.count == bar.entries.count - 4)
+    }
+
+    @Test("Folding never reorders: with room for one more, Shape comes back in its own place")
+    func foldKeepsTheDrawingOrder() {
+        let room = metrics.width(of: [[.tool(.select)],
+                                      [.tool(.frame), .tool(.component), .group(.shapes)],
+                                      [.tool(.hand)]], more: true)
+        let fold = strip(room)
+        #expect(fold.shown == [[.tool(.select)],
+                               [.tool(.frame), .tool(.component), .group(.shapes)],
+                               [.tool(.hand)]])
+    }
+
+    @Test("Without a priority a strip still folds from its far end")
+    func noPriorityFoldsFromTheEnd() {
+        let room = metrics.width(of: [[.tool(.select)], [.tool(.frame), .tool(.component)]],
+                                 more: true)
+        let fold = ToolBarFold(bar, strip: design.toolStrip ?? [], room: room, metrics: metrics)
+        #expect(fold.shown == [[.tool(.select)], [.tool(.frame), .tool(.component)]])
+        #expect(fold.isFolded(.hand))
     }
 
     @Test("A strip tool in hand that would fold takes the place of the last one that fit")

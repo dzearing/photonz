@@ -203,19 +203,27 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// bar carries one box for both instead of two side by side. The lens
     /// inherits the slot rather than the callout keeping it because the slot is
     /// now the wider thing: six kinds, of which magnify is one.
+    ///
+    /// The Hand is the other exception: it is not a drawing tool, so it is a
+    /// family of its own at the very end, where Photoshop keeps it and where
+    /// every mock's strip ends. Being last, it is also the first slot a narrow
+    /// picture window folds under More.
     public static func bar(withFrame: Bool, withLens: Bool = false,
-                           withPen: Bool = false, withComponent: Bool = false) -> ToolBarLayout {
+                           withPen: Bool = false, withComponent: Bool = false,
+                           withHand: Bool = false) -> ToolBarLayout {
         var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
                                 .tool(.text)]
         drawing.append(withLens ? .tool(.lens) : .tool(.zoomCallout))
         if withFrame { drawing.append(.tool(.frame)) }
         if withPen { drawing.append(.tool(.pen)) }
         if withComponent { drawing.append(.tool(.component)) }
-        return ToolBarLayout(families: [
+        var families: [[Entry]] = [
             [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
             drawing,
             [.tool(.fill)],
-        ])
+        ]
+        if withHand { families.append([.tool(.hand)]) }
+        return ToolBarLayout(families: families)
     }
 }
 
@@ -323,7 +331,13 @@ public struct ToolBarFold: Hashable, Sendable {
     /// switched on) is left out rather than drawn dead. `lit` swaps in only
     /// from the strip: a tool from outside it stays under More and More lights,
     /// because the mode chose what is in front.
+    ///
+    /// `priority` is the order the strip's slots STAY in front when the room
+    /// runs short (`WindowMode.toolStripPriority`), first kept first; slots it
+    /// does not name come after it in strip order. Nil folds from the strip's
+    /// far end. It never changes where a slot is drawn, only whether it is.
     public init(_ layout: ToolBarLayout, strip: [[ToolBarLayout.Entry]],
+                priority: [ToolBarLayout.Entry]? = nil,
                 room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry? = nil) {
         var seen: Set<ToolBarLayout.Entry> = []
         var draw: [[ToolBarLayout.Entry]] = []
@@ -336,16 +350,24 @@ public struct ToolBarFold: Hashable, Sendable {
             }
             if !kept.isEmpty { draw.append(kept) }
         }
-        self.init(drawing: draw, folding: layout.entries.filter { !seen.contains($0) },
+        let drawn = draw.flatMap { $0 }
+        let ranked = (priority ?? []).map { Self.slot(for: $0, in: layout) }
+            .filter(drawn.contains)
+        var order: [ToolBarLayout.Entry] = []
+        for slot in ranked + drawn where !order.contains(slot) { order.append(slot) }
+        self.init(drawing: draw, priority: order,
+                  folding: layout.entries.filter { !seen.contains($0) },
                   room: room, metrics: metrics, keeping: lit)
     }
 
     /// The fold both public room-based folds share: `draw` is every slot that
-    /// may be in front, in families and priority order; `rest` is under More
-    /// whatever the room.
-    private init(drawing draw: [[ToolBarLayout.Entry]], folding rest: [ToolBarLayout.Entry],
+    /// may be in front, in families and drawing order; `priority` is the same
+    /// slots in the order they stay in front (the drawing order when nil);
+    /// `rest` is under More whatever the room.
+    private init(drawing draw: [[ToolBarLayout.Entry]], priority order: [ToolBarLayout.Entry]? = nil,
+                 folding rest: [ToolBarLayout.Entry],
                  room: CGFloat, metrics: Metrics, keeping lit: ToolBarLayout.Entry?) {
-        let priority = draw.flatMap { $0 }
+        let priority = order ?? draw.flatMap { $0 }
         func row(_ keep: Set<ToolBarLayout.Entry>) -> [[ToolBarLayout.Entry]] {
             draw.map { $0.filter(keep.contains) }.filter { !$0.isEmpty }
         }

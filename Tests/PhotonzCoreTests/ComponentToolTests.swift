@@ -53,7 +53,7 @@ struct ComponentToolTests {
     @Test("Design puts it straight after Frame, as the mock draws it")
     func designStripHasIt() {
         let design = WindowModes.mode("design")?.toolStrip ?? []
-        #expect(design.count == 3)
+        #expect(design.count == 4)
         #expect(design[1] == [.tool(.frame), .tool(.component), .group(.shapes),
                               .tool(.pen), .tool(.text)])
     }

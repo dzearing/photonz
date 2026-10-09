@@ -290,9 +290,12 @@ Tool groups folding into the overflow landed for Design on 2026-10-09: a mode
 may carry a `toolStrip`, the slots it puts in front of the bar in families, and
 `ToolBarFold.init(_:strip:room:metrics:keeping:)` folds every other slot under
 More with its key. Design's strip is the UI entry mock's Select | Frame,
-Component insert, Shapes, Pen, Text | Measure (Component insert landed the same
-day, on N while the mock's C is a decision card, since C is Crop); its Hand is
-filed as a tool to build, its Zoom is not a tool. A document with time keeps the video's bar in any mode.
+Component insert, Shapes, Pen, Text | Measure | Hand (Component insert landed the same
+day, on N while the mock's C is a decision card, since C is Crop; the Hand landed
+the same day too, with no key while who keeps H is a card, since H is Highlight);
+its Zoom is not a tool. A narrow window folds the strip in the mock's order, not
+from the far end: `WindowMode.toolStripPriority` keeps Select, Frame, Component
+insert and Hand and folds Shape, Pen, Text and Measure first. A document with time keeps the video's bar in any mode.
 A tool from outside the strip picked by its key stays under More and More lights.
 
 Still to build, and filed as the second slice: a mode being a record somebody can write rather than a list in

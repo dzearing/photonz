@@ -274,6 +274,12 @@ extension CanvasNSView {
         if placingMotionPivot, motionPivotDrag == nil {
             return applyGrabCursor(.crosshair)
         }
+        // The Hand wears its hand everywhere on the canvas, open at rest and
+        // closed while it holds the view. Nothing under it is offered, because
+        // nothing under it can be picked.
+        if tool == .hand {
+            return applyGrabCursor(handPan == nil ? .openHand : .closedHand)
+        }
         guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
               cornerRadiusDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
@@ -408,6 +414,7 @@ extension CanvasNSView {
         if tool.createsAnnotationByDrag || tool == .crop || tool == .zoomCallout
             || tool == .lens || tool == .measure || tool == .pen { return .crosshair }
         if tool == .text { return .iBeam }
+        if tool == .hand { return handPan == nil ? .openHand : .closedHand }
         return nil
     }
 

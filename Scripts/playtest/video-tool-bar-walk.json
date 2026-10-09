@@ -9,7 +9,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "1-opened", "note": "a recording opened at Next defaults, no flag touched, and switched to Edit (Cmd-2): the video's own tools lead the bar, Select, Blade, Title / Text, Shape and Measure, and the window has room for every other tool after them, so there is no More" },
     { "do": "toolBar", "stage": "1-opened",
-      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Component insert", "Fill"],
+      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Component insert", "Fill", "Hand"],
       "more": [], "zoom": false,
       "lit": "Select", "capsules": 1 },
     { "do": "snapshot", "name": "1-the-video-tool-bar" },

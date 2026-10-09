@@ -1150,6 +1150,9 @@ final class CanvasNSView: NSView {
     /// The active tool, echoed from EditorState. Annotation tools reroute the
     /// pointer from hit-test/marquee into drag-to-create.
     var tool: Tool = .select
+    /// A drag with the Hand in flight: the view follows the pointer and the
+    /// document is never touched (`HandPan`).
+    var handPan: HandPan?
     /// View mode: presses pick nothing (`CanvasView.isWatching`).
     var isWatching = false
     var captionCloseRequest = 0

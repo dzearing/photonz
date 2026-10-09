@@ -27,6 +27,7 @@ extension Tool {
         // button draws the four-diamond mark (`ComponentGlyph`); a menu row
         // takes a system symbol.
         case .component: "square.on.square.dashed"
+        case .hand: "hand.raised"
         }
     }
 
@@ -54,6 +55,7 @@ extension Tool {
         // The mock's word for it (`ui-entry-wt.html`, `tComp`), and the same
         // on its More row and in Edit ▸ Tools: one tool, one name.
         case .component: "Component insert"
+        case .hand: "Hand"
         }
     }
 

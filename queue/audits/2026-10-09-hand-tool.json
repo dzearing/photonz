@@ -1,0 +1,27 @@
+{
+  "feature": "Hand tool",
+  "epic": "ui-building",
+  "summary": "The tool bar now ends with a Hand, after Measure, as the UI design mock draws it. Pick it and dragging the canvas moves the view instead of moving or picking anything, so a mouse can pan a zoomed picture for the first time.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/design-mode-tool-strip-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new window, pick the Design UI tile and press New UI canvas.", "shot": "2026-10-09-hand-tool-1.png" },
+    { "do": "Zoom in until the screen is bigger than the window (pinch, or Command +)." },
+    { "do": "Click the hand at the right end of the tool bar.", "shot": "2026-10-09-hand-tool-2.png" },
+    { "do": "Press on the Login screen and drag right and down.", "shot": "2026-10-09-hand-tool-3.png" },
+    { "do": "Let go and press V: the screen is still where you placed it, only the view moved." },
+    { "do": "Show Everything from the mode menu: the Hand is the last button on the bar there too." }
+  ],
+  "evaluate": [
+    "Does the Hand feel like Photoshop's: open hand at rest, closed while you drag, the picture glued to the pointer?",
+    "Is the end of the bar the right home for it in a picture window as well as in Design?",
+    "With the Hand in hand, does anything on the canvas react when it should not?",
+    "Should the Hand keep what you had picked (it does now, as Photoshop does)?"
+  ],
+  "rough": [
+    "The mock prints Hand (H); here the Hand has no key yet because H is Highlight. That is decision card a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick.",
+    "The mock draws a Zoom tool after the Hand; it is left out because zoom is not a tool (your call on 2026-09-29).",
+    "A picture that already fits the window has nowhere to go, so a Hand drag there does nothing, the same as Photoshop at Fit.",
+    "Space does not borrow the Hand while held, because Space plays and pauses here; the only temporary pan is still two finger scrolling."
+  ]
+}

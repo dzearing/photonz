@@ -141,6 +141,7 @@ extension CanvasNSView {
             alignmentPreviewLayer.isHidden = true
             regionDrag = nil
             regionOutlineDrag = nil
+            handPan = nil
             if regionContentDrag != nil {
                 regionContentDrag = nil
                 onRegionMoveCancel()

@@ -1289,7 +1289,9 @@ struct EditorView: View {
         // its Blade.
         if !isVideoBar, Experiments.shared.windowModesEnabled,
            let strip = WindowModeStore.shared.mode.toolStrip {
-            return ToolBarFold(layout, strip: strip, room: toolRowRoom,
+            return ToolBarFold(layout, strip: strip,
+                               priority: WindowModeStore.shared.mode.toolStripPriority,
+                               room: toolRowRoom,
                                metrics: toolRowMetrics(layout), keeping: lit)
         }
         return ToolBarFold(layout, leading: isVideoBar ? ToolBarFold.videoLeading : [],
@@ -1493,6 +1495,8 @@ struct EditorView: View {
         case pen
         /// Component insert (Next, `next-components`): a click places a copy.
         case component
+        /// The Hand (Next, `next-hand-tool`): a drag moves the view.
+        case hand
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
         /// The timeline's Blade, on a video's bar (`ToolBarFold.video`).
@@ -1542,6 +1546,7 @@ struct EditorView: View {
             case .frame: "Frame"
             case .pen: "Pen"
             case .component: Tool.component.barTitle
+            case .hand: Tool.hand.barTitle
             case .blade: "Blade"
             }
         }
@@ -1567,6 +1572,7 @@ struct EditorView: View {
             case .frame: "macwindow"
             case .pen: "pencil.tip"
             case .component: Tool.component.barSymbol
+            case .hand: Tool.hand.barSymbol
             case .blade: "scissors"
             }
         }
@@ -1606,6 +1612,7 @@ struct EditorView: View {
             case .frame: .frame
             case .pen: .pen
             case .component: .component
+            case .hand: .hand
             case .marquee, .shapes, .resize, .blade: nil
             }
         }
@@ -1620,11 +1627,12 @@ struct EditorView: View {
         let lens = Experiments.shared.lensEnabled
         let pen = Experiments.shared.penEnabled
         let component = Experiments.shared.componentsEnabled
+        let hand = Experiments.shared.handToolEnabled
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
                 $0 != .shapes && $0 != .blade && ($0 != .frame || frames) && ($0 != .lens || lens)
                     && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
-                    && ($0 != .component || component)
+                    && ($0 != .component || component) && ($0 != .hand || hand)
             }
         }
         var slots = Experiments.shared.toolBarLayout.entries.map(ToolbarSlot.init)
@@ -1676,6 +1684,7 @@ struct EditorView: View {
         case .frame: toolButton(.frame, "macwindow", "Frame")
         case .pen: toolButton(.pen, "pencil.tip", "Pen")
         case .component: componentToolButton
+        case .hand: toolButton(.hand, Tool.hand.barSymbol, Tool.hand.barTitle)
         case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill") {

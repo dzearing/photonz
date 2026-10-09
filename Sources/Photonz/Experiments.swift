@@ -468,8 +468,13 @@ extension Experiments {
     /// cannot reach one of them and miss another.
     var toolBarLayout: ToolBarLayout {
         ToolBarLayout.bar(withFrame: framesEnabled, withLens: lensEnabled,
-                          withPen: penEnabled, withComponent: componentsEnabled)
+                          withPen: penEnabled, withComponent: componentsEnabled,
+                          withHand: handToolEnabled)
     }
+
+    /// `next-hand-tool`: the Hand at the end of the tool bar, whose drag on
+    /// the canvas moves the view (`HandPan`).
+    var handToolEnabled: Bool { isEnabled(FeatureCatalog.handToolFlag) }
 
     /// `next-line-ends`: whether a line and an arrow are asked what their two
     /// ends look like, under Outline beside the Thickness. The model and the

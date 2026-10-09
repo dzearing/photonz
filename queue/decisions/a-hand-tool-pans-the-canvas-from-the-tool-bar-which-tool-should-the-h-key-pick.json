@@ -1,0 +1,64 @@
+{
+  "id": "a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick",
+  "taskId": "a-hand-tool-pans-the-canvas-from-the-tool-bar",
+  "question": "Which tool should the H key pick: the Hand or Highlight?",
+  "context": "The Hand is built: it sits at the end of the tool bar after Measure, as the UI design mock draws it, and a drag with it moves the view without moving anything. Your mocks and Photoshop print it as Hand (H), but H has been Highlight in Photonz since the first picture tool bar. Until you pick, the Hand ships with no key.",
+  "options": [
+    {
+      "id": "a",
+      "label": "H picks the Hand, Highlight moves to U",
+      "summary": "Press H anywhere in Photonz Next and the Hand comes up, the way it does in Photoshop and in every tool bar in your mocks. Highlight answers to U instead, and its tooltip and Edit > Tools row say U.",
+      "pros": [
+        "Same key as Photoshop and as the 79 tool bars in your mocks that print Hand (H)",
+        "Matches your rule: on a clash, Photoshop keeps the key and the other tool moves"
+      ],
+      "cons": [
+        "Anyone in Next who presses H for Highlight now gets the Hand"
+      ],
+      "mitigation": "Highlight tooltip and menu row show U right away, and the release Photonz stays on H for Highlight."
+    },
+    {
+      "id": "b",
+      "label": "H stays Highlight, the Hand has no key",
+      "summary": "Nothing changes from how it ships today: H is still Highlight, and you pick the Hand by clicking it at the end of the tool bar, under More, or in Edit > Tools.",
+      "pros": [
+        "No key anyone already knows changes"
+      ],
+      "cons": [
+        "A Photoshop user who presses H gets a highlighter, not the Hand",
+        "The Hand is the one tool on the bar with no key"
+      ],
+      "mitigation": "The Hand is always the last button on the bar, so it is easy to find with the pointer."
+    },
+    {
+      "id": "c",
+      "label": "H picks the Hand only in Design",
+      "summary": "In the Design mode H brings up the Hand. In every other mode H is still Highlight.",
+      "pros": [
+        "Design gets the Photoshop key and picture work keeps its key"
+      ],
+      "cons": [
+        "One key does two things depending on the mode, so people stop trusting it",
+        "In Design, Highlight under More loses its key"
+      ],
+      "mitigation": "The tooltip always prints the key that works in the current mode."
+    },
+    {
+      "id": "d",
+      "label": "No Hand tool",
+      "summary": "Take the Hand off the tool bar. To move around a zoomed picture you scroll with two fingers on the trackpad, as you do today.",
+      "pros": [
+        "One fewer button on the bar"
+      ],
+      "cons": [
+        "The Design bar no longer matches your mock, which ends with the Hand",
+        "No way to pan with a mouse"
+      ],
+      "mitigation": "Two finger scrolling keeps working everywhere.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-09T18:42:03.998Z"
+}

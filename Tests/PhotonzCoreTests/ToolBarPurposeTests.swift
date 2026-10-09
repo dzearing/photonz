@@ -59,8 +59,14 @@ struct ToolBarPurposeTests {
     }
 
     /// Ways of looking, and things that are not picked up at all.
+    ///
+    /// The Hand is not on the list: it is picked, then used on the canvas,
+    /// which is the contract's own test for a tool, and every app strip in the
+    /// user's mocks ends with it (`Hand (H)`, UX-PATTERNS D4), as Photoshop's
+    /// bar does. Panning by a command or a readout would still be a view
+    /// option, so "pan" stays.
     static let notTools: Set<String> = [
-        "zoom", "zoomIn", "zoomOut", "hand", "pan", "grid", "rulers", "guides",
+        "zoom", "zoomIn", "zoomOut", "pan", "grid", "rulers", "guides",
         "view", "fit", "actualSize", "snap", "snapping", "readout", "settings",
     ]
 }

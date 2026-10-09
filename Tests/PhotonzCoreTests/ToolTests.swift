@@ -343,7 +343,10 @@ struct AnnotationBuilderTests {
         // A tool a person can pick from the bar can be picked from the keyboard.
         // The marquee family is the one exception: the three region selectors
         // share a slot and M / ⇧M / W are resolved by the group, not per tool.
-        for tool in Tool.allCases where !tool.isRegionSelectionTool {
+        // The Hand waits on the user: the mocks and Photoshop give it H, which
+        // is Highlight's here, so which keeps it is on a decision card and the
+        // Hand takes no letter until then (`Tool.shortcutKey`).
+        for tool in Tool.allCases where !tool.isRegionSelectionTool && tool != .hand {
             #expect(tool.shortcutKey != nil, "\(tool) has no keyboard shortcut")
         }
     }
@@ -493,7 +496,7 @@ struct ToolBarLayoutTests {
 
     /// The tools a flag adds, and so the ones a bar may legitimately not hold.
     /// Every OTHER tool is in every bar, exactly once.
-    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen, .component]
+    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen, .component, .hand]
 
     /// How many slots each tool is reachable from.
     ///

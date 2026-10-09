@@ -56,15 +56,23 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// has not switched on is simply not drawn.
     public let toolStrip: [[ToolBarLayout.Entry]]?
 
+    /// The order the strip's slots stay in front when the window is too narrow
+    /// for all of them, first kept first, or nil to fold from the strip's far
+    /// end. It only decides WHICH slots fold; the strip still draws in its own
+    /// order (`ToolBarFold.init(_:strip:priority:room:metrics:keeping:)`).
+    public let toolStripPriority: [ToolBarLayout.Entry]?
+
     public init(id: String, title: String, summary: String, symbol: String,
                 preset: PanelSectionVisibility.Choices,
-                toolStrip: [[ToolBarLayout.Entry]]? = nil) {
+                toolStrip: [[ToolBarLayout.Entry]]? = nil,
+                toolStripPriority: [ToolBarLayout.Entry]? = nil) {
         self.id = id
         self.title = title
         self.summary = summary
         self.symbol = symbol
         self.preset = preset
         self.toolStrip = toolStrip
+        self.toolStripPriority = toolStripPriority
     }
 }
 
@@ -117,18 +125,28 @@ public enum WindowModes {
             summary: "Building screens out of components.",
             symbol: "square.on.square",
             preset: choices(["measurements": false, "motion": false]),
-            toolStrip: designStrip),
+            toolStrip: designStrip,
+            toolStripPriority: designStripPriority),
     ]
 
     /// The tools for building screens, as the UI entry mock draws them
     /// (`ui-entry-wt.html` step 4, UX-PATTERNS D4 "UI design"):
-    /// Select | Frame, Component insert, Shape, Pen, Text | Measure. The mock's
-    /// Hand is not a tool in this app yet, and its Zoom is not a tool at all
-    /// (the user, 2026-09-29), so they are not here.
+    /// Select | Frame, Component insert, Shape, Pen, Text | Measure | Hand.
+    /// The mock's Zoom is not a tool at all (the user, 2026-09-29), so it is
+    /// not here.
     public static let designStrip: [[ToolBarLayout.Entry]] = [
         [.tool(.select)],
         [.tool(.frame), .tool(.component), .group(.shapes), .tool(.pen), .tool(.text)],
         [.tool(.measure)],
+        [.tool(.hand)],
+    ]
+
+    /// How the Design bar folds in a narrow window, as the mock folds it: its
+    /// `ovf` slots (Shape, Pen, Text and Measure) go under More first, from the
+    /// far end, and Select, Frame, Component insert and the Hand stay.
+    public static let designStripPriority: [ToolBarLayout.Entry] = [
+        .tool(.select), .tool(.frame), .tool(.component), .tool(.hand),
+        .group(.shapes), .tool(.pen), .tool(.text), .tool(.measure),
     ]
 
     /// The one mode that folds nothing.

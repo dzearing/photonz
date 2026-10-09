@@ -48,6 +48,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`ComponentToolChoice`), and the tool's own capsule says which and
     /// swaps it. The UI entry mock's `tComp`, drawn in the component violet.
     case component
+    /// The Hand (Next, `next-hand-tool`): a drag on the canvas moves the view
+    /// and never a layer (`HandPan`). Every app strip in the mocks ends with
+    /// it (`Hand (H)`, UX-PATTERNS D4), as Photoshop's bar does. It makes,
+    /// paints and picks nothing.
+    case hand
 
     /// The single key that picks this tool, everywhere in the product.
     ///
@@ -103,6 +108,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // letter Photoshop leaves unassigned and no tool here uses, so the
         // component tool takes it rather than making C mean two things.
         case .component: "n"
+        // The mocks and Photoshop print H, which Highlight has owned here since
+        // the first picture tool bar. Which of the two keeps it is the user's
+        // call, so the Hand takes no letter until that is answered and is
+        // picked from the bar, under More, or from Edit > Tools.
+        case .hand: nil
         case .rectSelect, .ellipseSelect: nil
         }
     }
@@ -123,7 +133,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .ellipse: .ellipse
         case .highlight: .highlight
         case .select, .crop, .trim, .text, .zoomCallout, .lens, .measure, .fill,
-             .rectSelect, .ellipseSelect, .wand, .frame, .pen, .component: nil
+             .rectSelect, .ellipseSelect, .wand, .frame, .pen, .component, .hand: nil
         }
     }
 
@@ -156,9 +166,11 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// Trim is on the list for the same reason the Pen is: the clip it acts
     /// on is the one you picked, and dropping the pick on the way in would
     /// take away the thing the tool was reached for.
+    /// The Hand is on it because looking somewhere else is no reason to let
+    /// go of what you picked, the same as in Photoshop.
     public var preservesLayerSelection: Bool {
         self == .select || self == .fill || self == .pen || self == .trim
-            || isRegionSelectionTool
+            || self == .hand || isRegionSelectionTool
     }
 
     public var createsAnnotationByDrag: Bool { annotationShape != nil }
@@ -199,7 +211,8 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // Trim is on the true side with Crop: it shortens rather than adds,
         // and its own gesture lives in the timeline rather than on the picture,
         // so a double click on the matte has nothing of its to collide with.
-        case .select, .crop, .trim, .rectSelect, .ellipseSelect, .wand: true
+        // The Hand puts nothing on the picture either: its drags move the view.
+        case .select, .crop, .trim, .rectSelect, .ellipseSelect, .wand, .hand: true
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
              .zoomCallout, .lens, .measure, .fill, .frame, .pen, .component: false
         }
@@ -221,7 +234,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
              .zoomCallout, .lens, .measure, .frame, .pen, .component: true
-        case .select, .crop, .trim, .fill, .rectSelect, .ellipseSelect, .wand: false
+        case .select, .crop, .trim, .fill, .rectSelect, .ellipseSelect, .wand, .hand: false
         }
     }
 
@@ -250,9 +263,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // colour on the picture. The frame tool draws its own fixed grey.
         // A lens puts no colour on the picture either: it shows the colours
         // already there, changed.
-        // A component brings its own colours with it.
+        // A component brings its own colours with it. The Hand only moves
+        // the view.
         case .select, .crop, .trim, .zoomCallout, .lens, .measure,
-             .rectSelect, .ellipseSelect, .wand, .frame, .component: .hidden
+             .rectSelect, .ellipseSelect, .wand, .frame, .component, .hand: .hidden
         }
     }
 

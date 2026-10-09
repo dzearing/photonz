@@ -7,7 +7,7 @@
     { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
     { "do": "toolBar", "stage": "1-wide", "zoom": false, "capsules": 1, "more": [],
-      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Component insert", "Fill"] },
+      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Component insert", "Fill", "Hand"] },
     { "do": "describe", "stage": "1-wide", "note": "a recording at Next defaults in a wide window, in Edit: every tool is on the bar, the video's own first, and there is no More and no zoom" },
     { "do": "snapshot", "name": "1-wide" },
 
@@ -21,7 +21,7 @@
     { "do": "wait", "seconds": 1.2 },
     { "do": "toolBar", "stage": "3-medium", "zoom": false, "capsules": 1,
       "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame"],
-      "more": ["Pen", "Component insert", "Fill"] },
+      "more": ["Pen", "Component insert", "Fill", "Hand"] },
     { "do": "describe", "stage": "3-medium", "note": "the same window made narrower, live: the tools that no longer fit folded from the far end into More, and the video's own tools stayed" },
     { "do": "snapshot", "name": "2-medium" },
 
@@ -29,7 +29,7 @@
     { "do": "wait", "seconds": 1.2 },
     { "do": "toolBar", "stage": "4-narrow", "zoom": false, "capsules": 1,
       "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight"],
-      "more": ["Lens", "Frame", "Pen", "Component insert", "Fill"] },
+      "more": ["Lens", "Frame", "Pen", "Component insert", "Fill", "Hand"] },
     { "do": "describe", "stage": "4-narrow", "note": "narrower still: fewer tools, the rest under More, nothing clipped" },
     { "do": "snapshot", "name": "3-narrow" },
 

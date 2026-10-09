@@ -23,7 +23,7 @@ extension CanvasNSView {
         }
         // A picked zoom's box takes a press on its clip before any tool does:
         // carry it, pull a corner, or draw it again (`EditorState+Zoom`).
-        if zoomOwnsPicture, !isWatching,
+        if zoomOwnsPicture, !isWatching, tool != .hand,
            onZoomBoxDown(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))) {
             window?.makeFirstResponder(self)
             zoomBoxPressing = true
@@ -101,6 +101,13 @@ extension CanvasNSView {
         }
         window?.makeFirstResponder(self)
         let viewPoint = convert(event.locationInWindow, from: nil)
+        // The Hand takes hold of the view, never of anything on the picture:
+        // no hit test, no pick, no band. Only the camera moves until it lets go.
+        if tool == .hand {
+            handPan = HandPan(at: viewPoint, viewport: viewport)
+            applyGrabCursor(.closedHand, force: true)
+            return
+        }
         let p = viewport.documentPoint(fromView: viewPoint)
         // A line started by a click is waiting for the click that ends it, and
         // this is that click, whatever it lands on: nothing under it is picked
@@ -794,6 +801,10 @@ extension CanvasNSView {
             dragHeldGuide(toViewPoint: convert(event.locationInWindow, from: nil))
             return
         }
+        if handPan != nil {
+            handPanMove(to: convert(event.locationInWindow, from: nil))
+            return
+        }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
         // A point of a path taken hold of owns the rest of the gesture, even
         // with the Pen in hand: the Pen shows a picked path its points now, so
@@ -1208,6 +1219,12 @@ extension CanvasNSView {
         if guideDragging {
             guideDragging = false
             refreshOverlays()
+            return
+        }
+        if handPan != nil {
+            handPanMove(to: convert(event.locationInWindow, from: nil))
+            handPan = nil
+            applyGrabCursor(.openHand, force: true)
             return
         }
         // The release of a path-point drag, before the Pen, for the same reason

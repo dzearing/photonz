@@ -24,6 +24,15 @@ extension CanvasNSView {
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
     }
 
+    /// A step of a drag with the Hand: the camera follows the pointer from
+    /// where the press began. The same commit a two-finger scroll ends in, so
+    /// the grid, the overlays and the zoom readout move with it.
+    func handPanMove(to viewPoint: CGPoint) {
+        guard let handPan else { return }
+        commit(handPan.viewport(at: viewPoint))
+        refreshNameLabelHover(at: viewPoint)
+    }
+
     /// Pinch zooms around the cursor.
     override func magnify(with event: NSEvent) {
         let anchor = convert(event.locationInWindow, from: nil)
