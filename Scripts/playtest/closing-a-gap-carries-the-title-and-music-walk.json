@@ -1,0 +1,306 @@
+{
+  "out": "/tmp/photonz-playtest/closing-a-gap-carries-the-title-and-music-walk",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it, leaving a four second gap on V1; then a title typed with the text tool at 0:10 and the sample song dropped at 0:09 on its own track. A click in the gap picks it and Delete closes it: the last piece, the title and the song all move back four seconds, as they do when a piece of a clip is deleted. One Command Z puts all three back, and Shift Delete does the same as Delete.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleTalk"
+    },
+    {
+      "do": "action",
+      "action": "captionsWriteQuietly"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 8.0
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "pieces": 3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.0
+    },
+    {
+      "do": "key",
+      "key": "x"
+    },
+    {
+      "do": "key",
+      "key": ";"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 10.0
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Later"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 9.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 10.0,
+      "endsAt": 13.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 9.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-lifted",
+      "note": "0:04 to 0:08 lifted out with two cuts, X and the semicolon, leaving a four second gap on V1; then a title typed at 0:10 and the sample song dropped at 0:09 on its own track"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-before-the-gap-closes"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "V1",
+      "from": 6.0,
+      "toTrack": "V1",
+      "to": 6.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Gap on V1"
+      ],
+      "from": 4.0,
+      "to": 8.0
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 13.25
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 6.0,
+      "endsAt": 9.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 5.0
+    },
+    {
+      "do": "action",
+      "action": "captionsExpectOverClips"
+    },
+    {
+      "do": "describe",
+      "stage": "2-closed",
+      "note": "Delete on the picked gap closed it and the rest of the edit came along: the last piece at 0:04, the title at 0:06, the song at 0:05, each over the moment it was placed on"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-the-title-and-song-came-along"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 8.0,
+      "endsAt": 17.25
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 10.0,
+      "endsAt": 13.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 9.0
+    },
+    {
+      "do": "describe",
+      "stage": "3-one-undo",
+      "note": "one Command Z puts the clip, the title and the song back where they were"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "V1",
+      "from": 5.0,
+      "toTrack": "V1",
+      "to": 5.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Gap on V1"
+      ],
+      "from": 4.0,
+      "to": 8.0
+    },
+    {
+      "do": "key",
+      "key": "delete",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Talk",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 13.25
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 6.0,
+      "endsAt": 9.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 5.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-shift-delete",
+      "note": "Shift Delete on the picked gap does the same: the title and the song come along"
+    }
+  ]
+}

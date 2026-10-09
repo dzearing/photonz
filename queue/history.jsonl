@@ -10254,3 +10254,10 @@
 {"t":"2026-10-09T03:31:28.965Z","ev":"task_walks","id":"playing-backwards-fast-keeps-the-picture-moving","walks":[]}
 {"t":"2026-10-09T03:31:34.501Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
 {"t":"2026-10-09T03:32:16.852Z","ev":"manager","filed":7,"readyBefore":2,"readyAfter":9,"report":"queue/manager/2026-10-08-2030.md"}
+{"t":"2026-10-09T03:32:36.807Z","ev":"manager_pass","exit":0,"ready":9}
+{"t":"2026-10-09T03:32:36.868Z","ev":"task_started","id":"closing-a-gap-carries-the-titles-and-music-after","title":"Closing a gap carries the titles and music after it along","priority":"p2-normal"}
+{"t":"2026-10-09T03:53:01.589Z","ev":"task_walks","id":"closing-a-gap-carries-the-titles-and-music-after","walks":["closing-a-gap-carries-the-title-and-music-walk","a-gap-between-clips-closes-walk","a-gap-that-cannot-close-says-why-walk"]}
+{"t":"2026-10-09T03:53:10.896Z","ev":"task_note","id":"closing-a-gap-carries-the-titles-and-music-after"}
+{"t":"2026-10-09T03:53:10.953Z","ev":"task_note","id":"closing-a-gap-carries-the-titles-and-music-after"}
+{"t":"2026-10-09T03:53:11.013Z","ev":"task_note","id":"closing-a-gap-carries-the-titles-and-music-after"}
+{"t":"2026-10-09T03:53:15.411Z","ev":"task_done","id":"closing-a-gap-carries-the-titles-and-music-after","from":"in_progress","note":"Closing a gap (Delete, Shift Delete, right-click Ripple Delete) now moves everything after it on every track back by its length, titles and music included, in one undo step; things starting before the gap end and locked tracks/layers stay put; a collision refuses with the pill naming it. PhotonzCore TimelineGap.swift (+5 tests), walk closing-a-gap-carries-the-title-and-music-walk green at Next defaults with the existing gap walks, suite 11904 green, audit 2026-10-08-gap-close-sync."}

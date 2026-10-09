@@ -45,8 +45,8 @@ extension EditorState {
         return canCloseGap(gap)
     }
 
-    /// Close the gap in hand: everything after it on its track slides back,
-    /// with its sound and its captions, as one step to undo.
+    /// Close the gap in hand: everything after it slides back, on its track
+    /// and on the others (titles, music, captions), as one step to undo.
     func closeGapInHand() {
         guard let gap = timelineGapHeld else { return }
         closeGap(gap)

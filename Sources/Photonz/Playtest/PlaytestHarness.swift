@@ -2103,6 +2103,12 @@ private final class Run {
             let toY = try trackRowMiddle(toTrack, on: editor, lean: 0.2)
             let drawsRange = option || editor.timelineTool == .range
             let snap = drawsRange ? editor.keySnapReachMS(laneWidth: editor.timelineLaneWidth) : 0
+            // A press in the lanes is a press in the dock, and the dock's
+            // mouse-down monitor hands the timeline the keyboard before the
+            // press lands. Driving the lanes directly skips that monitor, so
+            // after a click on the canvas a Delete that followed went to the
+            // canvas instead of the gap just picked.
+            editor.takeTimelineKeyboard()
             editor.beginLanePress(atMS: from, y: fromY, drawsRange: drawsRange)
             let moved = from != to || fromTrack != toTrack
             if moved {

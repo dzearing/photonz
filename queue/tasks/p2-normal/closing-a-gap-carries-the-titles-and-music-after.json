@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:22.863Z",
-  "updated": "2026-10-09T03:31:28.560Z",
+  "updated": "2026-10-09T03:53:15.410Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Source: log of done task a-gap-between-clips-closes-with-a-click-and-dele (2026-10-08 04:19): 'only the gap's own track ripples, so titles and music elsewhere stay (Premiere with sync lock off)'; also listed in digest 2026-10-08 under 'What a user will hit'. Piece delete already does the all-tracks version: EditorState+ClipBar.swift deleteClipPieceInHand -> rippleDeleteClipPiece, which uses StretchRemoval.swift. Gap close lives in PhotonzCore TimelineGap.swift (+12 tests) and EditorState+TimelineGap.swift (closeGapInHand). TDD in core: extend TimelineGap tests first. Locked tracks stay put as today. Walks to keep green: a-gap-between-clips-closes-walk, gap-refusal walk (2026-10-08 audit gap-refusal), extract-a-marked-stretch, marquee-and-track-range. No new flag needed if it is a fix to the gap close behaviour; if the runner prefers one, it ships on in Next.",
@@ -28,6 +28,37 @@
     {
       "t": "2026-10-09T03:31:28.559Z",
       "note": "seq 3840 -> 1"
+    },
+    {
+      "t": "2026-10-09T03:32:36.862Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T03:53:01.586Z",
+      "note": "owns these walks: closing-a-gap-carries-the-title-and-music-walk, a-gap-between-clips-closes-walk, a-gap-that-cannot-close-says-why-walk"
+    },
+    {
+      "t": "2026-10-09T03:53:10.894Z",
+      "note": "Review before building: Premiere with sync lock on ripples every track when a gap closes, and refuses when another track has something that cannot move. Chosen rule, matching piece delete (StretchRemoval): everything starting at or after the gap end moves; anything starting earlier (music under the take, a title over the gap) stays with its children; locked tracks and locked layers stay put; a collision on any track refuses with the existing pill naming it. Unlike piece delete, nothing is cut or removed: a gap close never deletes a layer."
+    },
+    {
+      "t": "2026-10-09T03:53:10.951Z",
+      "note": "Built: PhotonzCore TimelineGap.swift closingGap gains carriedAlong(after:except:) (+5 TDD tests, old 'other tracks stay' test replaced). Harness: dragTracks now takes the timeline keyboard as the dock's mouse-down monitor does for a real press; without it a Delete after a canvas click went to the canvas (harness-only gap, the real app was fine). New walk closing-a-gap-carries-the-title-and-music-walk at Next defaults covers Delete, one undo, Shift Delete; Ripple Delete from the right-click menu runs the same closeGap and stays covered by a-gap-between-clips-closes-walk (a new right-click walk would need the Mac to itself). Walks green: new one, a-gap-between-clips-closes, a-gap-is-drawn-as-a-slot, a-gap-that-cannot-close-says-why, marquee-and-track-range, extract-a-marked-stretch. Scripts/test.sh: 11904 tests passed."
+    },
+    {
+      "t": "2026-10-09T03:53:11.011Z",
+      "note": "Left rough (no task, below the bar): ruler markers do not ripple with a gap close, same as piece delete today; the 2026-10-08 gap-refusal audit's line that only a caption is ever named in the way is now out of date, since a song can be."
+    },
+    {
+      "t": "2026-10-09T03:53:15.408Z",
+      "note": "Closing a gap (Delete, Shift Delete, right-click Ripple Delete) now moves everything after it on every track back by its length, titles and music included, in one undo step; things starting before the gap end and locked tracks/layers stay put; a collision refuses with the pill naming it. PhotonzCore TimelineGap.swift (+5 tests), walk closing-a-gap-carries-the-title-and-music-walk green at Next defaults with the existing gap walks, suite 11904 green, audit 2026-10-08-gap-close-sync."
     }
-  ]
+  ],
+  "started": "2026-10-09T03:32:36.861Z",
+  "walks": [
+    "closing-a-gap-carries-the-title-and-music-walk",
+    "a-gap-between-clips-closes-walk",
+    "a-gap-that-cannot-close-says-why-walk"
+  ],
+  "completed": "2026-10-09T03:53:15.409Z"
 }

@@ -8,23 +8,27 @@ import Foundation
 // track slide back to close it. Before this the only way here was a range drawn
 // over the gap and Shift-Delete.
 //
-// What moves is what a person pointed at, and what has to stay in step with it:
+// The rest of the edit goes along, the way it does when a piece of a clip is
+// deleted (`StretchRemoval.swift`) and in Premiere with sync lock on, so a
+// title or a music cue is still over the moment it was placed on:
 //
 // - **Every clip after the gap on its track**, each by the gap's length, with
 //   everything inside it. A clip's own sound is the clip, so it goes along.
 // - **The captions over those clips**, on whatever track they are on: they
 //   are the words of the recording that moves, and a caption left behind
 //   would be under the wrong picture.
-//
-// Nothing else moves. Music on another track, a title over the picture: the
-// person pointed at one track, as they do in Premiere with sync lock off.
+// - **Everything else that starts after the gap ends**, on any track: titles,
+//   music, other clips, captions. Something that starts before it ends (music
+//   under the whole take, a title over the gap) stays as it was, with what is
+//   inside it; cutting into it would be cutting something nobody pointed at.
+//   On a locked track, or locked itself, it stays put too: locking says so.
 //
 // It is refused, rather than half done, where something that has to move
 // cannot: a clip or a caption on a locked track (a clip whose own sound is
 // drawn on a locked track included: the sound is the clip), a locked layer, or
-// a moved clip, sound or caption landing on something already there on its own
-// track. The refusal names which (`GapCloseRefusal`), so a Delete that changed
-// nothing says what is in the way rather than only beeping.
+// a moved clip, sound, title or caption landing on something already there on
+// its own track. The refusal names which (`GapCloseRefusal`), so a Delete that
+// changed nothing says what is in the way rather than only beeping.
 
 /// An empty stretch between two clips on one track, or before the first.
 public struct TimelineGap: Hashable, Sendable {
@@ -112,8 +116,9 @@ extension PhotonzDocument {
         return nil
     }
 
-    /// Ripple Delete on a gap: every clip after it on its track, and the
-    /// captions over them, move earlier by its length. One edit; answers
+    /// Ripple Delete on a gap: every clip after it on its track, the
+    /// captions over them, and everything else that starts after it, move
+    /// earlier by its length. One edit; answers
     /// whether it was made, and changes nothing when it was not.
     @discardableResult
     public mutating func closeGap(_ gap: TimelineGap) -> Bool {
@@ -135,27 +140,31 @@ extension PhotonzDocument {
         let after = occupants(onTrack: gap.trackID, layout: layout).filter { $0.span.lowerBound >= gap.range.upperBound }
         guard !after.isEmpty else { return .refused(.gone) }
         let clipIDs = Set(after.map(\.id))
-        var moving: Set<UUID> = []
+        // What has to move: the clips after the gap and the words over them.
+        var bound: Set<UUID> = []
         for layer in layers where clipIDs.contains(layer.id) {
-            moving.formUnion(layer.selfAndDescendants.filter { $0.time != nil }.map(\.id))
+            bound.formUnion(layer.selfAndDescendants.filter { $0.time != nil }.map(\.id))
         }
         let spans = after.map(\.span)
         forEachLayer { layer in
             guard layer.isCaption, let time = layer.time,
                   spans.contains(where: { $0.contains(time.inMS) }) else { return }
-            moving.insert(layer.id)
+            bound.insert(layer.id)
         }
-        // Everything that moves has to be free to: the gap's own track named
-        // first, then the rest top to bottom.
+        // Everything that has to move has to be free to: the gap's own track
+        // named first, then the rest top to bottom.
         let locked = layout.tracks.filter(\.isLocked)
+        var pinned: Set<UUID> = []
         for track in locked.filter({ $0.id == gap.trackID }) + locked.filter({ $0.id != gap.trackID }) {
             let tops = Set((layout.clips[track.id] ?? []) + (layout.linked[track.id] ?? []))
             let held = layers.filter { tops.contains($0.id) }.flatMap { $0.selfAndDescendants.map(\.id) }
-            if held.contains(where: moving.contains) { return .refused(.locked(track.name)) }
+            if held.contains(where: bound.contains) { return .refused(.locked(track.name)) }
+            pinned.formUnion(held)
         }
-        if let held = allLayers.first(where: { moving.contains($0.id) && $0.isLocked }) {
+        if let held = allLayers.first(where: { bound.contains($0.id) && $0.isLocked }) {
             return .refused(.locked(Self.named(held)))
         }
+        let moving = bound.union(carriedAlong(after: gap.range.upperBound, except: pinned))
         var moved = self
         for id in moving {
             moved.updateLayer(id: id) { layer in
@@ -169,6 +178,26 @@ extension PhotonzDocument {
         }
         moved.refreshDuration()
         return .closed(moved)
+    }
+
+    /// Everything that starts at or after `end` and is free to move, with
+    /// what is inside it. Something that starts earlier stays, and so does
+    /// what is inside it; so does anything on a locked track (`pinned`) or
+    /// locked itself.
+    private func carriedAlong(after end: Int, except pinned: Set<UUID>) -> Set<UUID> {
+        var found: Set<UUID> = []
+        func walk(_ list: [Layer]) {
+            for layer in list {
+                guard let time = layer.time else {
+                    walk(layer.children)
+                    continue
+                }
+                guard time.inMS >= end, !layer.isLocked, !pinned.contains(layer.id) else { continue }
+                found.formUnion(layer.selfAndDescendants.filter { $0.time != nil }.map(\.id))
+            }
+        }
+        walk(layers)
+        return found
     }
 
     /// A layer as a refusal names it: a caption line by what it is, since

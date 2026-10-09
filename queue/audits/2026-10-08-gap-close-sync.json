@@ -1,0 +1,27 @@
+{
+  "feature": "Closing a gap carries the titles and music after it along",
+  "epic": "video-cutting",
+  "summary": "Closing a gap left by Lift now moves everything after it, on every track, back by the gap's length: the clips, the captions, a title and a song stay over the moment they were placed on, the way deleting a piece of a clip already did and the way Premiere does with sync lock on.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the talk sample, click the ruler at 0:04 and press Command K, then at 0:08 and press Command K." },
+    { "do": "Click the ruler at 0:06, press X, then semicolon: a four second gap opens on V1." },
+    { "do": "Click the ruler at 0:10, pick the Text tool, click the picture and type a title; press Command Return." },
+    { "do": "Click the ruler at 0:09 and drop a song onto the timeline.", "shot": "2026-10-08-gap-close-sync-1-before-sc.png" },
+    { "do": "Click the gap on V1 and press Delete: the clip, the title and the song all move back four seconds.", "shot": "2026-10-08-gap-close-sync-2-after-sc.png" },
+    { "do": "Press Command Z once: all three are back where they were." },
+    { "do": "Click the gap again and press Shift Delete, or right-click it and choose Ripple Delete: the same." }
+  ],
+  "evaluate": [
+    "Is the title still over the frame you typed it on after the gap closes?",
+    "Music that starts before the gap and runs across it stays exactly where it is. Is that what you expect, or should it lose the gap's stretch as well?",
+    "A title or song on a locked track stays put while everything else moves. Is that the right reading of a lock here?",
+    "When a song after the gap would land on another one still over the gap, the close is refused and the pill names the song in the way. Is refusing better than moving it onto a free track?"
+  ],
+  "rough": [
+    "No mock draws a gap close across tracks; this matches what deleting a piece of a clip already does on the same timeline.",
+    "Markers on the ruler do not move when a gap closes, as they do not when a piece is deleted; the marks a range was drawn with are not touched either.",
+    "Something that starts inside the gap on another track (a title over the black) stays where it is, so a title after it on the same track that would land on it refuses the close rather than pushing it."
+  ]
+}

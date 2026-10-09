@@ -100,14 +100,84 @@ struct TimelineGapTests {
         #expect(doc.gap(onTrack: track, atMS: 4000) == nil)
     }
 
-    @Test("A sound on another track stays where it is")
-    func otherTracksStay() throws {
-        var (doc, _, _, track, _) = try Self.lifted()
+    // MARK: The rest of the edit goes along
+
+    @Test("A title and music that start after the gap move back with the picture")
+    func titleAndMusicGoAlong() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        let title = MarkedStretchTests.title("Later", 10_000, 11_000)
+        doc.addLayer(title)
         let music = doc.addSound(SoundRef(durationMS: 3000), name: "music", atMS: 9000)
+        doc.materializeTracks()
         let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
         let closed = doc.closeGap(gap)
         #expect(closed)
+        #expect(doc.layer(id: tail)?.time?.inMS == 4000)
+        #expect(doc.layer(id: title.id)?.time?.inMS == 6000)
+        #expect(doc.layer(id: title.id)?.time?.outMS == 7000)
+        #expect(doc.layer(id: music)?.time?.inMS == 5000)
+        #expect(doc.documentDurationMS == 8000)
+    }
+
+    @Test("Music running across the gap, and a title inside it, stay where they are")
+    func acrossAndInsideStay() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        let bed = doc.addSound(SoundRef(durationMS: 20_000), name: "bed", atMS: 0)
+        let inside = MarkedStretchTests.title("Inside", 5000, 6000)
+        doc.addLayer(inside)
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: tail)?.time?.inMS == 4000)
+        #expect(doc.layer(id: bed)?.time?.inMS == 0)
+        #expect(doc.layer(id: bed)?.time?.outMS == 20_000)
+        #expect(doc.layer(id: inside.id)?.time?.inMS == 5000)
+    }
+
+    @Test("A song that would land on one still over the gap keeps it open, and names it")
+    func songInTheWayRefuses() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        let first = doc.addSound(SoundRef(durationMS: 2000), name: "Intro", atMS: 5000)
+        let second = doc.addSound(SoundRef(durationMS: 1000), name: "Sting", atMS: 9000)
+        doc.materializeTracks()
+        let audio = try #require(doc.trackID(ofClip: first))
+        _ = doc.moveClip(second, toTrack: audio)
+        #expect(doc.trackID(ofClip: second) == audio)
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        #expect(doc.gapCloseRefusal(gap) == .inTheWay("Intro"))
+        #expect(doc.gapCloseRefusal(gap)?.reading == "Intro is in the way")
+        let before = doc
+        let closed = doc.closeGap(gap)
+        #expect(!closed)
+        #expect(doc == before)
+        #expect(doc.layer(id: tail)?.time?.inMS == 8000)
+    }
+
+    @Test("Music on a locked track stays put, and the gap still closes")
+    func lockedMusicStays() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        let music = doc.addSound(SoundRef(durationMS: 3000), name: "music", atMS: 9000)
+        doc.materializeTracks()
+        let audio = try #require(doc.trackID(ofClip: music))
+        doc.updateTrack(audio) { $0.isLocked = true }
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: tail)?.time?.inMS == 4000)
         #expect(doc.layer(id: music)?.time?.inMS == 9000)
+    }
+
+    @Test("A locked title stays put, and the gap still closes")
+    func lockedTitleStays() throws {
+        var (doc, _, tail, track, _) = try Self.lifted()
+        var title = MarkedStretchTests.title("Pinned", 10_000, 11_000)
+        title.isLocked = true
+        doc.addLayer(title)
+        let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
+        let closed = doc.closeGap(gap)
+        #expect(closed)
+        #expect(doc.layer(id: tail)?.time?.inMS == 4000)
+        #expect(doc.layer(id: title.id)?.time?.inMS == 10_000)
     }
 
     @Test("A gap between two sounds on one audio track closes the same way")
