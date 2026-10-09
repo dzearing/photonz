@@ -21008,3 +21008,9 @@ Next: the first editor window's ~200 ms first build
 - Core in `FrontDoor.swift` (tested); app in `FrontDoorView.swift`, `EditorState+FrontDoor.swift`. Only `.fresh` windows are front doors; a guide's empty sample keeps the card. Walk harness `blank`/`blankVideo`/`startFromEmpty` ask for the plain empty window.
 - Walk step `startFromFrontDoor` (tile, press, optional sheet answer); walks `front-door-walk`, `design-ui-start-walk` now starts there.
 - Next: `design-mode-puts-the-ui-tool-strip-in-the-tool-b` (the mock's UI tool strip in Design mode).
+
+## 2026-10-09 — Edit Original's Done readable behind another app
+
+- Reproduced: with the window behind another app in light mode, the system's blue Done was white on white in the title bar (front:true run showed it blue). Done now uses `.activeProminent` (`Sources/Photonz/DesignSystem/ActiveProminentButtonStyle.swift`).
+- Walk pictures record whether they show the window behind (`PlaytestCaptureLedger.behind`, `behindLabel`); `Scripts/playtest.sh` prints the label for an audit's `shotNote`.
+- Next: the other blue buttons (Adjust Grid Done, Crop, Trim, video Done, captions) have the same problem: `blue-done-crop-and-trim-buttons-stay-readable-wi`.
