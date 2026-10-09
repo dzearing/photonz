@@ -184,6 +184,103 @@ struct StarterButtonLooksTests {
         }
     }
 
+    // MARK: - Primary's shine (`button.css`, `.btn.primary`)
+
+    /// The mock's gradient runs from the accent mixed a sixth of the way to
+    /// white at the top down to the plain accent at the bottom. That is a white
+    /// wash over the accent, strongest at the top and nothing at the bottom
+    /// (8% here, which is the mock's 16% in the renderer's linear light), and
+    /// it is drawn as exactly that: its own piece, white whatever the accent
+    /// is, so the accent underneath stays one named colour.
+    @Test func primaryWearsTheMocksGloss() {
+        let (doc, _) = dropped()
+        for size in ["Small", "Medium", "Large"] {
+            let primary = look(doc, "Primary", size)
+            let shine = piece(primary, "Shine")
+            guard case .annotation(let wash)? = shine?.content, let paint = wash.fill else {
+                Issue.record("Primary \(size) has no shine"); continue
+            }
+            #expect(paint.kind == .linear && paint.angle == 180, "\(size)")
+            let stops = paint.orderedStops
+            #expect(stops.first?.hex == "#FFFFFF14" && stops.first?.position == 0, "\(size)")
+            #expect(stops.last?.hex == "#FFFFFF00" && stops.last?.position == 1, "\(size)")
+            #expect((shine?.colorStyleBindings ?? []).isEmpty, "\(size)")
+            if case .annotation(let back)? = piece(primary, "Background")?.content {
+                #expect(wash.cornerRadius == back.cornerRadius, "\(size)")
+            }
+            #expect(shine?.placement == .fill, "\(size)")
+            // Over the accent, under the words.
+            #expect(primary?.children.map(\.name) == ["Background", "Shine", "Content"], "\(size)")
+        }
+        for variant in ["Secondary", "Ghost"] {
+            #expect(piece(look(doc, variant, "Medium"), "Shine") == nil, "\(variant)")
+        }
+    }
+
+    /// `inset 0 1px 0 rgba(255,255,255,.45)` is a lighter top edge: light cast
+    /// into the capsule from a point above it, sharp. `--glow` is the accent
+    /// spilling under it, and is the accent's own colour.
+    @Test func primaryHasALighterTopEdgeAndAnAccentGlow() {
+        let (doc, _) = dropped()
+        let background = piece(look(doc, "Primary", "Medium"), "Background")
+        let shadows = background?.style.effects.compactMap { effect -> ShadowStyle? in
+            if case .shadow(let shadow) = effect { return shadow }
+            return nil
+        } ?? []
+        let edge = shadows.first { $0.kind == .inner }
+        #expect(edge?.colorHex == "#FFFFFF")
+        #expect(edge?.opacity == 0.3)
+        #expect(edge?.offset == CGSize(width: 0, height: 1))
+        #expect(edge?.radius == 0)
+        let glow = shadows.first { $0.kind == .drop }
+        #expect(glow?.colorHex == StarterStyle.accent.colorHex)
+        #expect(glow?.offset == CGSize(width: 0, height: 6))
+        #expect(glow?.radius == 8)
+        #expect(glow?.spread == -6)
+        #expect(glow?.opacity == 0.6)
+        let accent = doc.colorStyles.first { $0.name == StarterStyle.accent.name }?.id
+        let place = background?.style.effects.firstIndex {
+            if case .shadow(let shadow) = $0 { return shadow.kind == .drop }
+            return false
+        }
+        #expect(place.flatMap { background?.colorStyleID(forEffectAt: $0) } == accent)
+    }
+
+    /// Recolouring Accent repaints the capsule and its glow, and leaves the
+    /// wash white: a green Primary shines like a blue one.
+    @Test func recolouringAccentRepaintsTheShiningPrimary() {
+        var (doc, copy) = dropped()
+        guard let accent = doc.colorStyles.first(where: { $0.name == StarterStyle.accent.name })
+        else { Issue.record("no accent"); return }
+        doc.setColorStyleHex(styleID: accent.id, hex: "#00AA55")
+        #expect(doc.reconcileColorStyles() == 0)
+        settle(&doc)
+        let background = piece(doc.layer(id: copy), "Background")
+        #expect(fillHex(background) == "#00AA55")
+        let glow = background?.style.effects.compactMap { effect -> String? in
+            if case .shadow(let shadow) = effect, shadow.kind == .drop { return shadow.colorHex }
+            return nil
+        }
+        #expect(glow == ["#00AA55"])
+        guard case .annotation(let wash)? = piece(doc.layer(id: copy), "Shine")?.content else {
+            Issue.record("the copy lost its shine"); return
+        }
+        #expect(wash.fill?.orderedStops.first?.hex == "#FFFFFF14")
+    }
+
+    /// Secondary is the mock's glass control (`.btn.secondary`, `--glass`):
+    /// the surface, three quarters solid, so a coloured backdrop shows through
+    /// it the way the mock's matrix shows its stage.
+    @Test func secondaryIsGlass() {
+        let (doc, _) = dropped()
+        for size in ["Small", "Medium", "Large"] {
+            let background = piece(look(doc, "Secondary", size), "Background")
+            #expect(background?.style.opacity == 0.74, "\(size)")
+            #expect(fillHex(background) == StarterStyle.surface.colorHex, "\(size)")
+        }
+        #expect(piece(look(doc, "Primary", "Medium"), "Background")?.style.opacity == 1)
+    }
+
     /// The colours are the design system's: its accent, and its quiet text.
     @Test func theKitPaintsInTheDesignSystemsColours() {
         #expect(StarterStyle.accent.colorHex == "#4C6FFF")

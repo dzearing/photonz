@@ -1902,6 +1902,7 @@ struct ComponentInstanceProperties: View {
             value: menu.value,
             valueStyle: menu.undecided ? MixedLook.style : nil,
             help: Self.variantHelp,
+            leadImage: menu.picked.flatMap(choicePicture),
             choices: menu.choices)
             .frame(maxWidth: .infinity)
             .panelHelp(Self.variantHelp)
@@ -1909,8 +1910,13 @@ struct ComponentInstanceProperties: View {
     }
 
     /// What a choice knob's dropdown says and offers.
+    ///
+    /// `picked` is the shape the face shows in front of its name, as the
+    /// variants mock's Icon field does (`ui-variants.html`, `#iconTrigger`):
+    /// nil when the copies disagree or the piece is hidden, where the face
+    /// reads Mixed or No icon and a picture would claim otherwise.
     private func choiceMenu(_ property: ComponentProperty, reading: ComponentKnobReading)
-        -> (value: String, undecided: Bool, choices: [VideoKit.Choice]) {
+        -> (value: String, undecided: Bool, picked: UUID?, choices: [VideoKit.Choice]) {
         // Labels rather than raw names: two rectangles drawn in a row are
         // both called "Rectangle", and a menu of identical rows is a menu
         // nobody can choose from.
@@ -1950,7 +1956,8 @@ struct ComponentInstanceProperties: View {
                                                 value: .visible(false))
             })
         }
-        return (value, undecided, choices)
+        let shown = undecided || hidden ? nil : options.first { $0.id == picked }?.id
+        return (value, undecided, shown, choices)
     }
 
     /// A choice's shape as a menu picture: drawn as a template, so the menu

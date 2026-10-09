@@ -45,7 +45,7 @@
     { "do": "press", "control": "Secondary" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "control": "Secondary", "reads": "Variant, already on Secondary, tooltip none" },
-    { "do": "describe", "stage": "3-secondary", "note": "Secondary: a white capsule with a hairline round it and dark words" },
+    { "do": "describe", "stage": "3-secondary", "note": "Secondary: the mock glass, a white capsule three quarters solid with a hairline round it and dark words" },
     { "do": "appearance", "value": "light" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "snapshot", "name": "3-secondary-light" },

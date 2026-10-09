@@ -123,6 +123,10 @@ extension VideoKit {
         /// The component mark in front of the value: the variants mock's
         /// main-component field (`ui-variants.html`, `.select.comp`).
         var showsComponentMark = false
+        /// A picture in front of the value, drawn in the face's own ink: the
+        /// icon a copy's Icon field shows before its name (`ui-variants.html`,
+        /// `#iconTrigger`). A template, so it reads in light and dark alike.
+        var leadImage: NSImage?
         /// The chevron at the end. Down for a list; right for a field that
         /// takes you somewhere, as the variants mock's main-component field does.
         var chevron = "chevron.down"
@@ -152,6 +156,14 @@ extension VideoKit {
                     }
                     if showsComponentMark {
                         VideoKit.ComponentMarkShape().fill(Palette.comp).frame(width: 11, height: 11)
+                    }
+                    if let leadImage {
+                        Image(nsImage: leadImage)
+                            .renderingMode(.template)
+                            .resizable()
+                            .interpolation(.high)
+                            .frame(width: 14, height: 14)
+                            .foregroundStyle(valueStyle ?? AnyShapeStyle(Palette.ink))
                     }
                     Text(value)
                         .font(.system(size: size == .small ? 11 : 11.5, weight: .medium))
@@ -295,6 +307,8 @@ extension VideoKit {
         var isComponent = false
         /// The chevron the face ends in (`SelectFace.chevron`).
         var chevron = "chevron.down"
+        /// A picture in front of the value (`SelectFace.leadImage`).
+        var leadImage: NSImage?
         let choices: [Choice]
         /// The app is asking for this list open, the way ⌘R asks for the
         /// Speed list (`EditorState+SpeedKey`). It opens once the dropdown is
@@ -305,7 +319,7 @@ extension VideoKit {
 
         init(label: String, value: String, swatch: AnyShapeStyle? = nil, size: SelectFace.Size = .small,
              valueStyle: AnyShapeStyle? = nil, help: String? = nil, isBare: Bool = false,
-             isComponent: Bool = false, chevron: String = "chevron.down",
+             isComponent: Bool = false, chevron: String = "chevron.down", leadImage: NSImage? = nil,
              choices: [Choice], opensWhenAsked: Bool = false, opened: @escaping @MainActor () -> Void = {}) {
             self.label = label
             self.value = value
@@ -316,6 +330,7 @@ extension VideoKit {
             self.isBare = isBare
             self.isComponent = isComponent
             self.chevron = chevron
+            self.leadImage = leadImage
             self.choices = choices
             self.opensWhenAsked = opensWhenAsked
             self.opened = opened
@@ -324,7 +339,7 @@ extension VideoKit {
         private var face: SelectFace {
             SelectFace(value: value, swatch: swatch, size: size, isComponent: isComponent,
                        valueStyle: valueStyle, isBare: isBare, showsComponentMark: isComponent,
-                       chevron: chevron)
+                       leadImage: leadImage, chevron: chevron)
         }
 
         func makeNSView(context: Context) -> DropdownButton {

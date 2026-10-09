@@ -159,6 +159,27 @@ struct StarterComponentRenderTests {
         #expect(abs(two.width - one.width * 2) <= one.width / 10)
     }
 
+    /// The Primary Button shines the way the mock draws it (`button.css`,
+    /// `.btn.primary`), read down a column left of the icon where nothing but
+    /// the capsule is, against the red the mock's own sums give on that row:
+    /// the accent (#4C6FFF, red 76) mixed 14% of the way to white four rows
+    /// down (101), a lighter line along the very top (45% white over that,
+    /// about 172), and all but the accent itself four rows from the foot (80).
+    ///
+    /// The mock mixes in sRGB and the renderer in linear light, where the same
+    /// white reads stronger, so the wash and the top edge are weaker numbers
+    /// than the mock's that land on the mock's colours.
+    @Test func thePrimaryButtonShinesLikeTheMock() throws {
+        let image = try #require(render(.button))
+        let data = rgba(image)
+        func red(_ x: Int, _ y: Int) -> Int { Int(data[(y * image.width + x) * 4]) }
+        let x = 10, height = image.height
+        let top = red(x, 4), foot = red(x, height - 4), edge = red(image.width / 2, 0)
+        #expect(abs(top - 101) <= 10, "four rows down is \(top), not the mock's 101")
+        #expect(abs(edge - 172) <= 20, "the top edge is \(edge), not the mock's 172")
+        #expect(abs(foot - 80) <= 6, "the foot is \(foot), not the mock's 80")
+    }
+
     /// A contact sheet of all five, for looking at rather than asserting on.
     /// Off unless asked for, so the suite writes nothing in the normal run.
     @Test func writesAContactSheetWhenAsked() throws {

@@ -661,6 +661,29 @@ public enum StarterComponents {
             return layer
         }
 
+        /// A white wash over whatever is under it, fading to nothing at the
+        /// bottom: the mock's Primary gradient (`color-mix(accent 84%, white
+        /// 16%)` down to the accent) laid over the accent rather than baked
+        /// into it, so the accent stays one named colour and the wash suits
+        /// any colour somebody makes it. 8% rather than the mock's 16%: the
+        /// renderer mixes in linear light, where the same white reads twice as
+        /// strong, and 8% lands on the mock's colour
+        /// (`StarterComponentRenderTests.thePrimaryButtonShinesLikeTheMock`).
+        func wash(_ name: String, width: CGFloat, height: CGFloat, radius: CGFloat) -> Layer {
+            let size = CGSize(width: px(width), height: px(height))
+            var annotation = AnnotationContent(shape: .rectangle, start: .zero,
+                                               end: CGPoint(x: size.width, y: size.height))
+            annotation.strokeWidth = 0
+            annotation.cornerRadius = px(radius)
+            annotation.colorHex = "#FFFFFF"
+            annotation.fill = Paint(hex: "#FFFFFF14", kind: .linear,
+                                    stops: [GradientStop(hex: "#FFFFFF14", position: 0),
+                                            GradientStop(hex: "#FFFFFF00", position: 1)],
+                                    angle: 180)
+            return Layer(name: name, content: .annotation(annotation),
+                         frame: CGRect(origin: .zero, size: size), placement: .fill)
+        }
+
         /// A piece of text, hung from its vertical middle so it sits where a
         /// person expects however tall the line turns out to be. No contrast
         /// halo: that belongs on a caption over a screenshot, not on a label
@@ -746,16 +769,53 @@ public enum StarterComponents {
                                               frame: CGRect(x: pen.px(size.padding), y: 0,
                                                             width: 0, height: 0)))
         let width = (content.localBounds.width + 2 * pen.px(size.padding)) / max(pen.scale, 0.01)
-        let background = pen.box("Background", x: 0, y: 0, width: width, height: height,
+        var background = pen.box("Background", x: 0, y: 0, width: width, height: height,
                                  radius: height / 2, fill: variant.fill, stroke: variant.edge,
                                  strokeWidth: 1, placement: .fill)
-        var group = GroupContent(children: [background, content],
+        var children = [background, content]
+        switch variant {
+        case .primary:
+            shine(&background, pen)
+            let wash = pen.wash("Shine", width: width, height: height, radius: height / 2)
+            children = [background, wash, content]
+        case .secondary:
+            background.style.opacity = glassOpacity
+            children[0] = background
+        case .ghost:
+            break
+        }
+        var group = GroupContent(children: children,
                                  componentID: StarterComponent.button.componentID,
                                  contentPlacement: StarterComponent.button.contentPlacement)
         group.layout = buttonLayout(size, pen)
         return GroupFlow.flowing(Layer(name: StarterComponent.button.name,
                                        content: .group(group), frame: .zero))
     }
+
+    /// Primary's capsule as the mock lights it (`button.css`, `.btn.primary`):
+    /// a sharp lighter line along its top (`inset 0 1px 0`, white at 45% in
+    /// the mock, 30% here for the same linear-light reason as the wash) and
+    /// the accent glowing under it (`--glow`, the accent at 60%, 6 down, 16
+    /// soft and 6 in). The glow wears the Accent name, so recolouring Accent
+    /// recolours it with the capsule; the top edge is light, not paint, and
+    /// stays white over any accent.
+    private static func shine(_ background: inout Layer, _ pen: Pen) {
+        let accent = pen.palette.style(.accent)
+        background.style.effects.append(.shadow(ShadowStyle(
+            radius: 0, offset: CGSize(width: 0, height: pen.px(1)), colorHex: "#FFFFFF",
+            opacity: 0.3, kind: .inner)))
+        background.style.effects.append(.shadow(ShadowStyle(
+            radius: pen.px(8), offset: CGSize(width: 0, height: pen.px(6)), spread: -pen.px(6),
+            colorHex: accent.colorHex, opacity: 0.6)))
+        background.colorStyleBindings = (background.colorStyleBindings ?? []) + [
+            ColorStyleBinding(slot: .shadow, effectIndex: background.style.effects.count - 1,
+                              styleID: accent.id)
+        ]
+    }
+
+    /// How solid Secondary's surface is: the mock's glass (`--glass`, white at
+    /// 74%), so a backdrop shows through it the way the mock's stage does.
+    static let glassOpacity = 0.74
 
     /// What the row holding a button's icon and words is called.
     static let buttonContentName = "Content"

@@ -87,10 +87,13 @@ struct StarterComponentTests {
 
     // MARK: - Built from named colors
 
+    /// Every piece but the Primary Button's Shine: that is light laid over the
+    /// accent, white fading to nothing, the same over any colour the accent is
+    /// made (`StarterButtonLooksTests.recolouringAccentRepaintsTheShiningPrimary`).
     @Test func everyPaintedPieceComesFromANamedStyle() {
         for kind in StarterComponent.allCases {
             let layer = StarterComponents.layer(kind)
-            for child in layer.children {
+            for child in layer.children where child.name != "Shine" {
                 for slot in child.colorSlots where paints(child, slot) {
                     #expect(child.colorStyleID(for: slot) != nil,
                             "\(kind.name) / \(child.name) paints \(slot) by hand")
