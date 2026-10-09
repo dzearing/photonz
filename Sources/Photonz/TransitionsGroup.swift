@@ -141,20 +141,17 @@ struct TransitionsGroupMenu: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        let kind = editorState.transitionsGroupKind
-        Menu {
-            Button("Apply to Every Cut") { editorState.putTransitionOnEveryCut(kind) }
-            Button("Set as Default Transition") { editorState.setDefaultTransition(kind) }
-                .disabled(editorState.defaultTransitionKind == kind)
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 11, weight: .medium))
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
+        let state = editorState
+        let kind = state.transitionsGroupKind
+        let help = "\(kind.title) on every cut, or as the default"
+        return VideoKit.HeaderMenu(label: "Add transition", symbol: "plus", help: help, choices: [
+            .item("Apply to Every Cut") { state.putTransitionOnEveryCut(kind) },
+            .item("Set as Default Transition", isEnabled: state.defaultTransitionKind != kind) {
+                state.setDefaultTransition(kind)
+            },
+        ])
         .fixedSize()
-        .accessibilityLabel("Add transition")
-        .panelHelp("\(kind.title) on every cut, or as the default")
+        .panelHelp(help)
         .playtestControl("Transitions menu", detail: "the plus on the Transitions header")
     }
 }

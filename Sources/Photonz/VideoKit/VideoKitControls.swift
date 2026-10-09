@@ -236,11 +236,15 @@ extension VideoKit {
         /// A small picture beside the words, for a row a word alone does not
         /// describe (a curve's shape). A menu row draws pictures, not views.
         var image: NSImage?
+        /// What resting the pointer on the row says.
+        var help: String?
         var action: @MainActor () -> Void = {}
 
         static func item(_ title: String, isOn: Bool = false, isEnabled: Bool = true,
-                         image: NSImage? = nil, action: @escaping @MainActor () -> Void) -> Choice {
-            Choice(kind: .item, title: title, isOn: isOn, isEnabled: isEnabled, image: image, action: action)
+                         image: NSImage? = nil, help: String? = nil,
+                         action: @escaping @MainActor () -> Void) -> Choice {
+            Choice(kind: .item, title: title, isOn: isOn, isEnabled: isEnabled, image: image, help: help,
+                   action: action)
         }
 
         static var divider: Choice { Choice(kind: .divider, title: "") }

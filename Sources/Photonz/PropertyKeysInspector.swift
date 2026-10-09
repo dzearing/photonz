@@ -270,29 +270,33 @@ struct PropertiesPanelMenu: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        Menu {
-            // Each with the mock's icon beside it: copy, and the undo arrow.
-            Button("Copy Look", systemImage: "doc.on.doc") { editorState.copyLook() }
-                .disabled(!editorState.canCopyLook)
-            Button("Paste Look", systemImage: "doc.on.clipboard") { editorState.pasteLook() }
-                .disabled(!editorState.canPasteLook)
-            if editorState.documentHasTime {
-                Button("Reset to Defaults", systemImage: "arrow.uturn.backward") {
-                    editorState.resetPropertiesToDefaults()
-                }
-                .disabled(!editorState.canResetProperties)
-            }
-        } label: {
-            Image(systemName: "ellipsis")
-                .font(.system(size: 11, weight: .medium))
+        // Each with the mock's icon beside it: copy, and the undo arrow.
+        var choices: [VideoKit.Choice] = [
+            .item("Copy Look", isEnabled: editorState.canCopyLook, image: Self.copyImage) { [editorState] in
+                editorState.copyLook()
+            },
+            .item("Paste Look", isEnabled: editorState.canPasteLook, image: Self.pasteImage) { [editorState] in
+                editorState.pasteLook()
+            },
+        ]
+        if editorState.documentHasTime {
+            choices.append(.item("Reset to Defaults", isEnabled: editorState.canResetProperties,
+                                 image: Self.resetImage) { [editorState] in
+                editorState.resetPropertiesToDefaults()
+            })
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .accessibilityLabel("Properties Menu")
-        .panelHelp("Copy the look, or reset")
-        .playtestControl("Properties Menu", detail: "the three dots on the Properties header")
+        return VideoKit.HeaderMenu(label: "Properties Menu", symbol: "ellipsis",
+                                   help: "Copy the look, or reset", choices: choices)
+            .fixedSize()
+            .panelHelp("Copy the look, or reset")
+            .playtestControl("Properties Menu", detail: "the three dots on the Properties header")
     }
+
+    // Made once: a menu row is rebuilt only when what it shows changes, and a
+    // new picture each pass would read as a change every time.
+    private static let copyImage = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
+    private static let pasteImage = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
+    private static let resetImage = NSImage(systemSymbolName: "arrow.uturn.backward", accessibilityDescription: nil)
 }
 
 /// `Sample Talk        2.0s → 14.9s  12.9s · 1.0x`: the mock's `.cliphead`.

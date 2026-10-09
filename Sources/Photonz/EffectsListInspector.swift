@@ -686,41 +686,37 @@ struct AddEffectButton: View {
     }
 
     /// The body, built by `readingForTheLookRows`: nothing in it shows a
-    /// key on where a layer is.
-    @ViewBuilder private var lookBody: some View {
-        Menu {
-            ForEach(AddableEffect.allCases) { kind in
-                Button(kind.title) { editorState.addEffect(kind) }
-                    .disabled(!editorState.canAddEffect(kind))
-                    .panelHelp(kind.summary)
-            }
-            // ...and the effects somebody has already tuned and named. This is
-            // the route by which a saved effect reaches a layer that has
-            // nothing like it yet, and it lives here because adding a saved
-            // effect IS adding an effect: a Style menu on a row can only reach
-            // layers that already hold that effect at that place
-            // (`EffectStylePanel.swift`).
-            let saved = editorState.namedEffectStyles
-            if !saved.isEmpty {
-                Section("Saved effects") {
-                    ForEach(saved) { style in
-                        Button(style.name) { editorState.addEffectStyle(styleID: style.id) }
-                            .panelHelp(EffectStyleNaming.effectText(style.effect))
-                    }
+    /// key on where a layer is. The rows are read here, inside it, rather than
+    /// in a menu's own closure, which would watch the whole document.
+    private var lookBody: some View {
+        let state = editorState
+        var choices: [VideoKit.Choice] = AddableEffect.allCases.map { kind in
+            .item(kind.title, isEnabled: state.canAddEffect(kind), help: kind.summary) { state.addEffect(kind) }
+        }
+        // ...and the effects somebody has already tuned and named. This is
+        // the route by which a saved effect reaches a layer that has
+        // nothing like it yet, and it lives here because adding a saved
+        // effect IS adding an effect: a Style menu on a row can only reach
+        // layers that already hold that effect at that place
+        // (`EffectStylePanel.swift`).
+        let saved = state.namedEffectStyles
+        if !saved.isEmpty {
+            choices.append(.divider)
+            choices.append(.heading("Saved Effects"))
+            choices += saved.map { style in
+                .item(style.name, help: EffectStyleNaming.effectText(style.effect)) {
+                    state.addEffectStyle(styleID: style.id)
                 }
             }
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 11, weight: .medium))
         }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .disabled(!editorState.hasRestylableSelection)
-        // The plus says nothing out loud, so this is both what a screen reader
-        // announces and the name a scripted walk opens it by.
-        .accessibilityLabel("Add Effect")
-        .panelHelp("Add an effect: a shadow, a glow, a border or a blur")
-        .playtestControl("Add Effect", detail: "the plus on the Effects header")
+        // The plus says nothing out loud, so its label is both what a screen
+        // reader announces and the name a scripted walk opens it by.
+        return VideoKit.HeaderMenu(label: "Add Effect", symbol: "plus",
+                                   help: "Add an effect: a shadow, a glow, a border or a blur",
+                                   choices: choices)
+            .fixedSize()
+            .disabled(!state.hasRestylableSelection)
+            .panelHelp("Add an effect: a shadow, a glow, a border or a blur")
+            .playtestControl("Add Effect", detail: "the plus on the Effects header")
     }
 }

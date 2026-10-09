@@ -436,6 +436,11 @@ private final class Run {
         expectNoControl = Set(script.setup.expectNoControl)
         holdsTheFront = script.setup.front
         if holdsTheFront { note(0, "setup", "the probe holds the front for this walk (setup front)") }
+        note(0, "setup", PlaytestSchedulingRole.shared.takeTheFrontAppsRole()
+             ? "timed as the app in front: the probe holds the scheduling role macOS gives the app a person "
+               + "is using, so a press starts on the cores theirs would (PlaytestSchedulingRole)"
+             : "could NOT take the front app's scheduling role, so every timing in this walk is a "
+               + "background app's and reads slower than a person's (PlaytestSchedulingRole)")
         timesWithoutMarkers = script.setup.timedWithoutMarkers
         if timesWithoutMarkers {
             note(0, "setup", "every timed press and action is timed with the walk's markers taken down, "
@@ -446,6 +451,7 @@ private final class Run {
             let number = index + 1
             do {
                 await holdTheFront()
+                PlaytestSchedulingRole.shared.takeTheFrontAppsRole()
                 await putTheMarkersBackUp()
                 do {
                     try await perform(step, number: number)

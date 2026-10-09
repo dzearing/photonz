@@ -197,21 +197,16 @@ struct AddSoundEffectButton: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
-        Menu {
-            ForEach(SoundEffectKind.allCases) { kind in
-                Button(kind.title) { editorState.addSoundEffectInHand(kind) }
-                    .disabled(!editorState.soundLevelInHand.canAddEffect(kind))
-            }
-        } label: {
-            Image(systemName: "plus")
-                .font(.system(size: 11, weight: .medium))
-        }
-        .menuStyle(.borderlessButton)
-        .menuIndicator(.hidden)
-        .fixedSize()
-        .disabled(editorState.soundLayerInHand == nil)
-        .accessibilityLabel("Add Audio Effect")
-        .panelHelp("Add an audio effect")
-        .playtestControl("Add Audio Effect", detail: "the plus on the Audio Effects header")
+        let state = editorState
+        let level = state.soundLevelInHand
+        return VideoKit.HeaderMenu(
+            label: "Add Audio Effect", symbol: "plus", help: "Add an audio effect",
+            choices: SoundEffectKind.allCases.map { kind in
+                .item(kind.title, isEnabled: level.canAddEffect(kind)) { state.addSoundEffectInHand(kind) }
+            })
+            .fixedSize()
+            .disabled(state.soundLayerInHand == nil)
+            .panelHelp("Add an audio effect")
+            .playtestControl("Add Audio Effect", detail: "the plus on the Audio Effects header")
     }
 }
