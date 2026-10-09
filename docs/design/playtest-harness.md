@@ -255,6 +255,22 @@ rather than a failure when the screen is locked.
 In an audit that label is the step's `shotNote`, and the dashboard prints it
 under the picture.
 
+### Pictures of the window behind another app
+
+A walk never takes key (2026-09-26), so unless its setup says `"front": true`
+every picture shows the window as it looks behind another app, and AppKit draws
+that look differently: the system's blue button turns grey, or in light mode on
+macOS 26 white words on a white pill, and a picked segment turns grey. On
+2026-10-09 that read as Edit Original's Done "missing" in every light picture.
+So each capture records whether the probe was the active app with a key window
+(`PlaytestHarness.windowIsBehind`), `done.json` lists the ones that were not in
+`behindPictures` beside `behindLabel`, the `Window captures:` line ends with how
+many show the window behind, and `Scripts/playtest.sh` prints the label. Put it
+in the audit step's `shotNote` like the lock label. A picture of the in-front
+look needs `"front": true`, which needs the Mac to itself. A button that must
+stay readable behind uses `.buttonStyle(.activeProminent)`
+(`ActiveProminentButtonStyle`) rather than `.borderedProminent`.
+
 The lock is NOT an excuse for a missing picture. `PlaytestCaptureLedger` used to
 withhold a capture failure and report "macOS refuses every one" whenever the
 screen was locked; both were wrong and both are gone, so a refused capture is a

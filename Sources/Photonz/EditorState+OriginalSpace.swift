@@ -139,7 +139,7 @@ struct OriginalSpaceTitleBar: View {
                     .truncationMode(.middle)
                     .accessibilityLabel(OriginalSpaceCopy.editing(name))
                 Button(OriginalSpaceCopy.done) { editorState.finishEditingOriginal() }
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.activeProminent)
                     .controlSize(.small)
                     .help(OriginalSpaceCopy.doneHelp)
                     .playtestControl(OriginalSpaceCopy.done, detail: name)

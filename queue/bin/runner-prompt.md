@@ -81,6 +81,8 @@ The machine you run on is the user's. Anything you start, you finish.
 
   **A picture taken under a lock is labelled as such where it is shown.** The walk hands you the exact line; put it in the audit step's `shotNote` beside the `shot`. It carries the one known cost, so nobody reads it as a bug: colours can read dimmed.
 
+  **A picture of the window behind another app is labelled too.** A walk never takes key, so its pictures show the window's background look (blue buttons grey or white, picked controls grey) unless its setup says `"front": true`. The `Window captures:` line says how many, and the walk prints the line to put in those steps' `shotNote`. Never file the background look as a bug without checking the same thing with `"front": true`.
+
   You do not have to work any of this out yourself. Every walk ends with one line saying what it photographed:
   ```
   ==> Window captures: 2 real pictures of the window: 1-narrow-sc.png, 2-narrow-shape-tool-sc.png

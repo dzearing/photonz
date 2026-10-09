@@ -744,6 +744,10 @@ private final class Run {
             said += " " + PlaytestLockSafety.pictureLabel
             done["pictureLabel"] = PlaytestLockSafety.pictureLabel
         }
+        if !captures.behind.isEmpty {
+            done["behindPictures"] = captures.behind
+            done["behindLabel"] = PlaytestCaptureLedger.behindLabel
+        }
         done["capturesSaid"] = said
         if locked { done["lockSafe"] = ranLockSafe }
         if !captures.refusals.isEmpty { done["capturesRefused"] = captures.refusals }
@@ -9592,7 +9596,7 @@ private final class Run {
         if let sheet = Self.stacked(frames.map(\.image)),
            let data = ImageCodec.encode(sheet, format: .png) {
             try data.write(to: out.appendingPathComponent("\(film.name)-strip-sc.png"))
-            captures.photographed("\(film.name)-strip")
+            captures.photographed("\(film.name)-strip", behind: Self.windowIsBehind)
         }
         // A thumb gone from the rail altogether is the worst frame of all:
         // on 2026-09-29 the whole pane sat on the panel toggle beside View |
@@ -9714,7 +9718,7 @@ private final class Run {
             write(json: ["frames": readings, "firstMS": cadence.firstMS ?? -1, "lastMS": cadence.lastMS ?? -1,
                          "pictures": cadence.pictures, "longestStillMS": cadence.longestStillMS],
                   to: "\(film.name).json")
-            if !frames.isEmpty { captures.photographed("\(film.name)-0") }
+            if !frames.isEmpty { captures.photographed("\(film.name)-0", behind: Self.windowIsBehind) }
             return cadence
         }
         if let ceiling = film.longestStillUnderMS, cadence.pictures > 0, cadence.longestStillMS >= ceiling {
@@ -11304,7 +11308,7 @@ private final class Run {
         // The picture is the deliverable, so whether there IS one is answered
         // by the file rather than by the step's good intentions.
         if FileManager.default.fileExists(atPath: shotURL.path) {
-            captures.photographed(shotName)
+            captures.photographed(shotName, behind: Self.windowIsBehind)
             shot = shotURL.lastPathComponent
         } else {
             captureFailed(shotName, outcome)
@@ -11567,7 +11571,7 @@ private final class Run {
         }
         if let shotURL, let askedFor = shot {
             if FileManager.default.fileExists(atPath: shotURL.path) {
-                captures.photographed(askedFor)
+                captures.photographed(askedFor, behind: Self.windowIsBehind)
                 reading.shot = shotURL.lastPathComponent
             } else {
                 captureFailed(askedFor, outcome)
@@ -11944,7 +11948,7 @@ private final class Run {
         }
         if let shotURL, let askedFor = shot {
             if FileManager.default.fileExists(atPath: shotURL.path) {
-                captures.photographed(askedFor)
+                captures.photographed(askedFor, behind: Self.windowIsBehind)
                 reading.shot = shotURL.lastPathComponent
             } else {
                 captureFailed(askedFor, outcome)
@@ -14948,6 +14952,15 @@ private final class Run {
     ///
     /// App-level commands (Capture, New Window, Open) are built live and stay
     /// live, so those shortcuts a walk really can press.
+    /// Whether a picture taken now shows the window behind another app: the
+    /// probe is not the active app, or none of its windows has key. That is
+    /// how a walk leaves it (2026-09-26), and AppKit draws such a window in
+    /// its background look, so the picture is labelled rather than judged as
+    /// the window in front (`PlaytestCaptureLedger.behindLabel`).
+    static var windowIsBehind: Bool {
+        !NSApp.isActive || NSApp.keyWindow == nil
+    }
+
     /// Whether the app in front is the system's alert agent, which is what
     /// shows "quit unexpectedly" after a crash.
     static var aSystemAlertIsInFront: Bool {
@@ -16428,7 +16441,7 @@ private final class Run {
                 return
             }
             try png.write(to: out.appendingPathComponent("\(name)-sc.png"))
-            captures.photographed(name)
+            captures.photographed(name, behind: Self.windowIsBehind)
             let hung = Self.hungWindows(on: window).count
             note(0, "capture", "\(name)-sc.png \(image.width)x\(image.height)"
                 + (hung > 0 ? " (with \(hung) window\(hung == 1 ? "" : "s") hung on it)" : "")

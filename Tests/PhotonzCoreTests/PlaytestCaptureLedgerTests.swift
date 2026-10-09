@@ -107,4 +107,48 @@ struct PlaytestCaptureLedgerTests {
         #expect(ledger.report(granted: false)
             == "none. This app holds no Screen Recording grant, so it may not photograph its own window.")
     }
+
+    // A walk never takes key (2026-09-26), so a picture of the window shows
+    // it as it looks behind another app: the system's blue button goes
+    // white, a picked segment goes grey. Judged as the window in front, that
+    // look files problems a person in front never sees (2026-10-09, Edit
+    // Original's Done "missing" in light mode).
+
+    @Test("A picture of the window behind another app is named as one")
+    func behindIsNamed() {
+        var ledger = PlaytestCaptureLedger()
+        ledger.photographed("a-front", behind: false)
+        ledger.photographed("b-behind", behind: true)
+        #expect(ledger.written == ["a-front-sc.png", "b-behind-sc.png"])
+        #expect(ledger.behind == ["b-behind-sc.png"])
+        #expect(ledger.report(granted: true)
+            == "2 real pictures of the window: a-front-sc.png, b-behind-sc.png; "
+            + "1 shows the window behind another app: b-behind-sc.png")
+    }
+
+    @Test("Pictures of the window in front say nothing more")
+    func frontSaysNothing() {
+        var ledger = PlaytestCaptureLedger()
+        ledger.photographed("a", behind: false)
+        #expect(ledger.behind.isEmpty)
+        #expect(ledger.report(granted: true) == "1 real picture of the window: a-sc.png")
+    }
+
+    @Test("Many behind pictures read as many")
+    func manyBehind() {
+        var ledger = PlaytestCaptureLedger()
+        ledger.photographed("a", behind: true)
+        ledger.photographed("b", behind: true)
+        #expect(ledger.report(granted: true)
+            == "2 real pictures of the window: a-sc.png, b-sc.png; "
+            + "all 2 show the window behind another app")
+    }
+
+    @Test("The label says what the behind look changes, in plain words")
+    func behindLabel() {
+        let label = PlaytestCaptureLedger.behindLabel
+        #expect(label.contains("behind another app"))
+        #expect(label.contains("in front"))
+        #expect(!label.contains("\u{2014}"))
+    }
 }

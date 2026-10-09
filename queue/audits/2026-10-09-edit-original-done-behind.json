@@ -1,0 +1,37 @@
+{
+  "feature": "Edit Original's Done stays readable behind another app",
+  "epic": "ui-components",
+  "summary": "In light mode, with the window behind another app, Edit Original's Done used to vanish from the title bar. It now shows as a grey Done. In front it is still the blue Done. Walk pictures now also say when they show the window behind another app.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Edit Original on a placed Button copy.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Switch the Mac to Light appearance, drop a Button from the Library and choose Edit Original.",
+      "shot": "2026-10-09-edit-original-done-front-light-sc.png"
+    },
+    {
+      "do": "Click another app's window so Photonz is behind it, and look at Done in the title bar.",
+      "shot": "2026-10-09-edit-original-done-behind-light-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Switch to Dark appearance with Photonz still behind and look at Done again.",
+      "shot": "2026-10-09-edit-original-done-behind-dark-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click back into Photonz and check Done is the blue button again."
+    }
+  ],
+  "evaluate": [
+    "With Photonz behind another app in light mode, can you read Done at a glance?",
+    "Does the grey Done look like the rest of a Mac window that is behind another app, or does it look wrong?",
+    "In front, is Done exactly the blue button you had before?",
+    "Does the line under a walk picture, saying it shows the window behind another app, stop you judging those pictures as the window in front?"
+  ],
+  "rough": [
+    "No mock draws the Edit Original title bar, so there is nothing to put it beside.",
+    "Adjust Grid's Done, Crop, Trim and the other blue buttons still go white on white in light mode behind another app; that is blue-done-crop-and-trim-buttons-stay-readable-wi, with a picture of Adjust Grid's bar (2026-10-09-adjust-grid-done-behind-light-sc.png).",
+    "A walk still cannot photograph the in-front look without taking the Mac to itself (\"front\": true). Pictures are labelled instead, not changed."
+  ]
+}

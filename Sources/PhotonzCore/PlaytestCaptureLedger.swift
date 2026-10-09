@@ -40,12 +40,28 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
     public private(set) var refusals: [String] = []
     /// How many steps were skipped for want of a Screen Recording grant.
     public private(set) var ungranted: Int = 0
+    /// The pictures in `written` taken while the window was behind another
+    /// app. A walk never takes key (2026-09-26), so most pictures are these,
+    /// and they show the window's background look: the system's blue button
+    /// turns white or grey, a picked segment turns grey. Judged as the window
+    /// in front, that look files problems a person in front never sees, and
+    /// hides ones they do (2026-10-09: Edit Original's Done read as missing).
+    public private(set) var behind: [String] = []
+
+    /// The line that goes under any picture in `behind` wherever it is shown,
+    /// which in an audit is the step's `shotNote`.
+    public static let behindLabel =
+        "Photographed with the window behind another app, the way a walk leaves it. Blue buttons "
+        + "and picked controls show their background look here; with the window in front they "
+        + "take the accent colour."
 
     public init() {}
 
     /// Records a picture taken. `name` is the step's name, without the suffix.
-    public mutating func photographed(_ name: String) {
+    /// `behind` says the window was behind another app when it was taken.
+    public mutating func photographed(_ name: String, behind isBehind: Bool = false) {
         written.append("\(name)-sc.png")
+        if isBehind { behind.append("\(name)-sc.png") }
     }
 
     /// Records a picture asked for and refused.
@@ -83,6 +99,12 @@ public struct PlaytestCaptureLedger: Sendable, Equatable {
             if !refusals.isEmpty {
                 line += "; \(refusals.count) more \(refusals.count == 1 ? "was" : "were") refused: "
                     + refusals.joined(separator: ", ")
+            }
+            if behind.count == written.count, behind.count > 1 {
+                line += "; all \(behind.count) show the window behind another app"
+            } else if !behind.isEmpty {
+                line += "; \(behind.count) \(behind.count == 1 ? "shows" : "show") the window behind another app: "
+                    + behind.joined(separator: ", ")
             }
             return line
         }

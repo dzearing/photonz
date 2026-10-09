@@ -1,0 +1,33 @@
+{
+  "id": "blue-done-crop-and-trim-buttons-stay-readable-wi",
+  "title": "Blue Done, Crop and Trim buttons stay readable with the window behind another app",
+  "goal": "In light mode, when the Photonz window is behind another app, the blue confirm buttons in the editor's bars (Adjust Grid's Done, Crop, Trim, the video trim and crop Done, Add Captions) turn into white words on a near-white pill and cannot be read. Make every one readable behind, as Edit Original's Done now is, without changing how they look in front.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 3950,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T20:03:37.297Z",
+  "updated": "2026-10-09T20:03:40.178Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-09 while fixing find-out-whether-edit-original-s-done-button-dis. Walk (kept at /tmp/donecheck/grid.json; steps: blank 1440x1024, appearance light, action showGrid, action adjustGrid, wait 1, snapshot light) run with Scripts/playtest.sh --no-build: light-sc.png shows the Adjust Grid bar's Done as nearly invisible white words on a near-white pill (queue/audits/2026-10-09-adjust-grid-done-behind-light-sc.png). Same cause as Edit Original's Done: .borderedProminent in an inactive window on macOS 26. The fix landed for that one is .buttonStyle(.activeProminent) (Sources/Photonz/DesignSystem/ActiveProminentButtonStyle.swift: prominent while appearsActive, .bordered otherwise). Remaining .borderedProminent uses: EditorView.swift (Adjust Grid Done ~901, Crop ~2486, Trim ~2536), VideoEditorView.swift (Done ~616, ~727), CaptionsInspector.swift (~126, ~162), Welcome/WelcomeView.swift. These files are shared, so the change reaches Current too: say in the log whether that is wanted (it is a legibility fix; the porting rule only forbids Next-only work leaking). Not done in the original task because that task was scoped to Edit Original and Current behaviour is off limits without the task saying so.",
+  "acceptance": [
+    "With the window behind another app in light mode, Adjust Grid's Done, Crop and Trim each read as dark words on a grey pill",
+    "The same buttons in dark mode behind read as light words on a grey pill",
+    "With the window in front every one of them is the blue button it is today",
+    "A walk photographs at least Adjust Grid's bar behind in light mode"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T20:03:37.299Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T20:03:40.177Z",
+      "note": "owns no walks; the ones it names are examples"
+    }
+  ],
+  "walks": []
+}

@@ -1,0 +1,76 @@
+{
+  "out": "/tmp/photonz-playtest/edit-original-done-reads-behind",
+  "seed": "Edit Original's Done, photographed with the window behind another app (the way every walk leaves it) in light and then dark: Done is a grey pill with dark words in light and light words in dark, never white on the white title bar. Before 2026-10-09 the system's blue button vanished there in light mode.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1440,
+      "canvasHeight": 1024,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "action",
+      "action": "showComponentShelf"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        420,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "action",
+      "action": "selectComponentOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "describe",
+      "stage": "light",
+      "note": "Edit Original open in light mode, window behind another app: the mark, Button, and a grey Done pill with dark words beside it"
+    },
+    {
+      "do": "snapshot",
+      "name": "light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "dark",
+      "note": "the same in dark mode: a grey Done pill with light words"
+    },
+    {
+      "do": "snapshot",
+      "name": "dark"
+    }
+  ]
+}

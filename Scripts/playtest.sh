@@ -216,6 +216,14 @@ if [[ -f "$OUT/done.json" ]]; then
       console.log("    real. Put this line under any picture of it you ship:");
       if (d.pictureLabel) console.log("    " + d.pictureLabel);
     }
+    // A walk never takes key, so most of its pictures show the window as it
+    // looks behind another app. Say so under them, so nobody judges the
+    // background look of a blue button or a picked control as the real one.
+    if (d.behindLabel) {
+      console.log("==> Pictures behind another app: " + d.behindPictures.length + " of them. Put this line");
+      console.log("    under any of them you ship (an audit step\x27s \"shotNote\"):");
+      console.log("    " + d.behindLabel);
+    }
   ' "$OUT/done.json"
 fi
 if [[ -f "$OUT/log.json" ]]; then
