@@ -207,6 +207,12 @@ extension CanvasNSView {
                      event.modifierFlags.contains(.option))
             return
         }
+        // Component insert: a click puts a copy of the component the tool
+        // holds centred on the click, the way the bucket fills on the press.
+        if tool == .component {
+            onComponentPlace(p)
+            return
+        }
         // Region selection tools. The wand floods app-side (async — the
         // composite sweep is heavy); rect/ellipse start a marquee, which
         // follows the pointer exactly and takes no magnet at all. The combine

@@ -66,7 +66,7 @@ struct ArrowCaptionEntryTests {
     @Test func theToolsThatCreateSomethingAreTheDrawingOnes() {
         let creating = Set(Tool.allCases.filter(\.createsLayers))
         #expect(creating == [.arrow, .line, .rectangle, .ellipse, .highlight,
-                             .text, .zoomCallout, .lens, .measure, .frame, .pen])
+                             .text, .zoomCallout, .lens, .measure, .frame, .pen, .component])
         for tool in [Tool.select, .crop, .fill, .rectSelect, .ellipseSelect, .wand] {
             #expect(!tool.createsLayers)
         }

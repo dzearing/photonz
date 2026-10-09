@@ -463,6 +463,14 @@ extension Experiments {
     /// flag off takes away a way IN, never a document's contents.
     var penEnabled: Bool { isEnabled(FeatureCatalog.penFlag) }
 
+    /// The tool bar's slots as this release's flags leave it: the one place
+    /// the bar, its More menu and Edit ▸ Tools all read, so a tool a flag adds
+    /// cannot reach one of them and miss another.
+    var toolBarLayout: ToolBarLayout {
+        ToolBarLayout.bar(withFrame: framesEnabled, withLens: lensEnabled,
+                          withPen: penEnabled, withComponent: componentsEnabled)
+    }
+
     /// `next-line-ends`: whether a line and an arrow are asked what their two
     /// ends look like, under Outline beside the Thickness. The model and the
     /// renderer are never flagged, for the reason the Pen gives above: a

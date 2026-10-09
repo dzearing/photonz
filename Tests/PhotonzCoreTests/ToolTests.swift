@@ -493,7 +493,7 @@ struct ToolBarLayoutTests {
 
     /// The tools a flag adds, and so the ones a bar may legitimately not hold.
     /// Every OTHER tool is in every bar, exactly once.
-    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen]
+    private static let flaggedTools: Set<Tool> = [.frame, .lens, .pen, .component]
 
     /// How many slots each tool is reachable from.
     ///

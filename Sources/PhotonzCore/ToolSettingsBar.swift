@@ -33,6 +33,8 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
     case lensAdjustment
     /// How strongly it does it.
     case lensAmount
+    /// Which component the Component insert tool places.
+    case component
 
     /// The word on the setting, the same one the right hand panel uses, so
     /// the two places read as one thing rather than two.
@@ -50,6 +52,7 @@ public enum ToolSetting: String, CaseIterable, Hashable, Sendable {
         // The word changes with the adjustment (Strength, Block size, Amount),
         // so the capsule asks `LensAdjustment.settingTitle` rather than this.
         case .lensAmount: "Amount"
+        case .component: "Component"
         }
     }
 }
@@ -134,6 +137,10 @@ public enum ToolSettingsBar {
                                         : availability.calloutMagnification
                   }
                 : [.lensAdjustment, .lensAmount]
+        case .component:
+            // No flag of its own: the tool is itself behind `next-components`.
+            // A tool that places one of several things has to say which.
+            [.component]
         default:
             []
         }

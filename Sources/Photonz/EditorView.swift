@@ -1280,9 +1280,7 @@ struct EditorView: View {
     /// Nil for the one-button-per-tool bar Current ships.
     private var groupedFold: ToolBarFold? {
         guard Experiments.shared.toolGroupsEnabled else { return nil }
-        let layout = ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
-                                       withLens: Experiments.shared.lensEnabled,
-                                       withPen: Experiments.shared.penEnabled)
+        let layout = Experiments.shared.toolBarLayout
         let lit: ToolBarLayout.Entry? = isVideoBar && editorState.isTimelineBlade
             ? .blade : layout.entry(for: editorState.activeTool)
         // A mode with tools of its own (Design) puts them in front and folds
@@ -1493,6 +1491,8 @@ struct EditorView: View {
         /// The vector Pen (Next, `next-pen`): click corners and drag curves
         /// into one outline.
         case pen
+        /// Component insert (Next, `next-components`): a click places a copy.
+        case component
         /// Line, Rectangle and Ellipse as one family. Only in the grouped bar.
         case shapes
         /// The timeline's Blade, on a video's bar (`ToolBarFold.video`).
@@ -1541,6 +1541,7 @@ struct EditorView: View {
             case .fill: "Fill"
             case .frame: "Frame"
             case .pen: "Pen"
+            case .component: Tool.component.barTitle
             case .blade: "Blade"
             }
         }
@@ -1565,6 +1566,7 @@ struct EditorView: View {
             case .fill: "drop"
             case .frame: "macwindow"
             case .pen: "pencil.tip"
+            case .component: Tool.component.barSymbol
             case .blade: "scissors"
             }
         }
@@ -1603,6 +1605,7 @@ struct EditorView: View {
             case .fill: .fill
             case .frame: .frame
             case .pen: .pen
+            case .component: .component
             case .marquee, .shapes, .resize, .blade: nil
             }
         }
@@ -1616,14 +1619,15 @@ struct EditorView: View {
         let frames = Experiments.shared.framesEnabled
         let lens = Experiments.shared.lensEnabled
         let pen = Experiments.shared.penEnabled
+        let component = Experiments.shared.componentsEnabled
         guard Experiments.shared.toolGroupsEnabled else {
             return ToolbarSlot.allCases.filter {
                 $0 != .shapes && $0 != .blade && ($0 != .frame || frames) && ($0 != .lens || lens)
                     && ($0 != .zoomCallout || !lens) && ($0 != .pen || pen)
+                    && ($0 != .component || component)
             }
         }
-        var slots = ToolBarLayout.bar(withFrame: frames, withLens: lens, withPen: pen)
-            .entries.map(ToolbarSlot.init)
+        var slots = Experiments.shared.toolBarLayout.entries.map(ToolbarSlot.init)
         if !Experiments.shared.toolOptionsEnabled, let crop = slots.firstIndex(of: .crop) {
             slots.insert(.resize, at: crop + 1)
         }
@@ -1671,6 +1675,7 @@ struct EditorView: View {
         case .lens: toolButton(.lens, LensCopy.symbol, LensCopy.toolTitle)
         case .frame: toolButton(.frame, "macwindow", "Frame")
         case .pen: toolButton(.pen, "pencil.tip", "Pen")
+        case .component: componentToolButton
         case .measure: measureToolButton
         case .fill:
             toolButton(.fill, help: "Fill") {
@@ -2311,6 +2316,24 @@ struct EditorView: View {
     /// live mode's glyph, press-and-hold lists the modes, I cycles them, and
     /// Snap and Show have moved to the Measure Tool section of the inspector,
     /// where settings belong.
+    /// Component insert, in the component violet the mock draws it in
+    /// (`ui-entry-wt.html`, `tComp`). In hand it goes white on the accent
+    /// circle like every other tool, because violet on the accent is a colour
+    /// on a colour.
+    private var componentToolButton: some View {
+        let inHand = barLights(.component)
+        return toolButton(.component, help: Tool.component.barTitle) {
+            Group {
+                if inHand {
+                    ComponentGlyphShape().fill(.foreground)
+                } else {
+                    ComponentGlyphShape().fill(ComponentGlyph.color)
+                }
+            }
+            .frame(width: 15, height: 15)
+        }
+    }
+
     private var measureToolButton: some View {
         @Bindable var state = editorState
         let modes = Experiments.shared.measureModesEnabled

@@ -122,12 +122,12 @@ public enum WindowModes {
 
     /// The tools for building screens, as the UI entry mock draws them
     /// (`ui-entry-wt.html` step 4, UX-PATTERNS D4 "UI design"):
-    /// Select | Frame, Shape, Pen, Text | Measure. The mock's Component insert
-    /// and Hand are not tools in this app yet, and its Zoom is not a tool at
-    /// all (the user, 2026-09-29), so they are not here.
+    /// Select | Frame, Component insert, Shape, Pen, Text | Measure. The mock's
+    /// Hand is not a tool in this app yet, and its Zoom is not a tool at all
+    /// (the user, 2026-09-29), so they are not here.
     public static let designStrip: [[ToolBarLayout.Entry]] = [
         [.tool(.select)],
-        [.tool(.frame), .group(.shapes), .tool(.pen), .tool(.text)],
+        [.tool(.frame), .tool(.component), .group(.shapes), .tool(.pen), .tool(.text)],
         [.tool(.measure)],
     ]
 

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 3900,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.419Z",
-  "updated": "2026-10-09T17:03:36.422Z",
+  "updated": "2026-10-09T17:47:47.983Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tool strip id tComp, title \"Component insert (C)\", style color:var(--comp); UX-PATTERNS D4 UI design. Strip lives in WindowModes.designStrip (Sources/PhotonzCore/WindowMode.swift): add .tool(.component) after .tool(.frame) once the Tool case exists. Key conflict: Tool.shortcutKey gives C to crop/trim. Acceptance of the strip task says every tool keeps its key in every mode, so no mode-dependent C.",
@@ -23,9 +23,31 @@
     {
       "t": "2026-10-09T17:03:36.421Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T17:20:04.119Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T17:47:33.398Z",
+      "note": "walks design-mode-tool-strip-walk -> design-mode-tool-strip-walk, video-tool-bar-walk"
+    },
+    {
+      "t": "2026-10-09T17:47:47.864Z",
+      "note": "Adversarial review before building: (1) the mock's C is Crop here and in Photoshop, and the house rule is one letter per tool, so the letter goes to a decision card; N is free in Photoshop and in Photonz (the mocks give N to a prototyping Connect tool nobody has built). (2) 'asks which one': a click that answers with a question is clumsy, so the tool always places something: the Library's picked tile, else the one it placed last, else the first on the shelf, and the capsule over the bar names it before you click and swaps it (Photoshop's options bar habit). (3) The mock shows no click flow for the tool (its walkthrough drags from the Library), so placement reuses the Library drop path exactly: same landing rules, same linked copy, one undo step."
+    },
+    {
+      "t": "2026-10-09T17:47:47.923Z",
+      "note": "Built: Tool.component (key N, createsLayers, no colour capsule), ToolSetting.component, ComponentToolChoice (core, tested), ToolBarLayout.bar(withComponent:) at the end of the drawing family, Design strip Select | Frame, Component insert, Shapes, Pen, Text | Measure. App: violet ComponentGlyph button (white on the accent when in hand), capsule Picker over the Components shelf, canvas press places via placeComponent, Experiments.toolBarLayout is now the one place bar/More/Edit > Tools read. Tests: ComponentToolTests (14) + updated tool/strip tests; Scripts/test.sh 12045 pass. Walks: design-mode-tool-strip-walk (pointer click on the tool at Next defaults, places Button, capsule swaps to Card, places Card; 10 real captures), video-tool-bar-walk (Edit > Tools > Component insert), plus one-glass-tool-bar, tool-bar-fills-its-room, front-door, window-modes, design-ui-start, every-area-has-one-purpose all ok."
+    },
+    {
+      "t": "2026-10-09T17:47:47.982Z",
+      "note": "left rough (none clears the follow-up bar on its own; all are in the audit for the user to react to): a press places on the press, so dragging after it does not slide the new copy; no right hand panel section for the tool (the Library shelf is that place and picks the capsule too); More and Edit > Tools rows wear the system symbol the timeline's component track uses, since a menu row takes a system symbol."
     }
   ],
   "walks": [
-    "design-mode-tool-strip-walk"
-  ]
+    "design-mode-tool-strip-walk",
+    "video-tool-bar-walk"
+  ],
+  "started": "2026-10-09T17:20:04.117Z"
 }

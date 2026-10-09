@@ -204,12 +204,13 @@ public struct ToolBarLayout: Hashable, Sendable {
     /// inherits the slot rather than the callout keeping it because the slot is
     /// now the wider thing: six kinds, of which magnify is one.
     public static func bar(withFrame: Bool, withLens: Bool = false,
-                           withPen: Bool = false) -> ToolBarLayout {
+                           withPen: Bool = false, withComponent: Bool = false) -> ToolBarLayout {
         var drawing: [Entry] = [.tool(.arrow), .group(.shapes), .tool(.highlight),
                                 .tool(.text)]
         drawing.append(withLens ? .tool(.lens) : .tool(.zoomCallout))
         if withFrame { drawing.append(.tool(.frame)) }
         if withPen { drawing.append(.tool(.pen)) }
+        if withComponent { drawing.append(.tool(.component)) }
         return ToolBarLayout(families: [
             [.tool(.select), .group(.selection), .tool(.crop), .tool(.measure)],
             drawing,

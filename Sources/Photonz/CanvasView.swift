@@ -357,6 +357,8 @@ struct CanvasView: NSViewRepresentable {
     let onGuideDelete: () -> Void
     let onCanvasResize: (CGSize, CanvasAnchor) -> Void
     let onFillAt: (CGPoint, UUID?, Bool) -> Void
+    /// A click with the Component insert tool, at a document point.
+    let onComponentPlace: (CGPoint) -> Void
     let onFillSelected: (Bool) -> Void
     let onClearBackground: () -> Void
     let onWindowChange: (NSWindow?) -> Void
@@ -519,6 +521,7 @@ struct CanvasView: NSViewRepresentable {
         view.onSwapCollageSlots = onSwapCollageSlots
         view.onCanvasResize = onCanvasResize
         view.onFillAt = onFillAt
+        view.onComponentPlace = onComponentPlace
         view.onFillSelected = onFillSelected
         view.onClearBackground = onClearBackground
         view.onWindowChange = onWindowChange
@@ -701,6 +704,8 @@ final class CanvasNSView: NSView {
     var onCanvasResize: ((CGSize, CanvasAnchor) -> Void) = { _, _ in }
     /// Bucket click: (document point, hit layer if any, ⌥ = background color).
     var onFillAt: ((CGPoint, UUID?, Bool) -> Void) = { _, _, _ in }
+    /// Component insert click: the document point the copy is centred on.
+    var onComponentPlace: ((CGPoint) -> Void) = { _ in }
     /// ⌥⌫ — fill the selected layer (false = foreground color).
     var onFillSelected: ((Bool) -> Void) = { _ in }
     /// ⌫ with the locked Background selected — reset it to the bg fill color.

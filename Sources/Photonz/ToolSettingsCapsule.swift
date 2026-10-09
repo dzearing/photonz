@@ -194,6 +194,20 @@ struct ToolSettingsCapsule: View {
                 .help("How hard the next lens does it. A lens already on the canvas "
                       + "is tuned in its own section of the panel.")
             }
+        case .component:
+            // A menu, because the shelf holds as many as you have made. It
+            // names what the next click places before you click.
+            Picker("Component", selection: Binding(
+                get: { editorState.componentToolComponentID },
+                set: { if let id = $0 { editorState.setComponentToolComponent(id) } })) {
+                ForEach(editorState.componentToolOffers) { entry in
+                    Text(entry.name).tag(UUID(uuidString: entry.id))
+                }
+            }
+            .labelsHidden()
+            .controlSize(.small)
+            .fixedSize()
+            .help("What a click with the tool places. Picking one in the Library picks it here too.")
         case .measureShow:
             Picker("Show", selection: Binding(
                 get: { editorState.measureShowFilter },

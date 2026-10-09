@@ -1,0 +1,54 @@
+{
+  "id": "a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component",
+  "taskId": "a-component-tool-places-a-component-from-the-too",
+  "question": "Which key picks up the Component insert tool?",
+  "context": "The UI design mock puts a Component insert tool after Frame with the key C. In Photonz, as in Photoshop, C is Crop, and the house rule is one letter per tool everywhere. The tool is built and in the Design tool bar on N for now.",
+  "options": [
+    {
+      "id": "a",
+      "label": "N everywhere, C stays Crop",
+      "summary": "The Component insert tool answers to N in every mode and every document, and its tip reads Component insert N. C crops, as it does in Photoshop, wherever you are. This is what is built now.",
+      "pros": [
+        "One letter means one tool everywhere, so a key you learned never changes under you",
+        "Photoshop leaves N unassigned and no Photonz tool uses it, so nothing moves",
+        "Crop keeps the C every Photoshop user reaches for"
+      ],
+      "cons": [
+        "The mock prints C, so the tip and the mock disagree",
+        "N has no link to the word component"
+      ],
+      "mitigation": "The tip on the button and its rows under More and in Edit > Tools all print N, so the letter is taught wherever the tool is seen."
+    },
+    {
+      "id": "b",
+      "label": "C in Design, Crop has no letter there",
+      "summary": "In the Design mode C picks up Component insert, as the mock draws it, and Crop (which sits under More in Design) has no letter there. In every other mode C crops as it does today and Component insert answers to nothing.",
+      "pros": [
+        "Matches the mock exactly",
+        "C reads as component"
+      ],
+      "cons": [
+        "C means two different tools depending on the mode, and a person pressing C to crop a screenshot in Design gets a component tool instead",
+        "Component insert has no key at all outside Design"
+      ],
+      "mitigation": "The tips and Edit > Tools rows would print whichever letter the current mode gives, so the menu never lies about what C does right now."
+    },
+    {
+      "id": "c",
+      "label": "Q everywhere, C stays Crop",
+      "summary": "The Component insert tool answers to Q in every mode, and C stays Crop. On a video, while the timeline has the keyboard, Q keeps trimming the clip start to the playhead as in Premiere; a click on the canvas gives Q back to the tool.",
+      "pros": [
+        "One letter, one tool on the canvas",
+        "Leaves N free for the mock prototyping Connect tool when it is built"
+      ],
+      "cons": [
+        "Q is Quick Mask in Photoshop, which Photonz may want later",
+        "Q shares the timeline ripple trim key on a video, like L, I and O already do"
+      ],
+      "mitigation": "The same rule the timeline already uses for I, O and L: the keyboard follows where you last clicked, and the accent ring says which."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-09T17:45:52.354Z"
+}

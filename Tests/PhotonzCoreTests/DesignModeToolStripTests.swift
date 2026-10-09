@@ -4,14 +4,16 @@ import Testing
 
 /// A mode can put its own tools in front. The Design mode puts the tools the
 /// UI entry mock draws for building screens (`ui-entry-wt.html` step 4,
-/// UX-PATTERNS D4 "UI design"): Select | Frame, Shape, Pen, Text | Measure.
+/// UX-PATTERNS D4 "UI design"): Select | Frame, Component insert, Shape, Pen,
+/// Text | Measure.
 /// Every other tool folds under More and keeps its key and its row there, so
 /// nothing is removed; leaving the mode gives the bar back.
 @Suite("Design mode tool strip")
 struct DesignModeToolStripTests {
 
-    /// The bar at Next defaults: frames, lens and pen all on.
-    private let bar = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true)
+    /// The bar at Next defaults: frames, lens, pen and components all on.
+    private let bar = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
+                                        withComponent: true)
 
     private let metrics = ToolBarFold.Metrics(slot: 28, gap: 4, hairline: 5, more: 28)
 
@@ -33,7 +35,7 @@ struct DesignModeToolStripTests {
         #expect(design.id == "design")
         #expect(design.toolStrip == [
             [.tool(.select)],
-            [.tool(.frame), .group(.shapes), .tool(.pen), .tool(.text)],
+            [.tool(.frame), .tool(.component), .group(.shapes), .tool(.pen), .tool(.text)],
             [.tool(.measure)],
         ])
     }
@@ -76,22 +78,25 @@ struct DesignModeToolStripTests {
 
     @Test("A strip tool the release has not switched on is left out, not drawn as a dead slot")
     func flaggedOffToolsAreLeftOut() {
-        let noFrameNoPen = ToolBarLayout.bar(withFrame: false, withLens: true, withPen: false)
+        let noFrameNoPen = ToolBarLayout.bar(withFrame: false, withLens: true, withPen: false,
+                                             withComponent: false)
         let fold = strip(layout: noFrameNoPen)
         #expect(fold.shown == [[.tool(.select)], [.group(.shapes), .tool(.text)],
                                [.tool(.measure)]])
         #expect(!fold.shownEntries.contains(.tool(.frame)))
         #expect(!fold.folded.contains(.tool(.frame)))
+        #expect(!fold.shownEntries.contains(.tool(.component)))
     }
 
     @Test("A narrow window folds the strip from its far end, then the rest follows")
     func narrowFoldsFromTheEnd() {
-        // Room for Select | Frame Shapes and More.
-        let room = metrics.width(of: [[.tool(.select)], [.tool(.frame), .group(.shapes)]],
+        // Room for Select | Frame Component and More.
+        let room = metrics.width(of: [[.tool(.select)], [.tool(.frame), .tool(.component)]],
                                  more: true)
         let fold = strip(room)
-        #expect(fold.shown == [[.tool(.select)], [.tool(.frame), .group(.shapes)]])
-        #expect(Array(fold.folded.prefix(3)) == [.tool(.pen), .tool(.text), .tool(.measure)])
+        #expect(fold.shown == [[.tool(.select)], [.tool(.frame), .tool(.component)]])
+        #expect(Array(fold.folded.prefix(4)) == [.group(.shapes), .tool(.pen), .tool(.text),
+                                                 .tool(.measure)])
         #expect(fold.folded.count == bar.entries.count - 3)
     }
 

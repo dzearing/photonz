@@ -1,0 +1,47 @@
+{
+  "feature": "Component insert tool",
+  "epic": "ui-components",
+  "summary": "The Design tool bar now has the mock's Component insert tool after Frame. Pick it, click the canvas, and a linked copy of a component lands centred on the click, without dragging from the Library.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walk: design-mode-tool-strip-walk (from the front door's Design UI tile). Edit > Tools row: video-tool-bar-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "New Window, pick the Design UI tile, press New UI canvas.",
+      "shot": "2026-10-09-component-tool-1.png"
+    },
+    {
+      "do": "Click the violet four-diamond button after Frame in the tool bar.",
+      "shot": "2026-10-09-component-tool-2.png"
+    },
+    {
+      "do": "Read the capsule above the bar: it names the component a click places (Button, first time)."
+    },
+    {
+      "do": "Click the canvas where you want it.",
+      "shot": "2026-10-09-component-tool-3.png"
+    },
+    {
+      "do": "Press N, open the capsule's menu, choose Card, click the canvas again.",
+      "shot": "2026-10-09-component-tool-4.png"
+    },
+    {
+      "do": "Pick a tile in the Library, press N and click: that tile is what lands."
+    },
+    {
+      "do": "Show Everything from the Mode menu, then Edit > Tools > Component insert."
+    }
+  ],
+  "evaluate": [
+    "Does the violet button read as the component tool next to Frame, and does it go white on blue cleanly when picked?",
+    "Is the capsule naming the component the right place to say what a click places, or would you rather the Library had to be open?",
+    "After a click it hands back to Select with the copy picked. Would you rather it stayed in hand so a row of buttons is a row of clicks?",
+    "Is N the right letter, or do you want the mock's C (see the card)?"
+  ],
+  "rough": [
+    "The mock's tip says C; the tool answers to N because C is Crop here and in Photoshop. Settled by decision card a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component.",
+    "The app goes further than the mock: the mock has no capsule saying which component the tool holds, and no mock frame shows the tool's click at all (the walkthrough places its Button by dragging from the Library, step 7).",
+    "A press places on the press; dragging after the press does not slide the new copy along with the pointer yet.",
+    "The right hand panel has no Component tool section; the Library's Components shelf is the panel's place to choose, and picking a tile there picks it in the capsule too.",
+    "The bar's button draws the component mark; under More and in Edit > Tools the row wears the system symbol the timeline's component track uses, since a menu row takes a system symbol."
+  ]
+}

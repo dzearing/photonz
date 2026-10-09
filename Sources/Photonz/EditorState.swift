@@ -1800,6 +1800,9 @@ final class EditorState {
     /// the tool bar and the panel's tool section redraw. The memory itself
     /// lives in UserDefaults, which nothing observes.
     var lensToolRevision: UInt = 0
+    /// The component the Component insert tool placed or was set to last, by
+    /// component id (`ComponentToolChoice`). Per window, like the shelf's pick.
+    var componentToolMemory: UUID?
     /// The same for the rotate knob: the angle a turn in flight is at, in
     /// RADIANS, committed to history only on mouse-up. `previewMoves` cannot
     /// carry it because an angle is not in the box, and the panel needs it for

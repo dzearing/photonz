@@ -42,6 +42,12 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// (`docs/design/vector-paths.md`). The one tool in the app that draws over
     /// several clicks rather than in one drag.
     case pen
+    /// Component insert (Next, `next-components`): click the canvas and a copy
+    /// of a component lands centred on the click. Which component is the one
+    /// the Library has picked, or the one it placed last
+    /// (`ComponentToolChoice`), and the tool's own capsule says which and
+    /// swaps it. The UI entry mock's `tComp`, drawn in the component violet.
+    case component
 
     /// The single key that picks this tool, everywhere in the product.
     ///
@@ -93,6 +99,10 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // F is the design-tool convention for a frame. Photoshop's F cycles
         // screen modes, which this app does not have, so nothing is displaced.
         case .frame: "f"
+        // The mock prints C, which is Crop's here and in Photoshop. N is a
+        // letter Photoshop leaves unassigned and no tool here uses, so the
+        // component tool takes it rather than making C mean two things.
+        case .component: "n"
         case .rectSelect, .ellipseSelect: nil
         }
     }
@@ -113,7 +123,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .ellipse: .ellipse
         case .highlight: .highlight
         case .select, .crop, .trim, .text, .zoomCallout, .lens, .measure, .fill,
-             .rectSelect, .ellipseSelect, .wand, .frame, .pen: nil
+             .rectSelect, .ellipseSelect, .wand, .frame, .pen, .component: nil
         }
     }
 
@@ -191,7 +201,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // so a double click on the matte has nothing of its to collide with.
         case .select, .crop, .trim, .rectSelect, .ellipseSelect, .wand: true
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
-             .zoomCallout, .lens, .measure, .fill, .frame, .pen: false
+             .zoomCallout, .lens, .measure, .fill, .frame, .pen, .component: false
         }
     }
 
@@ -210,7 +220,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     public var createsLayers: Bool {
         switch self {
         case .arrow, .line, .rectangle, .ellipse, .highlight, .text,
-             .zoomCallout, .lens, .measure, .frame, .pen: true
+             .zoomCallout, .lens, .measure, .frame, .pen, .component: true
         case .select, .crop, .trim, .fill, .rectSelect, .ellipseSelect, .wand: false
         }
     }
@@ -240,8 +250,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // colour on the picture. The frame tool draws its own fixed grey.
         // A lens puts no colour on the picture either: it shows the colours
         // already there, changed.
+        // A component brings its own colours with it.
         case .select, .crop, .trim, .zoomCallout, .lens, .measure,
-             .rectSelect, .ellipseSelect, .wand, .frame: .hidden
+             .rectSelect, .ellipseSelect, .wand, .frame, .component: .hidden
         }
     }
 

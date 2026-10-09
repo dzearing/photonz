@@ -1124,9 +1124,7 @@ struct EditorCommands: Commands {
 
     /// The tools the bar offers in this window, in its order.
     private var menuTools: [Tool] {
-        let layout = ToolBarLayout.bar(withFrame: Experiments.shared.framesEnabled,
-                                       withLens: Experiments.shared.lensEnabled,
-                                       withPen: Experiments.shared.penEnabled)
+        let layout = Experiments.shared.toolBarLayout
         let bounds = ToolGroup.bounds.tools.filter { editor?.boundsToolsOffered.contains($0) ?? ($0 == .crop) }
         return ToolMenu.tools(layout, bounds: bounds)
     }

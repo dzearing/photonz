@@ -8,7 +8,7 @@
     { "do": "key", "key": "2", "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.6 },
     { "do": "toolBar", "stage": "1-video", "capsules": 1, "toolGap": 4, "hairline": 18, "height": 38, "zoom": false,
-      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Fill"], "more": [] },
+      "slots": ["Select", "Blade", "Title", "Shapes", "Measure", "Selection", "Crop", "Arrow", "Highlight", "Lens", "Frame", "Pen", "Component insert", "Fill"], "more": [] },
     { "do": "describe", "stage": "1-video", "note": "a recording opened at Next defaults, no flag touched: the tools and the grid are ONE glass bar with a hairline between them, as video.html's floating tool bar draws it, tools 4pt apart and 18pt hairlines, the glass 38pt tall. The window has room for every tool, so there is no More, and no zoom: zoom is not a tool" },
     { "do": "snapshot", "name": "1-video-one-bar" },
 

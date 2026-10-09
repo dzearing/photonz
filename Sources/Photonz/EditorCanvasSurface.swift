@@ -245,6 +245,7 @@ struct EditorCanvasSurface: View {
                    onFillAt: { point, hit, useBackground in
                        editorState.fillLayer(at: point, hit: hit, useBackground: useBackground)
                    },
+                   onComponentPlace: { editorState.placeWithComponentTool(at: $0) },
                    onFillSelected: { editorState.fillSelectedLayer(useBackground: $0) },
                    onClearBackground: { editorState.clearBackgroundLayer() },
                    onWindowChange: { editorState.canvasDidMoveToWindow($0) },

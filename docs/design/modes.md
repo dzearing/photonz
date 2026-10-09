@@ -289,9 +289,10 @@ Every shipped preset is folds only, and `WindowMode.preset` says why.
 Tool groups folding into the overflow landed for Design on 2026-10-09: a mode
 may carry a `toolStrip`, the slots it puts in front of the bar in families, and
 `ToolBarFold.init(_:strip:room:metrics:keeping:)` folds every other slot under
-More with its key. Design's strip is the UI entry mock's Select | Frame, Shapes,
-Pen, Text | Measure; its Component insert and Hand are filed as tools to build,
-its Zoom is not a tool. A document with time keeps the video's bar in any mode.
+More with its key. Design's strip is the UI entry mock's Select | Frame,
+Component insert, Shapes, Pen, Text | Measure (Component insert landed the same
+day, on N while the mock's C is a decision card, since C is Crop); its Hand is
+filed as a tool to build, its Zoom is not a tool. A document with time keeps the video's bar in any mode.
 A tool from outside the strip picked by its key stays under More and More lights.
 
 Still to build, and filed as the second slice: a mode being a record somebody can write rather than a list in
