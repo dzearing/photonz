@@ -1876,6 +1876,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// reflected about the middle of their frame. A window-scoped row like the
     /// two above. Fails where nothing picked can be mirrored.
     case mirrorAcrossCenter
+    /// Layer ▸ Center on the Artboard: what is picked moves, as one piece,
+    /// onto the middle of its frame. A window-scoped row like the two above.
+    /// Fails where nothing picked would move.
+    case centerOnArtboard
+    /// Layer ▸ Union (⌥⌘U): Combine Shapes ▸ Join under the icon mock's name.
+    /// A window-scoped row like the two above. Fails without two shapes.
+    case union
+    /// Layer ▸ Outline Stroke (⇧⌘O): every picked line becomes a filled
+    /// shape. A window-scoped row like the two above. Fails without a line.
+    case outlineStroke
     /// View ▸ Show Timing (⌥⌘T): the timing strip under the canvas, opened or
     /// put away. A window-scoped row like the two above.
     case toggleTimingStrip

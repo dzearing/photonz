@@ -3,7 +3,7 @@ import Foundation
 /// The words on the Layers group's header, as both component mocks draw it
 /// (`component-configure-wt.html` `#gLayersH`, `components.html` `#layerMenu`):
 /// how many layers there are, a Make Component button, and the panel menu's
-/// three rows. Every row is a command the menu bar already has, under the
+/// rows. Every row is a command the menu bar already has, under the
 /// same name and on the same key, so nothing learned here is wrong there.
 ///
 /// Next only (`next-dock-headers`). The app draws it; the words live here so
@@ -37,16 +37,22 @@ public enum LayersPanelHeader {
         }
     }
 
-    /// The panel menu, top down. Mirror Across Center sits under Group
-    /// Selection, where `icon-draw-wt.html` `#layerMenu` puts it.
+    /// The panel menu, top down. Mirror Across Center and Center on the
+    /// Artboard sit under Group Selection, then a divider and Union and
+    /// Outline Stroke, where `icon-draw-wt.html` `#layerMenu` puts them.
     public enum MenuRow: CaseIterable, Sendable {
-        case groupSelection, mirrorAcrossCenter, makeComponent, hidePanel
+        case groupSelection, mirrorAcrossCenter, centerOnArtboard
+        case union, outlineStroke
+        case makeComponent, hidePanel
 
         /// The mock's words in the menu bar's Title Case.
         public var title: String {
             switch self {
             case .groupSelection: "Group Selection"
             case .mirrorAcrossCenter: MirrorAcrossCenter.title
+            case .centerOnArtboard: CenterOnArtboard.title
+            case .union: PathCombine.unionTitle
+            case .outlineStroke: OutlineStroke.title
             case .makeComponent: LayersPanelHeader.makeComponent
             case .hidePanel: "Hide This " + PanelCopy.noun
             }
@@ -59,14 +65,25 @@ public enum LayersPanelHeader {
             // On a picture or an icon only: on a video ⇧⌘M is Go to Previous
             // Marker, and the app leaves this row out there.
             case .mirrorAcrossCenter: Shortcut(key: "m", modifiers: [.shift, .command])
+            // The mock prints Option Command C, but that is Canvas Size, as it
+            // is in Photoshop, so this row borrows no key.
+            case .centerOnArtboard: nil
+            case .union: Shortcut(key: "u", modifiers: [.option, .command])
+            case .outlineStroke: Shortcut(key: "o", modifiers: [.shift, .command])
             case .makeComponent: Shortcut(key: "k", modifiers: [.option, .command])
             // Show Panel is a setting with a checkmark; this row only hides.
             case .hidePanel: nil
             }
         }
 
-        /// Whether a divider goes above the row: the others act on the
-        /// layers, the last on the window.
-        public var startsSection: Bool { self == .hidePanel }
+        /// Whether a divider goes above the row: one above the two that remake
+        /// an outline, as the icon mock draws it, one above Make Component,
+        /// and one above the last, which acts on the window.
+        public var startsSection: Bool {
+            switch self {
+            case .union, .makeComponent, .hidePanel: true
+            default: false
+            }
+        }
     }
 }

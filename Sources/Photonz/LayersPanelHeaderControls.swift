@@ -48,20 +48,21 @@ private struct MakeComponentHeaderButton: View {
 
 /// The three dots at the end of the Layers header (`components.html` and
 /// `icon-draw-wt.html`, `#layerMenu`): Group Selection, Mirror Across Center,
-/// Make Component, and Hide This Panel. Each is its menu bar twin, under the
-/// same name and on the same key.
+/// Center on the Artboard, Union, Outline Stroke, Make Component, and Hide This
+/// Panel. Each is its menu bar twin, under the same name and on the same key.
 private struct LayersPanelMenu: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
         Menu {
-            // The rows that act on the layers, then a divider, then the one
-            // that acts on the window. Built in two runs rather than with a
-            // divider behind an `if` inside one loop, which left an empty
-            // separator above the first row.
-            ForEach(rows.filter { !$0.startsSection }, id: \.self, content: item)
-            Divider()
-            ForEach(rows.filter(\.startsSection), id: \.self, content: item)
+            // The rows in their sections, a divider between each two, the
+            // last being the one that acts on the window. Built section by
+            // section rather than with a divider behind an `if` on each row,
+            // which left an empty separator above the first row.
+            ForEach(Array(sections.enumerated()), id: \.offset) { index, section in
+                if index > 0 { Divider() }
+                ForEach(section, id: \.self, content: item)
+            }
         } label: {
             Image(systemName: "ellipsis")
                 .font(.system(size: 11, weight: .medium))
@@ -70,7 +71,7 @@ private struct LayersPanelMenu: View {
         .menuIndicator(.hidden)
         .fixedSize()
         .accessibilityLabel(LayersPanelHeader.menuName)
-        .panelHelp("Group, mirror, make a component, or hide")
+        .panelHelp("Group, arrange, combine, or hide")
         .playtestControl(LayersPanelHeader.menuName, detail: "the three dots on the Layers header")
     }
 
@@ -83,6 +84,20 @@ private struct LayersPanelMenu: View {
             .disabled(!canPerform(row))
     }
 
+    /// The rows that are on, in runs that each start at a row with a divider
+    /// above it, so a section whose rows are all off leaves no divider behind.
+    private var sections: [[LayersPanelHeader.MenuRow]] {
+        var runs: [[LayersPanelHeader.MenuRow]] = []
+        for row in rows {
+            if row.startsSection || runs.isEmpty {
+                runs.append([row])
+            } else {
+                runs[runs.count - 1].append(row)
+            }
+        }
+        return runs
+    }
+
     /// A row whose command is switched off is absent, as it is in the menu
     /// bar, so nobody hunts for why a dead row is there.
     private var rows: [LayersPanelHeader.MenuRow] {
@@ -90,6 +105,8 @@ private struct LayersPanelMenu: View {
             switch row {
             case .groupSelection: Experiments.shared.layerGroupsEnabled
             case .mirrorAcrossCenter: editorState.offersMirrorAcrossCenter
+            case .centerOnArtboard: editorState.offersIconShapeCommands
+            case .union, .outlineStroke: editorState.offersPathRemaking
             case .makeComponent: editorState.componentsEnabled
             case .hidePanel: true
             }
@@ -100,6 +117,9 @@ private struct LayersPanelMenu: View {
         switch row {
         case .groupSelection: editorState.canGroupSelection
         case .mirrorAcrossCenter: editorState.canMirrorSelectionAcrossCenter
+        case .centerOnArtboard: editorState.canCenterSelectionOnArtboard
+        case .union: editorState.canUnionSelection
+        case .outlineStroke: editorState.canOutlineSelectionStroke
         case .makeComponent: editorState.canMakeComponent
         case .hidePanel: true
         }
@@ -109,18 +129,27 @@ private struct LayersPanelMenu: View {
         switch row {
         case .groupSelection: editorState.groupSelection()
         case .mirrorAcrossCenter: editorState.mirrorSelectionAcrossCenter()
+        case .centerOnArtboard: editorState.centerSelectionOnArtboard()
+        case .union: editorState.unionSelection()
+        case .outlineStroke: editorState.outlineSelectionStroke()
         case .makeComponent: editorState.makeComponent()
         case .hidePanel: editorState.setInspectorVisible(false)
         }
     }
 
-    /// The mock's `ic-group`, `ic-flip-horizontal`, `ic-component` and
-    /// `ic-sidebar`.
+    /// The mock's `ic-group`, `ic-flip-horizontal`, `ic-align-center-h`,
+    /// `ic-boolean-union`, `ic-flatten`, `ic-component` and `ic-sidebar`.
     private static func icon(_ row: LayersPanelHeader.MenuRow) -> Image {
         switch row {
         case .groupSelection: Image(systemName: "rectangle.3.group")
         // The mock's `ic-flip-horizontal`.
         case .mirrorAcrossCenter: Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
+        // The Arrange row's own centre glyph, so the two read as one idea.
+        case .centerOnArtboard: Image(systemName: "align.horizontal.center")
+        // A square and a circle overlapping, as the mock's union glyph is.
+        case .union: Image(systemName: "square.on.circle")
+        // A stack pressed down to one, as the mock's flatten glyph is.
+        case .outlineStroke: Image(systemName: "square.stack.3d.down.right")
         case .makeComponent: Image(nsImage: componentIcon)
         case .hidePanel: Image(systemName: "sidebar.right")
         }

@@ -67,6 +67,13 @@ public enum PathCombine {
     /// and on a layer row's own menu.
     public static let menuItem = "Combine Shapes"
 
+    /// Join, under the name the icon mock's Layers panel menu gives it
+    /// (`icon-draw-wt.html` `#layerMenu`) and every other drawing program
+    /// uses, as its own row with its own key (Option Command U) beside the
+    /// Combine Shapes submenu, so somebody arriving from Figma or Illustrator
+    /// finds it by the word they know.
+    public static let unionTitle = "Union"
+
     /// Whether a shape can take part in an area operation at all.
     ///
     /// It has to enclose something. An OPEN path is a line, and a line has no

@@ -774,6 +774,14 @@ extension Experiments {
         isEnabled(FeatureCatalog.mirrorAcrossCenterFlag)
     }
 
+    /// `next-icon-shape-commands`: whether Center on the Artboard, Union and
+    /// Outline Stroke are offered in the Layers panel menu, the Layer menu and
+    /// a shape's right-click menu. Union and Outline Stroke hand back a path,
+    /// so they also need the Pen (`penEnabled`).
+    var iconShapeCommandsEnabled: Bool {
+        isEnabled(FeatureCatalog.iconShapeCommandsFlag)
+    }
+
     /// `next-library`: whether the right dock offers the Library shelf and the
     /// View menu its Show Library row. The Library exists to hold reusable
     /// pieces, and the first of those is a group you promote, so this needs

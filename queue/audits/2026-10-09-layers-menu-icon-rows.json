@@ -1,0 +1,56 @@
+{
+  "feature": "Center on the Artboard, Union and Outline Stroke",
+  "epic": "icon-vector",
+  "summary": "The three dots on the Layers header now carry the icon mock's last three rows: Center on the Artboard puts what is picked in the middle of its frame, Union joins picked shapes into one path (Option Command U), and Outline Stroke turns a shape's line into a filled shape of its own (Shift Command O). Each is also in the Layer menu and on a shape's right-click menu under the same name.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: layers-menu-icon-rows-walk and layers-menu-icon-rows-right-click-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Layer > New Frame, pick 24 in Icons, Add Frame, then draw an oval near the frame's top left corner and open the three dots on the Layers header.",
+      "shot": "2026-10-09-layers-menu-rows-1-panel-menu.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose Center on the Artboard.",
+      "shot": "2026-10-09-layers-menu-rows-2-centred.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z, draw a box overlapping the oval, pick both rows and press Option Command U.",
+      "shot": "2026-10-09-layers-menu-rows-3-union.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Tick Outline on the joined path in Appearance, set its Thickness to 1, and press Shift Command O.",
+      "shot": "2026-10-09-layers-menu-rows-4-outline-stroke.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag one of the new outline's points: the ring reshapes and the fill under it stays."
+    },
+    {
+      "do": "Press Command Z, then right click the shape and choose Outline Stroke.",
+      "shot": "2026-10-09-layers-menu-rows-5-right-click.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick a filled box drawn with the box tool and add a Border in Effects, then choose Outline Stroke: the Border becomes the outline layer."
+    }
+  ],
+  "evaluate": [
+    "When a shape has both a fill and a line, is a new 'outline' layer above the fill what you expected, rather than one shape?",
+    "Should Center on the Artboard move several picked shapes together as one drawing (it does now), or centre each one on its own?",
+    "Is it right that Union is both its own row with a key and Join inside Combine Shapes, or is one of them enough?",
+    "Is Center on the Artboard without a key fine, given Option Command C stays Canvas Size?"
+  ],
+  "rough": [
+    "The mock prints Center on the artboard on Option Command C; that is Canvas Size, and keys follow Photoshop (your call on 2026-07-05), so the row has no key, as this task's acceptance allows.",
+    "The mock's Union stays live with the four shapes kept underneath; Union here is Join, which makes one path with real points, the answer already settled in two-shapes-become-one-join-them-cut-one-out-keep.",
+    "Rows read in Title Case (Center on the Artboard, Outline Stroke) where the mock writes sentence case, per UX-PATTERNS §7 'How a menu row is capitalised'.",
+    "The panel menu's glyphs are system symbols chosen to look like the mock's union, flatten and align icons, the same way Mirror's row was matched, per UX-PATTERNS §8; they are close, not identical.",
+    "Make Component and Hide This Panel stay below the new rows: they come from components.html's drawing of the same menu, which the icon mock does not show.",
+    "A shape drawn with the oval or box tool arrives filled with no line, so Outline Stroke is dimmed until a line is added (Outline in Appearance on a path, or a Border on a box or oval).",
+    "On a small shape a thick line fills it completely; outlining it then gives a solid shape the size of the fill, which is the same picture but can look like nothing happened.",
+    "Not offered on a video, like Mirror Across Center beside it."
+  ]
+}

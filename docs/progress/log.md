@@ -21014,3 +21014,10 @@ Next: the first editor window's ~200 ms first build
 - Reproduced: with the window behind another app in light mode, the system's blue Done was white on white in the title bar (front:true run showed it blue). Done now uses `.activeProminent` (`Sources/Photonz/DesignSystem/ActiveProminentButtonStyle.swift`).
 - Walk pictures record whether they show the window behind (`PlaytestCaptureLedger.behind`, `behindLabel`); `Scripts/playtest.sh` prints the label for an audit's `shotNote`.
 - Next: the other blue buttons (Adjust Grid Done, Crop, Trim, video Done, captions) have the same problem: `blue-done-crop-and-trim-buttons-stay-readable-wi`.
+
+## 2026-10-09 — Layers panel menu: Center on the Artboard, Union, Outline Stroke
+
+- The three dots on the Layers header carry the icon mock's last rows (`icon-draw-wt.html` `#layerMenu`): Center on the Artboard (no key: ⌥⌘C stays Canvas Size), then a divider, Union (⌥⌘U) and Outline Stroke (⇧⌘O). Each is also in the Layer menu and on a shape's right-click menu under the same name. Flag `next-icon-shape-commands`, on in Next; pictures and icons only, like Mirror.
+- Core, tested first: `CenterOnArtboard.swift` (picks move as one piece per frame, canvas when on no frame); `OutlineStroke.swift` outlines a shape's own stroke AND every painted Border (a box or oval's line is a Border, and Union keeps it), using the renderer's own geometry for each; a filled shape keeps its fill and gets an `… outline` layer above it, grouped when the shape was see-through or wore effects. Union is `PathCombine` Join under `PathCombine.unionTitle`.
+- Walks: `layers-menu-icon-rows-walk` (panel menu, keys, undo, light, menu bar listing) and `layers-menu-icon-rows-right-click-walk`. Walk actions `centerOnArtboard`, `union`, `outlineStroke` with ⌥⌘U/⇧⌘O stand-ins. No composite path touched.
+- Open: audit asks whether Union should be both its own row and Combine Shapes ▸ Join.

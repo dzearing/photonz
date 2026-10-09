@@ -1,0 +1,417 @@
+{
+  "out": "/tmp/photonz-playtest/layers-menu-icon-rows-right-click-walk",
+  "seed": "Center on the Artboard, Union and Outline Stroke from the shape's own right-click menu, at Next defaults with no flags, under the same names and keys as the Layers panel menu and the menu bar. A 24 unit icon frame at 788, 538: an oval of 6 at frame 2, 3 is centred onto 9, 9 by right click and undone; a box at frame 6, 4 is picked with it and Union by right click makes one path from 2, 3 to 16, 10; with its Outline ticked on, Outline Stroke by right click puts the line on a layer of its own above the fill. Also photographs the Layers panel menu open.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "ellipse"
+    },
+    {
+      "do": "drag",
+      "from": [
+        792,
+        542
+      ],
+      "to": [
+        806,
+        556
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
+    {
+      "do": "focus",
+      "field": "X"
+    },
+    {
+      "do": "type",
+      "text": "2"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "Y"
+    },
+    {
+      "do": "type",
+      "text": "3"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "type",
+      "text": "6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        790,
+        541
+      ],
+      "size": [
+        6,
+        6
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "selectRow",
+      "row": "Ellipse"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Layers Menu",
+      "shot": "0-layers-panel-menu"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        792,
+        544
+      ],
+      "shot": "1-right-click-center",
+      "choose": "Center on the Artboard"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        797,
+        547
+      ],
+      "size": [
+        6,
+        6
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectBox",
+      "layer": "Ellipse",
+      "at": [
+        790,
+        541
+      ],
+      "size": [
+        6,
+        6
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        796,
+        544
+      ],
+      "to": [
+        810,
+        552
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
+    {
+      "do": "focus",
+      "field": "X"
+    },
+    {
+      "do": "type",
+      "text": "6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "Y"
+    },
+    {
+      "do": "type",
+      "text": "4"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "W"
+    },
+    {
+      "do": "type",
+      "text": "10"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "focus",
+      "field": "H"
+    },
+    {
+      "do": "type",
+      "text": "6"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Rectangle",
+      "at": [
+        794,
+        542
+      ],
+      "size": [
+        10,
+        6
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "selectRow",
+      "row": "Ellipse"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        800,
+        545
+      ],
+      "shot": "2-right-click-union",
+      "keys": {
+        "Union": "⌥⌘U"
+      },
+      "choose": "Union"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 3
+    },
+    {
+      "do": "expectBox",
+      "layer": "Path",
+      "at": [
+        790,
+        541
+      ],
+      "size": [
+        14,
+        7
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "action",
+      "action": "togglePathOutline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        800,
+        545
+      ],
+      "shot": "3-right-click-outline-stroke",
+      "keys": {
+        "Outline Stroke": "⇧⌘O"
+      },
+      "choose": "Outline Stroke"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectLayers",
+      "count": 4
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Path outline"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "4-outlined-from-right-click"
+    }
+  ]
+}

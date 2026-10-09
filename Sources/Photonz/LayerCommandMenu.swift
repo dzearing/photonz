@@ -92,6 +92,11 @@ enum LayerCommandList {
                 editorState.mirrorRowAcrossCenter(id: id)
             })
         }
+        // And the middle of its frame, as the icon mock's Layers panel menu
+        // pairs them (`CenterOnArtboard.swift`).
+        if editorState.canCenterRowOnArtboard(id: id) {
+            rows.append(.command(CenterOnArtboard.title) { editorState.centerRowOnArtboard(id: id) })
+        }
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one
         // right click away (`EditorState+Look.swift`).
@@ -134,6 +139,19 @@ enum LayerCommandList {
                                          editorState.combineLayers(id: id, operation)
                                      }
                                  }))
+        }
+        // Join under the name the icon mock gives it, and a line turned into
+        // the filled shape it draws (`OutlineStroke.swift`), beside Combine
+        // Shapes. Absent rather than dimmed, like every row here.
+        if editorState.canUnionRow(id: id) {
+            rows.append(.command(PathCombine.unionTitle, .commandOption("u")) {
+                editorState.unionRow(id: id)
+            })
+        }
+        if editorState.canOutlineRowStroke(id: id) {
+            rows.append(.command(OutlineStroke.title, .commandShift("o")) {
+                editorState.outlineRowStroke(id: id)
+            })
         }
         // Not gated on THIS layer being a shape, for the same reason Turn Into
         // Path is not: with three picked the command acts on all of them, so a

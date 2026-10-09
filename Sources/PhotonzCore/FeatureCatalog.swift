@@ -117,6 +117,8 @@ public enum FeatureCatalog {
 
     public static let mirrorAcrossCenterFlag = "next-mirror-across-center"
 
+    public static let iconShapeCommandsFlag = "next-icon-shape-commands"
+
     public static let libraryFlag = "next-library"
 
     public static let componentsFlag = "next-components"
@@ -1237,6 +1239,16 @@ public enum FeatureCatalog {
                     name: mirrorAcrossCenterFlag,
                     title: "Mirror a shape across the center",
                     description: "Layer ▸ Mirror Across Center (⇧⌘M) copies the picked shape reflected about the middle of its frame, so a symmetrical icon is exact. Off means no Mirror command.",
+                    area: .icons,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: iconShapeCommandsFlag,
+                    title: "Center, Union and Outline Stroke",
+                    description: "Center on the Artboard, Union (⌥⌘U) and Outline Stroke (⇧⌘O) in the Layers panel menu, the Layer menu and a shape's right-click menu, as the icon drawing mock puts them. Off means none of the three rows.",
                     area: .icons,
                     isEnabled: false,
                     parameters: []),

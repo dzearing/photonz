@@ -1777,6 +1777,14 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("m", modifiers: [.command, .shift])
                     .disabled(!(editor?.canMirrorSelectionAcrossCenter ?? false))
             }
+            // Beside it, as the icon mock's Layers panel menu has them: what is
+            // picked moves, as one piece, onto the middle of its frame
+            // (`CenterOnArtboard.swift`). No key: the mock's ⌥⌘C is Canvas
+            // Size, as it is in Photoshop.
+            if Experiments.shared.iconShapeCommandsEnabled && !timed {
+                Button(CenterOnArtboard.title) { editor?.centerSelectionOnArtboard() }
+                    .disabled(!(editor?.canCenterSelectionOnArtboard ?? false))
+            }
             if Experiments.shared.proMenuBarEnabled {
                 layerListRows
             }
@@ -1874,6 +1882,19 @@ struct EditorCommands: Commands {
                     }
                 }
                 .disabled(!(editor?.canCombineSelection ?? false))
+            }
+            // The two the icon mock's Layers panel menu puts together: Join
+            // under the name every other drawing program gives it, with the
+            // mock's key, and a line turned into the filled shape it draws
+            // (`OutlineStroke.swift`). Pictures and icons only, like the
+            // panel menu's rows.
+            if Experiments.shared.penEnabled && Experiments.shared.iconShapeCommandsEnabled && !timed {
+                Button(PathCombine.unionTitle) { editor?.unionSelection() }
+                    .keyboardShortcut("u", modifiers: [.command, .option])
+                    .disabled(!(editor?.canUnionSelection ?? false))
+                Button(OutlineStroke.title) { editor?.outlineSelectionStroke() }
+                    .keyboardShortcut("o", modifiers: [.command, .shift])
+                    .disabled(!(editor?.canOutlineSelectionStroke ?? false))
             }
             // The one command that makes a shape or a piece of text into pixels,
             // which is what a marquee needs before it can cut a piece out of it

@@ -6633,6 +6633,21 @@ private final class Run {
                     throw Failure(description: "nothing picked can be mirrored across the center")
                 }
                 editor.mirrorSelectionAcrossCenter()
+            case .centerOnArtboard:
+                guard editor.canCenterSelectionOnArtboard else {
+                    throw Failure(description: "nothing picked would move to the middle of its frame")
+                }
+                editor.centerSelectionOnArtboard()
+            case .union:
+                guard editor.canUnionSelection else {
+                    throw Failure(description: "fewer than two picked shapes have an inside to join")
+                }
+                editor.unionSelection()
+            case .outlineStroke:
+                guard editor.canOutlineSelectionStroke else {
+                    throw Failure(description: "nothing picked has a line to outline")
+                }
+                editor.outlineSelectionStroke()
             case .pasteLook: editor.pasteLook()
             case .toggleTimingStrip:
                 editor.toggleMotionStrip()

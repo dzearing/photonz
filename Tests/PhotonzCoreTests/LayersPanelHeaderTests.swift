@@ -19,13 +19,16 @@ import Testing
     }
 
     @Test func theMenuIsTheMocksRowsInItsOrder() {
-        // Mirror Across Center under Group Selection, as `icon-draw-wt.html`
-        // draws the same menu.
+        // The icon rows as `icon-draw-wt.html` draws the same menu: Mirror
+        // Across Center and Center on the Artboard under Group Selection, then
+        // a divider and the two that remake a shape's outline.
         #expect(LayersPanelHeader.MenuRow.allCases.map(\.title)
-            == ["Group Selection", "Mirror Across Center", "Make Component", "Hide This Panel"])
-        // A divider before Hide: the rest act on the layers, the last on the
-        // window.
-        #expect(LayersPanelHeader.MenuRow.allCases.map(\.startsSection) == [false, false, false, true])
+            == ["Group Selection", "Mirror Across Center", "Center on the Artboard",
+                "Union", "Outline Stroke", "Make Component", "Hide This Panel"])
+        // Dividers before Union, before Make Component, and before Hide, which
+        // acts on the window rather than the layers.
+        #expect(LayersPanelHeader.MenuRow.allCases.map(\.startsSection)
+            == [false, false, false, true, false, true, true])
     }
 
     @Test func eachRowCarriesTheKeyItsMenuBarTwinAnswersTo() {
@@ -33,6 +36,14 @@ import Testing
             == .init(key: "g", modifiers: [.command]))
         #expect(LayersPanelHeader.MenuRow.makeComponent.shortcut
             == .init(key: "k", modifiers: [.option, .command]))
+        // The mock's keys for Union and Outline Stroke.
+        #expect(LayersPanelHeader.MenuRow.union.shortcut
+            == .init(key: "u", modifiers: [.option, .command]))
+        #expect(LayersPanelHeader.MenuRow.outlineStroke.shortcut
+            == .init(key: "o", modifiers: [.shift, .command]))
+        // The mock prints Option Command C for Center on the Artboard, but that
+        // is Canvas Size, as it is in Photoshop, so the row borrows no key.
+        #expect(LayersPanelHeader.MenuRow.centerOnArtboard.shortcut == nil)
         // Show Panel's Option Command L is a setting with a checkmark in the
         // View menu; here the row only ever hides, so it borrows no key.
         #expect(LayersPanelHeader.MenuRow.hidePanel.shortcut == nil)

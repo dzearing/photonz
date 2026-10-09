@@ -120,5 +120,9 @@ public enum PlaytestMenuStandIn {
         // like undo. On a video the same chord is Go to Previous Marker, which
         // the timeline answers itself before the menu is asked.
         Chord(key: "m", modifiers: [.command, .shift]): .mirrorAcrossCenter,
+        // Layer ▸ Union and Layer ▸ Outline Stroke, on a picture or an icon.
+        // Window-scoped like undo.
+        Chord(key: "u", modifiers: [.command, .option]): .union,
+        Chord(key: "o", modifiers: [.command, .shift]): .outlineStroke,
     ]
 }
