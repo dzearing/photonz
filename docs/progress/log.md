@@ -20929,3 +20929,9 @@ Next: the first editor window's ~200 ms first build
 - Core: `PhotonzDocument.setPathStrokePosition`, `PathLineStyleSelection.alignReading`/`hasAnInside`, tested in `PathStrokeAlignTests.swift` (including the SVG words). Rendering and SVG export already handled all three.
 - Walks: `path-outline-align-walk`, `path-outline-align-click-walk`. Audit `queue/audits/2026-10-08-path-outline-align.json`.
 - Next: p1 `a-drawn-path-s-outline-settings-read-like-the-ic` for the rest of the mock's Stroke section.
+
+## 2026-10-08 — Undo and Redo on a video: header menus stop rebuilding, walks time as the app in front
+
+- Walks kept the probe behind every app, with the darwin role UI_NON_FOCAL, and every timed press started 26-36 ms on an efficiency core (Time Profiler core column); the probe held in front never did. `PlaytestSchedulingRole` takes UI_FOCAL before every step. About 18 ms off each Undo/Redo reading, so every timed walk now reads closer to what a person gets. Residual: ~10 ms on an E core at press start that a front app does not pay.
+- The four dock header menus (Properties, Add Effect, Add Audio Effect, Add transition) were SwiftUI Menus that rebuilt their NSMenu on every document change. Now `VideoKit.HeaderMenu` (`VideoKit/VideoKitHeaderMenu.swift`), which rebuilds only when a row changes; same glyph, same pixels. `VideoKit.Choice` gained `help` (row tooltip).
+- undo-redo-cost-walk: 1/10 presses under 50 ms before, 7-10/10 after. Still over: Redo of the first cut and of the dropped clip (pick moves onto a clip, 50-56 ms), filed as `redo-that-hands-a-clip-back-to-the-panel-answers` with A/B numbers and profile.

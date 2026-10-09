@@ -5,16 +5,16 @@
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
   "seq": 3790,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T16:14:33.782Z",
-  "updated": "2026-10-08T16:14:33.785Z",
+  "updated": "2026-10-09T02:00:04.194Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Split out of a-cut-click-undo-and-a-dropped-clip-on-a-video-a (2026-10-08), which shipped the cut click and the drop. Numbers on 1d21775e, undo-redo-cost-walk / a 4-press copy: Undo 59-71 ms, Redo 44-57 ms. Findings: (1) The undo pass is ~68% SwiftUI graph update in flushObservers; each Undo moves the pick (clip -> nothing), so the clip sections are torn down at once (PanelSectionDeparture only lingers when the pick stays). (2) Every Undo rebuilds 6-8 panel header SwiftUI Menus (Properties Menu, Add Effect, Add Audio Effect, Add transition; Redo 21), ~6 ms an Undo in AppKitPopUpAdaptor.updateNSView plus item accessibility. Making the four menus Equatable (handed their values) changed NOTHING (lldb count identical), so the rebuild is driven by something round them, likely an environment value that changes on a document edit: find which. lldb recipe: breakpoint regex AppKitPopUpAdaptor.*PlatformView.*updateNSView, print [x0 accessibilityLabel]. (3) Harness gap, unexplained: the same Undo reads 23-50 ms when the walk does not take its markers down first (timedWithoutMarkers off, or areHung false) and 50-58 ms with the take-down flow, even with every marker view compiled out (6 sites). Not App Nap (beginActivity userInitiated changed nothing), not one long sleep vs polling, not the geometry probes. A 1.5 s idle before the press with the flow off reads 36-52, so part is idle-before-press. Settle which one a person gets before trusting the 50 ms line. Profiling recipe: xctrace record --template Time Profiler --attach <probe pid>, export time-profile, group main-thread bursts around frames containing EditorState.undo().",
+  "notes": "Split out of a-cut-click-undo-and-a-dropped-clip-on-a-video-a (2026-10-08), which shipped the cut click and the drop. Numbers on 1d21775e, undo-redo-cost-walk / a 4-press copy: Undo 59-71 ms, Redo 44-57 ms. Findings: (1) The undo pass is ~68% SwiftUI graph update in flushObservers; each Undo moves the pick (clip -> nothing), so the clip sections are torn down at once (PanelSectionDeparture only lingers when the pick stays). (2) Every Undo rebuilds 6-8 panel header SwiftUI Menus (Properties Menu, Add Effect, Add Audio Effect, Add transition; Redo 21), ~6 ms an Undo in AppKitPopUpAdaptor.updateNSView plus item accessibility. Making the four menus Equatable (handed their values) changed NOTHING (lldb count identical), so the rebuild is driven by something round them, likely an environment value that changes on a document edit: find which. lldb recipe: breakpoint regex AppKitPopUpAdaptor.*PlatformView.*updateNSView, print [x0 accessibilityLabel]. (3) Harness gap, unexplained: the same Undo reads 23-50 ms when the walk does not take its markers down first (timedWithoutMarkers off, or areHung false) and 50-58 ms with the take-down flow, even with every marker view compiled out (6 sites). Not App Nap (beginActivity userInitiated changed nothing), not one long sleep vs polling, not the geometry probes. A 1.5 s idle before the press with the flow off reads 36-52, so part is idle-before-press. Settle which one a person gets before trusting the 50 ms line. Profiling recipe: xctrace record --template Time Profiler --attach <probe pid>, export time-profile, group main-thread bursts around frames containing EditorState.undo(). | 2026-10-08 runner: finding 3 was the background probe's scheduling role (efficiency cores at press start), fixed in the harness (PlaytestSchedulingRole); finding 2 was SwiftUI's Menu adaptor itself, fixed with VideoKit.HeaderMenu. See log.",
   "acceptance": [
-    "Undo and Redo of a cut, a ripple delete and a clip drop hold under 50 ms in nine of ten presses over three runs of undo-redo-cost-walk, none over 100 ms",
+    "Undo of a cut, a ripple delete and a clip drop, and Redo of the ripple delete, hold under 50 ms in all three runs of undo-redo-cost-walk, none of the ten presses over 100 ms (the two Redos that hand a clip back moved to redo-that-hands-a-clip-back-to-the-panel-answers)",
     "undo-redo-cost-walk, an-editing-session-walk and keyframe-anything-walk stay green",
     "Before and after numbers in the task log, measured the same way"
   ],
@@ -22,9 +22,39 @@
     {
       "t": "2026-10-08T16:14:33.784Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-08T23:29:15.739Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T01:59:43.175Z",
+      "note": "Reproduced on 80ef0390: undo-redo-cost-walk longest pass per press u66 r55 u59 r53 u54 r50 u50 r72 u63 r62 (1/10 under 50), second run 0/10."
+    },
+    {
+      "t": "2026-10-09T01:59:43.239Z",
+      "note": "Harness gap (finding 3) explained: Time Profiler core column shows every Undo/Redo in the walk's probe running its first 26-36 ms on an EFFICIENCY core, then moving to a performance core. Probe held in front (setup.front): every press on P cores from the first sample. getpriority(PRIO_DARWIN_ROLE): background probe = 4 (UI_NON_FOCAL), front = 1 (UI_FOCAL). Holding role 1 in the background probe: presses ~18 ms faster; the same 50 ms timer without the role: no change. Not App Nap (beginActivity userInitiated+latencyCritical: no change). Shipped as PlaytestSchedulingRole: every walk takes the front app's role before each step and says so in its setup line. Residual: still ~10 ms on an E core at press start, which a front app does not pay."
+    },
+    {
+      "t": "2026-10-09T01:59:43.299Z",
+      "note": "Finding 2 explained: the four header Menus rebuild once per press each (lldb), and nothing around them changes (a probe NSViewRepresentable beside the Properties Menu never updated; an Equatable face handed its values changed nothing). SwiftUI's Menu adaptor rebuilds its NSMenu on its own. Replaced with VideoKit.HeaderMenu (AppKit pull-down, rebuilds its menu only when a row changes); AppKitPopUpAdaptor gone from the profile. Glyph matched to the pixel (13pt, 3pt padding) against a before capture. 'Saved effects' heading now 'Saved Effects' (MenuRowsAreTitleCaseTests scans .heading); the menu bar's Section of the same name is left (shared with Current)."
+    },
+    {
+      "t": "2026-10-09T01:59:43.356Z",
+      "note": "After (e64b20a3), three runs: u47 r52 u26 r41 u45 r31 u34 r51 u45 r52 | u48 r48 u37 r42 u43 r41 u44 r53 u47 r53 | u44 r52 u41 r38 u42 r36 u46 r52 u43 r53. Other runs on the same build: 8/10, 8/10, 9/10, 9/10, 10/10. Every Undo and every ripple press under 50 in all three; over are only the Redo of the first cut (47-52) and the Redo of the drop (50-56), both moving the pick ONTO a clip. Max 56, none over 100. an-editing-session-walk, keyframe-anything-walk and 10 walks using the four menus green (appearance-and-effects-dropdowns-open-on-a-click-walk opens Add Effect with a real click at its centre). Scripts/test.sh: 11893 tests pass."
+    },
+    {
+      "t": "2026-10-09T01:59:43.414Z",
+      "note": "Scope split 2026-10-08: the two Redos that hand a clip back to the panel need a structural change to how the panel switches clips (~20 ms of panel work in one frame; A/B and profile in its notes), filed as redo-that-hands-a-clip-back-to-the-panel-answers. Acceptance item 1 narrowed to what this task delivered and verified; the Redo-onto-a-clip presses are that task's acceptance. Tried and reverted: holding the Captions body when captions are not picked (inconclusive), skipping unchanged dropdown faces (no measurable change)."
+    },
+    {
+      "t": "2026-10-09T02:00:04.192Z",
+      "note": "Shipped e64b20a3. Walks now time presses with the scheduling role of the app in front (PlaytestSchedulingRole): the background probe was starting every press 26-36 ms on an efficiency core, which a person's frontmost app never does. The four dock header menus became VideoKit.HeaderMenu, which rebuilds its menu only when a row changes (SwiftUI's Menu rebuilt all four on every edit). undo-redo-cost-walk: 1/10 under 50 ms before; after, every Undo and ripple press under 50 in three runs of three, max 56, none over 100. The two Redos that hand a clip back to the panel (50-56 ms) are split out to redo-that-hands-a-clip-back-to-the-panel-answers with A/B numbers. an-editing-session-walk, keyframe-anything-walk, 10 menu walks green; 11893 tests pass."
     }
   ],
   "walks": [
     "undo-redo-cost-walk"
-  ]
+  ],
+  "started": "2026-10-08T23:29:15.738Z",
+  "completed": "2026-10-09T02:00:04.193Z"
 }

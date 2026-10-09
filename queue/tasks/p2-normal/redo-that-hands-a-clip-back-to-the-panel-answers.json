@@ -1,0 +1,31 @@
+{
+  "id": "redo-that-hands-a-clip-back-to-the-panel-answers",
+  "title": "Redo that hands a clip back to the panel answers inside 50 ms",
+  "goal": "On a video, Redo of a cut and Redo of a dropped clip still hold the app for 50 to 56 ms, because the right hand panel switches from what was picked to the clip in one frame. Bring both under the 50 ms the Premiere goal sets, so stepping forward through edits never hitches either.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 3830,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T01:59:11.925Z",
+  "updated": "2026-10-09T01:59:11.928Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of undo-and-redo-on-a-video-answer-inside-50-ms (2026-10-08, commit e64b20a3), which made walks time as the app in front (PlaytestSchedulingRole) and swapped the four dock header menus for VideoKit.HeaderMenu. After it, undo-redo-cost-walk reads Undo and the ripple presses 26-48 ms; the two over are the Redos where the pick moves ONTO a clip: first cut (Captions -> Sample Talk piece) 47-52, drop (Sample Talk -> b-roll) 50-56. A/B on 2026-10-08 (temp switches, reverted): inspector hidden -> those two read 28 and 33, so the panel is ~20 ms of them; section bodies blanked (Color.clear at their height) -> ~8 ms off; header accessories off -> ~6 ms off (now fixed by HeaderMenu). Profile of the Redo bursts: SectionRevealLayout.sizeThatFits ~5 ms a press (it is the section content being measured again), PanelFieldRowLayout.minimum ~2 ms, accessibility graph ~20% of the burst, InspectorPanel body + CollapsibleSection headers a few ms. Holding the Captions body while captions are not picked was inconclusive (first pair worse, drop pair noisy). Skipping an unchanged VideoKit.Dropdown face (5 updates a press) moved nothing measurable. Likely shape of a fix: split a pick change that Undo/Redo makes across two passes (canvas + timeline first, panel the next frame), the way PanelSectionArrival already does for new sections; or keep the leaving pick's built sections for one pass on a pick change too (PanelSectionDeparture only lingers when the pick stays). Measurement caveat: with the focal role held, a timed press still starts with ~10 ms on an efficiency core, where the probe held in front (setup.front) has none, so the walk reads a few ms slower than a person. Run-to-run spread on one press is about +/-8 ms, so take three runs. Profiling recipe: /tmp-style run script that starts Scripts/playtest.sh under nohup, then xctrace record --template 'Time Profiler' --attach <probe pid>; export time-profile and look at main-thread bursts containing EditorState.redo(); core column tells P from E.",
+  "acceptance": [
+    "Redo of the first cut and Redo of the clip drop in undo-redo-cost-walk hold under 50 ms in three runs out of three, with every other press there still under 50",
+    "No press in undo-redo-cost-walk goes over 100 ms",
+    "an-editing-session-walk and keyframe-anything-walk stay green",
+    "Before and after numbers in the task log, measured the same way"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T01:59:11.927Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "undo-redo-cost-walk"
+  ]
+}
