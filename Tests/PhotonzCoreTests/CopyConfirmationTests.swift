@@ -68,6 +68,16 @@ struct CopyConfirmationTests {
         #expect(notice.detail == "1 of 2 shapes shows. Copies pick it with Shape")
     }
 
+    /// A drop on the bare page of Edit Original's space says where it would
+    /// have gone in, rather than nothing happening.
+    @Test func aDropBesideTheOriginalSaysWhereToDropIt() {
+        let named = CopyConfirmation(subject: .componentBesideOriginal(component: "Button"), shownAt: t0)
+        #expect(named.title == "Not placed")
+        #expect(named.detail == "Drop it onto Button")
+        let unnamed = CopyConfirmation(subject: .componentBesideOriginal(component: nil), shownAt: t0)
+        #expect(unnamed.detail == "Drop it onto the drawing")
+    }
+
     @Test func pointingACopySomewhereElseSaysWhatItFollowsNow() {
         let notice = CopyConfirmation(subject: .componentSwapped(component: "Badge", count: 1,
                                                                  dropped: [], droppedOwnType: false),

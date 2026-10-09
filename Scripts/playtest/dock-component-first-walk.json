@@ -32,7 +32,7 @@
     },
     {
       "do": "wait",
-      "seconds": 1.0
+      "seconds": 1
     },
     {
       "do": "click",
@@ -74,6 +74,15 @@
       "seconds": 0.8
     },
     {
+      "comment": "Back to the document before placing copies: since 2026-10-09 a copy of the Badge let go in the Badge original's own space is refused, because Done would have folded it into the original.",
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragTile",
       "tile": "Badge",
       "to": [
@@ -83,7 +92,7 @@
     },
     {
       "do": "wait",
-      "seconds": 1.0
+      "seconds": 1
     },
     {
       "do": "dragTile",

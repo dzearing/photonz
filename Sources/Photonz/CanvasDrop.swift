@@ -158,12 +158,32 @@ extension CanvasNSView {
             return []
         }
         let point = viewport.documentPoint(fromView: viewPoint)
+        // In Edit Original's space only a drawing takes the drop: over it, it
+        // is the group the piece joins; over the bare page, or for a copy of
+        // the component itself, the drag is refused in the air.
+        var context = dropGroupContext
+        if let answer = originalSpaceDrop(componentID, point) {
+            guard case .into(let group) = answer else {
+                dropLanding = nil
+                dropHostBox = nil
+                onComponentDragEnded()
+                // A pointer alone cannot say why, and letting go does nothing,
+                // so the reason rides under it.
+                if let note = answer.note(component: originalSpaceName()) {
+                    showDropNote(note, lands: false, at: viewPoint)
+                }
+                refreshOverlays()
+                return []
+            }
+            context = group
+        }
+        clearTextStyleNote()
         // One question, asked of the model: the group you have stepped inside
         // takes the drop, so the outline says "this bar" while the button is
         // still down, and where a row would park the piece is where the box is
         // drawn — not under the pointer it is about to leave.
         guard let landing = document.componentDropLanding(
-            of: componentID, at: point, inside: dropGroupContext, version: version,
+            of: componentID, at: point, inside: context, version: version,
             measure: { TextRasterizer.naturalSize($0) },
             arriving: arrivingComponentDrawing(componentID))
         else {

@@ -185,7 +185,7 @@ extension PhotonzDocument {
 
     /// The components a layer's subtree relies on: the ones it holds copies of,
     /// and everything those rely on in turn.
-    private func componentsUsed(by layer: Layer, depth: Int = 0) -> Set<UUID> {
+    func componentsUsed(by layer: Layer, depth: Int = 0) -> Set<UUID> {
         guard depth < Self.componentNestingLimit else { return [] }
         var used: Set<UUID> = []
         if let referenced = layer.instanceOf {

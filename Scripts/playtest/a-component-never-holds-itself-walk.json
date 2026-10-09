@@ -1,0 +1,27 @@
+{
+  "seed": "Found 2026-10-09: with the Button's original open, a Button dragged off the shelf beside it and a Card beside that were folded into the original on Done, and every copy in the document turned into a big box holding a Card and a copy of itself. A drop in Edit Original's space now joins the drawing it lands on and nowhere else: a copy of the component itself is refused under the pointer with Cannot go inside itself, and the bare page beside the drawing refuses anything with Drop it onto Button. This walk does both at Next defaults, presses Done, and photographs the copy the size it was.",
+  "out": "/tmp/photonz-playtest/a-component-never-holds-itself",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "action", "action": "showComponentShelf" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "dragTile", "tile": "Button", "to": [420, 300] },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "expectLayers", "count": 27 },
+    { "do": "expectBox", "layer": "Button", "at": [371, 284], "size": [97, 32], "within": 1 },
+    { "do": "snapshot", "name": "1-copy" },
+    { "do": "action", "action": "editPickedComponentOriginal" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "snapshot", "name": "2-space" },
+    { "do": "dragTile", "tile": "Button", "to": [399, 504], "space": "window", "expect": "refuses", "says": "Cannot go inside itself", "hold": "3-button-over-its-own-drawing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "dragTile", "tile": "Card", "to": [868, 186], "space": "window", "expect": "refuses", "says": "Drop it onto Button", "hold": "4-card-beside-the-drawing" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "doneEditingOriginal" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectLayers", "count": 27 },
+    { "do": "expectBox", "layer": "Button", "at": [371, 284], "size": [97, 32], "within": 1 },
+    { "do": "snapshot", "name": "5-copy-unchanged" }
+  ]
+}

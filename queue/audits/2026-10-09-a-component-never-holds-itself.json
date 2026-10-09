@@ -1,0 +1,25 @@
+{
+  "feature": "Edit Original never folds a stray drop into the component",
+  "epic": "ui-components",
+  "summary": "With a component's original open, a copy of that same component, or anything dropped on the bare page beside the drawing, is now refused under the pointer instead of quietly joining the original on Done. A tile dropped onto a drawing still goes inside that drawing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-component-never-holds-itself-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Drag a Button off the Library shelf onto the page, then right-click it and choose Edit Original.", "shot": "2026-10-09-never-holds-itself-2-space.png" },
+    { "do": "Drag another Button off the shelf over the Primary Small drawing and hold it there.", "shot": "2026-10-09-never-holds-itself-3-self.png" },
+    { "do": "Drag a Card off the shelf over the empty page beside the grid and let go.", "shot": "2026-10-09-never-holds-itself-4-beside.png" },
+    { "do": "Drag a Badge onto any Button drawing and let go: it lands inside that drawing." },
+    { "do": "Press Done in the title bar and look at the Button on your page.", "shot": "2026-10-09-never-holds-itself-5-after-done.png" }
+  ],
+  "evaluate": [
+    "Is \"Cannot go inside itself\" clear enough when you drag a Button over the Button you are editing?",
+    "Over the empty page, does \"Drop it onto Button\" tell you where the drop would have worked?",
+    "Should a drop on the empty page beside the drawing instead do something useful, such as go back to the page you came from?",
+    "After Done, is every copy the size and look it was before?"
+  ],
+  "rough": [
+    "No mock covers what a drop does inside Edit Original's space; the refusal reuses the dark note a text style drag already shows under the pointer.",
+    "Something drawn with a tool, or pasted, beside the drawing still joins the first drawing on Done, as it did before; only a pasted copy of the component itself is now left out. Only drops were in scope here.",
+    "A double click on a tile or Layer > Insert Component while the space is open lands in the middle of the view, so it is refused when the middle of the view is bare page."
+  ]
+}

@@ -266,7 +266,8 @@ extension PhotonzDocument {
     /// and every instance follow when the sync runs.
     ///
     /// Anything drawn loose beside the component joins its first drawing
-    /// rather than being lost, and a space emptied of the component leaves the
+    /// rather than being lost, except a copy of the component itself, and a
+    /// space emptied of the component leaves the
     /// component as it was: deleting an original is not what Done means.
     public mutating func returnFromEditingSpace(_ space: PhotonzDocument, componentID: UUID) {
         var drawings = space.layers.filter { $0.componentID == componentID }
@@ -277,6 +278,11 @@ extension PhotonzDocument {
                 others.append(layer)
                 continue
             }
+            // A copy of the component itself, or of anything holding one, left
+            // loose on the page (a paste, say) would make a component that
+            // draws forever, so it stays out rather than joining.
+            if layer.instanceOf == componentID
+                || space.componentsUsed(by: layer).contains(componentID) { continue }
             var child = layer
             child.frame = child.frame.offsetBy(dx: -drawings[0].frame.origin.x,
                                                dy: -drawings[0].frame.origin.y)

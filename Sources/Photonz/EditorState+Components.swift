@@ -167,9 +167,10 @@ extension EditorState {
     @discardableResult
     func insertStarterComponent(_ kind: StarterComponent, at point: CGPoint) -> UUID? {
         guard starterComponentsEnabled, document != nil else { return nil }
+        guard let landing = landingContext(of: kind.componentID, at: point) else { return nil }
         discardDragPreview()
         var placed: UUID?
-        let context = dropContext
+        let context = landing.group
         let moment = placementMomentMS
         perform {
             placed = $0.insertStarterComponent(kind, at: point, inside: context,
@@ -200,14 +201,21 @@ extension EditorState {
         // A component off the shared shelf is not in this document yet, so the
         // drawing it would arrive as is handed in (`SharedComponents`).
         let arriving = sharedComponent(entryID: componentID.uuidString)?.drawings.first
+        // In Edit Original's space the drawing under the pointer takes the
+        // drop, and a drop it would refuse holds no room open.
+        var context = dropContext
+        if let answer = originalSpaceDrop(of: componentID, at: point, arriving: arriving) {
+            guard case .into(let group) = answer else { return releaseRoomForComponentDrag() }
+            context = group
+        }
         guard let landing = document.componentDropLanding(of: componentID, at: point,
-                                                          inside: dropContext, version: version,
+                                                          inside: context, version: version,
                                                           measure: measure, arriving: arriving),
               let host = landing.host, let index = landing.index
         else { return releaseRoomForComponentDrag() }
         guard componentDropRoom?.host != host || componentDropRoom?.index != index else { return }
         guard let held = document.holdingRoomForComponentDrop(of: componentID, at: point,
-                                                              inside: dropContext, version: version,
+                                                              inside: context, version: version,
                                                               measure: measure, arriving: arriving)
         else { return releaseRoomForComponentDrag() }
         componentDropRoom = (host, index)
@@ -306,18 +314,19 @@ extension EditorState {
                                  version: UUID? = nil) -> UUID? {
         guard Experiments.shared.componentsEnabled, let document else { return nil }
         guard document.mainComponent(componentID: componentID) != nil else { return nil }
+        guard let landing = landingContext(of: componentID, at: point) else { return nil }
         // Dropping a component onto its own original would make a thing that
         // draws forever, so it is refused out loud rather than quietly ignored.
         // The same answer is what the canvas draws mid-drag, so a drag that is
         // going to be refused says so before the button comes up.
         if document.componentDropTarget(of: componentID, at: point,
-                                        inside: dropContext) == .refused {
+                                        inside: landing.group) == .refused {
             raiseComponentCycleNotice()
             return nil
         }
         discardDragPreview()
         var placed: UUID?
-        let context = dropContext
+        let context = landing.group
         let moment = placementMomentMS
         perform {
             placed = $0.insertComponentInstance(of: componentID, at: point, inside: context,
@@ -334,6 +343,39 @@ extension EditorState {
     private func raiseComponentCycleNotice() {
         guard Experiments.shared.componentsEnabled else { return }
         raiseCanvasNotice(.componentCycle)
+    }
+
+    /// Where an accepted component drop goes in: the group it joins, nil out
+    /// on the canvas.
+    struct ComponentLanding { let group: UUID? }
+
+    /// What letting go of a component at a point would do in Edit Original's
+    /// space, nil while the document itself is showing. The space folds its
+    /// whole page into the original on Done, so a drop there joins the drawing
+    /// it lands on and nowhere else (`EditingSpaceDrop`).
+    func originalSpaceDrop(of componentID: UUID, at point: CGPoint,
+                           arriving: Layer? = nil) -> EditingSpaceDrop? {
+        guard let session = originalSpace, let document else { return nil }
+        return document.editingSpaceDrop(of: componentID, at: point, editing: session.componentID,
+                                         inside: dropContext, arriving: arriving)
+    }
+
+    /// The group a component let go at a point joins (`group` nil out on the
+    /// canvas), or nil when the drop is refused, after the canvas has said why.
+    /// Every drop path asks this, so a drag off the shelf, a double click on a
+    /// tile and the menu row all get the same answer.
+    func landingContext(of componentID: UUID, at point: CGPoint,
+                        arriving: Layer? = nil) -> ComponentLanding? {
+        switch originalSpaceDrop(of: componentID, at: point, arriving: arriving) {
+        case nil: return ComponentLanding(group: dropContext)
+        case .into(let group): return ComponentLanding(group: group)
+        case .holdsItself:
+            raiseComponentCycleNotice()
+            return nil
+        case .beside:
+            raiseCanvasNotice(.componentBesideOriginal(component: originalSpaceName))
+            return nil
+        }
     }
 
     /// "Select on Canvas" on a Components tile: answers "where is this thing?"

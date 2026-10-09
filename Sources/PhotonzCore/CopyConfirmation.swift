@@ -32,6 +32,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// A copy of a component was NOT placed, because it would have put a
         /// component inside itself.
         case componentCycle
+        /// A component let go on the bare page of Edit Original's space, beside
+        /// the drawing, was NOT placed: Done folds the page into the original,
+        /// so it would have quietly grown every copy. `component` names the
+        /// original open in the space.
+        case componentBesideOriginal(component: String?)
         /// A copy stopped following its original (`docs/design/ui-building.md`,
         /// step C6). Detaching changes nothing you can see — the picture is
         /// identical the instant after — so without a word on screen the
@@ -415,7 +420,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .videoCopied(let file, _): return file == nil ? "Not copied" : "Copied"
         case .specList, .measurements, .image: return "Copied"
         case .componentInstances: return "Updated"
-        case .componentCycle: return "Not placed"
+        case .componentCycle, .componentBesideOriginal: return "Not placed"
         case .componentDetached: return "Detached"
         case .pathTurned(let paths): return paths <= 1 ? "Turned into a path" : "Turned into \(paths) paths"
         case .pathJoined(let paths): return paths <= 1 ? "Joined into one path" : "Joined into \(paths) paths"
@@ -524,6 +529,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "\(copies) of \(component)"
         case .componentCycle:
             return "A component cannot hold a copy of itself"
+        case .componentBesideOriginal(let component):
+            return EditingSpaceDrop.beside.note(component: component) ?? ""
         case .componentDetached(let component, let count):
             let one = count == 1
             guard let component, !component.isEmpty else {

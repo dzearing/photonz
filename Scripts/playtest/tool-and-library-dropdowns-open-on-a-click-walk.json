@@ -636,6 +636,15 @@
       "name": "9-place"
     },
     {
+      "comment": "Back to the document before the drop: since 2026-10-09 a copy of the Badge let go in the Badge original's own space is refused (it would have folded into the original on Done). The shelf keeps Disabled picked across Done.",
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragTile",
       "tile": "Badge",
       "to": [

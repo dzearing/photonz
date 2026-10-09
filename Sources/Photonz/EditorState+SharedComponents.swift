@@ -120,9 +120,11 @@ extension EditorState {
     @discardableResult
     func insertSharedComponent(_ shared: SharedComponent, at point: CGPoint) -> UUID? {
         guard sharedLibraryEnabled, document != nil else { return nil }
+        guard let landing = landingContext(of: shared.id, at: point,
+                                           arriving: shared.drawings.first) else { return nil }
         discardDragPreview()
         var placed: UUID?
-        let context = dropContext
+        let context = landing.group
         let moment = placementMomentMS
         perform {
             placed = $0.adoptSharedComponent(shared, at: point, inside: context, atTimeMS: moment)

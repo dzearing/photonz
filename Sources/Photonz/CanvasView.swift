@@ -316,6 +316,12 @@ struct CanvasView: NSViewRepresentable {
     /// outline in the air has to be the size of a thing that is not in the
     /// document yet.
     let arrivingComponentDrawing: (UUID) -> Layer?
+    /// What a component let go at a document point would do in Edit
+    /// Original's space, nil while the document itself is showing: the space
+    /// takes a drop only on a drawing, so the air has to say so too.
+    let originalSpaceDrop: (UUID, CGPoint) -> EditingSpaceDrop?
+    /// The name of the component Edit Original's space is open on.
+    let originalSpaceName: () -> String?
     /// A saved text style let go of on a piece of text (Next, `next-styles`).
     let onDropTextStyle: (UUID, [UUID]) -> Void
     let onDropImageURLIntoCollage: (URL, UUID, Int) -> Void
@@ -506,6 +512,8 @@ struct CanvasView: NSViewRepresentable {
         view.onComponentDragMoved = onComponentDragMoved
         view.onComponentDragEnded = onComponentDragEnded
         view.arrivingComponentDrawing = arrivingComponentDrawing
+        view.originalSpaceDrop = originalSpaceDrop
+        view.originalSpaceName = originalSpaceName
         view.onDropTextStyle = onDropTextStyle
         view.onAbsorbLayerIntoCollage = onAbsorbLayerIntoCollage
         view.onSwapCollageSlots = onSwapCollageSlots
@@ -682,6 +690,8 @@ final class CanvasNSView: NSView {
     var onDropTextStyle: ((UUID, [UUID]) -> Void) = { _, _ in }
     var onComponentDragMoved: ((UUID, UUID?, CGPoint) -> Void) = { _, _, _ in }
     var arrivingComponentDrawing: ((UUID) -> Layer?) = { _ in nil }
+    var originalSpaceDrop: ((UUID, CGPoint) -> EditingSpaceDrop?) = { _, _ in nil }
+    var originalSpaceName: (() -> String?) = { nil }
     var onComponentDragEnded: (() -> Void) = { }
     /// A photo layer dropped onto a collage slot: (photo layer, collage, slot).
     var onAbsorbLayerIntoCollage: ((UUID, UUID, Int) -> Void) = { _, _, _ in }

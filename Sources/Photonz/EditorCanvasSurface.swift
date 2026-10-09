@@ -206,6 +206,13 @@ struct EditorCanvasSurface: View {
                        editorState.sharedComponent(entryID: componentID.uuidString)?
                            .drawings.first
                    },
+                   originalSpaceDrop: { componentID, point in
+                       editorState.originalSpaceDrop(
+                           of: componentID, at: point,
+                           arriving: editorState.sharedComponent(entryID: componentID.uuidString)?
+                               .drawings.first)
+                   },
+                   originalSpaceName: { editorState.originalSpaceName },
                    onDropTextStyle: { styleID, layerIDs in
                        editorState.dropTextStyle(styleID: styleID, onLayers: layerIDs)
                    },
