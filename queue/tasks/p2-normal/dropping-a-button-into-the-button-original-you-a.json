@@ -4,12 +4,12 @@
   "goal": "While you edit a component's original, dragging a copy of that same component (or any other tile) onto the page silently becomes part of the original, so on Done every copy in the document turns into a large box holding the dropped things, including a copy of itself. A component should never be able to contain itself, and a drop beside the drawing should not quietly grow it.",
   "epic": "ui-components",
   "priority": "p2-normal",
-  "seq": 3860,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T06:59:30.272Z",
-  "updated": "2026-10-09T06:59:30.275Z",
+  "updated": "2026-10-09T12:52:25.964Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by an-instance-s-properties-match-the-variants-mock on 2026-10-09. Reproduced with the walk saved at queue/evidence/2026-10-09-selfdrop-walk.json: Scripts/playtest.sh queue/evidence/2026-10-09-selfdrop-walk.json --no-build -> status ok, 4 real captures in /tmp/photonz-playtest/selfdrop. Steps: blank 1440x1024; showComponentShelf; dragTile Button to [420,300]; action editPickedComponentOriginal; dragTile Button to [600,600] (panel rows then: Button (layer, copy), Button (group, shut, original): the copy sits in the space beside the original); dragTile Card to [900,300]; action doneEditingOriginal. Result in 4-back-sc.png: toast Updated 1 copy of Button; the copy on the page is now a ~300x230 blue box with the Card in its top right, the label Button, and a component mark in its bottom left (the nested copy of itself). Swap already guards against a component holding itself (componentSwapChoices dims it); the drop into the original space does not. Code: EditorState+OriginalSpace.swift (editOriginal / finishEditingOriginal), the drop path in EditorState+Components.swift placeComponent / insertStarterComponent. The existing component-versions-walk and tutorial walks also drop tiles while the space is open, so check them when fixing.",
@@ -23,6 +23,18 @@
     {
       "t": "2026-10-09T06:59:30.274Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T12:52:21.426Z",
+      "note": "seq 3860 -> 1"
+    },
+    {
+      "t": "2026-10-09T12:52:25.762Z",
+      "note": "Daily triage 2026-10-09: moved to the front of p2. It is the one open defect that silently changes a user's document (every copy turns into a giant box on Done), so it goes ahead of the new icon and redline features."
+    },
+    {
+      "t": "2026-10-09T12:52:25.963Z",
+      "note": "seq 1 -> 10"
     }
   ]
 }

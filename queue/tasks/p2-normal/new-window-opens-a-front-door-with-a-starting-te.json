@@ -4,12 +4,12 @@
   "goal": "The entry mocks show New Window opening a small window with a prompt bar, four starting templates (Design UI, Edit an image, Edit video, Capture and redline) and recent documents; picking a template changes the main button to say what it will make, and the editor opens set up for that job. Today an empty window shows a card of rows instead, so someone choosing what to make never sees the templates the mocks draw.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 3840,
+  "seq": 240,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T05:48:58.793Z",
-  "updated": "2026-10-09T05:48:58.796Z",
+  "updated": "2026-10-09T12:52:27.701Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the-empty-window-can-start-a-ui-design (2026-10-08), which added the Design UI row to the existing empty card and left the tile grid out by its own scope. Mock: docs/design/mocks/pages/ui-entry-wt.html steps 2 to 5 (#homeWin, #tileUI, #btnNew). The starter document is UIStarter.document (PhotonzCore/UIStarter.swift); EditorState.startUIDesign / newUIDesign open it. The user decided on 2026-09-15 that a starting choice is a mode preset, not a document type (work-out-whether-the-app-needs-project-types-at), so the tile sets the window mode and stores nothing in the document. Walk step startFromEmpty clicks card rows; a front door needs its own step. The prompt bar is agent work (agent-drivable is staged later), so it may ship as a disabled field or be a decision card.",
@@ -23,6 +23,10 @@
     {
       "t": "2026-10-09T05:48:58.795Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T12:52:27.700Z",
+      "note": "seq 3840 -> 240"
     }
   ]
 }

@@ -4,12 +4,12 @@
   "goal": "A sound clip on the timeline has a flat green background, as the main editing mock draws it. The audio mock draws the same lane in the neutral panel colour with a thin edge in the lane's own colour, so the sound reads as the coloured shape. Ask which the user wants, then draw that.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 150,
+  "seq": 190,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T02:14:36.504Z",
-  "updated": "2026-10-08T13:03:05.290Z",
+  "updated": "2026-10-09T12:52:27.314Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found auditing a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa (2026-10-07). App: ClipPiecesBar.fill returns kind.fill, VideoKit ClipKind.audio fill is the DS .clip.aud gradient #26463A to #1C3A30 (photonz-ds.css:927, used by video.html). video-audio.html ~44 .lane.alane background var(--panel-2) with a clip rect fill rgba(255,255,255,.03) stroke col at .35 (~500), and .cliptag (~65, left 8 top 6, 9px 640 white on black .4). The name half of this was settled in the same task: a sound on its own track now wears the mock's .cliptag (ClipPiecesBar.soundTag), and a linked sound carries no words on purpose. Searched: cliptag, sound clip name, lane ground, clip.aud (--all); nothing covered it.",
@@ -42,6 +42,10 @@
     {
       "t": "2026-10-08T13:03:05.289Z",
       "note": "seq 3770 -> 150"
+    },
+    {
+      "t": "2026-10-09T12:52:27.313Z",
+      "note": "seq 150 -> 190"
     }
   ],
   "walks": [

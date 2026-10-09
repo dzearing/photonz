@@ -4,12 +4,12 @@
   "goal": "Drawing a symmetrical icon today means drawing the second half by hand and lining it up by eye, and a half unit of drift is exactly what people see in a set of icons. Add Mirror across center, as the icon drawing mock draws it: it copies the picked shape reflected about the vertical center line of the frame it sits in, exact by construction.",
   "epic": "icon-vector",
   "priority": "p2-normal",
-  "seq": 5,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.204Z",
-  "updated": "2026-10-09T03:31:28.793Z",
+  "updated": "2026-10-09T12:52:26.037Z",
   "deps": [],
   "blockedBy": [],
   "notes": "icon-vector success item 4: 'Mirror across center (Shift Cmd M) copies a shape exactly about the artboard centre'. Mock: docs/design/mocks/pages/icon-draw-wt.html lines ~142 and ~493 (#layerMenu: Group selection, Mirror across center Shift Cmd M, Center on the artboard, divider, Union, Outline stroke) and step 7 ('the shoulder is copied to 15, 10, reflected about the artboard's center line'). No Mirror exists in Sources today (grep -i mirror). Shift Cmd M is bound only on timed documents: EditorCommands.swift:1359 'timed ? KeyboardShortcut(\"m\", [.command,.shift]) : nil' (Previous Marker), so the key is free on pictures. The Layers panel menu landed on 2026-10-08 (task the-layers-header-carries-make-component-and-a-p, commit 9916955e). Geometry in PhotonzCore, tested first (a pure reflect of a layer's frame and path about x = c). Do NOT take the mock's Center on the artboard Option Cmd C: that key is Canvas Size (Photoshop parity), note it in rough. Ship behind a Next flag on by default.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-09T03:31:28.792Z",
       "note": "seq 3880 -> 5"
+    },
+    {
+      "t": "2026-10-09T12:52:26.036Z",
+      "note": "seq 5 -> 20"
     }
   ]
 }

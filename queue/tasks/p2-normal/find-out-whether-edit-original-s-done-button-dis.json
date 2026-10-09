@@ -1,0 +1,39 @@
+{
+  "id": "find-out-whether-edit-original-s-done-button-dis",
+  "title": "Find out whether Edit Original's Done button disappears in light mode when the window is not in front",
+  "goal": "In every light-mode picture of Edit Original the walks take, the Done button in the title bar is not visible at all, while in dark mode it shows as a grey pill. Find out whether a person sees the same when their Photonz window is behind another app, and if so make Done readable in every state.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 280,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T12:37:27.207Z",
+  "updated": "2026-10-09T12:52:56.370Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-09 while building edit-original-shows-a-live-copy-above-the-varian. Command: Scripts/playtest.sh Scripts/playtest/starter-button-looks-walk.json --no-build, then compare /tmp/photonz-playtest/starter-button-looks/9-grid-dark-sc.png (grey Done pill beside the Button title) with 9-grid-light-sc.png / 12-clicked-away-light-sc.png (title reads only the mark and Button, no Done; crop in queue/audits/2026-10-09-done-missing-light-crop.png). Also in the earlier audit picture queue/audits/2026-10-09-variant-grid-panel-light-sc.png, so it predates the live copy. Walks keep the probe window non-key, so this is the inactive look of .borderedProminent (OriginalSpaceTitleBar in Sources/Photonz/EditorState+OriginalSpace.swift:141). Not confirmed: what a person sees with their own window inactive in light mode.",
+  "acceptance": [
+    "A light-mode picture of Edit Original with the window not in front shows a readable Done",
+    "The same in dark mode",
+    "A person whose window is in front still sees Done as it is today",
+    "An audit picture taken by a walk either shows the window as it looks in front, or says on it that it shows the window behind another app, so nobody judges the background look as the real one"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T12:37:27.209Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T12:52:28.014Z",
+      "note": "seq 3910 -> 280"
+    },
+    {
+      "t": "2026-10-09T12:52:56.344Z",
+      "note": "Daily triage 2026-10-09: widened. This is one case of a wider gap: walks keep the probe window from taking key (since 2026-09-26), so every audit picture shows the window as it looks behind another app. The 2026-10-09 instance-properties audit says the segmented chip is grey for the same reason, and the Done button vanishing in light mode is the same effect. Anyone judging an audit from its pictures sees the background look and may file a problem that a person with the window in front never sees, or miss one they do see. Added a checklist item: an audit picture says when it shows the window behind another app, or a walk can photograph the in-front look without taking the keyboard."
+    }
+  ],
+  "walks": [
+    "starter-button-looks-walk"
+  ]
+}

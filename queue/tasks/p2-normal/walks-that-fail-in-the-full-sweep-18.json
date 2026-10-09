@@ -1,0 +1,41 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-18",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3900,
+  "status": "done",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-09T10:43:28.784Z",
+  "updated": "2026-10-09T12:52:21.369Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-09T10:43:28Z, not by a full sweep: it ran 32 of 820 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): read-every-label-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-09-033453.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T10:43:28.786Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-09T10:43:28.789Z",
+      "note": "rotating check 2026-10-09T10:43:28Z, 32 walks run from 516 onward in the rotation: read-every-label-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-09T12:52:21.307Z",
+      "note": "Daily triage 2026-10-09: ran Scripts/playtest.sh Scripts/playtest/read-every-label-walk.json --no-build twice in a row at HEAD 03288da5: status ok, 51 steps, both times. It also passed in the full sweep that ended 2026-10-08 23:29Z (812 of 813). The one red run (slice 10:34Z, step 49: no row Text 1 in the panel, the rows listed start at Text 9 and stop at Text 5) reads like the Layers list still scrolled to Text 5 from step 44 rather than missing rows. Walk was flaky, not the app broken. If it goes red again, add a waitFor layerRowInView Text 1 before step 49."
+    },
+    {
+      "t": "2026-10-09T12:52:21.366Z",
+      "note": "read-every-label-walk passes twice in a row on its own and passed in the full sweep; the one red slice was a one-off (list scroll position), see log"
+    }
+  ],
+  "standing": "walk-sweep",
+  "completed": "2026-10-09T12:52:21.368Z"
+}

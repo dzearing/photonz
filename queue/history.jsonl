@@ -10330,3 +10330,47 @@
 {"t":"2026-10-09T11:38:42.842Z","ev":"task_note","id":"edit-original-draws-a-two-question-component-ins"}
 {"t":"2026-10-09T11:38:42.900Z","ev":"task_walks","id":"edit-original-draws-a-two-question-component-ins","walks":["variant-and-size-walk","starter-button-looks-walk"]}
 {"t":"2026-10-09T11:38:47.081Z","ev":"task_done","id":"edit-original-draws-a-two-question-component-ins","from":"in_progress","note":"Edit Original now draws a two-question component as the mock's matrix: one rounded panel under the drawings in the document's Surface, small-capital column answers, row answers beside their rows, no per-drawing chips, page fitted to the grid so it opens framed at 100%, even 24pt-apart columns. Core tested (ComponentVariantGridTests), 11975 tests green, 8 walks green at Next defaults incl. starter-button-looks-walk without Fit. Commit a4dffd9e, audit queue/audits/2026-10-09-variant-grid-panel.json."}
+{"t":"2026-10-09T11:52:32.281Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":651,"of":820,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T11:52:32.448Z","ev":"task_started","id":"edit-original-shows-a-live-copy-above-the-varian","title":"Edit Original shows a live copy above the variant grid and lights the picked cell, as the variants mock does","priority":"p1-high"}
+{"t":"2026-10-09T11:56:14.611Z","ev":"task_note","id":"edit-original-shows-a-live-copy-above-the-varian"}
+{"t":"2026-10-09T12:36:10.085Z","ev":"task_walks","id":"edit-original-shows-a-live-copy-above-the-varian","walks":["starter-button-looks-walk","style-on-a-copy-walk"]}
+{"t":"2026-10-09T12:37:27.211Z","ev":"task_created","id":"find-out-whether-edit-original-s-done-button-dis","priority":"p2-normal","title":"Find out whether Edit Original's Done button disappears in light mode when the window is not in front"}
+{"t":"2026-10-09T12:37:57.027Z","ev":"task_note","id":"edit-original-shows-a-live-copy-above-the-varian"}
+{"t":"2026-10-09T12:37:57.093Z","ev":"task_done","id":"edit-original-shows-a-live-copy-above-the-varian","from":"in_progress","note":"Edit Original on a two-question component shows the mock's LIVE INSTANCE stage above the grid with a live copy of the picked look (ring + instance badge), the picked cell lit violet, both block headers. Clicked with the pointer at Next defaults in starter-button-looks-walk (dark + light pictures, an opacity edit followed live, click-away keeps the pick). Core tested, 11979 tests green, 22 Edit Original walks green. Commit 03288da5, audit queue/audits/2026-10-09-live-copy.json."}
+{"t":"2026-10-09T12:49:46.973Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":554,"of":820,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-09T12:52:21.309Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-18"}
+{"t":"2026-10-09T12:52:21.370Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-18","from":"pending","note":"read-every-label-walk passes twice in a row on its own and passed in the full sweep; the one red slice was a one-off (list scroll position), see log"}
+{"t":"2026-10-09T12:52:21.429Z","ev":"task_resequenced","id":"dropping-a-button-into-the-button-original-you-a","from":3860,"to":1}
+{"t":"2026-10-09T12:52:25.764Z","ev":"task_note","id":"dropping-a-button-into-the-button-original-you-a"}
+{"t":"2026-10-09T12:52:25.874Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":540,"to":50}
+{"t":"2026-10-09T12:52:25.965Z","ev":"task_resequenced","id":"dropping-a-button-into-the-button-original-you-a","from":1,"to":10}
+{"t":"2026-10-09T12:52:26.038Z","ev":"task_resequenced","id":"mirror-across-center-copies-a-shape-about-the-mi","from":5,"to":20}
+{"t":"2026-10-09T12:52:26.118Z","ev":"task_resequenced","id":"shift-command-j-closes-an-open-path","from":6,"to":30}
+{"t":"2026-10-09T12:52:26.197Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":7,"to":40}
+{"t":"2026-10-09T12:52:26.274Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":10,"to":50}
+{"t":"2026-10-09T12:52:26.355Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":20,"to":60}
+{"t":"2026-10-09T12:52:26.435Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":30,"to":70}
+{"t":"2026-10-09T12:52:26.506Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":40,"to":80}
+{"t":"2026-10-09T12:52:26.581Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":50,"to":90}
+{"t":"2026-10-09T12:52:26.657Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":60,"to":100}
+{"t":"2026-10-09T12:52:26.730Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":70,"to":110}
+{"t":"2026-10-09T12:52:26.808Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":80,"to":120}
+{"t":"2026-10-09T12:52:26.881Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":90,"to":130}
+{"t":"2026-10-09T12:52:26.959Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":100,"to":140}
+{"t":"2026-10-09T12:52:27.033Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":110,"to":150}
+{"t":"2026-10-09T12:52:27.099Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":120,"to":160}
+{"t":"2026-10-09T12:52:27.166Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":130,"to":170}
+{"t":"2026-10-09T12:52:27.239Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":140,"to":180}
+{"t":"2026-10-09T12:52:27.316Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":150,"to":190}
+{"t":"2026-10-09T12:52:27.395Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":170,"to":200}
+{"t":"2026-10-09T12:52:27.473Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":180,"to":210}
+{"t":"2026-10-09T12:52:27.547Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":3800,"to":220}
+{"t":"2026-10-09T12:52:27.624Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":3810,"to":230}
+{"t":"2026-10-09T12:52:27.702Z","ev":"task_resequenced","id":"new-window-opens-a-front-door-with-a-starting-te","from":3840,"to":240}
+{"t":"2026-10-09T12:52:27.779Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":3850,"to":250}
+{"t":"2026-10-09T12:52:27.857Z","ev":"task_resequenced","id":"decide-whether-starter-components-change-colour","from":3880,"to":260}
+{"t":"2026-10-09T12:52:27.932Z","ev":"task_resequenced","id":"the-starter-secondary-button-frosts-what-is-behi","from":3890,"to":270}
+{"t":"2026-10-09T12:52:28.016Z","ev":"task_resequenced","id":"find-out-whether-edit-original-s-done-button-dis","from":3910,"to":280}
+{"t":"2026-10-09T12:52:56.346Z","ev":"task_note","id":"find-out-whether-edit-original-s-done-button-dis"}
+{"t":"2026-10-09T12:54:01.309Z","ev":"triage","summary":"merged 0, moved 1 (self-drop bug to front of p2), reset 0, closed 1 (sweep-18: walk passes twice on its own, one-off flake), resequenced 29 (p1 1, p2 28), groomed 1 (Done button task widened to audit pictures showing the background look)"}
+{"t":"2026-10-09T12:54:01.337Z","ev":"digest","file":"2026-10-09.md"}
