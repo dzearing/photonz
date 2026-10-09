@@ -29,6 +29,8 @@ struct EditorView: View {
     /// panel (phase-9 carousel) reads it until phase 11.4 replaces it with the
     /// global slide-down overlay.
     @Environment(AppCoordinator.self) private var coordinator
+    /// Whether this window opened as New Window's front door (`FrontDoorView`).
+    @Environment(\.opensAsFrontDoor) private var opensAsFrontDoor
     /// The toolbar's own two pickers answer to the same "only one picker is
     /// open" rule every other colour row does, and by name — so a walk can
     /// open the one the tool is holding without a pointer.
@@ -108,8 +110,8 @@ struct EditorView: View {
                         // Kept behind View once built, out of sight below
                         // the canvas, so Edit only has to slide it up.
                         let toolBarHidden = editorState.isWatching
-                        if editorState.editArrival.showsToolBar
-                            && (!toolBarHidden || editorState.isEditorKeptBehindView) {
+                        if editorState.editArrival.showsToolBar, !showsFrontDoor,
+                           !toolBarHidden || editorState.isEditorKeptBehindView {
                         AsleepBehindView(asleep: editorState.editPiecesAsleep) {
                         VStack(spacing: EditorChromeLayout.toolBarStackGap) {
                             // The `if` is the "takes no room" rule: an empty
@@ -339,6 +341,12 @@ struct EditorView: View {
         // the toolbar's width and the background paints as a visible column
         // against the window's own background.
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        // New Window's front door, over the whole window, title bar band and
+        // all: a window with no document has no canvas, no tool bar and no
+        // panel to show (`ui-entry-wt.html`, step 2).
+        .overlay {
+            if showsFrontDoor { FrontDoorView() }
+        }
         // A video's name, size, length and saved or edited, centred in the
         // title bar's strip level with the traffic lights, as the video mocks
         // draw it. Nothing for a picture, whose title bar stays as it was.
@@ -557,9 +565,16 @@ struct EditorView: View {
                 .animation(.easeInOut(duration: 0.2), value: editorState.copyConfirmation)
                 .animation(.easeInOut(duration: 0.2), value: editorState.videoExport?.id)
                 .animation(.easeInOut(duration: 0.2), value: editorState.activeTool)
-        } else {
+        } else if !showsFrontDoor {
             emptyState
         }
+    }
+
+    /// Whether the window is New Window's front door with nothing in it yet
+    /// (`FrontDoorView`). The window's own say wins once it has had one, so
+    /// a walk can ask for the plain empty window.
+    private var showsFrontDoor: Bool {
+        (editorState.frontDoorChoice ?? opensAsFrontDoor) && !editorState.hasDocument
     }
 
     /// A file handed to this window from outside it: Finder, the dock, a recent

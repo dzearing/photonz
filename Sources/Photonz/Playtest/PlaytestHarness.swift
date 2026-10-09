@@ -941,6 +941,9 @@ private final class Run {
 
         case .startFromEmpty(let row, let size, let card):
             try await startFromEmpty(row: row, window: size, card: card, number: number)
+        case .startFromFrontDoor(let tile, let press, let answer, let size, let card):
+            try await startFromFrontDoor(tile: tile, press: press, answer: answer, window: size, card: card,
+                                         number: number)
 
         case .open(let file, let size):
             let url = try fileURL(file)
@@ -13116,6 +13119,10 @@ private final class Run {
         if let card {
             try await photographEmptyWindow(fresh, window: window, name: card, number: number)
         }
+        // The plain empty window, not New Window's front door: the walk is
+        // about the canvas, and the front door hands what it makes to a
+        // window of its own (`startFromFrontDoor` walks that).
+        fresh.frontDoorChoice = false
         // Through the same door the sheet uses, so a walk proves the empty
         // window fills itself rather than spawning a second one.
         fresh.createBlankCanvas(size: size)
@@ -13148,6 +13155,7 @@ private final class Run {
         guard Experiments.shared.blankVideoEnabled else {
             throw Failure(description: "File has no New Video in this release: next-blank-video is off")
         }
+        fresh.frontDoorChoice = false
         fresh.isBlankVideoDialogPresented = true
         await sleep(0.3)
         fresh.isBlankVideoDialogPresented = false
@@ -13176,6 +13184,8 @@ private final class Run {
             return fresh != nil
         }
         guard let fresh else { throw Failure(description: "no empty window appeared") }
+        // The card, which New Window's front door stands in for.
+        fresh.frontDoorChoice = false
         if let card {
             try await photographEmptyWindow(fresh, window: window, name: card, number: number)
         }
@@ -13184,6 +13194,54 @@ private final class Run {
         try await poll("the document the \"\(row)\" row opens", within: 10) { fresh.document != nil }
         try await adopt(fresh, window: window, step: "startFromEmpty",
                         subject: "\"\(row)\" clicked in the empty window's card", number: number)
+    }
+
+    /// New Window's front door, used the way a person uses it: a template
+    /// tile clicked by pointer on its face, then the primary button, found by
+    /// what it should read by then, so a tile that failed to rename it fails
+    /// here. The walk then takes over the editor window that opened, and
+    /// fails unless the front door closed on its own.
+    private func startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?,
+                                    card: String?, number: Int) async throws {
+        guard Experiments.shared.frontDoorEnabled else {
+            throw Failure(description: "New Window opens no front door in this release: next-front-door is off")
+        }
+        try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        coordinator.openWindowAction?(.fresh(UUID()))
+        var door: EditorState?
+        try await poll("the front door", within: 15) {
+            door = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
+            return door?.isFrontDoor == true
+        }
+        guard let door else { throw Failure(description: "New Window opened no front door") }
+        try await adoptEmpty(door, step: "startFromFrontDoor", subject: "the front door", number: number)
+        if let tile {
+            try await pressControl(tile, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        }
+        if let card {
+            try await photographEmptyWindow(door, window: nil, name: card, number: number)
+        }
+        let opened = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        try await pressControl(press, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        if let answer {
+            try await pressControl(answer, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        }
+        var made: EditorState?
+        try await poll("the editor \"\(press)\" opens", within: 15) {
+            made = PlaytestHarness.knownEditors.last {
+                !opened.contains(ObjectIdentifier($0)) && $0.document != nil
+            }
+            return made != nil
+        }
+        guard let made else { throw Failure(description: "\"\(press)\" opened no editor") }
+        try await poll("the front door to close on its own", within: 5) {
+            !(door.hostWindow?.isVisible ?? false)
+        }
+        try await adopt(made, window: window, step: "startFromFrontDoor",
+                        subject: "\"\(press)\" pressed on the front door"
+                            + (tile.map { " after picking \"\($0)\"" } ?? ""),
+                        number: number)
     }
 
     /// The empty window before anything is in it: the onboarding card, which
@@ -13207,7 +13265,7 @@ private final class Run {
         try snapshot(content, name: name)
         await screenCapture(window, name: name)
         window.alphaValue = 0
-        note(number, "blank", "\(name).png: the empty window's card")
+        note(number, "blank", "\(name).png: " + (fresh.isFrontDoor ? "the front door" : "the empty window's card"))
     }
 
     /// Takes over a freshly filled editor: hides its window, sizes it, finds
@@ -13271,7 +13329,8 @@ private final class Run {
         self.window = window
         canvas = nil
         note(number, step,
-             "\(subject): nothing open, so the onboarding card is what is on screen; "
+             "\(subject): nothing open, so "
+             + (opened.isFrontDoor ? "the front door" : "the onboarding card") + " is what is on screen; "
              + "window \(Int(window.frame.width))x\(Int(window.frame.height)) pt",
              state: describe())
     }

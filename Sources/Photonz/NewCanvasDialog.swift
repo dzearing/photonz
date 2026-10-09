@@ -75,6 +75,8 @@ struct NewCanvasDialog: View {
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(!BlankCanvas.isValid(chosenSize))
+                // So a walk can answer the sheet by pointer, the way a person does.
+                .playtestControl(opensNewWindow ? "Create in New Window" : "Create", detail: "New Canvas sheet")
             }
         }
         .padding(20)

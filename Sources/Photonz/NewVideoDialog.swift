@@ -77,6 +77,8 @@ struct NewVideoDialog: View {
                 }
                 .keyboardShortcut(.defaultAction)
                 .disabled(!BlankVideo.isValid(chosenSize) || !BlankVideo.isValidLength(seconds: seconds))
+                // So a walk can answer the sheet by pointer, the way a person does.
+                .playtestControl(opensNewWindow ? "Create in New Window" : "Create", detail: "New Video sheet")
             }
         }
         .padding(20)

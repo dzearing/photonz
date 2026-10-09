@@ -160,6 +160,12 @@ public enum PlaytestLockSafety {
         // through accessibility. The first locked run of design-ui-start-walk
         // is its watch; if it refuses there, take it out.
         "startFromEmpty",
+        // Added 2026-10-09 by reading, NOT yet watched under a lock:
+        // `startFromEmpty`'s door, with the tile and the primary button clicked
+        // through the app's own register of controls, never a name looked up
+        // through accessibility. The first locked run of front-door-walk is
+        // its watch; if it refuses there, take it out.
+        "startFromFrontDoor",
         // Added 2026-09-25 by reading, NOT yet watched under a lock (the screen
         // was unlocked all day): it asks the editor how wide each frame on
         // screen was read and how wide it is shown, the same kind of own state
@@ -475,6 +481,7 @@ public enum PlaytestLockSafety {
         case .blank(_, _, let card, _): card != nil
         case .blankVideo(_, let card): card != nil
         case .startFromEmpty(_, _, let card): card != nil
+        case .startFromFrontDoor(_, _, _, _, let card): card != nil
         default: false
         }
     }

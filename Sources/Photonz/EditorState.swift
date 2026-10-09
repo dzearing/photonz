@@ -232,6 +232,13 @@ final class EditorState {
     #endif
     /// The "how big?" sheet the empty window's Blank canvas row opens.
     var isBlankCanvasDialogPresented = false
+    /// Whether this window is the front door New Window opens (Next,
+    /// `next-front-door`): nil until the window root says, so a scripted walk
+    /// can tell a window to be the plain empty window instead.
+    var frontDoorChoice: Bool?
+    /// Set once the front door has been asked to close, so a second ask (a
+    /// double click, Return on top of a click) does not start a second wait.
+    @ObservationIgnored var frontDoorClosing: FrontDoorCloser?
     /// File ▸ New Video's size and length sheet.
     var isBlankVideoDialogPresented = false
     /// The size sheet Layer ▸ New Frame… opens (Next, `next-frames`).
@@ -2138,9 +2145,11 @@ final class EditorState {
     /// window fills itself, a window already holding something keeps it and
     /// the design opens in a new one.
     func startUIDesign() {
-        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        switch BlankCanvas.destination(windowHasDocument: document != nil, isFrontDoor: isFrontDoor) {
         case .thisWindow: newUIDesign()
-        case .newWindow: openUIDesignWindow?()
+        case .newWindow:
+            openUIDesignWindow?()
+            closeFrontDoorOnceTheEditorOpens()
         }
     }
 
@@ -2151,9 +2160,11 @@ final class EditorState {
     /// Answers the New Video sheet: an empty window fills itself, a window
     /// already holding something keeps it and the video opens in a new one.
     func createBlankVideo(size: CGSize, lengthMS: Int) {
-        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        switch BlankCanvas.destination(windowHasDocument: document != nil, isFrontDoor: isFrontDoor) {
         case .thisWindow: newBlankVideo(size: size, lengthMS: lengthMS)
-        case .newWindow: openBlankVideoWindow?(size, lengthMS)
+        case .newWindow:
+            openBlankVideoWindow?(size, lengthMS)
+            closeFrontDoorOnceTheEditorOpens()
         }
     }
 
@@ -2185,9 +2196,11 @@ final class EditorState {
     /// window fills itself; a window already holding a picture keeps it and the
     /// canvas arrives in a window of its own.
     func createBlankCanvas(size: CGSize) {
-        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        switch BlankCanvas.destination(windowHasDocument: document != nil, isFrontDoor: isFrontDoor) {
         case .thisWindow: newBlankCanvas(size: size)
-        case .newWindow: openBlankCanvasWindow?(size)
+        case .newWindow:
+            openBlankCanvasWindow?(size)
+            closeFrontDoorOnceTheEditorOpens()
         }
     }
 

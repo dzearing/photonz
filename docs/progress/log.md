@@ -21000,3 +21000,11 @@ Next: the first editor window's ~200 ms first build
 - Rule in `PathClose.shiftCommandJ` (`PathClosing.swift`, tested); `EditorState.shiftCommandJ` feeds both menus.
 - Walk: `shift-command-j-closes-a-path-walk` (`front: true`: a background walk's menu bar is frozen at launch, so a key that moves rows can only be proven with the probe in front).
 - Open: whether the key should skip the question (audit evaluate item); the mock's panel Close path button waits on the panel-buttons card.
+
+## 2026-10-09 — New Window opens the front door
+
+- New Window (⇧⌘N, and the menu bar icon's New Window) opens the front door `ui-entry-wt.html` draws instead of an empty editor: Open… and the primary button in its title bar, the prompt bar (drawn, dimmed: the agent is staged later), four templates under Start a project, and Recent (the newest four captures, with the history strip's action row under the pointer). Flag `next-front-door`, on in Next.
+- A template is a mode preset: the primary button reads what it makes (New UI canvas, Open Image…, New Video…, Capture), pressing it swaps the mode, and the editor opens in a window of its own (`BlankCanvas.destination(isFrontDoor:)`) while the front door closes once that window is main (`FrontDoorCloser`). A double click on a tile picks and makes.
+- Core in `FrontDoor.swift` (tested); app in `FrontDoorView.swift`, `EditorState+FrontDoor.swift`. Only `.fresh` windows are front doors; a guide's empty sample keeps the card. Walk harness `blank`/`blankVideo`/`startFromEmpty` ask for the plain empty window.
+- Walk step `startFromFrontDoor` (tile, press, optional sheet answer); walks `front-door-walk`, `design-ui-start-walk` now starts there.
+- Next: `design-mode-puts-the-ui-tool-strip-in-the-tool-b` (the mock's UI tool strip in Design mode).

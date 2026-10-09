@@ -14,6 +14,13 @@ struct ImageEditorRootView: View {
     @Environment(AppCoordinator.self) private var coordinator
     @State private var editorState = EditorState()
 
+    /// Whether this window is New Window's front door: a fresh window, in a
+    /// release that has one.
+    private var opensAsFrontDoor: Bool {
+        guard case .fresh = windowID else { return false }
+        return Experiments.shared.frontDoorEnabled
+    }
+
     var body: some View {
         // Equal to itself: the editor takes nothing from here but what it
         // reads for itself, and it redraws on exactly that. Without this every
@@ -23,6 +30,7 @@ struct ImageEditorRootView: View {
         EditorView()
             .equatable()
             .environment(editorState)
+            .environment(\.opensAsFrontDoor, opensAsFrontDoor)
             .focusedSceneValue(\.editorState, editorState)
             // What Save means in this window, recomputed here — inside a view
             // body, which IS re-run when the editor changes — so the menu is
@@ -38,6 +46,9 @@ struct ImageEditorRootView: View {
                 editorState.hostWindow?.isDocumentEdited = dirty
             }
             .task {
+                // New Window's front door (`FrontDoorView`), said before the
+                // window is seeded so anything it routes knows from the start.
+                if editorState.frontDoorChoice == nil { editorState.frontDoorChoice = opensAsFrontDoor }
                 // Starting from nothing while this window holds a picture opens
                 // another window rather than replacing what is here.
                 editorState.openBlankCanvasWindow = { [coordinator] size in

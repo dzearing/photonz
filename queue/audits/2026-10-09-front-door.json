@@ -1,0 +1,32 @@
+{
+  "feature": "New Window opens the front door",
+  "epic": "ui-building",
+  "summary": "New Window now opens a small front door instead of an empty editor: Open and a primary button in the title bar, the prompt bar, four starting templates and your recent captures. Picking a template names what the button makes and sets the mode, and the editor opens in its own window while the front door closes.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift Command N (or pick New Window from the Photonz menu bar icon).", "shot": "2026-10-09-front-door-3-nothing-picked-sc.png" },
+    { "do": "Click the Design UI tile. The primary button in the title bar now reads New UI canvas.", "shot": "2026-10-09-front-door-1-design-ui-picked-sc.png" },
+    { "do": "Click New UI canvas (or press Return).", "shot": "2026-10-09-front-door-2-editor-sc.png" },
+    { "do": "Check the chip beside the traffic lights reads Design, and that the front door has gone." },
+    { "do": "Open another New Window and double click Edit video: the New Video sheet comes up over it." },
+    { "do": "Open another New Window, point at a capture under Recent and use its Copy, Edit, Show in Finder or Delete buttons, or click it to open it." }
+  ],
+  "evaluate": [
+    "Does the front door feel like the place you would start from, or is it one window too many on the way to a canvas?",
+    "Is it clear that clicking a tile only picks it, and that the button in the title bar is what makes it?",
+    "Does the editor opening in its own window while the front door closes read as one smooth step?",
+    "Is the dimmed prompt bar fine to show before the agent can answer it, or would you rather it stayed hidden until then?"
+  ],
+  "rough": [
+    "The editor opens with the Design chip but the ordinary tool bar, not the mock's UI tool strip (Select, Frame, Component, Shape, Pen, Text, Measure, Hand): modes do not change the tool bar yet. Filed as design-mode-puts-the-ui-tool-strip-in-the-tool-b.",
+    "Two tile lines from the mock are over the 30 character chrome budget and moved into the tile's hover tip in the mock's words: 'Components, tokens, auto-layout' and 'Timeline, transitions, captions'. So Design UI and Edit video show a title with no second line (UX-PATTERNS §4).",
+    "The mock's header 'Start a project · pick a template' is over the budget, so the label reads Start a project and the full line moved behind it as its tip (UX-PATTERNS §4).",
+    "The mock's prompt placeholder, with its example, is over the budget: the field reads 'Describe what to create' and the mock's whole line moved into its tip (UX-PATTERNS §4).",
+    "The prompt bar is drawn but dimmed and takes no typing: the agent that would answer it is staged later in the plan, and the task asked for it to ship disabled (new-window-opens-a-front-door-with-a-starting-te notes).",
+    "The app goes further than the mock on the buttons the mock does not cover: Edit an image makes the button read Open Image…, Edit video reads New Video…, Capture & redline reads Capture, and a double click on a tile picks it and makes it in one go.",
+    "The primary button and Create are drawn white on the accent by hand, not with the system's prominent style, because in a window that is not key the system style drops its fill and left white text on the light window.",
+    "Recent shows capture history (the history strip's newest four), not every document you have opened; the hover action row is built from the history strip's own set and was not driven by a walk.",
+    "A guide's empty sample window (Your first capture) still shows the old card, because that guide points at its rows."
+  ]
+}

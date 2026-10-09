@@ -505,6 +505,36 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("A startFromFrontDoor step picks a tile and presses the primary button by pointer")
+    func startFromFrontDoorDecodes() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "startFromFrontDoor", "tile": "Design UI", "press": "New UI canvas",
+              "width": 1300, "height": 900, "card": "front-door" },
+            { "do": "startFromFrontDoor", "press": "New canvas", "answer": "Create" }
+          ]
+        }
+        """)
+        guard case .startFromFrontDoor(let tile, let press, let answer, let window, let card) = script.steps[0] else {
+            Issue.record("startFromFrontDoor"); return
+        }
+        #expect(tile == "Design UI")
+        #expect(press == "New UI canvas")
+        #expect(answer == nil)
+        #expect(window == CGSize(width: 1300, height: 900))
+        #expect(card == "front-door")
+        #expect(script.steps[0].name == "startFromFrontDoor")
+        guard case .startFromFrontDoor(nil, "New canvas", "Create", nil, nil) = script.steps[1] else {
+            Issue.record("bare startFromFrontDoor"); return
+        }
+        #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/walk/out", "steps": [ { "do": "startFromFrontDoor", "tile": "Design UI" } ] }"#)
+        }
+    }
+
     @Test("A blank step can say the document counts in twos, the way a Retina capture does")
     func blankTakesAPixelScale() throws {
         let script = try decode("""

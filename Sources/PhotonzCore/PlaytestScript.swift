@@ -2511,6 +2511,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the UI starter. The walk then drives whatever document the row opened.
     /// `window` and `card` are `blank`'s.
     case startFromEmpty(row: String, window: CGSize?, card: String?)
+    /// Start from the FRONT DOOR New Window opens (`ui-entry-wt.html`, steps
+    /// 2 to 5): pick `tile` by pointer on its face, when there is one, then
+    /// press the primary button by pointer, found by the words `press` says it
+    /// should read by then ("New UI canvas"), which is how the walk proves the
+    /// tile renamed it. The walk then drives the editor window that opened and
+    /// fails unless the front door closed on its own. `answer`, when the
+    /// primary button asks a question first (New canvas and New Video put up
+    /// their size sheet), is the sheet's button pressed by pointer next:
+    /// "Create". `window` and `card` are `blank`'s; `card` photographs the
+    /// front door with the tile picked.
+    case startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?, card: String?)
     /// Let the editor finish what the step before started. It ends the moment
     /// the app goes quiet, which is why a walk's waits cost seconds rather than
     /// minutes.
@@ -3919,7 +3930,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "clearClipboard", "click", "describe", "drag",
+        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
@@ -3940,6 +3951,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .blank: "blank"
         case .blankVideo: "blankVideo"
         case .startFromEmpty: "startFromEmpty"
+        case .startFromFrontDoor: "startFromFrontDoor"
         case .wait: "wait"
         case .key: "key"
         case .shortcut: "shortcut"
@@ -4096,6 +4108,12 @@ public enum PlaytestStep: Sendable, Equatable {
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .startFromEmpty(row: try f.string("row"), window: window,
                                    card: try f.optionalString("card"))
+        case "startFromFrontDoor":
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            self = .startFromFrontDoor(tile: try f.optionalString("tile"), press: try f.string("press"),
+                                       answer: try f.optionalString("answer"),
+                                       window: window, card: try f.optionalString("card"))
         case "wait":
             let bound = try f.optionalNumber("longestUnderMS")
             if let bound, !(bound > 0 && bound.isFinite) {

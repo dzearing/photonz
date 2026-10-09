@@ -5,14 +5,15 @@
       "all"
     ]
   },
-  "seed": "Start a UI design from nothing (ui-entry-wt.html, steps 3 to 7), at Next defaults. A new empty window's card offers Design UI; clicking it opens untitled-ui, a 1280 by 800 canvas holding a Login frame laid out as a column, with the Library already on Components. Drag the Button off the shelf onto the frame: it joins the column as a linked copy, last, and the frame grows to hold it. The window is called untitled-ui, and File > New UI Design from it opens a second one, untitled-ui 2, leaving this one as it is.",
+  "seed": "Start a UI design from nothing (ui-entry-wt.html, steps 3 to 7), at Next defaults. New Window's front door offers Design UI; picking it makes the primary button read New UI canvas, and pressing that opens untitled-ui in a window of its own while the front door closes: a 1280 by 800 canvas holding a Login frame laid out as a column, with the Library already on Components. Drag the Button off the shelf onto the frame: it joins the column as a linked copy, last, and the frame grows to hold it. The window is called untitled-ui, and File > New UI Design from it opens a second one, untitled-ui 2, leaving this one as it is.",
   "steps": [
     {
-      "do": "startFromEmpty",
-      "row": "Design UI",
+      "do": "startFromFrontDoor",
+      "tile": "Design UI",
+      "press": "New UI canvas",
       "width": 1280,
       "height": 900,
-      "card": "design-ui-1-card"
+      "card": "design-ui-1-front-door"
     },
     {
       "do": "wait",

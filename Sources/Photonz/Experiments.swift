@@ -416,6 +416,8 @@ extension Experiments {
     /// Design UI row, which open a canvas already holding a Login frame
     /// (`UIStarter`). Next only.
     var designUIStartEnabled: Bool { isEnabled(FeatureCatalog.designUIStartFlag) }
+    /// New Window opens the front door (`next-front-door`).
+    var frontDoorEnabled: Bool { isEnabled(FeatureCatalog.frontDoorFlag) }
 
     /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
     /// canvas picks a whole group (with double click going inside it and Escape

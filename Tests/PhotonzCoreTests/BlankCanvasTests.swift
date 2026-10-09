@@ -78,4 +78,10 @@ struct BlankCanvasTests {
     func destinationForAnEmptyWindow() {
         #expect(BlankCanvas.destination(windowHasDocument: false) == .thisWindow)
     }
+
+    @Test("The front door never becomes the editor: what it makes opens in a window of its own")
+    func destinationForTheFrontDoor() {
+        #expect(BlankCanvas.destination(windowHasDocument: false, isFrontDoor: true) == .newWindow)
+        #expect(BlankCanvas.destination(windowHasDocument: false, isFrontDoor: false) == .thisWindow)
+    }
 }

@@ -55,8 +55,13 @@ public enum BlankCanvas {
 
     /// The rule above, in one place, so every route to a blank canvas (the
     /// empty window's card, the File menu) agrees on where it lands.
-    public static func destination(windowHasDocument: Bool) -> Destination {
-        windowHasDocument ? .newWindow : .thisWindow
+    ///
+    /// The front door New Window opens is the one empty window that never
+    /// fills itself: it is a small launcher holding no document, so what it
+    /// makes opens in an editor window of its own and the front door closes
+    /// (`ui-entry-wt.html`, steps 4 and 5).
+    public static func destination(windowHasDocument: Bool, isFrontDoor: Bool = false) -> Destination {
+        windowHasDocument || isFrontDoor ? .newWindow : .thisWindow
     }
 
     /// A typed size made safe to build: whole pixels, inside the legal range,

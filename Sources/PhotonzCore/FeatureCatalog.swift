@@ -94,6 +94,8 @@ public enum FeatureCatalog {
 
     public static let designUIStartFlag = "next-design-ui-start"
 
+    public static let frontDoorFlag = "next-front-door"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -1383,6 +1385,16 @@ public enum FeatureCatalog {
                     name: designUIStartFlag,
                     title: "Start a UI design from an empty window",
                     description: "An empty window offers Design UI, and File has New UI Design: a 1280 \u{00D7} 800 canvas holding a Login frame laid out as a column, the Library open on Components. Off means you draw the frame yourself.",
+                    area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: frontDoorFlag,
+                    title: "New Window opens the front door",
+                    description: "New Window opens a small window to start from, with Open, four templates and your recent captures, and a template sets the mode and names what the main button makes. Off means an empty window with its card.",
                     area: .canvas,
                     isEnabled: false,
                     parameters: []),

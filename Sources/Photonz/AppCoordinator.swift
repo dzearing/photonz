@@ -956,15 +956,18 @@ final class AppCoordinator {
     /// open), then opens the chosen file in its own editor window. Recordings
     /// are offered alongside pictures once `next-opening-a-recording` is on, so
     /// a recording that is not in the capture folder still has a way in.
-    func presentOpenPanel() {
+    /// Says whether a file was picked, so the front door knows to close.
+    @discardableResult
+    func presentOpenPanel() -> Bool {
         AppFront.activate()
         let panel = NSOpenPanel()
         panel.allowedContentTypes = Experiments.shared.openingARecording
             ? [.image, EditorState.photonzType] + RecordingContentTypes.all
             : [.image, EditorState.photonzType]
         panel.allowsMultipleSelection = false
-        guard panel.runModal() == .OK, let url = panel.url else { return }
+        guard panel.runModal() == .OK, let url = panel.url else { return false }
         openFileWindow(url)
+        return true
     }
 
     // MARK: - Updater (phase 11.6; self-update 17.10)
