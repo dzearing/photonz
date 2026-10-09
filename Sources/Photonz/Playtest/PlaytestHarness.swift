@@ -9194,6 +9194,8 @@ private final class Run {
         var empty: [Int] = []
         var gaps = 0
         var late: [Int] = []
+        var lagAt: [Int: Int] = [:]
+        let onTime = PlaybackKeepsUp.framesOnTime(rate: rate)
         var worstLag = 0
         var worstLook = ""
         var seen = Set<String>()
@@ -9219,8 +9221,12 @@ private final class Run {
                 for sourceMS in [wanted] + (incoming.map { [$0] } ?? []) {
                     let index = movie.frameIndex(atSourceMS: sourceMS)
                     let shown = inHand.frameIndexToShow(index, of: movie.id)
-                    if shown != index, late.last != moment { late.append(moment) }
-                    if let shown, abs(index - shown) > worstLag {
+                    // At a shuttle's speed a frame a few from the playhead
+                    // is on time (`PlaybackKeepsUp.framesOnTime`).
+                    let lag = shown.map { abs(index - $0) }
+                    if lag.map({ $0 > onTime }) ?? true, late.last != moment { late.append(moment) }
+                    if let lag, lag > onTime { lagAt[moment] = max(lagAt[moment] ?? 0, lag) }
+                    if let shown, lag ?? 0 > onTime, abs(index - shown) > worstLag {
                         worstLag = abs(index - shown)
                         worstLook = " (worst at look \(moment), \(String(format: "%.2fs", Double(playhead) / 1000)): "
                             + "frame \(index) wanted, frame \(shown) shown)"
@@ -9244,10 +9250,15 @@ private final class Run {
         for (index, look) in looks.enumerated() {
             try writePNG(look, name: "\(name)-\(index + 1)")
         }
+        // Each late look with how far back it held, and how many of them
+        // were more than three frames back, which a person sees as a stick.
+        let farBehind = late.filter { (lagAt[$0] ?? 0) > 3 }.count
         let lateness = late.isEmpty
-            ? "every frame was read before the playhead reached it"
+            ? (onTime == 0 ? "every frame was read before the playhead reached it"
+                : "every look showed a frame within \(onTime) of the playhead")
             : "\(late.count) caught a frame still being read and held one \(worstLag) frame(s) back instead "
-                + "(look \(late.map(String.init).joined(separator: ", ")))"
+                + "(look \(late.map { "\($0): \(lagAt[$0].map { "\($0) back" } ?? "none in hand")" }.joined(separator: ", "))); "
+                + "\(farBehind) of \(moments) look(s) more than 3 frames behind"
         guard empty.isEmpty else {
             throw Failure(description: "the clip area was EMPTY at \(empty.count) of \(moments) moments "
                 + "(\(empty.map(String.init).joined(separator: ", "))) while playing; \(lateness)")
@@ -9259,7 +9270,7 @@ private final class Run {
         // Held is not blank, but it is a stutter: a picture that sticks and
         // jumps while the sound goes on (`PlaybackKeepsUp`).
         if let behind = PlaybackKeepsUp.problem(lateLooks: late, framesBehind: worstLag, looks: moments) {
-            throw Failure(description: "the picture did not keep up while it played: \(behind)\(worstLook)")
+            throw Failure(description: "the picture did not keep up while it played: \(behind)\(worstLook); \(lateness)")
         }
         let sizes = Set(clips.compactMap(\.movie).map { "\(Int($0.pixelSize.width))x\(Int($0.pixelSize.height))" })
         let gapNote = gaps == 0 ? "" : "; \(gaps) look(s) fell in a gap with no clip on, which is black by design"

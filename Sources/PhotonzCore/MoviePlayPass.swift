@@ -339,10 +339,20 @@ public enum MoviePlayBackward {
     /// decodes from its key frame again, so fewer than about five a block and
     /// reading falls behind the clock; more and the window holds more.
     public static let blockFrames = 10
-    /// The fastest the reach grows for: J J reads twice as far behind, and a
-    /// faster shuttle no further, so the window's memory stays bounded and a
-    /// shuttle at 4x or 8x is late rather than holding a gigabyte.
+    /// The fastest the number of frames held grows for: J J holds twice as
+    /// many behind, and a faster shuttle no more, so the window's memory stays
+    /// bounded rather than holding a gigabyte.
     public static let fastestScale = 2.0
+    /// The slowest speed that keeps only some of the frames it reads, since
+    /// the clock shows one frame in eight at 8x. J J J J kept every frame and
+    /// held one up to 13 behind at 12 of 24 looks on the five minute Retina
+    /// talk, where J J J kept up at every one (measured 2026-10-08)...
+    public static let thinsFromSpeed = 8.0
+    /// ...and every how many it keeps there. Every second still fell four
+    /// behind at one look in five runs: every third holds the same frames as
+    /// 4x for half as far again behind the playhead, and each block re-reads
+    /// its key frame for more of the recording.
+    public static let thinnedStride = 3
     /// How many blocks read at once behind one place in a recording...
     public static let blocksAtOnce = 2
     /// ...and in the whole recording: the stretch playing, and the far side
@@ -362,14 +372,30 @@ public enum MoviePlayBackward {
 
     private static func scale(_ speed: Double) -> Double { min(max(1, speed), fastestScale) }
 
-    /// How far behind the playhead every frame must be in hand or being read.
-    public static func reach(speed: Double) -> Int {
-        Int((Double(leadFrames) * scale(speed)).rounded())
+    /// Every how many grid frames one is kept at this speed: every one up to
+    /// 4x, every third at 8x. A block still decodes every frame of its
+    /// stretch (a file is read forwards from a key frame), but only the frames
+    /// kept are turned into pictures and held, which is the expensive part.
+    /// The picture is then at most two frames off at 8x, 8ms of the clock.
+    public static func stride(speed: Double) -> Int {
+        speed < thinsFromSpeed ? 1 : thinnedStride
     }
 
-    /// How many frames one block reads at this speed.
+    /// Whether the frame `frame` is one kept at this speed. Counted from the
+    /// first frame of the recording, so every block agrees which.
+    public static func keeps(frame: Int, speed: Double) -> Bool {
+        frame % stride(speed: speed) == 0
+    }
+
+    /// How far behind the playhead every kept frame must be in hand or being
+    /// read, in grid frames.
+    public static func reach(speed: Double) -> Int {
+        Int((Double(leadFrames) * scale(speed)).rounded()) * stride(speed: speed)
+    }
+
+    /// How many grid frames one block reads at this speed.
     public static func blockLength(speed: Double) -> Int {
-        Int((Double(blockFrames) * scale(speed)).rounded())
+        Int((Double(blockFrames) * scale(speed)).rounded()) * stride(speed: speed)
     }
 
     /// The block to start reading for a playhead going backwards on
@@ -393,8 +419,8 @@ public enum MoviePlayBackward {
         guard mine.count < blocksAtOnce,
               !mine.contains(where: { $0.upperBound >= head - urgentFrames }) else { return nil }
         let floor = max(bottom, head - reach(speed: speed))
-        guard let top = stride(from: head, through: floor, by: -1).first(where: { frame in
-            !inHand(frame) && !running.contains { $0.contains(frame) }
+        guard let top = Swift.stride(from: head, through: floor, by: -1).first(where: { frame in
+            keeps(frame: frame, speed: speed) && !inHand(frame) && !running.contains { $0.contains(frame) }
         }) else { return nil }
         var low = max(bottom, top - blockLength(speed: speed) + 1)
         for block in running where block.upperBound < top && block.upperBound >= low {
@@ -427,22 +453,25 @@ public enum MoviePlayBackward {
     /// With the far side of a cut coming up (`places` above one), as much
     /// again for each.
     public static func frameBudget(base: Int, speed: Double, places: Int = 1) -> Int {
-        let place = 1 + reach(speed: speed) + blockLength(speed: speed)
+        let place = 1 + (reach(speed: speed) + blockLength(speed: speed)) / stride(speed: speed)
         return max(base, max(1, places) * place + MoviePlayPass.fallenBehindFrames)
     }
 }
 
 extension PhotonzDocument {
 
-    /// Whether every frame a playhead on `ms` shows next going backwards, one
-    /// grid frame back, is in hand: what the clock waits for, at most
-    /// `MoviePlayBackward.preRollMS`, before it starts backwards from rest.
-    /// True where nothing is behind it to show.
-    public func readyToPlayBackward(atTimeMS ms: Int, inHand: MovieFramesInHand) -> Bool {
+    /// Whether every frame a playhead on `ms` shows next going backwards at
+    /// `speed`, one grid frame back, is in hand: what the clock waits for, at
+    /// most `MoviePlayBackward.preRollMS`, before it starts backwards from
+    /// rest. At a speed that keeps only some frames, the kept frame at or
+    /// below that one. True where nothing is behind it to show.
+    public func readyToPlayBackward(atTimeMS ms: Int, inHand: MovieFramesInHand, speed: Double = 1) -> Bool {
         let behind = ms - MovieRef.frameStepMS
         guard behind >= 0 else { return true }
+        let stride = MoviePlayBackward.stride(speed: speed)
         return movieFrames(atTimeMS: behind).allSatisfy {
-            inHand.contains(movie: $0.movie.id, frameIndex: $0.movie.frameIndex(atSourceMS: $0.sourceMS))
+            let frame = $0.movie.frameIndex(atSourceMS: $0.sourceMS)
+            return inHand.contains(movie: $0.movie.id, frameIndex: frame - frame % stride)
         }
     }
 }

@@ -1,0 +1,36 @@
+{
+  "out": "/tmp/photonz-playtest/playing-backwards-fast-keeps-moving-walk",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "describe", "stage": "why", "note": "J J J J (8x backwards) on the five minute Retina talk held a frame more than 3 behind the playhead at 8, 9 and 12 of 24 looks, up to 13 frames, while J J J (4x) kept up at every one (2026-10-08). Reading and converting every frame at 8x was twice what 4x does, for a clock that shows one frame in eight; it now keeps every third, holding no more than 4x. On the way, J J J from a stop at the end stopped dead on the third J: a speed change woke the old clock, which read the end." },
+    { "do": "action", "action": "openLongRetinaTalk" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "1-opened", "note": "the five minute talk at full-screen Retina size, 2880 by 1800, opened in the ordinary editor at Next defaults" },
+
+    { "do": "key", "key": "end" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "j" },
+    { "do": "key", "key": "j" },
+    { "do": "key", "key": "j" },
+    { "do": "expectTimeline", "rate": -4 },
+    { "do": "wait", "seconds": 1.5, "longestUnderMS": 50 },
+    { "do": "snapshot", "name": "1-four-times-backwards" },
+    { "do": "key", "key": "j" },
+    { "do": "expectTimeline", "rate": -8 },
+    { "do": "wait", "seconds": 1.5, "longestUnderMS": 50 },
+    { "do": "key", "key": "k" },
+    { "do": "expectTimeline", "rate": 0 },
+    { "do": "describe", "stage": "2-shuttled", "note": "End, then J J J played it backwards at four times, a fourth J at eight times, by the keys a Premiere editor uses, and the window answered inside 50ms all the while; K stopped it" },
+
+    { "do": "expectPlaybackNeverBlank", "name": "backwards-4x", "seconds": 2, "moments": 24, "rate": -4 },
+    { "do": "describe", "stage": "3-four-times", "note": "THE TEST: from the end at four times backwards, 24 looks in two seconds, the picture kept up with the playhead" },
+
+    { "do": "expectPlaybackNeverBlank", "name": "backwards-8x", "seconds": 2, "moments": 24, "rate": -8 },
+    { "do": "describe", "stage": "4-eight-times", "note": "THE SECOND TEST: from the end at eight times backwards, 24 looks in two seconds, the picture kept up too" },
+    { "do": "snapshot", "name": "2-stopped" }
+  ]
+}

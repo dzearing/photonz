@@ -14,6 +14,16 @@ public enum PlaybackKeepsUp {
     public static let lateLooksAllowed = 2
     public static let framesBehindAllowed = 2
 
+    /// How many frames from the playhead a look may show and still be on
+    /// time at `rate`: none at normal and double speed, three at 4x and
+    /// faster. A shuttle moves the playhead four or more frames a tick and
+    /// nobody reads every frame of it; three frames is 12ms of the clock at
+    /// 8x, where further is the picture sticking
+    /// (`playing-backwards-fast-keeps-the-picture-moving`).
+    public static func framesOnTime(rate: Double) -> Int {
+        abs(rate) >= 4 ? 3 : 0
+    }
+
     /// Why this playing failed to keep up, or nil when it kept up: which looks
     /// (numbered from 1) held an older frame, and the most frames behind any
     /// of them was.

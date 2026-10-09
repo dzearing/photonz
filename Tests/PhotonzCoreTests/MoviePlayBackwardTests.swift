@@ -136,12 +136,65 @@ struct MoviePlayBackwardTests {
         #expect(next == 32...34)
     }
 
-    @Test("Faster backwards reads further behind, up to twice as far")
+    @Test("Faster backwards reads further behind, holding up to twice as many frames")
     func speed() {
         #expect(MoviePlayBackward.reach(speed: 2) == 2 * lead)
         #expect(MoviePlayBackward.blockLength(speed: 2) == 2 * block)
-        #expect(MoviePlayBackward.reach(speed: 8) == MoviePlayBackward.reach(speed: 2))
+        #expect(MoviePlayBackward.reach(speed: 4) == MoviePlayBackward.reach(speed: 2))
         #expect(MoviePlayBackward.reach(speed: 0.5) == lead)
+    }
+
+    // J J J J on the five minute Retina talk held a frame up to 13 behind at
+    // 12 of 24 looks, where J J J kept up at every one (measured 2026-10-08).
+    // At 8x the clock shows one frame in eight, so reading and keeping every
+    // frame is twice the work 4x does for nothing anybody sees.
+    @Test("At 8x backwards every third frame is kept, and 4x and slower keep every frame")
+    func stride() {
+        #expect(MoviePlayBackward.stride(speed: 1) == 1)
+        #expect(MoviePlayBackward.stride(speed: 2) == 1)
+        #expect(MoviePlayBackward.stride(speed: 4) == 1)
+        #expect(MoviePlayBackward.stride(speed: 8) == 3)
+        #expect(MoviePlayBackward.keeps(frame: 39, speed: 8))
+        #expect(!MoviePlayBackward.keeps(frame: 40, speed: 8))
+        #expect(!MoviePlayBackward.keeps(frame: 41, speed: 8))
+        #expect(MoviePlayBackward.keeps(frame: 41, speed: 4))
+    }
+
+    @Test("At 8x backwards the reads reach further back in time than at 4x, holding the same number of frames")
+    func eightTimes() {
+        let four = MoviePlayBackward.reach(speed: 4)
+        #expect(MoviePlayBackward.reach(speed: 8) == 3 * four)
+        #expect(MoviePlayBackward.blockLength(speed: 8) == 3 * MoviePlayBackward.blockLength(speed: 4))
+        #expect(MoviePlayBackward.frameBudget(base: 16, speed: 8)
+            == MoviePlayBackward.frameBudget(base: 16, speed: 4))
+    }
+
+    @Test("At 8x backwards a frame that is not kept is never waited for nor read")
+    func eightTimesSkips() {
+        let reach = MoviePlayBackward.reach(speed: 8)
+        // Every kept frame within reach is in hand: nothing to read, though
+        // the frames between them are not.
+        #expect(MoviePlayBackward.next(playhead: 100, speed: 8, movie: movie,
+                                       inHand: { $0 >= 100 - reach && $0 % 3 == 0 }, running: []) == nil)
+        // From cold on a frame not kept, the block ends on the first kept frame below.
+        let next = MoviePlayBackward.next(playhead: 101, speed: 8, movie: movie,
+                                          inHand: { $0 == 101 }, running: [])
+        #expect(next?.upperBound == 99)
+        #expect(next?.count == MoviePlayBackward.blockLength(speed: 8))
+    }
+
+    @Test("At 8x backwards it is ready once the kept frame behind the playhead is in hand")
+    func readyAtEightTimes() {
+        let document = PhotonzDocument.recording(movie, name: "Take 1")
+        // The frame behind 92 is 91, and the kept frame at or below it is 90.
+        let at = 92 * MovieRef.frameStepMS
+        var hand = MovieFramesInHand()
+        hand.insert(movie: movie.id, frameIndex: 92)
+        #expect(!document.readyToPlayBackward(atTimeMS: at, inHand: hand, speed: 8))
+        hand.insert(movie: movie.id, frameIndex: 90)
+        #expect(document.readyToPlayBackward(atTimeMS: at, inHand: hand, speed: 8))
+        // Slower, it is the very frame behind that counts.
+        #expect(!document.readyToPlayBackward(atTimeMS: at, inHand: hand, speed: 4))
     }
 
     @Test("A block the playhead has gone past, or jumped far away from, no longer serves")

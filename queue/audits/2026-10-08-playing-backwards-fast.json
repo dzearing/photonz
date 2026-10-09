@@ -1,0 +1,24 @@
+{
+  "feature": "Playing backwards fast keeps the picture moving",
+  "epic": "video-beats-premiere",
+  "summary": "J J J J now plays a full-screen Retina recording backwards at 8x with the picture keeping up, where it used to stick up to 13 frames behind at a third to half of the moments looked at. J J J from a stop at the end also no longer stops dead on the third press.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any long full-screen recording (the walk uses a five minute 2880 x 1800 talk). Walk: playing-backwards-fast-keeps-moving-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Click the timeline so it has the keyboard, then press End." },
+    { "do": "Press J three times quickly: the transport reads -4x and the picture runs backwards.", "shot": "2026-10-08-playing-backwards-fast-1.png" },
+    { "do": "Press J once more for -8x and watch the picture keep moving with the playhead." },
+    { "do": "Press K to stop, End, then J J J J again from a stop." }
+  ],
+  "evaluate": [
+    "From a stop at the end, does J J J reach -4x every time rather than stopping?",
+    "At -8x does the picture move on every tick, with no stick-and-jump?",
+    "At -8x the picture shows every third frame of the recording. Does it look as smooth as -4x to you?"
+  ],
+  "rough": [
+    "No mock covers shuttling backwards; the transport and its -4x and -8x readouts are unchanged.",
+    "At 8x the picture is up to two frames (8ms) off the playhead by design, since only every third frame is read into a picture. The walk counts a look as on time within three frames at 4x and faster.",
+    "With the five minute Retina talk open, playing backwards at 4x or 8x holds about 600MB of frames on top of the 1.15GB the open document takes (peak 1.88GB measured). 8x holds no more than 4x.",
+    "Played forwards at 2x from a cold stop on the same recording, the very first look (0.1s in) was 3 frames back; every look after was on time. Not changed by this work."
+  ]
+}

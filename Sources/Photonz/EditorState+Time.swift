@@ -299,7 +299,7 @@ extension EditorState {
         documentPlaybackStartedAtMS = documentTimeMS
         let rate = documentPlaybackRate
         // Forwards it runs to the end, or to the Out on a Play In to Out.
-        let end = rate > 0 ? min(documentPlaybackStopMS ?? lastDocumentTimeMS, lastDocumentTimeMS) : lastDocumentTimeMS
+        let end = min(documentPlaybackStopMS ?? lastDocumentTimeMS, lastDocumentTimeMS)
         documentPlaybackTask = Task { @MainActor [weak self] in
             // Backwards, it waits a moment for the frame behind it: the first
             // block decodes from the key frame before it, and a playhead that
@@ -307,10 +307,16 @@ extension EditorState {
             if rate < 0 { await self?.preRollBackward() }
             while !Task.isCancelled {
                 try? await Task.sleep(for: .milliseconds(MovieRef.frameStepMS))
-                guard let self, isDocumentPlaying, let started = documentPlaybackStartedAt else { return }
+                // A change of speed cancels this clock mid-sleep, and the sleep
+                // ends early rather than throwing it out: read against the new
+                // clock's start, nothing has elapsed, and from the last frame
+                // that read as the end. J J J from a stop at the end stopped
+                // dead on the third J (2026-10-08).
+                guard !Task.isCancelled, let self, isDocumentPlaying,
+                      let started = documentPlaybackStartedAt else { return }
                 let elapsed = Int((Date().timeIntervalSince(started) * 1000 * rate).rounded())
                 let landing = documentPlaybackStartedAtMS + elapsed
-                if landing >= end {
+                if rate > 0, landing >= end {
                     // It finishes rather than looping: a recording has a last
                     // frame, and sitting on it is what having watched it looks
                     // like.
@@ -318,7 +324,7 @@ extension EditorState {
                     pauseDocument()
                     return
                 }
-                if landing <= 0 {
+                if rate < 0, landing <= 0 {
                     // ...and backwards it stops on the first.
                     documentTimeMS = 0
                     pauseDocument()
@@ -338,9 +344,13 @@ extension EditorState {
         documentMomentChanged()
         while !Task.isCancelled, isDocumentPlaying, Date() < deadline,
               let document = shownDocument,
-              !document.readyToPlayBackward(atTimeMS: documentTimeMS, inHand: movieFrames.inHand) {
+              !document.readyToPlayBackward(atTimeMS: documentTimeMS, inHand: movieFrames.inHand,
+                                            speed: abs(documentPlaybackRate)) {
             try? await Task.sleep(for: .milliseconds(4))
         }
+        // A clock cancelled while it waited leaves the start to the one
+        // that replaced it.
+        guard !Task.isCancelled else { return }
         documentPlaybackStartedAt = Date()
         documentPlaybackStartedAtMS = documentTimeMS
     }

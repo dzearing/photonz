@@ -293,8 +293,13 @@ enum MovieSweeper {
     /// `waitsAt` is told, before each sample is read, the first grid frame not
     /// handed over yet, and answers whether to wait before reading on: a pass
     /// playing ahead of the playhead waits there for it (`MoviePlayPass`).
+    ///
+    /// `keeps` picks the grid frames worth handing over; every sample is still
+    /// decoded, but only those are turned into pictures, which is most of the
+    /// cost (`MoviePlayBackward.stride`).
     static func sweep(movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize,
                       waitsAt: (@Sendable (Int) -> Bool)? = nil,
+                      keeps: (@Sendable (Int) -> Bool)? = nil,
                       deliver: @escaping @Sendable (Int, CGImage) -> Void) async -> Bool {
         let asset = AVURLAsset(url: url)
         guard let track = try? await asset.loadTracks(withMediaType: .video).first,
@@ -318,7 +323,8 @@ enum MovieSweeper {
 
         var grid = MovieSweepGrid(frames: frames)
         var previous: CVPixelBuffer?
-        func hand(_ indices: [Int], _ buffer: CVPixelBuffer?) {
+        func hand(_ arrived: [Int], _ buffer: CVPixelBuffer?) {
+            let indices = keeps.map { arrived.filter($0) } ?? arrived
             guard !indices.isEmpty, let buffer,
                   let image = picture(of: buffer, orientation: orientation, size: size) else { return }
             for index in indices { deliver(index, image) }
@@ -602,6 +608,13 @@ final class MovieFrameFetcher {
             if let filed = filedWidth(request.ref), filed >= width.width - 1 { continue }
             if playsAhead, coveredByPlay(request, width: width) { continue }
             if playsBack, coveredByBack(request, width: width) { continue }
+            // ...and at a speed that keeps only some frames, one it does not
+            // keep is never read on its own: a seek from the key frame for a
+            // frame the clock passes in 4ms.
+            if playsBack, let speed = playingBackward,
+               !MoviePlayBackward.keeps(frame: request.movie.frameIndex(atSourceMS: request.sourceMS), speed: speed) {
+                continue
+            }
             if handMoving, has(request.ref) { continue }
             wanted.append(Read(request: request, size: width, url: url))
         }
@@ -775,15 +788,17 @@ final class MovieFrameFetcher {
         for place in places where blocks.count < MoviePlayBackward.blocksPerRecording {
             if let frames = MoviePlayBackward.next(playhead: place.head, floor: place.floor, speed: speed,
                                                    movie: movie, inHand: sharp, running: blocks.map(\.frames)) {
-                blocks.append(openBack(movie, url: url, frames: frames, size: size))
+                blocks.append(openBack(movie, url: url, frames: frames, speed: speed, size: size))
             }
         }
         backBlocks[movie.id] = blocks
         keepInsideBudget()
     }
 
-    /// Start reading `frames` of `movie` in one pass, lowest first.
-    private func openBack(_ movie: MovieRef, url: URL, frames: ClosedRange<Int>, size: CGSize) -> BackBlock {
+    /// Start reading `frames` of `movie` in one pass, lowest first, keeping
+    /// the frames kept at `speed` (`MoviePlayBackward.keeps`).
+    private func openBack(_ movie: MovieRef, url: URL, frames: ClosedRange<Int>, speed: Double,
+                          size: CGSize) -> BackBlock {
         let token = UUID()
         let file: @MainActor @Sendable (Int, CGImage) -> Void = { [weak self] index, image in
             self?.filePlayed(image, movie: movie, frameIndex: index, backward: true)
@@ -797,7 +812,8 @@ final class MovieFrameFetcher {
             }
         }
         let task = Task.detached(priority: .userInitiated) {
-            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size) { index, image in
+            let swept = await MovieSweeper.sweep(movie: movie, url: url, frames: frames, size: size,
+                                                 keeps: { MoviePlayBackward.keeps(frame: $0, speed: speed) }) { index, image in
                 Task { @MainActor in file(index, image) }
             }
             if !Task.isCancelled { await finished(swept) }
