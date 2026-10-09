@@ -320,6 +320,17 @@ struct EditorCommands: Commands {
                     }
                 }
             }
+            // The empty window's Design UI row, in the menu bar too. No
+            // ellipsis: it asks nothing, it opens. No shortcut, as above.
+            if Experiments.shared.designUIStartEnabled {
+                Button(UIStarter.menuTitle) {
+                    if let editor {
+                        editor.startUIDesign()
+                    } else {
+                        coordinator.newUIDesignWindow()
+                    }
+                }
+            }
             Button("New from Clipboard") { coordinator.newFromClipboardWindow() }
                 .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }

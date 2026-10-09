@@ -1,0 +1,169 @@
+{
+  "out": "/tmp/photonz-playtest/design-ui-start",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "seed": "Start a UI design from nothing (ui-entry-wt.html, steps 3 to 7), at Next defaults. A new empty window's card offers Design UI; clicking it opens untitled-ui, a 1280 by 800 canvas holding a Login frame laid out as a column, with the Library already on Components. Drag the Button off the shelf onto the frame: it joins the column as a linked copy, last, and the frame grows to hold it. The window is called untitled-ui, and File > New UI Design from it opens a second one, untitled-ui 2, leaving this one as it is.",
+  "steps": [
+    {
+      "do": "startFromEmpty",
+      "row": "Design UI",
+      "width": 1280,
+      "height": 900,
+      "card": "design-ui-1-card"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectLayers",
+      "count": 9
+    },
+    {
+      "do": "expectWindows",
+      "titled": "untitled-ui",
+      "count": 1
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Login",
+        "  Password field",
+        "    Placeholder",
+        "    Background",
+        "  Email field",
+        "    Placeholder",
+        "    Background",
+        "  Subhead",
+        "  Headline"
+      ]
+    },
+    {
+      "do": "expect",
+      "tile": "Button",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "1-opened"
+    },
+    {
+      "do": "snapshot",
+      "name": "design-ui-2-opened"
+    },
+    {
+      "do": "selectRow",
+      "row": "Login"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "positionAndSize"
+    },
+    {
+      "do": "expect",
+      "field": "W",
+      "reads": "320"
+    },
+    {
+      "do": "panel",
+      "stage": "2-login-picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "design-ui-3-login"
+    },
+    {
+      "do": "dragTile",
+      "tile": "Button",
+      "to": [
+        640,
+        470
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectRows",
+      "rows": [
+        "Login",
+        "  Button",
+        "  Password field",
+        "    Placeholder",
+        "    Background",
+        "  Email field",
+        "    Placeholder",
+        "    Background",
+        "  Subhead",
+        "  Headline"
+      ]
+    },
+    {
+      "do": "panel",
+      "stage": "3-button-dropped"
+    },
+    {
+      "do": "snapshot",
+      "name": "design-ui-4-button"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Login",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "row": "Button",
+      "present": false
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "row": "Login",
+      "present": true
+    },
+    {
+      "do": "menus",
+      "stage": "4-file-menu",
+      "menu": "File",
+      "choose": "File > New UI Design"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectWindows",
+      "titled": "untitled-ui 2",
+      "count": 1
+    },
+    {
+      "do": "expectWindows",
+      "titled": "untitled-ui",
+      "count": 1
+    }
+  ]
+}

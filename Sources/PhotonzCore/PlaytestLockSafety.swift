@@ -154,6 +154,12 @@ public enum PlaytestLockSafety {
         // Added 2026-09-27 by reading: `blank`'s own door with the New Video
         // sheet in place of the canvas, so nothing in it looks a name up.
         "blankVideo",
+        // Added 2026-10-08 by reading, NOT yet watched under a lock: `blank`'s
+        // door, and the row is clicked through the app's own register of
+        // controls, the same one a `press` reads, never a name looked up
+        // through accessibility. The first locked run of design-ui-start-walk
+        // is its watch; if it refuses there, take it out.
+        "startFromEmpty",
         // Added 2026-09-25 by reading, NOT yet watched under a lock (the screen
         // was unlocked all day): it asks the editor how wide each frame on
         // screen was read and how wide it is shown, the same kind of own state
@@ -468,6 +474,7 @@ public enum PlaytestLockSafety {
         // the only step that can photograph it.
         case .blank(_, _, let card, _): card != nil
         case .blankVideo(_, let card): card != nil
+        case .startFromEmpty(_, _, let card): card != nil
         default: false
         }
     }

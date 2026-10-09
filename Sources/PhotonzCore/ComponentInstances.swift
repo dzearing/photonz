@@ -48,6 +48,9 @@ public struct ComponentSyncReport: Hashable, Sendable {
     public var strandedInstances: Int
     /// What those copies landed on, so the notice can name it.
     public var strandedOnVersion: String?
+    /// Which copies were rewritten, and of which component, so an edit can
+    /// leave out the copies it has only just placed (`excluding`).
+    public var updatedCopies: [UUID: UUID] = [:]
 
     public init(updatedInstances: Int = 0, componentIDs: Set<UUID> = [],
                 strandedInstances: Int = 0, strandedOnVersion: String? = nil) {
@@ -58,6 +61,21 @@ public struct ComponentSyncReport: Hashable, Sendable {
     }
 
     public var isEmpty: Bool { updatedInstances == 0 }
+
+    /// The same report without the copies in `placed`. A copy dropped into a
+    /// column that stretches it is refilled at its new width in the step that
+    /// placed it, and that is not a copy following an edit: placing one counts
+    /// zero, as `updatedInstances` promises.
+    public func excluding(_ placed: Set<UUID>) -> ComponentSyncReport {
+        guard !updatedCopies.isEmpty, !placed.isEmpty else { return self }
+        let kept = updatedCopies.filter { !placed.contains($0.key) }
+        guard kept.count != updatedCopies.count else { return self }
+        var out = self
+        out.updatedInstances = max(0, updatedInstances - (updatedCopies.count - kept.count))
+        out.updatedCopies = kept
+        out.componentIDs = Set(kept.values)
+        return out
+    }
 }
 
 // MARK: - Deriving a copy's ids
@@ -745,6 +763,7 @@ extension PhotonzDocument {
                         || copy.group?.layout != layer.group?.layout {
                         report.updatedInstances += 1
                         report.componentIDs.insert(componentID)
+                        report.updatedCopies[layer.id] = componentID
                     }
                     return copy
                 }

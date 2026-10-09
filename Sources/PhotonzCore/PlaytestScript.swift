@@ -2502,6 +2502,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// 1080, ten seconds), so the window holds an empty timeline. `window` and
     /// `card` are `blank`'s.
     case blankVideo(window: CGSize?, card: String?)
+    /// Start from a new EMPTY window by clicking one of its card's rows by
+    /// pointer, on the row's face, the way a person does: "Design UI" opens
+    /// the UI starter. The walk then drives whatever document the row opened.
+    /// `window` and `card` are `blank`'s.
+    case startFromEmpty(row: String, window: CGSize?, card: String?)
     /// Let the editor finish what the step before started. It ends the moment
     /// the app goes quiet, which is why a walk's waits cost seconds rather than
     /// minutes.
@@ -3910,7 +3915,7 @@ public enum PlaytestStep: Sendable, Equatable {
 
     /// Every step name, sorted, as the error text and the doc list them.
     public static let names: [String] = [
-        "action", "appKey", "appearance", "blank", "blankVideo", "clearClipboard", "click", "describe", "drag",
+        "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
@@ -3930,6 +3935,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .appearance: "appearance"
         case .blank: "blank"
         case .blankVideo: "blankVideo"
+        case .startFromEmpty: "startFromEmpty"
         case .wait: "wait"
         case .key: "key"
         case .shortcut: "shortcut"
@@ -4081,6 +4087,11 @@ public enum PlaytestStep: Sendable, Equatable {
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
             self = .blankVideo(window: window, card: try f.optionalString("card"))
+        case "startFromEmpty":
+            let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
+            let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            self = .startFromEmpty(row: try f.string("row"), window: window,
+                                   card: try f.optionalString("card"))
         case "wait":
             let bound = try f.optionalNumber("longestUnderMS")
             if let bound, !(bound > 0 && bound.isFinite) {

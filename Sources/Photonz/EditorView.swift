@@ -720,7 +720,7 @@ struct EditorView: View {
     /// where getting a picture IN is a control rather than a key, which is why
     /// the first guide in Basics is built on them.
     enum EmptyEditorStart: String {
-        case open, capture, paste, blank, video
+        case open, capture, paste, blank, video, ui
 
         var anchor: TutorialAnchor { .startHere(rawValue) }
     }
@@ -757,6 +757,13 @@ struct EditorView: View {
                     if Experiments.shared.blankVideoEnabled {
                         onboardingRow(.video, "film", "Blank video", "") {
                             editorState.isBlankVideoDialogPresented = true
+                        }
+                    }
+                    // The mock's Design UI tile (`ui-entry-wt.html`), as a row
+                    // of this card: no size to ask, so it opens straight away.
+                    if Experiments.shared.designUIStartEnabled {
+                        onboardingRow(.ui, "rectangle.3.group", UIStarter.rowTitle, "") {
+                            editorState.startUIDesign()
                         }
                     }
                 }
@@ -798,6 +805,9 @@ struct EditorView: View {
         }
         .buttonStyle(.borderless)
         .tutorialAnchor(start.anchor)
+        // So a walk can click the row on its face, the way a person does,
+        // rather than reaching past the card for the action behind it.
+        .playtestControl(title, detail: "Start")
     }
 
     /// Three glass bars: tools, fill colors, zoom — grouped in one

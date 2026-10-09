@@ -122,7 +122,12 @@ public struct History: Sendable {
         guard next != current else {
             return PreparedEdit(next: current, report: EditReport(), changed: false)
         }
-        let report = EditReport(componentSync: sync,
+        // Copies this edit placed are left out of what it reports: they did
+        // not follow anything, they arrived.
+        let placed = sync.updatedCopies.isEmpty
+            ? []
+            : Set(next.allLayerIDs).subtracting(current.allLayerIDs)
+        let report = EditReport(componentSync: sync.excluding(placed),
                                 linkBreaks: LinkBreakReport.between(current, next))
         return PreparedEdit(next: next, report: report, changed: true)
     }

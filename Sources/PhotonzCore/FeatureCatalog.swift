@@ -92,6 +92,8 @@ public enum FeatureCatalog {
 
     public static let blankVideoFlag = "next-blank-video"
 
+    public static let designUIStartFlag = "next-design-ui-start"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -1359,6 +1361,16 @@ public enum FeatureCatalog {
                     name: blankVideoFlag,
                     title: "Start a video from an empty timeline",
                     description: "File \u{25B8} New Video starts a video from nothing: pick a size and a length, and you get an empty V1 over an empty Audio track, the Library open for Import. Off means a video only starts from a recording.",
+                    area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: designUIStartFlag,
+                    title: "Start a UI design from an empty window",
+                    description: "An empty window offers Design UI, and File has New UI Design: a 1280 \u{00D7} 800 canvas holding a Login frame laid out as a column, the Library open on Components. Off means you draw the frame yourself.",
                     area: .canvas,
                     isEnabled: false,
                     parameters: []),

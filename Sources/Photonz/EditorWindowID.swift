@@ -25,6 +25,8 @@ import Foundation
 /// - `.blankVideo` — a window that starts a video from nothing (File ▸ New
 ///   Video): the same rule as `.blankCanvas`, with the length in
 ///   milliseconds beside the size.
+/// - `.uiDesign` — a window that starts a UI design (File ▸ New UI Design):
+///   born holding the Design UI starter, a canvas with a Login frame on it.
 /// - `tutorial` — a window a guide opened for itself, holding the guide's own
 ///   sample picture. A guide never teaches over your work: it brings something
 ///   of its own to point at. The string is the guide's id, so the window knows
@@ -36,6 +38,7 @@ enum EditorWindowID: Hashable, Codable, Sendable {
     case video(URL)
     case blankCanvas(UUID, CGSize?)
     case blankVideo(UUID, CGSize?, Int)
+    case uiDesign(UUID)
     case tutorial(UUID, String)
 
     /// A video-editor id for `url`, standardized so the same recording always

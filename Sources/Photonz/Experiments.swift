@@ -412,6 +412,11 @@ extension Experiments {
     /// Next release's catalog, so Current never offers either.
     var blankVideoEnabled: Bool { isEnabled(FeatureCatalog.blankVideoFlag) }
 
+    /// `next-design-ui-start`: File ▸ New UI Design and the empty window's
+    /// Design UI row, which open a canvas already holding a Login frame
+    /// (`UIStarter`). Next only.
+    var designUIStartEnabled: Bool { isEnabled(FeatureCatalog.designUIStartFlag) }
+
     /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
     /// canvas picks a whole group (with double click going inside it and Escape
     /// coming back out). Exists only in the Next release's catalog, so Current

@@ -939,6 +939,9 @@ private final class Run {
         case .blankVideo(let size, let card):
             try await blankVideo(window: size, card: card, number: number)
 
+        case .startFromEmpty(let row, let size, let card):
+            try await startFromEmpty(row: row, window: size, card: card, number: number)
+
         case .open(let file, let size):
             let url = try fileURL(file)
             try await open(url, size: size, number: number)
@@ -13148,6 +13151,30 @@ private final class Run {
         try await adopt(fresh, window: window, step: "blankVideo",
                         subject: "empty video \(Int(size.width))x\(Int(size.height)), \(length / 1000)s",
                         number: number)
+    }
+
+    /// A new empty window, and one row of its card clicked by pointer on its
+    /// face, the way a person starts something there. The walk then takes
+    /// over whatever document that row put in the window.
+    private func startFromEmpty(row: String, window: CGSize?, card: String?,
+                                number: Int) async throws {
+        try await poll("the app's window opener", within: 5) { coordinator.openWindowAction != nil }
+        let before = Set(PlaytestHarness.knownEditors.map { ObjectIdentifier($0) })
+        coordinator.openWindowAction?(.fresh(UUID()))
+        var fresh: EditorState?
+        try await poll("an empty editor window", within: 15) {
+            fresh = PlaytestHarness.knownEditors.last { !before.contains(ObjectIdentifier($0)) }
+            return fresh != nil
+        }
+        guard let fresh else { throw Failure(description: "no empty window appeared") }
+        if let card {
+            try await photographEmptyWindow(fresh, window: window, name: card, number: number)
+        }
+        try await adoptEmpty(fresh, step: "startFromEmpty", subject: "an empty window", number: number)
+        try await pressControl(row, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        try await poll("the document the \"\(row)\" row opens", within: 10) { fresh.document != nil }
+        try await adopt(fresh, window: window, step: "startFromEmpty",
+                        subject: "\"\(row)\" clicked in the empty window's card", number: number)
     }
 
     /// The empty window before anything is in it: the onboarding card, which

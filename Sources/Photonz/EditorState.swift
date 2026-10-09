@@ -2114,6 +2114,36 @@ final class EditorState {
         if Experiments.shared.libraryEnabled { showMediaShelf(revealing: nil) }
     }
 
+    /// Starts a UI design (`ui-entry-wt.html`, steps 3 to 7): a 1280 by 800
+    /// canvas holding a Login frame laid out as a column, and the Library
+    /// open on Components so the next thing is dragging one onto it. The frame
+    /// arrives with the document, so it is where history starts: undo after
+    /// the first edit takes back that edit and never the frame.
+    func newUIDesign() {
+        Self.uiDesignCount += 1
+        untitledName = UIStarter.documentName(number: Self.uiDesignCount)
+        installDocument(UIStarter.document(measure: { TextRasterizer.naturalSize($0) }), url: nil)
+        guard Experiments.shared.libraryEnabled else { return }
+        UserDefaults.standard.set(LibraryScope.components.rawValue, forKey: LibraryPanel.scopeKey)
+        setLibraryVisible(true)
+    }
+
+    private static var uiDesignCount = 0
+
+    /// How this window opens another one holding a UI design. Set by the
+    /// window root, like `openBlankCanvasWindow`.
+    @ObservationIgnored var openUIDesignWindow: (() -> Void)?
+
+    /// The empty window's Design UI row and File ▸ New UI Design: an empty
+    /// window fills itself, a window already holding something keeps it and
+    /// the design opens in a new one.
+    func startUIDesign() {
+        switch BlankCanvas.destination(windowHasDocument: document != nil) {
+        case .thisWindow: newUIDesign()
+        case .newWindow: openUIDesignWindow?()
+        }
+    }
+
     /// How this window opens another one holding a blank video. Set by the
     /// window root, like `openBlankCanvasWindow`.
     @ObservationIgnored var openBlankVideoWindow: ((CGSize, Int) -> Void)?
@@ -2220,6 +2250,8 @@ final class EditorState {
                 PlaytestHarness.register(self)
                 #endif
             }
+        case .uiDesign:
+            newUIDesign()
         case .tutorial(_, let guideID):
             untitledName = TutorialSampleScreen.documentName
             tutorialSample = TutorialCatalog.guide(id: guideID)?.sample

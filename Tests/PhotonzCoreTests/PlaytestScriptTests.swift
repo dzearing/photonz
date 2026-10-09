@@ -478,6 +478,33 @@ struct PlaytestScriptTests {
         #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
     }
 
+    @Test("A startFromEmpty step clicks a row of the empty window's card")
+    func startFromEmptyDecodes() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "startFromEmpty", "row": "Design UI", "width": 1300, "height": 900, "card": "empty-card" },
+            { "do": "startFromEmpty", "row": "Design UI" }
+          ]
+        }
+        """)
+        guard case .startFromEmpty(let row, let window, let card) = script.steps[0] else {
+            Issue.record("startFromEmpty"); return
+        }
+        #expect(row == "Design UI")
+        #expect(window == CGSize(width: 1300, height: 900))
+        #expect(card == "empty-card")
+        #expect(script.steps[0].name == "startFromEmpty")
+        guard case .startFromEmpty("Design UI", nil, nil) = script.steps[1] else {
+            Issue.record("bare startFromEmpty"); return
+        }
+        #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/tmp/walk/out", "steps": [ { "do": "startFromEmpty" } ] }"#)
+        }
+    }
+
     @Test("A blank step can say the document counts in twos, the way a Retina capture does")
     func blankTakesAPixelScale() throws {
         let script = try decode("""

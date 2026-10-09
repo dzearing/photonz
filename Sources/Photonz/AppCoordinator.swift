@@ -864,6 +864,12 @@ final class AppCoordinator {
         openWindow(.blankVideo(UUID(), size, lengthMS))
     }
 
+    /// File ▸ New UI Design from a window already holding something: the
+    /// starter opens in a window of its own.
+    func newUIDesignWindow() {
+        openWindow(.uiDesign(UUID()))
+    }
+
     /// File ▸ New Video asked with no window to hang the sheet on: a window
     /// opens empty and asks.
     func newBlankVideoWindowAskingForSize() {
