@@ -116,7 +116,11 @@ enum LayerCommandList {
         // already drawn with the Pen, Close Path over one of them on its own
         // (`EditorState+LayerOps.turnIntoPathMenuItem`).
         if editorState.canTurnLayerIntoPath(id: id) {
-            rows.append(.command(editorState.turnIntoPathMenuItem(id: id)) {
+            // ...printing ⇧⌘J when it is Close Path… and the key would run
+            // this very row on this very selection.
+            let closeKey: MenuShortcut? = editorState.shiftCommandJClosesRow(id: id)
+                ? .commandShift("j") : nil
+            rows.append(.command(editorState.turnIntoPathMenuItem(id: id), closeKey) {
                 editorState.turnLayerIntoPath(id: id)
             })
         }

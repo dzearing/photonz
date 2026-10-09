@@ -29,6 +29,27 @@ public enum PathClose {
     /// A distance written the way a sentence says it, so the question and the
     /// arithmetic cannot drift apart.
     public static func gapText(_ value: CGFloat) -> String { PathJoin.toleranceText(value) }
+
+    /// The two rows that share ⇧⌘J.
+    public enum ShiftCommandJ: Equatable, Sendable {
+        /// Layer ▸ New Layer via Cut, Photoshop's meaning for the key.
+        case newLayerViaCut
+        /// Layer ▸ Close Path…, the icon pen's.
+        case closePath
+    }
+
+    /// Which row ⇧⌘J runs right now, and so which row the menu bar prints
+    /// it against: only ever one.
+    ///
+    /// New Layer via Cut does nothing without a marquee, so a marquee is the
+    /// whole test. With one up the key keeps Photoshop's meaning even when an
+    /// open outline is picked too; with none, and the Close Path row offered
+    /// for what is picked, the key shuts that outline. With neither it stays
+    /// printed against the cut, dimmed, which is where a Photoshop hand looks
+    /// for it.
+    public static func shiftCommandJ(marqueeUp: Bool, closesOnePath: Bool) -> ShiftCommandJ {
+        !marqueeUp && closesOnePath ? .closePath : .newLayerViaCut
+    }
 }
 
 extension PathContent {

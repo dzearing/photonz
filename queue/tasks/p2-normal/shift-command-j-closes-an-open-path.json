@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.288Z",
-  "updated": "2026-10-09T12:52:26.117Z",
+  "updated": "2026-10-09T14:54:58.091Z",
   "deps": [],
   "blockedBy": [],
   "notes": "icon-vector success item 1: 'every anchor and handle stays draggable, and Shift Cmd J closes the path'. Open thread in manager report 2026-10-08-0639: 'Close Path has no key (Shift Cmd J is New Layer via Cut)'. Today: EditorCommands.swift:1745 New Layer via Cut, .keyboardShortcut(\"j\", [.command,.shift]), disabled unless canCutSelectionToLayer (needs a marquee). Close Path is the retitled Turn Into Path row (EditorCommands.swift ~1825-1837, turnSelectionIntoPathMenuItem; EditorState+LayerOps.swift:634 Close Path; PathClosing.swift). Pattern for a key that moves by context: the timed ? shortcut : nil idiom at EditorCommands.swift:1359. Photoshop parity memory: keep Photoshop's meaning wherever Photoshop has one, which is why the marquee case keeps New Layer via Cut.",
@@ -33,6 +33,30 @@
     {
       "t": "2026-10-09T12:52:26.114Z",
       "note": "seq 6 -> 30"
+    },
+    {
+      "t": "2026-10-09T14:39:24.332Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T14:54:43.809Z",
+      "note": "owns these walks: shift-command-j-closes-a-path-walk"
+    },
+    {
+      "t": "2026-10-09T14:54:57.977Z",
+      "note": "Adversarial review before building: Photoshop's Shift Cmd J (New Layer via Cut) needs a marquee, Illustrator's Cmd J closes/joins; so a marquee is the whole test and the key keeps Photoshop's meaning whenever one is up. With neither case the key stays printed on the dimmed cut row, where a Photoshop hand looks. The key runs the same Close Path row, so it asks the same question (with Don't ask again); left as an evaluate question in the audit rather than a quiet behaviour change."
+    },
+    {
+      "t": "2026-10-09T14:54:58.034Z",
+      "note": "Built: PathClose.shiftCommandJ(marqueeUp:closesOnePath:) in PhotonzCore (tests first, PathClosingTests); EditorState.shiftCommandJ + shiftCommandJClosesRow; Layer menu prints the key on exactly one of New Layer via Cut / Close Path…, and the layer row's right-click Close Path… prints it when the key would run that row. Walk shift-command-j-closes-a-path-walk needs front:true: in a background walk the menu bar is frozen at launch (the row read Turn Into Path… and the key sat on the cut), measured on the first run. Green at Next defaults; neighbour walks close-an-open-path, cut-onto-its-own-layer, mirror-across-center x2 green; Scripts/test.sh 12012 tests green."
+    },
+    {
+      "t": "2026-10-09T14:54:58.090Z",
+      "note": "left rough (no task, under the bar or already covered): question on every key press until silenced (audit evaluate item for the user); Shift Cmd J does nothing mid-Pen-draw (finish with Return first; audit evaluate item); the mock's panel Close path button is covered by open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h."
     }
+  ],
+  "started": "2026-10-09T14:39:24.329Z",
+  "walks": [
+    "shift-command-j-closes-a-path-walk"
   ]
 }

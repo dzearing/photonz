@@ -266,4 +266,22 @@ struct PathClosingTests {
     func theMenuRow() {
         #expect(PathClose.menuItem == "Close Path\u{2026}")
     }
+
+    // MARK: Which row Shift Command J runs
+
+    @Test("A marquee up keeps Shift Command J on New Layer via Cut, Photoshop's meaning")
+    func marqueeKeepsTheCut() {
+        #expect(PathClose.shiftCommandJ(marqueeUp: true, closesOnePath: false) == .newLayerViaCut)
+        #expect(PathClose.shiftCommandJ(marqueeUp: true, closesOnePath: true) == .newLayerViaCut)
+    }
+
+    @Test("With no marquee and one open outline picked, Shift Command J closes it")
+    func noMarqueeClosesThePath() {
+        #expect(PathClose.shiftCommandJ(marqueeUp: false, closesOnePath: true) == .closePath)
+    }
+
+    @Test("With nothing for either, the key stays printed against New Layer via Cut")
+    func neitherLeavesTheKeyOnTheCut() {
+        #expect(PathClose.shiftCommandJ(marqueeUp: false, closesOnePath: false) == .newLayerViaCut)
+    }
 }

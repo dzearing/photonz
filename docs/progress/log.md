@@ -20993,3 +20993,10 @@ Next: the first editor window's ~200 ms first build
 - On a video the row is absent and ⇧⌘M stays Go to Previous Marker; walks get a ⇧⌘M stand-in (`PlaytestMenuStandIn`) and a `mirrorAcrossCenter` action.
 - Walks: `mirror-across-center-walk`, `mirror-across-center-right-click-walk`.
 - Next: `the-layers-panel-menu-carries-the-icon-mock-s-ce` (the mock's Center on the artboard, Union, Outline stroke rows).
+
+## 2026-10-09 — Shift Command J closes an open path
+
+- With one open outline picked and no marquee up, ⇧⌘J runs Layer ▸ Close Path… (same row, same question, one undo step). With a marquee up it stays New Layer via Cut. The menu bar prints the key on exactly one of the two rows; the layer row's right-click Close Path… prints it when the key would run that row.
+- Rule in `PathClose.shiftCommandJ` (`PathClosing.swift`, tested); `EditorState.shiftCommandJ` feeds both menus.
+- Walk: `shift-command-j-closes-a-path-walk` (`front: true`: a background walk's menu bar is frozen at launch, so a key that moves rows can only be proven with the probe in front).
+- Open: whether the key should skip the question (audit evaluate item); the mock's panel Close path button waits on the panel-buttons card.

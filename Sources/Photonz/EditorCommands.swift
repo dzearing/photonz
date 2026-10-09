@@ -1752,9 +1752,14 @@ struct EditorCommands: Commands {
             // TAKEN rather than copied, and the space it came from filled in
             // from what was around it (`newLayerViaCut`). Directly under the
             // copy row it is the sibling of, so the pair reads as a pair.
+            // ⇧⌘J moves to Close Path… when one open outline is picked and no
+            // marquee is up, the one case the cut has nothing to do
+            // (`PathClose.shiftCommandJ`), so the bar prints it on one row.
+            let shiftJ = editor?.shiftCommandJ ?? .newLayerViaCut
+            let shiftJKey = KeyboardShortcut("j", modifiers: [.command, .shift])
             if Experiments.shared.newLayerViaCutEnabled {
                 Button("New Layer via Cut") { editor?.newLayerViaCut() }
-                    .keyboardShortcut("j", modifiers: [.command, .shift])
+                    .keyboardShortcut(shiftJ == .newLayerViaCut ? shiftJKey : nil)
                     .disabled(!(editor?.canCutSelectionToLayer ?? false))
             }
             Button("Blur Behind Selection") { editor?.blurBehindSelection() }
@@ -1854,6 +1859,7 @@ struct EditorCommands: Commands {
                 Button(editor?.turnSelectionIntoPathMenuItem ?? TurnIntoPathPrompt.menuItem) {
                     editor?.turnSelectionIntoPath()
                 }
+                .keyboardShortcut(shiftJ == .closePath ? shiftJKey : nil)
                 .disabled(!(editor?.canTurnSelectionIntoPath ?? false))
             }
             // Two shapes become one (`PathCombining.swift`). A submenu rather

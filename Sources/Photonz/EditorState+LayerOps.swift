@@ -466,6 +466,20 @@ extension EditorState {
         return nil
     }
 
+    /// Which Layer menu row ⇧⌘J runs right now (`PathClose.shiftCommandJ`):
+    /// Close Path… over one open outline picked with no marquee up, New Layer
+    /// via Cut otherwise.
+    var shiftCommandJ: PathClose.ShiftCommandJ {
+        PathClose.shiftCommandJ(marqueeUp: selection != nil,
+                                closesOnePath: pathRowAction(ids: actionableLayerIDs) == .close)
+    }
+
+    /// Whether a layer ROW's Close Path… is the one ⇧⌘J would run, so its
+    /// right-click menu prints the key only when pressing it does the same.
+    func shiftCommandJClosesRow(id: UUID) -> Bool {
+        shiftCommandJ == .closePath && rowMenuTargets(id) == actionableLayerIDs
+    }
+
     /// What the row says from a layer ROW's menu.
     func turnIntoPathMenuItem(id: UUID) -> String {
         turnIntoPathMenuItem(ids: rowMenuTargets(id))

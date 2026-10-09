@@ -1,0 +1,45 @@
+{
+  "feature": "Shift Command J closes an open path",
+  "epic": "icon-vector",
+  "summary": "With one open outline picked and no marquee up, Shift Command J now closes it on its own two ends. With a marquee up the key is still Photoshop's New Layer via Cut, and the menu bar prints the key on whichever of the two rows it will run.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/shift-command-j-closes-a-path-walk.json (it brings the probe to the front, so it waits for nobody to be at the Mac).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press P, click three points of a triangle, press Return, then Escape. Pick the Path row.",
+      "shot": "2026-10-09-shift-cmd-j-1-open.png"
+    },
+    {
+      "do": "Open the Layer menu: Shift Command J sits beside Close Path…, and New Layer via Cut shows no key."
+    },
+    {
+      "do": "Press Shift Command J and answer Close Path in the question.",
+      "shot": "2026-10-09-shift-cmd-j-3-question.png"
+    },
+    {
+      "do": "Look at the canvas: the third side is there, the notice says Closed, and the Fill row has appeared.",
+      "shot": "2026-10-09-shift-cmd-j-4-closed.png"
+    },
+    {
+      "do": "Press Command Z once: the outline is open again."
+    },
+    {
+      "do": "Drop a screenshot, marquee a word on it, and open the Layer menu: Shift Command J is back on New Layer via Cut."
+    },
+    {
+      "do": "Press Shift Command J: the word lifts onto a layer of its own, as before.",
+      "shot": "2026-10-09-shift-cmd-j-8-cut.png"
+    }
+  ],
+  "evaluate": [
+    "Does a key that changes rows depending on whether a marquee is up feel natural, or surprising?",
+    "Should the key close the path straight away instead of asking the question first, the way Illustrator's Join does?",
+    "Would you expect Shift Command J to close the path while you are still drawing it with the Pen, before pressing Return?"
+  ],
+  "rough": [
+    "The key runs the same row as the menu, so it asks the Close this path question every time until Don't ask again is ticked; Illustrator closes with no question.",
+    "The mock (vector-wt.html, Path inspector step) also puts a Close path button in the panel; whether the panel keeps one-shot buttons is the open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h.",
+    "The Layer menu's Close Path… with Shift Command J matches the mock's command popover, which prints the same pair.",
+    "Shift Command J does nothing while the Pen is still drawing; you finish with Return or Escape first."
+  ]
+}
