@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 3870,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T08:10:49.005Z",
-  "updated": "2026-10-09T09:54:36.025Z",
+  "updated": "2026-10-09T11:38:47.080Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Built in a-component-can-have-a-variant-and-a-size-at-onc (dbf55248). Edges are drawn in CanvasComponents.drawVariantGridEdges from PhotonzDocument.componentVariantGrid (Sources/PhotonzCore/ComponentVariantGrid.swift); layout is layOutComponentVariantGridOnPage, called from editingSpace and after adding a drawing in the space. Today: grey screen-name plates, each drawing still wears its chip (\"Default · Default\", \"Secondary · Default\"), and the camera does not move to the grid. Walk: variant-and-size-walk (shots 1-grid-dark, 2-grid-light). Mock: docs/design/mocks/pages/ui-variants.html .pmatrix, .mh, .rv.",
@@ -32,9 +32,36 @@
     {
       "t": "2026-10-09T09:54:36.024Z",
       "note": "priority p2-normal -> p1-high"
+    },
+    {
+      "t": "2026-10-09T10:45:39.491Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T11:38:42.720Z",
+      "note": "Reproduced first (starter-button-looks-walk 9-grid): chips covered the Large column, Ghost words near invisible because Edit Original's page is see-through and the page drop shadow (shadowPath = whole page, 45%) lay across it, grid small in the corner even after Fit. Built: ComponentVariantGrid.Panel geometry + componentVariantGridSurfaceHex + page shrinks to the grid (core, tested); panel CALayer under contentLayer, page shadow off while it shows, edge names restyled to .mh/.rv, chips skipped for gridded drawings, camera fits when adding a question first makes a grid, equal 24pt-apart columns never narrower than their names. a4dffd9e."
+    },
+    {
+      "t": "2026-10-09T11:38:42.781Z",
+      "note": "left rough: the picked drawing's rotate knob lands on its column name in the top row (selection chrome over a label; did not earn a task). left rough: zoomed far out, a colliding column name is skipped rather than shrunk."
+    },
+    {
+      "t": "2026-10-09T11:38:42.840Z",
+      "note": "Filed edit-original-shows-a-live-copy-above-the-varian (p1) for the mock's Live instance block and lit .pmcell.on. White panel in dark mode rides on the open dark-mode card. Walks run green: starter-button-looks, variant-and-size, instance-properties-variants-mock, layout-fits, name-chip-reads-anywhere, panel-reach, refused-width-says-why, width-reads-back. Scripts/test.sh: 11975 passed."
+    },
+    {
+      "t": "2026-10-09T11:38:42.898Z",
+      "note": "walks variant-and-size-walk -> variant-and-size-walk, starter-button-looks-walk"
+    },
+    {
+      "t": "2026-10-09T11:38:47.078Z",
+      "note": "Edit Original now draws a two-question component as the mock's matrix: one rounded panel under the drawings in the document's Surface, small-capital column answers, row answers beside their rows, no per-drawing chips, page fitted to the grid so it opens framed at 100%, even 24pt-apart columns. Core tested (ComponentVariantGridTests), 11975 tests green, 8 walks green at Next defaults incl. starter-button-looks-walk without Fit. Commit a4dffd9e, audit queue/audits/2026-10-09-variant-grid-panel.json."
     }
   ],
   "walks": [
-    "variant-and-size-walk"
-  ]
+    "variant-and-size-walk",
+    "starter-button-looks-walk"
+  ],
+  "started": "2026-10-09T10:45:39.490Z",
+  "completed": "2026-10-09T11:38:47.079Z"
 }

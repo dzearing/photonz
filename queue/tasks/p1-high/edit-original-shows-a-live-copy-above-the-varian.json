@@ -1,0 +1,30 @@
+{
+  "id": "edit-original-shows-a-live-copy-above-the-varian",
+  "title": "Edit Original shows a live copy above the variant grid and lights the picked cell, as the variants mock does",
+  "goal": "The variants mock puts a live copy of the component above its grid of looks, and clicking a look in the grid lights that cell in violet and loads it into the live copy. Edit Original now draws the grid itself, but not the live copy or the lit cell, so the page is missing the top half of what the mock shows.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 3880,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T11:38:22.613Z",
+  "updated": "2026-10-09T11:38:22.616Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building edit-original-draws-a-two-question-component-ins (a4dffd9e). The grid panel is drawn in CanvasComponents.drawVariantGridEdges into variantGridPanelLayer (under contentLayer); geometry is ComponentVariantGrid.Panel in PhotonzCore. The live copy needs a home that is not a document layer (anything loose on the Edit Original page is folded into the first drawing on Done, returnFromEditingSpace). Mock: docs/design/mocks/pages/ui-variants.html .cvblock Live instance, .pmcell.on.",
+  "acceptance": [
+    "On Edit Original of a component asking two questions, a live copy sits centred above the grid panel like ui-variants.html .instwrap, and follows edits to the drawings",
+    "Clicking a drawing in the grid lights its cell like .pmcell.on and the live copy shows that look",
+    "Light and dark both read, and a walk at Next defaults clicks a cell with the pointer and photographs the result"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T11:38:22.615Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "starter-button-looks-walk"
+  ]
+}

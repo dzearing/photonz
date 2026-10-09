@@ -1,0 +1,27 @@
+{
+  "feature": "Edit Original draws a two-question component as the mock's matrix panel",
+  "epic": "ui-components",
+  "summary": "Edit Original on a Button now opens framed on its nine looks inside one rounded panel, with SMALL, MEDIUM and LARGE across the top and Primary, Secondary and Ghost beside the rows. The Ghost row reads, and no name chip sits on top of a drawing any more.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: starter-button-looks-walk (and variant-and-size-walk for a grid you build yourself).",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library shelf and drag the Button onto a blank canvas." },
+    { "do": "With the copy picked, choose Layer > Edit Original.", "shot": "2026-10-09-variant-grid-panel-dark-sc.png" },
+    { "do": "Without pressing Fit, check the page opened framed on the grid at 100%." },
+    { "do": "Switch the Mac to light mode and look at the Ghost row.", "shot": "2026-10-09-variant-grid-panel-light-sc.png" },
+    { "do": "Click any drawing in the grid and drag it out of its row: the panel and the names go away. Press Command-Z and they come back." },
+    { "do": "Press Done, drop a Badge, Edit Original it, then use Add > New Variant Property and call the new answer Large.", "shot": "2026-10-09-variant-grid-panel-badge-sc.png" }
+  ],
+  "evaluate": [
+    "Does the panel read as the mock's matrix, a single surface holding the looks, rather than drawings floating on the page?",
+    "Is a white panel on the dark canvas right in dark mode, given the Button's colours are made for a light page?",
+    "Can you tell which look is which from the edges alone, now that the drawings carry no name chips?",
+    "Does opening framed at 100% feel right, or would you rather it zoomed further in on a small component like the Badge?"
+  ],
+  "rough": [
+    "The panel is the document's Surface (white) in dark mode too, where the mock draws dark glass: the starter Button keeps its light-page colours until decision card decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho is answered, and its Ghost words cannot be read on dark glass.",
+    "The mock's Live instance above the grid and its violet lit cell are not here yet: task edit-original-shows-a-live-copy-above-the-varian.",
+    "The picked drawing's rotate knob sits over its column name in the top row.",
+    "Zoomed far out, a column name that would run into its neighbour's is left out until there is room, rather than shrunk."
+  ]
+}
