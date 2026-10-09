@@ -1,0 +1,39 @@
+{
+  "id": "decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho",
+  "taskId": "decide-whether-starter-components-change-colour",
+  "question": "When the Mac is in dark mode, should a starter Button you dropped change to dark colours?",
+  "context": "The starter Button now matches the variants mock's light cells. The mock also draws dark cells, and today the Button keeps its light colours in dark mode.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep the colours you dropped",
+      "summary": "A Button stays the blue, white and grey it was dropped in whatever the Mac is set to, like any picture you drew. Only the app around it goes dark.",
+      "pros": [
+        "What you see is what you export or share",
+        "Matches how Figma and Photoshop treat a design"
+      ],
+      "cons": [
+        "In dark mode the Button does not match the mock's dark cells"
+      ],
+      "mitigation": "Recolour Accent, Surface or Text in Styles to make a dark version on purpose.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Follow the Mac appearance",
+      "summary": "Each starter colour gets a dark version, so a dropped Button turns into the mock's dark look when the Mac goes dark and back when it goes light.",
+      "pros": [
+        "Matches the mock in both schemes",
+        "A design made for both schemes comes for free"
+      ],
+      "cons": [
+        "An exported picture depends on the Mac's setting at the time",
+        "Styles need a second colour each, which is new to explain"
+      ],
+      "mitigation": "Export would say which appearance it used."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-09T09:54:23.056Z"
+}

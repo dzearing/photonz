@@ -1,0 +1,32 @@
+{
+  "feature": "The starter Button comes as Primary, Secondary or Ghost, in three sizes, with an icon",
+  "epic": "ui-components",
+  "summary": "The Button on the Library shelf now arrives the way the variants mock draws it: Primary, Secondary or Ghost in Small, Medium or Large, with a leading icon a copy can hide or swap for Wand, Swatch, Layers or Brush. A dropped copy starts as Primary, Medium.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default, in a new document. Walk: Scripts/playtest/starter-button-looks-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library, drag Button onto the canvas and look at Properties: Variant, Size, then Show icon, Label and Icon.", "shot": "2026-10-09-starter-button-1-dropped-dark-sc.png" },
+    { "do": "Click Large under Size. The copy grows to 40 tall; press Command Z once to put it back.", "shot": "2026-10-09-starter-button-2-large-dark-sc.png" },
+    { "do": "Click Secondary, then Ghost, under Variant.", "shot": "2026-10-09-starter-button-3-secondary-light-sc.png" },
+    { "do": "Click the Show icon switch. The icon goes and the button closes up round its word.", "shot": "2026-10-09-starter-button-5-icon-off-dark-sc.png" },
+    { "do": "Press Command Z, open the Icon menu and pick Wand.", "shot": "2026-10-09-starter-button-6-icon-menu-sc.png" },
+    { "do": "Click Large again. The Large button still leads with the wand.", "shot": "2026-10-09-starter-button-7-wand-large-dark-sc.png" },
+    { "do": "Drag the button wider by a corner handle: the icon and word stay together in the middle." },
+    { "do": "Click the component field and choose Edit Original to see the nine looks in their grid.", "shot": "2026-10-09-starter-button-9-grid-light-sc.png" }
+  ],
+  "evaluate": [
+    "Does a dropped Button now look like a finished button you would ship, or still like a placeholder?",
+    "Is No icon at the foot of the Icon menu, turning the Show icon switch Off, the behaviour you expect, or should the two stay separate?",
+    "Do the Small, Medium and Large heights (24, 32, 40) feel right next to the rest of a screen you are building?",
+    "Is starting every copy on Primary, Medium the right default, or should a copy start on the top-left look of the grid?"
+  ],
+  "rough": [
+    "Primary is a flat accent blue where the mock draws a soft gloss and a lighter top edge; filed as the-starter-button-primary-shines-like-the-mock.",
+    "The Icon field shows only the icon's name where the mock shows the icon in front of it; filed as the-starter-button-primary-shines-like-the-mock. The menu rows do carry each icon's picture.",
+    "Secondary is a plain white surface with a hairline where the mock draws a glass control; it reads the same on a white canvas and is settled in the-starter-button-primary-shines-like-the-mock.",
+    "In dark mode the button keeps its light colours, where the mock also draws dark cells; that is decision card decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho, recommended to keep them.",
+    "Picking No icon turns Show icon Off rather than greying the switch as the mock does: the app goes further than the mock by making them one fact, so the switch always says what the canvas shows.",
+    "On Edit Original the nine looks are crowded: each drawing's name chip covers part of the Large column, and the Ghost row's grey words almost vanish on the page's dark backdrop; folded into edit-original-draws-a-two-question-component-ins and raised to p1.",
+    "The starter's accent and quiet text are now the design system's (#4C6FFF, #5C6371), so a Badge or Button dropped into a new document is a little bluer than before; documents that already took a starter keep theirs."
+  ]
+}

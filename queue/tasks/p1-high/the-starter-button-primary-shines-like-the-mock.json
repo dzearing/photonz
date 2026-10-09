@@ -1,0 +1,31 @@
+{
+  "id": "the-starter-button-primary-shines-like-the-mock",
+  "title": "The starter Button Primary shines like the mock and its Icon field shows the icon",
+  "goal": "The Library Button now comes in the mock's nine looks, but its Primary look is a flat blue where the variants mock draws a soft gloss, and the Icon field on a copy shows only the word where the mock shows the icon in front of it. Bring both up to the mock so the first button somebody drops looks finished.",
+  "epic": "ui-components",
+  "priority": "p1-high",
+  "seq": 550,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T09:54:04.266Z",
+  "updated": "2026-10-09T09:54:04.269Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the-starter-button-comes-as-primary-secondary-or (2026-10-09). Starter looks: Sources/PhotonzCore/StarterComponents.swift button(pen,variant,size), paints from named styles (StarterStyle), so a gradient means either a gradient Paint on the Background fill bound to Accent (Paint supports gradients, check ColorStyleBinding with a gradient) or a highlight layer. Icon face: Sources/Photonz/ComponentPanel.swift choiceMenu/choiceKnob passes no glyph to VideoKit.Dropdown; SelectFace has swatch and showsComponentMark only, so it needs a leading image. Menu rows already carry template pictures (choicePicture). Mock: docs/design/mocks/pages/ui-variants.html .pmatrix and #iconTrigger; docs/design/mocks/shared/components/button.css .btn.primary/.btn.secondary.",
+  "acceptance": [
+    "The Primary look of a dropped Button has the mock's soft top to bottom gradient and lighter top edge (button.css .btn.primary), and still repaints when the Accent style is recoloured",
+    "On a picked Button copy the Icon field shows the picked icon's glyph in front of its name, as ui-variants.html #iconTrigger draws it, legible in light and dark",
+    "The Secondary look reads like the mock's glass control over a coloured backdrop, or a decision card settles keeping it a plain surface",
+    "starter-button-looks-walk photographs all three at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T09:54:04.268Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "starter-button-looks-walk"
+  ]
+}

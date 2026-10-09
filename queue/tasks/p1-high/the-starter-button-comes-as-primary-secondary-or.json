@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 101,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T06:07:33.822Z",
-  "updated": "2026-10-09T06:22:56.249Z",
+  "updated": "2026-10-09T09:55:34.559Z",
   "deps": [
     "a-component-can-have-a-variant-and-a-size-at-onc"
   ],
@@ -30,6 +30,44 @@
     {
       "t": "2026-10-09T06:22:56.248Z",
       "note": "Added from an-instance-s-properties-match-the-variants-mock (2026-10-09): the mock's Show icon switch says On beside it and its Label field is a full-width input with a T glyph; the app's text knob is a narrower rounded field with no glyph. Fold that into this task since it is the Button instance's knobs."
+    },
+    {
+      "t": "2026-10-09T08:21:44.826Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T09:55:20.038Z",
+      "note": "Review before building: a first-time user drops Button and gets a finished control with the knobs the mock lists. What the mock assumed the app lacked: (1) a default look that is not the grid's first (the grid runs Small to Large, the mock's instance is Medium) -> componentDefaultVersion for starters; (2) a choice answer made on one look meant nothing on another look (each look has its own Icon pieces) -> answers map by name across looks; (3) the mock's No icon has no home in a choice knob -> it is the paired Show icon switch's Off, one fact; (4) icons as data -> IconPathData reads icons.mjs path data verbatim. A Figma user expects the button set's default variant and swap; a widened button must keep icon+word centred, so the row is nested inside a free capsule (stacks have no main-axis centring)."
+    },
+    {
+      "t": "2026-10-09T09:55:20.039Z",
+      "note": "Built: PhotonzCore IconPathData (SVG path parser incl. arcs), StarterIcon (5 glyphs), StarterComponents.looks/button(variant,size) (9 drawings, Variant+Size answers, knobs Show icon/Label/Icon shared across looks), componentDefaultVersion, componentChoiceShape (choice answers across looks), piece lookups per copy's look (sourceOfPiece, wordingEdit). Accent #4C6FFF, Muted #5C6371. Panel: Show icon On/Off word, Label well with T glyph, Icon menu with template pictures and No icon. Tests: StarterButtonLooksTests (19) + updated starter/group/placement/library/first-drop tests; full suite 11963 green."
+    },
+    {
+      "t": "2026-10-09T09:55:20.039Z",
+      "note": "Walks: new starter-button-looks-walk (12 real captures, Next defaults, pointer presses, Icon menu clicked at its face). Updated 16 walks that used the starter Button as a one-look component (moved to Badge/Text Field, or reading the nine looks); all 69 component walks green."
+    },
+    {
+      "t": "2026-10-09T09:55:20.039Z",
+      "note": "Follow-ups: the-starter-button-primary-shines-like-the-mock (p1: gloss, Icon face glyph, Secondary glass), decide-whether-starter-components-change-colour (decision card on dark mode, acceptance 4's 'and dark'), folded the crowded/illegible Edit Original grid into edit-original-draws-a-two-question-component-ins and raised it to p1."
+    },
+    {
+      "t": "2026-10-09T09:55:20.039Z",
+      "note": "left rough: Edit Original of the Button lists 216 layers (each look holds five icon glyphs of a few paths each); below the bar, nobody reported it, noted here."
+    },
+    {
+      "t": "2026-10-09T09:55:20.096Z",
+      "note": "owns these walks: starter-button-looks-walk, instance-properties-variants-mock-walk"
+    },
+    {
+      "t": "2026-10-09T09:55:34.557Z",
+      "note": "Shipped c7e5cacb (Next): the starter Button is the mock's nine looks (Primary/Secondary/Ghost x Small/Medium/Large) with a leading icon; a copy starts Primary · Medium and offers Variant, Size, Show icon (On/Off word), Label (well with T glyph) and Icon (pictures + No icon), each one undo step; choices carry across looks. Verified by StarterButtonLooksTests + full suite (11963 green) and starter-button-looks-walk at Next defaults with 12 real captures; 69 component walks green. Audit: queue/audits/2026-10-09-starter-button-looks.json. Follow-ups: the-starter-button-primary-shines-like-the-mock, dark-mode decision card, grid crowding folded into edit-original-draws-a-two-question-component-ins (p1)."
     }
-  ]
+  ],
+  "started": "2026-10-09T08:21:44.824Z",
+  "walks": [
+    "starter-button-looks-walk",
+    "instance-properties-variants-mock-walk"
+  ],
+  "completed": "2026-10-09T09:55:34.558Z"
 }

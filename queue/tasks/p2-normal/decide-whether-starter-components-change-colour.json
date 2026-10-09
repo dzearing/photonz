@@ -1,0 +1,30 @@
+{
+  "id": "decide-whether-starter-components-change-colour",
+  "title": "Decide whether starter components change colour with the Mac appearance",
+  "goal": "The Library's starter Button, Badge and friends are painted in the variants mock's light colours and keep them when the Mac switches to dark mode, the way a picture you drew keeps its colours. The mock also has dark-mode colours for the same controls. Ask the user which they want before building anything.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 3880,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T09:54:10.563Z",
+  "updated": "2026-10-09T09:54:35.909Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From the-starter-button-comes-as-primary-secondary-or acceptance 4 (\"in light and dark\"). Today StarterStyle colours are document colours (ColorStyle has one hex), so a document reads the same whatever the appearance; the panel and canvas chrome follow the appearance. Mock dark tokens: docs/design/mocks/shared/components/tokens.css lines ~156-192 (--accent #7f9bff, --accent-ink #0b0d14, --ink #e7e9ee, --dim #b0b6c2).",
+  "acceptance": [
+    "A decision card asks the user whether starter components keep their colours or follow the Mac's appearance, with a brief",
+    "If they choose to follow it, the starter styles carry a dark value and a dropped Button matches the mock's dark cells in dark mode"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T09:54:10.565Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T09:54:35.907Z",
+      "note": "Waiting on the dark-mode decision card"
+    }
+  ]
+}

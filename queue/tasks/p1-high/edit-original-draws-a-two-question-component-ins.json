@@ -3,13 +3,13 @@
   "title": "Edit Original draws a two-question component inside the mock's matrix panel",
   "goal": "When a component asks two variant questions, Edit Original now lays its drawings out as a grid with the answers on small plates along the edges. The variants mock draws that grid as one soft glass panel with the column answers in small capitals across the top and the row answers beside each row, and the grid opens small in the corner of a large page. Make the grid look and sit the way the mock draws it.",
   "epic": "ui-components",
-  "priority": "p2-normal",
+  "priority": "p1-high",
   "seq": 3870,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T08:10:49.005Z",
-  "updated": "2026-10-09T08:10:49.008Z",
+  "updated": "2026-10-09T09:54:36.025Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Built in a-component-can-have-a-variant-and-a-size-at-onc (dbf55248). Edges are drawn in CanvasComponents.drawVariantGridEdges from PhotonzDocument.componentVariantGrid (Sources/PhotonzCore/ComponentVariantGrid.swift); layout is layOutComponentVariantGridOnPage, called from editingSpace and after adding a drawing in the space. Today: grey screen-name plates, each drawing still wears its chip (\"Default · Default\", \"Secondary · Default\"), and the camera does not move to the grid. Walk: variant-and-size-walk (shots 1-grid-dark, 2-grid-light). Mock: docs/design/mocks/pages/ui-variants.html .pmatrix, .mh, .rv.",
@@ -17,12 +17,21 @@
     "On Edit Original of a component asking Variant and Size, the drawings sit inside one rounded glass panel like ui-variants.html .pmatrix, in light and dark",
     "Column answers print in small capitals over their column and row answers beside their row, as the mock does, legible on the panel in both schemes",
     "Each drawing's own name chip no longer repeats what the edges already say, or the repetition is settled by a decision card",
-    "The page opens framed on the grid rather than leaving it small in a corner"
+    "The page opens framed on the grid rather than leaving it small in a corner",
+    "Every look of the starter Button reads clearly on the Edit Original page, the Ghost row included, in light and dark, and no drawing is covered by another look's name"
   ],
   "log": [
     {
       "t": "2026-10-09T08:10:49.007Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-09T09:54:35.966Z",
+      "note": "Since 2026-10-09 the starter Button is nine looks, so EVERY Button's Edit Original opens this grid: the per-drawing name chips overlap the Large column (Primary · Large is hidden under them), and the Ghost row's grey words are near invisible on the page's dark backdrop in both schemes (starter-button-looks-walk, 9-grid-light). Raised to p1 because every person who drops a Button now sees it."
+    },
+    {
+      "t": "2026-10-09T09:54:36.024Z",
+      "note": "priority p2-normal -> p1-high"
     }
   ],
   "walks": [
