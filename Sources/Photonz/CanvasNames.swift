@@ -136,7 +136,13 @@ extension CanvasNSView {
                 append(frame, inset: 0, kind: .screen)
             }
         }
-        for main in markedComponents { append(main, inset: Self.componentMarkInset, kind: .component) }
+        // A drawing standing in its component's variant grid is named by the
+        // answers along the grid's edges, so it wears no chip of its own: the
+        // chips repeated the edges and landed on the next column.
+        let gridded = componentsEnabled ? componentsShownAsGrid : []
+        for main in markedComponents where !(main.componentID.map(gridded.contains) ?? false) {
+            append(main, inset: Self.componentMarkInset, kind: .component)
+        }
         for copy in markedComponentInstances {
             // A copy with a version to say gets the same air after its mark
             // that a component's name gets; a bare mark needs none.

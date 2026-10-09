@@ -517,6 +517,7 @@ extension EditorState {
         discardDragPreview()
         var added: (property: UUID, version: UUID)?
         let onPage = isEditingOriginal
+        let wasGrid = document?.componentVariantGrid(of: componentID) != nil
         perform {
             added = $0.addComponentVariantProperty(componentID: componentID, from: version)
             if added != nil, onPage { $0.layOutComponentVariantGridOnPage(componentID: componentID) }
@@ -526,7 +527,14 @@ extension EditorState {
         else { return }
         selectLayer(main.id, inGroup: document.parentID(of: main.id))
         componentVariantPropertyAwaitingName = added.property
-        if let box = document.canvasBounds(of: main.id) { bringIntoView(box, alongside: nil) }
+        // The page has just become the grid, and shrunk round it: frame it
+        // the way Edit Original opens one, rather than leaving it small in
+        // the corner of the camera that was looking at the whole page.
+        if onPage, !wasGrid, document.componentVariantGrid(of: componentID) != nil {
+            zoomToFit()
+        } else if let box = document.canvasBounds(of: main.id) {
+            bringIntoView(box, alongside: nil)
+        }
     }
 
     /// Renames one of a component's variant questions.

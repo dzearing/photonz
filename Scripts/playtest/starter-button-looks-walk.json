@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/starter-button-looks",
-  "seed": "The starter Button the way the variants mock draws it (ui-variants.html, the .pmatrix cells and the Properties group): Primary, Secondary or Ghost, Small, Medium or Large, with a leading icon a copy can hide and swap. This walk drops a Button at Next defaults and reads its panel (Variant, Size, Show icon with its On word, the Label box with the T glyph, Icon), makes it Large with the pointer and reads its height, undoes that in one step, walks it through Secondary and Ghost, turns its icon off and reads the row closing up, picks Wand from the Icon menu with a click, carries the Wand across to Large, picks No icon, and opens Edit Original to photograph the nine looks in their grid.",
+  "seed": "The starter Button the way the variants mock draws it (ui-variants.html, the .pmatrix cells and the Properties group): Primary, Secondary or Ghost, Small, Medium or Large, with a leading icon a copy can hide and swap. This walk drops a Button at Next defaults and reads its panel (Variant, Size, Show icon with its On word, the Label box with the T glyph, Icon), makes it Large with the pointer and reads its height, undoes that in one step, walks it through Secondary and Ghost, turns its icon off and reads the row closing up, picks Wand from the Icon menu with a click, carries the Wand across to Large, picks No icon, and opens Edit Original to photograph the nine looks in their panel, framed on opening.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
@@ -90,10 +90,8 @@
     { "do": "snapshot", "name": "8-no-icon-dark" },
 
     { "do": "action", "action": "selectComponentOriginal" },
-    { "do": "wait", "seconds": 1.2 },
-    { "do": "action", "action": "zoomToFit" },
-    { "do": "wait", "seconds": 1.0 },
-    { "do": "describe", "stage": "9-grid", "note": "Edit Original: the nine looks in a grid, Primary, Secondary and Ghost down the side and Small, Medium and Large along the top" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "describe", "stage": "9-grid", "note": "Edit Original, opened framed on the grid with no Fit pressed: the nine looks inside one rounded panel painted the document's Surface, SMALL, MEDIUM and LARGE in small capitals across the top, Primary, Secondary and Ghost beside their rows, the Ghost row's grey words readable, and no name chip on any drawing" },
     { "do": "snapshot", "name": "9-grid-dark" },
     { "do": "appearance", "value": "light" },
     { "do": "wait", "seconds": 0.8 },

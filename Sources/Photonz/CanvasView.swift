@@ -872,6 +872,10 @@ final class CanvasNSView: NSView {
     /// A main component's mark and name, above its top left corner: one glyph
     /// and one text sublayer per component.
     let componentChromeLayer = CALayer()
+    /// The soft panel a component's variant grid sits in on its Edit Original
+    /// page, UNDER the picture so the drawings are on it rather than behind
+    /// it (`CanvasComponents.swift`, `drawVariantGridPanels`).
+    let variantGridPanelLayer = CALayer()
     /// Snap guides shown while a move drag is captured by an edge/center.
     let snapGuideLayer = CAShapeLayer()
     /// Hover snap dot: while the measure tool is active and idle, a dot follows
@@ -1953,7 +1957,7 @@ final class CanvasNSView: NSView {
         contentLayer.contentsGravity = .resize
         contentLayer.minificationFilter = .linear
         contentLayer.shadowColor = CGColor(gray: 0, alpha: 1)
-        contentLayer.shadowOpacity = 0.45
+        contentLayer.shadowOpacity = Self.pageShadowOpacity
         contentLayer.shadowRadius = 24
         contentLayer.shadowOffset = .zero
         layer?.addSublayer(contentLayer)
@@ -2181,6 +2185,8 @@ final class CanvasNSView: NSView {
         // because a promoted frame shows this instead of its own label.
         componentChromeLayer.isHidden = true
         layer?.addSublayer(componentChromeLayer)
+        variantGridPanelLayer.isHidden = true
+        layer?.insertSublayer(variantGridPanelLayer, below: contentLayer)
 
         // Hover snap dot: an accent-filled dot with a white ring, on top.
         snapDotLayer.fillColor = NSColor.controlAccentColor.cgColor

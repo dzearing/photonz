@@ -54,6 +54,9 @@ extension CanvasNSView {
               !markedComponents.isEmpty || !markedComponentInstances.isEmpty else {
             componentChromeLayer.isHidden = true
             componentChromeLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
+            variantGridPanelLayer.isHidden = true
+            variantGridPanelLayer.sublayers?.forEach { $0.removeFromSuperlayer() }
+            contentLayer.shadowOpacity = Self.pageShadowOpacity
             return
         }
         componentChromeLayer.isHidden = false
@@ -73,53 +76,155 @@ extension CanvasNSView {
         drawVariantGridEdges(into: componentChromeLayer)
     }
 
-    /// The answers along the edges of a component laid out as a grid on its
-    /// Edit Original page: the first question's down the left, the rest along
-    /// the top, the way the variants mock prints its matrix
-    /// (`ui-variants.html`, `.pmatrix .rv` and `.mh`). Read off where the
-    /// drawings stand (`ComponentVariantGrid`), so a drawing dragged out of
-    /// line turns them off rather than leaving them naming the wrong row.
+    /// The components on this canvas laid out as a variant grid right now:
+    /// the ones whose drawings are named by the grid's edges instead of their
+    /// own chips.
+    var componentsShownAsGrid: Set<UUID> {
+        guard let document else { return [] }
+        var found: Set<UUID> = []
+        for main in markedComponents {
+            guard let componentID = main.componentID, !found.contains(componentID),
+                  document.componentVariantGrid(of: componentID) != nil else { continue }
+            found.insert(componentID)
+        }
+        return found
+    }
+
+    /// A component laid out as a grid on its Edit Original page, drawn the
+    /// way the variants mock draws its matrix (`ui-variants.html`, `.pmatrix`):
+    /// one soft rounded panel under the drawings, the column answers in small
+    /// capitals across its top (`.mh`) and the row answers set right beside
+    /// their rows (`.rv`). Read off where the drawings stand
+    /// (`ComponentVariantGrid`), so a drawing dragged out of line takes the
+    /// panel and its names away rather than leaving them naming the wrong row.
     ///
-    /// On the plain grey plate a screen's name wears, white on it, because they
-    /// are read over whatever the page is painted and are names, not handles.
+    /// The panel is painted the document's Surface, the colour the drawings
+    /// were made to sit on, so a Ghost look's quiet words read on it the way
+    /// they would in a real screen; the names are inked for that panel.
     private func drawVariantGridEdges(into target: CALayer) {
-        guard let viewport, let document else { return }
+        let panels = variantGridPanelLayer
+        panels.sublayers?.forEach { $0.removeFromSuperlayer() }
+        panels.isHidden = true
+        guard let viewport, let document, let host = layer else { return }
+        // Straight under the picture, whatever else has been slipped in
+        // beneath it since (the graph paper moves there when it is off).
+        if let all = host.sublayers, let content = all.firstIndex(of: contentLayer),
+           content == 0 || all[content - 1] !== panels {
+            host.insertSublayer(panels, below: contentLayer)
+        }
+        // The page's shadow would lie across the panel and grey it, so while
+        // a grid is up the panel is the page you see and the shadow is off.
+        defer { contentLayer.shadowOpacity = panels.isHidden ? Self.pageShadowOpacity : 0 }
+        let surfaceHex = document.componentVariantGridSurfaceHex
+        let surface = RGBA(hex: surfaceHex) ?? RGBA(r: 1, g: 1, b: 1)
+        let light = ComponentVariantGrid.namesWantLightInk(onHex: surfaceHex)
+        let ink: CGFloat = light ? 1 : 0
         var seen: Set<UUID> = []
         for main in markedComponents {
             guard let componentID = main.componentID, seen.insert(componentID).inserted,
                   let grid = document.componentVariantGrid(of: componentID) else { continue }
-            let whole = viewRect(forDocRect: grid.bounds, in: viewport)
-            let height = CanvasNameLabels.height
-            for row in grid.rows {
-                let box = viewRect(forDocRect: row.box, in: viewport)
-                let width = Self.captionWidth(row.name)
-                drawGridEdge(row.name, frame: CGRect(x: whole.minX - Self.gridEdgeGap - width,
-                                                     y: (box.midY - height / 2).rounded(),
-                                                     width: width, height: height), into: target)
-            }
-            // Above the names each drawing wears over its own corner, so the
-            // two lines of chrome never land on each other.
-            let top = whole.minY - CanvasNameLabels.gap - height - Self.gridEdgeGap - height
+            let drawings = viewRect(forDocRect: grid.bounds, in: viewport)
+            let rowWidth = grid.rows.map { Self.gridRowNameWidth($0.name) }.max() ?? 0
+            let panel = ComponentVariantGrid.Panel(around: drawings, rowNameWidth: rowWidth,
+                                                   columnNameHeight: Self.gridColumnNameHeight)
+            panels.addSublayer(gridPanelLayer(panel.frame, surface: surface, lightInk: light))
+            panels.isHidden = false
+
+            // Zoomed out far enough, narrow columns come closer together than
+            // their names are wide. A name that would run into the one before
+            // it is left out rather than printed as one word with it
+            // ("DEFAULTLARGE"); it is back as soon as there is room.
+            var clearFrom = -CGFloat.infinity
             for column in grid.columns {
                 let box = viewRect(forDocRect: column.box, in: viewport)
-                let width = Self.captionWidth(column.name)
-                drawGridEdge(column.name, frame: CGRect(x: (box.midX - width / 2).rounded(), y: top,
-                                                        width: width, height: height), into: target)
+                let word = Self.gridColumnName(column.name, ink: ink)
+                let width = word.size().width.rounded(.up)
+                let frame = CGRect(x: (box.midX - width / 2).rounded(), y: panel.columnNameBand.minY,
+                                   width: width, height: panel.columnNameBand.height)
+                guard frame.minX >= clearFrom else { continue }
+                clearFrom = frame.maxX + ComponentVariantGrid.Panel.gap
+                target.addSublayer(gridNameLayer(word, frame: frame))
+            }
+            for row in grid.rows {
+                let box = viewRect(forDocRect: row.box, in: viewport)
+                let word = Self.gridRowName(row.name, ink: ink)
+                let size = word.size()
+                let frame = CGRect(x: panel.rowNameRight - size.width.rounded(.up),
+                                   y: (box.midY - size.height / 2).rounded(),
+                                   width: size.width.rounded(.up), height: size.height.rounded(.up))
+                target.addSublayer(gridNameLayer(word, frame: frame))
             }
         }
     }
 
-    /// The air between a grid and the answers printed along its edges.
-    static let gridEdgeGap: CGFloat = 12
+    /// How dark the picture's drop shadow is. It is shaped like the whole
+    /// page, so on a page with nothing painted on it (an Edit Original space)
+    /// it also lies across the page itself, over anything drawn beneath the
+    /// picture.
+    static let pageShadowOpacity: Float = 0.45
 
-    private func drawGridEdge(_ word: String, frame: CGRect, into target: CALayer) {
-        let plate = CALayer()
-        plate.frame = frame.insetBy(dx: -CanvasNameLabels.platePadding, dy: -1)
-        plate.cornerRadius = 4
-        plate.contentsScale = window?.backingScaleFactor ?? 2
-        plate.backgroundColor = Self.screenPlateColor
-        target.addSublayer(plate)
-        target.addSublayer(nameTextLayer(word, color: Self.plateInkColor, frame: frame))
+    /// `.mh`: nine points, semibold, capitals spaced a twentieth apart, at
+    /// half strength.
+    static let gridColumnNameFont = NSFont.systemFont(ofSize: 9, weight: .semibold)
+    /// `.rv`: eleven points, semibold, at nearly full strength.
+    static let gridRowNameFont = NSFont.systemFont(ofSize: 11, weight: .semibold)
+    static var gridColumnNameHeight: CGFloat {
+        gridColumnName("M", ink: 0).size().height.rounded(.up)
+    }
+
+    static func gridColumnName(_ name: String, ink: CGFloat) -> NSAttributedString {
+        // Half strength on the mock's dark glass; a touch more on a light
+        // panel, where nine point grey letters thin out sooner.
+        NSAttributedString(string: name.uppercased(), attributes: [
+            .font: gridColumnNameFont,
+            .kern: 9 * 0.05,
+            .foregroundColor: NSColor(white: ink, alpha: ink == 1 ? 0.5 : 0.55),
+        ])
+    }
+
+    static func gridRowName(_ name: String, ink: CGFloat) -> NSAttributedString {
+        NSAttributedString(string: name, attributes: [
+            .font: gridRowNameFont,
+            .foregroundColor: NSColor(white: ink, alpha: 0.85),
+        ])
+    }
+
+    static func gridRowNameWidth(_ name: String) -> CGFloat {
+        gridRowName(name, ink: 0).size().width.rounded(.up)
+    }
+
+    private func gridNameLayer(_ word: NSAttributedString, frame: CGRect) -> CATextLayer {
+        let label = CATextLayer()
+        label.string = word
+        label.contentsScale = window?.backingScaleFactor ?? 2
+        label.alignmentMode = .left
+        label.frame = frame
+        return label
+    }
+
+    /// The panel itself: the Surface, a hairline round it and the lighter
+    /// line along its top the mock's glass wears (`border`, `inset 0 1px 0`).
+    private func gridPanelLayer(_ frame: CGRect, surface: RGBA, lightInk: Bool) -> CALayer {
+        let panel = CALayer()
+        panel.frame = frame
+        panel.cornerRadius = ComponentVariantGrid.Panel.cornerRadius
+        panel.cornerCurve = .continuous
+        panel.contentsScale = window?.backingScaleFactor ?? 2
+        panel.backgroundColor = CGColor(srgbRed: surface.r, green: surface.g, blue: surface.b, alpha: 1)
+        panel.borderWidth = 1
+        panel.borderColor = lightInk ? CGColor(gray: 1, alpha: 0.12) : CGColor(gray: 0, alpha: 0.1)
+        // A soft shadow, so a white panel on a light page still has an edge.
+        panel.shadowColor = CGColor(gray: 0, alpha: 1)
+        panel.shadowOpacity = 0.18
+        panel.shadowRadius = 8
+        panel.shadowOffset = CGSize(width: 0, height: 2)
+        let shine = CALayer()
+        shine.frame = CGRect(x: ComponentVariantGrid.Panel.cornerRadius, y: 1,
+                             width: max(frame.width - ComponentVariantGrid.Panel.cornerRadius * 2, 0),
+                             height: 1)
+        shine.backgroundColor = CGColor(gray: 1, alpha: lightInk ? 0.14 : 0.7)
+        panel.addSublayer(shine)
+        return panel
     }
 
     /// The plate a name is drawn on at rest: the component violet, taken down

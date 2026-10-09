@@ -22,10 +22,10 @@ struct ComponentVariantGridTests {
 
     /// A Button with two looks, renamed Primary and Secondary, which is where
     /// the second question starts from.
-    private func button() -> (doc: PhotonzDocument, componentID: UUID,
-                              primary: UUID, secondary: UUID) {
+    private func button(width: CGFloat = 120) -> (doc: PhotonzDocument, componentID: UUID,
+                                                  primary: UUID, secondary: UUID) {
         var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600),
-                                  layers: [box("Box", CGRect(x: 10, y: 10, width: 120, height: 40))])
+                                  layers: [box("Box", CGRect(x: 10, y: 10, width: width, height: 40))])
         let main = doc.groupLayers(ids: [doc.layers[0].id], name: "Button")!
         let componentID = doc.makeComponent(id: main.id)!
         let secondary = doc.addComponentVersion(componentID: componentID)!
@@ -37,9 +37,10 @@ struct ComponentVariantGridTests {
 
     /// The Button with a Size question added from its Primary drawing, which
     /// makes a Primary · Size 2 drawing; that option is then called Large.
-    private func buttonWithSize() -> (doc: PhotonzDocument, componentID: UUID, size: UUID,
-                                      primary: UUID, secondary: UUID, primaryLarge: UUID) {
-        var b = button()
+    private func buttonWithSize(width: CGFloat = 120)
+        -> (doc: PhotonzDocument, componentID: UUID, size: UUID,
+            primary: UUID, secondary: UUID, primaryLarge: UUID) {
+        var b = button(width: width)
         let added = b.doc.addComponentVariantProperty(componentID: b.componentID, from: b.primary)!
         let large = b.doc.componentVersion(of: b.componentID, id: added.version)!
         _ = b.doc.setComponentVariantOption(componentID: b.componentID, drawing: large.layerID,
@@ -319,5 +320,114 @@ struct ComponentVariantGridTests {
         let r12 = space.layOutComponentVariantGrid(componentID: b.componentID)
         #expect(r12)
         #expect(space.componentVariantGrid(of: b.componentID) != nil)
+    }
+
+    // MARK: - The panel the grid sits in
+
+    /// The page opens round the grid rather than leaving it small in the
+    /// corner of a page the document's size: the drawings, the room for the
+    /// names along the edges and the margin, and nothing else.
+    @Test func theEditOriginalPageFitsTheGrid() throws {
+        let b = buttonWithSize()
+        let space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        let grid = try #require(space.componentVariantGrid(of: b.componentID))
+        let margin = PhotonzDocument.editingSpaceMargin
+        #expect(space.canvasSize.width < b.doc.canvasSize.width)
+        #expect(space.canvasSize.height < b.doc.canvasSize.height)
+        #expect(abs(space.canvasSize.width - (grid.bounds.maxX + margin)) <= 1)
+        #expect(abs(space.canvasSize.height - (grid.bounds.maxY + margin)) <= 1)
+    }
+
+    /// Something drawn loose beside the grid keeps the page big enough to
+    /// hold it when the grid is laid out again.
+    @Test func aLooseDrawingKeepsItsPage() throws {
+        let b = buttonWithSize()
+        var space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        space.layers.append(box("Note", CGRect(x: 900, y: 700, width: 50, height: 30)))
+        space.layOutComponentVariantGridOnPage(componentID: b.componentID)
+        #expect(space.canvasSize.width >= 950 + PhotonzDocument.editingSpaceMargin)
+        #expect(space.canvasSize.height >= 730 + PhotonzDocument.editingSpaceMargin)
+    }
+
+    /// The panel the variants mock draws round its matrix (`.pmatrix`): the
+    /// column answers in a band above the drawings, the row answers to their
+    /// left, and the padding all round, everything inside one rounded box.
+    @Test func thePanelHoldsTheNamesAndTheDrawings() {
+        let drawings = CGRect(x: 300, y: 200, width: 400, height: 160)
+        let panel = ComponentVariantGrid.Panel(around: drawings, rowNameWidth: 70, columnNameHeight: 12)
+        #expect(panel.frame.contains(drawings))
+        // The column band sits above the drawings, inside the panel.
+        #expect(panel.columnNameBand.maxY < drawings.minY)
+        #expect(panel.columnNameBand.minY > panel.frame.minY)
+        #expect(panel.columnNameBand.height == 12)
+        // The row names end short of the drawings and start inside the panel.
+        #expect(panel.rowNameRight < drawings.minX)
+        #expect(panel.rowNameRight - 70 > panel.frame.minX)
+        // The mock's padding on every side.
+        let pad = ComponentVariantGrid.Panel.padding
+        #expect(panel.frame.minY == panel.columnNameBand.minY - pad)
+        #expect(panel.frame.minX == panel.rowNameRight - 70 - pad)
+        #expect(panel.frame.maxX >= drawings.maxX + pad)
+        #expect(panel.frame.maxY >= drawings.maxY + pad)
+        #expect(ComponentVariantGrid.Panel.cornerRadius == 13)
+    }
+
+    /// The panel is painted what the drawings were made to sit on: the
+    /// document's Surface, white until somebody recolours it, so a Ghost
+    /// look's quiet words read on it the way they do in a real screen.
+    @Test func thePanelIsPaintedTheDocumentsSurface() {
+        var b = buttonWithSize()
+        #expect(b.doc.componentVariantGridSurfaceHex == "#FFFFFF")
+        var surface = StarterStyle.surface.colorStyle
+        surface.colorHex = "#202024"
+        b.doc.colorStyles.append(surface)
+        #expect(b.doc.componentVariantGridSurfaceHex == "#202024")
+    }
+
+    /// The names along the edges are inked for the panel under them: dark on
+    /// a light panel, light on a dark one.
+    @Test func theNamesAreInkedForThePanel() {
+        #expect(!ComponentVariantGrid.namesWantLightInk(onHex: "#FFFFFF"))
+        #expect(!ComponentVariantGrid.namesWantLightInk(onHex: "#F2F2F7"))
+        #expect(ComponentVariantGrid.namesWantLightInk(onHex: "#202024"))
+        #expect(ComponentVariantGrid.namesWantLightInk(onHex: "#4C6FFF"))
+    }
+
+    /// A drawing narrower than its column's name still gets a column wide
+    /// enough for the name, so two names never run together into one
+    /// ("DEFAULT LARGE" over a pair of small badges).
+    @Test func aColumnIsAsWideAsItsName() throws {
+        let b = buttonWithSize(width: 16)
+        let space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        let grid = try #require(space.componentVariantGrid(of: b.componentID))
+        #expect(grid.columns.map(\.name) == ["Default", "Large"])
+        let centres = grid.columns.map(\.box.midX)
+        let room = PhotonzDocument.variantGridColumnNameRoom("Default") / 2
+            + PhotonzDocument.variantGridColumnNameRoom("Large") / 2
+        #expect(centres[1] - centres[0] >= room)
+    }
+
+    /// The columns share the width evenly, the way the mock's matrix gives
+    /// each `1fr`, and the drawings sit closer than loose drawings on a page:
+    /// a cell's padding and the matrix gap, not the page's gap.
+    @Test func theColumnsShareTheWidthEvenly() throws {
+        let b = buttonWithSize()
+        var space = try #require(b.doc.editingSpace(forComponent: b.componentID))
+        let drawings = space.componentVersions(of: b.componentID)
+        let large = try #require(drawings.first { $0.id == b.primaryLarge })
+        let inside = try #require(space.layer(id: large.layerID)?.children.first?.id)
+        space.updateLayer(id: inside) { $0.frame.size.width = 200 }
+        #expect(space.canvasBounds(of: large.layerID)?.width == 200)
+        space.layOutComponentVariantGridOnPage(componentID: b.componentID)
+        let grid = try #require(space.componentVariantGrid(of: b.componentID))
+        let primary = try #require(space.canvasBounds(of: drawings[0].layerID))
+        let wide = try #require(space.canvasBounds(of: large.layerID))
+        // Centre to centre is one column's width plus the gap: the widest.
+        #expect(abs((wide.midX - primary.midX) - (200 + PhotonzDocument.variantGridGap)) <= 1)
+        #expect(grid.columns.count == 2)
+        let secondary = try #require(drawings.first { $0.id == b.secondary })
+        let below = try #require(space.canvasBounds(of: secondary.layerID))
+        #expect(abs(below.minY - primary.maxY - PhotonzDocument.variantGridGap) <= 1)
+        #expect(PhotonzDocument.variantGridGap < PhotonzDocument.editingSpaceGap)
     }
 }

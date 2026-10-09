@@ -37,6 +37,53 @@ public struct ComponentVariantGrid: Hashable, Sendable {
         self.columns = columns
         self.bounds = bounds
     }
+
+    /// The soft panel the variants mock draws round its matrix (`.pmatrix`):
+    /// the column answers in a band across the top, the row answers down the
+    /// left, and the drawings, all inside one rounded box. In view points,
+    /// because the names in it are chrome, the same size at every zoom.
+    public struct Panel: Hashable, Sendable {
+        /// `--pad`, the room between the panel's edge and what it holds.
+        public static let padding: CGFloat = 16
+        /// `--s2`, the gap between the names and the drawings they name.
+        public static let gap: CGFloat = 8
+        /// `--r-md`, the panel's corner.
+        public static let cornerRadius: CGFloat = 13
+
+        /// The whole panel.
+        public var frame: CGRect
+        /// The band the column answers are printed in, centred over their
+        /// columns.
+        public var columnNameBand: CGRect
+        /// Where the row answers end: they are set right against it, the way
+        /// the mock right-aligns `.rv`.
+        public var rowNameRight: CGFloat
+
+        /// The panel round drawings standing in `drawings`, with the widest
+        /// row answer `rowNameWidth` wide and the column answers
+        /// `columnNameHeight` tall.
+        public init(around drawings: CGRect, rowNameWidth: CGFloat, columnNameHeight: CGFloat) {
+            let pad = Self.padding
+            let gap = Self.gap
+            // A cell's own padding (`.pmcell`, `--s2` by `--s1`), so the
+            // names stand clear of the drawings rather than touching them.
+            let cells = drawings.insetBy(dx: -gap / 2, dy: -gap)
+            columnNameBand = CGRect(x: cells.minX, y: cells.minY - gap - columnNameHeight,
+                                    width: cells.width, height: columnNameHeight)
+            // `.rv` carries its own padding on the right, on top of the gap.
+            rowNameRight = cells.minX - gap * 2
+            let left = rowNameRight - rowNameWidth - pad
+            let top = columnNameBand.minY - pad
+            frame = CGRect(x: left, y: top,
+                           width: cells.maxX + pad - left, height: cells.maxY + pad - top)
+        }
+    }
+
+    /// Whether the names along the edges want light ink on a panel of this
+    /// colour: light on a dark panel, dark on a light one.
+    public static func namesWantLightInk(onHex hex: String) -> Bool {
+        (RGBA(hex: hex)?.relativeLuminance ?? 1) < 0.5
+    }
 }
 
 extension PhotonzDocument {
@@ -46,7 +93,33 @@ extension PhotonzDocument {
     /// zoom, so this is room for them at a zoom of one.
     static func variantGridLabelRoom(rows: [String]) -> CGSize {
         let longest = rows.map(\.count).max() ?? 0
-        return CGSize(width: max(56, CGFloat(longest) * 7 + 24), height: 32)
+        let panel = ComponentVariantGrid.Panel(around: .zero,
+                                               rowNameWidth: CGFloat(longest) * 7,
+                                               columnNameHeight: 12)
+        return CGSize(width: -panel.frame.minX, height: -panel.frame.minY)
+    }
+
+    /// The space between two drawings in a grid: a cell's padding either
+    /// side and the matrix's gap (`.pmcell`, `--s2`; `.pmatrix`, `gap`),
+    /// closer than loose drawings on a page because nothing else needs the
+    /// room now that the edges carry the names.
+    public static let variantGridGap: CGFloat = 24
+
+    /// Room a column's name needs across the top, in canvas points at a zoom
+    /// of one: nine point capitals, a little spaced, and the gap either side,
+    /// so a column of narrow drawings is never narrower than its name.
+    public static func variantGridColumnNameRoom(_ name: String) -> CGFloat {
+        CGFloat(name.count) * 7 + ComponentVariantGrid.Panel.gap * 2
+    }
+
+    /// What the panel round a component's grid is painted: the document's
+    /// Surface, which is what the drawings were made to sit on, or white when
+    /// the document keeps no Surface.
+    public var componentVariantGridSurfaceHex: String {
+        let surface = StarterStyle.surface
+        let style = colorStyles.first { $0.id == surface.styleID }
+            ?? colorStyles.first { $0.name == surface.name }
+        return style?.colorHex ?? surface.colorHex
     }
 
     /// Which row and column each drawing of a component sits in, or nil for a
@@ -121,7 +194,7 @@ extension PhotonzDocument {
     public mutating func layOutComponentVariantGrid(componentID: UUID,
                                                     origin: CGPoint? = nil) -> Bool {
         guard let layout = variantGridCells(of: componentID) else { return false }
-        let gap = Self.editingSpaceGap
+        let gap = Self.variantGridGap
         var boxes: [UUID: CGRect] = [:]
         for (drawing, _, _) in layout.cells {
             guard layers.contains(where: { $0.id == drawing.layerID }),
@@ -141,7 +214,7 @@ extension PhotonzDocument {
             return CGSize(width: parts.reduce(0) { $0 + $1.width } + gap * CGFloat(max(parts.count - 1, 0)),
                           height: parts.map(\.height).max() ?? 0)
         }
-        var widths = [CGFloat](repeating: 0, count: layout.columns.count)
+        var widths = layout.columns.map { Self.variantGridColumnNameRoom($0) - gap }
         var heights = [CGFloat](repeating: 0, count: layout.rows.count)
         for row in layout.rows.indices {
             for column in layout.columns.indices {
@@ -150,6 +223,11 @@ extension PhotonzDocument {
                 heights[row] = max(heights[row], cell.height)
             }
         }
+
+        // Every column as wide as the widest, the way the mock's matrix
+        // shares its width out (`repeat(3, 1fr)`).
+        let widest = widths.max() ?? 0
+        widths = widths.map { _ in widest }
 
         var top = start.y
         var far = CGPoint(x: start.x, y: start.y)
@@ -188,8 +266,22 @@ extension PhotonzDocument {
         let rows = componentVariantProperties(of: componentID).first?.options.map(\.name) ?? []
         let labels = Self.variantGridLabelRoom(rows: rows)
         let margin = Self.editingSpaceMargin
-        return layOutComponentVariantGrid(componentID: componentID,
-                                          origin: CGPoint(x: margin + labels.width,
-                                                          y: margin + labels.height))
+        guard layOutComponentVariantGrid(componentID: componentID,
+                                         origin: CGPoint(x: margin + labels.width,
+                                                         y: margin + labels.height)),
+              let grid = componentVariantGrid(of: componentID) else { return false }
+        // The page is the grid and its margin, so it opens framed on the grid
+        // rather than small in the corner of a page the document's size. Only
+        // as far as anything else drawn on it allows: a page never shrinks out
+        // from under a drawing.
+        var far = CGPoint(x: grid.bounds.maxX, y: grid.bounds.maxY)
+        for layer in layers {
+            guard let box = canvasBounds(of: layer.id) else { continue }
+            far.x = max(far.x, box.maxX)
+            far.y = max(far.y, box.maxY)
+        }
+        canvasSize = CGSize(width: (far.x + margin).rounded(.up),
+                            height: (far.y + margin).rounded(.up))
+        return true
     }
 }
