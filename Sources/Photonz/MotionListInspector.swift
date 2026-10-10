@@ -472,16 +472,26 @@ private struct MotionPivotSetting: View {
                 }
             }
         } else {
-            MotionSettingRow(label: "Around",
-                             help: "The point this layer turns about. A bell hangs from its "
-                                 + "mount, not from its middle: drag the crosshair on the "
-                                 + "picture to where yours hangs from.") {
+            MotionSettingRow(label: "Around", help: aroundHelp) {
                 HStack(spacing: 2) {
                     aroundMenu
                     placeButton
                 }
             }
         }
+    }
+
+    /// What the question mark says. In an icon it adds the spinner mock's
+    /// own note under its Around menu (`icon-loop-wt.html`, `#oriMenu`), which
+    /// is too long for the menu itself and so lives here, in its words.
+    private var aroundHelp: String {
+        let bell = "The point this layer turns about. A bell hangs from its "
+            + "mount, not from its middle: drag the crosshair on the "
+            + "picture to where yours hangs from."
+        guard editorState.motionArtboardPivot != nil else { return bell }
+        return bell + " An arc's own center is not the circle's center, which is why the "
+            + "sensible-looking default is the wrong one here. The crosshair on the "
+            + "artboard is the point it would turn around."
     }
 
     /// The three named spots, the point of your own when there is one, and
@@ -491,6 +501,17 @@ private struct MotionPivotSetting: View {
             ForEach(MotionPivot.Named.allCases, id: \.self) { spot in
                 Button(spot.title) {
                     editorState.setMotionPivot(spot.pivot, of: motion.id)
+                }
+                // In an icon, the middle of the artboard comes straight after
+                // the shape's own middle, as the spinner mock draws it
+                // (`icon-loop-wt.html`, `#oriMenu`): an arc's own middle is
+                // not the middle of its circle, and this is the fix.
+                if spot == .centre, let artboard = editorState.motionArtboardPivot {
+                    Button {
+                        editorState.setMotionPivot(artboard, of: motion.id)
+                    } label: {
+                        Label(MotionPivot.artboardTitle, systemImage: "camera.aperture")
+                    }
                 }
             }
             // The row prints Custom, so the menu offers it: the point

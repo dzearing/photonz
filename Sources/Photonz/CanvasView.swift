@@ -227,7 +227,9 @@ struct CanvasView: NSViewRepresentable {
     /// The turn's pivot, and the four moments of dragging it.
     let motionPivot: MotionPivotHandle?
     let onMotionPivotBegin: () -> Void
-    let onMotionPivotMove: (CGPoint) -> Void
+    /// Hands the pointer over and answers where the pivot landed, which is
+    /// the pointer itself unless a middle pulled it in.
+    let onMotionPivotMove: (CGPoint) -> CGPoint
     let onMotionPivotCommit: () -> Void
     let onMotionPivotCancel: () -> Void
     /// The picked layer's path, and the moments of bending one stretch of it
@@ -621,7 +623,7 @@ final class CanvasNSView: NSView {
     /// The pivot being grabbed, moved, let go, and let go without moving.
     /// Live while it is held (no history), then one undo step on release.
     var onMotionPivotBegin: (() -> Void) = {}
-    var onMotionPivotMove: ((CGPoint) -> Void) = { _ in }
+    var onMotionPivotMove: ((CGPoint) -> CGPoint) = { $0 }
     var onMotionPivotCommit: (() -> Void) = {}
     var onMotionPivotCancel: (() -> Void) = {}
     /// A path handle under the hand, let go, let go without moving, and

@@ -237,18 +237,32 @@ extension EditorState {
     /// is the one thing that leaves its own pivot still, so while the bell
     /// swings the crosshair sits dead under it, which is both what makes it
     /// catchable and what teaches what a pivot IS.
+    ///
+    /// The layer's box is stated from the corner of whatever holds it, so a
+    /// shape in an icon frame says (12, 12) for the middle of the icon. The
+    /// canvas wants the place on the canvas, so the corner travels with it.
     var motionPivotHandle: MotionPivotHandle? {
         guard let layer = motionLayer, let motion = turningMotion else { return nil }
         let pivot = motionPivotPreview?.motionID == motion.id
             ? motionPivotPreview!.pivot : motion.turnsAbout
+        let origin = document?.parentOrigin(of: layer.id) ?? .zero
+        let local = pivot.point(in: layer.turnPivotBox)
         return MotionPivotHandle(layerID: layer.id, motionID: motion.id,
-                                 point: pivot.point(in: layer.turnPivotBox),
-                                 box: layer.turnPivotBox)
+                                 point: CGPoint(x: local.x + origin.x, y: local.y + origin.y),
+                                 box: layer.turnPivotBox, origin: origin)
     }
 
-    /// Where the pivot is right now as two numbers on the canvas, which is
-    /// what the Around row types into. Nil where nothing is turning.
-    var motionPivotPoint: CGPoint? { motionPivotHandle?.point }
+    /// Where the pivot is right now as two numbers, which is what the At row
+    /// types into: stated where the layer's own box is, so a shape in an icon
+    /// reads the icon's own units. Nil where nothing is turning.
+    var motionPivotPoint: CGPoint? { motionPivotHandle?.local }
+
+    /// The middle of the icon the picked layer is drawn in, as the Around
+    /// menu's Artboard sets it, or nil where there is no icon to turn about.
+    var motionArtboardPivot: MotionPivot? {
+        guard let layer = motionLayer else { return nil }
+        return document?.artboardPivot(for: layer.id)
+    }
 
     /// The pivot the Around menu is showing as its current answer: the one
     /// under the hand while a drag is on, and the stored one otherwise. Nil
@@ -276,14 +290,26 @@ extension EditorState {
     /// The pivot under the hand: rendered straight away and kept out of
     /// history, so the swing follows the drag and the whole drag is one step
     /// to undo rather than forty.
-    func previewMotionPivot(at point: CGPoint) {
-        guard let layer = motionLayer, let motion = turningMotion else { return }
-        motionPivotPreview = (motion.id, MotionPivot(at: point, in: layer.turnPivotBox))
+    ///
+    /// `point` is on the canvas. Near the middle of the icon it lands on
+    /// Artboard, near the shape's own middle on Its centre, each reaching the
+    /// few screen points every other magnet on the canvas reaches.
+    @discardableResult
+    func previewMotionPivot(at point: CGPoint) -> CGPoint {
+        guard let layer = motionLayer, let motion = turningMotion else { return point }
+        let origin = document?.parentOrigin(of: layer.id) ?? .zero
+        let local = CGPoint(x: point.x - origin.x, y: point.y - origin.y)
+        let reach = IconSnap.pullRadius / max(zoom, 0.0001)
+        let landed = MotionPivot.dragged(to: local, in: layer.turnPivotBox,
+                                         artboard: motionArtboardPivot, reach: reach)
+        motionPivotPreview = (motion.id, landed)
         // Redrawn through `displayDocument` rather than by handing a changed
         // copy straight to the renderer, because the preview's own frame loop
         // submits the STORED document thirty times a second: a copy pushed
         // from here would be painted back over before the hand had moved.
         rerender()
+        let at = landed.point(in: layer.turnPivotBox)
+        return CGPoint(x: at.x + origin.x, y: at.y + origin.y)
     }
 
     /// The button up: one undo step from where the pivot started to where it

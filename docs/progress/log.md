@@ -21062,3 +21062,11 @@ Next: the first editor window's ~200 ms first build
 - Walk `front-door-recent-documents-walk`. Audit `queue/audits/2026-10-10-recent-documents.json`.
 - Gotcha: a large HEIC encode in a unit test hung the whole suite beside the text reading tests (hardware encoder); keep test images tiny.
 - Open: the document card's Copy, Pin and Delete (`a-recent-document-card-offers-the-mock-s-copy-pi`).
+
+## 2026-10-10 — A spinner turns about the middle of the artboard
+
+- Rotation's Around row offers Artboard inside icon frames (under Its centre, as `icon-loop-wt.html` step 4 draws it). It is a fixed place in the layer's parent space (`MotionPivot.artboard`, `PhotonzDocument.artboardPivot`), so nudging or reshaping the arc keeps it spinning about 12, 12; the exported SVG rotates about the same point.
+- Dragging the crosshair pulls onto the icon's middle and the shape's own middle (`MotionPivot.dragged`).
+- The pivot handle now carries the layer's parent origin, so the crosshair sits in the right place for shapes inside frames.
+- Tests: `ArtboardPivotTests`; walk `spinner-turns-about-the-artboard-walk`. The full suite hung in system HEIF/Vision work twice and was run in two parts (both green); filed as a p2 look-into.
+- Next: the ring's 0 to 360 Forever default (`a-ring-or-arc-gets-a-full-turn-forever-when-rota`).

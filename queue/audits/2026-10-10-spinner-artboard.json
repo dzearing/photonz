@@ -1,0 +1,50 @@
+{
+  "feature": "A spinner turns about the middle of the artboard",
+  "epic": "icon-animate",
+  "summary": "A rotation on a shape inside an icon can now turn about the middle of the icon: pick Artboard from the Around row, or drag the crosshair near the icon's middle and it pulls on. The exported animated SVG turns about the same point.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/spinner-turns-about-the-artboard-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Add a 24 unit icon frame (New Frame, Icons, 24) and zoom to 800%."
+    },
+    {
+      "do": "Draw a small rectangle or arc in the top right of the icon, off its middle, and select it."
+    },
+    {
+      "do": "Motion plus, Rotation. Watch it swing about its own middle.",
+      "shot": "2026-10-10-spinner-artboard-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Around and choose Artboard. The crosshair jumps to the icon's middle and At reads 12, 12.",
+      "shot": "2026-10-10-spinner-artboard-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the crosshair close to the shape's own middle and let go: Around reads Its centre."
+    },
+    {
+      "do": "Drag it back close to the icon's middle: it pulls on and Around reads Artboard.",
+      "shot": "2026-10-10-spinner-artboard-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Copy as SVG and open it in a browser: it turns about 12, 12."
+    }
+  ],
+  "evaluate": [
+    "Is Artboard where you would look for it, straight under Its centre?",
+    "Does the pull onto the two middles feel firm enough at 800% without getting in the way of a point just beside them?",
+    "Once on Artboard, nudge the shape with an arrow key: does it still spin about the icon's middle, as you would expect?",
+    "Does the question mark beside Around say enough about why an arc needs Artboard?"
+  ],
+  "rough": [
+    "The Around menu reads Its centre, Artboard, Top centre, Bottom centre, Somewhere else, where the spinner mock (icon-loop-wt.html #oriMenu) draws Its middle, Artboard, A point you pick. The names and the extra two spots come from the bell mock, settled by a-turning-layer-says-what-it-turns-around-and-yo and the-around-menu-ends-with-somewhere-else-as-the.",
+    "The mock shows the crosshair at 12, 12 only while you choose; here it shows whenever the turning shape is picked, as a-turning-layer-says-what-it-turns-around-and-yo settled.",
+    "The mock's note under the Around menu (an arc's own center is not the circle's center...) is longer than the panel budget, so it moved behind the question mark beside Around, in the mock's words (UX-PATTERNS §4).",
+    "A rectangle's Rotation still arrives as -12 to 12 there and back, where the mock's ring arrives at 0 to 360 Forever; that is task a-ring-or-arc-gets-a-full-turn-forever-when-rota.",
+    "Artboard is offered only inside icon frames, not on screens or loose on the canvas.",
+    "If the icon frame is resized after picking Artboard, the pivot stays on the old middle until Artboard is picked again."
+  ]
+}

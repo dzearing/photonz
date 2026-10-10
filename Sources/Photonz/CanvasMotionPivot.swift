@@ -25,8 +25,15 @@ struct MotionPivotHandle: Equatable {
     /// Where it sits now, in document points.
     let point: CGPoint
     /// The layer's own box, which is what the pivot is a fraction of: a drag
-    /// hands a place back and this is what turns it into one.
+    /// hands a place back and this is what turns it into one. Stated from the
+    /// corner of whatever holds the layer, like the layer's frame.
     let box: CGRect
+    /// That corner on the canvas: nought for a layer loose on the canvas, the
+    /// frame's corner for a shape in a frame.
+    var origin: CGPoint = .zero
+
+    /// Where it sits in the layer's own terms, which is what the At row reads.
+    var local: CGPoint { CGPoint(x: point.x - origin.x, y: point.y - origin.y) }
 }
 
 /// The handle under the hand.
@@ -54,7 +61,7 @@ extension CanvasNSView {
         guard tool == .select, !zoomOwnsPicture, let handle = motionPivot else { return nil }
         guard let drag = motionPivotDrag, drag.handle.motionID == handle.motionID else { return handle }
         return MotionPivotHandle(layerID: handle.layerID, motionID: handle.motionID,
-                                 point: drag.current, box: handle.box)
+                                 point: drag.current, box: handle.box, origin: handle.origin)
     }
 
     /// How close a press has to land, in view points. The ring is 8 across, so
@@ -208,7 +215,7 @@ extension CanvasNSView {
         motionPivotDrag = MotionPivotDrag(handle: handle, current: p, moved: true)
         applyGrabCursor(.closedHand, force: true)
         onMotionPivotBegin()
-        onMotionPivotMove(p)
+        motionPivotDrag?.current = onMotionPivotMove(p)
         refreshMotionPivotChrome()
         return true
     }
@@ -221,9 +228,10 @@ extension CanvasNSView {
         let start = drag.handle.point
         if !drag.moved, hypot(p.x - start.x, p.y - start.y) < 0.5 { return }
         drag.moved = true
-        drag.current = p
+        // The crosshair sits where the pivot LANDED, so a pull onto the middle
+        // of the icon or of the shape is something you see happen.
+        drag.current = onMotionPivotMove(p)
         motionPivotDrag = drag
-        onMotionPivotMove(p)
         refreshMotionPivotChrome()
     }
 

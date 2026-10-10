@@ -540,7 +540,54 @@ public struct MotionPivot: Hashable, Codable, Sendable {
     /// top-left origin, and `(0.5, 0.5)` is its middle.
     public var unit: CGPoint
 
+    /// A PLACE rather than a fraction, where the turn is about the middle of
+    /// the artboard the layer is drawn on: stated in the space the layer's own
+    /// box is stated in, so for a shape in an icon frame (12, 12) is the middle
+    /// of a 24 unit icon. Nil on every pivot that is a spot on the layer, so
+    /// those read back byte for byte the same.
+    ///
+    /// A spinner is the reason. An arc's own middle is not the middle of the
+    /// circle it belongs to, so an arc turned about its own box orbits; and a
+    /// fraction of the arc's box would wander off the icon's middle the moment
+    /// the arc was nudged or reshaped. A place does not.
+    public var artboard: CGPoint?
+
     public init(unit: CGPoint) { self.unit = unit }
+
+    /// The middle of the artboard, `point`, for a layer whose box is `box`.
+    /// `unit` keeps the fraction it is of that box today, which is only ever
+    /// read if the place is let go of.
+    public static func artboard(at point: CGPoint, in box: CGRect) -> MotionPivot {
+        var pivot = MotionPivot(at: point, in: box)
+        pivot.artboard = point
+        return pivot
+    }
+
+    /// True where the turn is about the artboard rather than a spot on the
+    /// layer.
+    public var isOnArtboard: Bool { artboard != nil }
+
+    /// What the Around menu calls it. The mock's word (`icon-loop-wt.html`,
+    /// `#miArtCenter`).
+    public static let artboardTitle = "Artboard"
+
+    /// Where a drag on the crosshair lets go of it, at `point` on a layer
+    /// whose box is `box`.
+    ///
+    /// The two middles a person aims at pull it in: the artboard's, where
+    /// there is one, and the shape's own. Each reaches `reach` (document
+    /// points, worked out from the zoom by the canvas); the nearer wins and a
+    /// dead heat goes to the shape, whose middle follows it about. Anywhere
+    /// else is exactly where the hand let go.
+    public static func dragged(to point: CGPoint, in box: CGRect,
+                               artboard: MotionPivot?, reach: CGFloat) -> MotionPivot {
+        func distance(_ other: CGPoint) -> CGFloat { hypot(other.x - point.x, other.y - point.y) }
+        let own = distance(centre.point(in: box))
+        let board = artboard.map { distance($0.point(in: box)) } ?? .infinity
+        if own <= reach, own <= board { return centre }
+        if let artboard, board <= reach { return artboard }
+        return MotionPivot(at: point, in: box)
+    }
 
     /// The pivot that puts this place on the canvas at that fraction of
     /// `box` — what a drag on the handle and a number typed into the row both
@@ -560,6 +607,7 @@ public struct MotionPivot: Hashable, Codable, Sendable {
     /// Where this lands on a layer whose box is `box`, in the space that box
     /// is stated in.
     public func point(in box: CGRect) -> CGPoint {
+        if let artboard { return artboard }
         let standard = box.standardized
         return CGPoint(x: standard.minX + standard.width * unit.x,
                        y: standard.minY + standard.height * unit.y)
@@ -602,14 +650,17 @@ public struct MotionPivot: Hashable, Codable, Sendable {
     /// edge reads back as "Top centre" rather than as a pair of numbers that
     /// happen to mean it.
     public var named: Named? {
-        Named.allCases.first { spot in
+        guard artboard == nil else { return nil }
+        return Named.allCases.first { spot in
             let other = spot.pivot.unit
             return abs(other.x - unit.x) < 0.0005 && abs(other.y - unit.y) < 0.0005
         }
     }
 
     /// What the Around row reads when it is not showing numbers.
-    public var title: String { named?.title ?? "Custom" }
+    public var title: String {
+        isOnArtboard ? Self.artboardTitle : named?.title ?? "Custom"
+    }
 
     /// The way to a point no menu can name: the Around menu's last row, the
     /// move button beside it, and Y all hand you the pivot, and the next press

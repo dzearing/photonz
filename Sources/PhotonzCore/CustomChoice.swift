@@ -51,7 +51,7 @@ extension CustomChoice: Codable where Value: Codable {}
 extension MotionPivot {
     /// True where the pivot is somewhere of its own rather than on one of the
     /// spots the Around menu names.
-    public var isOwn: Bool { named == nil }
+    public var isOwn: Bool { named == nil && !isOnArtboard }
 }
 
 extension LayerMotion {
