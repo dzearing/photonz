@@ -1,0 +1,46 @@
+{
+  "id": "a-recording-s-framing-reads-as-scale-then-centre",
+  "title": "A recording's framing reads as Scale then Centre, the way the zoom walkthrough draws it",
+  "goal": "On a zoomed-in recording the app names the framing Position and lists it above Scale, as X and Y numbers for the corner of the clip. The zoom walkthrough calls it Centre, puts its lane under the Scale lane, and shows the point of the recording that sits in the middle of the frame, which is what a person framing a shot is thinking about.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 3920,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:57:43.567Z",
+  "updated": "2026-10-10T05:14:07.787Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-10-09 by dragging-a-zoomed-in-recording-keys-where-it-is: its walk framing-a-zoom-keys-its-centre-walk shows lanes Position above Scale and the row Position X 740 Y 280 (the stored origin). Mock: docs/design/mocks/pages/video-zoom-wt.html, #laneScale then #laneCentre (~line 318-331), #vCentre in the Reframe section (~line 209). ClipReframe.centred(originAt:in:atScalePercent:) already computes the centre point (it fed the removed Reframe section, taken out by the-video-properties-look-like-the-rest-of-the-d in 246ab1e9 without a decision card). Lane order for transforms comes from PhotonzDocument.transformKeyProperties [.position, .scale, .rotation, .opacity]; only a clip (Layer.takesAReframe) should change. If the Centre row is judged a departure the user wants weighed, open a decision card rather than guessing.",
+  "acceptance": [
+    "On a recording with Scale and Position keyed, the timeline shows a Scale lane and under it a lane labelled Centre, as in the zoom walkthrough step 6",
+    "The Properties row for a recording reads Centre and shows the point of the recording in the middle of the frame (the walkthrough shows 1480, 810 after framing the button), and typing a new centre moves the framing to it",
+    "Titles, shapes and pictures keep Position as they are today",
+    "A walk at Next defaults reaches it and photographs the lanes and the row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:57:43.569Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T04:53:03.846Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T05:13:55.642Z",
+      "note": "owns these walks: framing-a-zoom-keys-its-centre-walk, captions-panel-keeps-its-margins-walk, animate-a-property-list-walk"
+    },
+    {
+      "t": "2026-10-10T05:14:07.785Z",
+      "note": "Review before: a person framing a punch-in thinks 'what is in the middle', not 'where is the corner'; Premiere's Motion shows Position as the anchor point's place, which for a full-frame clip IS the centre (960,540), so Centre reads as Premiere does. Built: Layer.positionReadsAsCentre (takesAReframe) in ClipReframe.swift; KeyedProperty.title(on:) says Centre; keyableProperties and laneRank put Scale first on a recording; PhotonzDocument.panelValue/setPanelValue convert corner<->centre at the scale at the playhead; lane key readings use the centre. Row editor (PropertyKeysInspector PropertyKeyValue) uses EditorState.keyRowValue/setKeyRowValue; addKeyHere and the rest still use the raw value. Tests: RecordingFramingReadsAsCentreTests (8); full suite 12150 green. Walks: framing-a-zoom-keys-its-centre-walk extended (Centre 303.6/272.7 at 0:05, typed X 500, wide reads 640/400), plus animate-a-property-list, captions-panel-keeps-its-margins (renamed Position to Centre on the clip), punch-in-and-hold, video-panel-order (notes), keyframe-anything, key-a-title-s-scale, motion-path all ok. Rough items: motion path filed as a-zoomed-recording-s-motion-path-shows-where-the (p2); X/Y boxes vs the mock's single value and document points vs source pixels left in the audit's rough and here, no task."
+    }
+  ],
+  "started": "2026-10-10T04:53:03.845Z",
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk",
+    "captions-panel-keeps-its-margins-walk",
+    "animate-a-property-list-walk"
+  ]
+}

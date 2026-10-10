@@ -1,0 +1,30 @@
+{
+  "id": "a-zoomed-recording-s-motion-path-shows-where-the",
+  "title": "A zoomed recording's motion path shows where the camera points, or nothing",
+  "goal": "When a recording is zoomed in and its framing is keyed, the canvas draws a dashed path for the move that follows the corner of the clip, a line across empty canvas that has nothing to do with where the camera is pointing. It should show the route of the centre, or not be drawn on a recording at all.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3970,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T05:13:51.137Z",
+  "updated": "2026-10-10T05:13:51.140Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-09 by a-recording-s-framing-reads-as-scale-then-centre. Repro: Scripts/playtest.sh Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json, pictures 3-framed-at-5-sc.png and 3b-centre-typed-sc.png show a dashed route from about (846,400) to (1465,633) screen points over the dark canvas, which is the posed origin path of the Position motion (copies under queue/audits/2026-10-09-zoom-centre-3-framed-at-5-sc.png). The video-zoom-wt mock draws no path in steps 6-8, only the frame ring. Which of the two (centre route or none) is a UX call; a decision card if unsure. Path drawing: grep motion path / route in Sources/Photonz canvas overlays; position on a takesAReframe layer is Layer.positionReadsAsCentre.",
+  "acceptance": [
+    "With Scale and Centre keyed on a recording, the dashed path on the canvas either follows the point in the middle of the frame or is not drawn",
+    "A title or shape keyed on Position still draws its path exactly as today",
+    "A walk at Next defaults photographs the canvas with the zoom framed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T05:13:51.139Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ]
+}

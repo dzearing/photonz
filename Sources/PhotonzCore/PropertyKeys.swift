@@ -50,6 +50,7 @@ public enum KeyedProperty: Hashable, Sendable {
     public func title(on layer: Layer) -> String {
         switch self {
         case let .motion(property, effect):
+            if property == .position, effect == 0, layer.positionReadsAsCentre { return "Centre" }
             let count = property.effectKind.map { kind in layer.style.effects.filter { $0.kind == kind }.count } ?? 1
             return property.title(effect: effect, of: count)
         case .volume: return "Volume"
@@ -241,8 +242,11 @@ extension Layer {
     public var keyableProperties: [KeyedProperty] {
         var list: [KeyedProperty] = []
         if !isSoundOnly {
-            let order: [MotionProperty] = [.position, .scale, .rotation, .opacity, .cornerRadius,
-                                           .strokeWidth, .color, .blur]
+            // A recording's framing is Scale then Centre, the zoom
+            // walkthrough's order: how far in, then what is in the middle.
+            let lead: [MotionProperty] = positionReadsAsCentre ? [.scale, .position] : [.position, .scale]
+            let order: [MotionProperty] = lead + [.rotation, .opacity, .cornerRadius,
+                                                  .strokeWidth, .color, .blur]
             for property in order where keyStill(property) != nil {
                 list.append(.motion(property))
             }

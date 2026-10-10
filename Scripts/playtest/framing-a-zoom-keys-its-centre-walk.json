@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk",
-  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys Position at 0:03 and 0:05 (four keys in all), a Position lane opens under the Scale lane, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
+  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -116,7 +116,7 @@
     },
     {
       "do": "expect",
-      "control": "Key Position 1",
+      "control": "Key Centre 1",
       "present": false
     },
     {
@@ -148,7 +148,7 @@
     {
       "do": "describe",
       "stage": "3-framed",
-      "note": "THE TEST: at 0:05 the picture dragged to frame a spot. Dragging a zoomed recording is where the zoom points, so Position keys itself the way Scale did: a key at 0:03 holding where the wide shot was and a key at 0:05 where the hand left it. Its lane opens under the Scale lane, four keys in all"
+      "note": "THE TEST: at 0:05 the picture dragged to frame a spot. Dragging a zoomed recording is where the zoom points, so Centre keys itself the way Scale did: a key at 0:03 holding where the wide shot was and a key at 0:05 where the hand left it. Its lane opens under the Scale lane, four keys in all"
     },
     {
       "do": "expect",
@@ -157,18 +157,18 @@
     },
     {
       "do": "expect",
-      "control": "Key Position 2",
+      "control": "Key Centre 2",
       "present": true
     },
     {
       "do": "expect",
-      "control": "Key Position 3",
+      "control": "Key Centre 3",
       "present": false
     },
     {
       "do": "expect",
       "control": "Key",
-      "in": "Position",
+      "in": "Centre",
       "reads": "on a key"
     },
     {
@@ -184,6 +184,85 @@
       "name": "3-framed-at-5-canvas"
     },
     {
+      "do": "expect",
+      "field": "Centre X",
+      "reads": "303.6"
+    },
+    {
+      "do": "expect",
+      "field": "Centre Y",
+      "reads": "272.7"
+    },
+    {
+      "do": "press",
+      "control": "Centre X Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "500"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3b-centre-typed",
+      "note": "THE ROW: Centre is the point of the recording in the middle of the frame. Typing 500 for X moves the framing so that point is in the middle: the picture slides left, Y stays, and it is still the same key at 0:05, not a new one"
+    },
+    {
+      "do": "expect",
+      "field": "Centre X",
+      "reads": "500"
+    },
+    {
+      "do": "expect",
+      "field": "Centre Y",
+      "reads": "272.7"
+    },
+    {
+      "do": "expect",
+      "control": "Key Centre 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Centre 3",
+      "present": false
+    },
+    {
+      "do": "snapshot",
+      "name": "3b-centre-typed"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Centre X",
+      "reads": "303.6"
+    },
+    {
       "do": "clickRuler",
       "seconds": 3
     },
@@ -194,23 +273,23 @@
     {
       "do": "describe",
       "stage": "4-wide-unmoved",
-      "note": "back at 0:03 the wide shot is exactly where it was before the drag: no canvas showing at its edge"
+      "note": "back at 0:03 the wide shot is exactly where it was before the drag: no canvas showing at its edge, and Centre reads the middle of the recording, 640, 400"
     },
     {
       "do": "expect",
       "control": "Key",
-      "in": "Position",
+      "in": "Centre",
       "reads": "on a key"
     },
     {
       "do": "expect",
-      "field": "Position X",
-      "reads": "0"
+      "field": "Centre X",
+      "reads": "640"
     },
     {
       "do": "expect",
-      "field": "Position Y",
-      "reads": "0"
+      "field": "Centre Y",
+      "reads": "400"
     },
     {
       "do": "expect",
@@ -240,7 +319,7 @@
     },
     {
       "do": "expect",
-      "control": "Key Position 1",
+      "control": "Key Centre 1",
       "present": false
     },
     {

@@ -826,25 +826,25 @@ private struct PropertyKeyValue: View {
     private var title: String { editorState.keyTitle(property) }
 
     var body: some View {
-        switch editorState.keyedValue(property) {
+        switch editorState.keyRowValue(property) {
         case let .number(number)?:
             numberBox(number, label: title, suffix: suffix) {
-                editorState.setKeyedValue(.number($0), for: property)
+                editorState.setKeyRowValue(.number($0), for: property)
             }
         case let .point(point)?:
             HStack(spacing: 4) {
                 numberBox(Double(point.x), label: "\(title) X", leading: "X", suffix: nil) {
-                    editorState.setKeyedValue(.point(CGPoint(x: $0, y: point.y)), for: property)
+                    editorState.setKeyRowValue(.point(CGPoint(x: $0, y: point.y)), for: property)
                 }
                 numberBox(Double(point.y), label: "\(title) Y", leading: "Y", suffix: nil) {
-                    editorState.setKeyedValue(.point(CGPoint(x: point.x, y: $0)), for: property)
+                    editorState.setKeyRowValue(.point(CGPoint(x: point.x, y: $0)), for: property)
                 }
             }
         case let .color(hex)?:
             ColorWellButton(hex: hex, name: title,
                             wellKey: "key-\(title)",
                             onCommit: { picked in
-                editorState.setKeyedValue(.color(picked), for: property)
+                editorState.setKeyRowValue(.color(picked), for: property)
                 editorState.recordRecentColor(hex: picked)
             })
             .panelReadout(hex)

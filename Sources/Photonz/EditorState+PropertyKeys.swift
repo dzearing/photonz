@@ -99,6 +99,23 @@ extension EditorState {
         return document.keyedValue(layerID: layer.id, property, atDocumentTimeMS: documentTimeMS)
     }
 
+    /// What the row's editor shows: the value, or on a recording its Centre,
+    /// the point of the recording in the middle of the frame
+    /// (`PhotonzDocument.panelValue`).
+    func keyRowValue(_ property: KeyedProperty) -> MotionValue? {
+        guard let layer = keyLayer, let document else { return nil }
+        return document.panelValue(layerID: layer.id, property, atDocumentTimeMS: documentTimeMS)
+    }
+
+    /// A value typed in the row, read the way `keyRowValue` shows it.
+    func setKeyRowValue(_ value: MotionValue, for property: KeyedProperty) {
+        guard let layer = keyLayer else { return }
+        let time = documentTimeMS
+        let ease = newKeyEaseToWrite
+        activeKeyProperty = property
+        perform { $0.setPanelValue(value, layerID: layer.id, property, atDocumentTimeMS: time, ease: ease) }
+    }
+
     /// Whether there is a key before (or after) the playhead to step to.
     func canStepToKey(_ property: KeyedProperty, forward: Bool) -> Bool {
         neighbourKey(property, forward: forward) != nil

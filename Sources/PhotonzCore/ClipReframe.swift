@@ -366,3 +366,70 @@ extension PhotonzDocument {
         return grown
     }
 }
+
+// MARK: - The framing, as the panel and the lanes read it
+
+extension Layer {
+
+    /// Whether this layer's Position is a recording's framing, which the panel
+    /// and the lanes call Centre and read as the point of the recording in the
+    /// middle of the frame (`video-zoom-wt.html`, step 6): what a person
+    /// framing a shot is thinking about, where the corner the value stores is
+    /// not. The value underneath is still Position. Titles, shapes and
+    /// pictures keep Position as it is.
+    public var positionReadsAsCentre: Bool { takesAReframe }
+}
+
+extension PhotonzDocument {
+
+    /// What the panel's row shows for a value at `ms`: the value itself, or,
+    /// for a recording's Position, the point of the recording in the middle of
+    /// the frame at the scale it has there.
+    public func panelValue(layerID: UUID, _ property: KeyedProperty,
+                           atDocumentTimeMS ms: Int) -> MotionValue? {
+        let value = keyedValue(layerID: layerID, property, atDocumentTimeMS: ms)
+        guard property == .motion(.position), let layer = layer(id: layerID),
+              layer.positionReadsAsCentre, case let .point(origin)? = value else { return value }
+        return .point(ClipReframe.centred(originAt: origin, in: layer.frame,
+                                          atScalePercent: framingPercent(layerID, atDocumentTimeMS: ms)))
+    }
+
+    /// A value typed in the panel's row, read the way `panelValue` shows it:
+    /// a centre typed on a recording becomes the Position that puts that point
+    /// in the middle of the frame at the scale it has there.
+    @discardableResult
+    public mutating func setPanelValue(_ value: MotionValue, layerID: UUID, _ property: KeyedProperty,
+                                       atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
+        guard property == .motion(.position), let layer = layer(id: layerID),
+              layer.positionReadsAsCentre, case let .point(centre) = value else {
+            return setKeyedValue(value, layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
+        }
+        let origin = ClipReframe.origin(centring: centre, in: layer.frame,
+                                        atScalePercent: framingPercent(layerID, atDocumentTimeMS: ms))
+        return setKeyedValue(.point(origin), layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
+    }
+
+    /// How far in the framing is at `ms`, 100 where Scale says nothing.
+    private func framingPercent(_ layerID: UUID, atDocumentTimeMS ms: Int) -> Double {
+        if case let .number(percent)? = keyedValue(layerID: layerID, .motion(.scale), atDocumentTimeMS: ms),
+           percent > 0 {
+            return percent
+        }
+        return 100
+    }
+
+    /// What a key on a lane reads: its value, or on a recording's Centre lane
+    /// the point in the middle of the frame at that key, so the lane and the
+    /// row say the same numbers.
+    func laneReading(of layer: Layer, _ motion: LayerMotion, _ key: MotionStop) -> MotionValue {
+        guard motion.property == .position, motion.effectOrdinal == 0, layer.positionReadsAsCentre,
+              case let .point(origin) = key.value else { return key.value }
+        var percent: Double = 100
+        let cycle = layer.motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+        if let scale = layer.keyedMotion(.scale),
+           case let .number(number) = scale.value(atMS: key.atMS, cycleMS: cycle), number > 0 {
+            percent = number
+        }
+        return .point(ClipReframe.centred(originAt: origin, in: layer.frame, atScalePercent: percent))
+    }
+}

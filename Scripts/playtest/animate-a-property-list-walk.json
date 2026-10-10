@@ -43,7 +43,7 @@
     { "do": "press", "control": "Animate a property" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-recording-with-border", "note": "THE SECOND PICTURE: the recording with a Border, and Animate a property lists its values, Border width and Border color among them" },
-    { "do": "expect", "control": "Position", "in": "Animate a property", "present": true },
+    { "do": "expect", "control": "Centre", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Border width", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Border color", "in": "Animate a property", "present": true },
     { "do": "expect", "control": "Swatch", "in": "Border color", "present": true },

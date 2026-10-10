@@ -36,7 +36,7 @@
 
     { "do": "rightClick", "at": [640, 400], "space": "document", "shot": "3-the-clip-menu", "choose": "Punch In > 150%" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "3-punched-in", "note": "THE THIRD TEST: Punch In is a right-click preset on the clip, around the spot you clicked, not a section of its own. What it did is the clip's ordinary Scale and Position, keyed, read in Animating" },
+    { "do": "describe", "stage": "3-punched-in", "note": "THE THIRD TEST: Punch In is a right-click preset on the clip, around the spot you clicked, not a section of its own. What it did is the clip's ordinary Scale and Centre, keyed, read in Animating" },
     { "do": "expect", "field": "Scale", "reads": "150" },
     { "do": "snapshot", "name": "3-punched-in" },
 

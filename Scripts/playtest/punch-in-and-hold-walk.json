@@ -39,7 +39,7 @@
     {
       "do": "describe",
       "stage": "1-wide",
-      "note": "the sample recording, wide, framed the way it was captured. There is no Reframe section: the clip's Scale and Position are rows in Animating, like any layer's, reading 100% and nothing keyed"
+      "note": "the sample recording, wide, framed the way it was captured. There is no Reframe section: the clip's Scale and Centre are rows in Animating, like any layer's, reading 100% and nothing keyed"
     },
     {
       "do": "snapshot",
@@ -109,7 +109,7 @@
     {
       "do": "describe",
       "stage": "3-arrived",
-      "note": "THE SECOND TEST: the camera ARRIVED at the playhead. Right-click, Punch In, To the Box, and the canvas is already showing what was pointed at, filling the frame, because the move leaned in over the second before this moment rather than setting off from it. The box is gone: it said what it had to say. Two lanes appeared on the timing strip, Scale and Position, because a punch-in is those two properties and not a zoom tool"
+      "note": "THE SECOND TEST: the camera ARRIVED at the playhead. Right-click, Punch In, To the Box, and the canvas is already showing what was pointed at, filling the frame, because the move leaned in over the second before this moment rather than setting off from it. The box is gone: it said what it had to say. Two lanes appeared on the timing strip, Scale and Centre under it, because a punch-in is those two properties and not a zoom tool"
     },
     {
       "do": "snapshot",

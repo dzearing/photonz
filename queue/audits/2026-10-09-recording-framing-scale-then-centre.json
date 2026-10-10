@@ -1,0 +1,27 @@
+{
+  "feature": "A recording's framing reads as Scale then Centre",
+  "epic": "video-transitions-motion",
+  "summary": "On a zoomed-in recording the framing is now called Centre and sits under Scale, both in the Properties rows and on the timeline lanes. It shows which point of the recording is in the middle of the frame, and typing a new centre moves the framing there. Titles, shapes and pictures still say Position.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: framing-a-zoom-keys-its-centre-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording, stop at 0:03, click the picture and pick Scale from Animate a property." },
+    { "do": "Go to 0:05 and type 220 in Scale.", "shot": "2026-10-09-zoom-centre-2-zoomed-at-5-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the picture to frame the spot you want. A Centre row appears under Scale, and a Centre lane opens under the Scale lane.", "shot": "2026-10-09-zoom-centre-3-framed-at-5-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type 500 in Centre X and press Return. The picture slides so that point of the recording is in the middle.", "shot": "2026-10-09-zoom-centre-3b-centre-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Go back to 0:03. Centre reads 640, 400, the middle of the recording, and the wide shot has not moved.", "shot": "2026-10-09-zoom-centre-4-wide-at-3-unmoved-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hover a key on the Centre lane: it reads the centre at that key, the same numbers as the row." },
+    { "do": "Type a title and key its Position: the row and the lane still say Position, above Scale." }
+  ],
+  "evaluate": [
+    "Does Centre, read as the point of the recording in the middle of the frame, match how you think about framing a punch-in?",
+    "Is Scale above Centre the right order in both the panel and the timeline?",
+    "Are two boxes, X and Y, fine for Centre, or do you want it as the single '1480, 810' value the walkthrough prints?",
+    "Is it clear that a title still says Position while a recording says Centre?"
+  ],
+  "rough": [
+    "The walkthrough prints Centre as one value ('960, 540') in a Reframe section with a Reset reframe button and a note; the app shows it as an X and a Y box in the Animating rows, the same editor every place value has, because typing a new centre is part of this task (a-recording-s-framing-reads-as-scale-then-centre). The Reframe section, its Reset button and its note were taken out by the-video-properties-look-like-the-rest-of-the-d; Reset is on the clip's right-click, Punch In, Reset.",
+    "Numbers are in document points (the sample is 1280 by 800, so the wide centre is 640, 400), not the recording's own pixels, so a 1920 by 1080 recording laid out smaller reads smaller numbers than the walkthrough's 1480, 810.",
+    "The dashed motion path on the canvas still draws the route of the clip's corner, which on a zoomed recording is a line across empty canvas that has nothing to do with where the camera points. Filed as a-zoomed-recording-s-motion-path-shows-where-the."
+  ]
+}

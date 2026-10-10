@@ -104,19 +104,30 @@ extension PhotonzDocument {
         laneOrder.firstIndex(of: property) ?? laneOrder.count
     }
 
+    /// The rank on this layer: a recording's framing reads Scale then Centre,
+    /// the zoom walkthrough's order, so its Scale lane goes above.
+    static func laneRank(_ property: MotionProperty, on layer: Layer) -> Int {
+        guard layer.positionReadsAsCentre else { return laneRank(property) }
+        switch property {
+        case .scale: return laneRank(.position)
+        case .position: return laneRank(.scale)
+        default: return laneRank(property)
+        }
+    }
+
     /// The keyed values of a layer, in the panel's order: Shadow 1's values
     /// before Shadow 2's, as the panel lists them.
     func laneMotions(of layer: Layer) -> [LayerMotion] {
         let motions = keyedMotions(of: layer)
         guard motions.contains(where: { $0.effectOrdinal > 0 }) else {
-            return motions.sorted { Self.laneRank($0.property) < Self.laneRank($1.property) }
+            return motions.sorted { Self.laneRank($0.property, on: layer) < Self.laneRank($1.property, on: layer) }
         }
         // A later shadow's values sit where the panel lists them, after the
         // values of the shadow before it.
         let panel = layer.keyableProperties
         func rank(_ motion: LayerMotion) -> (Int, Int) {
             let place = panel.firstIndex(of: .motion(motion.property, effect: motion.effectOrdinal))
-            return (place ?? panel.count, Self.laneRank(motion.property))
+            return (place ?? panel.count, Self.laneRank(motion.property, on: layer))
         }
         return motions.sorted { rank($0) < rank($1) }
     }
@@ -162,7 +173,8 @@ extension PhotonzDocument {
             let keys = motion.keyframes.compactMap { key -> LaneKey? in
                 guard let at = clipKeyDocumentMS(layer, clock: key.atMS) else { return nil }
                 return LaneKey(ref: KeyRef(motionID: motion.id, clockMS: key.atMS), documentMS: at,
-                               ease: key.ease ?? fallback, reading: motion.property.format(key.value))
+                               ease: key.ease ?? fallback,
+                               reading: motion.property.format(laneReading(of: layer, motion, key)))
             }
             return KeyLane(motionID: motion.id, property: motion.property, keys: keys,
                            effect: motion.effectOrdinal, title: KeyedProperty.motion(motion.property, effect: motion.effectOrdinal)
