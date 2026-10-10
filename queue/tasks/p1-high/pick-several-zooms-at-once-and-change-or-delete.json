@@ -5,14 +5,14 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 21,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:22:44.964Z",
-  "updated": "2026-10-10T12:22:45.130Z",
+  "updated": "2026-10-10T15:45:17.329Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "User's words: \"when i create multiple zooms on a track, id like to be able to select multiple zooms, either by shift clicking them, or clicking the zoom tab on the left to select all zooms in the row. Then I'd like to be able to modify common properties of the zoom. For example, maybe i want them all to have a consistent transition, or i want to delete a few at a time.\"\n\nFrom code reading (not run): one picked zoom only, EditorState.selectedZoom: ClipZoomRef? (EditorState.swift:1723; cleared :906). Zoom model PhotonzCore/ClipZoom.swift (easeInMS/easeOutMS :36-37, scale, followsCursor). Zoom lane UI ZoomLane.swift; menu rows EditorCommands.swift ~1118-1142 and EditorState+Zoom.swift. Make the pick a set (selectedZooms) and keep selectedZoom as 'the one in hand' only when the set has one, so the box code (showsZoomBox, EditorState+Zoom.swift:352-363) keeps working. Companion tasks filed the same day: 'Every transition can be picked from presets and tuned on a curve' (the curve the shared panel row edits) and 'Dragging a box on the timeline picks everything it touches' (marquee over zoom bars).",
+  "notes": "User's words: \"when i create multiple zooms on a track, id like to be able to select multiple zooms, either by shift clicking them, or clicking the zoom tab on the left to select all zooms in the row. Then I'd like to be able to modify common properties of the zoom. For example, maybe i want them all to have a consistent transition, or i want to delete a few at a time.\"\n\nFrom code reading (not run): one picked zoom only, EditorState.selectedZoom: ClipZoomRef? (EditorState.swift:1723; cleared :906). Zoom model PhotonzCore/ClipZoom.swift (easeInMS/easeOutMS :36-37, scale, followsCursor). Zoom lane UI ZoomLane.swift; menu rows EditorCommands.swift ~1118-1142 and EditorState+Zoom.swift. Make the pick a set (selectedZooms) and keep selectedZoom as 'the one in hand' only when the set has one, so the box code (showsZoomBox, EditorState+Zoom.swift:352-363) keeps working. Companion tasks filed the same day: 'Every transition can be picked from presets and tuned on a curve' (the curve the shared panel row edits) and 'Dragging a box on the timeline picks everything it touches' (marquee over zoom bars).\n\nDone 2026-10-10: EditorState.pickedZooms (Set<ClipZoomRef>) beside selectedZoom (the anchor; its didSet keeps the set honest). EditorState+Zoom: togglePickedZoom, pickAllZooms(onClip:), changeZooms/removeZooms (one perform each), zoomsActedOn(from:) for the bar's right-click, zoomOwnsPicture false when more than one is picked (no box). Core: ClipZoomsReading + PhotonzDocument.updateZooms/removeZooms (SeveralZoomsTests). ZoomInspector reads the shared values with Mixed. ZoomLane: Shift/Cmd click via NSApp.currentEvent, label tap picks the row (playtest control 'Zoom lane label'), picked bars keep a dark edge. Walk harness: windowClick takes modifiers. Walk: Scripts/playtest/pick-several-zooms-walk.json (bars at x 743/1132, lane y 897, label x 52).",
   "acceptance": [
     "Shift click on a zoom bar adds or removes it from the picked set; Command click the same; a plain click picks just that one",
     "Clicking the Zoom lane's label in the track column picks every zoom on that clip's row; the picked bars are visibly highlighted together",
@@ -31,6 +31,26 @@
     {
       "t": "2026-10-10T12:22:45.129Z",
       "note": "seq 3930 -> 21"
+    },
+    {
+      "t": "2026-10-10T14:51:08.643Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T15:28:44.194Z",
+      "note": "owns these walks: pick-several-zooms-walk"
+    },
+    {
+      "t": "2026-10-10T15:45:17.268Z",
+      "note": "adversarial review before building: Premiere/FCP users expect Shift or Command click to add to a pick and a plain click to narrow it; the lane label working like a track header (pick the row) is new but discoverable via its tooltip. Several boxes on one picture would leave a press ambiguous, so with several picked the canvas shows the picture as it plays and the clip's own handles. Mock: none covers the Zoom lane. The curve row the user mentions does not exist yet (zooms have no curve), folded into every-transition-can-be-picked-from-presets-and; moving several together folded into dragging-a-box-on-the-timeline-picks-everything."
+    },
+    {
+      "t": "2026-10-10T15:45:17.328Z",
+      "note": "left rough: a pick stays on one recording (Shift click on another clip's zoom starts a new pick there); the menu rows keep the singular 'Delete Zoom' with several picked, as Final Cut keeps 'Delete'. Neither clears the follow-up bar."
     }
+  ],
+  "started": "2026-10-10T14:51:08.642Z",
+  "walks": [
+    "pick-several-zooms-walk"
   ]
 }

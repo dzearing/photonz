@@ -148,6 +148,63 @@ enum PlaytestZoom {
         return "a zoom is picked, its box at \(box.integral)"
     }
 
+    static func expectThreePicked(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        let picked = editor.pickedZooms.filter { $0.layerID == clip.id }
+        guard picked.count == 3, editor.pickedZooms.count == 3 else {
+            throw Failure(description: "\(editor.pickedZooms.count) zooms are picked, not 3")
+        }
+        let lit = (clip.zooms ?? []).filter { editor.isZoomPicked(ClipZoomRef(layerID: clip.id, zoomID: $0.id)) }
+        guard lit.count == 3 else { throw Failure(description: "\(lit.count) bars are lit, not 3") }
+        guard editor.zoomBoxInDocument == nil, !editor.showsZoomBox else {
+            throw Failure(description: "three zooms are picked and a zoom box is still up on the picture")
+        }
+        return "three of \(clip.zooms?.count ?? 0) zooms are picked, their bars lit, no box on the picture"
+    }
+
+    static func expectEveryPicked(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        let zooms = clip.zooms ?? []
+        let lit = zooms.filter { editor.isZoomPicked(ClipZoomRef(layerID: clip.id, zoomID: $0.id)) }
+        guard zooms.count > 1, lit.count == zooms.count, editor.pickedZooms.count == zooms.count else {
+            throw Failure(description: "\(lit.count) of \(zooms.count) zooms are picked")
+        }
+        guard editor.zoomBoxInDocument == nil else {
+            throw Failure(description: "every zoom is picked and a zoom box is still up on the picture")
+        }
+        return "all \(zooms.count) zooms are picked, no box on the picture"
+    }
+
+    static func expectPickedEaseInAlike(_ editor: EditorState) throws -> String {
+        let clip = try recording(in: editor)
+        let zooms = clip.zooms ?? []
+        let picked = zooms.filter { editor.isZoomPicked(ClipZoomRef(layerID: clip.id, zoomID: $0.id)) }
+        let rest = zooms.filter { !editor.isZoomPicked(ClipZoomRef(layerID: clip.id, zoomID: $0.id)) }
+        let eases = Set(picked.map(\.easeInMS))
+        guard picked.count > 1, eases.count == 1, let ease = eases.first else {
+            throw Failure(description: "the \(picked.count) zooms picked ease in over \(picked.map(\.easeInMS)) ms")
+        }
+        guard rest.contains(where: { $0.easeInMS != ease }) else {
+            throw Failure(description: "every zoom eases in over \(ease) ms, picked or not: "
+                + "the change reached zooms that were not picked")
+        }
+        return "the \(picked.count) zooms picked all ease in over \(ease) ms; the others over "
+            + "\(rest.map(\.easeInMS)) ms"
+    }
+
+    static func expectCount(_ editor: EditorState, _ count: Int, nonePicked: Bool = false) throws -> String {
+        let clip = try recording(in: editor)
+        let zooms = clip.zooms ?? []
+        let said = zooms.map { "\($0.startMS)-\($0.endMS) ms in \($0.easeInMS)" }.joined(separator: ", ")
+        guard zooms.count == count else {
+            throw Failure(description: "the recording has \(zooms.count) zooms, not \(count): \(said)")
+        }
+        if nonePicked, !editor.pickedZooms.isEmpty {
+            throw Failure(description: "\(editor.pickedZooms.count) zooms are still picked after they went")
+        }
+        return "\(count) zooms: \(said)"
+    }
+
     static func expectLetGo(_ editor: EditorState) throws -> String {
         let clip = try recording(in: editor)
         guard editor.selectedZoom == nil else { throw Failure(description: "a zoom is still picked") }

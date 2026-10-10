@@ -9,8 +9,10 @@ import SwiftUI
 /// out, and the small upright mark where each ramp meets the hold is a handle
 /// that drags the ramp longer or shorter. A press on the bar picks it, its two
 /// ends trim it, its middle carries it, and a right click has Follow Cursor,
-/// how far in, and Delete Zoom. Screen Studio's zoom track, laid out the way
-/// the Words lane is.
+/// how far in, and Delete Zoom. Shift or Command click adds a bar to the pick
+/// or takes it out, and a click on the lane's "Zoom" label picks every bar on
+/// it, so a change in the panel or the menus reaches all of them at once.
+/// Screen Studio's zoom track, laid out the way the Words lane is.
 struct ZoomLane: View {
     @Environment(EditorState.self) private var editorState
     let layerID: UUID
@@ -22,20 +24,34 @@ struct ZoomLane: View {
     static let barTop: CGFloat = 2
     static let barHeight: CGFloat = 18
 
-    /// "Zoom" in the gutter, the way the Words lane labels itself.
-    static func header(indent: CGFloat) -> some View {
+    /// "Zoom" in the gutter, the way the Words lane labels itself. A click on
+    /// it picks every zoom on the lane, the way a track's header picks its track.
+    static func header(indent: CGFloat, isLit: Bool = false) -> some View {
         HStack(spacing: 5) {
             Image(systemName: "plus.magnifyingglass").font(.system(size: 9, weight: .semibold))
             Text("Zoom").font(.system(size: 10, weight: .semibold)).kerning(0.2)
         }
-        .foregroundStyle(VideoKit.Palette.dim)
+        .foregroundStyle(isLit ? VideoKit.Palette.ink : VideoKit.Palette.dim)
         .padding(.leading, indent + 12)
         .frame(width: TimelineDock.gutter, alignment: .leading)
     }
 
+    /// Every zoom on the lane is picked.
+    private var allPicked: Bool {
+        let zooms = editorState.document?.layer(id: layerID)?.zooms ?? []
+        return zooms.count > 1
+            && zooms.allSatisfy { editorState.isZoomPicked(ClipZoomRef(layerID: layerID, zoomID: $0.id)) }
+    }
+
     var body: some View {
         HStack(spacing: TimelineDock.gap) {
-            Self.header(indent: indent)
+            Self.header(indent: indent, isLit: allPicked)
+                .contentShape(Rectangle())
+                .onTapGesture { editorState.pickAllZooms(onClip: layerID) }
+                .help("Pick every zoom")
+                .accessibilityAddTraits(.isButton)
+                .accessibilityLabel("Pick every zoom")
+                .playtestControl("Zoom lane label", detail: "Timeline")
             ZoomBarsView(layerID: layerID, bars: bars, laneWidth: laneWidth, isLocked: isLocked)
         }
         .frame(height: Self.height)
@@ -104,11 +120,15 @@ private struct ZoomBarsView: View {
     @State private var pressed: (bar: ZoomLane.Bar, grab: ZoomGrab)?
     @State private var dragging = false
 
+    private func isPicked(_ bar: ZoomLane.Bar) -> Bool {
+        editorState.isZoomPicked(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
+    }
+
     var body: some View {
-        let picked = editorState.selectedZoom?.layerID == layerID ? editorState.selectedZoom?.zoomID : nil
+        let picked = Set(bars.filter(isPicked).map(\.zoom.id))
         Canvas { context, _ in
             for bar in bars {
-                let isPicked = bar.zoom.id == picked
+                let isPicked = picked.contains(bar.zoom.id)
                 let rect = CGRect(x: bar.x, y: ZoomLane.barTop, width: max(3, bar.width),
                                   height: ZoomLane.barHeight)
                 let shape = Path(roundedRect: rect, cornerRadius: 5)
@@ -125,10 +145,11 @@ private struct ZoomBarsView: View {
                                            width: bar.easeOut, height: rect.height)),
                                with: .color(ramp))
                 }
-                if !isPicked {
-                    context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 4.5),
-                                   with: .style(VideoKit.Palette.edgeLo), lineWidth: 1)
-                }
+                // Picked bars keep a dark edge, so two picked side by side
+                // still read as two bars rather than one long one.
+                context.stroke(Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 4.5),
+                               with: isPicked ? .color(.black.opacity(0.4)) : .style(VideoKit.Palette.edgeLo),
+                               lineWidth: 1)
                 // The two ramp handles.
                 let handleInk = isPicked ? AnyShapeStyle(Color.white) : AnyShapeStyle(VideoKit.Palette.dim)
                 for x in [rect.minX + bar.easeIn, rect.maxX - bar.easeOut]
@@ -169,7 +190,8 @@ private struct ZoomBarsView: View {
         .clipped()
         .accessibilityElement()
         .accessibilityLabel("Zoom")
-        .accessibilityValue(bars.first { $0.zoom.id == picked }.map { ZoomLane.label($0.zoom) } ?? "")
+        .accessibilityValue(picked.count > 1 ? "\(picked.count) picked"
+            : bars.first { picked.contains($0.zoom.id) }.map { ZoomLane.label($0.zoom) } ?? "")
         .playtestControl("Zoom lane", detail: "Timeline")
     }
 
@@ -204,7 +226,13 @@ private struct ZoomBarsView: View {
                 if dragging {
                     editorState.commitZoomDrag()
                 } else {
-                    editorState.pickZoom(ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id))
+                    let ref = ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id)
+                    let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+                    if flags.contains(.shift) || flags.contains(.command) {
+                        editorState.togglePickedZoom(ref)
+                    } else {
+                        editorState.pickZoom(ref)
+                    }
                 }
             }
     }

@@ -1248,22 +1248,22 @@ struct EditorCommands: Commands {
             let suggestClip = editor?.clipInHandID ?? zoomClip
             Button("Suggest Zooms") { if let suggestClip { editor?.suggestZooms(onClip: suggestClip) } }
                 .disabled(!(suggestClip.map { editor?.canSuggestZooms(onClip: $0) ?? false } ?? false))
-            // The picked zoom's own verbs, as its bar's right-click has them.
-            let zoomRef = editor?.selectedZoom
-            let zoomNow = zoomRef.flatMap { editor?.zoom($0) }
+            // The picked zooms' own verbs, as their bars' right-click has
+            // them: every zoom picked at once.
+            let zoomRefs = editor?.pickedZooms ?? []
+            let allFollow = editor.map { !zoomRefs.isEmpty && $0.pickedZoomsReading.followsCursor == true } ?? false
             Toggle("Follow Cursor", isOn: Binding(
-                get: { zoomNow?.followsCursor ?? false },
-                set: { on in if let zoomRef { editor?.setZoomFollowsCursor(zoomRef, on) } }))
-                .disabled(zoomRef == nil || !(zoomNow?.followsCursor == true
-                    || zoomRef.map { editor?.canFollowCursor(onClip: $0.layerID) ?? false } == true))
+                get: { allFollow },
+                set: { on in editor?.setZoomFollowsCursor(zoomRefs, on) }))
+                .disabled(zoomRefs.isEmpty || !(editor?.canFollowCursor(zoomRefs) ?? false))
             Menu("Zoom") {
                 ForEach(EditorState.zoomScaleStops, id: \.self) { stop in
-                    Button("\(stop)%") { if let zoomRef { editor?.setZoomScale(zoomRef, percent: stop) } }
+                    Button("\(stop)%") { editor?.setZoomScale(zoomRefs, percent: stop) }
                 }
             }
-            .disabled(zoomRef == nil)
+            .disabled(zoomRefs.isEmpty)
             Button("Delete Zoom") { editor?.removeZoomInHand() }
-                .disabled(zoomRef == nil)
+                .disabled(zoomRefs.isEmpty)
         }
         let media = editor?.mediaURLInHand
         Button("Reveal in Finder") { if let media { NSWorkspace.shared.activateFileViewerSelecting([media]) } }

@@ -138,12 +138,73 @@ extension EditorState {
 
     // MARK: Picking
 
-    /// Pick a zoom with its box up to frame it.
+    /// Pick a zoom, and only that one, with its box up to frame it.
     func pickZoom(_ ref: ClipZoomRef) {
         if selectedLayerID != ref.layerID { selectLayer(ref.layerID) }
+        if pickedZooms.count > 1 { pickedZooms = [ref] }
         if selectedZoom != ref { selectedZoom = ref }
         if !zoomFraming { zoomFraming = true }
         documentMomentChanged()
+    }
+
+    /// Shift or Command click on a bar: into the pick, or out of it. A zoom on
+    /// another clip starts a new pick, because one clip is in hand at a time.
+    func togglePickedZoom(_ ref: ClipZoomRef) {
+        guard selectedZoom?.layerID == ref.layerID, !pickedZooms.isEmpty else {
+            pickZoom(ref)
+            return
+        }
+        if pickedZooms.contains(ref) {
+            guard pickedZooms.count > 1 else {
+                letGoOfZoom()
+                return
+            }
+            pickedZooms.remove(ref)
+            if selectedZoom == ref { selectedZoom = earliest(of: pickedZooms) }
+        } else {
+            pickedZooms.insert(ref)
+            selectedZoom = ref
+        }
+        documentMomentChanged()
+    }
+
+    /// The Zoom lane's label: every zoom on the clip, picked together.
+    func pickAllZooms(onClip id: UUID) {
+        guard let zooms = document?.layer(id: id)?.zooms, let first = zooms.first else { return }
+        guard zooms.count > 1 else {
+            pickZoom(ClipZoomRef(layerID: id, zoomID: first.id))
+            return
+        }
+        if selectedLayerID != id { selectLayer(id) }
+        pickedZooms = Set(zooms.map { ClipZoomRef(layerID: id, zoomID: $0.id) })
+        selectedZoom = ClipZoomRef(layerID: id, zoomID: first.id)
+        documentMomentChanged()
+    }
+
+    /// Whether a zoom is one of those picked.
+    func isZoomPicked(_ ref: ClipZoomRef) -> Bool { pickedZooms.contains(ref) }
+
+    /// The picked zooms as the hand has them, in the order they run.
+    var pickedZoomsShown: [ClipZoom] {
+        let clips = Set(pickedZooms.map(\.layerID))
+        return clips.flatMap { clip in
+            zoomsShown(onClip: clip).filter { pickedZooms.contains(ClipZoomRef(layerID: clip, zoomID: $0.id)) }
+        }
+        .sorted { $0.startMS < $1.startMS }
+    }
+
+    /// What the picked zooms agree on.
+    var pickedZoomsReading: ClipZoomsReading { ClipZoomsReading(pickedZoomsShown) }
+
+    /// The one of `refs` that runs first.
+    private func earliest(of refs: Set<ClipZoomRef>) -> ClipZoomRef? {
+        refs.min { (zoom($0)?.startMS ?? .max, $0.zoomID.uuidString) < (zoom($1)?.startMS ?? .max, $1.zoomID.uuidString) }
+    }
+
+    /// What a verb on a zoom's bar acts on: every zoom picked when the bar is
+    /// one of them, otherwise that bar alone.
+    func zoomsActedOn(from ref: ClipZoomRef) -> Set<ClipZoomRef> {
+        pickedZooms.contains(ref) ? pickedZooms : [ref]
     }
 
     func letGoOfZoom() {
@@ -155,19 +216,30 @@ extension EditorState {
 
     // MARK: Changing
 
-    func removeZoom(_ ref: ClipZoomRef) {
-        guard zoom(ref) != nil, !isClipLocked(ref.layerID) else { return }
-        if selectedZoom == ref {
-            selectedZoom = nil
+    func removeZoom(_ ref: ClipZoomRef) { removeZooms([ref]) }
+
+    /// Take zooms away, all in one undo step. Those left picked stay picked.
+    func removeZooms(_ refs: Set<ClipZoomRef>) {
+        let refs = refs.filter { zoom($0) != nil && !isClipLocked($0.layerID) }
+        guard !refs.isEmpty else { return }
+        let left = pickedZooms.subtracting(refs)
+        if left.isEmpty {
+            if selectedZoom != nil { selectedZoom = nil }
             zoomFraming = false
+        } else if left != pickedZooms {
+            pickedZooms = left
+            if let anchor = selectedZoom, refs.contains(anchor) { selectedZoom = earliest(of: left) }
         }
-        perform { $0.removeZoom(onClip: ref.layerID, id: ref.zoomID) }
+        let byClip = Dictionary(grouping: refs, by: \.layerID).mapValues { Set($0.map(\.zoomID)) }
+        perform { document in
+            for (clip, ids) in byClip { document.removeZooms(onClip: clip, ids: ids) }
+        }
         documentMomentChanged()
     }
 
+    /// Delete with zooms picked: every one of them.
     func removeZoomInHand() {
-        guard let ref = selectedZoom else { return }
-        removeZoom(ref)
+        removeZooms(pickedZooms)
     }
 
     /// Whether this clip's recording kept where the pointer went, which is
@@ -179,23 +251,48 @@ extension EditorState {
     /// Change a zoom in one undo step, keeping it sensible
     /// (`PhotonzDocument.updateZoom`).
     func changeZoom(_ ref: ClipZoomRef, _ change: @escaping (inout ClipZoom) -> Void) {
-        guard zoom(ref) != nil, !isClipLocked(ref.layerID) else { return }
-        let track = recordedPointerTrack(ofClip: ref.layerID)
-        perform { $0.updateZoom(onClip: ref.layerID, id: ref.zoomID, cursorTrack: track, change) }
+        changeZooms([ref], change)
+    }
+
+    /// Change several zooms the same way, in one undo step.
+    func changeZooms(_ refs: Set<ClipZoomRef>, _ change: @escaping (inout ClipZoom) -> Void) {
+        let refs = refs.filter { zoom($0) != nil && !isClipLocked($0.layerID) }
+        guard !refs.isEmpty else { return }
+        let byClip = Dictionary(grouping: refs, by: \.layerID).map {
+            (clip: $0.key, ids: Set($0.value.map(\.zoomID)), track: recordedPointerTrack(ofClip: $0.key))
+        }
+        perform { document in
+            for group in byClip {
+                document.updateZooms(onClip: group.clip, ids: group.ids, cursorTrack: group.track, change)
+            }
+        }
         documentMomentChanged()
     }
 
-    func setZoomFollowsCursor(_ ref: ClipZoomRef, _ on: Bool) {
-        guard !on || canFollowCursor(onClip: ref.layerID) else { return }
-        changeZoom(ref) { $0.followsCursor = on }
+    /// Whether any of these zooms can follow the pointer: their recordings
+    /// kept where it went, or they already follow it.
+    func canFollowCursor(_ refs: Set<ClipZoomRef>) -> Bool {
+        refs.contains { zoom($0)?.followsCursor == true || canFollowCursor(onClip: $0.layerID) }
     }
 
-    func setZoomScale(_ ref: ClipZoomRef, percent: Int) {
-        changeZoom(ref) { $0.scale = Double(percent) / 100 }
+    func setZoomFollowsCursor(_ ref: ClipZoomRef, _ on: Bool) { setZoomFollowsCursor([ref], on) }
+
+    /// Turning it on reaches only the zooms whose recordings kept the pointer.
+    func setZoomFollowsCursor(_ refs: Set<ClipZoomRef>, _ on: Bool) {
+        let refs = on ? refs.filter { canFollowCursor(onClip: $0.layerID) } : refs
+        changeZooms(refs) { $0.followsCursor = on }
     }
 
-    func setZoomEase(_ ref: ClipZoomRef, easeIn: Bool, ms: Int) {
-        changeZoom(ref) { zoom in
+    func setZoomScale(_ ref: ClipZoomRef, percent: Int) { setZoomScale([ref], percent: percent) }
+
+    func setZoomScale(_ refs: Set<ClipZoomRef>, percent: Int) {
+        changeZooms(refs) { $0.scale = Double(percent) / 100 }
+    }
+
+    func setZoomEase(_ ref: ClipZoomRef, easeIn: Bool, ms: Int) { setZoomEase([ref], easeIn: easeIn, ms: ms) }
+
+    func setZoomEase(_ refs: Set<ClipZoomRef>, easeIn: Bool, ms: Int) {
+        changeZooms(refs) { zoom in
             if easeIn { zoom.easeInMS = ms } else { zoom.easeOutMS = ms }
         }
     }
@@ -226,21 +323,24 @@ extension EditorState {
         ]
     }
 
-    /// The menu on a zoom's bar: how it frames, and taking it away.
+    /// The menu on a zoom's bar: how it frames, and taking it away. On a bar
+    /// that is one of several picked, every row acts on all of them.
     func zoomMenuRows(_ ref: ClipZoomRef) -> [MenuRow] {
-        guard let zoom = zoom(ref) else { return [] }
-        let percent = Self.zoomPercent(zoom)
-        var follow = MenuRow.toggle("Follow Cursor", isOn: zoom.followsCursor) {
-            self.setZoomFollowsCursor(ref, !zoom.followsCursor)
+        guard zoom(ref) != nil else { return [] }
+        let refs = zoomsActedOn(from: ref)
+        let reading = ClipZoomsReading(refs.compactMap { zoom($0) })
+        let allFollow = reading.followsCursor == true
+        var follow = MenuRow.toggle("Follow Cursor", isOn: allFollow) {
+            self.setZoomFollowsCursor(refs, !allFollow)
         }
-        follow.isEnabled = zoom.followsCursor || canFollowCursor(onClip: ref.layerID)
+        follow.isEnabled = canFollowCursor(refs)
         return [
             follow,
             .submenu("Zoom", Self.zoomScaleStops.map { stop in
-                .toggle("\(stop)%", isOn: stop == percent) { self.setZoomScale(ref, percent: stop) }
+                .toggle("\(stop)%", isOn: stop == reading.scalePercent) { self.setZoomScale(refs, percent: stop) }
             }),
             .separator,
-            .command("Delete Zoom", TimelineMenuKeys.delete, destructive: true) { self.removeZoom(ref) },
+            .command("Delete Zoom", TimelineMenuKeys.delete, destructive: true) { self.removeZooms(refs) },
         ]
     }
 
@@ -249,7 +349,12 @@ extension EditorState {
     func beginZoomDrag(_ ref: ClipZoomRef, grab: ZoomGrab) {
         guard let zoom = zoom(ref), !isClipLocked(ref.layerID) else { return }
         pauseDocument()
-        if selectedZoom != ref { pickZoom(ref) }
+        // A bar among several picked is carried alone and leaves the rest picked.
+        if !pickedZooms.contains(ref) {
+            pickZoom(ref)
+        } else if selectedZoom != ref {
+            selectedZoom = ref
+        }
         zoomDrag = ZoomDragSession(ref: ref, grab: grab, before: zoom, landed: zoom)
     }
 
@@ -362,8 +467,12 @@ extension EditorState {
     /// Whether a picked zoom owns presses on the picture: picked, and
     /// nothing playing. The clip's own outline and handles step aside, so
     /// there is one thing a press can be about.
+    ///
+    /// Several picked own nothing there: several boxes over one picture would
+    /// leave nobody sure which a press moves, so the canvas shows the picture
+    /// as it plays at the playhead and the clip keeps its own handles.
     var zoomOwnsPicture: Bool {
-        selectedZoom != nil && !isDocumentPlaying && zoomInHand != nil
+        selectedZoom != nil && pickedZooms.count <= 1 && !isDocumentPlaying && zoomInHand != nil
     }
 
     /// Whether the canvas is showing a picked zoom's box over the whole

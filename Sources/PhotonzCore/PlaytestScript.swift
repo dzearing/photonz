@@ -1031,6 +1031,22 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Fail unless no zoom is picked and the recording it was on still is:
     /// the zoom was let go, one step back, not the whole selection.
     case expectZoomLetGo
+    /// Fail unless exactly three zooms on the recording are picked together,
+    /// every one of their bars lit, with no zoom box on the picture.
+    case expectThreeZoomsPicked
+    /// Fail unless every picked zoom eases in over the same time and some zoom
+    /// left out of the pick eases in over another: one change reached exactly
+    /// the zooms picked.
+    case expectPickedZoomsEaseInAlike
+    /// Fail unless every zoom on the recording is picked, more than one of
+    /// them, with no zoom box on the picture.
+    case expectEveryZoomPicked
+    /// Fail unless the recording has no zooms left.
+    case expectNoZooms
+    /// Fail unless the recording has four zooms.
+    case expectFourZooms
+    /// Fail unless the recording has two zooms left and none is picked.
+    case expectTwoZoomsLeft
     /// Fail unless a zoom is picked with its box DOWN: the picture shows what
     /// the zoom does at the playhead, not the whole picture with the box.
     case expectZoomBoxDown
@@ -1540,6 +1556,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,
+             .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
+             .expectEveryZoomPicked, .expectNoZooms,
              .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
              .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
@@ -2752,7 +2770,7 @@ public enum PlaytestStep: Sendable, Equatable {
     /// double-click), so it reaches whatever SwiftUI view is under the pointer
     /// the way a hand's does: the timeline's top edge, a clip. Window points,
     /// top left, unless `space` says other.
-    case windowClick(at: PlaytestPoint, count: Int)
+    case windowClick(at: PlaytestPoint, count: Int, modifiers: [PlaytestModifier])
     /// A grip on the timeline, found by its name in the app's own register,
     /// pulled `by` points sideways in `steps` real mouse moves posted to the
     /// window, with the grip's drawn position read back after every move
@@ -4357,7 +4375,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case "windowClick":
             var at = try f.point("at")
             if fields["space"] == nil { at.space = .window }
-            self = .windowClick(at: at, count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1))
+            self = .windowClick(at: at, count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
+                                modifiers: try f.modifiers())
         case "dragGrip":
             self = .dragGrip(control: try f.string("control"),
                              by: CGFloat(try f.number("by")),

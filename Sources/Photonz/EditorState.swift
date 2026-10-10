@@ -1719,8 +1719,21 @@ final class EditorState {
     /// (`comp-video.html` §02). Picking a layer lets it go.
     var selectedEditPoint: TimelineEditPoint?
     /// The zoom region picked on a clip's Zoom lane (`EditorState+Zoom`).
-    /// Picking another layer lets it go.
-    var selectedZoom: ClipZoomRef?
+    /// Picking another layer lets it go. With several picked it is the one
+    /// clicked last, and setting it to one outside `pickedZooms` picks just
+    /// that one.
+    var selectedZoom: ClipZoomRef? {
+        didSet {
+            guard let zoom = selectedZoom else {
+                if !pickedZooms.isEmpty { pickedZooms = [] }
+                return
+            }
+            if !pickedZooms.contains(zoom) { pickedZooms = [zoom] }
+        }
+    }
+    /// Every zoom picked: Shift or Command click adds to it, the Zoom lane's
+    /// label picks the whole row. Always holds `selectedZoom` when there is one.
+    var pickedZooms: Set<ClipZoomRef> = []
     /// The picked zoom's box is up over the whole picture to be moved or
     /// drawn again. Picking a zoom puts it up; the playhead moving takes it
     /// down, so a scrub always shows what the zoom does (`EditorState+Zoom`).

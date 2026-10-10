@@ -1806,18 +1806,19 @@ private final class Run {
             await giveTheFrontBack(front)
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
                  + "posted to the window in \(steps) moves\(held)\(front.note)")
-        case .windowClick(let at, let count):
+        case .windowClick(let at, let count, let modifiers):
             // A click, or two in a row, posted to the window the way
             // `windowDrag` posts its press, so it lands on whatever SwiftUI
             // view is under the point. Each press carries its place in the
             // run, which is how AppKit tells a double-click from two clicks.
             let window = try requireWindow()
             let point = try windowPoint(at)
+            let flags = eventFlags(modifiers)
             var stamp = ProcessInfo.processInfo.systemUptime
             func event(_ type: NSEvent.EventType, clicks: Int, pressure: Float) -> NSEvent? {
                 stamp += 0.016
                 return NSEvent.mouseEvent(
-                    with: type, location: point, modifierFlags: [], timestamp: stamp,
+                    with: type, location: point, modifierFlags: type == .mouseMoved ? [] : flags, timestamp: stamp,
                     windowNumber: window.windowNumber, context: nil, eventNumber: 0,
                     clickCount: clicks, pressure: pressure)
             }
@@ -1841,8 +1842,9 @@ private final class Run {
             }
             await sleep(0.3)
             await giveTheFrontBack(front)
+            let held = modifiers.isEmpty ? "" : " holding " + modifiers.map(\.rawValue).joined(separator: "+")
             note(number, "windowClick", "\(count == 2 ? "double-click" : "\(count) click(s)") at "
-                 + "\(short(at.point)) \(at.space.rawValue), posted to the window\(front.note)")
+                 + "\(short(at.point)) \(at.space.rawValue)\(held), posted to the window\(front.note)")
         case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
@@ -4444,6 +4446,8 @@ private final class Run {
                      state: describe())
             case .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
+                 .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
+                 .expectEveryZoomPicked, .expectNoZooms,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
                  .expectZoomShowsItsBox:
@@ -4456,6 +4460,12 @@ private final class Run {
                     case .expectZoomPicked: try PlaytestZoom.expectPicked(editor)
                     case .expectZoomLetGo: try PlaytestZoom.expectLetGo(editor)
                     case .zoomAddAtPlayhead: try PlaytestZoom.addAtPlayhead(editor)
+                    case .expectThreeZoomsPicked: try PlaytestZoom.expectThreePicked(editor)
+                    case .expectPickedZoomsEaseInAlike: try PlaytestZoom.expectPickedEaseInAlike(editor)
+                    case .expectFourZooms: try PlaytestZoom.expectCount(editor, 4)
+                    case .expectEveryZoomPicked: try PlaytestZoom.expectEveryPicked(editor)
+                    case .expectNoZooms: try PlaytestZoom.expectCount(editor, 0, nonePicked: true)
+                    case .expectTwoZoomsLeft: try PlaytestZoom.expectCount(editor, 2, nonePicked: true)
                     case .expectZoomBoxDown: try PlaytestZoom.expectBoxDown(editor)
                     case .expectZoomScrubMatchesExport: try await PlaytestZoom.expectScrubMatchesExport(editor)
                     case .expectZoomEasesFrameByFrame: try await PlaytestZoom.expectEasesFrameByFrame(editor)
@@ -6048,6 +6058,8 @@ private final class Run {
                  .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,
+                 .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
+                 .expectEveryZoomPicked, .expectNoZooms,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
                  .expectZoomShowsItsBox,

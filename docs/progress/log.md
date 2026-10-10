@@ -21091,3 +21091,7 @@ Next: the first editor window's ~200 ms first build
 - A filter switch, by key or click, keeps the focused capture when the new filter shows it, else lands on its newest (`HistorySelection.carry`), jumping it into view with no sweep (`HistoryStripFocus.jumps`).
 - New walk step `expectHistory` (filter, focused kind, capture file name), read through `HistoryOverlayProbe`; walk `history-filter-command-arrows-walk`.
 - Full `Scripts/test.sh` hung again in Vision/HEIF; split runs all green. Logged on the open hang task.
+
+## 2026-10-10 — several zooms picked together
+
+Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the row, the panel shows shared values (Mixed where they differ), and the panel, right-click and Clip menu change or delete every picked zoom in one undo step. No zoom box with several picked. Walk: pick-several-zooms-walk. Next: moving several together rides with the timeline marquee task; a curve row joins once zooms have curves.

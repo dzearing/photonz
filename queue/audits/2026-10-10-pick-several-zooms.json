@@ -1,0 +1,29 @@
+{
+  "feature": "Pick several zooms and change or delete them together",
+  "epic": "video-transitions-motion",
+  "summary": "Shift or Command click adds zoom bars to the pick, a click on the Zoom lane's label picks every zoom on it, and the panel, the bar's right-click menu and Clip > Zoom rows then change or delete all of them in one undo step.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, add four zooms (playhead on the clip, right-click it, Add Zoom). Walk: Scripts/playtest/pick-several-zooms-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Click one zoom bar, then Shift click a second and Command click a third.", "shot": "2026-10-10-pick-several-zooms-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In the panel's Zoom section, pick 0.3s from Ease In." },
+    { "do": "Press Command Z, then Command Shift Z." },
+    { "do": "Click the word Zoom at the left of the Zoom lane.", "shot": "2026-10-10-pick-several-zooms-3.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click one bar, Shift click another, press Delete.", "shot": "2026-10-10-pick-several-zooms-4.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z, click the Zoom label, right-click any bar and choose Delete Zoom." }
+  ],
+  "evaluate": [
+    "With three picked, does Ease In saying Mixed tell you what you need, and is one pick from it setting all three what you expected?",
+    "Is clicking the word Zoom on the left an obvious enough way to pick the whole row, or would you look for it somewhere else?",
+    "With several picked the picture shows the clip's own frame and handles instead of a zoom box. Is that the right thing to see?",
+    "Do the picked bars read clearly as picked, and as separate bars, when they sit side by side?"
+  ],
+  "rough": [
+    "With several zooms picked the canvas shows no zoom box: it shows the picture as it plays at the playhead, with the clip's own outline and handles back, so a press there moves the clip. Pick one zoom again to get its box.",
+    "Dragging one bar of several picked carries only that bar; moving the group together is folded into dragging-a-box-on-the-timeline-picks-everything.",
+    "There is no curve row yet because zooms have no curve; when they get one it joins the shared rows (folded into every-transition-can-be-picked-from-presets-and).",
+    "A pick stays on one recording: Shift click on a zoom on another clip starts a new pick there.",
+    "Follow Cursor when mixed shows the word Mixed beside a dimmed switch; turning it on reaches every picked zoom whose recording kept the pointer.",
+    "No mock covers the Zoom lane, so there is no mock frame to set it beside."
+  ]
+}

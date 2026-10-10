@@ -310,6 +310,27 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     }
 }
 
+/// What several zooms picked together agree on: each setting the panel shows
+/// for them, or nil where they differ, which the panel reads as Mixed.
+public struct ClipZoomsReading: Equatable, Sendable {
+    /// How far in, as the whole percent the panel shows.
+    public var scalePercent: Int?
+    public var followsCursor: Bool?
+    public var easeInMS: Int?
+    public var easeOutMS: Int?
+
+    public init(_ zooms: [ClipZoom]) {
+        func shared<T: Equatable>(_ value: (ClipZoom) -> T) -> T? {
+            guard let first = zooms.first.map(value) else { return nil }
+            return zooms.allSatisfy { value($0) == first } ? first : nil
+        }
+        scalePercent = shared { Int(($0.scale * 100).rounded()) }
+        followsCursor = shared(\.followsCursor)
+        easeInMS = shared(\.easeInMS)
+        easeOutMS = shared(\.easeOutMS)
+    }
+}
+
 // MARK: - On the clip
 
 extension Layer {
@@ -520,6 +541,24 @@ extension PhotonzDocument {
         let kept = zooms.filter { $0.id != zoomID }
         updateLayer(id: id) { $0.zooms = kept.isEmpty ? nil : kept }
         return true
+    }
+
+    /// Change several zooms on a clip the same way, each kept sensible as
+    /// `updateZoom` keeps one. The caller makes it one undo step.
+    public mutating func updateZooms(onClip id: UUID, ids: Set<UUID>, cursorTrack: PointerTrack? = nil,
+                                     _ change: (inout ClipZoom) -> Void) {
+        let order = (layer(id: id)?.zooms ?? []).map(\.id).filter { ids.contains($0) }
+        for zoomID in order { updateZoom(onClip: id, id: zoomID, cursorTrack: cursorTrack, change) }
+    }
+
+    /// Take several zooms off a clip. Answers how many went.
+    @discardableResult
+    public mutating func removeZooms(onClip id: UUID, ids: Set<UUID>) -> Int {
+        guard let zooms = layer(id: id)?.zooms else { return 0 }
+        let kept = zooms.filter { !ids.contains($0.id) }
+        guard kept.count < zooms.count else { return 0 }
+        updateLayer(id: id) { $0.zooms = kept.isEmpty ? nil : kept }
+        return zooms.count - kept.count
     }
 
     /// Add the zooms `ClipZoom.suggestions` proposes for a clip's clicks.

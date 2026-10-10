@@ -616,17 +616,19 @@ struct PlaytestScriptTests {
     func windowClickStep() throws {
         let script = try decode("""
         { "steps": [ { "do": "windowClick", "at": [864, 763], "count": 2 },
-                     { "do": "windowClick", "at": [10, 20] } ] }
+                     { "do": "windowClick", "at": [10, 20], "modifiers": ["shift"] } ] }
         """)
-        guard case .windowClick(let at, let count) = script.steps[0],
-              case .windowClick(let at2, let count2) = script.steps[1] else {
+        guard case .windowClick(let at, let count, let modifiers) = script.steps[0],
+              case .windowClick(let at2, let count2, let modifiers2) = script.steps[1] else {
             Issue.record("windowClick"); return
         }
         #expect(at.point == CGPoint(x: 864, y: 763))
         #expect(at.space == .window)
         #expect(count == 2)
+        #expect(modifiers.isEmpty)
         #expect(at2.space == .window)
         #expect(count2 == 1)
+        #expect(modifiers2 == [.shift])
         #expect(script.steps[0].name == "windowClick")
         #expect(PlaytestStep.names.contains("windowClick"))
     }
