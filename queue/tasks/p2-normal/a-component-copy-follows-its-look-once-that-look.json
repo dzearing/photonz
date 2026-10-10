@@ -1,0 +1,33 @@
+{
+  "id": "a-component-copy-follows-its-look-once-that-look",
+  "title": "A component copy follows its look once that look is drawn, and a second question can be removed",
+  "goal": "Two rough edges in components with two questions (say Variant and Size). A copy set to an answer pair nobody has drawn shows the nearest drawing, and keeps showing that stand-in even after you draw the exact pair, until you pick the answer again. And once a second question is added there is no way to take it away. Both leave a person's copies or component wrong with no way to tell why.",
+  "epic": "ui-components",
+  "priority": "p2-normal",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:41.209Z",
+  "updated": "2026-10-10T02:37:52.266Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Source: log of done task a-component-can-have-a-variant-and-a-size-at-onc ('left rough: no way to remove a second question; a copy on an undrawn combination keeps the nearest drawing after the exact one is drawn, until picked again') and audit queue/audits/2026-10-09-variant-and-size.json rough. Code: Sources/PhotonzCore/ComponentVariantProperty.swift setInstanceVariantAnswer ~400-428 resolves the nearest drawing only at pick time; store the wanted pair and re-resolve when the original's drawings change (on Done). Add: Sources/Photonz/ComponentPanel.swift ~1608-1612 addComponentVariantProperty; no remove exists. Tests first in core.",
+  "acceptance": [
+    "Reproduced first: the steps below are run and the stand-in staying is written into this task's log",
+    "Make a component, add a second look and a Size question, drop a copy and pick an undrawn pair, then in Edit Original draw that pair and press Done: the copy now shows the new drawing with no click",
+    "A second question can be removed from the same place it was added, with one undo step, and copies fall back to the remaining question's answers",
+    "Walks cover both cases and run green at Next defaults",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:41.211Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.265Z",
+      "note": "seq 4020 -> 5"
+    }
+  ]
+}

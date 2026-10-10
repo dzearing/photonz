@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3890,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T16:31:10.566Z",
-  "updated": "2026-10-09T17:09:11.202Z",
+  "updated": "2026-10-09T17:09:41.332Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing new-window-opens-a-front-door-with-a-starting-te (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html step 4, tool strip ids tSelect, tFrame, tComp, tShape, tPen, tText, tMeasure, tHand (tZoom is in the mock too, but zoom is not a tool: the user, 2026-09-29, and UX-PATTERNS placement contract). WindowMode (Sources/PhotonzCore/WindowMode.swift) says folding tool groups is a later slice; ToolBarLayout/ToolBarFold is where the bar is built. Seen: Scripts/playtest/front-door-walk.json front-door-2-editor-sc.png shows the Design chip over the ordinary bar (select, marquee, crop, measure, arrow, line, pen, text, shapes, frame, path, fill).",
@@ -39,11 +39,20 @@
     {
       "t": "2026-10-09T17:09:11.201Z",
       "note": "walks none -> design-mode-tool-strip-walk, front-door-walk"
+    },
+    {
+      "t": "2026-10-09T17:09:41.261Z",
+      "note": "Built: WindowMode.toolStrip + WindowModes.designStrip (Select | Frame, Shapes, Pen, Text | Measure), ToolBarFold strip init (rest always under More, strip folds from its far end, lit swaps in only from the strip), EditorView.groupedFold uses it when not a video bar. 10 core tests; design-mode-tool-strip-walk ok with 5 real captures; design-ui-start, front-door, window-modes, tool-bar-fills-its-room, every-area-has-one-purpose, one-glass-tool-bar walks ok; Scripts/test.sh 12033 tests pass. Filed: a-component-tool-places-a-component-from-the-too (p1), a-hand-tool-pans-the-canvas-from-the-tool-bar (p1, plus the fold-order note), the-design-tool-bar-s-shape-slot-shows-a-rectang (p2). Commit 6a348455."
+    },
+    {
+      "t": "2026-10-09T17:09:41.330Z",
+      "note": "Design mode's tool bar holds Select | Frame, Shapes, Pen, Text | Measure, everything else under More with its key; leaving Design restores the bar. Verified by 10 core tests, design-mode-tool-strip-walk at Next defaults from the front door (tips read by pointer, real captures), related walks green, full suite 12033 passing. Component insert and Hand filed as p1 tool tasks. Commit 6a348455."
     }
   ],
   "walks": [
     "design-mode-tool-strip-walk",
     "front-door-walk"
   ],
-  "started": "2026-10-09T16:51:11.636Z"
+  "started": "2026-10-09T16:51:11.636Z",
+  "completed": "2026-10-09T17:09:41.331Z"
 }

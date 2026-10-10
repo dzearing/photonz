@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.371Z",
-  "updated": "2026-10-09T12:52:26.196Z",
+  "updated": "2026-10-09T15:27:23.883Z",
   "deps": [],
   "blockedBy": [],
   "notes": "measure-redline success item 4; no count exists (searched queue and docs/design/next-measure.md, 2026-10-08). User memory: primary use is UX redlining (measure gaps and sizes). Recent related: redline copy pastes as a picture in Chromium (task find-out-whether-the-redline-copy-pastes-as-a-pi, audit 2026-10-08-redline-paste.json); one-shot copy Shift Cmd C. Example walk: Scripts/playtest/redline-walk.json. Competitor counts come from their public documentation; nothing is installed and no account is made.",
@@ -31,6 +31,38 @@
     {
       "t": "2026-10-09T12:52:26.195Z",
       "note": "seq 7 -> 40"
+    },
+    {
+      "t": "2026-10-09T15:10:04.376Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T15:27:09.691Z",
+      "note": "owns these walks: capture-to-redline-steps-walk"
+    },
+    {
+      "t": "2026-10-09T15:27:09.751Z",
+      "note": "Counted 2026-10-09. Photonz 10 steps at Next defaults (walk capture-to-redline-steps-walk, green, 3 real -sc pictures, screen unlocked): ⇧⌘4, drag, ⇧⌘6, I, I (Size), click, I (Measure again: a landed measurement hands back to Select via finishCreating), I (Gap), click, ⇧⌘C. Shottr 9 from shottr.cc tips + release notes (ruler is one axis per arrow key + click to imprint, editor opens after area capture by default, ⌘C copies). CleanShot X has no measuring tool on its features page or changelog; measuring is PixelSnap 2, at least 5 steps if a size and a gap can share one screenshot, which neither site documents. Table: docs/design/next-measure.md section 13."
+    },
+    {
+      "t": "2026-10-09T15:27:09.810Z",
+      "note": "Harness: hotkeyEditLastCapture now adopts the picture editor when the newest capture is a picture (adoptCapturedPicture, matched on openedFileURL); before, only a recording was followed. Probe-only code, no app behaviour changed, so no audit."
+    },
+    {
+      "t": "2026-10-09T15:27:09.866Z",
+      "note": "Biggest extra step vs Shottr: re-picking Measure after the Size click. Removing it is under an hour (finishCreating(layer.id, tool: .measure) for Size and Gap), but it reverses the user's own rule (2026-08-22, 2026-09-15: every tool that makes something hands back to Select), so it went to a decision card instead of being changed. Recommended: Measure stays in hand after Size and Gap only. If approved: change addSizeMeasure/addGapMeasure finish, flip the walk's waitFor tool select + extra I to a single I, recount the table to 9, update the stale STICKY comment on EditorState.activeTool, grep walks that press I after a Size/Gap click."
+    },
+    {
+      "t": "2026-10-09T15:27:09.926Z",
+      "note": "Adversarial: a first-timer at Next defaults would not know ⇧⌘4 is swallowed by macOS until the system shortcut is turned off (one-time, not counted; CleanShot asks the same). The toast's Edit pill is the mouse path for step 3. Steady state is worse than first time: the mode is remembered, so after a session ending in Gap, I lands on Gap and Size is three more presses away (Gap, Alignment, Distance, Size) unless you click Size in the tool options. Left rough, logged here only: not a new defect, just the cycle order. Filed: a-measurement-layer-thumbnail-shows-the-same-num (layer thumbnails print 33 px and 60 px for a 16 px gap and 30 px height on a 2x capture)."
+    },
+    {
+      "t": "2026-10-09T15:27:23.880Z",
+      "note": "Counted: Photonz 10 steps from a region capture to a picture with a size and a gap on the clipboard (walk capture-to-redline-steps-walk, green at Next defaults), Shottr 9, CleanShot X cannot measure on its own (PixelSnap 2 at least 5, not fully documented). Table in docs/design/next-measure.md section 13, committed 6db2f0ce. The one extra step is re-picking Measure after a Size click, because every tool hands back to Select by the user's own rule; whether Measure should stay in hand after Size and Gap is on a decision card (recommended: yes, Size and Gap only)."
     }
+  ],
+  "started": "2026-10-09T15:10:04.374Z",
+  "walks": [
+    "capture-to-redline-steps-walk"
   ]
 }

@@ -1,0 +1,32 @@
+{
+  "id": "find-out-whether-a-forever-motion-shorter-than-t",
+  "title": "Find out whether a Forever motion shorter than the loop stutters",
+  "goal": "Every motion in an icon shares one loop as long as the longest motion, and a motion that ends early holds still until the loop starts over. Reading the code says a spinner set to Forever at 800 ms beside a 900 ms bell pauses for a tenth of a second every turn, on the canvas and in the exported SVG, which breaks the promise that a spinner loops with no stutter. Check it, and if it is so, make a Forever motion repeat at its own pace.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:41.109Z",
+  "updated": "2026-10-10T02:37:52.671Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Not reproduced in the app: code reading only, hence p2 look-into. One shared cycle: Sources/PhotonzCore/LayerMotion.swift motionCycleLengthMS / automaticMotionCycleLengthMS ~1525-1550 (deliberately ONE CYCLE, see comment and MotionStrip.swift). A motion that ends early holds its final value (~1006). SVG export writes the same cycle length: Sources/PhotonzCore/SVGMotionExport.swift ~311; in SVG each animate element can carry its own dur with repeatCount=indefinite. Mock icon-loop-wt.html: 'with Forever on it, a length becomes a rate'.",
+  "acceptance": [
+    "The case is run: one frame with a bell at its default 900 ms rotation and a spinner 0 to 360 degrees, Linear, Forever, 800 ms; the result (canvas and exported SVG in a browser) is written into this task's log with how it was measured",
+    "If the spinner pauses: a Forever motion repeats at its own length on the canvas and in the exported SVG, the timing strip shows that honestly, and a walk covers it at Next defaults",
+    "If it does not pause: the task closes with the evidence and no code change",
+    "Audit written under queue/audits/ if the app changed; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:41.111Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.670Z",
+      "note": "seq 4010 -> 13"
+    }
+  ]
+}

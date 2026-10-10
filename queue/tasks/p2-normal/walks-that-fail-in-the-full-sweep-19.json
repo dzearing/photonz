@@ -1,0 +1,66 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-19",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 3940,
+  "status": "done",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-09T17:58:59.179Z",
+  "updated": "2026-10-10T01:46:49.072Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-10T00:12:13Z: 829 of 831 walks passed in 210 minutes.\n\nFailing walks (2): option-drag-copies-a-clip-walk, version-row-name-walk\n\nFull output: queue/sweep/2026-10-09-134213.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T17:58:59.181Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-09T17:58:59.184Z",
+      "note": "rotating check 2026-10-09T17:58:59Z, 36 walks run from 798 onward in the rotation: version-row-name-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-10T00:12:13.917Z",
+      "note": "sweep 2026-10-10T00:12:13Z: 2 failing (option-drag-copies-a-clip-walk, version-row-name-walk)"
+    },
+    {
+      "t": "2026-10-10T01:12:14.110Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T01:12:20.329Z",
+      "note": "owns these walks: option-drag-copies-a-clip-walk, version-row-name-walk"
+    },
+    {
+      "t": "2026-10-10T01:46:39.152Z",
+      "note": "version-row-name-walk was WRONG, not broken: since fd2bb4da (2026-10-09, Edit Original refuses a copy of the component in its own space) dragging Save button while its original is open is refused ('Cannot go inside itself'). That commit gave five walks a doneEditingOriginal step and missed this one. Added the same step before the copy is placed; reworded the last describe note (the originals are no longer in the document's layer list after Done). The copy's row still reads 'Copy, Disabled', which is what the walk checks."
+    },
+    {
+      "t": "2026-10-10T01:46:39.211Z",
+      "note": "option-drag-copies-a-clip-walk was RIGHT: the app had a race. Reproduced 1 in 3 to 1 in 8 runs on its own (passed 10-06..10-08 sweeps, failed 10-09). With a temporary NSCursor.set spy: the badge flag was on but AppKit's display cycle (_NSTrackingAreaAKManager setCursorForMouseLocation, after the hover's re-render changes SwiftUI tracking areas) set the arrow 30-50ms after the hover, sometimes AFTER the single main-queue re-assert; no event monitor sees that pass, so the arrow stuck until the pointer next moved. A person who stops on a clip with Option held could see the same. Fix: EditorState+ClipBar reassertClipBarCopyCursor re-sets the badge at 0, 0.1s and 0.3s (only while it is still meant to be up). After: 0 failures in 21 runs of the probe variant."
+    },
+    {
+      "t": "2026-10-10T01:46:39.272Z",
+      "note": "Each walk run on its own and passed twice in a row (probe, screen unlocked, Screen Recording granted). Scripts/test.sh: 12119 tests passed."
+    },
+    {
+      "t": "2026-10-10T01:46:49.070Z",
+      "note": "Both failing walks pass on their own, twice in a row. version-row-name-walk was out of date (fd2bb4da refuses a copy of the component dropped into its own open original): it now presses Done first. option-drag-copies-a-clip-walk caught a real race: AppKit's display pass put the arrow back over the clip copy badge about one time in five. The badge is now re-set a frame and three frames later too (EditorState+ClipBar); 0 failures in 21 runs after. Scripts/test.sh green, commit 1b2fd19e."
+    }
+  ],
+  "standing": "walk-sweep",
+  "started": "2026-10-10T01:12:14.108Z",
+  "walks": [
+    "option-drag-copies-a-clip-walk",
+    "version-row-name-walk"
+  ],
+  "completed": "2026-10-10T01:46:49.071Z"
+}

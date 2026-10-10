@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 3900,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.419Z",
-  "updated": "2026-10-09T17:47:47.983Z",
+  "updated": "2026-10-09T17:48:14.438Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tool strip id tComp, title \"Component insert (C)\", style color:var(--comp); UX-PATTERNS D4 UI design. Strip lives in WindowModes.designStrip (Sources/PhotonzCore/WindowMode.swift): add .tool(.component) after .tool(.frame) once the Tool case exists. Key conflict: Tool.shortcutKey gives C to crop/trim. Acceptance of the strip task says every tool keeps its key in every mode, so no mode-dependent C.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-10-09T17:47:47.982Z",
       "note": "left rough (none clears the follow-up bar on its own; all are in the audit for the user to react to): a press places on the press, so dragging after it does not slide the new copy; no right hand panel section for the tool (the Library shelf is that place and picks the capsule too); More and Edit > Tools rows wear the system symbol the timeline's component track uses, since a menu row takes a system symbol."
+    },
+    {
+      "t": "2026-10-09T17:48:14.432Z",
+      "note": "Built and pushed (5ccaa34d): Component insert sits after Frame in the Design tool bar in the component violet, a pointer click picks it, a canvas click places the component the Library picked (else the last placed, else the first on the shelf) centred on the click, and the capsule over the bar names and swaps it; under More and in Edit > Tools elsewhere. Verified: 12045 tests, design-mode-tool-strip-walk and video-tool-bar-walk at Next defaults with real captures, audit 2026-10-09-component-tool. Waiting on one answer: the mock's C collides with Crop, so it ships on N and the letter is on a decision card (recommended: keep N)."
     }
   ],
   "walks": [

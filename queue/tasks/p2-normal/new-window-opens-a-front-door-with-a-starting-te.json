@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 240,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T05:48:58.793Z",
-  "updated": "2026-10-09T12:52:27.701Z",
+  "updated": "2026-10-09T16:40:03.174Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from the-empty-window-can-start-a-ui-design (2026-10-08), which added the Design UI row to the existing empty card and left the tile grid out by its own scope. Mock: docs/design/mocks/pages/ui-entry-wt.html steps 2 to 5 (#homeWin, #tileUI, #btnNew). The starter document is UIStarter.document (PhotonzCore/UIStarter.swift); EditorState.startUIDesign / newUIDesign open it. The user decided on 2026-09-15 that a starting choice is a mode preset, not a document type (work-out-whether-the-app-needs-project-types-at), so the tile sets the window mode and stores nothing in the document. Walk step startFromEmpty clicks card rows; a front door needs its own step. The prompt bar is agent work (agent-drivable is staged later), so it may ship as a disabled field or be a decision card.",
@@ -27,6 +27,32 @@
     {
       "t": "2026-10-09T12:52:27.700Z",
       "note": "seq 3840 -> 240"
+    },
+    {
+      "t": "2026-10-09T15:39:47.550Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T15:46:06.702Z",
+      "note": "Pre-build review: (1) A first-time user opening New Window sees four tiles and a primary button; picking a tile before pressing is a two-step flow, so double-clicking a tile also creates (Photoshop's New Document presets work the same way) and Return presses the primary. (2) The mock's prompt bar has no agent behind it (agent-drivable is staged later), so it ships drawn but disabled, as the task notes allow. (3) Mock copy over the 30-character chrome budget (UX-PATTERNS 4): 'Components, tokens, auto-layout' and 'Timeline, transitions, captions' (31 each), 'Start a project · pick a template' (33) and the prompt placeholder move into hover tips in the mock's words. (4) Modes are app-wide (WindowModeStore), so a tile swaps the one mode, which is the user's 2026-09-15 call that a template is a mode preset. Modes do not change the tool bar yet, so 'the tool bar is the UI set' is the Design mode chip plus the UI starter's own tools. (5) Scope: only New Window (.fresh) gets the front door; a guide's empty sample window keeps the card the Basics guide points at. (6) Recent is capture history (the same entries the history overlay strip shows), newest four, absent when there are none."
+    },
+    {
+      "t": "2026-10-09T16:31:17.886Z",
+      "note": "owns these walks: front-door-walk, design-ui-start-walk"
+    },
+    {
+      "t": "2026-10-09T16:39:47.215Z",
+      "note": "Built: front door at Next defaults (flag next-front-door). All four acceptance items verified by front-door-walk (tile and primary clicked by pointer, untitled-ui opens with Mode reading Design, front door closed) and design-ui-start-walk; ad-hoc walks proved New canvas -> sheet -> Create and Edit video -> New Video sheet -> Mode Video. Light mode exposed white-on-white system prominent buttons in an inactive window; fixed with an explicit accent style. Rough items: tool strip filed as design-mode-puts-the-ui-tool-strip-in-the-tool-b (p1, mock difference); budget moves under UX-PATTERNS 4; left rough (log only): the Recent hover action row was built but not driven by a walk, and the harness photographs empty windows as the front door now in blank-canvas/chrome-says-labels/new-empty-video walks (all green)."
+    },
+    {
+      "t": "2026-10-09T16:40:03.172Z",
+      "note": "New Window opens the front door at Next defaults (flag next-front-door): Open and the primary button in the title bar, a dimmed prompt bar, four templates, Recent captures. Design UI renames the button New UI canvas, opens untitled-ui in its own window in Design mode, and the front door closes itself. Verified by front-door-walk and design-ui-start-walk (pointer clicks, no flags), ad-hoc New canvas and Edit video walks, full suite 12023 green. Commit f5b35f5e. Audit queue/audits/2026-10-09-front-door.json. Follow-up: design-mode-puts-the-ui-tool-strip-in-the-tool-b."
     }
-  ]
+  ],
+  "started": "2026-10-09T15:39:47.548Z",
+  "walks": [
+    "front-door-walk",
+    "design-ui-start-walk"
+  ],
+  "completed": "2026-10-09T16:40:03.173Z"
 }

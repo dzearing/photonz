@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 3910,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T14:22:50.271Z",
-  "updated": "2026-10-09T20:39:14.360Z",
+  "updated": "2026-10-09T20:39:42.296Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while doing mirror-across-center-copies-a-shape-about-the-mi (2026-10-09). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 491 #layerMenu. Union already exists as right-click Combine Shapes > Join (PathCombining.swift); Outline stroke (stroke to filled path) does not exist anywhere yet. Center on the artboard = align to the containing frame centre both ways; Arrange already aligns in Frame. Rows live in Sources/PhotonzCore/LayersPanelHeader.swift MenuRow + Sources/Photonz/LayersPanelHeaderControls.swift.",
@@ -39,11 +39,16 @@
     {
       "t": "2026-10-09T20:39:14.359Z",
       "note": "Audit rough items, none filed: Center key (settled by the Photoshop-parity answer of 2026-07-05), live Union (settled by two-shapes-become-one-join-them-cut-one-out-keep), Title Case (UX-PATTERNS 7), SF glyphs (UX-PATTERNS 8) are settled differences. Left rough, not filed: Union is both its own row (with the mock's key) and Combine Shapes > Join, an overlap asked about in the audit's evaluate list rather than guessed; a drawn box or oval arrives with no line at defaults, so Outline Stroke is dimmed until one is added, which is correct; a thick line on a tiny shape outlines to a solid shape the size of the fill (same picture)."
+    },
+    {
+      "t": "2026-10-09T20:39:42.294Z",
+      "note": "Layers panel menu now has Center on the Artboard, then a divider, Union (Option Command U) and Outline Stroke (Shift Command O), under Mirror Across Center as icon-draw-wt.html draws them; each also in the Layer menu and a shape's right-click menu under the same name (flag next-icon-shape-commands, on in Next). Center has no key since Option Command C is Canvas Size. Core tested first (CenterOnArtboard.swift, OutlineStroke.swift, which outlines a shape's own stroke and its Borders); full suite 12110 tests green. Walks layers-menu-icon-rows-walk and layers-menu-icon-rows-right-click-walk pass at Next defaults with real pictures; audit queue/audits/2026-10-09-layers-menu-icon-rows.json. Commit 621eefd0."
     }
   ],
   "started": "2026-10-09T20:04:50.882Z",
   "walks": [
     "layers-menu-icon-rows-walk",
     "layers-menu-icon-rows-right-click-walk"
-  ]
+  ],
+  "completed": "2026-10-09T20:39:42.295Z"
 }

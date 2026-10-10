@@ -1,0 +1,52 @@
+{
+  "id": "capture-to-a-pasted-redline-takes-no-more-steps-after-a-size-or-gap-click-should",
+  "taskId": "capture-to-a-pasted-redline-takes-no-more-steps",
+  "question": "After a Size or Gap click, should the Measure tool stay in your hand so the next click measures the next thing?",
+  "context": "Counted on 2026-10-09: Photonz takes 10 steps from a region capture to a picture with a size and a gap on the clipboard, Shottr takes 9, CleanShot X cannot measure on its own. Photonz loses its step because a landed measurement hands back to Select, so the second measurement starts by picking Measure up again. Shottr made the opposite choice on purpose (its notes: keeps selected tool after the object is created).",
+  "options": [
+    {
+      "id": "a",
+      "label": "Measure stays in hand after Size and Gap, nothing new picked",
+      "summary": "After a Size or Gap click lands, the tool stays Measure in the same mode, so the next click measures the next element or gap. The numbers you just placed are not picked, so the panel shows the tool, not them. V or Escape puts the tool down. Distance still hands you the caliper it drew, as now. Capture to a pasted redline becomes 9 steps, level with Shottr.",
+      "pros": [
+        "One step fewer every time you measure two things, which a redline almost always does",
+        "Same as Shottr and the Photoshop ruler: the tool you picked stays picked"
+      ],
+      "cons": [
+        "Breaks the rule you asked for on 2026-09-15 that every tool hands back to Select, for Measure alone",
+        "Arrow keys no longer nudge the measurement you just placed until you press V and click it"
+      ],
+      "mitigation": "Only the click to commit modes (Size and Gap) stay; Distance, which you place by hand and often want to adjust, still hands back."
+    },
+    {
+      "id": "b",
+      "label": "Keep handing back to Select after every measurement",
+      "summary": "Nothing changes. Each measurement lands picked with the pointer tool in hand, and measuring a second thing starts with I. Photonz stays at 10 steps to Shottr 9.",
+      "pros": [
+        "Every tool in the app ends the same way",
+        "The measurement you just placed is picked, ready to nudge or rename"
+      ],
+      "cons": [
+        "One step more than Shottr, so the success item stays unmet"
+      ],
+      "mitigation": "The table in the measure design notes keeps the count, so the gap is known.",
+      "declines": true
+    },
+    {
+      "id": "c",
+      "label": "A region capture opens straight in the editor",
+      "summary": "Instead of the corner toast saying Copied to clipboard, finishing a region drag opens the capture in an editor window, as Shottr does. Measure still hands back to Select. Capture to a pasted redline becomes 9 steps.",
+      "pros": [
+        "Saves the open step for anything you go on to mark up"
+      ],
+      "cons": [
+        "Every capture you only meant to paste now opens a window you have to close",
+        "Changes the toast you designed for capture"
+      ],
+      "mitigation": "Could be a setting, off by default, but then the default count is still 10."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-09T15:20:58.875Z"
+}

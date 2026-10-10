@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 3920,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T15:21:28.025Z",
-  "updated": "2026-10-10T00:12:14.154Z",
+  "updated": "2026-10-10T00:26:06.537Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-09 by task capture-to-a-pasted-redline-takes-no-more-steps. Command: Scripts/playtest.sh Scripts/playtest/capture-to-redline-steps-walk.json --no-build. Log: the newest capture in history: document 1440x960 at pixelScale 2.0. Canvas chips and the Measurements list read Gap 16 px, Width 124 px, Height 30 px; the layer row thumbnails in 9-size-and-gap-sc.png (copied to queue/audits/2026-10-09-capture-to-redline-size-and-gap.png) read 33 px and 60 px, about 2x. The thumbnail render (EditorState+LayersPanel.swift layerThumbnail path) probably draws the chip label in device pixels without dividing by pixelScale. Not yet traced in code.",
@@ -38,10 +38,15 @@
     {
       "t": "2026-10-10T00:25:57.956339Z",
       "note": "left rough: a Size measurement's tile shrinks its chip past legibility (124 px row is a red smudge at 80 px). Not filed: the tile is a picture of the layer, not a readout, and the Measurements list beside it prints the number."
+    },
+    {
+      "t": "2026-10-10T00:26:06.535Z",
+      "note": "Single-layer renders (layers-list thumbnail, drag preview, Copy Layer) now keep the capture's pixelScale (DocumentRenderer.renderSprite / render(only:)). 4 unit tests in RetinaMeasureSpriteTests; full suite 12114 green; capture-to-redline-steps-walk real-window picture shows rows reading 16 px and 30 px matching the canvas chips (were 33/60). 1x unchanged (pixelScale 1 is the old default). Audit queue/audits/2026-10-09-retina-measure-thumbnails.json. Commit f7d31f72."
     }
   ],
   "walks": [
     "capture-to-redline-steps-walk"
   ],
-  "started": "2026-10-10T00:12:14.148Z"
+  "started": "2026-10-10T00:12:14.148Z",
+  "completed": "2026-10-10T00:26:06.536Z"
 }

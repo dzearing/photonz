@@ -1,0 +1,33 @@
+{
+  "id": "a-spinner-can-turn-about-the-middle-of-the-artbo",
+  "title": "A spinner can turn about the middle of the artboard",
+  "goal": "A rotation can turn a shape about its own centre or its top or bottom, but not about the artboard, so a spinner arc that is not centred in its frame orbits instead of spinning, and dragging the pivot does not snap to the middle. The loop walkthrough picks Artboard from the Around row in one click.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:41.005Z",
+  "updated": "2026-10-10T02:37:52.553Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html step 4 'the Around row, and choose Artboard', crosshair at 12,12. Code: pivot stored relative to the layer box, named spots only Its centre/Top centre/Bottom centre in Sources/PhotonzCore/LayerMotion.swift ~574-596; menu Sources/Photonz/MotionListInspector.swift ~491; pivot drag has no snapping, Sources/Photonz/CanvasMotionPivot.swift ~219-228. SVG export: Sources/PhotonzCore/SVGMotionExport.swift. Tests first in core.",
+  "acceptance": [
+    "On an icon frame at Next defaults, the Rotation's Around row offers Artboard, and picking it turns the layer about the frame's centre",
+    "Dragging the pivot on the canvas snaps to the frame centre and to the shape's own centre",
+    "An exported animated SVG turns about the same point as the canvas",
+    "A walk adds Rotation to an off-centre arc, picks Artboard, and runs green at Next defaults",
+    "Audit written under queue/audits/ with the canvas beside icon-loop-wt.html step 4; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:41.007Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.552Z",
+      "note": "seq 4000 -> 11"
+    }
+  ]
+}

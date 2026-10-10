@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.204Z",
-  "updated": "2026-10-09T12:52:26.037Z",
+  "updated": "2026-10-09T14:29:22.508Z",
   "deps": [],
   "blockedBy": [],
   "notes": "icon-vector success item 4: 'Mirror across center (Shift Cmd M) copies a shape exactly about the artboard centre'. Mock: docs/design/mocks/pages/icon-draw-wt.html lines ~142 and ~493 (#layerMenu: Group selection, Mirror across center Shift Cmd M, Center on the artboard, divider, Union, Outline stroke) and step 7 ('the shoulder is copied to 15, 10, reflected about the artboard's center line'). No Mirror exists in Sources today (grep -i mirror). Shift Cmd M is bound only on timed documents: EditorCommands.swift:1359 'timed ? KeyboardShortcut(\"m\", [.command,.shift]) : nil' (Previous Marker), so the key is free on pictures. The Layers panel menu landed on 2026-10-08 (task the-layers-header-carries-make-component-and-a-p, commit 9916955e). Geometry in PhotonzCore, tested first (a pure reflect of a layer's frame and path about x = c). Do NOT take the mock's Center on the artboard Option Cmd C: that key is Canvas Size (Photoshop parity), note it in rough. Ship behind a Next flag on by default.",
@@ -32,6 +32,32 @@
     {
       "t": "2026-10-09T12:52:26.036Z",
       "note": "seq 5 -> 20"
+    },
+    {
+      "t": "2026-10-09T13:45:22.132Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T13:54:06.310Z",
+      "note": "Adversarial review before building: (1) a first-time user finds it where the mock puts it, the Layers panel menu under Group Selection, plus Layer menu next to Duplicate Layer and the shape's right-click under Duplicate; a Photoshop/Illustrator user expects a reflect-copy (Illustrator Reflect + Copy, Figma Flip), and ⇧⌘M is free on pictures. (2) 'which centre': nearest frame above the layer, canvas middle with none; a picked frame mirrors about the screen it sits on, never itself. (3) Offered only on documents without time: on video ⇧⌘M is Previous Marker and a copy would carry its keyed motion unreflected. (4) Look (shadows) is not reflected: a set of icons is lit from one side. (5) Reflect is exact in data for paths (points and handles), lines/arrows (ends, bend side), rounded boxes (left/right corners swap); pictures and text are flipped instead. Measurements, magnifiers, lenses and sounds are not offered. Mock's Center on the artboard (⌥⌘C) not taken: that key is Canvas Size (Photoshop parity)."
+    },
+    {
+      "t": "2026-10-09T14:23:22.571Z",
+      "note": "owns these walks: mirror-across-center-walk, mirror-across-center-right-click-walk"
+    },
+    {
+      "t": "2026-10-09T14:29:22.437Z",
+      "note": "Left rough, in this log only: the Layers panel menu opens to the right of its dots and runs past the window edge (pre-existing, not new); the harness reads a leading divider row in that menu (pre-existing, also in the 2026-10-08 walk log). Follow-up filed: the-layers-panel-menu-carries-the-icon-mock-s-ce (mock's other three rows). Commit 2ef62873."
+    },
+    {
+      "t": "2026-10-09T14:29:22.506Z",
+      "note": "Mirror Across Center (Shift Command M) ships in Next at defaults: Layer menu under Duplicate Layer, Layers panel menu under Group Selection, shape right-click under Duplicate; copy reflected about its frame's middle (canvas middle with no frame), picked, one undo. Core MirrorAcrossCenter.swift with 20 tests; full suite 12009 green; walks mirror-across-center-walk and mirror-across-center-right-click-walk green at Next defaults, reading the copy at frame 12,7 (centre 15,10) size 6; shift-m-jumps-between-markers-walk still green on video. Audit queue/audits/2026-10-09-mirror-across-center.json. Commit 2ef62873."
     }
-  ]
+  ],
+  "started": "2026-10-09T13:45:22.129Z",
+  "walks": [
+    "mirror-across-center-walk",
+    "mirror-across-center-right-click-walk"
+  ],
+  "completed": "2026-10-09T14:29:22.507Z"
 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 3950,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T20:03:37.297Z",
-  "updated": "2026-10-10T02:09:20.763Z",
+  "updated": "2026-10-10T02:09:29.720Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-09 while fixing find-out-whether-edit-original-s-done-button-dis. Walk (kept at /tmp/donecheck/grid.json; steps: blank 1440x1024, appearance light, action showGrid, action adjustGrid, wait 1, snapshot light) run with Scripts/playtest.sh --no-build: light-sc.png shows the Adjust Grid bar's Done as nearly invisible white words on a near-white pill (queue/audits/2026-10-09-adjust-grid-done-behind-light-sc.png). Same cause as Edit Original's Done: .borderedProminent in an inactive window on macOS 26. The fix landed for that one is .buttonStyle(.activeProminent) (Sources/Photonz/DesignSystem/ActiveProminentButtonStyle.swift: prominent while appearsActive, .bordered otherwise). Remaining .borderedProminent uses: EditorView.swift (Adjust Grid Done ~901, Crop ~2486, Trim ~2536), VideoEditorView.swift (Done ~616, ~727), CaptionsInspector.swift (~126, ~162), Welcome/WelcomeView.swift. These files are shared, so the change reaches Current too: say in the log whether that is wanted (it is a legibility fix; the porting rule only forbids Next-only work leaking). Not done in the original task because that task was scoped to Edit Original and Current behaviour is off limits without the task saying so.",
@@ -51,10 +51,15 @@
     {
       "t": "2026-10-10T02:09:20.762Z",
       "note": "verified: new walk blue-confirm-buttons-read-behind-walk (no flags) behind = grey Done with dark words (light) and light words (dark), grey Crop with dark words; the same walk with front:true = blue Done and blue Crop. Scripts/test.sh green (12119 tests, legibility gate clean). Audit rough lines stay in the audit, none filed: same-look-as-Cancel behind is the system's own background look"
+    },
+    {
+      "t": "2026-10-10T02:09:29.718Z",
+      "note": "Seven editor confirm buttons (Adjust Grid Done, Crop, Trim, video trim/crop Done, Add Captions, Rewrite) use .activeProminent: blue in front, grey readable bordered behind. Verified by blue-confirm-buttons-read-behind-walk at Next defaults (light + dark behind) and a front run (blue unchanged); tests green. Commit 6cee9a47; audit 2026-10-09-blue-confirm-buttons-read-behind.json"
     }
   ],
   "walks": [
     "blue-confirm-buttons-read-behind-walk"
   ],
-  "started": "2026-10-10T01:59:35.037Z"
+  "started": "2026-10-10T01:59:35.037Z",
+  "completed": "2026-10-10T02:09:29.719Z"
 }

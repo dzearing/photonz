@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 280,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T12:37:27.207Z",
-  "updated": "2026-10-09T20:04:12.758Z",
+  "updated": "2026-10-09T20:04:22.380Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-09 while building edit-original-shows-a-live-copy-above-the-varian. Command: Scripts/playtest.sh Scripts/playtest/starter-button-looks-walk.json --no-build, then compare /tmp/photonz-playtest/starter-button-looks/9-grid-dark-sc.png (grey Done pill beside the Button title) with 9-grid-light-sc.png / 12-clicked-away-light-sc.png (title reads only the mark and Button, no Done; crop in queue/audits/2026-10-09-done-missing-light-crop.png). Also in the earlier audit picture queue/audits/2026-10-09-variant-grid-panel-light-sc.png, so it predates the live copy. Walks keep the probe window non-key, so this is the inactive look of .borderedProminent (OriginalSpaceTitleBar in Sources/Photonz/EditorState+OriginalSpace.swift:141). Not confirmed: what a person sees with their own window inactive in light mode.",
@@ -47,11 +47,16 @@
     {
       "t": "2026-10-09T20:04:12.757Z",
       "note": "Fix: ActiveProminentButtonStyle (.activeProminent) is .borderedProminent while appearsActive and .bordered otherwise; Done in OriginalSpaceTitleBar uses it. Verified with walks: behind light = grey pill dark words, behind dark = grey pill light words, front light/dark = blue unchanged. Walk pictures: PlaytestCaptureLedger records which pictures show the window behind (PlaytestHarness.windowIsBehind = !NSApp.isActive || no key window), done.json gets behindPictures + behindLabel, the Window captures line says how many, playtest.sh prints the label for shotNote (TDD: 4 new ledger tests). New walk edit-original-done-reads-behind-walk. Follow-up filed for the other blue buttons (shared code, reaches Current): blue-done-crop-and-trim-buttons-stay-readable-wi."
+    },
+    {
+      "t": "2026-10-09T20:04:22.378Z",
+      "note": "Reproduced and fixed: Edit Original's Done vanished in light mode with the window behind another app (white on white, confirmed against a front:true run). Done now uses .activeProminent (blue in front, system bordered grey behind); verified by walks in light and dark, behind and in front. Walk pictures now record and label when they show the window behind (ledger + done.json behindLabel + playtest.sh line), unit tested; Scripts/test.sh green (12079). Commit 21ded16c. Other blue buttons filed as blue-done-crop-and-trim-buttons-stay-readable-wi."
     }
   ],
   "walks": [
     "edit-original-done-reads-behind-walk",
     "starter-button-looks-walk"
   ],
-  "started": "2026-10-09T19:47:52.289Z"
+  "started": "2026-10-09T19:47:52.289Z",
+  "completed": "2026-10-09T20:04:22.379Z"
 }

@@ -5,11 +5,11 @@
   "epic": "icon-vector",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.288Z",
-  "updated": "2026-10-09T14:54:58.091Z",
+  "updated": "2026-10-09T14:55:16.970Z",
   "deps": [],
   "blockedBy": [],
   "notes": "icon-vector success item 1: 'every anchor and handle stays draggable, and Shift Cmd J closes the path'. Open thread in manager report 2026-10-08-0639: 'Close Path has no key (Shift Cmd J is New Layer via Cut)'. Today: EditorCommands.swift:1745 New Layer via Cut, .keyboardShortcut(\"j\", [.command,.shift]), disabled unless canCutSelectionToLayer (needs a marquee). Close Path is the retitled Turn Into Path row (EditorCommands.swift ~1825-1837, turnSelectionIntoPathMenuItem; EditorState+LayerOps.swift:634 Close Path; PathClosing.swift). Pattern for a key that moves by context: the timed ? shortcut : nil idiom at EditorCommands.swift:1359. Photoshop parity memory: keep Photoshop's meaning wherever Photoshop has one, which is why the marquee case keeps New Layer via Cut.",
@@ -53,10 +53,15 @@
     {
       "t": "2026-10-09T14:54:58.090Z",
       "note": "left rough (no task, under the bar or already covered): question on every key press until silenced (audit evaluate item for the user); Shift Cmd J does nothing mid-Pen-draw (finish with Return first; audit evaluate item); the mock's panel Close path button is covered by open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h."
+    },
+    {
+      "t": "2026-10-09T14:55:16.968Z",
+      "note": "Shift Cmd J runs Layer > Close Path with one open outline picked and no marquee, New Layer via Cut with a marquee; menu bar prints the key on one row only (PathClose.shiftCommandJ, tested; EditorCommands, LayerCommandMenu). Walk shift-command-j-closes-a-path-walk green at Next defaults with live menu readings for both cases; neighbour walks and Scripts/test.sh (12012 tests) green. Audit queue/audits/2026-10-09-shift-command-j-closes-an-open-path.json."
     }
   ],
   "started": "2026-10-09T14:39:24.329Z",
   "walks": [
     "shift-command-j-closes-a-path-walk"
-  ]
+  ],
+  "completed": "2026-10-09T14:55:16.969Z"
 }

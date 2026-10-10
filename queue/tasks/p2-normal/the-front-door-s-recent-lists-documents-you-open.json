@@ -1,0 +1,33 @@
+{
+  "id": "the-front-door-s-recent-lists-documents-you-open",
+  "title": "The front door's Recent lists documents you opened",
+  "goal": "The new window's front door has a Recent section, but it shows only the last few captures, so a UI design or edited picture you saved yesterday cannot be reopened from there, and the app has no list of recent documents anywhere. The entry walkthrough's Recent is your recent documents.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 9,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:41.415Z",
+  "updated": "2026-10-10T02:37:52.495Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Source: rough line in queue/audits/2026-10-09-front-door.json ('Recent shows capture history ... not every document you have opened'). Mock: docs/design/mocks/pages/ui-entry-wt.html step 2 ~290-300, ~360. Code: Sources/Photonz/FrontDoorView.swift ~197-204 reads capture.store.entries. No Open Recent anywhere in Sources: NSDocumentController.recentDocumentURLs is the Mac's own list if the app's documents go through it; check before building a second list. Open Recent belongs in File (placement contract).",
+  "acceptance": [
+    "Saving a document and opening a new window at Next defaults shows that document in Recent, with its thumbnail and name, and clicking it opens it",
+    "Recent captures still reach the front door the way the mock draws them, or the audit says where they went and why",
+    "File > Open Recent lists the same documents, with Clear Menu",
+    "A walk saves a document, opens a new window and reopens it from Recent, green at Next defaults",
+    "Audit written under queue/audits/ with the front door beside ui-entry-wt.html step 2; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:41.417Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.494Z",
+      "note": "seq 4040 -> 9"
+    }
+  ]
+}

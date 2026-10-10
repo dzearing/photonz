@@ -1,0 +1,33 @@
+{
+  "id": "detached-sound-can-be-put-back-into-its-picture",
+  "title": "Detached sound can be put back into its picture",
+  "goal": "After you detach a recording's sound onto its own track there is no way to put it back except undo, which also throws away everything done since. The cutting walkthrough turns the Detach button into Re-attach audio once the sound is its own layer, so a person can join them again whenever they like.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.535Z",
+  "updated": "2026-10-10T02:37:52.209Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-cut-wt.html line ~334, data-set '#btnDetachLb=Re-attach audio' (steps 2 onward). The mock draws it, so no card. Code: only detachSound() exists, Sources/Photonz/EditorState+Audio.swift ~81, menu at Sources/Photonz/EditorCommands.swift ~1001. Nothing in docs/design/video-audio.md mentions reattach. Push the join logic into PhotonzCore with tests first. Decide (and say in the audit) what happens when the sound was moved off-sync: the simplest honest answer is it snaps back in step. Menu row placement follows the placement contract in UX-PATTERNS.md (a verb goes in the menu bar and right-click).",
+  "acceptance": [
+    "On a video at Next defaults: pick a recording, detach its sound, then the same button reads Re-attach audio, and pressing it puts the sound back under its picture, lined up with it, as one undo step",
+    "Re-attach is also on the sound clip's right-click menu and in the menu bar beside Detach",
+    "If the detached sound was moved or trimmed, Re-attach still puts it back in step with the picture, and the result is described in the audit",
+    "A walk detaches and re-attaches a recording's sound and runs green at Next defaults",
+    "Audit written under queue/audits/ with pictures before and after; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.537Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.208Z",
+      "note": "seq 3940 -> 80"
+    }
+  ]
+}

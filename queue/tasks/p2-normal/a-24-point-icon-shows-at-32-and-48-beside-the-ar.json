@@ -1,0 +1,32 @@
+{
+  "id": "a-24-point-icon-shows-at-32-and-48-beside-the-ar",
+  "title": "A 24 point icon shows at 32 and 48 beside the artboard too",
+  "goal": "The preview strip beside an icon frame only shows sizes at or below the frame's own, so a 24 point icon shows at 16 and 24 and never at 48, which the icon success list and the drawing walkthrough both promise. Designers check a 24 icon at 32 and 48 as well, on a dark chip for one of them, as the mock draws.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.796Z",
+  "updated": "2026-10-10T02:37:52.612Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html #igSizes step 11 (16, 24, 32, 48 with 32 on a dark chip). Answered card see-an-icon-at-the-size-it-will-really-be-used ('strip') promised 16 to 64. Code: Sources/PhotonzCore/IconPreviews.swift sides(forFrameSide:) ~51-56 deliberately keeps only sizes at or below the frame ('Nothing bigger'), test pins it at Tests/PhotonzCoreTests/IconPreviewTests.swift:44 (expects [16, 24]). Chips all use .fill(.quaternary) in Sources/Photonz/IconPreviewsStrip.swift chip(). The mock is the floor: change the rule, update the test first.",
+  "acceptance": [
+    "A new 24 point icon frame at Next defaults shows previews at 16, 24, 32 and 48, updating as you draw",
+    "One chip is dark as in icon-draw-wt.html step 11, so a light glyph can be checked",
+    "16 and 32 point frames show the sizes the mock implies for them, and the rule is written in the audit",
+    "Audit written under queue/audits/ with the strip beside the mock; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.798Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.611Z",
+      "note": "seq 3980 -> 12"
+    }
+  ]
+}

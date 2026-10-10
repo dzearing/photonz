@@ -1,0 +1,33 @@
+{
+  "id": "captions-language-can-be-picked-before-captions",
+  "title": "Captions language can be picked before captions are written",
+  "goal": "The captions section offers only Add Captions until captions exist, and its language is fixed to US English until then, so someone speaking another language gets wrong captions first and has to switch and transcribe again. The captions mock puts Language above the button, so it is chosen first.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.435Z",
+  "updated": "2026-10-10T02:37:52.151Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-captions.html ~244-256 (Language and Safe areas above Generate). Code: Sources/Photonz/CaptionsInspector.swift lookBody ~32-39, `else if !editorState.hasCaptions { addCaptionsButton }` hides `language`. The setting defaults to en-US in Sources/Photonz/EditorState+Captions.swift ~94-96. Safe areas row (`guides`) may also belong above, per the mock: decide from the mock and the one-purpose rule, say which in the audit. Keep copy short (UX-PATTERNS section 4).",
+  "acceptance": [
+    "On a video with no captions at Next defaults, the Captions section shows the Language row above Add Captions, as video-captions.html draws it",
+    "Picking a language there and pressing Add Captions writes the captions in that language, and the row keeps that choice afterwards",
+    "With captions already written the section looks exactly as it does today",
+    "A walk opens a video, reads the Language row before Add Captions, and runs green at Next defaults",
+    "Audit written under queue/audits/ with a picture of the empty section beside the mock; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.437Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.150Z",
+      "note": "seq 3930 -> 70"
+    }
+  ]
+}

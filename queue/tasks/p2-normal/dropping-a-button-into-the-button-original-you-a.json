@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T06:59:30.272Z",
-  "updated": "2026-10-09T12:52:25.964Z",
+  "updated": "2026-10-09T13:29:11.998Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by an-instance-s-properties-match-the-variants-mock on 2026-10-09. Reproduced with the walk saved at queue/evidence/2026-10-09-selfdrop-walk.json: Scripts/playtest.sh queue/evidence/2026-10-09-selfdrop-walk.json --no-build -> status ok, 4 real captures in /tmp/photonz-playtest/selfdrop. Steps: blank 1440x1024; showComponentShelf; dragTile Button to [420,300]; action editPickedComponentOriginal; dragTile Button to [600,600] (panel rows then: Button (layer, copy), Button (group, shut, original): the copy sits in the space beside the original); dragTile Card to [900,300]; action doneEditingOriginal. Result in 4-back-sc.png: toast Updated 1 copy of Button; the copy on the page is now a ~300x230 blue box with the Card in its top right, the label Button, and a component mark in its bottom left (the nested copy of itself). Swap already guards against a component holding itself (componentSwapChoices dims it); the drop into the original space does not. Code: EditorState+OriginalSpace.swift (editOriginal / finishEditingOriginal), the drop path in EditorState+Components.swift placeComponent / insertStarterComponent. The existing component-versions-walk and tutorial walks also drop tiles while the space is open, so check them when fixing.",
@@ -35,6 +35,44 @@
     {
       "t": "2026-10-09T12:52:25.963Z",
       "note": "seq 1 -> 10"
+    },
+    {
+      "t": "2026-10-09T12:54:15.425Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T13:28:43.617Z",
+      "note": "owns these walks: a-component-never-holds-itself-walk, component-versions-walk, place-a-version-walk, dock-component-first-walk, button-states-journey-walk, tool-and-library-dropdowns-open-on-a-click-walk"
+    },
+    {
+      "t": "2026-10-09T13:28:58.156Z",
+      "note": "Adversarial pass before building: a Figma user expects a drop onto a main component to go inside it and a drop beside it to stay outside; our space has no 'outside' (Done folds its whole page into the original), so the beside-drop is refused with a note saying where it would work rather than growing the original. Decided without a card: acceptance allows 'does not grow the original'; the audit asks the user whether a beside-drop should go back to the page instead."
+    },
+    {
+      "t": "2026-10-09T13:28:58.215Z",
+      "note": "Built: PhotonzCore EditingSpaceDrop (into drawing / holdsItself / beside) asked by every drop path (instance, starter, shared, room hold) and by the canvas mid-drag, which shows the reason under the pointer ('Cannot go inside itself', 'Drop it onto Button'). A drop onto a drawing now joins THAT drawing (it used to land loose and join drawing 0 on Done). returnFromEditingSpace also leaves out a loose copy of the component itself (paste road). Tests: EditingSpaceDropTests (9), CopyConfirmationTests; full suite 11989 green. Walk a-component-never-holds-itself-walk at Next defaults, 5 real captures."
+    },
+    {
+      "t": "2026-10-09T13:28:58.272Z",
+      "note": "Five walks were dropping Badge copies into the Badge's own open space (the bug itself): component-versions, place-a-version, dock-component-first, button-states-journey, tool-and-library-dropdowns-open-on-a-click. Each now presses Done before placing copies; all green, plus 15 other Edit Original walks green. tutorial-component-versions-walk failed once at step 66 (no text field had the keyboard), passed on rerun; it drops no tiles, so a focus flake, not this change."
+    },
+    {
+      "t": "2026-10-09T13:28:58.330Z",
+      "note": "left rough: a shape drawn or pasted beside the drawing still joins the first drawing on Done (the documented old rule, only drops were in scope); a double click on a tile in the space aims at the middle of the view and is refused when that is bare page. Neither filed: no report of either hurting anyone, and the audit asks the user about the beside rule directly."
+    },
+    {
+      "t": "2026-10-09T13:29:11.996Z",
+      "note": "In Edit Original's space a copy of the component itself is refused under the pointer (Cannot go inside itself), a drop on the bare page beside the drawing is refused (Drop it onto Button), and a drop onto a drawing joins that drawing; Done leaves every copy as it was and never folds in a loose copy of itself. Core EditingSpaceDrop with 9 tests, full suite green (11989); walk a-component-never-holds-itself-walk at Next defaults, 5 real captures; 5 walks that dropped into the open space now press Done first; audit 2026-10-09-a-component-never-holds-itself. Commit fd2bb4da."
     }
-  ]
+  ],
+  "started": "2026-10-09T12:54:15.424Z",
+  "walks": [
+    "a-component-never-holds-itself-walk",
+    "component-versions-walk",
+    "place-a-version-walk",
+    "dock-component-first-walk",
+    "button-states-journey-walk",
+    "tool-and-library-dropdowns-open-on-a-click-walk"
+  ],
+  "completed": "2026-10-09T13:29:11.997Z"
 }

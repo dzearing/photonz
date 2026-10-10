@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 3910,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.505Z",
-  "updated": "2026-10-09T17:09:11.263Z",
+  "updated": "2026-10-09T18:43:17.516Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tHand, title \"Hand (H)\"; UX-PATTERNS D4 lists Hand as a shared tool in every app strip. ToolBarFold.videoLeading earlier left Hand out as \"not a tool in this app\": a runner's call, not the user's; the user's 2026-09-29 rule is only that zoom is not a tool. Add .tool(.hand) to WindowModes.designStrip in its own family after Measure. Memory: Photoshop shortcut parity says relocate the non-PS feature on conflict, so Highlight would move, which changes picture users' keys: card it.",
@@ -27,9 +27,37 @@
     {
       "t": "2026-10-09T17:09:11.262Z",
       "note": "When Hand joins the Design strip, check the narrow-window fold order: the mock (ovf class) folds Shape, Pen, Text and Measure first and keeps Select, Frame, Component and Hand. ToolBarFold's strip init folds from the far end, so Hand would fold first unless priority is split from draw order."
+    },
+    {
+      "t": "2026-10-09T18:01:06.955Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T18:42:30.251Z",
+      "note": "walks design-mode-tool-strip-walk -> design-mode-tool-strip-walk, tool-bar-fills-its-room-walk, one-glass-tool-bar-walk, video-tool-bar-walk"
+    },
+    {
+      "t": "2026-10-09T18:43:12.755Z",
+      "note": "Adversarial review before building: (1) the mock prints Hand (H) in 79 strips and Photoshop agrees, but H is Highlight here and changing it moves picture users' keys, so the letter is a card and the Hand ships with no key meanwhile (Component's precedent). (2) ToolBarPurposeTests listed 'hand' as a way of looking: a 2026-09-29 runner's extension of 'zoom isn't a tool'; the contract's own row lists zoom, view options, readouts and settings, and the Hand is picked then used on the canvas, so it is a tool; the card carries a declining 'No Hand tool' option in case the user meant it too. (3) There was no space-drag pan at all (Space plays), only trackpad scroll, so a mouse had no way to pan. (4) The strip fold folded from the far end, which would fold Hand first against the mock's ovf order; priority split from draw order."
+    },
+    {
+      "t": "2026-10-09T18:43:12.813Z",
+      "note": "Built (39570bb6): Tool.hand (no key, keeps the pick, no capsule, makes nothing), HandPan in core (measured from the press, clamped), ToolBarLayout.bar(withHand:) as its own last family behind next-hand-tool (on at Next defaults), Design strip ends with Hand, WindowMode.toolStripPriority for the mock's fold order. Canvas: press with Hand starts a pan before any hit test, drag commits the viewport like a scroll, closed/open hand cursor, tool switch clears it. Tests 12056 pass. Walks green: design-mode-tool-strip (pointer click on Hand at Next defaults, drag from on the Login screen, view moved 200x100, Login at (480,302) unchanged, nothing picked, Select clicks find the screen where it moved), one-glass-tool-bar, tool-bar-fills-its-room, video-tool-bar, every-area-has-one-purpose, bucket-fills-the-enclosed-area, track-column-resizes. Audit 2026-10-09-hand-tool with three real captures."
+    },
+    {
+      "t": "2026-10-09T18:43:12.875Z",
+      "note": "left rough (none clears the follow-up bar; all in the audit): a Hand drag on a picture that fits does nothing (same as Photoshop at Fit); Space cannot borrow the Hand while held because Space plays here."
+    },
+    {
+      "t": "2026-10-09T18:43:17.513Z",
+      "note": "Built and pushed (39570bb6): the Hand sits at the end of the tool bar after Measure (Design, picture and video bars at Next defaults), a pointer click picks it, and a canvas drag moves the view without moving or picking anything. Verified by 12056 tests, design-mode-tool-strip-walk with real captures and six other tool bar walks, audit 2026-10-09-hand-tool. Waiting on one answer: the mocks and Photoshop give the Hand H, which is Highlight here, so which tool keeps H is on a decision card; the Hand ships with no key until then."
     }
   ],
   "walks": [
-    "design-mode-tool-strip-walk"
-  ]
+    "design-mode-tool-strip-walk",
+    "tool-bar-fills-its-room-walk",
+    "one-glass-tool-bar-walk",
+    "video-tool-bar-walk"
+  ],
+  "started": "2026-10-09T18:01:06.953Z"
 }

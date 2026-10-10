@@ -1,0 +1,33 @@
+{
+  "id": "dragging-a-zoomed-in-recording-keys-where-it-is",
+  "title": "Dragging a zoomed-in recording keys where it is centred",
+  "goal": "When you have keyed a recording zooming in and then drag the picture to frame the part you want, the app moves the whole clip, so the wide shot before the zoom slides off-centre and shows the empty canvas at its edge. The zoom walkthrough draws the drag writing a centre key at that moment instead, so the wide shot stays put and the zoom pans to what you framed.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.331Z",
+  "updated": "2026-10-10T02:37:52.094Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-zoom-wt.html step 6 'Put the button in the middle' (around line 414): data-show adds #laneCentre,#kdC1,#kdC2,#segCentre and #pKeyCount=4 keys. Code: Sources/PhotonzCore/PropertyKeys.swift ~594-610, the branch 'With the place NOT keyed, a move is still the ordinary move it always was' shifts the stored frame when Scale is keyed and Position is not. That is what moves the wide shot. Test pinning today's behaviour: Tests/PhotonzCoreTests/PropertyKeysTests.swift ~283-301, update it first (TDD). Caller: Sources/Photonz/EditorState+PropertyKeys.swift ~209-247. The first Centre key at the earlier Scale key should hold the pre-drag position so the wide shot does not move. Read from code only, not run in the app; the runner reproduces before changing. Found by the manager pass 2026-10-09 comparing the zoom walkthrough to the code.",
+  "acceptance": [
+    "On a video at Next defaults: open the talk sample, pick the clip, key Scale 100% at 0:03 and 220% at 0:05, then at 0:05 drag the picture to frame a spot: the clip gains Centre keys at 0:03 and 0:05 (four keys in all, as the walkthrough's step 6 counts), a Centre lane shows under the Scale lane, and at 0:03 the picture is exactly where it was before the drag",
+    "A drag with nothing keyed still moves the clip as it does today, and a drag with Position already keyed still writes a Position key as it does today",
+    "Command Z takes the drag and its keys back in one step",
+    "A walk covering the zoom-then-frame case runs green at Next defaults, and the existing keying walks stay green",
+    "Audit written under queue/audits/ with a picture of the timeline lanes and the canvas at 0:03 and 0:05; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.333Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.093Z",
+      "note": "seq 3920 -> 60"
+    }
+  ]
+}

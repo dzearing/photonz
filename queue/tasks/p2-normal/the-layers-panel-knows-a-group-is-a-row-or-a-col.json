@@ -1,0 +1,33 @@
+{
+  "id": "the-layers-panel-knows-a-group-is-a-row-or-a-col",
+  "title": "The Layers panel knows a group is a row or a column",
+  "goal": "Turning a group into a row or a column is only on the Layer menu in the menu bar, and in the Layers list a stack looks exactly like a plain group. The auto-layout mock puts it first in the Layers panel menu and writes row or column, and how each child is sized, on the rows' quiet second line, so you can see the layout without picking each thing.",
+  "epic": "ui-layout",
+  "priority": "p2-normal",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:41.312Z",
+  "updated": "2026-10-10T02:37:52.439Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/ui-autolayout.html #layerMenu ('Wrap in auto-layout' first) and row meta lmeta ~223, ~472-476. Code: panel menu rows Sources/PhotonzCore/LayersPanelHeader.swift ~43-46; right-click Sources/Photonz/LayerCommandMenu.swift ~184-188, 224 (Group, Ungroup, Make Component, no stack); menu bar only at Sources/Photonz/EditorCommands.swift ~1958. Row second line Sources/Photonz/LayersRow.swift ~75-100, 283-297. Keep the second line short (UX-PATTERNS section 4). Mind the open card on Layers order in a column (a-column-lists-its-rows-in-the-order-the-user-ch): do not change row order here.",
+  "acceptance": [
+    "At Next defaults the Layers panel menu and a layer's right-click menu both carry the stack command, matching the menu bar's wording",
+    "A stacked group's row says row or column on its second line, and each child row says hug, fill or fixed, as ui-autolayout.html draws it",
+    "Rows of plain groups and layers read exactly as today",
+    "A walk stacks two shapes from the Layers panel menu and reads the row text, green at Next defaults",
+    "Audit written under queue/audits/ with the panel beside the mock; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:41.314Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.438Z",
+      "note": "seq 4030 -> 8"
+    }
+  ]
+}

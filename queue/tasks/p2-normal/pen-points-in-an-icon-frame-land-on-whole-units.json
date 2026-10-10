@@ -1,0 +1,33 @@
+{
+  "id": "pen-points-in-an-icon-frame-land-on-whole-units",
+  "title": "Pen points in an icon frame land on whole units",
+  "goal": "Drawing with the pen inside a 24 point icon frame puts points on fractions of a unit unless the canvas grid is on, and even with it on the grid is 4 points apart, so a point cannot land on most whole units. The icon success list promises every point lands on a whole unit by snapping to the grid, the keylines and the shapes already drawn.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.901Z",
+  "updated": "2026-10-10T02:37:52.324Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Success line icon-grid 2. Code: Sources/PhotonzCore/PenDrawing.swift ~510-513 onGrid returns the raw point when there is no grid; never snaps to keylines or other anchors. CanvasGrid off by default (Sources/PhotonzCore/CanvasGrid.swift:75), 4 point spacing (~38), zoom ladder never finer (levels ~413). Icon frame draws no unit lines (Sources/Photonz/CanvasIconKeylines.swift). Tutorial says 'four point grid' at Sources/PhotonzCore/TutorialGuides.swift:2962, update if the rule changes. Whole-unit check exists as SVGWholeUnits. Done task a-new-frame-can-be-an-icon-size-and-an-icon-is-s says snapping was deliberately left out then. Whether the frame draws visible unit lines belongs to the open grid card (the-grid-s-controls-come-back-to-the-tool-bar-as); this task is the snapping only. Read from code, not run; the runner reproduces first.",
+  "acceptance": [
+    "In a new 24 point icon frame at Next defaults, with no setting changed, a pen click lands on the nearest whole unit, and an exported SVG of a shape drawn that way passes the whole-unit check",
+    "A pen point also snaps to a keyline and to an anchor of another shape in the frame when it is near one",
+    "Outside icon frames the pen behaves exactly as today",
+    "A walk draws a path in a 24 frame and checks every anchor is whole, and runs green at Next defaults",
+    "Audit written under queue/audits/ with a close picture of snapped points; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.903Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.323Z",
+      "note": "seq 3990 -> 6"
+    }
+  ]
+}

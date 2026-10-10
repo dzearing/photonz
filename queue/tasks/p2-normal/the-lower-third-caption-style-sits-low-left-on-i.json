@@ -1,0 +1,36 @@
+{
+  "id": "the-lower-third-caption-style-sits-low-left-on-i",
+  "title": "The Lower third caption style sits low left on its own plate",
+  "goal": "Picking the Lower third caption style today only changes the weight and the plate's darkness and leaves the captions centred where they were, so it looks almost the same as the default. The captions mock draws it low on the left on its own coloured plate, which is what anyone picking a lower third expects.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T02:37:40.696Z",
+  "updated": "2026-10-10T02:37:58.121Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-captions.html STYLES.B ~429-430, button ~272 (lower left, violet gradient plate, bold serif, 'Lower-third' badge). Code: Sources/PhotonzCore/CaptionLook.swift ~168-170 only sets weight, a 70% black plate, left alignment. Styles deliberately keep the user's font and size, so the fair targets are position and plate. Plate colour: use the mock's look or the design system's accent, say which in the audit. Tests first in PhotonzCore.",
+  "acceptance": [
+    "On a video with captions at Next defaults, picking Lower third moves the captions to the lower left inside the safe area and gives them the mock's plate, keeping the person's own font and size",
+    "Switching back to the default style puts them back where they were",
+    "Burned-in export shows the same placement as the canvas",
+    "Audit written under queue/audits/ with the canvas beside video-captions.html's Lower third; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T02:37:40.698Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-10T02:37:52.381Z",
+      "note": "seq 3970 -> 7"
+    },
+    {
+      "t": "2026-10-10T02:37:58.120Z",
+      "note": "seq 7 -> 4"
+    }
+  ]
+}

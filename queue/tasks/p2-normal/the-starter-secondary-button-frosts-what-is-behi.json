@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 270,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T10:33:44.302Z",
-  "updated": "2026-10-09T12:52:27.931Z",
+  "updated": "2026-10-09T19:34:04.450Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the-starter-button-primary-shines-like-the-mock (2026-10-09). Secondary Background now has LayerStyle.opacity 0.74 (StarterComponents.glassOpacity) to match --glass rgba(255,255,255,.74); the renderer has no backdrop blur (BlurEffect blurs the layer itself). Needs a backdrop/background-blur effect in LayerEffects + DocumentRenderer, then add it to the Secondary look. Seen on Scripts/playtest/starter-button-shine-walk.json (dark artboard fixture), where over a soft backdrop it already reads like the mock; the gap shows over sharp content.",
@@ -26,9 +26,36 @@
     {
       "t": "2026-10-09T12:52:27.930Z",
       "note": "seq 3890 -> 270"
+    },
+    {
+      "t": "2026-10-09T18:58:34.685Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-09T19:33:42.622Z",
+      "note": "walks starter-button-shine-walk -> secondary-button-glass-walk, starter-button-shine-walk"
+    },
+    {
+      "t": "2026-10-09T19:33:42.682Z",
+      "note": "Before building: Figma (the grown-up UI tool) has Layer blur and Background blur; this app's rule is one effect with a Kind (Shadow Drop/Inner, Glow Outer/Inner), so Blur got a Kind: Layer / Background. Background is CSS backdrop-filter: the backdrop under the shape's paint, blurred, cut to wherever the layer paints (any paint at all counts as the pane). Opacity fades the paint and not the glass, which is what makes the Secondary's layer-opacity 0.74 white read as the mock's --glass. Mock values: blur 12, saturate 180% (--lg-blur-sm), both matched."
+    },
+    {
+      "t": "2026-10-09T19:33:42.742Z",
+      "note": "Built: BlurKind on BlurEffect (old files read as layer; a layer blur is written exactly as before), LayerStyle.backgroundBlurRadius, blurRadius reads/writes the layer kind only, Layer.readsBackdrop/backdropSource include glass (drag preview + dirty region), isPlain false with glass, ComponentStyle .blur field covers glass so a copy's glass override sticks, LayerMotion .blur keys only a layer blur, DocumentRenderer.glazed() for leaves and groups, Blur row Kind segmented control + Amount reading the row's own entry, saved-effect editor Kind picker, StarterComponents.glassBlur=12 on Secondary. Tests: BackgroundBlurTests, BackgroundBlurRenderTests, StarterButtonLooksTests.secondaryFrostsWhatIsBehindIt; full suite 12075 green. Walks: new secondary-button-glass-walk (busy screenshot fixture) + 10 related walks all ok."
+    },
+    {
+      "t": "2026-10-09T19:33:42.802Z",
+      "note": "left rough: a GROUP wearing glass is not redrawn by the dirty region when something under it changes (RenderDiff reads leaves only); glass in practice sits on leaves, the Button's on its Background leaf. SVG export drops the glass (no SVG equivalent). Saved-effect plate preview for a background blur still draws a fuzzy plate. None filed: none is something a person hits today."
+    },
+    {
+      "t": "2026-10-09T19:34:04.448Z",
+      "note": "Blur in the Effects list has a Kind (Layer / Background); Background frosts what is behind a shape (blur + the mock's 180% saturation, under the paint, cut to where it paints). The starter Secondary Button wears 12 points of it, so over a busy screenshot the text behind is a wash and its words read. Verified: BackgroundBlurTests + BackgroundBlurRenderTests (incl. 2x export) + full suite 12075 green; secondary-button-glass-walk at Next defaults with 4 real window captures, plus 10 related walks ok. Audit queue/audits/2026-10-09-secondary-button-glass.json. Commit 106dc24b."
     }
   ],
   "walks": [
+    "secondary-button-glass-walk",
     "starter-button-shine-walk"
-  ]
+  ],
+  "started": "2026-10-09T18:58:34.684Z",
+  "completed": "2026-10-09T19:34:04.449Z"
 }
