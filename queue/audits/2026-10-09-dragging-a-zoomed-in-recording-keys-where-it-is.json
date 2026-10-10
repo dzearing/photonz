@@ -1,0 +1,48 @@
+{
+  "feature": "Dragging a zoomed-in recording keys where it is centred",
+  "epic": "video-transitions-motion",
+  "summary": "With a zoom keyed on a recording, dragging the picture now frames the zoom: it writes Position keys at the zoom's keys, so the wide shot before the zoom stays exactly where it was instead of sliding off and showing the canvas.",
+  "setup": "Photonz Probe built from main, release Next, no flag changed from its default. Walk: framing-a-zoom-keys-its-centre-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording, click it on the canvas, and click 0:03 on the ruler."
+    },
+    {
+      "do": "Animate a property > Scale, so Scale has a key at 0:03 holding 100%."
+    },
+    {
+      "do": "Click 0:05 on the ruler and type 220 into Scale.",
+      "shot": "2026-10-09-zoom-frame-2-zoomed-at-5-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With the Select tool, drag the picture until the Copying card fills the frame.",
+      "shot": "2026-10-09-zoom-frame-3-framed-at-5-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click 0:03 on the ruler: the wide shot is where it was, Position reads 0, 0.",
+      "shot": "2026-10-09-zoom-frame-4-wide-at-3-unmoved-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: both Position keys and the drag go, the two Scale keys stay.",
+      "shot": "2026-10-09-zoom-frame-5-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Play from 0:02: the picture pushes in and pans onto the card together."
+    }
+  ],
+  "evaluate": [
+    "Does dragging the zoomed picture feel like pointing the camera, with nothing before the zoom moving?",
+    "Dragging at the wide key (0:03) instead moves the wide shot and leaves the zoom alone. Is that what you expect?",
+    "With only one Scale key (nothing zooming yet) a drag still just moves the clip. Is that the right line?",
+    "Should the same rule apply to titles and pictures with a keyed size, or stay recordings only (today it is recordings only, the way Premiere moves a title)?"
+  ],
+  "rough": [
+    "The new lane is named Position and sits above the Scale lane, and its row shows the clip's corner (X 740, Y 280); the walkthrough draws a Centre lane under Scale showing the point in the middle of the frame. Covered by task a-recording-s-framing-reads-as-scale-then-centre.",
+    "A drag after the last Scale key (say at 0:08) pans from 0:05 to 0:08 rather than moving the whole held zoom; it keeps the wide shot still, but someone wanting to reframe the whole hold drags at 0:05 instead."
+  ]
+}

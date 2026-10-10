@@ -588,6 +588,9 @@ extension PhotonzDocument {
         let was = before.frame.standardized
         let now = after.frame.standardized
         var shift = CGPoint(x: now.minX - was.minX, y: now.minY - was.minY)
+        // The moments a recording's Centre starts keying at, holding where it
+        // is stored (`reframeAnchors`). Empty for an ordinary move.
+        var anchors: [Int] = []
         // A keyed place, size or angle is ALWAYS put back to what is stored,
         // changed or not: the hand worked on the layer as posed at the
         // playhead, so even an edit that changed nothing (an Escape, a click
@@ -603,10 +606,20 @@ extension PhotonzDocument {
             restored.frame = stored.frame
             restored.content = stored.content
             // With the place NOT keyed, a move is still the ordinary move it
-            // always was: the stored layer goes where the hand took it.
+            // always was: the stored layer goes where the hand took it. A
+            // zoomed recording is the exception (`reframeAnchors`): there the
+            // move is where the zoom is pointed, so Centre keys itself.
             if !keyed.contains(.position) {
-                restored.frame.origin.x += shift.x
-                restored.frame.origin.y += shift.y
+                if shift != .zero, after.takesAReframe {
+                    anchors = reframeAnchors(layerID: layerID, atDocumentTimeMS: ms)
+                }
+                if anchors.isEmpty {
+                    restored.frame.origin.x += shift.x
+                    restored.frame.origin.y += shift.y
+                } else {
+                    let origin = stored.frame.origin
+                    keys.append((.position, .point(CGPoint(x: origin.x + shift.x, y: origin.y + shift.y))))
+                }
             }
         }
         if keyed.contains(.position) {
@@ -633,10 +646,36 @@ extension PhotonzDocument {
         }
         if restored != after { updateLayer(id: layerID) { $0 = restored } }
         guard !lookKeys.isEmpty else { return false }
+        // Centre starts keying holding the stored place at each anchor, so
+        // the key at the playhead below is the only moment the hand changed.
+        for (index, anchor) in anchors.enumerated() {
+            if index == 0 {
+                startKeying(layerID: layerID, .motion(.position), atDocumentTimeMS: anchor, ease: ease)
+            } else {
+                setKeyedValue(.point(stored.frame.origin), layerID: layerID, .motion(.position),
+                              atDocumentTimeMS: anchor, ease: ease)
+            }
+        }
         for (property, value) in lookKeys {
             setKeyedValue(value, layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
         }
         return true
+    }
+
+    /// Where a zoomed recording's Centre is pinned when a drag starts keying
+    /// it: the Scale keys either side of the playhead, so the picture stays
+    /// where it was at every moment the drag did not touch. The zoom
+    /// walkthrough's step 6 (`video-zoom-wt.html`): framing the button at
+    /// 0:05 writes Centre at 0:03 and 0:05, and the wide shot does not move.
+    ///
+    /// Empty where Scale has no key but the one under the playhead: nothing
+    /// is zooming yet, and the drag is the ordinary move. A title or a shape
+    /// with a keyed size never gets here, so it moves the way it does in
+    /// Premiere.
+    func reframeAnchors(layerID: UUID, atDocumentTimeMS ms: Int) -> [Int] {
+        [false, true].compactMap {
+            neighbourKeyTime(layerID: layerID, .motion(.scale), from: ms, forward: $0)
+        }
     }
 
     /// A hand's edit on the canvas, start to finish, for a layer whose keys

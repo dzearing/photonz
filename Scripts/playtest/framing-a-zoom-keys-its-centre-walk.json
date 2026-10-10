@@ -1,0 +1,256 @@
+{
+  "out": "/tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk",
+  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys Position at 0:03 and 0:05 (four keys in all), a Position lane opens under the Scale lane, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        900,
+        620
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Scale",
+      "reads": "on a key"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-wide-before"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "220"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 1",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-zoomed",
+      "note": "Scale keyed 100% at 0:03 and 220% at 0:05: the picture is punched in at 0:05, centred where it was captured. Nothing else is keyed yet"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoomed-at-5"
+    },
+    {
+      "do": "drag",
+      "from": [
+        300,
+        300
+      ],
+      "to": [
+        1040,
+        580
+      ],
+      "steps": 10,
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-framed",
+      "note": "THE TEST: at 0:05 the picture dragged to frame a spot. Dragging a zoomed recording is where the zoom points, so Position keys itself the way Scale did: a key at 0:03 holding where the wide shot was and a key at 0:05 where the hand left it. Its lane opens under the Scale lane, four keys in all"
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "panel",
+      "stage": "3-framed"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-framed-at-5"
+    },
+    {
+      "do": "render",
+      "name": "3-framed-at-5-canvas"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-wide-unmoved",
+      "note": "back at 0:03 the wide shot is exactly where it was before the drag: no canvas showing at its edge"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Position",
+      "reads": "on a key"
+    },
+    {
+      "do": "expect",
+      "field": "Position X",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Position Y",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "100"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-wide-at-3-unmoved"
+    },
+    {
+      "do": "render",
+      "name": "4-wide-at-3-canvas"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "one undo takes the drag and both Position keys back; the two Scale keys stay"
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 1",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "snapshot",
+      "name": "5-undone"
+    }
+  ]
+}
