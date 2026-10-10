@@ -1,0 +1,35 @@
+{
+  "id": "title-tiles-play-and-a-few-knobs-restyle-a-title",
+  "title": "Title tiles play, and a few knobs restyle a title",
+  "goal": "Browsing titles shows them moving: a tile plays its animation when the pointer is over it and loops while it is picked. Once a title is in, a short set of knobs restyles the whole thing at once (colour theme, font pair, energy, intensity, background) before anyone needs to touch its parts one by one.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 29,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:50:57.124Z",
+  "updated": "2026-10-10T12:50:57.212Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 5 of 6.",
+  "acceptance": [
+    "Library title tiles animate on hover and loop while picked, at small size, using the person's own recording frame behind them where the style uses the recording; clicking a tile still highlights it within one frame (see clicking-a-title-in-the-library-highlights-it-at)",
+    "A Title section in the panel for a picked title, in this order: Theme (swatches plus From Recording, which samples two or three colours from the clip), Font pair (four or five curated pairs), Energy (Calm, Normal, Punchy scaling durations x1.3, x1, x0.7 and overshoot, stagger and motion blur with it), Intensity (one slider for blur, distance, grain and glow), Background (on or off and its kind); placement checked against the IA contract in docs/design/mocks/shared/UX-PATTERNS.md, anything uncovered goes to a decision card",
+    "Picking a part of the title (on the canvas or in the panel) shows its in, hold and out behaviour pickers with their few knobs and a Replay button; keys and the curve editor stay available",
+    "Typing on the canvas re-lays out the title and replays its in after a short pause",
+    "Save as My Title stores the design (behaviours, theme, roles), not only baked layers, so theme and energy stay changeable on a saved title",
+    "A walk changes theme, font pair and energy on a title and photographs each",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:50:57.126Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:50:57.211Z",
+      "note": "seq 3930 -> 29"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "title-backgrounds-move-gradients-grain-and-the-r",
+  "title": "Title backgrounds move: gradients, grain and the recording behind glass",
+  "goal": "A title page's background can be alive instead of flat: a slowly drifting multi-colour gradient, fine film grain, or the person's own recording blurred and dimmed behind the words, slowly zooming, and sharpening as the title leaves. Accents like underlines can draw themselves on.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 27,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:50:56.803Z",
+  "updated": "2026-10-10T12:50:56.893Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 3 of 6.",
+  "acceptance": [
+    "A moving gradient background (two or three colour points drifting on a loop, speed knob), rendered by a small kernel at half resolution and upscaled; MEASURED frame cost in the audit with a perf note",
+    "Grain as an effect with an amount, offset every frame, that also stops gradients banding in the exported MP4 (MEASURED banding before and after on one export)",
+    "A Recording Behind Glass background: frames of the clip under or after the title, blurred (default 30 to 40 px) and dimmed (default 40%), with a slow 105 to 100% zoom; on the title's out the blur and dim animate to nothing so it lands in the real footage",
+    "Hold behaviours that keep something moving while a title holds: background drift, a slow 1 to 2% push",
+    "Paths and lines take a trim (start and end along the stroke) that can be keyed, so an underline or rule draws on",
+    "All of it is non-destructive layer styling applied at render time; playback, scrubbing and export match",
+    "A walk inserts a title over a recording with Recording Behind Glass and photographs the in, hold and out",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:50:56.806Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:50:56.892Z",
+      "note": "seq 3930 -> 27"
+    }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "id": "a-set-of-titles-that-look-designed",
+  "title": "A set of titles that look designed",
+  "goal": "Replace the eight plain built-in titles and name cards with ten to twelve that look designed by a motion designer, each a distinct style from the research, all built from the parts, text animator, moving backgrounds and motion blur the earlier tasks add.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:50:57.283Z",
+  "updated": "2026-10-10T12:50:57.369Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 6 of 6.",
+  "acceptance": [
+    "Ten to twelve built-ins from the brief's style directions: Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Recording Behind Glass, Light Leak Cinematic, Split Wipe, Minimal Underline, Pill Card, Gradient Text Glow, Stacked Stagger (title pages and name cards both well represented), each with the knobs the brief lists",
+    "Each one follows the brief's designed-not-template rules: parts on separate beats, at most two type sizes, expo or quint out entrances, shorter ease in exits, something subtle moving during the hold, legible over light and dark footage, lower thirds inside title safe",
+    "Optional soft whoosh and tick sounds synced to the builds, off by default, using the existing sound effects",
+    "Every preset is photographed at in, hold and out over a dark recording and a light one, and the frames are in the audit for the user to judge",
+    "One walk per preset inserts it, edits its text and exports a short MP4 that plays",
+    "Titles saved by the user before this change still open and still appear on the shelf",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:50:57.285Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:50:57.368Z",
+      "note": "seq 3930 -> 30"
+    }
+  ]
+}

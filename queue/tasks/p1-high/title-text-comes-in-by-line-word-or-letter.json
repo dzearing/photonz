@@ -1,0 +1,35 @@
+{
+  "id": "title-text-comes-in-by-line-word-or-letter",
+  "title": "Title text comes in by line, word or letter",
+  "goal": "Text in a title can arrive a line, a word or a letter at a time, with a small delay between each, in the styles polished intros use: rise and fade, mask reveal (rising from behind its own baseline), blur to sharp, tracking in, and typewriter.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 26,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:50:56.631Z",
+  "updated": "2026-10-10T12:50:56.724Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 2 of 6.",
+  "acceptance": [
+    "A text animator on text layers (PhotonzCore, tests first): unit (whole, line, word, letter), stagger in ms, order (forward, reverse, centre out, random with a fixed seed), and the behaviour (rise and fade, mask reveal, blur in, track in, typewriter), stored once on the layer and evaluated per unit at render time, never split into a layer per word",
+    "PhotonzRender draws each unit from cached rasters so animated text costs no more than a re-layout on edit; MEASURED in the audit: frame time for a 12 word headline revealing by letter at 1080p stays under the 16 ms budget, with a perf note",
+    "Editing the text re-lays out the units and the animation keeps working; right-to-left and emoji do not break it",
+    "Playback, scrubbing and export match frame for frame (MEASURED at three moments)",
+    "The behaviour, unit and stagger are editable in the panel for a picked text layer inside a title, and work on any text layer on the timeline, not only titles",
+    "A walk reveals a headline by word with mask reveal and photographs the stagger",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:50:56.633Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:50:56.723Z",
+      "note": "seq 3930 -> 26"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "titles-move-in-parts-not-as-one-block",
+  "title": "Titles move in parts, not as one block",
+  "goal": "A title's background, its lines of text and its accents each come in on their own beat with their own movement, instead of the whole title fading or sliding in as one slab. This is the first and biggest step to titles that look designed rather than like slides.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:50:56.468Z",
+  "updated": "2026-10-10T12:50:56.557Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 1 of 6.",
+  "acceptance": [
+    "A pure title design model in PhotonzCore (tests first): a title is parts (background, text lines, accents) each with an in, a hold and an out behaviour (fade, rise, blur in, scale from, wipe, spring pop; hold: none, drift, push), a start offset, a length and a curve; it compiles into keys on ordinary layers inside the title group (a preset stays layers you own, per docs/design/video-titles.md)",
+    "Ease out expo (cubic-bezier 0.16,1,0.3,1) and Ease out quint join the shared EasingCurve list, named the same way everywhere",
+    "Trimming a title bar on the timeline stretches the hold and keeps the in and out lengths (locked builds), MEASURED on one preset at three bar lengths",
+    "Exits are shorter than entrances and ease in, per the brief",
+    "All 8 built-in titles and name cards are re-choreographed so their parts enter on separate beats (for example background, then headline, then subtitle 100 to 150 ms later); before and after frames at 0, 25, 50, 75 and 100% of the in are photographed for each and put in the audit",
+    "Titles already placed in documents open looking exactly as before",
+    "A walk at Next defaults inserts a title page and a name card and photographs the in frame by frame",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:50:56.470Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:50:56.556Z",
+      "note": "seq 3930 -> 25"
+    }
+  ]
+}
