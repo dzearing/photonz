@@ -1,0 +1,35 @@
+{
+  "id": "command-left-and-right-switch-the-history-filter",
+  "title": "Command Left and Right switch the history filter",
+  "goal": "In the history strip, Command Left and Command Right move the All / Screenshots / Videos filter one step, so the person can jump to just their videos from the keyboard without reaching for the mouse. Plain Left and Right keep moving between captures.",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:16:47.065Z",
+  "updated": "2026-10-10T12:16:47.167Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"on the history, i'd like cmd-left/right to change the filter control, so i can quickly swap to video filtering with keyboard\".\n\nFrom code reading (not run): Sources/Photonz/HistoryOverlay.swift. Filter is CaptureFilter (.all, .screenshots, .videos; PhotonzCore/CaptureFilter.swift:6-9) held in HistoryFilterChoice (:148-157) and shown by HistoryFilterBar (:37); one strip per filter with its own focus (:24), 'A new filter keeps the keyboard target' (:68). Arrows: .onKeyPress(.leftArrow)/.rightArrow -> moveSelection (:53-54), likely ignoring modifiers, so add Command handling before them (KeyPress.modifiers). Related done: walking-the-history-strip-with-the-arrow-keys-ke (arrow speed), keep it intact.",
+  "acceptance": [
+    "Reproduce first: with history open and a tile focused, press Command Left and Command Right and record what happens today (suspect: they act like plain arrows and move the selection)",
+    "Command Right moves the filter All -> Screenshots -> Videos and stops at the end (no wrap), Command Left goes back; the segmented control shows the change at once (within one frame, as the click path does) and the strip shows that filter",
+    "After a switch the keyboard focus lands on the same capture if it is in the new filter, otherwise the first capture of that filter, so plain arrows keep working straight away",
+    "Plain Left/Right still move between captures with no change in speed (the arrow walk work stays measured)",
+    "The shortcut is discoverable: the filter control's tooltip names Command Left / Right",
+    "A walk opens history, presses Command Right twice, checks the Videos filter is on and a video tile is focused, then Command Left back to All",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:16:47.067Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:16:47.166Z",
+      "note": "seq 3930 -> 20"
+    }
+  ]
+}

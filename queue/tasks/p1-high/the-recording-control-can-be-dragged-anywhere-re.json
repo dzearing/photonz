@@ -1,0 +1,37 @@
+{
+  "id": "the-recording-control-can-be-dragged-anywhere-re",
+  "title": "The recording control can be dragged anywhere, remembers where, and starts in the bottom left",
+  "goal": "The small control that floats on screen while recording (timer and Stop) often sits over what the person is recording. They can drag it anywhere on the screen, it remembers that spot for every later recording, and until it has been moved it starts in the bottom left corner of the screen instead of top centre.",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 19,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:16:46.883Z",
+  "updated": "2026-10-10T12:16:46.981Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"whenever i record something, the little recorder chip is in a very awkward spot sometimes, and I need to drag it elsewhere. I'd like to be able to drag it to a preferred position and have it remember. Ideally, we default in the bottom left corner of the screen rather than center top.\"\n\nFrom code reading (not run): Sources/Photonz/Capture/RecordingControlsController.swift. makePanel (:60-81) builds a borderless NonactivatingPanel at .statusBar level, not movable (no isMovableByWindowBackground or drag handling); frame(on:) (:84-89) places it top centre, 12 pt under the menu bar (vf.midX, vf.maxY - h - 12), size 232x52. RecordingCoordinator.start shows it before the stream so SCContentFilter can exclude its window (RecordingCoordinator.swift ~47-66), and sleeps 150 ms for that; moving the window keeps the same window number so exclusion holds, but confirm. Trap: isMovableByWindowBackground on a nonactivating panel can still activate the app on mouse down in some cases; verify with the focus drill. Trap: the pending Enter-to-record latency work may create the panel earlier/offscreen; keep the remembered origin in one place both use.",
+  "acceptance": [
+    "Default spot when it has never been moved: bottom left of the recorded screen's visible area (above the Dock if the Dock is there), 16 pt in from both edges",
+    "Pressing anywhere on the control except its buttons and dragging moves it, live, without stopping or pausing the recording and without the drag showing up in the recorded video (the control stays excluded from the capture wherever it is)",
+    "Where it was let go is remembered (per user, across launches) as a position relative to the screen's corners, so it lands in the same corner on a screen of a different size; if the remembered spot would be off screen or under the menu bar it is pulled back inside the visible area",
+    "Recording a region: the control is placed outside the recorded region when the remembered spot would fall inside it, so it never covers what is being recorded; say in the audit how it picks the nearest free spot",
+    "The Stop button and timer keep working exactly as today; dragging never activates Photonz or takes key from the app being recorded (focus drill reads clean)",
+    "A way back to the default: double click an empty part of the control, or a Reset Position row on its right-click menu; the audit says which",
+    "Text and icons legible on any desktop behind it, light and dark",
+    "A walk (or drill) starts a recording, checks the default spot, drags the control, stops, starts again and checks it came back where it was left",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:16:46.886Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:16:46.980Z",
+      "note": "seq 3930 -> 19"
+    }
+  ]
+}
