@@ -3863,6 +3863,16 @@ private final class Run {
                 throw Failure(description: failure.description)
             }
 
+        case .action(.recordingControlDrill):
+            do {
+                let said = try await PlaytestRecordingControl.run(out: out) { window, name in
+                    await screenCapture(window, name: name)
+                }
+                note(number, step.name, said, state: describe())
+            } catch let failure as PlaytestRecordingControl.Failure {
+                throw Failure(description: failure.description)
+            }
+
         case .action(.recordScriptedClicks):
             let landed: PlaytestScriptedClicks.Outcome
             do {
@@ -6769,7 +6779,8 @@ private final class Run {
                  .openLandingRecording, .reopenSampleRecording, .editLastCapture,
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
                  .hotkeyEditLastCapture, .showCaptureToast, .beginHeldSave, .finishHeldSave,
-                 .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace:
+                 .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
+                 .recordingControlDrill:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
                  .clipSpeedDouble, .clipSpeedHalf,

@@ -988,6 +988,16 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// window as it is before the file lands. Fails unless the window opened
     /// on the recording's last frame inside `RecordingStopBudget`.
     case recordAndOpenAtStop
+    /// Make real recordings of a corner of the screen with the app's own
+    /// floating control (timer and Stop) up, into a history folder of the
+    /// walk's own, and drive the control with mouse events handed to its
+    /// window: it must start bottom left with its glass 16 pt in, follow a
+    /// drag by its glass without stopping the recording or taking the
+    /// keyboard, ignore a drag that begins on Stop, come back where it was
+    /// left on the next recording, keep out of a recorded region laid over
+    /// that spot, and go home on a double click. It photographs the control
+    /// at each spot. Where the person left the probe's control is put back.
+    case recordingControlDrill
     /// Wait for the file `recordAndOpenAtStop` held back to land, and fail
     /// unless the window took it in place: the same window at the same size,
     /// the clip as long as the file, playable, and playing if Play was pressed

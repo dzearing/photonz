@@ -108,7 +108,23 @@ enum RecordingStartLatencyDiag {
             store.whenLanded(entry.url) { landedEntry = $0 }
         }
 
-        let hud = RecordingControlsController.frame(on: screen)
+        // The control goes over the region on purpose, so the region run
+        // proves it is left out of the picture there too. Its squares are
+        // laid out for the control top centre, where it sat before it could
+        // be moved, so it is put there for the drill and the person's spot
+        // is put back after.
+        RecordingControlsController.playtestKeepsOverRegion = true
+        let keptSpot = RecordingControlSpotStore.spot
+        let size = RecordingControlPlacement.size
+        let vf = screen.visibleFrame
+        RecordingControlSpotStore.spot = RecordingControlPlacement.spot(
+            for: CGRect(origin: CGPoint(x: vf.midX - size.width / 2, y: vf.maxY - size.height - 12), size: size),
+            visible: vf)
+        defer {
+            RecordingControlsController.playtestKeepsOverRegion = false
+            RecordingControlSpotStore.spot = keptSpot
+        }
+        let hud = RecordingControlsController.frame(on: screen, source: .fullDisplay)
         let flipFrame = CGRect(x: hud.minX - 80, y: hud.minY + 2, width: 48, height: 48)
         let flip = square(flipFrame, .black, level: .floating)
         let underHUD = square(hud, NSColor(srgbRed: 0, green: 1, blue: 0, alpha: 1), level: .floating)

@@ -21077,3 +21077,10 @@ Next: the first editor window's ~200 ms first build
 - One dark chip (`IconPreviews.darkSide`, the one before the biggest) in the mock's near black. On it the frame's surface is left out and a one colour dark glyph is redrawn light (`IconPreviewInk`), the way a template reads on dark.
 - Light chips are painted the frame's own flat surface so the glyph sits straight on the chip; the picture stays byte-exact export (dropping the white was measured to darken soft edges on screen).
 - Walk `icon-previews-dark-chip-walk`; `expectIconPreviews` takes `"dark"`. Full test run still hangs in HEIF/sound reading (open task); split runs green.
+
+## 2026-10-10 — The recording control drags, remembers, and starts bottom left
+
+- The floating timer and Stop control starts bottom left (glass 16 pt in, above the Dock) instead of top centre, drags by any part but Stop while recording, and comes back where it was left on later recordings. Double click puts it home.
+- Placement is pure and tested: `RecordingControlPlacement` / `RecordingControlSpot` (nearest-corner memory, clamped into the visible area, pushed out of a recorded region over its nearest edge). Stored under `photonz.recordingControlSpot` (`RecordingControlSpotStore`).
+- A press that begins on Stop is the button's: SwiftUI otherwise hands the button's buffered drag to the control's gesture at release.
+- Walk `the-recording-control-stays-where-you-put-it-walk` (action `recordingControlDrill`, real recordings); focus drill clean; region start drill still PASS (it pins the control top centre for its squares). Full suite hung in Vision/HEIF again; split runs green.

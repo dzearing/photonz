@@ -1,0 +1,29 @@
+{
+  "feature": "The recording control can be dragged anywhere and remembers where",
+  "epic": "capture-clickthrough",
+  "summary": "While recording, the small timer and Stop control now starts in the bottom left corner instead of top centre, can be dragged anywhere on the recorded screen by any part except Stop, and comes back to that spot on every later recording. Double click it to send it home.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. The walk Scripts/playtest/the-recording-control-stays-where-you-put-it-walk.json runs the whole thing on real recordings.",
+  "switched": {},
+  "try": [
+    { "do": "Start a full screen recording (the record shortcut, then Return on the card). The control sits bottom left, its glass 16 pt in from the edges, above the Dock.", "shot": "2026-10-10-recording-control-1-bottom-left-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press on the clock or the empty glass and drag the control somewhere else. The recording keeps going and the app you are recording keeps the keyboard.", "shot": "2026-10-10-recording-control-2-dragged-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press on Stop and drag off it before letting go. Nothing moves and the recording keeps going." },
+    { "do": "Click Stop, then start another recording. The control is where you left it." },
+    { "do": "Record a region drawn over that spot. The control moves just outside the region, on whichever side is the shortest move." },
+    { "do": "Double click the empty glass of the control. It glides back to bottom left and forgets the spot." }
+  ],
+  "evaluate": [
+    "Is bottom left the right home, or does it sit over things you often record there?",
+    "Does the drag feel attached to the pointer, with no lag or jump when it starts?",
+    "Is double click a good enough way home, or do you also want a right-click Reset Position?",
+    "When you record a region, is the spot it picks outside the region where you would have put it?"
+  ],
+  "rough": [
+    "There is no mock of the recording control; it keeps today's look (glass capsule, red dot, clock, red Stop) unchanged, so its legibility is what it was: white on dark glass in dark mode and the system's own pairing in light.",
+    "Reset is a double click on the empty glass, not a right-click menu row. Nothing on the control says it can be dragged or double clicked: no hand cursor, since the control is never in the active app and the Mac does not change the cursor for it reliably.",
+    "The spot is remembered from the nearest corner of the visible screen area, so a control left in the middle of a big screen lands proportionally nearer one corner on a small one. Anything that would fall off screen or under the menu bar is pulled back inside.",
+    "Region recordings move the control straight out over the region's nearest edge with a 12 pt gap; when no edge has room (a region filling the screen) it stays where it was, still left out of the video.",
+    "The control stays on the screen being recorded; it cannot be dragged onto a second display.",
+    "The walk drives the drag with mouse events handed to the control's window and a scripted pointer position, since a walk never moves your pointer, and it puts the control one level under other apps' windows so it never covered your work. A real hand drag reads the Mac's own pointer position. The video is kept clean because the control is left out by window, not by position; that the file stays clean after a move was not filmed by the walk (the region start drill still proves it at the starting spot)."
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "out": "/tmp/photonz-playtest/the-recording-control-stays-where-you-put-it-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "recordingControlDrill" },
+    { "do": "describe", "stage": "0-drilled", "note": "Five real recordings of a corner of the screen with the control up: it started bottom left, followed a drag by its glass while recording, ignored a drag that began on Stop, came back where it was left, kept out of a region laid over that spot, and went home on a double click" }
+  ]
+}

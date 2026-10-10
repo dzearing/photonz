@@ -54,7 +54,7 @@ final class RecordingCoordinator {
     /// last one wins.
     func prepare(config: RecordingConfig, screen: NSScreen, alsoExcluding: [NSWindow] = []) {
         guard !isRecording, !isStarting else { return }
-        let hud = controls.prepare(on: screen)
+        let hud = controls.prepare(on: screen, source: config.source)
         let previous = warming
         warming = Task { [recorder] in
             await previous?.value
@@ -77,6 +77,8 @@ final class RecordingCoordinator {
     #if PHOTONZ_PLAYTEST
     /// Probe drill: something made ready by `prepare` is still standing.
     var playtestSomethingPrepared: Bool { recorder.warmConfig != nil || controls.playtestIsUp }
+    /// The stop control, for the probe's drill of moving it.
+    var playtestControls: RecordingControlsController { controls }
     #endif
 
     /// Begin recording per `config` on `screen`. The stop HUD is shown first (so
@@ -98,8 +100,8 @@ final class RecordingCoordinator {
 
         var excluded: [NSWindow] = []
         if showsControls {
-            let wasUp = controls.isUp(on: screen)
-            excluded.append(controls.show(on: screen) { [weak self] in
+            let wasUp = controls.isUp(on: screen, source: config.source)
+            excluded.append(controls.show(on: screen, source: config.source) { [weak self] in
                 Task { await self?.stop() }
             })
             lastStartTrace?.controlsShown = PointerTracker.hostNow()
