@@ -1,0 +1,26 @@
+{
+  "feature": "Blue confirm buttons read with the window behind",
+  "epic": "ui-components",
+  "summary": "Done, Crop, Trim and the captions buttons no longer turn into white words on a near-white pill when the Photonz window is behind another app. Behind, they show as a grey button with readable words; in front they are the same blue button as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Light mode first.",
+  "switched": {},
+  "try": [
+    { "do": "Open a blank image, choose View > Show Grid, then Adjust Grid from the grid's gear.", "shot": "2026-10-09-blue-confirm-behind-grid-light-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click another app so Photonz goes behind it and read the Done button in the bar at the bottom." },
+    { "do": "Switch to dark mode in System Settings and look again.", "shot": "2026-10-09-blue-confirm-behind-grid-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape, press C for Crop, and click another app again.", "shot": "2026-10-09-blue-confirm-behind-crop-light-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click back into Photonz: Crop turns blue again.", "shot": "2026-10-09-blue-confirm-front-crop-light-sc.png" },
+    { "do": "Open a video, press the trim tool, and repeat the behind and front check on Trim and on the video Done." }
+  ],
+  "evaluate": [
+    "Behind another app, can you read Done and Crop at a glance in both light and dark?",
+    "Does the grey look behind feel like the Mac's own background button rather than a broken one?",
+    "In front, is every one of these buttons still the blue you expect?"
+  ],
+  "rough": [
+    "No mock covers how these buttons look with the window behind another app; behind they use the Mac's plain bordered button, the same answer Edit Original's Done got on 2026-10-09.",
+    "Behind, the confirm button looks the same as Cancel beside it, so the default action is told apart only by its position and the Return key while the window is in the background.",
+    "The video trim Done, video crop Done and the captions buttons got the same change but no walk photographs them behind; only Adjust Grid's Done and Crop are photographed.",
+    "The Welcome window and the recording panels still use the plain system blue button; they are panels with their own idea of being in front and were left alone rather than guessed at."
+  ]
+}

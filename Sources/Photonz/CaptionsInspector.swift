@@ -123,7 +123,7 @@ struct CaptionsInspector: View {
             Label("Add Captions", systemImage: "captions.bubble")
                 .lineLimit(1)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.activeProminent)
         .controlSize(.small)
         .fixedSize()
         .disabled(!editorState.canWriteCaptions)
@@ -159,7 +159,7 @@ struct CaptionsInspector: View {
             Label("Rewrite", systemImage: "sparkles")
                 .lineLimit(1)
         }
-        .buttonStyle(.borderedProminent)
+        .buttonStyle(.activeProminent)
         .controlSize(.small)
         .fixedSize()
         .disabled(!editorState.canWriteCaptions)

@@ -613,7 +613,7 @@ struct VideoEditorView: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Done") { state.commitTrim() }
                     .keyboardShortcut(.defaultAction)
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.activeProminent)
                     .tutorialAnchor(.video(.trimDone))
             }
         }
@@ -724,7 +724,7 @@ struct VideoEditorView: View {
                 .keyboardShortcut(.cancelAction)
             Button("Done") { state.commitCrop() }
                 .keyboardShortcut(.defaultAction)
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.activeProminent)
         }
         .frame(height: 44)
     }

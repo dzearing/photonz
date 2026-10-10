@@ -898,7 +898,7 @@ struct EditorView: View {
                 .playtestControl("Cancel", detail: "Adjust Grid bar")
             Button("Done") { editorState.commitGridAdjustment() }
                 .keyboardShortcut(.return, modifiers: [])
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.activeProminent)
                 .help("Keep the zero point, the cell and the guides (\u{23CE})")
                 .playtestControl("Done", detail: "Adjust Grid bar")
         }
@@ -2483,7 +2483,7 @@ struct EditorView: View {
                 .help("Cancel the crop (⎋)")
             Button("Crop") { editorState.commitCrop() }
                 .keyboardShortcut(.return, modifiers: [])
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(.activeProminent)
                 .help("Apply the crop (⏎)")
         }
         .controlSize(.large)
@@ -2533,7 +2533,7 @@ struct EditorView: View {
                     .help("Cancel the trim (⎋)")
                 Button("Trim") { editorState.commitTrim() }
                     .keyboardShortcut(.return, modifiers: [])
-                    .buttonStyle(.borderedProminent)
+                    .buttonStyle(.activeProminent)
                     .help("Keep what is between the handles (⏎)")
             }
         }

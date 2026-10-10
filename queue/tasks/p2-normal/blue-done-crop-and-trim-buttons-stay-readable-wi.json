@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 3950,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T20:03:37.297Z",
-  "updated": "2026-10-09T20:03:40.178Z",
+  "updated": "2026-10-10T02:09:20.763Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-09 while fixing find-out-whether-edit-original-s-done-button-dis. Walk (kept at /tmp/donecheck/grid.json; steps: blank 1440x1024, appearance light, action showGrid, action adjustGrid, wait 1, snapshot light) run with Scripts/playtest.sh --no-build: light-sc.png shows the Adjust Grid bar's Done as nearly invisible white words on a near-white pill (queue/audits/2026-10-09-adjust-grid-done-behind-light-sc.png). Same cause as Edit Original's Done: .borderedProminent in an inactive window on macOS 26. The fix landed for that one is .buttonStyle(.activeProminent) (Sources/Photonz/DesignSystem/ActiveProminentButtonStyle.swift: prominent while appearsActive, .bordered otherwise). Remaining .borderedProminent uses: EditorView.swift (Adjust Grid Done ~901, Crop ~2486, Trim ~2536), VideoEditorView.swift (Done ~616, ~727), CaptionsInspector.swift (~126, ~162), Welcome/WelcomeView.swift. These files are shared, so the change reaches Current too: say in the log whether that is wanted (it is a legibility fix; the porting rule only forbids Next-only work leaking). Not done in the original task because that task was scoped to Edit Original and Current behaviour is off limits without the task saying so.",
@@ -27,7 +27,34 @@
     {
       "t": "2026-10-09T20:03:40.177Z",
       "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-10T01:59:35.038Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T02:09:11.522Z",
+      "note": "walks none -> blue-confirm-buttons-read-behind-walk"
+    },
+    {
+      "t": "2026-10-10T02:09:20.586Z",
+      "note": "reproduced before fixing: /tmp/blue-done/grid.json (Adjust Grid in light, probe behind) photographed Done as white words on a near-white pill"
+    },
+    {
+      "t": "2026-10-10T02:09:20.645Z",
+      "note": "swapped .borderedProminent for .activeProminent at 7 editor sites: EditorView (Adjust Grid Done, Crop, Trim), VideoEditorView (trim Done, crop Done), CaptionsInspector (Add Captions, Rewrite). These files are shared, so Current gets the change too. That is intended: it is a legibility fix and the porting rule only forbids Next-only code leaking into Current"
+    },
+    {
+      "t": "2026-10-10T02:09:20.704Z",
+      "note": "left alone on purpose: WelcomeView and Capture/RecordingSetupController + RecordingControlsController host .borderedProminent in NSPanels, where appearsActive may not track the way it does in an editor window. Not reproduced there, so no task filed"
+    },
+    {
+      "t": "2026-10-10T02:09:20.762Z",
+      "note": "verified: new walk blue-confirm-buttons-read-behind-walk (no flags) behind = grey Done with dark words (light) and light words (dark), grey Crop with dark words; the same walk with front:true = blue Done and blue Crop. Scripts/test.sh green (12119 tests, legibility gate clean). Audit rough lines stay in the audit, none filed: same-look-as-Cancel behind is the system's own background look"
     }
   ],
-  "walks": []
+  "walks": [
+    "blue-confirm-buttons-read-behind-walk"
+  ],
+  "started": "2026-10-10T01:59:35.037Z"
 }

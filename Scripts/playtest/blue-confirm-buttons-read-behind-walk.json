@@ -1,0 +1,25 @@
+{
+  "out": "/tmp/photonz-playtest/blue-confirm-buttons-read-behind",
+  "seed": "The blue buttons that end a mode (Adjust Grid's Done, Crop), photographed with the window behind another app (the way every walk leaves it) in light and then dark: each is a grey pill with dark words in light and light words in dark, never white words on a near-white pill. Before 2026-10-09 the system's blue button nearly vanished there in light mode. With the window in front they stay the blue button.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1440, "canvasHeight": 1024, "width": 1240, "height": 900 },
+    { "do": "appearance", "value": "light" },
+    { "do": "action", "action": "showGrid" },
+    { "do": "action", "action": "adjustGrid" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "1-grid-light", "note": "Adjust Grid's bar in light mode, window behind another app: Done is a grey pill with dark words beside Cancel" },
+    { "do": "snapshot", "name": "1-grid-light" },
+    { "do": "appearance", "value": "dark" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-grid-dark", "note": "the same bar in dark mode: Done is a grey pill with light words" },
+    { "do": "snapshot", "name": "2-grid-dark" },
+    { "do": "key", "key": "escape" },
+    { "do": "appearance", "value": "light" },
+    { "do": "tool", "tool": "crop" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-crop-light", "note": "Crop's Cancel and Crop capsule in light mode, window behind: Crop is a grey pill with dark words" },
+    { "do": "snapshot", "name": "3-crop-light" }
+  ]
+}
