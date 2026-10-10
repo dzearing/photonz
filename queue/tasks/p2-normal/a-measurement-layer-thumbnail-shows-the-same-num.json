@@ -1,0 +1,47 @@
+{
+  "id": "a-measurement-layer-thumbnail-shows-the-same-num",
+  "title": "A measurement layer thumbnail shows the same number as the canvas on a Retina capture",
+  "goal": "On a screenshot taken on a Retina screen, the little picture beside each measurement in the layers list prints a number twice the size the canvas and the Measurements list show (33 px beside a 16 px gap). A person reading the list sees two different sizes for one measurement.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 3920,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-09T15:21:28.025Z",
+  "updated": "2026-10-10T00:12:14.154Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-09 by task capture-to-a-pasted-redline-takes-no-more-steps. Command: Scripts/playtest.sh Scripts/playtest/capture-to-redline-steps-walk.json --no-build. Log: the newest capture in history: document 1440x960 at pixelScale 2.0. Canvas chips and the Measurements list read Gap 16 px, Width 124 px, Height 30 px; the layer row thumbnails in 9-size-and-gap-sc.png (copied to queue/audits/2026-10-09-capture-to-redline-size-and-gap.png) read 33 px and 60 px, about 2x. The thumbnail render (EditorState+LayersPanel.swift layerThumbnail path) probably draws the chip label in device pixels without dividing by pixelScale. Not yet traced in code.",
+  "acceptance": [
+    "On a 2x capture, every measurement row thumbnail reads the same number its chip on the canvas reads",
+    "A 1x picture still reads the same as before",
+    "A walk photographs the layers list beside a measured 2x capture and the numbers agree"
+  ],
+  "log": [
+    {
+      "t": "2026-10-09T15:21:28.027Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T00:12:14.149Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T00:25:57.956339Z",
+      "note": "Reproduced in a unit test: DocumentRenderer.renderSprite and render(only:) built a fresh PhotonzDocument with pixelScale 1, so a Logical measure drawn alone (layers-list thumbnail, drag sprite, Copy Layer) printed the raw bitmap span. Both now carry document.pixelScale. Tests: Tests/PhotonzRenderTests/RetinaMeasureSpriteTests.swift (4)."
+    },
+    {
+      "t": "2026-10-10T00:25:57.956339Z",
+      "note": "Tried a walk step comparing each row tile against the same box cut from the canvas; sub-pixel placement noise (a layer on x=28.5) was as large as a changed number at 80 px, so it was dropped as an unfair check. The walk's real-window picture is the proof: 9-size-and-gap-sc.png reads 16 px and 30 px in the rows, matching the chips."
+    },
+    {
+      "t": "2026-10-10T00:25:57.956339Z",
+      "note": "left rough: a Size measurement's tile shrinks its chip past legibility (124 px row is a red smudge at 80 px). Not filed: the tile is a picture of the layer, not a readout, and the Measurements list beside it prints the number."
+    }
+  ],
+  "walks": [
+    "capture-to-redline-steps-walk"
+  ],
+  "started": "2026-10-10T00:12:14.148Z"
+}

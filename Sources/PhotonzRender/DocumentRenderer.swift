@@ -821,7 +821,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         if document.isOnDesignedSurface(id) {
             layer.style.shadows = layer.drawnShadows(onDesignedSurface: true)
         }
-        let alone = PhotonzDocument(canvasSize: document.canvasSize, layers: [layer])
+        // The capture's pixel scale comes along: a measurement reads its
+        // number through it, and a 2x capture copied without it read twice
+        // the number the canvas shows.
+        let alone = PhotonzDocument(canvasSize: document.canvasSize, layers: [layer],
+                                    pixelScale: document.pixelScale)
         return scale == 1 ? render(alone, store: store)
                           : render(alone, store: store, scale: scale)
     }
@@ -846,9 +850,12 @@ public final class DocumentRenderer: @unchecked Sendable {
         let box = layer.localBounds
         guard box.width >= 1, box.height >= 1 else { return nil }
         layer.frame = layer.frame.offsetBy(dx: padding - box.minX, dy: padding - box.minY)
+        // The capture's pixel scale comes along too: a measurement reads its
+        // number through it, so without it a layers-list thumbnail on a 2x
+        // capture printed 33 px beside the canvas's 16 px.
         let doc = PhotonzDocument(canvasSize: CGSize(width: box.width + padding * 2,
                                                      height: box.height + padding * 2),
-                                  layers: [layer])
+                                  layers: [layer], pixelScale: document.pixelScale)
         return render(doc, store: store)
     }
 

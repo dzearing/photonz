@@ -1,0 +1,22 @@
+{
+  "feature": "Measurement thumbnails read the canvas number on a Retina capture",
+  "epic": "measure-redline",
+  "summary": "On a 2x screenshot, the little picture beside each measurement in the Layers list now prints the same number as its chip on the canvas (16 px beside 16 px, where it used to say 33 px). Dragging a measurement and Copy Layer read the right number too.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any screenshot taken on a Retina screen.",
+  "switched": {},
+  "try": [
+    { "do": "Take a screenshot with Shift Command 4 on a Retina screen, then open it with Shift Command 6." },
+    { "do": "Press I twice for Size and click a button in the picture." },
+    { "do": "Press I, then I again for Gap, and click in the space between two cards." },
+    { "do": "Look at the Measure rows in the Layers list beside the chips on the canvas.", "shot": "2026-10-09-retina-measure-thumbnails.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag one measurement a little and watch its chip while it moves." }
+  ],
+  "evaluate": [
+    "Does every Measure row's picture print the same number as its chip on the canvas?",
+    "Does a measurement's number stay the same while you drag it?",
+    "On a plain 1x picture, do the row pictures still read what they did before?"
+  ],
+  "rough": [
+    "A Size measurement's row picture is shrunk so far that its number cannot be read at all (the 124 px row in the picture), so the row shows that a number is there but not which one."
+  ]
+}
