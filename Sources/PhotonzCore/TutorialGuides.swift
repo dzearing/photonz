@@ -1632,8 +1632,8 @@ public enum TutorialGuides {
                 id: "show-the-grid",
                 anchor: .canvas,
                 title: "Turn the pixels on",
-                body: "Press \u{2318}'. The lines are what an icon has to land on, and a point you place sticks to the nearest crossing.",
-                bodyWhenAlreadyTrue: "The grid is already on. Its lines are what an icon has to land on, and a point you place sticks to the nearest crossing.",
+                body: "Press \u{2318}'. The lines help you line things up, and every point you place in the frame lands on a whole pixel.",
+                bodyWhenAlreadyTrue: "The grid is already on. Its lines help you line things up, and every point you place in the frame lands on a whole pixel.",
                 advance: .waitsFor(.gridShown)),
             TutorialStep(
                 id: "show-the-keylines",
@@ -1685,7 +1685,7 @@ public enum TutorialGuides {
                 id: "lines-to-land-on",
                 anchor: .canvas,
                 title: "Lines to land on",
-                body: "Press \u{2318}' if the grid is not showing. Every point the Pen puts down sticks to the nearest crossing of it.",
+                body: "Press \u{2318}' if the grid is not showing. Inside the frame every point the Pen puts down lands on a whole pixel.",
                 advance: .waitsFor(.gridShown)),
             TutorialStep(
                 id: "take-the-pen",
@@ -1702,7 +1702,7 @@ public enum TutorialGuides {
                 id: "click-the-corners",
                 anchor: .canvas,
                 title: "Click out a shape",
-                body: "Click three or four corners, then click the first point again to close it. Each click lands on a crossing of the lines.",
+                body: "Click three or four corners, then click the first point again to close it. Each click lands on a whole pixel, or on a keyline near it.",
                 advance: .waitsFor(.editMade)),
             TutorialStep(
                 id: "pull-a-curve",

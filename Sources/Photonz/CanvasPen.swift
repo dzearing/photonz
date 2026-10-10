@@ -198,7 +198,7 @@ extension CanvasNSView {
     func penMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
         guard tool == .pen, let viewport else { return false }
         let startingAPath = !penSession.isDrawing
-        penSession.grid = canvasNudgeGrid
+        refreshPenSnapping(at: p)
         // The weight the whole path comes out at: the weight the Pen is armed
         // with, which is whatever a path's Thickness row was last set to, and
         // then only if NOBODY HAS CHOSEN one does the frame the FIRST anchor
@@ -229,7 +229,7 @@ extension CanvasNSView {
 
     func penMouseDragged(to p: CGPoint, event: NSEvent) {
         guard tool == .pen, let viewport else { return }
-        penSession.grid = canvasNudgeGrid
+        refreshPenSnapping(at: p)
         penSession.drag(to: p, constrained: event.modifierFlags.contains(.shift),
                         zoom: viewport.zoom)
         refreshPenChrome()
@@ -266,9 +266,28 @@ extension CanvasNSView {
         // The grid is read on every move rather than once at the start of a
         // path: the lines a drag pulls to follow the zoom, so a path drawn
         // across a pinch lands on the lines that are on screen NOW.
-        penSession.grid = canvasNudgeGrid
+        refreshPenSnapping(at: p)
         penSession.free = event.modifierFlags.contains(.command)
         refreshPenChrome()
+    }
+
+    /// What a Pen point is pulled onto right now: the canvas grid's lines, and
+    /// inside an icon frame the frame's whole units, keylines and the points
+    /// of the shapes already on it (`IconSnap`), which win over the grid.
+    ///
+    /// The icon is the one under the FIRST anchor once a path is under way, so
+    /// a point that strays past the frame's edge keeps the units its path
+    /// started on, and a path started on bare canvas stays exactly as the Pen
+    /// has always been even when it crosses an icon.
+    func refreshPenSnapping(at p: CGPoint?) {
+        penSession.grid = canvasNudgeGrid
+        penSession.iconSnap = penIconSnap(at: p)
+    }
+
+    func penIconSnap(at p: CGPoint?) -> IconSnap? {
+        guard framesEnabled, let document, document.hasIconFrames,
+              let aim = penSession.anchors.first?.point ?? p else { return nil }
+        return document.iconSnap(at: aim, keylines: iconKeylines)
     }
 
     /// Return and Escape with the Pen in hand. True when the pen answered the

@@ -1,0 +1,240 @@
+{
+  "out": "/tmp/photonz-playtest/pen-lands-on-whole-units-in-an-icon-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 1600,
+      "canvasHeight": 1100,
+      "width": 1240,
+      "height": 900
+    },
+    {
+      "do": "action",
+      "action": "newFrameDialog"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.9
+    },
+    {
+      "do": "press",
+      "control": "24",
+      "in": "Icons"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Add Frame"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "pinch",
+      "to": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-frame",
+      "note": "a 24 unit icon frame at 800%, at Next defaults with nothing switched on: the frame runs 788 to 812 across and 538 to 562 down"
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        791.3,
+        543.6
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        806.6,
+        544.4
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        799.4,
+        556.7
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "snapshot",
+      "name": "pen-whole-units-1-three-points"
+    },
+    {
+      "do": "click",
+      "at": [
+        791.2,
+        543.8
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": true
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "click",
+      "at": [
+        807.6,
+        544.2
+      ]
+    },
+    {
+      "do": "drag",
+      "from": [
+        803.3,
+        552.2
+      ],
+      "to": [
+        803.2,
+        556.4
+      ],
+      "steps": 8
+    },
+    {
+      "do": "move",
+      "at": [
+        809.7,
+        556.4
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "snapshot",
+      "name": "pen-whole-units-2-second-shape"
+    },
+    {
+      "do": "click",
+      "at": [
+        809.7,
+        556.4
+      ]
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPath",
+      "anchors": 3,
+      "closed": false,
+      "curves": 2,
+      "anchor": 0,
+      "near": [
+        807,
+        544
+      ],
+      "within": 0.01
+    },
+    {
+      "do": "writeSVG",
+      "name": "pen-whole-units"
+    },
+    {
+      "do": "expectSVG",
+      "contains": "M0 0 L16 0 L9 13 L0 0 Z"
+    },
+    {
+      "do": "expectSVG",
+      "contains": "d=\"M4 0 C4 0 0 4 0 8 C0 12 7 12 7 12\""
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "snapshot",
+      "name": "pen-whole-units-3-drawn"
+    },
+    {
+      "do": "click",
+      "at": [
+        789,
+        561
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "clearClipboard"
+    },
+    {
+      "do": "shortcut",
+      "key": "c",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Copy"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "readClipboard",
+      "stage": "4-the-icon-copied",
+      "svg": true
+    }
+  ]
+}

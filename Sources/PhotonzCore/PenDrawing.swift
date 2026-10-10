@@ -83,6 +83,14 @@ public struct PenSession: Equatable, Sendable {
     /// with a different tool.
     public var grid: NudgeGrid?
 
+    /// The icon frame the path is being drawn on, or nil off one. Inside an
+    /// icon every point lands on a whole unit, a keyline or another shape's
+    /// point (`IconSnap`), and that wins over `grid`: a canvas grid four points
+    /// apart could only reach one unit in four. The canvas hands this over
+    /// from the frame under the FIRST anchor, so one path keeps one set of
+    /// units even where a point strays past the frame's edge.
+    public var iconSnap: IconSnap?
+
     /// Whether ⌘ is held, which means "exactly where I put it": the one key
     /// that refuses the magnets everywhere on the canvas. Kept as state as
     /// well as passed to `press`, so pressing or releasing it moves the
@@ -289,7 +297,7 @@ public struct PenSession: Equatable, Sendable {
     /// laid over it. An axis ⇧ is holding at an angle is NOT lit, because the
     /// angle owns that axis and the point is not on a line down it.
     public var pressGridLines: (x: CGFloat?, y: CGFloat?) {
-        guard let origin = press?.origin, !free, let grid,
+        guard let origin = press?.origin, !free, iconSnap == nil, let grid,
               grid.spacing.isFinite, grid.spacing > 0 else { return (nil, nil) }
         func line(_ value: CGFloat, countingFrom start: CGFloat) -> CGFloat? {
             let quantized = Snapping.quantized(value, to: grid.spacing, from: start)
@@ -328,6 +336,9 @@ public struct PenSession: Equatable, Sendable {
         if press.dragged {
             var handle = CGPoint(x: point.x - press.origin.x, y: point.y - press.origin.y)
             if constrained { handle = Self.snappedToFortyFive(handle) }
+            // In an icon the handle's tip is a place in the file as much as
+            // the point is, so it ends on a whole unit too.
+            if !free, let iconSnap { handle = iconSnap.offset(handle) }
             press.handle = handle
         }
         self.press = press
@@ -498,23 +509,32 @@ public struct PenSession: Equatable, Sendable {
         let landed = onGrid(held)
         if offset.y == 0 { return CGPoint(x: landed.x, y: held.y) }
         if offset.x == 0 { return CGPoint(x: held.x, y: landed.y) }
+        // In an icon a diagonal still lands on a whole unit: both sides of the
+        // run round to the same length, so it stays at the angle it is held to.
+        if !free, let iconSnap {
+            let whole = iconSnap.offset(offset)
+            return CGPoint(x: last.point.x + whole.x, y: last.point.y + whole.y)
+        }
         return held
     }
 
-    /// Where a point put down at `point` really lands: on the nearest crossing
-    /// of the grid the canvas is drawing, or exactly where it was put when
-    /// nothing is pulling or ⌘ says so.
+    /// Where a point put down at `point` really lands: inside an icon frame on
+    /// a whole unit (`IconSnap`), elsewhere on the nearest crossing of the grid
+    /// the canvas is drawing, or exactly where it was put when nothing is
+    /// pulling or ⌘ says so.
     ///
     /// A grid of columns draws nothing across the canvas, so there is no line
     /// across to land on and the vertical stays where the hand put it.
     private func onGrid(_ point: CGPoint) -> CGPoint {
-        guard !free, let grid else { return point }
+        guard !free else { return point }
+        if let iconSnap { return iconSnap.point(nearest: point, zoom: zoom) }
+        guard let grid else { return point }
         return grid.crossing(nearest: point)
     }
 
     /// The same offset turned onto the nearest multiple of 45 degrees, at the
     /// length it already had.
-    static func snappedToFortyFive(_ offset: CGPoint) -> CGPoint {
+    public static func snappedToFortyFive(_ offset: CGPoint) -> CGPoint {
         let length = hypot(offset.x, offset.y)
         guard length > 0 else { return offset }
         let step = CGFloat.pi / 4

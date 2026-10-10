@@ -1,0 +1,32 @@
+{
+  "feature": "Pen points in an icon frame land on whole units",
+  "epic": "icon-grid",
+  "task": "pen-points-in-an-icon-frame-land-on-whole-units",
+  "summary": "Inside an icon frame every Pen point now lands on a whole pixel, pulled onto a keyline or onto another shape's point when it is near one, with nothing to switch on. A shape drawn that way copies and exports as SVG with whole numbers throughout.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/pen-lands-on-whole-units-in-an-icon-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Choose Layer > New Frame, pick 24 under Icons, then Add Frame." },
+    { "do": "Zoom in to about 800% so the frame fills a good part of the window." },
+    { "do": "Press P and click three points roughly, a little off the dashed lines.", "shot": "2026-10-10-pen-whole-units-1-close-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the first point to close the shape, then press Esc to drop the pick." },
+    { "do": "Press P, start a second shape just beside a corner of the first, press and drag for a curve, and hover where the last point goes.", "shot": "2026-10-10-pen-whole-units-2-close-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click, press Return, pick the frame and press Cmd C, then paste into a text editor.", "shot": "2026-10-10-pen-whole-units-3-drawn-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Cmd while clicking a point and check it lands exactly where you clicked." }
+  ],
+  "evaluate": [
+    "Does every point land where you meant it, with no half pixel anywhere in the pasted SVG?",
+    "Does the pull onto a keyline or another shape's corner feel helpful at 800%, or does it grab points you wanted one pixel away?",
+    "Zoomed right out, is it still possible to place the point you want, or do the keylines take over?",
+    "Is the ring under the pointer enough to tell where a point will land, or do you want the place written beside it as the mock shows?"
+  ],
+  "rough": [
+    "The mock (Draw an icon on the grid, Grid & snap group) has a Snap to row with Grid, Keylines and Geometry; here icon snapping is always on with no row. Task icon-snapping-reaches-what-the-icon-mock-draws.",
+    "The mock shows a readout beside the pointer naming the place a point will land (step 4); here there is only the ring. Task icon-snapping-reaches-what-the-icon-mock-draws.",
+    "The mock snaps to shapes' edges and centres as well as their points; here only points pull. Task icon-snapping-reaches-what-the-icon-mock-draws.",
+    "The mock suspends snapping with Control; the app's key for no magnets is Cmd everywhere on the canvas, and the Pen keeps that. Task icon-snapping-reaches-what-the-icon-mock-draws carries the card for it.",
+    "A curve that bulges past its own first point still copies with fractions in its SVG, although every point and handle is whole. Task a-curve-drawn-on-whole-units-exports-on-whole-un.",
+    "Only the Pen snaps this way; the rectangle and ellipse tools in an icon frame keep their own magnets.",
+    "Right after a shape closes it stays picked, so a Pen press on its corner grabs that corner instead of starting a new shape there. Press Esc first. Noted on task icon-snapping-reaches-what-the-icon-mock-draws."
+  ]
+}

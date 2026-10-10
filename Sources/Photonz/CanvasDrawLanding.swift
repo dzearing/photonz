@@ -102,8 +102,9 @@ extension CanvasNSView {
             // The Pen is the one drawing tool with no border magnets at all:
             // `PenSession.landing` knows the grid, the 45 degree constraint and
             // its own anchors, and nothing about the picture underneath. So it
-            // has something to aim at exactly when the grid is pulling.
-            guard canvasSnapSpacing != nil else { return nil }
+            // has something to aim at exactly when the grid is pulling, or
+            // when the pointer is on an icon, whose units always pull.
+            guard canvasSnapSpacing != nil || penIconSnap(at: pointer) != nil else { return nil }
             let aim = penSession.landing(at: pointer,
                                          constrained: pointerModifiers.contains(.shift),
                                          breaking: pointerModifiers.contains(.option),

@@ -21046,3 +21046,10 @@ Next: the first editor window's ~200 ms first build
 - Clip menu row on ⌃⇧D retitles Detach Audio ↔ Re-attach Audio; the right-click row on the picture and on the loose sound does the same. Notice "Sound put back".
 - Walks `re-attach-audio-walk` (right-click, off-step, one undo step) and `re-attach-audio-menu-bar-walk` (front, Clip menu). Audit `queue/audits/2026-10-09-reattach-audio.json`.
 - Open: the cut mock's panel button for Detach/Re-attach waits on the card about panel buttons.
+
+## 2026-10-10 — Pen points in an icon frame land on whole units
+
+- `IconSnap` (`Sources/PhotonzCore/IconSnap.swift`, `IconSnapTests`): inside an icon frame a Pen point lands on a whole unit counted from the frame's corner, pulled onto a keyline (while shown) or another path's point within 6 view points, never more than one unit. Wins over the canvas grid; ⌘ still frees. Shift runs and dragged handles stay whole too.
+- `CanvasPen.refreshPenSnapping` takes the icon under the first anchor, so paths started off icons are unchanged. Icon tutorial copy updated.
+- Walk `pen-lands-on-whole-units-in-an-icon-walk` (Next defaults, copy claims whole-unit SVG). Audit `queue/audits/2026-10-10-pen-points-in-an-icon-frame-land-on-whole-units.json`.
+- Open: a curve bulging past its first point still exports fractional (`a-curve-drawn-on-whole-units-exports-on-whole-un`); mock's Snap to row, readout and edge targets (`icon-snapping-reaches-what-the-icon-mock-draws`).

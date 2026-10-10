@@ -450,7 +450,7 @@ extension CanvasNSView {
         if tool == .pen {
             penSession.constrained = event.modifierFlags.contains(.shift)
             penSession.free = event.modifierFlags.contains(.command)
-            penSession.grid = canvasNudgeGrid
+            refreshPenSnapping(at: penSession.pointer)
             if penSession.isDrawing { refreshPenChrome() }
         }
         // ...and the mark saying where the next press lands moves with them,
