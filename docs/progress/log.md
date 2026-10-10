@@ -21053,3 +21053,12 @@ Next: the first editor window's ~200 ms first build
 - `CanvasPen.refreshPenSnapping` takes the icon under the first anchor, so paths started off icons are unchanged. Icon tutorial copy updated.
 - Walk `pen-lands-on-whole-units-in-an-icon-walk` (Next defaults, copy claims whole-unit SVG). Audit `queue/audits/2026-10-10-pen-points-in-an-icon-frame-land-on-whole-units.json`.
 - Open: a curve bulging past its first point still exports fractional (`a-curve-drawn-on-whole-units-exports-on-whole-un`); mock's Snap to row, readout and edge targets (`icon-snapping-reaches-what-the-icon-mock-draws`).
+
+## 2026-10-10 — The front door's Recent lists documents you opened
+
+- `RecentDocuments` (`Sources/PhotonzCore/RecentDocuments.swift`, `RecentDocumentsTests`): the documents you opened and saved, newest first, ten kept, one entry per file; `FrontDoor.recent(captures:documents:)` puts them among captures by date, a capture you opened staying one card.
+- `RecentDocumentsStore` (app, UserDefaults `recentDocuments`, playtest memory `recent`) notes a file opened (window seeded from a file or recording, Finder open) and every Save/Save As. Flag `next-recent-documents`, on by default in Next.
+- A saved package now carries `preview.png` (480 px long edge, `PackageIO.readPreview`) for the card; pictures and recordings use Quick Look. File > Open Recent with Clear Menu. Opening a file already open in a window brings that window forward (`EditorState.windowHolding`).
+- Walk `front-door-recent-documents-walk`. Audit `queue/audits/2026-10-10-recent-documents.json`.
+- Gotcha: a large HEIC encode in a unit test hung the whole suite beside the text reading tests (hardware encoder); keep test images tiny.
+- Open: the document card's Copy, Pin and Delete (`a-recent-document-card-offers-the-mock-s-copy-pi`).

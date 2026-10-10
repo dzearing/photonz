@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.415Z",
-  "updated": "2026-10-10T02:37:52.495Z",
+  "updated": "2026-10-10T09:44:44.726Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Source: rough line in queue/audits/2026-10-09-front-door.json ('Recent shows capture history ... not every document you have opened'). Mock: docs/design/mocks/pages/ui-entry-wt.html step 2 ~290-300, ~360. Code: Sources/Photonz/FrontDoorView.swift ~197-204 reads capture.store.entries. No Open Recent anywhere in Sources: NSDocumentController.recentDocumentURLs is the Mac's own list if the app's documents go through it; check before building a second list. Open Recent belongs in File (placement contract).",
@@ -28,6 +28,30 @@
     {
       "t": "2026-10-10T02:37:52.494Z",
       "note": "seq 4040 -> 9"
+    },
+    {
+      "t": "2026-10-10T08:26:30.030Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T08:55:33.837Z",
+      "note": "owns these walks: front-door-recent-documents-walk"
+    },
+    {
+      "t": "2026-10-10T09:44:44.598Z",
+      "note": "Before building: mock step 2 says Recent is 'your recent documents' and draws shots and a clip together, so documents go among captures by date rather than a second row. The app is a menu bar agent (LSUIElement) with no NSDocument, so the Mac's own recent list has nowhere to show and no dates; one list of our own feeds both the front door and File > Open Recent. Saving then clicking Recent would have opened a second window on the same file, so reopening an open file now brings its window forward."
+    },
+    {
+      "t": "2026-10-10T09:44:44.665Z",
+      "note": "left rough: capture cards under Recent still open on a SwiftUI tap gesture; the walk's pointer click on a document card did nothing until it became a Button (the probe window is never key), so a capture card's click is unproven by a walk. A person clicking a key front door is the ordinary case, so not filed."
+    },
+    {
+      "t": "2026-10-10T09:44:44.725Z",
+      "note": "Audit rough items: document/capture card action rows filed as a-recent-document-card-offers-the-mock-s-copy-pi; old packages without a preview and a saved video's preview frame stay here (no walk shows either broken)."
     }
+  ],
+  "started": "2026-10-10T08:26:30.029Z",
+  "walks": [
+    "front-door-recent-documents-walk"
   ]
 }

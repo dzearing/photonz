@@ -1,0 +1,43 @@
+{
+  "feature": "Recent lists the documents you open",
+  "epic": "ui-building",
+  "summary": "The front door's Recent now shows the documents you saved or opened, with a picture of each, among your newest captures, and File has Open Recent with Clear Menu. Opening a document that is already open brings its window forward instead of opening a second copy.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any picture, press Shift Command S and save it as a project."
+    },
+    {
+      "do": "Close its window, then press Shift Command N.",
+      "shot": "2026-10-10-recent-documents-1-front-door-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the project's card under Recent: it opens in its own window and the front door closes.",
+      "shot": "2026-10-10-recent-documents-2-reopened-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open File > Open Recent and pick the same project: the window you already have comes forward."
+    },
+    {
+      "do": "Point at a document card on a new front door, or right click it: Edit, Show in Finder, Remove from Recent."
+    },
+    {
+      "do": "Pick File > Open Recent > Clear Menu, open another New Window: Recent shows captures only."
+    }
+  ],
+  "evaluate": [
+    "Does mixing documents and captures in one Recent row, newest first, read as one list, or would you rather documents came first?",
+    "Is a document's saved picture (the whole canvas, shrunk) enough to recognise it at card size?",
+    "Should opening a capture from Recent or history also move it to the front of Recent, or only documents you open by file?",
+    "Does Remove from Recent, rather than Delete, feel right on a document card?"
+  ],
+  "rough": [
+    "A document card's hover row is Edit, Show in Finder and Remove from Recent, not the mock's Copy, Edit, Pin and Delete: Pin exists nowhere in the app and Delete would throw away your own file; the question is filed as a-recent-document-card-offers-the-mock-s-copy-pi.",
+    "Captures keep the history strip's own row (Copy, Edit, Show in Finder, Delete) as the front door shipped it, also covered by a-recent-document-card-offers-the-mock-s-copy-pi.",
+    "A project saved before today has no picture inside it, so its card shows a plain document glyph until it is saved again.",
+    "A saved video's picture is drawn from the frame under the playhead when it was saved; no walk has looked at one yet, so it may miss the recording's own frames."
+  ]
+}

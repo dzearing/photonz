@@ -4085,7 +4085,7 @@ struct PlaytestScriptTests {
     @Test func everyMemoryNameIsAPlainWord() throws {
         #expect(PlaytestMemory.allCases.map(\.rawValue)
                 == ["text", "color", "shapes", "measure", "tools", "groups", "panel", "grid",
-                    "frames", "tutorials", "motion", "shelf", "questions"])
+                    "frames", "tutorials", "motion", "shelf", "questions", "recent"])
     }
 
     @Test func waitForReadsASectionByItsHeaderText() {

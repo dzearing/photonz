@@ -96,6 +96,8 @@ public enum FeatureCatalog {
 
     public static let frontDoorFlag = "next-front-door"
 
+    public static let recentDocumentsFlag = "next-recent-documents"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -1419,6 +1421,16 @@ public enum FeatureCatalog {
                     name: frontDoorFlag,
                     title: "New Window opens the front door",
                     description: "New Window opens a small window to start from, with Open, four templates and your recent captures, and a template sets the mode and names what the main button makes. Off means an empty window with its card.",
+                    area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: recentDocumentsFlag,
+                    title: "Recent lists the documents you open",
+                    description: "The documents you open and save are remembered: the front door's Recent shows them among your captures, and File has Open Recent with Clear Menu. Off means Recent shows captures only and File has no Open Recent.",
                     area: .canvas,
                     isEnabled: false,
                     parameters: []),

@@ -45,7 +45,8 @@ struct FrontDoorTests {
     func everyDrawnWordIsALabel() {
         // A button is named by the command it is, so only the words that
         // are not on a button are held to never saying how.
-        var commands = [FrontDoor.openTitle, FrontDoor.createTitle, FrontDoor.primaryTitle(picked: nil)]
+        var commands = [FrontDoor.openTitle, FrontDoor.createTitle, FrontDoor.primaryTitle(picked: nil),
+                        FrontDoor.removeFromRecentTitle]
         var words = [FrontDoor.subtitle, FrontDoor.startHeader, FrontDoor.recentHeader,
                      FrontDoor.promptPlaceholder]
         for template in FrontDoorTemplate.allCases {
@@ -82,8 +83,39 @@ struct FrontDoorTests {
             CaptureEntry(url: URL(fileURLWithPath: "/tmp/\($0).png"),
                          createdAt: now.addingTimeInterval(TimeInterval(-$0)), kind: .image)
         }
-        #expect(FrontDoor.recent(entries).map(\.fileName) == ["0.png", "1.png", "2.png", "3.png"])
-        #expect(FrontDoor.recent([]).isEmpty)
+        #expect(FrontDoor.recent(captures: entries, documents: []).map(\.name) == ["0", "1", "2", "3"])
+        #expect(FrontDoor.recent(captures: [], documents: []).isEmpty)
+    }
+
+    @Test("Recent puts the documents you opened among your captures, newest first")
+    func recentDocumentsAmongCaptures() {
+        let now = Date()
+        let captures = [
+            CaptureEntry(url: URL(fileURLWithPath: "/caps/shot-1.png"), createdAt: now.addingTimeInterval(-60), kind: .image),
+            CaptureEntry(url: URL(fileURLWithPath: "/caps/clip.mov"), createdAt: now.addingTimeInterval(-3600), kind: .video),
+        ]
+        let documents = [
+            RecentDocument(url: URL(fileURLWithPath: "/work/hero-card.photonz"), usedAt: now.addingTimeInterval(-10)),
+            RecentDocument(url: URL(fileURLWithPath: "/work/sunset-edit.photonz"), usedAt: now.addingTimeInterval(-86_400)),
+        ]
+        let recent = FrontDoor.recent(captures: captures, documents: documents)
+        #expect(recent.map(\.name) == ["hero-card", "shot-1", "clip", "sunset-edit"])
+        #expect(recent.map(\.isCapture) == [false, true, true, false])
+        #expect(recent.first?.date == now.addingTimeInterval(-10))
+    }
+
+    @Test("A capture you opened is listed once, as the capture, at the time you opened it")
+    func aCaptureYouOpenedIsListedOnce() {
+        let now = Date()
+        let shot = URL(fileURLWithPath: "/caps/shot-1.png")
+        let captures = [CaptureEntry(url: shot, createdAt: now.addingTimeInterval(-3600), kind: .image),
+                        CaptureEntry(url: URL(fileURLWithPath: "/caps/shot-2.png"),
+                                     createdAt: now.addingTimeInterval(-60), kind: .image)]
+        let documents = [RecentDocument(url: shot, usedAt: now)]
+        let recent = FrontDoor.recent(captures: captures, documents: documents)
+        #expect(recent.map(\.name) == ["shot-1", "shot-2"])
+        #expect(recent.first?.isCapture == true)
+        #expect(recent.first?.date == now)
     }
 
     @Test("The front door is on by default in Next and absent from Current")

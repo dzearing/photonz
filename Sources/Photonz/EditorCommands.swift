@@ -277,6 +277,22 @@ struct EditorCommands: Commands {
         return KeyboardShortcut(KeyEquivalent(character), modifiers: .control)
     }
 
+    /// File > Open Recent: the same documents the front door's Recent puts
+    /// among your captures, newest first.
+    private var openRecentMenu: some View {
+        let recents = RecentDocumentsStore.shared
+        let documents = recents.documents
+        let titles = RecentDocuments.menuTitles(documents)
+        return Menu("Open Recent") {
+            ForEach(Array(zip(documents, titles)), id: \.0.id) { document, title in
+                Button(title) { coordinator.openFileWindow(document.url) }
+            }
+            if !documents.isEmpty { Divider() }
+            Button("Clear Menu") { recents.clear() }
+                .disabled(documents.isEmpty)
+        }
+    }
+
     var body: some Commands {
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
@@ -335,6 +351,11 @@ struct EditorCommands: Commands {
                 .keyboardShortcut("n", modifiers: [.command, .option])
             Button("Open…") { coordinator.presentOpenPanel() }
                 .keyboardShortcut("o", modifiers: .command)
+            // The documents you opened and saved, where every Mac app keeps
+            // them, with Clear Menu at the foot (`next-recent-documents`).
+            if Experiments.shared.recentDocumentsEnabled {
+                openRecentMenu
+            }
             // Recordings and sounds onto the Library shelf and nowhere else,
             // the mock's File row (`video.html`) and where Premiere and Final
             // Cut people look for it. ⇧⌘I is Photoshop's Invert Selection too,

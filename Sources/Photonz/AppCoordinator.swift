@@ -945,6 +945,15 @@ final class AppCoordinator {
     /// This is the one place Finder, the dock, a recent item and the Open panel
     /// all come through, so routing here covers every one of them.
     func openFileWindow(_ url: URL) {
+        // A document already open in a window comes forward rather than
+        // opening twice: saved and then picked from Recent, two windows of one
+        // file would each save over the other (`next-recent-documents`).
+        if Experiments.shared.recentDocumentsEnabled, let window = EditorState.windowHolding(url) {
+            AppFront.activate()
+            AppFront.present(window)
+            RecentDocumentsStore.shared.note(url)
+            return
+        }
         if Experiments.shared.openingARecording, RecordingFiles.isRecording(url) {
             openRecording(url)
             return

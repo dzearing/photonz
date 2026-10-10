@@ -109,6 +109,8 @@ extension PlaytestMemory {
             []
         case .questions:
             SilenceableQuestion.all.map(\.storageKey)
+        case .recent:
+            [RecentDocumentsStore.defaultsKey]
         }
     }
 }

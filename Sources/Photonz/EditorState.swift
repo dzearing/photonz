@@ -2222,10 +2222,12 @@ final class EditorState {
     func seed(from windowID: EditorWindowID, capture: CaptureCenter) {
         guard document == nil else { return }
         captureCenter = capture
+        Self.seeded.add(self)
         switch windowID {
         case .file(let url):
             openImageOrSidecar(at: url)
             openedFileURL = url
+            if document != nil { RecentDocumentsStore.shared.note(url) }
             // A plain image keeps its layers in a sidecar, so the window's
             // document has no url of its own; the file it was opened from is
             // what its open groups are filed under, and it is known only now.
@@ -2290,6 +2292,7 @@ final class EditorState {
             // same tools as a screenshot, and the only thing different about it
             // is that something in it occupies time.
             openRecordingAsDocument(at: url)
+            RecentDocumentsStore.shared.note(url)
         }
     }
 
@@ -2375,6 +2378,21 @@ final class EditorState {
     /// The window hosting this editor, captured by `WindowCloseGuard` so the
     /// close confirmation can attach and the edited-dot can track dirtiness.
     @ObservationIgnored weak var hostWindow: NSWindow?
+
+    /// Every editor a window has been seeded with, held weakly, so opening a
+    /// file can find the window already holding it (`windowHolding`).
+    @ObservationIgnored private static var seeded = NSHashTable<EditorState>.weakObjects()
+
+    /// The open window whose document IS `url`: saved there, or opened from
+    /// it. Opening that file again comes back to this window rather than
+    /// putting the same file in a second one, the way any Mac app does.
+    static func windowHolding(_ url: URL) -> NSWindow? {
+        let file = url.standardizedFileURL
+        return seeded.allObjects.first { editor in
+            guard editor.document != nil, let window = editor.hostWindow, window.isVisible else { return false }
+            return (editor.documentURL ?? editor.openedFileURL)?.standardizedFileURL == file
+        }?.hostWindow
+    }
 
     /// The throwaway editor `EditorWarmUp` builds at launch and never shows.
     /// Its canvas joins a window nobody sees, and it must never take that
@@ -3359,9 +3377,13 @@ final class EditorState {
             let media = ProjectMedia.table(for: document, project: url) {
                 SoundLibrary.shared.url(forID: $0)
             }
-            try PackageIO.write(document, store: store, media: media, to: url)
+            // A small picture of it goes in too, which is what the front
+            // door's Recent draws for it (`next-recent-documents`).
+            let preview = RecentDocumentsStore.shared.isEnabled ? compositeImage() : nil
+            try PackageIO.write(document, store: store, media: media, preview: preview, to: url)
             documentURL = url
             markSaved()
+            RecentDocumentsStore.shared.note(url)
             // Saved under a new name: the open groups belong to the new file
             // too, so it opens looking the way this window looks now.
             rememberExpandedGroups()

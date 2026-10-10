@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/front-door-recent-documents",
+  "setup": {
+    "forget": [
+      "recent"
+    ]
+  },
+  "seed": "The front door's Recent lists the documents you opened and saved, at Next defaults with no switch changed (ui-entry-wt.html step 2: 'your recent documents'). A picture is opened, saved as a project the way File > Save As does, and its window closed. New Window's front door then shows project under Recent, with the picture saved inside the package, among the probe's captures; a pointer click on that card opens project.photonz in a window of its own and the front door closes. File > Open Recent lists the same project; picking it again brings the window already holding it forward instead of opening a second copy, and Clear Menu empties the list.",
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "fixtures/Hero banner.png" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "saveProjectAs" },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "startFromFrontDoor",
+      "press": "project.photonz",
+      "width": 1100,
+      "height": 760,
+      "card": "recent-1-front-door"
+    },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectWindows", "titled": "project.photonz", "count": 1 },
+    {
+      "do": "describe",
+      "stage": "2-reopened",
+      "note": "The project saved a moment ago, reopened from the front door's Recent card in a window of its own. The front door has closed."
+    },
+    { "do": "snapshot", "name": "recent-2-reopened" },
+    { "do": "menus", "stage": "3-open-recent", "menu": "File", "choose": "File > Open Recent > project.photonz" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectWindows", "titled": "project.photonz", "count": 1 },
+    { "do": "menus", "stage": "4-clear-menu", "menu": "File", "choose": "File > Open Recent > Clear Menu" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "menus", "stage": "5-cleared", "menu": "File" }
+  ]
+}

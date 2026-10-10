@@ -1,0 +1,32 @@
+{
+  "id": "a-recent-document-card-offers-the-mock-s-copy-pi",
+  "title": "A recent document card offers the mock's Copy, Pin and Delete",
+  "goal": "Under the front door's Recent, the mock gives every card Copy, Edit, Pin and Delete when you point at it. A document you saved shows Edit, Show in Finder and Remove from Recent instead, because nothing in the app can pin yet and Delete on a document would throw away your own file from a launcher. Decide with the user what a document card should offer, then build it.",
+  "epic": "ui-building",
+  "priority": "p2-normal",
+  "seq": 4020,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T08:55:55.575Z",
+  "updated": "2026-10-10T08:56:07.320Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open.",
+  "acceptance": [
+    "A decision card asks the user whether a document card's Delete removes the file or only the card, and whether Pin is wanted",
+    "The document card's hover row and right-click menu offer what the user picked",
+    "A walk points at a document card and clicks each action by pointer, green at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T08:55:55.577Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T08:56:07.319Z",
+      "note": "walks front-door-recent-documents-walk -> none"
+    }
+  ],
+  "walks": []
+}

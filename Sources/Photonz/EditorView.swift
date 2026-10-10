@@ -587,6 +587,7 @@ struct EditorView: View {
             return
         }
         editorState.openImage(at: url)
+        if editorState.document != nil { RecentDocumentsStore.shared.note(url) }
     }
 
     /// The Measure tool's hint: a small glass pill saying what a click does in

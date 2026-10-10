@@ -418,6 +418,9 @@ extension Experiments {
     var designUIStartEnabled: Bool { isEnabled(FeatureCatalog.designUIStartFlag) }
     /// New Window opens the front door (`next-front-door`).
     var frontDoorEnabled: Bool { isEnabled(FeatureCatalog.frontDoorFlag) }
+    /// The documents you open and save are remembered, for the front door's
+    /// Recent and File > Open Recent (`next-recent-documents`).
+    var recentDocumentsEnabled: Bool { isEnabled(FeatureCatalog.recentDocumentsFlag) }
 
     /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
     /// canvas picks a whole group (with double click going inside it and Escape

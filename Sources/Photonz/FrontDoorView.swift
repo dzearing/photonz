@@ -192,16 +192,19 @@ struct FrontDoorView: View {
 
     // MARK: Recent
 
-    /// The newest captures, the same entries the history strip shows. Absent
-    /// when there are none: an empty state is empty.
+    /// The documents you opened and saved among your newest captures, newest
+    /// first (`next-recent-documents`; with it off, captures only, the same
+    /// entries the history strip shows). Absent when there are none: an empty
+    /// state is empty.
     @ViewBuilder private var recent: some View {
-        let entries = FrontDoor.recent(coordinator.capture.store.entries)
-        if !entries.isEmpty {
+        let items = FrontDoor.recent(captures: coordinator.capture.store.entries,
+                                     documents: RecentDocumentsStore.shared.documents)
+        if !items.isEmpty {
             VStack(alignment: .leading, spacing: 10) {
                 sectionLabel(FrontDoor.recentHeader)
                 HStack(alignment: .top, spacing: 12) {
-                    ForEach(entries) { entry in
-                        FrontDoorRecentCard(entry: entry) { open(entry) }
+                    ForEach(items) { item in
+                        FrontDoorRecentCard(item: item) { open(item) }
                     }
                     Spacer(minLength: 0)
                 }
@@ -252,11 +255,18 @@ struct FrontDoorView: View {
         }
     }
 
-    private func open(_ entry: CaptureEntry) {
-        if entry.kind == .video {
-            coordinator.openRecording(entry.url)
-        } else {
-            coordinator.editCapture(entry.url)
+    /// A capture opens the way history opens it; a document the way Finder
+    /// and File > Open Recent do.
+    private func open(_ item: FrontDoorRecent) {
+        switch item {
+        case .capture(let entry, _):
+            if entry.kind == .video {
+                coordinator.openRecording(entry.url)
+            } else {
+                coordinator.editCapture(entry.url)
+            }
+        case .document(let document):
+            coordinator.openFileWindow(document.url)
         }
         editorState.closeFrontDoorOnceTheEditorOpens()
     }
@@ -289,30 +299,29 @@ private struct FrontDoorProminentButtonStyle: ButtonStyle {
     }
 }
 
-/// One capture under Recent: its picture, its name and how long ago it was
-/// taken, the history strip's filmcard. A click opens it.
+/// One card under Recent: its picture, its name and how long ago it was
+/// taken or last used, the history strip's filmcard. A click opens it.
 private struct FrontDoorRecentCard: View {
-    let entry: CaptureEntry
+    let item: FrontDoorRecent
     let open: () -> Void
     @Environment(AppCoordinator.self) private var coordinator
     @State private var hovered = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            CaptureThumbnailView(entry: entry, store: coordinator.capture.store,
-                                 ringed: hovered, onActivate: open)
+            picture
                 .frame(width: 136, height: 84)
                 .background(Color(nsColor: .controlBackgroundColor), in: .rect(cornerRadius: 8))
                 .clipShape(.rect(cornerRadius: 8))
             VStack(alignment: .leading, spacing: 1) {
-                Text(entry.url.deletingPathExtension().lastPathComponent)
+                Text(item.name)
                     .font(.system(size: 11.5, weight: .medium))
                     .lineLimit(1)
                     .truncationMode(.middle)
                 // Under the pointer the time gives way to the history strip's
                 // own actions, in the same slot, so the row never reflows.
                 ZStack(alignment: .leading) {
-                    Text(RelativeTime.string(from: entry.createdAt, to: .now))
+                    Text(RelativeTime.string(from: item.date, to: .now))
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                         .opacity(hovered ? 0 : 1)
@@ -325,25 +334,77 @@ private struct FrontDoorRecentCard: View {
         .frame(width: 136, alignment: .leading)
         .contentShape(Rectangle())
         .playtestHover("front door recent card") { hovered = $0 }
-        .help(entry.kind == .video ? "Open this recording" : "Open this capture")
-        .playtestControl(entry.fileName, detail: "Front door recent")
+        .help(tip)
+        .contextMenu { menu }
+        .playtestControl(item.url.lastPathComponent, detail: "Front door recent")
+    }
+
+    @ViewBuilder private var picture: some View {
+        switch item {
+        case .capture(let entry, _):
+            CaptureThumbnailView(entry: entry, store: coordinator.capture.store,
+                                 ringed: hovered, onActivate: open)
+        case .document(let document):
+            // A button, so the first click on a window that is not in front
+            // opens it too, the way the template tiles take theirs.
+            Button(action: open) {
+                RecentDocumentThumbnail(url: document.url, ringed: hovered)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    private var tip: String {
+        switch item {
+        case .capture(let entry, _): entry.kind == .video ? "Open this recording" : "Open this capture"
+        case .document: "Open \(item.url.lastPathComponent)"
+        }
     }
 }
 
 extension FrontDoorRecentCard {
     /// The history strip's actions for one capture: Copy, Edit, Show in
     /// Finder and Delete (`HistoryOverlay`). A recording copies as its file.
+    /// A document you opened is yours wherever it lives, so its row never
+    /// deletes it: it opens, shows in Finder, or comes off the list.
     fileprivate var actions: some View {
         let store = coordinator.capture.store
         return HStack(spacing: 2) {
-            if entry.kind == .image {
-                iconButton("Copy", "doc.on.doc") { store.copyToPasteboard(entry) }
+            switch item {
+            case .capture(let entry, _):
+                if entry.kind == .image {
+                    iconButton("Copy", "doc.on.doc") { store.copyToPasteboard(entry) }
+                }
+                iconButton("Edit", "square.and.pencil") { open() }
+                iconButton("Show in Finder", "folder") { coordinator.revealInFinder(entry.url) }
+                iconButton("Delete", "trash", role: .destructive) { store.remove(entry) }
+            case .document(let document):
+                iconButton("Edit", "square.and.pencil") { open() }
+                iconButton("Show in Finder", "folder") { coordinator.revealInFinder(document.url) }
+                iconButton(FrontDoor.removeFromRecentTitle, "xmark") {
+                    RecentDocumentsStore.shared.remove(document.url)
+                }
             }
-            iconButton("Edit", "square.and.pencil") { open() }
-            iconButton("Show in Finder", "folder") { coordinator.revealInFinder(entry.url) }
-            iconButton("Delete", "trash", role: .destructive) { store.remove(entry) }
         }
         .buttonStyle(IconActionButtonStyle(diameter: 24))
+    }
+
+    /// The same verbs on a right click, where a Mac hand looks for them.
+    @ViewBuilder fileprivate var menu: some View {
+        Button("Open") { open() }
+        Button("Show in Finder") { coordinator.revealInFinder(item.url) }
+        switch item {
+        case .capture(let entry, _):
+            if entry.kind == .image {
+                Button("Copy") { coordinator.capture.store.copyToPasteboard(entry) }
+            }
+            Divider()
+            Button("Delete", role: .destructive) { coordinator.capture.store.remove(entry) }
+        case .document(let document):
+            Divider()
+            Button(FrontDoor.removeFromRecentTitle) { RecentDocumentsStore.shared.remove(document.url) }
+        }
     }
 
     private func iconButton(_ title: String, _ systemImage: String, role: ButtonRole? = nil,
@@ -351,7 +412,41 @@ extension FrontDoorRecentCard {
         Button(role: role, action: action) { Image(systemName: systemImage) }
             .toolTip(title, below: true)
             .accessibilityLabel(title)
-            .playtestControl("\(title) \(entry.fileName)", detail: "Front door recent")
+            .playtestControl("\(title) \(item.url.lastPathComponent)", detail: "Front door recent")
+    }
+}
+
+/// A document's picture under Recent: the small preview a saved package
+/// keeps, or what Quick Look draws for a picture or a recording. A plain card
+/// with the file's kind on it while it loads, and for a package saved before
+/// it kept one.
+private struct RecentDocumentThumbnail: View {
+    let url: URL
+    var ringed = false
+    @State private var image: CGImage?
+
+    var body: some View {
+        ZStack {
+            if let image {
+                Image(decorative: image, scale: 1)
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFit()
+                    .clipShape(.rect(cornerRadius: 4))
+                    .overlay {
+                        if ringed {
+                            RoundedRectangle(cornerRadius: 4).strokeBorder(Color.accentColor, lineWidth: 2)
+                        }
+                    }
+                    .padding(4)
+            } else {
+                Image(systemName: url.pathExtension.lowercased() == "photonz" ? "doc.richtext" : "doc")
+                    .font(.system(size: 22, weight: .light))
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .task(id: url) { image = await RecentDocumentPreview.image(for: url) }
     }
 }
 

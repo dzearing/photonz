@@ -422,6 +422,11 @@ public enum PlaytestMemory: String, CaseIterable, Sendable, Hashable, Codable {
     /// that ticks "Don't ask again" and does not forget it leaves that question
     /// silent for every walk after it, and none of them could say why.
     case questions
+    /// The documents you opened and saved, which the front door's Recent and
+    /// File > Open Recent list. A walk that saves a document and reopens it
+    /// from Recent forgets this first, or the card it clicks may be one the
+    /// last run left.
+    case recent
 }
 
 /// One feature a walk switches on or off for the length of its run.

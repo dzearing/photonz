@@ -75,6 +75,8 @@ public enum FrontDoor {
     public static let startHeader = "Start a project"
     public static let startHeaderTip = "Start a project \u{00B7} pick a template"
     public static let recentHeader = "Recent"
+    /// A document's card takes it off the list, never deletes the file.
+    public static let removeFromRecentTitle = "Remove from Recent"
     /// The prompt bar's placeholder. The mock's line, with its example, is
     /// the field's tip.
     public static let promptPlaceholder = "Describe what to create"
@@ -96,13 +98,62 @@ public enum FrontDoor {
         }
     }
 
-    /// How many captures Recent shows. The mock draws three in a window 640
+    /// How many cards Recent shows. The mock draws three in a window 640
     /// wide; four still fit and make the row read as a strip.
     public static let recentCount = 4
 
-    /// The captures Recent shows: the newest few, in the order history lists
-    /// them, and none at all when there are none (an empty state is empty).
-    public static func recent(_ entries: [CaptureEntry]) -> [CaptureEntry] {
-        Array(entries.prefix(recentCount))
+    /// What Recent shows: the documents you opened and saved among your
+    /// captures, newest first, the newest few of them, and none at all when
+    /// there are none (an empty state is empty). A capture you opened is one
+    /// card, the capture's, dated when you last used it.
+    public static func recent(captures: [CaptureEntry], documents: [RecentDocument]) -> [FrontDoorRecent] {
+        var used: [URL: Date] = [:]
+        for document in documents { used[document.url.standardizedFileURL] = document.usedAt }
+        var seen = Set<URL>()
+        var all: [FrontDoorRecent] = []
+        for entry in captures {
+            let file = entry.url.standardizedFileURL
+            guard seen.insert(file).inserted else { continue }
+            all.append(.capture(entry, usedAt: max(entry.createdAt, used[file] ?? entry.createdAt)))
+        }
+        for document in documents where seen.insert(document.url.standardizedFileURL).inserted {
+            all.append(.document(document))
+        }
+        // Stable on a tie, so captures keep the order history lists them in.
+        let ordered = all.enumerated().sorted {
+            $0.element.date != $1.element.date ? $0.element.date > $1.element.date : $0.offset < $1.offset
+        }
+        return ordered.prefix(recentCount).map(\.element)
+    }
+}
+
+/// One card under the front door's Recent: a capture from history, or a
+/// document you opened or saved.
+public enum FrontDoorRecent: Hashable, Sendable, Identifiable {
+    case capture(CaptureEntry, usedAt: Date)
+    case document(RecentDocument)
+
+    public var url: URL {
+        switch self {
+        case .capture(let entry, _): entry.url
+        case .document(let document): document.url
+        }
+    }
+
+    public var id: URL { url }
+
+    /// When it was taken, or last opened or saved, whichever is later.
+    public var date: Date {
+        switch self {
+        case .capture(_, let usedAt): usedAt
+        case .document(let document): document.usedAt
+        }
+    }
+
+    public var name: String { url.deletingPathExtension().lastPathComponent }
+
+    public var isCapture: Bool {
+        if case .capture = self { return true }
+        return false
     }
 }

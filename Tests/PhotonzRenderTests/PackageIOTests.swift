@@ -141,6 +141,54 @@ struct PackageIOTests {
         #expect(try PackageIO.readMedia(from: url).isEmpty)
     }
 
+    /// The picture Recent shows for a saved document: small, kept inside the
+    /// package, so a front door can draw it without opening the document.
+    @Test func aPackageKeepsASmallPreviewOfWhatItLooksLike() throws {
+        let store = ImageStore()
+        // The document is tiny so the package's own pictures stay cheap to
+        // encode; only the picture handed in as the preview is big. A large
+        // HEIC here took the hardware encoder while the text reading tests
+        // ran beside it, and the whole suite stopped.
+        let base = store.register(solidImage(width: 20, height: 10, r: 255, g: 0, b: 0))
+        let url = tempPackageURL()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try PackageIO.write(PhotonzDocument.withBaseImage(base), store: store,
+                            preview: solidImage(width: 1600, height: 800, r: 255, g: 0, b: 0), to: url)
+        let preview = try #require(PackageIO.readPreview(from: url))
+        // Never bigger than it needs to be, and the document's own shape.
+        #expect(preview.width == PackageIO.previewLongEdge)
+        #expect(preview.height == PackageIO.previewLongEdge / 2)
+    }
+
+    @Test func aSmallPictureIsPreviewedAtItsOwnSize() throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 60, height: 40, r: 0, g: 0, b: 255))
+        let url = tempPackageURL()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try PackageIO.write(PhotonzDocument.withBaseImage(base), store: store,
+                            preview: solidImage(width: 60, height: 40, r: 0, g: 0, b: 255), to: url)
+        let preview = try #require(PackageIO.readPreview(from: url))
+        #expect(preview.width == 60)
+        #expect(preview.height == 40)
+    }
+
+    @Test func aPackageWrittenWithoutAPreviewHasNone() throws {
+        let store = ImageStore()
+        let base = store.register(solidImage(width: 20, height: 20, r: 0, g: 0, b: 255))
+        let url = tempPackageURL()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try PackageIO.write(PhotonzDocument.withBaseImage(base), store: store, to: url)
+        #expect(PackageIO.readPreview(from: url) == nil)
+        // ...and the document still reads the way it always did.
+        #expect(try PackageIO.read(from: url, into: ImageStore()).layers.count == 1)
+    }
+
     @Test func readOfMissingPackageThrows() {
         let url = FileManager.default.temporaryDirectory
             .appendingPathComponent("does-not-exist-\(UUID().uuidString).photonz")
