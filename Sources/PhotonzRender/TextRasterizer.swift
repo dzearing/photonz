@@ -177,15 +177,53 @@ public enum TextRasterizer {
         }
         if let extra, !union.isNull { union = union.union(extra) }
         guard !union.isNull else { return }
-        let plate = union.insetBy(dx: -text.fontSize * 0.45, dy: -text.fontSize * 0.2)
+        let plate = union.insetBy(dx: -plateAir(text), dy: -text.fontSize * 0.2)
             .intersection(box)
         guard !plate.isEmpty else { return }
         let radius = min(text.fontSize * 0.28, plate.height / 2)
         context.saveGState()
-        context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
         context.addPath(CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius, transform: nil))
-        context.fillPath()
+        if let end = text.plateEndHex.flatMap({ RGBA(hex: $0) }),
+           let space = CGColorSpace(name: CGColorSpace.sRGB),
+           let gradient = CGGradient(colorSpace: space,
+                                     colorComponents: [rgba.r, rgba.g, rgba.b, rgba.a,
+                                                       end.r, end.g, end.b, end.a],
+                                     locations: [0, 1], count: 2) {
+            // The lower third's plate runs the way the mock's CSS does,
+            // `linear-gradient(120deg, …)`: toward the right and a little
+            // down, across the line that just reaches both corners. This
+            // context's y runs up, so down is minus.
+            let angle = 120.0 * Double.pi / 180
+            let dx = CGFloat(sin(angle)), dy = CGFloat(-cos(angle))
+            let half = (abs(plate.width * dx) + abs(plate.height * dy)) / 2
+            let mid = CGPoint(x: plate.midX, y: plate.midY)
+            context.clip()
+            context.drawLinearGradient(gradient,
+                                       start: CGPoint(x: mid.x - dx * half, y: mid.y + dy * half),
+                                       end: CGPoint(x: mid.x + dx * half, y: mid.y - dy * half),
+                                       options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
+        } else {
+            context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
+            context.fillPath()
+        }
         context.restoreGState()
+    }
+
+    /// How far a caption's plate reaches past its words on either side.
+    static func plateAir(_ text: TextContent) -> CGFloat { text.fontSize * 0.45 }
+
+    /// The box a plated caption's words lay out in: a line hung off one edge
+    /// (a lower third on the left) moves in by the plate's air, so the plate
+    /// starts on the box's edge instead of being cut off by it. Centred words
+    /// keep the whole box, so a centred caption draws exactly as it always has.
+    private static func plateRoom(_ text: TextContent, in box: CGRect) -> CGRect {
+        guard text.plateHex != nil, text.fontSize > 0 else { return box }
+        let air = min(plateAir(text), box.width / 4)
+        switch text.alignment ?? .left {
+        case .left: return CGRect(x: box.minX + air, y: box.minY, width: box.width - air, height: box.height)
+        case .right: return CGRect(x: box.minX, y: box.minY, width: box.width - air, height: box.height)
+        case .center: return box
+        }
     }
 
     // MARK: - A caption's words at a moment
@@ -514,7 +552,7 @@ public enum TextRasterizer {
     /// a hair short makes CoreText drop the last line, and losing a word is
     /// worse than a line of text hugging the top of a box too small for it.
     private static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
-        let box = alignedWidth(text, in: box)
+        let box = alignedWidth(text, in: plateRoom(text, in: box))
         // `TextBlockMetrics` owns how far down the lines sit, so the field you
         // type a label in can offset its draft by exactly the same amount.
         let inset = TextBlockMetrics.topInset(for: text, in: box.size)

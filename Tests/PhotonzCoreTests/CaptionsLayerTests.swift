@@ -175,14 +175,17 @@ final class CaptionsLayerTests: XCTestCase {
         let top = CGRect(x: 400, y: 110, width: 1_100, height: 160)
         document.updateLayer(id: layer.id) { $0 = $0.resized(to: top) }
         document.applyCaptionLook(.preset(.lowerThird), toCaptions: layer.id)
+        // A lower third moves the box low left (`CaptionLowerThirdTests`);
+        // where it put it is what writing again keeps.
+        let chosen = try captionsLayer(document).frame
 
         document.landCaptions(CaptionCues.cues(from: heard))
         XCTAssertEqual(document.captionsLayers.count, 1, "written again, not laid over")
         let again = try captionsLayer(document)
         XCTAssertEqual(again.id, layer.id)
-        XCTAssertEqual(again.frame, top)
+        XCTAssertEqual(again.frame, chosen)
         XCTAssertEqual(again.captionsLook, .preset(.lowerThird))
-        XCTAssertTrue(again.children.allSatisfy { $0.frame.size == top.size })
+        XCTAssertTrue(again.children.allSatisfy { $0.frame.size == chosen.size })
     }
 
     func testClearingTakesTheWholeLayerAway() {

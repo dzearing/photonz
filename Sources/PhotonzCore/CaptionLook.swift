@@ -58,6 +58,9 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     /// The plate behind the words, or nil for words straight on the picture
     /// wearing the readable shadow.
     public var backgroundHex: String?
+    /// Where the plate runs to, for a plate that is a gradient (the mock's
+    /// lower third), or nil for one flat colour.
+    public var backgroundEndHex: String?
     public var alignment: TextAlign
 
     /// How many words show at a time, and how many lines a caption may fill.
@@ -81,7 +84,8 @@ public struct CaptionLook: Hashable, Codable, Sendable {
 
     public init(preset: Preset, fontName: String = "SF Pro", weight: TextWeight = .semibold,
                 fontSize: CGFloat? = nil, colorHex: String = "#FFFFFF",
-                backgroundHex: String? = nil, activeHex: String? = nil,
+                backgroundHex: String? = nil, backgroundEndHex: String? = nil,
+                activeHex: String? = nil,
                 alignment: TextAlign = .center, show: CaptionGrouping = .line, lines: Int = 1,
                 said: CaptionWordShade = .full, coming: CaptionWordShade = .full,
                 word: CaptionWordLook = CaptionWordLook(), glowHex: String? = nil,
@@ -92,6 +96,7 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         self.fontSize = fontSize
         self.colorHex = colorHex
         self.backgroundHex = backgroundHex
+        self.backgroundEndHex = backgroundEndHex
         self.alignment = alignment
         self.show = show
         self.lines = lines
@@ -105,7 +110,8 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     }
 
     private enum CodingKeys: String, CodingKey {
-        case preset, fontName, weight, fontSize, colorHex, backgroundHex, activeHex, alignment
+        case preset, fontName, weight, fontSize, colorHex, backgroundHex, backgroundEndHex
+        case activeHex, alignment
         case show, lines, said, coming, word, glowHex, strokeHex, shadow
     }
 
@@ -131,6 +137,7 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         glowHex = try c.decodeIfPresent(String.self, forKey: .glowHex)
         strokeHex = try c.decodeIfPresent(String.self, forKey: .strokeHex)
         shadow = try c.decodeIfPresent(CaptionShadow.self, forKey: .shadow) ?? .auto
+        backgroundEndHex = try c.decodeIfPresent(String.self, forKey: .backgroundEndHex)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -141,6 +148,7 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         try c.encodeIfPresent(fontSize, forKey: .fontSize)
         try c.encode(colorHex, forKey: .colorHex)
         try c.encodeIfPresent(backgroundHex, forKey: .backgroundHex)
+        try c.encodeIfPresent(backgroundEndHex, forKey: .backgroundEndHex)
         try c.encodeIfPresent(activeHex, forKey: .activeHex)
         try c.encode(alignment, forKey: .alignment)
         try c.encode(show, forKey: .show)
@@ -157,6 +165,11 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     public static let activeYellow = "#FFD76A"
     /// The mock's plate: black at sixty per cent, which reads over anything.
     public static let plate = "#00000099"
+    /// The mock's lower-third plate: violet running to lilac, a little see
+    /// through, `linear-gradient(120deg, rgba(154,92,255,.94),
+    /// rgba(197,108,255,.86))`.
+    public static let lowerThirdPlate = "#9A5CFFF0"
+    public static let lowerThirdPlateEnd = "#C56CFFDB"
     /// The mock's karaoke cyan.
     public static let karaokeCyan = "#12C2E9"
 
@@ -166,8 +179,11 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         case .caption:
             CaptionLook(preset: .caption, backgroundHex: plate, activeHex: activeYellow)
         case .lowerThird:
-            CaptionLook(preset: .lowerThird, weight: .medium, backgroundHex: "#000000B3",
-                        alignment: .left)
+            // The mock's Lower third / Bold: bold white words, low on the
+            // left (`CaptionLayers.box(for:in:)`), on the violet plate, with
+            // the plate's soft drop under it and no word lit.
+            CaptionLook(preset: .lowerThird, weight: .bold, backgroundHex: lowerThirdPlate,
+                        backgroundEndHex: lowerThirdPlateEnd, alignment: .left, shadow: .soft)
         case .karaoke:
             // The mock's Karaoke / Pop: words to come at half white, sung
             // words white, the one being sung in cyan.
@@ -189,6 +205,10 @@ public struct CaptionLook: Hashable, Codable, Sendable {
 
     /// The look every caption comes out in until somebody picks another.
     public static let standard = preset(.caption)
+
+    /// Where a look puts its Captions layer: the lower third sits low on the
+    /// left; every other look leaves the box wherever it is.
+    public var sitsLowLeft: Bool { preset == .lowerThird }
 
     /// Karaoke lights every word said so far, not just the one being said.
     public var lightsEverythingSaid: Bool { said == .lit }
@@ -332,6 +352,17 @@ extension Layer {
     /// The clip a Captions track holds. The same thing as a Captions layer.
     public var isCaptionGroup: Bool { isCaptionsLayer }
 
+    /// Where a Captions layer was before a lower third moved it, so picking
+    /// another style puts it back. Nil for every other layer.
+    var captionsHome: CGRect? {
+        get { group?.captionsHome }
+        set {
+            guard case .group(var group) = content else { return }
+            group.captionsHome = newValue
+            content = .group(group)
+        }
+    }
+
     /// A Captions layer's look, or nil for every other layer. Setting it on a
     /// group makes it a Captions layer.
     public var captionsLook: CaptionLook? {
@@ -436,7 +467,7 @@ extension PhotonzDocument {
         let chosen = look ?? existing?.captionsLook ?? captionLook ?? .standard
         captionLook = chosen
         let box = existing.map(\.frame)
-            ?? CaptionLayers.defaultBox(in: canvasSize, fontSize: chosen.resolvedFontSize(in: canvasSize))
+            ?? CaptionLayers.box(for: chosen, in: canvasSize)
         let children = CaptionLayers.layers(for: cues, in: canvasSize, look: chosen, box: box.size)
         let regroups = chosen.show != .line || chosen.lines != 1
         if let existing {
@@ -477,7 +508,23 @@ extension PhotonzDocument {
             // width somebody gave it.
             let was = layer.captionsLook?.resolvedFontSize(in: size)
             let font = look.resolvedFontSize(in: size)
-            if was != font {
+            let wasLowLeft = layer.captionsLook?.sitsLowLeft == true
+            if look.sitsLowLeft, !wasLowLeft {
+                // Into a lower third: low on the left, remembering where the
+                // captions were so another style can put them back.
+                layer.captionsHome = layer.frame
+                layer.frame = CaptionLayers.lowerThirdBox(in: size, fontSize: font)
+            } else if wasLowLeft, !look.sitsLowLeft {
+                // Out of one: back where they were, sized for the new type on
+                // the floor they had, or the standard band for captions that
+                // were written as a lower third.
+                let home = layer.captionsHome ?? CaptionLayers.defaultBox(in: size, fontSize: font)
+                let height = CaptionLayers.band(in: size, lines: 2, fontSize: font).height
+                layer.frame = layer.captionsHome == nil || was != font
+                    ? CGRect(x: home.minX, y: home.maxY - height, width: home.width, height: height)
+                    : home
+                layer.captionsHome = nil
+            } else if was != font {
                 let height = CaptionLayers.band(in: size, lines: 2, fontSize: font).height
                 let frame = layer.frame
                 layer.frame = CGRect(x: frame.minX, y: frame.maxY - height,
@@ -560,6 +607,26 @@ extension CaptionLayers {
         band(in: size, lines: 2, fontSize: fontSize)
     }
 
+    /// How much of the picture's width a lower third may take: the mock's
+    /// `max-width: 64%`.
+    public static let lowerThirdWidth: CGFloat = 0.64
+
+    /// Where a lower third sits: its plate on the title-safe guide's left
+    /// edge, the line the mock hangs it from, on the floor every caption sits
+    /// on, two lines of its type tall and about two thirds of the picture
+    /// wide. The plate hugs the words inside it.
+    public static func lowerThirdBox(in size: CGSize, fontSize: CGFloat) -> CGRect {
+        let band = band(in: size, lines: 2, fontSize: fontSize)
+        let left = SafeAreaGuide.title.rect(in: size).minX
+        return CGRect(x: left, y: band.minY, width: size.width * lowerThirdWidth, height: band.height)
+    }
+
+    /// Where a fresh Captions layer in `look` lands.
+    public static func box(for look: CaptionLook, in size: CGSize) -> CGRect {
+        let font = look.resolvedFontSize(in: size)
+        return look.sitsLowLeft ? lowerThirdBox(in: size, fontSize: font) : defaultBox(in: size, fontSize: font)
+    }
+
     /// One layer per cue, dressed in `look`, each filling a box this size.
     public static func layers(for cues: [CaptionCue], in size: CGSize, look: CaptionLook,
                               box: CGSize) -> [Layer] {
@@ -585,6 +652,7 @@ extension CaptionLayers {
                                   alignment: look.alignment, verticalAlignment: .bottom)
         content.staysOnOneLine = false
         content.plateHex = look.backgroundHex
+        content.plateEndHex = look.backgroundHex == nil ? nil : look.backgroundEndHex
         content.activeWordHex = look.activeHex
         content.activeWordSung = look.lightsEverythingSaid ? true : nil
         layer.content = .text(content)

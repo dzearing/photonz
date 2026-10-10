@@ -58,6 +58,9 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// straight on whatever is under them. A caption's background
     /// (`CaptionLook.swift`); nil on every piece of text written before it.
     public var plateHex: String?
+    /// Where the plate runs to, left to right, for a plate that is a
+    /// gradient (the lower third's violet), or nil for one flat colour.
+    public var plateEndHex: String?
     /// The colour the word being said lights up in, for a caption whose look
     /// lights one. Nil for everything else.
     public var activeWordHex: String?
@@ -105,6 +108,7 @@ public struct TextContent: Hashable, Codable, Sendable {
         // Captions' plate and lit word postdate all of it; text from before
         // has neither.
         plateHex = try container.decodeIfPresent(String.self, forKey: .plateHex)
+        plateEndHex = try container.decodeIfPresent(String.self, forKey: .plateEndHex)
         activeWordHex = try container.decodeIfPresent(String.self, forKey: .activeWordHex)
         activeWordSung = try container.decodeIfPresent(Bool.self, forKey: .activeWordSung)
         highlight = try container.decodeIfPresent(TextHighlight.self, forKey: .highlight)
@@ -896,6 +900,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// (`CaptionLook.swift`). Its children are the transcript, one cue each,
     /// and every one of them fills this group's box. Nil is an ordinary group.
     public var captionLook: CaptionLook?
+    /// Set on a Captions layer a lower third moved: the box it had before,
+    /// so another style puts it back (`CaptionLook.sitsLowLeft`).
+    public var captionsHome: CGRect?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -920,7 +927,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
-        case variantName, captions, variantAnswers, instanceAnswers
+        case variantName, captions, variantAnswers, instanceAnswers, captionsHome
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -973,6 +980,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // Only a Captions layer writes its look, so every other group is byte
         // for byte what it was.
         try c.encodeIfPresent(captionLook, forKey: .captions)
+        try c.encodeIfPresent(captionsHome, forKey: .captionsHome)
         // Only a group somebody asked to arrange itself writes this key, so a
         // document saved before stacks and grids existed is byte for byte what
         // it was.
@@ -1019,6 +1027,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         columns = try c.decodeIfPresent(FrameColumns.self, forKey: .columns)
         isShared = try c.decodeIfPresent(Bool.self, forKey: .shared) ?? false
         captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captions)
+        captionsHome = try c.decodeIfPresent(CGRect.self, forKey: .captionsHome)
     }
 }
 

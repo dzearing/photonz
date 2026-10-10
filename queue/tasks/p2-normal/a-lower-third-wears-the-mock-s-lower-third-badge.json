@@ -1,0 +1,27 @@
+{
+  "id": "a-lower-third-wears-the-mock-s-lower-third-badge",
+  "title": "A lower third wears the mock's Lower-third badge on the canvas",
+  "goal": "The captions mock shows a small Lower-third tag riding on the top edge of the violet plate while that style is picked, so you can tell at a glance the captions are a lower third. The app now puts the captions low left on the plate but shows no tag.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 3980,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T05:57:27.788Z",
+  "updated": "2026-10-10T05:57:27.791Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-captions.html .l3badge (line ~39, ~477): top:-11px left:0 of the plate, var(--comp) fill, 8.5px 640 weight, ic-component icon. The app plate hugs the words inside the Captions box (TextRasterizer.drawPlate), so the tag needs the plate rect, not the box. Chrome overlay like the AUTO · EN badge (CaptionGuides.swift CaptionBadge). Found by the-lower-third-caption-style-sits-low-left-on-i.",
+  "acceptance": [
+    "On a video with captions in the Lower third style at Next defaults, a small Lower-third tag sits on the plate's top left edge in the editor, as video-captions.html draws it",
+    "The tag is never drawn into a frame written out, and is gone when another style is picked",
+    "If the tag's component icon promises something the app does not have (captions are not a component), a decision card asks the user before it ships"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T05:57:27.790Z",
+      "note": "created (manual)"
+    }
+  ]
+}

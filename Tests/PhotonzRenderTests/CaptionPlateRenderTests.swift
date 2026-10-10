@@ -67,6 +67,48 @@ struct CaptionPlateRenderTests {
         #expect(plated.bytes[i] < 60 && plated.bytes[i + 2] < 90)
     }
 
+    /// The colour of the pixel at a column, a little way above the box's
+    /// floor where the plate shows and no letter is.
+    private func colour(_ px: (bytes: [UInt8], width: Int, height: Int), x: Int, y: Int) -> (r: Int, g: Int, b: Int, a: Int) {
+        let i = (y * px.width + x) * 4
+        return (Int(px.bytes[i]), Int(px.bytes[i + 1]), Int(px.bytes[i + 2]), Int(px.bytes[i + 3]))
+    }
+
+    @Test func aLowerThirdPlateRunsFromVioletToLilac() throws {
+        var text = caption("Capture the screen")
+        text.alignment = .left
+        text.plateHex = "#9A5CFFF0"
+        text.plateEndHex = "#C56CFFDB"
+        let px = try #require(pixels(text))
+        let plate = try #require(inkedColumns(px))
+        let y = px.height - 6
+        let left = colour(px, x: plate.lowerBound + 2, y: y)
+        let right = colour(px, x: plate.upperBound - 2, y: y)
+        #expect(left.a > 200 && right.a > 180, "both ends are plate")
+        #expect(left.b > left.g + 60 && right.b > right.g + 60, "violet, not grey")
+        #expect(right.r > left.r + 20, "and warmer to the right, the mock's 120 degree run")
+    }
+
+    @Test func aLeftAlignedPlateKeepsItsAirInsideTheBox() throws {
+        var text = caption("Capture the screen")
+        text.alignment = .left
+        let bare = try #require(pixels(text))
+        text.plateHex = "#9A5CFFF0"
+        let plated = try #require(pixels(text))
+        let plate = try #require(inkedColumns(plated))
+        // The words move in by the plate's air, so the plate starts on the
+        // box's own edge instead of being cut off by it.
+        #expect(plate.lowerBound <= 2, "the plate starts on the box's left edge")
+        var words = plated
+        for index in stride(from: 0, to: words.bytes.count, by: 4) {
+            let r = words.bytes[index], b = words.bytes[index + 2]
+            if !(r > 240 && b > 240) { words.bytes[index + 3] = 0 }
+        }
+        let letters = try #require(inkedColumns(words))
+        let unplated = try #require(inkedColumns(bare))
+        #expect(letters.lowerBound >= unplated.lowerBound + 8, "the words sit in from the plate's edge")
+    }
+
     @Test func noPlateLeavesTextDrawnExactlyAsBefore() throws {
         let text = caption("Capture the screen")
         let a = try #require(pixels(text))

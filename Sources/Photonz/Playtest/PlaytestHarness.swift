@@ -4589,6 +4589,19 @@ private final class Run {
                 guard editor.captionLook.preset == preset, dressed else {
                     throw Failure(description: "picking \(preset.title) did not dress every caption")
                 }
+                // A lower third sits low on the left, on the title-safe edge.
+                if preset == .lowerThird, let document = editor.document,
+                   let box = editor.captionsLayerInFocus?.frame {
+                    let size = document.canvasSize
+                    let left = SafeAreaGuide.title.rect(in: size).minX
+                    guard abs(box.minX - left) < 1, box.midX < size.width / 2,
+                          box.minY >= size.height * 2 / 3 else {
+                        throw Failure(description: "Lower third left the captions at \(box), "
+                                      + "not low on the left of \(size)")
+                    }
+                    note(number, step.name, "captions: Lower third sits low left at \(box)",
+                         state: describe())
+                }
             case .captionsPositionTop, .captionsPositionBottom:
                 // The Captions layer's box moved to the top of title-safe, or
                 // back to where a fresh one lands: what a drag does.

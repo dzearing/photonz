@@ -1,0 +1,28 @@
+{
+  "feature": "Lower third caption style",
+  "epic": "video-audio",
+  "summary": "Picking Lower third now moves the captions low on the left, with the plate on the title-safe guide, bold white on the mock's violet plate. Picking another style puts them back where they were. A film written out draws them in the same place.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Any recording with speech, captions written (timeline + menu, Captions).",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording with speech and write its captions. They sit centred on a dark plate.", "shot": "2026-10-09-lower-third-1-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In the Captions section, click the Lower third tile.", "shot": "2026-10-09-lower-third-2-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Compare with the mock's Lower third (video-captions.html, canvas preview with Lower third picked).", "shot": "2026-10-09-lower-third-mock.png" },
+    { "do": "Change the caption font or size, then pick Lower third again: your font and size stay." },
+    { "do": "Export the video with captions Burned in and look at any frame.", "shot": "2026-10-09-lower-third-export-frame.png" },
+    { "do": "Click the Caption tile: the captions go back to where they were, centred.", "shot": "2026-10-09-lower-third-4-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does Lower third now read as a different style from Caption at a glance?",
+    "Is the violet plate close enough to the mock's, or should it follow the accent colour instead?",
+    "If you moved the lower third yourself and then pick Caption, is going back to where the captions were before the right answer?",
+    "Is the soft drop under the plate the right weight over a busy recording?"
+  ],
+  "rough": [
+    "Plate colour matches the mock: violet #9A5CFF to lilac #C56CFF at 120 degrees, chosen over the design system's accent.",
+    "The mock's small Lower-third tag on the plate's top edge is not drawn yet: a-lower-third-wears-the-mock-s-lower-third-badge.",
+    "The mock sets the lower third in New York serif; the app keeps the font you chose, as every style does since captions-are-one-layer-positioned-and-styled-lik.",
+    "The plate sits on the same floor every caption sits on, a little above the drawn title-safe line, where the mock has it on that line; that floor is shared with every style since captions-are-one-layer-positioned-and-styled-lik.",
+    "The Background colour well shows only the plate's first colour; picking a colour makes the plate one flat colour."
+  ]
+}

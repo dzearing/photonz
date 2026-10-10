@@ -117,7 +117,11 @@ public enum CaptionLookControl: String, CaseIterable, Hashable, Sendable {
         case (.size, .size(let size)): look.fontSize = size
         case (.weight, .weight(let weight)): look.weight = weight
         case (.textColour, .colour(let hex?)): look.colorHex = hex
-        case (.background, .colour(let hex)): look.backgroundHex = hex
+        case (.background, .colour(let hex)):
+            // A colour picked for the plate is one colour, so the lower
+            // third's gradient gives way to it.
+            look.backgroundHex = hex
+            look.backgroundEndHex = nil
         case (.glow, .colour(let hex)): look.glowHex = hex
         case (.stroke, .colour(let hex)): look.strokeHex = hex
         case (.shadow, .shadow(let shadow)): look.shadow = shadow
@@ -169,7 +173,9 @@ public enum CaptionLookControl: String, CaseIterable, Hashable, Sendable {
         look.show = .line
         switch self {
         case .speed: look.word.pick(.grow)
-        case .shadow: look.backgroundHex = nil
+        case .shadow:
+            look.backgroundHex = nil
+            look.backgroundEndHex = nil
         default: break
         }
         return look

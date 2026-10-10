@@ -1,0 +1,38 @@
+{
+  "out": "/tmp/photonz-playtest/lower-third-sits-low-left-walk",
+  "seed": "The captions mock draws Lower third low on the left, inside title safe, on its own violet plate (docs/design/mocks/pages/video-captions.html, STYLES.B). At Next defaults with no flag set: a talking recording gets its captions, Lower third is picked and the Captions layer moves to the title-safe left edge on the violet plate, a film written out draws it there too, and picking Caption puts the captions back where they were.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Sample Talk" },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-caption", "note": "Captions written in the standard Caption style: centred on the title-safe floor on a dark plate." },
+    { "do": "snapshot", "name": "1-caption" },
+
+    { "do": "press", "control": "Caption style Lower third" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsStyleLowerThird" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-lower-third", "note": "Lower third picked: the captions move to the title-safe left edge, bold, on the mock's violet plate, in the font and size they had." },
+    { "do": "snapshot", "name": "2-lower-third" },
+    { "do": "render", "name": "2-lower-third-frame" },
+
+    { "do": "action", "action": "startExportAt1080p" },
+    { "do": "action", "action": "awaitExport" },
+    { "do": "describe", "stage": "3-written-out", "note": "A film written out with the captions burned in: started-at-1080p.mp4 in this walk's folder draws the lower third where the canvas does." },
+
+    { "do": "action", "action": "captionsStyleCaption" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-back-to-caption", "note": "Caption picked again: the captions go back to where they were, centred." },
+    { "do": "snapshot", "name": "4-back-to-caption" }
+  ]
+}
