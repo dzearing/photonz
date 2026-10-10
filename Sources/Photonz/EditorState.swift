@@ -1569,6 +1569,9 @@ final class EditorState {
     /// Bumped when the app-wide caption settings (Auto, the language) change,
     /// so a panel reading them draws again (`EditorState+Captions.swift`).
     var captionSettingsTick = 0
+    /// The language the last captions written in this window were heard in,
+    /// as a locale identifier, or nil before any were. Read by a walk.
+    @ObservationIgnored var captionsHeardIn: String?
     /// The job doing the listening, so Stop can stop it.
     @ObservationIgnored var captionsTask: Task<Void, Never>?
     /// The job walking its progress readings onto this actor.

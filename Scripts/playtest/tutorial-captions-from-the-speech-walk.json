@@ -7,7 +7,7 @@
     { "do": "waitFor", "condition": "tutorialStep", "value": "add-captions", "timeout": 60 },
     { "do": "action", "action": "videoPause" },
     { "do": "action", "action": "captionsExpectNone" },
-    { "do": "describe", "stage": "1-add-captions", "note": "the talk opened with no captions and nothing listening; the card rings the Captions section and its one Add Captions button" },
+    { "do": "describe", "stage": "1-add-captions", "note": "the talk opened with no captions and nothing listening; the card rings the Captions section, its Language row, Safe areas and Add Captions" },
     { "do": "snapshot", "name": "1-add-captions" },
 
     { "do": "press", "control": "Add Captions" },

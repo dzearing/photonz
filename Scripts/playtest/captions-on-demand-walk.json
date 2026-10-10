@@ -43,7 +43,7 @@
     {
       "do": "describe",
       "stage": "1-opened-and-nothing-listened",
-      "note": "A talking recording, open ten seconds in Edit mode at Next defaults: no captions, no Captions track, nothing listening. The Captions section holds one Add Captions button and nothing else"
+      "note": "A talking recording, open ten seconds in Edit mode at Next defaults: no captions, no Captions track, nothing listening. The Captions section holds Language, Safe areas and Add Captions"
     },
     {
       "do": "snapshot",

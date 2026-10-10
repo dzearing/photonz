@@ -1,0 +1,41 @@
+{
+  "feature": "Pick the captions language before writing captions",
+  "epic": "video-audio",
+  "summary": "Before a recording has captions, the Captions section now shows Language, Safe areas and then Add Captions, the mock's three rows, so you choose the language first and the first captions come out in it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/captions-language-before-captions-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording with somebody talking and press Cmd-2 for Edit.",
+      "shot": "2026-10-09-captions-language-first-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Captions section, click the Language dropdown and pick English (en-GB).",
+      "shot": "2026-10-09-captions-language-first-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Add Captions on the Generate row, under Language and Safe areas."
+    },
+    {
+      "do": "When the words land, click the Captions layer and read the Language row.",
+      "shot": "2026-10-09-captions-language-first-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a second recording and check Language already says English (en-GB)."
+    }
+  ],
+  "evaluate": [
+    "Before any captions, does Language above Add Captions read as the first thing to choose?",
+    "Is Generate the right label for the row holding Add Captions, matching the row that holds Rewrite afterwards?",
+    "Is Safe areas worth showing before there are any captions, or is it one row too many there?",
+    "Once captions land, does the section look exactly as you remember it?"
+  ],
+  "rough": [
+    "Side by side with video-captions.html (Properties, Title / Text tool options): Language, Guides and Generate now sit in the mock's order before and after captions exist. The one difference is the button's words: the mock says Auto captions, the app says Add Captions, because captions are made only when asked (your call on 2026-09-28).",
+    "The canvas badge reads AUTO · EN for any English, so en-GB and en-US look the same there.",
+    "The language is one app-wide setting, not per recording: picking en-GB carries to the next recording you caption, as it did before this change."
+  ]
+}

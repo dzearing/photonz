@@ -4369,6 +4369,17 @@ private final class Run {
                     editor.hasCaptions && !editor.isWritingCaptions
                 }
                 note(number, step.name, "captions: \(editor.captionsReading)", state: describe())
+            case .captionsExpectHeardInPickedLanguage:
+                let picked = EditorState.captionsLanguage
+                guard editor.hasCaptions, let heardIn = editor.captionsHeardIn else {
+                    throw Failure(description: "no captions have been written in this window yet")
+                }
+                guard heardIn == picked else {
+                    throw Failure(description: "the captions were heard in \(heardIn), and the Language "
+                        + "row says \(picked)")
+                }
+                note(number, step.name, "captions: heard in \(heardIn), the language picked",
+                     state: describe())
             case .captionsExpectNone:
                 // Captions are made only when asked: nothing listens as a
                 // recording opens. A moment's grace first, so something that
@@ -5999,6 +6010,7 @@ private final class Run {
                  .captionsExpectSound, .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand,
                  .captionsExpectOneTrack, .captionsExpectOnePicked, .captionsWriteQuietly,
                  .captionsExpectEndWithRecording, .captionsExpectInsideMarks, .captionsExpectOverClips,
+                 .captionsExpectHeardInPickedLanguage,
                  .expectAddedClick,
                  .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
                  .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo, .zoomAddAtPlayhead,

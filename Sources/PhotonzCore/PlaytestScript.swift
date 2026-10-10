@@ -1220,6 +1220,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// which is where captions left behind by a moved clip end up
     /// (`TimelineGap.swift`).
     case captionsExpectOverClips
+    /// Fail unless the captions were heard in the language the Captions
+    /// section's Language row says now: what picking a language before Add
+    /// Captions is for, and what it must still say once they land.
+    case captionsExpectHeardInPickedLanguage
     /// Fail unless exactly one caption is picked: what a real click on a cue
     /// of the Captions track must do (`CaptionCuesLayer`).
     case captionsExpectOnePicked
@@ -1529,6 +1533,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsNudgeLater, .captionsNudgeEarlier,
              .captionsCorrectFirstWord, .captionsClear, .captionsExpectSound,
              .captionsExpectTimingsKept, .captionsExpectNone, .captionsWaitToLand, .captionsExpectOneTrack, .captionsExpectInsideMarks, .captionsExpectOverClips,
+             .captionsExpectHeardInPickedLanguage,
              .captionsExpectOnePicked, .captionsWriteQuietly, .captionsExpectEndWithRecording, .captionsPickFirst, .captionsPickNext, .captionsEditFirstInPlace, .captionsCommitFirstWords, .captionsTrimFirstEnd,
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,

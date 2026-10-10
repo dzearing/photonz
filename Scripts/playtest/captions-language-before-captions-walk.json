@@ -1,0 +1,46 @@
+{
+  "out": "/tmp/photonz-playtest/captions-language-before-captions-walk",
+  "seed": "Captions language can be picked before captions are written (2026-10-09). At Next defaults with no flag set: a talking recording opens with no captions, and the Captions section shows Language, Guides and then Add Captions, as video-captions.html draws them (Language, Guides, Generate). Picking English (en-GB) there with the pointer and clicking Add Captions writes the captions heard in en-GB, and the row still says en-GB once they land.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "2", "modifiers": ["command"] },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "captionsExpectNone" },
+    { "do": "reveal", "control": "Add Captions" },
+    { "do": "panelMenu", "menu": "Captions language", "at": ["centre"], "choose": "English (en-US)" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "menu": "Captions language", "reads": "English (en-US)" },
+    { "do": "expect", "control": "Safe areas", "present": true },
+    { "do": "panel", "stage": "1-before-captions" },
+    { "do": "describe", "stage": "1-before-captions", "note": "A talking recording with no captions yet: the Captions section shows Language, Guides with Safe areas, then Generate with Add Captions, the language chosen first as the mock draws it" },
+    { "do": "snapshot", "name": "1-before-captions" },
+
+    { "do": "panelMenu", "menu": "Captions language", "at": ["centre"], "choose": "English (en-GB)" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "menu": "Captions language", "reads": "English (en-GB)" },
+    { "do": "snapshot", "name": "2-language-picked-first" },
+
+    { "do": "press", "control": "Add Captions" },
+    { "do": "action", "action": "captionsWaitToLand" },
+    { "do": "action", "action": "captionsExpectOneTrack" },
+    { "do": "action", "action": "captionsExpectHeardInPickedLanguage" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "selectRow", "row": "Captions" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "menu": "Captions language", "reads": "English (en-GB)" },
+    { "do": "panel", "stage": "3-captions-written" },
+    { "do": "describe", "stage": "3-captions-written", "note": "Add Captions, pressed at its point, wrote the words heard in English (en-GB), and the Language row still says en-GB above Guides, Generate and the cue" },
+    { "do": "snapshot", "name": "3-captions-written" },
+
+    { "do": "panelMenu", "menu": "Captions language", "at": ["centre"], "choose": "English (en-US)" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "menu": "Captions language", "reads": "English (en-US)" }
+  ]
+}

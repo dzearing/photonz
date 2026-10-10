@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.435Z",
-  "updated": "2026-10-10T02:37:52.151Z",
+  "updated": "2026-10-10T04:03:39.125Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html ~244-256 (Language and Safe areas above Generate). Code: Sources/Photonz/CaptionsInspector.swift lookBody ~32-39, `else if !editorState.hasCaptions { addCaptionsButton }` hides `language`. The setting defaults to en-US in Sources/Photonz/EditorState+Captions.swift ~94-96. Safe areas row (`guides`) may also belong above, per the mock: decide from the mock and the one-purpose rule, say which in the audit. Keep copy short (UX-PATTERNS section 4).",
@@ -28,6 +28,35 @@
     {
       "t": "2026-10-10T02:37:52.150Z",
       "note": "seq 3930 -> 70"
+    },
+    {
+      "t": "2026-10-10T03:09:25.130Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T04:03:38.883Z",
+      "note": "owns these walks: captions-language-before-captions-walk, captions-on-demand-walk"
+    },
+    {
+      "t": "2026-10-10T04:03:38.942Z",
+      "note": "Adversarial pass: a first-time user with a non-English recording now sees Language first. Mock draws Language, Guides, Generate (in a state with captions, no empty state drawn), so the empty section shows all three; Add Captions sits in a Generate row like Rewrite does later. Premiere's caption flow also asks the language before transcribing, so this meets what an editor expects."
+    },
+    {
+      "t": "2026-10-10T04:03:39.007Z",
+      "note": "Verified: new walk captions-language-before-captions-walk (no flags) picks en-GB with the pointer, presses Add Captions at its point, and the new captionsExpectHeardInPickedLanguage check reads that the transcription ran in en-GB; the row still says en-GB after. 9 related walks green. Scripts/test.sh green (12128 tests); one earlier run had a single failure that two reruns did not repeat."
+    },
+    {
+      "t": "2026-10-10T04:03:39.066Z",
+      "note": "section-fold-motion-walk failed 2 of 3 runs on the 16ms frame budget at different headers (Properties, Transitions, Time), then passed 3 of 3 both with and without this change on a fresh build: the failing runs were the short 36s ones, so it reads as an environment flake, not this change. Left rough here; it did not reproduce enough to file."
+    },
+    {
+      "t": "2026-10-10T04:03:39.124Z",
+      "note": "left rough: canvas caption badge reads AUTO · EN for every English variant, so en-GB looks like en-US there; a person would rarely notice, not filed. Language stays one app-wide setting (unchanged)."
     }
+  ],
+  "started": "2026-10-10T03:09:25.128Z",
+  "walks": [
+    "captions-language-before-captions-walk",
+    "captions-on-demand-walk"
   ]
 }

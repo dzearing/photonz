@@ -138,7 +138,9 @@ extension EditorState {
         captionsBeingWritten = TranscriptionProgress(listenedToMS: 0, ofMS: sound.durationMS,
                                                      words: [])
         let landing = CaptionLanding()
-        let locale = Locale(identifier: Self.captionsLanguage)
+        let language = Self.captionsLanguage
+        let locale = Locale(identifier: language)
+        captionsHeardIn = language
         captionsTask = Task { [weak self] in
             do {
                 let heard = try await SpeechTranscription.words(of: url, locale: locale) {

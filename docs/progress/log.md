@@ -21033,3 +21033,9 @@ Next: the first editor window's ~200 ms first build
 - Adjust Grid's Done, Crop, Trim, the video trim and crop Done, and the captions buttons (Add Captions, Rewrite) moved from `.borderedProminent` to `.activeProminent`: blue in front, the plain bordered button behind, where macOS 26 had drawn them as white words on a near-white pill in light mode. Shared files, so Current has it too (a legibility fix).
 - Walk `blue-confirm-buttons-read-behind-walk` photographs the grid bar behind in light and dark, then the crop bar. A `front: true` run of it showed both still blue.
 - Left alone: Welcome and the recording panels (NSPanels; not reproduced there).
+
+## 2026-10-09 — Captions language picked before captions
+
+- The Captions section's empty state now shows the mock's three rows (Language, Guides with Safe areas, Generate with Add Captions) instead of the Add Captions button alone, so the language is chosen before the first captions are written (`Sources/Photonz/CaptionsInspector.swift`).
+- `EditorState.captionsHeardIn` records the locale the last captions were heard in; new walk check `captionsExpectHeardInPickedLanguage`; new walk `captions-language-before-captions-walk`.
+- Next: nothing open on this; `section-fold-motion-walk` showed a 16ms-budget flake twice that did not repeat on a fresh build.

@@ -5,9 +5,12 @@ import SwiftUI
 /// **Captions**: the words the app writes off the sound, as label and value
 /// rows (`Captions.swift`, `CaptionLook.swift`, `pages/video-captions.html`).
 ///
-/// Before there are any captions, one thing: the Add Captions button. Captions
-/// are made only when somebody asks (the user, 2026-09-28), so there is no
-/// Auto switch and nothing listens as a recording opens.
+/// Before there are any captions, the mock's first three rows: the Language
+/// they will be heard in, the Safe areas guides, then Generate with the Add
+/// Captions button, so the language is picked first rather than fixed to US
+/// English until the first captions land. Captions are made only when
+/// somebody asks (the user, 2026-09-28), so there is no Auto switch and
+/// nothing listens as a recording opens.
 ///
 /// Once there are some, three parts in the mock's order: how they are written
 /// (the language, and Rewrite), the cue in focus (its in, out, length and
@@ -32,7 +35,9 @@ struct CaptionsInspector: View {
             if editorState.isWritingCaptions {
                 listening
             } else if !editorState.hasCaptions {
-                addCaptionsButton
+                language
+                guides
+                VideoKit.FieldRow(label: "Generate") { addCaptionsButton }
             } else {
                 language
                 guides
@@ -115,7 +120,7 @@ struct CaptionsInspector: View {
         }
     }
 
-    /// The section before there are any captions: this, and nothing else.
+    /// The section before there are any captions: this, under the language.
     private var addCaptionsButton: some View {
         Button {
             editorState.writeCaptions()

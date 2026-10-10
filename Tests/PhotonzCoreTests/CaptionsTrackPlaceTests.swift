@@ -161,3 +161,11 @@ struct CaptionsTrackPlaceTests {
         #expect(hit?.isCaption == true)
     }
 }
+
+@Suite("Walks can ask which language the captions were heard in")
+struct CaptionsHeardInWalkActionTests {
+
+    @Test func theClaimIsAnActionTheEditorAnswers() {
+        #expect(PlaytestAction(rawValue: "captionsExpectHeardInPickedLanguage")?.drivesTheTimeline == true)
+    }
+}
