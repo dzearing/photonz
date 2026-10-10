@@ -22,6 +22,9 @@ struct KeyLanesView: View {
     let laneWidth: CGFloat
     var indent: CGFloat = 0
     var isLocked = false
+    /// The copy drawn lifted while its track is carried, which must not say
+    /// where the lanes are.
+    var isLifted = false
 
     /// A box being drawn round keys, in the lanes' own space (the first
     /// lane's top left is nought).
@@ -48,6 +51,19 @@ struct KeyLanesView: View {
                     }
                 }
                 .playtestField("Key lane \(layerName) \(lane.title)")
+                // Where the lane is down the tracks, for a box drawn over
+                // them (`EditorState+TrackRange`).
+                .onGeometryChange(for: CGRect.self) { proxy in
+                    proxy.frame(in: .named(TimelineDock.tracksSpace))
+                } action: { frame in
+                    guard !isLifted else { return }
+                    editorState.keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: lane.motionID)] =
+                        frame.minY...frame.maxY
+                }
+                .onDisappear {
+                    guard !isLifted else { return }
+                    editorState.keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: lane.motionID)] = nil
+                }
             }
         }
         .coordinateSpace(.named(space))
@@ -217,7 +233,9 @@ private struct KeyLaneView: View {
         return drag
     }
 
-    private var picked: Set<KeyRef> { editorState.pickedKeys(layerID: layerID) }
+    private var picked: Set<KeyRef> {
+        editorState.pickedKeys(layerID: layerID).union(editorState.keysLitByBox(layerID: layerID))
+    }
 
     /// Where a key is drawn: carried by the drag in the air when it is picked.
     private func shownMS(_ key: LaneKey) -> Int {

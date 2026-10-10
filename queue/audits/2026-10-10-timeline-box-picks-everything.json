@@ -1,0 +1,33 @@
+{
+  "feature": "A box on the timeline picks everything it touches",
+  "epic": "video-cutting",
+  "task": "dragging-a-box-on-the-timeline-picks-everything",
+  "summary": "A drag that starts on any empty part of the timeline, including the strip under the last track and the gaps between zoom bars, draws a box that picks every clip, title, sound, zoom bar and key it touches. Taking hold of any one of them carries the lot by the same time, and Delete takes the lot, each as one undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the tutorial sample recording, add zooms at 0:02 and 0:05 (right click the clip, Add Zoom), type a title at 0:01 with the Text tool, and add the sample song from the Library so it runs under everything. Walks: Scripts/playtest/box-picks-everything-it-touches-walk.json and box-pick-by-hand-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press on the empty strip under the last track, about 0:01.5, and drag up to the title at 0:03.", "shot": "2026-10-10-timeline-box-1-drawing.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go: the title, the recording, the song and the first zoom bar light up, and the panel says 4 picked with their kinds.", "shot": "2026-10-10-timeline-box-2-boxed.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the lit zoom bar half a second to the right: everything picked moves with it.", "shot": "2026-10-10-timeline-box-by-hand-zoom-bar.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: all of it goes back." },
+    { "do": "Draw the same box again and press Delete: all of it goes; Command Z brings it back.", "shot": "2026-10-10-timeline-box-6-deleted.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag a box on the Zoom lane between the bars over the first zoom, then Shift drag a box over the title.", "shot": "2026-10-10-timeline-box-8-zoom-and-title.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the title half a second to the left: the zoom slides along its recording with it, and the recording stays put.", "shot": "2026-10-10-timeline-box-9-zoom-came-along.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Option drag on an empty track: it still picks a stretch of time, not things." }
+  ],
+  "evaluate": [
+    "With the recording filling the timeline, did you find the strip under the last track on your own as the place to start a box?",
+    "Does a click between zoom bars now moving the playhead (like any empty timeline space) feel right?",
+    "When a picked zoom has no room left, the whole pick stops with it rather than leaving the zoom behind. Is that what you expect?",
+    "Is \"4 picked\" with the kinds under it enough in the panel, or do you want to see the names?"
+  ],
+  "rough": [
+    "No mock draws a box on the timeline or a pick of several things, so this follows Premiere and Final Cut: a box starts only in empty space (pressing on a clip still moves the clip in both), Final Cut's empty area under the storyline is the strip under the last track here, and Shift adds and Command flips as their clicks do.",
+    "A pick that holds zooms or keys from a clip that is not itself picked keeps its tracks: dragging it up or down does not change track, only time.",
+    "Option drag on a box's pick copies its clips but not the zooms and keys picked beside them on other clips.",
+    "Shift Delete on whole clips picked by a box ripples the clips but leaves zooms and keys picked on other clips; plain Delete takes everything.",
+    "A drag that starts on a key lane still draws that lane's own box, which picks keys on that one layer only; a box started on a track picks keys on every lane it crosses.",
+    "The strip under the last track is only 20 points tall and carries no label; it grows to the foot of the timeline when the timeline is taller than its tracks.",
+    "Every picture here was taken with the window behind another app, so picked controls show their background look."
+  ]
+}

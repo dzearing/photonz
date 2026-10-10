@@ -884,7 +884,9 @@ struct InspectorPanel: View {
         // What is keyed on the picked layer, in a document with time
         // (`PropertyKeysInspector`). One layer, like Motion: a key is that
         // layer's own value at a moment.
-        if editorState.keyLayer != nil { set.insert(.keys) }
+        // Several things picked on the timeline: how many, and of what kinds
+        // (`EditorState+TrackRange`).
+        if editorState.keyLayer != nil || editorState.timelinePickSummary != nil { set.insert(.keys) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -1113,6 +1115,11 @@ struct InspectorPanel: View {
     /// back, so the saved order stays the person's own and a document without
     /// time never sees it.
     private func timeOrdered(_ order: [InspectorSectionID]) -> [InspectorSectionID] {
+        // Several things picked on the timeline: what they are leads, the
+        // way the clip line leads for one (`EditorState+TrackRange`).
+        if editorState.documentHasTime, editorState.timelinePickSummary != nil {
+            return [.keys] + order.filter { $0 != .keys }
+        }
         guard let role = timeRole else { return order }
         return TimePanelOrder.arrange(order.map(\.rawValue), for: role)
             .compactMap(InspectorSectionID.init(rawValue:))
@@ -1199,7 +1206,7 @@ struct InspectorPanel: View {
             text = LayersPanelHeader.countChip(layerCount: editorState.searchableLayerCount)
             return text.map { .init(text: $0, field: "Layers Count") }
         case .keys:
-            text = DockGroupHeader.chip(editorState.keyLayerKind)
+            text = editorState.timelinePickSummary != nil ? nil : DockGroupHeader.chip(editorState.keyLayerKind)
             return text.map { .init(text: $0, field: "Properties Kind") }
         case .library:
             text = (LibraryScope(rawValue: libraryScopeRaw) ?? .media).title

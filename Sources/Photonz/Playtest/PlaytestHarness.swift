@@ -2104,7 +2104,8 @@ private final class Run {
         // The tracks' own gesture (`TimelineLaneMarquee`), pressed on one
         // track at one moment and carried to another: a box, or with Option
         // (or the Range tool) a range on the tracks it crosses.
-        case .dragTracks(let fromTrack, let fromSeconds, let toTrack, let toSeconds, let option, let hold):
+        case .dragTracks(let fromTrack, let fromSeconds, let toTrack, let toSeconds, let option, let hold,
+                         let modifiers):
             let editor = try requireEditor()
             let from = try rulerMoment(fromSeconds, on: editor, doing: "press")
             let to = try rulerMoment(toSeconds, on: editor, doing: "let go")
@@ -2121,7 +2122,9 @@ private final class Run {
             // after a click on the canvas a Delete that followed went to the
             // canvas instead of the gap just picked.
             editor.takeTimelineKeyboard()
-            editor.beginLanePress(atMS: from, y: fromY, drawsRange: drawsRange)
+            let mode: EditorState.BoxPickMode = modifiers.contains(.command) ? .toggle
+                : modifiers.contains(.shift) ? .add : .replace
+            editor.beginLanePress(atMS: from, y: fromY, drawsRange: drawsRange, mode: mode)
             let moved = from != to || fromTrack != toTrack
             if moved {
                 let steps = 8
@@ -16323,6 +16326,23 @@ private final class Run {
     /// The middle of a track's row, down the tracks' own space, by the
     /// track's name.
     private func trackRowMiddle(_ name: String, on editor: EditorState, lean: CGFloat = 0) throws -> CGFloat {
+        // The strip under the last track, which the Add Track row stands in.
+        if name.compare("Under the tracks", options: .caseInsensitive) == .orderedSame {
+            let bottoms = editor.trackDropRows.values.map(\.maxY) + editor.zoomLaneRows.values.map(\.upperBound)
+                + editor.keyLaneRows.values.map(\.upperBound)
+            guard let bottom = bottoms.max() else { throw Failure(description: "no tracks are on screen") }
+            return bottom + TimelineDock.rowSpacing + TimelineAddTrackRow.height * (0.5 + lean)
+        }
+        // A clip's Zoom lane, as "Zoom <clip>".
+        if name.lowercased().hasPrefix("zoom ") {
+            let clip = String(name.dropFirst(5))
+            guard let id = editor.document?.layers.first(where: {
+                $0.name.compare(clip, options: .caseInsensitive) == .orderedSame
+            })?.id, let row = editor.zoomLaneRows[id] else {
+                throw Failure(description: "no Zoom lane is on screen for a clip called \"\(clip)\"")
+            }
+            return (row.lowerBound + row.upperBound) / 2 + (row.upperBound - row.lowerBound) * lean
+        }
         let tracks = editor.document?.timelineTracks ?? []
         guard let id = tracks.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })?.id
         else {
@@ -16347,7 +16367,36 @@ private final class Run {
             return piece.map { "\(layerName) piece \($0 + 1)" } ?? layerName
         }
         var clips: [String] = []
-        if let picks = editor.timelinePicksHeld {
+        // Zooms read as "<clip> zoom <n>" counting from one along the clip,
+        // keys as "<layer> key at <ms> ms"; a clip held only because its
+        // zooms or keys are picked is not itself picked.
+        let extras = editor.boxExtrasHeld
+        var zooms: [ClipZoomRef] = Array(editor.pickedZooms)
+        var keys: [UUID: Set<KeyRef>] = [:]
+        if let extras {
+            for (clip, ids) in extras.zooms { zooms += ids.map { ClipZoomRef(layerID: clip, zoomID: $0) } }
+            keys = extras.keys
+        } else if let picked = editor.keySelection, !picked.refs.isEmpty {
+            keys[picked.layerID] = picked.refs
+        }
+        var parts: [String] = []
+        for ref in Set(zooms) {
+            let order = document.layer(id: ref.layerID)?.zooms?.map(\.id) ?? []
+            let at = (order.firstIndex(of: ref.zoomID) ?? -1) + 1
+            parts.append("\(document.layer(id: ref.layerID)?.name ?? "?") zoom \(at)")
+        }
+        for (layerID, refs) in keys {
+            let lanes = document.keyLanes(layerID: layerID)
+            for lane in lanes {
+                for key in lane.keys where refs.contains(key.ref) {
+                    parts.append("\(document.layer(id: layerID)?.name ?? "?") key at \(key.documentMS) ms")
+                }
+            }
+        }
+        let heldByAPart = extras == nil && (editor.selectedZoom != nil || !keys.isEmpty)
+        if heldByAPart {
+            clips = []
+        } else if let picks = editor.timelinePicksHeld {
             clips = picks.map { name($0.layerID, $0.piece) }
         } else if let id = editor.selectedLayerID {
             let count = document.layer(id: id)?.clipPieces?.count ?? 1
@@ -16355,6 +16404,7 @@ private final class Run {
         } else {
             clips = editor.multiSelectedLayerIDs.map { name($0, nil) }
         }
+        clips += Array(Set(parts))
         if let gap = editor.timelineGapHeld {
             let track = document.track(id: gap.trackID)?.name ?? "?"
             return (clips + ["Gap on \(track)"], [], gap.range)
@@ -18112,6 +18162,30 @@ extension Run {
             document.trackID(ofClip: id).flatMap { document.track(id: $0)?.name } ?? "no track"
         }
         func seconds(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+        // "<clip> zoom <n>": the clip's nth zoom bar, counting from one along
+        // it, where it sits on the timeline.
+        if let match = named.wholeMatch(of: /(.+) zoom (\d+)/), let n = Int(match.2),
+           let clip = document.timelineClipLayers.first(where: { $0.name == String(match.1) }) {
+            let zooms = clip.zooms ?? []
+            let spans = zooms.compactMap { clip.timelineSpanMS(of: $0.id) }
+            let said = spans.enumerated().map { "zoom \($0.offset + 1) \(seconds($0.element.start)) to "
+                + "\(seconds($0.element.end))" }.joined(separator: "; ")
+            guard n >= 1, n <= spans.count else {
+                if count == 0 { return "\(named) is not there, as the walk said; \(clip.name) has \(said)" }
+                throw Failure(description: "\(clip.name) has no zoom \(n); it has \(spans.isEmpty ? "none" : said)")
+            }
+            if count == 0 { throw Failure(description: "\(named) is still there; \(clip.name) has \(said)") }
+            let span = spans[n - 1]
+            if let startsAt, abs(Double(span.start) / 1000 - startsAt) > within {
+                throw Failure(description: "\(named) starts at \(seconds(span.start)), and the walk expected "
+                    + "\(startsAt)s; \(clip.name) has \(said)")
+            }
+            if let endsAt, abs(Double(span.end) / 1000 - endsAt) > within {
+                throw Failure(description: "\(named) ends at \(seconds(span.end)), and the walk expected "
+                    + "\(endsAt)s; \(clip.name) has \(said)")
+            }
+            return "\(named) \(seconds(span.start)) to \(seconds(span.end))"
+        }
         let all = document.timelineClipLayers
         let said = all.map { layer in
             "\(layer.name) on \(trackName(layer.id))"

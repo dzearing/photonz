@@ -83,7 +83,7 @@ struct TimelineTrackRow: View {
                 let keyed = keyedByClip[clip.layerID] ?? []
                 if !keyed.isEmpty, editorState.isKeyTrackOpen(track.id) {
                     KeyLanesView(layerID: clip.layerID, layerName: clip.layerName, laneWidth: laneWidth,
-                                 indent: indent, isLocked: track.isLocked)
+                                 indent: indent, isLocked: track.isLocked, isLifted: isLifted)
                 }
                 ForEach(clip.lanes.filter { !keyed.contains($0.motionID) }) { lane in
                     MotionStripLaneView(lane: lane, layerName: clip.layerName, laneWidth: laneWidth,
@@ -92,7 +92,7 @@ struct TimelineTrackRow: View {
                 // Its zooms, one bar each, under the clip they frame.
                 if row.zoomedClips.contains(clip.layerID) {
                     ZoomLane(layerID: clip.layerID, laneWidth: laneWidth, indent: indent,
-                             isLocked: track.isLocked)
+                             isLocked: track.isLocked, isLifted: isLifted)
                 }
             }
             ForEach(row.inner) { group in
@@ -1017,27 +1017,54 @@ enum TimelineLaneMarquee {
     @MainActor
     static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
                         trackID: UUID, in space: CoordinateSpace = .local) -> some Gesture {
+        gesture(editorState, ruler: ruler, laneWidth: laneWidth, in: space) {
+            editorState.trackDropRows[trackID]?.minY ?? 0
+        }
+    }
+
+    /// The same press read anywhere: `top` is where the view's own space
+    /// starts down the tracks', and `leading` how far across it the lanes
+    /// start (the tracks' own space starts at the track names).
+    @MainActor
+    static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
+                        in space: CoordinateSpace, leading: CGFloat = 0,
+                        top: @escaping @MainActor () -> CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: space)
             .onChanged { value in
-                let top = editorState.trackDropRows[trackID]?.minY ?? 0
-                let startMS = ms(value.startLocation.x, laneWidth, ruler)
-                // A new press, or one left behind by a gesture the system
-                // cancelled without an end.
-                if editorState.lanePress?.atMS != startMS {
-                    editorState.beginLanePress(
-                        atMS: startMS, y: top + value.startLocation.y,
-                        drawsRange: NSEvent.modifierFlags.contains(.option) || editorState.timelineTool == .range)
-                }
-                let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
-                let snap = editorState.lanePress?.drawsRange == true
-                    ? editorState.keySnapReachMS(laneWidth: laneWidth) : 0
-                editorState.dragLanePress(toMS: ms(value.location.x, laneWidth, ruler), y: top + value.location.y,
-                                          moved: moved, snapMS: snap)
+                changed(editorState, value, top: top(), leading: leading, ruler: ruler, laneWidth: laneWidth)
             }
             .onEnded { value in
-                let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
-                editorState.endLanePress(atMS: ms(value.location.x, laneWidth, ruler), moved: moved)
+                ended(editorState, value, leading: leading, ruler: ruler, laneWidth: laneWidth)
             }
+    }
+
+    /// The hand down or moving, for a view that reads its own presses and
+    /// hands only some of them to the box (the Zoom lane's bare stretches).
+    @MainActor
+    static func changed(_ editorState: EditorState, _ value: DragGesture.Value, top: CGFloat, leading: CGFloat,
+                        ruler: MotionStripRuler, laneWidth: CGFloat) {
+        let startMS = ms(value.startLocation.x - leading, laneWidth, ruler)
+        // A new press, or one left behind by a gesture the system
+        // cancelled without an end.
+        if editorState.lanePress?.atMS != startMS {
+            let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+            editorState.beginLanePress(
+                atMS: startMS, y: top + value.startLocation.y,
+                drawsRange: flags.contains(.option) || editorState.timelineTool == .range,
+                mode: .from(flags))
+        }
+        let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
+        let snap = editorState.lanePress?.drawsRange == true
+            ? editorState.keySnapReachMS(laneWidth: laneWidth) : 0
+        editorState.dragLanePress(toMS: ms(value.location.x - leading, laneWidth, ruler), y: top + value.location.y,
+                                  moved: moved, snapMS: snap)
+    }
+
+    @MainActor
+    static func ended(_ editorState: EditorState, _ value: DragGesture.Value, leading: CGFloat,
+                      ruler: MotionStripRuler, laneWidth: CGFloat) {
+        let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
+        editorState.endLanePress(atMS: ms(value.location.x - leading, laneWidth, ruler), moved: moved)
     }
 
     /// The moment under a point along the lane, which may be past either end
@@ -1344,10 +1371,18 @@ struct TimelineAddTrackRow: View {
             .help("Add a track")
             .playtestControl("Add Track", detail: "Timeline")
             .frame(width: TimelineDock.gutter, alignment: .leading)
+            // The strip under the last track is always empty, so a box can
+            // start here when every track is full end to end, the way the
+            // empty area under Final Cut's storyline works.
             Color.clear
                 .frame(width: laneWidth, height: Self.height)
                 .contentShape(Rectangle())
+                .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
+                                                     laneWidth: laneWidth,
+                                                     in: .named(TimelineDock.tracksSpace),
+                                                     leading: TimelineDock.lanesLeading) { 0 })
                 .contextMenu { items }
+                .playtestField("Under the tracks")
         }
         .frame(height: Self.height)
     }

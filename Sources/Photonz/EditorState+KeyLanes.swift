@@ -149,7 +149,10 @@ extension EditorState {
     /// A key taken hold of. One nobody had picked is picked alone first, the
     /// way a drag on an unselected clip takes that clip.
     func beginKeyDrag(layerID: UUID, grabbing ref: KeyRef) {
-        guard !isClipLocked(layerID) else { return }
+        guard !isClipLocked(layerID), !dragCarriesBoxPick else { return }
+        // A key in a box's pick carries the whole pick, clips and all
+        // (`EditorState+TrackRange`).
+        if keysLitByBox(layerID: layerID).contains(ref), beginBoxPickDrag(from: layerID) { return }
         if !pickedKeys(layerID: layerID).contains(ref) {
             if selectedLayerID != layerID { selectLayer(layerID) }
             keySelection = KeySelection(layerID: layerID, refs: [ref])
@@ -158,6 +161,10 @@ extension EditorState {
     }
 
     func updateKeyDrag(byMS ms: Int, copying: Bool) {
+        if dragCarriesBoxPick {
+            updateClipBarDrag(byMS: ms)
+            return
+        }
         guard var drag = keyLaneDrag else { return }
         drag.byMS = ms
         drag.copying = copying
@@ -167,6 +174,11 @@ extension EditorState {
     /// Let go: the picked keys land (or their copies do), as one undo step,
     /// and what landed is what is picked.
     func commitKeyDrag() {
+        if dragCarriesBoxPick {
+            dragCarriesBoxPick = false
+            commitClipBarDrag()
+            return
+        }
         guard let drag = keyLaneDrag else { return }
         keyLaneDrag = nil
         let refs = pickedKeys(layerID: drag.layerID)
@@ -174,7 +186,13 @@ extension EditorState {
         moveKeys(layerID: drag.layerID, refs, byMS: drag.byMS, copying: drag.copying)
     }
 
-    func cancelKeyDrag() { keyLaneDrag = nil }
+    func cancelKeyDrag() {
+        if dragCarriesBoxPick {
+            dragCarriesBoxPick = false
+            cancelClipBarDrag()
+        }
+        keyLaneDrag = nil
+    }
 
     func moveKeys(layerID: UUID, _ refs: Set<KeyRef>, byMS ms: Int, copying: Bool) {
         guard !isClipLocked(layerID) else { return }

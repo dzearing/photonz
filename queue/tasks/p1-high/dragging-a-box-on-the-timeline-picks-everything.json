@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 23,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:22:45.530Z",
-  "updated": "2026-10-10T12:22:45.683Z",
+  "updated": "2026-10-10T18:25:42.930Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"I also expected marquee selection on the timeline, so that i could select multiple things and move or delete them.\"\n\nFrom code reading (not run): a lane box exists. TimelineLaneMarquee.gesture on empty track space (TimelineTrackRows.swift:426, 446, 516; docs at :1010-1015): a click moves the playhead, a drag draws a box, Option or the Range tool picks a time range. EditorState+TrackRange.swift: LanePress/LaneBox (:27-43), endLanePress (:91-106) -> pickWithBox(within:onTracks:) which picks whole clips as picked layers or one piece as the piece in hand; drawn by TimelineLaneBoxView (TimelineDock.swift:1291-1330). Unknown why the user did not experience it: suspects are no empty space to start on in a full timeline, zoom/title/caption lanes not taking the gesture or not being picked, and the box not crossing into the Zoom lane. Companion: 'Pick several zooms at once and change or delete them together' (filed same day) owns the zoom multi-pick model this box feeds.",
@@ -30,6 +30,43 @@
     {
       "t": "2026-10-10T12:22:45.682Z",
       "note": "seq 3930 -> 23"
+    },
+    {
+      "t": "2026-10-10T15:28:30.513Z",
+      "note": "from pick-several-zooms (2026-10-10): zooms can now be picked together (EditorState.pickedZooms), but dragging one bar of several picked carries only that bar (beginZoomDrag keeps the pick, ZoomDragSession holds one ref). Moving a picked group should move every picked zoom, as Premiere does; when this task adds group moves, zoom bars belong in it."
+    },
+    {
+      "t": "2026-10-10T17:15:39.768Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T17:20:51.253Z",
+      "note": "Reproduced at Next defaults (probe, real pointer windowDrag; recording on V1 with two zooms, a title at 0:01 on Title, Sample Music on Audio 2): (a) a drag from empty V1 space past the recording's end drew a box and picked Sample Music: the box works where there is empty space. (b) a drag starting in the gap between the two zoom bars on the Zoom lane picked NOTHING (the lane's press only lets go of a zoom). (c) a drag starting on the strip below the last track (the Add Track row) picked NOTHING: that strip has no box gesture. (d) a drag starting over the recording MOVED the recording to 3.9s, as Premiere and Final Cut do. Why the user could not find it: in a normal recording edit the recording and its sound run the whole timeline end to end, so the only empty space is the Zoom lane and the strip under the tracks, and neither starts a box; and a box never picks zoom bars or keys even where it does start."
+    },
+    {
+      "t": "2026-10-10T18:25:42.688Z",
+      "note": "Before building (adversarial): a first-time user with a recording that fills the timeline has no empty space to start a box, so the fix is a place that is always empty (the strip under the last track, as Final Cut's area under the storyline and Premiere's empty tracks) plus the Zoom lane's gaps; pressing on a clip keeps moving the clip, as in both editors, so no modifier-on-a-clip invention. A zoom or key lives on its clip's clock, so one on a picked clip rides with it; only those on unpicked clips move on their own. Found in review: a zoom with no room was silently left behind while the rest moved, so the group now stops where the tightest zoom or key runs out of room (boxExtrasRoom, tested)."
+    },
+    {
+      "t": "2026-10-10T18:25:42.748Z",
+      "note": "Built: PhotonzCore/TimelineBoxPick.swift (marqueeZooms, marqueeKeys, shiftBoxExtras, removeBoxExtras, boxExtrasRoom, TimelinePickSummary; 13 tests in TimelineBoxPickTests). App: EditorState+TrackRange (box picks zooms/keys via zoomLaneRows/keyLaneRows, Shift adds/Command toggles, boxExtras kept with the clip pick they were made beside, deleteBoxPick, beginBoxPickDrag), clip bar drag carries extras (EditorState+ClipBar), zoom bar/key drag in a box pick carries the whole pick through the clip bar drag, several picked zooms move together (ZoomDragSession.group), box starts on Zoom lane gaps (ZoomLane), on the Add Track strip and the space under it (TimelineTrackRows, TimelineDock), panel Properties shows 'N picked' + kinds first (PropertyKeysInspector, InspectorPanel). Harness: dragTracks takes 'Zoom <clip>', 'Under the tracks' and modifiers; expectTimelinePick reads zooms and keys; expectClip takes '<clip> zoom <n>'."
+    },
+    {
+      "t": "2026-10-10T18:25:42.807Z",
+      "note": "left rough (none clears the follow-up bar on its own; all in the audit's rough list): a pick with zooms/keys from unpicked clips cannot change track; Option-drag copy of a box pick copies clips only; Shift-Delete on whole clips leaves the extras; key lanes keep their own one-layer box; the under-tracks strip is 20pt and unlabeled."
+    },
+    {
+      "t": "2026-10-10T18:25:42.867Z",
+      "note": "Verified: Scripts/test.sh hung at 0% CPU after walks (the open hang task, logged there); split run passed 11073 + 1153 + 76. Walks green: box-picks-everything-it-touches-walk (harness, 90 steps), box-pick-by-hand-walk (real pointer windowDrag box and zoom bar drag), and neighbours a-gap-* (3), a-shape-s-bar-keeps-its-track, a-zoom-follows-the-cursor, closing-a-gap-carries-the-title-and-music, empty-track-slot, keys-copy-between-layers, marquee-and-track-range, pick-several-zooms, several-clips-show-where-each-lands, tracks-you-can-add-rename-group, pick-a-track-and-delete-it, a-click-on-the-zoom-bar-frames-it, a-zoom-is-shaped-by-hand, border-width-keys."
+    },
+    {
+      "t": "2026-10-10T18:25:42.929Z",
+      "note": "owns these walks: box-picks-everything-it-touches-walk, box-pick-by-hand-walk"
     }
+  ],
+  "started": "2026-10-10T17:15:39.767Z",
+  "walks": [
+    "box-picks-everything-it-touches-walk",
+    "box-pick-by-hand-walk"
   ]
 }

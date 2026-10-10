@@ -46,6 +46,9 @@ extension EditorState {
 
     /// Layers > Delete Layer (⌘⌫): the whole selection in one undo step.
     func deleteSelectedLayers() {
+        // A box's whole pick on the timeline goes as one: its clips, and the
+        // zooms and keys beside them (`EditorState+TrackRange`).
+        if deleteBoxPick() { return }
         // A zoom picked is the thing in hand, never the clip under it.
         if selectedZoom != nil {
             removeZoomInHand()

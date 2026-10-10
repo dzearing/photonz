@@ -1,0 +1,257 @@
+{
+  "out": "/tmp/photonz-playtest/box-pick-by-hand-walk",
+  "seed": "The same edit at Next defaults, driven with the real pointer: a box pressed on the empty strip under the last track at 0:01.5 and pulled up to the title at 0:03 picks the title, the recording, the song and the first zoom; the first zoom's lit bar, pulled half a second later by hand, carries all of them; Delete takes them all and one undo brings them back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 5.0
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Hello"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 10.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 0.0,
+      "endsAt": 14.0
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        327,
+        964
+      ],
+      "to": [
+        493,
+        795
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Text",
+        "Tutorial Sample",
+        "Sample Music",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-boxed-by-hand",
+      "note": "a box pulled by hand from the strip under the tracks picks the title, the recording, the song and the first zoom"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-boxed-by-hand"
+    },
+    {
+      "do": "windowDrag",
+      "from": [
+        549,
+        856
+      ],
+      "to": [
+        605,
+        856
+      ],
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 1.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "startsAt": 0.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.5,
+      "within": 0.06
+    },
+    {
+      "do": "describe",
+      "stage": "2-zoom-bar-carried-them",
+      "note": "the first zoom's bar pulled half a second later by hand carried the whole pick with it"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoom-bar-carried-them"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "count": 0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "count": 0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "count": 0
+    },
+    {
+      "do": "snapshot",
+      "name": "3-deleted"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 1.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.5,
+      "within": 0.06
+    },
+    {
+      "do": "describe",
+      "stage": "4-back",
+      "note": "one undo brings them all back where they were carried to"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-back"
+    }
+  ]
+}

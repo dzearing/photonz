@@ -20,6 +20,17 @@ import PhotonzCore
 // A click on empty space moves the playhead there and lets go of what was
 // picked, the way a click beside the clips does in both editors. A click in
 // the gap between two clips also picks that gap (`EditorState+TimelineGap`).
+//
+// The box picks everything it touches, not only clips: the zoom bars on a
+// Zoom lane and the keys on the key lanes it crosses too
+// (`TimelineBoxPick.swift`). Shift adds what it touches to what is picked and
+// Command flips each thing in or out. It can start anywhere empty: a track, a
+// gap, the space between two zoom bars, and the strip under the last track,
+// which is always there, so a timeline whose tracks are full end to end still
+// has somewhere to start one, the way Final Cut's empty area under the
+// storyline and Premiere's empty tracks do. Taking hold of any one thing in
+// the pick carries the lot by the same time, and Delete takes the lot, each as
+// one step to undo.
 
 extension EditorState {
 
@@ -30,7 +41,21 @@ extension EditorState {
         /// ⌥ was down, or the Range tool is in hand: a stretch of time on the
         /// tracks crossed, not the clips.
         let drawsRange: Bool
+        /// What a box does with what is already picked.
+        var mode: BoxPickMode = .replace
         var hasMoved = false
+    }
+
+    /// ⇧ adds what a box touches to the pick, ⌘ flips each thing in or out,
+    /// the way Shift and Command clicks do.
+    enum BoxPickMode: Equatable {
+        case replace, add, toggle
+
+        static func from(_ flags: NSEvent.ModifierFlags) -> BoxPickMode {
+            if flags.contains(.command) { return .toggle }
+            if flags.contains(.shift) { return .add }
+            return .replace
+        }
     }
 
     /// The box or the range being drawn, while the hand is down.
@@ -50,9 +75,9 @@ extension EditorState {
 
     /// The hand went down on empty track space at `ms`, `y` points down the
     /// tracks' own space.
-    func beginLanePress(atMS ms: Int, y: CGFloat, drawsRange: Bool) {
+    func beginLanePress(atMS ms: Int, y: CGFloat, drawsRange: Bool, mode: BoxPickMode = .replace) {
         guard documentHasTime else { return }
-        lanePress = LanePress(atMS: ms, atY: y, drawsRange: drawsRange)
+        lanePress = LanePress(atMS: ms, atY: y, drawsRange: drawsRange, mode: mode)
         laneBoxDraft = nil
     }
 
@@ -94,6 +119,8 @@ extension EditorState {
         let draft = laneBoxDraft
         laneBoxDraft = nil
         guard moved || press.hasMoved else {
+            // A Shift or Command click beside the clips keeps what is picked.
+            guard press.mode == .replace else { return }
             clickEmptyTrackSpace(atMS: ms, y: press.atY)
             return
         }
@@ -101,7 +128,8 @@ extension EditorState {
         if draft.drawsRange {
             pickTrackRange(TrackRange(range: draft.range, trackIDs: Set(draft.tracks)))
         } else {
-            pickWithBox(within: draft.range, onTracks: Set(draft.tracks))
+            pickWithBox(within: draft.range, onTracks: Set(draft.tracks),
+                        span: draft.minY...draft.maxY, mode: press.mode)
         }
     }
 
@@ -126,23 +154,267 @@ extension EditorState {
 
     // MARK: Picking
 
-    /// What a box over `range` on `tracks` touched becomes what is picked:
-    /// whole clips as picked layers, one piece as the piece in hand, several
-    /// pieces as the pieces picked. Nothing touched lets everything go.
-    func pickWithBox(within range: Range<Int>, onTracks tracks: Set<UUID>) {
+    /// What a box over `range` on `tracks`, `span` points down the tracks'
+    /// own space, touched becomes what is picked: whole clips as picked
+    /// layers, one piece as the piece in hand, several pieces as the pieces
+    /// picked, and the zoom bars and keys it touched beside them. Only zooms
+    /// or only keys are picked the way a click picks them. Nothing touched
+    /// lets everything go. ⇧ and ⌘ (`mode`) add to what is picked or flip.
+    func pickWithBox(within range: Range<Int>, onTracks tracks: Set<UUID>,
+                     span: ClosedRange<CGFloat>? = nil, mode: BoxPickMode = .replace) {
         guard documentHasTime, let document else { return }
-        let picks = document.marqueePicks(within: range, onTracks: tracks)
+        var picks = document.marqueePicks(within: range, onTracks: tracks)
+        var extras = span.map { extrasTouched(within: range, span: $0, in: document) } ?? TimelineBoxExtras()
+        if mode != .replace {
+            let before = boxPickNow(in: document)
+            picks = Self.combine(before.picks, picks, mode)
+            extras = Self.combine(before.extras, extras, mode)
+        }
+        applyBoxPick(picks, extras: extras)
+    }
+
+    /// The zoom bars and keys a box touches: those whose lane it crosses and
+    /// that stand inside its stretch of time.
+    private func extrasTouched(within range: Range<Int>, span: ClosedRange<CGFloat>,
+                               in document: PhotonzDocument) -> TimelineBoxExtras {
+        let down = Double(span.lowerBound)...Double(span.upperBound)
+        var extras = TimelineBoxExtras()
+        if canWorkWithZooms {
+            for (clip, row) in zoomLaneRows
+            where TimelineMarquee.reaches(down, minY: Double(row.lowerBound), maxY: Double(row.upperBound)) {
+                let ids = document.marqueeZooms(within: range, onClip: clip)
+                if !ids.isEmpty { extras.zooms[clip] = Set(ids) }
+            }
+        }
+        var lanes: [UUID: Set<UUID>] = [:]
+        for (lane, row) in keyLaneRows
+        where TimelineMarquee.reaches(down, minY: Double(row.lowerBound), maxY: Double(row.upperBound)) {
+            lanes[lane.layerID, default: []].insert(lane.motionID)
+        }
+        for (layer, motions) in lanes {
+            let keys = document.marqueeKeys(within: range, layerID: layer, motionIDs: motions)
+            if !keys.isEmpty { extras.keys[layer] = keys }
+        }
+        return extras
+    }
+
+    /// What is picked on the timeline right now, in a box's terms, for ⇧ and
+    /// ⌘ to add to. A clip held only because its zoom or its keys are picked
+    /// is not itself picked.
+    private func boxPickNow(in document: PhotonzDocument) -> (picks: [TimelinePick], extras: TimelineBoxExtras) {
+        var extras = boxExtrasHeld ?? TimelineBoxExtras()
+        for ref in pickedZooms { extras.zooms[ref.layerID, default: []].insert(ref.zoomID) }
+        if let keys = keySelection, !keys.refs.isEmpty {
+            extras.keys[keys.layerID, default: []].formUnion(keys.refs)
+        }
+        if let picks = timelinePicksHeld { return (picks, extras) }
+        let heldByAPart = boxExtrasHeld == nil && (selectedZoom != nil || keySelection?.refs.isEmpty == false)
+        guard !heldByAPart else { return ([], extras) }
+        if let id = selectedLayerID, let piece = selectedClipPieceIndex {
+            return ([TimelinePick(layerID: id, piece: piece)], extras)
+        }
+        let onTimeline = Set(document.timelineClipLayers.map(\.id))
+        let layers = actionableLayerIDs.filter { onTimeline.contains($0) }
+        return (layers.sorted { $0.uuidString < $1.uuidString }.map { TimelinePick(layerID: $0, piece: nil) }, extras)
+    }
+
+    /// `before` with `touched` added (⇧) or flipped (⌘).
+    static func combine(_ before: [TimelinePick], _ touched: [TimelinePick], _ mode: BoxPickMode) -> [TimelinePick] {
+        var out = before
+        for pick in touched {
+            if let at = out.firstIndex(of: pick) {
+                if mode == .toggle { out.remove(at: at) }
+            } else {
+                out.append(pick)
+            }
+        }
+        // A clip picked whole holds all its pieces.
+        let whole = Set(out.filter { $0.piece == nil }.map(\.layerID))
+        return out.filter { $0.piece == nil || !whole.contains($0.layerID) }
+    }
+
+    static func combine(_ before: TimelineBoxExtras, _ touched: TimelineBoxExtras,
+                        _ mode: BoxPickMode) -> TimelineBoxExtras {
+        func merge<T: Hashable>(_ a: [UUID: Set<T>], _ b: [UUID: Set<T>]) -> [UUID: Set<T>] {
+            var out = a
+            for (id, set) in b {
+                let now = out[id] ?? []
+                out[id] = mode == .toggle ? now.symmetricDifference(set) : now.union(set)
+            }
+            return out.filter { !$0.value.isEmpty }
+        }
+        return TimelineBoxExtras(zooms: merge(before.zooms, touched.zooms), keys: merge(before.keys, touched.keys))
+    }
+
+    /// Make `picks` and `extras` what is picked.
+    private func applyBoxPick(_ picks: [TimelinePick], extras: TimelineBoxExtras) {
         letGoOfTimelinePicks()
         rulerRangeInHand = nil
         if selectedEditPoint != nil { selectedEditPoint = nil }
+        letGoOfZoom()
+        clearKeySelection()
+        guard !picks.isEmpty else {
+            pickBoxedZoomsOrKeys(extras)
+            return
+        }
         if picks.allSatisfy({ $0.piece == nil }) {
             selectLayers(Set(picks.map(\.layerID)))
-        } else if picks.count == 1, let only = picks.first {
+        } else if picks.count == 1, extras.isEmpty, let only = picks.first {
             selectClipPiece(layerID: only.layerID, index: only.piece)
         } else {
             selectLayer(nil)
             timelinePicks = picks
         }
+        if !extras.isEmpty {
+            boxExtras = extras
+            boxExtrasOwner = boxPickOwnerNow
+        }
+    }
+
+    /// A box that touched no clip: the zooms it touched are picked as a
+    /// click picks them, else the keys on the layer it touched most of.
+    private func pickBoxedZoomsOrKeys(_ extras: TimelineBoxExtras) {
+        let refs = extras.zooms.flatMap { clip, ids in ids.map { ClipZoomRef(layerID: clip, zoomID: $0) } }
+            .sorted { (zoom($0)?.startMS ?? 0, $0.zoomID.uuidString) < (zoom($1)?.startMS ?? 0, $1.zoomID.uuidString) }
+        if let first = refs.first {
+            guard refs.count > 1 else {
+                pickZoom(first)
+                return
+            }
+            if selectedLayerID != first.layerID { selectLayer(first.layerID) }
+            selectedZoom = first
+            pickedZooms = Set(refs)
+            documentMomentChanged()
+            return
+        }
+        if let (layer, keys) = extras.keys.max(by: { $0.value.count < $1.value.count }) {
+            pickKeys(layerID: layer, keys, extending: false)
+            return
+        }
+        selectLayer(nil)
+    }
+
+    /// The pick of clips a box's zooms and keys were made beside.
+    struct BoxPickOwner: Equatable {
+        let layer: UUID?
+        let layers: Set<UUID>
+        let picks: [TimelinePick]
+    }
+
+    var boxPickOwnerNow: BoxPickOwner {
+        BoxPickOwner(layer: selectedLayerID, layers: multiSelectedLayerIDs, picks: timelinePicks)
+    }
+
+    /// The zoom bars and keys a box picked, while the clips it picked beside
+    /// them are still what is picked.
+    var boxExtrasHeld: TimelineBoxExtras? {
+        guard documentHasTime, !boxExtras.isEmpty, boxExtrasOwner == boxPickOwnerNow else { return nil }
+        return boxExtras
+    }
+
+    /// What the panel says about several things picked on the timeline at
+    /// once: how many, and of what kinds. Nil for one thing, which the panel
+    /// describes in full, and for zooms or keys alone, which have panels of
+    /// their own.
+    var timelinePickSummary: TimelinePickSummary? {
+        guard documentHasTime, let document else { return nil }
+        let extras = boxExtrasHeld
+        var kinds: [String] = []
+        var pieces = 0
+        if let picks = timelinePicksHeld {
+            for pick in picks {
+                if pick.piece == nil, let layer = document.layer(id: pick.layerID) {
+                    kinds.append(ClipLine.kind(of: layer))
+                } else {
+                    pieces += 1
+                }
+            }
+        } else if extras != nil || multiSelectedLayerIDs.count > 1 {
+            kinds = actionableLayerIDs.compactMap { document.layer(id: $0) }.map { ClipLine.kind(of: $0) }
+        } else {
+            return nil
+        }
+        return TimelinePickSummary(kinds: kinds, pieces: pieces, zooms: extras?.zoomCount ?? 0,
+                                   keys: extras?.keyCount ?? 0)
+    }
+
+    /// Whether a box's pick lights this zoom's bar.
+    func isZoomLitByBox(_ ref: ClipZoomRef) -> Bool {
+        boxExtrasHeld?.zooms[ref.layerID]?.contains(ref.zoomID) == true
+    }
+
+    /// The keys a box's pick lights on a layer's lanes.
+    func keysLitByBox(layerID: UUID) -> Set<KeyRef> {
+        boxExtrasHeld?.keys[layerID] ?? []
+    }
+
+    // MARK: Carrying and deleting the whole pick
+
+    /// What a clip carried by the hand brings with it from a box's pick: the
+    /// zooms and keys on every clip that is not itself moving.
+    func boxExtrasCarried(moving: Set<UUID>) -> TimelineBoxExtras {
+        guard let held = boxExtrasHeld, timelinePicksHeld == nil,
+              moving.contains(where: { actionableLayerIDs.contains($0) }) else { return TimelineBoxExtras() }
+        return held.besides(moving)
+    }
+
+    /// A zoom bar or a key in a box's pick taken hold of: the whole pick is
+    /// carried, through the clip bar's own drag on a clip of the pick (the
+    /// zoom's own clip where that is picked), so it snaps as a clip does.
+    /// False where the pick has no whole clip to carry it by.
+    func beginBoxPickDrag(from clip: UUID) -> Bool {
+        guard boxExtrasHeld != nil, timelinePicksHeld == nil else { return false }
+        let layers = actionableLayerIDs
+        guard let anchor = layers.contains(clip) ? clip
+                : selectedLayerID ?? layers.min(by: { $0.uuidString < $1.uuidString }) else { return false }
+        beginClipBarDrag(layerID: anchor, grab: .body)
+        guard clipBarDrag != nil else { return false }
+        dragCarriesBoxPick = true
+        return true
+    }
+
+    /// The keys a carried pick left where they landed: a key is named by
+    /// where it sits, so its name changed with it.
+    func noteBoxExtrasLanded(_ landed: TimelineBoxExtras) {
+        guard boxExtrasHeld != nil else { return }
+        var now = boxExtras
+        for (layer, keys) in landed.keys { now.keys[layer] = keys }
+        boxExtras = now
+    }
+
+    /// Delete with a box's whole pick in hand: the clips or pieces and every
+    /// zoom and key beside them, as one step. False where there is no such
+    /// pick.
+    @discardableResult
+    func deleteBoxPick() -> Bool {
+        guard let extras = boxExtrasHeld, let document else { return false }
+        if let picks = timelinePicksHeld {
+            let rest = extras.besides(Set(picks.filter { $0.piece == nil }.map(\.layerID)))
+            takeOut { doc in
+                let lifted = doc.liftPicks(picks)
+                let removed = doc.removeBoxExtras(rest)
+                return lifted || removed
+            }
+            timelinePicks = []
+            boxExtras = TimelineBoxExtras()
+            return true
+        }
+        let ids = document.deletableLayerIDs(in: actionableLayerIDs)
+        let rest = extras.besides(actionableLayerIDs)
+        guard !ids.isEmpty || !rest.isEmpty else { return false }
+        discardDragPreview()
+        endTrimBeforeCutting()
+        pauseDocument()
+        if let selected = selectedLayerID, ids.contains(selected) { selectedLayerID = nil }
+        perform { doc in
+            if !ids.isEmpty { doc.holdingTurnedPivots(above: Array(ids)) { $0.removeLayers(ids: ids) } }
+            doc.removeBoxExtras(rest)
+        }
+        boxExtras = TimelineBoxExtras()
+        setSelection(nil, captureLayers: false, recording: false)
+        if documentTimeMS > lastDocumentTimeMS { documentTimeMS = lastDocumentTimeMS }
+        documentMomentChanged()
+        return true
     }
 
     /// A stretch of time on some tracks becomes the thing in hand: whatever
@@ -160,6 +432,7 @@ extension EditorState {
     /// Put down a box's pieces, a range on some tracks and a picked gap.
     func letGoOfTimelinePicks() {
         if !timelinePicks.isEmpty { timelinePicks = [] }
+        if !boxExtras.isEmpty { boxExtras = TimelineBoxExtras() }
         if trackRangeInHand != nil { trackRangeInHand = nil }
         if timelineGapInHand != nil { timelineGapInHand = nil }
     }
@@ -204,6 +477,7 @@ extension EditorState {
     /// gap. False where neither is in hand, so the press carries on.
     @discardableResult
     func liftTrackThing() -> Bool {
+        if boxExtrasHeld != nil, timelinePicksHeld != nil { return deleteBoxPick() }
         if let picks = timelinePicksHeld {
             takeOut { $0.liftPicks(picks) }
             timelinePicks = []
@@ -219,7 +493,15 @@ extension EditorState {
     @discardableResult
     func extractTrackThing() -> Bool {
         if let picks = timelinePicksHeld {
-            takeOut { $0.rippleDeletePicks(picks) }
+            // Zooms and keys a box picked beside the pieces go too; they have
+            // no gap of their own to close.
+            let rest = (boxExtrasHeld ?? TimelineBoxExtras())
+                .besides(Set(picks.filter { $0.piece == nil }.map(\.layerID)))
+            takeOut { doc in
+                let rippled = doc.rippleDeletePicks(picks)
+                let removed = doc.removeBoxExtras(rest)
+                return rippled || removed
+            }
             timelinePicks = []
             return true
         }
@@ -315,4 +597,11 @@ extension EditorState {
         guard let held = trackRangeHeld else { return false }
         return held.trackIDs.contains(track) && (held.range.lowerBound...held.range.upperBound).contains(ms)
     }
+}
+
+/// One key lane: a layer's lane for one keyed value, for working out which a
+/// box over the tracks crosses.
+struct KeyLaneRowID: Hashable {
+    let layerID: UUID
+    let motionID: UUID
 }

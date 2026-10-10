@@ -26,29 +26,12 @@ struct PropertyKeysInspector: View {
         let _ = ViewBuildMeter.shared.built(.keysSection)
         #endif
         VStack(alignment: .leading, spacing: 2) {
-            if let line = editorState.keyClipLine {
-                ClipLineRow(line: line)
-            }
-            // A recording's clicks, drawn or not (`ClickEffectRows`): a
-            // setting of the clip itself, so it sits with the clip line
-            // rather than among what is animating.
-            if let clip = editorState.clickEffectClip {
-                ClickEffectRows(clipID: clip.id)
-            }
-            AnimatingHeader()
-            // Nothing under the header while nothing is keyed: its own count
-            // already reads "nothing yet", and what can be keyed is the
-            // section's question mark.
-            let rows = editorState.animatingRows
-            ForEach(rows, id: \.self) { property in
-                PropertyKeyRow(property: property)
-            }
-            AnimatePropertyButton(isOpen: $isPicking)
-                .padding(.top, 4)
-            // How it gets from one key to the next, once something has two
-            // (`video-move-wt.html`, `#secEase`).
-            if editorState.betweenKeysProperty != nil {
-                BetweenKeysSection()
+            if let summary = editorState.timelinePickSummary {
+                // Several things picked at once: what they are. What they
+                // share is in the sections below.
+                PickSummaryRow(summary: summary)
+            } else {
+                keysOfOneLayer
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -61,6 +44,34 @@ struct PropertyKeysInspector: View {
             Button("Cancel", role: .cancel) { editorState.cancelStopKeying() }
         } message: {
             Text(stopAlertMessage)
+        }
+    }
+
+    /// The one layer picked: its clip line, and what is keyed on it.
+    @ViewBuilder private var keysOfOneLayer: some View {
+        if let line = editorState.keyClipLine {
+            ClipLineRow(line: line)
+        }
+        // A recording's clicks, drawn or not (`ClickEffectRows`): a
+        // setting of the clip itself, so it sits with the clip line
+        // rather than among what is animating.
+        if let clip = editorState.clickEffectClip {
+            ClickEffectRows(clipID: clip.id)
+        }
+        AnimatingHeader()
+        // Nothing under the header while nothing is keyed: its own count
+        // already reads "nothing yet", and what can be keyed is the
+        // section's question mark.
+        let rows = editorState.animatingRows
+        ForEach(rows, id: \.self) { property in
+            PropertyKeyRow(property: property)
+        }
+        AnimatePropertyButton(isOpen: $isPicking)
+            .padding(.top, 4)
+        // How it gets from one key to the next, once something has two
+        // (`video-move-wt.html`, `#secEase`).
+        if editorState.betweenKeysProperty != nil {
+            BetweenKeysSection()
         }
     }
 
@@ -326,6 +337,36 @@ extension ClipLineRow {
         .monospacedDigit()
         .lineLimit(1)
         .fixedSize()
+    }
+}
+
+/// `6 picked        2 clips, 1 title, 1 sound, 2 zooms`: what a box over the
+/// timeline picked, in the clip line's place and its type.
+private struct PickSummaryRow: View {
+    let summary: TimelinePickSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            VStack(alignment: .leading, spacing: 2) {
+                Text(summary.title)
+                    .font(.system(size: 11.5, weight: .semibold))
+                    .foregroundStyle(.primary)
+                Text(summary.detail)
+                    .font(.system(size: 10, design: .monospaced))
+                    .monospacedDigit()
+                    .foregroundStyle(VideoKit.Palette.dim)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 6)
+            .padding(.bottom, 4)
+            Rectangle()
+                .fill(VideoKit.Palette.line)
+                .frame(height: 1)
+                .padding(.bottom, 6)
+        }
+        .panelReadout("\(summary.title): \(summary.detail)")
+        .playtestField("Pick summary")
     }
 }
 

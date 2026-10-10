@@ -299,6 +299,8 @@ extension EditorState {
     /// thing in hand; then tracks picked on their headers; then a picked piece
     /// of a clip; then the picked layers.
     func liftInHand() -> Bool {
+        // A box's whole pick: its clips, and the zooms and keys beside them.
+        if deleteBoxPick() { return true }
         if selectedZoom != nil {
             removeZoomInHand()
             return true

@@ -40,6 +40,9 @@ struct TimelineDock: View {
     /// drag on its edge never changes.
     @State private var transportHeight: CGFloat = 0
     @State private var localBarHeight: CGFloat = 0
+    /// How tall the tracks' scroller is, so the empty space under the last
+    /// track reaches its foot and a box can start anywhere in it.
+    @State private var tracksViewportHeight: CGFloat = 0
 
     /// The track name column and the gap after it. The mock's
     /// `#tlDock{--gutter:84px}` left no room for a header's switches, so the
@@ -408,6 +411,18 @@ struct TimelineDock: View {
                             }
                             TimelineAddTrackRow(laneWidth: laneWidth)
                         }
+                        // Down to the scroller's foot, all of it empty space a
+                        // box can start in (`EditorState+TrackRange`).
+                        .frame(minHeight: max(0, tracksViewportHeight - 2 * Self.rowSpacing), alignment: .top)
+                        .background(alignment: .topLeading) {
+                            Color.clear
+                                .contentShape(Rectangle())
+                                .gesture(TimelineLaneMarquee.gesture(editorState, ruler: editorState.motionStripRuler,
+                                                                     laneWidth: laneWidth,
+                                                                     in: .named(Self.tracksSpace),
+                                                                     leading: Self.lanesLeading) { 0 })
+                                .padding(.leading, Self.lanesLeading)
+                        }
                         .padding(.vertical, Self.rowSpacing)
                         .frame(maxWidth: .infinity, alignment: .leading)
                         // A track carried by its header: the gap it will land
@@ -439,6 +454,9 @@ struct TimelineDock: View {
                                                      viewportHeight: geometry.containerSize.height)
                     } action: { _, now in
                         editorState.timelineTracksScrollGeometry = now
+                    }
+                    .onScrollGeometryChange(for: CGFloat.self) { $0.containerSize.height } action: { _, height in
+                        tracksViewportHeight = height
                     }
                     .overlay(alignment: .trailing) {
                         TimelineRowsScroller()

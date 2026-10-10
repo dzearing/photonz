@@ -392,7 +392,15 @@ extension EditorState {
         clipBarDrag = ClipBarDragSession(layerID: layerID, grab: grab, drag: drag,
                                          landing: drag.landing(byMS: 0),
                                          heldTimelineMS: max(1, document.documentDurationMS),
-                                         along: along)
+                                         along: along,
+                                         // A box's zooms and keys come too
+                                         // (`EditorState+TrackRange`).
+                                         extras: grab == .body
+                                            ? boxExtrasCarried(moving: Set(along.keys).union([layerID]))
+                                            : TimelineBoxExtras())
+        if let session = clipBarDrag, !session.extras.isEmpty {
+            clipBarDrag?.extrasRoom = document.boxExtrasRoom(session.extras)
+        }
         watchForClipBarEscape()
     }
 
@@ -481,6 +489,12 @@ extension EditorState {
         guard var session = clipBarDrag else { return }
         session.handMS = delta
         session.landing = (free ? session.drag.snapping(withinMS: 0) : session.drag).landing(byMS: delta)
+        // A box's zooms and keys go as far as the one with least room, and
+        // the clips stop with them, so nothing in the pick is left behind.
+        if !session.extras.isEmpty, !session.extrasRoom.contains(session.landing.movedMS) {
+            let held = min(max(session.landing.movedMS, session.extrasRoom.lowerBound), session.extrasRoom.upperBound)
+            session.landing = session.drag.snapping(withinMS: 0).landing(byMS: held)
+        }
         clipBarDrag = session
         rerender()
     }
@@ -488,6 +502,7 @@ extension EditorState {
     /// Let go: one step for undo covering the whole drag.
     func commitClipBarDrag() {
         stopWatchingForClipBarEscape()
+        dragCarriesBoxPick = false
         guard let session = clipBarDrag else { return }
         clipBarDrag = nil
         carriedCaptionCueID = nil
@@ -513,6 +528,22 @@ extension EditorState {
         case .seam(let after):
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
+        case .body where !session.extras.isEmpty:
+            // A box's pick: its clips and the zooms and keys beside them, all
+            // by the same time on the tracks they are on, as one step.
+            clipTrackDrop = nil
+            guard landing.movedMS != 0 else { break }
+            let extras = session.extras
+            var landed = extras
+            perform { doc in
+                if session.along.isEmpty {
+                    doc.moveClip(id, toInMS: landing.clipStartMS)
+                } else {
+                    doc.moveClips([id] + Array(session.along.keys), byMS: landing.movedMS)
+                }
+                landed = doc.shiftBoxExtras(extras, byMS: landing.movedMS)
+            }
+            noteBoxExtrasLanded(landed)
         case .body where !session.along.isEmpty:
             // Several picked clips: all of them by the same amount, and the
             // same number of tracks up or down where they were carried there,
@@ -553,6 +584,7 @@ extension EditorState {
     /// written.
     func cancelClipBarDrag() {
         stopWatchingForClipBarEscape()
+        dragCarriesBoxPick = false
         clipTrackDrop = nil
         guard clipBarDrag != nil else { return }
         clipBarDrag = nil
@@ -736,6 +768,8 @@ extension EditorState {
                 layer.time = layer.time?.moved(toInMS: start + landing.movedMS)
             }
         }
+        // ...and so do the zooms and keys a box picked beside them.
+        if !session.extras.isEmpty { document.shiftBoxExtras(session.extras, byMS: landing.movedMS) }
         // A copy over something on its own track is shown on the new track it
         // will land on (`liftClipsOffOverlaps`), rather than hidden under what
         // it covers. That track goes in ABOVE the one the hand is on, so
@@ -810,6 +844,11 @@ struct ClipBarDragSession {
     /// for every other drag. The one in the hand is `layerID`, and any others
     /// are in `along`.
     var copies: [ClipBarCopySource] = []
+    /// The zooms and keys of a box's pick carried with a `.body` drag, on
+    /// clips that are not themselves moving. Empty for every other drag.
+    var extras = TimelineBoxExtras()
+    /// How far those can go, either way, before one meets its clip's end.
+    var extrasRoom: ClosedRange<Int> = Int.min...Int.max
 
     /// Where a copy starts with the hand where it is: the one in the hand
     /// where the landing says, the rest by as much as it went.

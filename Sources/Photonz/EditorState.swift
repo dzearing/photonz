@@ -1796,6 +1796,18 @@ final class EditorState {
     /// The pieces of cut clips a box picked, where it picked more than one
     /// piece and not every piece of a clip.
     var timelinePicks: [TimelinePick] = []
+    /// The zoom bars and keys a box picked beside its clips and pieces, and
+    /// the pick of clips they were made beside (`EditorState+TrackRange`).
+    /// They count only while that pick is still the one in hand.
+    var boxExtras = TimelineBoxExtras()
+    @ObservationIgnored var boxExtrasOwner: BoxPickOwner?
+    /// Where each Zoom lane and each key lane is, down the tracks' own space,
+    /// for working out which a box crosses.
+    @ObservationIgnored var zoomLaneRows: [UUID: ClosedRange<CGFloat>] = [:]
+    @ObservationIgnored var keyLaneRows: [KeyLaneRowID: ClosedRange<CGFloat>] = [:]
+    /// A bar or a key taken hold of that carries a box's whole pick, through
+    /// the clip bar's own drag (`EditorState+TrackRange`).
+    @ObservationIgnored var dragCarriesBoxPick = false
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// The ⌥ watch armed while the pointer rests on a clip's bar, so the copy

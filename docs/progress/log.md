@@ -21102,3 +21102,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Core: `EasingCurve.smooth` (the zoom's own smootherstep, not on the shared eight), `ClipZoom.curve/outCurve`, `ClipTransition.curve` (picture only, each dip half on the curve so the cut stays all colour), `PictureFade.curve`, `SavedCurves`. Old documents decode and write exactly as before. `TransitionCurveTests`.
 - Walks `curves-on-a-zoom-and-a-dissolve-walk` (measures 25/50/75% within 2% on canvas and export) and `a-title-animation-takes-the-curve-row-walk`. Not the composite path: only the progress number fed to existing layer opacity/slicing changed.
 - Full test run stalled again after walks; split runs green (open hang task).
+
+## 2026-10-10 — A box on the timeline picks everything it touches (go loop)
+
+- Reproduced first: a box only started on empty track space, which a recording edit rarely has; between zoom bars and under the last track a drag did nothing.
+- Now a box starts there too, picks zoom bars and keys beside clips (Shift adds, Command flips), any picked thing carries the whole pick (stopping where a zoom or key runs out of room), Delete takes all of it in one undo, and the panel says "N picked" with the kinds. Core: `PhotonzCore/TimelineBoxPick.swift`.
+- Walks: `box-picks-everything-it-touches-walk`, `box-pick-by-hand-walk`. Audit: `queue/audits/2026-10-10-timeline-box-picks-everything.json`.
+- Open: the full test run hung again after walks (logged on the hang task); the split run passed.

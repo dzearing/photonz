@@ -3000,7 +3000,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "dragTracks", "fromTrack": "V1", "from": 2, "toTrack": "Audio", "to": 5.5,
                        "option": true, "hold": "mid" } ] }
         """)
-        guard case .dragTracks(let fromTrack, let from, let toTrack, let to, let option, let hold) = script.steps[0]
+        guard case .dragTracks(let fromTrack, let from, let toTrack, let to, let option, let hold, _) = script.steps[0]
         else { Issue.record("dragTracks"); return }
         #expect(fromTrack == "V1")
         #expect(from == 2)
@@ -3012,16 +3012,31 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("dragTracks"))
     }
 
+    // A box drawn with Shift held adds to what is picked, and with Command
+    // flips each thing in or out (`EditorState+TrackRange`).
+    @Test("A dragTracks step can hold Shift or Command for the whole drag")
+    func dragTracksModifiers() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "dragTracks", "fromTrack": "Zoom Talk", "from": 1, "to": 3,
+                       "modifiers": ["shift"] } ] }
+        """)
+        guard case .dragTracks(let fromTrack, _, _, _, _, _, let modifiers) = script.steps[0]
+        else { Issue.record("dragTracks"); return }
+        #expect(fromTrack == "Zoom Talk")
+        #expect(modifiers == [.shift])
+    }
+
     @Test("A dragTracks step ends on the track it starts on unless it says otherwise")
     func dragTracksDefaults() throws {
         let script = try decode("""
         { "steps": [ { "do": "dragTracks", "fromTrack": "V2", "from": 1, "to": 3 } ] }
         """)
-        guard case .dragTracks(_, _, let toTrack, _, let option, let hold) = script.steps[0]
+        guard case .dragTracks(_, _, let toTrack, _, let option, let hold, let modifiers) = script.steps[0]
         else { Issue.record("dragTracks"); return }
         #expect(toTrack == "V2")
         #expect(!option)
         #expect(hold == nil)
+        #expect(modifiers.isEmpty)
         #expect(throws: PlaytestScriptError.self) {
             _ = try decode("""
             { "steps": [ { "do": "dragTracks", "from": 1, "to": 3 } ] }

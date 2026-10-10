@@ -2837,7 +2837,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picks the clips it touches; with it, or with the Range tool in hand, a
     /// stretch of time on the tracks it crosses. The same moment on the same
     /// track is a click. `hold` names a picture taken before letting go.
-    case dragTracks(fromTrack: String, from: Double, toTrack: String, to: Double, option: Bool, hold: String?)
+    /// A track name may also be `Zoom <clip>`, that clip's Zoom lane, or
+    /// `Under the tracks`, the empty strip under the last one. `modifiers`
+    /// are held for the whole drag: Shift adds to what is picked, Command
+    /// flips each thing in or out.
+    case dragTracks(fromTrack: String, from: Double, toTrack: String, to: Double, option: Bool, hold: String?,
+                    modifiers: [PlaytestModifier] = [])
     /// What is picked on the timeline, and FAIL when it is not so: `clips` by
     /// name, a piece of a cut clip as "<name> piece <n>" counting from one, an
     /// empty list for nothing; `rangeOn` the tracks a range on some tracks
@@ -4449,7 +4454,8 @@ public enum PlaytestStep: Sendable, Equatable {
             guard to >= 0 else { throw f.invalid("to", "a drag on the tracks ends at the start or after it") }
             self = .dragTracks(fromTrack: fromTrack, from: from, toTrack: try f.optionalString("toTrack") ?? fromTrack,
                                to: to, option: try f.optionalFlag("option") ?? false,
-                               hold: try f.optionalString("hold"))
+                               hold: try f.optionalString("hold"),
+                               modifiers: try f.optionalModifiers("modifiers") ?? [])
         case "expectTimelinePick":
             let clips = f.has("clips") ? try f.optionalStrings("clips") : nil
             let rangeOn = f.has("rangeOn") ? try f.optionalStrings("rangeOn") : nil

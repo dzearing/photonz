@@ -19,6 +19,9 @@ struct ZoomLane: View {
     let laneWidth: CGFloat
     var indent: CGFloat = 0
     var isLocked = false
+    /// Whether this is the lane itself rather than the copy drawn lifted while
+    /// its track is carried, which must not say where the lane is.
+    var isLifted = false
 
     static let height: CGFloat = 22
     static let barTop: CGFloat = 2
@@ -56,6 +59,14 @@ struct ZoomLane: View {
         }
         .frame(height: Self.height)
         .playtestField("Zoom lane")
+        // Where the lane is down the tracks, for a box drawn over them
+        // (`EditorState+TrackRange`).
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .named(TimelineDock.tracksSpace))
+        } action: { frame in
+            if !isLifted { editorState.zoomLaneRows[layerID] = frame.minY...frame.maxY }
+        }
+        .onDisappear { if !isLifted { editorState.zoomLaneRows[layerID] = nil } }
     }
 
     // MARK: Where the bars go
@@ -119,9 +130,12 @@ private struct ZoomBarsView: View {
     @State private var hovered: ZoomLane.Bar?
     @State private var pressed: (bar: ZoomLane.Bar, grab: ZoomGrab)?
     @State private var dragging = false
+    /// A press between the bars, which is the timeline's box
+    /// (`TimelineLaneMarquee`), not a zoom's.
+    @State private var boxing = false
 
     private func isPicked(_ bar: ZoomLane.Bar) -> Bool {
-        editorState.isZoomPicked(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
+        editorState.isZoomLit(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id))
     }
 
     var body: some View {
@@ -198,10 +212,14 @@ private struct ZoomBarsView: View {
     private var press: some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: .local)
             .onChanged { value in
-                if pressed == nil {
-                    guard let bar = ZoomLane.bar(at: value.startLocation.x, in: bars) else { return }
+                if pressed == nil, !boxing {
+                    guard let bar = ZoomLane.bar(at: value.startLocation.x, in: bars) else {
+                        boxing = true
+                        return box(value)
+                    }
                     pressed = (bar, ZoomLane.grab(at: value.startLocation.x, on: bar))
                 }
+                if boxing { return box(value) }
                 guard let pressed, !isLocked else { return }
                 let ref = ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id)
                 if !dragging {
@@ -217,10 +235,17 @@ private struct ZoomBarsView: View {
                 defer {
                     pressed = nil
                     dragging = false
+                    boxing = false
                 }
                 guard let pressed else {
-                    // A press on the empty lane lets the picked zoom go.
-                    if ZoomLane.bar(at: value.startLocation.x, in: bars) == nil { editorState.letGoOfZoom() }
+                    // A press on the empty lane is a press on empty timeline
+                    // space: a click puts the playhead there and lets go of
+                    // what is picked, a drag draws a box.
+                    if boxing || ZoomLane.bar(at: value.startLocation.x, in: bars) == nil {
+                        if !boxing { box(value) }
+                        TimelineLaneMarquee.ended(editorState, value, leading: 0,
+                                                  ruler: editorState.motionStripRuler, laneWidth: laneWidth)
+                    }
                     return
                 }
                 if dragging {
@@ -235,6 +260,12 @@ private struct ZoomBarsView: View {
                     }
                 }
             }
+    }
+
+    /// Hand a press between the bars to the timeline's box.
+    private func box(_ value: DragGesture.Value) {
+        TimelineLaneMarquee.changed(editorState, value, top: editorState.zoomLaneRows[layerID]?.lowerBound ?? 0,
+                                    leading: 0, ruler: editorState.motionStripRuler, laneWidth: laneWidth)
     }
 
     /// The bar a right click is about: the one under the pointer, else the

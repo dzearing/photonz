@@ -56,6 +56,11 @@ struct ZoomDragSession {
     let before: ClipZoom
     var landed: ClipZoom
     var moved = false
+    /// Every zoom picked, carried together when the bar in the hand is one of
+    /// several picked; empty for a bar carried alone.
+    var group = TimelineBoxExtras()
+    /// How far the hand has carried that group, in ms of the timeline.
+    var groupMS = 0
 }
 
 extension EditorState {
@@ -183,6 +188,9 @@ extension EditorState {
 
     /// Whether a zoom is one of those picked.
     func isZoomPicked(_ ref: ClipZoomRef) -> Bool { pickedZooms.contains(ref) }
+
+    /// Whether a zoom's bar is drawn lit: picked, or in a box's pick.
+    func isZoomLit(_ ref: ClipZoomRef) -> Bool { pickedZooms.contains(ref) || isZoomLitByBox(ref) }
 
     /// The picked zooms as the hand has them, in the order they run.
     var pickedZoomsShown: [ClipZoom] {
@@ -375,20 +383,43 @@ extension EditorState {
 
     func beginZoomDrag(_ ref: ClipZoomRef, grab: ZoomGrab) {
         guard let zoom = zoom(ref), !isClipLocked(ref.layerID) else { return }
+        // A bar in a box's pick carries the whole pick, clips and all
+        // (`EditorState+TrackRange`).
+        if grab == .body, isZoomLitByBox(ref), beginBoxPickDrag(from: ref.layerID) { return }
         pauseDocument()
-        // A bar among several picked is carried alone and leaves the rest picked.
+        // A bar among several picked: its middle carries them all, its ends
+        // and ramps shape it alone, and the rest stay picked.
         if !pickedZooms.contains(ref) {
             pickZoom(ref)
         } else if selectedZoom != ref {
             selectedZoom = ref
         }
-        zoomDrag = ZoomDragSession(ref: ref, grab: grab, before: zoom, landed: zoom)
+        var session = ZoomDragSession(ref: ref, grab: grab, before: zoom, landed: zoom)
+        if grab == .body, pickedZooms.count > 1 {
+            for picked in pickedZooms where !isClipLocked(picked.layerID) {
+                session.group.zooms[picked.layerID, default: []].insert(picked.zoomID)
+            }
+        }
+        zoomDrag = session
     }
 
     /// The hand on the lane moved `delta` ms of the timeline from where it
     /// pressed. Read on the clip's own clock at the moment it lands, so a
     /// retimed clip still puts the edge under the hand.
     func updateZoomDrag(byMS delta: Int) {
+        if dragCarriesBoxPick {
+            updateClipBarDrag(byMS: delta)
+            return
+        }
+        if var session = zoomDrag, !session.group.isEmpty {
+            // As far as the one with least room can go, so they keep apart.
+            let room = document?.boxExtrasRoom(session.group) ?? 0...0
+            session.groupMS = min(max(delta, room.lowerBound), room.upperBound)
+            session.moved = session.moved || delta != 0
+            zoomDrag = session
+            documentMomentChanged()
+            return
+        }
         guard var session = zoomDrag, let layer = document?.layer(id: session.ref.layerID),
               let span = spanOnTimeline(session.before, of: layer) else { return }
         let before = session.before
@@ -448,8 +479,22 @@ extension EditorState {
 
     /// Let go: one undo step for the whole drag.
     func commitZoomDrag() {
+        if dragCarriesBoxPick {
+            dragCarriesBoxPick = false
+            commitClipBarDrag()
+            return
+        }
         guard let session = zoomDrag else { return }
         zoomDrag = nil
+        if !session.group.isEmpty {
+            // Every picked zoom by the same time, as one step.
+            if session.moved, session.groupMS != 0 {
+                let group = session.group, by = session.groupMS
+                perform { $0.shiftBoxExtras(group, byMS: by) }
+            }
+            documentMomentChanged()
+            return
+        }
         guard session.moved, session.landed != session.before else {
             documentMomentChanged()
             return
@@ -459,6 +504,11 @@ extension EditorState {
     }
 
     func cancelZoomDrag() {
+        if dragCarriesBoxPick {
+            dragCarriesBoxPick = false
+            cancelClipBarDrag()
+            return
+        }
         guard zoomDrag != nil else { return }
         zoomDrag = nil
         documentMomentChanged()
@@ -485,6 +535,10 @@ extension EditorState {
     func withDraggedZoom(_ document: PhotonzDocument) -> PhotonzDocument {
         guard let session = zoomDrag else { return document }
         var document = document
+        if !session.group.isEmpty {
+            document.shiftBoxExtras(session.group, byMS: session.groupMS)
+            return document
+        }
         document.updateLayer(id: session.ref.layerID) { layer in
             layer.zooms = layer.zooms?.map { $0.id == session.ref.zoomID ? session.landed : $0 }
         }
