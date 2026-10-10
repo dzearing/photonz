@@ -297,6 +297,33 @@ extension EditorState {
         }
     }
 
+    /// Which way of a zoom a curve is for: both, where they share one, or the
+    /// way in or the way out where they are set apart.
+    enum ZoomCurveEnd { case both, wayIn, wayOut }
+
+    /// Put these zooms on a curve. Smooth, their default, is written as no
+    /// curve at all, so a zoom put back on it writes what it always wrote.
+    func setZoomCurve(_ refs: Set<ClipZoomRef>, _ curve: EasingCurve, end: ZoomCurveEnd) {
+        let stored: EasingCurve? = curve == .smooth ? nil : curve
+        changeZooms(refs) { zoom in
+            switch end {
+            case .both:
+                zoom.curve = stored
+                zoom.outCurve = nil
+            case .wayIn:
+                zoom.curve = stored
+            case .wayOut:
+                zoom.outCurve = curve
+            }
+        }
+    }
+
+    /// Set the way in and the way out apart, each starting on the curve they
+    /// shared, or put them back on the way in's.
+    func setZoomCurvesApart(_ refs: Set<ClipZoomRef>, _ apart: Bool) {
+        changeZooms(refs) { zoom in zoom.outCurve = apart ? zoom.inCurve : nil }
+    }
+
     /// How far in a zoom can be set from its menu and the panel, in percent.
     static let zoomScaleStops = [125, 150, 200, 250, 300, 400]
     /// How long a way in or out can be set to from the panel, in ms.

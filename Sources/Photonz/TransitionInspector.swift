@@ -90,8 +90,8 @@ private struct CutField: View {
 }
 
 /// **Transition**: what is on the cut in hand. Nothing yet is one button that
-/// opens the tiles; something is a Type and a Length, and for the kinds that
-/// overlap, what it is paid with.
+/// opens the tiles; something is a Type, a Length and a Curve, and for the
+/// kinds that overlap, what it is paid with.
 struct TransitionInspector: View {
     @Environment(EditorState.self) private var editorState
 
@@ -101,6 +101,9 @@ struct TransitionInspector: View {
                 if let transition = inHand.cut.transition {
                     type(inHand, current: transition.kind)
                     length(inHand)
+                    CurveRow(current: transition.curve, help: "How it moves from one shot to the other.") {
+                        editorState.setClipTransitionCurve($0)
+                    }
                     if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
                         VideoKit.FieldRow(label: "Paid with") {
                             VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))

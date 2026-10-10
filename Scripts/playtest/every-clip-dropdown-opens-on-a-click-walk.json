@@ -195,7 +195,7 @@
     },
     {
       "do": "panelMenu",
-      "menu": "Curve",
+      "menu": "Sound fade curve",
       "at": [
         "centre",
         "start",
@@ -209,7 +209,7 @@
     },
     {
       "do": "expect",
-      "menu": "Curve",
+      "menu": "Sound fade curve",
       "reads": "Ease in out"
     },
     {

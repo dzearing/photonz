@@ -35,7 +35,8 @@ extension ClipCut {
     /// across the cut, else on whichever side has the spare: a clip dropped
     /// from its first frame has nothing before its in point, and Premiere puts
     /// a dissolve there after the cut rather than refusing it. A dip keeps the
-    /// hold the cut has; anything else holds nothing.
+    /// hold the cut has; anything else holds nothing. The curve stays, as the
+    /// length does: changing what happens at a cut is not changing how it moves.
     public func fitted(_ kind: ClipTransitionKind) -> ClipTransition? {
         let asked = transition?.lengthMS ?? kind.defaultLengthMS
         let hold = kind.needsOverlap ? 0 : (transition?.holdMS ?? 0)
@@ -47,7 +48,7 @@ extension ClipCut {
             let longest = longestMS(of: kind, aligned: alignment)
             guard longest >= ClipTransition.shortestMS else { continue }
             return ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest),
-                                  alignment: alignment, holdMS: hold)
+                                  alignment: alignment, holdMS: hold, curve: transition?.curve ?? .linear)
         }
         return nil
     }

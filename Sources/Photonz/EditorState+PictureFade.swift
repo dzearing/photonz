@@ -48,7 +48,14 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// What a length row does: that length, or, on the length it already has,
+    /// Put both of a layer's picture fades on a curve.
+    func setPictureFadeCurve(_ curve: EasingCurve, layerID id: UUID) {
+        guard pictureFadeLayer(id) != nil, document?.layer(id: id)?.pictureFade?.shownCurve != curve else { return }
+        perform { $0.setPictureFadeCurve(id, curve) }
+        documentMomentChanged()
+    }
+
+        /// What a length row does: that length, or, on the length it already has,
     /// no fade, so a checked row unchecks like every other toggle.
     func choosePictureFade(_ end: FadeEnd, ms: Int, layerID id: UUID) {
         let now = document?.layer(id: id)?.pictureFadeMS(end) ?? 0

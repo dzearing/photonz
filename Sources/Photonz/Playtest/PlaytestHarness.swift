@@ -4449,6 +4449,7 @@ private final class Run {
                  .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
                  .expectEveryZoomPicked, .expectNoZooms,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+                 .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
                  .expectZoomShowsItsBox:
                 do {
@@ -4469,6 +4470,9 @@ private final class Run {
                     case .expectZoomBoxDown: try PlaytestZoom.expectBoxDown(editor)
                     case .expectZoomScrubMatchesExport: try await PlaytestZoom.expectScrubMatchesExport(editor)
                     case .expectZoomEasesFrameByFrame: try await PlaytestZoom.expectEasesFrameByFrame(editor)
+                    case .curveDrawOnZoom: try PlaytestCurves.drawOnZoom(editor)
+                    case .expectZoomFollowsCurve: try await PlaytestCurves.expectZoomFollowsCurve(editor)
+                    case .expectDissolveFollowsCurve: try await PlaytestCurves.expectDissolveFollowsCurve(editor)
                     case .zoomCropCanvas: try PlaytestZoom.cropCanvas(editor)
                     case .zoomCropClip: try PlaytestZoom.cropClip(editor)
                     case .zoomCropByKeys: try PlaytestZoom.cropByKeys(editor)
@@ -6061,6 +6065,7 @@ private final class Run {
                  .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
                  .expectEveryZoomPicked, .expectNoZooms,
                  .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+                 .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
                  .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture,
                  .expectZoomShowsItsBox,
                  .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,

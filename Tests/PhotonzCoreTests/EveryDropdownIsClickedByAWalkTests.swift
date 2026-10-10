@@ -40,9 +40,13 @@ struct EveryDropdownIsClickedByAWalkTests {
         // was a dropdown named after its variant property until 2026-10-09;
         // it is a segmented control now, as ui-variants.html draws it.
         "Shape",
+        // `CurveRow`, the one Curve row every transition is tuned with: its
+        // label, the zoom's two when set apart, and the walk names of the
+        // two that share a clip's panel.
+        "Curve", "Curve In", "Curve Out", "Fade curve", "Sound fade curve",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 7
+    static let builtSites = 8
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

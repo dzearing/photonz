@@ -1,0 +1,48 @@
+{
+  "feature": "One Curve row for every transition",
+  "epic": "video-transitions-motion",
+  "task": "every-transition-can-be-picked-from-presets-and",
+  "summary": "Everything that moves from one state to another over time now has the same Curve row in the panel, right under its length: a zoom's way in and out, a transition at a cut, a clip or title's Fade In and Fade Out, a sound's fades and the stretch between two keys (which is how Animate In and Out work). Each offers the same eight named curves, Draw a Curve, and any curve you drew and saved by name.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline showing.",
+  "switched": {},
+  "inventory": [
+    "Zoom way in and way out: Ease In and Ease Out lengths (were the only control; the curve was fixed smootherstep). Now also Curve, one for both, or Curve In and Curve Out set apart. Default Smooth, the curve zooms always used.",
+    "Transition at a cut, inside one clip or between two clips (dissolve, dips, push, wipe, blur through): Type, Length, overlap side, Hold on black (ran straight, no curve). Now also Curve, default Linear. A dip runs the curve on each half, so it is all colour on the cut whatever the curve.",
+    "Fade In and Fade Out on a clip, title, shape or component (Time section): lengths only, ran straight. Now also Curve (shown once there is a fade), default Linear; the fade wedge on the clip bar is drawn along the curve.",
+    "Title and name card Animate In and Out (right click): writes keys, so its curve is the Between the keys Curve row in Properties, which already took the shared list. Now on the shared row, with Saved curves.",
+    "Keys in general (Between the keys): already had the shared list. Now on the shared row, with Saved curves.",
+    "Sound Fade In and Fade Out (Audio fades): already had the shared list. Now on the shared row, with Saved curves.",
+    "Not changed: the sound under a transition keeps its constant-power cross-fade, and a dip's Hold on black has no curve (it is a hold, not a change)."
+  ],
+  "measured": [
+    "Zoom, 1.5s way in on the drawn curve Slow start: canvas 2.0% / 10.0% / 30.6% in at 25 / 50 / 75%, curve 2.0% / 10.0% / 30.6%. Way out 98.0 / 90.0 / 69.4 against 98.0 / 90.0 / 69.4. The canvas matched the exported frame at a quarter, half and three quarters of the way in (0.0% of pixels apart).",
+    "Cross dissolve, 1.0s on Slow start: incoming shot 2.0% / 10.0% / 30.6% up at 25 / 50 / 75%, the same on the canvas and in the frame the exporter draws, curve 2.0% / 10.0% / 30.6%.",
+    "Unit tests check every named curve and a drawn one on a zoom's way in and out, a dissolve, a dip's two halves, a dissolve between two clips and a picture fade, within 2% at a quarter, a half and three quarters."
+  ],
+  "try": [
+    { "do": "Click a zoom bar on the Zoom lane. Under Ease In and Ease Out, open Curve: Smooth is ticked. Pick Ease in out sine and press Space.", "shot": "2026-10-10-transition-curves-zoom-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open Curve again, choose Draw a Curve..., drag the two handles, type a name and click Save." },
+    { "do": "Open Curve and choose Set In and Out Apart, then give Curve Out a different curve." },
+    { "do": "Click the cut between two clips, add a Cross dissolve, set Length to 1.0s, and pick your saved curve from its Curve row. Scrub across the cut.", "shot": "2026-10-10-transition-curves-dissolve-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick the recording, set Fade Out to 0.5s in the Time section, and pick Ease out from the Curve row under it.", "shot": "2026-10-10-transition-curves-fade-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type a title, right click it, Animate In > Fade, put the playhead in the fade and change Curve under Between the keys.", "shot": "2026-10-10-transition-curves-title-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With a saved curve showing, open Curve and choose Forget to take it off the list." }
+  ],
+  "evaluate": [
+    "Is the Curve row where you expect it each time, right under the length it shapes?",
+    "Does a dip that eases, still all black on the cut, feel better than one that runs straight?",
+    "Is Set In and Out Apart, inside the zoom's Curve menu, a place you would find it?",
+    "Should saved curves be listed under Saved in every Curve menu, or only where you saved them?",
+    "Is Smooth, offered only on zooms, the right name for how zooms have always moved?"
+  ],
+  "rough": [
+    "No mock covers a Curve row on a zoom, a transition at a cut or a picture fade; the app goes further than the transition mock (video-transition-wt.html, #propsCut), which stops at Type, Length, Paid with and the overlap. Curve sits right under Length, as it does under the zoom's eases and the fades.",
+    "The Curve menu matches the key curve mock (curve.js): Standard four, Shaped four, each with its shape, then Draw a Curve. Saved and Forget are additions after the eight.",
+    "A zoom's default, Smooth, is not one of the shared eight: zooms have always eased on it, and keeping it is what lets old documents play exactly as before. It shows at the end of the Shaped curves on zooms only.",
+    "A clip with a fade and a sound shows two Curve rows, one under Fade In and Fade Out (Time) and one under Audio fades, and a title with keys and a fade shows Between the keys Curve and the Time Curve: each sits under the thing it shapes.",
+    "Title Animate In and Out have no Length row of their own: their length is the distance between the keys, dragged on the timeline.",
+    "The sound under a transition does not follow the curve; it keeps the constant-power cross-fade an editor expects. Only the picture is shaped.",
+    "The walk stands in for dragging the two handles in Draw a Curve (it sets the drawn curve and saves it the way Save does); the handles themselves are the existing curve editor's, not new.",
+    "The zoom bar on the timeline does not draw its curve; the fade wedge on a clip bar does."
+  ]
+}

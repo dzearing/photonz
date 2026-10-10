@@ -21095,3 +21095,10 @@ Next: the first editor window's ~200 ms first build
 ## 2026-10-10 — several zooms picked together
 
 Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the row, the panel shows shared values (Mixed where they differ), and the panel, right-click and Clip menu change or delete every picked zoom in one undo step. No zoom box with several picked. Walk: pick-several-zooms-walk. Next: moving several together rides with the timeline marquee task; a curve row joins once zooms have curves.
+
+## 2026-10-10 — One Curve row for every transition
+
+- Shared `CurveRow` (the key mock's menu: Standard four, Shaped four, Saved, Custom, Draw a Curve, Forget) now on a zoom (Curve, or Curve In / Curve Out set apart), a transition at a cut, picture Fade In/Out, sound fades and Between the keys (how Animate In/Out are shaped). Curve sits right under each kind's length.
+- Core: `EasingCurve.smooth` (the zoom's own smootherstep, not on the shared eight), `ClipZoom.curve/outCurve`, `ClipTransition.curve` (picture only, each dip half on the curve so the cut stays all colour), `PictureFade.curve`, `SavedCurves`. Old documents decode and write exactly as before. `TransitionCurveTests`.
+- Walks `curves-on-a-zoom-and-a-dissolve-walk` (measures 25/50/75% within 2% on canvas and export) and `a-title-animation-takes-the-curve-row-walk`. Not the composite path: only the progress number fed to existing layer opacity/slicing changed.
+- Full test run stalled again after walks; split runs green (open hang task).

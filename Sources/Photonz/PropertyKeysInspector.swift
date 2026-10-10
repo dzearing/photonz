@@ -94,7 +94,6 @@ struct PropertyKeysInspector: View {
 /// the header) puts those same words behind the header's question mark.
 private struct BetweenKeysSection: View {
     @Environment(EditorState.self) private var editorState
-    @State private var isDrawing = false
 
     static let straightHelp = "Easing is how fast it travels. The path is where it travels. "
         + "They are separate on purpose: a straight move can still ease, "
@@ -125,15 +124,10 @@ private struct BetweenKeysSection: View {
                 SectionHelpMark(section: "Between the keys", text: help)
             }
             .padding(.bottom, 2)
-            VideoKit.DropdownRow(label: "Curve", value: name, choices: curveChoices(current: curve))
-            .frame(minHeight: 24)
-            .playtestField("Curve")
-            .panelHelp("How fast it travels between these two keys")
-            .popover(isPresented: $isDrawing, arrowEdge: .leading) {
-                CurveEditor(curve: curve ?? PropertyKeys.curve) { drawn in
-                    editorState.curveBetweenKeys(drawn)
-                    isDrawing = false
-                }
+            // The one Curve row every transition is tuned with (`CurveRow`).
+            CurveRow(current: curve ?? PropertyKeys.curve, kept: editorState.customBetweenKeysCurve,
+                     help: "How fast it travels between these two keys") {
+                editorState.curveBetweenKeys($0)
             }
             if let shape = editorState.motionPathShape {
                 MotionPathRow(shape: shape)
@@ -153,32 +147,6 @@ private struct BetweenKeysSection: View {
     }
 
     static let easingHelp = "Easing is how fast it changes between these two keys."
-
-    /// The mock's curve menu (`curve.js`): the four standard curves, the four
-    /// shaped ones, each with its shape beside its name, then Draw a Curve.
-    private func curveChoices(current: EasingCurve?) -> [VideoKit.Choice] {
-        [.heading("Standard")] + EasingCurve.named.prefix(4).map { item($0, current: current) }
-            + [.heading("Shaped")] + EasingCurve.named.dropFirst(4).map { item($0, current: current) }
-            + [.divider] + customChoice(current: current)
-            + [.item("Draw a Curve\u{2026}") { isDrawing = true }]
-    }
-
-    /// The row reads Custom for a curve of your own, so the menu offers it:
-    /// ticked while the stretch is on it, and the one it last left for a named
-    /// curve otherwise (`CustomChoice`). Absent until there has been one.
-    private func customChoice(current: EasingCurve?) -> [VideoKit.Choice] {
-        guard let own = editorState.customBetweenKeysCurve else { return [] }
-        return [.item(StretchCurve.title(own), isOn: current == own,
-                      image: CurveMenuImage.image(for: own)) {
-            editorState.curveBetweenKeys(own)
-        }]
-    }
-
-    private func item(_ curve: EasingCurve, current: EasingCurve?) -> VideoKit.Choice {
-        .item(curve.title, isOn: current == curve, image: CurveMenuImage.image(for: curve)) {
-            editorState.curveBetweenKeys(curve)
-        }
-    }
 }
 
 /// A curve's shape as a small template picture, for a menu row: a menu cannot

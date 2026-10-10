@@ -818,10 +818,14 @@ struct MotionNumberField: View {
 /// curves cover nearly everything and this is for the time they do not.
 struct CurveEditor: View {
     let curve: EasingCurve
+    /// Offers a name to keep the curve under (`SavedCurveStore`), so it is in
+    /// every Curve row's list after this.
+    var saves = false
     let done: (EasingCurve) -> Void
 
     @State private var first = CGPoint(x: 0.4, y: 0)
     @State private var second = CGPoint(x: 0.2, y: 1)
+    @State private var name = ""
 
     private var drawn: EasingCurve {
         .custom(x1: Double(first.x), y1: Double(first.y),
@@ -835,6 +839,20 @@ struct CurveEditor: View {
                 .font(.caption2.monospaced())
                 .foregroundStyle(.secondary)
                 .textSelection(.enabled)
+            if saves {
+                HStack(spacing: 6) {
+                    TextField("Name", text: $name)
+                        .textFieldStyle(.roundedBorder)
+                        .controlSize(.small)
+                        .accessibilityLabel("Curve name")
+                        .onSubmit(save)
+                    Button("Save", action: save)
+                        .controlSize(.small)
+                        .disabled(name.trimmingCharacters(in: .whitespaces).isEmpty)
+                        .help("Keep this curve under its name, in every Curve list")
+                        .playtestControl("Save Curve", detail: drawn.title)
+                }
+            }
             HStack {
                 Spacer()
                 Button("Use This Curve") { done(drawn) }
@@ -846,11 +864,30 @@ struct CurveEditor: View {
         .padding(12)
         .frame(width: 220)
         .onAppear {
-            if case let .custom(x1, y1, x2, y2) = curve {
+            // Start from the curve showing, where it is one two handles draw.
+            switch curve {
+            case let .custom(x1, y1, x2, y2):
                 first = CGPoint(x: x1, y: y1)
                 second = CGPoint(x: x2, y: y2)
+            case .linear:
+                first = CGPoint(x: 0.33, y: 0.33)
+                second = CGPoint(x: 0.67, y: 0.67)
+            case .easeIn:
+                first = CGPoint(x: 0.4, y: 0)
+                second = CGPoint(x: 1, y: 1)
+            case .easeOut:
+                first = CGPoint(x: 0, y: 0)
+                second = CGPoint(x: 0.2, y: 1)
+            default:
+                break
             }
         }
+    }
+
+    /// Keep the curve under its name and use it.
+    private func save() {
+        guard SavedCurveStore.shared.save(drawn, as: name) != nil else { return }
+        done(drawn)
     }
 
     /// The whole board is 0...1 in x and -0.25...1.25 in y, so a handle pulled

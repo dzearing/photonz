@@ -471,7 +471,7 @@ enum MotionSVG {
         case let .custom(x1, y1, x2, y2):
             let inside = [x1, y1, x2, y2].allSatisfy { $0 >= 0 && $0 <= 1 }
             return inside ? (x1, y1, x2, y2) : nil
-        case .easeInOutSine, .easeOutBack, .easeOutElastic, .steps:
+        case .easeInOutSine, .easeOutBack, .easeOutElastic, .smooth, .steps:
             return nil
         }
     }
@@ -481,7 +481,7 @@ enum MotionSVG {
     /// could read.
     static func sampleCount(for curve: EasingCurve) -> Int {
         switch curve {
-        case .easeInOutSine: return 10
+        case .easeInOutSine, .smooth: return 10
         case .easeOutBack: return 14
         case .easeOutElastic: return 28
         case let .steps(count): return max(1, count)

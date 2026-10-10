@@ -141,25 +141,37 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     /// where there is no gap to hold in: a hold asked for there cuts the clip
     /// in two first (`PhotonzDocument.holdOnColour`).
     public var holdMS: Int
+    /// How it gets from one side to the other: the one list of curves keys
+    /// use (`EasingCurve`). It shapes the picture only: how far a dissolve has
+    /// come up, how far a push has pushed, and each half of a dip on its own,
+    /// so a dip is all colour on the cut whatever the curve. The sound keeps
+    /// its constant-power cross-fade (`TransitionSound.swift`). Linear, the
+    /// way every transition ran before curves existed, is what a missing one
+    /// reads as.
+    public var curve: EasingCurve
 
     public init(kind: ClipTransitionKind, lengthMS: Int? = nil,
-                alignment: ClipTransitionAlignment = .across, holdMS: Int = 0) {
+                alignment: ClipTransitionAlignment = .across, holdMS: Int = 0,
+                curve: EasingCurve = .linear) {
         self.kind = kind
         self.lengthMS = max(Self.shortestMS, lengthMS ?? kind.defaultLengthMS)
         self.alignment = alignment
         self.holdMS = kind.needsOverlap ? 0 : max(0, holdMS)
+        self.curve = curve
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, lengthMS, alignment, holdMS }
+    private enum CodingKeys: String, CodingKey { case kind, lengthMS, alignment, holdMS, curve }
 
     /// Every transition written before placement and holds existed sat across
-    /// its cut and held nothing, so that is what a missing one reads as.
+    /// its cut and held nothing, and every one written before curves ran
+    /// straight, so that is what a missing one reads as.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         self.init(kind: try c.decode(ClipTransitionKind.self, forKey: .kind),
                   lengthMS: try c.decode(Int.self, forKey: .lengthMS),
                   alignment: try c.decodeIfPresent(ClipTransitionAlignment.self, forKey: .alignment) ?? .across,
-                  holdMS: try c.decodeIfPresent(Int.self, forKey: .holdMS) ?? 0)
+                  holdMS: try c.decodeIfPresent(Int.self, forKey: .holdMS) ?? 0,
+                  curve: try c.decodeIfPresent(EasingCurve.self, forKey: .curve) ?? .linear)
     }
 
     /// ...and one that still does writes exactly what it always wrote.
@@ -169,6 +181,7 @@ public struct ClipTransition: Hashable, Codable, Sendable {
         try c.encode(lengthMS, forKey: .lengthMS)
         if alignment != .across { try c.encode(alignment, forKey: .alignment) }
         if holdMS != 0 { try c.encode(holdMS, forKey: .holdMS) }
+        if curve != .linear { try c.encode(curve, forKey: .curve) }
     }
 
     /// Where it is drawn: where it was put for a kind that overlaps, across
@@ -193,7 +206,7 @@ public struct ClipTransition: Hashable, Codable, Sendable {
 
     /// The same transition, a different length.
     public func withLength(_ ms: Int) -> ClipTransition {
-        ClipTransition(kind: kind, lengthMS: ms, alignment: alignment, holdMS: holdMS)
+        ClipTransition(kind: kind, lengthMS: ms, alignment: alignment, holdMS: holdMS, curve: curve)
     }
 
     /// How far through a transition on a cut at `cutAtMS` a moment is, nought
@@ -216,6 +229,32 @@ public struct ClipTransition: Hashable, Codable, Sendable {
             amount = 1
         } else {
             amount = 1 - Double(ms - back) / Double(max(1, transition.afterMS))
+        }
+        return min(max(amount, 0), 1)
+    }
+
+    /// How far through the picture is at a moment: `progress` run through the
+    /// transition's curve. What a dissolve's incoming shot, a push and a wipe
+    /// are drawn at.
+    public static func shownProgress(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
+        transition.curve.value(at: progress(atMS: ms, cutAtMS: cutAtMS, transition))
+    }
+
+    /// How much of a dip's colour is up at a moment, along its curve: the fade
+    /// down runs the curve from the bottom to all colour on the cut, the hold
+    /// is all colour, and the fade up runs the same curve from all colour back
+    /// to none.
+    public static func shownDipAmount(atMS ms: Int, cutAtMS: Int, _ transition: ClipTransition) -> Double {
+        let back = cutAtMS + transition.holdMS
+        let amount: Double
+        if ms < cutAtMS {
+            let t = Double(ms - (cutAtMS - transition.beforeMS)) / Double(max(1, transition.beforeMS))
+            amount = transition.curve.value(at: t)
+        } else if ms < back {
+            amount = 1
+        } else {
+            let t = Double(ms - back) / Double(max(1, transition.afterMS))
+            amount = 1 - transition.curve.value(at: t)
         }
         return min(max(amount, 0), 1)
     }
@@ -476,7 +515,7 @@ extension ClipPieces {
         }
         // How far through the transition we are, nought at its first frame and
         // one at the frame after its last.
-        let progress = ClipTransition.progress(atMS: moment, cutAtMS: cut.atMS, transition)
+        let progress = ClipTransition.shownProgress(atMS: moment, cutAtMS: cut.atMS, transition)
         if transition.kind.needsOverlap {
             // Both pieces are playing, each from its own clock. Before the cut
             // the INCOMING one is reading early, out of the spare before its in
@@ -485,13 +524,14 @@ extension ClipPieces {
             let out = readingOn(piece: cut.index - 1, atMS: moment)
             let into = readingOn(piece: cut.index, atMS: moment)
             return ClipMoment(sourceMS: out, incomingSourceMS: into,
-                              incomingOpacity: progress, kind: transition.kind, progress: progress)
+                              incomingOpacity: min(max(progress, 0), 1), kind: transition.kind,
+                              progress: progress)
         }
         // A dip spends nothing: each piece plays the frames it already had, and
         // the picture goes through a colour and comes back. All the way through
         // at the cut itself.
         return ClipMoment(sourceMS: plain, dipColorHex: transition.kind.dipColorHex,
-                          dipOpacity: ClipTransition.dipAmount(atMS: moment, cutAtMS: cut.atMS, transition),
+                          dipOpacity: ClipTransition.shownDipAmount(atMS: moment, cutAtMS: cut.atMS, transition),
                           kind: transition.kind, progress: progress)
     }
 

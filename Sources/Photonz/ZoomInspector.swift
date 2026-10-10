@@ -6,8 +6,8 @@ import SwiftUI
 /// shows what they share, Mixed where they differ, and a change reaches all
 /// of them in one undo step.
 ///
-/// How far in, whether it follows the pointer, and how long its way in and out
-/// take. Where it is on the picture is its box on the canvas, and when it runs
+/// How far in, whether it follows the pointer, how long its way in and out
+/// take, and the curve they run on. Where it is on the picture is its box on the canvas, and when it runs
 /// is its bar on the lane: both are moved by hand there, not typed here.
 struct ZoomInspector: View {
     @Environment(EditorState.self) private var editorState
@@ -21,6 +21,7 @@ struct ZoomInspector: View {
                 follow(refs, reading)
                 ease(refs, now: reading.easeInMS, easeIn: true)
                 ease(refs, now: reading.easeOutMS, easeIn: false)
+                curves(refs, reading)
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -79,6 +80,31 @@ struct ZoomInspector: View {
                                  choices: easeChoices(refs, now: now, easeIn: false))
                 .playtestField("Ease Out")
                 .panelHelp("How long it takes to leave.")
+        }
+    }
+
+    /// **Curve**: one row for the way in and the way out, the shared row
+    /// every transition is tuned with, and a way to set them apart into a
+    /// Curve In and a Curve Out.
+    @ViewBuilder
+    private func curves(_ refs: Set<ClipZoomRef>, _ reading: ClipZoomsReading) -> some View {
+        if reading.curvesApart == true {
+            CurveRow(label: "Curve In", current: reading.inCurve, ownDefault: .smooth,
+                     extra: [.divider, .item("Same In and Out") { editorState.setZoomCurvesApart(refs, false) }],
+                     help: "How the zoom moves on its way in.") {
+                editorState.setZoomCurve(refs, $0, end: .wayIn)
+            }
+            CurveRow(label: "Curve Out", current: reading.outCurve, ownDefault: .smooth,
+                     extra: [.divider, .item("Same In and Out") { editorState.setZoomCurvesApart(refs, false) }],
+                     help: "How the zoom moves on its way out.") {
+                editorState.setZoomCurve(refs, $0, end: .wayOut)
+            }
+        } else {
+            CurveRow(current: reading.curvesApart == nil ? nil : reading.inCurve, ownDefault: .smooth,
+                     extra: [.divider, .item("Set In and Out Apart") { editorState.setZoomCurvesApart(refs, true) }],
+                     help: "How the zoom moves on its way in and out.") {
+                editorState.setZoomCurve(refs, $0, end: .both)
+            }
         }
     }
 

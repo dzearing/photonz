@@ -169,6 +169,16 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// The curve the transition on the cut in hand runs on.
+    func setClipTransitionCurve(_ curve: EasingCurve) {
+        guard canWorkWithClipTransitions, let inHand = cutInHand,
+              var existing = inHand.cut.transition, existing.curve != curve else { return }
+        existing.curve = curve
+        pauseDocument()
+        perform { $0.setTransition(existing, at: inHand.place) }
+        documentMomentChanged()
+    }
+
     /// How long the transition on the cut in hand is asked to be.
     func setClipTransitionLength(_ ms: Int) {
         guard canWorkWithClipTransitions, let inHand = cutInHand,
@@ -195,7 +205,7 @@ extension EditorState {
             return
         }
         let placed = ClipTransition(kind: existing.kind, lengthMS: min(existing.lengthMS, longest),
-                                    alignment: alignment)
+                                    alignment: alignment, curve: existing.curve)
         pauseDocument()
         perform { $0.setTransition(placed, at: inHand.place) }
         documentMomentChanged()

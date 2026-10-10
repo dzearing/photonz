@@ -1,0 +1,190 @@
+{
+  "out": "/tmp/photonz-playtest/a-title-animation-takes-the-curve-row-walk",
+  "seed": "A title animated in and a clip faded out take the same Curve row as a zoom and a dissolve, at Next defaults. The sample recording given a Fade Out from the Time section gets a Curve row under Fade In and Fade Out, Linear as fades always ran, and Ease out from it shapes the fade. Then a title typed on it, right click Animate In, Fade; with the playhead inside the fade the Properties panel's Between the keys section has the shared Curve row, and Ease in out sine from it reshapes the fade.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Fade Out",
+      "at": [
+        "centre"
+      ],
+      "choose": "0.5s"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "reads": "Linear",
+      "field": "Fade curve"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Fade curve",
+      "at": [
+        "centre"
+      ],
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "reads": "Ease out",
+      "field": "Fade curve"
+    },
+    {
+      "do": "describe",
+      "stage": "0-fade-out-on-a-curve",
+      "note": "A half second Fade Out on the recording from the Time section: a Curve row appears under Fade In and Fade Out, Linear as every fade always ran, and Ease out from it shapes the fade"
+    },
+    {
+      "do": "panel",
+      "stage": "0-fade-curve"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-fade-out-on-a-curve"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        640,
+        600
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        700,
+        615
+      ],
+      "space": "document",
+      "choose": "Animate In > Fade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Curve",
+      "present": true
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Curve",
+      "at": [
+        "centre"
+      ],
+      "choose": "Ease in out sine"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Curve",
+      "reads": "Ease in out sine"
+    },
+    {
+      "do": "describe",
+      "stage": "1-title-fade-on-a-curve",
+      "note": "THE TEST: the playhead a quarter second into the title's fade in. Properties shows Between the keys with the same Curve row the zoom and the dissolve have, and Ease in out sine from it reshapes the fade"
+    },
+    {
+      "do": "panel",
+      "stage": "1-title-curve"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-title-fade-on-a-curve"
+    }
+  ]
+}

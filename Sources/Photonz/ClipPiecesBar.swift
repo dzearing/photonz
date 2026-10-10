@@ -938,14 +938,14 @@ struct ClipPiecesBar: View {
         let inWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeIn))
         let outWidth = laneWidth * ruler.fraction(spanningMS: Double(fadeOut))
         if fadeIn > 0 {
-            FadeWedge(isIn: true)
+            FadeWedge(isIn: true, curve: layer?.pictureFade?.shownCurve ?? .linear)
                 .fill(Color.black.opacity(0.4))
                 .frame(width: inWidth, height: barHeight)
                 .offset(x: x0)
                 .allowsHitTesting(false)
         }
         if fadeOut > 0 {
-            FadeWedge(isIn: false)
+            FadeWedge(isIn: false, curve: layer?.pictureFade?.shownCurve ?? .linear)
                 .fill(Color.black.opacity(0.4))
                 .frame(width: outWidth, height: barHeight)
                 .offset(x: x0 + whole - outWidth)
@@ -1510,17 +1510,21 @@ struct SoundFadeDiamond: View {
 /// takes the sound out of.
 private struct FadeWedge: Shape {
     let isIn: Bool
+    /// What the fade runs on: the wedge's edge is the level line, so it is
+    /// drawn along the curve (`PictureFade.curve`).
+    var curve: EasingCurve = .linear
 
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        if isIn {
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        } else {
-            path.move(to: CGPoint(x: rect.minX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
-            path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
+        path.move(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        // The level along the fade, from its far end back to its near one:
+        // up from nothing on the way in, down from all of it on the way out.
+        let steps = curve == .linear ? 1 : 32
+        for step in stride(from: steps, through: 0, by: -1) {
+            let t = Double(step) / Double(steps)
+            let level = min(max(isIn ? curve.value(at: t) : 1 - curve.value(at: t), 0), 1)
+            path.addLine(to: CGPoint(x: rect.minX + rect.width * t, y: rect.maxY - rect.height * level))
         }
         path.closeSubpath()
         return path

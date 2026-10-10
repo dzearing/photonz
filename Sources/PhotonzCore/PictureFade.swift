@@ -45,6 +45,14 @@ public enum FadeEnd: String, Hashable, Codable, Sendable, CaseIterable {
 public struct PictureFade: Hashable, Codable, Sendable {
     public var inMS: Int
     public var outMS: Int
+    /// What both ends run on, from the one list every transition picks from
+    /// (`EasingCurve`): the fade in runs it up, the fade out runs it from the
+    /// top back down. Nil is Linear, how every fade ran before curves, so an
+    /// old fade reads back and writes exactly as it did.
+    public var curve: EasingCurve?
+
+    /// The curve the fades run on.
+    public var shownCurve: EasingCurve { curve ?? .linear }
 
     public init(inMS: Int, outMS: Int) {
         self.inMS = max(0, inMS)
@@ -80,7 +88,9 @@ public struct PictureFade: Hashable, Codable, Sendable {
         let total = inMS + outMS
         guard total > length, total > 0 else { return self }
         let fittedIn = Int((Double(inMS) * Double(length) / Double(total)).rounded())
-        return PictureFade(inMS: fittedIn, outMS: length - fittedIn)
+        var fitted = PictureFade(inMS: fittedIn, outMS: length - fittedIn)
+        fitted.curve = curve
+        return fitted
     }
 
     /// How far up the picture is, nought to one, `offsetMS` into a bar
@@ -88,13 +98,15 @@ public struct PictureFade: Hashable, Codable, Sendable {
     public func level(atOffsetMS offset: Int, lengthMS: Int) -> Double {
         let fade = fitted(lengthMS: lengthMS)
         var level = 1.0
+        let curve = fade.shownCurve
         if fade.inMS > 0, offset < fade.inMS {
-            level = min(level, max(0, Double(offset) / Double(fade.inMS)))
+            level = min(level, curve.value(at: max(0, Double(offset) / Double(fade.inMS))))
         }
         if fade.outMS > 0, offset > lengthMS - fade.outMS {
-            level = min(level, max(0, Double(lengthMS - offset) / Double(fade.outMS)))
+            let leaving = Double(offset - (lengthMS - fade.outMS)) / Double(fade.outMS)
+            level = min(level, 1 - curve.value(at: leaving))
         }
-        return level
+        return min(max(level, 0), 1)
     }
 }
 
@@ -178,6 +190,19 @@ extension PhotonzDocument {
     }
 
     /// The fade alone, nothing around it moved.
+    /// Put a layer's picture fades on a curve. Linear, their default, is
+    /// written as no curve at all. False where it has no fade to shape.
+    @discardableResult
+    public mutating func setPictureFadeCurve(_ id: UUID, _ curve: EasingCurve) -> Bool {
+        guard let layer = layer(id: id), layer.canFadePicture, var fade = layer.pictureFade,
+              !fade.isNone else { return false }
+        let stored: EasingCurve? = curve == .linear ? nil : curve
+        guard fade.curve != stored else { return false }
+        fade.curve = stored
+        updateLayer(id: id) { $0.pictureFade = fade }
+        return true
+    }
+
     @discardableResult
     mutating func fadePicture(_ id: UUID, _ end: FadeEnd, toMS ms: Int) -> Bool {
         guard let layer = layer(id: id), layer.canSetPictureFade(end, toMS: ms) else { return false }

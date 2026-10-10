@@ -88,7 +88,7 @@ extension PhotonzDocument {
         // meets it, and holds nothing.
         first.transitionIn = into.arrivalTransition.map {
             ClipTransition(kind: $0.kind, lengthMS: $0.lengthMS, alignment: $0.alignment,
-                           holdMS: start - at)
+                           holdMS: start - at, curve: $0.curve)
         }
         let sameFile = out.movie != nil && out.movie?.id == into.movie?.id
         return ClipCut(index: 0, atMS: at, outgoing: last, incoming: first,
@@ -157,7 +157,7 @@ extension PhotonzDocument {
         let hold = max(0, holdMS)
         guard hold != existing.holdMS else { return nil }
         let held = ClipTransition(kind: existing.kind, lengthMS: existing.lengthMS,
-                                  alignment: existing.alignment, holdMS: hold)
+                                  alignment: existing.alignment, holdMS: hold, curve: existing.curve)
         guard case let .join(clip, index) = place else {
             return setTransition(held, at: place) ? place : nil
         }
@@ -244,8 +244,8 @@ extension PhotonzDocument {
                 onScreen: outgoingOnScreen ? outgoing.id : incoming.id,
                 borrowed: outgoingOnScreen ? incoming.id : outgoing.id,
                 onScreenIsOutgoing: outgoingOnScreen, transition: drawn,
-                progress: ClipTransition.progress(atMS: ms, cutAtMS: cut.atMS, drawn),
-                dipAmount: ClipTransition.dipAmount(atMS: ms, cutAtMS: cut.atMS, drawn),
+                progress: ClipTransition.shownProgress(atMS: ms, cutAtMS: cut.atMS, drawn),
+                dipAmount: ClipTransition.shownDipAmount(atMS: ms, cutAtMS: cut.atMS, drawn),
                 borrowedSourceMS: source,
                 isHolding: ms >= cut.atMS && ms < cut.atMS + drawn.holdMS))
         }

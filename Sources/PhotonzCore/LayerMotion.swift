@@ -433,6 +433,11 @@ public enum EasingCurve: Hashable, Codable, Sendable {
     case easeInOutSine
     case easeOutBack
     case easeOutElastic
+    /// Slow off the mark and slow to settle, with no jolt at either end: the
+    /// curve a zoom has always eased on (smootherstep). Not on the shared list
+    /// the key mock draws; it is offered where it is the default
+    /// (task `every-transition-can-be-picked-from-presets-and`).
+    case smooth
     /// Jumps rather than slides, in this many equal steps.
     case steps(Int)
     /// One you drew: the two control points of `cubic-bezier(x1,y1,x2,y2)`.
@@ -454,6 +459,7 @@ public enum EasingCurve: Hashable, Codable, Sendable {
         case .easeInOutSine: "Ease in out sine"
         case .easeOutBack: "Ease out back"
         case .easeOutElastic: "Ease out elastic"
+        case .smooth: "Smooth"
         case let .steps(count): "Steps, \(count)"
         case let .custom(x1, y1, x2, y2):
             "cubic-bezier(\(MotionNumber.text(x1)), \(MotionNumber.text(y1)), "
@@ -495,6 +501,8 @@ public enum EasingCurve: Hashable, Codable, Sendable {
             if t == 0 || t == 1 { return t }
             let c4 = (2 * Double.pi) / 3
             return pow(2, -10 * t) * sin((t * 10 - 0.75) * c4) + 1
+        case .smooth:
+            return t * t * t * (t * (t * 6 - 15) + 10)
         case let .steps(count):
             let steps = max(1, count)
             if t >= 1 { return 1 }

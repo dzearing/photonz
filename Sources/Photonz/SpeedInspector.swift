@@ -57,8 +57,9 @@ struct SpeedInspector: View {
     }
 
     /// Fade In and Fade Out: how the picture comes up at the start of the bar
-    /// and goes down at its end, the lengths the right-click offers. The same
-    /// two rows for a clip, a title or anything else on the timeline.
+    /// and goes down at its end, the lengths the right-click offers, and the
+    /// curve both run on. The same rows for a clip, a title or anything else
+    /// on the timeline.
     @ViewBuilder
     private var pictureFades: some View {
         if let layer = editorState.pictureFadeLayerInHand {
@@ -74,6 +75,14 @@ struct SpeedInspector: View {
                     })
                 .playtestField(end.title)
                 .panelHelp(end == .in ? "How long the picture takes to come up" : "How long the picture takes to go down")
+            }
+            // The one Curve row every transition is tuned with (`CurveRow`),
+            // once there is a fade to shape.
+            if let fade = layer.pictureFade, !fade.isNone {
+                CurveRow(current: fade.shownCurve, help: "How the picture comes up and goes down.",
+                         row: "Fade curve") {
+                    editorState.setPictureFadeCurve($0, layerID: layer.id)
+                }
             }
         }
     }

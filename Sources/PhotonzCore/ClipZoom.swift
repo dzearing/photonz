@@ -35,6 +35,13 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     /// How long the way in and the way out take.
     public var easeInMS: Int
     public var easeOutMS: Int
+    /// The curve the way in runs on, and the way out too unless `outCurve`
+    /// sets it apart. Nil is the curve every zoom has always eased on,
+    /// `EasingCurve.smooth`, so a zoom written before curves existed reads
+    /// back and plays exactly as it did, and writes nothing new.
+    public var curve: EasingCurve?
+    /// The way out's own curve, where it has been set apart from the way in.
+    public var outCurve: EasingCurve?
     /// How far in: 2 shows half the width of the picture you can see across
     /// the whole of it (`ZoomStage.swift`).
     public var scale: Double
@@ -133,6 +140,14 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
         return (min(max(fit, 1), mostScale), CGPoint(x: box.midX, y: box.midY))
     }
 
+    /// The curve the way in runs on.
+    public var inCurve: EasingCurve { curve ?? .smooth }
+    /// The curve the way out runs on: its own where it was set apart, the way
+    /// in's otherwise.
+    public var outCurveShown: EasingCurve { outCurve ?? inCurve }
+    /// Whether the way in and the way out run on curves of their own.
+    public var curvesApart: Bool { outCurve != nil }
+
     /// The two eases, shared out where together they are longer than the zoom.
     public var eases: (inMS: Int, outMS: Int) {
         let easeIn = max(0, easeInMS)
@@ -146,23 +161,23 @@ public struct ClipZoom: Codable, Hashable, Sendable, Identifiable {
     // MARK: At a moment
 
     /// How far in at a moment of the clip's clock: nought outside the zoom,
-    /// one while it holds, and eased in between.
+    /// one while it holds, and along its curve in between. The way out is the
+    /// curve run from the top: it leaves the way the curve sets off.
+    ///
+    /// A curve that leans past the end (Ease out back) is let through, so the
+    /// frame pushes in a touch past the spot and settles; nothing ever goes
+    /// wider than the whole picture.
     public func amount(atMS ms: Int) -> Double {
         guard ms >= startMS, ms < endMS else { return 0 }
         let (easeIn, easeOut) = eases
         if easeIn > 0, ms < startMS + easeIn {
-            return Self.eased(Double(ms - startMS) / Double(easeIn))
+            return max(0, inCurve.value(at: Double(ms - startMS) / Double(easeIn)))
         }
         if easeOut > 0, ms > endMS - easeOut {
-            return Self.eased(Double(endMS - ms) / Double(easeOut))
+            let leaving = Double(ms - (endMS - easeOut)) / Double(easeOut)
+            return max(0, 1 - outCurveShown.value(at: leaving))
         }
         return 1
-    }
-
-    /// Slow off the mark and slow to settle, with no jolt at either end.
-    static func eased(_ t: Double) -> Double {
-        let x = min(max(t, 0), 1)
-        return x * x * x * (x * (x * 6 - 15) + 10)
     }
 
     /// The part of the picture shown at a moment, as fractions of it, or nil
@@ -318,6 +333,11 @@ public struct ClipZoomsReading: Equatable, Sendable {
     public var followsCursor: Bool?
     public var easeInMS: Int?
     public var easeOutMS: Int?
+    /// The way in's curve, and the way out's.
+    public var inCurve: EasingCurve?
+    public var outCurve: EasingCurve?
+    /// Whether their ways in and out are set apart.
+    public var curvesApart: Bool?
 
     public init(_ zooms: [ClipZoom]) {
         func shared<T: Equatable>(_ value: (ClipZoom) -> T) -> T? {
@@ -328,6 +348,9 @@ public struct ClipZoomsReading: Equatable, Sendable {
         followsCursor = shared(\.followsCursor)
         easeInMS = shared(\.easeInMS)
         easeOutMS = shared(\.easeOutMS)
+        inCurve = shared(\.inCurve)
+        outCurve = shared(\.outCurveShown)
+        curvesApart = shared(\.curvesApart)
     }
 }
 

@@ -98,7 +98,7 @@ extension PlaytestMemory {
             // tall its rows were (`TimelineViewMemory`), for the same reason
             // as the playhead.
             [EditorState.motionStripOpenKey, RecordingPlaceStore.defaultsKey,
-             DefaultTransitionStore.defaultsKey, EditorState.playerVolumeLevelKey,
+             DefaultTransitionStore.defaultsKey, SavedCurveStore.defaultsKey, EditorState.playerVolumeLevelKey,
              EditorState.timelineViewMemoryKey,
              // And how tall the timeline's top edge was dragged, and how
              // wide the column of track names.
@@ -174,6 +174,7 @@ struct PlaytestSetupRunner {
             if setup.forget.contains(.motion) {
                 RecordingPlaceStore.shared.reload()
                 DefaultTransitionStore.shared.reload()
+                SavedCurveStore.shared.reload()
                 TrackColumnWidth.shared.reload()
             }
             if setup.forget.contains(.tutorials) { TutorialController.shared.forgetAllProgress() }

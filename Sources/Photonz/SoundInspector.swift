@@ -207,7 +207,6 @@ struct SoundGainInspector: View {
 /// the level line: a fade is two points on it (`AudioLevel.setFadeIn`).
 struct SoundFadesInspector: View {
     @Environment(EditorState.self) private var editorState
-    @State private var isDrawing = false
 
     /// What the section header's question mark says. The mock printed its
     /// first half beside the title; the panel holds labels, not sentences.
@@ -233,21 +232,11 @@ struct SoundFadesInspector: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    /// The one Curve row every transition is tuned with (`CurveRow`).
     private var curve: some View {
-        let current = editorState.soundLevelInHand.fadeCurve
-        let title = current.isDrawn ? "Drawn" : current.title
-        return VideoKit.DropdownRow(
-            label: "Curve", value: title,
-            choices: EasingCurve.named.map { curve in
-                .item(curve.title, isOn: curve == current, image: CurveMenuImage.image(for: curve)) {
-                    editorState.setSoundFadeCurve(curve)
-                }
-            } + [.divider, .item("Draw a Curve...") { isDrawing = true }])
-        .panelReadout(title)
-        .panelHelp("How the fades rise and fall.")
-        .playtestField("Curve")
-        .popover(isPresented: $isDrawing, arrowEdge: .bottom) {
-            CurveEditor(curve: current) { editorState.setSoundFadeCurve($0) }
+        CurveRow(current: editorState.soundLevelInHand.fadeCurve, help: "How the fades rise and fall.",
+                 row: "Sound fade curve") {
+            editorState.setSoundFadeCurve($0)
         }
     }
 }

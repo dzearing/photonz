@@ -1059,6 +1059,18 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// out, and fail unless the picture goes in a little further at every
     /// frame in, and back out a little at every frame out.
     case expectZoomEasesFrameByFrame
+    /// Stand in for dragging the curve editor's two handles on the one zoom
+    /// and saving what was drawn under a name: the zoom runs on a drawn curve
+    /// and every Curve row lists it under Saved.
+    case curveDrawOnZoom
+    /// Scrub to a quarter, a half and three quarters of the one zoom's way in
+    /// and way out, and fail unless the canvas is that far in along the
+    /// zoom's curve, within 2%.
+    case expectZoomFollowsCurve
+    /// Scrub to a quarter, a half and three quarters of the dissolve on the
+    /// edit point in hand, and fail unless the incoming shot is that far up
+    /// along its curve, within 2%, on the canvas and in the exported frame.
+    case expectDissolveFollowsCurve
     /// Crop the recording the way the Crop tool does with nothing picked: the
     /// canvas, to a 4:3 piece off the middle of the recording.
     case zoomCropCanvas
@@ -1559,6 +1571,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .expectThreeZoomsPicked, .expectPickedZoomsEaseInAlike, .expectFourZooms, .expectTwoZoomsLeft,
              .expectEveryZoomPicked, .expectNoZooms,
              .expectZoomBoxDown, .expectZoomScrubMatchesExport, .expectZoomEasesFrameByFrame,
+             .curveDrawOnZoom, .expectZoomFollowsCurve, .expectDissolveFollowsCurve,
              .zoomCropCanvas, .zoomCropClip, .zoomCropByKeys, .zoomDrawBoxOnVisiblePicture, .expectZoomShowsItsBox,
              .zoomAddAtPlayhead, .expectClickRipple, .expectClickEffectExportMatches, .expectClickTicksEdited,
              .soundDetach, .soundAddSample, .soundDuck, .soundLevelHalf,
