@@ -21021,3 +21021,9 @@ Next: the first editor window's ~200 ms first build
 - Core, tested first: `CenterOnArtboard.swift` (picks move as one piece per frame, canvas when on no frame); `OutlineStroke.swift` outlines a shape's own stroke AND every painted Border (a box or oval's line is a Border, and Union keeps it), using the renderer's own geometry for each; a filled shape keeps its fill and gets an `… outline` layer above it, grouped when the shape was see-through or wore effects. Union is `PathCombine` Join under `PathCombine.unionTitle`.
 - Walks: `layers-menu-icon-rows-walk` (panel menu, keys, undo, light, menu bar listing) and `layers-menu-icon-rows-right-click-walk`. Walk actions `centerOnArtboard`, `union`, `outlineStroke` with ⌥⌘U/⇧⌘O stand-ins. No composite path touched.
 - Open: audit asks whether Union should be both its own row and Combine Shapes ▸ Join.
+
+## 2026-10-09 — Design's Shape slot starts on the Rectangle
+
+- In Design the tool bar's Shape slot now wears the Rectangle (the UI mock's square) until a shape is picked; Design remembers its own last shape, the picture bar keeps its Line. `WindowMode.toolStripMembers`, `ToolGroup.member(from:startingWith:)`, `EditorState.lastTool(in:)`.
+- Walk `design-mode-tool-strip-walk` extended; tests +5.
+- Open: decision card on whether the tip says Rectangle R (now) or the mock's Shape (R).
