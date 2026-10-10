@@ -1,0 +1,35 @@
+{
+  "id": "dragging-a-box-on-the-timeline-picks-everything",
+  "title": "Dragging a box on the timeline picks everything it touches, to move or delete together",
+  "goal": "Dragging a box over the timeline picks every clip, piece, zoom, title, caption and key it touches, across tracks, so the person can then drag them all together in time or delete them in one go, the way Premiere and Final Cut marquee selection works. The person expected this and could not find it.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:22:45.530Z",
+  "updated": "2026-10-10T12:22:45.683Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"I also expected marquee selection on the timeline, so that i could select multiple things and move or delete them.\"\n\nFrom code reading (not run): a lane box exists. TimelineLaneMarquee.gesture on empty track space (TimelineTrackRows.swift:426, 446, 516; docs at :1010-1015): a click moves the playhead, a drag draws a box, Option or the Range tool picks a time range. EditorState+TrackRange.swift: LanePress/LaneBox (:27-43), endLanePress (:91-106) -> pickWithBox(within:onTracks:) which picks whole clips as picked layers or one piece as the piece in hand; drawn by TimelineLaneBoxView (TimelineDock.swift:1291-1330). Unknown why the user did not experience it: suspects are no empty space to start on in a full timeline, zoom/title/caption lanes not taking the gesture or not being picked, and the box not crossing into the Zoom lane. Companion: 'Pick several zooms at once and change or delete them together' (filed same day) owns the zoom multi-pick model this box feeds.",
+  "acceptance": [
+    "Reproduce first at Next defaults with a real edit (several clips on several tracks, zooms, a title): try to box-select from empty space, from the gap between clips, from over a clip, and on the Zoom lane; record in the audit what each did and why the user could not find marquee selection (for example no empty space to start on, a press on a clip starts a move, zoom bars not included)",
+    "A drag that starts on empty track space or in a gap draws the box (as today) and picks clips, pieces, zoom bars, title and name card bars, caption cues and visible keys it touches; Shift adds to the current pick, Command toggles",
+    "There is a reliable way to start a box when the tracks are full of clips (for example starting on the empty area below the last track or on the ruler-free strip, or holding a modifier while pressing on a clip); the chosen way is checked against Premiere/Final Cut conventions and written in the audit",
+    "With a mixed pick, dragging any picked item moves all of them by the same time (keeping their tracks), snapping as a single drag does; Delete removes all of them in one undo step; Option-drag on empty space still picks a time range as today",
+    "The panel shows what is picked (a count and the kinds) and the settings they share",
+    "A walk at Next defaults boxes two clips, a zoom and a title, moves them half a second, undoes, deletes them, undoes, and photographs each step",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:22:45.532Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:22:45.682Z",
+      "note": "seq 3930 -> 23"
+    }
+  ]
+}

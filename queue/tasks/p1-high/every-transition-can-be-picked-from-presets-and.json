@@ -1,0 +1,38 @@
+{
+  "id": "every-transition-can-be-picked-from-presets-and",
+  "title": "Every transition can be picked from presets and tuned on a curve",
+  "goal": "Anything in the app that moves from one state to another over time should be tunable the same way: a zoom easing in and out, a transition between clips (dissolve, dip, slide and the rest), a title or name card animating in and out, a fade. Each offers the same short list of named curves plus Draw a Curve, where the person drags the curve's two handles, and its length. Today zooms have only fixed easing lengths and clip transitions have no curve at all, while keys already have the full curve list.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 22,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:22:45.261Z",
+  "updated": "2026-10-10T12:22:45.403Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"the transitions are fixed and the curves cant be adjusted. other software has more consistent ia where anything that is a transition can be tweaked - either picking a transition and tweaking it, or creating a custom one and tweaking a curve. I'd like every transition to be configurable like that.\"\n\nFrom code reading (not run): the shared curve list exists, PhotonzCore/LayerMotion.swift:428 EasingCurve (named presets, steps(n), custom(x1,y1,x2,y2) from the curve editor under 'Draw a Curve'), from task one-set-of-easing-curves-named-the-same-way-ever; used by keys. Zooms: PhotonzCore/ClipZoom.swift easeInMS/easeOutMS only (:36-37, defaultEaseMS), no curve. Clip transitions: PhotonzCore/ClipTransitions.swift ClipTransition (kind, lengthMS, alignment, holdMS :107-131), progress is linear (progress(atMS:) :190-194, dipAmount :199-210), no curve. Edit points: EditPointTransitions.swift. Title in/out: EditorState+ClipKeys.swift:66-77, 207-214 (Fade/Slide/Pop/Scale, built on keys, so may already take curves; check). Model changes in PhotonzCore with Codable defaults so old docs decode, tests first. Companion: 'Pick several zooms at once and change or delete them together' edits this Curve row across many zooms; 'Dip to black and Dip to white visibly fade out and fade back in' touches dipAmount, coordinate.",
+  "acceptance": [
+    "Inventory first, written in the audit: every place a transition or easing exists today (keys, zoom ease in/out, clip transitions at cuts and joins, dip hold, title/name card Animate In/Out, fades, any others found) and what each one lets the person change",
+    "One way to tune them, everywhere in that inventory: a Curve row with the shared list (EasingCurve.named: Linear, Ease in out, Ease in, Ease out, Ease in out sine, Ease out back, Ease out elastic, Steps) and Draw a Curve opening the existing curve editor; plus a Length row. Same control, same words, same place in the panel for each kind; the placement is checked against the IA placement contract in docs/design/mocks/shared/UX-PATTERNS.md, and anything the contract does not cover goes to the user as a decision card",
+    "A zoom has a curve for its ease in and its ease out (one Curve row for both by default, with a way to set them apart)",
+    "A clip transition has a curve for how it progresses (a dissolve that eases, a dip that falls slowly and rises fast, and so on)",
+    "Title and name card in and out animations take the same Curve row",
+    "A preset you tuned can be saved by name and appears in the same list for every kind (the audit says where saved curves live, using the Library if that is where saved looks already live)",
+    "Playback, scrubbing and export follow the curve; MEASURED in the audit for one zoom and one dissolve: the value at 25/50/75% of the transition matches the curve within 2%",
+    "Old documents open looking exactly as before (today's behaviour becomes the default curve for each kind)",
+    "Unit tests in PhotonzCore for the curve applied to zoom windows and transition progress; a walk sets a custom curve on a zoom and a dissolve and photographs mid-transition frames",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:22:45.263Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:22:45.401Z",
+      "note": "seq 3930 -> 22"
+    }
+  ]
+}

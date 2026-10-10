@@ -1,0 +1,36 @@
+{
+  "id": "pick-several-zooms-at-once-and-change-or-delete",
+  "title": "Pick several zooms at once and change or delete them together",
+  "goal": "A recording with many zooms needs them handled as a group: Shift click (and Command click) adds zooms to the picked set, clicking the Zoom row's label on the left picks every zoom on that row, and with several picked the panel shows the settings they share (how they ease in and out, the curve, the amount, Follow Cursor) so one change applies to all of them; Delete removes them all in one undo step.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:22:44.964Z",
+  "updated": "2026-10-10T12:22:45.130Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when i create multiple zooms on a track, id like to be able to select multiple zooms, either by shift clicking them, or clicking the zoom tab on the left to select all zooms in the row. Then I'd like to be able to modify common properties of the zoom. For example, maybe i want them all to have a consistent transition, or i want to delete a few at a time.\"\n\nFrom code reading (not run): one picked zoom only, EditorState.selectedZoom: ClipZoomRef? (EditorState.swift:1723; cleared :906). Zoom model PhotonzCore/ClipZoom.swift (easeInMS/easeOutMS :36-37, scale, followsCursor). Zoom lane UI ZoomLane.swift; menu rows EditorCommands.swift ~1118-1142 and EditorState+Zoom.swift. Make the pick a set (selectedZooms) and keep selectedZoom as 'the one in hand' only when the set has one, so the box code (showsZoomBox, EditorState+Zoom.swift:352-363) keeps working. Companion tasks filed the same day: 'Every transition can be picked from presets and tuned on a curve' (the curve the shared panel row edits) and 'Dragging a box on the timeline picks everything it touches' (marquee over zoom bars).",
+  "acceptance": [
+    "Shift click on a zoom bar adds or removes it from the picked set; Command click the same; a plain click picks just that one",
+    "Clicking the Zoom lane's label in the track column picks every zoom on that clip's row; the picked bars are visibly highlighted together",
+    "With several picked, the panel shows each shared setting once: a value where they agree, 'Mixed' where they differ; changing it sets it on every picked zoom in one undo step",
+    "Delete / Backspace, and the right-click menu's Delete Zoom, remove every picked zoom in one undo step",
+    "The menu bar's zoom rows (Clip > Zoom, Follow Cursor, Delete Zoom) act on all picked zooms",
+    "The zoom box on the canvas is shown only when exactly one zoom is picked (several boxes would be confusing), and the audit says what the canvas shows instead",
+    "A walk at Next defaults makes four zooms, picks three by Shift click, sets one ease length for all, checks all three changed, deletes two and undoes",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:22:44.966Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:22:45.129Z",
+      "note": "seq 3930 -> 21"
+    }
+  ]
+}
