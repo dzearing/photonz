@@ -2989,11 +2989,11 @@ retyped in a page:
 
 | | | |
 | --- | --- | --- |
-| **Standard** | Linear · Ease in out · Ease in · Ease out | the four nearly every motion wants |
+| **Standard** | Linear · Ease in out · Ease in · Ease out · Ease out quint · Ease out expo | the ones nearly every motion wants; quint and expo are what polished titles arrive on (2026-10-10, `docs/design/video-titles-polish.md`) |
 | **Shaped** | Ease in out sine · Ease out back · Ease out elastic · Steps, 4 | the ones that overshoot or jump |
 | | **Draw a curve…** | two handles and a `cubic-bezier(a,b,c,d)` readout, for the curve no name covers |
 
-Three of the eight ARE the design language's own motion tokens under the names
+Three of the ten ARE the design language's own motion tokens under the names
 people use for them: **Ease in out** is `--ease-standard`, **Ease out** is
 `--ease-decel`, and `--ease-spring` is what **Ease out back** does. The names
 and the numbers are also the app's (`EasingCurve` in

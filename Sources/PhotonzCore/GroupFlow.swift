@@ -101,7 +101,7 @@ enum GroupFlow {
         let settled = placed(out.children, layout: layout,
                              contentPlacement: group.contentPlacement,
                              bounds: bounds, onAScreen: group.isFrame)
-        out.children = settled.children
+        out.children = carryingMoves(from: out.children, to: settled.children)
         // A screen that hugs keeps its own size in its frame, so the frame is
         // what grows and shrinks around the contents, from its top left corner.
         if group.isFrame, bounds.width == nil || bounds.height == nil {
@@ -121,6 +121,34 @@ enum GroupFlow {
         // and down by 16.
         out.frame = out.frame.offsetBy(dx: -settled.grew.dx, dy: -settled.grew.dy)
         return out
+    }
+
+    /// The laid-out children, each keyed Position moved by as much as the
+    /// layout moved the child. A keyed position is a place, so a name card's
+    /// role rising into its spot under the name has to rise into the spot the
+    /// name now leaves it when somebody types a longer or larger name
+    /// (`TitleDesign.swift`); left where it was, it would land on the old one.
+    private static func carryingMoves(from before: [Layer], to after: [Layer]) -> [Layer] {
+        let was = Dictionary(before.map { ($0.id, $0.frame.origin) }, uniquingKeysWith: { first, _ in first })
+        return after.map { child in
+            guard let origin = was[child.id], origin != child.frame.origin,
+                  let motions = child.motions,
+                  motions.contains(where: { $0.property == .position && $0.repeats == .once })
+            else { return child }
+            let dx = child.frame.origin.x - origin.x, dy = child.frame.origin.y - origin.y
+            var moved = child
+            moved.motions = motions.map { motion in
+                guard motion.property == .position, motion.repeats == .once else { return motion }
+                return motion.rebuilt(from: motion.keyframes.map { stop in
+                    var carried = stop
+                    if case let .point(point) = stop.value {
+                        carried.value = .point(CGPoint(x: point.x + dx, y: point.y + dy))
+                    }
+                    return carried
+                })
+            }
+            return moved
+        }
     }
 
     // MARK: - One group's contents

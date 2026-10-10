@@ -28,6 +28,9 @@ extension Layer {
     /// (`authored`). The edge opposite never moves, and at least a point of
     /// picture is always left, however far two opposite edges are pulled.
     func croppedByKey(_ edge: MotionProperty, percent: Double, authored: Layer) -> Layer {
+        if edge.isCrop, annotation != nil, authored.annotation != nil {
+            return shapeCroppedByKey(edge, percent: percent, authored: authored)
+        }
         guard edge.isCrop, supportsContentCrop, case let .image(ref) = authored.content else { return self }
         let box = authored.frame.standardized
         let pixels = authored.crop ?? CGRect(origin: .zero, size: ref.pixelSize)
@@ -72,5 +75,37 @@ extension Layer {
         out.frame = frame
         out.crop = cut
         return out
+    }
+
+    /// A shape cut in from one edge: its box shrinks from that side and the
+    /// shape is drawn to the box that is left, the opposite edge never moving.
+    /// On a flat panel or bar that IS a wipe, which is what a title's panel
+    /// sweeping in from the left is made of (`TitleDesign.swift`). The panel
+    /// does not offer it (a shape has no crop of its own to key from there);
+    /// only a title's parts write these keys.
+    private func shapeCroppedByKey(_ edge: MotionProperty, percent: Double, authored: Layer) -> Layer {
+        let box = authored.frame.standardized
+        guard box.width > 0, box.height > 0 else { return self }
+        let share = CGFloat(min(max(percent, 0), 100) / 100)
+        let least: CGFloat = 1
+        var frame = self.frame.standardized
+        switch edge {
+        case .cropLeft:
+            let minX = min(box.minX + box.width * share, frame.maxX - least)
+            frame.size.width = frame.maxX - minX
+            frame.origin.x = minX
+        case .cropRight:
+            frame.size.width = max(box.maxX - box.width * share, frame.minX + least) - frame.minX
+        case .cropTop:
+            let minY = min(box.minY + box.height * share, frame.maxY - least)
+            frame.size.height = frame.maxY - minY
+            frame.origin.y = minY
+        case .cropBottom:
+            frame.size.height = max(box.maxY - box.height * share, frame.minY + least) - frame.minY
+        default:
+            return self
+        }
+        guard frame != self.frame.standardized else { return self }
+        return resized(to: frame)
     }
 }

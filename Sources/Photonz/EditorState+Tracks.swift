@@ -127,14 +127,23 @@ extension EditorState {
         // ask. Not while a bar on the strip is under a hand, since that draws
         // the drag over the document without changing it.
         let steady = motionTimingDrag == nil && motionStopDrag == nil
-        if steady, let memo = timelineTrackRowsMemo, memo.document == document { return memo.rows }
+        if steady, let memo = timelineTrackRowsMemo, memo.document == document,
+           memo.picked == selectedLayerID { return memo.rows }
         let rows = timelineTrackRows(of: document)
-        if steady { timelineTrackRowsMemo = (document, rows) }
+        if steady { timelineTrackRowsMemo = (document, selectedLayerID, rows) }
         return rows
     }
 
     private func timelineTrackRows(of document: PhotonzDocument) -> [TimelineTrackRowModel] {
         let groups = motionStripGroups
+        // The part picked, and every group it is inside.
+        var partInHand = Set<UUID>()
+        if let picked = selectedLayerID, var path = document.path(of: picked) {
+            while !path.isEmpty {
+                if let found = document.layer(atPath: path) { partInHand.insert(found.id) }
+                path.removeLast()
+            }
+        }
         let byLayer = Dictionary(groups.map { ($0.layerID, $0) }, uniquingKeysWith: { a, _ in a })
         let tracks = document.timelineTracks
         let soloPicture = tracks.contains { $0.kind != .audio && $0.isSolo }
@@ -163,7 +172,16 @@ extension EditorState {
                 }
                 guard let layer = document.layer(id: id) else { continue }
                 for part in layer.selfAndDescendants.dropFirst() {
-                    if let group = byLayer[part.id] { inner.append(group) }
+                    guard let group = byLayer[part.id] else { continue }
+                    // A title's parts each come in on their own beat
+                    // (`TitleDesign.swift`), and a row for every part under
+                    // every title buried the tracks below it: they open for
+                    // the part in hand, the way Premiere shows a graphic's
+                    // keys for the layer picked inside it. A component's
+                    // pieces keep their rows (`ComponentsInTime.swift`).
+                    if layer.isPlacedInTime, !layer.isComponentInstance,
+                       !partInHand.contains(part.id) { continue }
+                    inner.append(group)
                 }
             }
             let linked = (linkedByTrack[track.id] ?? []).compactMap { id -> MotionStripGroup? in

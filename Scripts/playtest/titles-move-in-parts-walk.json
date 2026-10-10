@@ -1,0 +1,861 @@
+{
+ "out": "/tmp/photonz-playtest/titles-move-in-parts-walk",
+ "seed": "Titles move in parts, at Next defaults with no switch touched: a title page (Midnight) put at the start from an empty track's right-click and a name card (Bar) put over the recording at six seconds, each photographed frame by frame through its in with the right arrow, so the separate beats of the background, the words and the accent can be seen.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Midnight"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "describe",
+   "stage": "page-landed",
+   "note": "Add Title Page > Midnight from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived (0.9s), with its title open for typing"
+  },
+  {
+   "do": "snapshot",
+   "name": "page-landed"
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "page-in",
+   "note": "THE IN, FRAME BY FRAME from 0:00 with the right arrow: the background fades up first, the title rises in at 0.15s, the subtitle 130 ms after it, and the accent bar wipes on under the title last. Nothing arrives as one block."
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f00"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f01"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f02"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f03"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f04"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f05"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f06"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f07"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f08"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f09"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f10"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f11"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f12"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f13"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f14"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f15"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f16"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f17"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f18"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f19"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f20"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f21"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f22"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f23"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f24"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f25"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f26"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "page-f27"
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V3",
+   "choose": "Add Name Card > Bar"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "type",
+   "text": "Dana Zearing"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "card-in",
+   "note": "THE NAME CARD'S IN, FRAME BY FRAME from 6.0s: the panel wipes in from the left, the accent strip draws up, the name rises in at 0.15s and the role 130 ms after it."
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f00"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f01"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f02"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f03"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f04"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f05"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f06"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f07"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f08"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f09"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f10"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f11"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f12"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f13"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f14"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f15"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f16"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f17"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f18"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f19"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f20"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f21"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f22"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f23"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f24"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.35
+  },
+  {
+   "do": "snapshot",
+   "name": "card-f25"
+  }
+ ]
+}

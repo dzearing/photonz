@@ -1437,7 +1437,8 @@ final class EditorState {
     /// worked out from (`timelineTrackRows`). The dock asks for them three or
     /// four times per draw, and on a talk with 170 captions each asking laid
     /// every track out again.
-    @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, rows: [TimelineTrackRowModel])?
+    @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, picked: UUID?,
+                                                     rows: [TimelineTrackRowModel])?
     /// How far the timeline is opened out, and which stretch of the document
     /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
     /// are looking at a recording is not part of the recording, so it is

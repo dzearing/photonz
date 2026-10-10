@@ -788,10 +788,14 @@ private struct MotionStripBar: View {
     /// has no marks and draws exactly as it always did.
     @ViewBuilder private func marks(width: CGFloat) -> some View {
         let ruler = editorState.motionStripRuler
+        // In the LANE's space, not the bar's: this overlay sits on the bar's
+        // frame before its offset, so a bar that starts anywhere but nought
+        // drew every mark that much too early (a title's part keyed from
+        // 0.4s showed its hold key at 0.08s).
         let barX = laneWidth * ruler.fraction(ofMS: Double(lane.timing.startMS))
         ForEach(Array(lane.keys.enumerated()), id: \.offset) { index, key in
-            let x = min(max(laneWidth * ruler.fraction(ofMS: Double(key.ms)) - barX, 1),
-                        width - 1)
+            let x = min(max(laneWidth * ruler.fraction(ofMS: Double(key.ms)), barX + 1),
+                        barX + width - 1)
             MotionStripKeyMark(lane: lane, layerName: layerName, key: key,
                                middle: index, laneWidth: laneWidth)
                 .offset(x: x - MotionStripKeyMark.grabWidth / 2)

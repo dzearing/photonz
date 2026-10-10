@@ -100,19 +100,137 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         }
     }
 
-    /// How it comes on.
-    public var animateIn: TitleAnimation {
+    /// How it moves: its parts, each coming in on its own beat, gently moving
+    /// while it holds, and leaving quicker than it came, in reverse
+    /// (`TitleDesign.swift`, `docs/design/video-titles-polish.md`). Amounts are
+    /// points of a 1080 line frame.
+    ///
+    /// A title page's background has no out of its own: the page leaves with
+    /// the bar's own fade, which is also the dissolve into a recording an
+    /// opening page pushes along (`pushPictureAfterOpeningTitle`). Its words
+    /// are gone just before that dissolve ends.
+    public var design: TitleDesign {
+        typealias B = TitleBuild
+        let backdrop = TitlePart(path: "Background", role: .background,
+                                 in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint),
+                                 hold: TitleHold(.push, amount: 3))
         switch self {
-        case .midnight, .spotlight, .minimal: .fade
-        case .sunrise: .scale
-        case .paper, .bar, .accent: .slide
-        case .clean: .pop
+        case .midnight:
+            return TitleDesign(parts: [
+                backdrop,
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.rise, delayMS: 150, lengthMS: 700, amount: 28),
+                          out: .off(.rise, delayMS: 130, amount: 12)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 280, lengthMS: 600, amount: 18),
+                          out: .off(.rise, delayMS: 190, amount: 8)),
+                TitlePart(path: "Accent", role: .accent,
+                          in: B(.wipe, delayMS: 400, lengthMS: 500, direction: .right),
+                          out: .off(.fade, delayMS: 250)),
+            ])
+        case .sunrise:
+            return TitleDesign(parts: [
+                backdrop,
+                TitlePart(path: "Sun", role: .accent,
+                          in: B(.scaleFrom, delayMS: 100, lengthMS: 900, amount: 70),
+                          hold: TitleHold(.drift, amount: 16, direction: .up),
+                          out: .off(.fade, delayMS: 130)),
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.blurIn, delayMS: 250, lengthMS: 700, amount: 14),
+                          out: .off(.blurIn, delayMS: 190, amount: 8)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 380, lengthMS: 600, amount: 16),
+                          out: .off(.fade, delayMS: 250)),
+            ])
+        case .paper:
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint),
+                          hold: TitleHold(.push, amount: 2)),
+                TitlePart(path: "Accent", role: .accent,
+                          in: B(.wipe, delayMS: 150, lengthMS: 500, direction: .down),
+                          out: .off(.fade, delayMS: 130)),
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.rise, delayMS: 250, lengthMS: 700, amount: 32, direction: .right),
+                          out: .off(.fade, delayMS: 190)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 380, lengthMS: 600, amount: 20, direction: .right),
+                          out: .off(.fade, delayMS: 250)),
+            ])
+        case .spotlight:
+            let dots = (0..<3).map { index in
+                TitlePart(path: "Dot \(index + 1)", role: .accent,
+                          in: B(.springPop, delayMS: 120 + index * 60, lengthMS: 450, amount: 50),
+                          out: .off(.fade, delayMS: 100, lengthMS: 200))
+            }
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.fade, delayMS: 0, lengthMS: 600, curve: .easeOutQuint),
+                          hold: TitleHold(.push, amount: 4)),
+            ] + dots + [
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.scaleFrom, delayMS: 320, lengthMS: 800, amount: 112),
+                          out: .off(.fade, delayMS: 190)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 450, lengthMS: 600, amount: 12),
+                          out: .off(.fade, delayMS: 250)),
+            ])
+        case .bar:
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.wipe, delayMS: 0, lengthMS: 450, direction: .right),
+                          out: .off(.wipe, delayMS: 0, direction: .left)),
+                TitlePart(path: "Accent", role: .accent,
+                          in: B(.wipe, delayMS: 60, lengthMS: 400, direction: .up),
+                          out: .off(.fade, delayMS: 50, lengthMS: 200)),
+                TitlePart(path: "Name", role: .headline,
+                          in: B(.rise, delayMS: 150, lengthMS: 550, amount: 12),
+                          out: .off(.fade, delayMS: 100)),
+                TitlePart(path: "Role", role: .subtitle,
+                          in: B(.rise, delayMS: 280, lengthMS: 550, amount: 10),
+                          out: .off(.fade, delayMS: 150)),
+            ])
+        case .clean:
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.springPop, delayMS: 0, lengthMS: 500, amount: 92),
+                          out: .off(.springPop, delayMS: 0, amount: 96)),
+                TitlePart(path: "Name", role: .headline,
+                          in: B(.blurIn, delayMS: 150, lengthMS: 550, amount: 8),
+                          out: .off(.fade, delayMS: 100)),
+                TitlePart(path: "Role", role: .subtitle,
+                          in: B(.blurIn, delayMS: 270, lengthMS: 550, amount: 8),
+                          out: .off(.fade, delayMS: 150)),
+            ])
+        case .accent:
+            return TitleDesign(parts: [
+                TitlePart(path: "Name Box/Background", role: .background,
+                          in: B(.wipe, delayMS: 0, lengthMS: 450, direction: .right),
+                          out: .off(.wipe, delayMS: 0, direction: .left)),
+                TitlePart(path: "Role Box/Background", role: .accent,
+                          in: B(.wipe, delayMS: 120, lengthMS: 450, direction: .right),
+                          out: .off(.wipe, delayMS: 100, direction: .left)),
+                TitlePart(path: "Name", role: .headline,
+                          in: B(.rise, delayMS: 150, lengthMS: 500, amount: 10),
+                          out: .off(.fade, delayMS: 100)),
+                TitlePart(path: "Role", role: .subtitle,
+                          in: B(.rise, delayMS: 270, lengthMS: 500, amount: 10),
+                          out: .off(.fade, delayMS: 150)),
+            ])
+        case .minimal:
+            return TitleDesign(parts: [
+                TitlePart(path: "Name", role: .headline,
+                          in: B(.rise, delayMS: 0, lengthMS: 600, amount: 10),
+                          out: .off(.rise, delayMS: 0, lengthMS: 300, amount: 8)),
+                TitlePart(path: "Rule", role: .accent,
+                          in: B(.wipe, delayMS: 100, lengthMS: 500, direction: .right),
+                          out: .off(.wipe, delayMS: 100, direction: .left)),
+                TitlePart(path: "Role", role: .subtitle,
+                          in: B(.rise, delayMS: 140, lengthMS: 550, amount: 8),
+                          out: .off(.fade, delayMS: 150)),
+            ])
         }
     }
-
-    /// How it goes off. A card that slid on fades off rather than sliding
-    /// across the whole picture on its way out.
-    public var animateOut: TitleAnimation { .fade }
 
     public static func presets(of kind: TitleKind) -> [BuiltInTitle] {
         allCases.filter { $0.kind == kind }
@@ -414,21 +532,15 @@ extension PhotonzDocument {
         let layer = preset.layer(in: canvasSize)
         guard let inserted = landTitle(layer, kind: preset.kind, lengthMS: preset.kind.lengthMS,
                                        sourceInMS: 0, atTimeMS: ms, landing: landing) else { return nil }
-        // A fade is the one fade everything on the timeline has
-        // (`PictureFade`): shaded on the bar, checked under Fade In and Fade
-        // Out, dragged from the bar's corner. Anything else is keys.
-        let fadeMS = TitleAnimation.lengthMS
-        for (end, kind) in [(FadeEnd.in, preset.animateIn), (.out, preset.animateOut)] {
-            if kind == .fade {
-                // Only the fade: what follows the page is pushed below.
-                fadePicture(inserted.layerID, end, toMS: fadeMS)
-            } else if end == .in {
-                animateIn(kind, layerID: inserted.layerID)
-            } else {
-                animateOut(kind, layerID: inserted.layerID)
-            }
+        // Each part on its own beat, as keys on the pieces themselves.
+        applyTitleDesign(preset.design, layerID: inserted.layerID)
+        // A page leaves with the one fade everything on the timeline has
+        // (`PictureFade`): shaded on the bar, checked under Fade Out, dragged
+        // from the bar's corner, and the dissolve into what follows it.
+        if preset.kind == .titlePage {
+            fadePicture(inserted.layerID, .out, toMS: TitleAnimation.lengthMS)
+            pushPictureAfterOpeningTitle(inserted.layerID)
         }
-        if preset.kind == .titlePage { pushPictureAfterOpeningTitle(inserted.layerID) }
         return inserted
     }
 

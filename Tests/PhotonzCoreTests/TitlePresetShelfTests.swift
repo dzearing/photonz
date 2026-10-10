@@ -148,8 +148,8 @@ struct TitlePresetShelfTests {
         let insertedLanded = doc.insertTitle(.builtIn(.bar), atTimeMS: 1000, landing: landing)
         let inserted = try #require(insertedLanded)
         let layer = try #require(doc.layer(id: inserted.layerID))
-        // Bar slides in (keys) and fades out (the bar's own fade).
-        #expect(!(layer.motions ?? []).isEmpty)
+        // Bar comes in part by part: keys on its pieces.
+        #expect(layer.children.contains { !($0.motions ?? []).isEmpty })
         #expect(doc.layer(id: inserted.wordsID)?.name == "Name")
     }
 

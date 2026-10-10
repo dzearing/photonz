@@ -7,7 +7,7 @@ import SwiftUI
 /// title animates in and out), and a sound's fades.
 ///
 /// Same control, same words, same menu everywhere: the key mock's menu
-/// (`curve.js`), the four standard curves and the four shaped ones each with
+/// (`curve.js`), the six standard curves and the four shaped ones each with
 /// its shape beside its name, then the curves kept under a name, then the one
 /// you drew, then Draw a Curve. A kind whose own default is not one of the
 /// eight (a zoom's Smooth) offers it at the end of the shaped ones, so the
@@ -57,9 +57,9 @@ struct CurveRow: View {
 
     private func choices(_ saved: SavedCurves) -> [VideoKit.Choice] {
         var rows: [VideoKit.Choice] = [.heading("Standard")]
-        rows += EasingCurve.named.prefix(4).map(item)
+        rows += EasingCurve.named.prefix(EasingCurve.standardCount).map(item)
         rows.append(.heading("Shaped"))
-        rows += EasingCurve.named.dropFirst(4).map(item)
+        rows += EasingCurve.named.dropFirst(EasingCurve.standardCount).map(item)
         if let ownDefault, !EasingCurve.named.contains(ownDefault) { rows.append(item(ownDefault)) }
         if !saved.items.isEmpty {
             rows.append(.heading("Saved"))

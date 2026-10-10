@@ -314,39 +314,65 @@ extension PhotonzDocument {
         guard delta != 0 || time.sourceInMS != old.sourceInMS else { return }
         let window = TitleAnimation.lengthMS + PropertyKeys.nearMS
         let outroFrom = max(old.lengthMS - window, old.lengthMS / 2 + 1)
+        func refitted(_ motion: LayerMotion) -> LayerMotion {
+            // Each key as a distance from the in point, which is what
+            // stays put while the end moves.
+            let keys = motion.keyframes
+            let from = keys.map { $0.atMS - old.sourceInMS }
+            let outro = from.indices.filter { from[$0] >= outroFrom }
+            let rest = from.indices.filter { from[$0] < outroFrom }
+            var to = from
+            for index in outro { to[index] = from[index] + delta }
+            // Shortened past what the keys before it leave room for:
+            // the out is squeezed in between them and the new end
+            // rather than jumping them.
+            if let first = outro.map({ from[$0] }).min(),
+               let last = outro.map({ from[$0] }).max() {
+                let floor = (rest.map { from[$0] }.max() ?? 0) + MotionStopDrag.shortestMS
+                if first + delta < floor {
+                    let end = max(floor, last + delta)
+                    let span = Double(max(1, last - first))
+                    for index in outro {
+                        let along = Double(from[index] - first) / span
+                        to[index] = floor + Int((Double(end - floor) * along).rounded())
+                    }
+                }
+            }
+            var list = keys
+            for index in list.indices { list[index].atMS = to[index] + time.sourceInMS }
+            return list == keys ? motion : motion.rebuilt(from: list)
+        }
+        // The layer's own keys, and those of every piece inside it that runs on
+        // its clock: a title's parts each come in and go off on their own
+        // (`TitleDesign.swift`), and their outs keep to the end the same way.
         updateLayer(id: id) { edited in
             edited.motions = edited.motions.map { motions in
                 motions.map { motion in
                     guard motion.repeats == .once, motion.isOn,
                           !(fadeShape && motion.property == .opacity) else { return motion }
-                    // Each key as a distance from the in point, which is what
-                    // stays put while the end moves.
-                    let keys = motion.keyframes
-                    let from = keys.map { $0.atMS - old.sourceInMS }
-                    let outro = from.indices.filter { from[$0] >= outroFrom }
-                    let rest = from.indices.filter { from[$0] < outroFrom }
-                    var to = from
-                    for index in outro { to[index] = from[index] + delta }
-                    // Shortened past what the keys before it leave room for:
-                    // the out is squeezed in between them and the new end
-                    // rather than jumping them.
-                    if let first = outro.map({ from[$0] }).min(),
-                       let last = outro.map({ from[$0] }).max() {
-                        let floor = (rest.map { from[$0] }.max() ?? 0) + MotionStopDrag.shortestMS
-                        if first + delta < floor {
-                            let end = max(floor, last + delta)
-                            let span = Double(max(1, last - first))
-                            for index in outro {
-                                let along = Double(from[index] - first) / span
-                                to[index] = floor + Int((Double(end - floor) * along).rounded())
-                            }
-                        }
-                    }
-                    var list = keys
-                    for index in list.indices { list[index].atMS = to[index] + time.sourceInMS }
-                    return list == keys ? motion : motion.rebuilt(from: list)
+                    return refitted(motion)
                 }
             }
+            edited = edited.refittingParts(refitted)
         }
+    }
+}
+
+private extension Layer {
+
+    /// Every piece inside this layer that has no stretch of its own, its
+    /// keys passed through `refit`.
+    func refittingParts(_ refit: (LayerMotion) -> LayerMotion) -> Layer {
+        guard !children.isEmpty else { return self }
+        var out = self
+        out.children = children.map { child in
+            guard child.time == nil else { return child }
+            var part = child
+            part.motions = part.motions.map { motions in
+                motions.map { $0.repeats == .once && $0.isOn ? refit($0) : $0 }
+            }
+            return part.refittingParts(refit)
+        }
+        return out
     }
 }

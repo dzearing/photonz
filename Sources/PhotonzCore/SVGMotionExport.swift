@@ -468,6 +468,8 @@ enum MotionSVG {
         case .easeInOut: return (0.4, 0, 0.2, 1)
         case .easeIn: return (0.4, 0, 1, 1)
         case .easeOut: return (0, 0, 0.2, 1)
+        case .easeOutQuint: return (0.22, 1, 0.36, 1)
+        case .easeOutExpo: return (0.16, 1, 0.3, 1)
         case let .custom(x1, y1, x2, y2):
             let inside = [x1, y1, x2, y2].allSatisfy { $0 >= 0 && $0 <= 1 }
             return inside ? (x1, y1, x2, y2) : nil
@@ -485,7 +487,7 @@ enum MotionSVG {
         case .easeOutBack: return 14
         case .easeOutElastic: return 28
         case let .steps(count): return max(1, count)
-        case .linear, .easeIn, .easeOut, .easeInOut, .custom: return 12
+        case .linear, .easeIn, .easeOut, .easeInOut, .easeOutQuint, .easeOutExpo, .custom: return 12
         }
     }
 

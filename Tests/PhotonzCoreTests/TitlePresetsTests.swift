@@ -122,53 +122,42 @@ struct TitlePresetsTests {
         #expect(doc.documentDurationMS == 10_000)
     }
 
-    @Test func insertingAnimatesItInAndOut() throws {
+    @Test func insertingAnimatesEachPartInAndOut() throws {
         var doc = Self.eightSeconds()
         for preset in BuiltInTitle.allCases {
             let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
             let layer = try #require(doc.layer(id: inserted.layerID))
-            let marks = doc.clipKeyMarks(layerID: layer.id).map(\.documentMS)
-            let time = try #require(layer.time)
-            // Each end either fades, with the one fade the bar shows, or is
-            // keys: one at the end and one where it has finished arriving.
-            if preset.animateIn == .fade {
-                #expect(layer.pictureFadeMS(.in) == TitleAnimation.lengthMS, "\(preset.name)")
-            } else {
-                #expect(marks.contains(time.inMS), "\(preset.name)")
-                #expect(marks.contains(time.inMS + TitleAnimation.lengthMS), "\(preset.name)")
+            // Every part's piece carries keys of its own: the parts move, not
+            // the group as one slab.
+            for part in preset.design.parts {
+                let piece = try #require(TitleDesign.find(part.path, in: layer), "\(preset.name)")
+                #expect(!(piece.motions ?? []).isEmpty, "\(preset.name): \(part.path)")
             }
-            if preset.animateOut == .fade {
-                #expect(layer.pictureFadeMS(.out) == TitleAnimation.lengthMS, "\(preset.name)")
-            } else {
-                #expect(marks.contains(time.outMS), "\(preset.name)")
-            }
+            #expect(layer.pictureFadeMS(.in) == 0, "\(preset.name)")
+            // A page dissolves out with the bar's own fade; a card leaves in parts.
+            #expect(layer.pictureFadeMS(.out) == (preset.kind == .titlePage ? TitleAnimation.lengthMS : 0),
+                    "\(preset.name)")
         }
     }
 
-    @Test func aFadeInStartsInvisibleAndArrivesWhole() throws {
-        var doc = Self.eightSeconds()
-        let preset = try #require(BuiltInTitle.allCases.first { $0.animateIn == .fade })
-        let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
-        let layer = try #require(doc.layer(id: inserted.layerID))
-        #expect(layer.pictureFadeLevel(atDocumentTimeMS: 1000) < 0.01)
-        #expect(layer.pictureFadeLevel(atDocumentTimeMS: 2000) > 0.99)
-    }
-
-    @Test func aSlideInStartsWhollyOffTheLeftOfTheFrame() throws {
-        var doc = Self.eightSeconds()
-        let preset = try #require(BuiltInTitle.presets(of: .nameCard).first { $0.animateIn == .slide })
-        let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
-        let layer = try #require(doc.layer(id: inserted.layerID))
-        let start = try #require(doc.keyedValue(layerID: layer.id, .motion(.position),
-                                                atDocumentTimeMS: 1000))
-        guard case let .point(origin) = start else {
-            Issue.record("position is not a point")
-            return
+    @Test func nothingOfATitleShowsOnItsFirstFrameAndAllOfItOnceArrived() throws {
+        for preset in BuiltInTitle.allCases {
+            var doc = Self.eightSeconds()
+            let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
+            let first = try #require(doc.drawn(atTimeMS: 1000).layer(id: inserted.layerID))
+            let arrived = try #require(doc.drawn(atTimeMS: 1000 + preset.design.inLengthMS)
+                .layer(id: inserted.layerID))
+            let authored = preset.layer(in: Self.canvas)
+            for part in preset.design.parts {
+                let start = try #require(TitleDesign.find(part.path, in: first))
+                // Invisible, or a wipe not yet begun: a sliver at most.
+                let hidden = start.style.opacity < 0.01 || min(start.frame.width, start.frame.height) <= 1
+                #expect(hidden, "\(preset.name): \(part.path)")
+                let end = try #require(TitleDesign.find(part.path, in: arrived))
+                let drawn = try #require(TitleDesign.find(part.path, in: authored))
+                #expect(abs(end.style.opacity - drawn.style.opacity) < 0.01, "\(preset.name): \(part.path)")
+            }
         }
-        // The group's box, moved to where the slide starts, ends left of x 0.
-        let box = layer.localBounds
-        let right = box.maxX + (origin.x - layer.frame.origin.x)
-        #expect(right <= 0)
     }
 
     @Test func theWordsToTypeAreTheMainLine() throws {
@@ -266,10 +255,11 @@ struct TitlePresetsTests {
         #expect(layer.time?.outMS == 8000)
         #expect(other.layer(id: again.wordsID)?.text?.string == "Dana Zearing")
         #expect(other.layer(id: again.wordsID)?.text?.colorHex == "#FFCC00")
-        // Its animation came with it, moved to where it now starts.
-        let marks = other.clipKeyMarks(layerID: layer.id).map(\.documentMS)
-        #expect(marks.contains(3000) && marks.contains(3000 + TitleAnimation.lengthMS))
-        #expect(layer.pictureFadeMS(.out) == TitleAnimation.lengthMS)
+        // Its animation came with it, part by part, moved to where it now
+        // starts: it arrives when it did.
+        #expect(other.titleArrivalMS(layerID: layer.id) == preset.design.inLengthMS)
+        let name = try #require(other.layer(id: again.wordsID))
+        #expect(other.keyedValue(layerID: name.id, .motion(.opacity), atDocumentTimeMS: 3000) == .number(0))
         #expect(again.layerID != inserted.layerID)
     }
 

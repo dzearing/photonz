@@ -29,7 +29,7 @@
   var PZ = window.PZ || {};
   var all = PZ.all || function (s, r) { return [].slice.call((r || document).querySelectorAll(s)); };
 
-  /* THE LIST. Order is part of the contract: the four standard eases
+  /* THE LIST. Order is part of the contract: the six standard eases
      first, because they are what nearly every motion wants, then the
      shaped ones that overshoot or jump, then the one you draw. */
   var CURVES = [
@@ -43,6 +43,10 @@
     { id: "ease-out",     el: "easOut",     group: "Standard", label: "Ease out",
       d: "M2 22C2 10 10 2 22 2",                        css: "cubic-bezier(0, 0, .2, 1)",
       token: "--ease-decel" },
+    { id: "ease-out-quint", el: "easQuint",  group: "Standard", label: "Ease out quint",
+      d: "M2 22C6 2 10 2 22 2",                         css: "cubic-bezier(.22, 1, .36, 1)" },
+    { id: "ease-out-expo", el: "easExpo",   group: "Standard", label: "Ease out expo",
+      d: "M2 22C5 2 9 2 22 2",                          css: "cubic-bezier(.16, 1, .3, 1)" },
     { id: "ease-in-out-sine", el: "easSine", group: "Shaped",  label: "Ease in out sine",
       d: "M2 22C10 22 14 2 22 2",                       css: "cubic-bezier(.37, 0, .63, 1)" },
     { id: "ease-out-back", el: "easBack",   group: "Shaped",   label: "Ease out back",
@@ -53,7 +57,7 @@
     { id: "steps-4",      el: "easSteps",   group: "Shaped",   label: "Steps, 4",
       d: "M2 22h6v-7h6v-6h8V2",                         css: "steps(4, end)" }
   ];
-  /* Not one of the named eight: the door out of the vocabulary, for
+  /* Not one of the named ten: the door out of the vocabulary, for
      the curve no name covers. It ends every curve menu. */
   var DRAW = { id: "custom", el: "easCustom", label: "Draw a curve…", sc: "⌥⌘C" };
 
@@ -66,7 +70,7 @@
       '<path d="' + c.d + '"/></svg>';
   }
 
-  /* The rows, with the group labels and separators that make eight
+  /* The rows, with the group labels and separators that make ten
      names readable as two short lists rather than one long one. */
   function menuHTML(opts) {
     opts = opts || {};

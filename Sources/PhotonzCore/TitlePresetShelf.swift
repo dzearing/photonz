@@ -156,7 +156,9 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         case .saved(let saved): inserted = doc.insertTitle(saved, atTimeMS: 0)
         }
         guard let inserted, let time = doc.layer(id: inserted.layerID)?.time else { return nil }
-        let rest = min(time.inMS + TitleAnimation.lengthMS, max(time.inMS, time.outMS - 1))
+        // Pictured once every part has arrived, not half way through one.
+        let rest = min(time.inMS + doc.titleArrivalMS(layerID: inserted.layerID),
+                       max(time.inMS, time.outMS - 1))
         var still = doc.drawn(atTimeMS: rest)
         still.durationMS = nil
         still.tracks = []

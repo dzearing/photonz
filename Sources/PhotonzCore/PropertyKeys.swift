@@ -342,13 +342,29 @@ extension PhotonzDocument {
 
     private func keyClock(of layer: Layer, _ property: KeyedProperty, atDocumentTimeMS ms: Int) -> Int {
         switch property {
-        case .motion: layer.motionClockMS(atDocumentTimeMS: ms)
+        case .motion: clockOwner(of: layer).motionClockMS(atDocumentTimeMS: ms)
         case .volume: layer.volumeClockMS(atDocumentTimeMS: ms)
         }
     }
 
     private func keyCycle(of layer: Layer) -> Int {
-        layer.motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+        clockOwner(of: layer).motionCycleMS(documentCycleMS: max(1, documentDurationMS))
+    }
+
+    /// The layer whose clock a layer's keys are read on: itself where it has a
+    /// stretch of its own, else the nearest group above it that has one, which
+    /// is the clock the picture plays it on (`Layer.movedTree`). A title's
+    /// parts are keyed on the title's clock (`TitleDesign.swift`), so a part
+    /// picked inside a title shows the key it is on, and a key added to it
+    /// lands where the playhead is.
+    func clockOwner(of layer: Layer) -> Layer {
+        guard layer.time == nil, let path = path(of: layer.id), path.count > 1 else { return layer }
+        var above = Array(path.dropLast())
+        while !above.isEmpty {
+            if let group = self.layer(atPath: above), group.time != nil { return group }
+            above.removeLast()
+        }
+        return layer
     }
 
     /// The moments, in the layer's own clock, this property is keyed at.

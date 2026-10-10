@@ -1,0 +1,55 @@
+{
+  "feature": "Titles move in parts",
+  "epic": "video-titles-graphics",
+  "summary": "Every built-in title page and name card now comes in part by part: the background first, then the headline, then the subtitle 130 ms later, then the accent, each with its own move (rise, blur in, scale, wipe, spring), and they leave quicker than they came, in reverse. Dragging a title's bar longer or shorter stretches the hold and keeps the in and out the same length.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with time in it (the sample recording works). Walk: titles-move-in-parts-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Right-click an empty track and choose Add Title Page > Midnight at 0:00. The playhead lands at 0.9s, where the last part has arrived.",
+      "shot": "2026-10-10-titles-in-parts-page-landed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Home, then step with the Right arrow: the background fades up first and the title has not started.",
+      "shot": "2026-10-10-titles-in-parts-page-f03-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Keep stepping: the title rises in at 0.15s, the subtitle follows, the accent bar wipes on last.",
+      "shot": "2026-10-10-titles-in-parts-page-f09-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Space and watch the whole page come in and dissolve into the recording at 3.5s."
+    },
+    {
+      "do": "At 6s, right-click an empty track and choose Add Name Card > Bar, type a name, then step through its in: the panel wipes in from the left, the strip draws up, the name and role rise in after it.",
+      "shot": "2026-10-10-titles-in-parts-card-f08-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the name card's right end out to 10s, then play its end: the role leaves first, then the name, then the panel wipes back, each as quick as before."
+    },
+    {
+      "do": "Compare old and new for each preset: the top row of each sheet is the old in at 0, 25, 50, 75 and 100 percent, the bottom row the new one.",
+      "shot": "2026-10-10-titles-in-parts-midnight-before-after.png"
+    }
+  ],
+  "evaluate": [
+    "Does a title page now read as designed rather than a slide, or does it still feel like one block?",
+    "Is 130 ms between the headline and the subtitle the right gap, or should the beats be further apart?",
+    "Do the name cards' wipes (Bar, Accent, Minimal) look like a broadcast lower third, or too busy?",
+    "Is the slow push on a title page's background noticeable enough, or too much?",
+    "Do the exits feel quick and clean, or abrupt?"
+  ],
+  "rough": [
+    "No mock covers a title's in frame by frame. video-title-wt.html draws a title as a layer with an in and an out, and that still matches: a preset is still layers you own.",
+    "A wipe on words is a fade for now: words cannot be masked until title-text-comes-in-by-line-word-or-letter lands.",
+    "There is no control yet to change a part's in, hold or out; the keys are on the parts (double-click into the title and pick one), and the per-part pickers are task title-tiles-play-and-a-few-knobs-restyle-a-title.",
+    "The title's own bar no longer carries key diamonds for its animation, because the keys are on its parts; its rows open only for the part in hand so a title does not push the tracks below it off the timeline.",
+    "A title page's background has no exit of its own: it leaves with the bar's fade, which is also the dissolve into the recording after an opening page.",
+    "The before and after sheets are offscreen renders from the app's own renderer at 960 by 540, a name card cropped to its corner at twice the size; the stepped frames are real window captures.",
+    "Ease out quint and Ease out expo joined every curve menu in both releases, since the list is one shared list."
+  ]
+}

@@ -21109,3 +21109,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Now a box starts there too, picks zoom bars and keys beside clips (Shift adds, Command flips), any picked thing carries the whole pick (stopping where a zoom or key runs out of room), Delete takes all of it in one undo, and the panel says "N picked" with the kinds. Core: `PhotonzCore/TimelineBoxPick.swift`.
 - Walks: `box-picks-everything-it-touches-walk`, `box-pick-by-hand-walk`. Audit: `queue/audits/2026-10-10-timeline-box-picks-everything.json`.
 - Open: the full test run hung again after walks (logged on the hang task); the split run passed.
+
+## 2026-10-10 — Titles move in parts, not as one block (go loop)
+
+- Core: `TitleDesign` / `TitlePart` / `TitleBuild` / `TitleHold` (`PhotonzCore/TitleDesign.swift`): a title is parts with an in (fade, rise, blur in, scale from, wipe, spring pop), a hold (none, drift, push) and an out, compiled into ordinary keys on the group's pieces. All 8 built-ins re-choreographed (`BuiltInTitle.design`): background, headline, subtitle 120 to 130 ms later, accent; exits 200 to 300 ms, ease in, reverse order, inside the last half second.
+- Locked builds: `refitFade` now refits the parts' keys too, so a trim stretches the hold (measured at 2.5, 6 and 8.5 s). A keyed crop now cuts shapes (a wipe); the group flow carries a moved child's position keys; keys of a piece inside a placed group read on its clock in the panel. Ease out quint and Ease out expo on the shared curve list (app and `curve.js`).
+- App: playhead after insert and the Library tile picture use `titleArrivalMS`; a title's part rows open only for the part in hand; strip key marks drawn in lane space (they sat early on any bar not starting at 0).
+- Old titles draw the same: fixture `PlacedTitlesOpenTheSameTests`. Before/after frames: `TitleInFramesTests`. Walk: `titles-move-in-parts-walk`. Audit: `queue/audits/2026-10-10-titles-move-in-parts.json`. Not the composite path (keys only; blur, crop and scale were already keyable).

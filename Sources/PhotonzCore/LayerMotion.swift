@@ -430,6 +430,12 @@ public enum EasingCurve: Hashable, Codable, Sendable {
     case easeInOut
     case easeIn
     case easeOut
+    /// A fast start and a long soft landing: `cubic-bezier(0.22, 1, 0.36, 1)`.
+    /// What a background or a panel arrives on (`docs/design/video-titles-polish.md`).
+    case easeOutQuint
+    /// The professional ease: very fast off the mark, then a soft landing,
+    /// `cubic-bezier(0.16, 1, 0.3, 1)`. What polished title words arrive on.
+    case easeOutExpo
     case easeInOutSine
     case easeOutBack
     case easeOutElastic
@@ -446,9 +452,14 @@ public enum EasingCurve: Hashable, Codable, Sendable {
     /// The menu, in order. `custom` is not in here: it arrives from the curve
     /// editor at the bottom of the same menu, under "Draw a Curve".
     public static let named: [EasingCurve] = [
-        .linear, .easeInOut, .easeIn, .easeOut,
+        .linear, .easeInOut, .easeIn, .easeOut, .easeOutQuint, .easeOutExpo,
         .easeInOutSine, .easeOutBack, .easeOutElastic, .steps(4),
     ]
+
+    /// How many of `named` are the standard eases, listed before the shaped
+    /// ones that overshoot or jump: every curve menu draws its two headings
+    /// from this.
+    public static let standardCount = 6
 
     public var title: String {
         switch self {
@@ -456,6 +467,8 @@ public enum EasingCurve: Hashable, Codable, Sendable {
         case .easeInOut: "Ease in out"
         case .easeIn: "Ease in"
         case .easeOut: "Ease out"
+        case .easeOutQuint: "Ease out quint"
+        case .easeOutExpo: "Ease out expo"
         case .easeInOutSine: "Ease in out sine"
         case .easeOutBack: "Ease out back"
         case .easeOutElastic: "Ease out elastic"
@@ -490,6 +503,10 @@ public enum EasingCurve: Hashable, Codable, Sendable {
             return EasingCurve.bezier(t, 0.4, 0, 1, 1)
         case .easeOut:
             return EasingCurve.bezier(t, 0, 0, 0.2, 1)
+        case .easeOutQuint:
+            return EasingCurve.bezier(t, 0.22, 1, 0.36, 1)
+        case .easeOutExpo:
+            return EasingCurve.bezier(t, 0.16, 1, 0.3, 1)
         case .easeInOutSine:
             return -(cos(.pi * t) - 1) / 2
         case .easeOutBack:
@@ -906,7 +923,7 @@ public enum KeyEase: String, Hashable, Codable, Sendable, CaseIterable {
         switch curve {
         case .linear, .steps: self = .linear
         case .easeIn: self = .easeOut
-        case .easeOut: self = .easeIn
+        case .easeOut, .easeOutQuint, .easeOutExpo: self = .easeIn
         default: self = .easeInAndOut
         }
     }

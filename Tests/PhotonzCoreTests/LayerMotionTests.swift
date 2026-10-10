@@ -180,7 +180,7 @@ struct LayerMotionTests {
         #expect(EasingCurve.named.first == .linear)
         let titles = EasingCurve.named.map(\.title)
         #expect(titles == ["Linear", "Ease in out", "Ease in", "Ease out",
-                           "Ease in out sine", "Ease out back", "Ease out elastic",
+                           "Ease out quint", "Ease out expo", "Ease in out sine", "Ease out back", "Ease out elastic",
                            "Steps, 4"])
     }
 

@@ -118,9 +118,9 @@ extension EditorState {
         landTitle(onTrack: trackID) { $0.insertTitle(saved, atTimeMS: $1) }
     }
 
-    /// Puts it in at the playhead, picks it, moves the playhead on to where it
-    /// has finished arriving (at its first frame a fade is invisible and a
-    /// slide is off the picture), and opens its main line for typing.
+    /// Puts it in at the playhead, picks it, moves the playhead on to where its
+    /// last part has finished arriving (at its first frame nothing of it is up
+    /// yet), and opens its main line for typing.
     private func landTitle(onTrack trackID: UUID?, atMS ms: Int? = nil,
                            _ insert: @escaping (inout PhotonzDocument, Int) -> InsertedTitle?) {
         guard canInsertTitle else { return }
@@ -133,7 +133,8 @@ extension EditorState {
         guard let inserted, let time = document?.layer(id: inserted.layerID)?.time else { return }
         selectLayer(inserted.layerID)
         switchToEditForAnEdit()
-        moveDocumentPlayhead(toMS: min(time.inMS + TitleAnimation.lengthMS, time.outMS))
+        let arrived = document?.titleArrivalMS(layerID: inserted.layerID) ?? TitleAnimation.lengthMS
+        moveDocumentPlayhead(toMS: min(time.inMS + arrived, time.outMS))
         // The caret waits for the picture to be drawn at that moment: the
         // canvas places its field on what it has drawn, and until then that
         // is the card at the start of its slide.

@@ -324,7 +324,17 @@ tile previews that play.
 
 ## Build order (one queue task each, filed 2026-10-10)
 
-1. **Titles move in parts, not as one block.**
+1. **Titles move in parts, not as one block.** Built 2026-10-10:
+   `TitleDesign` (parts, each with an in, a hold and an out) in
+   `Sources/PhotonzCore/TitleDesign.swift` compiles into ordinary keys on the
+   title group's pieces; `BuiltInTitle.design` choreographs all eight. Ins are
+   written from the title's start and outs inside its last half second, so a
+   trim stretches the hold (`TitleTime.refitFade` now refits the parts too). A
+   wipe crops a picture or a shape; on words it is a fade until step 2. A
+   title page still leaves with the bar's fade, which is the dissolve. Ease out
+   quint and Ease out expo joined the shared curve list. Walk:
+   `titles-move-in-parts-walk`; tests: `TitleDesignTests`,
+   `PlacedTitlesOpenTheSameTests` (titles placed before this draw the same).
 2. **Title text comes in by line, word or letter.**
 3. **Title backgrounds move: gradients, grain, the recording behind glass.**
 4. **Motion blur on titles that move fast.**
