@@ -7,6 +7,7 @@ import SwiftUI
 ///
 /// Keyboard-first: on open the first item takes a primary-colored selection
 /// outline; ← / → move it, Return opens/edits the focused item, ⌫ trashes it.
+/// ⌘← / ⌘→ step the filter (Next, `next-history-filter-keys`).
 /// The focused (or hovered) item shows its bottom action buttons; an idle,
 /// unfocused item shows a friendly "last taken" string in their place so the
 /// row height never jumps. A segmented All / Screenshots / Videos filter shares
@@ -50,13 +51,29 @@ struct HistoryOverlay: View {
         .focusable()
         .focusEffectDisabled()
         .focused($keyboardFocused)
-        .onKeyPress(.leftArrow) { moveSelection(by: -1) }
-        .onKeyPress(.rightArrow) { moveSelection(by: 1) }
+        .onKeyPress(keys: [.leftArrow, .rightArrow]) { press in
+            let delta = press.key == .leftArrow ? -1 : 1
+            // ⌘← / ⌘→ step the filter, the way ⌘ with an arrow goes to the
+            // next page of a segmented view in Finder and Safari.
+            if press.modifiers.contains(.command), Experiments.shared.historyFilterKeysEnabled {
+                return stepFilter(by: delta)
+            }
+            return moveSelection(by: delta)
+        }
         .onKeyPress(.return) { activateSelection() }
         .onKeyPress(.delete) { deleteSelection() }
         .onAppear {
             focus.land(count: entries.count)
             keyboardFocused = true
+            #if PHOTONZ_PLAYTEST
+            HistoryOverlayProbe.shared.read = { [choice, strips, capture] in
+                let entries = choice.showing.apply(to: capture.store.entries)
+                let selection = strips.focus(for: choice.showing).selection
+                return .init(filter: choice.filter, showing: choice.showing,
+                             focused: selection.flatMap { entries.indices.contains($0) ? entries[$0] : nil },
+                             count: entries.count)
+            }
+            #endif
         }
     }
 
@@ -113,6 +130,17 @@ struct HistoryOverlay: View {
 
     // MARK: - Keyboard selection
 
+    /// One step along the filter, through the same path a click takes, so the
+    /// bar shows it within a frame. The last end stays put: no wrap.
+    private func stepFilter(by delta: Int) -> KeyPress.Result {
+        guard !allEntries.isEmpty else { return .ignored }
+        let next = choice.wanted.stepped(by: delta)
+        if next != choice.wanted { choice.pick(next) }
+        // Held at either end too, so the key never falls through to a menu
+        // shortcut of the window behind.
+        return .handled
+    }
+
     @discardableResult
     private func moveSelection(by delta: Int) -> KeyPress.Result {
         let shown = entries
@@ -156,11 +184,15 @@ struct HistoryOverlay: View {
 private final class HistoryFilterChoice {
     private(set) var filter: CaptureFilter = .all
     private(set) var showing: CaptureFilter = .all
+    /// The last pick, before its frames have shown it: a second ⌘→ pressed
+    /// before the first has landed steps on from here, not from `filter`.
+    @ObservationIgnored private(set) var wanted: CaptureFilter = .all
     /// The next step, waiting for its frame. A pick that overtakes it takes
     /// its place.
     @ObservationIgnored private var pending: Task<Void, Never>?
 
     func pick(_ picked: CaptureFilter) {
+        wanted = picked
         pending?.cancel()
         pending = Task { [weak self] in
             await NextRunLoopPass.start()
@@ -191,7 +223,8 @@ private struct HistoryFilterBar: View {
                              options: CaptureFilter.allCases.map { .init($0, $0.title) },
                              form: .natural) { choice.pick($0) }
             .fixedSize()
-            .toolTip("Filter the history by capture type", below: true)
+            .toolTip("Filter the history by capture type",
+                     key: Experiments.shared.historyFilterKeysEnabled ? "⌘← ⌘→" : nil, below: true)
 
             HStack {
                 Spacer()
@@ -235,11 +268,20 @@ private struct HistoryStripsArea: View {
             }
         }
         .task { await buildTheOthers() }
-        // A new filter comes into sight at its newest capture, focused.
+        // A new filter comes into sight focused on the capture the old one
+        // had, when it shows that capture, and otherwise on its newest.
         .onChange(of: showing) { left, picked in
             built.insert(picked)
             switched()
-            strips.focus(for: picked).land(count: picked.apply(to: coordinator.capture.store.entries).count)
+            let entries = coordinator.capture.store.entries
+            let shown = picked.apply(to: entries)
+            if Experiments.shared.historyFilterKeysEnabled {
+                let at = HistorySelection.carry(strips.focus(for: left).selection,
+                                                from: left.apply(to: entries), to: shown)
+                strips.focus(for: picked).land(count: shown.count, at: at ?? 0)
+            } else {
+                strips.focus(for: picked).land(count: shown.count)
+            }
             strips.switched(from: left, to: picked)
         }
     }
@@ -272,6 +314,9 @@ private final class HistoryStripFocus {
     /// Bumped to put the strip back at its start at once, with no scroll
     /// through what lies between. Read only by the strip's scroller.
     var rewinds = 0
+    /// Bumped to bring the focused capture into view at once, with no scroll
+    /// through what lies between. Read only by the strip's scroller.
+    var jumps = 0
     /// The strip was put out of sight and has not been taken back to its
     /// start yet.
     @ObservationIgnored var awayFromStart = false
@@ -283,6 +328,17 @@ private final class HistoryStripFocus {
         let first: Int? = count == 0 ? nil : 0
         if selection != first { selection = first }
         if awayFromStart { rewind() }
+    }
+
+    /// The strip comes into sight focused on `index` (the capture the last
+    /// filter had focused), jumped straight into view. At its first capture
+    /// this is `land(count:)`.
+    func land(count: Int, at index: Int) {
+        guard count > 0, index > 0, index < count else { return land(count: count) }
+        byKeys = false
+        awayFromStart = false
+        if selection != index { selection = index }
+        jumps += 1
     }
 
     /// Back to the start: the newest capture focused and in view.
@@ -488,6 +544,15 @@ private struct HistoryStripScroller: View {
                 var still = Transaction()
                 still.disablesAnimations = true
                 withTransaction(still) { proxy.scrollTo(first, anchor: .leading) }
+            }
+            // The same for a switch that keeps a capture further along, and
+            // only as far as it takes: a capture already in view stays put.
+            .onChange(of: focus.jumps) {
+                pending?.cancel()
+                guard let selection = focus.selection, ids.indices.contains(selection) else { return }
+                var still = Transaction()
+                still.disablesAnimations = true
+                withTransaction(still) { proxy.scrollTo(ids[selection]) }
             }
     }
 }

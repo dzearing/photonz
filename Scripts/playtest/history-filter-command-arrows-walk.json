@@ -1,0 +1,200 @@
+{
+ "out": "/tmp/photonz-playtest/history-filter-command-arrows",
+ "setup": {
+  "forget": [
+   "text",
+   "shapes",
+   "tools"
+  ],
+  "history": 12
+ },
+ "steps": [
+  {
+   "do": "describe",
+   "stage": "why",
+   "note": "The user, 2026-10-10: Command Left and Command Right in the history strip move the All / Screenshots / Videos filter one step, so the videos are one key away; plain Left and Right keep walking the captures. At Next defaults with no flag set, over a made-up history of 12 captures (every third a recording, newest first: Screenshot 0000, Screenshot 0001, Recording 0002, ...), this walk steps the filter both ways with the keys, claims after each step which filter is on and which capture has the keyboard focus (the same capture when the new filter shows it, otherwise its newest), that the filter stops at either end, and that plain arrows walk the new strip straight away."
+  },
+  {
+   "do": "blank",
+   "canvasWidth": 900,
+   "canvasHeight": 600,
+   "width": 1360,
+   "height": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "key",
+   "key": "h",
+   "modifiers": [
+    "command",
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 2
+  },
+  {
+   "do": "expectHistory",
+   "filter": "all",
+   "capture": "Screenshot 0000.png"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "expectHistory",
+   "filter": "all",
+   "capture": "Screenshot 0001.png"
+  },
+  {
+   "do": "appKey",
+   "key": "right",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "screenshots",
+   "focused": "screenshot",
+   "capture": "Screenshot 0001.png"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-screenshots-keeps-the-capture",
+   "window": "Capture History"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "expectHistory",
+   "filter": "screenshots",
+   "capture": "Screenshot 0003.png"
+  },
+  {
+   "do": "appKey",
+   "key": "right",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "videos",
+   "focused": "video",
+   "capture": "Recording 0002.mp4"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-videos",
+   "window": "Capture History"
+  },
+  {
+   "do": "appKey",
+   "key": "right",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "videos",
+   "capture": "Recording 0002.mp4"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "expectHistory",
+   "filter": "videos",
+   "focused": "video",
+   "capture": "Recording 0005.mp4"
+  },
+  {
+   "do": "appKey",
+   "key": "left",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "screenshots",
+   "focused": "screenshot",
+   "capture": "Screenshot 0000.png"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "expectHistory",
+   "filter": "screenshots",
+   "capture": "Screenshot 0003.png"
+  },
+  {
+   "do": "appKey",
+   "key": "left",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "all",
+   "capture": "Screenshot 0003.png"
+  },
+  {
+   "do": "appKey",
+   "key": "left",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "expectHistory",
+   "filter": "all",
+   "capture": "Screenshot 0003.png"
+  },
+  {
+   "do": "appKey",
+   "key": "right"
+  },
+  {
+   "do": "expectHistory",
+   "filter": "all",
+   "capture": "Screenshot 0004.png"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-all-again",
+   "window": "Capture History"
+  },
+  {
+   "do": "hover",
+   "label": "Filter the history by capture type",
+   "window": "Capture History"
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "snapshot",
+   "name": "4-filter-tooltip",
+   "window": "Capture History"
+  }
+ ]
+}

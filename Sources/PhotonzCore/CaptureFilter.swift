@@ -30,6 +30,14 @@ public enum CaptureFilter: String, CaseIterable, Hashable, Sendable, Codable {
     public func apply(to entries: [CaptureEntry]) -> [CaptureEntry] {
         entries.filter { matches($0.kind) }
     }
+
+    /// The segment `delta` steps along from this one, in the order they are
+    /// drawn (⌘← / ⌘→ in the history strip). Stops at either end, no wrap.
+    public func stepped(by delta: Int) -> CaptureFilter {
+        let all = Self.allCases
+        guard let at = all.firstIndex(of: self) else { return self }
+        return all[min(max(0, at + delta), all.count - 1)]
+    }
 }
 
 /// Keyboard selection math for the history strip: moving Left/Right and keeping
@@ -51,5 +59,15 @@ public enum HistorySelection {
     public static func clamp(_ index: Int?, count: Int) -> Int? {
         guard count > 0, let index else { return nil }
         return min(max(0, index), count - 1)
+    }
+
+    /// Where the focus lands when the filter switches from showing `old` to
+    /// showing `new`: on the same capture when `new` has it, otherwise on its
+    /// first. `nil` only when `new` is empty.
+    public static func carry(_ index: Int?, from old: [CaptureEntry], to new: [CaptureEntry]) -> Int? {
+        guard !new.isEmpty else { return nil }
+        guard let index, old.indices.contains(index) else { return 0 }
+        let focused = old[index].id
+        return new.firstIndex { $0.id == focused } ?? 0
     }
 }

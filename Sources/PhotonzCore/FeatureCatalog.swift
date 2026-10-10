@@ -98,6 +98,8 @@ public enum FeatureCatalog {
 
     public static let recentDocumentsFlag = "next-recent-documents"
 
+    public static let historyFilterKeysFlag = "next-history-filter-keys"
+
     public static let windowCaptureFlag = "next-window-capture"
     public static let windowCaptureShadow = "shadow"
 
@@ -1422,6 +1424,16 @@ public enum FeatureCatalog {
                     title: "New Window opens the front door",
                     description: "New Window opens a small window to start from, with Open, four templates and your recent captures, and a template sets the mode and names what the main button makes. Off means an empty window with its card.",
                     area: .canvas,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: historyFilterKeysFlag,
+                    title: "Command arrows switch the history filter",
+                    description: "In the history strip, Command Left and Right step the All, Screenshots and Videos filter, keeping the focus on the same capture when the new filter shows it. Off means Command arrows move between captures like plain arrows.",
+                    area: .capture,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

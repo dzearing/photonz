@@ -421,6 +421,8 @@ extension Experiments {
     /// The documents you open and save are remembered, for the front door's
     /// Recent and File > Open Recent (`next-recent-documents`).
     var recentDocumentsEnabled: Bool { isEnabled(FeatureCatalog.recentDocumentsFlag) }
+    /// ⌘← / ⌘→ in the history strip step its filter (`next-history-filter-keys`).
+    var historyFilterKeysEnabled: Bool { isEnabled(FeatureCatalog.historyFilterKeysFlag) }
 
     /// `next-layer-groups`: whether ⌘G / ⇧⌘G exist, and whether a click on the
     /// canvas picks a whole group (with double click going inside it and Escape

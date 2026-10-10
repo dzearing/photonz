@@ -2375,6 +2375,15 @@ public enum PlaytestTimingCancel: String, CaseIterable, Hashable, Codable, Senda
 
 /// Which part of a bar on the timing strip a `dragTiming` step takes hold of.
 /// What a step claims about the selection chrome on the canvas.
+/// What kind of capture holds the history strip's keyboard focus, for an
+/// `expectHistory` claim.
+public enum PlaytestHistoryFocus: String, CaseIterable, Hashable, Codable, Sendable {
+    case screenshot
+    case video
+    /// No tile is focused: the strip is empty.
+    case none
+}
+
 public enum PlaytestOutlineClaim: String, CaseIterable, Hashable, Codable, Sendable {
     /// The blue box and its handles are drawn.
     case drawn
@@ -3343,6 +3352,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// exactly right (`TutorialLauncher`). Panels do not count, so a callout or
     /// a tooltip floating over a window is never mistaken for one.
     case expectWindows(titled: String, count: Int)
+    /// What the history strip is showing: which filter is picked, what kind
+    /// of capture has the keyboard focus, and which capture by file name.
+    /// Each claim is optional; the step has to make at least one. Read from
+    /// the strip itself, since no picture says which tile has the keys.
+    case expectHistory(filter: CaptureFilter?, focused: PlaytestHistoryFocus?, capture: String?)
     /// What the recording in front of the walk is made of: how many pieces it
     /// is in, which one is picked (1-based, 0 for none), how many of them the
     /// live trim window keeps, and how long that window is. Every claim is
@@ -3973,7 +3987,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4053,6 +4067,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectCorners: "expectCorners"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
+        case .expectHistory: "expectHistory"
         case .expectRecording: "expectRecording"
         case .expectStoredRecording: "expectStoredRecording"
         case .expectTutorialTracks: "expectTutorialTracks"
@@ -4883,6 +4898,24 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("count", "a count of windows is a whole number, zero or more, not \(howMany)")
             }
             self = .expectWindows(titled: titled, count: Int(howMany))
+        case "expectHistory":
+            let filter = try f.optionalString("filter").map {
+                guard let filter = CaptureFilter(rawValue: $0) else {
+                    throw f.invalid("filter", "filter is \"all\", \"screenshots\" or \"videos\"")
+                }
+                return filter
+            }
+            let focused = try f.optionalString("focused").map {
+                guard let kind = PlaytestHistoryFocus(rawValue: $0) else {
+                    throw f.invalid("focused", "focused is \"screenshot\", \"video\" or \"none\"")
+                }
+                return kind
+            }
+            let capture = try f.optionalString("capture")
+            guard filter != nil || focused != nil || capture != nil else {
+                throw f.invalid("filter", "expectHistory has to claim something: the filter picked, the kind of capture focused, or the focused capture's file name")
+            }
+            self = .expectHistory(filter: filter, focused: focused, capture: capture)
         case "expectRecording":
             func whole(_ key: String) throws -> Int? {
                 guard fields[key] != nil else { return nil }

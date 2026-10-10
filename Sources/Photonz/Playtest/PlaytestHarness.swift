@@ -2527,6 +2527,14 @@ private final class Run {
             note(number, step.name, try checkWindows(titled: titled, count: count),
                  state: describe())
 
+        case .expectHistory(let filter, let focused, let capture):
+            // Kept looking: a filter step lands over a frame or two.
+            note(number, step.name,
+                 try await patiently {
+                     try self.checkHistory(filter: filter, focused: focused, capture: capture)
+                 },
+                 state: describe())
+
         case .expectRecording(let pieces, let picked, let keeps, let seconds,
                               let starts, let caught, let playhead):
             note(number, step.name,
@@ -10809,6 +10817,33 @@ private final class Run {
         }
         return "every length in the panel says \(DocumentUnit.word), across \(saying.count) "
             + "readouts: " + saying.joined(separator: ", ")
+    }
+
+    /// The history strip's filter and focus, against a walk's claim.
+    private func checkHistory(filter: CaptureFilter?, focused: PlaytestHistoryFocus?,
+                              capture: String?) throws -> String {
+        guard NSApp.windows.contains(where: { $0.isVisible && $0.title == "Capture History" }),
+              let reading = HistoryOverlayProbe.shared.read?() else {
+            throw Failure(description: "the history strip is not up, so there is no filter or focus to read")
+        }
+        let kind: PlaytestHistoryFocus = switch reading.focused?.kind {
+        case .video: .video
+        case .image: .screenshot
+        case nil: .none
+        }
+        let said = "the filter shows \(reading.filter.rawValue) with the \(reading.showing.rawValue) strip in sight "
+            + "(\(reading.count) captures), focus on "
+            + (reading.focused.map { "\($0.fileName), a \(kind.rawValue)" } ?? "nothing")
+        if let filter, reading.filter != filter || reading.showing != filter {
+            throw Failure(description: "the history filter should be on \(filter.rawValue), but \(said)")
+        }
+        if let focused, kind != focused {
+            throw Failure(description: "the focused capture should be a \(focused.rawValue), but \(said)")
+        }
+        if let capture, reading.focused?.fileName != capture {
+            throw Failure(description: "the focus should be on \(capture), but \(said)")
+        }
+        return said + ", as claimed"
     }
 
     private func checkPanel(_ thing: PlaytestPanelThing, named: String, inRow: String?,

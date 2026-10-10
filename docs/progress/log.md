@@ -21084,3 +21084,10 @@ Next: the first editor window's ~200 ms first build
 - Placement is pure and tested: `RecordingControlPlacement` / `RecordingControlSpot` (nearest-corner memory, clamped into the visible area, pushed out of a recorded region over its nearest edge). Stored under `photonz.recordingControlSpot` (`RecordingControlSpotStore`).
 - A press that begins on Stop is the button's: SwiftUI otherwise hands the button's buffered drag to the control's gesture at release.
 - Walk `the-recording-control-stays-where-you-put-it-walk` (action `recordingControlDrill`, real recordings); focus drill clean; region start drill still PASS (it pins the control top centre for its squares). Full suite hung in Vision/HEIF again; split runs green.
+
+## 2026-10-10 — Command Left and Right switch the history filter
+
+- In the history strip, ⌘→ / ⌘← step All, Screenshots, Videos (no wrap) through the click's own two-frame path; plain arrows still walk captures. Behind `next-history-filter-keys`, on in Next, absent from Current (HistoryOverlay is shared).
+- A filter switch, by key or click, keeps the focused capture when the new filter shows it, else lands on its newest (`HistorySelection.carry`), jumping it into view with no sweep (`HistoryStripFocus.jumps`).
+- New walk step `expectHistory` (filter, focused kind, capture file name), read through `HistoryOverlayProbe`; walk `history-filter-command-arrows-walk`.
+- Full `Scripts/test.sh` hung again in Vision/HEIF; split runs all green. Logged on the open hang task.

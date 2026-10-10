@@ -1,0 +1,27 @@
+{
+  "feature": "Command Left and Right switch the history filter",
+  "epic": "capture-clickthrough",
+  "summary": "In the history strip, Command Right steps the filter All, Screenshots, Videos and Command Left steps back, so your videos are two keys away. The focus stays on the same capture when the new filter shows it, and plain Left and Right keep walking the captures.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/history-filter-command-arrows-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift Command H to open the history." },
+    { "do": "Press Right once, then Command Right: the filter moves to Screenshots and the same screenshot keeps the focus.", "shot": "2026-10-10-history-filter-keys-1-screenshots-keeps-the-capture-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Right again: Videos, with the newest recording focused.", "shot": "2026-10-10-history-filter-keys-2-videos-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Right once more: nothing moves, Videos is the last stop." },
+    { "do": "Press Right, then Return: the recording you walked to opens." },
+    { "do": "Press Command Left twice to come back to All." },
+    { "do": "Rest the pointer on the filter: its tooltip shows the Command arrow keys.", "shot": "2026-10-10-history-filter-keys-4-filter-tooltip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does Command Right then Command Right feel like the quickest way to your videos?",
+    "Is stopping at Videos (rather than wrapping back to All) what your hand expects?",
+    "When you switch, is keeping the same capture focused (when it is in the new filter) better than always jumping to the newest?",
+    "Is the tooltip the right place to learn the keys, or would you not find them there?"
+  ],
+  "rough": [
+    "No mock covers the history strip's keys; the filter looks exactly as before apart from the keys in its tooltip.",
+    "Keeping the focus on the same capture now also applies when you click a filter, not only with the keys, so both ways land in the same place.",
+    "The tooltip shows the two keys after the label; it does not spell out Left and Right in words."
+  ]
+}

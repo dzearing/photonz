@@ -217,7 +217,13 @@ public enum PlaytestLockSafety {
         // toast controller what the corner is saying, so there is no name to
         // look up and nothing for a lock to take away.
         "expectToast",
-        "expectWindows", "hover", "key", "measureMode", "move",
+        "expectWindows",
+        // Added 2026-10-10 by reading, NOT yet watched under a lock: it asks
+        // the history strip itself which filter is picked and which capture
+        // has the keys, never an accessibility name.
+        // history-filter-command-arrows-walk is its watch.
+        "expectHistory",
+        "hover", "key", "measureMode", "move",
         "open", "panel", "pinch",
         // Added 2026-09-28 by reading, NOT yet watched under a lock: it calls
         // the editor's own pinch and reads the frames and numbers the editor
