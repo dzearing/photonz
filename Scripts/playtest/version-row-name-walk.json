@@ -147,6 +147,15 @@
       "seconds": 0.5
     },
     {
+      "comment": "Back to the document before placing a copy: since 2026-10-09 a copy of Save button let go in Save button's own open original is refused, because Done would have folded it into the original.",
+      "do": "action",
+      "action": "doneEditingOriginal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
       "do": "dragTile",
       "tile": "Save button",
       "to": [
@@ -193,7 +202,7 @@
     {
       "do": "describe",
       "stage": "copy-on-a-version",
-      "note": "a copy placed and switched to the other variant: the two originals still read name over variant, and the copy's row now says Disabled under its name too, so a copy left on Default and one switched are no longer the same row"
+      "note": "back in the document, a copy placed and switched to the other variant: its row says Disabled under its name, so a copy left on Default and one switched are no longer the same row"
     },
     {
       "do": "snapshot",

@@ -645,10 +645,21 @@ extension EditorState {
     /// Put the badge back on top. The views under the pointer hand it their
     /// own cursor on every move and every cursor update, in the same turn the
     /// badge went up, so it is set again once they have had their say.
+    ///
+    /// And again a frame or two later. The hover that raised the badge also
+    /// redraws the timeline, and the display pass after that redraw has
+    /// AppKit re-read the cursor under the pointer from SwiftUI's tracking
+    /// areas, which answer with the arrow. That pass lands 30 to 50ms on,
+    /// either side of the next main-queue turn, and no event monitor sees it,
+    /// so with only the one re-set the arrow won about one time in five and
+    /// stayed until the pointer next moved (option-drag-copies-a-clip-walk,
+    /// 2026-10-10).
     private func reassertClipBarCopyCursor() {
         guard clipBarCopyCursorShown else { return }
-        DispatchQueue.main.async { [weak self] in
-            if self?.clipBarCopyCursorShown == true { NSCursor.dragCopy.set() }
+        for delay in [0, 0.1, 0.3] {
+            DispatchQueue.main.asyncAfter(deadline: .now() + delay) { [weak self] in
+                if self?.clipBarCopyCursorShown == true { NSCursor.dragCopy.set() }
+            }
         }
     }
 
