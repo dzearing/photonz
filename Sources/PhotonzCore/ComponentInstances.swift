@@ -681,11 +681,19 @@ extension PhotonzDocument {
             list.map { layer in
                 var copy = layer
                 if let componentID = layer.instanceOf {
+                    // A copy holding on to a combination nobody had drawn takes
+                    // the real drawing the moment it exists, and stops asking.
+                    if let drawn = snapshot.drawnCombination(askedBy: layer),
+                       var group = copy.group {
+                        group.instanceVersion = drawn.id
+                        group.instanceAnswers = []
+                        copy.content = .group(group)
+                    }
                     // The version this copy asked for, while its component
                     // still has it. A version somebody deleted leaves the copy
                     // on one that exists rather than on nothing at all, and is
                     // reported so the app can say so.
-                    var version = layer.instanceVersionID
+                    var version = copy.instanceVersionID
                     if let asked = version,
                        snapshot.componentVersion(of: componentID, id: asked) == nil {
                         version = nil

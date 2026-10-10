@@ -2662,6 +2662,22 @@ struct PlaytestScriptTests {
         #expect(layers.isEmpty)
     }
 
+    @Test("An expectShows step names the drawing the picked copies show")
+    func expectShowsNamesTheDrawing() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectShows", "drawing": "Secondary · Large" } ] }
+        """)
+        guard case .expectShows(let drawing) = script.steps[0] else {
+            Issue.record("expectShows"); return
+        }
+        #expect(drawing == "Secondary · Large")
+        #expect(script.steps[0].name == "expectShows")
+        #expect(PlaytestStep.names.contains("expectShows"))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectShows" } ] }"#)
+        }
+    }
+
     @Test("An expectRegion step claims where the marquee is")
     func expectRegionClaimsTheOutline() throws {
         let script = try decode("""

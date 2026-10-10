@@ -3275,6 +3275,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that separates a page, lets the reading land and presses undo can say
     /// `expectEdited: false` and pin it.
     case expectEdited(Bool)
+    /// Which drawing every picked copy of a component is showing, by the name
+    /// its own menu gives that drawing ("Secondary · Large").
+    ///
+    /// The panel cannot say: on a component asking two questions its rows read
+    /// what the copy ASKED for, and a combination nobody drew shows the
+    /// nearest drawing under those same rows. So a walk that draws the real
+    /// combination afterwards needs this to prove the copy moved onto it.
+    case expectShows(drawing: String)
     /// How many measurements must be on the canvas right now.
     ///
     /// `expectPicked` asks what the app is holding; this asks what it has
@@ -3949,7 +3957,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4072,6 +4080,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectBuilds: "expectBuilds"
         case .expectListStill: "expectListStill"
         case .expectEdited: "expectEdited"
+        case .expectShows: "expectShows"
         case .scrollPanel: "scrollPanel"
         case .wheel: "wheel"
         case .reveal: "reveal"
@@ -5301,6 +5310,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                      ? nil : Int(try f.number("atLeast")))
         case "expectListStill":
             self = .expectListStill(moved: try f.optionalFlag("moved") ?? false)
+        case "expectShows":
+            self = .expectShows(drawing: try f.string("drawing"))
         case "expectEdited":
             self = .expectEdited(try f.optionalFlag("edited") ?? f.optionalFlag("is") ?? true)
         case "expectPicked":

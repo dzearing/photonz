@@ -1,0 +1,27 @@
+{
+  "feature": "A component copy follows its look once it is drawn, and a second question can be removed",
+  "epic": "ui-components",
+  "summary": "A copy set to a Variant and Size pair nobody drew now switches to the real drawing as soon as somebody draws it, with no click. A second question like Size can be taken away again with the minus on its row, and copies drop back to the drawing that matches their remaining answers.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/variant-follows-and-goes-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Drop a Badge, choose Edit Original, add a second Variant called Secondary, then Add > New Variant Property and type Large over Size 2. Press Done." },
+    { "do": "Drop another Badge, pick it and click Large. Nobody drew Default Large, so it shows Secondary · Large as a stand-in.", "shot": "2026-10-10-variant-follows-and-goes-1-stand-in-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose Edit Original, click Default under Variant, choose Add > Another Size and type Large. Press Done." },
+    { "do": "Look at the copy: its label now reads Badge · Default · Large, and you never clicked it.", "shot": "2026-10-10-variant-follows-and-goes-3-follows-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose Edit Original again and click the minus at the end of the Size row (or right-click the row and choose Remove Size).", "shot": "2026-10-10-variant-follows-and-goes-4-remove-row-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: Size and its Large drawings come back. Click the minus again and press Done." },
+    { "do": "Pick the copy: it shows Default and its panel asks Variant alone.", "shot": "2026-10-10-variant-follows-and-goes-6-fell-back-dark-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "When you draw the missing pair, is it right that every copy waiting for it switches straight away, before you press Done on the copy's side?",
+    "Removing Size deletes the Large drawings and keeps the Default ones. Is that what you expect, or would you rather keep them as extra Variant answers?",
+    "Is the minus at the end of the Size row, matching the other property rows, where you would look to take it away?",
+    "After removing Size, does it feel right that only questions added beside the first can be removed, and the first stays?"
+  ],
+  "rough": [
+    "No mock covers taking a question away; the minus copies the panel's own property rows, and a right-click on the row says Remove Size.",
+    "Removing a question leaves the remaining drawings where they stood in the grid, a single column on a page still sized for the grid, rather than laying them out afresh.",
+    "Removing a question is not in the menu bar, and neither is adding one; both live in the Properties section of Edit Original."
+  ]
+}

@@ -1219,6 +1219,20 @@ private struct ComponentVariantPropertyRow: View {
                     .padding(.horizontal, 5)
                     .padding(.vertical, 1)
                     .background(Capsule().fill(.quaternary))
+                // A question added beside the first is taken away the way
+                // every other property row is. The first stays: it is the
+                // component's own looks, not something added to them.
+                if index > 0 {
+                    Button(action: remove) {
+                        Image(systemName: "minus.circle")
+                    }
+                    .buttonStyle(.borderless)
+                    .panelHelp("Take \(property.name) away. Each drawing it told apart folds into its first answer")
+                    .playtestControl("Remove \(property.name)")
+                }
+            }
+            .contextMenu {
+                if index > 0 { Button("Remove \(property.name)", action: remove) }
             }
             VStack(alignment: .leading, spacing: 6) {
                 if isOneOfMany {
@@ -1244,6 +1258,10 @@ private struct ComponentVariantPropertyRow: View {
         }
         .onChange(of: property.name) { _, name in if !focused { draft = name } }
         .onChange(of: editorState.componentVariantPropertyAwaitingName) { _, _ in claimNameIfJustAdded() }
+    }
+
+    private func remove() {
+        editorState.removeComponentVariantProperty(componentID: componentID, property: property.id)
     }
 
     /// Takes the focus a new question hands over, once, with its name selected

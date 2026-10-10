@@ -579,6 +579,25 @@ extension EditorState {
         }
     }
 
+    /// Takes a question after the first away again, Size off a Button asking
+    /// Variant and Size, in one undo step. The drawings that only differed by
+    /// it fold into the one giving its first answer, and a drawing you were on
+    /// that went hands the pick to the one it folded into.
+    func removeComponentVariantProperty(componentID: UUID, property: UUID) {
+        guard componentsEnabled else { return }
+        discardDragPreview()
+        var folded: [UUID: UUID]?
+        let onPage = isEditingOriginal
+        let picked = selectedLayerID
+        perform {
+            folded = $0.removeComponentVariantProperty(componentID: componentID, property: property)
+            if folded != nil, onPage { $0.layOutComponentVariantGridOnPage(componentID: componentID) }
+        }
+        guard let folded, let document, let picked, document.layer(id: picked) == nil,
+              let into = folded[picked] else { return }
+        selectLayer(into, inGroup: document.parentID(of: into))
+    }
+
     /// Renames one of a component's variant questions.
     func renameComponentVariantProperty(of componentID: UUID, property: UUID, to name: String) {
         guard componentsEnabled else { return }

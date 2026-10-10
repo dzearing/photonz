@@ -287,6 +287,82 @@ extension PhotonzDocument {
         return (property, added)
     }
 
+    /// Takes one of a component's questions after the first away again, in one
+    /// mutation, and answers which drawing each drawing that went folded into,
+    /// by layer id. Nil, changing nothing, for the first question (it is the
+    /// component's own looks, not something added beside them) and for a
+    /// question the component does not ask.
+    ///
+    /// Without the question, drawings that only differed by their answer to it
+    /// would be two drawings with the same answers, so each such set keeps ONE:
+    /// the one giving the question's first answer (Default, nearly always),
+    /// else the first in the component's order. The rest go. Every copy of the
+    /// component in this document lands on the drawing giving the answers it
+    /// still has, so a Primary · Large copy shows Primary; a copy in another
+    /// document is brought round the same way when Done writes the page back
+    /// (`returnFromEditingSpace`).
+    @discardableResult
+    public mutating func removeComponentVariantProperty(componentID: UUID,
+                                                        property: UUID) -> [UUID: UUID]? {
+        guard property != componentID else { return nil }
+        let properties = componentVariantProperties(of: componentID)
+        guard let question = properties.first(where: { $0.id == property }) else { return nil }
+        let first = question.options.first?.name
+        let drawings = componentVersions(of: componentID)
+        let staying = properties.map(\.id).filter { $0 != property }
+        func rest(_ drawing: ComponentVersion) -> [UUID: String] {
+            componentVariantAnswers(of: componentID, drawing: drawing).filter { staying.contains($0.key) }
+        }
+        // One drawing per combination of the answers left.
+        var kept: [ComponentVersion] = []
+        for drawing in drawings {
+            let answers = rest(drawing)
+            if let index = kept.firstIndex(where: { rest($0) == answers }) {
+                let gives = componentVariantAnswers(of: componentID, drawing: drawing)[property]
+                let keeps = componentVariantAnswers(of: componentID, drawing: kept[index])[property]
+                if gives == first, keeps != first { kept[index] = drawing }
+            } else {
+                kept.append(drawing)
+            }
+        }
+        var folded: [UUID: UUID] = [:]
+        var foldedVersions: [UUID: UUID] = [:]
+        for drawing in drawings where !kept.contains(drawing) {
+            guard let into = kept.first(where: { rest($0) == rest(drawing) }) else { continue }
+            folded[drawing.layerID] = into.layerID
+            foldedVersions[drawing.id] = into.id
+        }
+        // Where every copy lands, worked out while the drawings it asked about
+        // are all still here to ask.
+        var landing: [UUID: UUID] = [:]
+        for copy in instances(of: componentID) {
+            let answers = instanceVariantAnswers(of: copy.id).filter { staying.contains($0.key) }
+            if let exact = kept.first(where: { rest($0) == answers }) {
+                landing[copy.id] = exact.id
+            } else if let shown = instanceVersion(of: copy.id) {
+                landing[copy.id] = foldedVersions[shown] ?? shown
+            }
+        }
+        settleComponentVersionIdentities(componentID: componentID)
+        removeLayers(ids: Set(folded.keys))
+        for main in mainComponents where main.componentID == componentID {
+            updateLayer(id: main.id) { layer in
+                guard var group = layer.group else { return }
+                group.variantAnswers.removeAll { $0.property == property }
+                layer.content = .group(group)
+            }
+        }
+        for (copy, version) in landing {
+            updateLayer(id: copy) { layer in
+                guard var group = layer.group else { return }
+                group.instanceVersion = version
+                group.instanceAnswers = []
+                layer.content = .group(group)
+            }
+        }
+        return folded
+    }
+
     /// Another drawing of a component that differs from `version` (the first
     /// drawing when nil) on ONE question: it gives that question a fresh
     /// answer, "Size 2", and every other question the answer `version` gives.
@@ -378,9 +454,17 @@ extension PhotonzDocument {
     /// drew that combination. An answer the component no longer offers falls
     /// back to the drawing's own.
     public func instanceVariantAnswers(of instance: UUID) -> [UUID: String] {
-        guard let copy = layer(id: instance), let componentID = copy.instanceOf,
-              let shownID = instanceVersion(of: instance),
-              let shown = componentVersion(of: componentID, id: shownID) else { return [:] }
+        guard let copy = layer(id: instance) else { return [:] }
+        return variantAnswers(askedBy: copy)
+    }
+
+    /// The same, read off the copy itself, so a copy inside an original in the
+    /// library (which `layer(id:)` does not reach) can be asked too.
+    func variantAnswers(askedBy copy: Layer) -> [UUID: String] {
+        guard let componentID = copy.instanceOf else { return [:] }
+        let drawings = componentVersions(of: componentID)
+        guard let shown = drawings.first(where: { $0.id == copy.instanceVersionID }) ?? drawings.first
+        else { return [:] }
         var answers = componentVariantAnswers(of: componentID, drawing: shown)
         let asked = copy.group?.instanceAnswers ?? []
         guard !asked.isEmpty else { return answers }
@@ -391,6 +475,24 @@ extension PhotonzDocument {
             answers[answer.property] = answer.option
         }
         return answers
+    }
+
+    /// The drawing giving every answer a copy asked for, once somebody has drawn
+    /// that combination. Nil for a copy asking for none (it shows a drawing
+    /// that exists already) and for one whose combination is still undrawn,
+    /// which goes on showing the nearest drawing as its stand-in.
+    ///
+    /// The sync asks this of every copy holding on to a combination, so a copy
+    /// set to Secondary · Large while only Primary · Large existed shows the
+    /// real Secondary · Large the moment it is drawn, with nobody picking it
+    /// again.
+    func drawnCombination(askedBy copy: Layer) -> ComponentVersion? {
+        guard let componentID = copy.instanceOf, copy.group?.instanceAnswers.isEmpty == false
+        else { return nil }
+        let wanted = variantAnswers(askedBy: copy)
+        return componentVersions(of: componentID).first {
+            componentVariantAnswers(of: componentID, drawing: $0) == wanted
+        }
     }
 
     /// Gives every copy picked one answer to one question, leaving its other

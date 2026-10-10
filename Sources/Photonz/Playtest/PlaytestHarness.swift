@@ -2500,6 +2500,9 @@ private final class Run {
         case .expectEdited(let edited):
             note(number, step.name, try checkEdited(edited), state: describe())
 
+        case .expectShows(let drawing):
+            note(number, step.name, try checkShows(drawing), state: describe())
+
         case .expectPicked(let layers, let outline):
             note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
@@ -8326,6 +8329,31 @@ private final class Run {
                 : "this window is holding unsaved changes, and the walk says nothing should be unsaved here")
         }
         return edited ? "unsaved changes, as claimed" : "nothing unsaved, as claimed"
+    }
+
+    /// Fails the run unless every picked copy is showing the drawing called
+    /// `drawing`, naming what each one shows instead.
+    private func checkShows(_ drawing: String) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "there is no document to ask")
+        }
+        let copies = editor.orderedSelectedLayerIDs.compactMap { id -> (Layer, ComponentVersion?)? in
+            guard let copy = document.layer(id: id), let componentID = copy.instanceOf else { return nil }
+            let shown = document.instanceVersion(of: id)
+                .flatMap { document.componentVersion(of: componentID, id: $0) }
+            return (copy, shown)
+        }
+        guard !copies.isEmpty else {
+            throw Failure(description: "no copy of a component is picked, so nothing can be showing \(drawing)")
+        }
+        let wrong = copies.filter { $0.1?.name != drawing }
+        guard wrong.isEmpty else {
+            let found = wrong.map { "\($0.0.name) shows \($0.1?.name ?? "nothing")" }
+            throw Failure(description: "the walk says every picked copy shows \(drawing), but \(found.joined(separator: ", "))")
+        }
+        return copies.count == 1 ? "\(copies[0].0.name) shows \(drawing), as claimed"
+                                 : "all \(copies.count) picked copies show \(drawing), as claimed"
     }
 
     /// Fails the run unless the icon previews strip is showing exactly these

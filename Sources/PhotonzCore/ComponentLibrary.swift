@@ -288,6 +288,7 @@ extension PhotonzDocument {
                                                dy: -drawings[0].frame.origin.y)
             drawings[0].children.append(child)
         }
+        let landing = copiesLanding(componentID: componentID, in: space)
         adoptStyles(from: space)
         let slot = componentOriginals.firstIndex { $0.componentID == componentID }
         let before = slot.map { componentOriginals[..<$0].count { $0.componentID != componentID } }
@@ -296,6 +297,40 @@ extension PhotonzDocument {
         library.insert(contentsOf: drawings, at: at)
         componentOriginals = library
         for other in others { addOriginal(other) }
+        for (copy, version) in landing {
+            updateLayer(id: copy) { layer in
+                guard var group = layer.group else { return }
+                group.instanceVersion = version
+                group.instanceAnswers = []
+                layer.content = .group(group)
+            }
+        }
+    }
+
+    /// Where each copy of a component goes when the page coming back no longer
+    /// holds the drawing it shows, because a question was taken away there
+    /// and the drawings that only differed by it folded into one: the drawing
+    /// on the page giving every answer the copy still has, so a Secondary ·
+    /// Large copy shows Secondary rather than the component's first look.
+    ///
+    /// A copy with no such drawing is left out, and the sync puts it on the
+    /// first look and says so, exactly as it does for a look that was deleted.
+    private func copiesLanding(componentID: UUID, in space: PhotonzDocument) -> [UUID: UUID] {
+        let drawings = space.componentVersions(of: componentID)
+        let asked = space.componentVariantProperties(of: componentID).map(\.id)
+        guard !asked.isEmpty else { return [:] }
+        var landing: [UUID: UUID] = [:]
+        for copy in instances(of: componentID) {
+            guard let shown = instanceVersion(of: copy.id),
+                  !drawings.contains(where: { $0.id == shown }) else { continue }
+            let still = instanceVariantAnswers(of: copy.id).filter { asked.contains($0.key) }
+            guard still.count == asked.count,
+                  let match = drawings.first(where: {
+                      space.componentVariantAnswers(of: componentID, drawing: $0) == still
+                  }) else { continue }
+            landing[copy.id] = match.id
+        }
+        return landing
     }
 
     /// The named styles an editing space changed, replayed on this document
