@@ -118,6 +118,7 @@ extension EditorState {
         if isSearchingLayers {
             return document?.layerRows(matching: layerSearchQuery, selected: selected,
                                        saysItsWords: Experiments.shared.rowSaysItsWordsEnabled,
+                                       saysLayout: Experiments.shared.autoLayoutEnabled,
                                        separations: separationLeftovers,
                                        readWords: readWordsForRows) ?? []
         }
@@ -128,6 +129,9 @@ extension EditorState {
             // that says a container has cut something off ships with it.
             marksOutOfView: Experiments.shared.autoLayoutEnabled,
             saysItsWords: Experiments.shared.rowSaysItsWordsEnabled,
+            // Row, column, hug, fill and fixed under the names: auto layout's
+            // own words, so they ship with it.
+            saysLayout: Experiments.shared.autoLayoutEnabled,
             // What a separation left in each picture, kept where the pill
             // cannot: the picture's own row (`next-what-a-separation-left-behind`).
             // Empty until something has actually been separated, so an ordinary

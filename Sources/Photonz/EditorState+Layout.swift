@@ -384,9 +384,18 @@ extension EditorState {
 
     /// Whether Layer ▸ Stack Selection would do anything: one group to convert,
     /// or several layers to wrap up and arrange.
-    var canStackSelection: Bool {
+    var canStackSelection: Bool { canStack(ids: actionableLayerIDs) }
+
+    /// Whether the layer row menu's Stack Selection has something to stack:
+    /// the whole selection when the clicked row is in it, else that row alone,
+    /// which stacks when it is a group (`rowMenuTargets`).
+    func canStackRow(id: UUID) -> Bool { canStack(ids: rowMenuTargets(id)) }
+
+    /// The layer row menu's Stack Selection, on the same targets as Group.
+    func stackRow(id: UUID) { stack(ids: rowMenuTargets(id), .stack) }
+
+    private func canStack(ids: Set<UUID>) -> Bool {
         guard Experiments.shared.autoLayoutEnabled, let document else { return false }
-        let ids = actionableLayerIDs
         return document.canSetGroupLayout(ids: ids) || document.canGroup(ids: ids)
     }
 
@@ -423,9 +432,10 @@ extension EditorState {
     /// separately, the first ⌘Z handed back the outline and left the stack
     /// standing, which reads as undo doing nothing at all (reported
     /// 2026-09-08).
-    func stackSelection(_ kind: GroupLayoutKind) {
-        guard canStackSelection else { return }
-        let ids = actionableLayerIDs
+    func stackSelection(_ kind: GroupLayoutKind) { stack(ids: actionableLayerIDs, kind) }
+
+    private func stack(ids: Set<UUID>, _ kind: GroupLayoutKind) {
+        guard canStack(ids: ids) else { return }
         discardDragPreview()
         var madeID: UUID?
         perform { madeID = $0.stackSelection(ids: ids, kind: kind) }

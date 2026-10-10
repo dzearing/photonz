@@ -5,11 +5,11 @@
   "epic": "ui-layout",
   "priority": "p2-normal",
   "seq": 8,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.312Z",
-  "updated": "2026-10-10T02:37:52.439Z",
+  "updated": "2026-10-10T08:13:59.259Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/ui-autolayout.html #layerMenu ('Wrap in auto-layout' first) and row meta lmeta ~223, ~472-476. Code: panel menu rows Sources/PhotonzCore/LayersPanelHeader.swift ~43-46; right-click Sources/Photonz/LayerCommandMenu.swift ~184-188, 224 (Group, Ungroup, Make Component, no stack); menu bar only at Sources/Photonz/EditorCommands.swift ~1958. Row second line Sources/Photonz/LayersRow.swift ~75-100, 283-297. Keep the second line short (UX-PATTERNS section 4). Mind the open card on Layers order in a column (a-column-lists-its-rows-in-the-order-the-user-ch): do not change row order here.",
@@ -28,6 +28,32 @@
     {
       "t": "2026-10-10T02:37:52.438Z",
       "note": "seq 4030 -> 8"
+    },
+    {
+      "t": "2026-10-10T07:52:05.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T07:54:13.059Z",
+      "note": "Adversarial review before building: (1) the mock's panel menu row is 'Wrap in auto-layout ⇧A'; the app's command is Layer > Stack Selection on Control Command G, and the acceptance asks the panel and right-click rows to match the menu bar, so both say Stack Selection with ⌃⌘G (⇧A is a Figma key and would collide with nothing-modifier typing on the canvas). Grid Selection stays menu-bar only: the mock has one row. (2) A Figma or Photoshop user expects the layer menu and right click to carry the structure verb beside Group; right click puts Stack Selection directly under Group/Ungroup. (3) The mock prints the word at the row's right end in mono; the app prints row notes under the name because a chip beside the name starved it of width (2026-09-07), and this task asks for the second line. (4) A component original that is also a stack would carry two second lines; the layout word joins the component note on one line so the row does not grow. (5) Child words read along the way the stack runs: fill when set to Fill the Row/Stack, hug for text sized by its words and groups sized by their contents, fixed for everything with a drawn size. Grid children say nothing (a cell decides them). (6) Row order untouched, per the open card on column order."
+    },
+    {
+      "t": "2026-10-10T08:13:54.402Z",
+      "note": "owns these walks: layers-rows-say-row-or-column-walk, layers-rows-stack-by-right-click-walk"
+    },
+    {
+      "t": "2026-10-10T08:13:54.462Z",
+      "note": "Built: StackRowNote (PhotonzCore/StackRowNote.swift) on LayerRowDisplay.layoutNote, drawn under the name in LayersRow (mono 9.5, secondary, joins the component note on one line); Stack Selection first in LayersPanelHeader.MenuRow (⌃⌘G, Modifier.control added) and under Group/Ungroup in LayerCommandList (canStackRow/stackRow on rowMenuTargets); the menu bar row reads the same constant. Verified: StackRowNoteTests (13) + updated LayersPanelHeaderTests, full suite 12202 tests green; new walks layers-rows-say-row-or-column-walk and layers-rows-stack-by-right-click-walk green at Next defaults with real captures; neighbours layers-menu-icon-rows, layers-header-make-component, mirror-across-center, undo-hands-back-the-pick green. Rough items: mock wording and word placement went to follow-up the-layers-list-says-stack-words-the-way-the-aut with a decision card (blocked on it); accent on a picked row left grey for legibility (user rule 2026-09-30), stays in this log. Left rough, not filed: a piece stretched behind a stack or floated in front says nothing, and grid pieces say nothing, because neither is sized by a flow; the panel menu reader prints a leading divider before the first row (pre-existing, seen in older logs, not visible on screen)."
+    },
+    {
+      "t": "2026-10-10T08:13:59.257Z",
+      "note": "Stack Selection is the first row of the Layers panel menu and in a layer row's right-click menu (⌃⌘G, the menu bar's name); stacked groups say row/column/grid and their pieces hug/fill/fixed on the row's second line; plain groups unchanged. Verified by StackRowNoteTests, full suite (12202 green), and walks layers-rows-say-row-or-column-walk + layers-rows-stack-by-right-click-walk at Next defaults. Audit queue/audits/2026-10-10-layers-rows-say-row-or-column.json; mock wording/placement on card in follow-up the-layers-list-says-stack-words-the-way-the-aut."
     }
-  ]
+  ],
+  "started": "2026-10-10T07:52:05.650Z",
+  "walks": [
+    "layers-rows-say-row-or-column-walk",
+    "layers-rows-stack-by-right-click-walk"
+  ],
+  "completed": "2026-10-10T08:13:59.258Z"
 }

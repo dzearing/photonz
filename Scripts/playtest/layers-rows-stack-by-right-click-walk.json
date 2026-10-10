@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/layers-rows-stack-by-right-click-walk",
+  "seed": "Stack Selection from a layer row's right-click menu, at Next defaults with no flags, under the same name and key as the Layers panel menu and Layer > Stack Selection. Two boxes side by side are picked, a right click on one of their rows offers Stack Selection directly under Group, and choosing it lines them up in a row whose group row says row and whose boxes say fixed.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1240, "height": 900 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 300], "to": [300, 380] },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [320, 300], "to": [420, 380] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLayers", "count": 3 },
+    { "do": "selectRow", "row": "Rectangle" },
+    { "do": "selectRow", "row": "Rectangle 2", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "rightClick", "on": "Rectangle", "shot": "1-row-menu", "choose": "Stack Selection" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectLayers", "count": 4 },
+    { "do": "expect", "row": "Group", "reads": "group, shut, row" },
+    { "do": "press", "control": "Twist", "in": "Group" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expect", "row": "Group", "reads": "group, open, row" },
+    { "do": "expect", "row": "Rectangle", "reads": "layer, fixed" },
+    { "do": "describe", "stage": "2-stacked", "note": "the row's right-click Stack Selection lined the two boxes up in a row: the group says row, each box says fixed" },
+    { "do": "snapshot", "name": "2-stacked" }
+  ]
+}

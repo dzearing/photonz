@@ -51,6 +51,7 @@ extension PhotonzDocument {
     /// it.
     public func layerRows(matching query: String, selected: Set<UUID>,
                           saysItsWords: Bool = true,
+                          saysLayout: Bool = true,
                           separations: [ImageRef: SeparationLeftover] = [:],
                           readWords: [ImageRef: String] = [:]) -> [LayerRowDisplay] {
         guard !LayerSearch.normalized(query).isEmpty else { return [] }
@@ -62,7 +63,7 @@ extension PhotonzDocument {
         // walk can do.
         return layerRows(expanded: openableGroupIDs, selected: selected,
                          marksOutOfView: false, saysItsWords: saysItsWords,
-                         separations: separations, readWords: readWords)
+                         saysLayout: saysLayout, separations: separations, readWords: readWords)
             .filter { LayerSearch.matches(name: $0.name, query: query) }
             .map { display in
                 LayerRowDisplay(
@@ -85,7 +86,10 @@ extension PhotonzDocument {
                     // The mask line rides with the row: it names the other
                     // layer outright, so it still says what happened to a
                     // layer found by name and drawn away from its neighbours.
-                    maskNote: display.maskNote)
+                    maskNote: display.maskNote,
+                    // Row, column, hug: still true of a layer found by name,
+                    // and the only place a flat result can say it.
+                    layoutNote: display.layoutNote)
             }
     }
 }

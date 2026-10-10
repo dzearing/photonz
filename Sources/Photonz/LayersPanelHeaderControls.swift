@@ -47,7 +47,8 @@ private struct MakeComponentHeaderButton: View {
 }
 
 /// The three dots at the end of the Layers header (`components.html` and
-/// `icon-draw-wt.html`, `#layerMenu`): Group Selection, Mirror Across Center,
+/// `icon-draw-wt.html`, `#layerMenu`): Stack Selection (`ui-autolayout.html`
+/// puts it first), Group Selection, Mirror Across Center,
 /// Center on the Artboard, Union, Outline Stroke, Make Component, and Hide This
 /// Panel. Each is its menu bar twin, under the same name and on the same key.
 private struct LayersPanelMenu: View {
@@ -103,6 +104,7 @@ private struct LayersPanelMenu: View {
     private var rows: [LayersPanelHeader.MenuRow] {
         LayersPanelHeader.MenuRow.allCases.filter { row in
             switch row {
+            case .stackSelection: Experiments.shared.autoLayoutEnabled
             case .groupSelection: Experiments.shared.layerGroupsEnabled
             case .mirrorAcrossCenter: editorState.offersMirrorAcrossCenter
             case .centerOnArtboard: editorState.offersIconShapeCommands
@@ -115,6 +117,7 @@ private struct LayersPanelMenu: View {
 
     private func canPerform(_ row: LayersPanelHeader.MenuRow) -> Bool {
         switch row {
+        case .stackSelection: editorState.canStackSelection
         case .groupSelection: editorState.canGroupSelection
         case .mirrorAcrossCenter: editorState.canMirrorSelectionAcrossCenter
         case .centerOnArtboard: editorState.canCenterSelectionOnArtboard
@@ -127,6 +130,7 @@ private struct LayersPanelMenu: View {
 
     private func perform(_ row: LayersPanelHeader.MenuRow) {
         switch row {
+        case .stackSelection: editorState.stackSelection(.stack)
         case .groupSelection: editorState.groupSelection()
         case .mirrorAcrossCenter: editorState.mirrorSelectionAcrossCenter()
         case .centerOnArtboard: editorState.centerSelectionOnArtboard()
@@ -137,10 +141,12 @@ private struct LayersPanelMenu: View {
         }
     }
 
-    /// The mock's `ic-group`, `ic-flip-horizontal`, `ic-align-center-h`,
+    /// The mock's `ic-frame`, `ic-group`, `ic-flip-horizontal`, `ic-align-center-h`,
     /// `ic-boolean-union`, `ic-flatten`, `ic-component` and `ic-sidebar`.
     private static func icon(_ row: LayersPanelHeader.MenuRow) -> Image {
         switch row {
+        // Three bars in a line, the frame that lines its contents up.
+        case .stackSelection: Image(systemName: "rectangle.split.3x1")
         case .groupSelection: Image(systemName: "rectangle.3.group")
         // The mock's `ic-flip-horizontal`.
         case .mirrorAcrossCenter: Image(systemName: "arrow.left.and.right.righttriangle.left.righttriangle.right")
@@ -177,6 +183,7 @@ private struct LayersPanelMenu: View {
             case .command: modifiers.insert(.command)
             case .option: modifiers.insert(.option)
             case .shift: modifiers.insert(.shift)
+            case .control: modifiers.insert(.control)
             }
         }
         return KeyboardShortcut(KeyEquivalent(shortcut.key), modifiers: modifiers)

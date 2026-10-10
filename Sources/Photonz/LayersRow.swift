@@ -104,6 +104,11 @@ struct LayersRow: View, Equatable {
         if let mask = display.maskNote {
             parts.append(mask.text)
         }
+        // Row, column, hug, fill: the words under the name, so a walk can read
+        // the layout off the list the way a person does.
+        if let layout = display.layoutNote {
+            parts.append(layout.text)
+        }
         return parts.joined(separator: ", ")
     }
     private var indent: CGFloat { CGFloat(display.row.depth) * LayerRowDragSession.indentPerLevel }
@@ -294,12 +299,20 @@ struct LayersRow: View, Equatable {
             // is a nine point mark (2026-09-13). One word says which one you
             // are about to edit, and the version a drawing is showing rides on
             // the end of it rather than taking a line of its own.
-            if componentsEnabled, let note = display.componentNote {
-                Text(note.text)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                    .panelHelp(note.help(rowName: display.name))
+            // A component that is also a stack says both on the one line, so
+            // the row is no taller for it: "Original" and then "row".
+            let component = componentsEnabled ? display.componentNote : nil
+            if component != nil || display.layoutNote != nil {
+                HStack(spacing: 4) {
+                    if let note = component {
+                        Text(note.text)
+                            .font(.caption2)
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .panelHelp(note.help(rowName: display.name))
+                    }
+                    if let layout = display.layoutNote { layoutNote(layout) }
+                }
             }
             // What Separate into Layers left in THIS picture, kept where the
             // notice pill cannot keep it (`SeparationLeftover`). The count
@@ -324,6 +337,21 @@ struct LayersRow: View, Equatable {
             // looks exactly as it did, thumbnail and all (`LayerMaskNote`).
             if let mask = display.maskNote { maskNote(mask) }
         }
+    }
+
+    /// How auto layout treats this row (`StackRowNote`): row, column or grid
+    /// on a group that arranges itself, hug, fill or fixed on a piece of a
+    /// stack. The mock's quiet mono word (`ui-autolayout.html` `.lmeta`), so
+    /// the layout reads down the list without picking each thing. The mock
+    /// turns it accent on a picked row; here it stays the secondary label
+    /// colour, because nine points of accent over the row's own accent wash
+    /// is the kind of pairing that stops being legible.
+    private func layoutNote(_ note: StackRowNote) -> some View {
+        Text(note.text)
+            .font(.system(size: 9.5, design: .monospaced))
+            .foregroundStyle(.secondary)
+            .lineLimit(1)
+            .panelHelp(note.help)
     }
 
     /// The line that says this row is half of a mask, with an arrow saying

@@ -27,7 +27,7 @@ public enum LayersPanelHeader {
 
     /// A key a row answers to. Plain data, so the core never names a UI type.
     public struct Shortcut: Equatable, Sendable {
-        public enum Modifier: Sendable { case command, option, shift }
+        public enum Modifier: Sendable { case command, option, shift, control }
         public let key: Character
         public let modifiers: [Modifier]
 
@@ -37,17 +37,20 @@ public enum LayersPanelHeader {
         }
     }
 
-    /// The panel menu, top down. Mirror Across Center and Center on the
+    /// The panel menu, top down. Stack Selection opens it, where
+    /// `ui-autolayout.html` `#layerMenu` puts its "Wrap in auto-layout", in the
+    /// Layer menu's words. Mirror Across Center and Center on the
     /// Artboard sit under Group Selection, then a divider and Union and
     /// Outline Stroke, where `icon-draw-wt.html` `#layerMenu` puts them.
     public enum MenuRow: CaseIterable, Sendable {
-        case groupSelection, mirrorAcrossCenter, centerOnArtboard
+        case stackSelection, groupSelection, mirrorAcrossCenter, centerOnArtboard
         case union, outlineStroke
         case makeComponent, hidePanel
 
         /// The mock's words in the menu bar's Title Case.
         public var title: String {
             switch self {
+            case .stackSelection: Self.stackTitle
             case .groupSelection: "Group Selection"
             case .mirrorAcrossCenter: MirrorAcrossCenter.title
             case .centerOnArtboard: CenterOnArtboard.title
@@ -61,6 +64,7 @@ public enum LayersPanelHeader {
         /// The key the menu bar row for the same command answers to.
         public var shortcut: Shortcut? {
             switch self {
+            case .stackSelection: Shortcut(key: "g", modifiers: [.control, .command])
             case .groupSelection: Shortcut(key: "g", modifiers: [.command])
             // On a picture or an icon only: on a video ⇧⌘M is Go to Previous
             // Marker, and the app leaves this row out there.
@@ -75,6 +79,10 @@ public enum LayersPanelHeader {
             case .hidePanel: nil
             }
         }
+
+        /// Layer > Stack Selection, the right-click row and this one: one name
+        /// in all three places.
+        public static let stackTitle = "Stack Selection"
 
         /// Whether a divider goes above the row: one above the two that remake
         /// an outline, as the icon mock draws it, one above Make Component,

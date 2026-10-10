@@ -187,6 +187,14 @@ enum LayerCommandList {
         if editorState.canUngroupRow(id: id) {
             rows.append(.command("Ungroup", .commandShift("g")) { editorState.ungroupRow(id: id) })
         }
+        // Right under them, as in the Layer menu: a stack is a group that
+        // arranges itself, so it is reached for at the same moment
+        // (`ui-autolayout.html` puts it first in the Layers menu too).
+        if editorState.canStackRow(id: id) {
+            rows.append(.command(LayersPanelHeader.MenuRow.stackTitle, .commandControl("g")) {
+                editorState.stackRow(id: id)
+            })
+        }
         rows.append(.command("Bring to Front", .commandShift("]")) { editorState.bringLayerToFront(id: id) })
         rows.append(.command("Bring Forward", .command("]")) { editorState.bringLayerForward(id: id) })
         rows.append(.command("Send Backward", .command("[")) { editorState.sendLayerBackward(id: id) })

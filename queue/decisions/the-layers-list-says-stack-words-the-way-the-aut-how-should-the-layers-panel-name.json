@@ -1,0 +1,52 @@
+{
+  "id": "the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name",
+  "taskId": "the-layers-list-says-stack-words-the-way-the-aut",
+  "question": "How should the Layers panel name stacking, and where should a row's row, column, hug, fill or fixed word sit?",
+  "context": "Built 2026-10-10: Stack Selection is the first row of the Layers panel menu and in a row's right-click menu, and every row of a stack says row, column, hug, fill or fixed under its name. The auto-layout mock words the menu row 'Wrap in auto-layout' and puts the word at the row's right end.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep Stack Selection, word under the name",
+      "summary": "Every menu says Stack Selection on Control Command G, and the small word sits on the quiet line under the layer name, like the other notes the list already writes there.",
+      "pros": [
+        "One name in the menu bar, the Layers menu and right click",
+        "The name keeps the whole width of the row"
+      ],
+      "cons": [
+        "Differs from the mock in words and in where the word sits"
+      ],
+      "mitigation": "The mock is kept as drawn; the app records this as your choice.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Wrap in Auto Layout everywhere, word at the row end",
+      "summary": "The menu bar, the Layers menu and right click all say Wrap in Auto Layout, and the word moves to the right end of the row in front of the lock and eye, as the mock draws it.",
+      "pros": [
+        "Matches the mock exactly",
+        "Figma users know the words"
+      ],
+      "cons": [
+        "Long names cut off sooner in a narrow dock",
+        "Auto Layout is a word nothing else in the app uses"
+      ],
+      "mitigation": "The word stays at most six letters, so it takes about as much room as the padlock."
+    },
+    {
+      "id": "c",
+      "label": "Keep Stack Selection, word at the row end",
+      "summary": "The command keeps its menu bar name, and only the small word moves to the right end of the row, as the mock draws it.",
+      "pros": [
+        "The layout reads in one column down the right of the list",
+        "Menus stay as they are"
+      ],
+      "cons": [
+        "Long names cut off sooner in a narrow dock"
+      ],
+      "mitigation": "The word hides first when the row is too narrow for both."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-10T08:13:30.488Z"
+}

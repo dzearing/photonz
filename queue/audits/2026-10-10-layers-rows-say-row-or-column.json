@@ -1,0 +1,49 @@
+{
+  "feature": "The Layers panel knows a group is a row or a column",
+  "epic": "ui-layout",
+  "summary": "You can stack picked layers from the Layers panel menu or a row's right-click menu, and the Layers list now says under each name what auto layout does: row, column or grid on the stack, and hug, fill or fixed on each piece inside it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: layers-rows-say-row-or-column-walk and layers-rows-stack-by-right-click-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw two rectangles side by side and type a short label after them."
+    },
+    {
+      "do": "Pick all three in the Layers list, then choose Stack Selection, the first row of the three dots menu on the Layers header."
+    },
+    {
+      "do": "Open the new group's twist and read the words under each name: row on the group, fixed on the boxes, hug on the label.",
+      "shot": "2026-10-10-layers-rows-say-row-or-column-2-stacked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Switch to light mode and read the same words.",
+      "shot": "2026-10-10-layers-rows-say-row-or-column-2b-light-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Undo, pick two layers again and right click one of their rows: Stack Selection sits under Group, on Control Command G.",
+      "shot": "2026-10-10-layers-rows-say-row-or-column-1-row-menu-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Change the stack's Direction to Column in the Layout section and watch the group's word follow."
+    },
+    {
+      "do": "Group some layers with Command G instead: those rows say nothing about layout."
+    }
+  ],
+  "evaluate": [
+    "Can you read how a stack is built from the Layers list alone, without picking each piece?",
+    "Is the small mono word under the name quiet enough, or does it compete with the name?",
+    "Does Stack Selection belong first in the Layers menu, above Group Selection, as the mock has it?",
+    "Is 'fixed' the right word for a picture or a shape inside a stack, or would 'size' or nothing read better?"
+  ],
+  "rough": [
+    "The mock's panel row reads 'Wrap in auto-layout' on Shift A; the app says 'Stack Selection' on Control Command G, the menu bar's own name and key. Your call on card the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name.",
+    "The mock prints the word at the row's right end; the app prints it under the name, where every other row note goes. Your call on card the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name.",
+    "The mock turns a picked row's word accent; here it stays grey, because nine points of accent over the row's accent wash is not reliably legible (your rule on 2026-09-30: text is always legible).",
+    "Pieces of a grid say nothing, since a cell decides their size; the mock draws no grid, so nothing there to match.",
+    "A surface stretched behind a stack, or a piece floated in front, says nothing either: it is not one of the pieces the stack lines up."
+  ]
+}

@@ -37,6 +37,10 @@ struct MenuShortcut {
         MenuShortcut(key: key, modifiers: [.command, .option])
     }
 
+    static func commandControl(_ key: Character) -> MenuShortcut {
+        MenuShortcut(key: key, modifiers: [.command, .control])
+    }
+
     /// ⌘⌫. Both characters draw as ⌫; only U+0008 is what AppKit matches a
     /// real press against, so that is what a row carries once
     /// `next-menu-keys-do-what-they-say` is on (`DeleteKeyCharacters`).

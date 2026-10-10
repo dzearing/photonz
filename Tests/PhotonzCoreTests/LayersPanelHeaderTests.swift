@@ -22,18 +22,23 @@ import Testing
         // The icon rows as `icon-draw-wt.html` draws the same menu: Mirror
         // Across Center and Center on the Artboard under Group Selection, then
         // a divider and the two that remake a shape's outline.
+        // Stack Selection first, where `ui-autolayout.html` `#layerMenu` puts
+        // its "Wrap in auto-layout", in the menu bar's words.
         #expect(LayersPanelHeader.MenuRow.allCases.map(\.title)
-            == ["Group Selection", "Mirror Across Center", "Center on the Artboard",
+            == ["Stack Selection", "Group Selection", "Mirror Across Center", "Center on the Artboard",
                 "Union", "Outline Stroke", "Make Component", "Hide This Panel"])
         // Dividers before Union, before Make Component, and before Hide, which
         // acts on the window rather than the layers.
         #expect(LayersPanelHeader.MenuRow.allCases.map(\.startsSection)
-            == [false, false, false, true, false, true, true])
+            == [false, false, false, false, true, false, true, true])
     }
 
     @Test func eachRowCarriesTheKeyItsMenuBarTwinAnswersTo() {
         #expect(LayersPanelHeader.MenuRow.groupSelection.shortcut
             == .init(key: "g", modifiers: [.command]))
+        // One modifier off grouping, as Layer > Stack Selection has it.
+        #expect(LayersPanelHeader.MenuRow.stackSelection.shortcut
+            == .init(key: "g", modifiers: [.control, .command]))
         #expect(LayersPanelHeader.MenuRow.makeComponent.shortcut
             == .init(key: "k", modifiers: [.option, .command]))
         // The mock's keys for Union and Outline Stroke.

@@ -441,6 +441,10 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
     /// so without this line the row of a layer that has vanished from the
     /// canvas looks exactly as it did.
     public let maskNote: LayerMaskNote?
+    /// What auto layout makes of this row (`StackRowNote`): row, column or
+    /// grid on a group that arranges itself, hug, fill or fixed on a piece of a
+    /// stack. Nil on every row nobody stacked, which is nearly all of them.
+    public let layoutNote: StackRowNote?
 
     public var id: UUID { row.id }
 
@@ -454,7 +458,9 @@ public struct LayerRowDisplay: Identifiable, Hashable, Sendable {
                 isSound: Bool = false,
                 isCaptions: Bool = false,
                 piecesNote: ClipPiecesNote? = nil,
-                maskNote: LayerMaskNote? = nil) {
+                maskNote: LayerMaskNote? = nil,
+                layoutNote: StackRowNote? = nil) {
+        self.layoutNote = layoutNote
         self.isCaptions = isCaptions
         self.maskNote = maskNote
         self.piecesNote = piecesNote
@@ -491,6 +497,9 @@ extension PhotonzDocument {
     /// named by hand wear its own words instead of the number the app gave it
     /// (`Layer.displayName`). With it off every row says exactly what it is
     /// stored as, which is what Current shows.
+    /// `saysLayout` is the Next auto-layout flag again: with it on, a group
+    /// that arranges itself says row, column or grid under its name and each
+    /// piece of a stack says hug, fill or fixed (`StackRowNote`).
     /// `readWords` is what the app has read off the pictures beside it: a
     /// separated run of text is a picture of words, so its row wears the words
     /// that were read rather than the number the command gave it
@@ -499,6 +508,7 @@ extension PhotonzDocument {
     public func layerRows(expanded: Set<UUID>, selected: Set<UUID>,
                           marksOutOfView: Bool = true,
                           saysItsWords: Bool = true,
+                          saysLayout: Bool = true,
                           separations: [ImageRef: SeparationLeftover] = [:],
                           readWords: [ImageRef: String] = [:]) -> [LayerRowDisplay] {
         var rows: [LayerRowDisplay] = []
@@ -524,7 +534,7 @@ extension PhotonzDocument {
         func naming(_ layer: Layer) -> String {
             saysItsWords ? layer.displayName(readWords: readWords) : layer.name
         }
-        func walk(_ list: [Layer], depth: Int, parent: UUID?, clips: [ClipScope]) {
+        func walk(_ list: [Layer], depth: Int, parent: Layer?, clips: [ClipScope]) {
             // By index rather than by element: a mask is a fact about a layer
             // and its NEIGHBOURS, so the row has to know where in its own
             // sibling list it sits.
@@ -575,7 +585,7 @@ extension PhotonzDocument {
                 rows.append(LayerRowDisplay(
                     row: LayerPanelRow(id: layer.id, depth: depth, isGroup: openable,
                                        childCount: openable ? layer.children.count : 0,
-                                       isExpanded: open, parentID: parent),
+                                       isExpanded: open, parentID: parent?.id),
                     // Not `layer.name`: a piece of text nobody has renamed by
                     // hand says the words it holds (`Layer.displayName`).
                     name: naming(layer),
@@ -611,8 +621,11 @@ extension PhotonzDocument {
                     // Which half of a mask this row is, if either. Two index
                     // checks on a row with no mask anywhere near it, and the
                     // neighbour is only named when there is one.
-                    maskNote: LayerMaskNote.forRow(in: list, at: index, naming: naming)))
-                if open { walk(layer.children, depth: depth + 1, parent: layer.id, clips: inner) }
+                    maskNote: LayerMaskNote.forRow(in: list, at: index, naming: naming),
+                    // Two optional reads on a row nobody stacked: whether it
+                    // has a layout of its own and whether its parent does.
+                    layoutNote: saysLayout ? StackRowNote.forRow(layer, in: parent) : nil))
+                if open { walk(layer.children, depth: depth + 1, parent: layer, clips: inner) }
             }
         }
         walk(layers, depth: 0, parent: nil, clips: [])

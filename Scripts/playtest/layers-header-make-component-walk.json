@@ -110,7 +110,7 @@
     {
       "do": "panelMenu",
       "menu": "Layers Menu",
-      "comment": "Read without opening: seven rows (Mirror Across Center joined on 2026-10-09, then Center on the Artboard, Union and Outline Stroke), dividers above Union, Make Component and Hide This Panel, Make Component lit for a picked group."
+      "comment": "Read without opening: eight rows (Stack Selection first since 2026-10-10, Mirror Across Center joined on 2026-10-09, then Center on the Artboard, Union and Outline Stroke), dividers above Union, Make Component and Hide This Panel, Make Component lit for a picked group."
     },
     {
       "do": "press",

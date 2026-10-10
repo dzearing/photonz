@@ -1963,7 +1963,7 @@ struct EditorCommands: Commands {
             // is the same act with a column count, and a grid is picked far
             // less often than a row of things.
             if Experiments.shared.autoLayoutEnabled {
-                Button("Stack Selection") { editor?.stackSelection(.stack) }
+                Button(LayersPanelHeader.MenuRow.stackTitle) { editor?.stackSelection(.stack) }
                     .keyboardShortcut("g", modifiers: [.command, .control])
                     .disabled(!(editor?.canStackSelection ?? false))
                 Button("Grid Selection") { editor?.stackSelection(.grid) }
