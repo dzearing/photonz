@@ -22,8 +22,7 @@ struct LibraryTitleTile: View {
     var body: some View {
         let entry = preset.entry
         LibraryShelfTile(name: entry.name, meta: entry.detail, isSelected: isSelected) { thumbnail }
-        .onTapGesture(count: 2) { insert() }
-        .onTapGesture { editorState.selectLibraryItem(preset.id) }
+        .libraryTileClicks(pick: { editorState.selectLibraryItem(preset.id) }, open: insert)
         // What is in the air is noted where the drag starts, so the timeline
         // can draw the ghost the moment it arrives. It is not watched, so
         // noting it redraws nothing mid hand-over.

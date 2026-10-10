@@ -562,8 +562,7 @@ struct LibraryComponentTile: View {
         // gesture for "give me one of these" everywhere on the shelf. Changing
         // the original is Edit Original, on this tile's right-click and in the
         // section below.
-        .onTapGesture(count: 2) { place() }
-        .onTapGesture { editorState.selectLibraryItem(entry.id) }
+        .libraryTileClicks(pick: { editorState.selectLibraryItem(entry.id) }, open: place)
         .contextMenu {
             Button("Place a Copy") { place() }
             // Only a component this document holds has an original to open; a

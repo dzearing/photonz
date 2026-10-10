@@ -1,0 +1,44 @@
+{
+  "feature": "A click on a Library tile shows it picked at once",
+  "epic": "video-titles-graphics",
+  "summary": "Clicking a title, name card, component or colour tile in the Library now shows it picked in about one frame (10 to 18ms median) instead of about 370ms. The dock's section for the tile opens on the next frame instead of holding the click up.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording, View > Library, press Comps.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click the Midnight tile under Titles once.",
+      "shot": "2026-10-10-library-tile-click-midnight.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Midnight, then Sunrise, then Midnight again, quickly, the way you would look through the titles."
+    },
+    {
+      "do": "Search the Library for card and click Dana card.",
+      "shot": "2026-10-10-library-tile-click-name-card.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Double click a title tile: it should still land at the playhead on its own track."
+    },
+    {
+      "do": "In a picture, open Comps and click Button, then Card, then double click Card to place one.",
+      "shot": "2026-10-10-library-tile-click-card-placed.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a single click on a title tile now feel instant, with no pause before the highlight?",
+    "When nothing was picked, does the dock's section for the tile arriving a frame after the highlight look natural rather than like a flicker?",
+    "A double click is now told from a click by the Mac's own double-click speed, and its first click picks the tile straight away (as the Finder does with an icon). Does double click to insert still feel right?",
+    "Is clicking quickly from title to title smooth enough that you would happily browse the presets this way?"
+  ],
+  "rough": [
+    "Measured from letting go of the button to the first frame on screen, 10 clicks a tile, over three runs. Before: titles median 365ms, worst 376ms; components median 366ms, worst 371ms (every click waited out the double-click window). After, from nothing picked: Sunrise 9 to 16ms median (worst 22), Midnight 15 to 18 (worst 23), Dana card 11 to 14 (worst 18), Brand colour 7 to 10 (worst 14), Button 10 to 15 (worst 18), Card 10 (worst 26). Switching tile to tile: titles 12 to 16ms median (worst 25), components 16 to 19 (worst 26). The dock is ready within 33 to 69ms (worst click 69ms).",
+    "The median is within one frame (16ms) but the worst clicks reach 23 to 26ms, two frames. About 6 to 16ms of every click is SwiftUI recognising the tap after the release reaches the window, which this change cannot remove.",
+    "A first try put a separate SwiftUI double-tap gesture beside the click. It was fast, but a walk caught it finishing a double click on a lone click well over a second later, so the shipped version uses one click gesture and reads the click count the Mac puts on the event.",
+    "Clicking a tile while a layer is picked also closes that layer's sections in the same frame: one such click on the Brand colour read a 26.5ms pass, so it is roughly two frames. Not budgeted by the walks; kept in this task's log.",
+    "When moving from one component tile to another, the component's section words still change in the click's own frame (title tiles' words follow a frame later). Components still read 16 to 18ms median, so it was left.",
+    "No mock covers this: nothing on screen looks different, only how soon it appears."
+  ]
+}

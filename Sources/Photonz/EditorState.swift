@@ -1021,7 +1021,41 @@ final class EditorState {
     /// running beside it: picking a tile clears the layer and canvas
     /// selection, and picking anything on the canvas or in the layers list
     /// clears the tile. So the inspector always describes exactly one thing.
-    var selectedLibraryItemID: String?
+    var selectedLibraryItemID: String? {
+        didSet {
+            if selectedLibraryItemID != oldValue { panelFollowsThePick() }
+        }
+    }
+    /// The Library tile the dock is describing: the pick, a run loop pass
+    /// behind it. Read it for whether the tile's section is in the dock; read
+    /// the pick for everything else.
+    ///
+    /// Opening or closing that section is about 35ms of layout, and sharing a
+    /// frame with it held the tile's own highlight up by that much
+    /// (`library-tile-click-latency-walk`, 2026-10-10). So the tile lights up
+    /// in the frame the click lands in and the dock catches up in the next.
+    /// Moving the pick from tile to tile clears it on the way (picking clears
+    /// the layer selection, which lets go of the tile), and following a pass
+    /// behind means that dip never reaches the dock either.
+    private(set) var panelLibraryItemID: String?
+    @ObservationIgnored private var panelFollowPending = false
+
+    private func panelFollowsThePick() {
+        // No window, no frame to keep clear: tests and offscreen renders see
+        // the dock agree with the pick at once.
+        guard hostWindow != nil else {
+            panelLibraryItemID = selectedLibraryItemID
+            return
+        }
+        guard !panelFollowPending else { return }
+        panelFollowPending = true
+        Task { @MainActor [weak self] in
+            await NextRunLoopPass.start()
+            guard let self else { return }
+            panelFollowPending = false
+            if panelLibraryItemID != selectedLibraryItemID { panelLibraryItemID = selectedLibraryItemID }
+        }
+    }
     /// Which version each component's Library tile is set to place, by
     /// component id (Next, `next-components`). A component that holds a normal
     /// and a disabled drawing can hand you either one straight off the shelf,

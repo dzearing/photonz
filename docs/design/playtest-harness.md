@@ -738,6 +738,15 @@ Whether the whole drag is ONE step to undo is not checked here on purpose: a
 walk says that better itself, with an `undo` and a `redo` either side of a
 `panel` listing, the way `motion-timing-strip-walk` does.
 
+### How long does a click on a Library tile take to show?
+
+A picture of a picked tile looks the same whether it took one frame or a third
+of a second, so `timeTileClicks` times the click instead:
+
+| Step | Arguments | What it does |
+| --- | --- | --- |
+| `timeTileClicks` | `tiles`, optional `times` (10), `switching`, `highlightUnderMS`, `settledUnderMS` | Clicks each named Library tile `times` times with real mouse events, the way `press` clicks, and times every click from letting go: to the first refresh of the display after the pass that picked the tile was committed (`highlight`, read off the display link's own clock so a handler running late does not count against the app), and on until two refreshes in a row are handled on time (`settled`: the dock's section for the tile is open and nothing the click started is still holding the main thread). Each click starts from nothing picked, layers included, and the next waits out the double-click window so two clicks never read as a double click. `switching: true` clicks the tiles in turn without letting go in between, which is someone looking through the titles. The log line gives the median and the worst of both, every click is in `tile-clicks-<step>.json` (when the pick landed, when its pass was committed, the main thread meter, which views rebuilt), and the two budgets fail the walk on the worst click over either. Refused under a locked screen until somebody watches it run there. `Scripts/playtest/library-tile-click-latency-walk.json` (titles and a name card) and `library-tile-click-latency-picture-walk.json` (a colour and two components) read it. |
+
 ### Does a tile really come away in your hand? Yes, and here is the proof
 
 This was the open question behind three audits on 2026-09-09, each of which

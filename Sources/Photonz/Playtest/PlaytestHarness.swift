@@ -2361,6 +2361,9 @@ private final class Run {
 
         case .pickUpTile(let tile, let to):
             try await pickUpTile(tile, to: to, number: number)
+        case .timeTileClicks(let tiles, let times, let switching, let highlightUnderMS, let settledUnderMS):
+            try await timeTileClicks(tiles, times: times, switching: switching, highlightUnderMS: highlightUnderMS,
+                                     settledUnderMS: settledUnderMS, number: number)
 
         case .dragRow(let row, let onto, let zone, let hold, let cancel):
             try await dragRow(row, onto: onto, zone: zone, hold: hold, cancel: cancel, number: number)
@@ -12461,6 +12464,139 @@ private final class Run {
     /// real one runs a loop of its own that only a mouse coming up on a real
     /// desk can end. So what this proves is the pick up, not the picture that
     /// would follow the pointer afterwards: see `PlaytestTilePickUp.swift`.
+    /// Clicks each Library tile `times` times, the way `press` clicks a
+    /// control, and times every click from its release: to the tile being
+    /// picked and the next frame on screen (`highlight`), and on until two
+    /// frames in a row come on time (`settled`, the panel the pick opened is
+    /// drawn and nothing the click started is still holding the main thread).
+    ///
+    /// Each click starts from nothing picked, and the next one waits past the
+    /// double-click window so no two clicks read as a double click, which on a
+    /// title tile would put a title on the timeline.
+    private func timeTileClicks(_ tiles: [String], times: Int, switching: Bool, highlightUnderMS: Double?,
+                                settledUnderMS: Double?, number: Int) async throws {
+        let editor = try requireEditor()
+        guard let content = try requireWindow().contentView else {
+            throw Failure(description: "the window has no content view to time frames on")
+        }
+        let frames = DisplayFrames(view: content)
+        defer { frames.invalidate() }
+        // Kept running the whole step, so the frame after a pick is the
+        // display's next refresh and not a paused link waking up.
+        frames.run {}
+        await takeTheMarkersDownForATimedStep()
+        var readingsByTile: [String: [TileClickTiming.Reading]] = [:]
+        var rows: [[String: Any]] = []
+        // Switching goes round the tiles in turn, so each click moves the pick
+        // on from the tile before it; otherwise each tile has its run.
+        let order: [(tile: String, click: Int)] = switching
+            ? (1...times).flatMap { click in tiles.map { ($0, click) } }
+            : tiles.flatMap { tile in (1...times).map { (tile, $0) } }
+        // Nothing picked at all, layers included: a click that also lets go
+        // of a layer closes that layer's sections, which is a cost of its own.
+        editor.selectLibraryItem(nil)
+        for (tile, click) in order {
+            do {
+                if !switching { editor.selectLibraryItem(nil) }
+                await sleep(NSEvent.doubleClickInterval + 0.15)
+                let before = editor.selectedLibraryItemID
+                var (target, _) = try await reachableTarget(tile, in: nil)
+                target = await settled(target, named: tile, in: nil).target
+                guard let window = target.window else {
+                    throw Failure(description: "the tile \"\(tile)\" is in no window to click")
+                }
+                let stamp = ProcessInfo.processInfo.systemUptime
+                guard let down = NSEvent.mouseEvent(
+                        with: .leftMouseDown, location: target.point, modifierFlags: [], timestamp: stamp,
+                        windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                        clickCount: 1, pressure: 1),
+                      let up = NSEvent.mouseEvent(
+                        with: .leftMouseUp, location: target.point, modifierFlags: [], timestamp: stamp + 0.05,
+                        windowNumber: window.windowNumber, context: nil, eventNumber: 1,
+                        clickCount: 1, pressure: 0) else {
+                    throw Failure(description: "could not make a mouse event for \"\(tile)\"")
+                }
+                MainThreadMeter.shared.install()
+                MainThreadMeter.shared.reset()
+                // Delivered as `press` delivers it: the release queued, the
+                // press taken out of the queue and handed over. The clock
+                // starts once the press is handled, with the release next in
+                // line: what a person waits through is from letting go.
+                ViewBuildMeter.shared.reset()
+                // The pick is caught as it is made, and the end of the pass it
+                // was made in (the frame's commit is part of that pass) is
+                // when the picture with it in left the app.
+                let clock = TileClickClock()
+                withObservationTracking { _ = editor.selectedLibraryItemID } onChange: {
+                    MainActor.assumeIsolated { clock.notePick() }
+                }
+                // When AppKit hands the release to the window: the gap from
+                // there to the pick is SwiftUI recognizing the tap.
+                final class Stamp { var at: Double? }
+                let released = Stamp()
+                let monitor = NSEvent.addLocalMonitorForEvents(matching: .leftMouseUp) { event in
+                    if released.at == nil { released.at = CACurrentMediaTime() }
+                    return event
+                }
+                defer { monitor.map(NSEvent.removeMonitor) }
+                NSApp.postEvent(up, atStart: false)
+                NSApp.postEvent(down, atStart: true)
+                let pressed = CACurrentMediaTime()
+                NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+                let t0 = CACurrentMediaTime()
+                while clock.committed == nil, CACurrentMediaTime() - t0 < 2 {
+                    try? await Task.sleep(for: .milliseconds(1))
+                }
+                let picked = clock.picked
+                var highlight: Double?, settledAt: Double?
+                if let committed = clock.committed {
+                    // The refresh after the pick's own pass was committed is
+                    // the frame it is on screen in, read off the display's
+                    // clock: the link's handler may run later than that if the
+                    // main thread has moved on to the next thing.
+                    await frames.next()
+                    highlight = ((frames.refresh(atOrAfter: committed) ?? CACurrentMediaTime()) - t0) * 1000
+                    // On time is within half a frame again of a 60 hertz
+                    // frame: 25ms between two refreshes in a row handled.
+                    var last = CACurrentMediaTime()
+                    while CACurrentMediaTime() - t0 < 3 {
+                        await frames.next()
+                        let now = CACurrentMediaTime()
+                        defer { last = now }
+                        if now - last <= 0.025 { settledAt = max((last - t0) * 1000, highlight ?? 0); break }
+                    }
+                }
+                readingsByTile[tile, default: []]
+                    .append(.init(highlightMS: highlight, settledMS: settledAt ?? highlight))
+                var row: [String: Any] = ["tile": tile, "click": click,
+                                          "longestPassMS": MainThreadMeter.shared.longestMS,
+                                          "meter": MainThreadMeter.shared.report,
+                                          "pressHandledMS": (t0 - pressed) * 1000]
+                row["builds"] = ViewBuildMeter.shared.report + "; " + ViewBuildMeter.shared.traced
+                row["pickedMS"] = picked.map { ($0 - t0) * 1000 }
+                row["committedMS"] = clock.committed.map { ($0 - t0) * 1000 }
+                row["releaseHandedOverMS"] = released.at.map { ($0 - t0) * 1000 }
+                row["highlightMS"] = highlight
+                row["settledMS"] = settledAt
+                row["picked"] = editor.selectedLibraryItemID
+                rows.append(row)
+                PlaytestHarness.sendWindowsBehindThePerson()
+            }
+        }
+        let timings = tiles.map { TileClickTiming(tile: $0, readings: readingsByTile[$0] ?? []) }
+        editor.clearLibraryPick()
+        try SafeJSON.data(from: rows, options: [.prettyPrinted])?
+            .write(to: out.appendingPathComponent("tile-clicks-\(number).json"))
+        note(number, "timeTileClicks", (switching ? "switching from tile to tile: " : "from nothing picked: ")
+             + timings.map(\.summary).joined(separator: " | ")
+             + "; every click is in tile-clicks-\(number).json")
+        if let trouble = timings.lazy.compactMap({
+            $0.trouble(highlightUnderMS: highlightUnderMS, settledUnderMS: settledUnderMS)
+        }).first {
+            throw Failure(description: trouble)
+        }
+    }
+
     private func pickUpTile(_ name: String, to at: PlaytestPoint, number: Int) async throws {
         let canvas = try requireCanvas()
         let target = try await tileTarget(name)
@@ -17366,6 +17502,26 @@ private extension CAAnimation {
     var endsOnItsOwn: Bool {
         repeatCount.isFinite && repeatCount < .greatestFiniteMagnitude
             && repeatDuration.isFinite && repeatDuration < .greatestFiniteMagnitude
+    }
+}
+
+/// When a `timeTileClicks` click picked its tile, and when the pass that
+/// picked it ended: the frame's commit is one of that pass's last acts.
+/// Touched on the main thread only; Sendable because the observation callback
+/// that sets it is typed as if it might not be.
+final class TileClickClock: @unchecked Sendable {
+    private(set) var picked: Double?
+    private(set) var committed: Double?
+
+    @MainActor func notePick() {
+        guard picked == nil else { return }
+        picked = CACurrentMediaTime()
+        let observer = CFRunLoopObserverCreateWithHandler(
+            nil, CFRunLoopActivity.beforeWaiting.rawValue, false, CFIndex.max
+        ) { [self] _, _ in
+            committed = CACurrentMediaTime()
+        }
+        CFRunLoopAddObserver(CFRunLoopGetMain(), observer, .commonModes)
     }
 }
 

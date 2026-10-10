@@ -3093,6 +3093,24 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that wants to prove two tiles is two walks; the step says so rather than
     /// reporting the second tile as broken.
     case pickUpTile(tile: String, to: PlaytestPoint)
+    /// Click each named Library tile `times` times with real mouse events and
+    /// time every click: from the release to the tile being picked, and to the
+    /// first frame on screen after that (`highlight`), and on until the window
+    /// is drawing frames on time again (`settled`, which is when the panel the
+    /// pick opened is up). Each click is made on a shelf with nothing picked,
+    /// and spaced past the double-click window so no two of them read as a
+    /// double click. `highlightUnderMS` and `settledUnderMS` fail the step on
+    /// the worst click over either (`library-tile-click-latency-walk`).
+    /// `switching` clicks the tiles in turn instead, without letting go in
+    /// between, so every click after the first moves the pick from one tile
+    /// to the next: what someone looking through the titles does. It needs
+    /// two tiles at least.
+    ///
+    /// A click on a title tile used to wait out the whole double-click window
+    /// before it picked anything, because the tile listened for a double click
+    /// first: about a third of a second on every click (2026-10-10).
+    case timeTileClicks(tiles: [String], times: Int, switching: Bool, highlightUnderMS: Double?,
+                        settledUnderMS: Double?)
     /// Pick a row up in the layers list by its name and let go of it on
     /// another row: above it, below it, or inside it when that row is a group.
     /// `hold` names a picture taken before letting go, which is the only
@@ -4024,7 +4042,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
         "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
-        "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press",
+        "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
@@ -4087,6 +4105,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .rightClick: "rightClick"
         case .dragTile: "dragTile"
         case .pickUpTile: "pickUpTile"
+        case .timeTileClicks: "timeTileClicks"
         case .dragRow: "dragRow"
         case .dragTrack: "dragTrack"
         case .dragColor: "dragColor"
@@ -4590,6 +4609,29 @@ public enum PlaytestStep: Sendable, Equatable {
                              to: onto == nil ? try f.point("to") : nil, onto: onto,
                              hold: try f.optionalString("hold"), expect: landing,
                              says: try f.optionalString("says"))
+        case "timeTileClicks":
+            let tiles = try f.optionalStrings("tiles")
+            guard !tiles.isEmpty else {
+                throw f.invalid("tiles", "timeTileClicks has to name at least one Library tile to click")
+            }
+            let times = try f.optionalNumber("times") ?? 10
+            guard times >= 1, times == times.rounded() else {
+                throw f.invalid("times", "is how many clicks each tile gets, a whole number from 1")
+            }
+            var budgets: [Double?] = []
+            for field in ["highlightUnderMS", "settledUnderMS"] {
+                let bound = try f.optionalNumber(field)
+                if let bound, !(bound > 0 && bound.isFinite) {
+                    throw f.invalid(field, "must be a positive number of milliseconds")
+                }
+                budgets.append(bound)
+            }
+            let switching = try f.optionalFlag("switching") ?? false
+            guard !switching || tiles.count >= 2 else {
+                throw f.invalid("switching", "moves the pick from one tile to another, so it needs two tiles at least")
+            }
+            self = .timeTileClicks(tiles: tiles, times: Int(times), switching: switching,
+                                   highlightUnderMS: budgets[0], settledUnderMS: budgets[1])
         case "pickUpTile":
             self = .pickUpTile(tile: try f.string("tile"), to: try f.point("to"))
         case "dragRow":

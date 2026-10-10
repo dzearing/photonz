@@ -25,6 +25,18 @@ final class DisplayFrames: NSObject {
     /// How many refreshes have come since this was made. A walk reads it to
     /// say how many display frames something took.
     private(set) var count = 0
+    /// When the display last refreshed and how far apart its refreshes are,
+    /// read off the link itself, so a refresh handled late still says when it
+    /// really happened. Zero until the first one.
+    private(set) var lastRefreshAt: CFTimeInterval = 0
+    private(set) var refreshInterval: CFTimeInterval = 1.0 / 60
+
+    /// The first refresh at or after `moment`: when a picture committed then
+    /// reaches the screen. Nil until the display has refreshed once.
+    func refresh(atOrAfter moment: CFTimeInterval) -> CFTimeInterval? {
+        guard lastRefreshAt > 0, refreshInterval > 0 else { return nil }
+        return lastRefreshAt + ((moment - lastRefreshAt) / refreshInterval).rounded(.up) * refreshInterval
+    }
 
     init(view: NSView, fallback: Double = 1.0 / 50) {
         self.fallback = fallback
@@ -90,6 +102,8 @@ final class DisplayFrames: NSObject {
     }
 
     @objc private func tick(_ link: CADisplayLink) {
+        lastRefreshAt = link.timestamp
+        if link.duration > 0 { refreshInterval = link.duration }
         fallbackTask?.cancel()
         fallbackTask = nil
         refresh()

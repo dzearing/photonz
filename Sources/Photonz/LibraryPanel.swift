@@ -724,10 +724,7 @@ private struct LibraryTile: View {
         LibraryShelfTile(name: item.name,
                          meta: LibraryTileCaption.pictureSize(media.image.pixelSize),
                          isSelected: isSelected) { thumbnail }
-        // Double click first: SwiftUI hands a tap to the highest count that
-        // matches, and a single-click-only gesture would swallow both.
-        .onTapGesture(count: 2) { place() }
-        .onTapGesture { editorState.selectLibraryItem(item.id) }
+        .libraryTileClicks(pick: { editorState.selectLibraryItem(item.id) }, open: place)
         // The preview is the picture itself, so a media tile and a component
         // tile are picked up the same way. Nothing in here touches the app's
         // state: a change made while the drag is being handed over redraws the

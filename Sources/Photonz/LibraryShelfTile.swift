@@ -101,3 +101,28 @@ struct LibraryTileCornerWord: View {
             .padding(LibraryShelfLayout.tileBadgeInset)
     }
 }
+
+extension View {
+    /// A Library tile's click and double click: `pick` on the very first
+    /// click, and `open` (place, insert) on the second click of a double.
+    ///
+    /// One tap gesture, and the click count AppKit puts on the event says
+    /// which of the two it is, the way the Finder tells a click on an icon
+    /// from a double click: so it follows the double-click speed set in System
+    /// Settings, and nothing ever waits to see whether a second click is
+    /// coming. Stacked as `onTapGesture(count: 2)` over `onTapGesture`,
+    /// SwiftUI held every single click until the double-click window had run
+    /// out: 366ms from letting go to the tile picked, on every click
+    /// (`library-tile-click-latency-walk`, 2026-10-10). A second gesture for
+    /// the double, recognized side by side, was quick too, but it could be
+    /// left half recognized and finish on a lone click much later.
+    func libraryTileClicks(pick: @escaping () -> Void, open: @escaping () -> Void) -> some View {
+        onTapGesture {
+            if let event = NSApp.currentEvent, event.type == .leftMouseUp, event.clickCount >= 2 {
+                open()
+            } else {
+                pick()
+            }
+        }
+    }
+}

@@ -28,8 +28,7 @@ struct LibraryClipTile: View {
 
     var body: some View {
         LibraryShelfTile(name: item.name, meta: clip.length, isSelected: isSelected) { thumbnail }
-        .onTapGesture(count: 2) { addAtPlayhead() }
-        .onTapGesture { editorState.selectLibraryItem(item.id) }
+        .libraryTileClicks(pick: { editorState.selectLibraryItem(item.id) }, open: addAtPlayhead)
         .onDrag(dragItem, preview: {
             thumbnail.frame(width: tileMetrics.pictureWidth,
                             height: tileMetrics.pictureHeight)

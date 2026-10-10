@@ -162,6 +162,15 @@ extension EditorState {
         selectedLibraryItemID.flatMap { titlePreset(entryID: $0) }
     }
 
+    /// The preset the dock's section describes. Moving the pick from one
+    /// title to the next swaps the section's words a pass after the tile
+    /// lights up, as opening the section does (`panelLibraryItemID`); a title
+    /// picked after something else is described at once, so the section never
+    /// stands empty for a frame.
+    var titlePresetInPanel: TitlePreset? {
+        panelLibraryItemID.flatMap { titlePreset(entryID: $0) } ?? selectedTitlePreset
+    }
+
     /// One of your own off the shelf and out of the menus, from its tile's
     /// right-click. Nothing already on a timeline changes: what landed was a
     /// copy.

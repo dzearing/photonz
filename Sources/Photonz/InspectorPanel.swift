@@ -988,7 +988,8 @@ struct InspectorPanel: View {
             set.insert(.library)
             // ...and the picked tile's own section, the way a picked layer
             // brings its sections. Nothing picked, nothing shown.
-            if editorState.selectedLibraryItemID != nil { set.insert(.libraryItem) }
+            // It follows the pick a frame behind (`panelLibraryItemID`).
+            if editorState.panelLibraryItemID != nil { set.insert(.libraryItem) }
         }
         // The Measurements group (§6, `next-measure-panel`): a filtered view of
         // the layer stack, present whenever the document holds a measurement.
@@ -1349,7 +1350,7 @@ struct InspectorPanel: View {
         if id == .libraryItem {
             // A title tile is named after its kind: a picked lower third is a
             // Name Card, not a Component.
-            if let preset = editorState.selectedTitlePreset { return preset.kind.name }
+            if let preset = editorState.titlePresetInPanel { return preset.kind.name }
             return (LibraryScope(rawValue: libraryScopeRaw) ?? .media).itemTitle
         }
         // With the parts list on, this section is no longer only colours: it
@@ -1549,7 +1550,7 @@ struct InspectorPanel: View {
         case .libraryItem:
             // The picked tile's section, named and filled by the scope it came
             // from: a capture's details, or a component's.
-            if let preset = editorState.selectedTitlePreset {
+            if let preset = editorState.titlePresetInPanel {
                 LibraryTitlePresetInspector(preset: preset)
             } else if editorState.selectedComponentLayer != nil {
                 LibraryComponentInspector()

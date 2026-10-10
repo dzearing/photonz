@@ -1,0 +1,33 @@
+{
+  "out": "/tmp/photonz-playtest/library-tile-click-latency-walk",
+  "seed": "A click on a title page or name card tile in the Library shows it picked in the frame the click lands in, at Next defaults with no flag set, on a screen recording. Each click is made by the pointer and timed from letting go to the first frame on screen with the tile picked, and to the window drawing on time again once the dock's section for it is open. Every click whose picked frame takes 33ms or longer, or whose dock takes 100ms or longer, fails the walk (the user, 2026-10-10: \"when i click on a title in the comp there is a noticable lag\"; it was 405ms, every click waiting out the double-click window).",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "showLibrary" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Comps" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "describe", "stage": "1-from-nothing", "note": "THE FIRST TEST: Sunrise and Midnight, ten clicks each from nothing picked, every one shown picked within 33ms and the dock ready within 100ms" },
+    { "do": "timeTileClicks", "tiles": ["Sunrise", "Midnight"], "times": 10, "highlightUnderMS": 33, "settledUnderMS": 100 },
+    { "do": "describe", "stage": "2-switching", "note": "Looking through the titles: the pick moved from Sunrise to Midnight and back ten times, every click shown picked within 33ms" },
+    { "do": "timeTileClicks", "tiles": ["Sunrise", "Midnight"], "times": 10, "switching": true, "highlightUnderMS": 33, "settledUnderMS": 100 },
+    { "comment": "Past the double-click window, or this click and the timed step's last click on Midnight make a double click.",
+      "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Midnight" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "control": "Insert at Playhead", "present": true },
+    { "do": "snapshot", "name": "midnight-picked" },
+    { "do": "press", "control": "Search library" },
+    { "do": "type", "text": "card" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "3-name-card", "note": "A name card, Dana card, found by searching card: ten clicks, every one shown picked within 33ms" },
+    { "do": "timeTileClicks", "tiles": ["Dana card"], "times": 10, "highlightUnderMS": 33, "settledUnderMS": 100 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Dana card" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "snapshot", "name": "name-card-picked" }
+  ]
+}
