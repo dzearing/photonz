@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/design-mode-tool-strip-walk",
   "setup": { "forget": ["all"] },
-  "seed": "The Design mode puts the UI entry mock's tools in front of the tool bar (ui-entry-wt.html step 4, UX-PATTERNS D4 UI design): Select | Frame, Component insert, Shapes, Pen, Text | Measure | Hand, every other tool under More with its key. Starts from the front door's Design UI tile at Next defaults with no switch changed, reads the strip, rests the pointer on each of its tools to read its tip, picks up Frame and Crop by their keys (Crop is under More, so More lights and the pill says where it lives), then zooms in, picks the Hand with a pointer click and drags the canvas from on top of the Login screen: the view moves 200 by 100 points, the screen's own position does not change, nothing is picked, and Select clicks then find the screen where it now is. Then it leaves Design with Show Everything and reads the bar the window had before.",
+  "seed": "The Design mode puts the UI entry mock's tools in front of the tool bar (ui-entry-wt.html step 4, UX-PATTERNS D4 UI design): Select | Frame, Component insert, Shapes, Pen, Text | Measure | Hand, every other tool under More with its key. Starts from the front door's Design UI tile at Next defaults with no switch changed, reads the strip, rests the pointer on each of its tools to read its tip, picks up Frame and Crop by their keys (Crop is under More, so More lights and the pill says where it lives), then zooms in, picks the Hand with a pointer click and drags the canvas from on top of the Login screen: the view moves 200 by 100 points, the screen's own position does not change, nothing is picked, and Select clicks then find the screen where it now is. Then it leaves Design with Show Everything and reads the bar the window had before. The Shape slot starts on the Rectangle in Design (the mock's square, Shape (R)), remembers an Ellipse picked there, and the picture bar outside Design keeps its Line.",
   "steps": [
     { "do": "startFromFrontDoor", "tile": "Design UI", "press": "New UI canvas",
       "width": 1280, "height": 900, "card": "1-design-ui-picked" },
@@ -27,6 +27,10 @@
     { "do": "wait", "seconds": 0.8 },
     { "do": "hover", "label": "Measure" },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "hover", "label": "Rectangle" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "2-shape-tip", "note": "on a fresh machine the Shape slot wears the Rectangle, as the mock draws it, and its tip reads Rectangle (R)" },
+    { "do": "snapshot", "name": "2-shape-tip" },
     { "do": "hover", "at": [640, 400], "space": "view" },
     { "do": "wait", "seconds": 0.4 },
 
@@ -106,6 +110,27 @@
     { "do": "action", "action": "modeDesign" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "toolBar", "stage": "6-design-again",
-      "slots": ["Select", "Frame", "Component insert", "Shapes", "Pen", "Text", "Measure", "Hand"] }
+      "slots": ["Select", "Frame", "Component insert", "Shapes", "Pen", "Text", "Measure", "Hand"] },
+
+    { "do": "key", "key": "o" },
+    { "do": "waitFor", "condition": "tool", "value": "ellipse", "timeout": 2 },
+    { "do": "key", "key": "v" },
+    { "do": "waitFor", "condition": "tool", "value": "select", "timeout": 2 },
+    { "do": "hover", "label": "Ellipse" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "8-design-remembers", "note": "O picks the Ellipse up, and with Select back in hand the Shape slot keeps wearing the Ellipse: the slot remembers the last shape picked" },
+    { "do": "snapshot", "name": "8-design-remembers-ellipse" },
+    { "do": "hover", "at": [640, 400], "space": "view" },
+    { "do": "action", "action": "modeShowEverything" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "hover", "label": "Line" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "describe", "stage": "8-picture-bar-default", "note": "outside Design the picture bar keeps its own face for the shapes: the Line, its default, untouched by what was picked in Design" },
+    { "do": "snapshot", "name": "8-picture-bar-line" },
+    { "do": "hover", "at": [640, 400], "space": "view" },
+    { "do": "action", "action": "modeDesign" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "hover", "label": "Ellipse" },
+    { "do": "wait", "seconds": 0.6 }
   ]
 }

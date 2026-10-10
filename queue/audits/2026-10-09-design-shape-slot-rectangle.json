@@ -1,0 +1,40 @@
+{
+  "feature": "Design's Shape slot starts on the Rectangle",
+  "epic": "ui-building",
+  "summary": "In Design the tool bar's Shape slot now wears the Rectangle until you pick another shape, as the UI mock draws it, and it remembers the last shape you picked there. The picture bar outside Design keeps its own Line and its own memory.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: design-mode-tool-strip-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a new window and pick the Design UI tile, then New UI canvas.",
+      "shot": "2026-10-09-design-shape-slot-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest the pointer on the fourth tool: it reads Rectangle R."
+    },
+    {
+      "do": "Press O to pick up the Ellipse, then V for Select."
+    },
+    {
+      "do": "Check the Shape slot still wears the Ellipse."
+    },
+    {
+      "do": "Pick Show Everything from the mode chip and rest on the shapes slot: it reads Line L.",
+      "shot": "2026-10-09-design-shape-slot-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Go back to Design: the slot wears the Ellipse again."
+    }
+  ],
+  "evaluate": [
+    "Does the Rectangle feel like the right first face for the Shape slot when you build a screen?",
+    "Is it right that Design and the picture bar each remember their own last shape, rather than sharing one?",
+    "Does the slot's tip saying Rectangle R, rather than the mock's Shape (R), read fine to you?"
+  ],
+  "rough": [
+    "No mock covers whether Design and the picture bar share one shape memory; they keep separate ones here, so an Ellipse picked in Design leaves the picture bar's Line alone.",
+    "The mock's tip reads Shape (R); ours names the shape the slot wears, Rectangle R, like every family slot in the bar. Asked on decision card the-design-shape-slot-tip-reads-the-way-you-choo-what-should-the-shape-slot-s-tip."
+  ]
+}

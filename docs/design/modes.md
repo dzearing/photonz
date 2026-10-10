@@ -297,6 +297,10 @@ its Zoom is not a tool. A narrow window folds the strip in the mock's order, not
 from the far end: `WindowMode.toolStripPriority` keeps Select, Frame, Component
 insert and Hand and folds Shape, Pen, Text and Measure first. A document with time keeps the video's bar in any mode.
 A tool from outside the strip picked by its key stays under More and More lights.
+A mode can also give a family slot its own first face (`WindowMode.toolStripMembers`):
+Design's Shape slot starts on the Rectangle, the mock's square, and remembers the
+shape last picked in Design under its own key (`tool.shapes.last.design`), so the
+picture bar outside Design keeps its Line and its own last pick (2026-10-09).
 
 Still to build, and filed as the second slice: a mode being a record somebody can write rather than a list in
 Swift (section 4). Also unbuilt: two windows onto one file in two different

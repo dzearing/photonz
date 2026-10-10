@@ -62,10 +62,20 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
     /// order (`ToolBarFold.init(_:strip:priority:room:metrics:keeping:)`).
     public let toolStripPriority: [ToolBarLayout.Entry]?
 
+    /// The member a family's slot wears in this mode until a person picks
+    /// another one, for a family whose own first member is the wrong face for
+    /// the job: the shapes family starts on the Line, and a person building a
+    /// screen reaches for a Rectangle (`ui-entry-wt.html` draws the slot as a
+    /// square, "Shape (R)"). A family named here keeps its own memory in this
+    /// mode, so the window's bar outside it keeps its own default and its own
+    /// last pick. Read through `startingMember(of:)`.
+    public let toolStripMembers: [ToolGroup: Tool]
+
     public init(id: String, title: String, summary: String, symbol: String,
                 preset: PanelSectionVisibility.Choices,
                 toolStrip: [[ToolBarLayout.Entry]]? = nil,
-                toolStripPriority: [ToolBarLayout.Entry]? = nil) {
+                toolStripPriority: [ToolBarLayout.Entry]? = nil,
+                toolStripMembers: [ToolGroup: Tool] = [:]) {
         self.id = id
         self.title = title
         self.summary = summary
@@ -73,6 +83,16 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
         self.preset = preset
         self.toolStrip = toolStrip
         self.toolStripPriority = toolStripPriority
+        self.toolStripMembers = toolStripMembers
+    }
+
+    /// The member `group`'s slot starts on in this mode, or nil when the mode
+    /// leaves the family as it is. Only a mode with a strip of its own can
+    /// name one, and only a tool of that family counts.
+    public func startingMember(of group: ToolGroup) -> Tool? {
+        guard toolStrip != nil, let tool = toolStripMembers[group],
+              group.tools.contains(tool) else { return nil }
+        return tool
     }
 }
 
@@ -126,7 +146,8 @@ public enum WindowModes {
             symbol: "square.on.square",
             preset: choices(["measurements": false, "motion": false]),
             toolStrip: designStrip,
-            toolStripPriority: designStripPriority),
+            toolStripPriority: designStripPriority,
+            toolStripMembers: [.shapes: .rectangle]),
     ]
 
     /// The tools for building screens, as the UI entry mock draws them

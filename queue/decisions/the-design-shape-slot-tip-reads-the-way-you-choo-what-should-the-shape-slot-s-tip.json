@@ -1,0 +1,38 @@
+{
+  "id": "the-design-shape-slot-tip-reads-the-way-you-choo-what-should-the-shape-slot-s-tip",
+  "taskId": "the-design-shape-slot-tip-reads-the-way-you-choo",
+  "question": "What should the Shape slot's tip say when you rest the pointer on it?",
+  "context": "In Design, the tool bar's Shape slot now starts on the Rectangle as the UI mock draws it. The mock's tip says Shape (R); the app's tip names the shape the slot holds, Rectangle R.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Tip names the shape: Rectangle R",
+      "summary": "The tip says the shape the slot is wearing right now, Rectangle R, Ellipse O or Line L, the same way every family slot in the bar already does. The mock words Shape (R) are not shown.",
+      "pros": [
+        "Matches Photoshop, whose tips name the tool the slot holds",
+        "Tells you which shape a click will draw",
+        "Same rule as the Selection and Crop slots"
+      ],
+      "cons": [
+        "Differs from the mock words Shape (R)"
+      ],
+      "mitigation": "Press and hold still lists the whole family by name."
+    },
+    {
+      "id": "b",
+      "label": "Tip says Shape R, as in the mock",
+      "summary": "The tip reads Shape R whichever shape the slot is wearing, exactly the mock words. The slot icon still shows which shape a click draws.",
+      "pros": [
+        "Exactly the mock"
+      ],
+      "cons": [
+        "The tip no longer tells you which shape you get",
+        "The shapes slot reads unlike the other family slots"
+      ],
+      "mitigation": "The icon on the slot changes with the shape."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-10T00:58:32.859Z"
+}

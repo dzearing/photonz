@@ -3899,20 +3899,44 @@ final class EditorState {
     /// button wears the tool you last used and its key picks that one up.
     /// Persisted per family; the selection family keeps the key it has had
     /// since the marquee slot was born, so nobody's remembered selector moves.
-    private var lastGroupTools: [ToolGroup: Tool] = [:]
+    /// Keyed by the settings key, because a mode that gives a family its own
+    /// starting member (Design's Rectangle) remembers that family on its own.
+    private var lastGroupTools: [String: Tool] = [:]
 
-    static func groupMemoryKey(_ group: ToolGroup) -> String {
-        group == .selection ? "tool.marquee.last" : "tool.\(group.rawValue).last"
+    static func groupMemoryKey(_ group: ToolGroup, mode: WindowMode? = nil) -> String {
+        let key = group == .selection ? "tool.marquee.last" : "tool.\(group.rawValue).last"
+        return mode.map { "\(key).\($0.id)" } ?? key
     }
 
     /// Every family's remembered tool, for a walk that asks to start from the
-    /// tools a fresh machine would have.
-    static var toolMemoryKeys: [String] { ToolGroup.allCases.map(groupMemoryKey) }
+    /// tools a fresh machine would have: the window's own, and each mode's.
+    static var toolMemoryKeys: [String] {
+        ToolGroup.allCases.map { groupMemoryKey($0) }
+            + WindowModes.all.flatMap { mode in
+                ToolGroup.allCases.filter { mode.startingMember(of: $0) != nil }
+                    .map { groupMemoryKey($0, mode: mode) }
+            }
+    }
 
-    /// The tool `group`'s button stands for right now.
+    /// The mode whose own memory `group`'s slot reads right now, nil for the
+    /// window's. Only while the mode's strip is the bar: a document with time
+    /// keeps the video's bar in any mode, and its memory with it.
+    private func memoryMode(for group: ToolGroup) -> WindowMode? {
+        guard Experiments.shared.windowModesEnabled, !hasVideoToolBar else { return nil }
+        let mode = WindowModeStore.shared.mode
+        return mode.startingMember(of: group) == nil ? nil : mode
+    }
+
+    /// The tool `group`'s button stands for right now: the tool in hand when
+    /// it is of this family (so a shape carried across a mode swap is still
+    /// the face of the slot that lights for it), otherwise the one remembered.
     func lastTool(in group: ToolGroup) -> Tool {
-        if let tool = lastGroupTools[group] { return tool }
-        return group.member(from: UserDefaults.standard.string(forKey: Self.groupMemoryKey(group)))
+        if group.tools.contains(activeTool) { return activeTool }
+        let mode = memoryMode(for: group)
+        let key = Self.groupMemoryKey(group, mode: mode)
+        if let tool = lastGroupTools[key] { return tool }
+        return group.member(from: UserDefaults.standard.string(forKey: key),
+                            startingWith: mode?.startingMember(of: group))
     }
 
     /// Records `tool` as its family's last member. Called from every route
@@ -3920,8 +3944,9 @@ final class EditorState {
     /// memory can never lag the tool in hand.
     private func remember(_ tool: Tool) {
         guard let group = ToolGroup.containing(tool) else { return }
-        lastGroupTools[group] = tool
-        UserDefaults.standard.set(tool.rawValue, forKey: Self.groupMemoryKey(group))
+        let key = Self.groupMemoryKey(group, mode: memoryMode(for: group))
+        lastGroupTools[key] = tool
+        UserDefaults.standard.set(tool.rawValue, forKey: key)
     }
 
     // MARK: - Drag preview

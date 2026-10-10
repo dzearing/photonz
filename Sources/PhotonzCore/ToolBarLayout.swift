@@ -124,11 +124,14 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
         return members[(index + 1) % members.count]
     }
 
-    /// The member a stored raw value names, or the first member when the
-    /// value is missing, stale, or names a tool outside the family.
-    public func member(from raw: String?) -> Tool {
-        guard let raw, let tool = Tool(rawValue: raw), tools.contains(tool) else { return tools[0] }
-        return tool
+    /// The member a stored raw value names, or `start` (the first member when
+    /// that is nil or not of this family) when the value is missing, stale,
+    /// or names a tool outside the family. A mode with its own face for the
+    /// slot passes it as `start` (`WindowMode.startingMember(of:)`).
+    public func member(from raw: String?, startingWith start: Tool? = nil) -> Tool {
+        if let raw, let tool = Tool(rawValue: raw), tools.contains(tool) { return tool }
+        if let start, tools.contains(start) { return start }
+        return tools[0]
     }
 
     /// The family holding `tool`, nil for a tool that stands alone.

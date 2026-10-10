@@ -155,4 +155,46 @@ struct DesignModeToolStripTests {
         #expect(fold.shown == [[.group(.shapes)]])
         #expect(!fold.isFolded(.ellipse))
     }
+
+    // MARK: What the Shape slot wears
+
+    @Test("Design's Shape slot wears the Rectangle until a person picks another shape")
+    func designShapeSlotStartsOnTheRectangle() {
+        #expect(design.startingMember(of: .shapes) == .rectangle)
+        #expect(ToolGroup.shapes.member(from: nil, startingWith: design.startingMember(of: .shapes)) == .rectangle)
+        #expect(ToolGroup.shapes.member(from: "ellipse", startingWith: .rectangle) == .ellipse)
+        #expect(ToolGroup.shapes.member(from: "line", startingWith: .rectangle) == .line)
+    }
+
+    @Test("A stale or foreign memory falls back to the mode's starting member")
+    func staleMemoryFallsBackToTheModesMember() {
+        #expect(ToolGroup.shapes.member(from: "arrow", startingWith: .rectangle) == .rectangle)
+        #expect(ToolGroup.shapes.member(from: "nonsense", startingWith: .rectangle) == .rectangle)
+    }
+
+    @Test("The picture bar keeps the family's own first member")
+    func pictureBarKeepsItsOwnDefault() {
+        #expect(ToolGroup.shapes.member(from: nil) == .line)
+        #expect(WindowModes.everything.startingMember(of: .shapes) == nil)
+        for mode in WindowModes.all where mode.toolStrip == nil {
+            for group in ToolGroup.allCases {
+                #expect(mode.startingMember(of: group) == nil)
+            }
+        }
+    }
+
+    @Test("Design names a starting member only for the Shape family")
+    func designLeavesTheOtherFamiliesAlone() {
+        #expect(design.startingMember(of: .selection) == nil)
+        #expect(design.startingMember(of: .bounds) == nil)
+    }
+
+    @Test("A starting member from outside its family is ignored")
+    func foreignStartingMemberIsIgnored() {
+        let mode = WindowMode(id: "x", title: "X", summary: "", symbol: "",
+                              preset: .init(), toolStrip: [[.group(.shapes)]],
+                              toolStripMembers: [.shapes: .arrow])
+        #expect(mode.startingMember(of: .shapes) == nil)
+        #expect(ToolGroup.shapes.member(from: nil, startingWith: .arrow) == .line)
+    }
 }
