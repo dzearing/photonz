@@ -1,0 +1,34 @@
+{
+  "id": "clicking-a-title-in-the-library-highlights-it-at",
+  "title": "Clicking a title in the Library highlights it at once",
+  "goal": "Clicking a title or name card tile in the Library has a noticeable lag before anything happens. A click on any Library tile should show it picked on the very next frame, with anything slow (previews, the panel's details) arriving after without holding the click up.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 24,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T12:45:27.341Z",
+  "updated": "2026-10-10T12:45:27.439Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when i click on a title in the comp there is a noticable lag.\"\n\nFrom code reading (not run, cause unknown): a tile click goes through EditorState.selectLibraryItem (EditorState.swift:4273-4276): selectLayer(nil) then selectedLibraryItemID = id, so the whole selection didSet chain runs; the tile's own isSelected reads it (LibraryPanel.swift:721). Suspects: the inspector building the picked component/title's panel (main component lookup, property rows), the canvas re-rendering because the selection changed, or title previews (picture tiles) being rendered or text measured on the main thread at click. Profile before fixing. Companion filed the same day: polished animated title presets (the new animated previews must not make this worse).",
+  "acceptance": [
+    "Reproduce and MEASURE first at Next defaults in a video document: click a title tile, a name card tile, a colour tile and a component tile; record click-to-highlight and click-to-panel-ready times (signposts or the probe's frame timing), median and worst of 10, in the audit; profile the slow one and name what the time goes to",
+    "Click to highlight on any Library tile is under 16 ms (one frame), and the panel for the picked tile is ready within 100 ms, MEASURED the same way over 10 clicks",
+    "Whatever is expensive (rendering an animated preview, building the title's layers, measuring text, loading fonts) is done ahead of time or off the main thread and cached, and never blocks the click",
+    "Double clicking or dragging a title onto the timeline is not slower than today",
+    "A walk clicks each title tile and fails if any click-to-highlight frame exceeds 33 ms",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:45:27.343Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-10T12:45:27.437Z",
+      "note": "seq 3930 -> 24"
+    }
+  ]
+}
