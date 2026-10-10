@@ -3232,8 +3232,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// icon frame the strip is speaking for and what sizes it drew.
     ///
     /// `absent: true` claims no strip at all, which is what a document with no
-    /// icon frame in it must give.
-    case expectIconPreviews(sides: [Int], absent: Bool)
+    /// icon frame in it must give. `dark` names the size drawn on the strip's
+    /// one dark chip, when the walk wants to claim which that is.
+    case expectIconPreviews(sides: [Int], absent: Bool, dark: Int?)
     /// How many times a named view may have built since the step before it.
     ///
     /// The guard for what a click COSTS, written as a count rather than as a
@@ -5336,7 +5337,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("sides", "expectIconPreviews has to say which sizes the strip must be showing, smallest first, or carry \"absent\": true to claim there is no strip at all")
             }
             self = .expectIconPreviews(sides: try f.optionalNumbers("sides").map { Int($0) },
-                                       absent: absent)
+                                       absent: absent,
+                                       dark: try f.optionalNumber("dark").map { Int($0) })
         case "wheel":
             self = .wheel(control: try f.string("control"), by: try f.number("by"))
         case "scrollPanel":

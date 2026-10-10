@@ -20,10 +20,14 @@ struct IconPreviewRenderTests {
     /// A 512 icon frame with one dark hairline down the middle of it: a line a
     /// point wide, which is the classic thing that reads beautifully big and is
     /// gone at 16.
-    private func hairlineDocument(lineWidth: CGFloat = 1) -> PhotonzDocument {
+    ///
+    /// `surface` is the frame's own colour; nil makes a clear frame.
+    private func hairlineDocument(lineWidth: CGFloat = 1,
+                                  surface: String? = "#FFFFFF") -> PhotonzDocument {
         var document = PhotonzDocument(canvasSize: CGSize(width: 1200, height: 900))
         let frame = document.addFrame(origin: CGPoint(x: 100, y: 100),
-                                      size: CGSize(width: 512, height: 512))
+                                      size: CGSize(width: 512, height: 512),
+                                      backgroundHex: surface)
         // Start and end span the layer's own box: an annotation's shape is
         // drawn between them, not across whatever frame it is given.
         var line = AnnotationContent(shape: .rectangle, strokeWidth: 0,
@@ -54,13 +58,16 @@ struct IconPreviewRenderTests {
         return data
     }
 
-    /// How dark the darkest pixel in the picture is, 0 (white) to 255 (black).
-    /// The hairline's whole story is told by this one number.
+    /// How dark the darkest pixel in the picture is on a white ground, 0
+    /// (white) to 255 (black). The hairline's whole story is told by this one
+    /// number. Read premultiplied, coverage less red is exactly how far the
+    /// pixel darkens the white it sits on, so a picture whose white is the
+    /// chip's rather than its own reads the same as one that carries it.
     private func darkestInk(_ image: CGImage) -> Int {
         let data = bytes(image)
         var darkest = 0
         for offset in stride(from: 0, to: data.count, by: 4) {
-            darkest = max(darkest, 255 - Int(data[offset]))
+            darkest = max(darkest, Int(data[offset + 3]) - Int(data[offset]))
         }
         return darkest
     }
@@ -108,7 +115,7 @@ struct IconPreviewRenderTests {
     func isNotASmoothShrink() {
         let renderer = DocumentRenderer()
         let store = ImageStore()
-        let document = hairlineDocument()
+        let document = hairlineDocument(surface: nil)
         let id = frameID(document)
         let scoped = document.frameDocument(id: id)!
 
@@ -150,7 +157,7 @@ struct IconPreviewRenderTests {
         let store = ImageStore()
         var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
         let frame = document.addFrame(origin: CGPoint(x: 20, y: 20),
-                                      size: CGSize(width: 32, height: 32))
+                                      size: CGSize(width: 32, height: 32), backgroundHex: nil)
         let preview = renderer.iconPreview(for: frame.id, in: document, store: store, side: 32)
         let scoped = document.frameDocument(id: frame.id)!
         #expect(preview != nil)
@@ -172,6 +179,116 @@ struct IconPreviewRenderTests {
         // A side nobody could draw is refused rather than guessed at.
         let frame = document.addFrame(origin: .zero, size: CGSize(width: 64, height: 64))
         #expect(renderer.iconPreview(for: frame.id, in: document, store: store, side: 0) == nil)
+    }
+}
+
+/// The one chip on a dark ground (icon-draw-wt.html, step 11).
+///
+/// The mock draws the same glyph light on that chip, because a glyph drawn in
+/// one dark grey is a template: the Mac draws it in the label colour, which is
+/// light on a dark ground. So a picture in one dark grey is redrawn in the
+/// light ink there, edges and all. Anything else (a blue glyph, an app icon of
+/// many colours) is shown exactly as drawn, since that is how it will be seen.
+@Suite("An icon previewed on the dark chip")
+struct IconPreviewDarkGroundTests {
+
+    /// A side by side picture with the given colours painted as blocks on a
+    /// clear ground, plus a soft edge on the first so anti-aliasing is there.
+    private func picture(_ colours: [CGColor], side: Int = 24) -> CGImage {
+        let context = CGContext(data: nil, width: side, height: side,
+                                bitsPerComponent: 8, bytesPerRow: side * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        for (index, colour) in colours.enumerated() {
+            context.setFillColor(colour)
+            context.fillEllipse(in: CGRect(x: CGFloat(2 + index * 10), y: 4, width: 9.5, height: 15.3))
+        }
+        return context.makeImage()!
+    }
+
+    private func srgb(_ r: CGFloat, _ g: CGFloat, _ b: CGFloat) -> CGColor {
+        CGColor(srgbRed: r, green: g, blue: b, alpha: 1)
+    }
+
+    /// Every pixel as (r, g, b, a), un-premultiplied for the opaque-ish ones.
+    private func pixels(_ image: CGImage) -> [(r: Int, g: Int, b: Int, a: Int)] {
+        var data = [UInt8](repeating: 0, count: image.width * image.height * 4)
+        let context = CGContext(data: &data, width: image.width, height: image.height,
+                                bitsPerComponent: 8, bytesPerRow: image.width * 4,
+                                space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.draw(image, in: CGRect(x: 0, y: 0, width: image.width, height: image.height))
+        return stride(from: 0, to: data.count, by: 4).map { offset in
+            let a = Int(data[offset + 3])
+            func straight(_ v: UInt8) -> Int { a == 0 ? 0 : min(255, Int(v) * 255 / a) }
+            return (straight(data[offset]), straight(data[offset + 1]),
+                    straight(data[offset + 2]), a)
+        }
+    }
+
+    @Test("A glyph in one dark grey is drawn light on the dark chip, edges kept")
+    func templateGlyphGoesLight() {
+        let glyph = picture([srgb(0.06, 0.06, 0.06)])
+        let onDark = IconPreviewInk.onDarkGround(glyph)
+        #expect(onDark.width == glyph.width && onDark.height == glyph.height)
+        let before = pixels(glyph), after = pixels(onDark)
+        // Same coverage, pixel for pixel: only the colour changed.
+        #expect(before.map(\.a) == after.map(\.a))
+        let inked = after.filter { $0.a > 128 }
+        #expect(!inked.isEmpty)
+        #expect(inked.allSatisfy { $0.r > 220 && $0.g > 220 && $0.b > 220 })
+    }
+
+    @Test("Pure black reads as a template too")
+    func blackGoesLight() {
+        let after = pixels(IconPreviewInk.onDarkGround(picture([srgb(0, 0, 0)])))
+        #expect(after.filter { $0.a > 128 }.allSatisfy { $0.r > 220 })
+    }
+
+    @Test("A coloured glyph is shown as drawn")
+    func colouredGlyphIsKept() {
+        let blue = picture([srgb(0.13, 0.31, 0.75)])
+        #expect(pixels(IconPreviewInk.onDarkGround(blue)).map(\.b)
+                == pixels(blue).map(\.b))
+        #expect(IconPreviewInk.onDarkGround(blue) === blue)
+    }
+
+    @Test("A drawing of more than one colour is shown as drawn")
+    func manyColoursAreKept() {
+        let two = picture([srgb(0.06, 0.06, 0.06), srgb(0.9, 0.2, 0.1)])
+        #expect(IconPreviewInk.onDarkGround(two) === two)
+        // Two greys are two colours as well: the drawing chose its shading.
+        let greys = picture([srgb(0.06, 0.06, 0.06), srgb(0.45, 0.45, 0.45)])
+        #expect(IconPreviewInk.onDarkGround(greys) === greys)
+    }
+
+    @Test("A light glyph and an empty frame are shown as drawn")
+    func lightAndEmptyAreKept() {
+        let white = picture([srgb(1, 1, 1)])
+        #expect(IconPreviewInk.onDarkGround(white) === white)
+        let empty = picture([])
+        #expect(IconPreviewInk.onDarkGround(empty) === empty)
+    }
+
+    @Test("The hairline icon, previewed for the dark chip, comes back light")
+    func throughTheRenderer() {
+        let renderer = DocumentRenderer()
+        var document = PhotonzDocument(canvasSize: CGSize(width: 400, height: 400))
+        let frame = document.addFrame(origin: CGPoint(x: 20, y: 20),
+                                      size: CGSize(width: 24, height: 24))
+        var bar = AnnotationContent(shape: .rectangle, strokeWidth: 0, start: .zero,
+                                    end: CGPoint(x: 4, y: 16), fillColorHex: "#101010")
+        bar.strokePosition = .inside
+        document.updateLayer(id: frame.id) {
+            $0.children.append(Layer(name: "Bar", content: .annotation(bar),
+                                     frame: CGRect(x: 10, y: 4, width: 4, height: 16)))
+        }
+        let preview = renderer.iconPreview(for: frame.id, in: document, store: ImageStore(),
+                                           side: 32, onDarkGround: true)
+        #expect(preview?.width == 32)
+        let inked = preview.map { pixels($0).filter { $0.a > 200 } } ?? []
+        #expect(!inked.isEmpty)
+        #expect(inked.allSatisfy { $0.r > 220 })
     }
 }
 
@@ -232,7 +349,7 @@ struct IconPreviewMotionPerfTests {
         let document = movingIcon()
         let id = document.frames.first!.id
         let sides = IconPreviews.sides(forFrameSide: 48)
-        #expect(sides == [16, 24, 32, 48])
+        #expect(sides == [16, 24, 32, 48, 64])
         #expect(document.motionCycleLengthMS == 1260)
 
         // One frame of the loop is: work out where this frame's contents are at
@@ -252,7 +369,7 @@ struct IconPreviewMotionPerfTests {
         // and 8.9ms inside the full suite for identical work, and went red on
         // 2026-09-15 for no reason but the company it was keeping.
         var frame = 0
-        MachineSpeed.checkInterleaved("moving icon previews, whole strip of 4",
+        MachineSpeed.checkInterleaved("moving icon previews, whole strip of 5",
                                       baselineMS: 5) {
             strip(atMS: frame * 54)
             frame += 1

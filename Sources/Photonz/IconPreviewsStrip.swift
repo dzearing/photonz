@@ -4,8 +4,9 @@ import SwiftUI
 /// The icon previews strip (Next, `next-icon-previews`).
 ///
 /// A glass row in the canvas's top left corner, one chip per size, holding the
-/// icon frame you are working in drawn at 16, 24, 32, 48 and 64 pixels with the
-/// number under each. It appears when an icon frame is what you are in and goes
+/// icon frame you are working in drawn at each interface size up to twice its
+/// own (16, 24, 32 and 48 for a 24 point glyph) with the number under each, and
+/// the one before the biggest on a dark ground, as icon-draw-wt.html draws it. It appears when an icon frame is what you are in and goes
 /// the moment you pick anything else.
 ///
 /// Three things about it are deliberate and are the whole reason it works:
@@ -42,6 +43,10 @@ struct IconPreviewsStrip: View {
     /// The corner every chip is cut with.
     private static let chipRadius: CGFloat = 7
     private static let cardRadius: CGFloat = 12
+    /// The dark chip, in the mock's own near black and its edge, the same in
+    /// light and dark mode: it is a ground to test against, not chrome.
+    private static let darkGround = Color(hex: IconPreviews.darkChipHex)
+    private static let darkEdge = Color(hex: "#2A2F45")
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -84,10 +89,22 @@ struct IconPreviewsStrip: View {
                 }
                 // A walk can name one preview and read its size off the label.
                 .playtestControl("Icon preview \(Int(tile.side))",
-                                 detail: tile.image == nil ? "Drawing" : "Drawn")
+                                 detail: (tile.image == nil ? "Drawing" : "Drawn")
+                                     + (tile.onDarkGround ? ", dark ground" : ""))
             }
         }
         .allowsHitTesting(false)
+    }
+
+    /// The ground under one preview: the mock's near black on the dark chip,
+    /// the frame's own surface on a light one (so the glyph sits on the chip
+    /// as icon-draw-wt.html draws it, rather than on a white square inside a
+    /// grey one), and the plain chip for a frame whose surface stays in the
+    /// picture.
+    private func ground(_ tile: IconPreviewTile) -> AnyShapeStyle {
+        if tile.onDarkGround { return AnyShapeStyle(Self.darkGround) }
+        if let hex = tile.groundHex { return AnyShapeStyle(Color(hex: hex)) }
+        return AnyShapeStyle(.quaternary)
     }
 
     /// One preview on its chip. The chip is what makes a picture visible at
@@ -95,7 +112,7 @@ struct IconPreviewsStrip: View {
     /// and transparent on glass is nothing.
     private func chip(_ tile: IconPreviewTile) -> some View {
         RoundedRectangle(cornerRadius: Self.chipRadius)
-            .fill(.quaternary)
+            .fill(ground(tile))
             .overlay {
                 if let image = tile.image {
                     // Exactly `side` points across, which is the size the icon
@@ -108,7 +125,9 @@ struct IconPreviewsStrip: View {
             }
             .overlay {
                 RoundedRectangle(cornerRadius: Self.chipRadius)
-                    .strokeBorder(.separator, lineWidth: 1)
+                    .strokeBorder(tile.onDarkGround ? AnyShapeStyle(Self.darkEdge)
+                                                    : AnyShapeStyle(.separator),
+                                  lineWidth: 1)
             }
             .frame(width: IconPreviews.chipSide(for: tile.side),
                    height: IconPreviews.chipSide(for: tile.side))

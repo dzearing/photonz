@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.796Z",
-  "updated": "2026-10-10T02:37:52.612Z",
+  "updated": "2026-10-10T12:04:00.193Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html #igSizes step 11 (16, 24, 32, 48 with 32 on a dark chip). Answered card see-an-icon-at-the-size-it-will-really-be-used ('strip') promised 16 to 64. Code: Sources/PhotonzCore/IconPreviews.swift sides(forFrameSide:) ~51-56 deliberately keeps only sizes at or below the frame ('Nothing bigger'), test pins it at Tests/PhotonzCoreTests/IconPreviewTests.swift:44 (expects [16, 24]). Chips all use .fill(.quaternary) in Sources/Photonz/IconPreviewsStrip.swift chip(). The mock is the floor: change the rule, update the test first.",
@@ -27,6 +27,36 @@
     {
       "t": "2026-10-10T02:37:52.611Z",
       "note": "seq 3980 -> 12"
+    },
+    {
+      "t": "2026-10-10T11:13:01.607Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T12:03:59.951Z",
+      "note": "owns these walks: icon-previews-dark-chip-walk, icon-previews-stay-with-nothing-picked-walk, icon-preview-walk"
+    },
+    {
+      "t": "2026-10-10T12:04:00.011Z",
+      "note": "Adversarial pass before building: icon frames get a white surface by default, so a dark chip drawn as Export draws it would be a white square with a dark rim; and a black glyph on near black reads as nothing. Mock draws the glyph light on the dark chip (currentColor template). So the dark chip drops the frame surface and turns a one colour dark grey glyph light; coloured icons are shown as drawn."
+    },
+    {
+      "t": "2026-10-10T12:04:00.072Z",
+      "note": "Rule (in IconPreviews.sides): every interface size up to twice the frame's own, plus its own when 64 or under. 16 -> 16,24,32; 24 -> 16,24,32,48; 32 and up -> 16..64. Dark chip is the one before the biggest (IconPreviews.darkSide): 32 under a 24, 24 under a 16, 48 under 32+. Light chips are painted the frame's own flat surface (iconPreviewGroundHex) while the picture stays byte-exact export: dropping the white from light pictures was tried and measured up to 50/255 darker AA edges on screen (CI blends linear, SwiftUI in sRGB), which would flatter hairlines."
+    },
+    {
+      "t": "2026-10-10T12:04:00.131Z",
+      "note": "Tests: full Scripts/test.sh hung twice at 0% CPU (HEIF writer + AVAssetReader, logged on find-out-why-the-whole-test-run-hangs-in-the-mac). Ran split instead: --skip Render|Media 11009 pass; Render minus PackageIO|ImageCodec|Sound|Peaks|Read|HEIF 999 pass. Media and those render suites untouched by this change. Walks: icon-previews-dark-chip-walk (new, Next defaults, no flags), icon-previews-stay-with-nothing-picked-walk (24 and 48 expectations updated), icon-preview-walk, motion-loop-preview-walk all ok."
+    },
+    {
+      "t": "2026-10-10T12:04:00.192Z",
+      "note": "left rough: the dark chip's soft edges blend in sRGB on screen, so a hairline there reads slightly heavier than the same line would composited by the renderer; there is no exported equivalent of the dark chip to be true to, so not filed. Also a walk cannot set a shape's colour, so the light-on-dark glyph is proved by unit tests only; not filed (no one using the app notices)."
     }
+  ],
+  "started": "2026-10-10T11:13:01.606Z",
+  "walks": [
+    "icon-previews-dark-chip-walk",
+    "icon-previews-stay-with-nothing-picked-walk",
+    "icon-preview-walk"
   ]
 }

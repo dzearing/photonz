@@ -36,25 +36,31 @@ struct IconPreviewTests {
         #expect(IconPreviews.sides(forFrameSide: 512) == [16, 24, 32, 48, 64])
     }
 
-    @Test("A frame is never shown BIGGER than it is drawn")
-    func neverUpscales() {
-        // Blowing a 24 point frame up to 64 is not a size it will really be
-        // used at, and the softness it would show is the preview's own, not
-        // the icon's.
-        #expect(IconPreviews.sides(forFrameSide: 24) == [16, 24])
-        #expect(IconPreviews.sides(forFrameSide: 32) == [16, 24, 32])
+    @Test("A 24 point icon is shown at 16, 24, 32 and 48, as the icon mock draws it")
+    func twentyFourShowsTheMocksFour() {
+        // icon-draw-wt.html, step 11: the strip under a 24 unit glyph reads
+        // 16, 24, 32, 48. A 24 grid glyph is used at 32 and 48 as well, and
+        // those are the sizes a designer checks it at before it joins a set.
+        #expect(IconPreviews.sides(forFrameSide: 24) == [16, 24, 32, 48])
+    }
+
+    @Test("A frame is shown at every interface size up to twice its own")
+    func upToTwiceItsOwnSide() {
+        // The picture is drawn AT each size from the shapes, never a small
+        // picture blown up, so a bigger chip is the icon's own pixels at that
+        // size. Twice is where it stops: a 16 shown at 64 is a different icon.
+        #expect(IconPreviews.sides(forFrameSide: 16) == [16, 24, 32])
+        #expect(IconPreviews.sides(forFrameSide: 32) == [16, 24, 32, 48, 64])
+        #expect(IconPreviews.sides(forFrameSide: 48) == [16, 24, 32, 48, 64])
         #expect(IconPreviews.sides(forFrameSide: 64) == [16, 24, 32, 48, 64])
     }
 
-    @Test("The smallest frame still shows itself at true size")
-    func smallestFrame() {
-        // A 16 point frame drawn at 3200% is never seen at 16 anywhere else in
-        // the app, so the one preview it gets is the whole point of the strip.
-        #expect(IconPreviews.sides(forFrameSide: 16) == [16])
+    @Test("A size nobody offered still shows itself at true size")
+    func offSizeFrames() {
         // A size nobody offered still gets its own true size, with the
-        // interface sizes under it.
-        #expect(IconPreviews.sides(forFrameSide: 20) == [16, 20])
-        #expect(IconPreviews.sides(forFrameSide: 10) == [10])
+        // interface sizes round it.
+        #expect(IconPreviews.sides(forFrameSide: 20) == [16, 20, 24, 32])
+        #expect(IconPreviews.sides(forFrameSide: 10) == [10, 16])
         // Each size appears once, however it was arrived at.
         #expect(Set(IconPreviews.sides(forFrameSide: 48)).count
             == IconPreviews.sides(forFrameSide: 48).count)
@@ -66,7 +72,74 @@ struct IconPreviewTests {
         #expect(IconPreviews.sides(forFrameSide: 0).isEmpty)
     }
 
+    // MARK: - What the dark chip draws
+
+    @Test("A light chip is painted the frame's own flat surface, under the exported picture")
+    func lightChipIsTheSurface() throws {
+        // icon-draw-wt.html draws the glyph straight on a light chip. The
+        // frame sat as a white square inside a grey chip; painting the chip in
+        // the artboard's colour gives the mock's chip, while the picture on it
+        // stays exactly what Export writes. Left out of the picture, a soft
+        // edge blended on screen reads up to a fifth darker than in the file,
+        // which would flatter the very hairlines the strip is there to catch.
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
+        let frame = document.addFrame(origin: CGPoint(x: 10, y: 10),
+                                      size: CGSize(width: 24, height: 24))
+        #expect(document.iconPreviewGroundHex(id: frame.id) == "#FFFFFF")
+        let light = try #require(document.iconPreviewDocument(id: frame.id, onDarkGround: false))
+        #expect(light == document.frameDocument(id: frame.id))
+        #expect(document.iconPreviewDocument(id: UUID(), onDarkGround: false) == nil)
+    }
+
+    @Test("On the dark chip an icon frame is drawn without its own surface")
+    func darkChipDropsTheSurface() throws {
+        // The frame's white is the artboard, not the icon: left in, the dark
+        // chip would be a white square with a dark rim, and the glyph would
+        // never be seen against the dark at all.
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
+        let frame = document.addFrame(origin: CGPoint(x: 10, y: 10),
+                                      size: CGSize(width: 24, height: 24))
+        let dark = try #require(document.iconPreviewDocument(id: frame.id, onDarkGround: true))
+        #expect(dark.layers.first?.group?.background == nil)
+        #expect(document.iconPreviewDocument(id: UUID(), onDarkGround: true) == nil)
+    }
+
+    @Test("A surface the chip cannot paint stays in the picture")
+    func gradientOrClearSurfaceStays() throws {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 200, height: 200))
+        let clear = document.addFrame(origin: .zero, size: CGSize(width: 24, height: 24),
+                                      backgroundHex: nil)
+        #expect(document.iconPreviewGroundHex(id: clear.id) == nil)
+        let shaded = document.addFrame(origin: CGPoint(x: 50, y: 0),
+                                       size: CGSize(width: 24, height: 24))
+        document.updateLayer(id: shaded.id) { frame in
+            guard var group = frame.group else { return }
+            group.background = Paint(hex: "#2050C0", kind: .linear)
+            frame.content = .group(group)
+        }
+        // A gradient is not one colour a chip can be, so it sits on the plain
+        // chip, still exactly as Export draws it.
+        #expect(document.iconPreviewGroundHex(id: shaded.id) == nil)
+        let light = try #require(document.iconPreviewDocument(id: shaded.id, onDarkGround: false))
+        #expect(light == document.frameDocument(id: shaded.id))
+    }
+
     // MARK: - The chip each preview sits on
+
+    @Test("One chip is dark: the one before the biggest, as the mock puts 32 on dark under a 24")
+    func oneDarkChip() {
+        // icon-draw-wt.html step 11 draws 16, 24, 48 on light and 32 on dark,
+        // so a glyph is checked on both grounds. The biggest stays light, where
+        // the detail is read; the size beside it shows the dark ground.
+        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 24)) == 32)
+        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 16)) == 24)
+        #expect(IconPreviews.darkSide(among: IconPreviews.sides(forFrameSide: 512)) == 48)
+        #expect(IconPreviews.darkSide(among: [10, 16]) == 10)
+        // A lone chip stays light: with one picture there is no second ground
+        // to compare against, and the light one is the one people draw on.
+        #expect(IconPreviews.darkSide(among: [16]) == nil)
+        #expect(IconPreviews.darkSide(among: []) == nil)
+    }
 
     @Test("Every preview sits on a chip with the same margin round it")
     func chipSides() {

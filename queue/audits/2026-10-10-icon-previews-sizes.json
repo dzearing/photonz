@@ -1,0 +1,45 @@
+{
+  "feature": "Icon previews at 32 and 48, with one dark chip",
+  "epic": "icon-grid",
+  "summary": "A 24 point icon now shows at 16, 24, 32 and 48 beside the artboard, the way the icon mock draws it, and the 32 sits on a dark chip so you see the glyph on a dark ground too.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default. Walk: Scripts/playtest/icon-previews-dark-chip-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File > New Frame, pick 24 under Icons and click Add Frame.",
+      "shot": "2026-10-10-icon-previews-sizes-1-empty-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a rectangle and a circle inside the frame.",
+      "shot": "2026-10-10-icon-previews-sizes-2-drawn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the row in the top left: 16, 24, 32 on dark, 48."
+    },
+    {
+      "do": "Change a shape's fill to black and look at the dark chip: the glyph turns light there."
+    },
+    {
+      "do": "Add a 16 point icon frame the same way.",
+      "shot": "2026-10-10-icon-previews-sizes-3-sixteen-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the row: 16, 24 on dark, 32."
+    }
+  ],
+  "evaluate": [
+    "Is the rule right: every size an icon is used at, up to twice the size you drew it at (so a 16 shows at 16, 24 and 32; a 32 or bigger shows all five, 16 to 64)?",
+    "Is the chip before the biggest the right one to make dark, or would you rather the dark chip were always 32?",
+    "Does turning a one colour dark glyph light on the dark chip read the way you expect a template icon to look in dark mode?",
+    "Does a coloured glyph (the red one here) on the dark chip tell you anything useful, or should the dark chip only appear for one colour glyphs?"
+  ],
+  "rough": [
+    "Matches icon-draw-wt.html step 11: 16, 24, 32 and 48 under a 24 point glyph, the 32 on the mock's own near black, and the glyph sitting straight on light chips painted the frame's own white.",
+    "Light chips still show exactly the exported picture. Leaving the white out of it was tried and measured: a thin line's soft edge then read up to a fifth darker on screen than in the file, which would hide the hairlines the strip is for.",
+    "Only a glyph drawn in one dark grey turns light on the dark chip. A coloured or many coloured icon is shown as drawn there, which is how it will really be seen.",
+    "The walk could not paint a shape black (no walk step reaches the colour well yet), so the light on dark case is proved by unit tests rather than in these pictures."
+  ]
+}

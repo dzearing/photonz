@@ -59,13 +59,15 @@
       "do": "expectIconPreviews",
       "sides": [
         16,
-        24
+        24,
+        32,
+        48
       ]
     },
     {
       "do": "describe",
       "stage": "1-frame-picked",
-      "note": "a 24 by 24 icon frame, freshly added and picked: the previews row is up, showing it at 16 and at 24"
+      "note": "a 24 by 24 icon frame, freshly added and picked: the previews row is up, showing it at 16, 24, 32 and 48 as the icon mock draws it, with 32 on the dark chip"
     },
     {
       "do": "snapshot",
@@ -106,7 +108,9 @@
       "do": "expectIconPreviews",
       "sides": [
         16,
-        24
+        24,
+        32,
+        48
       ]
     },
     {
@@ -136,7 +140,9 @@
       "do": "expectIconPreviews",
       "sides": [
         16,
-        24
+        24,
+        32,
+        48
       ]
     },
     {
@@ -160,7 +166,9 @@
       "do": "expectIconPreviews",
       "sides": [
         16,
-        24
+        24,
+        32,
+        48
       ]
     },
     {
@@ -191,7 +199,9 @@
       "do": "expectIconPreviews",
       "sides": [
         16,
-        24
+        24,
+        32,
+        48
       ]
     },
     {
@@ -268,13 +278,14 @@
         16,
         24,
         32,
-        48
+        48,
+        64
       ]
     },
     {
       "do": "describe",
       "stage": "5-pointer-says-which",
-      "note": "with nothing picked, resting the pointer in a second icon frame moves the row onto that one: 48 is shown at 16, 24, 32 and 48. This is the rule the Width row already runs on, so the number in the tool bar and the pictures beside it are always about one icon."
+      "note": "with nothing picked, resting the pointer in a second icon frame moves the row onto that one: 48 is shown at 16, 24, 32, 48 and 64. This is the rule the Width row already runs on, so the number in the tool bar and the pictures beside it are always about one icon."
     },
     {
       "do": "snapshot",
@@ -297,7 +308,8 @@
         16,
         24,
         32,
-        48
+        48,
+        64
       ]
     },
     {

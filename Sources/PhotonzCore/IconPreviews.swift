@@ -42,18 +42,36 @@ public enum IconPreviews {
 
     /// The sizes one frame is shown at, smallest first.
     ///
-    /// Every interface size at or below the frame's own side, plus that side
-    /// itself when it is one an icon is used at. Nothing bigger: blowing a 24
-    /// point frame up to 64 is not a size it will really be used at, and the
-    /// softness that showed would be the preview's own rather than the icon's.
-    /// A 16 point frame gets exactly one preview, which is the whole point of
-    /// the strip — drawn at 3200% it is never seen at 16 anywhere else.
+    /// Every interface size up to twice the frame's own side, plus that side
+    /// itself. So a 24 point glyph is shown at 16, 24, 32 and 48, which is the
+    /// strip the icon mock draws under one (icon-draw-wt.html, step 11): a 24
+    /// grid glyph is used at 32 and 48 too, and that is where a designer checks
+    /// it before it joins a set. Bigger is honest here because each picture is
+    /// drawn AT its size from the shapes, never a small picture blown up.
+    /// Twice is where it stops: a 16 shown at 64 is a different icon.
     public static func sides(forFrameSide side: CGFloat) -> [CGFloat] {
         guard side >= 1, side <= largestIconSide else { return [] }
-        var sides = interfaceSides.filter { $0 <= side }
+        var sides = interfaceSides.filter { $0 <= side * 2 }
         if side <= (interfaceSides.last ?? 0), !sides.contains(side) { sides.append(side) }
         return sides.sorted()
     }
+
+    /// The one size shown on a dark chip, or nil when there is a single chip.
+    ///
+    /// The mock puts 32 on dark under a 24 point glyph, so it is checked on
+    /// both grounds. That is the chip before the biggest: the biggest stays
+    /// light, which is where detail is read, and the one beside it shows the
+    /// glyph against the dark.
+    public static func darkSide(among sides: [CGFloat]) -> CGFloat? {
+        let sorted = sides.sorted()
+        guard sorted.count >= 2 else { return nil }
+        return sorted[sorted.count - 2]
+    }
+
+    /// The dark chip's ground, and the ink a one colour dark glyph is drawn in
+    /// on it: the mock's own pair, light on near black.
+    public static let darkChipHex = "#0B0D14"
+    public static let inkOnDarkHex = "#F2F4FF"
 
     /// The sizes a frame of this size is shown at, or nothing for a frame that
     /// is not an icon.
@@ -75,6 +93,38 @@ extension PhotonzDocument {
     public func isIconFrame(id: UUID) -> Bool {
         guard let layer = layer(id: id), layer.isFrame else { return false }
         return IconPreviews.isIconSize(layer.frame.size)
+    }
+
+    /// The colour a light chip is painted, when it can be the frame's own
+    /// surface: one flat opaque colour on a frame drawn at full strength. The
+    /// picture still carries that surface, exactly as Export writes it, so the
+    /// chip and the picture are one colour and the glyph sits straight on the
+    /// chip the way icon-draw-wt.html draws it, rather than on a white square
+    /// inside a grey one. Nil for a clear frame, a gradient, or a faded one,
+    /// which sit on the plain chip.
+    public func iconPreviewGroundHex(id: UUID) -> String? {
+        guard let frame = layer(id: id), frame.isFrame, frame.style.opacity >= 1,
+              let surface = frame.group?.background, surface.kind == .solid,
+              let colour = RGBA(hex: surface.hex), colour.a >= 1 else { return nil }
+        return surface.hex
+    }
+
+    /// The frame on its own, as one preview chip draws it.
+    ///
+    /// Exactly what Export takes (`frameDocument(id:)`) on a light chip, so a
+    /// line too thin to survive is exactly as faint as in the exported file.
+    /// On the dark chip the frame's own surface is left out: that white is the
+    /// artboard rather than the icon, and left in it would cover the dark
+    /// ground the chip exists to show the glyph against.
+    public func iconPreviewDocument(id: UUID, onDarkGround: Bool) -> PhotonzDocument? {
+        guard var scoped = frameDocument(id: id) else { return nil }
+        guard onDarkGround else { return scoped }
+        scoped.updateLayer(id: id) { frame in
+            guard var group = frame.group else { return }
+            group.background = nil
+            frame.content = .group(group)
+        }
+        return scoped
     }
 
     /// The icon frame a layer is being drawn inside, if any.

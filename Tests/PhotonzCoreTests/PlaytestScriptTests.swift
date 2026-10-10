@@ -2637,6 +2637,25 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectIconPreviews step can name the size on the dark chip")
+    func expectIconPreviewsNamesTheDarkChip() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectIconPreviews", "sides": [16, 24, 32, 48], "dark": 32 },
+                     { "do": "expectIconPreviews", "sides": [16, 24] },
+                     { "do": "expectIconPreviews", "absent": true } ] }
+        """)
+        guard case .expectIconPreviews(let sides, let absent, let dark) = script.steps[0],
+              case .expectIconPreviews(_, _, let unclaimed) = script.steps[1],
+              case .expectIconPreviews(_, let none, _) = script.steps[2] else {
+            Issue.record("expectIconPreviews"); return
+        }
+        #expect(sides == [16, 24, 32, 48])
+        #expect(!absent)
+        #expect(dark == 32)
+        #expect(unclaimed == nil)
+        #expect(none)
+    }
+
     @Test("An expectPicked step names the layers that must be picked")
     func expectPickedNamesTheLayers() throws {
         let script = try decode("""

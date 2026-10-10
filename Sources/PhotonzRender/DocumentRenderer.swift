@@ -873,14 +873,23 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// the exported file.
     ///
     /// Nil for anything that is not a frame, and for a size nobody could draw.
+    ///
+    /// `onDarkGround` is the strip's one dark chip: the frame is drawn without
+    /// its own surface, and a glyph drawn in one dark grey comes back in the
+    /// light ink there, the way the Mac draws a template on dark
+    /// (`IconPreviewInk`).
     public func iconPreview(for id: UUID, in document: PhotonzDocument, store: ImageStore,
-                            side: CGFloat) -> CGImage? {
-        guard side >= 1, side.isFinite, let scoped = document.frameDocument(id: id) else { return nil }
+                            side: CGFloat, onDarkGround: Bool = false) -> CGImage? {
+        guard side >= 1, side.isFinite,
+              let scoped = document.iconPreviewDocument(id: id, onDarkGround: onDarkGround)
+        else { return nil }
         let widest = max(scoped.canvasSize.width, scoped.canvasSize.height)
         guard widest >= 1 else { return nil }
         let scale = side / widest
-        return scale == 1 ? render(scoped, store: store)
-                          : render(scoped, store: store, scale: scale)
+        let picture = scale == 1 ? render(scoped, store: store)
+                                 : render(scoped, store: store, scale: scale)
+        guard onDarkGround, let picture else { return picture }
+        return IconPreviewInk.onDarkGround(picture)
     }
 
     /// One layer rendered alone and downscaled for the layers panel. Renders

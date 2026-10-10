@@ -2506,8 +2506,8 @@ private final class Run {
         case .expectPicked(let layers, let outline):
             note(number, step.name, try checkPicked(layers, outline: outline), state: describe())
 
-        case .expectIconPreviews(let sides, let absent):
-            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent),
+        case .expectIconPreviews(let sides, let absent, let dark):
+            note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, dark: dark),
                  state: describe())
 
         case .expectMeasures(let count):
@@ -8363,7 +8363,7 @@ private final class Run {
     /// ones the document holds, because the two ways this goes wrong are "the
     /// strip is gone" and "the strip is showing the wrong icon", and a bare
     /// list of numbers tells them apart from neither.
-    private func checkIconPreviews(sides: [Int], absent: Bool) throws -> String {
+    private func checkIconPreviews(sides: [Int], absent: Bool, dark: Int?) throws -> String {
         let editor = try requireEditor()
         let showing = editor.iconPreviewTiles.map { Int($0.side) }
         let frameID = editor.iconPreviewFrameID
@@ -8388,7 +8388,13 @@ private final class Run {
                 + "not \(list(sides)); it is speaking for \"\(named)\", and the icon frames in "
                 + "the document are: \(inTheDocument)")
         }
-        return "icon previews for \"\(named)\" at \(list(showing)), as claimed"
+        let onDark = editor.iconPreviewTiles.filter(\.onDarkGround).map { Int($0.side) }
+        if let dark, onDark != [dark] {
+            throw Failure(description: "the icon previews strip has \(list(onDark)) on the dark "
+                + "chip, not \(dark); it is showing \(list(showing)) for \"\(named)\"")
+        }
+        let darkNote = onDark.isEmpty ? "" : " (\(list(onDark)) on the dark chip)"
+        return "icon previews for \"\(named)\" at \(list(showing))\(darkNote), as claimed"
     }
 
     /// Whether the canvas is showing the picture drawn at the size it is being

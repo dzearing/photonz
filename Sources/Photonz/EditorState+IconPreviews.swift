@@ -9,7 +9,7 @@ import PhotonzRender
 // An icon is the only thing in this app drawn at one size and looked at at
 // another. So while an icon frame is what you are working in, the same drawing
 // is shown small at the top left of the canvas, at the sizes it will really be
-// used, and it is redrawn as the picture changes. A hairline that disappears at
+// used (up to twice its own size, one of them on a dark ground), and it is redrawn as the picture changes. A hairline that disappears at
 // 16 disappears there, while you can still thicken it.
 //
 // Two rules decide what it costs:
@@ -83,8 +83,12 @@ extension EditorState {
         guard !sides.isEmpty else { return [] }
         let source = iconPreviewSource(document, frameID: frameID)
         let frame = source.layer(id: frameID) ?? authored
+        let dark = IconPreviews.darkSide(among: sides)
+        let ground = document.iconPreviewGroundHex(id: frameID)
         return sides.map { side in
-            IconPreviewTile(side: side, image: iconPreview(of: frame, in: source, side: side))
+            IconPreviewTile(side: side, onDarkGround: side == dark, groundHex: ground,
+                            image: iconPreview(of: frame, in: source, side: side,
+                                               onDarkGround: side == dark))
         }
     }
 
@@ -112,8 +116,9 @@ extension EditorState {
     /// nothing else does. While a fresh one is being drawn the last one stays
     /// on screen: a strip that blinked empty on every stroke would be worse
     /// than one a frame behind.
-    private func iconPreview(of frame: Layer, in document: PhotonzDocument, side: CGFloat) -> CGImage? {
-        let key = IconPreviewKey(frameID: frame.id, side: Int(side))
+    private func iconPreview(of frame: Layer, in document: PhotonzDocument, side: CGFloat,
+                             onDarkGround: Bool) -> CGImage? {
+        let key = IconPreviewKey(frameID: frame.id, side: Int(side), onDarkGround: onDarkGround)
         // The hash is of the frame the picture will be made FROM, which while
         // the loop runs is the frame at this moment of it. So a moving icon
         // orders a fresh picture per frame and a still one orders none, with no
@@ -131,7 +136,8 @@ extension EditorState {
                 self.iconPreviewsInFlight.insert(key)
                 let image = await Task.detached(priority: .userInitiated) {
                     renderer.iconPreview(for: key.frameID, in: document, store: store,
-                                         side: CGFloat(key.side))
+                                         side: CGFloat(key.side),
+                                         onDarkGround: key.onDarkGround)
                 }.value
                 self.iconPreviewsInFlight.remove(key)
                 if let image { self.iconPreviews[key] = (hash, image) }
@@ -178,6 +184,11 @@ extension EditorState {
 /// One preview in the strip: a size, and the frame drawn at it.
 struct IconPreviewTile: Identifiable {
     let side: CGFloat
+    /// The one chip on a dark ground, as the icon mock draws 32 under a 24.
+    let onDarkGround: Bool
+    /// What a light chip is painted: the frame's own flat surface, which the
+    /// picture then leaves out, or nil for the plain chip.
+    let groundHex: String?
     let image: CGImage?
     var id: Int { Int(side) }
 }
@@ -186,4 +197,7 @@ struct IconPreviewTile: Identifiable {
 struct IconPreviewKey: Hashable {
     let frameID: UUID
     let side: Int
+    /// The dark chip's picture can be a different colour from the same size
+    /// on a light one, so it is cached on its own.
+    let onDarkGround: Bool
 }

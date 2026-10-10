@@ -21070,3 +21070,10 @@ Next: the first editor window's ~200 ms first build
 - The pivot handle now carries the layer's parent origin, so the crosshair sits in the right place for shapes inside frames.
 - Tests: `ArtboardPivotTests`; walk `spinner-turns-about-the-artboard-walk`. The full suite hung in system HEIF/Vision work twice and was run in two parts (both green); filed as a p2 look-into.
 - Next: the ring's 0 to 360 Forever default (`a-ring-or-arc-gets-a-full-turn-forever-when-rota`).
+
+## 2026-10-10 — Icon previews show 32 and 48, one chip on dark
+
+- `IconPreviews.sides` now shows every interface size up to twice the frame's own: a 24 point icon at 16, 24, 32, 48 as icon-draw-wt.html step 11 draws it; a 16 at 16, 24, 32.
+- One dark chip (`IconPreviews.darkSide`, the one before the biggest) in the mock's near black. On it the frame's surface is left out and a one colour dark glyph is redrawn light (`IconPreviewInk`), the way a template reads on dark.
+- Light chips are painted the frame's own flat surface so the glyph sits straight on the chip; the picture stays byte-exact export (dropping the white was measured to darken soft edges on screen).
+- Walk `icon-previews-dark-chip-walk`; `expectIconPreviews` takes `"dark"`. Full test run still hangs in HEIF/sound reading (open task); split runs green.
