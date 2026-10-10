@@ -997,10 +997,18 @@ struct EditorCommands: Commands {
     // ⌃⇧D, the key the cut clickthrough's command menu prints for
     // it (`video-cut-wt`): two modifiers away from ⌘D, so not a key
     // anybody presses by accident on a take they have already cut.
+    // Once the sound is a layer of its own the same row, on the same key,
+    // reads Re-attach Audio and puts it back: one row that toggles, the way
+    // Premiere's Link and Unlink are one row on ⌘L.
     @ViewBuilder private var detachAudioRow: some View {
-        Button("Detach Audio") { editor?.detachSound() }
-            .keyboardShortcut("d", modifiers: [.control, .shift])
-            .disabled(!(editor?.canDetachSound ?? false))
+        if editor?.canReattachSound == true {
+            Button("Re-attach Audio") { editor?.reattachSound() }
+                .keyboardShortcut("d", modifiers: [.control, .shift])
+        } else {
+            Button("Detach Audio") { editor?.detachSound() }
+                .keyboardShortcut("d", modifiers: [.control, .shift])
+                .disabled(!(editor?.canDetachSound ?? false))
+        }
     }
 
     /// A video or a sound, onto the timeline at the playhead: the menu's

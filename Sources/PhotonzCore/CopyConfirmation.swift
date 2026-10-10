@@ -164,6 +164,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// identical the instant after — so without a word on screen the
         /// command reads as having done nothing.
         case soundDetached(clip: String)
+        /// A detached sound was put back into its picture. The canvas does
+        /// not change either, for the same reason.
+        case soundReattached(clip: String)
         /// A sound was brought in from a file and put on the timeline. It
         /// draws nothing on the canvas, so the same reason applies twice over:
         /// the only place it shows up is the timeline and the layers list.
@@ -393,6 +396,7 @@ public struct CopyConfirmation: Hashable, Sendable {
     public var title: String {
         switch subject {
         case .soundDetached: return "Sound taken off"
+        case .soundReattached: return "Sound put back"
         case .soundAdded: return "Sound added"
         case .titlePresetSaved: return "Preset saved"
         case .clipAdded: return "Clip added"
@@ -460,6 +464,8 @@ public struct CopyConfirmation: Hashable, Sendable {
         switch subject {
         case .soundDetached(let clip):
             return "\(clip) keeps its picture. Its sound is a layer of its own now"
+        case .soundReattached(let clip):
+            return "\(clip) plays its own sound again, in step"
         case .soundAdded(let name):
             return "\(name) is on the timeline"
         case .titlePresetSaved(let name):

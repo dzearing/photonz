@@ -1,0 +1,28 @@
+{
+  "feature": "Re-attach a detached sound to its picture",
+  "epic": "video-audio",
+  "task": "detached-sound-can-be-put-back-into-its-picture",
+  "summary": "Once a recording's sound has been detached onto its own clip, Re-attach Audio puts it back inside its picture, in step, as one undo step, without undoing anything you did since.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: re-attach-audio-walk and re-attach-audio-menu-bar-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording with sound and right-click its green sound segment on the Audio track, then choose Detach Audio.", "shot": "2026-10-09-reattach-audio-1-detached.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With the loose sound picked, press Command Right three times so it slips three frames behind the picture.", "shot": "2026-10-09-reattach-audio-2-off-step.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the loose sound and choose Re-attach Audio, in the place Detach Audio was.", "shot": "2026-10-09-reattach-audio-3-re-attached.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: the loose, slid sound comes back. Press Command Shift Z to join them again." },
+    { "do": "Pick the clip and open the Clip menu: the row on Control Shift D reads Detach Audio. Choose it, then open Clip again: the same row now reads Re-attach Audio.", "shot": "2026-10-09-reattach-audio-4-menu-bar.png" },
+    { "do": "Right-click the picture on V1 after detaching: its menu's Detach Audio row now reads Re-attach Audio too." }
+  ],
+  "evaluate": [
+    "Is one Clip menu row that flips between Detach Audio and Re-attach Audio (like Premiere's Link and Unlink) clearer than two rows side by side?",
+    "When the loose sound had been slid off its picture, is snapping it back in step what you expected?",
+    "Volume, gain, effects and noise cleaning come back with the sound, but a level line or fades drawn on a slid or trimmed sound are let go. Is that the right trade?",
+    "Does the notice under the canvas, Sound put back, tell you enough when nothing on the canvas changes?"
+  ],
+  "rough": [
+    "The mock draws a Sound section in the clip's panel with an Audio row whose button reads Detach audio, then Re-attach audio. The app has no panel button for either: Detach left the panel on 2026-09-23 under the placement contract (verbs go on right-click and the menu bar), and whether a section may keep one main action is the open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h. The same verb sits on the right-click row and the Clip menu row instead.",
+    "The task asked for Re-attach beside Detach in the menu bar. It is the same row, retitled, on the same key (Control Shift D), as Premiere does with Link and Unlink, so the shortcut never has two homes.",
+    "When one recording has been laid down twice and both detached, the app pairs each picture with the loose sound reading the most of the same stretch of the file, because nothing records which sound came off which picture. A picture whose loose sound was deleted simply gets its own sound back.",
+    "A sound that was moved, trimmed or cut comes back as the picture's own stretch, whole and in step. Its level line and fades are dropped in that case because they were drawn on a different stretch; if the sound was still in step everything comes back exactly."
+  ]
+}

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:22.564Z",
-  "updated": "2026-10-09T03:31:34.500Z",
+  "updated": "2026-10-10T04:36:28.155Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the IA contract task. Blocked on the card below. Inventory of panel verbs (docs/design/ia-audit-2026-09-29.md, Inspector): Layers 'Separate again' (LayersListView.swift:810), 'Out of view' (:957); Measurements header menu Show All/Hide All/Copy as Spec List/Clear (MeasurementsListView.swift:35-55); Arrange align/space buttons (ArrangeInspector.swift); component verbs (ComponentPanel.swift:310-2059); Canvas Size... (CanvasInspector.swift:21); Copy Measurement (MeasureInspector.swift:219); Key it / Key it again (CompositingInspector.swift:91,116); Clear stale (PlacementInspector.swift:726); Flatten, Normalize, Remove Noise Cleaning (SoundInspector.swift:95,170,218); Add Captions, Generate/Rewrite, Cancel, Earlier/Later, Export, Clear (CaptionsInspector.swift:96-257); Save/Delete caption style; Add transition (TransitionInspector.swift:115); Apply to Every Cut / Set as Default (TransitionsGroup.swift:107,133); Properties ... menu, Animate a property, Stop animating, key diamonds (PropertyKeysInspector.swift); Library Add at Playhead / Place in Picture (LibraryPanel.swift:720,741); Use Automatic For All (PanelSectionsFooter.swift:165); caption track bar Clear/Reset and readouts (CaptionTrackBar.swift:44-85). Depends on every-command-in-the-app-is-also-in-the-menu-bar for the menu rows.",
@@ -55,6 +55,10 @@
     {
       "t": "2026-10-09T03:31:34.499Z",
       "note": "manager 2026-10-08 20:30: icon-vector success item 2 asks for Union, Subtract, Intersect and Exclude 'from the Path section and from right-click'. Right-click and the Layer menu carry them today (PathCombining submenu); the panel has no Path section with the four buttons (icon-draw-wt.html draws one). Whatever this card settles about panel buttons decides whether that section gets built."
+    },
+    {
+      "t": "2026-10-10T04:36:28.154Z",
+      "note": "also waiting on this card: the cut mock's clip panel draws a Sound section with an Audio row whose button reads Detach audio, then Re-attach audio (video-cut-wt #btnDetach). Today both verbs are on right-click and the Clip menu only (task detached-sound-can-be-put-back-into-its-picture, 2026-10-09)."
     }
   ]
 }

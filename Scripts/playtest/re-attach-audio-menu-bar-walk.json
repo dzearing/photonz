@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/re-attach-audio-menu-bar-walk",
+  "seed": "The menu bar's Control Shift D row is one row that toggles, the way Premiere's Link and Unlink are one row (task detached-sound-can-be-put-back-into-its-picture), at Next defaults with no flag touched. On the sample recording with its sound linked it reads Detach Audio and takes the sound off; with the loose sound picked it reads Re-attach Audio and puts it back, in step. It needs the probe in front, because a menu bar only reads live for the app that has focus.",
+  "setup": {
+    "timelineOpen": true,
+    "front": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
+    { "comment": "The clip on V1 in the 1728x990 probe window, clicked the way a hand clicks it.", "do": "windowClick", "at": [726, 893] },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "menus", "stage": "1-clip-menu-linked", "menu": "Clip", "choose": "Clip > Detach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "track": "Audio", "startsAt": 0 },
+    { "do": "describe", "stage": "1-detached-from-the-menu-bar", "note": "The Clip menu's Detach Audio (Control Shift D) on the linked clip, and the sound is now its own clip on Audio, picked" },
+    { "do": "snapshot", "name": "1-detached-from-the-menu-bar" },
+
+    { "do": "menus", "stage": "2-clip-menu-detached", "menu": "Clip", "choose": "Clip > Re-attach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0, "endsAt": 8 },
+    { "do": "describe", "stage": "2-re-attached-from-the-menu-bar", "note": "THE TEST: the same row on the same key now read Re-attach Audio, and the sound is back inside its picture" },
+    { "do": "snapshot", "name": "2-re-attached-from-the-menu-bar" },
+
+    { "do": "menus", "stage": "3-clip-menu-joined", "menu": "Clip", "choose": "Clip > Detach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "track": "Audio", "startsAt": 0 },
+    { "do": "describe", "stage": "3-and-back-again", "note": "With the picture picked after the join, the row reads Detach Audio again" }
+  ]
+}

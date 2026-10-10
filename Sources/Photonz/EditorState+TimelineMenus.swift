@@ -167,10 +167,18 @@ extension EditorState {
             if !soundRows.isEmpty { soundRows.append(.separator) }
             soundRows.append(row)
         }
+        // Once the sound is a layer of its own, the same row on the picture
+        // and on that sound reads Re-attach Audio, as the cut clickthrough's
+        // button does (`video-cut-wt`), on the same key.
         let detachAudio: MenuRow? = document.canDetachSound(ofLayer: layerID) && plan.offersDetachAudio
             ? .command("Detach Audio", TimelineMenuKeys.detachAudio) {
                 self.selectLayer(layerID)
                 self.detachSound()
+            }
+            : document.canReattachSound(ofLayer: layerID)
+            ? .command("Re-attach Audio", TimelineMenuKeys.detachAudio) {
+                self.selectLayer(layerID)
+                self.reattachSound()
             }
             : nil
         // On the sound itself, the sound's rows are what the click was for.

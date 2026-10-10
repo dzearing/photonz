@@ -88,6 +88,29 @@ extension EditorState {
         raiseCanvasNotice(.soundDetached(clip: document.layer(id: id)?.name ?? "The clip"))
     }
 
+    // MARK: - Putting it back
+
+    /// Whether Re-attach Audio would do anything: the picked layer is a
+    /// picture whose sound was taken off, or the loose sound of one.
+    var canReattachSound: Bool {
+        guard let id = selectedLayerID else { return false }
+        return document?.canReattachSound(ofLayer: id) ?? false
+    }
+
+    /// **Re-attach Audio.** The loose sound goes and the picture plays its own
+    /// sound again, in step with it, on the audio track the loose sound sat
+    /// on. One undo step, so joining them never costs what was done since,
+    /// which is what undoing the detach would.
+    func reattachSound() {
+        guard let id = selectedLayerID, let document,
+              let joined = document.reattachingSound(ofLayer: id) else { return }
+        pauseDocument()
+        perform { $0 = joined.document }
+        selectLayer(joined.pictureID)
+        documentMomentChanged()
+        raiseCanvasNotice(.soundReattached(clip: document.layer(id: joined.pictureID)?.name ?? "The clip"))
+    }
+
     // MARK: - Bringing sound in
 
     /// **Add Media at Playhead.** Pick a recording or a sound; it lands on the

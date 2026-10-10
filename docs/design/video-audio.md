@@ -59,6 +59,20 @@ That last part is the whole point, and it is the case
 `video-cut-wt` is built around: cut the picture and the voiceover over it is
 untouched, because they are two rows and a cut acts on one row.
 
+### Re-attaching (2026-10-09)
+
+`PhotonzDocument.reattachingSound(ofLayer:)` is the way back that is not undo.
+From the silent picture or from its loose sound, the loose sound layer goes, the
+picture's `soundDetached` is cleared and its `soundTrackID` pinned to the track
+the loose sound sat on. It comes back **in step** by construction: a linked
+sound is the picture's own time and cuts. The level (volume, gain, cleaning,
+effects) comes with it; its points and fades only when the loose sound was
+still in step (same time and cuts), since a line drawn on another stretch would
+land on the wrong words. Nothing records which sound came off which picture, so
+the pair is the one reading the most of the same stretch of the same recording.
+A picture whose loose sound was deleted just gets its own sound back. One row,
+retitled, on ⌃⇧D in the Clip menu and on right-click (picture and loose sound).
+
 ---
 
 ## 2. The one plan

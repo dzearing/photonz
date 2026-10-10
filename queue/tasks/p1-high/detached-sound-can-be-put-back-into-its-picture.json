@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 80,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.535Z",
-  "updated": "2026-10-10T02:37:52.209Z",
+  "updated": "2026-10-10T04:36:28.219Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-cut-wt.html line ~334, data-set '#btnDetachLb=Re-attach audio' (steps 2 onward). The mock draws it, so no card. Code: only detachSound() exists, Sources/Photonz/EditorState+Audio.swift ~81, menu at Sources/Photonz/EditorCommands.swift ~1001. Nothing in docs/design/video-audio.md mentions reattach. Push the join logic into PhotonzCore with tests first. Decide (and say in the audit) what happens when the sound was moved off-sync: the simplest honest answer is it snaps back in step. Menu row placement follows the placement contract in UX-PATTERNS.md (a verb goes in the menu bar and right-click).",
@@ -28,6 +28,23 @@
     {
       "t": "2026-10-10T02:37:52.208Z",
       "note": "seq 3940 -> 80"
+    },
+    {
+      "t": "2026-10-10T04:15:05.074Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T04:36:17.094Z",
+      "note": "owns these walks: re-attach-audio-walk, re-attach-audio-menu-bar-walk"
+    },
+    {
+      "t": "2026-10-10T04:36:28.218Z",
+      "note": "Built: PhotonzDocument.canReattachSound/reattachingSound (SoundClip.swift, 14 tests in ReattachSoundTests), EditorState.reattachSound, Clip menu row on ctrl-shift-D retitles Detach Audio <-> Re-attach Audio, right-click on picture and loose sound, notice 'Sound put back'. No panel button: the mock's panel button waits on the open card about panel buttons (folded there). Walks re-attach-audio-walk (no front) and re-attach-audio-menu-bar-walk (front) green at defaults; neighbouring walks a-video-clip-menu-leads-with-the-picture, sound-on-the-timeline, a-clip-s-sound-is-linked-under-it, pro-menu-bar green. Off-step: snaps back in step, keeps volume/gain/effects, drops level points and fades. Nothing filed: no follow-up cleared the bar."
     }
+  ],
+  "started": "2026-10-10T04:15:05.071Z",
+  "walks": [
+    "re-attach-audio-walk",
+    "re-attach-audio-menu-bar-walk"
   ]
 }

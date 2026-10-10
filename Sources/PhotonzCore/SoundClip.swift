@@ -166,6 +166,85 @@ extension PhotonzDocument {
         return SoundDetachment(document: after, soundLayerID: soundLayerID, sound: sound)
     }
 
+    // MARK: Putting it back
+
+    /// Whether Re-attach Audio would do anything for this layer: it is a
+    /// picture whose recording's sound was taken off, or the loose sound of a
+    /// picture like that.
+    public func canReattachSound(ofLayer id: UUID) -> Bool {
+        reattachPair(ofLayer: id) != nil
+    }
+
+    /// The document with a detached sound put back into its picture: the
+    /// loose sound layer goes, and the picture speaks for its recording again,
+    /// linked to it on the audio track the loose sound was sitting on.
+    ///
+    /// **It comes back in step.** A linked sound is the picture's own time and
+    /// cuts drawn a second time, so however far the loose sound was slid,
+    /// trimmed or cut, what plays is the picture's stretch of the recording.
+    /// Volume, gain, cleaning and effects come back with it; a level line
+    /// (points and fades) comes back only when the sound was still in step,
+    /// since one drawn on a different stretch would land on the wrong words.
+    ///
+    /// Nil where there is nothing to put back.
+    public func reattachingSound(ofLayer id: UUID) -> SoundReattachment? {
+        guard let (pictureID, soundID) = reattachPair(ofLayer: id),
+              let picture = layer(id: pictureID) else { return nil }
+        let loose = soundID.flatMap { layer(id: $0) }
+        var after = self
+        var track: UUID?
+        if let soundID {
+            after.materializeTracks()
+            track = after.layer(id: soundID)?.trackID
+        }
+        let inStep = loose.map { $0.time == picture.time && $0.cuts == picture.cuts } ?? false
+        var level = loose?.soundLevel
+        if !inStep { level?.clearPoints() }
+        after.updateLayer(id: pictureID) {
+            $0.soundDetached = nil
+            $0.setSoundLevel(level ?? AudioLevel())
+            if let track { $0.soundTrackID = track }
+        }
+        if let soundID { after.removeLayers(ids: [soundID]) }
+        return SoundReattachment(document: after, pictureID: pictureID, soundLayerID: soundID)
+    }
+
+    /// The picture and the loose sound Re-attach would join, from either one.
+    ///
+    /// The document does not write down which sound came off which picture,
+    /// so the pair is the one reading the most of the same stretch of the same
+    /// recording: with a recording laid down twice and both detached, each
+    /// picture takes back the sound of its own stretch. A picture whose loose
+    /// sound was deleted pairs with nothing and simply gets its sound back.
+    func reattachPair(ofLayer id: UUID) -> (picture: UUID, sound: UUID?)? {
+        guard let layer = layer(id: id) else { return nil }
+        func isSilencedPicture(_ layer: Layer) -> Bool {
+            layer.isClip && layer.merged == nil && layer.soundDetached == true && layer.movie?.soundRef != nil
+        }
+        func score(_ a: Layer, _ b: Layer) -> (Int, Int, Int) {
+            guard let ta = a.time, let tb = b.time else { return (0, 0, Int.min) }
+            func overlap(_ x: Range<Int>, _ y: Range<Int>) -> Int {
+                max(0, min(x.upperBound, y.upperBound) - max(x.lowerBound, y.lowerBound))
+            }
+            let source = overlap(ta.sourceInMS..<(ta.sourceInMS + ta.lengthMS),
+                                 tb.sourceInMS..<(tb.sourceInMS + tb.lengthMS))
+            let placed = overlap(ta.inMS..<ta.outMS, tb.inMS..<tb.outMS)
+            return (source, placed, -abs(ta.inMS - tb.inMS))
+        }
+        let everything = allLayers
+        if isSilencedPicture(layer), let recording = layer.movie?.id {
+            let sounds = everything.filter { $0.isSoundOnly && $0.sound?.id == recording }
+            let best = sounds.max { score(layer, $0) < score(layer, $1) }
+            return (layer.id, best?.id)
+        }
+        if layer.isSoundOnly, let recording = layer.sound?.id {
+            let pictures = everything.filter { isSilencedPicture($0) && $0.movie?.id == recording }
+            guard let best = pictures.max(by: { score(layer, $0) < score(layer, $1) }) else { return nil }
+            return (best.id, layer.id)
+        }
+        return nil
+    }
+
     /// Put a piece of sound on the timeline at a moment, and stretch the
     /// document to hold it where it runs past the end.
     ///
@@ -199,6 +278,21 @@ public struct SoundDetachment: Sendable {
         self.document = document
         self.soundLayerID = soundLayerID
         self.sound = sound
+    }
+}
+
+/// A detached sound, put back into its picture.
+public struct SoundReattachment: Sendable {
+    public let document: PhotonzDocument
+    /// The picture that speaks for its recording again.
+    public let pictureID: UUID
+    /// The loose sound layer that went, or nil where there was none left.
+    public let soundLayerID: UUID?
+
+    public init(document: PhotonzDocument, pictureID: UUID, soundLayerID: UUID?) {
+        self.document = document
+        self.pictureID = pictureID
+        self.soundLayerID = soundLayerID
     }
 }
 

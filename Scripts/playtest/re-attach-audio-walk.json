@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/re-attach-audio-walk",
+  "seed": "Detached sound can be put back into its picture (task detached-sound-can-be-put-back-into-its-picture), at Next defaults with no flag touched. The sample recording's sound is taken off with a right-click on its segment, Detach Audio, and slid three frames off its picture with Command Right. A right-click on the loose sound now offers Re-attach Audio in the same place; choosing it takes the loose sound away and the picture plays its own sound again, back in step from 0:00. One Command Z puts the loose, slid sound back; Command Shift Z joins them again. The menu bar's Control Shift D row is walked by re-attach-audio-menu-bar-walk, which needs the probe in front.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0, "endsAt": 8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
+    { "do": "describe", "stage": "1-linked", "note": "At defaults: the recording on V1 with its own sound linked under it on Audio" },
+    { "do": "snapshot", "name": "1-linked" },
+
+    { "comment": "The sound segment on Audio, where a-clip-s-sound-is-linked-under-it-walk right-clicks it.", "do": "rightClick", "at": [726.6, 943], "space": "window", "choose": "Detach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "track": "Audio", "startsAt": 0 },
+    { "do": "describe", "stage": "2-detached", "note": "Right-click, Detach Audio: the sound is its own clip on the same track, and it is the one picked" },
+    { "do": "snapshot", "name": "2-detached" },
+
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "key", "key": "right", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "track": "Audio", "startsAt": 0.099, "within": 0.001 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0, "endsAt": 8 },
+    { "do": "describe", "stage": "3-off-step", "note": "Command Right three times: the loose sound is three frames behind its picture" },
+    { "do": "snapshot", "name": "3-off-step" },
+
+    { "do": "rightClick", "at": [740, 943], "space": "window", "choose": "Re-attach Audio" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0, "endsAt": 8 },
+    { "do": "expectNotice", "says": "Sound put back" },
+    { "do": "describe", "stage": "4-re-attached", "note": "THE TEST: right-click on the loose sound, Re-attach Audio. The loose clip is gone and the picture's own sound is linked under it again on Audio, from 0:00, back in step" },
+    { "do": "panel", "stage": "4-re-attached" },
+    { "do": "snapshot", "name": "4-re-attached" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "track": "Audio", "startsAt": 0.099, "within": 0.001 },
+    { "do": "shortcut", "key": "z", "modifiers": ["command", "shift"], "menuItem": "Redo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample sound", "count": 0 },
+    { "do": "describe", "stage": "5-one-undo-step", "note": "One Command Z brought back the loose, slid sound; Command Shift Z joined them again" },
+    { "do": "snapshot", "name": "5-one-undo-step" }
+
+  ]
+}

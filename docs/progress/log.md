@@ -21039,3 +21039,10 @@ Next: the first editor window's ~200 ms first build
 - The Captions section's empty state now shows the mock's three rows (Language, Guides with Safe areas, Generate with Add Captions) instead of the Add Captions button alone, so the language is chosen before the first captions are written (`Sources/Photonz/CaptionsInspector.swift`).
 - `EditorState.captionsHeardIn` records the locale the last captions were heard in; new walk check `captionsExpectHeardInPickedLanguage`; new walk `captions-language-before-captions-walk`.
 - Next: nothing open on this; `section-fold-motion-walk` showed a 16ms-budget flake twice that did not repeat on a fresh build.
+
+## 2026-10-09 — Re-attach a detached sound
+
+- `PhotonzDocument.canReattachSound/reattachingSound` (`SoundClip.swift`, `ReattachSoundTests`): the loose sound goes, the picture speaks for its recording again on the track the sound sat on, in step; level comes back whole when still in step, without its line and fades when it was slid, trimmed or cut.
+- Clip menu row on ⌃⇧D retitles Detach Audio ↔ Re-attach Audio; the right-click row on the picture and on the loose sound does the same. Notice "Sound put back".
+- Walks `re-attach-audio-walk` (right-click, off-step, one undo step) and `re-attach-audio-menu-bar-walk` (front, Clip menu). Audit `queue/audits/2026-10-09-reattach-audio.json`.
+- Open: the cut mock's panel button for Detach/Re-attach waits on the card about panel buttons.
