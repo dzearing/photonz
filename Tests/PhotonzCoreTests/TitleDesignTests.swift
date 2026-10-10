@@ -270,13 +270,19 @@ struct TitleDesignTests {
         #expect(try #require(Self.piece(doc, id, "Box", atMS: 400)).style.opacity > 0.99)
     }
 
-    @Test("A wipe on words fades them until words can be masked")
-    func wipeOnWordsFades() throws {
+    @Test("A wipe on words uncovers them where they stand: their own reveal, not a fade")
+    func wipeOnWordsIsARevealNotAFade() throws {
         let (doc, id) = try Self.oneBox(TitlePart(path: "Words", role: .headline,
                                                   in: TitleBuild(.wipe, delayMS: 0, lengthMS: 400)))
         let start = try #require(Self.piece(doc, id, "Words", atMS: 0))
-        #expect(start.style.opacity < 0.01)
+        // Full strength and full size: the reveal, read per moment by the
+        // renderer, does the uncovering (`TextReveal.swift`).
+        #expect(start.style.opacity > 0.99)
         #expect(abs(start.frame.width - 300) < 0.5)
+        let reveal = try #require(start.text?.reveal)
+        #expect(reveal.style == .wipe)
+        #expect(reveal.lengthMS == 400)
+        #expect(reveal.pose(rank: 0, atElapsedMS: start.text?.revealElapsedMS ?? -1).shown == 0)
     }
 
     @Test("Hold drift moves a part slowly while it is up; push grows it a little")

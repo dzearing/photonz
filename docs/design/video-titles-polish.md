@@ -335,7 +335,20 @@ tile previews that play.
    quint and Ease out expo joined the shared curve list. Walk:
    `titles-move-in-parts-walk`; tests: `TitleDesignTests`,
    `PlacedTitlesOpenTheSameTests` (titles placed before this draw the same).
-2. **Title text comes in by line, word or letter.**
+2. **Title text comes in by line, word or letter.** Built 2026-10-10: a
+   `TextReveal` on the text itself (`Sources/PhotonzCore/TextReveal.swift`):
+   unit (whole, line, word, letter), stagger, each piece's length, order
+   (forward, reverse, center out, random with a fixed seed), curve, and the
+   style (rise and fade, mask reveal, blur in, track in, typewriter, wipe).
+   Stored once and read at the moment drawn (`TextContent.revealElapsedMS`,
+   set in `moved(toMotionTimeMS:)`), never a layer per word. The renderer
+   draws each piece from its own cached picture
+   (`Sources/PhotonzRender/TextRevealRasterizer.swift`); once the last piece
+   is home it is the plain raster again, byte for byte. Measured: 56 letters at
+   1080p, 3.8 to 4.7 ms median a frame. A wipe on a title's words is now a
+   real wipe. Panel: the Reveal section for a picked text on a video. Walk:
+   `title-words-mask-reveal-walk`; tests: `TextRevealTests`,
+   `TextRevealRenderTests`.
 3. **Title backgrounds move: gradients, grain, the recording behind glass.**
 4. **Motion blur on titles that move fast.**
 5. **Title tiles play, and a few knobs restyle a title.**

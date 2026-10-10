@@ -76,6 +76,13 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// side of it dimmed or waiting (`CaptionWordStyle.swift`). Like
     /// `highlight`, set only on the frame drawn at a moment.
     public var wordPaint: CaptionWordPaint?
+    /// How the words come in, a line, a word or a letter at a time
+    /// (`TextReveal.swift`), or nil for words that are simply there.
+    public var reveal: TextReveal?
+    /// How far into its reveal this text is. Never saved by anything: like
+    /// `wordPaint`, it is set only on the frame drawn at a moment, where the
+    /// renderer reads it.
+    public var revealElapsedMS: Int?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -113,6 +120,9 @@ public struct TextContent: Hashable, Codable, Sendable {
         activeWordSung = try container.decodeIfPresent(Bool.self, forKey: .activeWordSung)
         highlight = try container.decodeIfPresent(TextHighlight.self, forKey: .highlight)
         wordPaint = try container.decodeIfPresent(CaptionWordPaint.self, forKey: .wordPaint)
+        // A reveal postdates all of it: older text simply has its words.
+        reveal = try container.decodeIfPresent(TextReveal.self, forKey: .reveal)
+        revealElapsedMS = try container.decodeIfPresent(Int.self, forKey: .revealElapsedMS)
     }
 }
 

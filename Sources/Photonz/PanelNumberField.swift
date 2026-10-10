@@ -184,6 +184,14 @@ struct PanelNumberField: View {
                 .fixedSize()
                 .accessibilityHidden(true)
             box
+            // The mock's `.stepper .u`: the unit after the number.
+            if let suffix {
+                Text(suffix)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .fixedSize()
+                    .accessibilityHidden(true)
+            }
             if let presets {
                 VideoKit.Dropdown(label: presets.label, value: presets.value,
                                   help: presets.label, isBare: true,

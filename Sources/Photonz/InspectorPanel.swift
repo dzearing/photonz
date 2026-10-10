@@ -907,6 +907,10 @@ struct InspectorPanel: View {
         if selectedLayer?.isCaptionsLayer == true {
             set.insert(.text)
         }
+        // How the picked text's words come in, on a video (`TextReveal.swift`).
+        if editorState.textRevealLayer != nil {
+            set.insert(.reveal)
+        }
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
@@ -1070,7 +1074,7 @@ struct InspectorPanel: View {
     /// fact the original decides.
     private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
         .arrange, .geometry, .frame, .columns, .placement, .color, .effects, .shadow,
-        .annotation, .callout, .lens, .text, .measure, .collage, .motion,
+        .annotation, .callout, .lens, .text, .reveal, .measure, .collage, .motion,
     ]
 
     private var orderedAvailableSections: [InspectorSectionID] {
@@ -1186,6 +1190,7 @@ struct InspectorPanel: View {
         switch id {
         case .fades: SoundFadesInspector.headerHelp
         case .keys: PropertyKeysInspector.sectionHelp
+        case .reveal: TextRevealInspector.sectionHelp
         case .editPoint: EditPointInspector.sectionHelp
         case .transition: TransitionInspector.sectionHelp
         case .transitions: TransitionsGroup.sectionHelp
@@ -1470,6 +1475,8 @@ struct InspectorPanel: View {
             } else {
                 TextInspector()
             }
+        case .reveal:
+            TextRevealInspector()
         case .measure:
             if let layer = selectedLayer, layer.measure != nil {
                 MeasureInspector(layer: layer)

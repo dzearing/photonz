@@ -50,9 +50,9 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     case blurIn
     /// Fades while it settles from `amount` percent of its size.
     case scaleFrom
-    /// Revealed from one edge with the far edge still: a crop. Words cannot be
-    /// masked yet (step 2, `title-text-by-line-word-letter`), so on words a
-    /// wipe is a fade.
+    /// Revealed from one edge with the far edge still: a crop on a picture or
+    /// a shape, and on words their own reveal (`TextReveal.swift`), which
+    /// uncovers the letters where they stand.
     case wipe
     /// Grows from `amount` percent past its own size and settles back: a
     /// spring. On the way out it drops its bounce.
@@ -213,14 +213,23 @@ extension PhotonzDocument {
         for part in design.parts {
             guard let current = layer(id: layerID), let piece = TitleDesign.find(part.path, in: current)
             else { continue }
-            let made = TitleCompiler(piece: piece, lengthMS: time.lengthMS, clock: time.sourceInMS,
-                                     unit: unit).motions(for: part)
-            guard !made.isEmpty else { continue }
-            let moved = Set(made.map(\.property))
+            let compiler = TitleCompiler(piece: piece, lengthMS: time.lengthMS, clock: time.sourceInMS,
+                                         unit: unit)
+            let made = compiler.motions(for: part)
+            // Words wiped in are uncovered by their own reveal, which is the
+            // whole of how they arrive: no fade keyed on top of it.
+            let reveal = compiler.wordReveal(for: part)
+            guard !made.isEmpty || reveal != nil else { continue }
+            var moved = Set(made.map(\.property))
+            if reveal != nil { moved.insert(.opacity) }
             updateLayer(id: piece.id) { edited in
                 var motions = (edited.motions ?? []).filter { !moved.contains($0.property) }
                 motions += made
-                edited.motions = motions
+                edited.motions = motions.isEmpty ? nil : motions
+                if let reveal, case .text(var text) = edited.content {
+                    text.reveal = reveal
+                    edited.content = .text(text)
+                }
             }
             wrote = true
         }
@@ -235,6 +244,14 @@ extension PhotonzDocument {
         guard let layer = layer(id: layerID), let time = layer.time else { return 0 }
         var last = layer.pictureFadeMS(.in)
         for piece in layer.selfAndDescendants where piece.id == layer.id || piece.time == nil {
+            // Words coming in a piece at a time have arrived when the last
+            // piece has (`TextReveal.swift`).
+            if let text = piece.text, let reveal = text.reveal {
+                let count = TextReveal.spans(in: text.string, unit: reveal.unit)?.count
+                    ?? max(1, text.string.split(whereSeparator: \.isNewline).count)
+                let ends = reveal.startMS - time.sourceInMS + reveal.lengthMS(count: count)
+                if ends < time.lengthMS { last = max(last, ends) }
+            }
             for motion in piece.motions ?? [] where motion.repeats == .once && motion.isOn {
                 for key in motion.keyframes {
                     let at = key.atMS - time.sourceInMS
@@ -265,12 +282,29 @@ private struct TitleCompiler {
         var curve: EasingCurve
     }
 
+    /// Whether this piece's in is its words' own reveal rather than keys.
+    private func revealsWords(_ build: TitleBuild?) -> Bool {
+        build?.kind == .wipe && piece.text != nil
+    }
+
+    /// The reveal a piece's words come in by, where its in is one.
+    func wordReveal(for part: TitlePart) -> TextReveal? {
+        guard let build = part.in, revealsWords(build) else { return nil }
+        let half = lengthMS / 2
+        let start = min(build.delayMS, half)
+        let length = max(1, min(build.delayMS + build.lengthMS, half) - start)
+        return TextReveal(style: .wipe, unit: .whole, lengthMS: length, startMS: clock + start,
+                          direction: build.direction, curve: build.curve)
+    }
+
     func motions(for part: TitlePart) -> [LayerMotion] {
         var runs: [MotionProperty: [Run]] = [:]
         let half = lengthMS / 2
         // The in, from the title's start, inside its front half.
         var inEnd = 0
-        if let build = part.in {
+        if let build = part.in, revealsWords(build) {
+            inEnd = min(build.delayMS + build.lengthMS, half)
+        } else if let build = part.in {
             let start = min(build.delayMS, half)
             let end = min(build.delayMS + build.lengthMS, half)
             inEnd = end

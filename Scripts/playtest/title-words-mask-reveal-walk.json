@@ -1,0 +1,383 @@
+{
+ "out": "/tmp/photonz-playtest/title-words-mask-reveal-walk",
+ "seed": "Title text comes in by word with a mask reveal, at Next defaults with no switch touched: a Midnight title page put at the start, its headline picked, Reveal set to Mask Reveal by Word at a 100 ms stagger with the pointer on each dropdown, then photographed three frames at a time through its in, and the same moments written out as exported frames.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Midnight"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster than ever"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "click",
+   "at": [
+    640,
+    330
+   ],
+   "count": 2,
+   "space": "document"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "headline-picked",
+   "note": "The title's headline typed, then double clicked to open its words, at Next defaults: the panel carries a Reveal section under Text, its Preset reading None"
+  },
+  {
+   "do": "expect",
+   "field": "Reveal Preset",
+   "reads": "None"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-headline-picked"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Reveal Preset",
+   "at": [
+    "centre"
+   ],
+   "choose": "Mask Reveal"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Reveal Preset",
+   "reads": "Mask Reveal"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Reveal By",
+   "at": [
+    "centre"
+   ],
+   "choose": "Word"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Reveal By",
+   "reads": "Word"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Reveal Stagger",
+   "choose": "100 ms"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Reveal Stagger",
+   "reads": "100 ms"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Reveal Order",
+   "at": [
+    "centre"
+   ],
+   "choose": "Forward"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Reveal Order",
+   "reads": "Forward"
+  },
+  {
+   "do": "describe",
+   "stage": "reveal-set",
+   "note": "Preset Mask Reveal, By Word, Stagger 100 ms, picked with the pointer on each dropdown's face: the rows the mock draws (Preset, Stagger, Each and Total, Curve) plus By and Order"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-reveal-set"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "stagger",
+   "note": "THE STAGGER, three frames (100 ms) at a time from 0:00 with the right arrow: each word rises from behind its own baseline 100 ms after the one before it, Ship first and ever last"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f00"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f03"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f06"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f09"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f12"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f15"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f18"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "snapshot",
+   "name": "3-stagger-f21"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "export",
+   "note": "The same moments written out as exported frames, which must match what the canvas showed"
+  },
+  {
+   "do": "writeFrame",
+   "name": "4-export-0200",
+   "atMS": 200
+  },
+  {
+   "do": "writeFrame",
+   "name": "4-export-0400",
+   "atMS": 400
+  },
+  {
+   "do": "writeFrame",
+   "name": "4-export-0700",
+   "atMS": 700
+  }
+ ]
+}

@@ -63,6 +63,10 @@ enum InspectorSectionID: String, CaseIterable {
     // fade are the layer's own, so they stay in Appearance and Effects.
     case lens
     case text
+    // How the picked text's words come in, a line, a word or a letter at a
+    // time (`TextReveal.swift`). Straight under Text, because it is about the
+    // same words: what they say and look like, then how they arrive.
+    case reveal
     case measure
     case collage
     case canvas
@@ -220,6 +224,7 @@ enum InspectorSectionID: String, CaseIterable {
         case .callout: "Zoom Callout"
         case .lens: LensCopy.sectionTitle
         case .text: "Text"
+        case .reveal: "Reveal"
         case .measure: "Measure"
         case .collage: "Collage"
         case .canvas: "Canvas"

@@ -132,7 +132,7 @@ public enum TextRasterizer {
 
     /// One rounded plate behind all the lines, as wide as the widest of them
     /// plus a little air, the way the mock's caption box hugs its words.
-    private static func drawPlate(for text: TextContent, hex: String, laidOutIn path: CGPath,
+    static func drawPlate(for text: TextContent, hex: String, laidOutIn path: CGPath,
                                   bounds box: CGRect, in context: CGContext, through limit: Int? = nil,
                                   including extra: CGRect? = nil,
                                   attributed: NSAttributedString? = nil) {
@@ -431,7 +431,7 @@ public enum TextRasterizer {
 
     /// The words with the lit stretch drawn in its own colour. A stretch that
     /// runs past the words (a line retyped shorter) is cut to them.
-    private static func lit(_ attributed: NSAttributedString, _ text: TextContent) -> NSAttributedString {
+    static func lit(_ attributed: NSAttributedString, _ text: TextContent) -> NSAttributedString {
         guard let highlight = text.highlight, let rgba = RGBA(hex: highlight.colorHex) else { return attributed }
         let length = attributed.length
         let start = min(max(0, highlight.location), length)
@@ -551,7 +551,7 @@ public enum TextRasterizer {
     /// Text that needs at least the box it has keeps the whole box: a rect even
     /// a hair short makes CoreText drop the last line, and losing a word is
     /// worse than a line of text hugging the top of a box too small for it.
-    private static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
+    static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
         let box = alignedWidth(text, in: plateRoom(text, in: box))
         // `TextBlockMetrics` owns how far down the lines sit, so the field you
         // type a label in can offset its draft by exactly the same amount.
@@ -821,7 +821,7 @@ public enum TextRasterizer {
 
     private static let faceCache = FontFaceCache()
 
-    private static func attributedString(_ text: TextContent, font: CTFont? = nil,
+    static func attributedString(_ text: TextContent, font: CTFont? = nil,
                                          borderWidth: CGFloat = 0,
                                          borderColorHex: String = "#000000") -> NSAttributedString {
         let rgba = RGBA(hex: text.colorHex) ?? RGBA(r: 1, g: 1, b: 1)

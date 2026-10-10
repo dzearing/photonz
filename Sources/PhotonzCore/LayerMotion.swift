@@ -1394,7 +1394,9 @@ extension Layer {
                                             to: moved, authored: self,
                                             magnification: magnification, effect: motion.effectOrdinal)
         }
-        return moved
+        // ...and text whose words come in a piece at a time says how far in
+        // it is, on the same clock (`TextReveal.swift`).
+        return moved.withTextRevealShown(atMotionMS: ms)
     }
 }
 

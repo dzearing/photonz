@@ -1,0 +1,32 @@
+{
+  "feature": "Title text comes in by line, word or letter",
+  "epic": "video-titles-graphics",
+  "summary": "Any text on a video, a title's headline included, can now arrive a line, a word or a letter at a time with a stagger between pieces: rise and fade, mask reveal, blur in, track in, typewriter or wipe.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, add a track above it and right click the empty track: Add Title Page > Midnight.",
+  "switched": {},
+  "try": [
+    { "do": "Type a headline into the new title page and press Command Return." },
+    { "do": "Double click the headline on the picture so its words are in hand; the panel shows a Reveal section." },
+    { "do": "Set Preset to Mask Reveal, By to Word and Stagger to 100 ms.", "shot": "2026-10-10-title-words-reveal-1-panel.png" },
+    { "do": "Press Escape twice, press Home, then step through the first second with the Right arrow.", "shot": "2026-10-10-title-words-reveal-2-stagger.png", "shotNote": "Eight real window captures, 100 ms apart, cropped to the headline and stacked. The window was behind another app, so buttons show their background look." },
+    { "do": "Press Space and watch it play.", "shot": "2026-10-10-title-words-reveal-3-mid.png", "shotNote": "Taken with the window behind another app, so buttons show their background look." },
+    { "do": "Try Blur In by Line, then Track In and Typewriter by Letter, and Order Center Out or Random." },
+    { "do": "Export one frame at 0.4s (File, Export, PNG) and compare it with the canvas.", "shot": "2026-10-10-title-words-reveal-4-export.png" }
+  ],
+  "evaluate": [
+    "Does Mask Reveal by Word read as the premium headline entrance you had in mind, or does it need a longer default length?",
+    "Is double clicking the headline an acceptable way to reach the Reveal section of a title's words?",
+    "Are Preset, By, Stagger, Each, Order and Curve the right knobs, in the right order?",
+    "Does the title's own rise on the headline fighting with the per word reveal bother you, or should picking a reveal take the part's own in off?",
+    "Should a reveal also have a way out (the words leaving a piece at a time)?"
+  ],
+  "rough": [
+    "The headline's own part keys (Midnight's rise and fade) still run under a reveal you add, so the whole line fades up while its words slide; a design that uses reveals on headlines is step 6 (a-set-of-titles-that-look-designed).",
+    "The mock's preset is a three way segmented control; here the six styles are a dropdown, because a list of more than three is a dropdown (UX-PATTERNS §4).",
+    "By and Order are rows the mock does not draw; the app goes further than the mock there.",
+    "The mock's closing line (One number drives the whole cascade...) moved, in the mock's words, behind the question mark on the Reveal header: it is longer than the panel's 40 character budget (UX-PATTERNS §4).",
+    "Reveals are only in (no out yet), and on a still picture with no time they do not play.",
+    "A piece rising from below can be cut at the bottom edge of the text's own box while it travels (rise and fade on the last line); mask reveal is unaffected.",
+    "Reaching a title's words takes a double click into them; the Reveal section shows while they are open, and Escape takes you back to the whole title."
+  ]
+}

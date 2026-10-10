@@ -131,6 +131,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     private static let cacheCapacity = 32
     private var rasterCache: [RasterKey: CIImage] = [:]
     private var rasterOrder: [RasterKey] = []
+    /// Texts' pieces for their reveals (`TextRevealRasterizer.swift`).
+    private var piecesCache: [RasterKey: TextRevealPieces] = [:]
+    private var piecesOrder: [RasterKey] = []
     // The CIImage retains its CGImage, so identities can't be reused while
     // an entry lives.
     private var wrapCache: [ObjectIdentifier: CIImage] = [:]
@@ -235,6 +238,35 @@ public final class DocumentRenderer: @unchecked Sendable {
         let affordable = (Self.crispRasterCap / area).squareRoot()
         guard affordable >= 2 else { return 1 }
         return min(scale, affordable)
+    }
+
+    /// A text's pieces for its reveal, laid out and drawn once per text,
+    /// size, look and unit.
+    private func revealPieces(for text: TextContent, size: CGSize, box: CGSize,
+                              outlines: [TextRasterizer.TextOutline], bake: CGFloat, variant: String,
+                              unit: TextRevealUnit) -> TextRevealPieces? {
+        let key = RasterKey(content: .text(text), pixelWidth: Int(size.width.rounded()),
+                            pixelHeight: Int(size.height.rounded()), variant: variant + "|pieces:\(unit.rawValue)")
+        cacheLock.lock()
+        if let hit = piecesCache[key] {
+            contentCacheHits += 1
+            cacheLock.unlock()
+            return hit
+        }
+        contentCacheMisses += 1
+        cacheLock.unlock()
+        guard let pieces = TextRasterizer.revealPieces(text, size: box, outlines: outlines, scale: bake, unit: unit)
+        else { return nil }
+        cacheLock.lock()
+        if piecesCache[key] == nil {
+            piecesCache[key] = pieces
+            piecesOrder.append(key)
+            if piecesOrder.count > Self.cacheCapacity {
+                piecesCache[piecesOrder.removeFirst()] = nil
+            }
+        }
+        cacheLock.unlock()
+        return pieces
     }
 
     private func raster(for content: LayerContent, size: CGSize, variant: String = "",
@@ -1019,8 +1051,26 @@ public final class DocumentRenderer: @unchecked Sendable {
             var variant = outlines.map { "outline:\($0.width):\($0.colorHex)" }.joined(separator: ",")
             if contentScale != 1 { variant += "|crisp" }
             let bake = crispScale(contentScale, box: boxInPoints)
-            guard let raster = raster(for: layer.content, size: layer.frame.size, variant: variant, rasterize: {
-                TextRasterizer.rasterize(text, size: boxInPoints, outlines: outlines, scale: bake)
+            // How its words come in is not part of what they look like once
+            // they are in, so a text mid-reveal and the same text at rest
+            // share one picture, and so does a reveal retimed.
+            var still = text
+            still.reveal = nil
+            still.revealElapsedMS = nil
+            // Words still arriving a piece at a time are drawn from each
+            // piece's own picture, kept until the words change
+            // (`TextRevealRasterizer.swift`). Once the last piece is home it is
+            // the ordinary picture again, pixel for pixel.
+            if let reveal = text.reveal, let elapsed = text.revealElapsedMS, text.wordPaint == nil,
+               let pieces = revealPieces(for: still, size: layer.frame.size, box: boxInPoints,
+                                         outlines: outlines, bake: bake, variant: variant, unit: reveal.unit),
+               !reveal.hasSettled(atElapsedMS: elapsed, count: pieces.pieces.count) {
+                image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed),
+                                  nearest: magnifyNearest, scale: contentScale / bake)
+                break
+            }
+            guard let raster = raster(for: .text(still), size: layer.frame.size, variant: variant, rasterize: {
+                TextRasterizer.rasterize(still, size: boxInPoints, outlines: outlines, scale: bake)
             }) else { return nil }
             image = magnified(raster, nearest: magnifyNearest, scale: contentScale / bake)
         case .annotation(let annotation):
