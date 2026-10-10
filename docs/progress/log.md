@@ -21027,3 +21027,9 @@ Next: the first editor window's ~200 ms first build
 - In Design the tool bar's Shape slot now wears the Rectangle (the UI mock's square) until a shape is picked; Design remembers its own last shape, the picture bar keeps its Line. `WindowMode.toolStripMembers`, `ToolGroup.member(from:startingWith:)`, `EditorState.lastTool(in:)`.
 - Walk `design-mode-tool-strip-walk` extended; tests +5.
 - Open: decision card on whether the tip says Rectangle R (now) or the mock's Shape (R).
+
+## 2026-10-09 — Blue confirm buttons read with the window behind
+
+- Adjust Grid's Done, Crop, Trim, the video trim and crop Done, and the captions buttons (Add Captions, Rewrite) moved from `.borderedProminent` to `.activeProminent`: blue in front, the plain bordered button behind, where macOS 26 had drawn them as white words on a near-white pill in light mode. Shared files, so Current has it too (a legibility fix).
+- Walk `blue-confirm-buttons-read-behind-walk` photographs the grid bar behind in light and dark, then the crop bar. A `front: true` run of it showed both still blue.
+- Left alone: Welcome and the recording panels (NSPanels; not reproduced there).
