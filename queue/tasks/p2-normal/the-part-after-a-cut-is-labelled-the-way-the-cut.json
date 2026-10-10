@@ -4,12 +4,12 @@
   "goal": "The cut walkthrough mock labels the second half of a cut clip with a number (screen-recording · 2), while the app labels every piece and every half with the plain clip name. Decide which the timeline should show, then make cuts, Lift and Extract all follow it.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 200,
+  "seq": 260,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T09:02:14.070Z",
-  "updated": "2026-10-09T12:52:27.391Z",
+  "updated": "2026-10-10T12:15:17.735Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-cut-wt.html line ~298 (#clipB, label \"screen-recording · 2\") and step text line ~393. App: ClipPiecesBar draws Text(layerName) on every piece (around line 678). Since 2026-10-08 Lift keeps the clip name on both halves (lifting-a-stretch-keeps-both-halves-as-pieces-of), so the difference is now the same for Command K and Lift. Premiere labels both halves with the plain clip name.",
@@ -34,6 +34,10 @@
     {
       "t": "2026-10-09T12:52:27.390Z",
       "note": "seq 170 -> 200"
+    },
+    {
+      "t": "2026-10-10T12:15:17.734Z",
+      "note": "seq 200 -> 260"
     }
   ],
   "walks": []

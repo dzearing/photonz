@@ -4,12 +4,12 @@
   "goal": "The captions mock shows a small Lower-third tag riding on the top edge of the violet plate while that style is picked, so you can tell at a glance the captions are a lower third. The app now puts the captions low left on the plate but shows no tag.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 3980,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T05:57:27.788Z",
-  "updated": "2026-10-10T05:57:27.791Z",
+  "updated": "2026-10-10T12:15:16.009Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html .l3badge (line ~39, ~477): top:-11px left:0 of the plate, var(--comp) fill, 8.5px 640 weight, ic-component icon. The app plate hugs the words inside the Captions box (TextRasterizer.drawPlate), so the tag needs the plate rect, not the box. Chrome overlay like the AUTO · EN badge (CaptionGuides.swift CaptionBadge). Found by the-lower-third-caption-style-sits-low-left-on-i.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-10T05:57:27.790Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T12:15:16.008Z",
+      "note": "seq 3980 -> 20"
     }
   ]
 }

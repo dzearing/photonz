@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.435Z",
-  "updated": "2026-10-10T04:03:39.125Z",
+  "updated": "2026-10-10T04:03:52.367Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html ~244-256 (Language and Safe areas above Generate). Code: Sources/Photonz/CaptionsInspector.swift lookBody ~32-39, `else if !editorState.hasCaptions { addCaptionsButton }` hides `language`. The setting defaults to en-US in Sources/Photonz/EditorState+Captions.swift ~94-96. Safe areas row (`guides`) may also belong above, per the mock: decide from the mock and the one-purpose rule, say which in the audit. Keep copy short (UX-PATTERNS section 4).",
@@ -52,11 +52,16 @@
     {
       "t": "2026-10-10T04:03:39.124Z",
       "note": "left rough: canvas caption badge reads AUTO · EN for every English variant, so en-GB looks like en-US there; a person would rarely notice, not filed. Language stays one app-wide setting (unchanged)."
+    },
+    {
+      "t": "2026-10-10T04:03:52.365Z",
+      "note": "Captions section shows Language, Safe areas and Add Captions before any captions exist (CaptionsInspector.swift), matching video-captions.html; the chosen language is the one the words are heard in. Verified by captions-language-before-captions-walk at Next defaults (en-GB picked by pointer, transcription checked to run in en-GB, row keeps it), 9 related walks green, Scripts/test.sh green. Audit: queue/audits/2026-10-09-captions-language-first.json. Commit 2e892d98."
     }
   ],
   "started": "2026-10-10T03:09:25.128Z",
   "walks": [
     "captions-language-before-captions-walk",
     "captions-on-demand-walk"
-  ]
+  ],
+  "completed": "2026-10-10T04:03:52.366Z"
 }

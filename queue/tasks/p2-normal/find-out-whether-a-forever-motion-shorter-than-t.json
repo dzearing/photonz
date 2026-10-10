@@ -4,12 +4,12 @@
   "goal": "Every motion in an icon shares one loop as long as the longest motion, and a motion that ends early holds still until the loop starts over. Reading the code says a spinner set to Forever at 800 ms beside a 900 ms bell pauses for a tenth of a second every turn, on the canvas and in the exported SVG, which breaks the promise that a spinner loops with no stutter. Check it, and if it is so, make a Forever motion repeat at its own pace.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 13,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.109Z",
-  "updated": "2026-10-10T02:37:52.671Z",
+  "updated": "2026-10-10T12:15:16.155Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced in the app: code reading only, hence p2 look-into. One shared cycle: Sources/PhotonzCore/LayerMotion.swift motionCycleLengthMS / automaticMotionCycleLengthMS ~1525-1550 (deliberately ONE CYCLE, see comment and MotionStrip.swift). A motion that ends early holds its final value (~1006). SVG export writes the same cycle length: Sources/PhotonzCore/SVGMotionExport.swift ~311; in SVG each animate element can carry its own dur with repeatCount=indefinite. Mock icon-loop-wt.html: 'with Forever on it, a length becomes a rate'.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-10T02:37:52.670Z",
       "note": "seq 4010 -> 13"
+    },
+    {
+      "t": "2026-10-10T12:15:16.154Z",
+      "note": "seq 13 -> 40"
     }
   ]
 }

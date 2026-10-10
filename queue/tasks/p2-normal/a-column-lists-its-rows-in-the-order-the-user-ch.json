@@ -4,12 +4,12 @@
   "goal": "In a frame laid out as a column, the Layers list shows the bottom row first, because it lists whatever is on top first, the way Photoshop and Figma do. The UI entry mock lists the same column top to bottom in reading order. The user picks which one the Layers list should follow for rows and columns, and the app follows it.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 250,
+  "seq": 300,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T05:49:21.682Z",
-  "updated": "2026-10-09T12:52:27.778Z",
+  "updated": "2026-10-10T12:15:18.025Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-empty-window-can-start-a-ui-design (2026-10-08). Mock: docs/design/mocks/pages/ui-entry-wt.html, Layers group (#lrLogin then Headline, Subhead, Email field, Password field, Button · Primary). App today: Login, Password field, Email field, Subhead, Headline (top of the stack first), checked by design-ui-start-walk expectRows. Figma lists auto-layout children last-first as the app does; the mock does not. Layer list building: PhotonzCore/LayerPanelTree.swift. If the answer is reading order, design-ui-start-walk and a-screen-hugs-what-it-holds-walk expectRows change in the same commit.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-09T12:52:27.777Z",
       "note": "seq 3850 -> 250"
+    },
+    {
+      "t": "2026-10-10T12:15:18.024Z",
+      "note": "seq 250 -> 300"
     }
   ],
   "walks": [

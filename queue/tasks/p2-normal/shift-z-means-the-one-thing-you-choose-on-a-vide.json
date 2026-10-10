@@ -4,12 +4,12 @@
   "goal": "On a video, Shift Z now only punches in on the picture (the key the punch-in mock prints), and the timeline fits itself on backslash, Premiere's key. You asked on 2026-09-28 for Shift Z to fit the timeline, Final Cut's key, so this asks which of the two Shift Z should be.",
   "epic": "video-beats-premiere",
   "priority": "p2-normal",
-  "seq": 100,
+  "seq": 160,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T07:17:50.789Z",
-  "updated": "2026-10-09T12:52:26.656Z",
+  "updated": "2026-10-10T12:15:17.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the-menu-bar-reads-like-a-professional-mac-edito. Today: TimelineKeys.swift no longer maps Shift Z to zoomToFit (backslash does); EditorCommands punchInRows keeps Shift Z; View > Zoom Timeline to Fit prints backslash while the timeline has the keyboard; TimelineMenuKeys.zoomToFit prints backslash. timeline-pinch-both-ways-walk presses backslash. Mock: docs/design/mocks/pages/video-zoom-wt.html line 83 prints Punch in Shift Z. User ask: queue task zoom-the-timeline-with-the-trackpad-both-ways-an acceptance item 5.",
@@ -70,6 +70,10 @@
     {
       "t": "2026-10-09T12:52:26.655Z",
       "note": "seq 60 -> 100"
+    },
+    {
+      "t": "2026-10-10T12:15:17.023Z",
+      "note": "seq 100 -> 160"
     }
   ],
   "walks": [

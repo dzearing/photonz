@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:49.350Z",
-  "updated": "2026-10-10T02:37:51.975Z",
+  "updated": "2026-10-10T12:15:15.568Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reverting is small: EditorChromeLayout.ToolBarSection gains .grid back, toolBarSections(showsColor:showsGrid:), gridChipParts/gridSettingsAnchor drop the oneGlass argument, EditorView.toolBarSection gets case .grid: gridChip, CanvasGridControls.cellRow goes, and the four walks lose flags {next-one-glass-tool-bar: false}. See the IA task's commit. The 2026-09-06 asks: the-grid-is-worked-from-the-tool-bar-and-you-can, the-grid-tool-bar-is-two-buttons-and-adjust-mode.",
@@ -50,6 +50,10 @@
     {
       "t": "2026-10-10T02:37:51.974Z",
       "note": "manager 2026-10-09: icon-grid success line 2 says square and circle keylines show from the Grid & snap group. Today Keylines is only a View menu toggle (EditorCommands.swift ~2393); the grid settings popover has only Grid and Snap (CanvasGridSettingsView.swift 59, 77). icon-draw-wt.html #gGrid draws Show: Grid / Live area / Keylines and Snap to: Grid / Keylines / Geometry. Whatever the card answers for where the grid is worked from should carry the keylines row too. Pen snapping to whole units is filed on its own as pen-points-in-an-icon-frame-land-on-whole-units."
+    },
+    {
+      "t": "2026-10-10T12:15:15.567Z",
+      "note": "seq 30 -> 30"
     }
   ],
   "walks": [

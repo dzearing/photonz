@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 11,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.005Z",
-  "updated": "2026-10-10T02:37:52.553Z",
+  "updated": "2026-10-10T11:02:07.644Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html step 4 'the Around row, and choose Artboard', crosshair at 12,12. Code: pivot stored relative to the layer box, named spots only Its centre/Top centre/Bottom centre in Sources/PhotonzCore/LayerMotion.swift ~574-596; menu Sources/Photonz/MotionListInspector.swift ~491; pivot drag has no snapping, Sources/Photonz/CanvasMotionPivot.swift ~219-228. SVG export: Sources/PhotonzCore/SVGMotionExport.swift. Tests first in core.",
@@ -28,6 +28,43 @@
     {
       "t": "2026-10-10T02:37:52.552Z",
       "note": "seq 4000 -> 11"
+    },
+    {
+      "t": "2026-10-10T09:56:19.791Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T11:01:14.366Z",
+      "note": "owns these walks: spinner-turns-about-the-artboard-walk"
+    },
+    {
+      "t": "2026-10-10T11:01:47.140Z",
+      "note": "review before building: a Premiere/AE or Figma user expects an anchor point they can put on the artboard centre; storing Artboard as a fraction of the arc's box would drift off the icon's middle the moment the arc is nudged or reshaped, so Artboard is a fixed place in the layer's parent space (MotionPivot.artboard), named in the menu, never Custom. Offered only inside icon frames (PhotonzDocument.artboardPivot), matching the mock."
+    },
+    {
+      "t": "2026-10-10T11:01:47.227Z",
+      "note": "also fixed: the pivot handle was built from the layer's frame-relative numbers and handed to the canvas as canvas points, so for a shape inside any frame the crosshair (and its drag) would sit at the frame-relative spot on the canvas. Read from code (EditorState.motionPivotHandle used document.layer(id:) with no parentOrigin), not reproduced on the old build; every earlier pivot walk used loose shapes. Handle now carries the parent origin; At row still reads frame units (12, 12)."
+    },
+    {
+      "t": "2026-10-10T11:01:47.310Z",
+      "note": "drag snap: MotionPivot.dragged pulls onto the icon's middle and the shape's own middle within IconSnap.pullRadius screen points; the nearer wins, a tie goes to the shape. This applies to loose shapes too (snap to own centre). onMotionPivotMove now returns where the pivot landed so the crosshair shows the pull."
+    },
+    {
+      "t": "2026-10-10T11:01:47.394Z",
+      "note": "tests: full Scripts/test.sh hung twice in system HEIF/Vision/AVAssetReader work (sampled), unrelated to this change; ran it split instead: --skip 'PhotonzRenderTests|PhotonzMediaTests' 11003 pass, and those two targets alone 1223 pass. Filed find-out-why-the-whole-test-run-hangs-in-the-mac (p2). Walks: spinner-turns-about-the-artboard-walk plus 9 pivot/motion walks all ok."
+    },
+    {
+      "t": "2026-10-10T11:01:47.467Z",
+      "note": "left rough (no task): Artboard is not offered on screen frames; resizing the icon after picking Artboard leaves the pivot on the old middle; the blue 'pivot' label over a red shape is hard to read in 1-turns-about-its-own-middle (pre-existing, accent on the shape's fill). Filed a-ring-or-arc-gets-a-full-turn-forever-when-rota for the mock's 0 to 360 Forever default."
+    },
+    {
+      "t": "2026-10-10T11:02:07.642Z",
+      "note": "Around offers Artboard inside icon frames (fixed place, turns about 12,12; SVG matches); crosshair drag pulls onto the icon's and the shape's middle; crosshair now right for shapes in frames. ArtboardPivotTests; walk spinner-turns-about-the-artboard-walk green at Next defaults plus 9 pivot walks; suite run in two green parts after a system HEIF/Vision hang. Audit queue/audits/2026-10-10-spinner-artboard.json. Commit a7b5045b."
     }
-  ]
+  ],
+  "started": "2026-10-10T09:56:19.789Z",
+  "walks": [
+    "spinner-turns-about-the-artboard-walk"
+  ],
+  "completed": "2026-10-10T11:02:07.643Z"
 }

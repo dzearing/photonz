@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-07T23:10:38.768Z",
-  "updated": "2026-10-08T13:03:05.173Z",
+  "updated": "2026-10-10T12:15:15.643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while auditing a-sound-s-waveform-grows-and-shrinks-with-its-fa (2026-10-07). Mock: docs/design/mocks/pages/video-audio.html ~41 `.lane.alane{height:84px}` (~73 72px narrow), ~506-514 the waveform as one SVG path (top edge then bottom edge, fill-opacity .55). App: Sources/Photonz/MotionStripView.swift ~44 soundBarHeight 36, soundLaneHeight 42; Sources/Photonz/SoundLane.swift SoundWaveform draws one rect per column. Heights already come from Waveform.drawnHeights (PhotonzCore), so the shape only changes how they are drawn. Searched: waveform smooth, waveform filled path, sound lane taller, audio lane height, lane is taller (with --all); nothing covered it.",
@@ -60,6 +60,10 @@
     {
       "t": "2026-10-08T13:03:05.172Z",
       "note": "seq 520 -> 40"
+    },
+    {
+      "t": "2026-10-10T12:15:15.642Z",
+      "note": "seq 40 -> 40"
     }
   ],
   "walks": [

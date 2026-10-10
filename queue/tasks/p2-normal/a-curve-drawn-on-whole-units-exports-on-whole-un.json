@@ -1,0 +1,34 @@
+{
+  "id": "a-curve-drawn-on-whole-units-exports-on-whole-un",
+  "title": "A curve drawn on whole units exports on whole units",
+  "goal": "A curved shape drawn in an icon frame, with every point and handle on a whole unit, still comes out of Copy and Export with fractions in its SVG whenever the curve bulges past its own points. The file should say the whole numbers the drawing is made of.",
+  "epic": "icon-export",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T07:41:02.916Z",
+  "updated": "2026-10-10T12:15:16.226Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-10 by pen-points-in-an-icon-frame-land-on-whole-units. Earlier version of Scripts/playtest/pen-lands-on-whole-units-in-an-icon-walk.json with the curve drag {\"do\":\"drag\",\"from\":[803.3,552.2],\"to\":[806.6,550.4]} (pinch to 8, pen clicks 807.6,544.2 then that drag then 809.7,556.4, Return). writeSVG wrote: <path transform=\"translate(13.88 6)\" d=\"M5.12 0 C5.12 0 -2.88 10 1.12 8 C5.12 6 8.12 12 8.12 12\" .../>. Every absolute place is whole (13.88+5.12=19) but the layer's frame origin is the curve's BOUNDS origin (PathBuilder.layer normalises to content.bounds, which includes the bulge, VectorPath.swift ~688/610), so both the translate and d are fractional. Fix candidates: in SVGExport (placement + path, ~842/1110/1864) fold a fractional translate into d when that makes every number whole (gradient boxes, inside/outside stroke clips and filters read the box too, so check those), or keep the layer origin on whole units at commit. The walk in that task now drags the handle straight down so its box starts on its points; switch it back to the bulging drag once this lands.",
+  "acceptance": [
+    "A curve whose points and handles are all whole units, and which bulges past its first point, copies and exports as SVG with no fractional place (the whole-unit check on the copy passes)",
+    "Straight-sided shapes and shapes off icon frames write exactly the file they write today",
+    "A walk draws such a curve in a 24 frame, copies the frame and claims the SVG is whole"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T07:41:02.919Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T12:15:16.225Z",
+      "note": "seq 3990 -> 50"
+    }
+  ],
+  "walks": [
+    "pen-lands-on-whole-units-in-an-icon-walk"
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "The UI mock labels the Shape slot Shape (R); the app names the shape the slot is wearing (Rectangle R, Ellipse O), like every family slot in the tool bar. The user picks which words the tip shows.",
   "epic": "ui-building",
   "priority": "p2-normal",
-  "seq": 3960,
+  "seq": 320,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T00:58:26.229Z",
-  "updated": "2026-10-10T00:58:46.200Z",
+  "updated": "2026-10-10T12:15:18.174Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised finishing the-design-tool-bar-s-shape-slot-shows-a-rectang (2026-10-09). Tip comes from ToolGroupButton .toolTip(remembered.barTitle, key:). Mock ui-entry-wt.html tShape data-tip \"Shape (R)\". Picture: queue/audits/2026-10-09-design-shape-slot-1.png.",
@@ -25,6 +25,10 @@
     {
       "t": "2026-10-10T00:58:46.197Z",
       "note": "Waiting on the tip wording card: the-design-shape-slot-tip-reads-the-way-you-choo-what-should-the-shape-slot-s-tip"
+    },
+    {
+      "t": "2026-10-10T12:15:18.173Z",
+      "note": "seq 3960 -> 320"
     }
   ],
   "walks": [

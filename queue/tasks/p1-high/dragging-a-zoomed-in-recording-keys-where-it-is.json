@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.331Z",
-  "updated": "2026-10-10T02:37:52.094Z",
+  "updated": "2026-10-10T02:58:27.820Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-zoom-wt.html step 6 'Put the button in the middle' (around line 414): data-show adds #laneCentre,#kdC1,#kdC2,#segCentre and #pKeyCount=4 keys. Code: Sources/PhotonzCore/PropertyKeys.swift ~594-610, the branch 'With the place NOT keyed, a move is still the ordinary move it always was' shifts the stored frame when Scale is keyed and Position is not. That is what moves the wide shot. Test pinning today's behaviour: Tests/PhotonzCoreTests/PropertyKeysTests.swift ~283-301, update it first (TDD). Caller: Sources/Photonz/EditorState+PropertyKeys.swift ~209-247. The first Centre key at the earlier Scale key should hold the pre-drag position so the wide shot does not move. Read from code only, not run in the app; the runner reproduces before changing. Found by the manager pass 2026-10-09 comparing the zoom walkthrough to the code.",
@@ -28,6 +28,27 @@
     {
       "t": "2026-10-10T02:37:52.093Z",
       "note": "seq 3920 -> 60"
+    },
+    {
+      "t": "2026-10-10T02:38:52.802Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T02:57:56.591Z",
+      "note": "owns these walks: framing-a-zoom-keys-its-centre-walk"
+    },
+    {
+      "t": "2026-10-10T02:58:16.759Z",
+      "note": "Reproduced first: a model test (scale 100% at 3s, 220% at 5s, drag at 5s by -300,-200) showed the wide shot at 3s slid to (-300,-200) and no Position keys. Adversarial review: a Premiere user expects a drag with only Scale keyed to move the clip statically; the mock (video-zoom-wt step 6) is the floor and says Centre keys itself, so the rule is scoped to recordings (Layer.takesAReframe) and only when Scale has a key other than the one under the playhead; titles/shapes keep the Premiere move. Fix in PropertyKeys.foldEditIntoKeys + reframeAnchors: Position keys at the Scale keys either side of the playhead hold the stored origin, playhead key = origin + shift; corner resizes of a zoomed clip follow the same rule. Undo is one step (single perform). Verified: 8 new tests, Scripts/test.sh 12127 passing, new walk framing-a-zoom-keys-its-centre-walk green at Next defaults (no flags), and punch-in-and-hold, key-a-title-s-scale, between-the-keys, key-lanes, premiere-keys-on-the-timeline, keyframe-anything, framing-a-zoom-shows-one-box walks green. Audit rough: lane named Position above Scale vs mock's Centre under Scale -> filed a-recording-s-framing-reads-as-scale-then-centre (p1). Left rough (not filed): a drag after the last Scale key pans from that key rather than moving the whole held zoom; noted in the audit."
+    },
+    {
+      "t": "2026-10-10T02:58:27.818Z",
+      "note": "Shipped in 99e4b807: on a recording with Scale keyed and Position not, a canvas drag writes Position keys at the Scale keys either side of the playhead (holding the stored place) plus one at the playhead, so the wide shot stays put while the zoom pans (PropertyKeys.foldEditIntoKeys/reframeAnchors). Unkeyed drags and already-keyed Position unchanged; one undo. Verified by 8 new core tests, full suite 12127 green, new walk framing-a-zoom-keys-its-centre-walk at Next defaults plus 7 existing keying walks green. Audit queue/audits/2026-10-09-dragging-a-zoomed-in-recording-keys-where-it-is.json; lane naming/order vs mock filed as a-recording-s-framing-reads-as-scale-then-centre."
     }
-  ]
+  ],
+  "started": "2026-10-10T02:38:52.801Z",
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ],
+  "completed": "2026-10-10T02:58:27.819Z"
 }

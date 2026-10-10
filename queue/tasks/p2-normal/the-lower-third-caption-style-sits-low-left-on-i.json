@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.696Z",
-  "updated": "2026-10-10T02:37:58.121Z",
+  "updated": "2026-10-10T05:59:11.666Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html STYLES.B ~429-430, button ~272 (lower left, violet gradient plate, bold serif, 'Lower-third' badge). Code: Sources/PhotonzCore/CaptionLook.swift ~168-170 only sets weight, a 70% black plate, left alignment. Styles deliberately keep the user's font and size, so the fair targets are position and plate. Plate colour: use the mock's look or the design system's accent, say which in the audit. Tests first in PhotonzCore.",
@@ -31,6 +31,37 @@
     {
       "t": "2026-10-10T02:37:58.120Z",
       "note": "seq 7 -> 4"
+    },
+    {
+      "t": "2026-10-10T05:25:44.630Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T05:58:41.387Z",
+      "note": "owns these walks: lower-third-sits-low-left-walk, captions-panel-keeps-its-margins-walk, captions-write-themselves-walk"
+    },
+    {
+      "t": "2026-10-10T05:58:41.447Z",
+      "note": "Adversarial review before: a first-time user picking Lower third expects it to move (Premiere/FCP lower thirds sit bottom-left); the mock's box is left:9% bottom:13% max-width:64%, violet gradient plate, bold, no lit word. The app had no gradient plate and styles never moved the box (captions are positioned like any layer), so placement became part of the Lower third look only: picking it moves the box to the title-safe guide's left edge on the shared caption floor and remembers the old box (GroupContent.captionsHome); leaving it restores that box (sized for the new type), or the standard band for captions written as a lower third. Tuning a lower third (colour etc.) never moves it."
+    },
+    {
+      "t": "2026-10-10T05:58:41.507Z",
+      "note": "Built: CaptionLook.backgroundEndHex + TextContent.plateEndHex (gradient plate drawn at the CSS 120deg in TextRasterizer.drawPlate); plated left/right-aligned words move in by the plate's air so the plate is not clipped by the box (centred captions unchanged byte for byte); CaptionLayers.lowerThirdBox/box(for:in:); lowerThird preset = bold, violet plate, soft shadow. Tests first: CaptionLowerThirdTests (13), two new CaptionPlateRenderTests. Full suite 12,152 green. New walk lower-third-sits-low-left-walk at Next defaults (presses the tile, renders, exports 1080p, back to Caption); the harness action now checks the box is low left. 8 caption walks green. Export frame pulled with ffmpeg shows the plate at x=64 of 1280, same as canvas."
+    },
+    {
+      "t": "2026-10-10T05:58:41.563Z",
+      "note": "Audit rough lines: badge -> filed a-lower-third-wears-the-mock-s-lower-third-badge; serif face and shared floor -> settled by captions-are-one-layer-positioned-and-styled-lik; colour well showing only the first colour -> left rough here (a person picking a colour gets a flat plate, which is what they asked for). Also left rough: plate air is the existing 0.45 of the font size for every plate, the mock's lower third pads a little more (14px at 21px). Pre-existing, not mine: the drawn title-safe guide is 5% in from each side while captions land 10% in (CaptionLayers.titleSafeInset vs SafeAreaGuide.title); the lower third hangs off the drawn guide so it matches the mock."
+    },
+    {
+      "t": "2026-10-10T05:59:11.664Z",
+      "note": "Lower third now moves captions low left (plate on the title-safe guide, shared caption floor, 64% wide) on the mock's violet gradient plate, bold, keeping the person's font and size; another style puts the box back. Core in CaptionLook/Layer, gradient + plate air in TextRasterizer. Verified: CaptionLowerThirdTests + plate render tests, full suite 12,152 green, new lower-third-sits-low-left-walk at Next defaults plus 8 caption walks green, exported 1080p frame matches the canvas. Audit 2026-10-09-lower-third-caption-style.json; badge follow-up a-lower-third-wears-the-mock-s-lower-third-badge. Commit 03040780."
     }
-  ]
+  ],
+  "started": "2026-10-10T05:25:44.628Z",
+  "walks": [
+    "lower-third-sits-low-left-walk",
+    "captions-panel-keeps-its-margins-walk",
+    "captions-write-themselves-walk"
+  ],
+  "completed": "2026-10-10T05:59:11.665Z"
 }

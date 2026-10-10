@@ -1,0 +1,31 @@
+{
+  "id": "a-ring-or-arc-gets-a-full-turn-forever-when-rota",
+  "title": "A ring or arc gets a full turn, forever, when Rotation is added",
+  "goal": "In the spinner walkthrough, adding Rotation to a ring or arc arrives as 0 to 360 degrees with Repeat on Forever, because that is what a spinner is. Today every shape arrives as a small swing back and forth, so a person has to retype both ends and the repeat before anything spins.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T11:01:28.844Z",
+  "updated": "2026-10-10T12:15:16.300Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock docs/design/mocks/pages/icon-loop-wt.html step 3 #motNote: Rotation arrives at 0 to 360 with Repeat on Forever when the shape is a ring. Code: LayerMotion.starting(.rotation, on:) in Sources/PhotonzCore/LayerMotion.swift ~1206, currently -12..12 foreverThereAndBack for every layer. Found by a-spinner-can-turn-about-the-middle-of-the-artbo.",
+  "acceptance": [
+    "Adding Rotation to an ellipse or an open arc path in an icon frame arrives as From 0, To 360, Repeat Forever, at Next defaults",
+    "Other shapes keep the swing they arrive with today",
+    "A walk adds Rotation to an arc and reads 0, 360 and Forever on the row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T11:01:28.846Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T12:15:16.299Z",
+      "note": "seq 4040 -> 60"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:40.901Z",
-  "updated": "2026-10-10T02:37:52.324Z",
+  "updated": "2026-10-10T07:42:02.142Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Success line icon-grid 2. Code: Sources/PhotonzCore/PenDrawing.swift ~510-513 onGrid returns the raw point when there is no grid; never snaps to keylines or other anchors. CanvasGrid off by default (Sources/PhotonzCore/CanvasGrid.swift:75), 4 point spacing (~38), zoom ladder never finer (levels ~413). Icon frame draws no unit lines (Sources/Photonz/CanvasIconKeylines.swift). Tutorial says 'four point grid' at Sources/PhotonzCore/TutorialGuides.swift:2962, update if the rule changes. Whole-unit check exists as SVGWholeUnits. Done task a-new-frame-can-be-an-icon-size-and-an-icon-is-s says snapping was deliberately left out then. Whether the frame draws visible unit lines belongs to the open grid card (the-grid-s-controls-come-back-to-the-tool-bar-as); this task is the snapping only. Read from code, not run; the runner reproduces first.",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-10T02:37:52.323Z",
       "note": "seq 3990 -> 6"
+    },
+    {
+      "t": "2026-10-10T07:00:49.737Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T07:41:34.756Z",
+      "note": "owns these walks: pen-lands-on-whole-units-in-an-icon-walk"
+    },
+    {
+      "t": "2026-10-10T07:41:48.448Z",
+      "note": "Reproduced before the fix: new walk pen-lands-on-whole-units-in-an-icon-walk, at Next defaults, failed with 'the copied SVG puts 6 place(s) off whole units: transform=3.3, transform=5.6, d=15.3, d=0.8, d=8.1, d=13.1'."
+    },
+    {
+      "t": "2026-10-10T07:41:48.508Z",
+      "note": "Review before building: a Photoshop/Illustrator user expects pixel snapping in a pixel-sized artboard with no setup, and Cmd as the no-magnets key (the app's rule). Risk: keylines one unit apart (live area 2, square 3) would steal units if the pull were wide, so the pull is 6 view points capped at one unit; zoomed in, rounding alone decides. Targets off whole units (odd frame centre, a point placed with Cmd) are never offered, which keeps every point whole. The canvas grid is ignored inside icon frames: at 4 points apart it reaches one unit in four."
+    },
+    {
+      "t": "2026-10-10T07:41:48.569Z",
+      "note": "Built: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; PhotonzDocument.iconSnap(at:keylines:)). PenSession.iconSnap wins over grid for points, Shift runs (diagonals stay 45 on whole units) and dragged handles. Canvas: CanvasPen.refreshPenSnapping takes the icon under the FIRST anchor, so a path started on bare canvas behaves exactly as before; the landing ring now shows inside icon frames too. Icon tutorial copy no longer says points stick to grid crossings. Tests: IconSnapTests (27). Full suite green (12189). Walks green: the new one plus icon-stroke-weight, icon-width-row x2, pen-path-thickness, tutorial-draw-it-with-the-pen, tutorial-icon-keylines-already-on, tutorial-start-on-an-icon-frame, copy-an-icon-as-svg, icon-keylines, close-an-open-path, join-two-pen-paths, path-reshape, path-arrives-with-no-edge, copy-leaves-the-canvas-out, pen-on-the-grid."
+    },
+    {
+      "t": "2026-10-10T07:41:48.631Z",
+      "note": "Follow-ups filed: a-curve-drawn-on-whole-units-exports-on-whole-un (reproduced: a whole-unit curve that bulges past its first point exports translate(13.88 6)); icon-snapping-reaches-what-the-icon-mock-draws (the mock's Snap to row, pointer readout, edge and centre targets, Ctrl vs Cmd, and the picked-shape-corner press clash). Left rough, not filed: rectangle and ellipse tools in icon frames keep their own magnets (noted in the audit; the mock-parity task's notes name it)."
+    },
+    {
+      "t": "2026-10-10T07:42:02.140Z",
+      "note": "Inside an icon frame Pen points land on whole units, keylines and other shapes' points with no setting (IconSnap in PhotonzCore, PenSession.iconSnap, CanvasPen.refreshPenSnapping); off icons unchanged. Verified: IconSnapTests + full suite green (12189), walk pen-lands-on-whole-units-in-an-icon-walk green at Next defaults with the copied SVG whole, 16 related walks green. Audit queue/audits/2026-10-10-pen-points-in-an-icon-frame-land-on-whole-units.json. Commit 2ebd6d2b."
     }
-  ]
+  ],
+  "started": "2026-10-10T07:00:49.736Z",
+  "walks": [
+    "pen-lands-on-whole-units-in-an-icon-walk"
+  ],
+  "completed": "2026-10-10T07:42:02.141Z"
 }

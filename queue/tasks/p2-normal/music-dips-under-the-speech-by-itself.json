@@ -4,12 +4,12 @@
   "goal": "A music bed added under a talking recording plays at full level over the voice, and the only fix today is dragging four level points around every sentence. The captions already know exactly when someone is talking, so the music can dip under the speech in one step, the way Premiere's auto ducking and the audio mock do.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 110,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-06T00:44:03.432Z",
-  "updated": "2026-10-09T12:52:26.273Z",
+  "updated": "2026-10-10T12:15:16.662Z",
   "deps": [],
   "blockedBy": [],
   "notes": "docs/design/video-audio.md section 7 cut 'Duck music under voiceover' on 2026-09-21 because 'it needs the app to know which layer is a voice'. That has changed: captions now write themselves with word-level timing (the captions track, CaptionCue / TranscribedWord), so the spoken stretches are known. The level model already represents a duck as points either side of a dip (Sources/PhotonzCore/AudioMix.swift:12-14, 41, 157, 277), and walks already have a .soundDuck step (PlaytestScript.swift:1231). Mock: docs/design/mocks/pages/video-audio.html (Duck toggle :326, menu row 'Duck music under voiceover' :101, Ducking section :626-632). Competitors: Premiere Essential Sound auto-ducking, Final Cut's audio ducking, Descript. New visible command, so it went through a card first (manager prompt rule). Filed by the 2026-10-05 evening manager pass.",
@@ -41,6 +41,10 @@
     {
       "t": "2026-10-09T12:52:26.272Z",
       "note": "seq 10 -> 50"
+    },
+    {
+      "t": "2026-10-10T12:15:16.661Z",
+      "note": "seq 50 -> 110"
     }
   ]
 }

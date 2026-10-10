@@ -4,12 +4,12 @@
   "goal": "Copying a drawing now puts its SVG on the clipboard as an SVG file, which Chrome-based apps can read, but a code editor, a plain text box or Safari only ever reads plain text, so pasting an icon there gives nothing. Decide how the SVG markup reaches those places without taking the measurement list's place, then build it.",
   "epic": "icon-export",
   "priority": "p2-normal",
-  "seq": 230,
+  "seq": 290,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T19:29:41.546Z",
-  "updated": "2026-10-09T12:52:27.622Z",
+  "updated": "2026-10-10T12:15:17.951Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows copying-an-icon-puts-its-svg-on-the-clipboard-to (2026-10-08), which put the SVG on as public.svg-image beside PNG and TIFF on Copy Merged, on Command C with nothing picked and no marquee, and on Command C with a frame picked (EditorState.clipboardSVG, CompositeCopy.carriesSVG). Measured with the real copy (kit in docs/design/references/svg-copy-check): Chrome 153 hands a page image/svg+xml plus image/png (paste event and navigator.clipboard.read), a contenteditable box still takes the PNG; WebKit and NSTextView (TextEdit rich and plain) never see the SVG type; a textarea (what Monaco and VS Code read) gets nothing. Putting the markup on as .string makes every plain text field take it (tried with a stand-in clipboard: TextEdit plain mode and a textarea pasted the markup, the rich boxes still took the picture). The clash: .string already carries the spec list when the document has visible measurements (CompositeCopy.representations). Photoshop answers this with a separate Copy SVG on the layer right-click menu; Figma with Copy as > Copy as SVG.",
@@ -35,6 +35,10 @@
     {
       "t": "2026-10-09T12:52:27.621Z",
       "note": "seq 3810 -> 230"
+    },
+    {
+      "t": "2026-10-10T12:15:17.950Z",
+      "note": "seq 230 -> 290"
     }
   ],
   "walks": []

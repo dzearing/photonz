@@ -10512,3 +10512,145 @@
 {"t":"2026-10-10T02:37:52.672Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":4010,"to":13}
 {"t":"2026-10-10T02:37:58.122Z","ev":"task_resequenced","id":"the-lower-third-caption-style-sits-low-left-on-i","from":7,"to":4}
 {"t":"2026-10-10T02:38:35.186Z","ev":"manager","filed":11,"readyBefore":2,"readyAfter":13,"report":"queue/manager/2026-10-09-1937.md"}
+{"t":"2026-10-10T02:38:52.745Z","ev":"manager_pass","exit":0,"ready":13}
+{"t":"2026-10-10T02:38:52.808Z","ev":"task_started","id":"dragging-a-zoomed-in-recording-keys-where-it-is","title":"Dragging a zoomed-in recording keys where it is centred","priority":"p1-high"}
+{"t":"2026-10-10T02:57:43.571Z","ev":"task_created","id":"a-recording-s-framing-reads-as-scale-then-centre","priority":"p1-high","title":"A recording's framing reads as Scale then Centre, the way the zoom walkthrough draws it"}
+{"t":"2026-10-10T02:57:56.593Z","ev":"task_walks","id":"dragging-a-zoomed-in-recording-keys-where-it-is","walks":["framing-a-zoom-keys-its-centre-walk"]}
+{"t":"2026-10-10T02:58:16.761Z","ev":"task_note","id":"dragging-a-zoomed-in-recording-keys-where-it-is"}
+{"t":"2026-10-10T02:58:27.821Z","ev":"task_done","id":"dragging-a-zoomed-in-recording-keys-where-it-is","from":"in_progress","note":"Shipped in 99e4b807: on a recording with Scale keyed and Position not, a canvas drag writes Position keys at the Scale keys either side of the playhead (holding the stored place) plus one at the playhead, so the wide shot stays put while the zoom pans (PropertyKeys.foldEditIntoKeys/reframeAnchors). Unkeyed drags and already-keyed Position unchanged; one undo. Verified by 8 new core tests, full suite 12127 green, new walk framing-a-zoom-keys-its-centre-walk at Next defaults plus 7 existing keying walks green. Audit queue/audits/2026-10-09-dragging-a-zoomed-in-recording-keys-where-it-is.json; lane naming/order vs mock filed as a-recording-s-framing-reads-as-scale-then-centre."}
+{"t":"2026-10-10T03:09:24.956Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":506,"of":833,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T03:09:25.136Z","ev":"task_started","id":"captions-language-can-be-picked-before-captions","title":"Captions language can be picked before captions are written","priority":"p1-high"}
+{"t":"2026-10-10T04:03:38.885Z","ev":"task_walks","id":"captions-language-can-be-picked-before-captions","walks":["captions-language-before-captions-walk","captions-on-demand-walk"]}
+{"t":"2026-10-10T04:03:38.944Z","ev":"task_note","id":"captions-language-can-be-picked-before-captions"}
+{"t":"2026-10-10T04:03:39.009Z","ev":"task_note","id":"captions-language-can-be-picked-before-captions"}
+{"t":"2026-10-10T04:03:39.068Z","ev":"task_note","id":"captions-language-can-be-picked-before-captions"}
+{"t":"2026-10-10T04:03:39.126Z","ev":"task_note","id":"captions-language-can-be-picked-before-captions"}
+{"t":"2026-10-10T04:03:52.368Z","ev":"task_done","id":"captions-language-can-be-picked-before-captions","from":"in_progress","note":"Captions section shows Language, Safe areas and Add Captions before any captions exist (CaptionsInspector.swift), matching video-captions.html; the chosen language is the one the words are heard in. Verified by captions-language-before-captions-walk at Next defaults (en-GB picked by pointer, transcription checked to run in en-GB, row keeps it), 9 related walks green, Scripts/test.sh green. Audit: queue/audits/2026-10-09-captions-language-first.json. Commit 2e892d98."}
+{"t":"2026-10-10T04:15:04.908Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":521,"of":834,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T04:15:05.080Z","ev":"task_started","id":"detached-sound-can-be-put-back-into-its-picture","title":"Detached sound can be put back into its picture","priority":"p1-high"}
+{"t":"2026-10-10T04:36:17.096Z","ev":"task_walks","id":"detached-sound-can-be-put-back-into-its-picture","walks":["re-attach-audio-walk","re-attach-audio-menu-bar-walk"]}
+{"t":"2026-10-10T04:36:28.156Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
+{"t":"2026-10-10T04:36:28.220Z","ev":"task_note","id":"detached-sound-can-be-put-back-into-its-picture"}
+{"t":"2026-10-10T04:36:55.292Z","ev":"task_done","id":"detached-sound-can-be-put-back-into-its-picture","from":"in_progress","note":"Re-attach Audio shipped (fec629fd): core reattachingSound in SoundClip.swift with 14 tests; Clip menu row on ctrl-shift-D toggles Detach/Re-attach; right-click on picture and loose sound; snaps back in step, one undo step. Walks re-attach-audio-walk and re-attach-audio-menu-bar-walk green at Next defaults; full suite green. Audit queue/audits/2026-10-09-reattach-audio.json. Mock's panel button waits on the open panel-buttons card."}
+{"t":"2026-10-10T04:53:03.662Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":816,"of":836,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T04:53:03.853Z","ev":"task_started","id":"a-recording-s-framing-reads-as-scale-then-centre","title":"A recording's framing reads as Scale then Centre, the way the zoom walkthrough draws it","priority":"p1-high"}
+{"t":"2026-10-10T05:13:51.141Z","ev":"task_created","id":"a-zoomed-recording-s-motion-path-shows-where-the","priority":"p2-normal","title":"A zoomed recording's motion path shows where the camera points, or nothing"}
+{"t":"2026-10-10T05:13:55.644Z","ev":"task_walks","id":"a-recording-s-framing-reads-as-scale-then-centre","walks":["framing-a-zoom-keys-its-centre-walk","captions-panel-keeps-its-margins-walk","animate-a-property-list-walk"]}
+{"t":"2026-10-10T05:14:07.788Z","ev":"task_note","id":"a-recording-s-framing-reads-as-scale-then-centre"}
+{"t":"2026-10-10T05:14:18.874Z","ev":"task_done","id":"a-recording-s-framing-reads-as-scale-then-centre","from":"in_progress","note":"A recording's Position row and lane now read Centre, under Scale, showing the point of the recording in the middle of the frame; typing a centre moves the framing there; titles keep Position. Core in ClipReframe/PropertyKeys/KeyLanes with 8 tests (full suite 12150 green); framing-a-zoom-keys-its-centre-walk at Next defaults photographs lanes and row and reads 303.6, 272.7 then 500 typed and 640, 400 wide; audit 2026-10-09-recording-framing-scale-then-centre."}
+{"t":"2026-10-10T05:25:44.467Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":530,"of":836,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T05:25:44.636Z","ev":"task_started","id":"the-lower-third-caption-style-sits-low-left-on-i","title":"The Lower third caption style sits low left on its own plate","priority":"p2-normal"}
+{"t":"2026-10-10T05:57:27.792Z","ev":"task_created","id":"a-lower-third-wears-the-mock-s-lower-third-badge","priority":"p2-normal","title":"A lower third wears the mock's Lower-third badge on the canvas"}
+{"t":"2026-10-10T05:58:41.389Z","ev":"task_walks","id":"the-lower-third-caption-style-sits-low-left-on-i","walks":["lower-third-sits-low-left-walk","captions-panel-keeps-its-margins-walk","captions-write-themselves-walk"]}
+{"t":"2026-10-10T05:58:41.450Z","ev":"task_note","id":"the-lower-third-caption-style-sits-low-left-on-i"}
+{"t":"2026-10-10T05:58:41.509Z","ev":"task_note","id":"the-lower-third-caption-style-sits-low-left-on-i"}
+{"t":"2026-10-10T05:58:41.565Z","ev":"task_note","id":"the-lower-third-caption-style-sits-low-left-on-i"}
+{"t":"2026-10-10T05:59:11.667Z","ev":"task_done","id":"the-lower-third-caption-style-sits-low-left-on-i","from":"in_progress","note":"Lower third now moves captions low left (plate on the title-safe guide, shared caption floor, 64% wide) on the mock's violet gradient plate, bold, keeping the person's font and size; another style puts the box back. Core in CaptionLook/Layer, gradient + plate air in TextRasterizer. Verified: CaptionLowerThirdTests + plate render tests, full suite 12,152 green, new lower-third-sits-low-left-walk at Next defaults plus 8 caption walks green, exported 1080p frame matches the canvas. Audit 2026-10-09-lower-third-caption-style.json; badge follow-up a-lower-third-wears-the-mock-s-lower-third-badge. Commit 03040780."}
+{"t":"2026-10-10T06:10:36.148Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":521,"of":837,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T06:10:36.322Z","ev":"task_started","id":"a-component-copy-follows-its-look-once-that-look","title":"A component copy follows its look once that look is drawn, and a second question can be removed","priority":"p2-normal"}
+{"t":"2026-10-10T06:17:37.382Z","ev":"task_note","id":"a-component-copy-follows-its-look-once-that-look"}
+{"t":"2026-10-10T06:27:45.616Z","ev":"task_note","id":"a-component-copy-follows-its-look-once-that-look"}
+{"t":"2026-10-10T06:42:36.381Z","ev":"task_walks","id":"a-component-copy-follows-its-look-once-that-look","walks":["variant-follows-and-goes-walk","variant-and-size-walk"]}
+{"t":"2026-10-10T06:44:52.073Z","ev":"task_note","id":"a-component-copy-follows-its-look-once-that-look"}
+{"t":"2026-10-10T06:44:52.132Z","ev":"task_note","id":"a-component-copy-follows-its-look-once-that-look"}
+{"t":"2026-10-10T06:44:52.189Z","ev":"task_note","id":"a-component-copy-follows-its-look-once-that-look"}
+{"t":"2026-10-10T06:45:16.830Z","ev":"task_done","id":"a-component-copy-follows-its-look-once-that-look","from":"in_progress","note":"A copy waiting on an undrawn Variant+Size pair now moves onto the real drawing as soon as it is drawn (sync + Done), and a second question can be removed from its row on Edit Original (minus or right-click Remove Size) in one undo step, copies falling back to their remaining answers. Reproduced first in core and in the app (walk failed on the old behaviour). 9 new core tests, Scripts/test.sh 12162 passed; variant-follows-and-goes-walk green at Next defaults with a pointer press on the minus. Audit queue/audits/2026-10-10-variant-follows-and-goes.json. Commit a18f5203."}
+{"t":"2026-10-10T07:00:49.568Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":777,"of":838,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T07:00:49.743Z","ev":"task_started","id":"pen-points-in-an-icon-frame-land-on-whole-units","title":"Pen points in an icon frame land on whole units","priority":"p2-normal"}
+{"t":"2026-10-10T07:41:02.921Z","ev":"task_created","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","priority":"p2-normal","title":"A curve drawn on whole units exports on whole units"}
+{"t":"2026-10-10T07:41:10.760Z","ev":"task_created","id":"icon-snapping-reaches-what-the-icon-mock-draws","priority":"p2-normal","title":"Icon snapping reaches what the icon mock draws"}
+{"t":"2026-10-10T07:41:34.758Z","ev":"task_walks","id":"pen-points-in-an-icon-frame-land-on-whole-units","walks":["pen-lands-on-whole-units-in-an-icon-walk"]}
+{"t":"2026-10-10T07:41:48.450Z","ev":"task_note","id":"pen-points-in-an-icon-frame-land-on-whole-units"}
+{"t":"2026-10-10T07:41:48.510Z","ev":"task_note","id":"pen-points-in-an-icon-frame-land-on-whole-units"}
+{"t":"2026-10-10T07:41:48.571Z","ev":"task_note","id":"pen-points-in-an-icon-frame-land-on-whole-units"}
+{"t":"2026-10-10T07:41:48.633Z","ev":"task_note","id":"pen-points-in-an-icon-frame-land-on-whole-units"}
+{"t":"2026-10-10T07:42:02.143Z","ev":"task_done","id":"pen-points-in-an-icon-frame-land-on-whole-units","from":"in_progress","note":"Inside an icon frame Pen points land on whole units, keylines and other shapes' points with no setting (IconSnap in PhotonzCore, PenSession.iconSnap, CanvasPen.refreshPenSnapping); off icons unchanged. Verified: IconSnapTests + full suite green (12189), walk pen-lands-on-whole-units-in-an-icon-walk green at Next defaults with the copied SVG whole, 16 related walks green. Audit queue/audits/2026-10-10-pen-points-in-an-icon-frame-land-on-whole-units.json. Commit 2ebd6d2b."}
+{"t":"2026-10-10T07:52:05.480Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":437,"of":839,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T07:52:05.659Z","ev":"task_started","id":"the-layers-panel-knows-a-group-is-a-row-or-a-col","title":"The Layers panel knows a group is a row or a column","priority":"p2-normal"}
+{"t":"2026-10-10T07:54:13.061Z","ev":"task_note","id":"the-layers-panel-knows-a-group-is-a-row-or-a-col"}
+{"t":"2026-10-10T08:13:16.160Z","ev":"task_created","id":"the-layers-list-says-stack-words-the-way-the-aut","priority":"p2-normal","title":"The Layers list says stack words the way the auto-layout mock draws them"}
+{"t":"2026-10-10T08:13:30.490Z","ev":"decision_opened","id":"the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name","taskId":"the-layers-list-says-stack-words-the-way-the-aut","question":"How should the Layers panel name stacking, and where should a row's row, column, hug, fill or fixed word sit?"}
+{"t":"2026-10-10T08:13:39.899Z","ev":"task_blocked","id":"the-layers-list-says-stack-words-the-way-the-aut","from":"pending","note":"Waiting on the card: mock words and row-end placement versus what shipped"}
+{"t":"2026-10-10T08:13:54.404Z","ev":"task_walks","id":"the-layers-panel-knows-a-group-is-a-row-or-a-col","walks":["layers-rows-say-row-or-column-walk","layers-rows-stack-by-right-click-walk"]}
+{"t":"2026-10-10T08:13:54.464Z","ev":"task_note","id":"the-layers-panel-knows-a-group-is-a-row-or-a-col"}
+{"t":"2026-10-10T08:13:59.260Z","ev":"task_done","id":"the-layers-panel-knows-a-group-is-a-row-or-a-col","from":"in_progress","note":"Stack Selection is the first row of the Layers panel menu and in a layer row's right-click menu (⌃⌘G, the menu bar's name); stacked groups say row/column/grid and their pieces hug/fill/fixed on the row's second line; plain groups unchanged. Verified by StackRowNoteTests, full suite (12202 green), and walks layers-rows-say-row-or-column-walk + layers-rows-stack-by-right-click-walk at Next defaults. Audit queue/audits/2026-10-10-layers-rows-say-row-or-column.json; mock wording/placement on card in follow-up the-layers-list-says-stack-words-the-way-the-aut."}
+{"t":"2026-10-10T08:26:29.858Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":587,"of":841,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T08:26:30.037Z","ev":"task_started","id":"the-front-door-s-recent-lists-documents-you-open","title":"The front door's Recent lists documents you opened","priority":"p2-normal"}
+{"t":"2026-10-10T08:55:33.839Z","ev":"task_walks","id":"the-front-door-s-recent-lists-documents-you-open","walks":["front-door-recent-documents-walk"]}
+{"t":"2026-10-10T08:55:55.579Z","ev":"task_created","id":"a-recent-document-card-offers-the-mock-s-copy-pi","priority":"p2-normal","title":"A recent document card offers the mock's Copy, Pin and Delete"}
+{"t":"2026-10-10T08:56:07.321Z","ev":"task_walks","id":"a-recent-document-card-offers-the-mock-s-copy-pi","walks":[]}
+{"t":"2026-10-10T09:44:44.600Z","ev":"task_note","id":"the-front-door-s-recent-lists-documents-you-open"}
+{"t":"2026-10-10T09:44:44.667Z","ev":"task_note","id":"the-front-door-s-recent-lists-documents-you-open"}
+{"t":"2026-10-10T09:44:44.727Z","ev":"task_note","id":"the-front-door-s-recent-lists-documents-you-open"}
+{"t":"2026-10-10T09:44:55.783Z","ev":"task_done","id":"the-front-door-s-recent-lists-documents-you-open","from":"in_progress","note":"Front door Recent lists saved/opened documents among captures with a preview picture; File > Open Recent with Clear Menu; reopening an open file brings its window forward. Flag next-recent-documents on by default in Next. Verified: front-door-recent-documents-walk green at Next defaults (pointer click on the Recent card reopens the saved project, Open Recent lists and focuses it, Clear Menu empties it), front-door-walk and design-ui-start-walk green, Scripts/test.sh 12215 tests passed. Audit queue/audits/2026-10-10-recent-documents.json. Commit 3a5cfc74."}
+{"t":"2026-10-10T09:56:19.633Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":530,"of":842,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T09:56:19.798Z","ev":"task_started","id":"a-spinner-can-turn-about-the-middle-of-the-artbo","title":"A spinner can turn about the middle of the artboard","priority":"p2-normal"}
+{"t":"2026-10-10T11:00:59.698Z","ev":"task_created","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","priority":"p2-normal","title":"Find out why the whole test run hangs in the Mac's picture and text reading work"}
+{"t":"2026-10-10T11:01:14.368Z","ev":"task_walks","id":"a-spinner-can-turn-about-the-middle-of-the-artbo","walks":["spinner-turns-about-the-artboard-walk"]}
+{"t":"2026-10-10T11:01:28.848Z","ev":"task_created","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","priority":"p2-normal","title":"A ring or arc gets a full turn, forever, when Rotation is added"}
+{"t":"2026-10-10T11:01:47.142Z","ev":"task_note","id":"a-spinner-can-turn-about-the-middle-of-the-artbo"}
+{"t":"2026-10-10T11:01:47.230Z","ev":"task_note","id":"a-spinner-can-turn-about-the-middle-of-the-artbo"}
+{"t":"2026-10-10T11:01:47.313Z","ev":"task_note","id":"a-spinner-can-turn-about-the-middle-of-the-artbo"}
+{"t":"2026-10-10T11:01:47.400Z","ev":"task_note","id":"a-spinner-can-turn-about-the-middle-of-the-artbo"}
+{"t":"2026-10-10T11:01:47.469Z","ev":"task_note","id":"a-spinner-can-turn-about-the-middle-of-the-artbo"}
+{"t":"2026-10-10T11:02:07.645Z","ev":"task_done","id":"a-spinner-can-turn-about-the-middle-of-the-artbo","from":"in_progress","note":"Around offers Artboard inside icon frames (fixed place, turns about 12,12; SVG matches); crosshair drag pulls onto the icon's and the shape's middle; crosshair now right for shapes in frames. ArtboardPivotTests; walk spinner-turns-about-the-artboard-walk green at Next defaults plus 9 pivot walks; suite run in two green parts after a system HEIF/Vision hang. Audit queue/audits/2026-10-10-spinner-artboard.json. Commit a7b5045b."}
+{"t":"2026-10-10T11:13:01.430Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":500,"of":843,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T11:13:01.615Z","ev":"task_started","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar","title":"A 24 point icon shows at 32 and 48 beside the artboard too","priority":"p2-normal"}
+{"t":"2026-10-10T11:49:26.037Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T12:03:59.953Z","ev":"task_walks","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar","walks":["icon-previews-dark-chip-walk","icon-previews-stay-with-nothing-picked-walk","icon-preview-walk"]}
+{"t":"2026-10-10T12:04:00.013Z","ev":"task_note","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar"}
+{"t":"2026-10-10T12:04:00.074Z","ev":"task_note","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar"}
+{"t":"2026-10-10T12:04:00.133Z","ev":"task_note","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar"}
+{"t":"2026-10-10T12:04:00.194Z","ev":"task_note","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar"}
+{"t":"2026-10-10T12:04:18.682Z","ev":"task_done","id":"a-24-point-icon-shows-at-32-and-48-beside-the-ar","from":"in_progress","note":"A 24 point icon frame now previews at 16, 24, 32, 48 with the 32 on the mock's near black chip (glyph turned light there when drawn in one dark grey); a 16 shows 16, 24, 32; 32 and up show 16 to 64. Light chips are painted the frame's surface so the glyph sits on the chip, picture byte-exact export. Commit 335d0d38. Verified: new walk icon-previews-dark-chip-walk at Next defaults plus 3 updated/neighbour walks ok; tests split (full run hangs, see hang task): 11009 + 999 pass. Audit queue/audits/2026-10-10-icon-previews-sizes.json."}
+{"t":"2026-10-10T12:12:29.839Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":464,"of":844,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T12:14:42.954Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T12:15:01.719Z","ev":"task_created","id":"the-rule-for-picking-a-key-is-written-where-runn","priority":"p2-normal","title":"The rule for picking a key is written where runners read it"}
+{"t":"2026-10-10T12:15:05.390Z","ev":"task_note","id":"a-recent-document-card-offers-the-mock-s-copy-pi"}
+{"t":"2026-10-10T12:15:15.432Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":10,"to":10}
+{"t":"2026-10-10T12:15:15.499Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":20,"to":20}
+{"t":"2026-10-10T12:15:15.569Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":30,"to":30}
+{"t":"2026-10-10T12:15:15.644Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":40,"to":40}
+{"t":"2026-10-10T12:15:15.719Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":50,"to":50}
+{"t":"2026-10-10T12:15:15.791Z","ev":"task_resequenced","id":"a-component-tool-places-a-component-from-the-too","from":3900,"to":60}
+{"t":"2026-10-10T12:15:15.868Z","ev":"task_resequenced","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar","from":3910,"to":70}
+{"t":"2026-10-10T12:15:15.939Z","ev":"task_resequenced","id":"a-zoomed-recording-s-motion-path-shows-where-the","from":3970,"to":10}
+{"t":"2026-10-10T12:15:16.010Z","ev":"task_resequenced","id":"a-lower-third-wears-the-mock-s-lower-third-badge","from":3980,"to":20}
+{"t":"2026-10-10T12:15:16.081Z","ev":"task_resequenced","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","from":4030,"to":30}
+{"t":"2026-10-10T12:15:16.156Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":13,"to":40}
+{"t":"2026-10-10T12:15:16.227Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":3990,"to":50}
+{"t":"2026-10-10T12:15:16.301Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":4040,"to":60}
+{"t":"2026-10-10T12:15:16.375Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":4000,"to":70}
+{"t":"2026-10-10T12:15:16.446Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":4020,"to":80}
+{"t":"2026-10-10T12:15:16.516Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":4050,"to":90}
+{"t":"2026-10-10T12:15:16.592Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":40,"to":100}
+{"t":"2026-10-10T12:15:16.663Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":50,"to":110}
+{"t":"2026-10-10T12:15:16.733Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":60,"to":120}
+{"t":"2026-10-10T12:15:16.809Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":70,"to":130}
+{"t":"2026-10-10T12:15:16.878Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":80,"to":140}
+{"t":"2026-10-10T12:15:16.950Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":90,"to":150}
+{"t":"2026-10-10T12:15:17.025Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":100,"to":160}
+{"t":"2026-10-10T12:15:17.097Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":110,"to":170}
+{"t":"2026-10-10T12:15:17.167Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":120,"to":180}
+{"t":"2026-10-10T12:15:17.240Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":130,"to":190}
+{"t":"2026-10-10T12:15:17.309Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":140,"to":200}
+{"t":"2026-10-10T12:15:17.376Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":150,"to":210}
+{"t":"2026-10-10T12:15:17.444Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":160,"to":220}
+{"t":"2026-10-10T12:15:17.517Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":170,"to":230}
+{"t":"2026-10-10T12:15:17.587Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":180,"to":240}
+{"t":"2026-10-10T12:15:17.659Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":190,"to":250}
+{"t":"2026-10-10T12:15:17.737Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":200,"to":260}
+{"t":"2026-10-10T12:15:17.809Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":210,"to":270}
+{"t":"2026-10-10T12:15:17.879Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":220,"to":280}
+{"t":"2026-10-10T12:15:17.952Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":230,"to":290}
+{"t":"2026-10-10T12:15:18.027Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":250,"to":300}
+{"t":"2026-10-10T12:15:18.098Z","ev":"task_resequenced","id":"decide-whether-starter-components-change-colour","from":260,"to":310}
+{"t":"2026-10-10T12:15:18.175Z","ev":"task_resequenced","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":3960,"to":320}
+{"t":"2026-10-10T12:15:18.247Z","ev":"task_resequenced","id":"the-layers-list-says-stack-words-the-way-the-aut","from":4010,"to":330}
+{"t":"2026-10-10T12:16:46.888Z","ev":"task_created","id":"the-recording-control-can-be-dragged-anywhere-re","priority":"p1-high","title":"The recording control can be dragged anywhere, remembers where, and starts in the bottom left"}
+{"t":"2026-10-10T12:16:46.982Z","ev":"task_resequenced","id":"the-recording-control-can-be-dragged-anywhere-re","from":3930,"to":19}
+{"t":"2026-10-10T12:16:47.069Z","ev":"task_created","id":"command-left-and-right-switch-the-history-filter","priority":"p1-high","title":"Command Left and Right switch the history filter"}
+{"t":"2026-10-10T12:16:47.168Z","ev":"task_resequenced","id":"command-left-and-right-switch-the-history-filter","from":3930,"to":20}
+{"t":"2026-10-10T12:17:44.303Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T12:17:48.016Z","ev":"triage","summary":"merged 0, moved 0 priorities, reset 0, retagged 1 (test-run hang to unmanned-loop), filed 1 (key-rule scrub), resequenced p1 7 and p2 33 (focus video tasks to the front of p2), groomed 0, rough edge logged 1 (front door button style)"}
+{"t":"2026-10-10T12:17:48.046Z","ev":"digest","file":"2026-10-10.md"}

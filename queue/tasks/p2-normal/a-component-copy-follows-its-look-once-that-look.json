@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.209Z",
-  "updated": "2026-10-10T02:37:52.266Z",
+  "updated": "2026-10-10T06:45:16.829Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Source: log of done task a-component-can-have-a-variant-and-a-size-at-onc ('left rough: no way to remove a second question; a copy on an undrawn combination keeps the nearest drawing after the exact one is drawn, until picked again') and audit queue/audits/2026-10-09-variant-and-size.json rough. Code: Sources/PhotonzCore/ComponentVariantProperty.swift setInstanceVariantAnswer ~400-428 resolves the nearest drawing only at pick time; store the wanted pair and re-resolve when the original's drawings change (on Done). Add: Sources/Photonz/ComponentPanel.swift ~1608-1612 addComponentVariantProperty; no remove exists. Tests first in core.",
@@ -28,6 +28,44 @@
     {
       "t": "2026-10-10T02:37:52.265Z",
       "note": "seq 4020 -> 5"
+    },
+    {
+      "t": "2026-10-10T06:10:36.315Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T06:17:37.380Z",
+      "note": "Reproduced in core first (Scripts/test.sh --filter ComponentVariantFollowTests, before the fix): a copy on Secondary picked Large shows the Primary · Large stand-in; after Secondary · Large is drawn and the copies synced it STILL shows the stand-in (instanceVersion stays Primary·Large, instanceAnswers still held). Same through Edit Original + Done (returnFromEditingSpace in one History.perform). Also found: a copy on a drawing that disappears on Done falls to the component's FIRST drawing, so removing Size on the page would send a Secondary · Large copy to Primary rather than Secondary. App walk repro follows once the harness can say which drawing a copy shows."
+    },
+    {
+      "t": "2026-10-10T06:27:45.614Z",
+      "note": "Reproduced in the app (probe built with the sync fix switched off): Scripts/playtest.sh Scripts/playtest/variant-follows-and-goes-walk.json -> step 58 (expectShows): 'the walk says every picked copy shows Default · Large, but Badge shows Secondary · Large'. That is the copy set to Default + Large keeping its Secondary · Large stand-in after Default · Large was drawn on Edit Original and Done pressed."
+    },
+    {
+      "t": "2026-10-10T06:42:36.379Z",
+      "note": "owns these walks: variant-follows-and-goes-walk, variant-and-size-walk"
+    },
+    {
+      "t": "2026-10-10T06:44:52.071Z",
+      "note": "Before building (adversarial): a Figma user expects a property to be removable from its row; the panel's knob rows already carry a minus, so the question row gets the same minus plus a right-click Remove. Removing a question leaves drawings that only differed by it as duplicates, so each set keeps one (its first answer, Default) and the rest go, in one undo step; copies land on the drawing giving their remaining answers. Copies live in the document while the removal happens on the Edit Original page, so Done (returnFromEditingSpace) re-points any copy whose drawing vanished to the page drawing matching its remaining answers; with no match it still falls to the first look and is reported, as before."
+    },
+    {
+      "t": "2026-10-10T06:44:52.130Z",
+      "note": "Built: core removeComponentVariantProperty + drawnCombination (ComponentVariantProperty.swift), sync settles a waiting copy onto the real drawing (ComponentInstances.swift), Done re-points copies (ComponentLibrary.swift copiesLanding); app minus/right-click on question rows past the first (ComponentPanel.swift), EditorState.removeComponentVariantProperty hands the pick to the drawing it folded into; harness step expectShows (PlaytestScript/PlaytestHarness, docs table). 9 new core tests + script test; Scripts/test.sh 12162 passed. Walk variant-follows-and-goes-walk green at Next defaults (no flags), presses the minus with real pointer events; variant-and-size-walk and instance-properties-variants-mock-walk green. tutorial-component-versions-walk failed once in a batch and passed alone on rerun (flake, not this change)."
+    },
+    {
+      "t": "2026-10-10T06:44:52.187Z",
+      "note": "left rough (under the bar, no task): after removing a question the remaining drawings stay where they stood in the grid, a column on a page still sized for it; reopening Edit Original keeps them there. Add/remove question are not in the menu bar (neither was Add before). No mock covers removal."
+    },
+    {
+      "t": "2026-10-10T06:45:16.827Z",
+      "note": "A copy waiting on an undrawn Variant+Size pair now moves onto the real drawing as soon as it is drawn (sync + Done), and a second question can be removed from its row on Edit Original (minus or right-click Remove Size) in one undo step, copies falling back to their remaining answers. Reproduced first in core and in the app (walk failed on the old behaviour). 9 new core tests, Scripts/test.sh 12162 passed; variant-follows-and-goes-walk green at Next defaults with a pointer press on the minus. Audit queue/audits/2026-10-10-variant-follows-and-goes.json. Commit a18f5203."
     }
-  ]
+  ],
+  "started": "2026-10-10T06:10:36.314Z",
+  "walks": [
+    "variant-follows-and-goes-walk",
+    "variant-and-size-walk"
+  ],
+  "completed": "2026-10-10T06:45:16.828Z"
 }

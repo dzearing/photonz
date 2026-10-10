@@ -4,12 +4,12 @@
   "goal": "Redlining screenshots is what Photonz is used for most, and its success list promises that someone used to CleanShot X or Shottr gets from a capture to a redline pasted into a chat in no more steps than there. Nobody has counted. Count both sides, and remove the one biggest extra step if Photonz takes more.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 100,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T03:31:23.371Z",
-  "updated": "2026-10-09T15:27:23.883Z",
+  "updated": "2026-10-10T12:15:16.591Z",
   "deps": [],
   "blockedBy": [],
   "notes": "measure-redline success item 4; no count exists (searched queue and docs/design/next-measure.md, 2026-10-08). User memory: primary use is UX redlining (measure gaps and sizes). Recent related: redline copy pastes as a picture in Chromium (task find-out-whether-the-redline-copy-pastes-as-a-pi, audit 2026-10-08-redline-paste.json); one-shot copy Shift Cmd C. Example walk: Scripts/playtest/redline-walk.json. Competitor counts come from their public documentation; nothing is installed and no account is made.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-09T15:27:23.880Z",
       "note": "Counted: Photonz 10 steps from a region capture to a picture with a size and a gap on the clipboard (walk capture-to-redline-steps-walk, green at Next defaults), Shottr 9, CleanShot X cannot measure on its own (PixelSnap 2 at least 5, not fully documented). Table in docs/design/next-measure.md section 13, committed 6db2f0ce. The one extra step is re-picking Measure after a Size click, because every tool hands back to Select by the user's own rule; whether Measure should stay in hand after Size and Gap is on a decision card (recommended: yes, Size and Gap only)."
+    },
+    {
+      "t": "2026-10-10T12:15:16.590Z",
+      "note": "seq 40 -> 100"
     }
   ],
   "started": "2026-10-09T15:10:04.374Z",

@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-08T18:52:37.115Z",
-  "updated": "2026-10-09T12:52:25.872Z",
+  "updated": "2026-10-10T12:15:15.718Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building the Align row (task a-drawn-path-takes-an-outline-inside-centred-or, 2026-10-08). Mock: docs/design/mocks/pages/icon-draw-wt.html ~line 411 (#secStroke: Width select reading 1.75, Caps seg Butt/Round/Square with Round on, Align select Center). App: Sources/Photonz/ShapePartSettings.swift .stroke slot (thickness slider labelled Thickness) and Sources/Photonz/PathLineStylePickers.swift (Pattern, Ends, Corners picture segments, Align dropdown). Ends is hidden on a closed solid path by design (PathContent.showsLineEnds) while the mock always shows Caps. Thickness and Ends are the words lines and arrows use too, so renaming for paths alone splits the vocabulary: that is a card for the user, not a runner guess. Pattern and Corners go further than the mock and are not differences.",
@@ -46,6 +46,10 @@
     {
       "t": "2026-10-09T12:52:25.871Z",
       "note": "seq 540 -> 50"
+    },
+    {
+      "t": "2026-10-10T12:15:15.717Z",
+      "note": "seq 50 -> 50"
     }
   ],
   "started": "2026-10-08T19:08:27.440Z",

@@ -1,0 +1,33 @@
+{
+  "id": "icon-snapping-reaches-what-the-icon-mock-draws",
+  "title": "Icon snapping reaches what the icon mock draws",
+  "goal": "Inside an icon frame the Pen now lands on whole units, keylines and other shapes' points with nothing to switch on. The Draw an icon on the grid mock goes further: a Snap to row (Grid, Keylines, Geometry) to turn each pull on or off, a small readout beside the pointer naming the place it will land, and shapes' edges and centres as targets as well as their points.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T07:41:10.756Z",
+  "updated": "2026-10-10T12:15:16.374Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape.",
+  "acceptance": [
+    "The mock's Snap to choices exist and each one turns its pull on or off, placed where the placement contract puts them (or a decision card says where, before building)",
+    "While a point is being placed in an icon frame, a readout beside the pointer names the whole-unit place it will land, as in the mock's step 4",
+    "A point near another shape's edge or centre lands on it, as the mock's step 6 shows",
+    "Whether ⌘ (the app's key for no magnets) or the mock's ⌃ suspends snapping is settled with the user on a decision card"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T07:41:10.758Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T12:15:16.373Z",
+      "note": "seq 4000 -> 70"
+    }
+  ],
+  "walks": []
+}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 9,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.415Z",
-  "updated": "2026-10-10T09:44:44.726Z",
+  "updated": "2026-10-10T09:44:55.782Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Source: rough line in queue/audits/2026-10-09-front-door.json ('Recent shows capture history ... not every document you have opened'). Mock: docs/design/mocks/pages/ui-entry-wt.html step 2 ~290-300, ~360. Code: Sources/Photonz/FrontDoorView.swift ~197-204 reads capture.store.entries. No Open Recent anywhere in Sources: NSDocumentController.recentDocumentURLs is the Mac's own list if the app's documents go through it; check before building a second list. Open Recent belongs in File (placement contract).",
@@ -48,10 +48,15 @@
     {
       "t": "2026-10-10T09:44:44.725Z",
       "note": "Audit rough items: document/capture card action rows filed as a-recent-document-card-offers-the-mock-s-copy-pi; old packages without a preview and a saved video's preview frame stay here (no walk shows either broken)."
+    },
+    {
+      "t": "2026-10-10T09:44:55.780Z",
+      "note": "Front door Recent lists saved/opened documents among captures with a preview picture; File > Open Recent with Clear Menu; reopening an open file brings its window forward. Flag next-recent-documents on by default in Next. Verified: front-door-recent-documents-walk green at Next defaults (pointer click on the Recent card reopens the saved project, Open Recent lists and focuses it, Clear Menu empties it), front-door-walk and design-ui-start-walk green, Scripts/test.sh 12215 tests passed. Audit queue/audits/2026-10-10-recent-documents.json. Commit 3a5cfc74."
     }
   ],
   "started": "2026-10-10T08:26:30.029Z",
   "walks": [
     "front-door-recent-documents-walk"
-  ]
+  ],
+  "completed": "2026-10-10T09:44:55.781Z"
 }

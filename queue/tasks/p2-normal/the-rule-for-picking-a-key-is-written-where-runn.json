@@ -1,0 +1,31 @@
+{
+  "id": "the-rule-for-picking-a-key-is-written-where-runn",
+  "title": "The rule for picking a key is written where runners read it",
+  "goal": "When a mock prints a key the app already uses, runners keep asking the user on a card, even though the user settled the rule in July: the key Photoshop (for pictures) or Premiere (for video) uses wins, and the other command moves to a free key. Four of the 31 open cards are key questions of this kind. Write the rule down in the design rules and the runner's instructions so a runner applies it, says what moved in the audit, and only asks when two grown-up tools disagree.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 90,
+  "status": "pending",
+  "release": "next",
+  "area": "infra",
+  "created": "2026-10-10T12:15:01.714Z",
+  "updated": "2026-10-10T12:15:16.515Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence 2026-10-10 digest: cards a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick and a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component both quote 'your rule: on a clash, Photoshop keeps the key and the other tool moves' in their own options, and recommend the option the rule gives. Also option-delete-ripple-deletes-on-the-timeline-as (Premiere key) and shift-z-means-the-one-thing-you-choose-on-a-vide; icon-snapping-reaches-what-the-icon-mock-draws plans a card for Control vs Command. The rule today lives only in old decision answers (2026-07-05: M marquee, Measure moved to I; Command N New Layer) and in the layers design doc's Photoshop shortcut table; neither UX-PATTERNS.md nor queue/bin/runner-prompt.md states it. Leave existing cards for the user; this only changes how new clashes are settled.",
+  "acceptance": [
+    "UX-PATTERNS.md has a short rule on how a key is chosen: the grown-up tool's key wins (Photoshop for pictures, Premiere for video), the command that is not theirs moves to a free key, and a mock's printed key that clashes follows the same rule",
+    "The runner instructions say a clash settled by that rule is built and named in the audit's rough list, and a card is opened only when the rule does not decide it (two grown-up tools disagree, or the key belongs to neither)",
+    "The manager and digest prompts point at the same rule, so a key card the rule already answers is called out rather than added to the pile"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T12:15:01.717Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T12:15:16.514Z",
+      "note": "seq 4050 -> 90"
+    }
+  ]
+}

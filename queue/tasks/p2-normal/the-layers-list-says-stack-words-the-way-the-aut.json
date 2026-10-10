@@ -4,12 +4,12 @@
   "goal": "The Layers panel now names a stack and how each piece is sized, but in two places it differs from the auto-layout mock: the menu row says Stack Selection instead of Wrap in auto-layout, and the small word sits under the name instead of at the right end of the row. You pick which way each should go.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 4010,
+  "seq": 330,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T08:13:16.156Z",
-  "updated": "2026-10-10T08:13:39.898Z",
+  "updated": "2026-10-10T12:15:18.246Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/ui-autolayout.html #layerMenu row 1 (Wrap in auto-layout, Shift A) and .lmeta (mono 9.5px, right end of the row, accent when picked). Shipped 2026-10-10 by the-layers-panel-knows-a-group-is-a-row-or-a-col: LayersPanelHeader.MenuRow.stackSelection uses MenuRow.stackTitle (also the menu bar and right-click row); LayersRow.layoutNote draws StackRowNote.text under the name. Shift A alone would be a bare-letter key on the canvas, so the key question is separate from the words.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-10-10T08:13:39.895Z",
       "note": "Waiting on the card: mock words and row-end placement versus what shipped"
+    },
+    {
+      "t": "2026-10-10T12:15:18.245Z",
+      "note": "seq 4010 -> 330"
     }
   ],
   "walks": [

@@ -4,12 +4,12 @@
   "goal": "The UI design mock (and Photoshop) has a Hand tool at the end of the tool bar: pick it and dragging the canvas scrolls the view instead of moving things. Photonz pans only with space-drag or the trackpad, so the Design mode tool bar is missing the mock's Hand.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 3910,
+  "seq": 70,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.505Z",
-  "updated": "2026-10-09T18:43:17.516Z",
+  "updated": "2026-10-10T12:15:15.867Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tHand, title \"Hand (H)\"; UX-PATTERNS D4 lists Hand as a shared tool in every app strip. ToolBarFold.videoLeading earlier left Hand out as \"not a tool in this app\": a runner's call, not the user's; the user's 2026-09-29 rule is only that zoom is not a tool. Add .tool(.hand) to WindowModes.designStrip in its own family after Measure. Memory: Photoshop shortcut parity says relocate the non-PS feature on conflict, so Highlight would move, which changes picture users' keys: card it.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-09T18:43:17.513Z",
       "note": "Built and pushed (39570bb6): the Hand sits at the end of the tool bar after Measure (Design, picture and video bars at Next defaults), a pointer click picks it, and a canvas drag moves the view without moving or picking anything. Verified by 12056 tests, design-mode-tool-strip-walk with real captures and six other tool bar walks, audit 2026-10-09-hand-tool. Waiting on one answer: the mocks and Photoshop give the Hand H, which is Highlight here, so which tool keeps H is on a decision card; the Hand ships with no key until then."
+    },
+    {
+      "t": "2026-10-10T12:15:15.866Z",
+      "note": "seq 3910 -> 70"
     }
   ],
   "walks": [

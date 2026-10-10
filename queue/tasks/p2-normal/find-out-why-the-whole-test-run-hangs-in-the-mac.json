@@ -1,0 +1,42 @@
+{
+  "id": "find-out-why-the-whole-test-run-hangs-in-the-mac",
+  "title": "Find out why the whole test run hangs in the Mac's picture and text reading work",
+  "goal": "On 2026-10-10 the full test run stopped making progress twice, stuck inside the Mac's own HEIF picture writing, text recognition and sound reading, while the same tests pass on their own. Until it is understood, a runner cannot get a single green run before committing.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T11:00:59.694Z",
+  "updated": "2026-10-10T12:17:44.302Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen by runner on a-spinner-can-turn-about-the-middle-of-the-artbo, 03:10-03:50. `Scripts/test.sh` twice sat at 0% CPU for 9-19 min (swiftpm-testing-helper). `sample <pid>` showed threads parked in CGImageDestinationFinalize > HEIFWritePlugin > CMPhoto > VCPHEVC (PackageIOTests, ImageCodecTests), VNRecognizeTextRequest (ReadPageWeightFixtureTests, ReadRunAsTextFixtureTests, ARefusedReadIsToldApartTests via TextReader) and AVAssetReader (SoundFile.peaks). `swift test --skip-build --filter ImageCodecTests` alone: 6 pass in 0.05s. Split run passed: `Scripts/test.sh --skip 'PhotonzRenderTests|PhotonzMediaTests'` 11003 pass in 42s; `swift test --skip-build --filter 'PhotonzRenderTests|PhotonzMediaTests'` 1223 pass in 240s. Previous commit 3a5cfc74 at 02:44 passed its run, so this may be transient (VTEncoderXPCService/aned state). Also: `timeout` is not on this Mac, so a bounded run needs a poll loop.",
+  "acceptance": [
+    "The cause is named: the machine's media services, the number of these tests running at once, or something in the tests",
+    "Scripts/test.sh finishes on this Mac, or stops with a message naming the stuck test instead of sitting idle"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T11:00:59.696Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-10T11:49:26.035Z",
+      "note": "Seen again 2026-10-10 ~04:30 by runner on a-24-point-icon-shows-at-32-and-48-beside-the-ar: full Scripts/test.sh and then 'swift test --skip-build --filter PhotonzRenderTests|PhotonzMediaTests' both sat at 0% CPU 10 min. sample showed AVAssetReaderTrackOutput copyNextSampleBuffer (8 threads) and CGImageDestinationFinalize > IIO_Writer_HEIF > CMPhoto (5). Load average was ~1-2, so not machine load. Same signature, still reproducing hours later, so not a one-off."
+    },
+    {
+      "t": "2026-10-10T12:14:42.952Z",
+      "note": "triage 2026-10-10: epic icon-animate -> unmanned-loop. A test run that hangs slows every runner whatever it is building, so it serves the loop, not the spinner task that first saw it."
+    },
+    {
+      "t": "2026-10-10T12:15:16.079Z",
+      "note": "seq 4030 -> 30"
+    },
+    {
+      "t": "2026-10-10T12:17:44.301Z",
+      "note": "digest 2026-10-10 ~12:20 UTC at 335d0d38: ran swift test --skip-build --filter 'PhotonzRenderTests|PhotonzMediaTests' with no other runner on the Mac: 1229 tests in 174 suites passed after 229.6 s, no stall. So it does not hang every time; the two stalls this morning came while a runner had just built and walks had been running. Kept at p2, behind the two ready video tasks."
+    }
+  ]
+}
