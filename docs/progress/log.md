@@ -21162,3 +21162,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Media: `TitleSoundSynth.swift` makes the sounds (seeded band-swept noise whoosh, two-tone tick, 48 kHz mono WAV, peak -14 dBFS). App: `TitleSoundFiles.swift` writes each score once into the caches folder and files it with the sound library. Panel: Sounds row in the Title section.
 - Tests: `TitleSoundsTests`, `TitleSoundSynthTests` (including an export of the mix). Walk: `title-sounds-whoosh-and-tick-walk` (silent export with Sounds off, sound track with it on, at Next defaults, switch clicked at its face). Full suite green, 12,497 tests.
 - Next: whatever the loop's manager picks for the video focus.
+
+## 2026-10-11 — 2.5D design mocks
+
+- New mock page `docs/design/mocks/pages/video-depth.html` (Video > Depth (2.5D)): turning layers in depth on the canvas, a 3D panel section, timeline and layers list, camera options, three playable moves.
+- Decision cards: handle design (on the controls task, recommended arcs on the turn knob) and where the camera lives (on the model task, recommended a keyable frame setting).
+- Next: the 2.5D model and renderer task, which does not wait on either card.

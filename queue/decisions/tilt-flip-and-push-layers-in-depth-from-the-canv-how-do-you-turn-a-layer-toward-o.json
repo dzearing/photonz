@@ -1,0 +1,56 @@
+{
+  "id": "tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o",
+  "taskId": "tilt-flip-and-push-layers-in-depth-from-the-canv",
+  "question": "How do you turn a layer toward or away from you on the canvas?",
+  "context": "Mocks: Depth (2.5D) page, section Three ways to turn a layer in 3D. Each canvas there is live: pick the big or small layer and drag. The panel's 3D rows and the depth arrow are the same in all three.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Arcs on the turn knob",
+      "summary": "Rest the pointer on the knob above a picked layer and two arcs appear on it: drag the flat one sideways to swing the layer, the tall one up or down to tip it. Dragging the knob itself still turns it flat, as today.",
+      "pros": [
+        "Nothing new to find: it grows out of the knob people already use",
+        "No mode to enter or leave",
+        "Same size on a tiny layer as on a big one"
+      ],
+      "cons": [
+        "The arcs are small targets close to the knob",
+        "Hidden until the pointer rests on the knob"
+      ],
+      "mitigation": "Generous hit areas on each arc, and the 3D rows in the panel are always there for exact numbers."
+    },
+    {
+      "id": "b",
+      "label": "Click the knob, then tip the edges",
+      "summary": "Click the turn knob and the frame switches to 3D: its side handles become tabs. Pull the top tab down and the top comes toward you; push a side tab in and that side swings away. Click the knob again or press Esc to go back.",
+      "pros": [
+        "Feels like holding a card by its edge",
+        "Big, easy targets on a large layer"
+      ],
+      "cons": [
+        "A mode you have to notice you are in",
+        "On a small layer the four tabs crowd together",
+        "The resize handles are gone while in 3D"
+      ],
+      "mitigation": "The knob stays filled while in 3D and Esc always leaves it."
+    },
+    {
+      "id": "c",
+      "label": "Coloured rings round the pivot",
+      "summary": "A picked layer that can turn in 3D shows Final Cut and Motion's control: a red ring to tip, a green ring to swing, a blue ring to turn flat, centred on the pivot, plus the depth arrow.",
+      "pros": [
+        "What Final Cut Pro and Motion users already know",
+        "The most precise of the three"
+      ],
+      "cons": [
+        "A second turn control beside the knob",
+        "On a small layer the rings cover the layer completely",
+        "Busy: three rings on every picked layer"
+      ],
+      "mitigation": "Rings could show only while a key is held, at the cost of being hidden like option A."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-11T18:16:57.445Z"
+}

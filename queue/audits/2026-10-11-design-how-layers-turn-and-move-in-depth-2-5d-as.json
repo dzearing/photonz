@@ -1,0 +1,47 @@
+{
+  "feature": "2.5D design: turning layers in depth, as mocks",
+  "epic": "video-transitions-motion",
+  "summary": "A live mock page shows how a layer tips, swings and moves in depth: the handles on the canvas, a 3D section in the panel, how it looks on the timeline and in the layers list, the camera, and three moves (card flip, title from depth, cube) you can play and scrub. Two cards ask you to pick the handle design and where the camera lives.",
+  "setup": "Mock page only, no app change: open http://127.0.0.1:8791/index.html#video-depth (Prototype, Video, Depth (2.5D)). Every canvas on it is live in the browser.",
+  "switched": {},
+  "try": [
+    {
+      "do": "In the editor at the top, drag the green flat arc on the knob above the title sideways, then the red tall arc up.",
+      "shot": "2026-10-11-depth-mock-editor.png"
+    },
+    {
+      "do": "Drag the blue arrow at the title's crosshair up and down to push it away and pull it nearer; watch the panel's 3D rows follow."
+    },
+    {
+      "do": "Type a number into Rotation Y in the panel and watch the title turn."
+    },
+    {
+      "do": "Under Three ways to turn a layer in 3D, try each canvas with Big layer and then Small layer picked.",
+      "shot": "2026-10-11-depth-mock-handles.png"
+    },
+    {
+      "do": "In design B, click the turn knob to leave the 3D frame and again to come back; press Esc to leave it."
+    },
+    {
+      "do": "Under How it feels, play and scrub the card flip, the title entrance and the cube.",
+      "shot": "2026-10-11-depth-mock-camera.png"
+    },
+    {
+      "do": "Answer the two cards: How do you turn a layer toward or away from you on the canvas? and Where does the camera live?"
+    }
+  ],
+  "evaluate": [
+    "Would you find the arcs on the turn knob (design A) without being told they are there?",
+    "On the small NEW badge, is any of the three designs still usable, or does the small case need its own answer?",
+    "Do the three moves feel like Keynote and Motion, or do they need more weight (a bounce, a shadow, depth of field) before titles use them?",
+    "Is a 3D section of four rows under Position & Size the right home, or should the 3D rows only appear once a layer is turned?",
+    "Is a camera you set on the frame (card option A) enough for the camera moves you want in titles?"
+  ],
+  "rough": [
+    "No mock covers this surface: this page is the first 2.5D mock.",
+    "The perspective on the page is the browser's, so turns may look a little stronger than the app draws them; the model task layers-can-turn-about-x-and-y-and-move-in-depth measures its own.",
+    "Arcs in design A are drawn as two simple curves; the real handle needs a proper hit area and a pointer cue, which the controls task owns.",
+    "The timeline's opened property rows (Rotation Y, Depth under the title) are drawn for this page only; how a track opens to show its property rows is the video timeline's existing design, not decided here.",
+    "Bring Nearer and Send Further are given Option Command ] and [ in the page's command menu: free in the app today, not checked against Premiere; tilt-flip-and-push-layers-in-depth-from-the-canv settles the keys."
+  ]
+}

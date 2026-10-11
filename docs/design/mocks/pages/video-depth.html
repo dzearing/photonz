@@ -1,0 +1,708 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-depth</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-depth · layers that turn and move in depth (2.5D).
+   Flat layers (text, pictures, shapes, groups, clips) turn about X and Y and
+   move in depth under one perspective camera, the way Keynote and Apple Motion
+   do it. Not extruded type, not lights, not models.
+   Chrome is the shared shell; this page authors content only. Every local
+   class carries the dp- prefix (AGENTS.md, "PREFIX every page-local class"). */
+
+#video-depth{--dp-x:#ff6b5e;--dp-y:#3ecf8e;--dp-z:#6f9bff}
+#video-depth .win.shell{height:820px;min-height:0}
+#video-depth .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}
+
+/* ---------- a 3D stage: the frame a perspective camera looks through ---------- */
+.dp-stage{position:relative;overflow:hidden;perspective:1100px;perspective-origin:50% 50%;
+  background:radial-gradient(120% 90% at 30% 20%,#2a2f4a,#0d0f18 70%);border-radius:var(--r2);
+  touch-action:none;user-select:none;-webkit-user-select:none}
+.dp-stage.dp-frame{position:absolute;inset:var(--s5) var(--s6);aspect-ratio:auto}
+.dp-layer{position:absolute;left:50%;top:50%;transform-style:preserve-3d;cursor:move;
+  border-radius:10px;will-change:transform}
+.dp-layer .dp-m{position:absolute;width:0;height:0}
+.dp-layer .dp-m.tl{left:0;top:0}.dp-layer .dp-m.tr{right:0;top:0}
+.dp-layer .dp-m.br{right:0;bottom:0}.dp-layer .dp-m.bl{left:0;bottom:0}
+.dp-layer .dp-m.t{left:50%;top:0}.dp-layer .dp-m.b{left:50%;bottom:0}
+.dp-layer .dp-m.l{left:0;top:50%}.dp-layer .dp-m.r{right:0;top:50%}
+.dp-layer .dp-m.c{left:50%;top:50%}
+
+/* the designed content the layers carry */
+.dp-card{background:linear-gradient(135deg,#12c2e9,#7c4dff 60%,#ff5d8f);color:#fff;
+  box-shadow:0 18px 40px rgba(0,0,0,.45);display:flex;flex-direction:column;justify-content:center;
+  padding:0 var(--s5);font-weight:760;letter-spacing:-.02em}
+.dp-card .dp-k{font-size:10px;font-weight:650;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.dp-card .dp-h{font-size:26px;line-height:1.05}
+.dp-chip{background:#ffd166;color:#1b1400;font-size:10px;font-weight:800;letter-spacing:.06em;
+  display:grid;place-items:center;border-radius:6px;box-shadow:0 6px 14px rgba(0,0,0,.4)}
+.dp-shot{background:linear-gradient(180deg,#f5f7fb,#dfe5f1);border-radius:8px;overflow:hidden;
+  box-shadow:0 18px 40px rgba(0,0,0,.45)}
+.dp-shot::before{content:"";display:block;height:14px;background:#e6e9f0;border-bottom:1px solid #cfd5e2}
+.dp-shot i{display:block;margin:8px 10px;height:7px;border-radius:4px;background:#c5cde0}
+.dp-shot i:nth-child(2){width:60%}.dp-shot i:nth-child(3){width:78%;background:#7c8cff}
+
+/* the handles are drawn in screen space, over the stage, so they keep one size
+   whatever the layer's tilt, depth or size (the app draws its turn knob and
+   crosshair the same way: in view space, never scaled with the picture). */
+.dp-ov{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none}
+.dp-ov .hit{pointer-events:stroke;stroke:transparent;fill:none;cursor:grab}
+.dp-ov .hitf{pointer-events:all;fill:transparent;cursor:grab}
+.dp-ov .hit:active,.dp-ov .hitf:active{cursor:grabbing}
+.dp-read{position:absolute;pointer-events:none;padding:2px 6px;border-radius:5px;font-family:var(--mono);
+  font-size:10px;font-weight:600;color:#fff;background:rgba(10,12,20,.82);
+  box-shadow:0 2px 8px rgba(0,0,0,.35);white-space:nowrap;transform:translate(12px,-26px);display:none}
+.dp-read.on{display:block}
+
+/* ---------- the panel's 3D section (rows in video.html's grammar) ---------- */
+.dp-prow{display:flex;align-items:center;gap:var(--s2);padding:2px 0}
+.dp-prow .rl{flex:1 1 auto;min-width:0;font-size:10.5px;color:var(--dim)}
+.dp-prow.anim .rl{color:var(--ink)}
+.dp-prow .stepper{flex:none;width:84px;min-width:0}
+.dp-prow .stepper>input{text-align:right}
+.dp-key{width:16px;height:16px;padding:0;border:1px solid transparent;background:transparent;
+  border-radius:var(--r1);display:grid;place-items:center;cursor:pointer;flex:none}
+.dp-key::before{content:"";width:8px;height:8px;border-radius:1px;transform:rotate(45deg);
+  border:1.5px solid var(--line-strong);background:transparent;transition:background .12s ease,border-color .12s ease}
+.dp-key:hover{background:var(--panel-2)}
+.dp-key.armed::before{border-color:var(--comp)}
+.dp-key.on::before{background:var(--comp);border-color:var(--comp)}
+.dp-key:focus-visible{outline:none;box-shadow:var(--ring)}
+.dp-sec{padding:var(--s2) var(--pad-sm)}
+.dp-sec+.dp-sec{border-top:1px solid var(--edge-lo)}
+.dp-sech{display:flex;align-items:center;gap:var(--s2);font-size:10px;font-weight:660;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--faint);margin-bottom:var(--s1)}
+.dp-sech .dp-q{margin-left:auto;width:16px;height:16px;border-radius:50%;border:1px solid var(--line-strong);
+  display:grid;place-items:center;font-size:9px;color:var(--faint);text-transform:none;letter-spacing:0;cursor:help}
+.dp-numgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--s2)}
+.dp-numgrid .stepper{min-width:0;width:auto}
+.dp-pvrow{transition:opacity .18s ease}
+.dp-pvrow[hidden]{display:none}
+
+/* ---------- timeline (shared track/lane/clip, plus property rows) ---------- */
+#dpTl{--gutter:84px;flex:0 0 auto;padding:0;display:flex;flex-direction:column}
+#dpTl .dp-tlz{padding:var(--s2) var(--s3) var(--s3);position:relative}
+#dpTl .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:4px}
+#dpTl .track .lane{height:26px}
+#dpTl .lane>.clip{position:absolute;top:0;height:26px}
+#dpTl .dp-tclip{background:linear-gradient(135deg,#6b47c9,#9a5cff);color:#fff}
+#dpTl .dp-sub .tl{color:var(--faint);padding-left:14px}
+#dpTl .dp-sub .lane{height:18px;border-top:1px dashed var(--edge-lo)}
+#dpTl .dp-kd{position:absolute;top:50%;width:8px;height:8px;margin:-4px 0 0 -4px;transform:rotate(45deg);
+  background:var(--comp);border-radius:1px;box-shadow:0 0 0 1.5px rgba(0,0,0,.35)}
+#dpTl .dp-kline{position:absolute;top:50%;height:2px;margin-top:-1px;background:color-mix(in srgb,var(--comp) 45%,transparent)}
+#dpTl .dp-disc{width:12px;height:12px;display:inline-grid;place-items:center;color:var(--faint);transform:rotate(90deg)}
+#dpTl .dp-ph{position:absolute;top:0;bottom:0;width:2px;background:var(--crit);z-index:5;pointer-events:none}
+#dpTl .dp-band{position:absolute;top:0;height:26px;border-radius:6px;z-index:6;
+  background:linear-gradient(90deg,rgba(111,155,255,.8),rgba(62,207,142,.8));border:1px solid rgba(255,255,255,.55);
+  display:flex;align-items:center;justify-content:center;color:#071018;font-size:8.5px;font-weight:700}
+
+/* ---------- the three handle designs ---------- */
+.dp-trio{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+@media (max-width:1100px){.dp-trio{grid-template-columns:1fr}}
+.dp-opt{display:flex;flex-direction:column;gap:var(--s2)}
+.dp-opt .dp-stage{height:300px;perspective:640px}
+.dp-opt .seg{align-self:flex-start}
+.dp-opth{display:flex;align-items:baseline;gap:var(--s2)}
+.dp-opth .dp-l{width:20px;height:20px;border-radius:50%;background:var(--panel-2);color:var(--ink);
+  font-size:11px;font-weight:760;display:grid;place-items:center;flex:none}
+.dp-opth.rec .dp-l{background:var(--accent);color:var(--accent-ink)}
+.dp-opth h3{margin:0;font-size:12.5px}
+.dp-opth .dp-tag{margin-left:auto;font-size:10px;color:var(--accent);font-weight:650}
+.dp-vals{font-family:var(--mono);font-size:10px;color:var(--dim);display:flex;gap:var(--s3);flex-wrap:wrap}
+.dp-vals b{color:var(--ink);font-weight:600}
+.dp-opt p{margin:0;font-size:11px;line-height:1.5;color:var(--dim)}
+.dp-opt p b{color:var(--ink)}
+.dp-tools{display:flex;gap:var(--s2);align-items:center}
+
+/* ---------- the feel: three moves ---------- */
+.dp-moves{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+@media (max-width:1100px){.dp-moves{grid-template-columns:1fr}}
+.dp-move .dp-stage{height:220px;perspective:900px}
+.dp-move .dp-ctl{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
+.dp-move .dp-ctl input[type=range]{flex:1;accent-color:var(--accent)}
+.dp-move .dp-t{font-family:var(--mono);font-size:10px;color:var(--dim);width:40px;text-align:right}
+.dp-move h3{margin:0 0 var(--s1);font-size:12.5px}
+.dp-move p{margin:var(--s2) 0 0;font-size:11px;color:var(--dim);line-height:1.5}
+.dp-3d{position:absolute;left:50%;top:50%;transform-style:preserve-3d}
+.dp-face{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border-radius:10px;overflow:hidden}
+.dp-flipback{background:linear-gradient(135deg,#1d2236,#2d3554);color:#e9ecff;display:flex;flex-direction:column;
+  justify-content:center;padding:0 var(--s4);font-size:11px;gap:6px;transform:rotateY(180deg)}
+.dp-flipback b{font-size:15px}
+.dp-word{display:inline-block;color:#fff;font-size:30px;font-weight:780;letter-spacing:-.02em;
+  text-shadow:0 6px 24px rgba(0,0,0,.45);transform-origin:50% 100%;margin:0 5px}
+.dp-cubeA{background:linear-gradient(160deg,#1b7a8c,#12c2e9);border-radius:0}
+.dp-cubeB{background:linear-gradient(160deg,#7c4dff,#ff5d8f);border-radius:0}
+.dp-cubeA span,.dp-cubeB span{position:absolute;left:12px;bottom:10px;color:#fff;font-size:11px;font-weight:700;
+  background:rgba(0,0,0,.35);padding:2px 6px;border-radius:4px}
+.dp-cubeA i,.dp-cubeB i{position:absolute;left:12%;right:12%;top:16%;height:46%;border-radius:6px;background:rgba(255,255,255,.88)}
+
+/* ---------- small specimens (layers list, camera) ---------- */
+.dp-specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+@media (max-width:1100px){.dp-specs{grid-template-columns:1fr}}
+.dp-spec{background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r4);overflow:hidden}
+.dp-spec .dp-spech{padding:var(--s2) var(--pad-sm);font-size:10px;font-weight:660;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--edge-lo)}
+.dp-thumb{width:22px;height:16px;flex:none;perspective:60px;display:grid;place-items:center}
+.dp-thumb i{display:block;width:18px;height:12px;border-radius:2px;background:linear-gradient(135deg,#12c2e9,#7c4dff)}
+.dp-lrow{display:flex;align-items:center;gap:var(--s2);padding:5px var(--pad-sm);font-size:11px;color:var(--ink)}
+.dp-lrow.sel{background:var(--accent-soft)}
+.dp-lrow .ic{color:var(--dim)}
+.dp-lrow .dp-nm{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.dp-lrow .eye{color:var(--faint)}
+.dp-cam .dp-camtrack{display:flex;align-items:center;gap:var(--s2);padding:var(--s2) var(--pad-sm)}
+.dp-cam .dp-camtrack .dp-tlab{width:64px;font-size:10px;color:var(--dim);display:flex;gap:4px;align-items:center}
+.dp-cam .dp-camtrack .dp-tlane{flex:1;height:22px;border-radius:5px;position:relative;
+  background:linear-gradient(90deg,#3c4157,#4a4f68);border:1px solid rgba(255,255,255,.12)}
+.dp-cam .dp-camtrack .dp-tlane .dp-kd{position:absolute;top:50%;width:7px;height:7px;margin:-3.5px 0 0 -3.5px;transform:rotate(45deg);background:#fff;border-radius:1px}
+.dp-cam .dp-camtrack .dp-tlane span{position:absolute;left:8px;top:4px;font-size:9.5px;color:#fff;font-weight:650}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-depth">
+  <div class="scen-head"><span class="pip" style="background:#6f9bff"></span><h2>Depth (2.5D)</h2><span class="k">· flat layers that turn toward you and move back and forth in space</span></div>
+
+  <p class="pglead">Any layer (a title, a picture, a shape, a group, a clip) can <b>turn about its sideways and upright
+    axes</b> and <b>move nearer or further away</b>, seen through one camera with real perspective. That is all 2.5D
+    is: Keynote's and Apple Motion's kind of 3D, flat cards in space, not modelled objects. It adds handles to the
+    turn knob you already use, one short section to the panel, and nothing to the tool bar.</p>
+
+  <!-- ========== THE EDITOR: a tilted title, live ========== -->
+  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:15" data-ws="video">
+    <div class="edit lean" id="dpShell" data-dock="open">
+
+      <div class="popover menu pop cmdpop" id="cmdMenu">
+        <div class="mlabel">Layer</div>
+        <div class="menuitem"><i class="ic ic-refresh"></i> Reset 3D Rotation</div>
+        <div class="menuitem"><i class="ic ic-arrow-up"></i> Bring Nearer <span class="sc">⌥⌘]</span></div>
+        <div class="menuitem"><i class="ic ic-arrow-down"></i> Send Further <span class="sc">⌥⌘[</span></div>
+        <div class="menu-sep"></div>
+        <div class="mlabel">View</div>
+        <div class="menuitem"><i class="ic ic-camera"></i> Show Camera Settings</div>
+      </div>
+
+      <div class="cnv">
+        <div class="canvas">
+          <div class="dp-stage dp-frame" id="edStage">
+            <!-- the clip under the title: a screen recording -->
+            <div class="dp-layer dp-shot" data-l="bg" style="width:340px;height:200px"><i></i><i></i><i></i><i></i></div>
+            <div class="dp-layer dp-card" data-l="title" style="width:300px;height:112px">
+              <span class="dp-k">Launch</span><span class="dp-h">Ship it faster.</span>
+            </div>
+            <svg class="dp-ov"></svg>
+            <span class="dp-read"></span>
+          </div>
+        </div>
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#dpShell" title="Show or hide the panel (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+        </div>
+        <!-- THE TOOL BAR GAINS NOTHING. Turning and depth are handles on the
+             picked layer, not tools (UX-PATTERNS, the placement contract). -->
+        <div class="tbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Blade (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+          </span>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="212" data-max="420"></div>
+
+      <div class="pdock" id="dpDock">
+        <div class="dgrp grow" id="dpProps">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt" id="dpKind">Title</span></div>
+          <div class="dgrp-b" style="padding:0">
+            <div class="dp-sec">
+              <div class="dp-sech">Position &amp; Size</div>
+              <div class="dp-numgrid">
+                <span class="stepper sm"><span class="k">X</span><input name="dp-x" value="960" aria-label="X"></span>
+                <span class="stepper sm"><span class="k">Y</span><input name="dp-y" value="540" aria-label="Y"></span>
+                <span class="stepper sm"><span class="k">W</span><input name="dp-w" value="900" aria-label="Width"></span>
+                <span class="stepper sm"><span class="k">H</span><input name="dp-h" value="336" aria-label="Height"></span>
+                <span class="stepper sm"><span class="k">A</span><input name="dp-a" data-f="rz" value="0" aria-label="Rotation"><span class="u">°</span></span>
+              </div>
+            </div>
+            <!-- THE 3D SECTION. One label and one value per row, each with the
+                 key diamond the video mock gives every keyable row. Pivot depth
+                 only shows once the layer is actually turned: on a flat layer it
+                 has nothing to do. -->
+            <div class="dp-sec">
+              <div class="dp-sech">3D<span class="dp-q" title="Rotation X tips the top away or toward you. Rotation Y swings the sides. Depth moves it away from or toward the camera.">?</span></div>
+              <div class="dp-prow anim" data-row="rx"><button class="dp-key armed" title="Set a Rotation X key at 0:04"></button><span class="rl">Rotation X</span><span class="stepper sm"><input name="dp-rx" data-f="rx" value="0"><span class="u">°</span></span></div>
+              <div class="dp-prow anim" data-row="ry"><button class="dp-key on" title="Remove the Rotation Y key at 0:04"></button><span class="rl">Rotation Y</span><span class="stepper sm"><input name="dp-ry" data-f="ry" value="0"><span class="u">°</span></span></div>
+              <div class="dp-prow anim" data-row="z"><button class="dp-key armed" title="Set a Depth key at 0:04"></button><span class="rl">Depth</span><span class="stepper sm"><input name="dp-z" data-f="z" value="0"><span class="u">px</span></span></div>
+              <div class="dp-prow dp-pvrow" data-row="pz"><button class="dp-key" title="Animate Pivot depth"></button><span class="rl">Pivot depth</span><span class="stepper sm"><input name="dp-pz" data-f="pz" value="0"><span class="u">px</span></span></div>
+            </div>
+            <div class="dp-sec">
+              <div class="dp-sech">Effects</div>
+              <div class="efx click"><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta">0, 18, 40</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="drail">
+        <button class="drailtab" data-group="#dpProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+      </div>
+    </div>
+
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" title="Skip back"><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" title="Play or pause"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" title="Skip forward"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur">0:04</span>
+      <span class="scrub" role="slider" aria-label="Scrub" aria-valuemin="0" aria-valuemax="15" aria-valuenow="4" tabindex="0">
+        <span class="fill" style="width:27%"></span><span class="knob" style="left:27%"></span>
+      </span>
+      <span class="tc">0:15</span>
+    </div>
+
+    <!-- THE TIMELINE: a turned layer is an animated clip like any other. Its keys
+         are marks on the clip; open the track and each property it animates gets
+         its own row of diamonds. No 3D badge: the canvas shows the tilt. -->
+    <div class="timeline" id="dpTl">
+      <div class="tlbar">
+        <span class="tstrip" data-radio=".tool">
+          <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+          <button class="tool" title="Blade (B)"><i class="ic sm ic-blade"></i></button>
+        </span>
+        <span class="tspacer"></span>
+        <span class="lbl">Easing</span>
+        <span class="select sm" tabindex="0" role="button"><span class="lead">Ease out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span>
+      </div>
+      <div class="dp-tlz">
+        <div class="track"><span class="tl"><i class="dp-disc ic xs ic-chevron-right"></i> Titles</span>
+          <div class="lane abs"><div class="clip dp-tclip sel" style="left:4%;width:36%"><span class="lbl">Ship it faster.</span><span class="kfm" style="left:2%"></span><span class="kfm" style="left:30%"></span><span class="kfm" style="left:58%"></span></div></div></div>
+        <div class="track dp-sub"><span class="tl">Rotation Y</span>
+          <div class="lane abs"><span class="dp-kline" style="left:4%;width:21%"></span><span class="dp-kd" style="left:4%"></span><span class="dp-kd" style="left:15%"></span><span class="dp-kd" style="left:25%"></span></div></div>
+        <div class="track dp-sub"><span class="tl">Depth</span>
+          <div class="lane abs"><span class="dp-kline" style="left:4%;width:11%"></span><span class="dp-kd" style="left:4%"></span><span class="dp-kd" style="left:15%"></span></div></div>
+        <div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span>
+          <div class="lane abs"><div class="clip v1" style="left:0;width:44%"><span class="lbl">clip-01</span></div><div class="clip v2" style="left:44%;width:48%;padding-left:40px"><span class="lbl">clip-02</span></div><span class="dp-band" style="left:41.5%;width:5%">Cube</span></div></div>
+        <div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span>
+          <div class="lane abs"><div class="clip aud" style="left:0;width:92%"><span class="lbl">music.wav</span></div></div></div>
+        <span class="dp-ph" style="left:calc(var(--gutter) + 20px + (100% - var(--gutter) - 32px) * .27)"></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Where each control lives</div><p><b>Canvas:</b> the turn knob grows two arcs (tilt and swing) and the pivot crosshair grows a depth arrow. <b>Panel:</b> a 3D section, four rows, each keyable. <b>Tool bar:</b> nothing new, because turning is not a tool you pick. <b>Layer menu:</b> Reset 3D Rotation, Bring Nearer, Send Further. <b>Right-click a layer:</b> the same three.</p></div>
+    <div class="c"><div class="lab g2">Try it</div><p>Rest on the knob above the title, then drag the <b>flat arc</b> sideways to swing it or the <b>tall arc</b> up and down to tip it. Drag the knob itself to turn it flat, as today. Drag the <b>arrow at the crosshair</b> up to push the title away. Hold Shift to step in 15° turns. The panel follows.</p></div>
+    <div class="c"><div class="lab g2">On the timeline</div><p>A turned layer is just an animated layer: its keys are marks on its clip, and opening the track lists one row per property it animates (Rotation Y, Depth). Nothing marks it as 3D there; the canvas already shows the tilt.</p></div>
+  </div>
+
+  <!-- ========== THE THREE HANDLE DESIGNS ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#6f9bff"></span><h2>Three ways to turn a layer in 3D</h2><span class="k">· pick one on the decision card</span></div>
+  <p class="pglead">Each canvas below holds a big layer and a small one. Click either to pick it, then turn it. All three share the depth arrow on the crosshair and the panel rows; they differ only in how you grab the turn.</p>
+
+  <div class="dp-trio">
+    <div class="dp-opt">
+      <div class="dp-opth rec"><span class="dp-l">A</span><h3>Arcs on the turn knob</h3><span class="dp-tag">Recommended</span></div>
+      <div class="seg" data-pick="optA"><button class="on" data-which="big">Big layer</button><button data-which="small">Small layer</button></div>
+      <div class="dp-stage" id="optA">
+        <div class="dp-layer dp-card" data-l="big" style="width:220px;height:96px"><span class="dp-k">Launch</span><span class="dp-h" style="font-size:20px">Ship it faster.</span></div>
+        <div class="dp-layer dp-chip" data-l="small" style="width:44px;height:22px">NEW</div>
+        <svg class="dp-ov"></svg><span class="dp-read"></span>
+      </div>
+      <div class="dp-vals" data-vals="optA"></div>
+      <p>The knob you already turn with grows a <b>flat arc</b> (swing) and a <b>tall arc</b> (tip) when the pointer rests on it. No mode, no new key to learn, and the arcs stay the same size on a tiny layer. Hardest part: the arcs are small targets, so they get a generous hit area.</p>
+    </div>
+    <div class="dp-opt">
+      <div class="dp-opth"><span class="dp-l">B</span><h3>Edges you tip, in a 3D frame</h3></div>
+      <div class="seg" data-pick="optB"><button class="on" data-which="big">Big layer</button><button data-which="small">Small layer</button></div>
+      <div class="dp-stage" id="optB">
+        <div class="dp-layer dp-card" data-l="big" style="width:220px;height:96px"><span class="dp-k">Launch</span><span class="dp-h" style="font-size:20px">Ship it faster.</span></div>
+        <div class="dp-layer dp-chip" data-l="small" style="width:44px;height:22px">NEW</div>
+        <svg class="dp-ov"></svg><span class="dp-read"></span>
+      </div>
+      <div class="dp-vals" data-vals="optB"></div>
+      <p><b>Click</b> the turn knob to switch the frame to 3D: the side handles become tabs. Pull the top tab down and the top comes toward you; push a side tab in and that side swings away. Feels like holding a card by its edge. Costs a mode (click the knob or press Esc to leave it), and on a small layer the four tabs crowd together.</p>
+    </div>
+    <div class="dp-opt">
+      <div class="dp-opth"><span class="dp-l">C</span><h3>Rings around the pivot</h3></div>
+      <div class="seg" data-pick="optC"><button class="on" data-which="big">Big layer</button><button data-which="small">Small layer</button></div>
+      <div class="dp-stage" id="optC">
+        <div class="dp-layer dp-card" data-l="big" style="width:220px;height:96px"><span class="dp-k">Launch</span><span class="dp-h" style="font-size:20px">Ship it faster.</span></div>
+        <div class="dp-layer dp-chip" data-l="small" style="width:44px;height:22px">NEW</div>
+        <svg class="dp-ov"></svg><span class="dp-read"></span>
+      </div>
+      <div class="dp-vals" data-vals="optC"></div>
+      <p>Final Cut Pro's and Motion's 3D control: a <b>red ring</b> tips, a <b>green ring</b> swings, a <b>blue ring</b> turns flat, all centred on the pivot. Familiar to anyone who has used those apps and the most precise, but it is a second turn control beside the knob, and on a small layer the rings cover it completely.</p>
+    </div>
+  </div>
+
+  <!-- ========== THE FEEL: three moves ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#3ecf8e"></span><h2>How it feels</h2><span class="k">· three moves made only from Rotation X, Rotation Y and Depth</span></div>
+  <div class="dp-moves">
+    <div class="dp-move" id="mvFlip">
+      <h3>Card flip</h3>
+      <div class="dp-stage">
+        <div class="dp-3d" data-mv="card" style="width:200px;height:120px;margin:-60px 0 0 -100px">
+          <div class="dp-face dp-card" style="padding:0 var(--s4)"><span class="dp-k">Front</span><span class="dp-h" style="font-size:20px">Ship it faster.</span></div>
+          <div class="dp-face dp-flipback"><span>Back</span><b>Capture to export</b><span>One canvas</span></div>
+        </div>
+      </div>
+      <div class="dp-ctl"><button class="btn ghost icon sm" data-play title="Play"><i class="ic ic-play"></i></button><input type="range" min="0" max="1000" value="0" aria-label="Card flip time"><span class="dp-t">0.0s</span></div>
+      <p>Rotation Y 0° to 180° over 1.2s, Depth lifting 80 toward you halfway. One layer, two keys on each row.</p>
+    </div>
+    <div class="dp-move" id="mvTitle">
+      <h3>Title swinging in from depth</h3>
+      <div class="dp-stage">
+        <div class="dp-3d" data-mv="words" style="width:0;height:0;white-space:nowrap">
+          <div style="position:absolute;transform:translate(-50%,-50%);transform-style:preserve-3d"><span class="dp-word">Ship</span><span class="dp-word">it</span><span class="dp-word">faster.</span></div>
+        </div>
+      </div>
+      <div class="dp-ctl"><button class="btn ghost icon sm" data-play title="Play"><i class="ic ic-play"></i></button><input type="range" min="0" max="1000" value="0" aria-label="Title time"><span class="dp-t">0.0s</span></div>
+      <p>Each word starts 900 back and tipped 75°, then lands upright, 0.12s after the word before it. The kind of entrance the title rework will use.</p>
+    </div>
+    <div class="dp-move" id="mvCube">
+      <h3>Cube between two clips</h3>
+      <div class="dp-stage">
+        <div class="dp-3d" data-mv="cube" style="width:240px;height:135px;margin:-67.5px 0 0 -120px">
+          <div class="dp-face dp-cubeA" data-face="a"><i></i><span>clip-01</span></div>
+          <div class="dp-face dp-cubeB" data-face="b"><i></i><span>clip-02</span></div>
+        </div>
+      </div>
+      <div class="dp-ctl"><button class="btn ghost icon sm" data-play title="Play"><i class="ic ic-play"></i></button><input type="range" min="0" max="1000" value="0" aria-label="Cube time"><span class="dp-t">0.0s</span></div>
+      <p>The two clips are faces of a box: Pivot depth pushes the turn point to the box's middle, Rotation Y goes 0° to 90°, and Depth backs off a little at the midpoint so the edge never fills the frame.</p>
+    </div>
+  </div>
+
+  <!-- ========== LAYERS LIST, CAMERA ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#ffb36b"></span><h2>The layers list and the camera</h2><span class="k">· the camera is its own decision card</span></div>
+  <div class="dp-specs">
+    <div class="dp-spec">
+      <div class="dp-spech">Layers, in a picture</div>
+      <div class="dp-lrow"><i class="ic sm ic-text"></i><span class="dp-nm">Caption</span><i class="ic sm ic-eye eye"></i></div>
+      <div class="dp-lrow sel"><span class="dp-thumb"><i style="transform:rotateY(-38deg) rotateX(12deg)"></i></span><span class="dp-nm">Ship it faster.</span><i class="ic sm ic-eye eye"></i></div>
+      <div class="dp-lrow"><span class="dp-thumb"><i style="background:linear-gradient(180deg,#f5f7fb,#c5cde0)"></i></span><span class="dp-nm">Screenshot</span><i class="ic sm ic-eye eye"></i></div>
+      <p class="note" style="padding:var(--s2) var(--pad-sm);margin:0">A turned layer's thumbnail is drawn turned. No badge and no new column.</p>
+    </div>
+    <div class="dp-spec dp-cam">
+      <div class="dp-spech">Camera A · a setting of the frame</div>
+      <div class="dp-sec">
+        <div class="dp-sech">Camera</div>
+        <div class="dp-prow anim"><button class="dp-key" title="Animate Perspective"></button><span class="rl">Perspective</span><span class="stepper sm"><input name="dp-persp" value="40"><span class="u">°</span></span></div>
+        <div class="dp-prow anim"><button class="dp-key armed" title="Set a Camera depth key"></button><span class="rl">Camera depth</span><span class="stepper sm"><input name="dp-cz" value="0"><span class="u">px</span></span></div>
+        <div class="dp-prow anim"><button class="dp-key" title="Animate Camera X"></button><span class="rl">Camera X</span><span class="stepper sm"><input name="dp-cx" value="0"><span class="u">px</span></span></div>
+      </div>
+      <p class="note" style="padding:0 var(--pad-sm) var(--s2);margin:0">Click empty canvas: the panel shows the frame, and the camera is a section of it. Keyed camera moves show on a thin row at the top of the timeline.</p>
+    </div>
+    <div class="dp-spec dp-cam">
+      <div class="dp-spech">Camera B · a camera you add</div>
+      <div class="dp-camtrack"><span class="dp-tlab"><i class="ic xs ic-camera"></i> Camera</span><span class="dp-tlane"><span>Camera</span><span class="dp-kd" style="left:30%"></span><span class="dp-kd" style="left:70%"></span></span></div>
+      <div class="dp-camtrack"><span class="dp-tlab"><i class="ic xs ic-text"></i> Titles</span><span class="dp-tlane" style="background:linear-gradient(90deg,#6b47c9,#9a5cff);width:60%;flex:none"><span>Ship it faster.</span></span></div>
+      <p class="note" style="padding:var(--s2) var(--pad-sm);margin:0">Layer, Add Camera puts a Camera track at the top. Pick it and the canvas shows the frame it sees, which you drag to pan and push to dolly, like Apple Motion. Without one, the camera stays still.</p>
+    </div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Out of scope</div><p>Extruded type, lights, materials, shadows cast between layers and imported 3D models. Layers stay flat; a group turns as one flat card.</p></div>
+    <div class="c"><div class="lab g2">What a Photoshop or Final Cut user expects</div><p>Photoshop's 3D is gone, so its users bring Keynote's habits: the knob, the panel numbers. Final Cut users expect rings (design C) and Rotation X and Y rows, which the panel has under the same names.</p></div>
+    <div class="c"><div class="lab g2">Keys</div><p>Every 3D row takes keys the way every other row does: the diamond on the row sets or removes a key at the playhead, and the timeline draws it on the clip.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function(){
+  "use strict";
+  var clamp=function(v,a,b){return Math.max(a,Math.min(b,v));};
+  var snap15=function(v){return Math.round(v/15)*15;};
+  var NS="http://www.w3.org/2000/svg";
+
+  /* ================= THE HANDLE ENGINE =================
+     One per stage. Each layer is positioned with real CSS 3D under the stage's
+     perspective, and its handles are found by asking the browser where its
+     corner markers landed, so the outline is the true projected quad. */
+  function Stage(el, design, onChange){
+    var self=this;
+    this.el=el; this.design=design; this.onChange=onChange||function(){};
+    this.svg=el.querySelector(".dp-ov"); this.read=el.querySelector(".dp-read");
+    this.layers=[].map.call(el.querySelectorAll(".dp-layer"),function(L){
+      ["tl","tr","br","bl","t","b","l","r","c"].forEach(function(k){
+        var m=document.createElement("span"); m.className="dp-m "+k; L.appendChild(m);
+      });
+      return {el:L,id:L.getAttribute("data-l"),x:0,y:0,z:0,rx:0,ry:0,rz:0,pz:0,
+              w:L.offsetWidth,h:L.offsetHeight};
+    });
+    this.sel=this.layers[this.layers.length-1];
+    this.hoverKnob=false; this.mode3d=false;
+    el.addEventListener("pointerdown",function(e){ self.down(e); });
+    el.addEventListener("pointermove",function(e){ if(!self.drag) self.hover(e); });
+    el.addEventListener("pointerleave",function(){ if(!self.drag && self.hoverKnob && !self.pinArcs){ self.hoverKnob=false; self.draw(); } });
+  }
+  Stage.prototype.find=function(id){ for(var i=0;i<this.layers.length;i++) if(this.layers[i].id===id) return this.layers[i]; };
+  Stage.prototype.apply=function(L){
+    L.el.style.marginLeft=(-L.w/2)+"px"; L.el.style.marginTop=(-L.h/2)+"px";
+    L.el.style.transformOrigin="50% 50% "+L.pz+"px";
+    L.el.style.transform="translate3d("+L.x+"px,"+L.y+"px,"+L.z+"px) rotateX("+L.rx+"deg) rotateY("+L.ry+"deg) rotateZ("+L.rz+"deg)";
+    var c=L.el.querySelector(".dp-m.c"); c.style.transform="translateZ("+L.pz+"px)";
+  };
+  Stage.prototype.pt=function(L,k){
+    var r=L.el.querySelector(".dp-m."+k).getBoundingClientRect(), s=this.el.getBoundingClientRect();
+    return {x:r.left-s.left,y:r.top-s.top};
+  };
+  Stage.prototype.local=function(e){ var s=this.el.getBoundingClientRect(); return {x:e.clientX-s.left,y:e.clientY-s.top}; };
+  Stage.prototype.setAll=function(){ var self=this; this.layers.forEach(function(L){ self.apply(L); }); this.draw(); };
+
+  function mk(svg,tag,attrs){ var n=document.createElementNS(NS,tag); for(var k in attrs) n.setAttribute(k,attrs[k]); svg.appendChild(n); return n; }
+  function arrowHead(svg,x,y,ang,col){
+    var a=ang, s=5;
+    mk(svg,"path",{d:"M"+(x+Math.cos(a)*s)+","+(y+Math.sin(a)*s)+" L"+(x+Math.cos(a+2.4)*s)+","+(y+Math.sin(a+2.4)*s)+" L"+(x+Math.cos(a-2.4)*s)+","+(y+Math.sin(a-2.4)*s)+"Z",fill:col});
+  }
+
+  Stage.prototype.geom=function(){
+    var L=this.sel, g={};
+    ["tl","tr","br","bl","t","b","l","r","c"].forEach(function(k){ g[k]=this.pt(L,k); },this);
+    // the turn knob floats off the projected top edge, away from the middle
+    var mid={x:(g.tl.x+g.tr.x+g.br.x+g.bl.x)/4,y:(g.tl.y+g.tr.y+g.br.y+g.bl.y)/4};
+    var dx=g.t.x-mid.x, dy=g.t.y-mid.y, d=Math.hypot(dx,dy)||1;
+    g.up={x:dx/d,y:dy/d}; g.mid=mid;
+    g.knob={x:g.t.x+g.up.x*22,y:g.t.y+g.up.y*22};
+    g.depth={x:g.c.x+22,y:g.c.y-22};
+    return g;
+  };
+
+  Stage.prototype.draw=function(){
+    var svg=this.svg, A="var(--accent)", W="#ffffff", self=this;
+    while(svg.firstChild) svg.removeChild(svg.firstChild);
+    if(!this.sel) return;
+    var g=this.geom(); this.g=g;
+    var small=this.sel.w<80;
+    mk(svg,"polygon",{points:[g.tl,g.tr,g.br,g.bl].map(function(p){return p.x+","+p.y;}).join(" "),fill:"none",stroke:"#7f9bff","stroke-width":1.5});
+    var sq=function(p,k){ mk(svg,"rect",{x:p.x-3.5,y:p.y-3.5,width:7,height:7,fill:W,stroke:"#7f9bff","stroke-width":1.2,rx:1}); };
+
+    if(this.design==="B" && this.mode3d){
+      // B in 3D: the four side handles become tabs drawn along their edges
+      [["t","tl","tr"],["b","bl","br"],["l","tl","bl"],["r","tr","br"]].forEach(function(e){
+        var p=g[e[0]], a=g[e[1]], b=g[e[2]], ang=Math.atan2(b.y-a.y,b.x-a.x), len=small?10:22;
+        var x1=p.x-Math.cos(ang)*len/2, y1=p.y-Math.sin(ang)*len/2, x2=p.x+Math.cos(ang)*len/2, y2=p.y+Math.sin(ang)*len/2;
+        mk(svg,"line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:"#ffffff","stroke-width":6,"stroke-linecap":"round"});
+        mk(svg,"line",{x1:x1,y1:y1,x2:x2,y2:y2,stroke:"#7f9bff","stroke-width":3,"stroke-linecap":"round"});
+        var h=mk(svg,"line",{x1:x1,y1:y1,x2:x2,y2:y2,"stroke-width":18,"class":"hit"}); h.setAttribute("data-h","tab-"+e[0]);
+      });
+    } else {
+      ["tl","tr","br","bl"].forEach(function(k){ sq(g[k]); });
+      if(!small) ["t","b","l","r"].forEach(function(k){ sq(g[k]); });
+    }
+
+    // the turn knob and its stem (all three designs keep it for flat turns)
+    {
+      mk(svg,"line",{x1:g.t.x,y1:g.t.y,x2:g.knob.x,y2:g.knob.y,stroke:"#7f9bff","stroke-width":1.2});
+      var on=this.design==="B" && this.mode3d;
+      mk(svg,"circle",{cx:g.knob.x,cy:g.knob.y,r:5,fill:on?"#7f9bff":W,stroke:"#7f9bff","stroke-width":1.5});
+      var kh=mk(svg,"circle",{cx:g.knob.x,cy:g.knob.y,r:10,"class":"hitf"}); kh.setAttribute("data-h","knob");
+    }
+
+    // A: two arcs bloom from the knob while the pointer rests on it
+    if(this.design==="A" && (this.hoverKnob || this.pinArcs)){
+      var k=g.knob, ux=g.up.x, uy=g.up.y, px=-uy, py=ux; // px,py: along the edge
+      var R=26;
+      // flat arc (swing, Rotation Y): runs along the edge direction, bowed outward
+      var a1={x:k.x-px*R,y:k.y-py*R}, a2={x:k.x+px*R,y:k.y+py*R}, ac={x:k.x+ux*10,y:k.y+uy*10};
+      var dA="M"+a1.x+","+a1.y+" Q"+ac.x+","+ac.y+" "+a2.x+","+a2.y;
+      mk(svg,"path",{d:dA,fill:"none",stroke:"rgba(0,0,0,.45)","stroke-width":5,"stroke-linecap":"round"});
+      mk(svg,"path",{d:dA,fill:"none",stroke:"var(--dp-y)","stroke-width":2.5,"stroke-linecap":"round"});
+      arrowHead(svg,a1.x,a1.y,Math.atan2(-py,-px)+0.35,"var(--dp-y)"); arrowHead(svg,a2.x,a2.y,Math.atan2(py,px)-0.35,"var(--dp-y)");
+      var h1=mk(svg,"path",{d:dA,"stroke-width":16,"class":"hit"}); h1.setAttribute("data-h","arcY");
+      // tall arc (tip, Rotation X): runs across the edge, beside the knob
+      var side=36, s0={x:k.x+px*side,y:k.y+py*side};
+      var b1={x:s0.x-ux*22,y:s0.y-uy*22}, b2={x:s0.x+ux*22,y:s0.y+uy*22}, bc={x:s0.x+px*9,y:s0.y+py*9};
+      var dB="M"+b1.x+","+b1.y+" Q"+bc.x+","+bc.y+" "+b2.x+","+b2.y;
+      mk(svg,"path",{d:dB,fill:"none",stroke:"rgba(0,0,0,.45)","stroke-width":5,"stroke-linecap":"round"});
+      mk(svg,"path",{d:dB,fill:"none",stroke:"var(--dp-x)","stroke-width":2.5,"stroke-linecap":"round"});
+      arrowHead(svg,b1.x,b1.y,Math.atan2(-uy,-ux)-0.35,"var(--dp-x)"); arrowHead(svg,b2.x,b2.y,Math.atan2(uy,ux)+0.35,"var(--dp-x)");
+      var h2=mk(svg,"path",{d:dB,"stroke-width":16,"class":"hit"}); h2.setAttribute("data-h","arcX");
+    }
+
+    // C: three rings round the pivot, fixed size, whatever the layer's size
+    if(this.design==="C"){
+      var c=g.c, Rr=46;
+      var ring=function(rx,ry,col,h,rot){
+        mk(svg,"ellipse",{cx:c.x,cy:c.y,rx:rx,ry:ry,fill:"none",stroke:"rgba(0,0,0,.4)","stroke-width":4.5,transform:"rotate("+rot+" "+c.x+" "+c.y+")"});
+        mk(svg,"ellipse",{cx:c.x,cy:c.y,rx:rx,ry:ry,fill:"none",stroke:col,"stroke-width":2,transform:"rotate("+rot+" "+c.x+" "+c.y+")"});
+        var hh=mk(svg,"ellipse",{cx:c.x,cy:c.y,rx:rx,ry:ry,"stroke-width":12,"class":"hit",transform:"rotate("+rot+" "+c.x+" "+c.y+")"}); hh.setAttribute("data-h",h);
+      };
+      var rz=this.sel.rz;
+      ring(Rr,Rr,"var(--dp-z)","ringZ",0);
+      ring(Rr,Rr*0.32,"var(--dp-y)","ringY",rz);
+      ring(Rr*0.32,Rr,"var(--dp-x)","ringX",rz);
+    }
+
+    // the pivot crosshair and its depth arrow (shared by all three)
+    var c2=g.c;
+    mk(svg,"circle",{cx:c2.x,cy:c2.y,r:6,fill:"none",stroke:"#ffffff","stroke-width":1.5});
+    mk(svg,"line",{x1:c2.x-9,y1:c2.y,x2:c2.x+9,y2:c2.y,stroke:"#ffffff","stroke-width":1.2});
+    mk(svg,"line",{x1:c2.x,y1:c2.y-9,x2:c2.x,y2:c2.y+9,stroke:"#ffffff","stroke-width":1.2});
+    var showDepth=this.design!=="B" || this.mode3d;
+    if(showDepth){
+      mk(svg,"line",{x1:c2.x+5,y1:c2.y-5,x2:g.depth.x,y2:g.depth.y,stroke:"rgba(0,0,0,.45)","stroke-width":4.5});
+      mk(svg,"line",{x1:c2.x+5,y1:c2.y-5,x2:g.depth.x,y2:g.depth.y,stroke:"var(--dp-z)","stroke-width":2});
+      arrowHead(svg,g.depth.x,g.depth.y,-Math.PI/4,"var(--dp-z)");
+      var dh=mk(svg,"line",{x1:c2.x+6,y1:c2.y-6,x2:g.depth.x+3,y2:g.depth.y-3,"stroke-width":14,"class":"hit"}); dh.setAttribute("data-h","depth");
+    }
+    this.onChange(this.sel);
+  };
+
+  Stage.prototype.hover=function(e){
+    if(this.design!=="A" || !this.g) return;
+    var p=this.local(e), k=this.g.knob, near=Math.hypot(p.x-k.x,p.y-k.y)<(this.hoverKnob?62:12);
+    if(near!==this.hoverKnob){ this.hoverKnob=near; this.draw(); }
+  };
+
+  Stage.prototype.readout=function(p,txt){
+    if(!txt){ this.read.classList.remove("on"); return; }
+    this.read.textContent=txt; this.read.style.left=p.x+"px"; this.read.style.top=p.y+"px"; this.read.classList.add("on");
+  };
+
+  Stage.prototype.down=function(e){
+    var self=this, p=this.local(e), h=e.target.getAttribute && e.target.getAttribute("data-h");
+    if(!h){
+      // a press on a layer picks it (and starts a move); on nothing, keeps it
+      var hitL=e.target.closest && e.target.closest(".dp-layer");
+      if(hitL){
+        var L=this.layers.filter(function(l){return l.el===hitL;})[0];
+        if(L!==this.sel){ this.sel=L; this.hoverKnob=false; this.draw(); if(this.onSelect) this.onSelect(L); }
+        h="move";
+      } else return;
+    }
+    var L0=this.sel, s={x:L0.x,y:L0.y,z:L0.z,rx:L0.rx,ry:L0.ry,rz:L0.rz}, moved=false;
+    var c=this.g.c, a0=Math.atan2(p.y-c.y,p.x-c.x);
+    this.drag=h; e.preventDefault();
+    try{ this.el.setPointerCapture(e.pointerId); }catch(_){}
+    var move=function(ev){
+      var q=self.local(ev), dx=q.x-p.x, dy=q.y-p.y, sh=ev.shiftKey, t="";
+      if(Math.hypot(dx,dy)>2) moved=true;
+      var deg=function(v){ return sh?snap15(v):Math.round(v); };
+      if(h==="move"){ L0.x=s.x+dx; L0.y=s.y+dy; }
+      else if(h==="knob"){ if(self.design==="B" && !moved) return; var a=Math.atan2(q.y-c.y,q.x-c.x); L0.rz=deg(s.rz+(a-a0)*180/Math.PI); t="Rotation "+L0.rz+"°"; }
+      else if(h==="ringZ"){ var a2=Math.atan2(q.y-c.y,q.x-c.x); L0.rz=deg(s.rz+(a2-a0)*180/Math.PI); t="Rotation "+L0.rz+"°"; }
+      else if(h==="arcY"||h==="ringY"){ L0.ry=deg(clamp(s.ry+dx*0.6,-180,180)); t="Rotation Y "+L0.ry+"°"; }
+      else if(h==="arcX"||h==="ringX"){ L0.rx=deg(clamp(s.rx-dy*0.6,-180,180)); t="Rotation X "+L0.rx+"°"; }
+      else if(h==="tab-t"||h==="tab-b"){ L0.rx=deg(clamp(s.rx-dy*0.5,-89,89)); t="Rotation X "+L0.rx+"°"; }
+      else if(h==="tab-l"||h==="tab-r"){ L0.ry=deg(clamp(s.ry-dx*0.5,-89,89)); t="Rotation Y "+L0.ry+"°"; }
+      else if(h==="depth"){ L0.z=Math.round(clamp(s.z+(dy-dx)*2.5,-1600,600)); t="Depth "+L0.z; }
+      self.apply(L0); self.draw(); self.readout(q,t);
+    };
+    var up=function(ev){
+      self.el.removeEventListener("pointermove",move); self.el.removeEventListener("pointerup",up);
+      self.drag=null; self.readout(null,"");
+      if(h==="knob" && !moved && self.design==="B"){ self.mode3d=!self.mode3d; self.draw(); }
+    };
+    this.el.addEventListener("pointermove",move); this.el.addEventListener("pointerup",up);
+  };
+
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape") stages.forEach(function(s){ if(s.mode3d){ s.mode3d=false; s.draw(); } });
+  });
+
+  /* ================= THE STAGES ================= */
+  var stages=[];
+  function vals(L){ return "<span>X <b>"+L.rx+"°</b></span><span>Y <b>"+L.ry+"°</b></span><span>Depth <b>"+L.z+"</b></span><span>Rotation <b>"+L.rz+"°</b></span>"; }
+  ["optA","optB","optC"].forEach(function(id,i){
+    var el=document.getElementById(id); if(!el) return;
+    var out=document.querySelector('[data-vals="'+id+'"]');
+    var st=new Stage(el,["A","B","C"][i],function(L){ if(out) out.innerHTML=(L.id==="small"?"Small layer · ":"")+vals(L); });
+    var big=st.find("big"), sm=st.find("small");
+    big.x=-30; big.y=16; big.ry=-32; big.rx=14;
+    sm.x=118; sm.y=-78; sm.ry=-30;
+    st.sel=big; st.pinArcs=(i===0); st.mode3d=(i===1);
+    stages.push(st);
+    var seg=document.querySelector('[data-pick="'+id+'"]');
+    if(seg) seg.addEventListener("click",function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      [].forEach.call(seg.children,function(x){ x.classList.toggle("on",x===b); });
+      st.sel=st.find(b.getAttribute("data-which")); st.draw();
+    });
+    st.onSelect=function(L){ if(seg) [].forEach.call(seg.children,function(x){ x.classList.toggle("on",x.getAttribute("data-which")===L.id); }); };
+  });
+
+  // the editor's stage, wired to the panel
+  var ed=document.getElementById("edStage");
+  if(ed){
+    var est=new Stage(ed,"A",function(L){
+      var set=function(n,v){ var inp=document.querySelector('#dpProps input[data-f="'+n+'"]'); if(inp && document.activeElement!==inp) inp.value=v; };
+      set("rx",L.rx); set("ry",L.ry); set("z",L.z); set("pz",L.pz); set("rz",L.rz);
+      var pv=document.querySelector('#dpProps .dp-pvrow'); if(pv) pv.hidden=!(L.rx||L.ry);
+      var k=document.getElementById("dpKind"); if(k) k.textContent=L.id==="bg"?"Clip":"Title";
+    });
+    var t=est.find("title"), bg=est.find("bg");
+    t.ry=-28; t.rx=12; t.z=60; t.y=-6; bg.ry=0; bg.z=-260;
+    est.sel=t; est.pinArcs=true;
+    stages.push(est);
+    [].forEach.call(document.querySelectorAll('#dpProps input[data-f]'),function(inp){
+      inp.addEventListener("input",function(){
+        var v=parseFloat(inp.value); if(isNaN(v)) return;
+        est.sel[inp.getAttribute("data-f")]=v; est.apply(est.sel); est.draw();
+      });
+    });
+    [].forEach.call(document.querySelectorAll('#video-depth .dp-key'),function(b){
+      b.addEventListener("click",function(){
+        if(b.classList.contains("on")){ b.classList.remove("on"); b.classList.add("armed"); }
+        else { b.classList.add("on"); b.classList.remove("armed"); }
+      });
+    });
+  }
+
+  // first layout: wait a frame so the shell has sized every stage
+  requestAnimationFrame(function(){ stages.forEach(function(s){
+    s.layers.forEach(function(L){ L.w=L.el.offsetWidth; L.h=L.el.offsetHeight; });
+    s.setAll();
+  }); });
+  window.addEventListener("resize",function(){ stages.forEach(function(s){ s.draw(); }); });
+
+  /* ================= THE THREE MOVES =================
+     Each is a pure function of time, so the scrubber and play agree. */
+  var easeInOut=function(x){ return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2; };
+  var easeOutBack=function(x){ var c1=1.4,c3=c1+1; return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2); };
+  var seg=function(t,a,b){ return clamp((t-a)/(b-a),0,1); };
+  var MOVES={
+    mvFlip:{dur:3.0,frame:function(root,t){
+      var k=easeInOut(seg(t,0.4,1.6)), ry=180*k, z=80*Math.sin(Math.PI*k);
+      root.querySelector('[data-mv="card"]').style.transform="translateZ("+z+"px) rotateY("+ry+"deg)";
+    }},
+    mvTitle:{dur:3.2,frame:function(root,t){
+      [].forEach.call(root.querySelectorAll(".dp-word"),function(w,i){
+        var k=seg(t,0.3+i*0.12,1.3+i*0.12), e=easeOutBack(k);
+        w.style.transform="translateZ("+(-900*(1-e))+"px) rotateX("+(75*(1-e))+"deg)";
+        w.style.opacity=clamp(k*2.2,0,1);
+      });
+    }},
+    mvCube:{dur:3.0,frame:function(root,t){
+      var W=240, k=easeInOut(seg(t,0.6,1.6)), ry=-90*k, z=-W/2-70*Math.sin(Math.PI*k);
+      var cube=root.querySelector('[data-mv="cube"]');
+      cube.style.transform="translateZ("+z+"px) rotateY("+ry+"deg)";
+      cube.querySelector('[data-face="a"]').style.transform="translateZ("+(W/2)+"px)";
+      cube.querySelector('[data-face="b"]').style.transform="rotateY(90deg) translateZ("+(W/2)+"px)";
+    }}
+  };
+  Object.keys(MOVES).forEach(function(id){
+    var root=document.getElementById(id); if(!root) return;
+    var mv=MOVES[id], range=root.querySelector('input[type=range]'), lab=root.querySelector(".dp-t"),
+        btn=root.querySelector("[data-play]"), playing=true, t=0, last=null;
+    var show=function(){ mv.frame(root,t); range.value=Math.round(t/mv.dur*1000); lab.textContent=t.toFixed(1)+"s";
+      btn.innerHTML='<i class="ic '+(playing?"ic-pause":"ic-play")+'"></i>'; };
+    var tick=function(now){
+      if(playing){ if(last!=null) t+= (now-last)/1000; if(t>mv.dur) t=0; show(); }
+      last=now; requestAnimationFrame(tick);
+    };
+    range.addEventListener("input",function(){ playing=false; t=range.value/1000*mv.dur; show(); });
+    btn.addEventListener("click",function(){ playing=!playing; if(playing && t>=mv.dur-0.05) t=0; show(); });
+    show(); requestAnimationFrame(tick);
+  });
+})();
+</script>
+</body>
+</html>

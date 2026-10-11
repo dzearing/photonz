@@ -1,0 +1,40 @@
+{
+  "id": "layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live",
+  "taskId": "layers-can-turn-about-x-and-y-and-move-in-depth",
+  "question": "Where does the camera live?",
+  "context": "Mocks: Depth (2.5D) page, section The layers list and the camera. Either way there is one camera; without changes everything looks flat exactly as today.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Camera settings on the frame",
+      "summary": "Click empty canvas and the panel shows the frame, with a Camera section: Perspective, Camera depth and Camera X and Y, each keyable. When the camera is keyed, a thin Camera row appears at the top of the timeline to hold its keys.",
+      "pros": [
+        "No new kind of thing in the document",
+        "Perspective is where the frame's other settings are",
+        "Simple for the common case: set the perspective once and forget it"
+      ],
+      "cons": [
+        "Moving the camera is numbers and keys, not a drag on the canvas",
+        "The Camera row on the timeline is a special row, not a track"
+      ],
+      "mitigation": "Option B can be added later on top of this without changing anything people learned."
+    },
+    {
+      "id": "b",
+      "label": "A camera you add, like Motion",
+      "summary": "Layer, Add Camera puts a Camera track at the top of the timeline. Pick it and the canvas shows the frame the camera sees, which you drag to pan and push to dolly, with its settings in the panel. Without one, the camera stays still.",
+      "pros": [
+        "Camera moves are direct manipulation on the canvas",
+        "What Apple Motion and After Effects users expect"
+      ],
+      "cons": [
+        "A new kind of layer to learn",
+        "The canvas has to show two frames at once: the camera's and the document's"
+      ],
+      "mitigation": "Only appears when someone adds a camera, so a person who never wants one never sees it."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-11T18:16:57.485Z"
+}
