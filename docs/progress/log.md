@@ -21139,3 +21139,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - App: switch `next-motion-blur` (Next, on): Motion Blur in the Effects plus and Layer > Add Effect on video documents only, Shutter row, built-in titles wear it. Walk: `motion-blur-on-a-fast-slide-walk`. Audit: `queue/audits/2026-10-10-motion-blur.json`.
 - Full `Scripts/test.sh` hung again (known, p2 task); split run green: core 11154, render+media 1133, the 12 Vision/HEIF suites 118. `LongTimelineCostTests` timing tripped twice under a 21 load from an outside Xcode build, green on rerun.
 - Next: step 5, title tiles play and a few knobs restyle a title.
+
+## 2026-10-10 — Title tiles play, and a few knobs restyle a title
+
+- Changed: a placed title keeps its design and knobs (`TitleRestyle.swift`); Title and Part sections in the panel; typing relays out and replays; Library title tiles play on hover and loop while picked, over the recording for glass and name cards; Replay Title on the right-click and in Clip. Switch `next-title-restyle`, on in Next.
+- Verified: `TitleRestyleTests` (core), `title-knobs-restyle-walk`, `title-tiles-play-walk`, the 25 title walks, `library-tile-click-latency-walk` (worst 27 ms). Full suite hung on HEIF/Vision again; split runs all green.
+- Next: step 6, a set of titles that look designed.
+

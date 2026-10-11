@@ -311,10 +311,18 @@ extension EditorState {
                 // land a whole group's origin away from where they were typed,
                 // which is how a label typed inside a button ended up off the
                 // button and looked like it had been thrown away.
+                // Words typed into a title lay the whole title out again in
+                // the same step, so its backing follows them and every part
+                // moves into its new place, then its in plays again after a
+                // short pause (`TitleRestyle.swift`).
+                let title = Experiments.shared.titleRestyleEnabled
+                    ? document?.titleLayerID(containing: layerID) : nil
                 perform { document in
                     document.commitTextEdit(id: layerID, content: content,
                                             canvasFrame: CGRect(origin: origin, size: size))
+                    if let title { document.relayOutTitle(layerID: title) }
                 }
+                if let title { replayTitleAfterTyping(title) }
             }
         } else {
             guard !isEmpty else { return }

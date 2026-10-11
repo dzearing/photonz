@@ -117,7 +117,7 @@ public struct TitleBuild: Hashable, Codable, Sendable {
     }
 
     /// The usual way off: shorter than the way in, eased in.
-    static func off(_ kind: TitleBuildKind, delayMS: Int, lengthMS: Int = 250, amount: Double? = nil,
+    public static func off(_ kind: TitleBuildKind, delayMS: Int, lengthMS: Int = 250, amount: Double? = nil,
                     direction: TitleDirection = .up) -> TitleBuild {
         TitleBuild(kind, delayMS: delayMS, lengthMS: lengthMS, amount: amount, direction: direction,
                    curve: .easeIn)
@@ -248,6 +248,35 @@ extension PhotonzDocument {
         return wrote
     }
 
+    /// Take a design's keys off the pieces of a title's group: every property
+    /// any of its parts moves, and the reveal a wipe gave words. Keys on other
+    /// properties stay. What a restyle does before it compiles a design again
+    /// (`TitleRestyle.swift`), so a part that stops moving a property does not
+    /// keep the keys an earlier design wrote on it.
+    mutating func clearTitleDesign(_ design: TitleDesign, layerID: UUID) {
+        guard let group = layer(id: layerID), group.group != nil, let time = group.time else { return }
+        for part in design.parts {
+            guard let current = layer(id: layerID), let piece = TitleDesign.find(part.path, in: current)
+            else { continue }
+            // As long as it takes for every in, hold and out to be written, so
+            // no property a part moves is missed on a short title.
+            let compiler = TitleCompiler(piece: piece, lengthMS: max(time.lengthMS, 600_000),
+                                         clock: time.sourceInMS, unit: 1)
+            var moved = Set(compiler.motions(for: part).map(\.property))
+            let revealed = compiler.wordReveal(for: part) != nil
+            if revealed { moved.insert(.opacity) }
+            guard !moved.isEmpty else { continue }
+            updateLayer(id: piece.id) { edited in
+                let motions = (edited.motions ?? []).filter { !moved.contains($0.property) }
+                edited.motions = motions.isEmpty ? nil : motions
+                if revealed, case .text(var text) = edited.content {
+                    text.reveal = nil
+                    edited.content = .text(text)
+                }
+            }
+        }
+    }
+
     /// How long after it arrives a placed layer has finished arriving: its bar
     /// fade in, or the last key anything inside it reaches in the front half of
     /// its stretch. Where the playhead goes after an insert, and the moment a
@@ -276,7 +305,7 @@ extension PhotonzDocument {
 }
 
 /// One part's keys, for one piece of one title.
-private struct TitleCompiler {
+struct TitleCompiler {
     let piece: Layer
     let lengthMS: Int
     /// Where the title's own clock starts (`LayerTime.sourceInMS`).

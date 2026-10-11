@@ -1,0 +1,431 @@
+{
+ "out": "/tmp/photonz-playtest/title-knobs-restyle-walk",
+ "seed": "A few knobs restyle a title, at Next defaults with no switch touched: a Midnight title page put at the start and typed, then its Theme set to Sunset from the swatches, its Font Pair to Editorial, its Energy to Punchy and Calm (each photographed at the same 0.4 s into its in), its Background to Mesh, and its headline picked from the Part menu with its In changed to Blur In and replayed.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Midnight"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.4,
+   "onTheClock": true
+  },
+  {
+   "do": "click",
+   "at": [
+    960,
+    700
+   ],
+   "space": "document"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "0-picked"
+  },
+  {
+   "do": "describe",
+   "stage": "title-picked",
+   "note": "A Midnight title page typed and put down, at Next defaults with no switch touched: the panel leads with a Title section (Theme, Font Pair, Energy, Intensity, Background, Part)"
+  },
+  {
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Original"
+  },
+  {
+   "do": "expect",
+   "field": "Title Font Pair",
+   "reads": "Original"
+  },
+  {
+   "do": "expect",
+   "field": "Title Energy",
+   "reads": "Normal"
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Gradient"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-title-section"
+  },
+  {
+   "do": "press",
+   "control": "Theme Sunset"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Theme",
+   "reads": "Sunset"
+  },
+  {
+   "do": "describe",
+   "stage": "theme",
+   "note": "THEME: Sunset picked from the swatches: the background, the words and the accent all take its colours at once, dark words on the warm ground"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-theme-sunset"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Title Font Pair",
+   "at": [
+    "centre"
+   ],
+   "choose": "Editorial"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Font Pair",
+   "reads": "Editorial"
+  },
+  {
+   "do": "describe",
+   "stage": "fonts",
+   "note": "FONT PAIR: Editorial, a serif headline over a sans subtitle, laid out again"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-font-editorial"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.4
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "normal",
+   "note": "ENERGY Normal, 0.4 s in: the headline still rising"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-normal-at-0.4s"
+  },
+  {
+   "do": "press",
+   "control": "Punchy"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0,
+   "onTheClock": true
+  },
+  {
+   "do": "expect",
+   "field": "Title Energy",
+   "reads": "Punchy"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.4
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "punchy",
+   "note": "ENERGY Punchy, the same 0.4 s in: everything has nearly landed, since every in runs at 0.7 of its length"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-punchy-at-0.4s"
+  },
+  {
+   "do": "press",
+   "control": "Calm"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.4,
+   "onTheClock": true
+  },
+  {
+   "do": "expect",
+   "field": "Title Energy",
+   "reads": "Calm"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.4
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "calm",
+   "note": "ENERGY Calm, the same 0.4 s in: further back than Normal, every in at 1.3 of its length"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-calm-at-0.4s"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 1.6
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Title Background",
+   "at": [
+    "centre"
+   ],
+   "choose": "Mesh"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Mesh"
+  },
+  {
+   "do": "describe",
+   "stage": "background",
+   "note": "BACKGROUND: Mesh, the theme's three colours drifting"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-background-mesh"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Title Part",
+   "at": [
+    "centre"
+   ],
+   "choose": "Headline"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Part",
+   "reads": "Headline"
+  },
+  {
+   "do": "expect",
+   "field": "Part In",
+   "reads": "Rise"
+  },
+  {
+   "do": "snapshot",
+   "name": "8a-part-section"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part In Direction",
+   "at": [
+    "centre"
+   ],
+   "choose": "Left"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Part In Direction",
+   "reads": "Left"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part Hold",
+   "at": [
+    "centre"
+   ],
+   "choose": "Drift"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Part Hold",
+   "reads": "Drift"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part Hold Direction",
+   "at": [
+    "centre"
+   ],
+   "choose": "Up"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Part Hold Direction",
+   "reads": "Up"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part Out Direction",
+   "at": [
+    "centre"
+   ],
+   "choose": "Down"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Part Out Direction",
+   "reads": "Down"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part Out",
+   "at": [
+    "centre"
+   ],
+   "choose": "Fade"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Part Out",
+   "reads": "Fade"
+  },
+  {
+   "do": "panelMenu",
+   "menu": "Part In",
+   "at": [
+    "centre"
+   ],
+   "choose": "Blur In"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.4,
+   "onTheClock": true
+  },
+  {
+   "do": "expect",
+   "field": "Part In",
+   "reads": "Blur In"
+  },
+  {
+   "do": "describe",
+   "stage": "part",
+   "note": "PART: the headline picked from the Title section's Part menu: its In, Hold and Out with their knobs, and Replay. Its In changed from Rise to Blur In, and the title played its in again"
+  },
+  {
+   "do": "snapshot",
+   "name": "8-part-headline"
+  },
+  {
+   "do": "press",
+   "control": "Replay"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "9-replaying"
+  }
+ ]
+}

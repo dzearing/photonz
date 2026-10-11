@@ -137,6 +137,13 @@ struct TimePanelOrderTests {
         #expect(Array(order.prefix(4)) == ["layers", "keys", "speed", "text"])
     }
 
+    /// A title's few knobs come before anything about its parts, its time or
+    /// its words (`TitleRestyle.swift`): theme, font pair and energy first.
+    @Test func aTitlesKnobsLeadThenThePartInHand() {
+        let order = TimePanelOrder.arrange(Self.saved + ["titlePart", "reveal", "title"], for: .onScreen)
+        #expect(Array(order.prefix(7)) == ["layers", "keys", "title", "titlePart", "speed", "text", "reveal"])
+    }
+
     @Test func aSoundLeadsWithItsPropertiesThenItsLevelThenItsTime() {
         let order = TimePanelOrder.arrange(Self.saved, for: .heard)
         #expect(Array(order.prefix(7)) == ["layers", "keys", "sound", "fades", "gain", "soundEffects",

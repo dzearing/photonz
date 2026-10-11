@@ -246,6 +246,8 @@ public enum FeatureCatalog {
 
     public static let motionBlurFlag = "next-motion-blur"
 
+    public static let titleRestyleFlag = "next-title-restyle"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -907,6 +909,16 @@ public enum FeatureCatalog {
                     name: motionBlurFlag,
                     title: "Motion blur",
                     description: "Motion Blur in the Effects list on video, with a Shutter angle, worn by the built-in titles: fast moves smear along the way they go. Off means none is offered or added.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: titleRestyleFlag,
+                    title: "Title knobs and playing tiles",
+                    description: "A Title section restyles a picked title (Theme, Font Pair, Energy, Intensity, Background), a Part section sets each part's In, Hold and Out, and Library title tiles play. Off means titles are edited piece by piece.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

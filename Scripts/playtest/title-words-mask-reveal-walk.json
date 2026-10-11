@@ -97,6 +97,11 @@
    "name": "1-headline-picked"
   },
   {
+   "do": "reveal",
+   "control": "Reveal section",
+   "comment": "The Title and Part sections above Reveal (title-tiles-play-and-a-few-knobs-restyle-a-title) put it far down the panel: its header is brought into reach first, so the press below never parks the dropdown under the title bar's panel toggle."
+  },
+  {
    "do": "panelMenu",
    "menu": "Reveal Preset",
    "at": [

@@ -1,0 +1,180 @@
+{
+ "out": "/tmp/photonz-playtest/title-tiles-play-walk",
+ "seed": "Library title tiles play, at Next defaults with no switch touched: the Comps shelf at rest, then Behind Glass picked and photographed four times a third of a second apart while it loops over the recording's own first frame, then the pointer rested on Aurora, which plays as well.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "action",
+   "action": "showLibrary"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Comps"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "1-shelf",
+   "note": "The Library's titles at rest, nothing picked or pointed at: each tile a still, Behind Glass over the recording's own first frame rather than a dark page"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-shelf-at-rest"
+  },
+  {
+   "do": "press",
+   "control": "Search library"
+  },
+  {
+   "do": "type",
+   "text": "glass"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "1b-glass-at-rest"
+  },
+  {
+   "do": "press",
+   "control": "Behind Glass"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.2
+  },
+  {
+   "do": "expect",
+   "control": "Insert at Playhead",
+   "present": true
+  },
+  {
+   "do": "wait",
+   "seconds": 2.5,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "2-picked-plays",
+   "note": "Behind Glass picked: its tile loops its in, a hold and its way off over the recording's frame, photographed four times a third of a second apart"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-picked-a"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.33,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "2-picked-b"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.33,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "2-picked-c"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.33,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "2-picked-d"
+  },
+  {
+   "do": "press",
+   "control": "Search library"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "type",
+   "text": "aurora"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "move",
+   "control": "Aurora"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.5,
+   "onTheClock": true
+  },
+  {
+   "do": "describe",
+   "stage": "3-pointed-plays",
+   "note": "The pointer resting on Aurora: its tile plays too, its mesh drifting and its rule drawing on"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-hover-a"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4,
+   "onTheClock": true
+  },
+  {
+   "do": "snapshot",
+   "name": "3-hover-b"
+  }
+ ]
+}

@@ -191,7 +191,10 @@ extension EditorState {
         guard let frame = document?.canvasSize, frame.width > 0, frame.height > 0 else { return nil }
         let width = max(1, pixelsWide.rounded())
         let own = if case .saved(let saved) = preset { saved.hashValue } else { 0 }
-        let key = "\(preset.id)|\(Int(frame.width))x\(Int(frame.height))|\(Int(width))|\(own)"
+        // Over the person's own first frame, where the style uses it.
+        let recording = titleTileRecording
+        let key = "\(preset.id)|\(Int(frame.width))x\(Int(frame.height))|\(Int(width))|\(own)|"
+            + (recording?.id.uuidString ?? "")
         if let picture = titlePresetPictures[key] { return picture }
         guard !titlePresetPicturesInFlight.contains(key) else { return nil }
         titlePresetPicturesInFlight.insert(key)
@@ -199,7 +202,8 @@ extension EditorState {
         let store = store
         Task { @MainActor [weak self] in
             let image = await Task.detached(priority: .utility) {
-                preset.preview(frame: frame, width: width).flatMap { renderer.render($0, store: store) }
+                preset.preview(frame: frame, width: width, recording: recording)
+                    .flatMap { renderer.render($0, store: store) }
             }.value
             guard let self else { return }
             self.titlePresetPicturesInFlight.remove(key)
@@ -271,7 +275,12 @@ extension EditorState {
     func titlePresetSaveMenuRows(layerID: UUID) -> [MenuRow] {
         guard Experiments.shared.titlePresetsEnabled, documentHasTime, !isClipLocked(layerID),
               document?.canSaveTitlePreset(layerID: layerID) == true else { return [] }
-        return [.command("Save as Preset…") { self.beginSavingTitlePreset(layerID) }]
+        // A title built from a design plays its in again from here, the verb
+        // beside the Part section's Replay (`EditorState+TitleRestyle`).
+        let replay: [MenuRow] = Experiments.shared.titleRestyleEnabled
+            && document?.titleRecipe(layerID: layerID) != nil
+            ? [.command("Replay Title") { self.replayTitle(layerID) }] : []
+        return replay + [.command("Save as Preset…") { self.beginSavingTitlePreset(layerID) }]
     }
 
     func beginSavingTitlePreset(_ layerID: UUID? = nil) {

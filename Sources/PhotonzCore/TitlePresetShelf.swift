@@ -110,23 +110,89 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
     /// it sits in, in the tile's own shape, over a backdrop: big enough to
     /// read, still plainly low in the frame. Nil only when the preset has no
     /// words to land.
-    public func preview(frame: CGSize, width: CGFloat) -> PhotonzDocument? {
+    ///
+    /// `recording` is a frame of the person's own recording, filed under that
+    /// ref: where the style uses the recording (glass over it, or a name card
+    /// that lies over it) it is pictured over that instead of a stand-in.
+    public func preview(frame: CGSize, width: CGFloat, recording: ImageRef? = nil) -> PhotonzDocument? {
+        pictures(frame: frame, width: width, recording: recording) { _ in [] }?.first
+    }
+
+    /// The tile playing: the preset drawn at a run of moments `fps` a second,
+    /// from its first frame until a moment after every part has arrived, then
+    /// its way off, then a beat of nothing, as `TitleTileReel`.
+    public func reel(frame: CGSize, width: CGFloat, recording: ImageRef? = nil, fps: Int = 20) -> TitleTileReel? {
+        var moments: [Int] = []
+        let step = 1000 / max(1, fps)
+        guard let drawn = pictures(frame: frame, width: width, recording: recording, rest: false, at: { doc in
+            guard let layer = doc.layers.last, let time = layer.time else { return [] }
+            let arrived = doc.titleArrivalMS(layerID: layer.id)
+            let length = time.lengthMS
+            let leaving = max(doc.titleRecipe(layerID: layer.id)?.compiled.outLengthMS ?? 0,
+                              layer.pictureFadeMS(.out))
+            let held = min(arrived + TitleTileReel.holdMS, length)
+            let away = max(held, length - leaving - step)
+            var at = 0
+            while at < held { moments.append(at); at += step }
+            at = away
+            while at < length { moments.append(at); at += step }
+            moments.append(max(0, length - 1))
+            return moments.map { time.inMS + $0 }
+        }), !drawn.isEmpty else { return nil }
+        // The way back to the start: a beat of the last frame, nothing up.
+        let frames = drawn.count
+        let lap = frames * step + TitleTileReel.gapMS
+        let keyTimes = (0..<frames).map { Double($0 * step) / Double(lap) } + [1]
+        return TitleTileReel(pictures: drawn, keyTimes: keyTimes, lapMS: lap)
+    }
+
+    /// The preset landed, then drawn at each moment `at` names (at rest when
+    /// it names none), each picture with no time left in it.
+    private func pictures(frame: CGSize, width: CGFloat, recording: ImageRef?, rest: Bool = true,
+                          at moments: (PhotonzDocument) -> [Int]) -> [PhotonzDocument]? {
         guard frame.width > 0, frame.height > 0, width > 0 else { return nil }
         let canvas = CGSize(width: width, height: max(1, (width * frame.height / frame.width).rounded()))
-        guard kind == .nameCard else { return still(on: canvas) }
+        guard kind == .nameCard else {
+            guard let landed = land(on: canvas, under: usesTheRecording ? recording : nil) else { return nil }
+            return drawn(landed, at: moments(landed))
+        }
         // Drawn once to find the corner, then again large enough that the
         // corner alone is `width` across, so the words are drawn at the size
         // they are seen rather than blown up.
-        guard let first = still(on: canvas), let card = first.layers.last?.localBounds else { return nil }
+        guard let first = land(on: canvas, under: nil), let card = Self.atRest(first)?.layers.last?.localBounds
+        else { return nil }
         let scale = canvas.width / max(1, Self.corner(around: card, in: canvas).width)
         let large = CGSize(width: (canvas.width * scale).rounded(), height: (canvas.height * scale).rounded())
-        guard var picture = still(on: large), let index = picture.layers.indices.last else { return nil }
-        let region = Self.corner(around: picture.layers[index].localBounds, in: large)
-        picture.layers[index].frame.origin.x -= region.minX
-        picture.layers[index].frame.origin.y -= region.minY
-        picture.canvasSize = region.size
-        picture.layers.insert(TitlePen(canvas: region.size).fullFrame(Self.backdrop), at: 0)
-        return picture
+        guard let landed = land(on: large, under: nil), let rested = Self.atRest(landed),
+              let box = rested.layers.last?.localBounds else { return nil }
+        let region = Self.corner(around: box, in: large)
+        return drawn(landed, at: moments(landed)).map { picture in
+            var picture = picture
+            for index in picture.layers.indices {
+                picture.layers[index].frame.origin.x -= region.minX
+                picture.layers[index].frame.origin.y -= region.minY
+            }
+            picture.canvasSize = region.size
+            let behind: Layer
+            if let recording {
+                behind = Layer(name: "Recording", content: .image(recording),
+                               frame: CGRect(x: -region.minX, y: -region.minY,
+                                             width: large.width, height: large.height))
+            } else {
+                behind = TitlePen(canvas: region.size).fullFrame(Self.backdrop)
+            }
+            picture.layers.insert(behind, at: 0)
+            return picture
+        }
+    }
+
+    /// Whether this preset is pictured over the recording rather than over a
+    /// frame of its own: one whose background is glass.
+    public var usesTheRecording: Bool {
+        switch self {
+        case .builtIn(let preset): preset.usesTheRecording
+        case .saved(let saved): saved.layer.group?.titleRecipe?.background == .glass
+        }
     }
 
     /// The bottom left of `canvas` holding `card` with room round it, in the
@@ -145,21 +211,46 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         return CGRect(x: 0, y: canvas.height - height, width: width, height: height)
     }
 
-    /// The preset landed on a frame this size and drawn at rest, with no time
-    /// left in it.
-    private func still(on canvas: CGSize) -> PhotonzDocument? {
+    /// The preset landed on a frame this size at its start, over the
+    /// recording's frame where one is given.
+    private func land(on canvas: CGSize, under recording: ImageRef?) -> PhotonzDocument? {
         var doc = PhotonzDocument(canvasSize: canvas)
         doc.durationMS = lengthMS
+        if let recording {
+            var picture = Layer(name: "Recording", content: .image(recording),
+                                frame: CGRect(origin: .zero, size: canvas))
+            picture.time = LayerTime(inMS: 0, outMS: lengthMS, sourceInMS: 0, sourceLengthMS: lengthMS)
+            doc.layers = [picture]
+        }
         let inserted: InsertedTitle?
         switch self {
         case .builtIn(let preset): inserted = doc.insertTitle(preset, atTimeMS: 0)
         case .saved(let saved): inserted = doc.insertTitle(saved, atTimeMS: 0)
         }
-        guard let inserted, let time = doc.layer(id: inserted.layerID)?.time else { return nil }
-        // Pictured once every part has arrived, not half way through one.
-        let rest = min(time.inMS + doc.titleArrivalMS(layerID: inserted.layerID),
-                       max(time.inMS, time.outMS - 1))
-        var still = doc.drawn(atTimeMS: rest)
+        guard let inserted, doc.layer(id: inserted.layerID)?.time != nil,
+              doc.layers.last?.id == inserted.layerID else { return nil }
+        return doc
+    }
+
+    /// The moment a landed preset has every part arrived, not half way
+    /// through one.
+    private static func restingMS(_ doc: PhotonzDocument) -> Int? {
+        guard let layer = doc.layers.last, let time = layer.time else { return nil }
+        return min(time.inMS + doc.titleArrivalMS(layerID: layer.id), max(time.inMS, time.outMS - 1))
+    }
+
+    private static func atRest(_ doc: PhotonzDocument) -> PhotonzDocument? {
+        restingMS(doc).map { stilled(doc, at: $0) }
+    }
+
+    private func drawn(_ doc: PhotonzDocument, at moments: [Int]) -> [PhotonzDocument] {
+        if moments.isEmpty { return Self.atRest(doc).map { [$0] } ?? [] }
+        return moments.map { Self.stilled(doc, at: $0) }
+    }
+
+    /// The document as it is drawn at one moment, with no time left in it.
+    private static func stilled(_ doc: PhotonzDocument, at ms: Int) -> PhotonzDocument {
+        var still = doc.drawn(atTimeMS: ms)
         still.durationMS = nil
         still.tracks = []
         still.layers = still.layers.map(Self.stilled)
@@ -177,6 +268,20 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
         if !still.children.isEmpty { still.children = still.children.map(stilled) }
         return still
     }
+}
+
+/// A title tile playing: its pictures in order, where in the lap each one
+/// starts (a last `1` closing the lap), and how long the lap lasts.
+public struct TitleTileReel: Sendable {
+    public var pictures: [PhotonzDocument]
+    public var keyTimes: [Double]
+    public var lapMS: Int
+
+    /// How long a tile holds once every part has arrived, before it plays
+    /// the way off.
+    public static let holdMS = 900
+    /// The beat of nothing between one lap and the next.
+    public static let gapMS = 350
 }
 
 extension PhotonzDocument {

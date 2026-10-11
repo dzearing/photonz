@@ -1,0 +1,35 @@
+{
+  "feature": "Title tiles play, and a few knobs restyle a title",
+  "epic": "video-titles-graphics",
+  "summary": "Library title tiles now play while you point at them and loop while picked, over your own recording where the style uses it. A placed title gets a Title section (Theme, Font Pair, Energy, Intensity, Background) that restyles the whole thing at once, and a Part section for each part's In, Hold and Out with Replay.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, add a track above it and right click the empty track: Add Title Page > Midnight. Type a headline and press Command Return, then click the title once.",
+  "switched": {},
+  "try": [
+    { "do": "With the title picked, look at the Title section under Properties.", "shot": "2026-10-10-title-knobs-1-title-section.png", "shotNote": "Taken with the window behind another app, so picked controls show their background look." },
+    { "do": "Click the orange Sunset swatch in Theme.", "shot": "2026-10-10-title-knobs-2-theme-sunset.png", "shotNote": "Taken with the window behind another app, so picked controls show their background look." },
+    { "do": "Set Font Pair to Editorial.", "shot": "2026-10-10-title-knobs-3-font-editorial.png", "shotNote": "Taken with the window behind another app, so picked controls show their background look." },
+    { "do": "Click Calm, then Punchy, in Energy; each replays the title's in.", "shot": "2026-10-10-title-knobs-4-energy-calm-normal-punchy.png", "shotNote": "Calm, Normal and Punchy, each at 0.4 s into the title, cropped from real window captures." },
+    { "do": "Set Background to Mesh, then drag Intensity up and down." , "shot": "2026-10-10-title-knobs-5-background-mesh.png", "shotNote": "Taken with the window behind another app, so picked controls show their background look." },
+    { "do": "Choose Headline in Part, change its In to Blur In and its Hold to Drift, then press Replay.", "shot": "2026-10-10-title-knobs-6-part-section.png", "shotNote": "Taken with the window behind another app, so picked controls show their background look." },
+    { "do": "In the Library's Comps, click Behind Glass and watch its tile; then rest the pointer on Aurora.", "shot": "2026-10-10-title-knobs-7-tile-plays.png", "shotNote": "Five real captures of the tile: at rest, then picked and looping a third of a second apart, over the sample recording's first frame." },
+    { "do": "Double click the headline, type new words and press Command Return: the title lays itself out and replays its in." }
+  ],
+  "evaluate": [
+    "Are Theme, Font Pair, Energy, Intensity and Background the right five knobs, in that order, before the parts?",
+    "Do the theme swatches read well enough at this size, or would you rather a dropdown with names?",
+    "Is the difference between Calm, Normal and Punchy big enough to feel?",
+    "Does a tile that plays on hover and loops while picked help you choose, or is the motion distracting?",
+    "Is the Part section's length (In, Hold, Out with their knobs) acceptable, or should its knobs fold away until asked?"
+  ],
+  "rough": [
+    "No mock covers the Title or Part sections; they use the panel's own controls (UX-PATTERNS §4): swatches, dropdowns for lists of more than three, segments for three, a slider for a strength.",
+    "Replay is a one-shot verb in the panel, which the placement contract leaves to the open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h; it is also on the title's right-click and in Clip as Replay Title.",
+    "Typing replays the in when the words are put down (Command Return or clicking away), not live while typing; no walk times the replay after typing yet.",
+    "From Recording samples two or three colours from the clip under the title; no walk presses it yet, and on the sample recording it gives a dark blue ground.",
+    "Glass is offered in Background only when a picture is on screen under the title; an opening title page that pushes the recording along has nothing under it, so it cannot be glass.",
+    "Original is the first entry in Theme and Font Pair, so a preset's own look is always one click back.",
+    "Dark words keep a soft light halo from the shadow the typed title wears, which reads but is the drop shadow look the research calls template-y; step 6 (a-set-of-titles-that-look-designed) owns the presets' look.",
+    "Titles placed before this change carry no recipe, so they show no Title section.",
+    "Behind the Next switch next-title-restyle, on by default."
+  ]
+}

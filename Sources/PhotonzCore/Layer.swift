@@ -925,6 +925,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// Set on a Captions layer a lower third moved: the box it had before,
     /// so another style puts it back (`CaptionLook.sitsLowLeft`).
     public var captionsHome: CGRect?
+    /// Set on a title's group: the design it was built from and where its
+    /// knobs stand (`TitleRestyle.swift`). Nil on every other group.
+    public var titleRecipe: TitleRecipe?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -949,7 +952,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case children, isFrame, clipsContents, backgroundHex, componentID, instanceOf
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
-        case variantName, captions, variantAnswers, instanceAnswers, captionsHome
+        case variantName, captions, variantAnswers, instanceAnswers, captionsHome, title
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -1003,6 +1006,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // for byte what it was.
         try c.encodeIfPresent(captionLook, forKey: .captions)
         try c.encodeIfPresent(captionsHome, forKey: .captionsHome)
+        // Only a title writes its recipe, so every other group is byte for
+        // byte what it was.
+        try c.encodeIfPresent(titleRecipe, forKey: .title)
         // Only a group somebody asked to arrange itself writes this key, so a
         // document saved before stacks and grids existed is byte for byte what
         // it was.
@@ -1050,6 +1056,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         isShared = try c.decodeIfPresent(Bool.self, forKey: .shared) ?? false
         captionLook = try c.decodeIfPresent(CaptionLook.self, forKey: .captions)
         captionsHome = try c.decodeIfPresent(CGRect.self, forKey: .captionsHome)
+        titleRecipe = try c.decodeIfPresent(TitleRecipe.self, forKey: .title)
     }
 }
 

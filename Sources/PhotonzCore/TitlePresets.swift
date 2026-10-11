@@ -638,6 +638,9 @@ extension PhotonzDocument {
         // Each part on its own beat, as keys on the pieces themselves.
         applyTitleDesign(preset.design, layerID: inserted.layerID)
         if motionBlur { addEffect(.motionBlur, layerIDs: [inserted.layerID]) }
+        // The design and where its knobs stand stay on the title, so a theme,
+        // a font pair or an energy restyles it later (`TitleRestyle.swift`).
+        rememberTitleDesign(preset.design, layerID: inserted.layerID)
         // A page leaves with the one fade everything on the timeline has
         // (`PictureFade`): shaded on the bar, checked under Fade Out, dragged
         // from the bar's corner, and the dissolve into what follows it. A page

@@ -14,8 +14,9 @@ import Foundation
 ///   the picture fading (the user, 2026-10-03; `video.html` draws no Audio
 ///   section for a video clip at all).
 /// - A title, or anything else placed on the timeline, is for being ON SCREEN
-///   and read: when it is on and how it fades (Time), its words (Text), and
-///   how they come in (Reveal).
+///   and read. A title's few knobs come first (Title), then the part of it in
+///   hand (Part), then when it is on and how it fades (Time), its words
+///   (Text), and how they come in (Reveal).
 /// - A sound is for being HEARD: its Channel, its fades, its Gain, its Audio
 ///   Effects, then its time.
 /// - Captions are for CAPTIONING: the captions' own options (Captions), then
@@ -64,7 +65,7 @@ public enum TimePanelOrder {
     public static func leads(_ role: Role) -> [String] {
         switch role {
         case .playing: ["keys", "speed"]
-        case .onScreen: ["keys", "speed", "text", "reveal"]
+        case .onScreen: ["keys", "title", "titlePart", "speed", "text", "reveal"]
         case .heard: ["keys", "sound", "fades", "gain", "soundEffects", "speed"]
         case .captioned: ["captions", "text", "keys"]
         }

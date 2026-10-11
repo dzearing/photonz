@@ -1058,6 +1058,11 @@ struct EditorCommands: Commands {
 
     /// Save as Preset…: the picked title page or name card, kept as your own.
     @ViewBuilder private var saveTitlePresetRow: some View {
+        // Replay Title: the picked title's in, played again.
+        if Experiments.shared.titleRestyleEnabled {
+            Button("Replay Title") { editor?.replayTitle() }
+                .disabled(editor?.titleInHandID == nil)
+        }
         Button("Save as Preset…") { editor?.beginSavingTitlePreset() }
             .disabled(editor?.titlePresetLayerInHand == nil)
     }

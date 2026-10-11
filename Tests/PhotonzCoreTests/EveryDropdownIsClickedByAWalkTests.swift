@@ -31,6 +31,9 @@ struct EveryDropdownIsClickedByAWalkTests {
         // menus, on the panel's dropdown since 2026-10-05. In Next, Size is a
         // box whose preset list (`PanelNumberField.presets`) is the dropdown.
         "Font", "Size", "Weight",
+        // A title part's In and Out, and each one's Direction and the Hold's
+        // (`TitlePartInspector`, `title-knobs-restyle-walk`).
+        "Part In", "Part Out", "Part In Direction", "Part Out Direction", "Part Hold Direction",
         // A saved effect style's Kind and Position (`EffectStylePanel.picker`)
         // were here for a day; they are segmented controls since 2026-10-05.
         // A Library text style's Font, Size and Weight share one builder
@@ -46,7 +49,7 @@ struct EveryDropdownIsClickedByAWalkTests {
         "Curve", "Curve In", "Curve Out", "Fade curve", "Sound fade curve",
     ]
     /// How many dropdown call sites build their row name from a variable.
-    static let builtSites = 8
+    static let builtSites = 10
 
     /// The name a walk finds each dropdown by: the first `playtestField` or
     /// `playtestControl` after the call, nil when that name is built at run

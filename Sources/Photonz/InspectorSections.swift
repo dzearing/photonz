@@ -62,6 +62,12 @@ enum InspectorSectionID: String, CaseIterable {
     // the picture underneath it and how hard. Its ring, its rounding and its
     // fade are the layer's own, so they stay in Appearance and Effects.
     case lens
+    // A picked title's few knobs (Theme, Font Pair, Energy, Intensity,
+    // Background) and then the part of it in hand, with its in, hold and out
+    // (`TitleRestyle.swift`). Before Text, because they restyle the whole
+    // title at once, before anybody needs to touch its words one by one.
+    case title
+    case titlePart
     case text
     // How the picked text's words come in, a line, a word or a letter at a
     // time (`TextReveal.swift`). Straight under Text, because it is about the
@@ -223,6 +229,8 @@ enum InspectorSectionID: String, CaseIterable {
         case .annotation: "Annotation"
         case .callout: "Zoom Callout"
         case .lens: LensCopy.sectionTitle
+        case .title: "Title"
+        case .titlePart: "Part"
         case .text: "Text"
         case .reveal: "Reveal"
         case .measure: "Measure"

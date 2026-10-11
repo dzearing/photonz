@@ -16,8 +16,16 @@ struct LibraryTitleTile: View {
     @Environment(\.libraryTile) private var tileMetrics
     @Environment(EditorState.self) private var editorState
     let preset: TitlePreset
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var isHovered = false
 
     private var isSelected: Bool { editorState.selectedLibraryItemID == preset.id }
+
+    /// A tile plays while the pointer is on it and loops while it is picked,
+    /// so what makes a title good, the way it moves, is what you browse by.
+    private var isPlaying: Bool {
+        Experiments.shared.titleRestyleEnabled && (isHovered || isSelected) && !reduceMotion
+    }
 
     var body: some View {
         let entry = preset.entry
@@ -55,13 +63,25 @@ struct LibraryTitleTile: View {
             .fill(Color.black)
             .frame(height: tileMetrics.pictureHeight)
             .overlay {
-                if let image = editorState.titlePresetPicture(preset, pixelsWide: pixelsWide) {
+                if isPlaying, let reel = editorState.titlePresetReel(preset, pixelsWide: pixelsWide),
+                   let first = reel.frames.first {
+                    // Fitted the way the still is: the reel's pictures are
+                    // drawn at the size of the still, and shown at the scale
+                    // that fits them in the well.
+                    GeometryReader { proxy in
+                        let scale = max(CGFloat(first.width) / max(1, proxy.size.width),
+                                        CGFloat(first.height) / max(1, proxy.size.height))
+                        VideoKit.LoopingFrames(reel: reel, scale: max(scale, 0.01))
+                            .frame(width: proxy.size.width, height: proxy.size.height)
+                    }
+                } else if let image = editorState.titlePresetPicture(preset, pixelsWide: pixelsWide) {
                     Image(decorative: image, scale: 1)
                         .resizable()
                         .scaledToFit()
                 }
             }
             .clipped()
+            .playtestHover("Title tile \(preset.name)") { isHovered = $0 }
     }
 
     private var pixelsWide: CGFloat {

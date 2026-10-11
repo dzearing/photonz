@@ -579,6 +579,10 @@ extension Experiments {
     /// the built-in titles.
     var motionBlurEnabled: Bool { isEnabled(FeatureCatalog.motionBlurFlag) }
 
+    /// `next-title-restyle`: the Title and Part sections for a picked title,
+    /// titles laid out again after typing, and Library title tiles that play.
+    var titleRestyleEnabled: Bool { isEnabled(FeatureCatalog.titleRestyleFlag) }
+
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a
     /// second at a time (`TimelineZoom.swift`).

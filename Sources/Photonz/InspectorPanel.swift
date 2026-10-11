@@ -911,6 +911,10 @@ struct InspectorPanel: View {
         if editorState.textRevealLayer != nil {
             set.insert(.reveal)
         }
+        // A picked title's few knobs, and the part of it in hand
+        // (`TitleRestyle.swift`).
+        if editorState.titleRecipeInHand != nil { set.insert(.title) }
+        if editorState.titlePartInHand != nil { set.insert(.titlePart) }
         if let layer = selectedLayer {
             // A frame's own properties: its size, its clipping, its surface
             // (Next, `next-frames`). Only a frame has any of them.
@@ -1191,6 +1195,8 @@ struct InspectorPanel: View {
         case .fades: SoundFadesInspector.headerHelp
         case .keys: PropertyKeysInspector.sectionHelp
         case .reveal: TextRevealInspector.sectionHelp
+        case .title: TitleRestyleInspector.sectionHelp
+        case .titlePart: TitlePartInspector.sectionHelp
         case .editPoint: EditPointInspector.sectionHelp
         case .transition: TransitionInspector.sectionHelp
         case .transitions: TransitionsGroup.sectionHelp
@@ -1477,6 +1483,10 @@ struct InspectorPanel: View {
             }
         case .reveal:
             TextRevealInspector()
+        case .title:
+            TitleRestyleInspector()
+        case .titlePart:
+            TitlePartInspector()
         case .measure:
             if let layer = selectedLayer, layer.measure != nil {
                 MeasureInspector(layer: layer)

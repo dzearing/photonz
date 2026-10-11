@@ -257,6 +257,20 @@ final class EditorState {
     /// The pictures on the Library's title tiles, keyed by the preset, the
     /// frame shape and the size drawn (`LibraryTitleTile`).
     var titlePresetPictures: [String: CGImage] = [:]
+    /// Library title tiles playing, by preset, size and the recording frame
+    /// behind them (`EditorState+TitleRestyle`).
+    var titlePresetReels: [String: VideoKit.PlayedReel] = [:]
+    @ObservationIgnored var titlePresetReelsInFlight: Set<String> = []
+    /// The recording's first frame as the title tiles picture it, and which
+    /// recording it is of.
+    var titleTileRecordingFrame: (movieID: UUID, ref: ImageRef)?
+    @ObservationIgnored var titleTileRecordingReading: UUID?
+    /// Where the Title section's Intensity slider is while it is being
+    /// dragged, before it lets go (`EditorState+TitleRestyle`).
+    var titleIntensityPreview: Double?
+    /// The replay of a title's in waiting for a pause after its words were
+    /// typed.
+    @ObservationIgnored var titleReplayAfterTyping: Task<Void, Never>?
     @ObservationIgnored var titlePresetPicturesInFlight: Set<String> = []
     /// A title tile held over the timeline, read off its drag once it arrives
     /// (`TitlePresetDrag.swift`).

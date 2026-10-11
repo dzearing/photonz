@@ -394,7 +394,33 @@ tile previews that play.
    180, 5.9 ms at 360; full-frame slide 4.3, 5.1, 5.6 ms. Walk:
    `motion-blur-on-a-fast-slide-walk`; tests: `MotionBlurTests`,
    `MotionBlurRenderTests`.
-5. **Title tiles play, and a few knobs restyle a title.**
+5. **Title tiles play, and a few knobs restyle a title.** Built 2026-10-10.
+   A placed title keeps a **recipe** on its group (`GroupContent.titleRecipe`,
+   `Sources/PhotonzCore/TitleRestyle.swift`): its design at Normal, a theme
+   (background colours, headline, subtitle, accent), a font pair (display and
+   text), an energy (Calm, Normal, Punchy: x1.3, x1, x0.7 on every in and
+   out's length and start, overshoot x0.7 to x1.3, shutter 120, 180, 270), an
+   intensity (0 to 200%: rise and blur amounts, scale and spring distance,
+   hold amounts, grain, a glass's blur and a glow) and its background (Solid,
+   Gradient, Mesh, Glass, or none). Turning a knob takes the old design's keys
+   off (`clearTitleDesign`), restyles the pieces by role, lays them out again
+   (a page's lines move down by what a line grew, a card flows and keeps its
+   bottom left corner), keeps words legible on whatever box a theme painted
+   under them, and compiles the design again. Original is always one click
+   back, and a title saved as your own keeps the recipe. From Recording
+   samples a frame into a dark ground, the clip's most colourful part and
+   white words (`TitleTheme.sampled`). Panel: a **Title** section (Theme
+   swatches, Font Pair, Energy, Intensity, Background, Part) and a **Part**
+   section (In, Hold, Out with Length, Delay, Distance or Blur or Scale,
+   Direction, Curve, and Replay), leading a title's panel after Properties;
+   Replay Title is also on the title's right-click and in Clip. Typing into a
+   title lays it out again in the same undo step and replays its in after a
+   short pause. Library tiles play while pointed at and loop while picked
+   (`TitlePreset.reel`, drawn once off the main thread and played by Core
+   Animation), over the recording's own first frame for glass and name cards.
+   Switch `next-title-restyle`, on by default. Walks:
+   `title-knobs-restyle-walk`, `title-tiles-play-walk`; tests:
+   `TitleRestyleTests`.
 6. **A set of titles that look designed.**
 
 Screen Studio cannot make text slides at all
