@@ -1,0 +1,247 @@
+{
+  "out": "/tmp/photonz-playtest/the-menu-bar-stays-still-while-playing-walk",
+  "seed": "A video plays and the menu bar along the top of the screen stays still, at Next defaults with no flag changed. While a recording with two clicks and a zoom plays, the menu bar's commands are built again only when the playhead crosses something a menu shows (a click, the zoom, the start edge), never once a frame, and not one menu is taken off the bar or put back. Ten seconds of a long talk playing builds them at most a handful of times. Both stretches are FILMED: the left half of the menu bar, where the app's menus are, must not change in a single frame. The rows that depend on the playhead are still right when they are used: mid-playback, Hide Click at Playhead is live while the playhead is on a click and picks from the menu, and Command K and Shift Command K both split the clip while it plays, though both rows were dimmed at the first frame; Shift Command K reaches the clip only through its menu row. It needs the probe in front, because a menu bar only updates live for the app that has focus. Reported on 2026-10-11: the bar flickered on every frame of playback, because every pass made SwiftUI put View back in its own place and the app moved it again.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "zoomScriptPointerPath"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "filmMenuBar",
+      "name": "1-clicks-and-a-zoom-playing",
+      "seconds": 6,
+      "atMostChanges": 0
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuBarRowAddedOrRemoved",
+      "atMost": 0
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuBarTitle",
+      "atMost": 0
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuCommands",
+      "atLeast": 1,
+      "atMost": 12
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 2,
+      "onTheClock": true
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuCommands",
+      "atMost": 2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "expectZoomLetGo"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 5.2,
+      "onTheClock": true
+    },
+    {
+      "do": "menus",
+      "stage": "4-past-the-zoom-while-playing",
+      "menu": "Clip",
+      "choose": "Clip > Add Zoom"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "expectZoomPicked"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0,
+      "onTheClock": true
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command",
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0,
+      "onTheClock": true
+    },
+    {
+      "do": "key",
+      "key": "k",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 3
+    },
+    {
+      "do": "action",
+      "action": "openLongTalk"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "filmMenuBar",
+      "name": "2-a-long-talk-playing",
+      "seconds": 10,
+      "atMostChanges": 0
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuBarRowAddedOrRemoved",
+      "atMost": 0
+    },
+    {
+      "do": "expectBuilds",
+      "view": "menuCommands",
+      "atLeast": 1,
+      "atMost": 4
+    },
+    {
+      "do": "snapshot",
+      "name": "3-still-playing"
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    }
+  ]
+}

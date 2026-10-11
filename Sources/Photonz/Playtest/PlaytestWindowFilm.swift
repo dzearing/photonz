@@ -45,6 +45,12 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
 
     /// Starts filming `scWindow`, which is `size` pixels.
     @MainActor func start(_ scWindow: SCWindow, size: CGSize) async throws {
+        try await start(SCContentFilter(desktopIndependentWindow: scWindow), size: size)
+    }
+
+    /// Starts filming whatever `filter` takes in (a whole display, for the
+    /// menu bar along its top: `filmMenuBar`), at `size` pixels.
+    @MainActor func start(_ filter: SCContentFilter, size: CGSize) async throws {
         let config = SCStreamConfiguration()
         config.width = Int(size.width.rounded())
         config.height = Int(size.height.rounded())
@@ -53,8 +59,7 @@ final class PlaytestWindowFilm: NSObject, SCStreamOutput, @unchecked Sendable {
         config.queueDepth = 6
         config.pixelFormat = kCVPixelFormatType_32BGRA
         config.captureResolution = .best
-        let stream = SCStream(filter: SCContentFilter(desktopIndependentWindow: scWindow),
-                              configuration: config, delegate: nil)
+        let stream = SCStream(filter: filter, configuration: config, delegate: nil)
         try stream.addStreamOutput(self, type: .screen, sampleHandlerQueue: queue)
         try await stream.startCapture()
         self.stream = stream

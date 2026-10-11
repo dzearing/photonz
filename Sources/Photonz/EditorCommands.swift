@@ -294,6 +294,13 @@ struct EditorCommands: Commands {
     }
 
     var body: some Commands {
+        #if PHOTONZ_PLAYTEST
+        let _ = ViewBuildMeter.shared.built(.menuCommands)
+        #endif
+        // The playhead is read unwatched from here to the end, and what the
+        // menu shows about it is watched through one value that changes only
+        // when the playhead crosses something (`EditorState+MenuPlayhead`).
+        let _ = EditorState.beginMenuRead(editor)
         CommandGroup(replacing: .appInfo) {
             Button("About \(AppInfo.name)") { coordinator.showAbout() }
             Button("Open Source Notices…") { coordinator.showOpenSourceNotices() }
@@ -537,6 +544,7 @@ struct EditorCommands: Commands {
         documentMenus
 
         viewAndHelpCommands
+        let _ = EditorState.endMenuRead()
     }
 
     // MARK: - The menus for what the document is made of
@@ -1223,8 +1231,10 @@ struct EditorCommands: Commands {
         Button("Select Forward") { if let clip { editor?.selectClipsForward(from: clip, onItsTrackOnly: false) } }
             .disabled(clip == nil)
         let clickClip = editor?.clipToAddClickTo
-        Button("Add Click at Playhead\u{2026}") { if let clickClip { editor?.beginPlacingClick(onClip: clickClip) } }
-            .disabled(clickClip == nil)
+        Button("Add Click at Playhead\u{2026}") {
+            if let clickClip = editor?.clipToAddClickTo { editor?.beginPlacingClick(onClip: clickClip) }
+        }
+        .disabled(clickClip == nil)
         if Experiments.shared.clickEffectsEnabled {
             // The Clicks switch on the clip's Properties (`ClickEffectRows`).
             let effectClip = editor?.clickEffectClip?.id
@@ -1235,19 +1245,23 @@ struct EditorCommands: Commands {
             // A tick's own verbs (`ClickTicksView`), for the click at the playhead.
             let clickNow = editor?.clickAtPlayhead
             Button(clickNow?.mark.isHidden == true ? "Show Click at Playhead" : "Hide Click at Playhead") {
-                if let clickNow {
+                // Asked again here: the row was drawn at the last boundary the
+                // playhead crossed, and the press is now.
+                if let clickNow = editor?.clickAtPlayhead {
                     editor?.setClickHidden(!clickNow.mark.isHidden, clickID: clickNow.mark.id, onClip: clickNow.clip)
                 }
             }
             .disabled(clickNow == nil)
             let next = editor?.nextClickMS
-            Button("Next Click") { if let next { editor?.moveDocumentPlayhead(toMS: next) } }
+            Button("Next Click") { if let next = editor?.nextClickMS { editor?.moveDocumentPlayhead(toMS: next) } }
                 .disabled(next == nil)
         }
         if Experiments.shared.zoomRegionsEnabled {
             let zoomClip = editor.flatMap { $0.clipToAddZoom(atMS: $0.documentTimeMS) }
             Button("Add Zoom") {
-                if let zoomClip, let editor { editor.addZoom(toClip: zoomClip, atMS: editor.documentTimeMS) }
+                if let editor, let zoomClip = editor.clipToAddZoom(atMS: editor.documentTimeMS) {
+                    editor.addZoom(toClip: zoomClip, atMS: editor.documentTimeMS)
+                }
             }
             .disabled(zoomClip == nil)
             let suggestClip = editor?.clipInHandID ?? zoomClip
@@ -1402,7 +1416,7 @@ struct EditorCommands: Commands {
             .keyboardShortcut(timed ? KeyboardShortcut("m", modifiers: [.command, .shift]) : nil)
             .disabled(!(editor?.canGoToMarker(forward: false) ?? false))
         let marker = editor?.markerAtPlayhead
-        Button("Remove Marker") { if let marker { editor?.removeMarker(marker) } }
+        Button("Remove Marker") { if let marker = editor?.markerAtPlayhead { editor?.removeMarker(marker) } }
             .disabled(marker == nil)
         Button("Clear All Markers") { editor?.removeAllMarkers() }
             .disabled(editor?.document?.markers.isEmpty ?? true)
@@ -2255,181 +2269,17 @@ struct EditorCommands: Commands {
             }
         }
 
-        CommandGroup(after: .sidebar) {
-            let hasDocument = editor?.document != nil
-            // A setting, so one name and a checkmark: the item never renames
-            // itself and never changes width under the pointer, and it reports
-            // its own on/off to accessibility (MenuToggleNames).
-            //
-            // Every `set` below FLIPS what the state says right now rather than
-            // storing the value SwiftUI hands it. A Commands body is re-run
-            // only while an event is being handled, so the value the item was
-            // drawn from can be a toggle behind; flipping the live reading is
-            // what the plain Button did and it cannot be talked into a press
-            // that does nothing. `set` runs only when a person picks the item,
-            // so there is no other writer to disagree with.
-            Toggle(MenuToggleNames.panel, isOn: Binding(
-                get: { editor?.isLayersPanelVisible ?? false },
-                set: { _ in
-                    if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
-                }))
-            .keyboardShortcut("l", modifiers: [.command, .option])
-            .disabled(!hasDocument)
-            // The Library shelf, right under Show Panel because they are the
-            // same kind of thing, and in the order they nest: the panel is the
-            // column, the Library is one shelf inside it. No key: Photoshop
-            // binds none for its Libraries panel, and Option Command L already
-            // shows the panel.
-            // A flagged command is absent, not greyed, so the row is simply
-            // not there when the flag is off.
-            if Experiments.shared.libraryEnabled {
-                Toggle(MenuToggleNames.library, isOn: Binding(
-                    get: { editor?.isLibraryVisible ?? false },
-                    set: { _ in
-                        if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
-                    }))
-                .disabled(!hasDocument)
-            }
-            // The timing strip across the bottom (Next, `next-motion-strip`).
-            // Next to the panel because it is the same kind of thing: a surface
-            // the window can show or put away. Dimmed with nothing moving,
-            // because there is no strip for a still picture and a row that
-            // would open an empty one is a row that lies.
-            //
-            // A recording has no strip to show or hide: its tracks are Edit
-            // mode's, and the window is a player or the editor
-            // (`ViewEditMode`), on ⌘1 and ⌘2 like the title bar's switch.
-            if editor?.documentHasTime ?? false {
-                ForEach(ViewEditMode.allCases, id: \.self) { mode in
-                    Toggle(mode.menuTitle, isOn: Binding(
-                        get: { editor?.viewEditMode == mode },
-                        set: { _ in editor?.setViewEditMode(mode) }))
-                    .keyboardShortcut(KeyEquivalent(mode.commandKey), modifiers: .command)
-                }
-                // The transport's timeline toggle, on the key an icon's
-                // timing strip has.
-                Toggle(MenuToggleNames.timeline, isOn: Binding(
-                    get: { editor?.isMotionStripOpen ?? false },
-                    set: { _ in editor?.pressTimelineToggle() }))
-                .keyboardShortcut("t", modifiers: [.command, .option])
-            } else if Experiments.shared.motionStripEnabled {
-                Toggle(MenuToggleNames.timingStrip, isOn: Binding(
-                    get: { editor?.isMotionStripShown ?? false },
-                    set: { _ in editor?.toggleMotionStrip() }))
-                .keyboardShortcut("t", modifiers: [.command, .option])
-                .disabled(!(editor?.hasMotionStrip ?? false))
-            }
-            // What this window is set up for (Next, `next-window-modes`). Here
-            // rather than anywhere else because a mode is a VIEW preference in
-            // the strictest sense: it changes what the window offers and
-            // nothing whatever about the document. It sits with the panel and
-            // the strip above it, which are the other two surfaces a window can
-            // put away.
-            //
-            // A submenu rather than a flat run of rows: five modes and two ways
-            // out would be seven rows in the middle of View, and the chip in
-            // the title bar is the everyday door. This one is the keyboard's
-            // door and accessibility's.
-            if Experiments.shared.windowModesEnabled {
-                Menu(WindowModeCopy.menuTitle) {
-                    ForEach(WindowModes.swappable) { mode in
-                        Button(mode.title) { WindowModeStore.shared.swap(to: mode.id) }
-                            .keyboardShortcut(modeKey(mode.id))
-                    }
-                    Divider()
-                    Button(WindowModeCopy.showEverything) {
-                        WindowModeStore.shared.showEverything()
-                    }
-                }
-                .disabled(!hasDocument)
-            }
-            Button("Zoom In") { editor?.zoomIn() }
-                .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
-                .disabled(!hasDocument)
-            Button("Zoom Out") { editor?.zoomOut() }
-                .keyboardShortcut("-", modifiers: .command)
-                .disabled(!hasDocument)
-            Button("Zoom to Fit") { editor?.zoomToFit() }
-                .keyboardShortcut("0", modifiers: .command)
-                .disabled(!hasDocument)
-            // ⌘1 is View mode on a document with time (`ViewEditMode`), so
-            // there Actual Size takes Photoshop's older ⌥⌘0.
-            Button("Actual Size") { editor?.zoomToActualSize() }
-                .keyboardShortcut((editor?.documentHasTime ?? false) ? "0" : "1",
-                                  modifiers: (editor?.documentHasTime ?? false) ? [.command, .option] : .command)
-                .disabled(!hasDocument)
-            // The timeline, fitted to the whole of the time: the row its
-            // right-click has, on Premiere's \, which the timeline answers
-            // while it has the keyboard (⇧Z is Punch In).
-            if Experiments.shared.proMenuBarEnabled && timed {
-                Button("Zoom Timeline to Fit") { editor?.fitTimeline() }
-                    .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
-                    .disabled(!(editor?.isTimelineOpenedOut ?? false))
-                timelineViewRows
-            }
-            // The grid you build against (Next, `next-canvas-grid`), on the key
-            // Photoshop uses for its own. It is a view preference, not part of
-            // the picture, so it belongs on this menu next to the zooms rather
-            // than anywhere near Layer or Image. Everything that shapes it is
-            // one row below, on Grid Settings, and on the chip the grid puts in
-            // the tool bar while it is showing.
-            if Experiments.shared.canvasGridEnabled {
+        // View's rows. On the pro menu bar they are a menu the app declares
+        // after the document menus, so SwiftUI lays View out before Window by
+        // itself and nothing has to move it (`MenuBarArranger`); with the flag
+        // off they join SwiftUI's own View, as they always did.
+        if Experiments.shared.proMenuBarEnabled {
+            CommandMenu(MenuBarOrder.view) { viewMenuRows }
+        } else {
+            CommandGroup(after: .sidebar) {
+                viewMenuRows
                 Divider()
-                Toggle(MenuToggleNames.grid, isOn: Binding(
-                    get: { editor?.canvasGrid.isVisible ?? false },
-                    set: { _ in editor?.toggleCanvasGrid() }))
-                .keyboardShortcut("'", modifiers: .command)
-                .disabled(!hasDocument)
-                // Right under the switch, because the menu you turn the grid on
-                // from is the first place you look for what shapes it. It is
-                // also the same popover the grid's icon in the tool bar opens,
-                // and it leaves the grid alone either way: the switch above is
-                // the first row of what it raises.
-                Button(CanvasGridCopy.settingsMenuItem) {
-                    editor?.showGridSettings()
-                }
-                .disabled(!hasDocument || (editor?.isAdjustingGrid ?? false))
-                // Photoshop's own key for Snap, next to the grid it pulls to.
-                // Dimmed with the grid hidden, because with no lines on the
-                // picture there is nothing to pull to.
-                Toggle(MenuToggleNames.snapToGrid, isOn: Binding(
-                    get: { editor?.canvasGrid.snapsToGrid ?? true },
-                    set: { _ in editor?.toggleSnapToGrid() }))
-                .keyboardShortcut(";", modifiers: [.command, .shift])
-                .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
-                // Where the grid starts, and the guides pinned onto it. It
-                // takes the canvas over, so it reads as an action with an
-                // ellipsis rather than as a switch. The tool bar's Adjust Grid
-                // button is the same door on a canvas wide enough to hold it;
-                // this is how you get in at any width.
-                //
-                // Dimmed with the grid hidden, for the reason Snap above it is:
-                // the whole mode is placing a zero point against lines you can
-                // see. With the grid off the gear is not on the tool bar
-                // either, so the two doors say the same thing.
-                Button(CanvasGridCopy.adjustMenuItem) {
-                    editor?.beginGridAdjustment()
-                }
-                .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false)
-                          || (editor?.isAdjustingGrid ?? false))
             }
-            // The space an icon has to live inside (Next, `next-icon-frames`).
-            // Here rather than on Layer because it is the same kind of thing
-            // the grid above it is: how you like to draw, kept between
-            // launches, true of every icon frame at once. Nothing else shapes
-            // it, because the frame's size already says what the margin is.
-            //
-            // Dimmed when nothing in the document is the size an icon is drawn
-            // at: a tick beside a row that plainly changes nothing on screen
-            // is worse than a row that says there is nothing to change.
-            if Experiments.shared.iconFramesEnabled {
-                Divider()
-                Toggle(MenuToggleNames.iconKeylines, isOn: Binding(
-                    get: { editor?.iconKeylinesShowing ?? false },
-                    set: { _ in editor?.toggleIconKeylines() }))
-                .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
-            }
-            Divider()
         }
         // The capture history is a window of its own, so on the pro menu bar
         // it is where a Mac user looks for one: Window, with the checkmark
@@ -2476,6 +2326,183 @@ struct EditorCommands: Commands {
                     }
                 }
             }
+        }
+    }
+
+    /// What View holds: the panel, the modes, the zooms, the grid.
+    @ViewBuilder private var viewMenuRows: some View {
+        let hasDocument = editor?.document != nil
+        // A setting, so one name and a checkmark: the item never renames
+        // itself and never changes width under the pointer, and it reports
+        // its own on/off to accessibility (MenuToggleNames).
+        //
+        // Every `set` below FLIPS what the state says right now rather than
+        // storing the value SwiftUI hands it. A Commands body is re-run
+        // only while an event is being handled, so the value the item was
+        // drawn from can be a toggle behind; flipping the live reading is
+        // what the plain Button did and it cannot be talked into a press
+        // that does nothing. `set` runs only when a person picks the item,
+        // so there is no other writer to disagree with.
+        Toggle(MenuToggleNames.panel, isOn: Binding(
+            get: { editor?.isLayersPanelVisible ?? false },
+            set: { _ in
+                if let editor { editor.setInspectorVisible(!editor.isLayersPanelVisible) }
+            }))
+        .keyboardShortcut("l", modifiers: [.command, .option])
+        .disabled(!hasDocument)
+        // The Library shelf, right under Show Panel because they are the
+        // same kind of thing, and in the order they nest: the panel is the
+        // column, the Library is one shelf inside it. No key: Photoshop
+        // binds none for its Libraries panel, and Option Command L already
+        // shows the panel.
+        // A flagged command is absent, not greyed, so the row is simply
+        // not there when the flag is off.
+        if Experiments.shared.libraryEnabled {
+            Toggle(MenuToggleNames.library, isOn: Binding(
+                get: { editor?.isLibraryVisible ?? false },
+                set: { _ in
+                    if let editor { editor.setLibraryVisible(!editor.isLibraryVisible) }
+                }))
+            .disabled(!hasDocument)
+        }
+        // The timing strip across the bottom (Next, `next-motion-strip`).
+        // Next to the panel because it is the same kind of thing: a surface
+        // the window can show or put away. Dimmed with nothing moving,
+        // because there is no strip for a still picture and a row that
+        // would open an empty one is a row that lies.
+        //
+        // A recording has no strip to show or hide: its tracks are Edit
+        // mode's, and the window is a player or the editor
+        // (`ViewEditMode`), on ⌘1 and ⌘2 like the title bar's switch.
+        if editor?.documentHasTime ?? false {
+            ForEach(ViewEditMode.allCases, id: \.self) { mode in
+                Toggle(mode.menuTitle, isOn: Binding(
+                    get: { editor?.viewEditMode == mode },
+                    set: { _ in editor?.setViewEditMode(mode) }))
+                .keyboardShortcut(KeyEquivalent(mode.commandKey), modifiers: .command)
+            }
+            // The transport's timeline toggle, on the key an icon's
+            // timing strip has.
+            Toggle(MenuToggleNames.timeline, isOn: Binding(
+                get: { editor?.isMotionStripOpen ?? false },
+                set: { _ in editor?.pressTimelineToggle() }))
+            .keyboardShortcut("t", modifiers: [.command, .option])
+        } else if Experiments.shared.motionStripEnabled {
+            Toggle(MenuToggleNames.timingStrip, isOn: Binding(
+                get: { editor?.isMotionStripShown ?? false },
+                set: { _ in editor?.toggleMotionStrip() }))
+            .keyboardShortcut("t", modifiers: [.command, .option])
+            .disabled(!(editor?.hasMotionStrip ?? false))
+        }
+        // What this window is set up for (Next, `next-window-modes`). Here
+        // rather than anywhere else because a mode is a VIEW preference in
+        // the strictest sense: it changes what the window offers and
+        // nothing whatever about the document. It sits with the panel and
+        // the strip above it, which are the other two surfaces a window can
+        // put away.
+        //
+        // A submenu rather than a flat run of rows: five modes and two ways
+        // out would be seven rows in the middle of View, and the chip in
+        // the title bar is the everyday door. This one is the keyboard's
+        // door and accessibility's.
+        if Experiments.shared.windowModesEnabled {
+            Menu(WindowModeCopy.menuTitle) {
+                ForEach(WindowModes.swappable) { mode in
+                    Button(mode.title) { WindowModeStore.shared.swap(to: mode.id) }
+                        .keyboardShortcut(modeKey(mode.id))
+                }
+                Divider()
+                Button(WindowModeCopy.showEverything) {
+                    WindowModeStore.shared.showEverything()
+                }
+            }
+            .disabled(!hasDocument)
+        }
+        Button("Zoom In") { editor?.zoomIn() }
+            .keyboardShortcut("=", modifiers: .command) // the ⌘+ key
+            .disabled(!hasDocument)
+        Button("Zoom Out") { editor?.zoomOut() }
+            .keyboardShortcut("-", modifiers: .command)
+            .disabled(!hasDocument)
+        Button("Zoom to Fit") { editor?.zoomToFit() }
+            .keyboardShortcut("0", modifiers: .command)
+            .disabled(!hasDocument)
+        // ⌘1 is View mode on a document with time (`ViewEditMode`), so
+        // there Actual Size takes Photoshop's older ⌥⌘0.
+        Button("Actual Size") { editor?.zoomToActualSize() }
+            .keyboardShortcut((editor?.documentHasTime ?? false) ? "0" : "1",
+                              modifiers: (editor?.documentHasTime ?? false) ? [.command, .option] : .command)
+            .disabled(!hasDocument)
+        // The timeline, fitted to the whole of the time: the row its
+        // right-click has, on Premiere's \, which the timeline answers
+        // while it has the keyboard (⇧Z is Punch In).
+        if Experiments.shared.proMenuBarEnabled && timed {
+            Button("Zoom Timeline to Fit") { editor?.fitTimeline() }
+                .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
+                .disabled(!(editor?.isTimelineOpenedOut ?? false))
+            timelineViewRows
+        }
+        // The grid you build against (Next, `next-canvas-grid`), on the key
+        // Photoshop uses for its own. It is a view preference, not part of
+        // the picture, so it belongs on this menu next to the zooms rather
+        // than anywhere near Layer or Image. Everything that shapes it is
+        // one row below, on Grid Settings, and on the chip the grid puts in
+        // the tool bar while it is showing.
+        if Experiments.shared.canvasGridEnabled {
+            Divider()
+            Toggle(MenuToggleNames.grid, isOn: Binding(
+                get: { editor?.canvasGrid.isVisible ?? false },
+                set: { _ in editor?.toggleCanvasGrid() }))
+            .keyboardShortcut("'", modifiers: .command)
+            .disabled(!hasDocument)
+            // Right under the switch, because the menu you turn the grid on
+            // from is the first place you look for what shapes it. It is
+            // also the same popover the grid's icon in the tool bar opens,
+            // and it leaves the grid alone either way: the switch above is
+            // the first row of what it raises.
+            Button(CanvasGridCopy.settingsMenuItem) {
+                editor?.showGridSettings()
+            }
+            .disabled(!hasDocument || (editor?.isAdjustingGrid ?? false))
+            // Photoshop's own key for Snap, next to the grid it pulls to.
+            // Dimmed with the grid hidden, because with no lines on the
+            // picture there is nothing to pull to.
+            Toggle(MenuToggleNames.snapToGrid, isOn: Binding(
+                get: { editor?.canvasGrid.snapsToGrid ?? true },
+                set: { _ in editor?.toggleSnapToGrid() }))
+            .keyboardShortcut(";", modifiers: [.command, .shift])
+            .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false))
+            // Where the grid starts, and the guides pinned onto it. It
+            // takes the canvas over, so it reads as an action with an
+            // ellipsis rather than as a switch. The tool bar's Adjust Grid
+            // button is the same door on a canvas wide enough to hold it;
+            // this is how you get in at any width.
+            //
+            // Dimmed with the grid hidden, for the reason Snap above it is:
+            // the whole mode is placing a zero point against lines you can
+            // see. With the grid off the gear is not on the tool bar
+            // either, so the two doors say the same thing.
+            Button(CanvasGridCopy.adjustMenuItem) {
+                editor?.beginGridAdjustment()
+            }
+            .disabled(!hasDocument || !(editor?.canvasGrid.isVisible ?? false)
+                      || (editor?.isAdjustingGrid ?? false))
+        }
+        // The space an icon has to live inside (Next, `next-icon-frames`).
+        // Here rather than on Layer because it is the same kind of thing
+        // the grid above it is: how you like to draw, kept between
+        // launches, true of every icon frame at once. Nothing else shapes
+        // it, because the frame's size already says what the margin is.
+        //
+        // Dimmed when nothing in the document is the size an icon is drawn
+        // at: a tick beside a row that plainly changes nothing on screen
+        // is worse than a row that says there is nothing to change.
+        if Experiments.shared.iconFramesEnabled {
+            Divider()
+            Toggle(MenuToggleNames.iconKeylines, isOn: Binding(
+                get: { editor?.iconKeylinesShowing ?? false },
+                set: { _ in editor?.toggleIconKeylines() }))
+            .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
         }
     }
 }

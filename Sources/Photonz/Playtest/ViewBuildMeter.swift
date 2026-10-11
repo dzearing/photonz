@@ -4,6 +4,7 @@
 // build does not contain this file at all.
 #if PHOTONZ_PLAYTEST
 import Foundation
+import PhotonzCore
 
 /// How many times a view body ran since the last reset.
 ///
@@ -57,6 +58,17 @@ final class ViewBuildMeter {
         /// One capture tile of the history strip. A filter switch builds the
         /// tiles it brings on screen and no others (`history-filter-switch-speed-walk`).
         case historyTile
+        /// The menu bar's commands body (`EditorCommands`). Every pass hands
+        /// SwiftUI a whole new set of menus to compare with the bar, so a
+        /// video playing must not run it once a frame
+        /// (`the-menu-bar-stays-still-while-playing-walk`).
+        case menuCommands
+        /// What AppKit says happened to the bar (`MenuBarMeter`): a title on
+        /// the bar itself, a row in one of its menus, and of those a row
+        /// added or taken out rather than changed in place.
+        case menuBarTitle
+        case menuBarRow
+        case menuBarRowAddedOrRemoved
     }
 
     private var counts: [Subject: Int] = [:]
@@ -76,12 +88,34 @@ final class ViewBuildMeter {
 
     var traced: String { trace.isEmpty ? "" : "passes: " + trace.joined(separator: " | ") }
 
-    func reset() { counts.removeAll(); trace.removeAll() }
+    func reset() { counts.removeAll(); trace.removeAll(); ticks.removeAll() }
+
+    /// When the playback clock moved the playhead on, for how evenly a video
+    /// plays: the gaps between ticks, which a busy main thread stretches.
+    private var ticks: [CFAbsoluteTime] = []
+
+    func playbackTicked() { ticks.append(CFAbsoluteTimeGetCurrent()) }
+
+    /// "playback ticks 300, every 33.4ms on average, 95% within 36.1ms,
+    /// longest 41.0ms, 0 late" — late is a gap over twice the frame step.
+    var playbackReport: String {
+        guard ticks.count > 2 else { return "" }
+        let gaps = zip(ticks.dropFirst(), ticks).map { ($0 - $1) * 1000 }.sorted()
+        let mean = gaps.reduce(0, +) / Double(gaps.count)
+        let p95 = gaps[min(gaps.count - 1, Int(Double(gaps.count) * 0.95))]
+        let late = gaps.filter { $0 > Double(MovieRef.frameStepMS) * 2 }.count
+        return String(format: "playback ticks %d, every %.1fms on average, 95%% within %.1fms, longest %.1fms, %d late",
+                      ticks.count, mean, p95, gaps.last ?? 0, late)
+    }
 
     func count(_ subject: Subject) -> Int { counts[subject] ?? 0 }
 
     /// "layer rows built 6" — the phrase a walk's log line carries.
     var report: String {
+        (playbackReport.isEmpty ? "" : playbackReport + "; ") + countsReport
+    }
+
+    private var countsReport: String {
         counts.isEmpty
             ? "no view bodies counted"
             : counts.sorted { $0.key.rawValue < $1.key.rawValue }

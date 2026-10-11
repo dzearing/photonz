@@ -1,0 +1,27 @@
+{
+  "feature": "The menu bar stays still while a video plays",
+  "epic": "video-cutting",
+  "summary": "Playing a video no longer makes the menus at the top of the screen flicker. View stays put between Measure and Window, and the menu rows that depend on the playhead are still right the moment you open a menu or press a key.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/the-menu-bar-stays-still-while-playing-walk.json (it needs the probe in front, so it waits for nobody to be at the Mac).",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and press Space to play it.", "shot": "2026-10-11-menu-bar-still-3-playing-sc.png" },
+    { "do": "Watch the menu names along the top of the screen for ten seconds: View stays between Measure and Window the whole time.", "shot": "2026-10-11-menu-bar-still-2-after-sc.png" },
+    { "do": "For comparison, this is the old build mid-playback: View jumped between after Edit and after Measure about 30 times a second.", "shot": "2026-10-11-menu-bar-still-1-before-flicker-sc.png" },
+    { "do": "While it plays, open Clip after the playhead passes a zoom: Add Zoom is live, and picking it adds a zoom there." },
+    { "do": "While it plays, press Shift Command K: the clip is split at the playhead." },
+    { "do": "Pause, then click a layer or a clip: the menu bar still does not move." }
+  ],
+  "evaluate": [
+    "Does the menu bar look completely still to you while a recording plays, including one with clicks and zooms in it?",
+    "Is View where you expect it, just before Window, in every window you open?",
+    "Do Hide Click at Playhead, Next Click and Add Zoom read right when you open the Clip menu mid-playback?",
+    "Does playback feel any different to you, smoother or not?"
+  ],
+  "rough": [
+    "No mock covers the menu bar's behaviour during playback; the order it keeps is the placement contract's Menu bar row (UX-PATTERNS, placement contract).",
+    "The menu's commands are still rebuilt when the playhead crosses something a menu row cares about (entering a clip, a click, a zoom): 7 times in the 6 second sample with two clicks and a zoom. Nothing on the bar moves when that happens; it only refreshes which rows are dimmed.",
+    "Measured on the same build with the fix switched off and on: 6 s of the sample went from 180 menu rebuilds and 718 menus taken off the bar and put back to 8 and 0; 10 s of a long talk from 293 and 1172 to 2 and 0. The main thread was busy 45% less while playing (5.2 s to 2.8 s of 10 s). Playback ticks were unchanged: every 35.1 ms on average, longest about 39 ms, none late, before and after.",
+    "Command K during playback is answered by the timeline's own keys before any menu row, before and after this change; Shift Command K is the playhead key that reaches the clip only through its menu row, and the walk proves it works mid-playback."
+  ]
+}

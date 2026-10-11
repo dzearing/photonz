@@ -32,11 +32,24 @@ public enum MenuBarOrder {
     /// it is already there. `to` is the index View ends up at after it has
     /// been taken out, which is how `NSMenu.insertItem` wants it.
     public static func viewMove(in titles: [String]) -> Move? {
-        guard let from = titles.firstIndex(of: view) else { return nil }
+        guard titles.count(where: { $0 == view }) == 1, let from = titles.firstIndex(of: view) else {
+            return nil
+        }
         var rest = titles
         rest.remove(at: from)
         let to = rest.firstIndex(of: window) ?? rest.firstIndex(of: help) ?? rest.count
         return to == from ? nil : Move(from: from, to: to)
+    }
+
+    /// SwiftUI's own View, when the app has declared a View of its own: the
+    /// first of two, since SwiftUI puts every `CommandMenu` after its own
+    /// View. Declared after the document menus, the app's View already sits
+    /// before Window, so nothing has to move: SwiftUI's empty one is hidden
+    /// instead. Moving View fought SwiftUI, which put it back on every pass of
+    /// the commands, and the bar flickered with each one (2026-10-11).
+    public static func builtInViewToHide(in titles: [String]) -> Int? {
+        let views = titles.indices.filter { titles[$0] == view }
+        return views.count > 1 ? views.first : nil
     }
 
     /// The titles as they read once the move is made.

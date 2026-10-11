@@ -5,12 +5,18 @@ import PhotonzCore
 /// document is made of, straight before Window (`MenuBarOrder`).
 ///
 /// SwiftUI puts every `CommandMenu` after its own View menu and offers no way
-/// to say otherwise, and it rebuilds the bar as scenes come and go and adds
-/// Clip and Sequence the moment a video comes forward, each time after View.
-/// So the order is checked after every event the app handles
-/// (`NSApplication.didUpdateNotification`) and View moved back when it is out
-/// of place. The check reads a dozen titles, so it costs nothing; the move
-/// happens only on the pass after SwiftUI touched the bar.
+/// to say otherwise. So the app declares a View of its own after the document
+/// menus (`EditorCommands`), and SwiftUI's own, left empty, is hidden here.
+/// Until 2026-10-11 this moved SwiftUI's View instead, and SwiftUI put it back
+/// in its own place on every pass of the commands, so each pass took View off
+/// the bar twice: thirty times a second while a video played, which a person
+/// saw as the menu bar flickering. Hiding is a change SwiftUI leaves alone.
+///
+/// The bar is checked after every event the app handles
+/// (`NSApplication.didUpdateNotification`) because SwiftUI rebuilds it as
+/// scenes come and go. The check reads a dozen titles, so it costs nothing.
+/// The move is kept for a bar with only one View, should SwiftUI ever stop
+/// building its own.
 ///
 /// Next only (`next-a-pro-menu-bar`): with the flag off the bar is exactly
 /// what SwiftUI builds.
@@ -55,8 +61,13 @@ enum MenuBarArranger {
     }
 
     static func arrange(_ bar: NSMenu? = NSApp.mainMenu) {
-        guard Experiments.shared.proMenuBarEnabled, let bar,
-              let move = MenuBarOrder.viewMove(in: bar.items.map(\.title)) else { return }
+        guard Experiments.shared.proMenuBarEnabled, let bar else { return }
+        let titles = bar.items.map(\.title)
+        if let builtIn = MenuBarOrder.builtInViewToHide(in: titles) {
+            if !bar.items[builtIn].isHidden { bar.items[builtIn].isHidden = true }
+            return
+        }
+        guard let move = MenuBarOrder.viewMove(in: titles) else { return }
         let view = bar.items[move.from]
         bar.removeItem(at: move.from)
         bar.insertItem(view, at: move.to)

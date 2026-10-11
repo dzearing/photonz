@@ -1489,12 +1489,30 @@ final class EditorState {
     /// Only means anything in a document that HAS time. In every other
     /// document it stays at nought and nothing reads it, which is what makes
     /// all of this free for a screenshot.
-    var documentTimeMS: Int = 0 {
-        // Framing a zoom is done at one moment: the playhead moving on, by a
-        // scrub, a key or playing, puts the picture back to what the zoom
-        // shows there (`EditorState+Zoom`).
-        didSet { if zoomFraming, documentTimeMS != oldValue { zoomFraming = false } }
+    ///
+    /// Read while the menu bar's commands are being built, it is not watched
+    /// (`EditorState+MenuPlayhead`): the menu would otherwise be built again on
+    /// every frame of playback, and the bar flickered with it.
+    var documentTimeMS: Int {
+        get {
+            if !Self.readingForTheMenu { access(keyPath: \.documentTimeMS) }
+            return storedDocumentTimeMS
+        }
+        set {
+            let oldValue = storedDocumentTimeMS
+            guard newValue != oldValue else { return }
+            withMutation(keyPath: \.documentTimeMS) { storedDocumentTimeMS = newValue }
+            // Framing a zoom is done at one moment: the playhead moving on, by
+            // a scrub, a key or playing, puts the picture back to what the
+            // zoom shows there (`EditorState+Zoom`).
+            if zoomFraming { zoomFraming = false }
+        }
     }
+    @ObservationIgnored private var storedDocumentTimeMS = 0
+    /// What the menu bar shows that depends on the playhead, written only when
+    /// one of those answers changes (`EditorState+MenuPlayhead`).
+    var menuPlayhead = MenuPlayhead()
+    @ObservationIgnored var watchesMenuPlayhead = false
     /// Whether the document is playing.
     var isDocumentPlaying = false
     /// True while this window holds a recording opened the moment it was

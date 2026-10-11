@@ -332,6 +332,9 @@ extension EditorState {
                 }
                 documentTimeMS = landing
                 documentMomentChanged()
+                #if PHOTONZ_PLAYTEST
+                ViewBuildMeter.shared.playbackTicked()
+                #endif
             }
         }
     }

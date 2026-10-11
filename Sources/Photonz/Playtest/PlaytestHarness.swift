@@ -412,6 +412,7 @@ private final class Run {
         // being built, which is the whole of the flake this was written for.
         MainThreadMeter.shared.install()
         MainThreadMeter.shared.reset()
+        MenuBarMeter.shared.install()
         // Whatever the walk said it needs, before step one — and, however this
         // run ends, everything it borrowed goes back.
         do {
@@ -2499,7 +2500,8 @@ private final class Run {
                 .compactMap { $0 }.joined(separator: " and ")
             note(number, step.name,
                  "\"\(view)\" built \(times), \(bounds) allowed; "
-                 + ViewBuildMeter.shared.report,
+                 + ViewBuildMeter.shared.report
+                 + (ViewBuildMeter.shared.traced.isEmpty ? "" : "; " + ViewBuildMeter.shared.traced),
                  state: describe())
 
         case .expectListStill(let moved):
@@ -2675,6 +2677,10 @@ private final class Run {
             note(number, step.name, try await filmThumb(film, number: number), state: describe())
         case .filmWindow(let film):
             note(number, step.name, try await filmWindow(film, number: number), state: describe())
+
+        case .filmMenuBar(let name, let seconds, let atMostChanges):
+            note(number, step.name, try await filmMenuBar(name: name, seconds: seconds, atMostChanges: atMostChanges),
+                 state: describe())
 
         case .expectBox(let layer, let at, let size, let corner, let onScreen, let reachable, let within):
             note(number, step.name,
@@ -2989,7 +2995,9 @@ private final class Run {
             // The order along the top, after the app's own menu (whose name
             // carries the release and the bundle).
             if !wantedBar.isEmpty {
-                let read = Array((NSApp.mainMenu?.items.map(\.title) ?? []).dropFirst())
+                // What a person sees: SwiftUI's own View is on the bar, hidden
+                // (`MenuBarArranger`).
+                let read = Array((NSApp.mainMenu?.items.filter { !$0.isHidden }.map(\.title) ?? []).dropFirst())
                 guard read == wantedBar else {
                     throw Failure(description: "the menu bar reads \(read.joined(separator: ", ")), "
                                   + "not \(wantedBar.joined(separator: ", "))")
@@ -9775,6 +9783,70 @@ private final class Run {
     /// The title bar is left out on purpose: the View | Edit control there is
     /// the system's own and animates its thumb without the app, so a window
     /// whose main thread stalled would still look busy if it were in frame.
+    /// Films the left half of the menu bar, where the app's own menus are,
+    /// for `seconds`, and counts the frames in which it changed
+    /// (`PlaytestStep.filmMenuBar`). The right half is left out because the
+    /// clock and the status icons there change by themselves; on a Mac with a
+    /// notch, the app's menus stop at it.
+    private func filmMenuBar(name: String, seconds: Double, atMostChanges: Int?) async throws -> String {
+        guard CGPreflightScreenCaptureAccess() else {
+            captures.skippedUngranted()
+            throw Failure(description: "filming the menu bar needs the probe's Screen Recording grant, and it has none")
+        }
+        let host = try requireWindow()
+        guard let screen = host.screen ?? NSScreen.main,
+              let id = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID else {
+            throw Failure(description: "the window is on no screen")
+        }
+        let barHeight = screen.frame.maxY - screen.visibleFrame.maxY
+        guard barHeight > 0 else {
+            throw Failure(description: "this screen hides its menu bar, so there is no bar to film")
+        }
+        let shareable = try await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
+        guard let display = shareable.displays.first(where: { $0.displayID == id }) else {
+            throw Failure(description: "display \(id) is not in shareable content")
+        }
+        let size = CGSize(width: display.width, height: display.height)
+        let crop = CGRect(x: 0, y: 0, width: size.width / 2, height: barHeight).integral
+        let camera = PlaytestWindowFilm(crop: crop)
+        try await camera.start(SCContentFilter(display: display, excludingWindows: []), size: size)
+        await sleep(seconds)
+        // The camera stopping is the film's cost, not the app's (`filmWindow`).
+        let beforeTheStop = MainThreadMeter.shared.mark()
+        defer { MainThreadMeter.shared.forget(since: beforeTheStop) }
+        await camera.stop()
+        let frames = camera.frames
+        var changedAt: [Double] = []
+        harnessWork {
+            var last: [UInt8]?
+            for each in frames {
+                let print = PlaytestWindowFilm.print(of: each.image)
+                if let last, zip(last, print).contains(where: { abs(Int($0) - Int($1)) > 2 }) {
+                    if changedAt.isEmpty, let data = ImageCodec.encode(each.image, format: .png) {
+                        try? data.write(to: out.appendingPathComponent("\(name)-menubar-changed-sc.png"))
+                    }
+                    changedAt.append(each.time)
+                }
+                last = print
+            }
+            if let first = frames.first?.image, let data = ImageCodec.encode(first, format: .png) {
+                try? data.write(to: out.appendingPathComponent("\(name)-menubar-sc.png"))
+                captures.photographed("\(name)-menubar")
+            }
+        }
+        guard !frames.isEmpty else {
+            throw Failure(description: "the camera gave no frames of the menu bar in \(seconds)s")
+        }
+        let said = String(format: "filmed the menu bar for %gs: %d frames, the app's menus changed in %d of them",
+                          seconds, frames.count, changedAt.count)
+            + (changedAt.isEmpty ? "" : " (first at \(String(format: "%.2f", changedAt[0]))s)")
+        if let atMostChanges, changedAt.count > atMostChanges {
+            throw Failure(description: said + ", and this walk allows at most \(atMostChanges). A person watching "
+                + "the top of the screen saw the menus move: \(name)-menubar-changed-sc.png is the first frame that did")
+        }
+        return said
+    }
+
     private func filmWindow(_ film: PlaytestSlideFilm, number: Int) async throws -> String {
         guard CGPreflightScreenCaptureAccess() else {
             captures.skippedUngranted()
@@ -11384,7 +11456,7 @@ private final class Run {
             throw Failure(description: "the app has no menu bar")
         }
         bar.update()
-        guard let top = bar.items.first(where: { $0.title == name }), let menu = top.submenu else {
+        guard let top = bar.items.first(where: { $0.title == name && !$0.isHidden }), let menu = top.submenu else {
             let names = bar.items.map(\.title).joined(separator: ", ")
             throw Failure(description: "no menu called \"\(name)\"; the menu bar has: \(names)")
         }
@@ -15108,7 +15180,7 @@ private final class Run {
         for (depth, title) in path.enumerated() {
             menu.update()
             menu.delegate?.menuNeedsUpdate?(menu)
-            guard let found = menu.items.first(where: { $0.title == title }) else {
+            guard let found = menu.items.first(where: { $0.title == title && !$0.isHidden }) else {
                 let there = menu.items.filter { !$0.isSeparatorItem && !$0.isHidden }.map(\.title)
                 throw Failure(description: "no row called \"\(title)\" in \(path.prefix(depth).joined(separator: " > ")); "
                               + "it holds \(there.joined(separator: ", "))")
@@ -15131,7 +15203,7 @@ private final class Run {
     private func readMenuBar(only wanted: String?) throws -> [String: Any] {
         guard let bar = NSApp.mainMenu else { throw Failure(description: "the app has no menu bar yet") }
         bar.update()
-        var top = bar.items
+        var top = bar.items.filter { !$0.isHidden }
         if let wanted {
             // Exact title, then a prefix, then a mention: "Capture" is the
             // menu, and the app menu answers to "Photonz" whatever it is

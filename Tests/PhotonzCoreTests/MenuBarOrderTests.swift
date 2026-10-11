@@ -45,6 +45,26 @@ import Testing
                     "Window", "Help"])
     }
 
+    /// The app declares its own View after the document menus, so SwiftUI's
+    /// order already reads right and nothing has to be moved: SwiftUI's own,
+    /// empty View is the one to put away. Moving View fought SwiftUI, which
+    /// put it back on every pass, and the bar flickered while a video played
+    /// (2026-10-11).
+    @Test func withTheAppsOwnViewSwiftUIsIsTheOneToHide() {
+        let built = ["Photonz", "File", "Edit", "View", "Image", "Layer", "Clip", "Sequence",
+                     "Measure", "View", "Window", "Help"]
+        #expect(MenuBarOrder.builtInViewToHide(in: built) == 3)
+        #expect(MenuBarOrder.viewMove(in: built) == nil)
+        #expect(MenuBarOrder.arranged(built) == built)
+    }
+
+    @Test func aSingleViewIsNeverHidden() {
+        #expect(MenuBarOrder.builtInViewToHide(in: ["Photonz", "File", "Edit", "View", "Image",
+                                                    "Window", "Help"]) == nil)
+        #expect(MenuBarOrder.builtInViewToHide(in: ["Photonz", "File", "Edit", "Image",
+                                                    "Window", "Help"]) == nil)
+    }
+
     @Test func theContractsOrderIsTheOneWritten() {
         #expect(MenuBarOrder.documentMenus == ["Image", "Layer", "Clip", "Sequence", "Measure"])
         #expect(MenuBarOrder.clip == "Clip")

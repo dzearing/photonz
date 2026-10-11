@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:14:51.411Z",
-  "updated": "2026-10-11T12:51:00.079Z",
+  "updated": "2026-10-11T14:21:09.346Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when a video is playing back, I am seeing the menu at the top of the screen flickering, as if something is being added and removed in the list. if i pause, no flicker\".\n\nSuspect from code reading, NOT confirmed: SwiftUI Commands bodies that READ observable state re-evaluate whenever it changes, and the menu bar is rebuilt each time. Sources/Photonz/EditorCommands.swift reads the playhead in the body, not just in actions: clickAtPlayhead (:1236), nextClickMS (:1243), clipToAddZoom(atMS: documentTimeMS) (:1248); documentTimeMS changes every frame during playback. Reads inside Button closures (:774, :925-929, :1250, :1493) are fine. 31 playhead mentions in the file; audit all of them and any other per-frame state (isDocumentPlaying transitions are fine, the time is not). Fix pattern: compute in the action, or expose coarse derived values that change only at boundaries (clip under playhead, click under playhead) with equality-gated updates. Trap: the Clicks/Zoom rows were added in 39d066d8 and the zoom rows by the zoom task; keep their behaviour.",
@@ -34,6 +34,34 @@
     {
       "t": "2026-10-11T12:51:00.078Z",
       "note": "seq 2 -> 10"
+    },
+    {
+      "t": "2026-10-11T12:53:18.826Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T14:21:09.092Z",
+      "note": "owns these walks: the-menu-bar-stays-still-while-playing-walk"
+    },
+    {
+      "t": "2026-10-11T14:21:09.154Z",
+      "note": "Reproduced at Next defaults with a new probe meter (MenuBarMeter: AppKit's own add/remove/change notifications on the bar, plus a counter on the commands body). Playing: ~30 commands passes/s (179 in 6 s) and ~120 bar changes/s (716). Paused: 0/s. Cause 1: the commands body read the playhead, mostly through clipInHandID ('picked clip, else the one under the playhead'), found by recording call stacks of playhead reads during the body. Cause 2 (the visible flicker): each pass made SwiftUI put View back after Edit and MenuBarArranger moved it before Window again; filmed: View jumping between the two places."
+    },
+    {
+      "t": "2026-10-11T14:21:09.220Z",
+      "note": "Fix: (1) EditorState.documentTimeMS reads are unwatched while the commands body is built (EditorState+MenuPlayhead, readingForTheMenu); the body watches one Equatable MenuPlayhead fingerprint (30 playhead answers) recomputed by withObservationTracking and written only when an answer changes. (2) On the pro menu bar the app declares its own CommandMenu(View) after the document menus and MenuBarArranger hides SwiftUI's empty View instead of moving it (MenuBarOrder.builtInViewToHide, tested). Click/marker/zoom rows now read the playhead in their action. Gated on next-a-pro-menu-bar so Current is unchanged."
+    },
+    {
+      "t": "2026-10-11T14:21:09.283Z",
+      "note": "Measured (same build, fix off vs on): sample 6 s 180->8 passes, 718->0 bar changes; long talk 10 s 293->2 passes, 1172->0 bar changes, main thread busy 5191->2833 ms; playback ticks unchanged (mean 35.1 ms, longest ~39 ms, 0 late). Film of the menu bar (new filmMenuBar step): 57-115 changed frames in 6 s before, 0 of 406 (6 s) and 0 of 627 (10 s) after. 23 menu walks green, Scripts/test.sh green (12512 tests)."
+    },
+    {
+      "t": "2026-10-11T14:21:09.345Z",
+      "note": "left rough: the panel's Time section body rebuilds on every playback tick (timeSection bodies 296 in 10 s of the long talk). Costs CPU only, nothing a person sees, so no task filed. Also seen: Command K during playback stops playback (the playhead then sits on the new cut, so an immediate Shift Command K is dimmed); same before and after, not verified against Premiere, not filed."
     }
+  ],
+  "started": "2026-10-11T12:53:18.825Z",
+  "walks": [
+    "the-menu-bar-stays-still-while-playing-walk"
   ]
 }
