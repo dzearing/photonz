@@ -64,9 +64,34 @@ outline and handles, the click (`hitTestPath`), the marquee and the SVG
 picture box all read them. SVG cannot say perspective, so a turned layer goes
 out as its picture and is named in the export's fallback list.
 
+## By hand: the canvas, the panel and the menus
+
+Flag `next-turn-in-depth` (on in Next). Design A on the card
+`...-how-do-you-turn-a-layer-toward-o`: resting on the turn knob brings out a
+flat green arc (Rotation Y, drag sideways) and a tall red arc (Rotation X, drag
+up and down); the knob's own middle still turns flat. A blue arrow off the
+pivot pushes the layer away (drag up). Shift steps 15 degrees; the drag pill
+names the value. Geometry and drag maths: `SpaceHandles`, `SpaceDrag`
+(`Sources/PhotonzCore/SpaceEditing.swift`); canvas: `CanvasSpaceHandles.swift`
+(the press and cue read `drawnSpaceHandles`, what the chrome last drew). A flat
+layer wears nothing new until the knob is hovered; a layer turned in space keeps
+its arrow and a pivot crosshair. One undo step per drag; a keyed value becomes a
+key at the playhead (`PhotonzDocument.setSpaceTurn`).
+
+Panel: a 3D section (`Space3DInspector`) with Rotation X, Rotation Y, Depth and
+Pivot depth (only once turned), Mixed across several picks, arrow keys step
+each layer from its own value, diamonds for one layer in a document with time.
+Shown in documents with time, or on a still once a picked layer is turned.
+Camera section (`CameraInspector`) when the frame is picked: View > Show
+Camera Settings, or the Canvas row. Layer menu and right click: Reset 3D
+Rotation, Bring Nearer (⌥⌘]) and Send Further (⌥⌘[), 100 points a step. View:
+Reset Camera. Walks: `tilt-and-flip-a-title-in-3d-walk`,
+`camera-settings-on-the-frame-walk` (the `spaceHandle` step drives the arcs
+with real pointer events).
+
 ## Not done here
 
-The canvas handles and the panel's 3D section (task
-`tilt-flip-and-push-layers-in-depth-from-the-canv`), 3D transitions and title
+The thin Camera row on the timeline (task
+`show-the-camera-s-keys-on-a-thin-row-at-the-top`), 3D transitions and title
 entrances (step 4). Drag sprites and layer thumbnails of a turned layer are
 drawn about their own small canvas's middle, not the frame's.

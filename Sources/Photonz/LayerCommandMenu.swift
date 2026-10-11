@@ -199,6 +199,23 @@ enum LayerCommandList {
         rows.append(.command("Bring Forward", .command("]")) { editorState.bringLayerForward(id: id) })
         rows.append(.command("Send Backward", .command("[")) { editorState.sendLayerBackward(id: id) })
         rows.append(.command("Send to Back", .commandShift("[")) { editorState.sendLayerToBack(id: id) })
+        // Turning it in space (`video-depth.html`, "Right-click a layer: the
+        // same three" as the Layer menu), on the whole selection when the
+        // layer is part of it.
+        let turnable = editorState.spaceRowTargets(id)
+        if !turnable.isEmpty {
+            rows.append(.separator)
+            rows.append(.command("Reset 3D Rotation",
+                                 enabled: editorState.document?.hasSpaceRotation(layerIDs: turnable) ?? false) {
+                editorState.resetSpaceRotation(ids: turnable)
+            })
+            rows.append(.command("Bring Nearer", .commandOption("]")) {
+                editorState.pushDepth(nearer: true, ids: turnable)
+            })
+            rows.append(.command("Send Further", .commandOption("[")) {
+                editorState.pushDepth(nearer: false, ids: turnable)
+            })
+        }
         // Only where it IS out of view, which is the only place it would do
         // anything. Same move as the mark on the row, named, for anybody who
         // goes to the menu before they go to a small orange glyph.

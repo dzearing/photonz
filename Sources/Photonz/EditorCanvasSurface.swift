@@ -150,6 +150,8 @@ struct EditorCanvasSurface: View {
                    onMeasureEndpointCancel: { editorState.cancelMeasureEndpointDrag() },
                    onCornerRadiiPreview: { editorState.previewCornerRadii(ids: [$0], $1) },
                    onCornerRadiiCommit: { editorState.commitCornerRadii(ids: [$0], $1) },
+                   onSpaceTurnPreview: { editorState.previewSpaceTurn(id: $0, $1) },
+                   onSpaceTurnCommit: { editorState.commitSpaceTurn(id: $0, $1) },
                    onCaptionPlacePreview: { editorState.previewCaptionPlacement(id: $0, center: $1) },
                    onCaptionPlaceCommit: { editorState.commitCaptionPlacement(id: $0, center: $1) },
                    onCaptionPlaceCancel: { editorState.cancelCaptionPlacement() },

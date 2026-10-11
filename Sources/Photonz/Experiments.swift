@@ -238,6 +238,11 @@ extension Experiments {
     /// false and rounding stays something you type in the panel.
     var cornerHandlesEnabled: Bool { isEnabled(FeatureCatalog.cornerHandlesFlag) }
 
+    /// `next-turn-in-depth`: whether a picked layer can be tipped, swung and
+    /// pushed in depth from the canvas, and the panel and menus offer the 3D
+    /// and camera values (`SpaceEditing.swift`).
+    var turnInDepthEnabled: Bool { isEnabled(FeatureCatalog.turnInDepthFlag) }
+
     /// `next-edge-grab`: whether the whole run of a picked object's edge
     /// resizes it, rather than only the small square in the middle of that
     /// edge. Exists only in the Next release's catalog, so Current always

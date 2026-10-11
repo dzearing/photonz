@@ -2198,6 +2198,20 @@ struct EditorCommands: Commands {
             Button("Send to Back") { editor?.restackSelectedLayers(.toBack) }
                 .keyboardShortcut("[", modifiers: [.command, .shift])
                 .disabled(!hasLayerSelection)
+            // Turning the picked layers in space (Next, `next-turn-in-depth`,
+            // `video-depth.html`): Option with the arrange keys moves them
+            // nearer and further rather than up and down the stack.
+            if Experiments.shared.turnInDepthEnabled {
+                Divider()
+                Button("Reset 3D Rotation") { editor?.resetSpaceRotation() }
+                    .disabled(!(editor?.canResetSpaceRotation ?? false))
+                Button("Bring Nearer") { editor?.pushDepth(nearer: true) }
+                    .keyboardShortcut("]", modifiers: [.command, .option])
+                    .disabled(!(editor?.canPushDepth ?? false))
+                Button("Send Further") { editor?.pushDepth(nearer: false) }
+                    .keyboardShortcut("[", modifiers: [.command, .option])
+                    .disabled(!(editor?.canPushDepth ?? false))
+            }
             Divider()
             deleteLayerRow
         }
@@ -2441,6 +2455,16 @@ struct EditorCommands: Commands {
                 .keyboardShortcut(timelineKeys ? KeyboardShortcut("\\", modifiers: []) : nil)
                 .disabled(!(editor?.isTimelineOpenedOut ?? false))
             timelineViewRows
+        }
+        // The camera the frame is seen through (Next, `next-turn-in-depth`):
+        // a view of the picture, so it sits with the zooms. Show Camera
+        // Settings picks the frame, whose panel holds the Camera section.
+        if Experiments.shared.turnInDepthEnabled {
+            Divider()
+            Button("Show Camera Settings") { editor?.showCameraSettings() }
+                .disabled(editor?.document == nil)
+            Button("Reset Camera") { editor?.resetCamera() }
+                .disabled(!(editor?.canResetCamera ?? false))
         }
         // The grid you build against (Next, `next-canvas-grid`), on the key
         // Photoshop uses for its own. It is a view preference, not part of

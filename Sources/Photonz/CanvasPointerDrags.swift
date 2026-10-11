@@ -505,10 +505,21 @@ extension CanvasNSView {
             refreshOverlays()
             return
         }
-        // Rotate knob, floated off the selected layer's top edge.
+        // The arcs on the knob and the depth arrow, which tip, swing and push
+        // the picked layer in 3D (`CanvasSpaceHandles.swift`). Read before the
+        // knob's own press, which keeps the knob's middle.
+        if tool == .select, spaceHandleMouseDown(atView: convert(event.locationInWindow, from: nil)) {
+            return
+        }
+        // Rotate knob, floated off the selected layer's top edge: where it is
+        // drawn, which for a layer seen in space is off the edge the camera
+        // sees (`DrawnSpaceHandles`).
+        let knobView = convert(event.locationInWindow, from: nil)
+        let knobInSpace = drawnSpaceHandles.map { $0.inSpace && $0.layerID == selectedLayerID } ?? false
         if let id = selectedLayerID, let layer = selectedLayer, offersRotation(layer),
            let knob = layer.rotateKnobPoint(zoom: viewport.zoom),
-           hypot(q.x - knob.x, q.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
+           knobInSpace ? spaceKnobHit(atView: knobView)
+               : hypot(q.x - knob.x, q.y - knob.y) * viewport.zoom <= CanvasPointer.rotateTolerance {
             // About whatever this layer turns about, which is its middle
             // unless a turn on it hangs it somewhere else (`Layer.turnPivot`).
             // The knob has to measure the same turn the picture takes or it
@@ -803,6 +814,11 @@ extension CanvasNSView {
         }
         if handPan != nil {
             handPanMove(to: convert(event.locationInWindow, from: nil))
+            return
+        }
+        // A 3D handle taken hold of owns the rest of the gesture
+        // (`CanvasSpaceHandles.swift`).
+        if spaceHandleMouseDragged(atView: convert(event.locationInWindow, from: nil), event: event) {
             return
         }
         let p = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
@@ -1241,6 +1257,7 @@ extension CanvasNSView {
             applyGrabCursor(.openHand, force: true)
             return
         }
+        if spaceHandleMouseUp(event: event) { return }
         // The release of a path-point drag, before the Pen, for the same reason
         // its `mouseDragged` is: with the Pen in hand this drag belongs to the
         // points, and `pathEditMouseUp` answers nothing when no such drag is in

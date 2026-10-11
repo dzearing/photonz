@@ -4110,6 +4110,10 @@ final class EditorState {
     /// is plainly round (seen on the probe, 2026-09-09). Every edit that lands
     /// drops it, which is what `discardDragPreview` is for.
     var cornerRadiiPreview: (ids: [UUID], radii: CornerRadii)?
+    /// A layer being tipped, swung or pushed by a 3D handle on the canvas,
+    /// with the turn under the hand, so the 3D rows follow the drag
+    /// (`EditorState+Space3D.swift`).
+    var spaceTurnPreview: (id: UUID, turn: LayerTurn3D)?
 
     // MARK: - Layers panel
 

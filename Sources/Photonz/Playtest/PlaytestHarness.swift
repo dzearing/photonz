@@ -2652,6 +2652,66 @@ private final class Run {
             note(number, step.name, try checkDragReadout(says: says, absent: absent),
                  state: describe())
 
+        case .spaceHandle(let handle, let by, let steps, let modifiers, let readout):
+            // As a hand does it: rest on the knob so the arcs come out, then
+            // take the arc (or the arrow) a little way along and drag it.
+            let canvas = try requireCanvas()
+            let flags = eventFlags(modifiers)
+            guard let before = canvas.drawnSpaceHandles else {
+                throw Failure(description: "no picked layer is wearing a turn knob, so there is no "
+                    + "3D handle to take hold of")
+            }
+            let knob = before.handles.knob
+            if let window = canvas.window {
+                _ = PlaytestPointer.rest(at: canvas.convert(knob, to: nil), in: window)
+            }
+            if let event = mouseEvent(.mouseMoved, at: knob, on: canvas, flags: []) {
+                canvas.mouseMoved(with: event)
+            }
+            await sleep(0.1)
+            guard let shown = canvas.drawnSpaceHandles else {
+                throw Failure(description: "resting on the turn knob took the 3D handles away")
+            }
+            let grip: CGPoint
+            switch handle {
+            case nil:
+                grip = shown.handles.knob
+            case .swing?:
+                // A hand's width along the flat arc from the knob, toward
+                // the end the drag travels to.
+                let points = shown.handles.swingArc.points(16)
+                grip = by.x >= 0 ? points[13] : points[3]
+            case .tip?:
+                grip = shown.handles.tipArc.points(8)[by.y <= 0 ? 2 : 6]
+            case .depth?:
+                let arrow = shown.handles.depthArrow
+                grip = CGPoint(x: (arrow.tail.x + arrow.head.x) / 2, y: (arrow.tail.y + arrow.head.y) / 2)
+            }
+            let name = handle?.rawValue ?? "knob"
+            guard canvas.spaceHandleHit(atView: grip) == handle else {
+                throw Failure(description: "the \(name) handle did not answer a press at view "
+                    + "\(short(grip)): the arcs are \(shown.arcs ? "out" : "away"), the depth arrow is "
+                    + "\(shown.depth ? "showing" : "hidden")")
+            }
+            if let event = mouseEvent(.leftMouseDown, at: grip, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
+            for i in 1...steps {
+                let t = CGFloat(i) / CGFloat(steps)
+                let p = CGPoint(x: grip.x + by.x * t, y: grip.y + by.y * t)
+                if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) {
+                    canvas.mouseDragged(with: event)
+                }
+                await sleep(0.02)
+            }
+            var said = ""
+            if let readout {
+                said = ", " + (try checkDragReadout(says: readout, absent: false))
+            }
+            let end = CGPoint(x: grip.x + by.x, y: grip.y + by.y)
+            if let event = mouseEvent(.leftMouseUp, at: end, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
+            await sleep(0.1)
+            note(number, step.name, "\(name) taken at view \(short(grip)) and dragged "
+                + "\(short(by))\(said)", state: describe())
+
         case .expectChrome(let within):
             let canvas = try requireCanvas()
             let peak = canvas.pathChromeDriftPeak

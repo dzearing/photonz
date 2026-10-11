@@ -76,6 +76,10 @@ enum InspectorSectionID: String, CaseIterable {
     case measure
     case collage
     case canvas
+    // The camera every frame is seen through, a setting of the frame: with
+    // the canvas picked, under the canvas's own settings (decision card
+    // `...-where-does-the-camera-live`, option A).
+    case camera
     case geometry
     case frame
     // The column layout a selected screen is designed to (Next, `next-frames`).
@@ -128,6 +132,11 @@ enum InspectorSectionID: String, CaseIterable {
     // thing's kind beside it: the clip line, then only what is animating
     // (`PropertiesPane.swift`, 2026-09-25). The raw id stays for saved orders.
     case keys
+    // How the picked layers are turned and placed in space: Rotation X and Y,
+    // Depth and Pivot depth (Next, `next-turn-in-depth`, `video-depth.html`).
+    // Under Properties, as the mock stacks it under Position & Size: where it
+    // is, then how it is turned in space, then how it looks.
+    case space3D
     case reframe
     case motion
     // What happens at the CUT you have picked (Next,
@@ -238,6 +247,8 @@ enum InspectorSectionID: String, CaseIterable {
         case .canvas: "Canvas"
         case .effects: "Effects"
         case .keys: "Properties"
+        case .space3D: "3D"
+        case .camera: "Camera"
         case .motion: "Motion"
         case .reframe: "Reframe"
         case .editPoint: "Edit point"

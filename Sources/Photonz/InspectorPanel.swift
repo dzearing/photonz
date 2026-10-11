@@ -887,6 +887,10 @@ struct InspectorPanel: View {
         // Several things picked on the timeline: how many, and of what kinds
         // (`EditorState+TrackRange`).
         if editorState.keyLayer != nil || editorState.timelinePickSummary != nil { set.insert(.keys) }
+        // How the picked layers are turned in space, and the camera when the
+        // frame itself is picked (Next, `next-turn-in-depth`).
+        if editorState.showsSpaceSection { set.insert(.space3D) }
+        if editorState.showsCameraSection { set.insert(.camera) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present
         // whenever the picked shapes share at least one setting, so two arrows
@@ -1194,6 +1198,8 @@ struct InspectorPanel: View {
         switch id {
         case .fades: SoundFadesInspector.headerHelp
         case .keys: PropertyKeysInspector.sectionHelp
+        case .space3D: Space3DInspector.sectionHelp
+        case .camera: CameraInspector.sectionHelp
         case .reveal: TextRevealInspector.sectionHelp
         case .title: TitleRestyleInspector.sectionHelp
         case .titlePart: TitlePartInspector.sectionHelp
@@ -1516,6 +1522,10 @@ struct InspectorPanel: View {
             MotionListInspector()
         case .keys:
             PropertyKeysInspector()
+        case .space3D:
+            Space3DInspector()
+        case .camera:
+            CameraInspector()
         case .reframe:
             // Never offered (see `availableSections`); kept for saved orders.
             EmptyView()

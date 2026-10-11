@@ -58,6 +58,10 @@ extension CanvasNSView {
         if let drag = pathAnchorDrag, drag.moved, let box = selectedLayerFrame {
             return reading(.reshape, canvasBox: box, of: drag.layerID)
         }
+        // A 3D handle reads the one value it is changing, under the layer.
+        if let drag = spaceHandleDrag, drag.moved, let box = selectedLayerFrame {
+            return (.resize, box, .space(drag.handle, drag.turn))
+        }
         // A corner knob reads the radius it is pulling, under the shape.
         if let drag = pathCornerDrag, drag.moved, let box = selectedLayerFrame {
             return (.reshape, box, .radius(drag.radius))

@@ -3664,6 +3664,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
     case expectReadout(says: String?, absent: Bool)
+    /// One of a picked layer's 3D handles taken the way a hand takes it
+    /// (`CanvasSpaceHandles.swift`): the pointer rests on the turn knob so the
+    /// arcs come out, then presses on the arc or the depth arrow and drags it
+    /// `by` view points, real pointer events throughout. A walk cannot aim at
+    /// the knob without knowing the zoom, so the canvas says where it drew it.
+    /// `readout` is what the pill under the drag must say with the button
+    /// still down. `"handle": "knob"` takes the knob itself, the flat turn,
+    /// so a walk can prove the old turn still works where the arcs grow.
+    case spaceHandle(SpaceHandle?, by: CGPoint, steps: Int, modifiers: [PlaytestModifier], readout: String?)
     /// Where the canvas says a press would put the first point of a shape,
     /// which is the mark drawn under the pointer while you are only hovering
     /// (`CanvasDrawLanding`).
@@ -4087,7 +4096,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
-        "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
+        "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
     /// The `do` name this step answers to.
@@ -4181,6 +4190,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
         case .expectReadout: "expectReadout"
+        case .spaceHandle: "spaceHandle"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
         case .expectCue: "expectCue"
@@ -4378,6 +4388,16 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "for no pill at all. It cannot claim both and it has to claim one")
             }
             self = .expectReadout(says: says, absent: absent)
+        case "spaceHandle":
+            let handle: SpaceHandle? = try f.optionalString("handle") == "knob"
+                ? nil : f.enumValue("handle", SpaceHandle.self)
+            guard let pair = fields["by"] as? [NSNumber], pair.count == 2 else {
+                throw f.invalid("by", "must be a pair of numbers, [x, y]: how far the handle is dragged, in view points")
+            }
+            let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
+            self = .spaceHandle(handle, by: CGPoint(x: pair[0].doubleValue, y: pair[1].doubleValue),
+                                steps: max(1, steps), modifiers: try f.modifiers(),
+                                readout: try f.optionalString("readout"))
         case "type":
             self = .type(try f.string("text"))
         case "focus":

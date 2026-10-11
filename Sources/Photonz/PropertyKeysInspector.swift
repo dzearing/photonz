@@ -777,7 +777,7 @@ private struct KeyRowLayout: Layout {
 /// The diamond: Premiere's keyframe button and the key readout in one mark, drawn by the
 /// video kit (`VideoKit.KeyDiamond`, the mock's `.kfkey`). Three states, told
 /// apart by weight: a dim outline, a coloured outline, a filled diamond.
-private struct KeyDiamondButton: View {
+struct KeyDiamondButton: View {
     @Environment(EditorState.self) private var editorState
     let property: KeyedProperty
     private var title: String { editorState.keyTitle(property) }

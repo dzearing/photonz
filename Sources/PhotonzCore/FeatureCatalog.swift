@@ -59,6 +59,11 @@ public enum FeatureCatalog {
 
     public static let cornerHandlesFlag = "next-corner-handles"
 
+    /// Arcs on the turn knob that tip and swing a picked layer in 3D, a depth
+    /// arrow off its pivot, the panel's 3D and Camera sections, and the Layer
+    /// and View menu rows for them (`SpaceEditing.swift`, `video-depth.html`).
+    public static let turnInDepthFlag = "next-turn-in-depth"
+
     public static let grabCueFlag = "next-grab-cue"
     /// Edit's panel built behind View with the rest of Edit, so its sections
     /// come in with the slide rather than just after it (`EditModeArrival`).
@@ -428,6 +433,16 @@ public enum FeatureCatalog {
                     name: cornerHandlesFlag,
                     title: "Drag a corner to round it",
                     description: "A picked shape shows a dot inside each corner: drag one to round that corner, or hold Option to round all four. Off means corners round only from the panel.",
+                    area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: turnInDepthFlag,
+                    title: "Turn layers in 3D",
+                    description: "Rest on a picked layer's turn knob for two arcs that tip or swing it in 3D, with an arrow to push it away and 3D and Camera panel sections. Off means layers turn flat only.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

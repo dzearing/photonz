@@ -49,6 +49,8 @@ extension CanvasNSView {
         refreshPointerIconFrame(at: convert(event.locationInWindow, from: nil))
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshPathCornerHover(at: convert(event.locationInWindow, from: nil))
+        // The knob's 3D arcs come out while the pointer rests on it.
+        refreshSpaceArcs(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
@@ -79,6 +81,7 @@ extension CanvasNSView {
         // the way to being read would be no better than the one it replaced.
         refreshNameLabelHover(at: nil)
         refreshPathCornerHover(at: nil)
+        refreshSpaceArcs(at: nil)
         applyGrabCursor(nil)
         // Nothing is being aimed at once the pointer is off the canvas, so
         // nothing is left drawn on an idle window.
@@ -161,6 +164,12 @@ extension CanvasNSView {
            motionPivotTakesPress(at: p) {
             return (.grab, .identity)
         }
+        // The 3D arcs and the depth arrow, read where `mouseDown` reads them:
+        // after the pivot and ahead of the knob. A knob that has moved with a
+        // layer seen in space is caught where it is drawn.
+        let view = viewport.viewPoint(fromDocument: p)
+        if spaceHandleHit(atView: view) != nil { return (.grab, .identity) }
+        if spaceKnobHit(atView: view) { return (.rotate, apparentTransform(of: layer)) }
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
         let cue = CanvasPointer.cue(at: uprightPoint(p, of: layer.id), layer: layer,
@@ -280,7 +289,7 @@ extension CanvasNSView {
         if tool == .hand {
             return applyGrabCursor(handPan == nil ? .openHand : .closedHand)
         }
-        guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil,
+        guard captionDrag == nil, measureHandleDrag == nil, resizeDrag == nil, spaceHandleDrag == nil,
               cornerRadiusDrag == nil,
               endpointDrag == nil, transformDrag == nil, canvasResizeDrag == nil,
               cropDrag == nil else { return }

@@ -918,6 +918,8 @@ extension CanvasNSView {
         // dots, so every other path through this method leaves them off
         // (`next-corner-handles`).
         cornerRadiusHandlesLayer.isHidden = true
+        // Likewise the 3D handles: only the knob branch below draws them.
+        hideSpaceHandles()
         refreshGroupContextOutline()
         refreshColumnChrome()
         refreshIconKeylineChrome()
@@ -1095,7 +1097,13 @@ extension CanvasNSView {
         // card the camera sees (`PhotonzDocument.drawnMap`). Carried along
         // with a move in flight, which the document has not had yet.
         let spaceMap: Homography? = {
-            guard var shown = document, shown.isSeenInSpace else { return nil }
+            guard var shown = document else { return nil }
+            // A 3D handle in the hand: the chrome follows the turn under the
+            // hand, which the document has not had yet.
+            if let drag = spaceHandleDrag, drag.layerID == selectedLayer.id {
+                shown.updateLayer(id: drag.layerID) { $0.turn3D = drag.turn }
+            }
+            guard shown.isSeenInSpace else { return nil }
             let delta = CGPoint(x: frame.minX - selectedLayer.frame.minX,
                                 y: frame.minY - selectedLayer.frame.minY)
             if delta != .zero {
@@ -1232,9 +1240,31 @@ extension CanvasNSView {
                 // then rides whatever the cards above it have been turned by,
                 // so on a piece inside a card on a slant it stays out from the
                 // edge it is attached to.
-                let knobInView = viewport
+                var knobInView = viewport
                     .viewPoint(fromDocument: knob.applying(inheritedTurn(of: selectedLayer.id)))
                 let topMid = chromePoint(CGPoint(x: frame.midX, y: frame.minY))
+                // The 3D handles grow from the knob (`CanvasSpaceHandles`). A
+                // layer seen in space wears its knob off the top edge the
+                // camera sees, so the knob moves there too.
+                let pivotOffset = CGPoint(x: selectedLayer.turnPivot.x - selectedLayer.frame.minX,
+                                          y: selectedLayer.turnPivot.y - selectedLayer.frame.minY)
+                let corners = [CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
+                               CGPoint(x: frame.maxX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.maxY)]
+                    .map(chromePoint)
+                let xs = corners.map(\.x), ys = corners.map(\.y)
+                let drawnBox = CGRect(x: xs.min() ?? 0, y: ys.min() ?? 0,
+                                      width: (xs.max() ?? 0) - (xs.min() ?? 0),
+                                      height: (ys.max() ?? 0) - (ys.min() ?? 0))
+                let turnedInSpace = spaceHandleDrag.map { $0.layerID == selectedLayer.id && !$0.turn.isFlat }
+                    ?? selectedLayer.isTurnedInSpace
+                if let placed = drawSpaceHandles(
+                    for: selectedLayer, topMid: topMid,
+                    middle: chromePoint(CGPoint(x: frame.midX, y: frame.midY)),
+                    pivot: chromePoint(CGPoint(x: frame.minX + pivotOffset.x, y: frame.minY + pivotOffset.y)),
+                    flatKnob: spaceMap == nil ? knobInView : nil, drawn: drawnBox,
+                    turned: turnedInSpace) {
+                    knobInView = placed
+                }
                 let path = CGMutablePath()
                 path.move(to: topMid)
                 path.addLine(to: knobInView)

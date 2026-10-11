@@ -268,6 +268,8 @@ struct CanvasView: NSViewRepresentable {
     /// on release (`next-corner-handles`).
     let onCornerRadiiPreview: (UUID, CornerRadii) -> Void
     let onCornerRadiiCommit: (UUID, CornerRadii) -> Void
+    var onSpaceTurnPreview: (UUID, LayerTurn3D) -> Void = { _, _ in }
+    var onSpaceTurnCommit: (UUID, LayerTurn3D) -> Void = { _, _ in }
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
     let onCaptionPlacePreview: (UUID, CGPoint) -> Void
     let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
@@ -497,6 +499,8 @@ struct CanvasView: NSViewRepresentable {
         view.onMeasureEndpointCancel = onMeasureEndpointCancel
         view.onCornerRadiiPreview = onCornerRadiiPreview
         view.onCornerRadiiCommit = onCornerRadiiCommit
+        view.onSpaceTurnPreview = onSpaceTurnPreview
+        view.onSpaceTurnCommit = onSpaceTurnCommit
         view.onCaptionPlacePreview = onCaptionPlacePreview
         view.onCaptionPlaceCommit = onCaptionPlaceCommit
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
@@ -656,6 +660,10 @@ final class CanvasNSView: NSView {
     /// undo step).
     var onCornerRadiiPreview: ((UUID, CornerRadii) -> Void) = { _, _ in }
     var onCornerRadiiCommit: ((UUID, CornerRadii) -> Void) = { _, _ in }
+    /// A layer tipped, swung or pushed in depth by a 3D handle: live while the
+    /// hand is down, then once when it lets go.
+    var onSpaceTurnPreview: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
+    var onSpaceTurnCommit: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
     /// A selected arrow's caption pill being dragged: live (no history), the
     /// drop (one undo step), and Esc (restores the render).
     var onCaptionPlacePreview: ((UUID, CGPoint) -> Void) = { _, _ in }
@@ -866,6 +874,13 @@ final class CanvasNSView: NSView {
     let cornerRadiusHandlesLayer = CAShapeLayer()
     /// Rotate knob: a circle floated off the layer's top edge plus its stem.
     let rotateKnobLayer = CAShapeLayer()
+    /// The 3D handles: a dark rim under all of them, the two knob arcs, the
+    /// depth arrow, and the pivot crosshair of a layer turned in space.
+    let spaceHandleRimLayer = CAShapeLayer()
+    let spaceSwingLayer = CAShapeLayer()
+    let spaceTipLayer = CAShapeLayer()
+    let spaceDepthLayer = CAShapeLayer()
+    let spaceCrosshairLayer = CAShapeLayer()
     /// The faint box around the group you are currently INSIDE, so descending
     /// into one is visible rather than a mode you have to remember.
     let groupContextLayer = CAShapeLayer()
@@ -1753,6 +1768,14 @@ final class CanvasNSView: NSView {
         var transform: LayerTransform
     }
     var transformDrag: TransformDragSession?
+    /// A 3D handle in the hand: an arc on the turn knob or the depth arrow
+    /// (`CanvasSpaceHandles.swift`).
+    var spaceHandleDrag: SpaceHandleDrag?
+    /// The picked layer whose knob arcs are out, after the pointer rested on
+    /// its knob.
+    var spaceArcsOutFor: UUID?
+    /// Where the 3D handles were last drawn, read by the press and the cue.
+    var drawnSpaceHandles: DrawnSpaceHandles?
     /// After a transform commit, the sprite keeps the final delta applied
     /// until the re-rendered composite lands (no flash-back).
     var transformHold: (layerID: UUID, start: LayerTransform, transform: LayerTransform)?
@@ -2258,6 +2281,7 @@ final class CanvasNSView: NSView {
         setUpPenChrome()
         setUpDrawLandingChrome()
         setUpMotionPivotChrome()
+        setUpSpaceHandleChrome()
         setUpMotionPathChrome()
         setUpPathEditChrome()
 

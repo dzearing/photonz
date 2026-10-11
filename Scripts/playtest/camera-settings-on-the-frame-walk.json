@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/camera-settings-on-the-frame-walk",
+  "seed": "The camera is a setting of the frame (decision card where-does-the-camera-live, option A), at Next defaults with no flag changed. On a recording with a title turned in 3D, View, Show Camera Settings picks the frame and the panel shows a Camera section: Perspective, Camera depth, Camera X and Camera Y, each with a key diamond. Typing 300 into Camera depth pushes the whole picture in; View, Reset Camera puts it back. The menu bar is only live with the app in front, so this walk takes the front.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true,
+    "front": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [520, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster." },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "spaceHandle", "handle": "swing", "by": [-50, 0], "readout": "Rotation Y -30°" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "menus", "stage": "1-view-menu", "menu": "View", "choose": "View > Show Camera Settings" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "reveal", "control": "Camera section" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "Camera depth" },
+    { "do": "key", "key": "a", "modifiers": ["command"] },
+    { "do": "type", "text": "300" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Camera depth Value", "reads": "300" },
+    { "do": "describe", "stage": "2-camera-pushed-in", "note": "the frame picked by View, Show Camera Settings: the panel shows its Camera section, Perspective, Camera depth, Camera X and Camera Y, each with a key diamond. Camera depth 300 pushes the whole picture in, so everything is bigger about the middle" },
+    { "do": "panel", "stage": "2-camera-pushed-in" },
+    { "do": "snapshot", "name": "2-camera-pushed-in" },
+    { "do": "menus", "stage": "3-reset-camera", "menu": "View", "choose": "View > Reset Camera" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Camera depth Value", "reads": "0" },
+    { "do": "describe", "stage": "3-camera-reset", "note": "View, Reset Camera puts the camera back where every document starts: the picture is its own size again" },
+    { "do": "snapshot", "name": "3-camera-reset" }
+  ]
+}

@@ -21183,3 +21183,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Walk harness: `expectMeasures` takes `reads` to pin the numbers.
 - Fixture `Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png` (drawn by `Scripts/make-shapes-fixture.swift`), walk `size-reads-avatars-and-stacks-walk`.
 - Open: luma only; stacks with no separating ring untested; no real Teams/Slack capture used.
+
+## 2026-10-11 — Tilt, flip and push layers in depth by hand (2.5D controls)
+
+- Canvas: arcs on the turn knob (swing Y, tip X) and a depth arrow off the pivot, Shift 15° steps, drag pill, one undo step per drag, keys at the playhead where keyed (design A, card unanswered). Flag `next-turn-in-depth`, on in Next.
+- Panel: 3D section (Rotation X/Y, Depth, Pivot depth once turned, Mixed, arrow nudges, diamonds) and a Camera section on the frame (card option A). Layer menu/right click: Reset 3D Rotation, Bring Nearer ⌥⌘], Send Further ⌥⌘[. View: Show Camera Settings, Reset Camera.
+- Core: `SpaceEditing.swift` + `SpaceEditingTests` (17). Walk step `spaceHandle`. Walks: tilt-and-flip-a-title-in-3d, camera-settings-on-the-frame.
+- Next: thin Camera row on the timeline (filed), then 3D transitions and title entrances.

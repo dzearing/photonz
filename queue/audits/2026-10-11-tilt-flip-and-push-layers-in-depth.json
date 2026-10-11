@@ -1,0 +1,31 @@
+{
+  "feature": "Tilt, flip and push layers in depth from the canvas and the panel",
+  "epic": "video-transitions-motion",
+  "summary": "A picked layer can now be swung and tipped in 3D by two arcs that grow out of its turn knob, pushed back by a blue arrow off its middle, typed exactly in a new 3D section of the panel (keyable), and seen through a camera you set on the frame. Layer and right-click menus have Reset 3D Rotation, Bring Nearer and Send Further; View has Show Camera Settings and Reset Camera.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (or any recording) and type a title on it with the Text tool.",
+  "switched": {},
+  "try": [
+    { "do": "Pick the title with V and rest the pointer on the round turn knob above it: a green arc and a red arc appear." },
+    { "do": "Drag the green arc to the right about two finger widths: the title swings, the pill under it says Rotation Y, and the 3D section in the panel follows.", "shot": "2026-10-11-depth-controls-swung-40.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the diamond on the 3D section's Rotation Y row, step a second forward, and drag the green arc further right until it reads 180: the title now flips over that second." },
+    { "do": "Scrub back through that second and watch the flip.", "shot": "2026-10-11-depth-controls-flip.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the blue arrow off the title's middle upward to push it away; try Option Command [ and ] too." },
+    { "do": "Draw a rectangle, drag its knob itself (not an arc) and move it: it turns flat exactly as before and its 3D rows stay 0.", "shot": "2026-10-11-depth-controls-flat.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose View, Show Camera Settings, type 300 into Camera depth, then choose View, Reset Camera.", "shot": "2026-10-11-depth-controls-camera.png" }
+  ],
+  "evaluate": [
+    "Did you find the arcs on your own by resting on the knob, or did you need to be told they were there?",
+    "Is 0.6 degrees per point the right speed for the arcs, or does a flip need too long a drag?",
+    "Is the green arc for Rotation Y and the red one for Rotation X (Final Cut's and Motion's axis colours) clear without labels?",
+    "Should the 3D section show for every picked layer in a video, as now, or only once something has been turned?",
+    "Is View, Show Camera Settings an obvious enough way to the camera when the recording fills the whole frame and there is no empty canvas to click?"
+  ],
+  "rough": [
+    "The arcs only appear while the pointer rests on the knob, as decision card tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o (option A, your call on 2026-10-11) describes; the mock's own editor frame draws them pinned. They then stay out while the pointer is anywhere over the layer, so the hand can reach the depth arrow.",
+    "On a still picture (a marked-up screenshot) the 3D section stays away until a layer has actually been turned with the arcs, so redlining keeps the panel it had; in a video it shows for every picked layer.",
+    "The 3D section sits under Effects rather than straight under Position and Size as the mock stacks it: Position and Size is no longer a panel section, and Color and Effects sit directly under Layers by your call on 2026-09-07.",
+    "The mock's thin Camera row at the top of the timeline for camera keys is not built, and in a video a click on the picture picks the recording rather than the frame, so the camera is reached by View, Show Camera Settings or the Canvas row: task show-the-camera-s-keys-on-a-thin-row-at-the-top.",
+    "The depth arrow's reading depends on the zoom (2.5 points of depth per screen point at 100%), so the same drag pushes further when zoomed out.",
+    "A walk photographs the window behind another app; the camera picture was taken with the app in front."
+  ]
+}

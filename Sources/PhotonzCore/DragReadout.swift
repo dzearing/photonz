@@ -25,6 +25,9 @@ public enum DragReadout {
         case size(CGSize)
         /// How round a corner is being pulled, by the knob inside it.
         case radius(CGFloat)
+        /// A layer turned or pushed in space by one of its 3D handles: the
+        /// one value that handle changes (`SpaceDrag.readout`).
+        case space(SpaceHandle, LayerTurn3D)
     }
 
     /// What is being dragged, for the one rule that picks the reading.
@@ -63,6 +66,7 @@ public enum DragReadout {
         // Half points stay, since a radius of 1.5 is an ordinary one on an
         // icon grid.
         case .radius(let radius): "Radius \(halves(radius))"
+        case .space(let handle, let turn): SpaceDrag.readout(handle, turn)
         }
     }
 
