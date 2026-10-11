@@ -2504,5 +2504,19 @@ struct EditorCommands: Commands {
                 set: { _ in editor?.toggleIconKeylines() }))
             .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
         }
+        // Last, where every Mac app has it, on the Mac's own ⌃⌘F, for a
+        // picture or a video, the player or the editor (`PlayerFullScreen`).
+        // Only on the pro menu bar: there AppKit's own row is in SwiftUI's
+        // View, which `MenuBarArranger` hides, so without this one nothing on
+        // the bar carried the chord. With the flag off, SwiftUI's View is
+        // the one on screen and keeps AppKit's row.
+        if Experiments.shared.proMenuBarEnabled {
+            Divider()
+            Button(PlayerFullScreen.menuTitle(isFullScreen: editor?.isWindowFullScreen ?? false)) {
+                editor?.toggleWindowFullScreen()
+            }
+            .keyboardShortcut("f", modifiers: [.control, .command])
+            .disabled(!hasDocument)
+        }
     }
 }

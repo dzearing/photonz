@@ -1458,11 +1458,15 @@ private struct TimelineTransport: View {
             // A player's far end: full screen, as QuickTime has it. Only in
             // View, the player; the editor's transport is the mock's.
             if editorState.isWatching {
-                VideoKit.TransportButton(symbol: "arrow.up.left.and.arrow.down.right",
+                // The arrows point the way a press goes: out to the edges, or
+                // back in once the window fills the screen.
+                VideoKit.TransportButton(symbol: editorState.isWindowFullScreen
+                                            ? "arrow.down.right.and.arrow.up.left"
+                                            : "arrow.up.left.and.arrow.down.right",
                                          label: "Full Screen") {
-                    editorState.hostWindow?.toggleFullScreen(nil)
+                    editorState.toggleWindowFullScreen()
                 }
-                .panelHelp("Full screen (⌃⌘F)")
+                .panelHelp(PlayerFullScreen.tooltip)
                 .playtestControl("Full Screen", detail: "Transport")
                 .transition(.opacity)
             }

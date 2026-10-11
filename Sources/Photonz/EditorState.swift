@@ -2469,7 +2469,25 @@ final class EditorState {
 
     /// The window hosting this editor, captured by `WindowCloseGuard` so the
     /// close confirmation can attach and the edited-dot can track dirtiness.
-    @ObservationIgnored weak var hostWindow: NSWindow?
+    @ObservationIgnored weak var hostWindow: NSWindow? {
+        didSet { if hostWindow !== oldValue { watchHostWindowFullScreen() } }
+    }
+
+    /// The window fills the screen right now, read off the window's own
+    /// notices (`EditorState+FullScreen`), so the View menu's row and the
+    /// player's controls follow it however full screen was reached.
+    var isWindowFullScreen = false
+    /// The transport tucked away, and the pointer hidden, while a video plays
+    /// full screen with the pointer still (`PlayerFullScreen`).
+    var arePlayerControlsTuckedAway = false
+    @ObservationIgnored var fullScreenNotices: [NSObjectProtocol] = []
+    /// Where the window is sliding to, full screen or back, while it slides.
+    @ObservationIgnored var fullScreenSlideTarget: Bool?
+    /// Where a press made during the slide wants it to end up.
+    @ObservationIgnored var fullScreenAskedDuringSlide: Bool?
+    @ObservationIgnored var playerControlsWatch: Timer?
+    @ObservationIgnored var pointerLastSeen = CGPoint(x: -1, y: -1)
+    @ObservationIgnored var pointerStillSince = Date()
 
     /// Every editor a window has been seeded with, held weakly, so opening a
     /// file can find the window already holding it (`windowHolding`).

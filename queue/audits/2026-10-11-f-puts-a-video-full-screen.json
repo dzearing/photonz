@@ -1,0 +1,47 @@
+{
+  "feature": "F puts a video full screen",
+  "epic": "video-cutting",
+  "summary": "While you watch a video, F fills the screen with it and F or Escape bring it back, still playing. View > Enter Full Screen on Control Command F now works in every window, and the transport button's tip says Full Screen (F).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: f-puts-a-video-full-screen-walk (it needs the Mac to itself, because full screen takes a space of its own).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording from the Finder. It opens in View, the player."
+    },
+    {
+      "do": "Press space to play, then press F.",
+      "shot": "2026-10-11-f-full-screen-2-full-screen.png"
+    },
+    {
+      "do": "Leave the mouse still for three seconds while it plays.",
+      "shot": "2026-10-11-f-full-screen-3-transport-tucked-away.png"
+    },
+    {
+      "do": "Nudge the mouse, then press Escape.",
+      "shot": "2026-10-11-f-full-screen-4-escape-back.png"
+    },
+    {
+      "do": "Press F twice quickly."
+    },
+    {
+      "do": "Press Command 2 for the editor, press F (the Frame tool), then Control Command F.",
+      "shot": "2026-10-11-f-full-screen-5-editor-full-screen.png"
+    },
+    {
+      "do": "Open View at the bottom: Enter Full Screen or Exit Full Screen, with Control Command F."
+    }
+  ],
+  "evaluate": [
+    "Does F feel like the full screen key you expected while watching?",
+    "When the transport tucks away after about two and a half seconds of a still mouse, is that the right wait?",
+    "With the transport tucked away, the picture stays where it was and an empty dark band is left at the bottom. Would you rather the picture grew into that space?",
+    "Is it right that Escape leaves full screen only in the player, and in the editor keeps letting go of what is picked?"
+  ],
+  "rough": [
+    "Before: in the player, F switched to the editor with the Frame tool in hand; Control Command F did nothing, because no row on the menu bar carried it; the transport's Full Screen button worked.",
+    "No mock draws a full screen player, so there is nothing to put beside the pictures.",
+    "In the editor F is still the Frame tool. Whether F should be full screen there too is a decision card on its own task (f-in-the-editor-the-frame-tool-or-full-screen).",
+    "When the transport tucks away the picture does not grow into its space: an empty band stays at the bottom, so nothing jumps when it comes back. QuickTime lays its controls over the picture instead.",
+    "The walk checks the button's tip only through the unit test. The walk harness cannot rest on the transport's buttons to read a tip."
+  ]
+}

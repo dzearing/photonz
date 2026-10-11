@@ -232,6 +232,7 @@ struct EditorView: View {
             // one-lap timing strip and the row it leaves behind.
             if editorState.motionStripMeasuresADocument, editorState.motionStripPhase != .none {
                 TimelineDock(windowHeight: geo.size.height)
+                    .modifier(PlayerControlsTuck())
             } else {
                 switch editorState.motionStripPhase {
                 case .open: MotionStripView()

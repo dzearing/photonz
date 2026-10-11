@@ -5286,7 +5286,9 @@ public enum PlaytestStep: Sendable, Equatable {
                 dockHeight: try f.optionalNumber("dockHeight"),
                 arrived: fields["arrived"] as? Bool,
                 trackColumn: try f.optionalNumber("trackColumn"),
-                markerAtMS: try f.optionalNumber("markerAtMS").map { Int($0) })
+                markerAtMS: try f.optionalNumber("markerAtMS").map { Int($0) },
+                fullScreen: fields["fullScreen"] as? Bool,
+                controlsTucked: fields["controlsTucked"] as? Bool)
             if let height = claim.dockHeight, height <= 0 {
                 throw f.invalid("dockHeight", "the timeline dock stands some points tall, not \(height)")
             }
@@ -5304,7 +5306,8 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "\"keyboard\", \"rate\", \"blade\", \"markInMS\", \"markOutMS\", \"hasIn\", "
                     + "\"hasOut\", \"markers\", \"rulerMatches\", \"rulerAtPlayhead\", \"lengthMS\", "
                     + "\"open\", \"mode\", \"tool\", \"timelineTool\", \"tracks\", "
-                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\", \"trackColumn\" or \"arrived\"")
+                    + "\"volumePercent\", \"muted\", \"outputGain\", \"zoomScale\", \"rowScale\", \"dockHeight\", \"trackColumn\", \"arrived\", "
+                    + "\"fullScreen\" or \"controlsTucked\"")
             }
             self = .expectTimeline(claim)
         case "expectPlaybackNeverBlank":
@@ -5796,6 +5799,11 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
     /// still arriving (`EditModeArrival`). The panel's sections keep their
     /// own count of what has arrived.
     public var arrived: Bool?
+    /// The window fills the screen (`PlayerFullScreen`).
+    public var fullScreen: Bool?
+    /// The player's transport is tucked away, as it is while a video plays
+    /// full screen with the pointer still (`PlayerFullScreen`).
+    public var controlsTucked: Bool?
 
     public init(playheadMS: Int? = nil, withinMS: Int = 0, keyboard: Keyboard? = nil, rate: Double? = nil,
                 blade: Bool? = nil, markInMS: Int? = nil, markOutMS: Int? = nil,
@@ -5806,7 +5814,9 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
                 mode: ViewEditMode? = nil, volumePercent: Int? = nil, muted: Bool? = nil,
                 outputGain: Double? = nil, zoomScale: Double? = nil, rowScale: Double? = nil,
                 dockHeight: Double? = nil, arrived: Bool? = nil, trackColumn: Double? = nil,
-                markerAtMS: Int? = nil) {
+                markerAtMS: Int? = nil, fullScreen: Bool? = nil, controlsTucked: Bool? = nil) {
+        self.fullScreen = fullScreen
+        self.controlsTucked = controlsTucked
         self.markerAtMS = markerAtMS
         self.dockHeight = dockHeight
         self.trackColumn = trackColumn
@@ -5843,7 +5853,7 @@ public struct PlaytestTimelineClaim: Hashable, Sendable {
             || rulerMatches != nil || rulerAtPlayhead != nil || lengthMS != nil || tracks != nil
             || volumePercent != nil || muted != nil || outputGain != nil
             || zoomScale != nil || rowScale != nil || dockHeight != nil || arrived != nil
-            || trackColumn != nil
+            || trackColumn != nil || fullScreen != nil || controlsTucked != nil
     }
 }
 

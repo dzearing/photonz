@@ -6164,24 +6164,11 @@ private final class Run {
                     ? "the chip reads \(modes.label)"
                     : "modes are switched off in this release, so nothing swapped"
             case .toggleFullScreen:
-                // A walk opens its window straight, without going through the
-                // agent's own "a window is up now" hand-off, so the probe is
-                // still a menu-bar accessory — and an accessory app is not
-                // allowed full screen at all (its windows come back
-                // `fullScreenNone`). Becoming regular first is exactly what
-                // `AppCoordinator.openWindow` does for a person, so this is
-                // the app as they have it, not a special case for the walk.
-                NSApp.setActivationPolicy(.regular)
-                // The window was BUILT while the app was still an accessory,
-                // and AppKit stamps such a window `fullScreenNone` for life.
-                // Putting it back to what a regular app's window is born with
-                // is restoring the window a person has, not granting the walk
-                // something the app cannot do.
-                if let window = editor.hostWindow {
-                    window.collectionBehavior.remove(.fullScreenNone)
-                    window.collectionBehavior.insert(.fullScreenPrimary)
-                    window.toggleFullScreen(nil)
-                }
+                // The same door F, ⌃⌘F and the transport's button use. A walk
+                // opens its window while the probe is still a menu-bar agent,
+                // which may not fill the screen; the command itself makes the
+                // app regular and the window able first, as a person's are.
+                editor.toggleWindowFullScreen()
             case .dockNarrowest:
                 let defaults = UserDefaults.standard
                 if dockWidthToRestore == nil {
@@ -13823,6 +13810,8 @@ private final class Run {
             + ", volume \(editor.playerVolume.percent)%"
             + (editor.playerVolume.isMuted ? " muted" : "")
             + ", engine out " + String(format: "%.3f", editor.audioPlayer.outputGain)
+            + (editor.isWindowFullScreen ? ", full screen" : "")
+            + (editor.arePlayerControlsTuckedAway ? ", transport tucked away" : "")
         var wrong: [String] = []
         if let want = claim.volumePercent, want != editor.playerVolume.percent {
             wrong.append("the volume slider reads \(editor.playerVolume.percent)%, not \(want)%")
@@ -13860,6 +13849,20 @@ private final class Run {
                 wrong.append(String(format: "the next launch would open the track names %.0f points wide, not %.0f",
                                     kept, want))
             }
+        }
+        if let want = claim.fullScreen {
+            // Off the window itself as well as the editor's reading of it, so
+            // a notice the editor missed cannot pass for a window that filled.
+            let window = editor.hostWindow?.styleMask.contains(.fullScreen) ?? false
+            if want != window {
+                wrong.append(window ? "the window fills the screen" : "the window does not fill the screen")
+            } else if want != editor.isWindowFullScreen {
+                wrong.append("the window " + (window ? "fills" : "does not fill")
+                    + " the screen but the editor thinks it " + (window ? "does not" : "does"))
+            }
+        }
+        if let want = claim.controlsTucked, want != editor.arePlayerControlsTuckedAway {
+            wrong.append(editor.arePlayerControlsTuckedAway ? "the transport is tucked away" : "the transport is showing")
         }
         if let want = claim.arrived, want != (editor.editArrival == .settled) {
             wrong.append(editor.editArrival == .settled ? "Edit's tool bar and tracks have all arrived"
