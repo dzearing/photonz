@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk",
-  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
+  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the canvas draws only the frame ring and no dashed route (no Path row either, since a recording's framing has no route to show), the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -182,6 +182,11 @@
     {
       "do": "render",
       "name": "3-framed-at-5-canvas"
+    },
+    {
+      "do": "expect",
+      "field": "Path",
+      "present": false
     },
     {
       "do": "expect",

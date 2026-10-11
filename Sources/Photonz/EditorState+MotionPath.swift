@@ -30,9 +30,11 @@ extension EditorState {
         return document.motionPath(layerID: layer.id)
     }
 
-    /// What the Path control in Properties shows: nil where there is no path.
+    /// What the Path control in Properties shows: nil where there is no path,
+    /// which includes a recording's framing, whose path is never drawn.
     var motionPathShape: MotionPathShape? {
-        guard let layer = keyLayer, let motion = layer.keyedMotion(.position),
+        guard let layer = keyLayer, !layer.positionReadsAsCentre,
+              let motion = layer.keyedMotion(.position),
               !motion.pathSegments.isEmpty else { return nil }
         if let preview = motionPathPreview, preview.layerID == layer.id {
             return .curved

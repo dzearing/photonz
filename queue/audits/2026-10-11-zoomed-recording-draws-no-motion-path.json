@@ -1,0 +1,39 @@
+{
+  "feature": "A zoomed recording draws no motion path",
+  "epic": "video-transitions-motion",
+  "summary": "Framing a zoomed recording no longer draws a dashed route across empty canvas, and the Path row is gone for it. A title or shape that moves still draws its path as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample recording, pick it, and park the playhead at 0:03."
+    },
+    {
+      "do": "Press Animate a property and pick Scale, then click 0:05 on the ruler and type 220 in Scale."
+    },
+    {
+      "do": "Drag the picture up and to the left at 0:05 to frame a spot.",
+      "shot": "2026-10-11-zoom-no-path-3-framed-at-5-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the canvas: only the zoomed picture, no dashed line or square handle over the dark canvas."
+    },
+    {
+      "do": "Look at Between the keys in Properties: Curve is there, Path is not."
+    },
+    {
+      "do": "Type a title over the recording, key its Position at 0:01 and 0:03 in two places, and check its dashed path and Path row are still there."
+    }
+  ],
+  "evaluate": [
+    "With the route gone, can you still tell the camera is moving between the two keys from the lanes and the picture alone?",
+    "Is it right that a zoom's move cannot be curved, or would you want to bend a camera move one day?",
+    "Does the Video menu's Curve the Path greying out on a recording read as expected?"
+  ],
+  "rough": [
+    "The zoomed recording, when picked, is still outlined as the whole magnified picture, so a dashed edge and a handle hang off the left of the frame where the mock puts a ring on the frame: a-zoomed-recording-shows-its-ring-on-the-frame-n.",
+    "Matches the mock: in steps 6 to 8 it draws only the picture and its ring, and so does the app now; a route for the centre would have nothing on the canvas to follow, since the camera always points at the middle of the frame.",
+    "Hiding Path also means a recording's framing cannot be bent into an arc any more from the panel or the Video menu. No mock asks for it."
+  ]
+}

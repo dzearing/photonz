@@ -314,9 +314,14 @@ extension PhotonzDocument {
 
     /// The path a moving layer travels, or nil where it does not move from one
     /// place to another.
+    ///
+    /// A recording's Position is its framing, where the camera points, and the
+    /// camera always points at the middle of the frame: the route its corner
+    /// takes runs across empty canvas and means nothing, so a recording draws
+    /// no path, only its frame ring (`video-zoom-wt.html`, steps 6 to 8).
     public func motionPath(layerID: UUID) -> MotionPathOnCanvas? {
-        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(.position),
-              motion.isOn else { return nil }
+        guard let layer = layer(id: layerID), !layer.positionReadsAsCentre,
+              let motion = layer.keyedMotion(.position), motion.isOn else { return nil }
         let segments = motion.pathSegments
         guard !segments.isEmpty else { return nil }
         let offset = motionPathOffset(of: layer)

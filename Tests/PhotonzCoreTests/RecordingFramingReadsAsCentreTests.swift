@@ -136,4 +136,30 @@ struct RecordingFramingReadsAsCentreTests {
         #expect(document.keyedValue(layerID: id, .motion(.position), atDocumentTimeMS: 1000)
                 == .point(CGPoint(x: 40, y: 50)))
     }
+
+    // MARK: - The path on the canvas
+
+    /// A recording's framing is where the camera points, and the camera always
+    /// points at the middle of the frame, so the dashed route a moving layer
+    /// draws has nothing to follow: the corner's route ran across empty canvas
+    /// (task `a-zoomed-recording-s-motion-path-shows-where-the`). The zoom
+    /// walkthrough draws only the frame ring in steps 6 to 8, and no Path row.
+    @Test("A framed recording draws no motion path on the canvas")
+    func aFramedRecordingDrawsNoPath() throws {
+        let (document, id) = Self.framed()
+        let move = try #require(document.layer(id: id)?.keyedMotion(.position))
+        #expect(move.pathSegments.count == 1)
+        #expect(document.motionPath(layerID: id) == nil)
+    }
+
+    @Test("A title keyed on Position still draws its path")
+    func aTitleStillDrawsItsPath() throws {
+        var document = ClipReframeTests.document(Self.title())
+        let id = try #require(document.layers.first?.id)
+        document.startKeying(layerID: id, .motion(.position), atDocumentTimeMS: 1000)
+        document.setKeyedValue(.point(CGPoint(x: 700, y: 100)), layerID: id,
+                               .motion(.position), atDocumentTimeMS: 3000)
+        let path = try #require(document.motionPath(layerID: id))
+        #expect(path.segments.count == 1)
+    }
 }
