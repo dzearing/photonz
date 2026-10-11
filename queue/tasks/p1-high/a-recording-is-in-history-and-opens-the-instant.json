@@ -1,0 +1,35 @@
+{
+  "id": "a-recording-is-in-history-and-opens-the-instant",
+  "title": "A recording is in history and opens the instant you stop it, every time",
+  "goal": "Stopping a recording must put its tile in history and keep it there, and clicking it must open the recording at once, with no 'not there', 'could not be opened' or waiting message. Today the tile appears for a moment and then vanishes, opening it once said there was no recording in the file, and another time the user was told to wait. The files on disk are fine afterwards, so this is the app mishandling the seconds while the file is being finished.",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T03:17:48.265Z",
+  "updated": "2026-10-11T03:17:48.363Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-10): \"there is something horrible happening with video recording. once again, video recording is not fast and easy. I record, i stop, i momentarily see the thumbnail, then it disappears. once i tried to open and it said no video data was available. another time it gave me a 'hang on tight' message. I expect NO latency in recording and opening!\"\n\nChecked in intake: today's recordings in ~/Pictures/Screenshots (20.14.54, 19.44.21, 19.43.56, 19.35.36) are all valid on disk after the fact (ffprobe: h264 3456x2234 + aac, durations 3.0/7.6/44.2/6.9 s, frame counts sane). No Photonz crash reports. So the failure is in the window while macOS finishes the file (RecordingCoordinator.stop: store.beginSaving -> holdLastFrame -> recorder.stop -> store.finishSaving, RecordingCoordinator.swift ~stop()).\nThe 'no video data' matches RecordingDoor's .unplayable message ('could not be opened... there is no recording in it to play', PhotonzCore/RecordingDoor.swift:72-84); an MP4 without its moov atom yet reads as unplayable unless the app knows it is its own pending save. The exact 'hang on tight' text is NOT in Photonz's source; find what showed it (a macOS or AVFoundation message, a different wording of 'still being saved', or another app) and record it.\nSuspects to test, none confirmed: (1) 1f6a9962 'Saving an edited recording puts the finished video in history' (10-06) changed CaptureStore (+42), CaptureThumbnailView (+79) and tile replacement: may key or replace tiles in a way that drops the pending one; (2) CaptureStore's folder watch/reload seeing the new file before finishSaving and dropping the saving placeholder (CaptureStore.swift ~515-535 'A recording still being saved has no file to read yet'); (3) 017f5873 draggable recording control (10-10) changing the stop path; (4) 7c564f4f cut-only export (10-07) touching readers. Bisect between 2026-10-03 (user's recordings worked then) and now if the cause is not obvious. Related shipped promises this regresses: a-recording-shows-in-history-the-moment-you-stop (done), pressing-enter-on-the-recording-card-starts-reco (done).",
+  "acceptance": [
+    "Reproduce first, on the probe and with the real recorder path, at Next defaults: record 3 s, 10 s and 45 s (with and without sound), stop, and within 0 to 3 s of Stop (a) watch the history tile frame by frame, (b) click it to open. Repeat 10 times each. Record in the audit every time the tile vanished, flickered, was replaced, or the open showed a message, with the exact message text and the timestamps against when the file finished closing",
+    "Root cause named in the audit with evidence (for example the folder watcher or a store reload dropping the placeholder tile while the file has no moov atom yet, the save-to-history change replacing or keying tiles differently, RecordingDoor classing an unfinished MP4 as unplayable instead of still writing, or the open racing the pending entry); a regression test reproduces it before the fix",
+    "After Stop the tile appears at once and is never removed, replaced by a blank, or reordered while the file finishes; MEASURED: zero vanishes in 30 stops",
+    "Opening the recording from its tile or the corner card at any moment after Stop opens the editor immediately on the last frame (the existing ready-at-stop path) and fills in when the file lands, with no 'still being saved', 'could not be opened' or 'not there' message; MEASURED: click to editor visible under 200 ms at 0.5 s, 1 s and 2 s after Stop",
+    "RecordingDoor never reports an MP4 that the app itself is still finishing as unplayable",
+    "A drill or walk does stop-then-open at 0.2 s, 0.5 s, 1 s and 2 s after Stop, 5 times each, and fails on any vanish or message; it runs in the rotating check",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T03:17:48.268Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T03:17:48.362Z",
+      "note": "seq 3930 -> 1"
+    }
+  ]
+}
