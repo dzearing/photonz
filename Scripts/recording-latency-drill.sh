@@ -58,6 +58,12 @@ console.log(`    file playable        ${f(d.fileReadableMS)}`);
 console.log(`    editor playable      ${f(d.stopToPlayableMS)}`);
 console.log(`    duration             ${f(d.durationMS)}`);
 console.log(`    found closed by look ${f(d.closedByLookingMS)}`);
+if (d.mixedLive) {
+  console.log(`    mixed sound closed   ${f(d.soundWrittenMS)}`);
+  console.log(`    pictures and sound joined ${f(d.soundJoinedMS)}${d.joined ? "" : " (NOT joined: Mac sound only)"}`);
+  console.log(`    first heard after the first frame: Mac ${f(d.macHeardAfterFirstFrameMS)}, microphone ${f(d.microphoneHeardAfterFirstFrameMS)}`);
+  console.log(`    first buffer arrived after it was heard: Mac ${f(d.macArrivedAfterHeardMS)}, microphone ${f(d.microphoneArrivedAfterHeardMS)}`);
+}
 if (d.gaveUpMS != null) console.log(`    GAVE UP waiting      ${f(d.gaveUpMS)}`);
 console.log(`    door at landing      ${d.doorAtLand} (closed before landing: ${d.closedBeforeLanding})`);
 if (!d.readyAtStop) console.log("    (next-a-recording-is-ready-at-stop is off: thumbnail and editor wait for the file)");

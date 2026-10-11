@@ -77,6 +77,7 @@ enum RecordingLatencyDiag {
         try? await Task.sleep(for: .seconds(seconds))
 
         let stop = Date()
+        let lastFirstFrame = coordinator.firstFrameHostSeconds
         let inHistoryAtTile: Bool
         out["readyAtStop"] = Experiments.shared.recordingReadyAtStop
         // Watched while the file closes: the tile's picture, and an editor
@@ -146,6 +147,19 @@ enum RecordingLatencyDiag {
         out["outputFinishedMS"] = trace.flatMap { ms(stop, $0.outputFinished) }
         out["closedByLookingMS"] = trace.flatMap { ms(stop, $0.closedByLooking) }
         out["gaveUpMS"] = trace.flatMap { ms(stop, $0.gaveUp) }
+        out["mixedLive"] = trace?.mixedLive ?? false
+        out["joined"] = trace?.joined ?? false
+        out["soundWrittenMS"] = trace.flatMap { ms(stop, $0.soundWritten) }
+        out["soundJoinedMS"] = trace.flatMap { ms(stop, $0.soundJoined) }
+        // How long after the first frame each sound was first heard: what of
+        // the start of the recording a late sound leaves silent.
+        let start = coordinator.lastRecorderStartTrace
+        if let first = coordinator.firstFrameHostSeconds ?? lastFirstFrame {
+            out["macHeardAfterFirstFrameMS"] = start.firstHeardMac.map { (($0.at - first) * 1000).rounded() }
+            out["microphoneHeardAfterFirstFrameMS"] = start.firstHeardMicrophone.map { (($0.at - first) * 1000).rounded() }
+        }
+        out["macArrivedAfterHeardMS"] = start.firstHeardMac.map { ($0.arrivedAfter * 1000).rounded() }
+        out["microphoneArrivedAfterHeardMS"] = start.firstHeardMicrophone.map { ($0.arrivedAfter * 1000).rounded() }
         out["stopToTileMS"] = ms(stop, tile)
         out["stopToFileLandedMS"] = ms(stop, landed)
         out["tileInHistory"] = inHistoryAtTile

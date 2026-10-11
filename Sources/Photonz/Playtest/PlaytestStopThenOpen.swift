@@ -4,8 +4,9 @@ import AVFoundation
 import PhotonzCore
 
 /// The walk step `stopThenOpenDrill`: real recordings with sound from the Mac
-/// and the microphone (the pair macOS is slowest closing, about 0.45 s per
-/// recorded second), each opened through the app's own door at 0.2, 0.5, 1 and
+/// and the microphone (the pair macOS was slowest closing, about 0.45 s per
+/// recorded second, until the recorder mixed them itself on 2026-10-11:
+/// `RecordingSoundMixer`), each opened through the app's own door at 0.2, 0.5, 1 and
 /// 2 seconds after Stop, five times each.
 ///
 /// The user, 2026-10-10: the tile showed for a moment and went, and opening it

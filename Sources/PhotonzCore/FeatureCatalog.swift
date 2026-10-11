@@ -224,6 +224,8 @@ public enum FeatureCatalog {
 
     public static let recordingReadyAtStopFlag = "next-a-recording-is-ready-at-stop"
 
+    public static let twoSoundsMixedAsYouRecordFlag = "next-two-sounds-mixed-as-you-record"
+
     public static let droppingMediaFlag = "next-dropping-a-sound-or-a-video"
 
     public static let soundOnTheTimelineFlag = "next-sound-on-the-timeline"
@@ -819,6 +821,16 @@ public enum FeatureCatalog {
                     name: recordingReadyAtStopFlag,
                     title: "A recording is ready the moment you stop it",
                     description: "Stop puts the recording's last frame on its tile at once, opening it shows that frame while the file finishes, and the corner says Copying until it is copied. Off means the tile and the editor wait for the file.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: twoSoundsMixedAsYouRecordFlag,
+                    title: "A recording with two sounds plays the moment you stop it",
+                    description: "With the Mac's sound and the microphone both on, they are mixed while you record, so the recording plays and copies as soon as you stop. Off means they are mixed after Stop, which takes half the recording's length.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

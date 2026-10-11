@@ -625,6 +625,12 @@ extension Experiments {
     /// whether the corner says Copying until the file is really copied.
     var recordingReadyAtStop: Bool { isEnabled(FeatureCatalog.recordingReadyAtStopFlag) }
 
+    /// `next-two-sounds-mixed-as-you-record`: whether a recording with the
+    /// Mac's sound and the microphone mixes them while it records
+    /// (`RecordingSoundMixer`), so the file is done a moment after Stop,
+    /// rather than leaving macOS to mix them after Stop.
+    var twoSoundsMixedAsYouRecord: Bool { isEnabled(FeatureCatalog.twoSoundsMixedAsYouRecordFlag) }
+
     /// Whether a sound or a video let go on an editor window lands as a layer,
     /// opens as its own document, or is refused IN WORDS where a yes would have
     /// appeared (`MediaDrop`). Off, all three are one silent no-entry pointer.

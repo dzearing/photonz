@@ -5,9 +5,12 @@ import PhotonzCore
 import ScreenCaptureKit
 
 /// Records the screen to an MP4 via ScreenCaptureKit's modern `SCRecordingOutput`
-/// (macOS 15+) — no hand-rolled `AVAssetWriter`. The stream captures video plus
-/// (optionally) system audio and a microphone, and writes the file itself; we
-/// just configure, start, and finalize on stop. The floating stop control is
+/// (macOS 15+) — no hand-rolled `AVAssetWriter` for the pictures. The stream
+/// captures video plus (optionally) system audio and a microphone, and writes
+/// the file itself; we just configure, start, and finalize on stop. With the
+/// Mac's sound and the microphone both on, the microphone is heard and mixed
+/// here instead (`RecordingSoundMixer`), since macOS mixing the two itself
+/// holds the file for about half the recording's length after Stop. The floating stop control is
 /// excluded from the captured video via the content filter (phase 12.3).
 ///
 /// Recording session *config* is the testable `RecordingConfig` (PhotonzCore);
@@ -18,6 +21,9 @@ final class ScreenRecorder: NSObject {
 
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
+    /// Mixes the Mac's sound and the microphone while recording, when both
+    /// are chosen (`RecordingSoundMixer`).
+    private var soundMixer: RecordingSoundMixer?
     /// Hears the stream's frames only to learn when the first one was taken,
     /// which is the moment the file counts from (`PointerTracker`).
     private var firstFrame: FirstFrameClock?
@@ -51,6 +57,12 @@ final class ScreenRecorder: NSObject {
         /// Nothing changed for longer than closing could take.
         var gaveUp: Date?
         var resumed: Date?
+        /// The mix of the Mac's sound and the microphone was closed, and then
+        /// joined to the pictures (only when both sounds were recorded).
+        var soundWritten: Date?
+        var soundJoined: Date?
+        var mixedLive = false
+        var joined = false
     }
     private(set) var lastStop: StopTrace?
 
@@ -63,6 +75,18 @@ final class ScreenRecorder: NSObject {
         var plan: RecordingWarmStart?
         var reusedWarmFilter = false
         var outputStarted: Double?
+        /// When the Mac's sound and the microphone were first heard, with
+        /// both mixed while recording.
+        /// And how long after it was heard each first buffer arrived.
+        var firstHeardMac: (at: Double, arrivedAfter: Double)?
+        var firstHeardMicrophone: (at: Double, arrivedAfter: Double)?
+    }
+
+    /// When the sounds of the recording under way were first heard.
+    private func noteFirstHeard() {
+        guard let mixer = soundMixer else { return }
+        lastStart.firstHeardMac = mixer.firstHeard(.mac)
+        lastStart.firstHeardMicrophone = mixer.firstHeard(.microphone)
     }
     private(set) var lastStart = StartTrace()
 
@@ -237,8 +261,10 @@ final class ScreenRecorder: NSObject {
         return warm
     }
 
+    /// `mixesSound`: the microphone is heard by `RecordingSoundMixer`, not
+    /// by the stream, so macOS records the pictures with the Mac's sound only.
     private static func streamConfiguration(_ config: RecordingConfig, display: SCDisplay,
-                                            scale: CGFloat) -> SCStreamConfiguration {
+                                            scale: CGFloat, mixesSound: Bool = false) -> SCStreamConfiguration {
         let displaySize = CGSize(width: display.width, height: display.height)
         let rect = config.source.sourceRect(displaySize: displaySize)
         let streamConfig = SCStreamConfiguration()
@@ -248,7 +274,10 @@ final class ScreenRecorder: NSObject {
         streamConfig.showsCursor = true
         streamConfig.minimumFrameInterval = CMTime(value: 1, timescale: 60)
         streamConfig.capturesAudio = config.audio.capturesSystemAudio
-        if config.audio.capturesMicrophone {
+        if mixesSound {
+            streamConfig.sampleRate = Int(RecordingSoundMixer.sampleRate)
+            streamConfig.channelCount = RecordingSoundMixer.channelCount
+        } else if config.audio.capturesMicrophone {
             streamConfig.captureMicrophone = true
             streamConfig.microphoneCaptureDeviceID = config.microphoneDeviceID
         }
@@ -327,17 +356,31 @@ final class ScreenRecorder: NSObject {
                                      excludingWindows: content.windows.filter { excludedNumbers.contains($0.windowID) })
         }
 
+        let clock = FirstFrameClock()
+        // With the Mac's sound and the microphone both chosen, macOS mixes
+        // them only after Stop, taking about half as long as the recording,
+        // so they are mixed here as it records instead.
+        let mixer: RecordingSoundMixer? = config.audio.capturesSystemAudio && config.audio.capturesMicrophone
+            && Experiments.shared.twoSoundsMixedAsYouRecord
+            ? try? RecordingSoundMixer(recordingTo: url, firstFrame: clock,
+                                       microphoneDeviceID: config.microphoneDeviceID)
+            : nil
+
         let scale = screen.backingScaleFactor
-        let streamConfig = Self.streamConfiguration(config, display: display, scale: scale)
+        let streamConfig = Self.streamConfiguration(config, display: display, scale: scale,
+                                                    mixesSound: mixer != nil)
         let rect = streamConfig.sourceRect
         recordedSize = CGSize(width: streamConfig.width, height: streamConfig.height)
 
         let stream = SCStream(filter: filter, configuration: streamConfig, delegate: self)
 
-        let recordingOutput = recordingOutput(to: url)
+        let recordingOutput = recordingOutput(to: mixer?.pictureURL ?? url)
         try stream.addRecordingOutput(recordingOutput)
-        let clock = FirstFrameClock()
         try stream.addStreamOutput(clock, type: .screen, sampleHandlerQueue: FirstFrameClock.queue)
+        if let mixer {
+            try stream.addStreamOutput(mixer, type: .audio, sampleHandlerQueue: mixer.queue)
+            mixer.startMicrophone()
+        }
         self.firstFrame = clock
 
         // The pointer is followed from just before the first frame, so the
@@ -351,9 +394,11 @@ final class ScreenRecorder: NSObject {
             lastStart.captureStarted = PointerTracker.hostNow()
         } catch {
             pointer?.stop()
+            mixer?.abandon()
             throw error
         }
 
+        self.soundMixer = mixer
         self.stream = stream
         self.recordingOutput = recordingOutput
         self.outputURL = url
@@ -409,8 +454,11 @@ final class ScreenRecorder: NSObject {
 
     /// Stop and finalize the recording, returning the written MP4 URL once
     /// macOS has finished the file, however long that takes
-    /// (`RecordingFileClose`): with sound from the Mac and the microphone
-    /// together it is about 0.45 s per recorded second. The recording lets go
+    /// (`RecordingFileClose`): under 100 ms, or about 0.45 s per recorded
+    /// second when macOS mixes the Mac's sound and the microphone itself
+    /// (`next-two-sounds-mixed-as-you-record` off). With the mix made while
+    /// recording, the pictures and the mix are joined once both are closed,
+    /// in tens of milliseconds. The recording lets go
     /// of the recorder at once, so the next one can start while this file is
     /// still closing; its stream and writer are held until it is done, since a
     /// writer let go of mid-close never says it finished.
@@ -421,14 +469,20 @@ final class ScreenRecorder: NSObject {
         }
         isRecording = false
         lastStop = StopTrace()
+        noteFirstHeard()
         let recorded = firstFrame?.seconds.map { max(0, PointerTracker.hostNow() - $0) } ?? 0
         firstFrame?.release()
+        let mixer = soundMixer
+        self.soundMixer = nil
         self.stream = nil
         self.recordingOutput = nil
         self.outputURL = nil
+        // The mix is closed while macOS closes the pictures' file.
+        let soundWritten = mixer.map { mixer in Task { await mixer.finishSound() } }
 
         let key = ObjectIdentifier(output)
-        let file = ClosingFile(stream: stream, output: output, url: url, recordedSeconds: recorded)
+        let file = ClosingFile(stream: stream, output: output, url: mixer?.pictureURL ?? url,
+                               recordedSeconds: recorded)
         closingFiles[key] = file
         let verdict = await withCheckedContinuation { (continuation: CheckedContinuation<RecordingFileClose.Verdict, Never>) in
             file.continuation = continuation
@@ -440,6 +494,13 @@ final class ScreenRecorder: NSObject {
         }
         closingFiles[key] = nil
         if verdict == .gaveUp { NSLog("Recording file never reported closing; handing it over as it is: \(url.path)") }
+        if let mixer, let soundWritten {
+            let written = await soundWritten.value
+            lastStop?.mixedLive = true
+            lastStop?.soundWritten = Date()
+            lastStop?.joined = await mixer.join(into: url, soundWritten: written)
+            lastStop?.soundJoined = Date()
+        }
         return url
     }
 
@@ -493,6 +554,8 @@ final class ScreenRecorder: NSObject {
     private func streamFailed(_ stopped: ObjectIdentifier) {
         guard let stream, ObjectIdentifier(stream) == stopped else { return }
         isRecording = false
+        soundMixer?.abandon()
+        soundMixer = nil
     }
 }
 

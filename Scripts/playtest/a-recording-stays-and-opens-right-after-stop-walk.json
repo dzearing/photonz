@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-recording-stays-and-opens-right-after-stop-walk",
-  "seed": "The user, 2026-10-10: 'I record, i stop, i momentarily see the thumbnail, then it disappears. once i tried to open and it said no video data was available. another time it gave me a hang on tight message.' Their recordings take sound from the Mac and the microphone, which macOS takes about 0.45 s per recorded second to close, and the recorder used to hand the file over 400 ms after the stream stopped whether it was finished or not. At Next defaults with no flag touched: twenty real recordings with that sound, each opened at 0.2, 0.5, 1 or 2 s after Stop; any tile that vanishes, moves or blanks, any note in the corner, or an open over 250 ms fails it.",
+  "seed": "The user, 2026-10-10: 'I record, i stop, i momentarily see the thumbnail, then it disappears. once i tried to open and it said no video data was available. another time it gave me a hang on tight message.' Their recordings take sound from the Mac and the microphone, which macOS took about 0.45 s per recorded second to close until the recorder mixed the pair itself (2026-10-11, now about 100 ms), and the recorder used to hand the file over 400 ms after the stream stopped whether it was finished or not. At Next defaults with no flag touched: twenty real recordings with that sound, each opened at 0.2, 0.5, 1 or 2 s after Stop; any tile that vanishes, moves or blanks, any note in the corner, or an open over 250 ms fails it.",
   "clock": 300,
   "setup": {
     "history": 4,
