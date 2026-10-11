@@ -4,12 +4,12 @@
   "goal": "The captions mock shows a small Lower-third tag riding on the top edge of the violet plate while that style is picked, so you can tell at a glance the captions are a lower third. The app now puts the captions low left on the plate but shows no tag.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 20,
-  "status": "in_progress",
+  "seq": 120,
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T05:57:27.788Z",
-  "updated": "2026-10-11T12:32:47.229Z",
+  "updated": "2026-10-11T12:51:01.435Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html .l3badge (line ~39, ~477): top:-11px left:0 of the plate, var(--comp) fill, 8.5px 640 weight, ic-component icon. The app plate hugs the words inside the Captions box (TextRasterizer.drawPlate), so the tag needs the plate rect, not the box. Chrome overlay like the AUTO · EN badge (CaptionGuides.swift CaptionBadge). Found by the-lower-third-caption-style-sits-low-left-on-i.",
@@ -46,6 +46,14 @@
     {
       "t": "2026-10-11T12:32:47.228Z",
       "note": "built: TextRasterizer.plateRect (shares drawPlate's union via plateBounds), LowerThirdTag in CaptionGuides.swift, EditorState.lowerThirdPlates, tag drawn in CaptionGuidesOverlay in the caption's own face at 8.5pt semibold on the fixed component violet. Walk lower-third-sits-low-left-walk gains captionsExpectLowerThirdTag / captionsExpectNoLowerThirdTag, ok at Next defaults with real captures; captions-panel-keeps-its-margins and captions-write-themselves walks ok. Exported frame at 4.31s checked: no tag. Icon held back for decision card. Left rough (not filed, agent-only): the walk 'render' step draws the untimed document, so with captions every cue stacks on one picture; use a frame from the exported film instead. Audit rough line 3 (tag follows the whole line's plate) stays here: the lower third look shows the whole line at once by default."
+    },
+    {
+      "t": "2026-10-11T12:33:08.865Z",
+      "note": "Tag shipped in d26ae25c: a violet Lower-third tag rides the top left of a lower third's plate in the editor, in the caption's face, never in the exported film, gone under other styles; lower-third-sits-low-left-walk checks it at Next defaults (ok, real captures), audit 2026-10-11-lower-third-tag.json. Waiting on the card about which icon the tag wears (the mock's component icon would read as a component chip); it shows the label only until answered."
+    },
+    {
+      "t": "2026-10-11T12:51:01.434Z",
+      "note": "seq 20 -> 120"
     }
   ],
   "started": "2026-10-11T11:56:31.525Z",

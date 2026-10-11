@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T05:13:51.137Z",
-  "updated": "2026-10-10T12:15:15.938Z",
+  "updated": "2026-10-11T11:43:42.512Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-09 by a-recording-s-framing-reads-as-scale-then-centre. Repro: Scripts/playtest.sh Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json, pictures 3-framed-at-5-sc.png and 3b-centre-typed-sc.png show a dashed route from about (846,400) to (1465,633) screen points over the dark canvas, which is the posed origin path of the Position motion (copies under queue/audits/2026-10-09-zoom-centre-3-framed-at-5-sc.png). The video-zoom-wt mock draws no path in steps 6-8, only the frame ring. Which of the two (centre route or none) is a UX call; a decision card if unsure. Path drawing: grep motion path / route in Sources/Photonz canvas overlays; position on a takesAReframe layer is Layer.positionReadsAsCentre.",
@@ -26,9 +26,39 @@
     {
       "t": "2026-10-10T12:15:15.937Z",
       "note": "seq 3970 -> 10"
+    },
+    {
+      "t": "2026-10-11T11:05:59.247Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T11:25:31.141Z",
+      "note": "Full Scripts/test.sh hung at 0% CPU after 10 min, swiftpm-testing-helper parked in VNRecognizeTextRequest and CGImageDestinationFinalize: the signature already on find-out-why-the-whole-test-run-hangs-in-the-mac. Killed it, ran the split that task records instead."
+    },
+    {
+      "t": "2026-10-11T11:43:25.555Z",
+      "note": "Adversarial pass: the centre route has no honest home on the canvas. The camera always points at the middle of the frame, so a centre route drawn in the recording's own points would land on features that are not where the magnified picture shows them. The zoom mock draws no path in steps 6-8 and no Path row, so the mock settles it: no path, no card needed. A Premiere user sees the same: the Program monitor shows no Position path for Scale-to-crop zooms in Screen Studio-style tools."
+    },
+    {
+      "t": "2026-10-11T11:43:25.613Z",
+      "note": "Built: PhotonzDocument.motionPath(layerID:) returns nil when layer.positionReadsAsCentre (MotionPath.swift); EditorState.motionPathShape nil for the same, so the Path row and the Video menu's Curve the Path (disabled) follow. Tests: RecordingFramingReadsAsCentreTests +2 (recording draws none, title still draws). Walk framing-a-zoom-keys-its-centre-walk now expects no Path row after the framed shot; it passes with 6 real captures. motion-path-walk, between-the-keys-walk, every-title-dropdown-opens-on-a-click-walk pass unchanged (they key a title over the recording)."
+    },
+    {
+      "t": "2026-10-11T11:43:25.670Z",
+      "note": "Rough edge filed: the picked zoomed recording is outlined as the whole magnified box, so a dashed edge and handle hang off the frame, where the mock rings the frame: a-zoomed-recording-shows-its-ring-on-the-frame-n. Left rough, no task: a recording that already carries a bend from before keeps it, invisibly, with no Path row to straighten it; nobody could easily bend one before and no mock asks for it."
+    },
+    {
+      "t": "2026-10-11T11:43:30.595Z",
+      "note": "Correction to the adversarial note above: Premiere does draw a Position path in the Program monitor for a clip's Motion; the case for none here is the mock and that a reframe's Position is the camera, not the clip moving."
+    },
+    {
+      "t": "2026-10-11T11:43:42.510Z",
+      "note": "A framed recording draws no motion path and no Path row (matches video-zoom-wt steps 6-8); titles and shapes keep their path. MotionPath.swift + EditorState+MotionPath.swift, 2 new core tests, framing-a-zoom-keys-its-centre-walk expects no Path row and passes at Next defaults with 6 real captures; motion-path, between-the-keys and title-dropdown walks pass. Audit 2026-10-11-zoomed-recording-draws-no-motion-path.json. Commit 849bce62."
     }
   ],
   "walks": [
     "framing-a-zoom-keys-its-centre-walk"
-  ]
+  ],
+  "started": "2026-10-11T11:05:59.245Z",
+  "completed": "2026-10-11T11:43:42.511Z"
 }

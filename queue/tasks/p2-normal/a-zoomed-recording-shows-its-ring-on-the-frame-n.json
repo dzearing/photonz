@@ -1,0 +1,39 @@
+{
+  "id": "a-zoomed-recording-shows-its-ring-on-the-frame-n",
+  "title": "A zoomed recording shows its ring on the frame, not handles off the edge",
+  "goal": "When a recording is zoomed in and picked, the canvas outlines the whole magnified picture, so a dashed edge and a handle hang out past the frame on empty canvas. The zoom walkthrough puts a ring on the frame itself, which is where the shot is.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T11:42:27.207Z",
+  "updated": "2026-10-11T12:51:25.546Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-11 by a-zoomed-recording-s-motion-path-shows-where-the. Repro: Scripts/playtest.sh Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json, picture 3-framed-at-5-sc.png (copy queue/audits/2026-10-11-zoom-no-path-3-framed-at-5-sc.png): at 220% a dashed vertical line runs at about x=288 screen points left of the frame (frame left edge ~311) with a square handle at (288,633), the magnified layer box. Mock: docs/design/mocks/pages/video-zoom-wt.html #frameRing (step 5 on: the clip outlines on the timeline, a ring lands on the frame). Layer.takesAReframe / positionReadsAsCentre names the case. Resize handles on a zoomed clip may need a UX call (drag them to change Scale, or none): decision card if unsure.",
+  "acceptance": [
+    "With a recording at 220% and picked, the outline sits on the edge of the frame, not outside it",
+    "No resize handle is drawn out on the empty canvas past the frame",
+    "A title or shape picked on top of the same recording keeps its usual outline and handles",
+    "A walk at Next defaults photographs the picked zoomed recording"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T11:42:27.209Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T12:51:00.790Z",
+      "note": "seq 3970 -> 10"
+    },
+    {
+      "t": "2026-10-11T12:51:25.545Z",
+      "note": "seq 10 -> 20"
+    }
+  ],
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ]
+}

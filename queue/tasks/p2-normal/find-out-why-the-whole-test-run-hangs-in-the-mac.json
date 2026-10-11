@@ -4,12 +4,12 @@
   "goal": "On 2026-10-10 the full test run stopped making progress twice, stuck inside the Mac's own HEIF picture writing, text recognition and sound reading, while the same tests pass on their own. Until it is understood, a runner cannot get a single green run before committing.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T11:00:59.694Z",
-  "updated": "2026-10-10T12:17:44.302Z",
+  "updated": "2026-10-11T12:51:25.477Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by runner on a-spinner-can-turn-about-the-middle-of-the-artbo, 03:10-03:50. `Scripts/test.sh` twice sat at 0% CPU for 9-19 min (swiftpm-testing-helper). `sample <pid>` showed threads parked in CGImageDestinationFinalize > HEIFWritePlugin > CMPhoto > VCPHEVC (PackageIOTests, ImageCodecTests), VNRecognizeTextRequest (ReadPageWeightFixtureTests, ReadRunAsTextFixtureTests, ARefusedReadIsToldApartTests via TextReader) and AVAssetReader (SoundFile.peaks). `swift test --skip-build --filter ImageCodecTests` alone: 6 pass in 0.05s. Split run passed: `Scripts/test.sh --skip 'PhotonzRenderTests|PhotonzMediaTests'` 11003 pass in 42s; `swift test --skip-build --filter 'PhotonzRenderTests|PhotonzMediaTests'` 1223 pass in 240s. Previous commit 3a5cfc74 at 02:44 passed its run, so this may be transient (VTEncoderXPCService/aned state). Also: `timeout` is not on this Mac, so a bounded run needs a poll loop.",
@@ -37,6 +37,78 @@
     {
       "t": "2026-10-10T12:17:44.301Z",
       "note": "digest 2026-10-10 ~12:20 UTC at 335d0d38: ran swift test --skip-build --filter 'PhotonzRenderTests|PhotonzMediaTests' with no other runner on the Mac: 1229 tests in 174 suites passed after 229.6 s, no stall. So it does not hang every time; the two stalls this morning came while a runner had just built and walks had been running. Kept at p2, behind the two ready video tasks."
+    },
+    {
+      "t": "2026-10-10T13:32:15.078Z",
+      "note": "seen again 2026-10-10 ~06:00 by the recording-control task: the full Scripts/test.sh run sat at 0% CPU with no test finished, every stuck thread in VNRecognizeTextRequest (TextReader.reading) or PackageIO's HEIF preview. The render+media half hung the same way on its own. Skipping 8 suites (TheReaderSaysWhenItWasRefused, ARefusedReadIsToldApart, GuardedReads, PackageIO, ReadPageWeightFixture, ReadRunAsTextFixture, ReadSizeGroundTruth, RunWordsForARow) the rest passed (1153), and those 8 then passed on their own (15 + 63). So it reads as load on the Mac's Vision/HEIF services, not a test bug."
+    },
+    {
+      "t": "2026-10-10T14:34:55.449Z",
+      "note": "seen again 2026-10-10 ~14:30 by command-left-and-right-switch-the-history-filter: full Scripts/test.sh sat at 0% CPU (swiftpm-testing-helper) for 9+ min; 'swift test --skip-build --filter PhotonzRenderTests|PhotonzMediaTests' hung the same way. Split exactly as the recording-control task did: everything but render+media 11032 pass (39s); render+media skipping the 8 Vision/HEIF suites 1153 pass (216s); those 8 alone 76 pass (98s). Walks had just been run on the probe before both stalls."
+    },
+    {
+      "t": "2026-10-10T15:45:17.208Z",
+      "note": "seen again 2026-10-10 ~15:30 by pick-several-zooms: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper for 18+ min, straight after 18 zoom walks on the probe. Same split passed: core half 11040 (39s), render+media minus the 8 Vision/HEIF suites 1153 (237s), those 8 alone 76 (98s). Every stall so far has come right after walks ran."
+    },
+    {
+      "t": "2026-10-10T16:51:14.444Z",
+      "note": "seen again 2026-10-10 ~16:45 by every-transition-can-be-picked-from-presets-and: full Scripts/test.sh passed the 600s ceiling with no output, straight after walks on the probe. Same split passed: core half 11059 (33s), render+media minus the 8 Vision/HEIF suites 1153 (203s), those 8 alone 76 (98s)."
+    },
+    {
+      "t": "2026-10-10T18:10:54.158Z",
+      "note": "seen again 2026-10-10 ~18:00 by dragging-a-box-on-the-timeline-picks-everything: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper past 10 min, straight after walks on the probe. Same split passed: core half 11073 (37s), render+media minus the 8 Vision/HEIF suites 1153 (226s), those 8 alone 76 (99s)."
+    },
+    {
+      "t": "2026-10-10T20:50:14.269Z",
+      "note": "seen again 2026-10-10 ~20:30 by clicking-a-title-in-the-library-highlights-it-at: full Scripts/test.sh ran past 20 min with no output, straight after ~60 walks on the probe. Same split passed: core half 11082 (39s; one earlier core run reported 1 issue that two reruns did not reproduce), render+media minus the 8 Vision/HEIF suites 1153 (230s), those 8 alone 76 (100s)."
+    },
+    {
+      "t": "2026-10-10T23:33:18.662Z",
+      "note": "seen again 2026-10-10 ~16:30 by title-text-comes-in-by-line-word-or-letter: full Scripts/test.sh killed at 20 min with no output, straight after ~4 probe walks. Same split passed: core 11123 (36s), render+media minus the 8 Vision/HEIF suites 1162 (234s), those 8 alone 76 (100s)."
+    },
+    {
+      "t": "2026-10-11T01:32:19.379Z",
+      "note": "seen again 2026-10-10 ~23:55 by title-backgrounds-move-gradients-grain-and-the-r: full Scripts/test.sh killed at 20 min; swift test --filter 'PhotonzRenderTests|PhotonzMediaTests' sat at 0% CPU after 97 tests, straight after one probe walk. Split passed: core 11138 (37s), render+media skipping ImageCodec/PackageIO/PictureExportBackground/ReadRunAsTextFixture/ReadSizeGroundTruth/ReadPageWeightFixture/RunWordsForARow/SeparatedRowsSayTheirWords/SeparateAutoReadStudy/TheReaderSaysWhenItWasRefused/AlignmentFixture/SpeechTranscription 1128 (248s), those 12 alone 118 (102s)."
+    },
+    {
+      "t": "2026-10-11T02:46:15.227Z",
+      "note": "seen again 2026-10-10 ~19:23 by motion-blur-on-titles-that-move-fast: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper 10+ min after ~25 probe walks. Split passed: core 11154 (37s), render+media skipping the 12 suites 1133 (256s), those 12 alone 118 (103s)."
+    },
+    {
+      "t": "2026-10-11T04:38:10.220Z",
+      "note": "seen again 2026-10-10 ~21:30 by title-tiles-play-and-a-few-knobs-restyle-a-title: full Scripts/test.sh and then render+media alone both sat at 0% CPU in swiftpm-testing-helper after ~8 probe walks; sample showed CGImageDestinationFinalize > HEIFWritePlugin (PackageIOTests) and VNRecognizeTextRequest (ReadPageWeightFixtureTests, ReadRunAsTextFixtureTests, TheReaderSaysWhenItWasRefusedTests, RunWordsForARowTests). Split passed: core 11172 (38s), render+media skipping those 7 suites 1185 (234s), the 7 alone 66 (77s)."
+    },
+    {
+      "t": "2026-10-11T06:41:01.405Z",
+      "note": "seen again 2026-10-10 ~23:20 by a-recording-is-in-history-and-opens-the-instant: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper for 9+ min after ~30 probe walks/drills. Split passed: core 11182 (38s), render+media skipping the 7 suites 1185 (one ScrubCompositePerfTests timing miss 20.2 vs 18.9 ms under load, passes alone), the 7 alone 66 (77s)."
+    },
+    {
+      "t": "2026-10-11T08:28:35.910Z",
+      "note": "seen again 2026-10-11 ~00:45 by a-set-of-titles-that-look-designed: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper for 10 min (no probe walks yet that session, only test runs). Split passed: core 11197 (40s), render+media skipping the 13 Vision/HEIF suites 1135 (211s, one RenderPerfTests timing miss under load that passes alone), those suites alone 118 (99s)."
+    },
+    {
+      "t": "2026-10-11T09:59:52.961Z",
+      "note": "seen again 2026-10-11 ~03:00 by a-full-screen-recording-with-mac-sound-and-the-m: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper past 10 min after ~12 recording-latency drills on the probe; sample showed VNRecognizeTextRequest (TheReaderSaysWhenItWasRefusedTests, RunWordsForARowTests, ReadRunAsTextFixtureTests, ReadSizeGroundTruthTests) and CGImageDestinationFinalize > HEIFWritePlugin. Split passed: core 11212 (40s), render+media skipping the 12 Vision/HEIF suites 1143 (224s), those 12 alone 118 (99s)."
+    },
+    {
+      "t": "2026-10-11T11:42:06.959Z",
+      "note": "seen again 2026-10-11 ~04:10 by a-zoomed-recording-s-motion-path-shows-where-the: full Scripts/test.sh at 0% CPU past 10 min after one probe walk run; sample showed VNRecognizeTextRequest and CGImageDestinationFinalize. render+media alone hung too (killed at 540s). Split passed: core 11231 (37s), render+media skipping the 12 Vision/HEIF suites 1148 of 1150 (233s; TitleSetFramesTests 1080p median 16.6/17.7 vs 16 ms under load, passes alone), those 12 alone 118 (99s)."
+    },
+    {
+      "t": "2026-10-11T12:32:41.081Z",
+      "note": "seen again 2026-10-11 ~05:10 by a-lower-third-wears-the-mock-s-lower-third-badge: full Scripts/test.sh at 0% CPU in swiftpm-testing-helper past 10 min after two probe walk runs. Split passed: core 11234 (34s), render+media skipping the 12 Vision/HEIF suites 1153 of 1154 (212s; TitleSetFramesTests 1080p median 17.5 vs 16 ms under load, passes alone), those 12 alone 118 (99s)."
+    },
+    {
+      "t": "2026-10-11T12:51:00.967Z",
+      "note": "seq 30 -> 40"
+    },
+    {
+      "t": "2026-10-11T12:51:25.409Z",
+      "note": "2026-10-11 digest: now seen by three runners in a row today (03:00, 04:10, 05:10 local), each losing 10 or more minutes before splitting the run, so it moves to the front of p2. Also folded here: in the split runs TitleSetFramesTests' 1080p frame-time check failed under load twice (median 16.6 and 17.5 ms against 16) and passed alone; when the full run is fixed, that check must pass in the full run too, or be made fair to a loaded machine, so no runner has to rerun a red test by hand to commit."
+    },
+    {
+      "t": "2026-10-11T12:51:25.476Z",
+      "note": "seq 40 -> 10"
     }
   ]
 }

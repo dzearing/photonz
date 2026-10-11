@@ -10654,3 +10654,259 @@
 {"t":"2026-10-10T12:17:44.303Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
 {"t":"2026-10-10T12:17:48.016Z","ev":"triage","summary":"merged 0, moved 0 priorities, reset 0, retagged 1 (test-run hang to unmanned-loop), filed 1 (key-rule scrub), resequenced p1 7 and p2 33 (focus video tasks to the front of p2), groomed 0, rough edge logged 1 (front door button style)"}
 {"t":"2026-10-10T12:17:48.046Z","ev":"digest","file":"2026-10-10.md"}
+{"t":"2026-10-10T12:18:02.864Z","ev":"task_started","id":"the-recording-control-can-be-dragged-anywhere-re","title":"The recording control can be dragged anywhere, remembers where, and starts in the bottom left","priority":"p1-high"}
+{"t":"2026-10-10T12:22:44.968Z","ev":"task_created","id":"pick-several-zooms-at-once-and-change-or-delete","priority":"p1-high","title":"Pick several zooms at once and change or delete them together"}
+{"t":"2026-10-10T12:22:45.131Z","ev":"task_resequenced","id":"pick-several-zooms-at-once-and-change-or-delete","from":3930,"to":21}
+{"t":"2026-10-10T12:22:45.265Z","ev":"task_created","id":"every-transition-can-be-picked-from-presets-and","priority":"p1-high","title":"Every transition can be picked from presets and tuned on a curve"}
+{"t":"2026-10-10T12:22:45.404Z","ev":"task_resequenced","id":"every-transition-can-be-picked-from-presets-and","from":3930,"to":22}
+{"t":"2026-10-10T12:22:45.534Z","ev":"task_created","id":"dragging-a-box-on-the-timeline-picks-everything","priority":"p1-high","title":"Dragging a box on the timeline picks everything it touches, to move or delete together"}
+{"t":"2026-10-10T12:22:45.684Z","ev":"task_resequenced","id":"dragging-a-box-on-the-timeline-picks-everything","from":3930,"to":23}
+{"t":"2026-10-10T12:45:27.345Z","ev":"task_created","id":"clicking-a-title-in-the-library-highlights-it-at","priority":"p1-high","title":"Clicking a title in the Library highlights it at once"}
+{"t":"2026-10-10T12:45:27.440Z","ev":"task_resequenced","id":"clicking-a-title-in-the-library-highlights-it-at","from":3930,"to":24}
+{"t":"2026-10-10T12:50:56.472Z","ev":"task_created","id":"titles-move-in-parts-not-as-one-block","priority":"p1-high","title":"Titles move in parts, not as one block"}
+{"t":"2026-10-10T12:50:56.558Z","ev":"task_resequenced","id":"titles-move-in-parts-not-as-one-block","from":3930,"to":25}
+{"t":"2026-10-10T12:50:56.635Z","ev":"task_created","id":"title-text-comes-in-by-line-word-or-letter","priority":"p1-high","title":"Title text comes in by line, word or letter"}
+{"t":"2026-10-10T12:50:56.725Z","ev":"task_resequenced","id":"title-text-comes-in-by-line-word-or-letter","from":3930,"to":26}
+{"t":"2026-10-10T12:50:56.808Z","ev":"task_created","id":"title-backgrounds-move-gradients-grain-and-the-r","priority":"p1-high","title":"Title backgrounds move: gradients, grain and the recording behind glass"}
+{"t":"2026-10-10T12:50:56.894Z","ev":"task_resequenced","id":"title-backgrounds-move-gradients-grain-and-the-r","from":3930,"to":27}
+{"t":"2026-10-10T12:50:56.970Z","ev":"task_created","id":"motion-blur-on-titles-that-move-fast","priority":"p1-high","title":"Motion blur on titles that move fast"}
+{"t":"2026-10-10T12:50:57.054Z","ev":"task_resequenced","id":"motion-blur-on-titles-that-move-fast","from":3930,"to":28}
+{"t":"2026-10-10T12:50:57.128Z","ev":"task_created","id":"title-tiles-play-and-a-few-knobs-restyle-a-title","priority":"p1-high","title":"Title tiles play, and a few knobs restyle a title"}
+{"t":"2026-10-10T12:50:57.213Z","ev":"task_resequenced","id":"title-tiles-play-and-a-few-knobs-restyle-a-title","from":3930,"to":29}
+{"t":"2026-10-10T12:50:57.287Z","ev":"task_created","id":"a-set-of-titles-that-look-designed","priority":"p1-high","title":"A set of titles that look designed"}
+{"t":"2026-10-10T12:50:57.370Z","ev":"task_resequenced","id":"a-set-of-titles-that-look-designed","from":3930,"to":30}
+{"t":"2026-10-10T13:32:15.080Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T13:35:58.926Z","ev":"task_walks","id":"the-recording-control-can-be-dragged-anywhere-re","walks":["the-recording-control-stays-where-you-put-it-walk"]}
+{"t":"2026-10-10T13:36:11.402Z","ev":"task_note","id":"the-recording-control-can-be-dragged-anywhere-re"}
+{"t":"2026-10-10T13:36:11.460Z","ev":"task_note","id":"the-recording-control-can-be-dragged-anywhere-re"}
+{"t":"2026-10-10T13:36:11.522Z","ev":"task_note","id":"the-recording-control-can-be-dragged-anywhere-re"}
+{"t":"2026-10-10T13:36:11.582Z","ev":"task_note","id":"the-recording-control-can-be-dragged-anywhere-re"}
+{"t":"2026-10-10T13:36:11.641Z","ev":"task_note","id":"the-recording-control-can-be-dragged-anywhere-re"}
+{"t":"2026-10-10T13:39:07.138Z","ev":"task_done","id":"the-recording-control-can-be-dragged-anywhere-re","from":"in_progress","note":"The recording control starts bottom left (glass 16 pt in, above the Dock), drags by any part but Stop while recording without taking focus, comes back to its corner-relative spot on every later recording, keeps out of a recorded region, and double click sends it home. Core placement + 16 tests (RecordingControlPlacement), app drag/memory in RecordingControlsController. Verified by walk the-recording-control-stays-where-you-put-it-walk (5 real recordings, no flags, 4 real captures), focus drill clean, region start drill PASS, tests green in split runs (full run hung in Vision/HEIF, logged on the open look-into). Audit queue/audits/2026-10-10-recording-control-spot.json."}
+{"t":"2026-10-10T13:51:30.633Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":572,"of":845,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T13:51:30.805Z","ev":"task_started","id":"command-left-and-right-switch-the-history-filter","title":"Command Left and Right switch the history filter","priority":"p1-high"}
+{"t":"2026-10-10T13:56:02.137Z","ev":"task_walks","id":"command-left-and-right-switch-the-history-filter","walks":["history-filter-command-arrows-walk","history-filter-switch-speed-walk"]}
+{"t":"2026-10-10T14:01:02.869Z","ev":"task_note","id":"command-left-and-right-switch-the-history-filter"}
+{"t":"2026-10-10T14:34:55.451Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T14:35:20.949Z","ev":"task_note","id":"command-left-and-right-switch-the-history-filter"}
+{"t":"2026-10-10T14:35:21.008Z","ev":"task_note","id":"command-left-and-right-switch-the-history-filter"}
+{"t":"2026-10-10T14:35:21.067Z","ev":"task_note","id":"command-left-and-right-switch-the-history-filter"}
+{"t":"2026-10-10T14:35:43.211Z","ev":"task_done","id":"command-left-and-right-switch-the-history-filter","from":"in_progress","note":"Command Left/Right step the history filter (All, Screenshots, Videos, no wrap) in Next, behind next-history-filter-keys on by default; plain arrows unchanged; a switch keeps the focused capture when the new filter has it; tooltip names the keys. Verified by history-filter-command-arrows-walk at Next defaults (35 steps green, Command steps under 7ms a pass), all 8 history walks green incl. the speed walk, unit tests green in three parts after the known Vision/HEIF hang. Audit queue/audits/2026-10-10-history-filter-keys.json. Commit 92d6119a."}
+{"t":"2026-10-10T14:51:08.461Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":686,"of":846,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T14:51:08.649Z","ev":"task_started","id":"pick-several-zooms-at-once-and-change-or-delete","title":"Pick several zooms at once and change or delete them together","priority":"p1-high"}
+{"t":"2026-10-10T15:28:30.515Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T15:28:30.574Z","ev":"task_note","id":"every-transition-can-be-picked-from-presets-and"}
+{"t":"2026-10-10T15:28:44.196Z","ev":"task_walks","id":"pick-several-zooms-at-once-and-change-or-delete","walks":["pick-several-zooms-walk"]}
+{"t":"2026-10-10T15:45:17.211Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T15:45:17.270Z","ev":"task_note","id":"pick-several-zooms-at-once-and-change-or-delete"}
+{"t":"2026-10-10T15:45:17.330Z","ev":"task_note","id":"pick-several-zooms-at-once-and-change-or-delete"}
+{"t":"2026-10-10T15:45:38.383Z","ev":"task_done","id":"pick-several-zooms-at-once-and-change-or-delete","from":"in_progress","note":"Shift/Command click and the Zoom lane label pick several zooms; panel shows shared values (Mixed where they differ); panel, right-click and Clip menu change or delete all picked in one undo step; no box with several picked. Commit 28b0b5d2. Verified: pick-several-zooms-walk at Next defaults (pointer clicks with Shift/Command, Delete key, right-click Delete Zoom, undo/redo), all 18 zoom walks green, tests 11040+1153+76 pass (full run hit the known Vision/HEIF hang, split per that task). Audit queue/audits/2026-10-10-pick-several-zooms.json."}
+{"t":"2026-10-10T15:57:48.554Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":575,"of":847,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T15:57:48.732Z","ev":"task_started","id":"every-transition-can-be-picked-from-presets-and","title":"Every transition can be picked from presets and tuned on a curve","priority":"p1-high"}
+{"t":"2026-10-10T16:01:17.618Z","ev":"task_note","id":"every-transition-can-be-picked-from-presets-and"}
+{"t":"2026-10-10T16:10:38.148Z","ev":"task_walks","id":"every-transition-can-be-picked-from-presets-and","walks":["curves-on-a-zoom-and-a-dissolve-walk"]}
+{"t":"2026-10-10T16:51:14.446Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T17:03:23.519Z","ev":"task_walks","id":"every-transition-can-be-picked-from-presets-and","walks":["curves-on-a-zoom-and-a-dissolve-walk","a-title-animation-takes-the-curve-row-walk"]}
+{"t":"2026-10-10T17:03:23.581Z","ev":"task_note","id":"every-transition-can-be-picked-from-presets-and"}
+{"t":"2026-10-10T17:03:23.640Z","ev":"task_note","id":"every-transition-can-be-picked-from-presets-and"}
+{"t":"2026-10-10T17:03:49.977Z","ev":"task_done","id":"every-transition-can-be-picked-from-presets-and","from":"in_progress","note":"Shared Curve row (CurveRow) on zooms (Curve or Curve In/Out apart, default Smooth), transitions at a cut (Linear), picture Fade In/Out, sound fades and Between the keys (Animate In/Out); saved curves by name with Forget; old docs unchanged. Measured at 25/50/75% within 2% (0.0 off) on canvas and export by curves-on-a-zoom-and-a-dissolve-walk; TransitionCurveTests; split test runs green. Commit 2e1ef658. Audit queue/audits/2026-10-10-every-transition-can-be-picked-from-presets-and.json"}
+{"t":"2026-10-10T17:15:39.578Z","ev":"slice_pass","walks":39,"passed":39,"failed":0,"seconds":555,"of":849,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T17:15:39.775Z","ev":"task_started","id":"dragging-a-box-on-the-timeline-picks-everything","title":"Dragging a box on the timeline picks everything it touches, to move or delete together","priority":"p1-high"}
+{"t":"2026-10-10T17:20:51.255Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T18:10:54.160Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T18:25:42.690Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T18:25:42.750Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T18:25:42.809Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T18:25:42.870Z","ev":"task_note","id":"dragging-a-box-on-the-timeline-picks-everything"}
+{"t":"2026-10-10T18:25:42.931Z","ev":"task_walks","id":"dragging-a-box-on-the-timeline-picks-everything","walks":["box-picks-everything-it-touches-walk","box-pick-by-hand-walk"]}
+{"t":"2026-10-10T18:26:12.664Z","ev":"task_done","id":"dragging-a-box-on-the-timeline-picks-everything","from":"in_progress","note":"Shipped in 5b8204c2 (Next, no flag): a box starts on empty track space, between zoom bars, and on the strip under the last track (reproduced first: before, only empty track space started one, and a recording edit has none). It picks clips, pieces, titles, sounds, zoom bars and keys it touches; Shift adds, Command flips. Dragging any picked clip, zoom bar or key carries the whole pick by the same time on its own tracks, snapping as a clip does and stopping where a zoom or key runs out of room; Delete takes all of it in one undo; Option-drag still picks a range. Panel leads with 'N picked' and the kinds above the shared sections. Core TimelineBoxPick.swift + 13 tests; split test run green (11073+1153+76; full run hit the known hang). Walks box-picks-everything-it-touches-walk and box-pick-by-hand-walk (real pointer) green, plus 18 neighbouring walks. Audit queue/audits/2026-10-10-timeline-box-picks-everything.json."}
+{"t":"2026-10-10T18:39:23.323Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":765,"of":851,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-10T18:39:23.467Z","ev":"task_started","id":"clicking-a-title-in-the-library-highlights-it-at","title":"Clicking a title in the Library highlights it at once","priority":"p1-high"}
+{"t":"2026-10-10T20:31:31.092Z","ev":"task_walks","id":"clicking-a-title-in-the-library-highlights-it-at","walks":["library-tile-click-latency-walk","library-tile-click-latency-picture-walk"]}
+{"t":"2026-10-10T20:32:15.962Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T20:32:16.023Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T20:32:16.084Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T20:32:16.147Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T20:50:14.271Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T20:50:14.339Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T21:16:59.154Z","ev":"task_note","id":"clicking-a-title-in-the-library-highlights-it-at"}
+{"t":"2026-10-10T21:17:23.171Z","ev":"task_done","id":"clicking-a-title-in-the-library-highlights-it-at","from":"in_progress","note":"Library tile clicks went from 365ms median (worst 376) to 7-18ms median (worst 26) from letting go to the tile picked on screen; dock ready within 69ms. Cause: a double-tap gesture stacked over the click held every click for the double-click window; now one click gesture reads AppKit's click count. The dock's section follows the pick a run loop pass later so its ~35ms layout no longer shares the highlight's frame. New walk step timeTileClicks; walks library-tile-click-latency-walk and -picture-walk gate at 33ms/100ms; Library (12), component (25), title (20) and double-click walks green; unit tests green via the known split (11082 + 1153 + 76). Audit queue/audits/2026-10-10-library-tile-click-latency.json. Commit 41670627."}
+{"t":"2026-10-10T21:17:47.981Z","ev":"task_started","id":"titles-move-in-parts-not-as-one-block","title":"Titles move in parts, not as one block","priority":"p1-high"}
+{"t":"2026-10-10T21:24:33.209Z","ev":"task_note","id":"titles-move-in-parts-not-as-one-block"}
+{"t":"2026-10-10T22:20:25.701Z","ev":"task_walks","id":"titles-move-in-parts-not-as-one-block","walks":["titles-move-in-parts-walk"]}
+{"t":"2026-10-10T22:20:25.766Z","ev":"task_note","id":"title-text-comes-in-by-line-word-or-letter"}
+{"t":"2026-10-10T22:20:25.828Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-10T22:20:32.544Z","ev":"task_created","id":"a-part-picked-inside-a-title-shows-its-row-only","priority":"p2-normal","title":"A part picked inside a title shows its row only across the title"}
+{"t":"2026-10-10T22:21:26.866Z","ev":"task_note","id":"titles-move-in-parts-not-as-one-block"}
+{"t":"2026-10-10T22:21:26.933Z","ev":"task_done","id":"titles-move-in-parts-not-as-one-block","from":"in_progress","note":"Shipped in 7886bd53. TitleDesign model (PhotonzCore/TitleDesign.swift, TitleDesignTests written first) compiles parts' in/hold/out into keys; all 8 built-ins re-choreographed on separate beats; locked builds measured at 2.5/6/8.5s; Ease out quint/expo on the shared list; titles placed before draw identically (PlacedTitlesOpenTheSameTests fixture); before/after frames at 0/25/50/75/100% for all 8 (TitleInFramesTests, in the audit); walk titles-move-in-parts-walk at Next defaults photographs both ins frame by frame (55 real captures); 15 affected walks green; full Scripts/test.sh green (12333 tests). Audit queue/audits/2026-10-10-titles-move-in-parts.json."}
+{"t":"2026-10-10T22:21:57.550Z","ev":"task_started","id":"title-text-comes-in-by-line-word-or-letter","title":"Title text comes in by line, word or letter","priority":"p1-high"}
+{"t":"2026-10-10T23:33:07.087Z","ev":"task_walks","id":"title-text-comes-in-by-line-word-or-letter","walks":["title-words-mask-reveal-walk"]}
+{"t":"2026-10-10T23:33:07.153Z","ev":"task_note","id":"title-text-comes-in-by-line-word-or-letter"}
+{"t":"2026-10-10T23:33:07.218Z","ev":"task_note","id":"title-text-comes-in-by-line-word-or-letter"}
+{"t":"2026-10-10T23:33:18.664Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-10T23:33:18.729Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-10T23:33:18.796Z","ev":"task_note","id":"title-text-comes-in-by-line-word-or-letter"}
+{"t":"2026-10-10T23:43:13.952Z","ev":"task_done","id":"title-text-comes-in-by-line-word-or-letter","from":"in_progress","note":"Text on a video can come in by line, word or letter (rise and fade, mask reveal, blur in, track in, typewriter, wipe; stagger, order, each length, curve), stored once on the text (PhotonzCore/TextReveal.swift) and drawn from cached per-piece rasters (PhotonzRender/TextRevealRasterizer.swift); Reveal section in the panel (Next). Verified: TextRevealTests 21 + TextRevealRenderTests 7 (settled frames byte-equal to plain text, RTL and emoji, edit mid-reveal, playback/scrub/export byte-equal at 3 moments, 56 letters at 1080p median 3.8-4.7 ms); full suite in the known split (11123 + 1162 + 76) green; title-words-mask-reveal-walk at Next defaults with pointer clicks on Preset/By/Order plus 21 other title walks green. Commit 74b7f677. Audit queue/audits/2026-10-10-title-words-reveal.json."}
+{"t":"2026-10-10T23:43:38.908Z","ev":"task_started","id":"title-backgrounds-move-gradients-grain-and-the-r","title":"Title backgrounds move: gradients, grain and the recording behind glass","priority":"p1-high"}
+{"t":"2026-10-10T23:49:03.138Z","ev":"task_note","id":"title-backgrounds-move-gradients-grain-and-the-r"}
+{"t":"2026-10-11T01:32:02.777Z","ev":"task_walks","id":"title-backgrounds-move-gradients-grain-and-the-r","walks":["title-backgrounds-move-walk"]}
+{"t":"2026-10-11T01:32:19.176Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T01:32:19.243Z","ev":"task_note","id":"title-backgrounds-move-gradients-grain-and-the-r"}
+{"t":"2026-10-11T01:32:19.311Z","ev":"task_note","id":"title-backgrounds-move-gradients-grain-and-the-r"}
+{"t":"2026-10-11T01:32:19.381Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T01:32:48.216Z","ev":"task_done","id":"title-backgrounds-move-gradients-grain-and-the-r","from":"in_progress","note":"Aurora (drifting mesh, grain, rule that draws on) and Behind Glass (the recording blurred, dimmed, settling 105 to 100%, racking back into the footage) title pages; Mesh fill with Drift, Grain effect, background blur Zoom, Trim start/end keys, Draw On and Frost builds; Next switch on by default. Verified: TitleBackgroundsTests, TitleBackgroundsRenderTests (playback/scrub/export byte-equal; Aurora 8.9-10.4 ms, Behind Glass 4.7-5.5 ms at 1080p), GrainBandingExportTests (MP4 bands 48 rows plain vs 24 with grain), split test run green, title-backgrounds-move-walk ok with 18 real captures plus 10 neighbouring walks ok. Commit e3f0814f. Audit queue/audits/2026-10-10-title-backgrounds-move.json."}
+{"t":"2026-10-11T01:38:30.741Z","ev":"sweep_pass","walks":11,"passed":11,"failed":0,"seconds":314,"complete":false,"total":856,"interrupted":true}
+{"t":"2026-10-11T01:38:30.909Z","ev":"task_started","id":"motion-blur-on-titles-that-move-fast","title":"Motion blur on titles that move fast","priority":"p1-high"}
+{"t":"2026-10-11T01:43:51.636Z","ev":"task_note","id":"motion-blur-on-titles-that-move-fast"}
+{"t":"2026-10-11T02:45:59.191Z","ev":"task_walks","id":"motion-blur-on-titles-that-move-fast","walks":["motion-blur-on-a-fast-slide-walk"]}
+{"t":"2026-10-11T02:46:15.099Z","ev":"task_note","id":"motion-blur-on-titles-that-move-fast"}
+{"t":"2026-10-11T02:46:15.164Z","ev":"task_note","id":"motion-blur-on-titles-that-move-fast"}
+{"t":"2026-10-11T02:46:15.229Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T02:46:37.936Z","ev":"task_done","id":"motion-blur-on-titles-that-move-fast","from":"in_progress","note":"Motion Blur effect (switch + Shutter, 180 default) on any video layer or a title as a whole; per-part smear along each part's own path (slide, scale, turn, and each revealing word); built-in titles wear it (next-motion-blur, on). Commit ad742ad9. Verified: MotionBlurTests 16 + MotionBlurRenderTests 5 (held frames byte-identical on/off, playback/scrub/export byte-equal, 1080p medians 4.4-5.9ms), split suite green, walk motion-blur-on-a-fast-slide-walk green at defaults with real captures, 22 title walks green. Audit queue/audits/2026-10-10-motion-blur.json."}
+{"t":"2026-10-11T03:03:57.344Z","ev":"slice_pass","walks":37,"passed":37,"failed":0,"seconds":779,"of":857,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T03:03:57.534Z","ev":"task_started","id":"title-tiles-play-and-a-few-knobs-restyle-a-title","title":"Title tiles play, and a few knobs restyle a title","priority":"p1-high"}
+{"t":"2026-10-11T03:17:48.270Z","ev":"task_created","id":"a-recording-is-in-history-and-opens-the-instant","priority":"p1-high","title":"A recording is in history and opens the instant you stop it, every time"}
+{"t":"2026-10-11T03:17:48.364Z","ev":"task_resequenced","id":"a-recording-is-in-history-and-opens-the-instant","from":3930,"to":1}
+{"t":"2026-10-11T04:38:10.222Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T04:43:22.264Z","ev":"task_walks","id":"title-tiles-play-and-a-few-knobs-restyle-a-title","walks":["title-knobs-restyle-walk","title-tiles-play-walk"]}
+{"t":"2026-10-11T04:43:36.230Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T04:43:36.288Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T04:43:36.345Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T04:43:36.404Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T04:43:36.462Z","ev":"task_note","id":"title-tiles-play-and-a-few-knobs-restyle-a-title"}
+{"t":"2026-10-11T04:44:00.406Z","ev":"task_done","id":"title-tiles-play-and-a-few-knobs-restyle-a-title","from":"in_progress","note":"Shipped in d767f1df: titles keep a recipe (PhotonzCore/TitleRestyle.swift) so Theme, Font Pair, Energy, Intensity and Background restyle a whole title; a Part section edits each part's In/Hold/Out with Replay; typing relays out and replays; Library title tiles play on hover and loop while picked, over the recording for glass and name cards; Replay Title on right-click and in Clip. Verified by TitleRestyleTests, title-knobs-restyle-walk and title-tiles-play-walk at Next defaults, all 25 title walks, tile click latency (worst 27 ms), and split test runs (full run hit the known HEIF/Vision hang). Audit: queue/audits/2026-10-10-title-knobs.json."}
+{"t":"2026-10-11T04:57:24.470Z","ev":"slice_pass","walks":39,"passed":39,"failed":0,"seconds":642,"of":859,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T04:57:24.639Z","ev":"task_started","id":"a-recording-is-in-history-and-opens-the-instant","title":"A recording is in history and opens the instant you stop it, every time","priority":"p1-high"}
+{"t":"2026-10-11T05:32:27.466Z","ev":"task_note","id":"a-recording-is-in-history-and-opens-the-instant"}
+{"t":"2026-10-11T06:40:32.407Z","ev":"task_created","id":"a-full-screen-recording-with-mac-sound-and-the-m","priority":"p1-high","title":"A full-screen recording with Mac sound and the microphone plays the moment you stop it"}
+{"t":"2026-10-11T06:41:01.230Z","ev":"task_walks","id":"a-recording-is-in-history-and-opens-the-instant","walks":["a-recording-stays-and-opens-right-after-stop-walk","a-recording-opens-at-stop-walk"]}
+{"t":"2026-10-11T06:41:01.289Z","ev":"task_note","id":"a-recording-is-in-history-and-opens-the-instant"}
+{"t":"2026-10-11T06:41:01.348Z","ev":"task_note","id":"a-recording-is-in-history-and-opens-the-instant"}
+{"t":"2026-10-11T06:41:01.407Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T06:41:24.135Z","ev":"task_done","id":"a-recording-is-in-history-and-opens-the-instant","from":"in_progress","note":"Root cause reproduced: with Mac sound + microphone, full screen, the recorder filed the file 0.75 s after Stop while macOS needed 1.6-20 s more and never said it finished (door 'still writing', playable only ~11 s later). Now waits for macOS (RecordingFileClose, tested) and keeps the writer alive; just-landed recordings open on their held frame. Verified: drill 42 runs ready at landing; new walk a-recording-stays-and-opens-right-after-stop-walk 20/20 stop-then-open with no vanish or message, opens 144-197 ms median (worst 210 alone, 165 beside a window); 8 recording walks green; core tests 11182 pass, render+media split green. Commit f5b67a7d. Follow-up a-full-screen-recording-with-mac-sound-and-the-m for macOS's own slow close."}
+{"t":"2026-10-11T06:54:04.109Z","ev":"slice_pass","walks":39,"passed":39,"failed":0,"seconds":602,"of":860,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T06:54:04.280Z","ev":"task_started","id":"a-set-of-titles-that-look-designed","title":"A set of titles that look designed","priority":"p1-high"}
+{"t":"2026-10-11T08:28:23.735Z","ev":"task_created","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b","priority":"p1-high","title":"Titles can play a soft whoosh and tick as they build"}
+{"t":"2026-10-11T08:28:35.912Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T08:28:35.973Z","ev":"task_walks","id":"a-set-of-titles-that-look-designed","walks":["title-set-keynote-clean-walk","title-set-soft-gradient-glass-walk","title-set-kinetic-bold-walk","title-set-editorial-serif-walk","title-set-tech-terminal-walk","title-set-behind-glass-walk","title-set-light-leak-walk","title-set-gradient-glow-walk","title-set-stacked-stagger-walk","title-set-split-wipe-walk","title-set-minimal-underline-walk","title-set-pill-card-walk","title-presets-gallery-walk","title-knobs-restyle-walk"]}
+{"t":"2026-10-11T08:52:45.537Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:45.600Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:45.660Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:45.720Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:45.780Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:45.839Z","ev":"task_note","id":"a-set-of-titles-that-look-designed"}
+{"t":"2026-10-11T08:52:58.423Z","ev":"task_done","id":"a-set-of-titles-that-look-designed","from":"in_progress","note":"Twelve designed titles replace the plain set on the shelf and in the Insert menus (Sources/PhotonzCore/TitleSet.swift): Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Behind Glass, Light Leak, Gradient Glow, Stacked Stagger, and the lower thirds Split Wipe, Minimal Underline, Pill Card, in title safe. Title parts can bring words in by line, word or letter (plus Mask Reveal, Track In, Typewriter, and a Blink hold), editable in the Part section. Verified: TitleSetTests (designed rules per preset), TitleBuildsByPieceTests, TitleSetFramesTests (72 frames, in the audit), TitleSetPerfTests (1.7 to 8.4 ms a 1080p frame), SavedTitlesStillOpenTests; 12 title-set walks each insert, type and export an MP4 that plays; 14 title walks retargeted and green; split test run green (full run hangs, known p2). Sounds moved to titles-can-play-a-soft-whoosh-and-tick-as-they-b (no sound clips exist). Audit: queue/audits/2026-10-11-a-set-of-titles-that-look-designed.json."}
+{"t":"2026-10-11T09:10:45.298Z","ev":"slice_pass","walks":39,"passed":39,"failed":0,"seconds":904,"of":872,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T09:10:45.490Z","ev":"task_started","id":"a-full-screen-recording-with-mac-sound-and-the-m","title":"A full-screen recording with Mac sound and the microphone plays the moment you stop it","priority":"p1-high"}
+{"t":"2026-10-11T09:19:06.653Z","ev":"task_note","id":"a-full-screen-recording-with-mac-sound-and-the-m"}
+{"t":"2026-10-11T09:59:52.963Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T10:03:11.027Z","ev":"task_walks","id":"a-full-screen-recording-with-mac-sound-and-the-m","walks":["a-recording-stays-and-opens-right-after-stop-walk"]}
+{"t":"2026-10-11T10:03:11.088Z","ev":"task_note","id":"a-full-screen-recording-with-mac-sound-and-the-m"}
+{"t":"2026-10-11T10:03:11.147Z","ev":"task_note","id":"a-full-screen-recording-with-mac-sound-and-the-m"}
+{"t":"2026-10-11T10:03:27.880Z","ev":"task_done","id":"a-full-screen-recording-with-mac-sound-and-the-m","from":"in_progress","note":"With Mac sound and the microphone both on, the recorder now mixes them live while recording (Next switch next-two-sounds-mixed-as-you-record, on by default) and joins pictures + mix at Stop without re-encoding. Probe drill, full screen, both sounds: playable 60 ms after Stop for 3 s, 46 ms for 10 s, 92 ms for 45 s (were 1.6 s, 4.6 s, 20 s); one or no sound unchanged at 25-49 ms. Mac sound sync matches macOS's own track to 0.1 ms; mic stamps on the host clock (arrive 12 ms after). Commit 376031ec, audit queue/audits/2026-10-11-two-sounds-play-at-stop.json, walks ok, split test run green."}
+{"t":"2026-10-11T10:20:58.921Z","ev":"slice_pass","walks":37,"passed":37,"failed":0,"seconds":672,"of":872,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T10:20:59.095Z","ev":"task_started","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b","title":"Titles can play a soft whoosh and tick as they build","priority":"p1-high"}
+{"t":"2026-10-11T10:25:53.205Z","ev":"task_note","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b"}
+{"t":"2026-10-11T10:49:10.036Z","ev":"task_walks","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b","walks":["title-sounds-whoosh-and-tick-walk"]}
+{"t":"2026-10-11T10:49:45.828Z","ev":"task_note","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b"}
+{"t":"2026-10-11T10:49:45.895Z","ev":"task_done","id":"titles-can-play-a-soft-whoosh-and-tick-as-they-b","from":"in_progress","note":"A Sounds switch in the Title section (off by default) lays a Title Sounds bar under the title: a synthesised soft whoosh as the headline comes in and a tick as each small accent lands, timed from the title's design and shaped by Energy. The bar is kept under its title on every edit (drag, trim, copy, delete), plays, and exports. Core TitleSounds.swift + Layer.titleSound, PhotonzMedia TitleSoundSynth.swift, app TitleSoundFiles.swift and the panel row. Verified by TitleSoundsTests (17), TitleSoundSynthTests (7, including an export of the mix), the full suite (12,497 green) and title-sounds-whoosh-and-tick-walk at Next defaults (the switch clicked at its face, silent MP4 with Sounds off, MP4 with a sound track with it on, bar gone when clicked off). Audit: queue/audits/2026-10-11-titles-can-play-a-soft-whoosh-and-tick-as-they-b.json. Commit 9ac8b17a."}
+{"t":"2026-10-11T11:05:59.067Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":816,"of":873,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T11:05:59.253Z","ev":"task_started","id":"a-zoomed-recording-s-motion-path-shows-where-the","title":"A zoomed recording's motion path shows where the camera points, or nothing","priority":"p2-normal"}
+{"t":"2026-10-11T11:25:31.143Z","ev":"task_note","id":"a-zoomed-recording-s-motion-path-shows-where-the"}
+{"t":"2026-10-11T11:42:06.961Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T11:42:27.211Z","ev":"task_created","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n","priority":"p2-normal","title":"A zoomed recording shows its ring on the frame, not handles off the edge"}
+{"t":"2026-10-11T11:43:25.557Z","ev":"task_note","id":"a-zoomed-recording-s-motion-path-shows-where-the"}
+{"t":"2026-10-11T11:43:25.615Z","ev":"task_note","id":"a-zoomed-recording-s-motion-path-shows-where-the"}
+{"t":"2026-10-11T11:43:25.672Z","ev":"task_note","id":"a-zoomed-recording-s-motion-path-shows-where-the"}
+{"t":"2026-10-11T11:43:30.597Z","ev":"task_note","id":"a-zoomed-recording-s-motion-path-shows-where-the"}
+{"t":"2026-10-11T11:43:42.513Z","ev":"task_done","id":"a-zoomed-recording-s-motion-path-shows-where-the","from":"in_progress","note":"A framed recording draws no motion path and no Path row (matches video-zoom-wt steps 6-8); titles and shapes keep their path. MotionPath.swift + EditorState+MotionPath.swift, 2 new core tests, framing-a-zoom-keys-its-centre-walk expects no Path row and passes at Next defaults with 6 real captures; motion-path, between-the-keys and title-dropdown walks pass. Audit 2026-10-11-zoomed-recording-draws-no-motion-path.json. Commit 849bce62."}
+{"t":"2026-10-11T11:56:31.360Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":617,"of":873,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T11:56:31.532Z","ev":"task_started","id":"a-lower-third-wears-the-mock-s-lower-third-badge","title":"A lower third wears the mock's Lower-third badge on the canvas","priority":"p2-normal"}
+{"t":"2026-10-11T11:58:34.836Z","ev":"task_note","id":"a-lower-third-wears-the-mock-s-lower-third-badge"}
+{"t":"2026-10-11T12:14:51.415Z","ev":"task_created","id":"the-menu-bar-stays-still-while-a-video-plays","priority":"p1-high","title":"The menu bar stays still while a video plays"}
+{"t":"2026-10-11T12:14:51.519Z","ev":"task_resequenced","id":"the-menu-bar-stays-still-while-a-video-plays","from":3950,"to":2}
+{"t":"2026-10-11T12:16:15.433Z","ev":"task_created","id":"f-puts-a-video-full-screen-and-the-full-screen-s","priority":"p1-high","title":"F puts a video full screen, and the full screen shortcut it lists works"}
+{"t":"2026-10-11T12:16:15.527Z","ev":"task_resequenced","id":"f-puts-a-video-full-screen-and-the-full-screen-s","from":3950,"to":3}
+{"t":"2026-10-11T12:20:56.496Z","ev":"task_created","id":"a-selection-box-on-the-timeline-scrolls-the-time","priority":"p1-high","title":"A selection box on the timeline scrolls the timeline when it reaches an edge"}
+{"t":"2026-10-11T12:20:56.582Z","ev":"task_resequenced","id":"a-selection-box-on-the-timeline-scrolls-the-time","from":3950,"to":4}
+{"t":"2026-10-11T12:24:42.034Z","ev":"decision_opened","id":"a-lower-third-wears-the-mock-s-lower-third-badge-should-the-lower-third-tag-on-th","taskId":"a-lower-third-wears-the-mock-s-lower-third-badge","question":"Should the Lower-third tag on the captions wear the mock's four-diamond icon?"}
+{"t":"2026-10-11T12:24:53.566Z","ev":"decision_withdrawn","id":"a-lower-third-wears-the-mock-s-lower-third-badge-should-the-lower-third-tag-on-th","taskId":"a-lower-third-wears-the-mock-s-lower-third-badge","question":"Should the Lower-third tag on the captions wear the mock's four-diamond icon?","reason":"reopened with option d no longer retiring the task: the tag is already built, so no tag means removing it"}
+{"t":"2026-10-11T12:24:53.641Z","ev":"decision_opened","id":"a-lower-third-wears-the-mock-s-lower-third-badge-which-icon-should-the-lower-thir","taskId":"a-lower-third-wears-the-mock-s-lower-third-badge","question":"Which icon should the Lower-third tag on the captions wear?"}
+{"t":"2026-10-11T12:25:07.388Z","ev":"task_created","id":"title-backgrounds-that-are-alive-auroras-energy","priority":"p1-high","title":"Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching"}
+{"t":"2026-10-11T12:25:07.473Z","ev":"task_resequenced","id":"title-backgrounds-that-are-alive-auroras-energy","from":3950,"to":5}
+{"t":"2026-10-11T12:25:07.555Z","ev":"task_created","id":"title-text-visibly-comes-in-and-every-built-in-t","priority":"p1-high","title":"Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds"}
+{"t":"2026-10-11T12:25:07.642Z","ev":"task_resequenced","id":"title-text-visibly-comes-in-and-every-built-in-t","from":3950,"to":6}
+{"t":"2026-10-11T12:32:41.083Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T12:32:41.143Z","ev":"task_walks","id":"a-lower-third-wears-the-mock-s-lower-third-badge","walks":["lower-third-sits-low-left-walk"]}
+{"t":"2026-10-11T12:32:47.230Z","ev":"task_note","id":"a-lower-third-wears-the-mock-s-lower-third-badge"}
+{"t":"2026-10-11T12:33:08.869Z","ev":"task_blocked","id":"a-lower-third-wears-the-mock-s-lower-third-badge","from":"in_progress","note":"Tag shipped in d26ae25c: a violet Lower-third tag rides the top left of a lower third's plate in the editor, in the caption's face, never in the exported film, gone under other styles; lower-third-sits-low-left-walk checks it at Next defaults (ok, real captures), audit 2026-10-11-lower-third-tag.json. Waiting on the card about which icon the tag wears (the mock's component icon would read as a component chip); it shows the label only until answered."}
+{"t":"2026-10-11T12:47:46.876Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":498,"of":873,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T12:50:19.082Z","ev":"task_created","id":"work-about-how-something-looks-or-moves-is-filed","priority":"p2-normal","title":"Work about how something looks or moves is filed with a bar the weak version fails"}
+{"t":"2026-10-11T12:50:32.898Z","ev":"task_created","id":"the-focus-check-stops-crying-theft-about-one-wal","priority":"p2-normal","title":"The focus check stops crying theft about one walk's own declared drags"}
+{"t":"2026-10-11T12:50:59.960Z","ev":"task_note","id":"the-focus-check-stops-crying-theft-about-one-wal"}
+{"t":"2026-10-11T12:51:00.020Z","ev":"task_note","id":"the-rule-for-picking-a-key-is-written-where-runn"}
+{"t":"2026-10-11T12:51:00.080Z","ev":"task_resequenced","id":"the-menu-bar-stays-still-while-a-video-plays","from":2,"to":10}
+{"t":"2026-10-11T12:51:00.138Z","ev":"task_resequenced","id":"f-puts-a-video-full-screen-and-the-full-screen-s","from":3,"to":20}
+{"t":"2026-10-11T12:51:00.196Z","ev":"task_resequenced","id":"a-selection-box-on-the-timeline-scrolls-the-time","from":4,"to":30}
+{"t":"2026-10-11T12:51:00.253Z","ev":"task_resequenced","id":"title-backgrounds-that-are-alive-auroras-energy","from":5,"to":40}
+{"t":"2026-10-11T12:51:00.310Z","ev":"task_resequenced","id":"title-text-visibly-comes-in-and-every-built-in-t","from":6,"to":50}
+{"t":"2026-10-11T12:51:00.369Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":10,"to":60}
+{"t":"2026-10-11T12:51:00.429Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":20,"to":70}
+{"t":"2026-10-11T12:51:00.498Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":30,"to":80}
+{"t":"2026-10-11T12:51:00.558Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":40,"to":90}
+{"t":"2026-10-11T12:51:00.618Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":50,"to":100}
+{"t":"2026-10-11T12:51:00.675Z","ev":"task_resequenced","id":"a-component-tool-places-a-component-from-the-too","from":60,"to":110}
+{"t":"2026-10-11T12:51:00.735Z","ev":"task_resequenced","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar","from":70,"to":120}
+{"t":"2026-10-11T12:51:00.792Z","ev":"task_resequenced","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n","from":3970,"to":10}
+{"t":"2026-10-11T12:51:00.852Z","ev":"task_resequenced","id":"a-part-picked-inside-a-title-shows-its-row-only","from":3960,"to":20}
+{"t":"2026-10-11T12:51:00.911Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":3980,"to":30}
+{"t":"2026-10-11T12:51:00.970Z","ev":"task_resequenced","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","from":30,"to":40}
+{"t":"2026-10-11T12:51:01.027Z","ev":"task_resequenced","id":"the-focus-check-stops-crying-theft-about-one-wal","from":3990,"to":50}
+{"t":"2026-10-11T12:51:01.084Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":90,"to":60}
+{"t":"2026-10-11T12:51:01.142Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":40,"to":70}
+{"t":"2026-10-11T12:51:01.203Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":50,"to":80}
+{"t":"2026-10-11T12:51:01.262Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":60,"to":90}
+{"t":"2026-10-11T12:51:01.320Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":70,"to":100}
+{"t":"2026-10-11T12:51:01.377Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":80,"to":110}
+{"t":"2026-10-11T12:51:01.436Z","ev":"task_resequenced","id":"a-lower-third-wears-the-mock-s-lower-third-badge","from":20,"to":120}
+{"t":"2026-10-11T12:51:01.497Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":100,"to":130}
+{"t":"2026-10-11T12:51:01.556Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":110,"to":140}
+{"t":"2026-10-11T12:51:01.617Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":120,"to":150}
+{"t":"2026-10-11T12:51:01.677Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":130,"to":160}
+{"t":"2026-10-11T12:51:01.735Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":140,"to":170}
+{"t":"2026-10-11T12:51:01.796Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":150,"to":180}
+{"t":"2026-10-11T12:51:01.857Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":160,"to":190}
+{"t":"2026-10-11T12:51:01.917Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":170,"to":200}
+{"t":"2026-10-11T12:51:01.976Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":180,"to":210}
+{"t":"2026-10-11T12:51:02.036Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":190,"to":220}
+{"t":"2026-10-11T12:51:02.094Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":200,"to":230}
+{"t":"2026-10-11T12:51:02.151Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":210,"to":240}
+{"t":"2026-10-11T12:51:02.210Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":220,"to":250}
+{"t":"2026-10-11T12:51:02.268Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":230,"to":260}
+{"t":"2026-10-11T12:51:02.328Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":240,"to":270}
+{"t":"2026-10-11T12:51:02.385Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":250,"to":280}
+{"t":"2026-10-11T12:51:02.444Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":260,"to":290}
+{"t":"2026-10-11T12:51:02.502Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":270,"to":300}
+{"t":"2026-10-11T12:51:02.560Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":280,"to":310}
+{"t":"2026-10-11T12:51:02.618Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":290,"to":320}
+{"t":"2026-10-11T12:51:02.677Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":300,"to":330}
+{"t":"2026-10-11T12:51:02.736Z","ev":"task_resequenced","id":"decide-whether-starter-components-change-colour","from":310,"to":340}
+{"t":"2026-10-11T12:51:02.796Z","ev":"task_resequenced","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":320,"to":350}
+{"t":"2026-10-11T12:51:02.855Z","ev":"task_resequenced","id":"the-layers-list-says-stack-words-the-way-the-aut","from":330,"to":360}
+{"t":"2026-10-11T12:51:25.411Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T12:51:25.478Z","ev":"task_resequenced","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","from":40,"to":10}
+{"t":"2026-10-11T12:51:25.547Z","ev":"task_resequenced","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n","from":10,"to":20}
+{"t":"2026-10-11T12:51:25.609Z","ev":"task_resequenced","id":"a-part-picked-inside-a-title-shows-its-row-only","from":20,"to":30}
+{"t":"2026-10-11T12:51:25.671Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":30,"to":40}
+{"t":"2026-10-11T12:51:25.702Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 reset (guard clean, no leftovers, nothing held); 2 filed (p2: work-about-how-something-looks-or-moves-is-filed from the design review, the-focus-check-stops-crying-theft-about-one-wal from the loop log); 3 logs folded (test hang now 3 runners a day plus the TitleSetFramesTests load failure; key-rule scrub companion; focus-check count); test hang moved to the front of p2; p1 resequenced 10-120 (5 new user asks first), p2 10-370 with the two focus video bugs right after the hang; open p1 12, p2 36, p3 2"}
+{"t":"2026-10-11T12:51:59.009Z","ev":"task_created","id":"design-how-layers-turn-and-move-in-depth-2-5d-as","priority":"p1-high","title":"Design how layers turn and move in depth (2.5D), as mocks"}
+{"t":"2026-10-11T12:51:59.093Z","ev":"task_resequenced","id":"design-how-layers-turn-and-move-in-depth-2-5d-as","from":3950,"to":31}
+{"t":"2026-10-11T12:51:59.175Z","ev":"task_created","id":"layers-can-turn-about-x-and-y-and-move-in-depth","priority":"p1-high","title":"Layers can turn about X and Y and move in depth under a camera (2.5D model and renderer)"}
+{"t":"2026-10-11T12:51:59.272Z","ev":"task_resequenced","id":"layers-can-turn-about-x-and-y-and-move-in-depth","from":3950,"to":32}
+{"t":"2026-10-11T12:51:59.348Z","ev":"task_created","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","priority":"p1-high","title":"Tilt, flip and push layers in depth from the canvas and the panel"}
+{"t":"2026-10-11T12:51:59.432Z","ev":"task_resequenced","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","from":3950,"to":33}
+{"t":"2026-10-11T12:51:59.508Z","ev":"task_created","id":"3d-transitions-and-title-entrances-flip-cube-swi","priority":"p1-high","title":"3D transitions and title entrances: flip, cube, swing, doorway, depth push"}
+{"t":"2026-10-11T12:51:59.592Z","ev":"task_resequenced","id":"3d-transitions-and-title-entrances-flip-cube-swi","from":3950,"to":34}
+{"t":"2026-10-11T12:51:59.664Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-11T12:51:59.736Z","ev":"task_note","id":"title-text-visibly-comes-in-and-every-built-in-t"}
+{"t":"2026-10-11T12:52:46.381Z","ev":"digest","file":"2026-10-11.md"}

@@ -1,0 +1,36 @@
+{
+  "id": "work-about-how-something-looks-or-moves-is-filed",
+  "title": "Work about how something looks or moves is filed with a bar the weak version fails",
+  "goal": "Yesterday seven title tasks closed done on rule checks while their own audit pictures showed flat backgrounds and headlines already fully on screen at the start, and the user called the result boring this morning. The rule that would have caught it (a measured visual bar plus a reel for the user) lives only in the review window's memory; write it where the manager, the runners and the intake window read it before filing or closing visual work. This serves the video focus: titles, transitions and motion are all looks.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:50:19.078Z",
+  "updated": "2026-10-11T12:51:25.670Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in', show Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass with the whole headline already visible, nearly identical to 'hold'. The done tasks a-set-of-titles-that-look-designed, title-backgrounds-move-gradients-grain-and-the-r and title-text-comes-in-by-line-word-or-letter had checklists of rules and photographs 'for the user to judge' but no measured bar. The user's rework is title-backgrounds-that-are-alive-auroras-energy and title-text-visibly-comes-in-and-every-built-in-t, which already carry the kind of bar this task asks to make standard. grep for 'visual bar' or 'weak version' in queue/bin/runner-prompt.md, queue/bin/manager-prompt.md and .claude/skills/intake/SKILL.md finds nothing today. Companion scrub: the-rule-for-picking-a-key-is-written-where-runn (same shape: a user rule that lives only in answers). Filed by the 2026-10-11 digest design review.",
+  "acceptance": [
+    "The runner instructions, the manager instructions and the intake skill each say, in plain words, that a task whose value is how something looks or moves carries a measured bar in its checklist that the current weak version would fail (for example frame difference between two moments, or how much of the text is visible at the first frame against the hold), plus a reel (a short video and a contact sheet under queue/audits/) and a decision card linking it for the user",
+    "The runner instructions say a runner closing visual work opens its own audit pictures and checks them against the task's goal before marking it done, and that pictures showing the weak version still on screen mean the task is not done",
+    "The design rules for runners (shared/AGENTS.md or UX-PATTERNS.md, whichever runners read for motion and looks) carry the same rule in one short paragraph that cites the 2026-10-11 titles rework as the reason",
+    "The next visual task the manager files after this lands carries such a bar (checked by reading it, recorded in this task's log)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:50:19.080Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T12:51:00.909Z",
+      "note": "seq 3980 -> 30"
+    },
+    {
+      "t": "2026-10-11T12:51:25.669Z",
+      "note": "seq 30 -> 40"
+    }
+  ]
+}

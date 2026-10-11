@@ -4,12 +4,12 @@
   "goal": "The auto-layout mock gives a frame one Frame size row with Hug, Narrow and Wide. The app gives a group or an arranging screen two rows, Width and Height, each Hug or Fixed, with the number typed in W and H. Decide which one the Layout section should show.",
   "epic": "ui-layout",
   "priority": "p2-normal",
-  "seq": 280,
+  "seq": 310,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T17:22:51.629Z",
-  "updated": "2026-10-10T12:15:17.878Z",
+  "updated": "2026-10-11T12:51:02.559Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised by a-screen-can-hug-what-it-holds (2026-10-08): its audit compares the shipped Width/Height rows against ui-autolayout.html lines ~281-288 (Frame size: Hug | Narrow | Wide). The group rows have had this shape since auto layout landed; no decision ever settled it. Sources/Photonz/ArrangementInspector.swift sizeRows.",
@@ -38,6 +38,10 @@
     {
       "t": "2026-10-10T12:15:17.877Z",
       "note": "seq 220 -> 280"
+    },
+    {
+      "t": "2026-10-11T12:51:02.558Z",
+      "note": "seq 280 -> 310"
     }
   ]
 }

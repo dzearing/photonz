@@ -1,0 +1,35 @@
+{
+  "id": "a-part-picked-inside-a-title-shows-its-row-only",
+  "title": "A part picked inside a title shows its row only across the title",
+  "goal": "When you pick a piece inside a title or a name card (its background, its words), the timeline row that opens for it runs across the whole video instead of only the title's few seconds, so it reads as if that piece is on screen the whole time. Its row should span the title it belongs to.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-10T22:20:32.540Z",
+  "updated": "2026-10-11T12:51:25.608Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in titles-move-in-parts-walk before the parts' rows were made to open only for the part in hand: queue/audits/2026-10-10-titles-in-parts-part-lanes.png shows the Background and Accent rows of a Midnight title page running past the end of the Title Page bar (4s) to the end of the 11s timeline. MotionStrip.stripGroup passes bar: layer.time, which is nil for a piece inside a placed group, and the timeline draws that row as a full-width bar. Likely fix: pass the enclosing placed layer's time (the shift walk already knows it) for a piece with no time of its own. Not re-run since the rows were hidden by default; reproduce by double-clicking into an inserted title and picking Background.",
+  "acceptance": [
+    "A part picked inside a title on the timeline shows its row bar from the title's start to its end, not the whole timeline",
+    "The lanes under it (Opacity, Position and so on) are unchanged",
+    "A walk at Next defaults picks a part inside an inserted title and photographs the row"
+  ],
+  "log": [
+    {
+      "t": "2026-10-10T22:20:32.542Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T12:51:00.850Z",
+      "note": "seq 3960 -> 20"
+    },
+    {
+      "t": "2026-10-11T12:51:25.607Z",
+      "note": "seq 20 -> 30"
+    }
+  ]
+}

@@ -4,12 +4,12 @@
   "goal": "When a mock prints a key the app already uses, runners keep asking the user on a card, even though the user settled the rule in July: the key Photoshop (for pictures) or Premiere (for video) uses wins, and the other command moves to a free key. Four of the 31 open cards are key questions of this kind. Write the rule down in the design rules and the runner's instructions so a runner applies it, says what moved in the audit, and only asks when two grown-up tools disagree.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 90,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "infra",
   "created": "2026-10-10T12:15:01.714Z",
-  "updated": "2026-10-10T12:15:16.515Z",
+  "updated": "2026-10-11T12:51:01.083Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence 2026-10-10 digest: cards a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick and a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component both quote 'your rule: on a clash, Photoshop keeps the key and the other tool moves' in their own options, and recommend the option the rule gives. Also option-delete-ripple-deletes-on-the-timeline-as (Premiere key) and shift-z-means-the-one-thing-you-choose-on-a-vide; icon-snapping-reaches-what-the-icon-mock-draws plans a card for Control vs Command. The rule today lives only in old decision answers (2026-07-05: M marquee, Measure moved to I; Command N New Layer) and in the layers design doc's Photoshop shortcut table; neither UX-PATTERNS.md nor queue/bin/runner-prompt.md states it. Leave existing cards for the user; this only changes how new clashes are settled.",
@@ -26,6 +26,14 @@
     {
       "t": "2026-10-10T12:15:16.514Z",
       "note": "seq 4050 -> 90"
+    },
+    {
+      "t": "2026-10-11T12:51:00.015Z",
+      "note": "Companion scrub filed 2026-10-11: work-about-how-something-looks-or-moves-is-filed (same shape, a user rule that lives only in an answer or a memory). A runner doing both prompt edits in one pass is fine."
+    },
+    {
+      "t": "2026-10-11T12:51:01.082Z",
+      "note": "seq 90 -> 60"
     }
   ]
 }
