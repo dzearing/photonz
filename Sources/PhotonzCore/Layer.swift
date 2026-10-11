@@ -1862,6 +1862,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// written before this existed.
     public var soundTrackID: UUID?
 
+    /// Set on the bar of sound a title plays as it builds
+    /// (`TitleSounds.swift`): which title it belongs to and the score it
+    /// plays. Nil is every other layer, which is every layer in every
+    /// document written before this existed.
+    public var titleSound: TitleSoundLink?
+
     /// Set on a picture that Separate into Layers lifted off a screenshot as a
     /// RUN OF TEXT: the label on a button, a row's caption, a heading. It is
     /// still a picture, because reading the words is a separate step, and this
@@ -1968,6 +1974,10 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // ...and sits on the same track.
         copy.trackID = trackID
         copy.soundTrackID = soundTrackID
+        // A copy of a title's sounds still belongs to that title, which has
+        // its own already, so the copy goes on the next step
+        // (`keepTitleSoundsInStep`); a copy of the title gets its own.
+        copy.titleSound = titleSound
         // A copy of a run of text is still a run of text, so double clicking it
         // still offers to read the words.
         copy.isARunOfText = isARunOfText

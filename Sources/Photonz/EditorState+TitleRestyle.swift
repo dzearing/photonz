@@ -94,6 +94,16 @@ extension EditorState {
         restyleTitleInHand(replaying: true) { $0.energy = energy }
     }
 
+    /// Whether the picked title plays its whoosh and ticks.
+    var titleSoundsInHand: Bool { titleRecipeInHand?.playsSounds ?? false }
+
+    /// Turn the picked title's whoosh and ticks on or off: a bar of sound
+    /// under it, or none (`TitleSounds.swift`).
+    func setTitleSounds(_ on: Bool) {
+        guard let id = titleInHandID, var probe = document, probe.setTitleSounds(layerID: id, on: on) else { return }
+        perform { $0.setTitleSounds(layerID: id, on: on) }
+    }
+
     func setTitleBackground(_ kind: TitleBackgroundKind) {
         restyleTitleInHand {
             $0.background = kind

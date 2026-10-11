@@ -438,13 +438,34 @@ tile previews that play.
    any knob until that part's In changes. Glass dims 55%. Gradient text is a
    gradient box matted to the words, in a group whose glow is theirs.
    Measured: 1.7 to 8.4 ms a 1080p frame median (debug, `TitleSetPerfTests`).
-   Not built: the whoosh and tick sounds (no sound clips exist; task
-   `titles-can-play-a-soft-whoosh-and-tick-as-they-b`), Kinetic Bold's
+   The whoosh and tick sounds were built as step 7. Not built: Kinetic Bold's
    colour swap per word, the terminal's scanlines and scramble, tracking on
    the editorial kicker, capitals as a text setting. Walks:
    `title-set-*-walk` (one per preset: insert, type, export an MP4), tests:
    `TitleSetTests`, `TitleBuildsByPieceTests`, `TitleSetFramesTests`,
    `SavedTitlesStillOpenTests`.
+
+7. **Titles play a soft whoosh and tick as they build.** Built 2026-10-11.
+   A **Sounds** switch in the Title section, off by default
+   (`TitleRecipe.sounds`). On, it lays one **Title Sounds** bar under the
+   title on an audio track of its own: a whoosh from the moment the headline
+   (or the first words) starts coming in, about 1.2 times its in long (280 to
+   1100 ms), and a tick as each small accent (under a fifth of the frame)
+   reads as landed, nine tenths of the way along its curve; at most three
+   ticks, 120 ms apart (`Sources/PhotonzCore/TitleSounds.swift`,
+   `TitleSoundScore`). Energy sets the whoosh's band and the tick's pitch.
+   The bar is an ordinary sound layer carrying a link to its title and the
+   score it plays (`Layer.titleSound`), so the mix, export, track mute and
+   level all treat it like any sound. `keepTitleSoundsInStep`, run at the end
+   of every edit in `EditorState.perform`, puts each bar back at its title's
+   start with its current score, makes one for a copy or a paste, and takes
+   away bars whose title went; a bar deleted by hand turns its title's Sounds
+   off. Nothing ships as a file: `PhotonzMedia/TitleSoundSynth.swift` makes a
+   seeded band-swept noise whoosh and a two-tone tick, 48 kHz mono WAV, peak
+   -14 dBFS, written once per score into the app's caches folder
+   (`Sources/Photonz/TitleSoundFiles.swift`) and filed under the score's
+   stable id. Walk: `title-sounds-whoosh-and-tick-walk`; tests:
+   `TitleSoundsTests`, `TitleSoundSynthTests`.
 
 Screen Studio cannot make text slides at all
 ([tight.studio](https://tight.studio/blog/how-to-add-text-slides-in-screen-studio/)),

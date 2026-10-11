@@ -285,6 +285,9 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
     /// How opaque the background was drawn when it was not glass.
     public var backgroundOpacity: Double
     public var looks: [TitleLookBase]
+    /// True when the title plays its whoosh and ticks (`TitleSounds.swift`);
+    /// nil, and so off, for every title until somebody turns them on.
+    public var sounds: Bool? = nil
 
     public static let intensityRange: ClosedRange<Double> = 0...200
 

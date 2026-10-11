@@ -1,0 +1,33 @@
+{
+  "feature": "Titles play a soft whoosh and tick as they build",
+  "epic": "video-titles-graphics",
+  "summary": "A title can now be heard arriving: one Sounds switch in its Title section lays a bar of sound under it, a soft whoosh as the words come in and a light tick as a small accent lands. The bar moves, trims, copies and deletes with the title, plays, and goes into the exported MP4.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: title-sounds-whoosh-and-tick-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, open the Library, and double click Editorial Serif to put it in." },
+    { "do": "Click the title on the canvas and find Sounds in the Title section, under Background. It is off." },
+    { "do": "Click the Sounds switch on. A Title Sounds bar appears under the title on its own audio track.", "shot": "2026-10-11-title-sounds-on-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Home, then Space, and listen: a whoosh as the headline rises, a tick as the rule under it draws on." },
+    { "do": "Drag the title's bar along the timeline, then drag its right edge shorter. The sound bar follows both." },
+    { "do": "Set Energy to Punchy and play it again: a shorter, brighter whoosh." },
+    { "do": "Choose File > Export…, pick MP4, and play the file: the sounds are in it." },
+    { "do": "Click Sounds off. The bar goes.", "shot": "2026-10-11-title-sounds-off-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Is the whoosh soft enough to sit under your own voice and still be noticed?",
+    "Does the tick land where your eye sees the accent arrive, not after it?",
+    "Is one Title Sounds bar on its own track what you expect, or would you rather the sounds sat inside the title's own bar?",
+    "Should Sounds stay a switch in the Title section, or would you also want it on the title's right-click menu?",
+    "Do you want a choice of sound sets (softer, clickier) or is one set, shaped by Energy, enough?"
+  ],
+  "rough": [
+    "No mock covers title sounds, so the Sounds row is placed by the placement contract (the placement contract table at the top of UX-PATTERNS: the panel holds values you set) as a plain switch row like the caption Shadow switch.",
+    "While a title's bar is being dragged, its sound bar stays put and catches up the moment you let go.",
+    "Dragging the Title Sounds bar on its own snaps it back under its title: it is linked. To move it freely you would turn Sounds off and add a sound of your own.",
+    "Deleting the Title Sounds bar turns that title's Sounds off rather than putting it back.",
+    "The track the bar lands on is named Audio 2 (the next free audio name), not after the title.",
+    "The sounds are made by the app, not recorded: a band-swept noise whoosh and a two-tone tick. I could not listen to them on this machine during an unmanned run; they are checked by their shape (swell, short tick, peak 14 dB under full scale) and by the exported file's levels lining up with the build.",
+    "Big accents (Light Leak's washes, a glass panel) do not tick on purpose; Tech Terminal's typing gets a whoosh, not a keystroke per letter."
+  ]
+}

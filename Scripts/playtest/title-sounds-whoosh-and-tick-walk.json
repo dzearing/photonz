@@ -1,0 +1,252 @@
+{
+  "out": "/tmp/photonz-playtest/title-sounds-whoosh-and-tick-walk",
+  "seed": "At Next defaults with no switch touched: Editorial Serif inserted from the Library and typed into, its Sounds switch read Off, the recording's own sound muted on its track so only the title can be heard, the edit written out silent, then Sounds clicked on in the Title section: a Title Sounds bar lands under the title on a track of its own, it plays, and the edit written out again carries a sound track. Clicked off, the bar goes.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Editorial Serif"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2,
+      "onTheClock": true
+    },
+    {
+      "do": "press",
+      "control": "Editorial Serif"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Insert at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4,
+      "onTheClock": true
+    },
+    {
+      "do": "action",
+      "action": "hideLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        960,
+        540
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Title Sounds",
+      "reads": "Off"
+    },
+    {
+      "do": "expect",
+      "present": false,
+      "control": "Title Sounds clip"
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Mute"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        960,
+        540
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "comment": "Only the title can make a sound now, and it is off: the file is silent.",
+      "do": "writeVideo",
+      "name": "sounds-off",
+      "format": "mp4",
+      "range": "whole",
+      "sound": false,
+      "estimateFactor": 2
+    },
+    {
+      "do": "press",
+      "control": "Title Sounds"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Title Sounds",
+      "reads": "On"
+    },
+    {
+      "do": "expect",
+      "present": true,
+      "control": "Title Sounds clip"
+    },
+    {
+      "do": "describe",
+      "stage": "1-sounds-on",
+      "note": "Sounds switched on in the Title section with one click on the switch: a Title Sounds bar lies under the title from its first frame, on an audio track of its own, its waveform a soft swell and a short tick where the rule draws on"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-sounds-on"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "describe",
+      "stage": "2-played",
+      "note": "Played from the start through the title's build: the whoosh as the headline came in and the tick as the rule landed"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-played"
+    },
+    {
+      "comment": "The title's whoosh and tick are the only sound left in the edit, and the file has a sound track.",
+      "do": "writeVideo",
+      "name": "sounds-on",
+      "format": "mp4",
+      "range": "whole",
+      "sound": true,
+      "estimateFactor": 2
+    },
+    {
+      "do": "press",
+      "control": "Title Sounds"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Title Sounds",
+      "reads": "Off"
+    },
+    {
+      "do": "expect",
+      "present": false,
+      "control": "Title Sounds clip"
+    },
+    {
+      "do": "describe",
+      "stage": "3-sounds-off",
+      "note": "Clicked off again: the Title Sounds bar is gone from under the title"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-sounds-off"
+    }
+  ]
+}

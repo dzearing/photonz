@@ -1,0 +1,44 @@
+{
+  "id": "titles-can-play-a-soft-whoosh-and-tick-as-they-b",
+  "title": "Titles can play a soft whoosh and tick as they build",
+  "goal": "A title's builds can be heard: a soft whoosh as its headline comes in and a light tick as an accent lands, off by default and turned on from the title's own controls, so an intro sounds as finished as it looks.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 3940,
+  "status": "in_progress",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T08:28:23.731Z",
+  "updated": "2026-10-11T10:49:10.035Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split from a-set-of-titles-that-look-designed (step 6 of docs/design/video-titles-polish.md), whose acceptance asked for 'optional soft whoosh and tick sounds synced to the builds, off by default, using the existing sound effects'. There are no existing sound effects to use: SoundEffects.swift is the Effects list on a picked sound (EQ, Compressor, Noise reduction), not sound clips, and Resources holds only the app icon (grep -rli whoosh Sources Resources: nothing). Sound reaches the timeline only as a file (EditorState.addSound(from:) via SoundLibrary.shared.sound(at:), PhotonzDocument.addSound). So this needs: bundled or generated sound files (PhotonzMedia could synthesise a filtered noise sweep and a click to WAV), a way for a title's recipe (GroupContent.titleRecipe) to own the sound layers it placed so a drag or trim of the title carries them, a Sounds row in the Title section (TitleRestyleInspector), and the build moments from TitleRecipe.compiled (each part's in delay). canSaveTitlePreset refuses titles containing sound, so the sounds must stay beside the title, not inside its group.",
+  "acceptance": [
+    "A small set of short whoosh and tick sounds ships with the app (made or licensed for it), with no file for the person to find",
+    "A Sounds switch on a picked title, off by default, puts those sounds on the timeline under the title at the moments its parts arrive, and takes them off again",
+    "The sounds move with the title when it is dragged or trimmed, and are heard in playback and in an exported MP4",
+    "A walk turns Sounds on for a built-in title, plays it, exports it, and finds a sound track in the file"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T08:28:23.733Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T10:20:59.088Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T10:25:53.203Z",
+      "note": "Adversarial review before building. A Premiere editor expects a sound effect as its own clip on an audio track under the graphic, linked so it moves with it; Final Cut titles with built-in sound draw it under the title clip. So: ONE bar named Title Sounds per title, on an audio track, the whoosh and ticks mixed into it at the build moments, owned by the title (Layer.titleSound) and put back in step on every edit (inside EditorState.perform, beside dropTracksEmptied), so a drag, nudge, trim, copy, paste or delete of the title carries it with no move path taught about it. Cost: during a live drag the sound bar catches up on release; dragging the sound bar alone snaps it back to the title (it is linked); deleting the sound bar by hand turns the title's Sounds off rather than coming back. No mock covers this (grep of docs/design/mocks/pages for whoosh/title sound: nothing), so the switch goes in the Title section as one labelled row, a value you set, per UX-PATTERNS placement (panel = values you tune). Sounds are synthesised, not shipped as files: a filtered noise sweep for the whoosh, a short bright click for the tick, deterministic, written once to the app's caches folder and resolved by id like any sound; a saved project copies them in like any sound file. Whoosh at the headline's in (or the first words if there is no headline), lasting about as long as it takes to arrive; a tick as each small accent (under a fifth of the frame) visually lands, at most three, none within 120 ms of another. Energy changes the whoosh's brightness and length."
+    },
+    {
+      "t": "2026-10-11T10:49:10.034Z",
+      "note": "owns these walks: title-sounds-whoosh-and-tick-walk"
+    }
+  ],
+  "started": "2026-10-11T10:20:59.087Z",
+  "walks": [
+    "title-sounds-whoosh-and-tick-walk"
+  ]
+}

@@ -4557,6 +4557,9 @@ final class EditorState {
             if let landing {
                 document.landNewLayers(since: was, onTrack: landing.trackID, atMS: landing.atMS)
             }
+            // A title's whoosh and ticks follow it wherever the edit took it,
+            // and go with it, in the same step (`TitleSounds.swift`).
+            document.keepTitleSoundsInStep(since: was)
             document.dropTracksEmptied(since: was)
         }) {
             report = history?.record(prepared) ?? EditReport()
@@ -4814,6 +4817,9 @@ final class EditorState {
             iconPreviews = [:]
             return
         }
+        // A title's sounds are made, not shipped: any score this document
+        // plays that has no file yet gets one now (`TitleSoundFiles`).
+        TitleSoundFiles.prepare(for: document)
         // Thumbnails for layers that no longer exist are dead weight.
         if thumbnailCache.count != document.layers.count {
             let ids = Set(document.layers.map(\.id))

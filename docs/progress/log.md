@@ -21155,3 +21155,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Walks: 12 `title-set-*-walk` (insert, type, photograph, export an MP4 that plays), 14 title walks retargeted from the retired names. Full `Scripts/test.sh` hung again (p2 task logged); the split ran green.
 - Follow-up: `titles-can-play-a-soft-whoosh-and-tick-as-they-b` (the sounds; there are no sound clips to use).
 - Next: whatever the loop's manager picks for the video focus.
+
+## 2026-10-11 — Titles play a soft whoosh and tick as they build
+
+- Core: `TitleSounds.swift`. A Sounds switch on a title's recipe (off by default) lays one Title Sounds bar under it, an ordinary sound layer linked back to its title (`Layer.titleSound`) holding a score worked out from the compiled design: a whoosh from the headline's in, a tick as each small accent reads as landed (at most three, 120 ms apart). `keepTitleSoundsInStep`, run at the end of every edit in `EditorState.perform`, keeps the bar under its title through drags, trims, copies and deletes; deleting the bar by hand turns Sounds off.
+- Media: `TitleSoundSynth.swift` makes the sounds (seeded band-swept noise whoosh, two-tone tick, 48 kHz mono WAV, peak -14 dBFS). App: `TitleSoundFiles.swift` writes each score once into the caches folder and files it with the sound library. Panel: Sounds row in the Title section.
+- Tests: `TitleSoundsTests`, `TitleSoundSynthTests` (including an export of the mix). Walk: `title-sounds-whoosh-and-tick-walk` (silent export with Sounds off, sound track with it on, at Next defaults, switch clicked at its face). Full suite green, 12,497 tests.
+- Next: whatever the loop's manager picks for the video focus.

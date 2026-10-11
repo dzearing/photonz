@@ -5,8 +5,8 @@ import SwiftUI
 /// needs to touch its parts one by one (`TitleRestyle.swift`,
 /// `docs/design/video-titles-polish.md`, "What the person sees", step 4).
 ///
-/// In the design's order: Theme, Font Pair, Energy, Intensity, Background.
-/// Then Part, which picks one part of the title for the Part section below.
+/// In the design's order: Theme, Font Pair, Energy, Intensity, Background,
+/// then Sounds (a switch, off until turned on). Then Part, which picks one part of the title for the Part section below.
 /// No mock draws this section; its rows are the panel's own controls
 /// (UX-PATTERNS §4): swatches for colours, a dropdown for a list of more than
 /// three, segments for three, a slider for a strength.
@@ -24,6 +24,7 @@ struct TitleRestyleInspector: View {
                 energy(recipe)
                 intensity(recipe)
                 if recipe.background != nil { background(recipe) }
+                sounds(recipe)
                 part()
             }
         }
@@ -159,6 +160,25 @@ struct TitleRestyleInspector: View {
             .panelReadout(value)
             .playtestField("Title Background")
             .panelHelp("What is behind the words, or nothing.")
+    }
+
+    // MARK: Sounds
+
+    /// A soft whoosh as the words come in and a tick as each small accent
+    /// lands, as a bar of sound under the title. Off until turned on.
+    private func sounds(_ recipe: TitleRecipe) -> some View {
+        let on = recipe.playsSounds
+        return PanelFieldRow("Sounds") {
+            Toggle("Sounds", isOn: Binding(get: { on }, set: { editorState.setTitleSounds($0) }))
+                .labelsHidden()
+                .toggleStyle(.switch)
+                .controlSize(.mini)
+                .playtestControl("Title Sounds", detail: on ? "on" : "off")
+                .accessibilityLabel("Title Sounds")
+        }
+        .panelReadout(on ? "On" : "Off")
+        .playtestField("Title Sounds")
+        .panelHelp("A soft whoosh as the words come in, and a tick as each accent lands.")
     }
 
     // MARK: Part
