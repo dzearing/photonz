@@ -1,0 +1,38 @@
+{
+  "id": "a-selection-box-on-the-timeline-scrolls-the-time",
+  "title": "A selection box on the timeline scrolls the timeline when it reaches an edge",
+  "goal": "While dragging a selection box on the timeline, bringing the pointer near the left, right, top or bottom edge scrolls the timeline that way so the box can reach things off screen. It starts slowly just inside the edge and speeds up the closer the pointer gets, without ever becoming hard to control, and the box keeps growing with the scroll.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:20:56.492Z",
+  "updated": "2026-10-11T12:20:56.581Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"marquee selection on the timeline doesn't seem to have progressive scroll built in - where as we get close to the scroll edge it starts to slowly scroll in that direction so that we can select more items offscreen. as you get closer to the edge, the velocity increases but not obnoxiously\".\n\nFrom code reading (not run): vertical edge autoscroll exists only for carrying a track, TrackRowDragSession.swift:238-263 (edgeBand, edgeSpeed, speed = edgeSpeed * into * |into|, driven per frame with dt, scrolls editor.timelineTracksScroll and moves the pointer by the scrolled amount), and LayerRowDragSession.swift:293-300 for the layers list. The box: EditorState+TrackRange.swift LanePress/LaneBox and beginLanePress/endLanePress, gesture TimelineLaneMarquee (TimelineTrackRows.swift ~1010+), drawn by TimelineLaneBoxView (TimelineDock.swift ~1291); its range is in ms, so a horizontal scroll must extend the box's ms range by the scrolled time. A drag gesture gets no events while the pointer is still, so autoscroll needs a display-link/timer driver like TrackRowDragSession's. Box selection itself: dragging-a-box-on-the-timeline-picks-everything (done).",
+  "acceptance": [
+    "Reproduce first at Next defaults: zoom the timeline in so clips run off both sides and tracks overflow vertically, drag a box toward each edge and record that nothing scrolls",
+    "The edge scrolling the track drag already has (TrackRowDragSession autoscroll: an edge band, speed rising with the square of how far into the band the pointer is) moves into one shared, pure, unit tested helper in PhotonzCore (tests first) and both the track drag and the box use it",
+    "Horizontal: near the left or right edge of the tracks' visible area the timeline scrolls in time; vertical: near the top or bottom it scrolls the tracks; both at once in a corner",
+    "Feel, MEASURED and written in the audit: zero speed at the inner edge of the band, a gentle start (well under a fifth of top speed across the inner half of the band), top speed only at or past the edge, and a top speed chosen so a 10 minute timeline at a typical zoom can be crossed in a few seconds while a single clip is still easy to stop on; the curve and its numbers are in the audit",
+    "Holding the pointer still in the band keeps scrolling and the box keeps extending to the pointer's place in the scrolled content; moving back out of the band stops it at once; letting go picks everything the box covered, including what scrolled into view",
+    "Pointer past the edge of the window (outside the timeline) keeps scrolling at top speed in that direction until released",
+    "Dragging clips, zoom bars and title bars along the timeline gets the same edge scrolling if it does not have it already (the audit says which had it)",
+    "Scrolling is smooth at 60 fps (frame timing MEASURED over a 5 s scroll) and never fights the playhead or follow-playhead",
+    "A walk draws a box from a clip on screen to one off screen to the right, holding at the edge, and checks both are picked",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:20:56.494Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:20:56.580Z",
+      "note": "seq 3950 -> 4"
+    }
+  ]
+}
