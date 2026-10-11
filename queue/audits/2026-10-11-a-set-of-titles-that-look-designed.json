@@ -1,0 +1,38 @@
+{
+  "feature": "A set of titles that look designed",
+  "epic": "video-titles-graphics",
+  "task": "a-set-of-titles-that-look-designed",
+  "summary": "The Library's Comps shelf and the Insert menus now offer twelve titles built to the research brief instead of the eight plain ones: nine title pages and three lower thirds, each with its parts on separate beats, words that come in by line, word or letter, and something still moving while it holds.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a recording and show the Library in the dock.",
+  "switched": {},
+  "try": [
+    { "do": "In the Library, pick Comps and point at a few title tiles: each one plays its in, a hold and its way off." },
+    { "do": "Double click Keynote Clean, type a title and press Command Return.", "shot": "2026-10-11-title-set-keynote-holding-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Home, then Space, and watch Keynote Clean, Soft Gradient Glass and Kinetic Bold come in, hold and go.", "shot": "2026-10-11-title-set-pages-1.png", "shotNote": "Drawn by the renderer the export uses, over a dark recording and a light one, in, hold and out across; not a window capture." },
+    { "do": "Try Editorial Serif, Tech Terminal and Behind Glass the same way.", "shot": "2026-10-11-title-set-pages-2.png", "shotNote": "Drawn by the renderer the export uses, over a dark recording and a light one; not a window capture." },
+    { "do": "Try Light Leak, Gradient Glow and Stacked Stagger.", "shot": "2026-10-11-title-set-pages-3.png", "shotNote": "Drawn by the renderer the export uses, over a dark recording and a light one; not a window capture." },
+    { "do": "Drop Split Wipe, Minimal Underline and Pill Card over the recording and type a name into each.", "shot": "2026-10-11-title-set-cards.png", "shotNote": "Drawn by the renderer the export uses, over a dark recording and a light one; each picture is the bottom left of the frame." },
+    { "do": "Pick a headline that comes in by word, open Part, and change By to Line and Stagger to 120 ms.", "shot": "2026-10-11-title-set-part-by-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose File > Export… (Shift Command E), pick MP4, and play the file." }
+  ],
+  "evaluate": [
+    "Do these read as designed by a motion designer, rather than as slides?",
+    "Is there one you would use on your next screen recording as it comes, without touching a knob?",
+    "Do Minimal Underline's words read well enough over a bright, busy screenshot?",
+    "Are three lower thirds enough, or do you want more name cards than title pages?",
+    "Should By and Stagger live only in the Part section, now that the Reveal section below it edits the same words?"
+  ],
+  "rough": [
+    "No mock draws these presets; the twelve style directions in docs/design/video-titles-polish.md are the spec, and every one of them is built.",
+    "The soft whoosh and tick sounds the brief asked for are not here: the app has no sound clips to use (its sound effects are EQ, Compressor and Noise reduction), so they are their own task, titles-can-play-a-soft-whoosh-and-tick-as-they-b.",
+    "Kinetic Bold keeps one colour behind its words; the brief's colour that swaps on each word beat is left out, since a swap keyed by hand would stop the theme recolouring it.",
+    "Tech Terminal has no scanlines or grid and no letter scramble before each letter locks: the app draws neither yet.",
+    "Light Leak and Kinetic Bold are drawn in capitals, but words you type keep the case you type them in; there is no capitals setting on text.",
+    "Editorial Serif's kicker is not tracked wide (+0.15em), because text has no letter spacing setting; it is small semibold capitals instead.",
+    "Behind Glass dims the recording by 55% rather than the brief's 40%, so its white words read over a white screenshot.",
+    "Minimal Underline sits on a soft dark shade rather than nothing, so it stays legible over a light recording; over a busy light screenshot it is readable but not crisp.",
+    "Gradient Glow's Part menu lists its gradient and its glowing headline as Accent 1 and Accent 2, which says little about which is which.",
+    "The Part section's By and Stagger and the Reveal section under it both set how a title's words come in; a reveal set in the Reveal section now survives turning any title knob, until that part's In is changed.",
+    "Name cards are three of twelve, the brief's three lower thirds; the old rule of four per kind was relaxed to three."
+  ]
+}

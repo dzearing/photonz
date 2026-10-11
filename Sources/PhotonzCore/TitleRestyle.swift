@@ -385,6 +385,7 @@ extension PhotonzDocument {
     }
 
     private mutating func refitTitle(layerID: UUID, from old: TitleRecipe, to recipe: TitleRecipe) {
+        let kept = handReveals(layerID: layerID, from: old, to: recipe)
         clearTitleDesign(old.compiled, layerID: layerID)
         guard var group = layer(id: layerID) else { return }
         group = TitleRestyler(recipe: recipe, unit: titleUnit).restyled(group)
@@ -395,6 +396,31 @@ extension PhotonzDocument {
         let edited = group
         updateLayer(id: layerID) { $0 = edited }
         applyTitleDesign(recipe.compiled, layerID: layerID)
+        for (pieceID, reveal) in kept {
+            updateLayer(id: pieceID) { piece in
+                guard case .text(var text) = piece.content else { return }
+                text.reveal = reveal
+                piece.content = .text(text)
+            }
+        }
+    }
+
+    /// Reveals somebody set by hand on a title's words (the Reveal section):
+    /// any that is not what the old design wrote, on a part whose In the
+    /// change leaves alone. A theme or an energy never undoes them; changing
+    /// that part's In says how it comes in now.
+    private func handReveals(layerID: UUID, from old: TitleRecipe, to recipe: TitleRecipe) -> [(UUID, TextReveal)] {
+        guard let group = layer(id: layerID), let time = group.time else { return [] }
+        let compiled = old.compiled.parts
+        var kept: [(UUID, TextReveal)] = []
+        for (index, part) in old.design.parts.enumerated() where compiled.indices.contains(index) {
+            guard let now = recipe.design.parts.first(where: { $0.path == part.path }), now.in == part.in,
+                  let piece = TitleDesign.find(part.path, in: group), let reveal = piece.text?.reveal else { continue }
+            let written = TitleCompiler(piece: piece, lengthMS: time.lengthMS, clock: time.sourceInMS,
+                                        unit: titleUnit).wordReveal(for: compiled[index])
+            if reveal != written { kept.append((piece.id, reveal)) }
+        }
+        return kept
     }
 
     /// One point of a 1080 line frame, on this document's.

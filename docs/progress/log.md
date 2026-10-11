@@ -21146,3 +21146,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Verified: `TitleRestyleTests` (core), `title-knobs-restyle-walk`, `title-tiles-play-walk`, the 25 title walks, `library-tile-click-latency-walk` (worst 27 ms). Full suite hung on HEIF/Vision again; split runs all green.
 - Next: step 6, a set of titles that look designed.
 
+
+## 2026-10-11 — A set of titles that look designed (go loop)
+
+- Core: the twelve style directions of the brief as built-ins (`PhotonzCore/TitleSet.swift`), the plain set retired from shelf and menus. `TitleBuild.unit` and `staggerMS`; build kinds Mask Reveal, Track In, Typewriter (on words: the text's reveal; on shapes: a wipe or a fade); hold Blink. Restyle: `TitleLookBase` remembers a preset's own paint, ink and weight for Original; gradient accents stay gradients; rows inside a page lay out again; legibility looks through nested groups; a hand-set reveal survives knobs until its part's In changes. `TitleLook.glassDim` 0.55. Cards at `TitlePen.safeCorner`, a tenth in.
+- App: Part section gains the new kinds, By and Stagger for words, Spread, Blink.
+- Tests: `TitleSetTests`, `TitleBuildsByPieceTests`, `TitleSetFramesTests` + `TitleSetPerfTests` (1.7 to 12.5 ms median a 1080p frame, debug), `SavedTitlesStillOpenTests` (fixture of every old built-in saved as your own). Test-run text measurement is an estimate that draws nothing for Avenir Next when its box is short; the frames run installs CoreText measurement and only runs alone.
+- Walks: 12 `title-set-*-walk` (insert, type, photograph, export an MP4 that plays), 14 title walks retargeted from the retired names. Full `Scripts/test.sh` hung again (p2 task logged); the split ran green.
+- Follow-up: `titles-can-play-a-soft-whoosh-and-tick-as-they-b` (the sounds; there are no sound clips to use).
+- Next: whatever the loop's manager picks for the video focus.

@@ -182,4 +182,34 @@ struct TitleBuildsByPieceTests {
         #expect(seen.allSatisfy { $0 == 0 || $0 > 0.5 }, "a blink half way: \(seen)")
         #expect(TitleHoldKind.blink.rawValue == "blink")
     }
+
+    @Test("A reveal set by hand on a title's words survives a knob, until that part's In is changed")
+    func handRevealSurvivesKnobs() throws {
+        var doc = PhotonzDocument(canvasSize: Self.canvas)
+        doc.durationMS = 10_000
+        let placed = doc.insertTitle(.keynote, atTimeMS: 1000)
+        let id = try #require(placed).layerID
+        let words = try #require(Self.piece(doc, id, "Title"))
+        var hand = try #require(words.text?.reveal)
+        hand.style = .maskReveal
+        hand.unit = .letter
+        hand.order = .centerOut
+        let set = doc.setTextReveal(hand, layerID: words.id)
+        #expect(set)
+        // A theme, an energy: the words keep coming in the way they were told.
+        let themed = doc.restyleTitle(layerID: id) { $0.theme = TitleTheme.curated[1] }
+        #expect(themed)
+        #expect(Self.piece(doc, id, "Title")?.text?.reveal == hand)
+        let paced = doc.restyleTitle(layerID: id) { $0.energy = .punchy }
+        #expect(paced)
+        #expect(Self.piece(doc, id, "Title")?.text?.reveal?.order == .centerOut)
+        #expect(Self.piece(doc, id, "Title")?.text?.reveal?.style == .maskReveal)
+        // Changing the part's own In says how it comes in now.
+        let index = try #require(doc.titleRecipe(layerID: id)?.design.parts.firstIndex { $0.path == "Title" })
+        let changed = doc.restyleTitle(layerID: id) {
+            $0.design.parts[index].in = TitleBuild(.blurIn, delayMS: 150, lengthMS: 500, by: .line)
+        }
+        #expect(changed)
+        #expect(Self.piece(doc, id, "Title")?.text?.reveal?.style == .blurIn)
+    }
 }

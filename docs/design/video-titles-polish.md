@@ -421,7 +421,30 @@ tile previews that play.
    Switch `next-title-restyle`, on by default. Walks:
    `title-knobs-restyle-walk`, `title-tiles-play-walk`; tests:
    `TitleRestyleTests`.
-6. **A set of titles that look designed.**
+6. **A set of titles that look designed.** Built 2026-10-11. The shelf and
+   the Insert menus carry the twelve directions above
+   (`Sources/PhotonzCore/TitleSet.swift`): Keynote Clean, Soft Gradient
+   Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Behind Glass, Light
+   Leak, Gradient Glow and Stacked Stagger as pages; Split Wipe, Minimal
+   Underline and Pill Card as cards, in title safe (a tenth of the frame in).
+   The plain set is retired from shelf and menus (`BuiltInTitle.isRetired`),
+   kept for the mechanism tests. A part's in now says what words come in by
+   (`TitleBuild.unit`, `staggerMS`) and gains Mask Reveal, Track In and
+   Typewriter; on words all of them compile to the text's reveal, on shapes a
+   wipe or a fade. A Blink hold keeps a cursor waiting. Restyle keeps a
+   preset's own looks under Original (`TitleLookBase` paint, ink, weight),
+   keeps gradient accents gradients, lays out rows inside a page, checks
+   legibility through nested groups, and keeps a reveal set by hand through
+   any knob until that part's In changes. Glass dims 55%. Gradient text is a
+   gradient box matted to the words, in a group whose glow is theirs.
+   Measured: 1.7 to 12.5 ms a 1080p frame median (debug, `TitleSetPerfTests`).
+   Not built: the whoosh and tick sounds (no sound clips exist; task
+   `titles-can-play-a-soft-whoosh-and-tick-as-they-b`), Kinetic Bold's
+   colour swap per word, the terminal's scanlines and scramble, tracking on
+   the editorial kicker, capitals as a text setting. Walks:
+   `title-set-*-walk` (one per preset: insert, type, export an MP4), tests:
+   `TitleSetTests`, `TitleBuildsByPieceTests`, `TitleSetFramesTests`,
+   `SavedTitlesStillOpenTests`.
 
 Screen Studio cannot make text slides at all
 ([tight.studio](https://tight.studio/blog/how-to-add-text-slides-in-screen-studio/)),
