@@ -68,10 +68,6 @@ final class TrackRowDragSession {
     @ObservationIgnored private var ticker: Task<Void, Never>?
 
     static let spring = LayerRowDragSession.spring
-    /// How close to the top or bottom of the tracks' view the pointer has to
-    /// be before they scroll, and how fast they go right at the edge.
-    static let edgeBand: CGFloat = 20
-    static let edgeSpeed: CGFloat = 420
 
     var isCarrying: Bool { grabbedID != nil }
 
@@ -237,26 +233,19 @@ final class TrackRowDragSession {
     }
 
     /// Held near the top or bottom of the tracks' view, the tracks scroll on
-    /// their own, faster the closer the pointer is to the edge, and the gap
-    /// keeps following the pointer as the rows pass under it.
+    /// their own, faster the closer the pointer is to the edge, on the same
+    /// curve as every other drag on the timeline (`EdgeAutoscroll.rows`), and
+    /// the gap keeps following the pointer as the rows pass under it.
     private func autoscroll(dt: CFTimeInterval) {
         guard let editor, let drag else { return }
         let geometry = editor.timelineTracksScrollGeometry
-        guard geometry.overflows, geometry.viewportHeight > Self.edgeBand * 2 else { return }
-        let viewportY = drag.pointerY - geometry.offsetY
-        let into: CGFloat
-        if viewportY < Self.edgeBand {
-            into = -(Self.edgeBand - viewportY) / Self.edgeBand
-        } else if viewportY > geometry.viewportHeight - Self.edgeBand {
-            into = (viewportY - (geometry.viewportHeight - Self.edgeBand)) / Self.edgeBand
-        } else {
-            return
-        }
-        let clamped = min(max(into, -1), 1)
-        let furthest = max(0, geometry.contentHeight - geometry.viewportHeight)
-        let next = min(max(geometry.offsetY + Self.edgeSpeed * clamped * abs(clamped) * CGFloat(dt), 0), furthest)
+        guard geometry.overflows else { return }
+        let next = EdgeAutoscroll.rows.scrolled(offset: geometry.offsetY, contentLength: geometry.contentHeight,
+                                                viewport: geometry.viewportHeight,
+                                                at: drag.pointerY - geometry.offsetY, seconds: dt)
         guard abs(next - geometry.offsetY) > 0.1 else { return }
         editor.timelineTracksScroll.scrollTo(y: next)
+        editor.timelineTracksScrollGeometry.offsetY = next
         // The pointer has not moved on the screen, so it has moved through the
         // tracks by as much as they scrolled.
         move(pointerY: drag.pointerY + (next - geometry.offsetY))

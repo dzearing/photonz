@@ -591,13 +591,17 @@ struct PlaytestScriptTests {
     func windowDragStep() throws {
         let script = try decode("""
         { "steps": [ { "do": "windowDrag", "from": [691, 943], "to": [864, 943], "steps": 6,
-                       "hold": "mid" },
+                       "hold": "mid", "holdSeconds": 2 },
                      { "do": "windowDrag", "from": [10, 20], "to": [30, 40] } ] }
         """)
-        guard case .windowDrag(let from, let to, let steps, let hold) = script.steps[0],
-              case .windowDrag(let from2, _, let steps2, let noHold) = script.steps[1] else {
+        guard case .windowDrag(let from, let to, let steps, let hold, let held) = script.steps[0],
+              case .windowDrag(let from2, _, let steps2, let noHold, let notHeld) = script.steps[1] else {
             Issue.record("windowDrag"); return
         }
+        // Held at the end with the button down, for something that goes on
+        // while the hand is still (the timeline scrolling at an edge).
+        #expect(held == 2)
+        #expect(notHeld == 0)
         // A picture taken with the button still down, the only moment what
         // is in the hand is on screen.
         #expect(hold == "mid")
@@ -3024,6 +3028,39 @@ struct PlaytestScriptTests {
         else { Issue.record("dragTracks"); return }
         #expect(fromTrack == "Zoom Talk")
         #expect(modifiers == [.shift])
+    }
+
+    // A box carried to an edge of the timeline and held there, so the
+    // timeline scrolls under it (`TimelineEdgeScroll`).
+    @Test("A boxToEdge step names where the box starts, the edge it is held at and for how long")
+    func boxToEdgeParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "boxToEdge", "fromTrack": "V1", "from": 1, "toTrack": "Title",
+                       "edge": "right", "holdSeconds": 2.5, "inset": 6, "hold": "held" },
+                     { "do": "boxToEdge", "fromTrack": "V1", "from": 1, "edge": "bottom", "holdSeconds": 1 } ] }
+        """)
+        guard case .boxToEdge(let fromTrack, let from, let toTrack, let edge, let inset, let seconds, let hold)
+                = script.steps[0],
+              case .boxToEdge(_, _, let toTrack2, let edge2, let inset2, _, let hold2) = script.steps[1]
+        else { Issue.record("boxToEdge"); return }
+        #expect(fromTrack == "V1")
+        #expect(from == 1)
+        #expect(toTrack == "Title")
+        #expect(edge == .right)
+        #expect(inset == 6)
+        #expect(seconds == 2.5)
+        #expect(hold == "held")
+        #expect(toTrack2 == "V1")
+        #expect(edge2 == .bottom)
+        #expect(inset2 == 0)
+        #expect(hold2 == nil)
+        #expect(script.steps[0].name == "boxToEdge")
+        #expect(PlaytestStep.names.contains("boxToEdge"))
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "boxToEdge", "fromTrack": "V1", "from": 1, "edge": "middle", "holdSeconds": 1 } ] }
+            """)
+        }
     }
 
     @Test("A dragTracks step ends on the track it starts on unless it says otherwise")

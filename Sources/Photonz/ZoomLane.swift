@@ -227,9 +227,12 @@ private struct ZoomBarsView: View {
                     dragging = true
                     editorState.beginZoomDrag(ref, grab: pressed.grab)
                 }
-                let ms = editorState.motionStripRuler.msSpanning(
-                    fraction: Double(value.translation.width / max(1, laneWidth)))
-                editorState.updateZoomDrag(byMS: Int(ms.rounded()))
+                let ms = Int(editorState.motionStripRuler.msSpanning(
+                    fraction: Double(value.translation.width / max(1, laneWidth))).rounded())
+                // Plus however far the timeline has scrolled under the hand
+                // at an edge (`TimelineEdgeScroll`).
+                editorState.updateZoomDrag(byMS: ms + editorState.timelineEdgePannedMS)
+                editorState.zoomDragHand(laneX: value.location.x, handMS: ms)
             }
             .onEnded { value in
                 defer {

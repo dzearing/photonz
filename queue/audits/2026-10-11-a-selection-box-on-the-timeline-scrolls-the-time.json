@@ -1,0 +1,33 @@
+{
+  "feature": "Edge scrolling on the timeline",
+  "epic": "video-cutting",
+  "task": "a-selection-box-on-the-timeline-scrolls-the-time",
+  "summary": "Hold a selection box, a clip, a title or a zoom bar near any edge of the timeline and the timeline scrolls that way, slowly at first and faster right at the edge. The box keeps growing to the pointer, so you can pick things that were off screen, and letting go leaves the timeline where it scrolled to.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a recording at least ten seconds long, add a title around 0:12, then press the timeline's zoom in key twice so only the first few seconds are on screen.",
+  "switched": {},
+  "try": [
+    { "do": "Start a box on empty timeline space near the start, then drag it toward the lanes' right edge.", "shot": "2026-10-11-edge-scroll-1-opened-out.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Ease into the last finger-width before the right edge: it creeps. Push right to the edge, or past it out of the window: it runs.", "shot": "2026-10-11-edge-scroll-2-held-right.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold still at the edge until the title scrolls in, then let go: the recording and the title are both picked.", "shot": "2026-10-11-edge-scroll-4-by-hand.png" },
+    { "do": "Drag a box back to the left edge and hold: it scrolls back toward the start." },
+    { "do": "Add three video tracks so they no longer fit, then drag a box to the bottom edge and hold: the tracks scroll down.", "shot": "2026-10-11-edge-scroll-3-held-bottom.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag a clip by its body to the right edge and hold: the clip goes on with the scroll, and stays where you let go.", "shot": "2026-10-11-edge-scroll-5-clip.png" },
+    { "do": "Drag a zoom bar on a clip's Zoom lane to the right edge and hold: it goes on too.", "shot": "2026-10-11-edge-scroll-6-zoom-bar.png" }
+  ],
+  "evaluate": [
+    "Does the start feel gentle enough that you never scroll by accident while drawing a box near an edge?",
+    "At the very edge, is a lane and a half a second fast enough to cross a long recording without feeling like it runs away from you?",
+    "Can you stop on the clip you want by easing back out of the edge?",
+    "When you let go after scrolling, does the timeline staying where it scrolled to (rather than jumping back to the playhead) feel right?"
+  ],
+  "rough": [
+    "No mock draws edge scrolling: it is behaviour, not a surface, so there is nothing to put side by side.",
+    "The curve, measured: inside a band 40 points wide at the lanes' left and right, speed is top speed times the cube of how far in the pointer is. Nothing at the band's inner edge, 1.6% of top a quarter of the way in, 12.5% halfway (the whole inner half stays under an eighth), 42% at three quarters, top speed only at the edge and past it, outside the window included.",
+    "Top speed along time is a lane and a half a second (2,330 points a second on this Mac's 1,554 point lane), so a ten minute recording shown two minutes at a time crosses in about 3.3 seconds and one shown a minute at a time in about 6.7. Halfway into the band it is a fifth of a lane a second, slow enough to stop on a clip.",
+    "Up and down the tracks: a band 24 points tall, the same cube, 600 points a second at the edge. The track carried by its header now uses this same curve (it used to start at a quarter of top speed halfway in, band 20, 420 points a second), so it starts more gently than before.",
+    "Frame timing, measured over a 5 second hold eight points inside the right edge, opened right in: 303 steps, every one 16.7 ms apart (p50, p95 and max), so 60 frames a second with none dropped. Held at full speed across the recording itself, the steps run at 16.7 ms but about one in twenty takes 33 ms (p95 33.3, max 39), because each step redraws the whole window. The walks add their own work to these numbers too. Filed as scrolling-the-timeline-along-time-keeps-every-fr.",
+    "A box that starts inside an edge band does not scroll from that edge until the pointer has left the band once, so starting a box near an edge never scrolls before you have moved. Past the edge always scrolls.",
+    "Clip edges (trims) scroll along time but not up and down. A linked sound only scrolls along time, as it only moves along time.",
+    "While playing, the playhead does not drag the window back during the drag. After letting go, the window only follows the playhead again once the playhead moves (it used to jump back to the playhead after any edit, scroll or not)."
+  ]
+}

@@ -1,0 +1,95 @@
+{
+ "out": "/tmp/photonz-playtest/zoom-bar-scrolls-at-the-edge-walk",
+ "seed": "At Next defaults, driven with the real pointer: a zoom bar on the recording's Zoom lane, dragged to the lanes' right edge and held half a second, goes on past where the hand stopped as the timeline scrolls; the hand alone moves it about 1.2 seconds, the scroll about three more.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.5
+  },
+  {
+   "do": "action",
+   "action": "zoomAddAtPlayhead"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.0
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectClip",
+   "clip": "Tutorial Sample zoom 1",
+   "startsAt": 0.5,
+   "within": 0.1
+  },
+  {
+   "do": "snapshot",
+   "name": "0-zoom-lane"
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    778,
+    897
+   ],
+   "to": [
+    1716,
+    897
+   ],
+   "steps": 12,
+   "holdSeconds": 0.5,
+   "hold": "1-zoom-held"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "1-zoom-carried-on",
+   "note": "the zoom bar dragged to the right edge and held carried on as the timeline scrolled"
+  },
+  {
+   "do": "expectClip",
+   "clip": "Tutorial Sample zoom 1",
+   "startsAt": 4.5,
+   "within": 1.2
+  },
+  {
+   "do": "snapshot",
+   "name": "2-zoom-landed"
+  }
+ ]
+}

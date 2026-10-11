@@ -1301,9 +1301,17 @@ struct ClipPiecesBar: View {
                 }
                 // ⌘ held frees the edge of every magnet for as long as it is
                 // held, the way it frees a handle on the canvas and in Trim.
-                editorState.updateClipBarDrag(byMS: Self.ms(value.translation.width,
-                                                            laneWidth: laneWidth, ruler: ruler),
-                                              free: Self.commandHeld)
+                // Read through the editor's ruler, which an edge scroll moves.
+                let travel = Self.ms(value.translation.width, laneWidth: laneWidth,
+                                     ruler: editorState.motionStripRuler)
+                let free = Self.commandHeld
+                editorState.updateClipBarDrag(byMS: travel + editorState.timelineEdgePannedMS, free: free)
+                // On the dock, an edge held near the timeline's left or right
+                // scrolls it, and the edge goes on with it.
+                if kind != nil {
+                    editorState.clipBarDragHand(laneX: Self.laneX(globalX: value.location.x, editorState),
+                                                contentY: nil, handMS: travel, travelledY: 0, free: free)
+                }
             }
             .onEnded { _ in editorState.commitClipBarDrag() }
     }
@@ -1332,14 +1340,25 @@ struct ClipPiecesBar: View {
                                                  grab: whole ? .body : .carry(piece: index),
                                                  copying: Self.optionHeld)
                 }
-                editorState.updateClipBarDrag(
-                    byMS: Self.ms(value.translation.width, laneWidth: laneWidth,
-                                  ruler: editorState.motionStripRuler))
+                let travel = Self.ms(value.translation.width, laneWidth: laneWidth,
+                                     ruler: editorState.motionStripRuler)
+                // Plus however far the timeline has scrolled under the hand
+                // at an edge (`TimelineEdgeScroll`).
+                editorState.updateClipBarDrag(byMS: travel + editorState.timelineEdgePannedMS)
                 // A linked sound goes where its clip goes, along time only:
                 // up or down would be a picture landing on a sound track.
-                if kind != nil, !isLinkedSound {
+                let carriesTracks = kind != nil && !isLinkedSound
+                if carriesTracks {
                     editorState.updateClipTrackDrop(pointerY: value.location.y,
-                                                    travelledY: value.translation.height)
+                                                    travelledY: value.translation.height
+                                                        + editorState.timelineEdgeScroll.scrolledY)
+                }
+                // On the dock the pointer is read in the tracks' own space,
+                // so held near any edge of the timeline it scrolls that way.
+                if kind != nil {
+                    editorState.clipBarDragHand(laneX: value.location.x - TimelineDock.lanesLeading,
+                                                contentY: carriesTracks ? value.location.y : nil,
+                                                handMS: travel, travelledY: value.translation.height)
                 }
             }
             .onEnded { _ in editorState.commitClipBarDrag() }
@@ -1361,6 +1380,13 @@ struct ClipPiecesBar: View {
     static var commandHeld: Bool {
         NSEvent.modifierFlags.contains(.command)
             || NSApp.currentEvent?.modifierFlags.contains(.command) == true
+    }
+
+    /// A point in the window's global space as a place across the dock's
+    /// lanes, from their left hand edge.
+    @MainActor
+    static func laneX(globalX x: CGFloat, _ editorState: EditorState) -> CGFloat {
+        x - editorState.timelineTracksFrame.minX - TimelineDock.lanesLeading
     }
 
     /// How many milliseconds a sideways travel is worth on this ruler.

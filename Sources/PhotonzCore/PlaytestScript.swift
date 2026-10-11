@@ -531,6 +531,12 @@ public struct PlaytestKey: Hashable, Sendable {
 }
 
 /// Modifier keys by their Mac names.
+/// An edge of the timeline's tracks, which a box is carried to and held at
+/// (`boxToEdge`).
+public enum PlaytestEdge: String, CaseIterable, Hashable, Codable, Sendable {
+    case left, right, top, bottom
+}
+
 public enum PlaytestModifier: String, CaseIterable, Hashable, Codable, Sendable {
     case command, shift, option, control
 }
@@ -2792,7 +2798,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// handle. Points are window points, top left, unless `space` says other.
     /// `hold` names a picture taken at the end of the pull with the button
     /// still down, the only moment what is in the hand is on screen.
-    case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int, hold: String?)
+    /// `holdSeconds` keeps the button down and the pointer still at the end
+    /// for that long before letting go (the timeline scrolls at an edge).
+    case windowDrag(from: PlaytestPoint, to: PlaytestPoint, steps: Int, hold: String?, holdSeconds: Double = 0)
     /// A click posted to the WINDOW, `count` presses in a row (2 is a
     /// double-click), so it reaches whatever SwiftUI view is under the pointer
     /// the way a hand's does: the timeline's top edge, a clip. Window points,
@@ -2857,6 +2865,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// flips each thing in or out.
     case dragTracks(fromTrack: String, from: Double, toTrack: String, to: Double, option: Bool, hold: String?,
                     modifiers: [PlaytestModifier] = [])
+    /// A box pressed on `fromTrack` at `from` seconds and carried, through
+    /// the tracks' own press and drag, to `edge` of the tracks' view (`inset`
+    /// points inside it, or past it when negative), level with `toTrack` for
+    /// the left and right edges. Held there for `holdSeconds` while the
+    /// timeline scrolls under it on its own (`TimelineEdgeScroll`), then let
+    /// go. The log line says how far it scrolled, how smoothly, and what the
+    /// box picked. `hold` names a picture taken just before letting go.
+    case boxToEdge(fromTrack: String, from: Double, toTrack: String, edge: PlaytestEdge, inset: Double,
+                   holdSeconds: Double, hold: String?)
     /// What is picked on the timeline, and FAIL when it is not so: `clips` by
     /// name, a piece of a cut clip as "<name> piece <n>" counting from one, an
     /// empty list for nothing; `rangeOn` the tracks a range on some tracks
@@ -4064,7 +4081,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4111,6 +4128,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .clickRuler: "clickRuler"
         case .dragRuler: "dragRuler"
         case .dragTracks: "dragTracks"
+        case .boxToEdge: "boxToEdge"
         case .expectTimelinePick: "expectTimelinePick"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
@@ -4432,7 +4450,10 @@ public enum PlaytestStep: Sendable, Equatable {
                 from.space = .window
                 to.space = .window
             }
-            self = .windowDrag(from: from, to: to, steps: max(1, steps), hold: try f.optionalString("hold"))
+            let held = try f.optionalNumber("holdSeconds") ?? 0
+            guard held >= 0, held <= 20 else { throw f.invalid("holdSeconds", "between 0 and 20 seconds") }
+            self = .windowDrag(from: from, to: to, steps: max(1, steps), hold: try f.optionalString("hold"),
+                               holdSeconds: held)
         case "windowClick":
             var at = try f.point("at")
             if fields["space"] == nil { at.space = .window }
@@ -4499,6 +4520,19 @@ public enum PlaytestStep: Sendable, Equatable {
                                to: to, option: try f.optionalFlag("option") ?? false,
                                hold: try f.optionalString("hold"),
                                modifiers: try f.optionalModifiers("modifiers") ?? [])
+        case "boxToEdge":
+            let fromTrack = try f.string("fromTrack")
+            let from = try f.number("from")
+            guard from >= 0 else { throw f.invalid("from", "a box starts at the start or after it") }
+            let edgeName = try f.string("edge")
+            guard let edge = PlaytestEdge(rawValue: edgeName) else {
+                throw f.invalid("edge", "one of left, right, top or bottom")
+            }
+            let seconds = try f.number("holdSeconds")
+            guard seconds > 0, seconds <= 20 else { throw f.invalid("holdSeconds", "between 0 and 20 seconds") }
+            self = .boxToEdge(fromTrack: fromTrack, from: from, toTrack: try f.optionalString("toTrack") ?? fromTrack,
+                              edge: edge, inset: try f.optionalNumber("inset") ?? 0, holdSeconds: seconds,
+                              hold: try f.optionalString("hold"))
         case "expectTimelinePick":
             let clips = f.has("clips") ? try f.optionalStrings("clips") : nil
             let rangeOn = f.has("rangeOn") ? try f.optionalStrings("rangeOn") : nil

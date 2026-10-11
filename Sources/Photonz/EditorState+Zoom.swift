@@ -477,8 +477,22 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Where the hand is along the Zoom lane while a bar is dragged, for
+    /// the timeline's left and right edges (`TimelineEdgeScroll`). `handMS`
+    /// is what the hand itself has moved.
+    func zoomDragHand(laneX: CGFloat, handMS: Int) {
+        guard zoomDrag != nil || (dragCarriesBoxPick && clipBarDrag != nil) else { return }
+        timelineEdgeScroll.follow(.init(laneX: laneX, contentY: nil), editor: self) { [weak self] scroll in
+            guard let self, self.zoomDrag != nil || (self.dragCarriesBoxPick && self.clipBarDrag != nil)
+            else { return false }
+            self.updateZoomDrag(byMS: handMS + Int(scroll.pannedMS.rounded()))
+            return true
+        }
+    }
+
     /// Let go: one undo step for the whole drag.
     func commitZoomDrag() {
+        timelineEdgeScroll.end()
         if dragCarriesBoxPick {
             dragCarriesBoxPick = false
             commitClipBarDrag()
@@ -504,6 +518,7 @@ extension EditorState {
     }
 
     func cancelZoomDrag() {
+        timelineEdgeScroll.end()
         if dragCarriesBoxPick {
             dragCarriesBoxPick = false
             cancelClipBarDrag()

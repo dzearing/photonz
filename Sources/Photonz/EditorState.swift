@@ -1782,6 +1782,12 @@ final class EditorState {
     /// lane into a moment, and by a walk to find one.
     @ObservationIgnored var timelineTracksFrame: CGRect = .zero
     @ObservationIgnored var timelineLaneWidth: CGFloat = 0
+    /// A drag held near an edge of the timeline scrolls it that way
+    /// (`TimelineEdgeScroll`): the box, a clip, a zoom bar.
+    @ObservationIgnored let timelineEdgeScroll = TimelineEdgeScroll()
+    /// Where the playhead was the last time the timeline's window followed
+    /// it, so an edit that leaves the playhead still never moves the window.
+    @ObservationIgnored var timelineFollowedMS: Int?
     /// The cut between two clips on one track that is picked
     /// (`comp-video.html` §02). Picking a layer lets it go.
     var selectedEditPoint: TimelineEditPoint?

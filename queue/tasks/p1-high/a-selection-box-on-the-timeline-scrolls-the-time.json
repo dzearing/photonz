@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:20:56.492Z",
-  "updated": "2026-10-11T12:51:00.195Z",
+  "updated": "2026-10-11T17:53:32.332Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"marquee selection on the timeline doesn't seem to have progressive scroll built in - where as we get close to the scroll edge it starts to slowly scroll in that direction so that we can select more items offscreen. as you get closer to the edge, the velocity increases but not obnoxiously\".\n\nFrom code reading (not run): vertical edge autoscroll exists only for carrying a track, TrackRowDragSession.swift:238-263 (edgeBand, edgeSpeed, speed = edgeSpeed * into * |into|, driven per frame with dt, scrolls editor.timelineTracksScroll and moves the pointer by the scrolled amount), and LayerRowDragSession.swift:293-300 for the layers list. The box: EditorState+TrackRange.swift LanePress/LaneBox and beginLanePress/endLanePress, gesture TimelineLaneMarquee (TimelineTrackRows.swift ~1010+), drawn by TimelineLaneBoxView (TimelineDock.swift ~1291); its range is in ms, so a horizontal scroll must extend the box's ms range by the scrolled time. A drag gesture gets no events while the pointer is still, so autoscroll needs a display-link/timer driver like TrackRowDragSession's. Box selection itself: dragging-a-box-on-the-timeline-picks-everything (done).",
@@ -37,6 +37,48 @@
     {
       "t": "2026-10-11T12:51:00.194Z",
       "note": "seq 4 -> 30"
+    },
+    {
+      "t": "2026-10-11T16:22:05.208Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T16:25:55.571Z",
+      "note": "Reproduced at Next defaults (no flags): sample recording + Sample Music, timeline zoomed in twice (0:00 to 0:03 on screen). windowDrag from (400,963) to (1722,930), past the lanes' right edge, held: the box stops at the edge and the window still reads 0:00 to 0:03, nothing scrolls (/tmp/photonz-playtest/edge-autoscroll-repro/1-held-at-right-edge-sc.png). Vertical: the lane press has no autoscroll code at all (only TrackRowDragSession/LayerRowDragSession do)."
+    },
+    {
+      "t": "2026-10-11T17:53:02.485Z",
+      "note": "owns these walks: box-scrolls-at-the-edge-walk, box-scrolls-at-the-edge-by-hand-walk, zoom-bar-scrolls-at-the-edge-walk"
+    },
+    {
+      "t": "2026-10-11T17:53:32.003Z",
+      "note": "Adversarial review before building: (1) A press that starts inside an edge band would scroll instantly with no hand movement; fixed by arming each band only after the pointer has been outside it (past the edge always scrolls). (2) The box told a new press from an old one by the moment under the press, which changes once time scrolls, so a scroll would have restarted the box; it now compares the gesture's start point. (3) A drag gesture hears nothing while the pointer is still, so a display-link ticker drives the scroll from the last place the hand was. (4) Follow-playhead could fight the hand; it is held off during a run. Premiere and Final Cut both edge-scroll while marqueeing or dragging clips, so this meets the expectation."
+    },
+    {
+      "t": "2026-10-11T17:53:32.065Z",
+      "note": "Built: EdgeAutoscroll in PhotonzCore (cube curve, arming, time preset 1.5 lanes/s with band 40, rows preset 600 pt/s band 24; EdgeAutoscrollTests). TimelineEdgeScroll (Sources/Photonz) is one CADisplayLink ticker at 60 Hz shared by the box (EditorState+TrackRange laneBoxHand), clip bars, titles and caption cues through ClipPiecesBar (clipBarDragHand: body, piece carry, trims; vertical too for carries on the dock) and zoom bars (ZoomLane, zoomDragHand). TrackRowDragSession now uses EdgeAutoscroll.rows. Which had edge scrolling before: only the track carried by its header (vertical); clips, titles, zoom bars and the box had none."
+    },
+    {
+      "t": "2026-10-11T17:53:32.130Z",
+      "note": "Found while walking: after any clip drag the window jumped back to the playhead, because documentMomentChanged always ran followTimelineWindow. Now it follows only when the playhead has moved (timelineFollowedMS), so an edge scroll survives the let go. Every zoomed-timeline walk still passes (open-out-the-timeline, first-long-jump-when-zoomed-in, clip-pictures-when-zoomed-in, ruler-names-the-right-time-zoomed, a-click-on-a-clip-piece-picks-it, the-timeline-is-the-one-in-the-mock)."
+    },
+    {
+      "t": "2026-10-11T17:53:32.196Z",
+      "note": "Walks: box-scrolls-at-the-edge-walk (scripted boxToEdge step, survives a lock, no flags: right, left, bottom, 5 s timing), box-scrolls-at-the-edge-by-hand-walk (real pointer windowDrag with new holdSeconds: box past the right edge picks recording, song and the title 12 s in; a clip dragged to the edge goes on 7.6 s), zoom-bar-scrolls-at-the-edge-walk. Also green: box-pick-by-hand, box-picks-everything-it-touches, marquee-and-track-range, several-picked-clips-change-track, track-header-lifts(-by-pointer), bar-end-follows-the-pointer, panel-reads-the-marquee, a-zoom-follows-the-cursor."
+    },
+    {
+      "t": "2026-10-11T17:53:32.262Z",
+      "note": "Tests: the whole suite hung twice in the known HEIF/Vision park (logged on find-out-why-the-whole-test-run-hangs-in-the-mac). Split run all green: --skip Render|Media 11268 pass; Render|Media minus the hang-prone suites 1215 pass; ImageCodec, PackageIO, ReadPageWeightFixture, ReadRunAsTextFixture, ARefusedReadIsToldApart, SoundFile each pass alone."
+    },
+    {
+      "t": "2026-10-11T17:53:32.331Z",
+      "note": "Frame timing: a 5 s hold deep in runs at 16.7 ms every step (60 fps, none dropped). Full speed across the recording drops about 1 in 20 (p95 33 ms) because each step redraws the whole window; filed scrolling-the-timeline-along-time-keeps-every-fr (p2) with the profile. Left rough, not filed: trims scroll along time only; the layers list drag (LayerRowDragSession) keeps its own quadratic curve since it is not the timeline; walks cannot yet assert the timeline window reading, so it is in the log lines only."
     }
+  ],
+  "started": "2026-10-11T16:22:05.206Z",
+  "walks": [
+    "box-scrolls-at-the-edge-walk",
+    "box-scrolls-at-the-edge-by-hand-walk",
+    "zoom-bar-scrolls-at-the-edge-walk"
   ]
 }

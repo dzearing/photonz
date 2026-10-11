@@ -499,8 +499,31 @@ extension EditorState {
         rerender()
     }
 
+    /// Where the hand is during a drag on a bar, for the timeline's edges
+    /// (`TimelineEdgeScroll`): across the lanes, and down the tracks' own
+    /// space for a clip that can be carried to another track. `handMS` and
+    /// `travelledY` are what the hand itself has moved; held near an edge the
+    /// timeline scrolls, and the clip goes on by as far as it has scrolled.
+    func clipBarDragHand(laneX: CGFloat, contentY: CGFloat?, handMS: Int, travelledY: CGFloat,
+                         free: Bool = false) {
+        guard clipBarDrag != nil else { return }
+        timelineEdgeScroll.follow(.init(laneX: laneX, contentY: contentY), editor: self) { [weak self] scroll in
+            guard let self, self.clipBarDrag != nil else { return false }
+            self.updateClipBarDrag(byMS: handMS + Int(scroll.pannedMS.rounded()), free: free)
+            if let y = scroll.hand?.contentY {
+                self.updateClipTrackDrop(pointerY: y, travelledY: travelledY + scroll.scrolledY)
+            }
+            return true
+        }
+    }
+
+    /// How far the timeline has scrolled under the drag in hand, in whole
+    /// milliseconds: what a drag read as a travel adds to its own.
+    var timelineEdgePannedMS: Int { Int(timelineEdgeScroll.pannedMS.rounded()) }
+
     /// Let go: one step for undo covering the whole drag.
     func commitClipBarDrag() {
+        timelineEdgeScroll.end()
         stopWatchingForClipBarEscape()
         dragCarriesBoxPick = false
         guard let session = clipBarDrag else { return }
@@ -583,6 +606,7 @@ extension EditorState {
     /// Escape, or a drag that went nowhere. Costs nothing, because nothing was
     /// written.
     func cancelClipBarDrag() {
+        timelineEdgeScroll.end()
         stopWatchingForClipBarEscape()
         dragCarriesBoxPick = false
         clipTrackDrop = nil

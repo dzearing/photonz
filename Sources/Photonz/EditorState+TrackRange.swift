@@ -44,6 +44,11 @@ extension EditorState {
         /// What a box does with what is already picked.
         var mode: BoxPickMode = .replace
         var hasMoved = false
+        /// Where the gesture that made this press began, in its own view's
+        /// space: what tells a press apart from the next one. Not the
+        /// moment under it, which changes once the timeline scrolls at an
+        /// edge (`TimelineEdgeScroll`).
+        var startedAt: CGPoint?
     }
 
     /// ⇧ adds what a box touches to the pick, ⌘ flips each thing in or out,
@@ -75,10 +80,26 @@ extension EditorState {
 
     /// The hand went down on empty track space at `ms`, `y` points down the
     /// tracks' own space.
-    func beginLanePress(atMS ms: Int, y: CGFloat, drawsRange: Bool, mode: BoxPickMode = .replace) {
+    func beginLanePress(atMS ms: Int, y: CGFloat, drawsRange: Bool, mode: BoxPickMode = .replace,
+                        startedAt: CGPoint? = nil) {
         guard documentHasTime else { return }
-        lanePress = LanePress(atMS: ms, atY: y, drawsRange: drawsRange, mode: mode)
+        timelineEdgeScroll.end()
+        lanePress = LanePress(atMS: ms, atY: y, drawsRange: drawsRange, mode: mode, startedAt: startedAt)
         laneBoxDraft = nil
+    }
+
+    /// Where the hand is while a box or a range is drawn: across the lanes
+    /// from their left hand edge, and down the tracks' own space. Held near
+    /// an edge, the timeline scrolls that way and the box keeps reaching to
+    /// the hand's place in what scrolled in (`TimelineEdgeScroll`).
+    func laneBoxHand(laneX: CGFloat, contentY: CGFloat, snapMS: Int) {
+        guard lanePress?.hasMoved == true else { return }
+        timelineEdgeScroll.follow(.init(laneX: laneX, contentY: contentY), editor: self) { [weak self] scroll in
+            guard let self, self.lanePress?.hasMoved == true, let hand = scroll.hand else { return false }
+            let ms = TimelineLaneMarquee.ms(hand.laneX, self.timelineLaneWidth, self.motionStripRuler)
+            self.dragLanePress(toMS: ms, y: hand.contentY ?? 0, moved: true, snapMS: snapMS)
+            return true
+        }
     }
 
     /// The hand moved to `ms`, `y`. `moved` says whether it has gone far
@@ -115,6 +136,7 @@ extension EditorState {
     /// picked.
     func endLanePress(atMS ms: Int, moved: Bool) {
         guard let press = lanePress else { return }
+        timelineEdgeScroll.end()
         lanePress = nil
         let draft = laneBoxDraft
         laneBoxDraft = nil

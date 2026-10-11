@@ -1,0 +1,202 @@
+{
+ "out": "/tmp/photonz-playtest/box-scrolls-at-the-edge-by-hand-walk",
+ "seed": "At Next defaults, driven with the real pointer: a box pulled from the strip under the tracks up to the Title track and past the lanes' right edge, held there, scrolls the timeline to the end and picks the recording, the song and the title twelve seconds in; the recording itself dragged to the right edge and held carries on as the timeline scrolls.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "soundAddSample"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 12.0
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Later"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.0
+  },
+  {
+   "do": "expectClip",
+   "clip": "Text",
+   "startsAt": 12.0,
+   "within": 0.1
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "0-opened-out",
+   "note": "the timeline opened out to the first few seconds: the recording on screen, the title at 0:12 well off to the right"
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    400,
+    963
+   ],
+   "to": [
+    1724,
+    819
+   ],
+   "steps": 12,
+   "holdSeconds": 3.0,
+   "hold": "1-held-past-the-right-edge"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectTimelinePick",
+   "clips": [
+    "Tutorial Sample",
+    "Text",
+    "Sample Music"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "1-picked-by-hand",
+   "note": "a box pulled by hand past the lanes' right edge and held there scrolled the timeline to the end, and letting go picked the recording, the song and the title twelve seconds in"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-picked-by-hand"
+  },
+  {
+   "do": "action",
+   "action": "timelineFit"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.0
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    300,
+    819
+   ]
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "action",
+   "action": "timelineZoomIn"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "windowDrag",
+   "from": [
+    700,
+    854
+   ],
+   "to": [
+    1716,
+    854
+   ],
+   "steps": 12,
+   "holdSeconds": 0.6,
+   "hold": "2-clip-held-at-the-right-edge"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "2-clip-carried-on",
+   "note": "the recording dragged by hand to the right edge and held carried on past where the hand stopped, by as far as the timeline scrolled, and the timeline stayed where the drag left it"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-clip-carried-on"
+  },
+  {
+   "do": "expectClip",
+   "clip": "Text",
+   "startsAt": 12.0,
+   "within": 0.06
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Music",
+   "startsAt": 0.0,
+   "within": 0.06
+  }
+ ]
+}

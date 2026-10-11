@@ -1043,28 +1043,34 @@ enum TimelineLaneMarquee {
     @MainActor
     static func changed(_ editorState: EditorState, _ value: DragGesture.Value, top: CGFloat, leading: CGFloat,
                         ruler: MotionStripRuler, laneWidth: CGFloat) {
-        let startMS = ms(value.startLocation.x - leading, laneWidth, ruler)
         // A new press, or one left behind by a gesture the system
-        // cancelled without an end.
-        if editorState.lanePress?.atMS != startMS {
+        // cancelled without an end. Told apart by where the gesture began,
+        // never by the moment under it: the timeline may have scrolled at an
+        // edge since (`TimelineEdgeScroll`).
+        if editorState.lanePress?.startedAt != value.startLocation {
             let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
             editorState.beginLanePress(
-                atMS: startMS, y: top + value.startLocation.y,
+                atMS: ms(value.startLocation.x - leading, laneWidth, ruler), y: top + value.startLocation.y,
                 drawsRange: flags.contains(.option) || editorState.timelineTool == .range,
-                mode: .from(flags))
+                mode: .from(flags), startedAt: value.startLocation)
         }
         let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
         let snap = editorState.lanePress?.drawsRange == true
             ? editorState.keySnapReachMS(laneWidth: laneWidth) : 0
-        editorState.dragLanePress(toMS: ms(value.location.x - leading, laneWidth, ruler), y: top + value.location.y,
+        // Read through the editor's ruler, which is the one the edge scroll
+        // has just moved, rather than the one this view was drawn with.
+        let scrolled = editorState.motionStripRuler
+        editorState.dragLanePress(toMS: ms(value.location.x - leading, laneWidth, scrolled), y: top + value.location.y,
                                   moved: moved, snapMS: snap)
+        editorState.laneBoxHand(laneX: value.location.x - leading, contentY: top + value.location.y, snapMS: snap)
     }
 
     @MainActor
     static func ended(_ editorState: EditorState, _ value: DragGesture.Value, leading: CGFloat,
                       ruler: MotionStripRuler, laneWidth: CGFloat) {
         let moved = hypot(value.translation.width, value.translation.height) >= EditorState.laneClickSlop
-        editorState.endLanePress(atMS: ms(value.location.x - leading, laneWidth, ruler), moved: moved)
+        editorState.endLanePress(atMS: ms(value.location.x - leading, laneWidth, editorState.motionStripRuler),
+                                 moved: moved)
     }
 
     /// The moment under a point along the lane, which may be past either end

@@ -107,6 +107,15 @@ extension EditorState {
         rememberTimelineView()
     }
 
+    /// Slide the window under a drag held at the lanes' left or right edge
+    /// (`TimelineEdgeScroll`). Remembered once, when the drag lets go, rather
+    /// than sixty times a second.
+    func edgePanTimeline(byMS delta: Double) {
+        guard isTimelineOpenedOut else { return }
+        setTimelineWindow(timelineWindow.panned(byMS: delta,
+                                                documentMS: timelineLengthForZoomMS))
+    }
+
     /// Put the window around a moment. What clicking the overview does.
     func centreTimeline(onMS ms: Double) {
         guard isTimelineOpenedOut else { return }
@@ -121,8 +130,17 @@ extension EditorState {
     /// frame of playback, so it has to be free when there is nothing to do:
     /// `revealing` hands back the same window it was given when the playhead
     /// is already on screen, and writing the same value back changes nothing.
+    ///
+    /// Only when the PLAYHEAD moved: an edit redraws the moment too, and a
+    /// window scrolled away from a still playhead (by hand, or by a drag held
+    /// at an edge, `TimelineEdgeScroll`) must not jump back to it the moment
+    /// the drag lets go.
     func followTimelineWindow() {
-        guard isTimelineOpenedOut else { return }
+        let moved = timelineFollowedMS != documentTimeMS
+        timelineFollowedMS = documentTimeMS
+        // A drag scrolling the timeline at its edge has the window; the
+        // playhead does not pull it back from under the hand.
+        guard moved, isTimelineOpenedOut, !timelineEdgeScroll.isFollowing else { return }
         setTimelineWindow(timelineWindow.revealing(ms: Double(documentTimeMS),
                                                    documentMS: timelineLengthForZoomMS))
     }

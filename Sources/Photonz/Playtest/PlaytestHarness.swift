@@ -1770,7 +1770,7 @@ private final class Run {
                  "\(url.lastPathComponent) let go at \(short(at.point)) \(at.space.rawValue) = view \(short(viewPoint))\(held)",
                  state: describe())
 
-        case .windowDrag(let from, let to, let steps, let hold):
+        case .windowDrag(let from, let to, let steps, let hold, let holdSeconds):
             let window = try requireWindow()
             let a = try windowPoint(from), b = try windowPoint(to)
             var stamp = ProcessInfo.processInfo.systemUptime
@@ -1782,6 +1782,7 @@ private final class Run {
                         clickCount: 1, pressure: pressure) else { return }
                 NSApp.postEvent(event, atStart: false)
             }
+            let edgeBefore = editor?.timelineEdgeScroll.run
             let front = await takeTheFrontForADrag()
             // The pointer arrives first, as it does under a hand, or SwiftUI
             // has nothing to begin a gesture from (`pickUpTile`).
@@ -1796,17 +1797,27 @@ private final class Run {
                 await sleep(0.04)
             }
             var held = ""
+            if holdSeconds > 0 {
+                await sleep(holdSeconds)
+                held = ", held still \(holdSeconds)s"
+            }
             if let hold, let content = window.contentView {
                 await sleep(0.35)
                 try snapshot(content, name: hold)
                 await screenCapture(window, name: hold)
-                held = ", held \(hold).png"
+                held += ", held \(hold).png"
             }
+            let edge = editor?.timelineEdgeScroll.run
             post(.leftMouseUp, at: b, pressure: 0)
             await sleep(0.3)
             await giveTheFrontBack(front)
+            let scrolled = edge.flatMap { run -> String? in
+                guard run != edgeBefore, run.pannedMS != 0 || run.scrolledY != 0 else { return nil }
+                return "; the timeline scrolled \(Int(run.pannedMS.rounded())) ms along and "
+                    + "\(Int(run.scrolledY.rounded())) pt down at the edge, now \(editor?.timelineWindowReading ?? "")"
+            } ?? ""
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
-                 + "posted to the window in \(steps) moves\(held)\(front.note)")
+                 + "posted to the window in \(steps) moves\(held)\(scrolled)\(front.note)")
         case .windowClick(let at, let count, let modifiers):
             // A click, or two in a row, posted to the window the way
             // `windowDrag` posts its press, so it lands on whatever SwiftUI
@@ -2154,6 +2165,70 @@ private final class Run {
                  + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", ")) from "
                     + "\(reading.range.map { "\($0.lowerBound) to \($0.upperBound) ms" } ?? "?")")
                  + ", playhead \(editor.documentTimeMS) ms", state: describe())
+
+        // A box carried to an edge of the tracks' view and held there, through
+        // the same press, drag and hand the gesture gives the editor
+        // (`TimelineLaneMarquee`, `TimelineEdgeScroll`), so the timeline
+        // scrolls under it on its own, once a frame, while the hand is still.
+        case .boxToEdge(let fromTrack, let fromSeconds, let toTrack, let edge, let inset, let holdSeconds, let hold):
+            let editor = try requireEditor()
+            let from = try rulerMoment(fromSeconds, on: editor, doing: "press")
+            let fromY = try trackRowMiddle(fromTrack, on: editor, lean: -0.2)
+            let laneWidth = editor.timelineLaneWidth
+            let rows = editor.timelineTracksScrollGeometry
+            guard laneWidth > 0 else { throw Failure(description: "the timeline's lanes are not on screen") }
+            let fromX = CGFloat(editor.motionStripRuler.fraction(ofMS: Double(from))) * laneWidth
+            // Where the hand is held: at the edge, `inset` points inside it.
+            var toX = fromX, toY = try trackRowMiddle(toTrack, on: editor, lean: 0.2)
+            let gap = CGFloat(inset)
+            switch edge {
+            case .right: toX = laneWidth - gap
+            case .left: toX = gap
+            case .top, .bottom:
+                // A quarter of a lane across as well, so the box has some
+                // width to it, kept clear of the side bands.
+                toX = min(fromX + laneWidth / 4, laneWidth - 60)
+                toY = edge == .top ? rows.offsetY + gap : rows.offsetY + rows.viewportHeight - gap
+            }
+            let windowBefore = editor.timelineWindowReading
+            let offsetBefore = rows.offsetY
+            editor.takeTimelineKeyboard()
+            editor.beginLanePress(atMS: from, y: fromY, drawsRange: editor.timelineTool == .range)
+            let steps = 8
+            for step in 1...steps {
+                let t = CGFloat(step) / CGFloat(steps)
+                let x = fromX + (toX - fromX) * t
+                // The tracks may already have scrolled under the hand on the
+                // way, so its place down them is read off the view each time.
+                let viewY = (fromY - offsetBefore) + ((toY - offsetBefore) - (fromY - offsetBefore)) * t
+                let y = viewY + editor.timelineTracksScrollGeometry.offsetY
+                let ms = TimelineLaneMarquee.ms(x, laneWidth, editor.motionStripRuler)
+                editor.dragLanePress(toMS: ms, y: y, moved: true, snapMS: 0)
+                editor.laneBoxHand(laneX: x, contentY: y, snapMS: 0)
+                await sleep(0.03)
+            }
+            await sleep(holdSeconds)
+            if let hold, let window = try? requireWindow(), let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+            }
+            let run = editor.timelineEdgeScroll.run
+            let endMS = TimelineLaneMarquee.ms(toX, laneWidth, editor.motionStripRuler)
+            editor.endLanePress(atMS: endMS, moved: true)
+            await sleep(0.2)
+            let reading = timelinePickReading(editor)
+            let frames = run.frames.sorted()
+            func quantile(_ q: Double) -> String {
+                guard !frames.isEmpty else { return "-" }
+                return String(format: "%.1f", frames[min(frames.count - 1, Int(Double(frames.count) * q))] * 1000)
+            }
+            note(number, step.name, "pressed \(fromTrack) at \(EditorState.timecode(ms: from)), carried to the "
+                 + "\(edge.rawValue) edge and held \(holdSeconds)s: the timeline went from \(windowBefore) to "
+                 + "\(editor.timelineWindowReading) (\(Int(run.pannedMS.rounded())) ms), the tracks scrolled "
+                 + "\(Int(run.scrolledY.rounded())) pt; \(frames.count) frames, ms between them p50 \(quantile(0.5)) "
+                 + "p95 \(quantile(0.95)) max \(quantile(1)); picked "
+                 + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", ")),
+                 state: describe())
 
         case .expectTimelinePick(let clips, let rangeOn, let fromSeconds, let toSeconds):
             let editor = try requireEditor()
