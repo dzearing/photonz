@@ -1,0 +1,35 @@
+{
+  "id": "title-text-visibly-comes-in-and-every-built-in-t",
+  "title": "Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds",
+  "goal": "When a title starts, its words must clearly arrive: sliding up out of a mask, blurring into focus, tracking together, typing on, word by word or letter by letter, with motion blur on the fast moves. Today the first frame of every built-in title already shows the whole headline, so nothing reads as moving in. Then the built-in set is rebuilt on the new animated backgrounds so each one looks produced, not like a slide.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:25:07.551Z",
+  "updated": "2026-10-11T12:25:07.641Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"The text itself doesn't even move in. It's just boring ... I asked you to research good titles and this was really not an improvement\" (full quote on the companion task 'Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching').\n\nEvidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in': Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass all show the complete headline at their 'in' frame, nearly identical to 'hold'. The previous tasks shipped TextReveal (PhotonzCore/TextReveal.swift, PhotonzRender/TextRevealRasterizer.swift), TitleDesign parts (TitleDesign.swift), MotionBlur, TitleSet.swift (12 built-ins); the log of title-text-comes-in-by-line-word-or-letter says 'the headline's own part keys still run under a hand-added reveal' and 'reveals have no out yet' and a-set-of-titles-that-look-designed folded that in. Find out why it does not show. Depends on the backgrounds task for the backgrounds; the entrance fix can land first.",
+  "acceptance": [
+    "Reproduce first: insert each of the 12 built-ins, play from its start, and photograph frames at 0, 100, 200, 300, 400, 600 and 800 ms; write in the audit why the headline is already fully visible at the start (for example the reveal is not applied by default, the part keys win over the reveal, the 'in' frame was sampled after the in, or the in is too short to see)",
+    "VISIBLE ENTRANCE BAR, measured for every built-in: at the title's first frame the headline's visible ink is under 10% of its held ink; at the midpoint of its in it is between 20% and 80%; it reaches 100% no earlier than 400 ms. Subtitles and accents arrive on their own later beats. Same measured bar for the out",
+    "Each built-in uses a clearly different, polished entrance from the research (mask reveal by line, word stagger rise with blur, letter tracking in, typewriter with cursor, scale from large with blur, split wipe behind a bar), with motion blur on the fast parts, at Normal energy",
+    "All 12 built-ins (and the lower thirds) are rebuilt on the live backgrounds from the companion task, each pairing a background look with its type and entrance so the set has real variety; no built-in has a flat colour background except one deliberately minimal one",
+    "A reel: every built-in as a 5 s MP4 and GIF under queue/audits/, plus a contact sheet at the frame times above over a dark and a light recording; a decision card links the reel for the user to judge, option labels naming the titles. Building does not wait on the answer",
+    "Titles already in documents keep working",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:25:07.553Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:25:07.640Z",
+      "note": "seq 3950 -> 6"
+    }
+  ]
+}

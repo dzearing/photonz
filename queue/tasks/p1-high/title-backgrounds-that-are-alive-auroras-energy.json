@@ -1,0 +1,36 @@
+{
+  "id": "title-backgrounds-that-are-alive-auroras-energy",
+  "title": "Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching",
+  "goal": "A title page's background should be the thing that makes it look produced: auroras rippling across the frame, streams of light flowing like wind, soft colour bubbles drifting and blooming, light rays and leaks sweeping through, an architectural line drawing sketching itself in, particles. Today the backgrounds are flat colours or a faint, nearly static gradient with noise ('Mesh'), which the user called horrible. Replace them with a library of animated looks that are obviously moving and beautiful at a glance, each with a few knobs.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:25:07.384Z",
+  "updated": "2026-10-11T12:25:07.472Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"the titles are still boring. there are no background motion options, the backgrounds are just colors. I'd love energy streams, moving color bubbles, light effects, anything to make it less of a powerpoint slide. The text itself doesn't even move in. It's just boring. the 'mesh' option is just.... static noise? that's hard to see? It is horrible.. Replace it with anything that's interesting - auroras, wind streams, architectural sketching, stylistic options. I asked you to research good titles and this was really not an improvement\".\n\nWhat went wrong last time: the six title tasks (titles-move-in-parts..., title-backgrounds-move..., a-set-of-titles-that-look-designed, etc.) were all closed 'done' on rule checks and timing numbers. Their own audit frames (queue/audits/2026-10-11-title-set-pages-1.png, -2.png) show flat colour or a faint gradient behind every title and the 'in' frame already showing the whole headline. This task's bar is visual and measured motion, not rules. Research: docs/design/video-titles-polish.md (Backgrounds, renderer costs). Existing pieces to replace or reuse: Mesh fill with Drift and Grain effect from title-backgrounds-move-gradients-grain-and-the-r (commit around 2026-10-11 01:32), TitleRestyle.swift Background knob, TitleSet.swift built-ins. Kernels: curl noise, layered sin ribbons with hue shift, additive blurred discs, radial light shafts with a mask, line segments with a trim drawn over time; render at half resolution where soft. Memory: mocks are the floor, legible text, no em dashes in UI copy. Companion filed the same day: 'Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds'.",
+  "acceptance": [
+    "At least 10 animated background looks, generated in real time (Metal or Core Image kernels, not video files): Aurora (layered ribbons of light rippling and shifting hue), Energy Streams (glowing flowing lines like wind or data, with trails), Color Bubbles (large soft bokeh circles drifting, blooming and overlapping), Light Rays (god rays / beams sweeping through haze), Light Leaks (warm film leaks washing across), Wind Streams (fine flowing streaklines following a curl-noise field), Architectural Sketch (thin construction lines drawing themselves in as a perspective or blueprint sketch, then holding with a slow drift), Particles (dust or sparks with depth and parallax), Liquid Gradient (glossy flowing gradient with real visible movement, replacing Mesh), Grid Horizon (a glowing perspective grid moving toward the viewer). The runner may add more; each must be clearly different",
+    "Every look has 3 to 5 knobs that matter (colours, taken from the title's Theme by default; Speed; Intensity or density; Scale; and one look-specific knob such as ray angle or line weight), and reads well behind both light and dark text",
+    "VISIBLE MOTION BAR, measured and written in the audit for every look: the mean absolute pixel difference between frames 0.5 s apart is large enough that the motion is obvious at a glance (pick the threshold by comparing against the current 'Mesh', which must FAIL it), and no look is a static image with grain",
+    "Mesh as it is today is removed from the title backgrounds (old documents still open and draw what they had)",
+    "Each look renders at 1080p within the 16 ms budget at Normal intensity (MEASURED, perf note); export matches playback",
+    "Backgrounds are a Background picker in the Title section with animated thumbnails of each look, and work behind any of the title presets and any text the person adds",
+    "A reel: for every look, a 4 s MP4 (and an animated GIF) is written under queue/audits/ and a contact sheet of 6 frames across 2 s; a decision card links the reel and asks the user which looks to keep, make default, or rework, with option labels naming the looks. Building does not wait on the answer",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:25:07.386Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:25:07.470Z",
+      "note": "seq 3950 -> 5"
+    }
+  ]
+}
