@@ -48,6 +48,84 @@ struct PaintedCapture {
         }
     }
 
+    /// How much of pixel (x, y) a shape covers, from a 4 x 4 grid of samples:
+    /// the antialiasing a real capture puts on every curved edge.
+    private func coverage(_ x: Int, _ y: Int, _ inside: (Double, Double) -> Bool) -> Double {
+        var hits = 0
+        for sy in 0..<4 {
+            for sx in 0..<4 where inside(Double(x) + (Double(sx) + 0.5) / 4,
+                                         Double(y) + (Double(sy) + 0.5) / 4) {
+                hits += 1
+            }
+        }
+        return Double(hits) / 16
+    }
+
+    /// Paints a shape whose tone at each point is `tone(x, y)`, blended over
+    /// what is there by how much of each pixel the shape covers.
+    mutating func paint(within rect: CGRect, inside: (Double, Double) -> Bool,
+                        tone: (Double, Double) -> Double) {
+        let x0 = max(0, Int(rect.minX) - 1), x1 = min(w - 1, Int(rect.maxX) + 1)
+        let y0 = max(0, Int(rect.minY) - 1), y1 = min(h - 1, Int(rect.maxY) + 1)
+        guard x0 <= x1, y0 <= y1 else { return }
+        for y in y0...y1 {
+            for x in x0...x1 {
+                let a = coverage(x, y, inside)
+                guard a > 0 else { continue }
+                let under = Double(pixels[y * w + x])
+                let over = tone(Double(x) + 0.5, Double(y) + 0.5)
+                pixels[y * w + x] = UInt8(max(0, min(255, (under * (1 - a) + over * a).rounded())))
+            }
+        }
+    }
+
+    /// An antialiased disc filling `rect` (a circle when it is square).
+    mutating func disc(_ rect: CGRect, _ tone: UInt8) {
+        disc(rect) { _, _ in Double(tone) }
+    }
+
+    mutating func disc(_ rect: CGRect, tone: (Double, Double) -> Double) {
+        let cx = Double(rect.midX), cy = Double(rect.midY)
+        let rx = Double(rect.width) / 2, ry = Double(rect.height) / 2
+        paint(within: rect, inside: { x, y in
+            let dx = (x - cx) / rx, dy = (y - cy) / ry
+            return dx * dx + dy * dy <= 1
+        }, tone: tone)
+    }
+
+    /// An antialiased rounded rectangle (a capsule when `radius` is half its
+    /// height).
+    mutating func roundedRect(_ rect: CGRect, radius: Double, _ tone: UInt8) {
+        let x0 = Double(rect.minX), x1 = Double(rect.maxX)
+        let y0 = Double(rect.minY), y1 = Double(rect.maxY)
+        paint(within: rect, inside: { x, y in
+            guard x >= x0, x <= x1, y >= y0, y <= y1 else { return false }
+            let cx = min(max(x, x0 + radius), x1 - radius)
+            let cy = min(max(y, y0 + radius), y1 - radius)
+            return (x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius * radius
+        }, tone: { _, _ in Double(tone) })
+    }
+
+    /// A head-and-shoulders "photo" clipped to a disc: a diagonal backdrop
+    /// gradient, a face, hair and a shirt, so its insides are full of edges.
+    mutating func portrait(_ rect: CGRect, backdrop: (Double, Double) = (200, 110),
+                           skin: Double = 205, hair: Double = 45, shirt: Double = 70) {
+        let x0 = Double(rect.minX), y0 = Double(rect.minY), u = Double(rect.width)
+        func inEllipse(_ x: Double, _ y: Double, _ ex: Double, _ ey: Double,
+                       _ ew: Double, _ eh: Double) -> Bool {
+            let cx = x0 + (ex + ew / 2) * u, cy = y0 + (ey + eh / 2) * u
+            let dx = (x - cx) / (ew * u / 2), dy = (y - cy) / (eh * u / 2)
+            return dx * dx + dy * dy <= 1
+        }
+        disc(rect) { x, y in
+            if inEllipse(x, y, 0.27, 0.12, 0.46, 0.22) { return hair }
+            if inEllipse(x, y, 0.3, 0.18, 0.4, 0.48) { return skin }
+            if inEllipse(x, y, 0.12, 0.66, 0.76, 0.6) { return shirt }
+            let t = ((x - x0) + (y - y0)) / (2 * u)
+            return backdrop.0 + (backdrop.1 - backdrop.0) * t
+        }
+    }
+
     var luma: LumaField { LumaField(width: w, height: h, samples: pixels) }
 
     /// The same Sobel pass `EdgeMapAnalyzer` runs, on 0…1 brightness so the

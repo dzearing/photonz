@@ -881,6 +881,20 @@ extension CanvasNSView {
             drag.current = p
             alignmentDrag = drag
             refreshAlignmentPreview()
+        } else if tool == .measure, measureToolMode == .size, let down = measurePressDownView {
+            // Size mode: a press that really moves draws a box, and the thing
+            // it would snap to is outlined as it grows.
+            let now = convert(event.locationInWindow, from: nil)
+            if sizeBoxDrag == nil, hypot(now.x - down.x, now.y - down.y) > 4 {
+                sizeBoxDrag = (viewport.documentPoint(fromView: down), p)
+            }
+            if var drag = sizeBoxDrag {
+                drag.current = p
+                sizeBoxDrag = drag
+                refreshSizeBoxPreview()
+            } else {
+                handleMeasureHover(event)
+            }
         } else if tool == .measure {
             // Caliper creation is click-based; a drag between clicks just updates
             // the placement preview (same as moving with the button up).
@@ -1261,6 +1275,13 @@ extension CanvasNSView {
             alignmentPreviewLayer.isHidden = true
             finishAlignmentDrag(from: drag.anchor,
                                 to: viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))
+            return
+        }
+        if tool == .measure, measureToolMode == .size, sizeBoxDrag != nil {
+            let up = convert(event.locationInWindow, from: nil)
+            measurePressDownView = nil
+            hoverPoint = up
+            finishSizeBox(at: viewport.documentPoint(fromView: up))
             return
         }
         if tool == .measure, measureToolMode.commitsOnClick {

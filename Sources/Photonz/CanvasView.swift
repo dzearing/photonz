@@ -279,6 +279,9 @@ struct CanvasView: NSViewRepresentable {
     /// calipers, plus the elements touching it, which the two readouts steer
     /// around so neither number reads as the neighbour's.
     let onElementSizeCommit: (CGRect, [CGRect]) -> Void
+    /// Size mode's box found nothing wholly inside it and was measured as
+    /// drawn: the app says so.
+    let onSizeBoxKept: () -> Void
     /// Gap mode's click: the whitespace reading to turn into one caliper.
     let onGapCommit: (GapMeasurement) -> Void
     /// `[` / `]` moved Size mode's pick to a different rung.
@@ -486,6 +489,7 @@ struct CanvasView: NSViewRepresentable {
         view.onMeasureCommit = onMeasureCommit
         view.onAlignmentCommit = onAlignmentCommit
         view.onElementSizeCommit = onElementSizeCommit
+        view.onSizeBoxKept = onSizeBoxKept
         view.onGapCommit = onGapCommit
         view.onCandidateLevelChange = onCandidateLevelChange
         view.onMeasureEndpointPreview = onMeasureEndpointPreview
@@ -642,6 +646,7 @@ final class CanvasNSView: NSView {
     var onMeasureCommit: ((CGPoint, CGPoint, MeasureMode, CGFloat?) -> Void) = { _, _, _, _ in }
     var onAlignmentCommit: ((MeasureMode, CGFloat, ClosedRange<CGFloat>) -> Void) = { _, _, _ in }
     var onElementSizeCommit: ((CGRect, [CGRect]) -> Void) = { _, _ in }
+    var onSizeBoxKept: (() -> Void) = {}
     var onGapCommit: ((GapMeasurement) -> Void) = { _ in }
     var onCandidateLevelChange: ((Int) -> Void) = { _ in }
     var onMeasureEndpointPreview: ((UUID, CGPoint, CGPoint, CGFloat, MeasureReadoutPlacement?) -> Void) = { _, _, _, _, _ in }
@@ -1326,6 +1331,13 @@ final class CanvasNSView: NSView {
     /// offers element/gap centers, echoed from EditorState via the wrapper.
     var measureSnapsToCenters = false
     var alignmentDrag: (anchor: CGPoint, current: CGPoint)?
+    /// Size mode's box: a press-drag draws a rough box round something and
+    /// release measures what it snaps to (the user, 2026-10-11). Document
+    /// coordinates; nil until the press has really moved.
+    var sizeBoxDrag: (anchor: CGPoint, current: CGPoint)?
+    /// What the box in hand snaps to right now, nil when nothing is wholly
+    /// inside it.
+    var sizeBoxSnap: CGRect?
     /// Dashed live preview of the guide being dragged.
     let alignmentPreviewLayer = CAShapeLayer()
     /// The mouse-down location (view space) of the current measure press, to tell

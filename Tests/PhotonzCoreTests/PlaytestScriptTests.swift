@@ -2756,12 +2756,32 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2 } ] }
         """)
-        guard case .expectMeasures(let count) = script.steps[0] else {
+        guard case .expectMeasures(let count, let reads) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
+        #expect(reads == nil)
         #expect(script.steps[0].name == "expectMeasures")
         #expect(PlaytestStep.names.contains("expectMeasures"))
+    }
+
+    // Counting says something landed; Size mode's whole point is the NUMBER it
+    // landed with (2026-10-11: an avatar read as a piece of its photo).
+    @Test("An expectMeasures step can claim what the measurements read")
+    func expectMeasuresCanClaimTheReadings() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectMeasures", "count": 2, "reads": ["32 px", "32 px"] } ] }
+        """)
+        guard case .expectMeasures(let count, let reads) = script.steps[0] else {
+            Issue.record("expectMeasures"); return
+        }
+        #expect(count == 2)
+        #expect(reads == ["32 px", "32 px"])
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectMeasures", "count": 2, "reads": ["32 px"] } ] }
+            """)
+        }
     }
 
     // A walk that exports and photographs the sheet proves the sheet opened,
@@ -3688,7 +3708,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 0 } ] }
         """)
-        guard case .expectMeasures(let count) = script.steps[0] else {
+        guard case .expectMeasures(let count, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 0)

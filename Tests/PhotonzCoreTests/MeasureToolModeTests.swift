@@ -99,7 +99,14 @@ struct MeasureToolModeTests {
         #expect(!MeasureToolMode.size.hint.contains("["))
         #expect(MeasureToolMode.size.help.contains("[ and ]"))
         let tip = try #require(MeasureToolMode.size.keyTip)
-        #expect(tip.contains("[ and ]"))
+        // It names the way out to a whole avatar stack (2026-10-11), since a
+        // hover picks the one avatar under the pointer.
+        #expect(tip.contains("]") && tip.contains("["))
+        #expect(tip.contains("stack"))
+        // And the pill teaches the box, the way to say "the thing in here"
+        // when a hover cannot tell which thing is meant.
+        #expect(MeasureToolMode.size.hint.contains("drag a box"))
+        #expect(MeasureToolMode.size.help.contains("drag a box"))
         #expect(tip.count <= MeasureToolMode.hintLengthLimit)
         #expect(!tip.contains("—"))
         // Only Size has keys worth a line; a tip under Distance would be noise.

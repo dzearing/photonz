@@ -3405,7 +3405,10 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// Zero is as much of the point as any other number: it says nothing
     /// should have landed here.
-    case expectMeasures(count: Int)
+    /// `reads`, when given, is what they say, in the order they landed, one
+    /// entry per measurement (`"32 px"`), so a Size click proves the number
+    /// and not just that something landed.
+    case expectMeasures(count: Int, reads: [String]?)
     /// CLAIMS how round a path's corners are, asked of the document: `radius`
     /// is what every sharp corner draws at (to within `within` points), and
     /// `rounded` is how many of them are rounded at all. The only way a walk
@@ -5009,7 +5012,11 @@ public enum PlaytestStep: Sendable, Equatable {
             guard howMany >= 0, howMany == howMany.rounded() else {
                 throw f.invalid("count", "a count of measurements is a whole number, zero or more, not \(howMany)")
             }
-            self = .expectMeasures(count: Int(howMany))
+            let reads = f.has("reads") ? try f.optionalStrings("reads") : nil
+            if let reads, reads.count != Int(howMany) {
+                throw f.invalid("reads", "names \(reads.count) readings for \(Int(howMany)) measurements; claim one per measurement, in the order they landed")
+            }
+            self = .expectMeasures(count: Int(howMany), reads: reads)
         case "expectSVG":
             let pictured: Int?
             if fields["pictured"] != nil {

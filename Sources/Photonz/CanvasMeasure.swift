@@ -459,6 +459,97 @@ extension CanvasNSView {
         onAlignmentCommit(axis, position, span) // adds, selects, reverts to Select
     }
 
+    // MARK: Size mode's box (Next)
+
+    /// The box in hand, in document px, held inside the canvas.
+    private func sizeBoxRect() -> CGRect? {
+        guard let drag = sizeBoxDrag, let document else { return nil }
+        let raw = CGRect(x: min(drag.anchor.x, drag.current.x), y: min(drag.anchor.y, drag.current.y),
+                         width: abs(drag.current.x - drag.anchor.x),
+                         height: abs(drag.current.y - drag.anchor.y))
+        let box = raw.intersection(CGRect(origin: .zero, size: document.canvasSize))
+        return box.isNull || box.width <= 0 || box.height <= 0 ? nil : box
+    }
+
+    /// What a box snaps to: everything wholly inside it, read off the picture
+    /// (`ShapeBounds.content`). A box drawn four points tight still reaches
+    /// the edge just outside it, and a word it cuts in half is left out whole.
+    private func sizeBoxTarget(_ box: CGRect) -> CGRect? {
+        let scale = Double(max(1, document?.pixelScale ?? 1))
+        return ShapeBounds.content(in: box, luma: lumaField, slack: 4 * scale,
+                                   link: Double(AlignmentScan.visibleGap) * scale / 2,
+                                   minElement: 4 * scale)
+    }
+
+    /// Draws the box being dragged (dashed, in the measure ink) and, live,
+    /// the outline and calipers of what letting go would measure.
+    func refreshSizeBoxPreview() {
+        guard let viewport, let document, let box = sizeBoxRect() else {
+            alignmentPreviewLayer.isHidden = true
+            return
+        }
+        let style = measureContent ?? MeasureContent()
+        let rgba = RGBA(hex: style.strokeColorHex) ?? RGBA(r: 1, g: 0.23, b: 0.19)
+        let corners = [CGPoint(x: box.minX, y: box.minY), CGPoint(x: box.maxX, y: box.minY),
+                       CGPoint(x: box.maxX, y: box.maxY), CGPoint(x: box.minX, y: box.maxY)]
+            .map { viewport.viewPoint(fromDocument: $0) }
+        let path = CGMutablePath()
+        path.addLines(between: corners)
+        path.closeSubpath()
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        alignmentPreviewLayer.path = path
+        alignmentPreviewLayer.strokeColor = CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b,
+                                                    alpha: 0.55)
+        alignmentPreviewLayer.lineWidth = 1
+        alignmentPreviewLayer.isHidden = false
+        snapDotLayer.isHidden = true
+        CATransaction.commit()
+        let snapped = sizeBoxTarget(box)
+        sizeBoxSnap = snapped
+        if let snapped {
+            measureElementPreview = snapped
+            drawElementPreview(snapped, style: style, viewport: viewport,
+                               pixelScale: document.pixelScale, canvas: document.canvasSize)
+        } else {
+            CATransaction.begin()
+            CATransaction.setDisableActions(true)
+            hoverBoundsLayer.isHidden = true
+            hoverWidthCaliperLayer.isHidden = true
+            hoverHeightCaliperLayer.isHidden = true
+            CATransaction.commit()
+            measureElementPreview = nil
+            measureElementNeighbors = []
+        }
+    }
+
+    /// Letting go of the box: measure what it snapped to, or, with nothing
+    /// wholly inside it, the box itself, and say so.
+    func finishSizeBox(at point: CGPoint) {
+        if var drag = sizeBoxDrag {
+            drag.current = point
+            sizeBoxDrag = drag
+        }
+        let box = sizeBoxRect()
+        let snapped = box.flatMap(sizeBoxTarget)
+        let around = snapped != nil && snapped == measureElementPreview ? measureElementNeighbors : []
+        sizeBoxDrag = nil
+        sizeBoxSnap = nil
+        alignmentPreviewLayer.isHidden = true
+        hideMeasureHoverReadout()
+        guard let box else { return }
+        if let snapped {
+            onElementSizeCommit(snapped, around)
+            return
+        }
+        // Whole pixels: a box drawn by hand has no reading finer than that.
+        let drawn = CGRect(x: box.minX.rounded(), y: box.minY.rounded(),
+                           width: max(1, (box.maxX - box.minX).rounded()),
+                           height: max(1, (box.maxY - box.minY).rounded()))
+        onElementSizeCommit(drawn, [])
+        onSizeBoxKept()
+    }
+
     // MARK: Size / Gap mode preview (Next)
 
     /// Hides every mode-preview layer (a miss, a placement, a tool switch).
@@ -480,6 +571,8 @@ extension CanvasNSView {
     /// snapping uses. Whatever is drawn is stashed, so mouse-up commits exactly
     /// the thing you were looking at.
     private func refreshMeasureHoverReadout(modifierFlags: NSEvent.ModifierFlags) {
+        // A box in hand owns the preview until it is let go.
+        guard sizeBoxDrag == nil else { return }
         measureElementPreview = nil
         measureElementNeighbors = []
         measureGapPreview = nil
@@ -509,7 +602,8 @@ extension CanvasNSView {
                     // element, whatever the capture's scale; a line of text ends
                     // at the same visible gap the alignment scan splits items on.
                     minElement: max(10, 10 * document.pixelScale),
-                    textGap: AlignmentScan.visibleGap * max(1, document.pixelScale)))
+                    textGap: AlignmentScan.visibleGap * max(1, document.pixelScale),
+                    readsShapes: true))
             guard let rect = ladder.isEmpty
                     ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
                 hideMeasureHoverReadout()
@@ -551,7 +645,8 @@ extension CanvasNSView {
                                             minElement: max(10, 10 * scale),
                                             textGap: AlignmentScan.visibleGap * scale,
                                             reaches: [ElementBounds.neighborProbeReach,
-                                                      Double(reach)])
+                                                      Double(reach)],
+                                            readsShapes: true)
         // The shapes beside this one are known, not guessed, so a number never
         // parks on the rectangle next door on a canvas with no picture in it.
         if let document {

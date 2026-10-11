@@ -155,6 +155,7 @@ struct EditorCanvasSurface: View {
                    onCaptionPlaceCancel: { editorState.cancelCaptionPlacement() },
                    onAlignmentCommit: { editorState.addAlignmentCheck(axis: $0, position: $1, span: $2) },
                    onElementSizeCommit: { editorState.addElementSize($0, neighbors: $1) },
+                   onSizeBoxKept: { editorState.raiseCanvasNotice(.boxKeptAsDrawn) },
                    onGapCommit: { editorState.addGapMeasure($0) },
                    onCandidateLevelChange: { editorState.measureCandidateLevel = $0 },
                    onToolChange: { editorState.setTool($0) },

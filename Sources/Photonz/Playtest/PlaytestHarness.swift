@@ -2595,8 +2595,8 @@ private final class Run {
             note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, dark: dark),
                  state: describe())
 
-        case .expectMeasures(let count):
-            note(number, step.name, try checkMeasures(count), state: describe())
+        case .expectMeasures(let count, let reads):
+            note(number, step.name, try checkMeasures(count, reads: reads), state: describe())
 
         case .expectCorners(let layerName, let corner, let radius, let rounded, let within):
             note(number, step.name,
@@ -8823,7 +8823,7 @@ private final class Run {
         TutorialController.shared.choose(choice)
     }
 
-    private func checkMeasures(_ count: Int) throws -> String {
+    private func checkMeasures(_ count: Int, reads: [String]? = nil) throws -> String {
         let editor = try requireEditor()
         let landed = (editor.document?.allLayers ?? []).filter { $0.measure != nil }
         func plural(_ n: Int) -> String { n == 1 ? "measurement" : "measurements" }
@@ -8831,6 +8831,15 @@ private final class Run {
             throw Failure(description: "\(landed.count) \(plural(landed.count)) on the canvas, not \(count)"
                 + "; the caliper is \(canvas?.playtestMeasuringReport ?? "on no canvas")"
                 + (landed.isEmpty ? "" : "; landed: \(landed.map(\.name).joined(separator: ", "))"))
+        }
+        if let reads {
+            let scale = editor.document?.pixelScale ?? 1
+            let said = landed.compactMap { $0.measure?.label(pixelScale: scale) }
+            guard said == reads else {
+                throw Failure(description: "the measurements read \(said.joined(separator: ", ")), "
+                    + "not \(reads.joined(separator: ", "))")
+            }
+            return "\(count) \(plural(count)) on the canvas, reading \(said.joined(separator: ", ")), as claimed"
         }
         return count == 0
             ? "nothing has been measured, as claimed"

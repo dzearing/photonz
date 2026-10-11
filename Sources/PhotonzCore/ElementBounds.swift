@@ -101,10 +101,11 @@ public enum ElementBounds {
                               maxRadius: Double = defaultMaxRadius,
                               spanRadius: Double = defaultSpanRadius,
                               minElement: Double = defaultMinElement,
-                              textGap: Double = TextLineBounds.defaultGap) -> CGRect? {
+                              textGap: Double = TextLineBounds.defaultGap,
+                              readsShapes: Bool = false) -> CGRect? {
         candidates(at: point, in: edges, luma: luma, maxRadius: maxRadius,
                    spanRadius: spanRadius, minElement: minElement, textGap: textGap,
-                   limit: 1).first
+                   limit: 1, readsShapes: readsShapes).first
     }
 
     /// How much taller than its words a rung may be and still be a CONTROL
@@ -124,34 +125,76 @@ public enum ElementBounds {
     /// readout that flickered between a word and its button as the pointer
     /// crossed the letters would be worse than one that is quietly wrong.
     /// `textGap` is the clean stretch that ends a line, in image px.
+    ///
+    /// `readsShapes` adds the things a pair of straight edges cannot see
+    /// (`ShapeBounds`): round avatars, icons, badges, photos and the stacks
+    /// they sit in. Next's Size mode turns it on; everything else reads as it
+    /// always did, which keeps Current's readout placement exactly as it was.
     public static func candidates(at point: CGPoint, in edges: EdgeMap,
                                   luma: LumaField,
                                   maxRadius: Double = defaultMaxRadius,
                                   spanRadius: Double = defaultSpanRadius,
                                   minElement: Double = defaultMinElement,
                                   textGap: Double = TextLineBounds.defaultGap,
-                                  limit: Int = candidateLimit) -> [CGRect] {
+                                  limit: Int = candidateLimit,
+                                  readsShapes: Bool = false) -> [CGRect] {
         guard !edges.isEmpty, !luma.isEmpty, maxRadius > 0, limit > 0 else { return [] }
-        guard let text = TextLineBounds.detect(at: point, in: luma, gap: textGap,
-                                               minElement: minElement, maxRadius: maxRadius)
-        else {
-            return pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
-                             spanRadius: spanRadius, minElement: minElement, limit: limit)
+        var shape = readsShapes
+            ? ShapeBounds.shape(at: point, in: luma, minElement: minElement, maxRadius: maxRadius)
+            : nil
+        // With a shape in hand the whole pair ladder is needed, to see which
+        // of its rungs hold the shape and which are pieces of its picture.
+        let pairLimit = shape == nil ? limit : candidateLimit
+        let text = TextLineBounds.detect(at: point, in: luma, gap: textGap,
+                                         minElement: minElement, maxRadius: maxRadius)
+        if let found = shape, found.onBody, let text,
+           text.insetBy(dx: CGFloat(-probeSlack), dy: CGFloat(-probeSlack)).contains(found.bounds) {
+            // The line reader ran through a shape. An avatar or an icon beside
+            // its label is a picture with words next to it, and pointing at it
+            // means the picture; a letter is just a letter of the line.
+            guard isPicture(found, besideTextIn: text, luma: luma) else {
+                shape = nil
+                return textLadder(text, at: point, shape: nil, in: edges, luma: luma,
+                                  maxRadius: maxRadius, spanRadius: spanRadius,
+                                  minElement: minElement, limit: limit)
+            }
+            let rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                                  spanRadius: spanRadius, minElement: minElement,
+                                  limit: candidateLimit)
+            let ladder = shaped(found, rungs, luma: luma)
+            return Array(insert(text, into: ladder).prefix(limit))
         }
+        guard let text else {
+            let rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                                  spanRadius: spanRadius, minElement: minElement, limit: pairLimit)
+            return Array(shaped(shape, rungs, luma: luma).prefix(limit))
+        }
+        return textLadder(text, at: point, shape: shape, in: edges, luma: luma,
+                          maxRadius: maxRadius, spanRadius: spanRadius,
+                          minElement: minElement, limit: limit)
+    }
+
+    /// The ladder when a line of text is under the pointer: the line first,
+    /// unless a control is wearing it as its label.
+    private static func textLadder(_ text: CGRect, at point: CGPoint, shape: ShapeBounds.Reading?,
+                                   in edges: EdgeMap, luma: LumaField, maxRadius: Double,
+                                   spanRadius: Double, minElement: Double, limit: Int) -> [CGRect] {
         let slack = CGFloat(probeSlack)
         func holds(_ rung: CGRect) -> Bool { rung.insetBy(dx: -slack, dy: -slack).contains(text) }
+        let pairLimit = shape == nil ? limit : candidateLimit
         var rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
-                              spanRadius: spanRadius, minElement: minElement, limit: limit)
+                              spanRadius: spanRadius, minElement: minElement, limit: pairLimit)
         // A rung that does not hold the whole line is a fragment of it (one
         // letter's top and baseline can agree with each other), not a
         // container. When that is all a short ladder found, the full ladder is
         // needed to see the rung that does hold the words, since that one
         // decides whether they are its caption.
-        if let first = rungs.first, !holds(first), limit < candidateLimit {
+        if let first = rungs.first, !holds(first), pairLimit < candidateLimit {
             rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
                               spanRadius: spanRadius, minElement: minElement,
                               limit: candidateLimit)
         }
+        rungs = shaped(shape, rungs, luma: luma)
         let containing = rungs.filter(holds)
         if let control = containing.first, hugs(control, text) {
             return Array(rungs.prefix(limit))
@@ -161,6 +204,119 @@ public enum ElementBounds {
             ladder.append(rect)
         }
         return ladder
+    }
+
+    // MARK: Shapes on the ladder
+
+    /// How close two readings of one thing have to be, side by side, to be
+    /// the same reading. The pair ladder's number wins a tie, so nothing it
+    /// already measured moves.
+    private static let sameReading: CGFloat = 3
+
+    /// How bold (0...255 from the background) anything in the band between a
+    /// rung and a shape around it may be for that band to be a shadow or a
+    /// glow, which belongs to no spec.
+    private static let haloContrast = 51
+
+    /// The pair ladder with the shape under the pointer put where it belongs.
+    ///
+    /// On the shape's own paint the shape is the first rung, and pair rungs
+    /// INSIDE it are dropped: two straight edges across a photo are a piece of
+    /// the photo, not a thing to measure. Two exceptions keep today's numbers:
+    /// a first rung that already reads the shape stays as it is, and a shape
+    /// that is only a first rung plus a soft band round it is that rung and its
+    /// shadow. A shape the pointer is in a HOLE of (a white button inside a
+    /// filled banner) is a container, slotted in after what it holds. A stack
+    /// the shape belongs to comes right after it, one `]` away.
+    private static func shaped(_ shape: ShapeBounds.Reading?, _ rungs: [CGRect],
+                               luma: LumaField) -> [CGRect] {
+        guard let shape else { return rungs }
+        let b = shape.bounds
+        guard shape.onBody else { return insert(b, into: rungs) }
+        let group = ShapeBounds.group(of: shape, in: luma)
+        if let first = rungs.first {
+            if same(first, b) { return group.map { insert($0, into: rungs) } ?? rungs }
+            if b.insetBy(dx: -sameReading, dy: -sameReading).contains(first),
+               isHalo(b, around: first, luma: luma, background: shape.background) {
+                return rungs
+            }
+        }
+        var ladder = [b]
+        if let group, grows(group, beyond: b) { ladder.append(group) }
+        for rung in rungs where grows(rung, beyond: ladder.last) { ladder.append(rung) }
+        return ladder
+    }
+
+    private static func same(_ a: CGRect, _ b: CGRect) -> Bool {
+        abs(a.minX - b.minX) <= sameReading && abs(a.minY - b.minY) <= sameReading
+            && abs(a.maxX - b.maxX) <= sameReading && abs(a.maxY - b.maxY) <= sameReading
+    }
+
+    /// `rect` slotted into a nested ladder: after every rung it holds, before
+    /// every rung that holds it. A ladder it would not nest in (a rung crosses
+    /// it) or already reads it is handed back untouched.
+    private static func insert(_ rect: CGRect, into rungs: [CGRect]) -> [CGRect] {
+        let slack = CGFloat(probeSlack)
+        guard !rungs.contains(where: { same($0, rect) }) else { return rungs }
+        var out: [CGRect] = []
+        var placed = false
+        for rung in rungs {
+            if !placed, rect.insetBy(dx: -slack, dy: -slack).contains(rung) {
+                out.append(rung)
+                continue
+            }
+            if !placed {
+                guard grows(rung, beyond: rect), grows(rect, beyond: out.last) else { return rungs }
+                out.append(rect)
+                placed = true
+            }
+            out.append(rung)
+        }
+        if !placed {
+            guard grows(rect, beyond: out.last) else { return rungs }
+            out.append(rect)
+        }
+        return out
+    }
+
+    /// Whether everything in `shape` outside `inner` is soft: a drop shadow or
+    /// a glow round the element `inner` already reads.
+    private static func isHalo(_ shape: CGRect, around inner: CGRect, luma: LumaField,
+                               background: Int) -> Bool {
+        let x0 = Int(shape.minX), x1 = Int(shape.maxX), y0 = Int(shape.minY), y1 = Int(shape.maxY)
+        guard x0 < x1, y0 < y1 else { return false }
+        // The rung's own border can sit a pixel or two outside what it reads.
+        let own = inner.insetBy(dx: -sameReading, dy: -sameReading)
+        var strongest = 0
+        for y in max(0, y0)..<min(luma.height, y1) {
+            for x in max(0, x0)..<min(luma.width, x1)
+            where !own.contains(CGPoint(x: Double(x) + 0.5, y: Double(y) + 0.5)) {
+                strongest = max(strongest, abs(Int(luma.samples[y * luma.width + x]) - background))
+                if strongest >= haloContrast { return false }
+            }
+        }
+        return true
+    }
+
+    /// Whether a shape lying inside a line of text is a picture beside the
+    /// words (an avatar by a name) rather than one of the letters: the rest of
+    /// the line's ink is clearly shorter than it is.
+    private static func isPicture(_ shape: ShapeBounds.Reading, besideTextIn text: CGRect,
+                                  luma: LumaField) -> Bool {
+        let b = shape.bounds
+        let floor = Int((TextLineBounds.inkFloor * 255).rounded())
+        var top = Int.max, bottom = -1
+        let y0 = max(0, Int(text.minY)), y1 = min(luma.height, Int(text.maxY))
+        for x in max(0, Int(text.minX))..<min(luma.width, Int(text.maxX)) {
+            guard Double(x) < Double(b.minX) - 2 || Double(x) > Double(b.maxX) + 2 else { continue }
+            for y in y0..<y1
+            where abs(Int(luma.samples[y * luma.width + x]) - shape.background) >= floor {
+                top = min(top, y)
+                bottom = max(bottom, y)
+            }
+        }
+        guard bottom >= top else { return true }
+        return Double(bottom - top + 1) <= 0.75 * Double(b.height)
     }
 
     /// Whether `rung` is a control wearing `text` as its label: the words are
@@ -312,14 +468,15 @@ public enum ElementBounds {
                                  spanRadius: Double = defaultSpanRadius,
                                  minElement: Double = defaultMinElement,
                                  textGap: Double = TextLineBounds.defaultGap,
-                                 reaches: [Double] = [neighborProbeReach]) -> [CGRect] {
+                                 reaches: [Double] = [neighborProbeReach],
+                                 readsShapes: Bool = false) -> [CGRect] {
         guard !edges.isEmpty, !luma.isEmpty, rect.width > 0, rect.height > 0 else { return [] }
         let slack = CGFloat(probeSlack)
         var found: [CGRect] = []
         for reach in reaches {
             probe(rect, reach: CGFloat(reach), slack: slack, into: &found, in: edges, luma: luma,
                   maxRadius: maxRadius, spanRadius: spanRadius, minElement: minElement,
-                  textGap: textGap)
+                  textGap: textGap, readsShapes: readsShapes)
         }
         return found
     }
@@ -328,7 +485,7 @@ public enum ElementBounds {
     private static func probe(_ rect: CGRect, reach r: CGFloat, slack: CGFloat,
                               into found: inout [CGRect], in edges: EdgeMap, luma: LumaField,
                               maxRadius: Double, spanRadius: Double, minElement: Double,
-                              textGap: Double) {
+                              textGap: Double, readsShapes: Bool) {
         // Each probe carries the test for what a neighbour on THAT side looks
         // like: it has to begin where the element ends. A box that reaches back
         // across the element is a band read off the picture, not the row next
@@ -346,7 +503,7 @@ public enum ElementBounds {
                   Double(probe.point.y) < Double(edges.height),
                   let hit = detect(at: probe.point, in: edges, luma: luma, maxRadius: maxRadius,
                                    spanRadius: spanRadius, minElement: minElement,
-                                   textGap: textGap),
+                                   textGap: textGap, readsShapes: readsShapes),
                   probe.beyond(hit),
                   !found.contains(where: { $0.insetBy(dx: -slack, dy: -slack).contains(hit) })
             else { continue }

@@ -210,6 +210,11 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// playhead, or a title picked. A key that does nothing reads as a
         /// key that is broken, so it says what it needs.
         case speedNeedsAClip
+        /// A box drawn in the Measure tool's Size mode had nothing wholly
+        /// inside it to snap to, so it was measured as drawn. Without a word
+        /// a box that did not snap reads as a box that did, around something
+        /// invisible.
+        case boxKeptAsDrawn
         /// Delete on a gap closed nothing (`TimelineGap.swift`): a track or a
         /// layer that has to move is locked, or something would be landed on.
         /// The gap is still there either way, so without a word the key reads
@@ -409,6 +414,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
         case .speedNeedsAClip: return "No clip picked"
+        case .boxKeptAsDrawn: return "Kept your box"
         case .gapNotClosed: return "Not closed"
         case .transitionCutSkipped: return "1 cut skipped"
         case .landedOnTrack(_, _, _, let isSound): return isSound ? "Sound added" : "Clip added"
@@ -482,6 +488,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "No spare frames on that side"
         case .speedNeedsAClip:
             return "Pick a clip to set its speed"
+        case .boxKeptAsDrawn:
+            return "Nothing inside to snap to"
         case .gapNotClosed(let refusal):
             return refusal.reading
         case .clipAdded(let name):

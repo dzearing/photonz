@@ -107,7 +107,8 @@ struct MeasureToolInspector: View {
     /// Each dropdown's hover tip, on the AppKit button and in the panel's
     /// register where a walk reads it.
     static let modeHelp = "What a click does. The Measure button holds the same list, "
-        + "and I cycles it. In Size, [ and ] pick a smaller or larger element."
+        + "and I cycles it. In Size, ] steps out to a larger element (a stack, a row) "
+        + "and [ back in, and a box dragged round something snaps to it."
     static let snapHelp = "What measure points magnetize to. Hold Command to drag free."
     static let showHelp = "Which measurements the canvas shows. A view filter only: exports "
         + "always include every visible measurement."

@@ -57,7 +57,7 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
         switch self {
         case .distance:
             "Distance: click two points, then click to place the readout"
-        case .size: "Size: click the element under the pointer for its width and height. [ and ] pick a smaller or larger one"
+        case .size: "Size: click the element under the pointer for its width and height, or drag a box around it. [ and ] pick a smaller or larger one"
         case .gap: "Gap: click in the space between two elements for the gap"
         case .alignment: "Alignment: drag a guide along an edge to check everything it crosses"
         }
@@ -74,7 +74,7 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     public var hint: String {
         switch self {
         case .distance: "Click twice, then click to place the number"
-        case .size: "Click an element for its width and height"
+        case .size: "Click an element, or drag a box around one"
         case .gap: "Click the space between two elements"
         case .alignment: "Drag along an edge to see what lines up"
         }
@@ -95,7 +95,7 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// Only Size has any; a tip under Distance would be noise.
     public var keyTip: String? {
         switch self {
-        case .size: "[ and ] pick a smaller or larger element"
+        case .size: "] steps out to a stack or row, [ back in"
         case .distance, .gap, .alignment: nil
         }
     }
