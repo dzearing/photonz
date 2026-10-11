@@ -10910,3 +10910,10 @@
 {"t":"2026-10-11T12:51:59.664Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
 {"t":"2026-10-11T12:51:59.736Z","ev":"task_note","id":"title-text-visibly-comes-in-and-every-built-in-t"}
 {"t":"2026-10-11T12:52:46.381Z","ev":"digest","file":"2026-10-11.md"}
+{"t":"2026-10-11T12:53:18.832Z","ev":"task_started","id":"the-menu-bar-stays-still-while-a-video-plays","title":"The menu bar stays still while a video plays","priority":"p1-high"}
+{"t":"2026-10-11T14:21:09.094Z","ev":"task_walks","id":"the-menu-bar-stays-still-while-a-video-plays","walks":["the-menu-bar-stays-still-while-playing-walk"]}
+{"t":"2026-10-11T14:21:09.156Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
+{"t":"2026-10-11T14:21:09.222Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
+{"t":"2026-10-11T14:21:09.285Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
+{"t":"2026-10-11T14:21:09.347Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
+{"t":"2026-10-11T14:21:29.070Z","ev":"task_done","id":"the-menu-bar-stays-still-while-a-video-plays","from":"in_progress","note":"Menu bar no longer flickers during playback (Next): menu reads the playhead unwatched and refreshes only at boundaries via a MenuPlayhead fingerprint; app declares its own View and hides SwiftUI's instead of moving it. Measured 10 s long talk 293->2 rebuilds, 1172->0 bar changes, frame ticks unchanged; filmed menu bar 0 changed frames. Walk the-menu-bar-stays-still-while-playing-walk green, 23 menu walks green, test.sh green. Commit 0e87597a. Audit queue/audits/2026-10-11-the-menu-bar-stays-still-while-a-video-plays.json"}

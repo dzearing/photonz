@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:14:51.411Z",
-  "updated": "2026-10-11T14:21:09.346Z",
+  "updated": "2026-10-11T14:21:29.069Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when a video is playing back, I am seeing the menu at the top of the screen flickering, as if something is being added and removed in the list. if i pause, no flicker\".\n\nSuspect from code reading, NOT confirmed: SwiftUI Commands bodies that READ observable state re-evaluate whenever it changes, and the menu bar is rebuilt each time. Sources/Photonz/EditorCommands.swift reads the playhead in the body, not just in actions: clickAtPlayhead (:1236), nextClickMS (:1243), clipToAddZoom(atMS: documentTimeMS) (:1248); documentTimeMS changes every frame during playback. Reads inside Button closures (:774, :925-929, :1250, :1493) are fine. 31 playhead mentions in the file; audit all of them and any other per-frame state (isDocumentPlaying transitions are fine, the time is not). Fix pattern: compute in the action, or expose coarse derived values that change only at boundaries (clip under playhead, click under playhead) with equality-gated updates. Trap: the Clicks/Zoom rows were added in 39d066d8 and the zoom rows by the zoom task; keep their behaviour.",
@@ -58,10 +58,15 @@
     {
       "t": "2026-10-11T14:21:09.345Z",
       "note": "left rough: the panel's Time section body rebuilds on every playback tick (timeSection bodies 296 in 10 s of the long talk). Costs CPU only, nothing a person sees, so no task filed. Also seen: Command K during playback stops playback (the playhead then sits on the new cut, so an immediate Shift Command K is dimmed); same before and after, not verified against Premiere, not filed."
+    },
+    {
+      "t": "2026-10-11T14:21:29.067Z",
+      "note": "Menu bar no longer flickers during playback (Next): menu reads the playhead unwatched and refreshes only at boundaries via a MenuPlayhead fingerprint; app declares its own View and hides SwiftUI's instead of moving it. Measured 10 s long talk 293->2 rebuilds, 1172->0 bar changes, frame ticks unchanged; filmed menu bar 0 changed frames. Walk the-menu-bar-stays-still-while-playing-walk green, 23 menu walks green, test.sh green. Commit 0e87597a. Audit queue/audits/2026-10-11-the-menu-bar-stays-still-while-a-video-plays.json"
     }
   ],
   "started": "2026-10-11T12:53:18.825Z",
   "walks": [
     "the-menu-bar-stays-still-while-playing-walk"
-  ]
+  ],
+  "completed": "2026-10-11T14:21:29.068Z"
 }
