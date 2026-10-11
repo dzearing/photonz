@@ -1,0 +1,57 @@
+{
+  "feature": "Title backgrounds move: gradients, grain and the recording behind glass",
+  "epic": "video-titles-graphics",
+  "summary": "Two new title pages with a background that is alive: Aurora, a slowly drifting three colour blend with fine grain and a rule that draws itself on, and Behind Glass, your own recording blurred, dimmed and slowly settling behind the words, sharpening back into the footage as the title leaves. The pieces are ordinary and editable: a Mesh fill with Drift, Grain in Effects, a Zoom on a background blur, and Trim keys on lines.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, right click Track V1 and choose Add Track Above.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Home, right click the empty track and choose Add Title Page > Behind Glass. Type a title and press Command Return.",
+      "shot": "2026-10-10-title-backgrounds-1-glass-hold.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Escape twice, press Home and play it: the recording frosts over, holds behind the words, then racks back into focus at 4 seconds.",
+      "shot": "2026-10-10-title-backgrounds-2-glass-in-out.png",
+      "shotNote": "Six real window captures, cropped to the picture: 0.0s, 0.4s, 3.2s, 3.6s, 3.8s and past the title. Taken with the window behind another app."
+    },
+    {
+      "do": "Move the playhead to 6 seconds, add another track and choose Add Title Page > Aurora. Type a title and play it.",
+      "shot": "2026-10-10-title-backgrounds-3-aurora.png",
+      "shotNote": "Six real window captures, cropped to the picture: the in, then two moments of the hold a second apart. Taken with the window behind another app."
+    },
+    {
+      "do": "Pause on Aurora's hold and zoom the canvas to 100% to see the grain.",
+      "shot": "2026-10-10-title-backgrounds-4-grain.png",
+      "shotNote": "A crop of a real window capture. Taken with the window behind another app."
+    },
+    {
+      "do": "Double click into the Aurora title, pick its Background, click the Fill swatch: the type row now has Mesh, with a Drift slider under the ramp.",
+      "shot": "2026-10-10-title-backgrounds-5-mesh-tile.png",
+      "shotNote": "From the gradient walk's real window capture. Taken with the window behind another app."
+    },
+    {
+      "do": "With the Background picked, open its Grain row in Effects and drag Amount; then pick Behind Glass's Background and try the Zoom row under its Blur."
+    },
+    {
+      "do": "Draw a Line over the recording: its rows now include Trim start and Trim end. Key Trim end at 0%, move half a second on and key it at 100% to draw it on."
+    }
+  ],
+  "evaluate": [
+    "Does Behind Glass feel like the recording is the title's backdrop, or should it hold a single still frame instead of the playing footage?",
+    "Is the frost coming in over the first 0.7 seconds right, or should the glass already be frosted on the very first frame?",
+    "Is Aurora's grain the right strength at 25%, given that less than this is wiped out by the movie encoder?",
+    "Is a 20 second drift loop slow enough to read as calm, or too slow to notice?",
+    "Are Trim start and Trim end the words you would look for to draw a line on?"
+  ],
+  "rough": [
+    "No mock page covers title backgrounds, the Mesh fill, Grain or a line's trim.",
+    "Behind Glass's Library tile shows a dark page, because a tile is a still of the preset alone with no recording behind it; tiles that play over your own first frame are step 5 (task title-tiles-play-and-a-few-knobs-restyle-a-title).",
+    "Placed over nothing (a gap with no clip under it) Behind Glass is a dark page with words: the glass has nothing to blur.",
+    "Grain at the first 12% amount and one pixel grains was measured to vanish in the exported 1080p MP4 (bands 41 rows against 48 plain), so the default is 25% with two pixel grains (24 rows). On the canvas it is a visible texture up close.",
+    "The mesh's colour points are placed by the fill's Angle and its stops; there are no handles on the canvas to drag a point.",
+    "Only a box or an oval's fill drifts on the canvas; a Mesh on a drawn path or on a frame's screen shows where its drift starts and holds still.",
+    "Glass's colour boost now eases in over its first 4 points of blur, so glass softer than that is a touch less saturated than before; glass at 4 points and up is unchanged.",
+    "A hand drawn style arrow ignores a trim; plain arrows, lines, paths and shape outlines take it."
+  ]
+}

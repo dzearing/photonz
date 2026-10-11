@@ -427,6 +427,8 @@ public enum EffectStyleNaming {
             return "\(border.position.title) border • \(points(border.width)) • \(border.colorHex)"
         case .glow(let glow):
             return "\(glow.kind.title) glow • \(points(glow.radius)) • \(glow.colorHex)"
+        case .grain(let grain):
+            return "Grain • \(Int(grain.amount.rounded()))%"
         }
     }
 

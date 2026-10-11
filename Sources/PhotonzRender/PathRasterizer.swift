@@ -99,10 +99,15 @@ public enum PathRasterizer {
         // the pattern too would make an inside dashed line's dashes twice as
         // long as a centred one's.
         let dash = content.dashPattern
+        // How much of the outline is drawn (`StrokeTrim.swift`). The clips
+        // below still follow the whole shape: an inside line drawing on stays
+        // inside it.
+        let stroked = content.trim.flatMap { $0.isWhole ? nil : $0.applied(to: shape) } ?? shape
+        guard !stroked.isEmpty else { return }
 
         switch content.effectiveStrokePosition {
         case .center:
-            GradientPainter.stroke(path: shape, with: content.paint, width: width,
+            GradientPainter.stroke(path: stroked, with: content.paint, width: width,
                                    lineJoin: join, lineCap: cap, dash: dash,
                                    miterLimit: pathMiterLimit, in: context)
         case .inside, .outside:
@@ -131,7 +136,7 @@ public enum PathRasterizer {
                 // outside the shape.
                 context.clip(using: .evenOdd)
             }
-            GradientPainter.stroke(path: shape, with: content.paint, width: width * 2,
+            GradientPainter.stroke(path: stroked, with: content.paint, width: width * 2,
                                    lineJoin: join, lineCap: cap, dash: dash,
                                    miterLimit: pathMiterLimit, in: context)
             context.restoreGState()

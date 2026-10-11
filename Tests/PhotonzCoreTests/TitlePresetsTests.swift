@@ -134,9 +134,11 @@ struct TitlePresetsTests {
                 #expect(!(piece.motions ?? []).isEmpty, "\(preset.name): \(part.path)")
             }
             #expect(layer.pictureFadeMS(.in) == 0, "\(preset.name)")
-            // A page dissolves out with the bar's own fade; a card leaves in parts.
-            #expect(layer.pictureFadeMS(.out) == (preset.kind == .titlePage ? TitleAnimation.lengthMS : 0),
-                    "\(preset.name)")
+            // A page dissolves out with the bar's own fade; a card leaves in
+            // parts, and so does a page made of the recording under it, which
+            // sharpens into that recording instead.
+            let fades = preset.kind == .titlePage && !preset.usesTheRecording
+            #expect(layer.pictureFadeMS(.out) == (fades ? TitleAnimation.lengthMS : 0), "\(preset.name)")
         }
     }
 
@@ -150,8 +152,10 @@ struct TitlePresetsTests {
             let authored = preset.layer(in: Self.canvas)
             for part in preset.design.parts {
                 let start = try #require(TitleDesign.find(part.path, in: first))
-                // Invisible, or a wipe not yet begun: a sliver at most.
+                // Invisible, or a wipe not yet begun (a sliver at most), or a
+                // line not yet drawn on.
                 let hidden = start.style.opacity < 0.01 || min(start.frame.width, start.frame.height) <= 1
+                    || start.annotation?.trim?.isEmpty == true
                 #expect(hidden, "\(preset.name): \(part.path)")
                 let end = try #require(TitleDesign.find(part.path, in: arrived))
                 let drawn = try #require(TitleDesign.find(part.path, in: authored))

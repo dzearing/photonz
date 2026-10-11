@@ -1,4 +1,5 @@
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 /// The gradient half of the one color picker: what KIND of paint this is, and
@@ -44,8 +45,7 @@ extension Paint {
     /// has to show: the outcome of a choice not yet made.
     func preview(as kind: Kind) -> Paint {
         var copy = self
-        copy.kind = kind
-        if kind != .solid, copy.stops.count < 2 { copy.stops = Paint.seededStops(from: hex) }
+        copy.becoming(kind)
         return copy
     }
 }
@@ -79,6 +79,16 @@ struct PaintFill: View {
                 AngularGradient(stops: paint.swiftUIStops,
                                 center: paint.swiftUICenter,
                                 angle: .degrees(paint.angle - 90))
+            case .mesh:
+                // The mesh where its drift starts, drawn by the same code the
+                // canvas uses (`MeshPainter`), so a swatch is the picture.
+                if let picture = MeshPainter.cgImage(paint, size: size) {
+                    Image(decorative: picture, scale: 1)
+                        .resizable()
+                        .interpolation(.high)
+                } else {
+                    Color(hex: paint.hex)
+                }
             }
         }
     }
@@ -103,7 +113,7 @@ struct PaintTypeRow: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            ForEach(Paint.Kind.allCases, id: \.self) { kind in
+            ForEach(kinds, id: \.self) { kind in
                 Button { onPick(kind) } label: { tile(kind) }
                     .buttonStyle(.plain)
                     .panelHelp("\(kind.title) paint")
@@ -115,6 +125,14 @@ struct PaintTypeRow: View {
                     .playtestControl(kind.title, detail: kind == paint.kind
                                      ? "Paint type, already on \(kind.title)" : "Paint type")
             }
+        }
+    }
+
+    /// Every kind, less Mesh where moving title backgrounds are switched off
+    /// (unless this paint already is one, which must still say so).
+    private var kinds: [Paint.Kind] {
+        Paint.Kind.allCases.filter {
+            $0 != .mesh || Experiments.shared.titleBackgroundsEnabled || paint.kind == .mesh
         }
     }
 
@@ -420,5 +438,37 @@ private struct GradientRamp: View {
     private func move(_ index: Int, to position: Double) {
         guard paint.stops.indices.contains(index) else { return }
         paint.stops[index].position = min(max(position, 0), 1)
+    }
+}
+
+// MARK: - How fast a mesh drifts
+
+/// One slider: how fast a mesh's colour points drift on a video, from still
+/// to quick. The canvas follows the drag, and letting go is one undo step.
+struct MeshDriftRow: View {
+    @Binding var paint: Paint
+    let onDrag: () -> Void
+    let onCommit: () -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            Text("Drift")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .leading)
+            Slider(value: Binding(get: { paint.drift },
+                                  set: { paint.drift = min(max($0.rounded(), 0), 100); onDrag() }),
+                   in: 0...100) { editing in
+                if !editing { onCommit() }
+            }
+            .controlSize(.small)
+            .accessibilityLabel("Drift")
+            .playtestControl("Drift", detail: "Mesh")
+            Text("\(Int(paint.drift.rounded()))%")
+                .font(.system(size: 10, design: .monospaced))
+                .foregroundStyle(.secondary)
+                .frame(width: 34, alignment: .trailing)
+        }
+        .panelHelp("How fast the colours drift on a video")
     }
 }

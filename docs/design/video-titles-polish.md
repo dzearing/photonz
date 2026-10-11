@@ -350,6 +350,30 @@ tile previews that play.
    `title-words-mask-reveal-walk`; tests: `TextRevealTests`,
    `TextRevealRenderTests`.
 3. **Title backgrounds move: gradients, grain, the recording behind glass.**
+   Built 2026-10-10. A **Mesh** fill (`Paint.Kind.mesh`, `PhotonzCore/MeshPaint.swift`):
+   one soft colour point per stop, each on its own slow loop, `drift` a
+   percent (100 = one loop every 8 s; new meshes 40). **Grain** is an effect
+   (`GrainEffect`, amount, default 25%), two pixels of a 1080 line frame per
+   grain. Both are read at the moment drawn: `Layer.drawnAtMS` is stamped on
+   the drawn copy only where a look runs on a clock. A background blur has a
+   **Zoom** (`BlurEffect.zoom`), and `backgroundBlur` / `backgroundZoom` key
+   like any value; the glass's colour boost now eases in over its first 4
+   points so glass keyed to nothing ends exactly on the footage. Lines and
+   paths take a **trim** (`StrokeTrim`, keys `trimStart` / `trimEnd`). Two new
+   builds, **Draw On** (a line's trim; anything else wipes) and **Frost**
+   (glass blurring and dimming in or out); a push hold on glass zooms the
+   footage behind. Two new pages: **Aurora** (mesh, grain, a rule that draws
+   on) and **Behind Glass** (lies over the recording instead of pushing it,
+   leaves through its own parts, no bar fade). Renderer:
+   `PhotonzRender/MovingBackdrops.swift` (`MeshPainter`: a 96 sample grid,
+   separable weights, enlarged by Core Image; `GrainFilter`). Measured: Aurora
+   8.9 to 10.4 ms and Behind Glass 4.7 to 5.4 ms a 1080p frame (debug build),
+   the mesh grid 2.2 ms of that. Banding in a 1080p MP4 of Midnight's ramp:
+   48 rows plain, 24 with default grain (one pixel 12% grain made no
+   difference: the encoder wipes it out). Behind the Next switch
+   `next-title-backgrounds-move`, on by default. Walk:
+   `title-backgrounds-move-walk`; tests: `TitleBackgroundsTests`,
+   `TitleBackgroundsRenderTests`, `GrainBandingExportTests`.
 4. **Motion blur on titles that move fast.**
 5. **Title tiles play, and a few knobs restyle a title.**
 6. **A set of titles that look designed.**

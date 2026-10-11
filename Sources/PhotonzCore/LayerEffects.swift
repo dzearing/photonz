@@ -33,6 +33,10 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// to set a shadow up: nobody finds "shadow, coloured, offset nought", and
     /// a glow has no Distance and no Direction to answer for.
     case glow
+    /// Fine film grain over what the layer paints, moving every frame: the
+    /// tactile look of a polished title backdrop, and what stops a smooth
+    /// gradient banding once it is squeezed into a movie (`GrainEffect`).
+    case grain
 
     /// What the row is called on screen.
     public var title: String {
@@ -41,6 +45,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         case .shadow: return "Shadow"
         case .border: return "Border"
         case .glow: return "Glow"
+        case .grain: return "Grain"
         }
     }
 
@@ -51,7 +56,8 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// a second one would be two answers to one question.
     public var isCountable: Bool {
         switch self {
-        case .blur: return false
+        // One grain, like one softness: two would be one answer twice.
+        case .blur, .grain: return false
         // A card wants a dark hairline tight to its edge AND a pale halo
         // outside it, so a border is countable too. A glow likewise: a tight
         // bright core and a wide soft bloom are two of them.
@@ -68,7 +74,9 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// nothing is a grip that lies.
     public var isPinned: Bool {
         switch self {
-        case .blur: return true
+        // Grain is laid over what the layer paints, wherever it is listed,
+        // so it holds its place at the top beside the blur.
+        case .blur, .grain: return true
         case .shadow, .border, .glow: return false
         }
     }
@@ -82,7 +90,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// at all, which brings no colour row rather than a blank one.
     public var colorSlot: ColorSlot? {
         switch self {
-        case .blur: return nil
+        case .blur, .grain: return nil
         case .shadow: return .shadow
         case .border: return .border
         case .glow: return .glow
@@ -124,20 +132,29 @@ public struct BlurEffect: Hashable, Codable, Sendable {
     public var isOn: Bool
     /// Whether it softens the layer or what is behind it.
     public var kind: BlurKind
+    /// How much bigger what is behind a BACKGROUND blur is drawn, as a
+    /// percent about the layer's middle: 100 is as it is. A title over a
+    /// recording eases this from 105 to 100 so the footage behind the glass
+    /// slowly settles. A layer blur has nothing behind it to enlarge.
+    public var zoom: Double
 
     /// What a blur looks like the moment it is added: enough to read as blurred
     /// without hiding what is under it, so the next thing you do is tune it
     /// rather than discover that nothing happened.
     public static let startingRadius: CGFloat = 8
 
+    /// How far the Zoom field goes.
+    public static let zoomRange: ClosedRange<Double> = 100...150
+
     public init(radius: CGFloat = BlurEffect.startingRadius, isOn: Bool = true,
-                kind: BlurKind = .layer) {
+                kind: BlurKind = .layer, zoom: Double = 100) {
         self.radius = radius
         self.isOn = isOn
         self.kind = kind
+        self.zoom = min(max(zoom, BlurEffect.zoomRange.lowerBound), BlurEffect.zoomRange.upperBound)
     }
 
-    private enum CodingKeys: String, CodingKey { case radius, isOn, kind }
+    private enum CodingKeys: String, CodingKey { case radius, isOn, kind, zoom }
 
     /// A blur written before it had a Kind softened the layer, so that is what
     /// it reads back as.
@@ -146,6 +163,8 @@ public struct BlurEffect: Hashable, Codable, Sendable {
         radius = try c.decode(CGFloat.self, forKey: .radius)
         isOn = try c.decodeIfPresent(Bool.self, forKey: .isOn) ?? true
         kind = try c.decodeIfPresent(BlurKind.self, forKey: .kind) ?? .layer
+        // A zoom postdates the glass; every blur before it enlarged nothing.
+        zoom = try c.decodeIfPresent(Double.self, forKey: .zoom) ?? 100
     }
 
     /// A layer blur is written exactly as it was before blur had a Kind, so a
@@ -155,7 +174,38 @@ public struct BlurEffect: Hashable, Codable, Sendable {
         try c.encode(radius, forKey: .radius)
         try c.encode(isOn, forKey: .isOn)
         if kind != .layer { try c.encode(kind, forKey: .kind) }
+        if zoom != 100 { try c.encode(zoom, forKey: .zoom) }
     }
+}
+
+/// Fine film grain over what a layer paints (`EffectKind.grain`).
+///
+/// Monochrome noise laid softly over the layer's own pixels and nowhere else,
+/// a fresh pattern every frame on a moving picture, so it reads as film rather
+/// than as a dirty screen. Enough to notice at full size and forgotten at arm's
+/// length: that is also exactly enough to break up the steps a movie encoder
+/// cuts a smooth gradient into.
+public struct GrainEffect: Hashable, Codable, Sendable {
+    /// How strong, as a percent: nought is none, 100 is very heavy.
+    public var amount: Double
+    /// Whether it paints at all. Off keeps the amount.
+    public var isOn: Bool
+
+    /// What grain looks like the moment it is added: visible on a dark
+    /// backdrop at full size, gone at arm's length, and strong enough to come
+    /// through a movie encoder and break up a dark gradient's bands (measured
+    /// on 2026-10-10: 12% was wiped out by the encoder, 25% halves the bands).
+    public static let startingAmount: Double = 25
+    /// How far the Amount slider goes.
+    public static let amountRange: ClosedRange<Double> = 0...100
+
+    public init(amount: Double = GrainEffect.startingAmount, isOn: Bool = true) {
+        self.amount = min(max(amount, 0), 100)
+        self.isOn = isOn
+    }
+
+    /// Whether it puts anything on the canvas.
+    public var paints: Bool { isOn && amount > 0 }
 }
 
 /// A ring round the layer, added rather than simply there.
@@ -425,6 +475,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     case shadow(ShadowStyle)
     case border(BorderEffect)
     case glow(GlowEffect)
+    case grain(GrainEffect)
 
     public var kind: EffectKind {
         switch self {
@@ -432,6 +483,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .shadow: return .shadow
         case .border: return .border
         case .glow: return .glow
+        case .grain: return .grain
         }
     }
 
@@ -444,6 +496,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .shadow(let shadow): return shadow.isOn
             case .border(let border): return border.isOn
             case .glow(let glow): return glow.isOn
+            case .grain(let grain): return grain.isOn
             }
         }
         set {
@@ -452,6 +505,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .shadow(var shadow): shadow.isOn = newValue; self = .shadow(shadow)
             case .border(var border): border.isOn = newValue; self = .border(border)
             case .glow(var glow): glow.isOn = newValue; self = .glow(glow)
+            case .grain(var grain): grain.isOn = newValue; self = .grain(grain)
             }
         }
     }
@@ -467,7 +521,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     public var colorHex: String? {
         get {
             switch self {
-            case .blur: return nil
+            case .blur, .grain: return nil
             case .shadow(let shadow): return shadow.colorHex
             case .border(let border): return border.colorHex
             case .glow(let glow): return glow.colorHex
@@ -476,7 +530,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set {
             guard let newValue else { return }
             switch self {
-            case .blur: return
+            case .blur, .grain: return
             case .shadow(var shadow): shadow.colorHex = newValue; self = .shadow(shadow)
             case .border(var border): border.colorHex = newValue; self = .border(border)
             case .glow(var glow): glow.colorHex = newValue; self = .glow(glow)
@@ -508,10 +562,16 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set { if let newValue, case .glow = self { self = .glow(newValue) } }
     }
 
+    /// The grain this entry holds, or nil when it is not grain.
+    public var grain: GrainEffect? {
+        get { if case .grain(let grain) = self { return grain } else { return nil } }
+        set { if let newValue, case .grain = self { self = .grain(newValue) } }
+    }
+
     // Written by hand rather than synthesized, so the saved file reads
     // `{"kind":"shadow","shadow":{…}}` instead of Swift's `{"shadow":{"_0":…}}`.
     // A file is a thing people open, and a new kind should be legible in it.
-    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow }
+    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow, grain }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -521,6 +581,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .shadow: self = .shadow(try c.decode(ShadowStyle.self, forKey: .shadow))
         case .border: self = .border(try c.decode(BorderEffect.self, forKey: .border))
         case .glow: self = .glow(try c.decode(GlowEffect.self, forKey: .glow))
+        case .grain: self = .grain(try c.decode(GrainEffect.self, forKey: .grain))
         }
     }
 
@@ -532,6 +593,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .shadow(let shadow): try c.encode(shadow, forKey: .shadow)
         case .border(let border): try c.encode(border, forKey: .border)
         case .glow(let glow): try c.encode(glow, forKey: .glow)
+        case .grain(let grain): try c.encode(grain, forKey: .grain)
         }
     }
 }
@@ -555,6 +617,9 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     case glow
     case border
     case blur
+    /// Last: it is a texture rather than a halo or a line, and the rarest of
+    /// the five to reach for.
+    case grain
 
     public var id: String { rawValue }
 
@@ -580,6 +645,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .glow: return .glow
         case .border: return .border
         case .blur: return .blur
+        case .grain: return .grain
         }
     }
 
@@ -590,6 +656,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .glow: return "A coloured halo outside the layer, or a lit edge inside it"
         case .border: return "An extra ring, inside the layer's edge or outside it"
         case .blur: return "Softens the whole layer"
+        case .grain: return "Fine film grain that moves on video"
         }
     }
 
@@ -606,6 +673,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         // happening, and the Kind on the row turns it inside in one press.
         case .glow: return .glow(GlowEffect())
         case .blur: return .blur(BlurEffect())
+        case .grain: return .grain(GrainEffect())
         }
     }
 }
@@ -717,6 +785,23 @@ extension LayerStyle {
     /// The glow at a place in the LIST — not a place among the glows — because
     /// that is the number a row in the panel already knows.
     public func glowEffect(at index: Int) -> GlowEffect? { effect(at: index)?.glow }
+
+    /// The grain at a place in the list, or nil when the entry there is
+    /// something else.
+    public func grainEffect(at index: Int) -> GrainEffect? { effect(at: index)?.grain }
+
+    /// Changes one grain in place, and does nothing at all when the entry
+    /// there is not grain.
+    public mutating func updateGrainEffect(at index: Int, _ mutate: (inout GrainEffect) -> Void) {
+        guard var grain = grainEffect(at: index) else { return }
+        mutate(&grain)
+        effects[index] = .grain(grain)
+    }
+
+    /// The grain that paints, or nil when there is none or it is off.
+    public var grain: GrainEffect? {
+        effects.compactMap(\.grain).first(where: \.paints)
+    }
 
     /// The blur at a place in the list, or nil when the entry there is
     /// something else.

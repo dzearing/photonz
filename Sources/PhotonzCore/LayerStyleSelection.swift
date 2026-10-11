@@ -208,6 +208,12 @@ public struct LayerStyleSelection: Hashable, Sendable {
                             selectionCount: selectionCount)
     }
 
+    /// The picked layers with GRAIN in a given place in their list.
+    public func grains(at index: Int) -> LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { $0.style.grainEffect(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
     /// True while some of the picked layers throw a shadow and the rest do not.
     ///
     /// Off is a true answer — none of them have one — so a selection where

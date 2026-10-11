@@ -103,7 +103,9 @@ public enum PropertyPicker {
             case .position, .scale, .rotation: return "Transform"
             case .opacity, .cornerRadius, .strokeWidth, .color: return "Appearance"
             case .blur, .shadow, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity,
-                 .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor: return "Effects"
+                 .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor,
+                 .backgroundBlur, .backgroundZoom: return "Effects"
+            case .trimStart, .trimEnd: return "Appearance"
             case .textSize: return "Text"
             case .cropLeft, .cropTop, .cropRight, .cropBottom: return "Crop"
             }

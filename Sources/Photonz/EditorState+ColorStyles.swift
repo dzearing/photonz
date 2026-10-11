@@ -475,6 +475,12 @@ extension EditorState {
     /// Whether the plus can still offer this. A layer has one softness, so once
     /// there is a blur in the list the menu says so by going quiet rather than
     /// letting a second one in and then ignoring it.
+    /// What the Effects plus offers: every kind, less Grain where moving
+    /// title backgrounds are switched off.
+    var addableEffects: [AddableEffect] {
+        AddableEffect.allCases.filter { $0 != .grain || Experiments.shared.titleBackgroundsEnabled }
+    }
+
     func canAddEffect(_ kind: AddableEffect) -> Bool {
         guard let document else { return false }
         let ids = layerStyleSelection.layerIDs

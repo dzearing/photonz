@@ -79,6 +79,19 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     case cropTop
     case cropRight
     case cropBottom
+    /// How soft what is BEHIND it is, in document points: its background
+    /// blur, the frosted glass a title over a recording sharpens to nothing
+    /// as it leaves. Never the layer's own blur, which is `blur`.
+    case backgroundBlur
+    /// How much bigger what is behind its glass is drawn, as a percent
+    /// (`BlurEffect.zoom`): the footage behind a title slowly settling.
+    case backgroundZoom
+    /// Where the drawn part of its line starts, as a percent along it
+    /// (`StrokeTrim.swift`). Lines and paths only.
+    case trimStart
+    /// Where the drawn part of its line ends, as a percent along it: an
+    /// underline drawing itself on is this going from nought to 100.
+    case trimEnd
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -106,6 +119,10 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cropTop: "Crop top"
         case .cropRight: "Crop right"
         case .cropBottom: "Crop bottom"
+        case .backgroundBlur: "Background blur"
+        case .backgroundZoom: "Background zoom"
+        case .trimStart: "Trim start"
+        case .trimEnd: "Trim end"
         }
     }
 
@@ -149,8 +166,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// A distance in document points, which the panel writes in the app's one
     /// word for a length (`DocumentUnit`).
     public var isLength: Bool {
-        [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .borderWidth, .textSize]
-            .contains(self)
+        [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .borderWidth, .textSize,
+         .backgroundBlur].contains(self)
     }
 
     /// The order the menu offers them in: where it is, how big, how turned,
@@ -189,7 +206,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// the growth then magnifies, and the growth keeps its middle where the
     /// whole picture's middle is (`applied`, the scale case).
     public static let nestingOrder: [MotionProperty] =
-        [.opacity, .blur, .position, .rotation, .scale, .color, .strokeWidth,
+        [.opacity, .blur, .backgroundBlur, .backgroundZoom, .position, .rotation, .scale, .color,
+         .strokeWidth, .trimStart, .trimEnd,
          .cornerRadius, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .shadow,
          .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize,
          .cropLeft, .cropTop, .cropRight, .cropBottom]
@@ -305,6 +323,21 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // Nothing cut away: a keyed crop is measured from the picture as
             // it is drawn, whatever the Crop tool already took off it.
             return layer.supportsContentCrop ? .number(0) : nil
+        case .backgroundBlur:
+            // Only where there is glass to change, as with a layer blur.
+            guard let glass = layer.style.effects.compactMap(\.blur).first(where: { $0.kind == .background })
+            else { return nil }
+            return .number(Double(glass.radius))
+        case .backgroundZoom:
+            guard let glass = layer.style.effects.compactMap(\.blur).first(where: { $0.kind == .background })
+            else { return nil }
+            return .number(glass.zoom)
+        case .trimStart, .trimEnd:
+            // Only a line that is drawn: a box whose edge is a ring in its
+            // Effects list, or a shape with no line at all, has no stroke
+            // to draw on.
+            guard layer.drawsItsOwnOutline, let trim = layer.strokeTrimForMotion else { return nil }
+            return .number((self == .trimStart ? trim.start : trim.end) * 100)
         }
     }
 
@@ -1338,6 +1371,26 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(0), to: .number(25),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .backgroundBlur:
+            // The glass clearing: from the softness it has to none, which is
+            // what a title sharpening into its recording is.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(0),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .backgroundZoom:
+            // Settling back from a little in: the slow pull a title's
+            // recording backdrop makes.
+            return LayerMotion(property: property, from: .number(105), to: .number(100),
+                               timing: MotionTiming(startMS: 0, durationMS: 4000),
+                               curve: .linear, repeats: plays)
+        case .trimStart, .trimEnd:
+            // The line drawing itself on from its start: the end runs from
+            // nothing to all of it, the start from all of it to nothing.
+            let on = property == .trimEnd
+            return LayerMotion(property: property, from: .number(on ? 0 : 100), to: .number(on ? 100 : 0),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeOutExpo, repeats: plays)
         }
     }
 }
@@ -1396,7 +1449,7 @@ extension Layer {
         }
         // ...and text whose words come in a piece at a time says how far in
         // it is, on the same clock (`TextReveal.swift`).
-        return moved.withTextRevealShown(atMotionMS: ms)
+        return moved.withTextRevealShown(atMotionMS: ms).withClockShown(atMotionMS: ms)
     }
 }
 
@@ -1564,6 +1617,20 @@ extension MotionProperty {
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
             moved = moved.croppedByKey(self, percent: percent, authored: authored)
+        case let (.backgroundBlur, .number(points)):
+            // Magnified from above like every length: glass on a title drawn
+            // at twice the size is twice as soft.
+            moved.style.updateBackgroundBlur { $0.radius = CGFloat(max(0, points)) * grown }
+        case let (.backgroundZoom, .number(percent)):
+            moved.style.updateBackgroundBlur { $0.zoom = min(max(percent, 50), 400) }
+        case let (.trimStart, .number(percent)), let (.trimEnd, .number(percent)):
+            guard var trim = moved.strokeTrimForMotion else { break }
+            if self == .trimStart {
+                trim.start = min(max(percent / 100, 0), 1)
+            } else {
+                trim.end = min(max(percent / 100, 0), 1)
+            }
+            moved.setStrokeTrimForMotion(trim)
         default:
             break
         }

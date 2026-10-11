@@ -154,7 +154,7 @@ struct EffectsListTests {
     func theMenu() {
         // The two halos sit together at the top, because somebody reaching for
         // a glow is looking where the shadow is.
-        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur"])
+        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur", "Grain"])
     }
 
     @Test("Adding a shadow adds one row, and adding a second adds a second row")

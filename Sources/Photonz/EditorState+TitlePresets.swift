@@ -87,7 +87,9 @@ extension EditorState {
         let own = TitlePresetStore.shared.presets(of: kind).map { saved in
             MenuRow.command(saved.name) { self.insertTitle(saved: saved, onTrack: trackID) }
         }
-        let builtIn = BuiltInTitle.presets(of: kind).map { preset in
+        let builtIn = BuiltInTitle.presets(of: kind,
+                                           movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
+            .map { preset in
             MenuRow.command(preset.name) { self.insertTitle(preset, onTrack: trackID) }
         }
         return own.isEmpty ? builtIn : own + [.separator] + builtIn
@@ -149,7 +151,8 @@ extension EditorState {
     /// (`TitlePresetShelf.swift`).
     var titleShelf: [TitlePreset] {
         guard canInsertTitle else { return [] }
-        return TitlePreset.shelf(saved: TitlePresetStore.shared.saved)
+        return TitlePreset.shelf(saved: TitlePresetStore.shared.saved,
+                                 movingBackdrops: Experiments.shared.titleBackgroundsEnabled)
     }
 
     /// The preset behind a shelf id, nil for any other kind of tile.

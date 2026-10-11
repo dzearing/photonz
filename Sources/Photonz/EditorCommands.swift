@@ -1187,7 +1187,7 @@ struct EditorCommands: Commands {
     @ViewBuilder private var effectRows: some View {
         let canRestyle = editor?.hasRestylableSelection ?? false
         Menu("Add Effect") {
-            ForEach(AddableEffect.allCases) { kind in
+            ForEach(editor?.addableEffects ?? AddableEffect.allCases) { kind in
                 Button(kind.title) { editor?.addEffect(kind) }
                     .disabled(!(editor?.canAddEffect(kind) ?? false))
             }

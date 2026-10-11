@@ -24,7 +24,8 @@ extension MotionProperty {
                                                   .cornerRadius, .shadow, .shadowDistance,
                                                   .shadowDirection, .shadowColor, .shadowOpacity,
                                                   .glow, .glowColor, .glowOpacity, .borderWidth,
-                                                  .borderColor, .textSize]
+                                                  .borderColor, .textSize, .trimStart, .trimEnd,
+                                                  .backgroundBlur, .backgroundZoom]
 }
 
 extension Layer {

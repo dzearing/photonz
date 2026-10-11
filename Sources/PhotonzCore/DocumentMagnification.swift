@@ -145,6 +145,9 @@ extension LayerEffect {
             glow.radius *= scale
             glow.size *= scale
             return .glow(glow)
+        // Grain is a texture of the picture's own pixels, not a length.
+        case .grain:
+            return self
         }
     }
 }

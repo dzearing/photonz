@@ -379,6 +379,13 @@ struct EffectSample: View {
                                   lineWidth: max(border.width * scale, 1)))
         case .blur(let blur):
             base.blur(radius: blur.radius * scale)
+        case .grain:
+            base.overlay(
+                Image(systemName: "circle.grid.3x3.fill")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(8)
+                    .foregroundStyle(.white.opacity(0.45)))
         }
     }
 
@@ -517,6 +524,10 @@ struct LibraryEffectStyleInspector: View {
             picker(style, "Kind", BlurKind.allCases, current: blur.kind,
                    title: \.title) { $0.blur?.kind = $1 }
             slider(style, "Amount", blur.radius, 0...50, .points) { $0.blur?.radius = $1 }
+        case .grain(let grain):
+            slider(style, "Amount", CGFloat(grain.amount / 100), 0...1, .percent) {
+                $0.grain?.amount = Double($1) * 100
+            }
         }
     }
 

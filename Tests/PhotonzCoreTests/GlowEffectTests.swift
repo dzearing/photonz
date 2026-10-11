@@ -39,7 +39,7 @@ struct GlowEffectTests {
 
     @Test("The plus offers a Glow, once, beside the Shadow")
     func theMenu() {
-        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur"])
+        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur", "Grain"])
         // ONE entry, not a Glow and an Inner Glow: the row it becomes carries
         // the Kind that turns it inside.
         #expect(AddableEffect.allCases.filter { $0.kind == .glow }.count == 1)

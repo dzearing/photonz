@@ -31,7 +31,7 @@ struct TitlePresetShelfTests {
     @Test func theShelfHoldsEveryBuiltInPresetPagesFirst() {
         let shelf = TitlePreset.shelf(saved: [])
         #expect(shelf.count == BuiltInTitle.allCases.count)
-        #expect(shelf.map(\.name) == ["Midnight", "Sunrise", "Paper", "Spotlight",
+        #expect(shelf.map(\.name) == ["Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Behind Glass",
                                       "Bar", "Clean", "Accent", "Minimal"])
     }
 
@@ -39,7 +39,7 @@ struct TitlePresetShelfTests {
         let card = try Self.saved("Team Card", .nameCard)
         let page = try Self.saved("Intro", .titlePage)
         let shelf = TitlePreset.shelf(saved: [card, page])
-        #expect(shelf.map(\.name) == ["Intro", "Midnight", "Sunrise", "Paper", "Spotlight",
+        #expect(shelf.map(\.name) == ["Intro", "Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Behind Glass",
                                       "Team Card", "Bar", "Clean", "Accent", "Minimal"])
     }
 

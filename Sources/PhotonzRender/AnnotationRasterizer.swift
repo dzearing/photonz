@@ -67,10 +67,17 @@ public enum AnnotationRasterizer {
 
         /// Every outline in here goes through one call, so a gradient reaches
         /// a line, an arrow's shaft and a box's border by the same route.
+        // How much of the line is drawn (`StrokeTrim.swift`): an underline
+        // drawing itself on. Only the line: a fill is never trimmed.
+        let trim = annotation.trim.flatMap { $0.isWhole ? nil : $0 }
         func strokeInk(_ path: CGPath, cap: CGLineCap = cap) {
-            GradientPainter.stroke(path: path, with: ink, width: annotation.strokeWidth,
+            let drawn = trim?.applied(to: path) ?? path
+            guard !drawn.isEmpty else { return }
+            GradientPainter.stroke(path: drawn, with: ink, width: annotation.strokeWidth,
                                    lineJoin: join, lineCap: cap, in: context)
         }
+        // An arrow's head arrives when its shaft has reached it.
+        let headIsDrawn = trim.map { $0.end >= 0.999 && !$0.isEmpty } ?? true
         /// And so does every solid piece of ink: an arrowhead, a highlight.
         func fillInk(_ path: CGPath) {
             GradientPainter.fill(path: path, with: ink, in: context)
@@ -118,7 +125,9 @@ public enum AnnotationRasterizer {
             // A bent arrow's shaft follows its curve (`ArrowBend.swift`); a
             // straight one is the line it always was.
             strokeInk(annotation.shaftPath)
-            if let circle = Geometry.arrowheadCircle(at: annotation.end,
+            if !headIsDrawn {
+                // Nothing more of it yet.
+            } else if let circle = Geometry.arrowheadCircle(at: annotation.end,
                                                      strokeWidth: annotation.strokeWidth,
                                                      scale: annotation.arrowheadScale, style: style) {
                 let dot = CGPath(ellipseIn: CGRect(x: circle.center.x - circle.radius,

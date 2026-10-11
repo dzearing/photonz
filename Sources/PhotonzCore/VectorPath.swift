@@ -371,6 +371,9 @@ public struct PathContent: Hashable, Codable, Sendable {
     public var lineCorner: PathLineCorner
     /// Whether the line is unbroken, dashed or dotted.
     public var linePattern: PathLinePattern
+    /// How much of the outline is drawn, start to end along it
+    /// (`StrokeTrim.swift`). Nil is the whole of it.
+    public var trim: StrokeTrim?
 
     public init(anchors: [PathAnchor],
                 isClosed: Bool = false,
@@ -617,7 +620,7 @@ public struct PathContent: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case anchors, closed, ringStarts, paint, strokeWidth, strokePosition, fill, fillRule
-        case lineEnd, lineCorner, linePattern
+        case lineEnd, lineCorner, linePattern, trim
     }
 
     public init(from decoder: any Decoder) throws {
@@ -641,6 +644,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         lineEnd = try c.decodeIfPresent(PathLineEnd.self, forKey: .lineEnd) ?? .round
         lineCorner = try c.decodeIfPresent(PathLineCorner.self, forKey: .lineCorner) ?? .sharp
         linePattern = try c.decodeIfPresent(PathLinePattern.self, forKey: .linePattern) ?? .solid
+        trim = try c.decodeIfPresent(StrokeTrim.self, forKey: .trim)
     }
 
     public func encode(to encoder: any Encoder) throws {
@@ -658,6 +662,7 @@ public struct PathContent: Hashable, Codable, Sendable {
         try c.encode(lineEnd, forKey: .lineEnd)
         try c.encode(lineCorner, forKey: .lineCorner)
         try c.encode(linePattern, forKey: .linePattern)
+        try c.encodeIfPresent(trim, forKey: .trim)
     }
 }
 

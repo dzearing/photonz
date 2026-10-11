@@ -64,10 +64,10 @@ public enum TitlePreset: Hashable, Sendable, Identifiable {
 
     /// Every preset on the shelf: title pages, then name cards, each kind with
     /// the person's own first, the order the Insert menus list them in.
-    public static func shelf(saved: [SavedTitlePreset]) -> [TitlePreset] {
+    public static func shelf(saved: [SavedTitlePreset], movingBackdrops: Bool = true) -> [TitlePreset] {
         TitleKind.allCases.flatMap { kind in
             saved.filter { $0.kind == kind }.map(TitlePreset.saved)
-                + BuiltInTitle.presets(of: kind).map(TitlePreset.builtIn)
+                + BuiltInTitle.presets(of: kind, movingBackdrops: movingBackdrops).map(TitlePreset.builtIn)
         }
     }
 

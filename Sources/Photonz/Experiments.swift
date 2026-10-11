@@ -572,6 +572,9 @@ extension Experiments {
     var clickEffectsEnabled: Bool { isEnabled(FeatureCatalog.clickEffectsFlag) }
     var pictureFadesEnabled: Bool { isEnabled(FeatureCatalog.pictureFadesFlag) }
     var titlePresetsEnabled: Bool { isEnabled(FeatureCatalog.titlePresetsFlag) }
+    /// `next-title-backgrounds-move`: the Aurora and Behind Glass pages, the
+    /// Mesh fill, Grain, the glass's Zoom and line trims.
+    var titleBackgroundsEnabled: Bool { isEnabled(FeatureCatalog.titleBackgroundsFlag) }
 
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a

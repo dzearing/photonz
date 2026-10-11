@@ -128,6 +128,18 @@ public enum GradientPainter {
                                                  .drawsAfterEndLocation])
         case .angular:
             drawSweep(paint, in: box, in: context)
+        case .mesh:
+            // Where it starts its drift: a still picture of a moving mesh, for
+            // a swatch, a frame's surface and a shape that is not on a clock.
+            // A drifting one on the canvas is laid over the shape each frame
+            // instead (`DocumentRenderer`, `MeshPainter`).
+            guard let image = MeshPainter.cgImage(paint, size: box.size) else { return }
+            context.saveGState()
+            context.interpolationQuality = .high
+            context.translateBy(x: 0, y: box.minY + box.maxY)
+            context.scaleBy(x: 1, y: -1)
+            context.draw(image, in: box)
+            context.restoreGState()
         }
     }
 

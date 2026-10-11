@@ -1,0 +1,989 @@
+{
+ "out": "/tmp/photonz-playtest/title-backgrounds-move-walk",
+ "seed": "Title backgrounds move, at Next defaults with no switch touched: Behind Glass put over the sample recording at 0:00 from an empty track's right-click and photographed through its in, its hold and its out into the real footage; then Aurora at 6s, photographed through its in and two moments of its hold.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Behind Glass"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "describe",
+   "stage": "glass-landed",
+   "note": "Add Title Page > Behind Glass from the empty track's right-click at 0:00, at Next defaults. It lies OVER the recording's first four seconds (the recording is not pushed later), with its title open for typing"
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-landed"
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "glass-in",
+   "note": "THE IN from 0:00: the recording is already behind frosted glass on the first frame (blurred, dimmed to 40%, drawn 5% larger), the title blurs in from 0.2s and the subtitle rises in after it"
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-in-0"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-in-1"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-in-2"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-in-3"
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "glass-hold",
+   "note": "THE HOLD at 2s: the words are still; the footage behind the glass keeps playing and slowly settles from 105% to 100%"
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-hold"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "glass-out",
+   "note": "THE OUT from 3.0s: the words fade by 3.65s while the glass sharpens and brightens to nothing over the last 0.8s, landing exactly on the real footage at 4.0s"
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-out-0"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-out-1"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-out-2"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-out-3"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-out-4"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "describe",
+   "stage": "glass-after",
+   "note": "Past the title: the recording itself, sharp and undimmed, with no jump from the last frame of the title"
+  },
+  {
+   "do": "snapshot",
+   "name": "glass-after"
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V3",
+   "choose": "Add Title Page > Aurora"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "describe",
+   "stage": "aurora-in",
+   "note": "AURORA from 6.0s: a three colour mesh with fine grain fades up, the title blurs in, the subtitle rises, and the rule under the title draws itself on from the left"
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-in-0"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-in-1"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-in-2"
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "key",
+   "key": "right"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.12
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-in-3"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-hold-a"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "aurora-hold",
+   "note": "Two moments of Aurora's hold a second apart: the mesh has drifted between them and the grain is a fresh pattern"
+  },
+  {
+   "do": "snapshot",
+   "name": "aurora-hold-b"
+  }
+ ]
+}

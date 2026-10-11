@@ -505,6 +505,8 @@ public enum SVGExport {
                 continue
             case .glow:
                 return .beyondSVG("it wears a glow")
+            case .grain:
+                return .beyondSVG("it wears grain")
             case .shadow(let shadow):
                 guard shadow.paints else { continue }
                 guard shadow.kind == .drop else {
@@ -1842,7 +1844,7 @@ private struct Writer {
             lines.append("    <radialGradient id=\"\(id)\" gradientUnits=\"userSpaceOnUse\""
                 + " cx=\"\(n(middle.x))\" cy=\"\(n(middle.y))\""
                 + " r=\"\(n(paint.radialRadius(in: box)))\">")
-        case .solid, .angular:
+        case .solid, .angular, .mesh:
             return nil
         }
         for stop in paint.orderedStops {

@@ -57,6 +57,14 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// Grows from `amount` percent past its own size and settles back: a
     /// spring. On the way out it drops its bounce.
     case springPop
+    /// A line draws itself on from its start, and off from its start again
+    /// (`StrokeTrim.swift`): an underline or a rule. Anything with no line of
+    /// its own wipes on in `direction` instead.
+    case drawOn
+    /// Glass over the recording frosting over: what is behind it blurs and
+    /// dims in, and on the way out sharpens and brightens back to the real
+    /// footage (`BlurEffect`, background). Anything that is not glass fades.
+    case frost
 
     public var title: String {
         switch self {
@@ -66,6 +74,8 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .scaleFrom: "Scale From"
         case .wipe: "Wipe"
         case .springPop: "Spring Pop"
+        case .drawOn: "Draw On"
+        case .frost: "Frost"
         }
     }
 
@@ -73,7 +83,7 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// 1080 line frame for a rise and a blur, a percentage for a scale.
     public var defaultAmount: Double {
         switch self {
-        case .fade, .wipe: 0
+        case .fade, .wipe, .drawOn, .frost: 0
         case .rise: 24
         case .blurIn: 12
         case .scaleFrom: 110
@@ -120,7 +130,9 @@ public enum TitleHoldKind: String, CaseIterable, Hashable, Codable, Sendable {
     case none
     /// Travels `amount` points slowly in `direction`.
     case drift
-    /// Grows by `amount` percent, slowly: the Ken Burns push.
+    /// Grows by `amount` percent, slowly: the Ken Burns push. On glass over a
+    /// recording it is the footage behind that grows (`BlurEffect.zoom`), so
+    /// a negative amount is the backdrop slowly settling back to its size.
     case push
 }
 
@@ -282,9 +294,26 @@ private struct TitleCompiler {
         var curve: EasingCurve
     }
 
+    /// What a build actually does on this piece: a draw on with no line to
+    /// draw is a wipe, and a frost with no glass to frost is a fade.
+    private func kind(of build: TitleBuild) -> TitleBuildKind {
+        switch build.kind {
+        case .drawOn: draws ? .drawOn : .wipe
+        case .frost: isGlass ? .frost : .fade
+        default: build.kind
+        }
+    }
+
+    /// Whether this piece is a line that can be drawn on.
+    private var draws: Bool { piece.drawsItsOwnOutline && piece.strokeTrimForMotion != nil }
+
+    /// Whether this piece is glass: something with a background blur.
+    private var isGlass: Bool { piece.style.effects.contains { $0.blur?.kind == .background } }
+
     /// Whether this piece's in is its words' own reveal rather than keys.
     private func revealsWords(_ build: TitleBuild?) -> Bool {
-        build?.kind == .wipe && piece.text != nil
+        guard let build else { return false }
+        return kind(of: build) == .wipe && piece.text != nil
     }
 
     /// The reveal a piece's words come in by, where its in is one.
@@ -316,7 +345,7 @@ private struct TitleCompiler {
                 // A crop always leaves a point of the shape, so a wipe also
                 // fades up over its first moments rather than showing a
                 // sliver before it starts.
-                if build.kind == .wipe, wipes {
+                if kind(of: build) == .wipe, wipes {
                     runs[.opacity, default: []].append(Run(start: start, end: start + sliver(end - start),
                                                            from: .number(0), to: rest(.opacity),
                                                            curve: .linear))
@@ -346,7 +375,7 @@ private struct TitleCompiler {
                                                    from: held[property] ?? rest(property),
                                                    to: off, curve: curve))
         }
-        if let build = part.out, build.kind == .wipe, wipes, outEnd > outStart {
+        if let build = part.out, kind(of: build) == .wipe, wipes, outEnd > outStart {
             runs[.opacity, default: []].append(Run(start: outEnd - sliver(outEnd - outStart), end: outEnd,
                                                    from: rest(.opacity), to: .number(0), curve: .linear))
         }
@@ -398,7 +427,7 @@ private struct TitleCompiler {
     private func offs(_ build: TitleBuild, arriving: Bool) -> [(MotionProperty, MotionValue, EasingCurve)] {
         let curve = build.curve
         let gone: (MotionProperty, MotionValue, EasingCurve) = (.opacity, .number(0), curve)
-        switch build.kind {
+        switch kind(of: build) {
         case .fade:
             return [gone]
         case .rise:
@@ -418,6 +447,13 @@ private struct TitleCompiler {
         case .wipe:
             guard wipes else { return [gone] }
             return [(cropEdge(build.direction, arriving: arriving), .number(100), curve)]
+        case .drawOn:
+            // In: the end runs out from the start. Out: the start runs after
+            // it, so the line leaves the way it was drawn.
+            return arriving ? [(.trimEnd, .number(0), curve)] : [(.trimStart, .number(100), curve)]
+        case .frost:
+            // Clear and undimmed while it is off: the footage itself.
+            return [gone, (.backgroundBlur, .number(0), curve)]
         }
     }
 
@@ -445,7 +481,12 @@ private struct TitleCompiler {
         switch hold.kind {
         case .none: []
         case .drift: [(.position, moved(hold.direction, by: hold.amount))]
-        case .push: [(.scale, .number(100 + hold.amount))]
+        case .push:
+            if isGlass, case let .number(zoom) = rest(.backgroundZoom) {
+                [(.backgroundZoom, .number(zoom + hold.amount))]
+            } else {
+                [(.scale, .number(100 + hold.amount))]
+            }
         }
     }
 }

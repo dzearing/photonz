@@ -33,6 +33,10 @@ public struct Paint: Hashable, Sendable {
         case radial
         /// Sweeping around `center`, starting at `angle`.
         case angular
+        /// A few soft colour points, one per stop, blended into each other
+        /// and drifting slowly on a loop as `drift` says (`MeshPaint.swift`):
+        /// the moving backdrop behind a polished title.
+        case mesh
 
         public var title: String {
             switch self {
@@ -40,6 +44,7 @@ public struct Paint: Hashable, Sendable {
             case .linear: return "Linear"
             case .radial: return "Radial"
             case .angular: return "Angular"
+            case .mesh: return "Mesh"
             }
         }
     }
@@ -59,17 +64,23 @@ public struct Paint: Hashable, Sendable {
     /// Where a `radial` or `angular` paint is centred, in the shape's own box:
     /// 0,0 is its top-left corner and 1,1 its bottom-right.
     public var center: CGPoint
+    /// How fast a `mesh` paint's colour points drift, as a percent: nought
+    /// holds them still, 100 takes them once round their loop every
+    /// `MeshPaint.loopMSAtFullDrift`. Ignored by every other kind.
+    public var drift: Double
 
     public init(hex: String,
                 kind: Kind = .solid,
                 stops: [GradientStop] = [],
                 angle: Double = 135,
-                center: CGPoint = CGPoint(x: 0.5, y: 0.5)) {
+                center: CGPoint = CGPoint(x: 0.5, y: 0.5),
+                drift: Double = 0) {
         self.kind = kind
         self.hex = hex
         self.stops = stops
         self.angle = angle
         self.center = center
+        self.drift = min(max(drift, 0), 100)
     }
 
     /// A flat paint of this color, which is what every existing color in the
@@ -113,6 +124,7 @@ public struct Paint: Hashable, Sendable {
         }
         guard isGradient, other.isGradient, kind == other.kind,
               angle == other.angle, center == other.center else { return false }
+        if kind == .mesh, drift != other.drift { return false }
         let mine = orderedStops, theirs = other.orderedStops
         guard mine.count == theirs.count else { return false }
         return zip(mine, theirs).allSatisfy {
@@ -159,6 +171,34 @@ public struct Paint: Hashable, Sendable {
     public mutating func becoming(_ kind: Kind) {
         self.kind = kind
         if kind != .solid, stops.count < 2 { stops = Paint.seededStops(from: hex) }
+        // A mesh is points of colour, and two points read as a plain ramp:
+        // a third, between the two, is what makes it a mesh. It starts
+        // drifting, gently, because a still mesh is what a ramp already is.
+        if kind == .mesh {
+            if stops.count < 3 { stops = Paint.seededMeshStops(from: stops, hex: hex) }
+            if drift == 0 { drift = Paint.startingDrift }
+        }
+    }
+
+    /// How fast a new mesh drifts: one slow loop every twenty seconds or so,
+    /// the "one gentle sweep per clip" a product video backdrop moves at.
+    public static let startingDrift: Double = 40
+
+    /// Three points for a mesh made from `stops`: theirs, with a third mixed
+    /// between the first two and turned a little warmer.
+    static func seededMeshStops(from stops: [GradientStop], hex: String) -> [GradientStop] {
+        let ramp = stops.count >= 2 ? stops.sorted { $0.position < $1.position } : seededStops(from: hex)
+        guard let first = ramp.first, let last = ramp.last,
+              let a = RGBA(hex: first.hex), let b = RGBA(hex: last.hex) else { return ramp }
+        let middle = RGBA(r: (a.r + b.r) / 2, g: (a.g + b.g) / 2, b: (a.b + b.b) / 2, a: (a.a + b.a) / 2)
+        let hsl = middle.hsl
+        let turned = RGBA(hsl: HSL(hue: (hsl.hue + 320).truncatingRemainder(dividingBy: 360),
+                                   saturation: min(1, hsl.saturation + 0.15),
+                                   lightness: hsl.lightness),
+                          alpha: middle.a)
+        return [GradientStop(hex: first.hex, position: 0),
+                GradientStop(hex: turned.hexStringWithAlpha, position: 0.5),
+                GradientStop(hex: last.hex, position: 1)]
     }
 
     /// The ramp a solid turns into: the color you already had, running to a
@@ -225,7 +265,7 @@ public struct GradientStop: Hashable, Codable, Sendable {
 extension Paint: Codable {
 
     private enum CodingKeys: String, CodingKey {
-        case kind, hex, stops, angle, cx, cy
+        case kind, hex, stops, angle, cx, cy, drift
     }
 
     /// A flat paint writes the bare hex string the document has always held,
@@ -243,6 +283,9 @@ extension Paint: Codable {
         try c.encode(angle, forKey: .angle)
         try c.encode(center.x, forKey: .cx)
         try c.encode(center.y, forKey: .cy)
+        // Only a drifting paint says how fast: every gradient written before
+        // a mesh could move is byte for byte what it was.
+        if drift != 0 { try c.encode(drift, forKey: .drift) }
     }
 
     /// A bare string is the color it always was; anything else is a gradient
@@ -259,7 +302,8 @@ extension Paint: Codable {
                   stops: try c.decodeIfPresent([GradientStop].self, forKey: .stops) ?? [],
                   angle: try c.decodeIfPresent(Double.self, forKey: .angle) ?? 135,
                   center: CGPoint(x: try c.decodeIfPresent(CGFloat.self, forKey: .cx) ?? 0.5,
-                                  y: try c.decodeIfPresent(CGFloat.self, forKey: .cy) ?? 0.5))
+                                  y: try c.decodeIfPresent(CGFloat.self, forKey: .cy) ?? 0.5),
+                  drift: try c.decodeIfPresent(Double.self, forKey: .drift) ?? 0)
     }
 }
 

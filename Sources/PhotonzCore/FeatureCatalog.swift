@@ -242,6 +242,8 @@ public enum FeatureCatalog {
 
     public static let titlePresetsFlag = "next-title-pages-and-name-cards"
 
+    public static let titleBackgroundsFlag = "next-title-backgrounds-move"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -883,6 +885,16 @@ public enum FeatureCatalog {
                     name: titlePresetsFlag,
                     title: "Title pages and name cards",
                     description: "Sequence and an empty track's right-click insert a title page or name card preset at the playhead, animated in and out, and Save as Preset keeps your own. Off means titles are typed with the Text tool only.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: titleBackgroundsFlag,
+                    title: "Title backgrounds that move",
+                    description: "Two more title pages, Aurora and Behind Glass, a Mesh fill that drifts, Grain in the Effects list, a Zoom on a background blur, and Trim start and Trim end keys on lines. Off means title backgrounds stay still.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

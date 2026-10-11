@@ -269,6 +269,12 @@ extension Layer {
             where keyStill(property) != nil {
                 list.append(.motion(property))
             }
+            // How much of a line is drawn, then the glass behind: each only
+            // where the layer has a line, or a background blur, to change.
+            for property in [MotionProperty.trimStart, .trimEnd, .backgroundBlur, .backgroundZoom]
+            where keyStill(property) != nil {
+                list.append(.motion(property))
+            }
         }
         if sound != nil { list.append(.volume) }
         return list

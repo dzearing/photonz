@@ -235,6 +235,10 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         get { fill?.hex }
         set { fill = newValue.map { Paint(hex: $0) } }
     }
+    /// How much of the line is drawn, start to end along it: an underline
+    /// drawing itself on is this keyed (`StrokeTrim.swift`). Nil, the whole
+    /// line, is what every shape drawn before it is.
+    public var trim: StrokeTrim?
     /// Arrow-only: label text rendered as a pill at the arrow's tail, matching
     /// the measure tool's readout treatment. Nil = plain arrow.
     ///
@@ -356,6 +360,7 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         case storedCaption = "caption"
         case captionFontSize, captionRoundness
         case captionOffset, captionGrowth, captionPinned
+        case trim
     }
 
     public init(from decoder: Decoder) throws {
@@ -413,6 +418,8 @@ public struct AnnotationContent: Hashable, Codable, Sendable {
         captionGrowth = try c.decodeIfPresent(CGSize.self, forKey: .captionGrowth)
         // Hand placement postdates planning; an old offset was the planner's.
         captionPinned = try c.decodeIfPresent(Bool.self, forKey: .captionPinned) ?? false
+        // A trim postdates every shape; absent is the whole line.
+        trim = try c.decodeIfPresent(StrokeTrim.self, forKey: .trim)
         // A label written before it had colours of its own keeps the three it
         // was drawn in: the darkened tone of the arrow's colour, that colour
         // for its edge, white for its words. `captionTextColorHex` is the mark,
@@ -1188,6 +1195,20 @@ public struct LayerStyle: Hashable, Codable, Sendable {
         return max(0, blur.radius)
     }
 
+    /// How much bigger what is behind the glass is drawn, as a percent: 100
+    /// where there is no background blur or it is off (`BlurEffect.zoom`).
+    public var backgroundBlurZoom: Double {
+        guard let blur = effects.compactMap(\.blur).first(where: { $0.kind == .background }),
+              blur.isOn else { return 100 }
+        return blur.zoom
+    }
+
+    /// Changes the first background blur, and does nothing where there is none.
+    mutating func updateBackgroundBlur(_ mutate: (inout BlurEffect) -> Void) {
+        guard let index = effects.firstIndex(where: { $0.blur?.kind == .background }) else { return }
+        updateBlurEffect(at: index, mutate)
+    }
+
     /// The layer's ring, as a plain number: the Border nearest the eye.
     ///
     /// There used to be a ring HERE, a stored width and colour of its own,
@@ -1690,6 +1711,13 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// re-wrap (`docs/design/ui-building.md`, "Where the words sit in their
     /// box").
     public var heightChosenByHand: CGFloat?
+
+    /// The moment on its own clock this layer is being DRAWN at, for a look
+    /// that runs on time by itself: a mesh fill drifting, grain moving every
+    /// frame. Stamped on the copy the renderer is handed
+    /// (`moved(toMotionTimeMS:)`), never on the layer in the document, and
+    /// only where something about it moves, so nothing else pays for it.
+    public var drawnAtMS: Int?
 
     /// What this layer has been told to CHANGE over time: one entry per
     /// property that moves, read the same way the Effects list above it is

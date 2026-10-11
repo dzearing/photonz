@@ -113,6 +113,9 @@ struct DesignedColorPicker: View {
                                         onDrag: previewGeometry,
                                         onCommit: commitGeometry)
                 }
+                if paint.kind == .mesh {
+                    MeshDriftRow(paint: $paint, onDrag: previewGeometry, onCommit: commitGeometry)
+                }
             }
             SaturationValueField(color: $color, onDrag: preview, onCommit: commit)
                 .frame(height: Self.squareHeight)
@@ -539,7 +542,9 @@ struct DesignedColorPicker: View {
         guard kind != paint.kind else { return }
         let wasFlat = !paint.isGradient
         if kind != .solid, wasFlat { paint.stops = Paint.seededStops(from: paint.hex) }
-        paint.kind = kind
+        // A mesh wants a third point and a gentle drift, which `becoming`
+        // adds; every other kind is exactly the switch it always was.
+        if kind == .mesh { paint.becoming(.mesh) } else { paint.kind = kind }
         stopIndex = min(max(stopIndex, 0), max(paint.stops.count - 1, 0))
         if let seed = PickerColor(hex: activeHex) { color = seed }
         hexField = displayHex

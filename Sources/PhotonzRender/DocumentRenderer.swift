@@ -782,6 +782,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
         image = blurred(image, radius: layer.style.blurRadius, fadesEdges: true)
+        if let grain = layer.style.grain {
+            image = GrainFilter.grained(image, amount: grain.amount, atMS: layer.drawnAtMS,
+                                        linearLight: compositing == .linearLight,
+                                        cell: GrainFilter.cell(forFrame: document.canvasSize))
+        }
         // The turn, taken by the whole card at once and in the same place a
         // single layer takes its own: after the blur, so the softness is part
         // of what turns, and before the shadow, so the shadow is cast by the
@@ -809,7 +814,8 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
-                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius)
+                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
+                      zoom: layer.style.backgroundBlurZoom)
     }
 
     /// A region of the composite as pixels ("promote selection to layer").
@@ -1078,6 +1084,15 @@ public final class DocumentRenderer: @unchecked Sendable {
             // a stroke, an arrowhead and a caption pill all come from shapes and
             // type, so all three can be as sharp as the words beside them.
             let bake = crispScale(contentScale, box: boxInPoints)
+            // A fill drifting on its own clock: the shape's rasters stay
+            // cached and only the mesh is worked out for this moment
+            // (`MovingBackdrops.swift`).
+            if let fill = annotation.fill, fill.moves, let ms = layer.drawnAtMS,
+               let drifting = driftingFill(annotation, fill: fill, atMS: ms, size: layer.frame.size,
+                                           box: boxInPoints, bake: bake, contentScale: contentScale) {
+                image = magnified(drifting, nearest: magnifyNearest, scale: contentScale / bake)
+                break
+            }
             guard let raster = raster(for: layer.content, size: layer.frame.size,
                                       variant: contentScale == 1 ? "" : "crisp", rasterize: {
                 AnnotationRasterizer.rasterize(annotation, size: boxInPoints, scale: bake)
@@ -1317,6 +1332,12 @@ public final class DocumentRenderer: @unchecked Sendable {
         // into the clear space around it (`blurred`).
         let isPhoto: Bool = { if case .image = layer.content { return true } else { return false } }()
         image = blurred(image, radius: layer.style.blurRadius, fadesEdges: !isPhoto)
+        // Grain over what it paints, after the blur so the grain stays crisp.
+        if let grain = layer.style.grain {
+            image = GrainFilter.grained(image, amount: grain.amount, atMS: layer.drawnAtMS,
+                                        linearLight: compositing == .linearLight,
+                                        cell: GrainFilter.cell(forFrame: document.canvasSize))
+        }
 
         // Geometric transform around the layer's center. LayerTransform angles are
         // defined in top-left model space; CI is y-up, so mirror the angular
@@ -1353,7 +1374,44 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = shadowed(image, glows: layer.style.paintedGlows,
                          shadows: layer.drawnShadows(onDesignedSurface: onDesignedSurface))
         return glazed(faded(image, opacity: layer.style.opacity), silhouette: silhouette,
-                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius)
+                      backdrop: backdrop, radius: layer.style.backgroundBlurRadius,
+                      zoom: layer.style.backgroundBlurZoom)
+    }
+
+    /// A shape whose fill drifts, at one moment: the mesh for that moment cut
+    /// to the inside of the shape, and the shape's own line over it. Both cut
+    /// and line come from rasters cached like any shape's (the fill painted
+    /// plain white with the line left out, and the line with no fill), so a
+    /// frame costs the mesh and two composites. Nil to fall back to the
+    /// still picture.
+    private func driftingFill(_ annotation: AnnotationContent, fill: Paint, atMS ms: Int,
+                              size: CGSize, box: CGSize, bake: CGFloat,
+                              contentScale: CGFloat) -> CIImage? {
+        let variant = contentScale == 1 ? "" : "crisp"
+        var inside = annotation
+        inside.fill = Paint(hex: "#FFFFFF")
+        inside.paint = Paint(hex: "#00000000")
+        inside.headPaint = Paint(hex: "#00000000")
+        guard let mask = raster(for: .annotation(inside), size: size, variant: variant + "|meshmask", rasterize: {
+            AnnotationRasterizer.rasterize(inside, size: box, scale: bake)
+        }) else { return nil }
+        // The ramp is laid across the shape's own box, inside whatever room
+        // the bitmap keeps for a line drawn past its edge, as a still
+        // gradient is.
+        let pad = annotation.strokeOutset * bake
+        let area = mask.extent.insetBy(dx: pad, dy: pad)
+        guard area.width >= 1, area.height >= 1,
+              let mesh = MeshPainter.image(fill, size: area.size, atMS: ms) else { return nil }
+        let painted = mesh.transformed(by: CGAffineTransform(translationX: area.minX, y: area.minY))
+            .applyingFilter("CISourceInCompositing", parameters: [kCIInputBackgroundImageKey: mask])
+            .cropped(to: mask.extent)
+        guard annotation.strokeWidth > 0 else { return painted }
+        var line = annotation
+        line.fill = nil
+        guard let edge = raster(for: .annotation(line), size: size, variant: variant, rasterize: {
+            AnnotationRasterizer.rasterize(line, size: box, scale: bake)
+        }) else { return painted }
+        return edge.composited(over: painted)
     }
 
     // MARK: - Style pieces
@@ -1396,6 +1454,10 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// How much richer the colour behind glass comes through: the mock's 180%.
     static let glassSaturation: CGFloat = 1.8
 
+    /// How soft glass has to be before its colour is fully boosted, in
+    /// points: below it the boost eases in with the blur.
+    static let glassSaturationRamp: CGFloat = 4
+
     /// Frosted glass (`BlurKind.background`): the picture BEHIND the layer,
     /// softened, laid under the finished layer wherever it paints.
     ///
@@ -1411,19 +1473,36 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// before blurring, as a lens does it (`LensFilter`), so the glass has no
     /// dark rim where the canvas stops.
     private func glazed(_ drawn: CIImage, silhouette: CIImage, backdrop: CIImage,
-                        radius: CGFloat) -> CIImage {
+                        radius: CGFloat, zoom: Double = 100) -> CIImage {
         guard radius > 0 else { return drawn }
         let pane = silhouette.extent
         guard !pane.isInfinite, !pane.isEmpty else { return drawn }
         let reach = (radius * 3).rounded(.up)
-        let sampled = backdrop.cropped(to: pane.insetBy(dx: -reach, dy: -reach))
+        // What is behind, drawn larger about the pane's middle where the glass
+        // zooms it: the footage behind a title slowly settling
+        // (`BlurEffect.zoom`). Held at its own edge first, so a zoomed
+        // picture never pulls the clear space past the canvas in.
+        var behind = backdrop
+        if zoom != 100, zoom > 0, !backdrop.extent.isInfinite {
+            let factor = CGFloat(zoom / 100)
+            behind = backdrop.clampedToExtent()
+                .transformed(by: CGAffineTransform(translationX: -pane.midX, y: -pane.midY)
+                    .concatenating(CGAffineTransform(scaleX: factor, y: factor))
+                    .concatenating(CGAffineTransform(translationX: pane.midX, y: pane.midY)))
+                .cropped(to: backdrop.extent)
+        }
+        let sampled = behind.cropped(to: pane.insetBy(dx: -reach, dy: -reach))
         guard !sampled.extent.isEmpty else { return drawn }
         // ...and richer, the way the design system's glass is everywhere it
         // appears (`--lg-blur-sm`: `saturate(180%) blur(12px)`): a blur alone
-        // averages colours towards grey, and the boost gives them back.
+        // averages colours towards grey, and the boost gives them back. The
+        // boost comes in with the first few points of softness, so glass
+        // keyed down to nothing ends on the footage as it is rather than a
+        // richer copy of it that snaps back the frame the blur reaches nought.
+        let boost = 1 + (Self.glassSaturation - 1) * min(1, radius / Self.glassSaturationRamp)
         let softened = sampled.clampedToExtent()
             .applyingGaussianBlur(sigma: radius)
-            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: Self.glassSaturation])
+            .applyingFilter("CIColorControls", parameters: [kCIInputSaturationKey: boost])
             .cropped(to: pane.intersection(backdrop.extent))
         let mask = silhouette
             .applyingFilter("CIColorMatrix", parameters: [

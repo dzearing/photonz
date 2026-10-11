@@ -76,13 +76,20 @@ public struct InsertedTitle: Hashable, Sendable {
 /// on, so a 4K recording and a square one both get a page that fills them.
 public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable {
     case midnight, sunrise, paper, spotlight
+    /// A drifting mesh with grain, and a rule that draws itself on
+    /// (`docs/design/video-titles-polish.md`, step 3).
+    case aurora
+    /// The recording under the title, blurred, dimmed and slowly settling,
+    /// sharpening into the real footage as the title leaves: the Photonz
+    /// signature, which ties the intro to the content.
+    case glass
     case bar, clean, accent, minimal
 
     public var id: String { rawValue }
 
     public var kind: TitleKind {
         switch self {
-        case .midnight, .sunrise, .paper, .spotlight: .titlePage
+        case .midnight, .sunrise, .paper, .spotlight, .aurora, .glass: .titlePage
         case .bar, .clean, .accent, .minimal: .nameCard
         }
     }
@@ -93,6 +100,8 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         case .sunrise: "Sunrise"
         case .paper: "Paper"
         case .spotlight: "Spotlight"
+        case .aurora: "Aurora"
+        case .glass: "Behind Glass"
         case .bar: "Bar"
         case .clean: "Clean"
         case .accent: "Accent"
@@ -175,6 +184,39 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
                           in: B(.rise, delayMS: 450, lengthMS: 600, amount: 12),
                           out: .off(.fade, delayMS: 250)),
             ])
+        case .aurora:
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.fade, delayMS: 0, lengthMS: 600, curve: .easeOutQuint),
+                          hold: TitleHold(.push, amount: 2)),
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.blurIn, delayMS: 150, lengthMS: 800, amount: 14),
+                          out: .off(.blurIn, delayMS: 160, amount: 8)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 280, lengthMS: 650, amount: 14),
+                          out: .off(.fade, delayMS: 220)),
+                TitlePart(path: "Accent", role: .accent,
+                          in: B(.drawOn, delayMS: 450, lengthMS: 600, direction: .right),
+                          out: .off(.drawOn, delayMS: 100, lengthMS: 300)),
+            ])
+        case .glass:
+            // The recording frosts over as the title arrives (nothing of a
+            // title is on its first frame), settles from 105% to 100% the
+            // whole time it holds, and racks back into focus as the title
+            // leaves, ending exactly on the footage. The words are gone just
+            // before the glass clears.
+            return TitleDesign(parts: [
+                TitlePart(path: "Background", role: .background,
+                          in: B(.frost, delayMS: 0, lengthMS: 700, curve: .easeOutQuint),
+                          hold: TitleHold(.push, amount: -5),
+                          out: .off(.frost, delayMS: 0, lengthMS: 480)),
+                TitlePart(path: "Title", role: .headline,
+                          in: B(.blurIn, delayMS: 200, lengthMS: 800, amount: 16),
+                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
+                TitlePart(path: "Subtitle", role: .subtitle,
+                          in: B(.rise, delayMS: 330, lengthMS: 650, amount: 14),
+                          out: .off(.fade, delayMS: 220, lengthMS: 250)),
+            ])
         case .bar:
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
@@ -232,9 +274,14 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         }
     }
 
-    public static func presets(of kind: TitleKind) -> [BuiltInTitle] {
-        allCases.filter { $0.kind == kind }
+    /// One kind's presets. `movingBackdrops` false leaves out the pages whose
+    /// background moves, for a release that has not got them.
+    public static func presets(of kind: TitleKind, movingBackdrops: Bool = true) -> [BuiltInTitle] {
+        allCases.filter { $0.kind == kind && (movingBackdrops || !$0.hasMovingBackdrop) }
     }
+
+    /// Whether this preset's background moves (`docs/design/video-titles-polish.md`, step 3).
+    public var hasMovingBackdrop: Bool { self == .aurora || self == .glass }
 
     /// The group this preset draws on a frame this size.
     public func layer(in canvas: CGSize) -> Layer {
@@ -245,6 +292,8 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         case .sunrise: page = Self.sunrise(pen)
         case .paper: page = Self.paper(pen)
         case .spotlight: page = Self.spotlight(pen)
+        case .aurora: page = Self.aurora(pen)
+        case .glass: page = Self.glass(pen)
         // A card is laid out by the group itself, the way a starter button
         // is: a longer name makes a wider card rather than words running off
         // the edge of their panel.
@@ -331,6 +380,43 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         return [background] + dots + [title, subtitle]
     }
 
+    private static func aurora(_ pen: TitlePen) -> [Layer] {
+        // Three deep colours, all dark enough that white words read on every
+        // part of the blend, drifting one slow loop every twenty seconds.
+        var background = pen.fullFrame(Paint(hex: "#0E1030", kind: .mesh,
+                                             stops: [GradientStop(hex: "#0E1030", position: 0),
+                                                     GradientStop(hex: "#3A1F8F", position: 0.5),
+                                                     GradientStop(hex: "#8C2B6B", position: 1)],
+                                             angle: 200, drift: Paint.startingDrift))
+        background.style.effects = [.grain(GrainEffect())]
+        let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 112, weight: .bold,
+                                color: "#FFFFFF", top: pen.canvas.height * 0.36)
+        let rule = pen.line("Accent", from: CGPoint(x: pen.canvas.width / 2 - pen.u(80),
+                                                    y: title.frame.maxY + pen.u(22)),
+                            length: pen.u(160), width: pen.u(4), color: "#FFFFFF")
+        let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
+                                   color: "#D4CCF2", top: rule.frame.maxY + pen.u(26))
+        return [background, title, rule, subtitle]
+    }
+
+    private static func glass(_ pen: TitlePen) -> [Layer] {
+        // Black at 40% over the recording, the recording itself softened
+        // behind it and drawn 5% larger, which the hold eases back to 100%.
+        var background = pen.fullFrame(Paint(hex: "#000000"))
+        background.style.opacity = 0.4
+        background.style.effects = [.blur(BlurEffect(radius: pen.u(36), kind: .background, zoom: 105))]
+        let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 112, weight: .bold,
+                                color: "#FFFFFF", top: pen.canvas.height * 0.38)
+        let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
+                                   weight: .medium, color: "#E8E8ED", top: title.frame.maxY + pen.u(18))
+        return [background, title, subtitle]
+    }
+
+    /// Whether this page's background is the recording under it, so it lies
+    /// OVER that recording rather than pushing it later, and leaves through
+    /// its own parts rather than the bar's fade.
+    public var usesTheRecording: Bool { self == .glass }
+
     // MARK: Name cards
 
     private static func bar(_ pen: TitlePen) -> Layer {
@@ -416,6 +502,20 @@ struct TitlePen {
 
     func oval(_ name: String, _ rect: CGRect, fill: Paint) -> Layer {
         shape(.ellipse, name, rect, fill: fill, radius: 0)
+    }
+
+    /// A level line `length` long from `start`, `width` thick: a rule that
+    /// can draw itself on. Its frame holds half a width of room all round, as
+    /// a line drawn by hand does (`AnnotationBuilder`).
+    func line(_ name: String, from start: CGPoint, length: CGFloat, width: CGFloat,
+              color: String) -> Layer {
+        let half = width / 2
+        let content = AnnotationContent(shape: .line, strokeWidth: width, colorHex: color,
+                                        start: CGPoint(x: half, y: half),
+                                        end: CGPoint(x: half + length, y: half))
+        return Layer(name: name, content: .annotation(content),
+                     frame: CGRect(x: (start.x - half).rounded(), y: (start.y - half).rounded(),
+                                   width: length + width, height: width))
     }
 
     private func shape(_ shape: AnnotationShape, _ name: String, _ rect: CGRect,
@@ -536,8 +636,10 @@ extension PhotonzDocument {
         applyTitleDesign(preset.design, layerID: inserted.layerID)
         // A page leaves with the one fade everything on the timeline has
         // (`PictureFade`): shaded on the bar, checked under Fade Out, dragged
-        // from the bar's corner, and the dissolve into what follows it.
-        if preset.kind == .titlePage {
+        // from the bar's corner, and the dissolve into what follows it. A page
+        // made of the recording under it leaves by sharpening into it instead,
+        // and must lie over it rather than push it on.
+        if preset.kind == .titlePage, !preset.usesTheRecording {
             fadePicture(inserted.layerID, .out, toMS: TitleAnimation.lengthMS)
             pushPictureAfterOpeningTitle(inserted.layerID)
         }

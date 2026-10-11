@@ -216,6 +216,8 @@ private struct EffectRowView: View {
             GlowSlidersRow(row: row)
         case .blur:
             BlurEffectRow(row: row)
+        case .grain:
+            GrainEffectRow(row: row)
         }
     }
 }
@@ -599,6 +601,41 @@ private struct BlurEffectRow: View {
                 if v > 0 { $0.isOn = true }
             }
         }
+        // Glass can draw what is behind it a little larger: the footage behind
+        // a title slowly settling. Only on glass, only where moving title
+        // backgrounds are on.
+        let glass = blurs.reading { $0.blurEffect(at: index)?.kind ?? .layer }
+        if Experiments.shared.titleBackgroundsEnabled, !glass.isMixed, glass.value == .background {
+            let range = BlurEffect.zoomRange
+            LayerStyleSlider(layerIDs: ids, label: "Zoom",
+                             reading: blurs.reading { ($0.blurEffect(at: index)?.zoom ?? 100) / 100 },
+                             range: (range.lowerBound / 100)...(range.upperBound / 100),
+                             typing: .percent) { style, v in
+                style.updateBlurEffect(at: index) {
+                    $0.zoom = min(max(v * 100, range.lowerBound), range.upperBound)
+                }
+            }
+        }
+    }
+}
+
+/// How strong one grain is. One number: grain is a texture, and the only
+/// question about it is how much.
+private struct GrainEffectRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let grains = editorState.layerStyleSelection.grains(at: row.index)
+        let index = row.index
+        LayerStyleSlider(layerIDs: grains.layerIDs, label: "Amount",
+                         reading: grains.reading { ($0.grainEffect(at: index)?.amount ?? 0) / 100 },
+                         range: 0...1, typing: .percent) { style, v in
+            style.updateGrainEffect(at: index) {
+                $0.amount = min(max(v * 100, 0), 100)
+                if v > 0 { $0.isOn = true }
+            }
+        }
     }
 }
 
@@ -707,7 +744,7 @@ struct AddEffectButton: View {
     /// in a menu's own closure, which would watch the whole document.
     private var lookBody: some View {
         let state = editorState
-        var choices: [VideoKit.Choice] = AddableEffect.allCases.map { kind in
+        var choices: [VideoKit.Choice] = state.addableEffects.map { kind in
             .item(kind.title, isEnabled: state.canAddEffect(kind), help: kind.summary) { state.addEffect(kind) }
         }
         // ...and the effects somebody has already tuned and named. This is
