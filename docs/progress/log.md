@@ -21175,3 +21175,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Measured: canvas vs export 0 pixels differ; MP4 vs canvas about 1 level mean; 1080p, 10 layers, 4 tilted, 1 out of focus in 5.5ms median.
 - Next: the canvas handles, the panel's 3D section and the camera controls (`tilt-flip-and-push-layers-in-depth-from-the-canv`).
 - Open: the camera card is unanswered (built option A).
+
+## 2026-10-11 — Size mode reads avatars, icons and stacks; a rough box snaps
+
+- New `PhotonzCore/ShapeBounds.swift`: reads the shape under the pointer by the flat colour that surrounds it (walks outward, then a scanline trace of the piece), with a crisp-edge check, crescent-to-circle completion for stacked avatars, a stack lookup for `]`, and `content(in:)` for a drawn box. Wired into `ElementBounds.candidates` behind `readsShapes` (Next Size mode only; Current's caliper subjects unchanged).
+- App: in Size mode a press-drag draws a dashed box, the snap is outlined live, release measures it; an empty box is kept as drawn with a "Kept your box" notice. Size hint now teaches the box; key tip names `]` for stacks.
+- Walk harness: `expectMeasures` takes `reads` to pin the numbers.
+- Fixture `Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png` (drawn by `Scripts/make-shapes-fixture.swift`), walk `size-reads-avatars-and-stacks-walk`.
+- Open: luma only; stacks with no separating ring untested; no real Teams/Slack capture used.

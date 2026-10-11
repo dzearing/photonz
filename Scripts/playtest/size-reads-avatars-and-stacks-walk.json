@@ -1,0 +1,53 @@
+{
+  "out": "/tmp/photonz-playtest/size-reads-avatars-and-stacks-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "move", "at": [80, 76] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "1-hover-a-photo-avatar" },
+    { "do": "click", "at": [80, 76] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 2, "reads": ["32 px", "32 px"] },
+    { "do": "describe", "stage": "1-avatar", "note": "a 32 point photo avatar reads 32 by 32, not a piece of its photo" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "move", "at": [104, 376] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "2-hover-one-stacked-avatar" },
+    { "do": "key", "key": "]" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "3-right-bracket-takes-the-stack" },
+    { "do": "click", "at": [104, 376] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 4, "reads": ["32 px", "32 px", "104 px", "24 px"] },
+    { "do": "describe", "stage": "3-stack", "note": "] stepped out from one 24 point avatar to the whole 104 by 24 stack" },
+    { "do": "key", "key": "[" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "drag", "from": [92, 344], "to": [150, 408], "steps": 8, "hold": "4-a-rough-box-round-one-avatar" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 6, "reads": ["32 px", "32 px", "104 px", "24 px", "24 px", "24 px"] },
+    { "do": "describe", "stage": "4-one-avatar-by-box", "note": "a loose box round one stacked avatar measured that avatar" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "drag", "from": [40, 330], "to": [300, 424], "steps": 8 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 8, "reads": ["32 px", "32 px", "104 px", "24 px", "24 px", "24 px", "104 px", "24 px"] },
+    { "do": "describe", "stage": "5-stack-by-box", "note": "a rough box round the stack measured the stack" },
+    { "do": "snapshot", "name": "5-the-stack-by-box" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "drag", "from": [330, 540], "to": [470, 650], "steps": 8 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectNotice", "says": "Kept your box" },
+    { "do": "expectMeasures", "count": 10, "reads": ["32 px", "32 px", "104 px", "24 px", "24 px", "24 px", "104 px", "24 px", "70 px", "55 px"] },
+    { "do": "snapshot", "name": "6-a-box-round-nothing-is-kept" }
+  ]
+}

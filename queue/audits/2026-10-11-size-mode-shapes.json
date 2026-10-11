@@ -1,0 +1,51 @@
+{
+  "feature": "Size mode measures avatars, icons and stacks, and a rough box snaps to the thing inside it",
+  "epic": "measure-redline",
+  "summary": "In the Measure tool's Size mode, hovering a round avatar, an icon tile, a pill or count badge, or one avatar in a stack now outlines that thing at its true size, and ] steps out to the whole stack. Dragging a rough box round something measures what is wholly inside it.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open a screenshot with avatars (the walk uses Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png; walk: Scripts/playtest/size-reads-avatars-and-stacks-walk.json).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press I until the Mode reads Size, then rest the pointer on a round photo avatar.",
+      "shot": "2026-10-11-size-shapes-1-avatar-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click: the width and height land, 32 by 32 for a 32 point avatar."
+    },
+    {
+      "do": "Rest on one avatar in a stack, then press ] to take in the whole stack.",
+      "shot": "2026-10-11-size-shapes-2-stack-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press I to get Size back, then drag a loose box round one avatar in the stack and watch the outline before you let go.",
+      "shot": "2026-10-11-size-shapes-3-box-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag a loose box round the whole stack and let go."
+    },
+    {
+      "do": "Drag a box round empty space: the box is measured as drawn and a notice says Kept your box.",
+      "shot": "2026-10-11-size-shapes-4-kept-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "On your own Teams or Slack screenshots, does hovering an avatar now outline the avatar rather than a piece of it or the whole row?",
+    "Is ] the way out from one avatar to the stack you expected, or would you reach for something else?",
+    "When you drag a rough box, does the live outline tell you what you will get before you let go?",
+    "Should an empty box be kept as drawn, or would you rather nothing landed?",
+    "After a Size click the tool goes back to Select, so each box needs Size picked again: is that in your way here?"
+  ],
+  "rough": [
+    "Tested on a rendered 2x people panel with known sizes (photo, pale and initials avatars, a presence dot, a four-avatar stack with a +3 pill, icon tiles, two badges, a photo in a card), not on a real Teams or Slack capture, which this machine cannot take for the loop.",
+    "Shapes are told apart from their background by brightness alone: an avatar the same brightness as the page behind it is not seen.",
+    "Avatars in a stack are read one by one because the stack draws a ring of page colour round each; a stack drawn with no ring, avatars touching, is expected to read as one piece on hover (not yet tried).",
+    "A shape bigger than 160 points from the pointer either way is left to the old reader, which measures panels and cards as before.",
+    "The bordered Save button still reads 78 by 26 against its true 80 by 28: that is the old reader's number, kept on purpose so nothing that read before moves; the new reader would say 80 by 28.",
+    "No mock covers the rough box gesture.",
+    "The hover outline matches the redline mock's highlight, as before."
+  ]
+}
