@@ -1,0 +1,35 @@
+{
+  "id": "the-menu-bar-stays-still-while-a-video-plays",
+  "title": "The menu bar stays still while a video plays",
+  "goal": "While a video plays, the menu bar at the top of the screen flickers as if its menus were being taken down and put back on every frame. It should not change at all during playback; anything in a menu that depends on where the playhead is should be worked out when the menu is opened or the command is chosen, not on every frame.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:14:51.411Z",
+  "updated": "2026-10-11T12:14:51.518Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"when a video is playing back, I am seeing the menu at the top of the screen flickering, as if something is being added and removed in the list. if i pause, no flicker\".\n\nSuspect from code reading, NOT confirmed: SwiftUI Commands bodies that READ observable state re-evaluate whenever it changes, and the menu bar is rebuilt each time. Sources/Photonz/EditorCommands.swift reads the playhead in the body, not just in actions: clickAtPlayhead (:1236), nextClickMS (:1243), clipToAddZoom(atMS: documentTimeMS) (:1248); documentTimeMS changes every frame during playback. Reads inside Button closures (:774, :925-929, :1250, :1493) are fine. 31 playhead mentions in the file; audit all of them and any other per-frame state (isDocumentPlaying transitions are fine, the time is not). Fix pattern: compute in the action, or expose coarse derived values that change only at boundaries (clip under playhead, click under playhead) with equality-gated updates. Trap: the Clicks/Zoom rows were added in 39d066d8 and the zoom rows by the zoom task; keep their behaviour.",
+  "acceptance": [
+    "Reproduce first at Next defaults: play a recording with zooms and recorded clicks and watch the menu bar (record a screen video or count menu rebuilds with a signpost or a counter on the Commands body); record in the audit how many times per second the menu bar is rebuilt while playing and while paused",
+    "MEASURED after the fix: zero menu bar rebuilds per second during steady playback (a rebuild only when something a menu shows actually changes, such as the selection), and no visible flicker in a screen recording of 10 s of playback",
+    "Menu rows whose enabled state or title depends on the playhead (Hide/Show Click at Playhead, Next Click, Add Zoom's target clip, Split Here and any others found) are correct at the moment the menu is opened and when their key is pressed; they read the playhead lazily (in the action, or through a value that only changes when it crosses a boundary such as entering or leaving a clip or a click), never in the Commands body on every frame",
+    "Playback frame timing does not get worse (MEASURED before and after over 10 s)",
+    "Keyboard shortcuts for those rows still work during playback",
+    "A walk or drill plays 10 s and fails if the menu bar is rebuilt more than a handful of times",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:14:51.413Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:14:51.516Z",
+      "note": "seq 3950 -> 2"
+    }
+  ]
+}
