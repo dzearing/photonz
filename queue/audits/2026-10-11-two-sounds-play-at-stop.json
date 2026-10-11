@@ -1,0 +1,28 @@
+{
+  "feature": "A full-screen recording with Mac sound and the microphone plays the moment you stop it",
+  "epic": "capture-clickthrough",
+  "summary": "A recording with both Mac sound and the microphone used to wait for macOS to mix them after Stop, about half as long as the recording (20 s for 45 s). The two are now mixed while you record, so Play, Copy and the corner card are ready about a tenth of a second after Stop at any length.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Recording settings with Mac sound and the microphone both on, full screen, which is how you record.",
+  "switched": {},
+  "try": [
+    { "do": "Play some music or a video with sound, then record the full screen with Mac sound and the microphone for about 45 seconds, talking now and then." },
+    { "do": "Press Stop, click the new tile in history straight away, and press Space." },
+    { "do": "Listen through: you should hear both the Mac's sound and your voice, in step with the picture." },
+    { "do": "Record a 3 second clip the same way, press Stop, and paste into a chat or a note the moment the corner card says Copied." },
+    { "do": "Record once with only Mac sound and once with only the microphone, and open each right after Stop." }
+  ],
+  "evaluate": [
+    "Does Play start the instant you press it after Stop, even on a 45 second recording?",
+    "Do your voice and the Mac's sound both come through at the same balance as your recordings before this change?",
+    "Does your voice line up with your lips or your clicks the way it did before, with no echo or drift by the end of a long recording?",
+    "Does the corner card say Copied as soon as you stop, rather than a few seconds later?"
+  ],
+  "rough": [
+    "Measured on the probe with the latency drill, full 3456 by 2234 display, both sounds: playable in the editor 60 ms after Stop for 3 s (was about 1.6 s), 46 ms for 10 s (was 4.6 s), 92 ms for 45 s (was about 20 s). One sound or none is unchanged at 25 to 49 ms. Twenty 2 s full-screen recordings in the stop-then-open walk landed 73 to 107 ms after Stop.",
+    "Sync: the Mac's sound in the finished file starts at the same moments as in macOS's own recording of it, to a tenth of a millisecond, checked with system Tink sounds played during the drill. The microphone is placed by its own timestamps, which arrive 12 ms after the sound was heard; I could not check it against a sound it heard, because the speakers were at 6% volume and the room was silent.",
+    "The microphone opens alongside the screen and is first heard about 85 ms after the recording's first frame, so the very first moment of a recording has the Mac's sound but not your voice. Speech that starts with the recording would lose its first syllable; under a tenth of a second, and noted on the task rather than filed.",
+    "If the microphone cannot be opened, or the two cannot be joined, the recording keeps the Mac's sound alone rather than failing. That case was not forced in a run.",
+    "No picture with this audit: nothing on screen changed, only how soon the recording is ready, and the walks that prove it take no window pictures.",
+    "No mock covers this surface."
+  ]
+}
