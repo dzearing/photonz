@@ -66,6 +66,14 @@ final class CaptureStore {
     @ObservationIgnored private var closing: [URL: ClosingFrame] = [:]
     /// Editors waiting for a closing recording's frame to be read.
     @ObservationIgnored private var closingWaiters: [URL: [(ClosingPicture?) -> Void]] = [:]
+    /// The newest recording to land, with the frame it ended on, for a little
+    /// while after: opening it then opens on that frame at once and takes the
+    /// file a moment later, exactly as opening it before it landed does,
+    /// rather than reading the file first (about 450 ms on a full screen
+    /// recording, measured 2026-10-10). Only the newest, since the frame is a
+    /// whole screen's worth of memory.
+    @ObservationIgnored private var justLanded: (url: URL, frame: ClosingFrame)?
+    static let heldAfterLandingSeconds: TimeInterval = 120
     /// A recording landing right now, which the history warm-up leaves to be
     /// served first rather than queueing it behind every other recording.
     @ObservationIgnored private var landingNow: URL?
@@ -150,6 +158,7 @@ final class CaptureStore {
         // closed has no file yet and keeps the one its last frame gave it.
         let live = Set(sorted.map(\.url)).union(saving.keys)
         thumbnails = thumbnails.filter { live.contains($0.key) }
+        if let held = justLanded, !live.contains(held.url) { justLanded = nil }
 
         // Drop video thumbnails whose media file changed (a save in the video
         // editor commits the trim into it), so the poster and duration
@@ -159,6 +168,9 @@ final class CaptureStore {
             if mediaStamps[entry.url] != stamp {
                 mediaStamps[entry.url] = stamp
                 thumbnails[entry.url] = nil
+                // Its file changed: the frame it ended on may not be its
+                // last any more.
+                if justLanded?.url == entry.url { justLanded = nil }
             }
         }
         mediaStamps = mediaStamps.filter { live.contains($0.key) }
@@ -303,6 +315,7 @@ final class CaptureStore {
             NSLog("Couldn't file recording: \(error)")
             reload()
         }
+        if let landed, let held = closing[entry.url], held.picture != nil { holdAfterLanding(held, at: landed.url) }
         land(entry.url, as: landed)
         if let landed, let shown = closing[entry.url]?.thumbnail { settleLastFrame(shown, landedAt: landed.url) }
         forgetClosing(entry.url)
@@ -386,7 +399,9 @@ final class CaptureStore {
 
     /// A closing recording's last frame, once it is read: right away when it
     /// has been, nil when the recording is not closing or has no frame held.
+    /// The newest recording keeps its frame for a while after it lands.
     func closingPicture(for url: URL) async -> ClosingPicture? {
+        if closing[url] == nil, let landed = justLanded, landed.url == url { return picture(of: landed.frame) }
         guard let held = closing[url] else { return nil }
         if held.read { return picture(of: held) }
         return await withCheckedContinuation { continuation in
@@ -400,6 +415,31 @@ final class CaptureStore {
         if closing[url] != nil { return url }
         let wanted = url.standardizedFileURL.resolvingSymlinksInPath().path
         return closing.keys.first { $0.standardizedFileURL.resolvingSymlinksInPath().path == wanted }
+    }
+
+    /// The URL of the recording this URL names, however it is spelled, when
+    /// the frame it ended on is in hand: one still closing, or the newest one
+    /// for a while after it landed. Opening it opens on that frame.
+    func heldRecordingURL(matching url: URL) -> URL? {
+        if let closing = closingRecordingURL(matching: url) { return closing }
+        guard let landed = justLanded else { return nil }
+        let wanted = url.standardizedFileURL.resolvingSymlinksInPath().path
+        guard landed.url == url || landed.url.standardizedFileURL.resolvingSymlinksInPath().path == wanted,
+              // Watched since, and left part way: it opens back where it was
+              // left, which is not the frame it ended on.
+              RecordingPlaceStore.shared.moment(for: landed.url,
+                                                durationMS: landed.frame.recording.standIn().durationMS) == nil
+        else { return nil }
+        return landed.url
+    }
+
+    private func holdAfterLanding(_ held: ClosingFrame, at url: URL) {
+        justLanded = (url, held)
+        let id = held.movieID
+        Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .seconds(Self.heldAfterLandingSeconds))
+            if let self, self.justLanded?.frame.movieID == id { self.justLanded = nil }
+        }
     }
 
     private func picture(of held: ClosingFrame) -> ClosingPicture? {
@@ -470,6 +510,7 @@ final class CaptureStore {
         try? FileManager.default.trashItem(at: entry.url, resultingItemURL: nil)
         trashSidecar(for: entry.url)
         thumbnails[entry.url] = nil
+        if justLanded?.url == entry.url { justLanded = nil }
         reload()
     }
 

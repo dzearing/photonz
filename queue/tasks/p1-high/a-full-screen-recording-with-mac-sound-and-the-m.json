@@ -1,0 +1,28 @@
+{
+  "id": "a-full-screen-recording-with-mac-sound-and-the-m",
+  "title": "A full-screen recording with Mac sound and the microphone plays the moment you stop it",
+  "goal": "A full-screen recording that takes sound from both the Mac and the microphone can only play once macOS finishes its file, and that takes about half as long as the recording itself (20 seconds for a 45 second recording). The window opens on the last frame at once, but Play, Copy and the corner card wait. Make it playable right away, the way a recording with one sound source already is (under 100 ms).",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 3930,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T06:40:32.403Z",
+  "updated": "2026-10-11T06:40:32.406Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Measured 2026-10-10 on the probe after the fix in a-recording-is-in-history-and-opens-the-instant: SCRecordingOutput (ScreenRecorder.swift) with captureMicrophone AND capturesAudio on a full 3456x2234 display reports recordingOutputDidFinishRecording at 1.58-1.64 s (3 s, n=10), 4.52-4.67 s (10 s, n=10), 20.0 s (45 s, n=3). Same sound on a 480x300 region: 52-85 ms. Either source alone at full screen: 22-75 ms. So the close cost scales with video size only when both audio sources are on, suggesting SCRecordingOutput rewrites the file to mix the two audio tracks. Ideas: record the mic through its own SCStreamOutput / AVAssetWriter audio track and mix later, or write the whole file with AVAssetWriter. The user records with audio=3 (both), see defaults photonz.recordingConfig.",
+  "acceptance": [
+    "A 45 s full-screen recording with Mac sound and microphone is playable in the editor within 1 s of Stop, measured with Scripts/recording-latency-drill.sh 45 --system-audio --with-microphone",
+    "The finished file still has both sounds mixed and in sync with the picture",
+    "3 s and 10 s recordings with both sources are playable within 300 ms of Stop",
+    "Recordings with one or no sound source are no slower than today (under 100 ms to land)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T06:40:32.405Z",
+      "note": "created (manual)"
+    }
+  ]
+}

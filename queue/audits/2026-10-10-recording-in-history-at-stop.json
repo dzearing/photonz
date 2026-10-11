@@ -1,0 +1,30 @@
+{
+  "feature": "A recording stays in history and opens the instant you stop it",
+  "epic": "capture-clickthrough",
+  "summary": "Stopping a recording with Mac sound and the microphone no longer drops a half-written file into history. Its tile stays, keeps its picture, and opens at once on the last frame with no message in the corner, then plays when macOS finishes the file.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Recording settings with Mac sound and the microphone both on, full screen, which is how you record.",
+  "switched": {},
+  "try": [
+    { "do": "Record the full screen with Mac sound and the microphone for about 10 seconds, then press Stop." },
+    { "do": "Watch the newest tile in history for the next five seconds: it should stay first and keep its picture.", "shot": "2026-10-10-recording-in-history-at-stop-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Record again and click the tile (or Edit on the corner card) within a second of Stop." },
+    { "do": "Press Play straight away, before the file has finished." },
+    { "do": "Wait a few seconds for it to start playing on its own.", "shot": "2026-10-10-recording-in-history-at-stop-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Record a third time, wait five seconds after Stop, then open the tile." }
+  ],
+  "evaluate": [
+    "Did the tile ever vanish, go blank or jump after Stop?",
+    "Did the corner ever say a recording could not be opened, was not there, or was still being saved?",
+    "Does the window opening on the last frame feel instant, with or without another window already open?",
+    "On a long recording, is the wait before Play actually starts acceptable, or does it need the follow-up below?"
+  ],
+  "rough": [
+    "Cause, measured: macOS takes about 0.45 s per recorded second to finish a full-screen file with both sound sources (1.6 s for 3 s, 4.6 s for 10 s, 20 s for 45 s). The recorder stopped waiting after 400 ms and filed the unfinished file, and letting go of the writer meant macOS never said it was done. That file became playable only about 11 s after Stop, so its tile went blank and opening it said it could not be opened or was still being saved. It now waits for macOS, however long that takes.",
+    "Before the fix, 3 s, 10 s and 45 s recordings with both sources were all filed unfinished ('still writing' at landing). After it: 30 drill recordings with both sources and 12 with none, plus 20 walk recordings opened at 0.2, 0.5, 1 and 2 s after Stop, all ready at landing, with no tile lost and nothing said in the corner.",
+    "Play still waits for macOS to finish: 20 s on a 45 s recording with both sound sources. The window opens at once on the last frame and remembers Play, but that is a real wait. Task a-full-screen-recording-with-mac-sound-and-the-m covers making it instant.",
+    "Opening right after Stop shows the picture in 144 to 197 ms (median) with no other window open, worst 210 ms; beside an open window the worst was 165 ms. The extra time is the app becoming a Dock app for its first window. The task asked for under 200 ms, and the worst no-window case misses that by about 10 ms.",
+    "A 'hang on tight' message is not in Photonz. The closest is 'is still being saved', which this fix removes for a recording the app is finishing.",
+    "The drill opens recordings through the same open path the tile and the card use, not with a pointer click on the tile.",
+    "No mock covers this surface."
+  ]
+}

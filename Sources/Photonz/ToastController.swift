@@ -119,6 +119,9 @@ final class ToastController {
     /// question.
     func presentNote(title: String, detail: String, symbol: String, on screen: NSScreen) {
         self.screen = screen
+        #if PHOTONZ_PLAYTEST
+        playtestNotesSaid.append(title)
+        #endif
 
         while items.count >= maxVisible, let oldest = items.last {
             remove(oldest.id, animated: false)
@@ -189,6 +192,10 @@ final class ToastController {
     }
 
     #if PHOTONZ_PLAYTEST
+    /// Every note the corner has put up this launch, oldest first, so a drill
+    /// can fail on one that came and went between its looks.
+    private(set) var playtestNotesSaid: [String] = []
+
     /// The panel of the newest toast, which is the one in the corner. Probe
     /// only: it is how a walk photographs the thing that just got said rather
     /// than whichever panel the window list happens to hand back first.

@@ -36,7 +36,7 @@ APP="$PWD/dist/Photonz Probe.app"
 Scripts/probe-app.sh --quit >/dev/null
 rm -f "$OUT"
 open -g -n "$APP" --args --recording-latency-diag "$SECONDS_ARG" "${EXTRA[@]+"${EXTRA[@]}"}"
-LIMIT=$(( ${SECONDS_ARG%.*} + 60 ))
+LIMIT=$(( ${SECONDS_ARG%.*} + 120 ))
 for ((i = 0; i < LIMIT; i++)); do
   [[ -f "$OUT" ]] && break
   sleep 1
@@ -51,10 +51,15 @@ console.log(`==> ${d.seconds} s recording, sound: ${d.audio.length ? d.audio.joi
 console.log(`    tile in history      ${f(d.stopToTileMS)} after Stop${d.tileInHistory ? "" : " (NOT in history)"}`);
 console.log(`    thumbnail shown      ${f(d.stopToThumbnailMS)}`);
 console.log(`    editor shows picture ${f(d.stopToEditorPictureMS)}`);
+console.log(`    capture stopped      ${f(d.stopCaptureReturnedMS)}`);
 console.log(`    file closed by macOS ${f(d.outputFinishedMS)}`);
 console.log(`    file landed          ${f(d.stopToFileLandedMS)}`);
+console.log(`    file playable        ${f(d.fileReadableMS)}`);
 console.log(`    editor playable      ${f(d.stopToPlayableMS)}`);
 console.log(`    duration             ${f(d.durationMS)}`);
+console.log(`    found closed by look ${f(d.closedByLookingMS)}`);
+if (d.gaveUpMS != null) console.log(`    GAVE UP waiting      ${f(d.gaveUpMS)}`);
+console.log(`    door at landing      ${d.doorAtLand} (closed before landing: ${d.closedBeforeLanding})`);
 if (!d.readyAtStop) console.log("    (next-a-recording-is-ready-at-stop is off: thumbnail and editor wait for the file)");
 console.log(d.passed ? `==> PASS: tile inside ${d.budgetMS} ms` + (d.readyAtStop ? `, thumbnail inside ${d.thumbnailBudgetMS} ms, editor picture inside ${d.editorBudgetMS} ms` : "")
                      : `!! FAIL: a reading is over its budget (tile ${d.budgetMS} ms, thumbnail ${d.thumbnailBudgetMS} ms, editor picture ${d.editorBudgetMS} ms), or the tile was not in history`);

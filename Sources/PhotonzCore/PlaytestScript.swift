@@ -988,6 +988,15 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// window as it is before the file lands. Fails unless the window opened
     /// on the recording's last frame inside `RecordingStopBudget`.
     case recordAndOpenAtStop
+    /// Make twenty real two second recordings of a corner of the screen with
+    /// sound from the Mac and the microphone into the walk's made-up history,
+    /// and open each through the app's own door at 0.2, 0.5, 1 or 2 seconds
+    /// after Stop, five of each. Fails on a tile that vanishes, moves or loses
+    /// its picture before its file lands, anything said in the corner, a
+    /// window that never shows the recording or never takes its file, and an
+    /// open from 0.5 s on that takes over 250 ms to show the picture
+    /// (`PlaytestStopThenOpen`).
+    case stopThenOpenDrill
     /// Make real recordings of a corner of the screen with the app's own
     /// floating control (timer and Stop) up, into a history folder of the
     /// walk's own, and drive the control with mouse events handed to its

@@ -18,7 +18,6 @@ final class ScreenRecorder: NSObject {
 
     private var stream: SCStream?
     private var recordingOutput: SCRecordingOutput?
-    private var finishContinuation: CheckedContinuation<Void, Never>?
     /// Hears the stream's frames only to learn when the first one was taken,
     /// which is the moment the file counts from (`PointerTracker`).
     private var firstFrame: FirstFrameClock?
@@ -47,7 +46,10 @@ final class ScreenRecorder: NSObject {
         var requested = Date()
         var stopCaptureReturned: Date?
         var outputFinished: Date?
-        var fallbackFired: Date?
+        /// The writer never said so, and the file was found finished.
+        var closedByLooking: Date?
+        /// Nothing changed for longer than closing could take.
+        var gaveUp: Date?
         var resumed: Date?
     }
     private(set) var lastStop: StopTrace?
@@ -405,49 +407,92 @@ final class ScreenRecorder: NSObject {
         self.isRecording = true
     }
 
-    /// Stop and finalize the recording, returning the written MP4 URL.
+    /// Stop and finalize the recording, returning the written MP4 URL once
+    /// macOS has finished the file, however long that takes
+    /// (`RecordingFileClose`): with sound from the Mac and the microphone
+    /// together it is about 0.45 s per recorded second. The recording lets go
+    /// of the recorder at once, so the next one can start while this file is
+    /// still closing; its stream and writer are held until it is done, since a
+    /// writer let go of mid-close never says it finished.
     @discardableResult
     func stop() async throws -> URL {
-        guard isRecording, let stream, let url = outputURL else { throw RecorderError.notRecording }
+        guard isRecording, let stream, let output = recordingOutput, let url = outputURL else {
+            throw RecorderError.notRecording
+        }
         isRecording = false
         lastStop = StopTrace()
+        let recorded = firstFrame?.seconds.map { max(0, PointerTracker.hostNow() - $0) } ?? 0
+        firstFrame?.release()
+        self.stream = nil
+        self.recordingOutput = nil
+        self.outputURL = nil
 
-        // Wait for the recording output to flush before handing back the URL, so
-        // callers can immediately read a complete file.
-        await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
-            finishContinuation = continuation
+        let key = ObjectIdentifier(output)
+        let file = ClosingFile(stream: stream, output: output, url: url, recordedSeconds: recorded)
+        closingFiles[key] = file
+        let verdict = await withCheckedContinuation { (continuation: CheckedContinuation<RecordingFileClose.Verdict, Never>) in
+            file.continuation = continuation
             Task {
                 try? await stream.stopCapture()
                 self.lastStop?.stopCaptureReturned = Date()
-                // stopCapture may return before didFinishRecording fires; if the
-                // delegate never calls back, don't hang the caller forever.
-                try? await Task.sleep(for: .milliseconds(400))
-                if self.finishContinuation != nil { self.lastStop?.fallbackFired = Date() }
-                self.resumeFinishIfNeeded()
             }
+            Task { await self.watch(key, file) }
         }
-
-        // A new recording may have started while this one was closing (the
-        // stop control goes away at Stop); leave its stream alone.
-        if self.stream === stream {
-            firstFrame?.release()
-            self.stream = nil
-            self.recordingOutput = nil
-            self.outputURL = nil
-        }
+        closingFiles[key] = nil
+        if verdict == .gaveUp { NSLog("Recording file never reported closing; handing it over as it is: \(url.path)") }
         return url
     }
 
-    /// The recording's stream died under it.
-    private func streamFailed() {
-        isRecording = false
-        resumeFinishIfNeeded()
+    /// Recordings stopped whose file macOS is still closing, by their writer.
+    private var closingFiles: [ObjectIdentifier: ClosingFile] = [:]
+
+    private final class ClosingFile {
+        let stream: SCStream
+        let output: SCRecordingOutput
+        let url: URL
+        let stoppedAt = Date()
+        var close: RecordingFileClose
+        var continuation: CheckedContinuation<RecordingFileClose.Verdict, Never>?
+
+        init(stream: SCStream, output: SCRecordingOutput, url: URL, recordedSeconds: TimeInterval) {
+            self.stream = stream
+            self.output = output
+            self.url = url
+            self.close = RecordingFileClose(recordedSeconds: recordedSeconds)
+        }
     }
 
-    private func resumeFinishIfNeeded() {
-        if finishContinuation != nil { lastStop?.resumed = Date() }
-        finishContinuation?.resume()
-        finishContinuation = nil
+    /// Looks at a closing file now and then, in case the writer's word that it
+    /// is done never comes.
+    private func watch(_ key: ObjectIdentifier, _ file: ClosingFile) async {
+        while file.continuation != nil {
+            try? await Task.sleep(for: .seconds(RecordingFileClose.lookInterval))
+            guard file.continuation != nil else { return }
+            let facts = await RecordingFileReader.facts(for: file.url, sampleGrowth: false)
+            file.close.looked(at: facts, after: Date().timeIntervalSince(file.stoppedAt))
+            settle(file)
+        }
+    }
+
+    /// Hand the file back once there is a verdict on it.
+    private func settle(_ file: ClosingFile) {
+        guard let verdict = file.close.verdict, let continuation = file.continuation else { return }
+        file.continuation = nil
+        switch verdict {
+        case .finished: if lastStop?.outputFinished == nil { lastStop?.closedByLooking = Date() }
+        case .gaveUp: lastStop?.gaveUp = Date()
+        case .failed: break
+        }
+        lastStop?.resumed = Date()
+        continuation.resume(returning: verdict)
+    }
+
+    /// The recording's stream died under it. A stream dying after Stop is
+    /// one whose file is closing, and its writer or a look at the file says
+    /// how that went.
+    private func streamFailed(_ stopped: ObjectIdentifier) {
+        guard let stream, ObjectIdentifier(stream) == stopped else { return }
+        isRecording = false
     }
 }
 
@@ -463,7 +508,7 @@ extension ScreenRecorder: SCStreamDelegate {
                 self.warm = nil
                 return
             }
-            self.streamFailed()
+            self.streamFailed(stopped)
         }
     }
 }
@@ -472,9 +517,12 @@ extension ScreenRecorder: SCStreamDelegate {
 
 extension ScreenRecorder: SCRecordingOutputDelegate {
     nonisolated func recordingOutput(_ recordingOutput: SCRecordingOutput, didFailWithError error: Error) {
+        let key = ObjectIdentifier(recordingOutput)
         Task { @MainActor in
             NSLog("Recording output failed: \(error)")
-            self.resumeFinishIfNeeded()
+            guard let file = self.closingFiles[key] else { return }
+            file.close.writerFailed()
+            self.settle(file)
         }
     }
 
@@ -490,9 +538,12 @@ extension ScreenRecorder: SCRecordingOutputDelegate {
     }
 
     nonisolated func recordingOutputDidFinishRecording(_ recordingOutput: SCRecordingOutput) {
+        let key = ObjectIdentifier(recordingOutput)
         Task { @MainActor in
-            self.lastStop?.outputFinished = Date()
-            self.resumeFinishIfNeeded()
+            guard let file = self.closingFiles[key] else { return }
+            if file.continuation != nil { self.lastStop?.outputFinished = Date() }
+            file.close.writerFinished()
+            self.settle(file)
         }
     }
 }

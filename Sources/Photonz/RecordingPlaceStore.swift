@@ -92,14 +92,16 @@ final class RecordingPlaceStore {
 /// second size sample is only ever taken when the length could not be read, so
 /// opening a recording that plays never waits for it.
 enum RecordingFileReader {
-    static func facts(for url: URL) async -> RecordingFileFacts {
+    /// `sampleGrowth: false` takes one look only, for a caller that keeps
+    /// looking anyway (`RecordingFileClose`).
+    static func facts(for url: URL, sampleGrowth: Bool = true) async -> RecordingFileFacts {
         let manager = FileManager.default
         guard manager.fileExists(atPath: url.path) else {
             return RecordingFileFacts(exists: false)
         }
         let size = byteCount(of: url)
         let durationMS = await durationMS(of: url)
-        guard durationMS == nil || durationMS == 0 else {
+        guard sampleGrowth, durationMS == nil || durationMS == 0 else {
             return RecordingFileFacts(exists: true, byteCount: size, durationMS: durationMS)
         }
         // Nothing playable yet. Is the file still landing? One more look, a

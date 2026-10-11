@@ -3872,6 +3872,14 @@ private final class Run {
                             subject: "a recording opened the moment it was stopped", number: number)
             note(number, step.name, landed.summary, state: describe())
 
+        case .action(.stopThenOpenDrill):
+            do {
+                note(number, step.name, try await PlaytestStopThenOpen.run(coordinator: coordinator),
+                     state: describe())
+            } catch let failure as PlaytestStopThenOpen.Failure {
+                throw Failure(description: failure.description)
+            }
+
         case .action(.expectRecordingLandedInPlace):
             do {
                 note(number, step.name, try await PlaytestOpenAtStop.expectLandedInPlace(), state: describe())
@@ -6811,7 +6819,7 @@ private final class Run {
                  .hotkeyCaptureFullScreen, .hotkeyCaptureRegion, .hotkeyRecord,
                  .hotkeyEditLastCapture, .showCaptureToast, .beginHeldSave, .finishHeldSave,
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
-                 .recordingControlDrill:
+                 .recordingControlDrill, .stopThenOpenDrill:
                 break  // handled above, in the branch that asks for a recording
             case .clipSplit, .clipDeletePiece, .clipHoldFrame,
                  .clipSpeedDouble, .clipSpeedHalf,

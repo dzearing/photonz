@@ -48,6 +48,7 @@ final class AppCoordinator {
     #if PHOTONZ_PLAYTEST
     /// What the bottom-right corner is saying right now, for `expectToast`.
     var playtestToastLines: [String] { toasts.playtestLines }
+    var playtestNotesSaid: [String] { toasts.playtestNotesSaid }
     /// The panel of the newest toast, so a `snapshot` of "Toast" photographs
     /// the thing that just got said.
     var newestToastPanel: NSWindow? { toasts.newestPanel }
@@ -312,6 +313,15 @@ final class AppCoordinator {
     /// opens itself when it finishes. Without the check, all three of those
     /// opened a window that never became anything.
     func openRecording(_ url: URL) {
+        // The frame it ended on is in hand (stopped a moment ago, its file
+        // still closing or just landed): the window opens now on that frame
+        // and takes the file as soon as it is there, with nothing to read
+        // first (`EditorState+ClosingRecording`).
+        if Experiments.shared.recordingReadyAtStop, openWindowAction != nil,
+           let held = capture.store.heldRecordingURL(matching: url) {
+            openWindow(.video(standardizing: held))
+            return
+        }
         // Stopped a moment ago and macOS is still closing the file: open it
         // the moment it lands rather than finding nothing there.
         if capture.store.isSaving(url) {

@@ -109,6 +109,13 @@ enum RecordingLatencyDiag {
         }
         await coordinator.stop()
         let landed = Date()
+        // What the door makes of the file the moment it lands: anything but
+        // ready is a file handed over before macOS finished closing it.
+        if let entry = tileEntry {
+            let facts = await RecordingFileReader.facts(for: entry.url)
+            out["doorAtLand"] = "\(RecordingDoor.state(of: facts))"
+            out["closedBeforeLanding"] = coordinator.lastStopTrace?.outputFinished.map { $0 <= landed } ?? false
+        }
         let watchDeadline = Date().addingTimeInterval(10)
         while Date() < watchDeadline, thumbnailAt == nil || pictureAt == nil || playableAt == nil {
             try? await Task.sleep(for: .milliseconds(5))
@@ -120,9 +127,25 @@ enum RecordingLatencyDiag {
         guard let tile, let entry = tileEntry else { out["error"] = "no tile was put up"; return }
         inHistoryAtTile = store.entries.contains { $0.url == entry.url }
 
+        // macOS can take many seconds to close a recording with sound: wait
+        // for it to say so, so the reading is when it did, not "never".
+        let closeDeadline = Date().addingTimeInterval(60)
+        var readableAt: Date?
+        while Date() < closeDeadline,
+              coordinator.lastStopTrace?.outputFinished == nil
+                && coordinator.lastStopTrace?.closedByLooking == nil || readableAt == nil {
+            if readableAt == nil, let entry = tileEntry,
+               RecordingDoor.state(of: await RecordingFileReader.facts(for: entry.url)) == .ready {
+                readableAt = Date()
+            }
+            try? await Task.sleep(for: .milliseconds(20))
+        }
+        out["fileReadableMS"] = ms(stop, readableAt)
         let trace = coordinator.lastStopTrace
+        out["stopCaptureReturnedMS"] = trace.flatMap { ms(stop, $0.stopCaptureReturned) }
         out["outputFinishedMS"] = trace.flatMap { ms(stop, $0.outputFinished) }
-        out["fallbackFiredMS"] = trace.flatMap { ms(stop, $0.fallbackFired) }
+        out["closedByLookingMS"] = trace.flatMap { ms(stop, $0.closedByLooking) }
+        out["gaveUpMS"] = trace.flatMap { ms(stop, $0.gaveUp) }
         out["stopToTileMS"] = ms(stop, tile)
         out["stopToFileLandedMS"] = ms(stop, landed)
         out["tileInHistory"] = inHistoryAtTile

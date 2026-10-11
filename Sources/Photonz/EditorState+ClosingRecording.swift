@@ -18,7 +18,7 @@ extension EditorState {
     /// ended on. False when there is no such frame held for it, and the
     /// caller opens it the ordinary way.
     func openClosingRecording(at url: URL, from store: CaptureStore) -> Bool {
-        guard let reserved = store.closingRecordingURL(matching: url) else { return false }
+        guard let reserved = store.heldRecordingURL(matching: url) else { return false }
         Task { @MainActor [weak self] in
             guard let picture = await store.closingPicture(for: reserved) else {
                 // The frame could not be read: wait for the file instead, the
