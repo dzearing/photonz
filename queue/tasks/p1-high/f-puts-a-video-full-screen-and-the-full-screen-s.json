@@ -1,0 +1,36 @@
+{
+  "id": "f-puts-a-video-full-screen-and-the-full-screen-s",
+  "title": "F puts a video full screen, and the full screen shortcut it lists works",
+  "goal": "Watching a video, pressing F should fill the screen with it (and F or Escape bring it back), the way video players work, instead of switching to the editor. The Full Screen button's tooltip names a shortcut, Control Command F, that does nothing today; it should work everywhere, and the tooltip should name F.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:16:15.429Z",
+  "updated": "2026-10-11T12:16:15.526Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words: \"the video's fullscreen feature lists ctrl-cmd-f as the shortcut but that does not work. and it's a bad shortcut. i expected 'f' to just fullscreen it but it puts it into edit mode\".\n\nFrom code reading (not run): the watch view's Full Screen transport button calls hostWindow?.toggleFullScreen and advertises .panelHelp(\"Full screen (⌃⌘F)\") (TimelineDock.swift:1457-1467, only while editorState.isWatching). No menu row carries ⌃⌘F or toggleFullScreen (no 'Enter Full Screen' in EditorCommands.swift or the app's commands; the pro menu bar rearrangement likely dropped the system item), so the shortcut does nothing. F is the Frame tool's key (PhotonzCore/Tools.swift:106); picking a tool from the watch view brings the editor in. K is the Lens tool (Tools.swift:96). Double click on the canvas already toggles full screen (CanvasPointerDrags.swift:36). Memory rule: default to Photoshop's keys; that is why the editor question goes to a card, not a silent remap.",
+  "acceptance": [
+    "Reproduce first at Next defaults: open a recording in the watch view, press F, press Control Command F, use the transport's Full Screen button; record what each does in the audit",
+    "In the watch view, F toggles full screen for that window (picture, transport and nothing else, as the button does today); Escape also leaves full screen; F does NOT switch to the editor or pick a tool there",
+    "View > Enter Full Screen / Exit Full Screen exists in the menu bar with Control Command F (the macOS standard), in both the watch view and the editor, for image and video documents, and works",
+    "The transport button's tooltip says Full Screen (F)",
+    "In the editor, F stays the Frame tool. If the person should get F for full screen there too (Photoshop's F cycles screen modes, and its Frame tool is K, which Photonz uses for Lens), raise it as a decision card with the key moves spelled out in the option labels rather than deciding it here",
+    "Entering and leaving full screen keeps the playhead and play state; during full screen playback the menu bar and controls hide and show the way QuickTime's do",
+    "A walk opens a recording to watch, presses F, checks the window is full screen and still playing, presses Escape, checks it is back",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:16:15.431Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:16:15.525Z",
+      "note": "seq 3950 -> 3"
+    }
+  ]
+}
