@@ -1,5 +1,6 @@
 import Foundation
 import PhotonzCore
+import PhotonzRender
 
 // What the captions mock draws round the captions rather than in them
 // (`CaptionGuides.swift`, `docs/design/mocks/pages/video-captions.html`): the
@@ -41,6 +42,26 @@ extension EditorState {
         _ = captionSettingsTick
         guard isCaptioningOnScreen else { return nil }
         return CaptionBadge.text(language: Self.captionsLanguage)
+    }
+
+    /// Where each lower third's plate is drawn at this moment, in document
+    /// points, and the words on it: what the Lower-third tag rides
+    /// (`LowerThirdTag`), set in the words' own face as the mock's tag is.
+    /// Empty unless a Captions layer wears the Lower third look and one of
+    /// its captions is on screen.
+    var lowerThirdPlates: [(plate: CGRect, text: TextContent)] {
+        _ = captionSettingsTick
+        guard isCaptioningOnScreen, let shown = canvasGeometryDocument else { return [] }
+        var plates: [(plate: CGRect, text: TextContent)] = []
+        for captions in shown.captionsLayers
+        where captions.isVisible && LowerThirdTag.isWorn(by: captions.captionsLook) {
+            for cue in captions.children where cue.isVisible {
+                guard let placed = shown.canvasLayer(id: cue.id), case .text(let text) = placed.content,
+                      let plate = TextRasterizer.plateRect(text, size: placed.frame.size) else { continue }
+                plates.append((plate.offsetBy(dx: placed.frame.minX, dy: placed.frame.minY), text))
+            }
+        }
+        return plates
     }
 
     // MARK: - Reset

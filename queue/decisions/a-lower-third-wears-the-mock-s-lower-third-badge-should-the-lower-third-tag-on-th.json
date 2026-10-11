@@ -1,0 +1,67 @@
+{
+  "id": "a-lower-third-wears-the-mock-s-lower-third-badge-should-the-lower-third-tag-on-th",
+  "taskId": "a-lower-third-wears-the-mock-s-lower-third-badge",
+  "question": "Should the Lower-third tag on the captions wear the mock's four-diamond icon?",
+  "context": "The captions mock puts a small violet Lower-third tag with the component icon on the top left of the lower third plate. The app already uses a violet chip with that icon on the canvas to mean this is a component. The tag is built and shipping without the icon until you choose.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Diamond icon, as the mock",
+      "summary": "The tag reads Lower-third with the four-diamond icon in front, exactly as the captions mock draws it.",
+      "pros": [
+        "Matches the mock to the pixel"
+      ],
+      "cons": [
+        "That violet chip with the four diamonds is the same chip the canvas puts on every component, so it tells people their captions are a component they can edit as one, which they are not"
+      ],
+      "mitigation": "Only shows while the timeline is open and the Lower third style is picked, so it is rare next to a real component."
+    },
+    {
+      "id": "b",
+      "label": "Label only, as built now",
+      "summary": "The tag reads Lower-third on the violet chip with no icon. This is what the app shows today.",
+      "pros": [
+        "Says exactly what the style is and nothing more",
+        "Never mistaken for a component chip"
+      ],
+      "cons": [
+        "One step away from the mock: no icon"
+      ],
+      "mitigation": "The tag keeps the mock spot, colour, size and words."
+    },
+    {
+      "id": "c",
+      "label": "Captions icon instead",
+      "summary": "The tag reads Lower-third with the small speech-bubble captions icon the Words track already wears.",
+      "pros": [
+        "Keeps the mock icon-and-label shape",
+        "The icon says captions, which is true"
+      ],
+      "cons": [
+        "Not the mock icon",
+        "One more icon on a small tag"
+      ],
+      "mitigation": "Uses the icon the captions track already shows, so nothing new to learn."
+    },
+    {
+      "id": "d",
+      "label": "No tag at all",
+      "summary": "Take the tag away. The violet plate low on the left is the only sign of the style.",
+      "pros": [
+        "A cleaner picture"
+      ],
+      "cons": [
+        "Below the mock"
+      ],
+      "mitigation": "The style stays named in the Caption style tiles in the panel.",
+      "declines": true
+    }
+  ],
+  "recommended": "b",
+  "status": "withdrawn",
+  "created": "2026-10-11T12:24:42.032Z",
+  "withdrawn": {
+    "reason": "reopened with option d no longer retiring the task: the tag is already built, so no tag means removing it",
+    "at": "2026-10-11T12:24:53.565Z"
+  }
+}

@@ -49,6 +49,30 @@ public enum CaptionBadge {
     }
 }
 
+/// **Lower-third**: the small tag on the top left edge of a lower third's
+/// plate (`.l3badge` in the mock), so the style reads at a glance. Canvas
+/// chrome sized in screen points, like the mock's 8.5px tag: it never grows
+/// with the zoom and is never drawn into the film.
+public enum LowerThirdTag {
+
+    public static let label = "Lower-third"
+
+    /// How far the tag's top sits above the plate's top, in screen points
+    /// (`top:-11px`), so it rides the plate's edge rather than covering words.
+    public static let lift: CGFloat = 11
+
+    /// Only a Captions layer in the Lower third look wears the tag.
+    public static func isWorn(by look: CaptionLook?) -> Bool {
+        look?.sitsLowLeft == true
+    }
+
+    /// The tag's top left corner for a plate drawn at `plate`, both in screen
+    /// points: on the plate's left edge, lifted by `lift`.
+    public static func origin(onPlate plate: CGRect) -> CGPoint {
+        CGPoint(x: plate.minX, y: plate.minY - lift)
+    }
+}
+
 /// **Caption track**: the bar over the Captions track, with its words and
 /// readouts (`.tlbar` in the mock).
 public enum CaptionTrackBar {

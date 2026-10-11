@@ -115,4 +115,26 @@ struct CaptionGuidesTests {
         document.resetCaptions(UUID())
         #expect(document == before)
     }
+
+    // MARK: - The Lower-third tag
+
+    @Test func theLowerThirdTagSaysWhatTheMockSays() {
+        #expect(LowerThirdTag.label == "Lower-third")
+        #expect(LowerThirdTag.label.count <= 30, "chrome is a label, never a sentence")
+    }
+
+    @Test func onlyTheLowerThirdLookWearsTheTag() {
+        #expect(LowerThirdTag.isWorn(by: .preset(.lowerThird)))
+        for preset in CaptionLook.Preset.allCases where preset != .lowerThird {
+            #expect(!LowerThirdTag.isWorn(by: .preset(preset)), "\(preset.title) wears no tag")
+        }
+        #expect(!LowerThirdTag.isWorn(by: nil))
+    }
+
+    @Test func theTagRidesThePlateTopLeftEleven() {
+        // `.l3badge{top:-11px;left:0}`: on the plate's left edge, its top
+        // eleven points above the plate's, whatever the zoom.
+        let plate = CGRect(x: 120, y: 400, width: 300, height: 40)
+        #expect(LowerThirdTag.origin(onPlate: plate) == CGPoint(x: 120, y: 389))
+    }
 }

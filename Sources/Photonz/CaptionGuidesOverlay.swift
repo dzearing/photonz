@@ -1,16 +1,19 @@
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
-/// The title-safe and action-safe guides over the picture, and the AUTO · EN
-/// badge at its top, as the captions mock draws them (`.vc-safe` and
-/// `.autoflag` in `pages/video-captions.html`, `CaptionGuides.swift`). Drawn
-/// over the canvas, never into the film, and never in the way of a click.
+/// The title-safe and action-safe guides over the picture, the AUTO · EN
+/// badge at its top, and the Lower-third tag on a lower third's plate, as the
+/// captions mock draws them (`.vc-safe`, `.autoflag` and `.l3badge` in
+/// `pages/video-captions.html`, `CaptionGuides.swift`). Drawn over the canvas,
+/// never into the film, and never in the way of a click.
 struct CaptionGuidesOverlay: View {
     @Environment(EditorState.self) private var editorState
 
     var body: some View {
+        let plates = editorState.lowerThirdPlates
         if let viewport = editorState.viewport, let size = editorState.document?.canvasSize,
-           editorState.showsSafeAreaGuides || editorState.captionBadge != nil {
+           editorState.showsSafeAreaGuides || editorState.captionBadge != nil || !plates.isEmpty {
             let corner = viewport.viewPoint(fromDocument: .zero)
             let picture = CGRect(origin: corner, size: CGSize(width: size.width * viewport.zoom,
                                                               height: size.height * viewport.zoom))
@@ -29,6 +32,14 @@ struct CaptionGuidesOverlay: View {
                     Self.badge(badge)
                         .frame(width: picture.width)
                         .offset(x: picture.minX, y: picture.minY + 10)
+                }
+                ForEach(Array(plates.enumerated()), id: \.offset) { _, shown in
+                    let plate = shown.plate
+                    let corner = LowerThirdTag.origin(onPlate: CGRect(
+                        origin: viewport.viewPoint(fromDocument: plate.origin),
+                        size: CGSize(width: plate.width * viewport.zoom, height: plate.height * viewport.zoom)))
+                    Self.lowerThirdTag(face: shown.text)
+                        .offset(x: corner.x, y: corner.y)
                 }
             }
             .animation(.easeInOut(duration: 0.18), value: editorState.showsSafeAreaGuides)
@@ -58,6 +69,25 @@ struct CaptionGuidesOverlay: View {
                     .padding(guide == .title ? .bottom : .top, 3)
             }
             .playtestField(guide.label)
+    }
+
+    /// Lower-third: a small violet tag on the plate's top left edge, in the
+    /// caption's own face as the mock's tag inherits it. The violet is the
+    /// fixed one the canvas spends on components, not the dark theme's lighter
+    /// tint, so the white label reads over any picture.
+    private static func lowerThirdTag(face caption: TextContent) -> some View {
+        var face = caption
+        face.fontSize = 8.5
+        face.weight = .semibold
+        return Text(LowerThirdTag.label)
+            .font(Font(TextRasterizer.font(for: face)))
+            .foregroundStyle(.white)
+            .lineLimit(1)
+            .fixedSize()
+            .padding(.horizontal, 7)
+            .padding(.vertical, 2)
+            .background(RoundedRectangle(cornerRadius: 6).fill(ComponentGlyph.color))
+            .playtestField(LowerThirdTag.label)
     }
 
     /// AUTO · EN: a small gradient pill, centred at the top of the picture.

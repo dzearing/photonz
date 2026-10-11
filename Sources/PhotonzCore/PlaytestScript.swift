@@ -1308,6 +1308,10 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// picture and the Caption track bar reads a word being said;
     /// `captionsExpectNoGuides` wants the guides gone and the badge still up.
     case captionsExpectGuides, captionsExpectNoGuides
+    /// Fail unless the Lower-third tag rides the top left corner of a lower
+    /// third's plate on the canvas; `captionsExpectNoLowerThirdTag` wants it
+    /// gone, as it is under any other style.
+    case captionsExpectLowerThirdTag, captionsExpectNoLowerThirdTag
     /// Fail unless the Captions layer wears the standard look in the box a
     /// fresh one lands in: what the Caption track bar's Reset does.
     case captionsExpectReset
@@ -1593,6 +1597,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsStyleCaption, .captionsStyleLowerThird, .captionsStyleKaraoke,
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
+             .captionsExpectLowerThirdTag, .captionsExpectNoLowerThirdTag,
              .captionsExpectFootApart,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsNoteDrawn, .captionsExpectDrawnChanged,

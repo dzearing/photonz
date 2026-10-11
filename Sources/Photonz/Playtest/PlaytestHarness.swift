@@ -4704,6 +4704,28 @@ private final class Run {
                      + "active word \(word ?? "none"), "
                      + CaptionTrackBar.time(atMS: editor.documentTimeMS, ofMS: editor.documentLengthMS),
                      state: describe())
+            case .captionsExpectLowerThirdTag, .captionsExpectNoLowerThirdTag:
+                // The tag rides the plate the canvas draws, which only the
+                // rasterizer knows: its top left corner, read back off the
+                // words on screen at the playhead.
+                let plates = editor.lowerThirdPlates.map(\.plate)
+                if action == .captionsExpectNoLowerThirdTag {
+                    guard plates.isEmpty else {
+                        throw Failure(description: "the Lower-third tag is still on \(plates.count) plate(s)")
+                    }
+                    note(number, step.name, "captions: no Lower-third tag", state: describe())
+                } else {
+                    guard let plate = plates.first, let box = editor.captionsLayerInFocus?.frame else {
+                        throw Failure(description: "no Lower-third tag: no lower third plate is on screen")
+                    }
+                    guard abs(plate.minX - box.minX) < 2, plate.minY > box.minY - 1,
+                          plate.maxY < box.maxY + 1 else {
+                        throw Failure(description: "the Lower-third tag rides a plate at \(plate), "
+                                      + "not on the left of the Captions box \(box)")
+                    }
+                    note(number, step.name, "captions: Lower-third tag on the plate's top left at "
+                         + "(\(Int(plate.minX)), \(Int(plate.minY))) in the picture", state: describe())
+                }
             case .captionsExpectReset:
                 guard let document = editor.document, let layer = editor.captionsLayerInFocus else {
                     throw Failure(description: "there is no Captions layer to have been reset")
@@ -6089,6 +6111,7 @@ private final class Run {
                  .captionsExpectOneLayerPicked, .captionsExpectMovedTogether,
                  .captionsExpectLitWord, .captionsExportFiles,
                  .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
+                 .captionsExpectLowerThirdTag, .captionsExpectNoLowerThirdTag,
                  .captionsExpectFootApart,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
                  .captionsNoteDrawn, .captionsExpectDrawnChanged,

@@ -1,0 +1,25 @@
+{
+  "feature": "The Lower-third tag on a lower third's plate",
+  "epic": "video-audio",
+  "summary": "Pick the Lower third caption style and a small violet Lower-third tag now rides the top left edge of the caption plate while you edit, as the captions mock draws it. It never goes into the exported film and leaves when you pick another style.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/lower-third-sits-low-left-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording with speech and choose Write Captions with the timeline open." },
+    { "do": "In the Caption style tiles, click Lower third.", "shot": "2026-10-11-lower-third-tag-1-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the top left corner of the violet plate: the Lower-third tag sits on its edge.", "shot": "2026-10-11-lower-third-tag-close.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Zoom the canvas in and out: the tag stays on the plate's corner at the same small size." },
+    { "do": "Export the film and look at a frame with a caption: no tag.", "shot": "2026-10-11-lower-third-tag-export-frame.png" },
+    { "do": "Click the Caption tile: the captions move back to the centre and the tag is gone." }
+  ],
+  "evaluate": [
+    "Does the tag help you see at a glance that the captions are a lower third, or is it clutter on the picture?",
+    "Is the tag readable at its small size over your own recordings?",
+    "Should it wear an icon? (the card on this task asks which one)"
+  ],
+  "rough": [
+    "The mock's four-diamond component icon is left off the tag, because the canvas already uses a violet chip with that icon to mean a component: decision a-lower-third-wears-the-mock-s-lower-third-badge-which-icon-should-the-lower-thir.",
+    "In dark mode the mock paints the tag in its lighter violet; the app keeps the fixed component violet in both modes so the white label stays readable over any picture (the legibility rule, your call on 2026-09-30).",
+    "The tag follows the plate the whole line will have, so in a style that holds words back until they are said it sits where the plate's corner lands, not where the half drawn plate is."
+  ]
+}

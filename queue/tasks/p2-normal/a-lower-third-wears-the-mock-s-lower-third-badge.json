@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T05:57:27.788Z",
-  "updated": "2026-10-10T12:15:16.009Z",
+  "updated": "2026-10-11T12:32:47.229Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html .l3badge (line ~39, ~477): top:-11px left:0 of the plate, var(--comp) fill, 8.5px 640 weight, ic-component icon. The app plate hugs the words inside the Captions box (TextRasterizer.drawPlate), so the tag needs the plate rect, not the box. Chrome overlay like the AUTO · EN badge (CaptionGuides.swift CaptionBadge). Found by the-lower-third-caption-style-sits-low-left-on-i.",
@@ -26,6 +26,30 @@
     {
       "t": "2026-10-10T12:15:16.008Z",
       "note": "seq 3980 -> 20"
+    },
+    {
+      "t": "2026-10-11T11:56:31.526Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T11:58:34.834Z",
+      "note": "review before building: the tag is canvas chrome (like AUTO · EN), sized in screen points not picture points as the mock's 8.5px tag is, riding the plate's top left at -11px. It needs the plate's rect, which only the text rasterizer knows (plate hugs the words, not the box), so the rasterizer gets a public plateRect that shares drawPlate's union. Risk found: the app already draws a violet chip with the component glyph on the canvas for every component instance (CanvasComponents.swift, ComponentPaint violet). The mock's tag is that exact chip, so wearing the glyph would tell a person their captions are a component, which they are not. Building the tag with the label only and asking the user about the glyph on a card (acceptance 3). Premiere/FCP check: neither labels a caption style on the canvas; this is a chrome hint like the safe-area slabs, gone in the film."
+    },
+    {
+      "t": "2026-10-11T12:24:53.600Z",
+      "note": "the question \"Should the Lower-third tag on the captions wear the mock's four-diamond icon?\" was taken down without an answer: reopened with option d no longer retiring the task: the tag is already built, so no tag means removing it. Nobody chose anything, so nothing here was decided."
+    },
+    {
+      "t": "2026-10-11T12:32:41.141Z",
+      "note": "owns these walks: lower-third-sits-low-left-walk"
+    },
+    {
+      "t": "2026-10-11T12:32:47.228Z",
+      "note": "built: TextRasterizer.plateRect (shares drawPlate's union via plateBounds), LowerThirdTag in CaptionGuides.swift, EditorState.lowerThirdPlates, tag drawn in CaptionGuidesOverlay in the caption's own face at 8.5pt semibold on the fixed component violet. Walk lower-third-sits-low-left-walk gains captionsExpectLowerThirdTag / captionsExpectNoLowerThirdTag, ok at Next defaults with real captures; captions-panel-keeps-its-margins and captions-write-themselves walks ok. Exported frame at 4.31s checked: no tag. Icon held back for decision card. Left rough (not filed, agent-only): the walk 'render' step draws the untimed document, so with captions every cue stacks on one picture; use a frame from the exported film instead. Audit rough line 3 (tag follows the whole line's plate) stays here: the lower third look shows the whole line at once by default."
     }
+  ],
+  "started": "2026-10-11T11:56:31.525Z",
+  "walks": [
+    "lower-third-sits-low-left-walk"
   ]
 }
