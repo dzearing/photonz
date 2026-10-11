@@ -278,10 +278,50 @@ struct TitlePartInspector: View {
                 if Self.hasDirection(build.kind) {
                     direction(build.direction, row: name) { direction in edit { $0?.direction = direction } }
                 }
+                // Words can come in a piece at a time.
+                if arriving, inHandIsText, Self.goesByPiece(build.kind) {
+                    pieces(build, id: id, edit: edit)
+                }
                 if arriving {
                     CurveRow(current: build.curve, help: "How this part moves on its way in.", row: "Part In Curve") {
                         curve in edit { $0?.curve = curve }
                     }
+                }
+            }
+        }
+    }
+
+    /// Whether the picked part is words, which can come in a piece at a time.
+    private var inHandIsText: Bool { editorState.titlePartInHand?.piece.text != nil }
+
+    /// Whether a kind of in can bring words in by line, word or letter.
+    static func goesByPiece(_ kind: TitleBuildKind) -> Bool {
+        switch kind {
+        case .fade, .rise, .blurIn, .maskReveal, .trackIn, .typewriter: true
+        case .scaleFrom, .wipe, .springPop, .drawOn, .frost: false
+        }
+    }
+
+    static let staggers = [20, 30, 40, 50, 60, 80, 100, 120, 150, 200]
+
+    /// By (Whole, Line, Word, Letter) and, once it goes by a piece, how far
+    /// apart the pieces start.
+    private func pieces(_ build: TitleBuild, id: UUID,
+                        edit: @escaping (@escaping (inout TitleBuild?) -> Void) -> Void) -> some View {
+        let unit = build.unit ?? build.kind.defaultUnit
+        return VStack(alignment: .leading, spacing: 6) {
+            VideoKit.DropdownRow(
+                label: "By", value: unit.title,
+                choices: .picking(TextRevealUnit.allCases, current: unit, title: \.title) { picked in
+                    edit { $0?.unit = picked }
+                })
+            .panelReadout(unit.title)
+            .playtestField("Part In By")
+            .panelHelp("Whether the words come in whole, or a line, word or letter at a time.")
+            if unit != .whole {
+                let stagger = build.staggerMS ?? (build.kind == .typewriter ? 50 : unit.defaultStaggerMS)
+                msField("Stagger", stagger, stops: Self.staggers, id: id, row: "In") { ms in
+                    edit { $0?.staggerMS = max(0, ms) }
                 }
             }
         }
@@ -299,6 +339,11 @@ struct TitlePartInspector: View {
             ? TitleBuild(kind, delayMS: was?.delayMS ?? 0, lengthMS: was?.lengthMS ?? 600)
             : TitleBuild.off(kind, delayMS: was?.delayMS ?? 0, lengthMS: was?.lengthMS ?? 250)
         fresh.direction = was?.direction ?? (kind == .wipe || kind == .drawOn ? .right : .up)
+        // Words that came in a piece at a time keep coming in by that piece.
+        if arriving, goesByPiece(kind), let was, goesByPiece(was.kind) {
+            fresh.unit = was.unit
+            fresh.staggerMS = was.staggerMS
+        }
         current = fresh
     }
 
@@ -311,13 +356,13 @@ struct TitlePartInspector: View {
                 choices: .picking(TitleHoldKind.allCases, current: hold.kind, title: Self.title) { kind in
                     editorState.editTitlePart(replaying: false) { part in
                         part.hold.kind = kind
-                        if part.hold.amount == 0 { part.hold.amount = kind == .drift ? 16 : 3 }
+                        if part.hold.amount == 0, kind != .blink { part.hold.amount = kind == .drift ? 16 : 3 }
                     }
                 })
             .panelReadout(Self.title(hold.kind))
             .playtestField("Part Hold")
             .panelHelp("What this part does while the title is up.")
-            if hold.kind != .none {
+            if hold.kind != .none, hold.kind != .blink {
                 let amount = hold.kind == .drift ? Amount.distance : Amount.grow
                 amountField(amount, hold.amount, id: id, row: "Hold") { value in
                     editorState.editTitlePart(replaying: false) { $0.hold.amount = value }
@@ -336,13 +381,14 @@ struct TitlePartInspector: View {
         case .none: "None"
         case .drift: "Drift"
         case .push: "Push"
+        case .blink: "Blink"
         }
     }
 
     // MARK: Knobs
 
     enum Amount {
-        case distance, blur, scale, grow
+        case distance, blur, scale, grow, spread
 
         var label: String {
             switch self {
@@ -350,13 +396,14 @@ struct TitlePartInspector: View {
             case .blur: "Blur"
             case .scale: "Scale"
             case .grow: "Grow"
+            case .spread: "Spread"
             }
         }
 
         var suffix: String {
             switch self {
             case .distance, .blur: DocumentUnit.word
-            case .scale, .grow: "%"
+            case .scale, .grow, .spread: "%"
             }
         }
     }
@@ -366,12 +413,21 @@ struct TitlePartInspector: View {
         case .rise: .distance
         case .blurIn: .blur
         case .scaleFrom, .springPop: .scale
-        case .fade, .wipe, .drawOn, .frost: nil
+        case .trackIn: .spread
+        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter: nil
         }
     }
 
     static func hasDirection(_ kind: TitleBuildKind) -> Bool {
-        kind == .rise || kind == .wipe || kind == .drawOn
+        kind == .rise || kind == .wipe || kind == .drawOn || kind == .maskReveal
+    }
+
+    static func help(forTime label: String) -> String {
+        switch label {
+        case "Length": "How long it takes."
+        case "Stagger": "How long after one piece starts the next one does."
+        default: "How long after the title starts, or before it ends."
+        }
     }
 
     private func msField(_ label: String, _ ms: Int, stops: [Int], id: UUID, row: String,
@@ -385,7 +441,7 @@ struct TitlePartInspector: View {
             floor: 0,
             ceiling: 5_000,
             wholeNumbers: true,
-            help: label == "Length" ? "How long it takes." : "How long after the title starts, or before it ends.",
+            help: Self.help(forTime: label),
             look: .well,
             presets: .init(label: label, value: "\(ms) ms",
                            choices: .picking(Array(Set(stops + [ms])).sorted(), current: ms,

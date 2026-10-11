@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
-  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Sunrise tile is picked up by the pointer, and the Midnight tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Sunrise held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Midnight double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
+  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Soft Gradient Glass held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -59,12 +59,12 @@
     },
     {
       "do": "expect",
-      "control": "Midnight",
+      "control": "Keynote Clean",
       "present": true
     },
     {
       "do": "expect",
-      "control": "Sunrise",
+      "control": "Soft Gradient Glass",
       "present": true
     },
     {
@@ -91,7 +91,7 @@
     },
     {
       "do": "expect",
-      "control": "Bar",
+      "control": "Split Wipe",
       "present": true
     },
     {
@@ -113,7 +113,7 @@
     },
     {
       "do": "pickUpTile",
-      "tile": "Sunrise",
+      "tile": "Soft Gradient Glass",
       "to": [
         640,
         700
@@ -121,7 +121,7 @@
     },
     {
       "do": "press",
-      "control": "Midnight",
+      "control": "Keynote Clean",
       "count": 2
     },
     {
@@ -146,7 +146,7 @@
     {
       "do": "describe",
       "stage": "2-double-clicked",
-      "note": "THE SECOND TEST: a double click on the Midnight tile, by the pointer, put the Midnight title page at the playhead (two seconds) on a track of its own, four seconds long, exactly as Sequence > Insert Title Page > Midnight does"
+      "note": "THE SECOND TEST: a double click on the Keynote Clean tile, by the pointer, put the Keynote Clean title page at the playhead (two seconds) on a track of its own, four seconds long, exactly as Sequence > Insert Title Page > Keynote Clean does"
     },
     {
       "do": "snapshot",
@@ -154,7 +154,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Sunrise",
+      "tile": "Soft Gradient Glass",
       "track": "V1",
       "seconds": 0.5,
       "release": false,
@@ -164,11 +164,11 @@
     {
       "do": "describe",
       "stage": "3-held-over-the-recording",
-      "note": "THE THIRD TEST: the Sunrise tile held over the recording on V1, half a second in. The lane draws the dashed ghost a file draws, four seconds long, and it says Title Page on a new track: a title is laid over the recording, never cut into it"
+      "note": "THE THIRD TEST: the Soft Gradient Glass tile held over the recording on V1, half a second in. The lane draws the dashed ghost a file draws, four seconds long, and it says Title Page on a new track: a title is laid over the recording, never cut into it"
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Sunrise",
+      "tile": "Soft Gradient Glass",
       "track": "V1",
       "seconds": 0.5
     },
@@ -202,7 +202,7 @@
     {
       "do": "describe",
       "stage": "4-let-go-over-the-recording",
-      "note": "Let go, the Sunrise title page lands half a second in on the new track V2, over the recording, which is untouched on V1"
+      "note": "Let go, the Soft Gradient Glass title page lands half a second in on the new track V2, over the recording, which is untouched on V1"
     },
     {
       "do": "snapshot",
@@ -210,7 +210,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Sunrise",
+      "tile": "Soft Gradient Glass",
       "track": "V2",
       "seconds": 5.5,
       "release": false,
@@ -218,7 +218,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Sunrise",
+      "tile": "Soft Gradient Glass",
       "track": "V2",
       "seconds": 5.5
     },
@@ -245,7 +245,7 @@
     {
       "do": "describe",
       "stage": "5-let-go-on-a-free-track",
-      "note": "THE FOURTH TEST: held over V2 where it is free, after the first Sunrise, the ghost says V2 and the second lands there at five and a half seconds, on the same track"
+      "note": "THE FOURTH TEST: held over V2 where it is free, after the first Soft Gradient Glass, the ghost says V2 and the second lands there at five and a half seconds, on the same track"
     },
     {
       "do": "snapshot",
@@ -270,9 +270,9 @@
       "note": "One Command Z takes the last drop back whole"
     },
     {
-      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding): a double click on Midnight by the pointer. The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
+      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding): a double click on Keynote Clean by the pointer. The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
       "do": "press",
-      "control": "Midnight",
+      "control": "Keynote Clean",
       "count": 2
     },
     {
@@ -303,13 +303,13 @@
     },
     {
       "do": "expect",
-      "control": "Midnight",
+      "control": "Keynote Clean",
       "present": true
     },
     {
       "do": "describe",
       "stage": "7-crowded-dock-at-its-end",
-      "note": "THE FIFTH TEST: with the timeline grown and the dock crowded, a double click on Midnight by the pointer still lands it at the playhead, and the dock scrolled to its end shows a whole row of title tiles with a sliver of the next under the fade"
+      "note": "THE FIFTH TEST: with the timeline grown and the dock crowded, a double click on Keynote Clean by the pointer still lands it at the playhead, and the dock scrolled to its end shows a whole row of title tiles with a sliver of the next under the fade"
     },
     {
       "do": "snapshot",
@@ -324,7 +324,7 @@
       "seconds": 1.0
     },
     {
-      "comment": "Back to the top of the dock, so the Media tile has to be scrolled to the same way Midnight was.",
+      "comment": "Back to the top of the dock, so the Media tile has to be scrolled to the same way Keynote Clean was.",
       "do": "scrollPanel",
       "row": "Media",
       "by": 3000

@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/titles-move-in-parts-walk",
- "seed": "Titles move in parts, at Next defaults with no switch touched: a title page (Midnight) put at the start from an empty track's right-click and a name card (Bar) put over the recording at six seconds, each photographed frame by frame through its in with the right arrow, so the separate beats of the background, the words and the accent can be seen.",
+ "seed": "Titles move in parts, at Next defaults with no switch touched: a title page (Keynote Clean) put at the start from an empty track's right-click and a name card (Split Wipe) put over the recording at six seconds, each photographed frame by frame through its in with the right arrow, so the separate beats of the background, the words and the accent can be seen.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > Midnight"
+   "choose": "Add Title Page > Keynote Clean"
   },
   {
    "do": "wait",
@@ -57,7 +57,7 @@
   {
    "do": "describe",
    "stage": "page-landed",
-   "note": "Add Title Page > Midnight from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived (0.9s), with its title open for typing"
+   "note": "Add Title Page > Keynote Clean from the empty track's right-click, at Next defaults. The playhead moves on to where its LAST part has arrived, once the subtitle's last word is in, with its title open for typing"
   },
   {
    "do": "snapshot",
@@ -105,7 +105,7 @@
   {
    "do": "describe",
    "stage": "page-in",
-   "note": "THE IN, FRAME BY FRAME from 0:00 with the right arrow: the background fades up first, the title rises in at 0.15s, the subtitle 130 ms after it, and the accent bar wipes on under the title last. Nothing arrives as one block."
+   "note": "THE IN, FRAME BY FRAME from 0:00 with the right arrow: the background fades up first, the title's words rise in one after another from 0.15s, then the subtitle's. Nothing arrives as one block."
   },
   {
    "do": "snapshot",
@@ -479,7 +479,7 @@
   {
    "do": "rightClick",
    "on": "Track V3",
-   "choose": "Add Name Card > Bar"
+   "choose": "Add Name Card > Split Wipe"
   },
   {
    "do": "wait",
@@ -551,7 +551,7 @@
   {
    "do": "describe",
    "stage": "card-in",
-   "note": "THE NAME CARD'S IN, FRAME BY FRAME from 6.0s: the panel wipes in from the left, the accent strip draws up, the name rises in at 0.15s and the role 130 ms after it."
+   "note": "THE NAME CARD'S IN, FRAME BY FRAME from 6.0s: the bar wipes in from the left, its white edge draws down, then the name and the role are uncovered behind the bar's edge a beat apart."
   },
   {
    "do": "snapshot",

@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/title-words-mask-reveal-walk",
- "seed": "Title text comes in by word with a mask reveal, at Next defaults with no switch touched: a Midnight title page put at the start, its headline picked, Reveal set to Mask Reveal by Word at a 100 ms stagger with the pointer on each dropdown, then photographed three frames at a time through its in, and the same moments written out as exported frames.",
+ "seed": "Title text comes in by word with a mask reveal, at Next defaults with no switch touched: a Keynote Clean title page put at the start, its headline picked, Reveal set to Mask Reveal by Word at a 100 ms stagger with the pointer on each dropdown, then photographed three frames at a time through its in, and the same moments written out as exported frames.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -48,7 +48,7 @@
   {
    "do": "rightClick",
    "on": "Track V2",
-   "choose": "Add Title Page > Midnight"
+   "choose": "Add Title Page > Keynote Clean"
   },
   {
    "do": "wait",
@@ -85,12 +85,12 @@
   {
    "do": "describe",
    "stage": "headline-picked",
-   "note": "The title's headline typed, then double clicked to open its words, at Next defaults: the panel carries a Reveal section under Text, its Preset reading None"
+   "note": "The title's headline typed, then double clicked to open its words, at Next defaults: the panel carries a Reveal section under Text, its Preset reading Rise and Fade, the way Keynote Clean brings its headline in word by word"
   },
   {
    "do": "expect",
    "field": "Reveal Preset",
-   "reads": "None"
+   "reads": "Rise and Fade"
   },
   {
    "do": "snapshot",

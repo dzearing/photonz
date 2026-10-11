@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-gallery-walk",
-  "seed": "Every built-in preset, photographed as it lands at Next defaults: a track added above the recording, then each of the four title pages (Midnight, Sunrise, Paper, Spotlight) and the four name cards (Bar, Clean, Accent, Minimal) put on it from its right-click at one second, photographed at rest, and undone before the next.",
+  "seed": "Every built-in preset of the designed set, photographed as it lands at Next defaults: a track added above the recording, then each title page (Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Light Leak, Gradient Glow, Stacked Stagger) and each name card (Split Wipe, Minimal Underline, Pill Card) put on it from its right-click at one second, photographed at rest, and undone before the next. Behind Glass lies over the recording rather than on a track of its own, and has its own walk.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -52,7 +52,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Midnight"
+      "choose": "Add Title Page > Keynote Clean"
     },
     {
       "do": "wait",
@@ -83,12 +83,12 @@
     },
     {
       "do": "describe",
-      "stage": "title-page-midnight",
-      "note": "Title Page preset Midnight, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-keynote-clean",
+      "note": "Title Page preset Keynote Clean, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "title-page-midnight"
+      "name": "title-page-keynote-clean"
     },
     {
       "do": "action",
@@ -113,7 +113,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Sunrise"
+      "choose": "Add Title Page > Soft Gradient Glass"
     },
     {
       "do": "wait",
@@ -144,12 +144,12 @@
     },
     {
       "do": "describe",
-      "stage": "title-page-sunrise",
-      "note": "Title Page preset Sunrise, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-soft-gradient-glass",
+      "note": "Title Page preset Soft Gradient Glass, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "title-page-sunrise"
+      "name": "title-page-soft-gradient-glass"
     },
     {
       "do": "action",
@@ -174,7 +174,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Paper"
+      "choose": "Add Title Page > Kinetic Bold"
     },
     {
       "do": "wait",
@@ -205,12 +205,12 @@
     },
     {
       "do": "describe",
-      "stage": "title-page-paper",
-      "note": "Title Page preset Paper, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-kinetic-bold",
+      "note": "Title Page preset Kinetic Bold, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "title-page-paper"
+      "name": "title-page-kinetic-bold"
     },
     {
       "do": "action",
@@ -235,7 +235,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Spotlight"
+      "choose": "Add Title Page > Editorial Serif"
     },
     {
       "do": "wait",
@@ -266,12 +266,12 @@
     },
     {
       "do": "describe",
-      "stage": "title-page-spotlight",
-      "note": "Title Page preset Spotlight, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-editorial-serif",
+      "note": "Title Page preset Editorial Serif, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "title-page-spotlight"
+      "name": "title-page-editorial-serif"
     },
     {
       "do": "action",
@@ -296,7 +296,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Name Card > Bar"
+      "choose": "Add Title Page > Tech Terminal"
     },
     {
       "do": "wait",
@@ -327,12 +327,12 @@
     },
     {
       "do": "describe",
-      "stage": "name-card-bar",
-      "note": "Name Card preset Bar, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-tech-terminal",
+      "note": "Title Page preset Tech Terminal, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "name-card-bar"
+      "name": "title-page-tech-terminal"
     },
     {
       "do": "action",
@@ -357,7 +357,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Name Card > Clean"
+      "choose": "Add Title Page > Light Leak"
     },
     {
       "do": "wait",
@@ -388,12 +388,12 @@
     },
     {
       "do": "describe",
-      "stage": "name-card-clean",
-      "note": "Name Card preset Clean, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-light-leak",
+      "note": "Title Page preset Light Leak, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "name-card-clean"
+      "name": "title-page-light-leak"
     },
     {
       "do": "action",
@@ -418,7 +418,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Name Card > Accent"
+      "choose": "Add Title Page > Gradient Glow"
     },
     {
       "do": "wait",
@@ -449,12 +449,12 @@
     },
     {
       "do": "describe",
-      "stage": "name-card-accent",
-      "note": "Name Card preset Accent, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-gradient-glow",
+      "note": "Title Page preset Gradient Glow, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "name-card-accent"
+      "name": "title-page-gradient-glow"
     },
     {
       "do": "action",
@@ -479,7 +479,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Name Card > Minimal"
+      "choose": "Add Title Page > Stacked Stagger"
     },
     {
       "do": "wait",
@@ -510,12 +510,12 @@
     },
     {
       "do": "describe",
-      "stage": "name-card-minimal",
-      "note": "Name Card preset Minimal, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest half a second after it arrives"
+      "stage": "title-page-stacked-stagger",
+      "note": "Title Page preset Stacked Stagger, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
     },
     {
       "do": "snapshot",
-      "name": "name-card-minimal"
+      "name": "title-page-stacked-stagger"
     },
     {
       "do": "action",
@@ -536,6 +536,177 @@
     {
       "do": "wait",
       "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Name Card > Split Wipe"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "d",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "name-card-split-wipe",
+      "note": "Name Card preset Split Wipe, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-card-split-wipe"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Name Card > Minimal Underline"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "d",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "name-card-minimal-underline",
+      "note": "Name Card preset Minimal Underline, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-card-minimal-underline"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Name Card > Pill Card"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "d",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "name-card-pill-card",
+      "note": "Name Card preset Pill Card, as it lands at Next defaults: picked from the empty track's right-click, photographed at rest once it has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "name-card-pill-card"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
     }
   ]
 }

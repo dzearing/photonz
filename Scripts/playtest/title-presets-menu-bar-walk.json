@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-menu-bar-walk",
-  "seed": "The menu-bar half of title pages and name cards, at Next defaults: Sequence carries Insert Title Page and Insert Name Card with their presets, Sequence > Insert Title Page > Sunrise puts one in at the playhead with its words open for typing, the clip's right-click offers Save as Preset beside Animate In and Out, an empty track's right-click offers Add Title Page and Add Name Card, and Clip > Save as Preset opens the naming sheet. Needs the front for the menu pictures.",
+  "seed": "The menu-bar half of title pages and name cards, at Next defaults: Sequence carries Insert Title Page and Insert Name Card with their presets, Sequence > Insert Title Page > Kinetic Bold puts one in at the playhead with its words open for typing, the clip's right-click offers Save as Preset beside Animate In and Out, an empty track's right-click offers Add Title Page and Add Name Card, and Clip > Save as Preset opens the naming sheet. Needs the front for the menu pictures.",
   "setup": {
     "timelineOpen": true,
     "front": true,
@@ -47,7 +47,7 @@
       "stage": "2-insert",
       "menu": "Sequence",
       "oneKeyEach": true,
-      "choose": "Sequence > Insert Title Page > Sunrise"
+      "choose": "Sequence > Insert Title Page > Kinetic Bold"
     },
     {
       "do": "wait",
@@ -76,7 +76,7 @@
     {
       "do": "describe",
       "stage": "2-inserted",
-      "note": "Sequence > Insert Title Page > Sunrise from the menu bar: three clicks, words typed straight in"
+      "note": "Sequence > Insert Title Page > Kinetic Bold from the menu bar: three clicks, words typed straight in"
     },
     {
       "do": "snapshot",

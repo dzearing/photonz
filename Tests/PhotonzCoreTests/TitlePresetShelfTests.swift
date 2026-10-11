@@ -30,17 +30,19 @@ struct TitlePresetShelfTests {
 
     @Test func theShelfHoldsEveryBuiltInPresetPagesFirst() {
         let shelf = TitlePreset.shelf(saved: [])
-        #expect(shelf.count == BuiltInTitle.allCases.count)
-        #expect(shelf.map(\.name) == ["Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Behind Glass",
-                                      "Bar", "Clean", "Accent", "Minimal"])
+        #expect(shelf.count == BuiltInTitle.shelved.count)
+        #expect(shelf.map(\.name) == ["Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
+                                      "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
+                                      "Split Wipe", "Minimal Underline", "Pill Card"])
     }
 
     @Test func aPersonsOwnPresetsComeFirstWithinTheirKind() throws {
         let card = try Self.saved("Team Card", .nameCard)
         let page = try Self.saved("Intro", .titlePage)
         let shelf = TitlePreset.shelf(saved: [card, page])
-        #expect(shelf.map(\.name) == ["Intro", "Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Behind Glass",
-                                      "Team Card", "Bar", "Clean", "Accent", "Minimal"])
+        #expect(shelf.map(\.name) == ["Intro", "Keynote Clean", "Soft Gradient Glass", "Kinetic Bold", "Editorial Serif", "Tech Terminal",
+                                      "Behind Glass", "Light Leak", "Gradient Glow", "Stacked Stagger",
+                                      "Team Card", "Split Wipe", "Minimal Underline", "Pill Card"])
     }
 
     @Test func everyTileHasAShelfEntryInComponentsThatFindsItAgain() throws {
@@ -66,7 +68,7 @@ struct TitlePresetShelfTests {
 
     @Test func searchFindsAPresetByItsName() {
         let entries = TitlePreset.shelf(saved: []).map(\.entry)
-        #expect(LibrarySearch.filter(entries, query: "spotlight").map(\.name) == ["Spotlight"])
+        #expect(LibrarySearch.filter(entries, query: "terminal").map(\.name) == ["Tech Terminal"])
     }
 
     // MARK: - Where a drop lands

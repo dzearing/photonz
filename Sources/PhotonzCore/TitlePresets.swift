@@ -74,34 +74,106 @@ public struct InsertedTitle: Hashable, Sendable {
 
 /// The presets the app ships with. Each is drawn against the frame it lands
 /// on, so a 4K recording and a square one both get a page that fills them.
+///
+/// **The shelf is the twelve style directions of
+/// `docs/design/video-titles-polish.md`** (task
+/// `a-set-of-titles-that-look-designed`), nine pages then three cards, in the
+/// brief's order. Each keeps its rules: parts on separate beats, two type
+/// sizes at most, expo or quint ins, shorter ease in outs, something still
+/// moving while it holds, words that read over dark and light footage, and a
+/// lower third inside title safe (`TitleSetTests`).
+///
+/// The plain set they replaced (Midnight to Minimal) is retired: on no shelf
+/// and in no menu, kept because the tests of how a title moves, restyles and
+/// fits its time are written against those plain shapes, and a drag that
+/// names one still resolves.
 public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable {
-    case midnight, sunrise, paper, spotlight
-    /// A drifting mesh with grain, and a rule that draws itself on
-    /// (`docs/design/video-titles-polish.md`, step 3).
-    case aurora
+    // The set, in shelf order.
+    /// Black, a big bold headline whose words rise in one after another, and
+    /// a light line under it. Apple's keynote slide.
+    case keynote
+    /// A drifting three colour mesh with grain, and a frosted panel holding
+    /// the words.
+    case softGlass
+    /// Huge condensed capitals sliding up word by word out of their own
+    /// line, on one saturated colour.
+    case kinetic
+    /// Warm paper with grain, a small kicker, a serif headline wiped on and a
+    /// hairline rule drawing itself under it.
+    case editorial
+    /// A dark screen with a faint green glow, the words typed in with a
+    /// blinking cursor and a progress line.
+    case terminal
     /// The recording under the title, blurred, dimmed and slowly settling,
     /// sharpening into the real footage as the title leaves: the Photonz
     /// signature, which ties the intro to the content.
     case glass
+    /// Two warm blurred lights drifting across the dark, and wide capitals
+    /// tracking in with a glow.
+    case lightLeak
+    /// A very large headline filled with a moving gradient and a soft glow,
+    /// settling from a little larger out of a blur.
+    case gradientGlow
+    /// Lines of two weights revealed from alternating sides, then a small
+    /// mark popping in, over a slow dark mesh.
+    case stacked
+    /// A colour bar wipes in and the name and role are revealed behind its
+    /// edge: the broadcast lower third.
+    case splitWipe
+    /// No backing: the name rises in, a line draws itself under it, and the
+    /// role follows.
+    case underline
+    /// A rounded pill with a round mark, springing in, the name and role
+    /// sharpening inside it.
+    case pill
+
+    // Retired from the shelf.
+    case midnight, sunrise, paper, spotlight
+    /// A drifting mesh with grain, and a rule that draws itself on
+    /// (`docs/design/video-titles-polish.md`, step 3).
+    case aurora
     case bar, clean, accent, minimal
 
     public var id: String { rawValue }
 
+    /// The set the shelf and the Insert menus offer, in order.
+    public static let shelved: [BuiltInTitle] = allCases.filter { !$0.isRetired }
+
+    /// One of the plain set the designed one replaced: on no shelf and in no menu.
+    public var isRetired: Bool {
+        switch self {
+        case .midnight, .sunrise, .paper, .spotlight, .aurora, .bar, .clean, .accent, .minimal: true
+        default: false
+        }
+    }
+
     public var kind: TitleKind {
         switch self {
-        case .midnight, .sunrise, .paper, .spotlight, .aurora, .glass: .titlePage
-        case .bar, .clean, .accent, .minimal: .nameCard
+        case .keynote, .softGlass, .kinetic, .editorial, .terminal, .glass, .lightLeak, .gradientGlow, .stacked,
+             .midnight, .sunrise, .paper, .spotlight, .aurora: .titlePage
+        case .splitWipe, .underline, .pill, .bar, .clean, .accent, .minimal: .nameCard
         }
     }
 
     public var name: String {
         switch self {
+        case .keynote: "Keynote Clean"
+        case .softGlass: "Soft Gradient Glass"
+        case .kinetic: "Kinetic Bold"
+        case .editorial: "Editorial Serif"
+        case .terminal: "Tech Terminal"
+        case .glass: "Behind Glass"
+        case .lightLeak: "Light Leak"
+        case .gradientGlow: "Gradient Glow"
+        case .stacked: "Stacked Stagger"
+        case .splitWipe: "Split Wipe"
+        case .underline: "Minimal Underline"
+        case .pill: "Pill Card"
         case .midnight: "Midnight"
         case .sunrise: "Sunrise"
         case .paper: "Paper"
         case .spotlight: "Spotlight"
         case .aurora: "Aurora"
-        case .glass: "Behind Glass"
         case .bar: "Bar"
         case .clean: "Clean"
         case .accent: "Accent"
@@ -123,6 +195,7 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         let backdrop = TitlePart(path: "Background", role: .background,
                                  in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint),
                                  hold: TitleHold(.push, amount: 3))
+        if let designed = designedSet { return designed }
         switch self {
         case .midnight:
             return TitleDesign(parts: [
@@ -199,24 +272,6 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
                           in: B(.drawOn, delayMS: 450, lengthMS: 600, direction: .right),
                           out: .off(.drawOn, delayMS: 100, lengthMS: 300)),
             ])
-        case .glass:
-            // The recording frosts over as the title arrives (nothing of a
-            // title is on its first frame), settles from 105% to 100% the
-            // whole time it holds, and racks back into focus as the title
-            // leaves, ending exactly on the footage. The words are gone just
-            // before the glass clears.
-            return TitleDesign(parts: [
-                TitlePart(path: "Background", role: .background,
-                          in: B(.frost, delayMS: 0, lengthMS: 700, curve: .easeOutQuint),
-                          hold: TitleHold(.push, amount: -5),
-                          out: .off(.frost, delayMS: 0, lengthMS: 480)),
-                TitlePart(path: "Title", role: .headline,
-                          in: B(.blurIn, delayMS: 200, lengthMS: 800, amount: 16),
-                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
-                TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 330, lengthMS: 650, amount: 14),
-                          out: .off(.fade, delayMS: 220, lengthMS: 250)),
-            ])
         case .bar:
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
@@ -271,21 +326,31 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
                           in: B(.rise, delayMS: 140, lengthMS: 550, amount: 8),
                           out: .off(.fade, delayMS: 150)),
             ])
+        default:
+            return TitleDesign(parts: [])
         }
     }
 
-    /// One kind's presets. `movingBackdrops` false leaves out the pages whose
-    /// background moves, for a release that has not got them.
+    /// One kind's presets on the shelf. `movingBackdrops` false leaves out the
+    /// pages whose background moves, for a release that has not got them.
     public static func presets(of kind: TitleKind, movingBackdrops: Bool = true) -> [BuiltInTitle] {
-        allCases.filter { $0.kind == kind && (movingBackdrops || !$0.hasMovingBackdrop) }
+        shelved.filter { $0.kind == kind && (movingBackdrops || !$0.hasMovingBackdrop) }
     }
 
-    /// Whether this preset's background moves (`docs/design/video-titles-polish.md`, step 3).
-    public var hasMovingBackdrop: Bool { self == .aurora || self == .glass }
+    /// Whether this preset's background moves, grains or frosts
+    /// (`docs/design/video-titles-polish.md`, step 3): what a release without
+    /// moving backdrops cannot draw.
+    public var hasMovingBackdrop: Bool {
+        switch self {
+        case .aurora, .glass, .softGlass, .editorial, .terminal, .lightLeak, .stacked: true
+        default: false
+        }
+    }
 
     /// The group this preset draws on a frame this size.
     public func layer(in canvas: CGSize) -> Layer {
         let pen = TitlePen(canvas: canvas)
+        if let designed = designedLayer(pen) { return designed }
         let page: [Layer]
         switch self {
         case .midnight: page = Self.midnight(pen)
@@ -293,7 +358,6 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         case .paper: page = Self.paper(pen)
         case .spotlight: page = Self.spotlight(pen)
         case .aurora: page = Self.aurora(pen)
-        case .glass: page = Self.glass(pen)
         // A card is laid out by the group itself, the way a starter button
         // is: a longer name makes a wider card rather than words running off
         // the edge of their panel.
@@ -301,6 +365,7 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         case .clean: return Self.clean(pen)
         case .accent: return Self.accent(pen)
         case .minimal: return Self.minimal(pen)
+        default: page = []
         }
         return TitlePen.grouped(page, name: kind.name)
     }
@@ -397,19 +462,6 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
                                    color: "#D4CCF2", top: rule.frame.maxY + pen.u(26))
         return [background, title, rule, subtitle]
-    }
-
-    private static func glass(_ pen: TitlePen) -> [Layer] {
-        // Black at 40% over the recording, the recording itself softened
-        // behind it and drawn 5% larger, which the hold eases back to 100%.
-        var background = pen.fullFrame(Paint(hex: "#000000"))
-        background.style.opacity = 0.4
-        background.style.effects = [.blur(BlurEffect(radius: pen.u(36), kind: .background, zoom: 105))]
-        let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 112, weight: .bold,
-                                color: "#FFFFFF", top: pen.canvas.height * 0.38)
-        let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
-                                   weight: .medium, color: "#E8E8ED", top: title.frame.maxY + pen.u(18))
-        return [background, title, subtitle]
     }
 
     /// Whether this page's background is the recording under it, so it lies
@@ -560,23 +612,48 @@ struct TitlePen {
     /// the words. Not zero: a shape stretched from nothing stays nothing.
     var surfaceStart: CGRect { CGRect(x: 0, y: 0, width: u(100), height: u(100)) }
 
-    /// Where every card's bottom-left corner sits: the safe area a broadcast
-    /// lower third keeps to.
+    /// Where the retired cards' bottom-left corner sits.
     var cardCorner: CGPoint {
         CGPoint(x: (canvas.width * 0.06).rounded(), y: (canvas.height * 0.9).rounded())
     }
 
+    /// Where the set's cards sit: title safe, a tenth of the frame in from
+    /// the left and up from the bottom, as a broadcast lower third keeps to
+    /// (192 and 108 points of a 1080 line frame).
+    var safeCorner: CGPoint {
+        CGPoint(x: (canvas.width * 0.1).rounded(), y: (canvas.height * 0.9).rounded())
+    }
+
     /// A name card: the pieces in a column the group lays out itself, words
-    /// on the left edge, its bottom-left corner on `cardCorner`.
-    func card(_ pieces: [Layer], name: String, gap: CGFloat, padding: GroupPadding) -> Layer {
+    /// on the left edge, its bottom-left corner on `corner` (`cardCorner`
+    /// when nobody says).
+    func card(_ pieces: [Layer], name: String, gap: CGFloat, padding: GroupPadding,
+              direction: StackDirection = .column, corner: CGPoint? = nil) -> Layer {
         var content = GroupContent(children: pieces,
-                                   contentPlacement: LayerPlacement(horizontal: .left))
-        content.layout = GroupLayout(kind: .stack, direction: .column, gap: gap, padding: padding)
+                                   contentPlacement: direction == .column
+                                       ? LayerPlacement(horizontal: .left)
+                                       : LayerPlacement(vertical: .center))
+        content.layout = GroupLayout(kind: .stack, direction: direction, gap: gap, padding: padding)
         var card = GroupFlow.flowing(Layer(name: name, content: .group(content), frame: .zero))
         let box = card.localBounds
-        card.frame.origin = CGPoint(x: cardCorner.x - (box.minX - card.frame.minX),
-                                    y: cardCorner.y - (box.maxY - card.frame.minY))
+        let corner = corner ?? cardCorner
+        card.frame.origin = CGPoint(x: corner.x - (box.minX - card.frame.minX),
+                                    y: corner.y - (box.maxY - card.frame.minY))
         return card
+    }
+
+    /// Pieces the group arranges itself in a row or a column, `gap` apart,
+    /// its top-left corner at `origin`: a line of words with a cursor after
+    /// it that follows the words wherever they end.
+    func stack(_ pieces: [Layer], name: String, direction: StackDirection, gap: CGFloat,
+               origin: CGPoint, placement: LayerPlacement? = nil) -> Layer {
+        var content = GroupContent(children: pieces, contentPlacement: placement)
+        content.layout = GroupLayout(kind: .stack, direction: direction, gap: gap, padding: .none)
+        var group = GroupFlow.flowing(Layer(name: name, content: .group(content), frame: .zero))
+        let box = group.localBounds
+        group.frame.origin = CGPoint(x: origin.x - (box.minX - group.frame.minX),
+                                     y: origin.y - (box.minY - group.frame.minY))
+        return group
     }
 
     /// The pieces, drawn in frame coordinates, as one group whose box is

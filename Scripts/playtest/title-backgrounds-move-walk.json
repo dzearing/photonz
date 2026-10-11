@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/title-backgrounds-move-walk",
- "seed": "Title backgrounds move, at Next defaults with no switch touched: Behind Glass put over the sample recording at 0:00 from an empty track's right-click and photographed through its in, its hold and its out into the real footage; then Aurora at 6s, photographed through its in and two moments of its hold.",
+ "seed": "Title backgrounds move, at Next defaults with no switch touched: Behind Glass put over the sample recording at 0:00 from an empty track's right-click and photographed through its in, its hold and its out into the real footage; then Soft Gradient Glass at 6s, photographed through its in and two moments of its hold.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -658,7 +658,7 @@
   {
    "do": "rightClick",
    "on": "Track V3",
-   "choose": "Add Title Page > Aurora"
+   "choose": "Add Title Page > Soft Gradient Glass"
   },
   {
    "do": "wait",
@@ -979,7 +979,7 @@
   {
    "do": "describe",
    "stage": "aurora-hold",
-   "note": "Two moments of Aurora's hold a second apart: the mesh has drifted between them and the grain is a fresh pattern"
+   "note": "Two moments of Soft Gradient Glass's hold a second apart: the mesh has drifted between them and the grain is a fresh pattern"
   },
   {
    "do": "snapshot",

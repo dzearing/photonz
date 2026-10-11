@@ -40,10 +40,11 @@ struct TitlePresetsTests {
 
     // MARK: - The type list
 
-    @Test func everyKindHasAtLeastFourPresets() {
+    @Test func everyKindHasAtLeastThreePresets() {
         #expect(TitleKind.allCases.count >= 2)
+        // The designed set: nine pages and the brief's three lower thirds.
         for kind in TitleKind.allCases {
-            #expect(BuiltInTitle.presets(of: kind).count >= 4, "\(kind.name)")
+            #expect(BuiltInTitle.presets(of: kind).count >= 3, "\(kind.name)")
         }
     }
 
@@ -147,15 +148,20 @@ struct TitlePresetsTests {
             var doc = Self.eightSeconds()
             let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
             let first = try #require(doc.drawn(atTimeMS: 1000).layer(id: inserted.layerID))
-            let arrived = try #require(doc.drawn(atTimeMS: 1000 + preset.design.inLengthMS)
+            let arrived = try #require(doc.drawn(atTimeMS: 1000 + doc.titleArrivalMS(layerID: inserted.layerID))
                 .layer(id: inserted.layerID))
             let authored = preset.layer(in: Self.canvas)
             for part in preset.design.parts {
                 let start = try #require(TitleDesign.find(part.path, in: first))
                 // Invisible, or a wipe not yet begun (a sliver at most), or a
                 // line not yet drawn on.
+                // Words that come in a piece at a time are hidden by their
+                // own reveal until its first piece starts; a box cut to the
+                // words' shape draws nothing of its own.
+                let unrevealed = start.text?.reveal.map { ($0.style == .typewriter ? -1 : 0) >= (start.text?.revealElapsedMS ?? 0) } == true
                 let hidden = start.style.opacity < 0.01 || min(start.frame.width, start.frame.height) <= 1
-                    || start.annotation?.trim?.isEmpty == true
+                    || start.annotation?.trim?.isEmpty == true || unrevealed
+                    || (part.in == nil && start.style.matte != nil)
                 #expect(hidden, "\(preset.name): \(part.path)")
                 let end = try #require(TitleDesign.find(part.path, in: arrived))
                 let drawn = try #require(TitleDesign.find(part.path, in: authored))
@@ -190,7 +196,8 @@ struct TitlePresetsTests {
     }
 
     @Test func everyPanelBehindACardsWordsCoversThem() throws {
-        for preset in BuiltInTitle.presets(of: .nameCard) where preset != .minimal {
+        // Minimal Underline has a soft shade, not a panel.
+        for preset in BuiltInTitle.presets(of: .nameCard) where preset != .minimal && preset != .underline {
             var doc = Self.eightSeconds()
             let card = try #require(Self.insert(&doc, preset, atTimeMS: 0))
             let words = try #require(doc.canvasLayer(id: card.wordsID)).frame
@@ -233,7 +240,7 @@ struct TitlePresetsTests {
 
     @Test func savingKeepsTheEditedVersionAndInsertsItBackTheSame() throws {
         var doc = Self.eightSeconds()
-        let preset = BuiltInTitle.presets(of: .nameCard)[0]
+        let preset = BuiltInTitle.pill
         let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 1000))
         doc.updateLayer(id: inserted.wordsID) { layer in
             if case .text(var words) = layer.content {

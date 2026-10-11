@@ -105,7 +105,14 @@ struct TitleDesignTests {
                 #expect(background < headline, "\(preset.name)")
             }
             if let subtitle = ins.first(where: { $0.0 == .subtitle })?.1 {
-                #expect((100...150).contains(subtitle - headline), "\(preset.name): \(subtitle - headline)")
+                // The plain set's lines were a beat apart. In the designed
+                // set a headline whose words come in one by one is followed
+                // when they have, so the subtitle simply comes after it.
+                if preset.isRetired {
+                    #expect((100...150).contains(subtitle - headline), "\(preset.name): \(subtitle - headline)")
+                } else {
+                    #expect(subtitle > headline, "\(preset.name): \(subtitle - headline)")
+                }
             }
         }
     }
@@ -409,7 +416,17 @@ struct TitleDesignTests {
         var doc = Self.tenSeconds()
         for preset in BuiltInTitle.allCases {
             let inserted = try #require(Self.insert(&doc, preset, atTimeMS: 2000))
-            #expect(doc.titleArrivalMS(layerID: inserted.layerID) == preset.design.inLengthMS, "\(preset.name)")
+            // Words that come in a piece at a time arrive when their last
+            // piece has, which only the words themselves know.
+            let byPiece = preset.design.parts.contains { part in
+                guard let entrance = part.in else { return false }
+                return entrance.unit != nil || [.maskReveal, .trackIn, .typewriter].contains(entrance.kind)
+            }
+            if byPiece {
+                #expect(doc.titleArrivalMS(layerID: inserted.layerID) >= preset.design.inLengthMS, "\(preset.name)")
+            } else {
+                #expect(doc.titleArrivalMS(layerID: inserted.layerID) == preset.design.inLengthMS, "\(preset.name)")
+            }
         }
         // Something animated with one Animate In arrives when that does.
         var plain = Self.tenSeconds()

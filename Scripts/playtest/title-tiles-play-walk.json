@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/title-tiles-play-walk",
- "seed": "Library title tiles play, at Next defaults with no switch touched: the Comps shelf at rest, then Behind Glass picked and photographed four times a third of a second apart while it loops over the recording's own first frame, then the pointer rested on Aurora, which plays as well.",
+ "seed": "Library title tiles play, at Next defaults with no switch touched: the Comps shelf at rest, then Behind Glass picked and photographed four times a third of a second apart while it loops over the recording's own first frame, then the pointer rested on Soft Gradient Glass, which plays as well.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -143,7 +143,7 @@
   },
   {
    "do": "type",
-   "text": "aurora"
+   "text": "soft gradient"
   },
   {
    "do": "wait",
@@ -151,7 +151,7 @@
   },
   {
    "do": "move",
-   "control": "Aurora"
+   "control": "Soft Gradient Glass"
   },
   {
    "do": "wait",
@@ -161,7 +161,7 @@
   {
    "do": "describe",
    "stage": "3-pointed-plays",
-   "note": "The pointer resting on Aurora: its tile plays too, its mesh drifting and its rule drawing on"
+   "note": "The pointer resting on Soft Gradient Glass: its tile plays too, its mesh drifting and its rule drawing on"
   },
   {
    "do": "snapshot",

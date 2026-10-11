@@ -67,7 +67,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Midnight"
+      "choose": "Add Title Page > Keynote Clean"
     },
     {
       "do": "wait",
@@ -76,7 +76,7 @@
     {
       "do": "describe",
       "stage": "1-title-page-ready",
-      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above on V1, then the empty track's Add Title Page > Midnight. A full-frame title page lands at the playhead on that track, four seconds long; the playhead steps half a second in to where it has finished arriving and its title is open for typing"
+      "note": "RIGHT-CLICK, TWO ROWS: Add Track Above on V1, then the empty track's Add Title Page > Keynote Clean. A full-frame title page lands at the playhead on that track, four seconds long; the playhead steps half a second in to where it has finished arriving and its title is open for typing"
     },
     {
       "do": "snapshot",
@@ -105,7 +105,7 @@
     {
       "do": "describe",
       "stage": "2-title-page",
-      "note": "The words typed straight in, centred over the Midnight background with its accent bar and subtitle"
+      "note": "The words typed straight in, centred over Keynote Clean's dark background above its subtitle"
     },
     {
       "do": "snapshot",

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/saved-name-card-on-another-frame-walk",
-  "seed": "A person's own name card saved on one recording and used on a recording of another size keeps its name on one line, clear of its role, at Next defaults with no switch touched. an empty track's Add Name Card > Clean on a 2880 by 1800 recording, the name typed as Dana Zearing, the clip's Save as Preset named Wrap check; then on the 1280 by 800 sample recording, an empty track's Add Name Card > Wrap check, photographed on the canvas, and its tile on the Library's Components shelf photographed too. Until 2026-10-04 the card shrank its words' box a few points short of the words and the name broke onto two lines over the role.",
+  "seed": "A person's own name card saved on one recording and used on a recording of another size keeps its name on one line, clear of its role, at Next defaults with no switch touched. an empty track's Add Name Card > Pill Card on a 2880 by 1800 recording, the name typed as Dana Zearing, the clip's Save as Preset named Wrap check; then on the 1280 by 800 sample recording, an empty track's Add Name Card > Wrap check, photographed on the canvas, and its tile on the Library's Components shelf photographed too. Until 2026-10-04 the card shrank its words' box a few points short of the words and the name broke onto two lines over the role.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -44,7 +44,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Name Card > Clean"
+      "choose": "Add Name Card > Pill Card"
     },
     {
       "do": "wait",
@@ -75,7 +75,7 @@
     {
       "do": "describe",
       "stage": "1-on-the-big-frame",
-      "note": "The Clean name card on the 2880 by 1800 recording with Dana Zearing typed in, on one line above its role"
+      "note": "The Pill Card name card on the 2880 by 1800 recording with Dana Zearing typed in, on one line above its role"
     },
     {
       "do": "snapshot",

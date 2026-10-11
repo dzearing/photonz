@@ -65,6 +65,15 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// dims in, and on the way out sharpens and brightens back to the real
     /// footage (`BlurEffect`, background). Anything that is not glass fades.
     case frost
+    /// Words slide up from behind their own baseline, cut off by their own
+    /// box: the premium headline entrance. A shape wipes up instead.
+    case maskReveal
+    /// Letters start spread wide and close up as they fade in. Anything that
+    /// is not words fades.
+    case trackIn
+    /// Letters appear one after another, as typed. Anything that is not
+    /// words fades.
+    case typewriter
 
     public var title: String {
         switch self {
@@ -76,18 +85,34 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .springPop: "Spring Pop"
         case .drawOn: "Draw On"
         case .frost: "Frost"
+        case .maskReveal: "Mask Reveal"
+        case .trackIn: "Track In"
+        case .typewriter: "Typewriter"
         }
     }
 
     /// The amount a build of this kind takes when nobody says: points of a
-    /// 1080 line frame for a rise and a blur, a percentage for a scale.
+    /// 1080 line frame for a rise and a blur, a percentage for a scale, and
+    /// for a track in how wide the letters start, as a percent of the type.
     public var defaultAmount: Double {
         switch self {
-        case .fade, .wipe, .drawOn, .frost: 0
+        case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter: 0
         case .rise: 24
         case .blurIn: 12
         case .scaleFrom: 110
         case .springPop: 85
+        case .trackIn: 25
+        }
+    }
+
+    /// What words split into when a build of this kind says nothing: a mask
+    /// reveal goes by line, a track in and a typewriter by letter, and
+    /// everything else moves the words whole.
+    public var defaultUnit: TextRevealUnit {
+        switch self {
+        case .maskReveal: .line
+        case .trackIn, .typewriter: .letter
+        default: .whole
         }
     }
 }
@@ -105,15 +130,25 @@ public struct TitleBuild: Hashable, Codable, Sendable {
     public var direction: TitleDirection
     /// The curve the move runs on (the shared `EasingCurve` list).
     public var curve: EasingCurve
+    /// On words, what they come in a piece at a time by (line, word or
+    /// letter), each piece `lengthMS` long. Nil moves them as the kind
+    /// suits (`TitleBuildKind.defaultUnit`). Ignored on anything else.
+    public var unit: TextRevealUnit?
+    /// How long after one piece starts the next one does; nil for the
+    /// unit's own (`TextRevealUnit.defaultStaggerMS`).
+    public var staggerMS: Int?
 
     public init(_ kind: TitleBuildKind, delayMS: Int, lengthMS: Int, amount: Double? = nil,
-                direction: TitleDirection = .up, curve: EasingCurve = .easeOutExpo) {
+                direction: TitleDirection = .up, curve: EasingCurve = .easeOutExpo,
+                by unit: TextRevealUnit? = nil, staggerMS: Int? = nil) {
         self.kind = kind
         self.delayMS = max(0, delayMS)
         self.lengthMS = max(1, lengthMS)
         self.amount = amount ?? kind.defaultAmount
         self.direction = direction
         self.curve = curve
+        self.unit = unit
+        self.staggerMS = staggerMS.map { max(0, $0) }
     }
 
     /// The usual way off: shorter than the way in, eased in.
@@ -134,6 +169,8 @@ public enum TitleHoldKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// recording it is the footage behind that grows (`BlurEffect.zoom`), so
     /// a negative amount is the backdrop slowly settling back to its size.
     case push
+    /// On and off on a steady beat, the way a text cursor waits.
+    case blink
 }
 
 public struct TitleHold: Hashable, Codable, Sendable {
@@ -148,6 +185,9 @@ public struct TitleHold: Hashable, Codable, Sendable {
     }
 
     public static let still = TitleHold(.none)
+
+    /// Half a blink: how long a cursor stays on, and then off.
+    public static let blinkMS = 530
 }
 
 /// One part of a title: a piece of its group named by `path` (names from the
@@ -329,6 +369,10 @@ struct TitleCompiler {
         switch build.kind {
         case .drawOn: draws ? .drawOn : .wipe
         case .frost: isGlass ? .frost : .fade
+        // Words do these themselves (`revealStyle`); a shape does the
+        // nearest thing it can.
+        case .maskReveal: piece.text != nil ? .maskReveal : .wipe
+        case .trackIn, .typewriter: piece.text != nil ? build.kind : .fade
         default: build.kind
         }
     }
@@ -339,20 +383,44 @@ struct TitleCompiler {
     /// Whether this piece is glass: something with a background blur.
     private var isGlass: Bool { piece.style.effects.contains { $0.blur?.kind == .background } }
 
-    /// Whether this piece's in is its words' own reveal rather than keys.
-    private func revealsWords(_ build: TitleBuild?) -> Bool {
-        guard let build else { return false }
-        return kind(of: build) == .wipe && piece.text != nil
+    /// How a piece's words come in by their own reveal, or nil where its in
+    /// is keys: a wipe, a mask reveal, a track in and a typewriter always,
+    /// and a fade, a rise or a blur in once it says a piece to come in by.
+    private func revealStyle(_ build: TitleBuild?) -> TextRevealStyle? {
+        guard let build, piece.text != nil else { return nil }
+        switch kind(of: build) {
+        case .wipe: return .wipe
+        case .maskReveal: return .maskReveal
+        case .trackIn: return .trackIn
+        case .typewriter: return .typewriter
+        case .fade, .rise: return build.unit == nil ? nil : .riseAndFade
+        case .blurIn: return build.unit == nil ? nil : .blurIn
+        case .scaleFrom, .springPop, .drawOn, .frost: return nil
+        }
     }
 
-    /// The reveal a piece's words come in by, where its in is one.
+    /// Whether this piece's in is its words' own reveal rather than keys.
+    private func revealsWords(_ build: TitleBuild?) -> Bool { revealStyle(build) != nil }
+
+    /// The reveal a piece's words come in by, where its in is one. A rise's
+    /// and a blur's points of a 1080 line frame become a share of the type,
+    /// which is how a reveal measures; a track in's amount already is one.
     func wordReveal(for part: TitlePart) -> TextReveal? {
-        guard let build = part.in, revealsWords(build) else { return nil }
+        guard let build = part.in, let style = revealStyle(build), let text = piece.text else { return nil }
         let half = lengthMS / 2
         let start = min(build.delayMS, half)
         let length = max(1, min(build.delayMS + build.lengthMS, half) - start)
-        return TextReveal(style: .wipe, unit: .whole, lengthMS: length, startMS: clock + start,
-                          direction: build.direction, curve: build.curve)
+        let unitOfWords = build.unit ?? build.kind.defaultUnit
+        let amount: Double? = switch style {
+        case .riseAndFade:
+            build.kind == .fade ? 0 : build.amount * Double(unit) / Double(max(1, text.fontSize)) * 100
+        case .blurIn: build.amount * Double(unit) / Double(max(1, text.fontSize)) * 100
+        case .trackIn: build.amount
+        case .maskReveal, .typewriter, .wipe: nil
+        }
+        return TextReveal(style: style, unit: unitOfWords, staggerMS: build.staggerMS, lengthMS: length,
+                          startMS: clock + start, amount: amount, direction: build.direction,
+                          curve: build.curve)
     }
 
     func motions(for part: TitlePart) -> [LayerMotion] {
@@ -392,7 +460,24 @@ struct TitleCompiler {
         }
         // The hold, between them.
         var held: [MotionProperty: MotionValue] = [:]
-        if part.hold.kind != .none, outStart > inEnd {
+        if part.hold.kind == .blink, outStart > inEnd {
+            // Off half a beat, on half a beat, jumping rather than fading, as
+            // the Mac's own text cursor does; it ends on, so the out leaves
+            // from where it rests.
+            let on = rest(.opacity)
+            var at = inEnd, lit = true
+            while at + TitleHold.blinkMS < outStart {
+                let next = at + TitleHold.blinkMS
+                runs[.opacity, default: []].append(Run(start: at, end: next, from: lit ? on : .number(0),
+                                                       to: lit ? .number(0) : on, curve: .steps(1)))
+                at = next
+                lit.toggle()
+            }
+            if !lit {
+                runs[.opacity, default: []].append(Run(start: at, end: outStart, from: .number(0), to: on,
+                                                       curve: .steps(1)))
+            }
+        } else if part.hold.kind != .none, outStart > inEnd {
             for (property, value) in holdEnds(part.hold) {
                 held[property] = value
                 runs[property, default: []].append(Run(start: inEnd, end: outStart, from: rest(property),
@@ -483,6 +568,12 @@ struct TitleCompiler {
         case .frost:
             // Clear and undimmed while it is off: the footage itself.
             return [gone, (.backgroundBlur, .number(0), curve)]
+        case .maskReveal:
+            // Words leaving by a mask: they drop back behind their baseline,
+            // which keys can only say as a short fall and a fade.
+            return [gone, (.position, moved(opposite(build.direction), by: 12), curve)]
+        case .trackIn, .typewriter:
+            return [gone]
         }
     }
 
@@ -508,7 +599,7 @@ struct TitleCompiler {
 
     private func holdEnds(_ hold: TitleHold) -> [(MotionProperty, MotionValue)] {
         switch hold.kind {
-        case .none: []
+        case .none, .blink: []
         case .drift: [(.position, moved(hold.direction, by: hold.amount))]
         case .push:
             if isGlass, case let .number(zoom) = rest(.backgroundZoom) {

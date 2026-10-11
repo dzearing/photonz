@@ -348,7 +348,9 @@ struct TitleBackgroundsTests {
 
     @Test("Aurora: a drifting three colour mesh with grain, and an underline that draws itself on")
     func auroraPage() throws {
-        #expect(BuiltInTitle.presets(of: .titlePage).contains(.aurora))
+        // Retired from the shelf by the designed set, and still drawn the same.
+        #expect(BuiltInTitle.aurora.isRetired)
+        #expect(!BuiltInTitle.presets(of: .titlePage).contains(.aurora))
         #expect(BuiltInTitle.aurora.name == "Aurora")
         var doc = Self.overARecording()
         let landed = doc.insertTitle(.aurora, atTimeMS: 3000)
@@ -391,12 +393,13 @@ struct TitleBackgroundsTests {
         #expect(group.pictureFadeMS(.out) == 0)
         let glass = try #require(TitleDesign.find("Background", in: group))
         #expect(glass.style.backgroundBlurRadius >= 30 && glass.style.backgroundBlurRadius <= 40)
-        #expect(abs(glass.style.opacity - 0.4) < 0.001)
+        #expect(abs(glass.style.opacity - TitleLook.glassDim) < 0.001)
 
-        // Held: blurred 30 to 40, dimmed 40%, the zoom easing from 105 to 100.
+        // Held: blurred 30 to 40, dimmed enough for white words to read over
+        // a white screenshot, the zoom easing from 105 to 100.
         let held = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: 1200))
         #expect(held.style.backgroundBlurRadius >= 30)
-        #expect(abs(held.style.opacity - 0.4) < 0.01)
+        #expect(abs(held.style.opacity - TitleLook.glassDim) < 0.01)
         let zoomEarly = held.style.backgroundBlurZoom
         let later = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: length - 900))
         #expect(zoomEarly > later.style.backgroundBlurZoom)

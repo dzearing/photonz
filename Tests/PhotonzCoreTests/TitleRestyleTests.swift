@@ -153,8 +153,9 @@ struct TitleRestyleTests {
                     if piece.isGroup { check(piece.children) }
                     guard let text = piece.text, let ink = RGBA(hex: text.colorHex) else { continue }
                     let middle = CGPoint(x: piece.frame.midX, y: piece.frame.midY)
+                    // A box cut to the words' shape fills them; it is not behind them.
                     guard let backing = pieces.last(where: {
-                        $0.id != piece.id && $0.isVisible && $0.style.opacity >= 0.5
+                        $0.id != piece.id && $0.isVisible && $0.style.opacity >= 0.5 && $0.style.matte == nil
                             && TitleRestyler.paint(of: $0) != nil && $0.frame.contains(middle)
                     }), let paint = TitleRestyler.paint(of: backing) else { continue }
                     let behind = paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]

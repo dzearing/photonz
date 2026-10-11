@@ -1,0 +1,166 @@
+{
+  "out": "/tmp/photonz-playtest/title-set-tech-terminal-walk",
+  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Tech Terminal, a title page, found on the Library's Comps shelf by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 11.4s.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Tech Terminal"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2,
+      "onTheClock": true
+    },
+    {
+      "do": "press",
+      "control": "Tech Terminal"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Insert at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Timing Title Page",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-landed",
+      "note": "Tech Terminal inserted from its Library tile at 0:00 with Insert at Playhead, at Next defaults, and its words typed straight in as 'Ship it faster': the playhead waits where every part has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-landed"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-coming-in",
+      "note": "Half a second in: Tech Terminal's parts still arriving, each on its own beat"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-coming-in"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-holding",
+      "note": "Two and a half seconds in: Tech Terminal holding, with the typed words in place"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-holding"
+    },
+    {
+      "do": "writeVideo",
+      "name": "terminal",
+      "format": "mp4",
+      "range": "whole",
+      "seconds": 11.4,
+      "within": 0.3,
+      "estimateFactor": 2
+    }
+  ]
+}

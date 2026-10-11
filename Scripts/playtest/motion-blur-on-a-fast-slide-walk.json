@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/motion-blur-on-a-fast-slide-walk",
-  "seed": "Motion blur on a title that moves fast, at Next defaults with no switch touched: a Midnight title page put at the start (it arrives wearing Motion Blur on the title as a whole), right clicked for Animate In > Slide, then the same frame early in the slide photographed with Motion Blur on, with its switch off, and with the Shutter opened to 360 degrees, and each written out as an exported frame.",
+  "seed": "Motion blur on a title that moves fast, at Next defaults with no switch touched: a Keynote Clean title page put at the start (it arrives wearing Motion Blur on the title as a whole), right clicked for Animate In > Slide, then the same frame early in the slide photographed with Motion Blur on, with its switch off, and with the Shutter opened to 360 degrees, and each written out as an exported frame.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -48,7 +48,7 @@
     {
       "do": "rightClick",
       "on": "Track V2",
-      "choose": "Add Title Page > Midnight"
+      "choose": "Add Title Page > Keynote Clean"
     },
     {
       "do": "wait",

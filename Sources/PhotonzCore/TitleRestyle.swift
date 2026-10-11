@@ -236,12 +236,32 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
 // MARK: - The recipe a title keeps
 
 /// What a piece was drawn with before any knob turned, for the knobs that
-/// scale it: grain, a background blur and a glow.
+/// scale it: grain, a background blur and a glow. And where a preset gave a
+/// piece a look of its own that its role would not (a second light in another
+/// colour, a second line in a lighter weight, a gradient), that look, which
+/// the Original theme and font pair put back.
 public struct TitleLookBase: Hashable, Codable, Sendable {
     public var path: String
     public var grain: Double?
     public var blur: Double?
     public var glow: Double?
+    /// A shape's own fill, where it is not the theme's colour for its role.
+    public var paint: Paint?
+    /// Words' own colour, where it is not the theme's colour for their role.
+    public var ink: String?
+    /// Words' own weight, where it is not the font pair's for their role.
+    public var weight: TextWeight?
+
+    public init(path: String, grain: Double? = nil, blur: Double? = nil, glow: Double? = nil,
+                paint: Paint? = nil, ink: String? = nil, weight: TextWeight? = nil) {
+        self.path = path
+        self.grain = grain
+        self.blur = blur
+        self.glow = glow
+        self.paint = paint
+        self.ink = ink
+        self.weight = weight
+    }
 }
 
 /// A title's design and where its knobs stand, kept on its group.
@@ -276,12 +296,16 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
             guard var build else { return nil }
             build.delayMS = Int((Double(build.delayMS) * energy.pace).rounded())
             build.lengthMS = max(1, Int((Double(build.lengthMS) * energy.pace).rounded()))
+            if let unit = build.unit ?? (build.kind.defaultUnit == .whole ? nil : build.kind.defaultUnit) {
+                let stagger = build.staggerMS ?? (build.kind == .typewriter ? 50 : unit.defaultStaggerMS)
+                build.staggerMS = Int((Double(stagger) * energy.pace).rounded())
+            }
             switch build.kind {
-            case .rise, .blurIn:
+            case .rise, .blurIn, .trackIn:
                 build.amount *= share
             case .scaleFrom, .springPop:
                 build.amount = 100 + (build.amount - 100) * share * energy.overshoot
-            case .fade, .wipe, .drawOn, .frost:
+            case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter:
                 break
             }
             return build
@@ -417,11 +441,29 @@ extension TitleRecipe {
         let looks = design.parts.compactMap { part -> TitleLookBase? in
             guard let piece = TitleDesign.find(part.path, in: group) else { return nil }
             let effects = piece.style.effects
-            let grain = effects.compactMap(\.grain).first.map(\.amount)
-            let blur = effects.compactMap(\.blur).first { $0.kind == .background }.map { Double($0.radius) }
-            let glow = effects.compactMap(\.glow).first.map { Double($0.radius) }
-            guard grain != nil || blur != nil || glow != nil else { return nil }
-            return TitleLookBase(path: part.path, grain: grain, blur: blur, glow: glow)
+            var base = TitleLookBase(path: part.path)
+            base.grain = effects.compactMap(\.grain).first.map(\.amount)
+            base.blur = effects.compactMap(\.blur).first { $0.kind == .background }.map { Double($0.radius) }
+            base.glow = effects.compactMap(\.glow).first.map { Double($0.radius) }
+            // A look of its own, which its role under the preset's own theme
+            // and faces would not give it back.
+            switch part.role {
+            case .accent:
+                if let paint = TitleRestyler.paint(of: piece), paint.isGradient || paint.hex != theme.accent {
+                    base.paint = paint
+                }
+            case .headline, .subtitle, .kicker:
+                if let text = piece.text {
+                    let ink = part.role == .headline ? theme.primary : theme.secondary
+                    let weight = part.role == .headline ? fonts.displayWeight : fonts.textWeight
+                    if text.colorHex != ink { base.ink = text.colorHex }
+                    if text.weight != weight { base.weight = text.weight }
+                }
+            case .background:
+                break
+            }
+            guard base != TitleLookBase(path: part.path) else { return nil }
+            return base
         }
         return TitleRecipe(design: design, theme: theme, fonts: fonts, energy: .normal, intensity: 100,
                            background: kind, showsBackground: backdrop?.isVisible ?? true,
@@ -471,13 +513,13 @@ struct TitleRestyler {
                     paintBackground(&piece)
                     piece.isVisible = recipe.showsBackground
                 case .accent:
-                    paintAccent(&piece, theme.accent)
+                    paintAccent(&piece, theme.accent, own: own(part.path)?.paint)
                 case .headline:
-                    setWords(&piece, color: theme.primary, font: recipe.fonts.display,
-                             weight: recipe.fonts.displayWeight)
+                    setWords(&piece, color: own(part.path)?.ink ?? theme.primary, font: recipe.fonts.display,
+                             weight: ownWeight(part.path) ?? recipe.fonts.displayWeight)
                 case .subtitle, .kicker:
-                    setWords(&piece, color: theme.secondary, font: recipe.fonts.text,
-                             weight: recipe.fonts.textWeight)
+                    setWords(&piece, color: own(part.path)?.ink ?? theme.secondary, font: recipe.fonts.text,
+                             weight: ownWeight(part.path) ?? recipe.fonts.textWeight)
                 }
                 scaleLooks(&piece, path: part.path)
                 if let blur = piece.style.effects.firstIndex(where: { $0.kind == .motionBlur }),
@@ -495,6 +537,20 @@ struct TitleRestyler {
         }
         group = laidOut(group)
         return legible(group)
+    }
+
+    /// The look a preset gave a piece of its own, while its theme is still
+    /// the preset's own.
+    private func own(_ path: String) -> TitleLookBase? {
+        guard recipe.theme.id == TitleTheme.originalID else { return nil }
+        return recipe.looks.first { $0.path == path }
+    }
+
+    /// The weight a preset gave a line of its own, while its faces are still
+    /// the preset's own.
+    private func ownWeight(_ path: String) -> TextWeight? {
+        guard recipe.fonts.id == TitleFontPair.originalID else { return nil }
+        return recipe.looks.first { $0.path == path }?.weight
     }
 
     // MARK: Paint
@@ -532,8 +588,9 @@ struct TitleRestyler {
         piece.content = .annotation(shape)
         let glassAt = piece.style.effects.firstIndex { $0.blur?.kind == .background }
         if kind == .glass {
-            let light = (RGBA(hex: recipe.theme.ground)?.relativeLuminance ?? 0) > 0.4
-            piece.style.opacity = light ? 0.55 : 0.4
+            // Dark glass or light, the same strength: enough that its words
+            // read over whatever the recording shows.
+            piece.style.opacity = TitleLook.glassDim
             if glassAt == nil {
                 let radius = recipe.looks.first { $0.blur != nil }?.blur ?? Double(36 * unit)
                 piece.style.effects.append(.blur(BlurEffect(radius: CGFloat(radius), kind: .background,
@@ -557,11 +614,25 @@ struct TitleRestyler {
         }
     }
 
-    private func paintAccent(_ piece: inout Layer, _ hex: String) {
+    /// An accent in the theme's accent colour, or in the look the preset gave
+    /// it while the theme is its own. A gradient stays a gradient, running
+    /// from the accent to the headline's colour and back.
+    private func paintAccent(_ piece: inout Layer, _ hex: String, own: Paint?) {
         switch piece.content {
         case .annotation(var shape):
-            if shape.fill != nil { shape.fill = Paint(hex: hex) }
-            shape.colorHex = hex
+            if let own {
+                shape.fill = own
+                shape.colorHex = own.hex
+            } else if var paint = shape.fill, paint.isGradient {
+                let ends = paint.stops.count > 2 ? [hex, recipe.theme.primary, hex] : [hex, recipe.theme.primary]
+                paint.hex = hex
+                paint.stops = Self.recoloured(paint.orderedStops, ends)
+                shape.fill = paint
+                shape.colorHex = hex
+            } else {
+                if shape.fill != nil { shape.fill = Paint(hex: hex) }
+                shape.colorHex = hex
+            }
             piece.content = .annotation(shape)
             if !piece.style.shadows.isEmpty {
                 piece.style.shadows = TitleLook.shadows(forColorHex: hex,
@@ -618,7 +689,9 @@ struct TitleRestyler {
         var group = group
         let before = group.localBounds
         group.children = Self.measured(group.children)
-        guard group.group?.layout != nil else { return group }
+        // A page arranges nothing itself, but a row inside it may (a cursor
+        // kept after its words), and it follows the words it holds.
+        guard group.group?.layout != nil else { return GroupFlow.flowing(group) }
         group = GroupFlow.flowing(group)
         let after = group.localBounds
         group.frame.origin.x += before.minX - after.minX
@@ -660,24 +733,33 @@ struct TitleRestyler {
     /// it, it takes whichever of the theme's words, white or near black does.
     private func legible(_ group: Layer) -> Layer {
         var group = group
-        group.children = legibleChildren(group.children)
+        group.children = legibleChildren(group.children, under: [])
         return group
     }
 
-    private func legibleChildren(_ pieces: [Layer]) -> [Layer] {
-        pieces.map { piece in
+    /// `under` is what the group holding `pieces` is drawn over, framed in
+    /// that group's own space: words in a column inside a card sit on the
+    /// card's backing as surely as words beside it do.
+    private func legibleChildren(_ pieces: [Layer], under: [(layer: Layer, frame: CGRect)]) -> [Layer] {
+        let here = under + pieces.map { ($0, $0.frame) }
+        return pieces.map { piece in
             if piece.isGroup {
                 var group = piece
-                group.children = legibleChildren(piece.children)
+                let shift = piece.frame.origin
+                group.children = legibleChildren(piece.children, under: here.filter { $0.layer.id != piece.id }.map {
+                    ($0.layer, $0.frame.offsetBy(dx: -shift.x, dy: -shift.y))
+                })
                 return group
             }
             guard case .text(var text) = piece.content, let ink = RGBA(hex: text.colorHex) else { return piece }
             let middle = CGPoint(x: piece.frame.midX, y: piece.frame.midY)
-            guard let backing = pieces.last(where: { other in
-                other.id != piece.id && other.isVisible && other.style.opacity >= 0.5
-                    && !other.style.effects.contains { $0.blur?.kind == .background }
-                    && Self.paint(of: other) != nil && other.frame.contains(middle)
-            }), let paint = Self.paint(of: backing) else { return piece }
+            // A box cut to the words' shape is their fill, not their backing.
+            guard let backing = here.last(where: { other in
+                other.layer.id != piece.id && other.layer.isVisible && other.layer.style.opacity >= 0.5
+                    && other.layer.style.matte == nil
+                    && !other.layer.style.effects.contains { $0.blur?.kind == .background }
+                    && Self.paint(of: other.layer) != nil && other.frame.contains(middle)
+            })?.layer, let paint = Self.paint(of: backing) else { return piece }
             let behind = (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
             func worst(_ color: RGBA) -> Double {
                 behind.map { SegmentInk.contrast(color, $0) }.min() ?? 21

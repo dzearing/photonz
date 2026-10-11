@@ -1,0 +1,166 @@
+{
+  "out": "/tmp/photonz-playtest/title-set-split-wipe-walk",
+  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Split Wipe, a name card, found on the Library's Comps shelf by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 7.9s.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "press",
+      "control": "Search library"
+    },
+    {
+      "do": "type",
+      "text": "Split Wipe"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2,
+      "onTheClock": true
+    },
+    {
+      "do": "press",
+      "control": "Split Wipe"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Insert at Playhead"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Dana Zearing"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Name Card clip",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-landed",
+      "note": "Split Wipe inserted from its Library tile at 0:00 with Insert at Playhead, at Next defaults, and its words typed straight in as 'Dana Zearing': the playhead waits where every part has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-landed"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-coming-in",
+      "note": "Half a second in: Split Wipe's parts still arriving, each on its own beat"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-coming-in"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-holding",
+      "note": "Two and a half seconds in: Split Wipe holding, with the typed words in place"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-holding"
+    },
+    {
+      "do": "writeVideo",
+      "name": "splitWipe",
+      "format": "mp4",
+      "range": "whole",
+      "seconds": 7.9,
+      "within": 0.3,
+      "estimateFactor": 2
+    }
+  ]
+}

@@ -15,6 +15,11 @@ public enum TitleLook {
 
     /// The mock sets its title in the system serif, which the renderer cannot
     /// reach by name; Georgia is the curated serif it falls back to.
+    /// How dark a title's glass dims the recording under it: enough that
+    /// white words read at 4.5 to 1 over a white screenshot, and dark words
+    /// on a light glass over a black one.
+    public static let glassDim: Double = 0.55
+
     public static let fontName = "Georgia"
     public static let weight = TextWeight.bold
     public static let colorHex = "#FFFFFF"
