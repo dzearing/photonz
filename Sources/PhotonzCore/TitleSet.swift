@@ -31,11 +31,13 @@ extension BuiltInTitle {
         switch self {
         case .keynote:
             // Words rise into place one after another, Apple's two frame
-            // stagger, and everything leaves together.
+            // stagger, and everything leaves together. The headline's slow
+            // push is what moves while it holds; pushing the full-frame
+            // gradient behind it too would redraw it every frame for a
+            // change nobody sees.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint),
-                          hold: TitleHold(.push, amount: 3)),
+                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
                           in: B(.rise, delayMS: 150, lengthMS: 500, amount: 12, by: .word, staggerMS: 80),
                           hold: TitleHold(.push, amount: 1.5),
@@ -96,11 +98,11 @@ extension BuiltInTitle {
             ])
         case .terminal:
             // Typed in a letter at a time, the cursor waiting after it, the
-            // progress line running out under it all.
+            // progress line running out under it all; the cursor is what
+            // moves while it holds.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint),
-                          hold: TitleHold(.push, amount: 2)),
+                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
                           in: B(.typewriter, delayMS: 200, lengthMS: 400, staggerMS: 45),
                           out: .off(.fade, delayMS: 120, lengthMS: 200)),
@@ -172,11 +174,11 @@ extension BuiltInTitle {
             ])
         case .stacked:
             // Lines revealed from alternating sides a beat apart, then the
-            // mark; they leave upwards in reverse order.
+            // mark; they leave upwards in reverse order. The mesh drifting
+            // behind them is what moves while it holds.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint),
-                          hold: TitleHold(.push, amount: 2)),
+                          in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
                           in: B(.maskReveal, delayMS: 150, lengthMS: 600, direction: .up),
                           out: .off(.rise, delayMS: 160, lengthMS: 200, amount: 20)),
