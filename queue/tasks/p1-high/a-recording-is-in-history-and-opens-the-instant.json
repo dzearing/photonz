@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T03:17:48.265Z",
-  "updated": "2026-10-11T03:17:48.363Z",
+  "updated": "2026-10-11T06:41:24.134Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"there is something horrible happening with video recording. once again, video recording is not fast and easy. I record, i stop, i momentarily see the thumbnail, then it disappears. once i tried to open and it said no video data was available. another time it gave me a 'hang on tight' message. I expect NO latency in recording and opening!\"\n\nChecked in intake: today's recordings in ~/Pictures/Screenshots (20.14.54, 19.44.21, 19.43.56, 19.35.36) are all valid on disk after the fact (ffprobe: h264 3456x2234 + aac, durations 3.0/7.6/44.2/6.9 s, frame counts sane). No Photonz crash reports. So the failure is in the window while macOS finishes the file (RecordingCoordinator.stop: store.beginSaving -> holdLastFrame -> recorder.stop -> store.finishSaving, RecordingCoordinator.swift ~stop()).\nThe 'no video data' matches RecordingDoor's .unplayable message ('could not be opened... there is no recording in it to play', PhotonzCore/RecordingDoor.swift:72-84); an MP4 without its moov atom yet reads as unplayable unless the app knows it is its own pending save. The exact 'hang on tight' text is NOT in Photonz's source; find what showed it (a macOS or AVFoundation message, a different wording of 'still being saved', or another app) and record it.\nSuspects to test, none confirmed: (1) 1f6a9962 'Saving an edited recording puts the finished video in history' (10-06) changed CaptureStore (+42), CaptureThumbnailView (+79) and tile replacement: may key or replace tiles in a way that drops the pending one; (2) CaptureStore's folder watch/reload seeing the new file before finishSaving and dropping the saving placeholder (CaptureStore.swift ~515-535 'A recording still being saved has no file to read yet'); (3) 017f5873 draggable recording control (10-10) changing the stop path; (4) 7c564f4f cut-only export (10-07) touching readers. Bisect between 2026-10-03 (user's recordings worked then) and now if the cause is not obvious. Related shipped promises this regresses: a-recording-shows-in-history-the-moment-you-stop (done), pressing-enter-on-the-recording-card-starts-reco (done).",
@@ -30,6 +30,36 @@
     {
       "t": "2026-10-11T03:17:48.362Z",
       "note": "seq 3930 -> 1"
+    },
+    {
+      "t": "2026-10-11T04:57:24.632Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T05:32:27.464Z",
+      "note": "Reproduced with Scripts/recording-latency-drill.sh at Next defaults (probe, Screen Recording granted, screen unlocked). Sound none/system/mic alone: file closed by macOS 27-65 ms after Stop, door ready at landing. System + microphone (the user's saved setting, audio=3): 3 s, 10 s and 45 s all had the 400 ms fallback in ScreenRecorder.stop fire (717-757 ms), the file was moved into history unfinished (door at landing: stillWriting), macOS never reported it closed, and it only became playable ~11.2 s after Stop. Experiment keeping the writer alive and waiting for macOS: closes at 1.8 s (3 s), 4.6 s (10 s), 20 s (45 s), i.e. about 0.45 s per recorded second. Root cause: the fallback hands over a half-written file AND releases the stream/output, so the delegate never fires."
+    },
+    {
+      "t": "2026-10-11T06:41:01.228Z",
+      "note": "owns these walks: a-recording-stays-and-opens-right-after-stop-walk, a-recording-opens-at-stop-walk"
+    },
+    {
+      "t": "2026-10-11T06:41:01.287Z",
+      "note": "Fix: ScreenRecorder.stop waits for macOS (recordingOutputDidFinishRecording, or two looks finding the file playable and the same size), via pure PhotonzCore RecordingFileClose (10 tests); no timer is evidence. Each stopped recording keeps its stream and writer until it is finished and is tracked by its own writer, so a new recording can start while one closes. CaptureStore keeps the newest landed recording's last frame for 120 s so opening it just after landing opens on that frame (450 ms -> ~190 ms) unless a remembered place says otherwise. Probe: ToastController records notes said; new walk a-recording-stays-and-opens-right-after-stop-walk (stopThenOpenDrill: 20 full-screen recordings with Mac sound + mic, opened at 0.2/0.5/1/2 s, fails on vanish/blank/reorder/any corner note/open over 250 ms). recording-latency-drill.sh now prints door verdict at landing. Walks re-run green: a-recording-opens-at-stop, close-and-reopen-a-recording, opening-a-recording, a-recording-keeps-its-clicks, an-edited-recording-saves-into-history, the-recording-control-stays-where-you-put-it, a-recording-opens-in-the-editor-at-defaults, capture-shortcuts-clear-the-corner."
+    },
+    {
+      "t": "2026-10-11T06:41:01.346Z",
+      "note": "left rough: worst open with no other window open is 210 ms vs the 200 ms ask (the Dock-app switch for the first window, ~50 ms); medians 144-197 ms, beside a window worst 165 ms. Did not earn its own task: no open task covers it and it is about 10 ms. 'Hang on tight' text is not in Photonz source; nearest is RecordingDoor's 'still being saved'. Acceptance asked for 10 runs each of 3/10/45 s with and without sound; ran both-sources 3 s x10, 10 s x10, 45 s x3, none 3 s x5, 10 s x5, 45 s x2 plus the 20-run walk; 45 s x10 was cut for time (each takes about 70 s with the close)."
+    },
+    {
+      "t": "2026-10-11T06:41:24.132Z",
+      "note": "Root cause reproduced: with Mac sound + microphone, full screen, the recorder filed the file 0.75 s after Stop while macOS needed 1.6-20 s more and never said it finished (door 'still writing', playable only ~11 s later). Now waits for macOS (RecordingFileClose, tested) and keeps the writer alive; just-landed recordings open on their held frame. Verified: drill 42 runs ready at landing; new walk a-recording-stays-and-opens-right-after-stop-walk 20/20 stop-then-open with no vanish or message, opens 144-197 ms median (worst 210 alone, 165 beside a window); 8 recording walks green; core tests 11182 pass, render+media split green. Commit f5b67a7d. Follow-up a-full-screen-recording-with-mac-sound-and-the-m for macOS's own slow close."
     }
-  ]
+  ],
+  "started": "2026-10-11T04:57:24.631Z",
+  "walks": [
+    "a-recording-stays-and-opens-right-after-stop-walk",
+    "a-recording-opens-at-stop-walk"
+  ],
+  "completed": "2026-10-11T06:41:24.133Z"
 }

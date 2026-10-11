@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:56.468Z",
-  "updated": "2026-10-10T12:50:56.557Z",
+  "updated": "2026-10-10T22:21:26.932Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 1 of 6.",
@@ -31,6 +31,31 @@
     {
       "t": "2026-10-10T12:50:56.556Z",
       "note": "seq 3930 -> 25"
+    },
+    {
+      "t": "2026-10-10T21:17:47.974Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T21:24:33.207Z",
+      "note": "Adversarial pass before building: (1) a part keyed by POSITION inside a name card goes stale when the card lays itself out again (typing a longer name, a bigger size): GroupFlow moves the child's frame but not its keys, so a rise would land off its rest place. Fix in scope: the flow carries a moved child's position keys with it. (2) Wipe has no carrier for shapes or words: a keyed crop only cuts pictures. Shapes get it in scope (the crop edge shrinks the box from that side, which on a flat panel IS a wipe); words get a real mask reveal in step 2 (title-text-by-line-word-letter), and until then a wipe on words compiles to a fade. (3) Parts' keys live on the group's children, so the refit that keeps an out at the bar's end must walk the children too, or trimming a title leaves its parts leaving on the old end. (4) A title page's out stays the group's bar fade, because that fade IS the dissolve into the recording an opening page pushes; the words leave on their own beats just before it. (5) Before frames of all 8 presets were rendered from the old code (TitleInFramesTests) and a fingerprint fixture of all 8 as placed by the old code was written (PlacedTitlesOpenTheSameTests) before any production change."
+    },
+    {
+      "t": "2026-10-10T22:20:25.699Z",
+      "note": "owns these walks: titles-move-in-parts-walk"
+    },
+    {
+      "t": "2026-10-10T22:21:26.864Z",
+      "note": "Left rough, not filed: (a) the Accent name card at 960x540 shows only 'Your' of 'Your Name' in both old and new renders (pre-existing at that frame size, not checked at 1080p); (b) Animate In/Out from a preset title's right-click still keys the whole group on top of its parts, so both play together; (c) a title page's background has no exit of its own, it leaves with the bar's fade (the dissolve). Filed p2 a-part-picked-inside-a-title-shows-its-row-only. Folded: wipe-on-words into title-text-comes-in-by-line-word-or-letter; no per-part controls into title-tiles-play-and-a-few-knobs-restyle-a-title. Easing additions are on the shared list, so Current's curve menus gain the two curves as well (the task asked for one list named the same everywhere)."
+    },
+    {
+      "t": "2026-10-10T22:21:26.930Z",
+      "note": "Shipped in 7886bd53. TitleDesign model (PhotonzCore/TitleDesign.swift, TitleDesignTests written first) compiles parts' in/hold/out into keys; all 8 built-ins re-choreographed on separate beats; locked builds measured at 2.5/6/8.5s; Ease out quint/expo on the shared list; titles placed before draw identically (PlacedTitlesOpenTheSameTests fixture); before/after frames at 0/25/50/75/100% for all 8 (TitleInFramesTests, in the audit); walk titles-move-in-parts-walk at Next defaults photographs both ins frame by frame (55 real captures); 15 affected walks green; full Scripts/test.sh green (12333 tests). Audit queue/audits/2026-10-10-titles-move-in-parts.json."
     }
-  ]
+  ],
+  "started": "2026-10-10T21:17:47.973Z",
+  "walks": [
+    "titles-move-in-parts-walk"
+  ],
+  "completed": "2026-10-10T22:21:26.931Z"
 }

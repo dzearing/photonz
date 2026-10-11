@@ -4,12 +4,12 @@
   "goal": "When a title starts, its words must clearly arrive: sliding up out of a mask, blurring into focus, tracking together, typing on, word by word or letter by letter, with motion blur on the fast moves. Today the first frame of every built-in title already shows the whole headline, so nothing reads as moving in. Then the built-in set is rebuilt on the new animated backgrounds so each one looks produced, not like a slide.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 6,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:25:07.551Z",
-  "updated": "2026-10-11T12:25:07.641Z",
+  "updated": "2026-10-11T12:51:59.735Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"The text itself doesn't even move in. It's just boring ... I asked you to research good titles and this was really not an improvement\" (full quote on the companion task 'Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching').\n\nEvidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in': Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass all show the complete headline at their 'in' frame, nearly identical to 'hold'. The previous tasks shipped TextReveal (PhotonzCore/TextReveal.swift, PhotonzRender/TextRevealRasterizer.swift), TitleDesign parts (TitleDesign.swift), MotionBlur, TitleSet.swift (12 built-ins); the log of title-text-comes-in-by-line-word-or-letter says 'the headline's own part keys still run under a hand-added reveal' and 'reveals have no out yet' and a-set-of-titles-that-look-designed folded that in. Find out why it does not show. Depends on the backgrounds task for the backgrounds; the entrance fix can land first.",
@@ -30,6 +30,14 @@
     {
       "t": "2026-10-11T12:25:07.640Z",
       "note": "seq 3950 -> 6"
+    },
+    {
+      "t": "2026-10-11T12:51:00.308Z",
+      "note": "seq 6 -> 50"
+    },
+    {
+      "t": "2026-10-11T12:51:59.734Z",
+      "note": "User 2026-10-11: build 2.5D first so the title rework can use it. Sequenced after the four 2.5D tasks (31-34). Use the depth entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle), camera pushes and depth of field from '3D transitions and title entrances' where they suit a title, alongside the 2D reveals."
     }
   ]
 }

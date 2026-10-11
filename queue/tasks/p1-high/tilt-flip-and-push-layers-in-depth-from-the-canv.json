@@ -1,0 +1,36 @@
+{
+  "id": "tilt-flip-and-push-layers-in-depth-from-the-canv",
+  "title": "Tilt, flip and push layers in depth from the canvas and the panel",
+  "goal": "With the 2.5D model in place, a person can grab a layer and tilt it in 3D right on the canvas, set exact angles and depth in the panel, key them over time, and set up the camera, all as the approved mocks show.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 33,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:51:59.344Z",
+  "updated": "2026-10-11T12:51:59.431Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 3 of 4.",
+  "acceptance": [
+    "Built to the approved mocks from 'Design how layers turn and move in depth (2.5D), as mocks' (mocks are the floor: match them, never rewrite them to fit the code); if the card is unanswered, build the recommended option and say so in the log",
+    "On-canvas 3D rotate handle that tilts about X and Y live with a readout, Shift snapping to 15 degree steps, and a way to reset; depth adjustable by drag or scroll with a modifier as the mocks say",
+    "Panel rows Rotation X, Rotation Y, Depth and Perspective with key diamonds, Mixed for several picked layers, and keyboard nudges",
+    "Camera controls as designed, with a View menu row to reset the camera",
+    "Undo is one step per drag; the controls never take over plain 2D editing (a layer with no tilt behaves exactly as today)",
+    "Works for text, shapes, pictures, groups, components and video clips at Next defaults",
+    "A walk tilts a text layer 40 degrees on Y, keys a flip over 1 s, scrubs, and photographs frames; and checks plain 2D rotate and move are unchanged",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:51:59.346Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:51:59.430Z",
+      "note": "seq 3950 -> 33"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "3d-transitions-and-title-entrances-flip-cube-swi",
+  "title": "3D transitions and title entrances: flip, cube, swing, doorway, depth push",
+  "goal": "Use 2.5D for the moves that make video feel produced: clip transitions that flip, turn a cube, swing open like a door or revolve, and title and text entrances that swing in from depth, flip up, or fly in from behind the camera, all tunable with the shared curves.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 34,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:51:59.504Z",
+  "updated": "2026-10-11T12:51:59.591Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 4 of 4.",
+  "acceptance": [
+    "Clip transitions at cuts and joins: Flip, Cube, Swing, Doorway, Revolve, Push in Depth, each with Length, Curve (shared list) and Direction, appearing in the transition tiles and right-click Add Transition like the others",
+    "Title part and text reveal behaviours that use depth: Swing In (hinged at an edge), Flip Up, Fly In From Depth, Tilt Settle, plus their outs; usable per part, per word or per letter with stagger",
+    "Every one has motion blur available and depth of field optional",
+    "VISIBLE MOTION BAR, measured: at the midpoint of each transition or entrance the moving layer's projected quad is visibly non-rectangular (an angle of at least 20 degrees from flat) and its frames 100 ms apart differ obviously; the audit includes these numbers",
+    "A reel: each transition and entrance as a 3 s MP4 and GIF under queue/audits/ and a contact sheet; a decision card links it for the user to judge, option labels naming each move. Building does not wait on the answer",
+    "Playback, scrub and export match; perf within the 16 ms budget at 1080p, MEASURED",
+    "The title rework tasks that follow (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) can use these behaviours; say in this task's log which ones they should start from",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:51:59.506Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:51:59.590Z",
+      "note": "seq 3950 -> 34"
+    }
+  ]
+}

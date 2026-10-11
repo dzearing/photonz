@@ -1,0 +1,37 @@
+{
+  "id": "layers-can-turn-about-x-and-y-and-move-in-depth",
+  "title": "Layers can turn about X and Y and move in depth under a camera (2.5D model and renderer)",
+  "goal": "Every layer gets Rotation X, Rotation Y and Depth, and every scene a camera with perspective, so flat layers can tilt, flip and move toward the viewer. All of it keys and eases like any other value and draws the same on the canvas, in playback and in export.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 32,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:51:59.170Z",
+  "updated": "2026-10-11T12:51:59.271Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 2 of 4.",
+  "acceptance": [
+    "PhotonzCore first, tests first, pure and Codable with defaults so old documents open unchanged: Layer gains rotationX, rotationY (degrees) and depth (points toward the viewer), a 3D pivot (the existing pivot plus a depth offset), and keyable LayerMotion properties for each, eased with the shared EasingCurve list",
+    "A camera per scene or frame (perspective on or off, focal length or field of view, position) with sensible defaults (off means everything is flat exactly as today), keyable so a camera can push in or orbit slightly",
+    "Groups pass their 3D transform to their children (a group can flip as one, with children keeping their own tilt), with a documented choice of flattening vs preserving 3D through a group, matching Keynote/Motion where they agree",
+    "Rendering in PhotonzRender: each layer's 2D result is placed with a 4x4 perspective transform (CIPerspectiveTransform or a Metal warp), back faces hidden or shown per a setting, layers drawn in depth order within a 3D group, and optional depth of field (blur by distance from a focus depth) using the existing blur",
+    "Hit testing, selection outlines and snapping work on tilted layers (the selection outline follows the projected quad)",
+    "SVG/PNG export of a still and MP4 export of motion match the canvas, MEASURED pixel agreement at three moments of a flip",
+    "PERF, MEASURED with a note: a 1080p frame with 10 layers, 4 of them tilted and one with depth of field, renders in under 16 ms on this Mac",
+    "Unit tests: projection math, depth ordering, back face, key interpolation of rotation X/Y and depth, round trip of old documents",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:51:59.173Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:51:59.270Z",
+      "note": "seq 3950 -> 32"
+    }
+  ]
+}

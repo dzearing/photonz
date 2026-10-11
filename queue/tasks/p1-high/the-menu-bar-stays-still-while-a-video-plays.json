@@ -4,12 +4,12 @@
   "goal": "While a video plays, the menu bar at the top of the screen flickers as if its menus were being taken down and put back on every frame. It should not change at all during playback; anything in a menu that depends on where the playhead is should be worked out when the menu is opened or the command is chosen, not on every frame.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 2,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:14:51.411Z",
-  "updated": "2026-10-11T12:14:51.518Z",
+  "updated": "2026-10-11T12:51:00.079Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when a video is playing back, I am seeing the menu at the top of the screen flickering, as if something is being added and removed in the list. if i pause, no flicker\".\n\nSuspect from code reading, NOT confirmed: SwiftUI Commands bodies that READ observable state re-evaluate whenever it changes, and the menu bar is rebuilt each time. Sources/Photonz/EditorCommands.swift reads the playhead in the body, not just in actions: clickAtPlayhead (:1236), nextClickMS (:1243), clipToAddZoom(atMS: documentTimeMS) (:1248); documentTimeMS changes every frame during playback. Reads inside Button closures (:774, :925-929, :1250, :1493) are fine. 31 playhead mentions in the file; audit all of them and any other per-frame state (isDocumentPlaying transitions are fine, the time is not). Fix pattern: compute in the action, or expose coarse derived values that change only at boundaries (clip under playhead, click under playhead) with equality-gated updates. Trap: the Clicks/Zoom rows were added in 39d066d8 and the zoom rows by the zoom task; keep their behaviour.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-11T12:14:51.516Z",
       "note": "seq 3950 -> 2"
+    },
+    {
+      "t": "2026-10-11T12:51:00.078Z",
+      "note": "seq 2 -> 10"
     }
   ]
 }

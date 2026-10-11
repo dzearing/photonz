@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 3940,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T08:28:23.731Z",
-  "updated": "2026-10-11T10:49:10.035Z",
+  "updated": "2026-10-11T10:49:45.894Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split from a-set-of-titles-that-look-designed (step 6 of docs/design/video-titles-polish.md), whose acceptance asked for 'optional soft whoosh and tick sounds synced to the builds, off by default, using the existing sound effects'. There are no existing sound effects to use: SoundEffects.swift is the Effects list on a picked sound (EQ, Compressor, Noise reduction), not sound clips, and Resources holds only the app icon (grep -rli whoosh Sources Resources: nothing). Sound reaches the timeline only as a file (EditorState.addSound(from:) via SoundLibrary.shared.sound(at:), PhotonzDocument.addSound). So this needs: bundled or generated sound files (PhotonzMedia could synthesise a filtered noise sweep and a click to WAV), a way for a title's recipe (GroupContent.titleRecipe) to own the sound layers it placed so a drag or trim of the title carries them, a Sounds row in the Title section (TitleRestyleInspector), and the build moments from TitleRecipe.compiled (each part's in delay). canSaveTitlePreset refuses titles containing sound, so the sounds must stay beside the title, not inside its group.",
@@ -35,10 +35,19 @@
     {
       "t": "2026-10-11T10:49:10.034Z",
       "note": "owns these walks: title-sounds-whoosh-and-tick-walk"
+    },
+    {
+      "t": "2026-10-11T10:49:45.826Z",
+      "note": "left rough, none earned its own task (no person stopped by any; the audit asks the user about each): the sound bar catches up only when a title drag is let go; the bar's track is named Audio 2, not after the title; Sounds is only in the panel, not on the title's right-click menu (it is a value, so the panel is its home by the placement contract); a bar dragged alone snaps back under its title; one sound set only, shaped by Energy. Not listened to by ear in this unmanned run: checked by sample shape in tests and by the exported MP4's levels (ffmpeg read: whoosh rising from 0.30s to a peak near 0.85s, tick at about 0.96s, matching Editorial Serif's score whoosh@300+840 tick@960)."
+    },
+    {
+      "t": "2026-10-11T10:49:45.892Z",
+      "note": "A Sounds switch in the Title section (off by default) lays a Title Sounds bar under the title: a synthesised soft whoosh as the headline comes in and a tick as each small accent lands, timed from the title's design and shaped by Energy. The bar is kept under its title on every edit (drag, trim, copy, delete), plays, and exports. Core TitleSounds.swift + Layer.titleSound, PhotonzMedia TitleSoundSynth.swift, app TitleSoundFiles.swift and the panel row. Verified by TitleSoundsTests (17), TitleSoundSynthTests (7, including an export of the mix), the full suite (12,497 green) and title-sounds-whoosh-and-tick-walk at Next defaults (the switch clicked at its face, silent MP4 with Sounds off, MP4 with a sound track with it on, bar gone when clicked off). Audit: queue/audits/2026-10-11-titles-can-play-a-soft-whoosh-and-tick-as-they-b.json. Commit 9ac8b17a."
     }
   ],
   "started": "2026-10-11T10:20:59.087Z",
   "walks": [
     "title-sounds-whoosh-and-tick-walk"
-  ]
+  ],
+  "completed": "2026-10-11T10:49:45.893Z"
 }

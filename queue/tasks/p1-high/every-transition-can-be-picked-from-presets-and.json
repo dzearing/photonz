@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 22,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:22:45.261Z",
-  "updated": "2026-10-10T12:22:45.403Z",
+  "updated": "2026-10-10T17:03:49.976Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"the transitions are fixed and the curves cant be adjusted. other software has more consistent ia where anything that is a transition can be tweaked - either picking a transition and tweaking it, or creating a custom one and tweaking a curve. I'd like every transition to be configurable like that.\"\n\nFrom code reading (not run): the shared curve list exists, PhotonzCore/LayerMotion.swift:428 EasingCurve (named presets, steps(n), custom(x1,y1,x2,y2) from the curve editor under 'Draw a Curve'), from task one-set-of-easing-curves-named-the-same-way-ever; used by keys. Zooms: PhotonzCore/ClipZoom.swift easeInMS/easeOutMS only (:36-37, defaultEaseMS), no curve. Clip transitions: PhotonzCore/ClipTransitions.swift ClipTransition (kind, lengthMS, alignment, holdMS :107-131), progress is linear (progress(atMS:) :190-194, dipAmount :199-210), no curve. Edit points: EditPointTransitions.swift. Title in/out: EditorState+ClipKeys.swift:66-77, 207-214 (Fade/Slide/Pop/Scale, built on keys, so may already take curves; check). Model changes in PhotonzCore with Codable defaults so old docs decode, tests first. Companion: 'Pick several zooms at once and change or delete them together' edits this Curve row across many zooms; 'Dip to black and Dip to white visibly fade out and fade back in' touches dipAmount, coordinate.",
@@ -33,6 +33,44 @@
     {
       "t": "2026-10-10T12:22:45.401Z",
       "note": "seq 3930 -> 22"
+    },
+    {
+      "t": "2026-10-10T15:28:30.572Z",
+      "note": "from pick-several-zooms (2026-10-10): the Zoom panel now shows shared settings for several picked zooms (ClipZoomsReading, ZoomInspector). When a zoom gets a curve, add it to ClipZoomsReading so the curve row says Mixed and one pick sets it on every picked zoom (EditorState.changeZooms)."
+    },
+    {
+      "t": "2026-10-10T15:57:48.726Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T16:01:17.616Z",
+      "note": "adversarial review before building: (1) zooms ease on smootherstep today, which is not on the shared list of eight; to open old documents exactly as before, a zoom's default curve is kept as its own named curve Smooth, offered at the top of the zoom's Curve menu only (the shared eight stay as the key mock draws them). (2) clip transitions are linear today, so Linear is their default. (3) Title Animate In/Out is built from keys, so its curve is the Properties Between the keys Curve row, which already takes EasingCurve; it moves onto the same shared row. (4) a dip keeps all of its colour on the cut whatever the curve: the curve shapes the fade down and the fade up, each on its own half, so a hard cut is never seen. (5) sound across a transition keeps its equal-power cross-fade; only the picture follows the curve (a Premiere editor expects the audio crossfade to stay constant power). (6) Premiere has no curve on video transitions at all and Resolve has Ease In/Out on them, so a full curve list meets or beats both."
+    },
+    {
+      "t": "2026-10-10T16:10:38.146Z",
+      "note": "owns these walks: curves-on-a-zoom-and-a-dissolve-walk"
+    },
+    {
+      "t": "2026-10-10T17:03:23.517Z",
+      "note": "walks curves-on-a-zoom-and-a-dissolve-walk -> curves-on-a-zoom-and-a-dissolve-walk, a-title-animation-takes-the-curve-row-walk"
+    },
+    {
+      "t": "2026-10-10T17:03:23.579Z",
+      "note": "built: shared CurveRow (Sources/Photonz/CurveRow.swift) on zoom (Curve, or Curve In / Curve Out via Set In and Out Apart), transition at a cut, picture Fade In/Out (Time), sound fades, Between the keys. Core: EasingCurve.smooth (zoom default, smootherstep, not in named), ClipZoom.curve/outCurve (nil = Smooth, writes nothing new), ClipTransition.curve (Linear default, encoded only when not linear; shownProgress/shownDipAmount, each dip half on the curve), PictureFade.curve, SavedCurves + SavedCurveStore (UserDefaults motion.savedCurves, forgotten with walk 'motion'). CurveEditor gained a name field + Save. Tests: TransitionCurveTests (19). Walks: curves-on-a-zoom-and-a-dissolve-walk (measures 25/50/75% on canvas and export, within 2%: 0.0 off), a-title-animation-takes-the-curve-row-walk. Updated walks for the sound fade row's walk name (Sound fade curve): sound-fades-in-the-panel, every-clip-dropdown-opens-on-a-click."
+    },
+    {
+      "t": "2026-10-10T17:03:23.638Z",
+      "note": "left rough (below the follow-up bar, kept here): the zoom bar on the timeline does not draw its curve; the picture-side motion list (MotionListInspector MotionCurveSetting) keeps its own curve menu with the word Drawn and no Saved list; title Animate In/Out has no Length row (its length is the key spacing); sound under a transition keeps constant power by design. Full Scripts/test.sh stalled again after walks (logged on the hang task); split runs all green: 11059 + 1153 + 76."
+    },
+    {
+      "t": "2026-10-10T17:03:49.974Z",
+      "note": "Shared Curve row (CurveRow) on zooms (Curve or Curve In/Out apart, default Smooth), transitions at a cut (Linear), picture Fade In/Out, sound fades and Between the keys (Animate In/Out); saved curves by name with Forget; old docs unchanged. Measured at 25/50/75% within 2% (0.0 off) on canvas and export by curves-on-a-zoom-and-a-dissolve-walk; TransitionCurveTests; split test runs green. Commit 2e1ef658. Audit queue/audits/2026-10-10-every-transition-can-be-picked-from-presets-and.json"
     }
-  ]
+  ],
+  "started": "2026-10-10T15:57:48.724Z",
+  "walks": [
+    "curves-on-a-zoom-and-a-dissolve-walk",
+    "a-title-animation-takes-the-curve-row-walk"
+  ],
+  "completed": "2026-10-10T17:03:49.975Z"
 }

@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 3930,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T06:40:32.403Z",
-  "updated": "2026-10-11T06:40:32.406Z",
+  "updated": "2026-10-11T10:03:27.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-10 on the probe after the fix in a-recording-is-in-history-and-opens-the-instant: SCRecordingOutput (ScreenRecorder.swift) with captureMicrophone AND capturesAudio on a full 3456x2234 display reports recordingOutputDidFinishRecording at 1.58-1.64 s (3 s, n=10), 4.52-4.67 s (10 s, n=10), 20.0 s (45 s, n=3). Same sound on a 480x300 region: 52-85 ms. Either source alone at full screen: 22-75 ms. So the close cost scales with video size only when both audio sources are on, suggesting SCRecordingOutput rewrites the file to mix the two audio tracks. Ideas: record the mic through its own SCStreamOutput / AVAssetWriter audio track and mix later, or write the whole file with AVAssetWriter. The user records with audio=3 (both), see defaults photonz.recordingConfig.",
@@ -23,6 +23,35 @@
     {
       "t": "2026-10-11T06:40:32.405Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T09:10:45.484Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T09:19:06.651Z",
+      "note": "Reproduced 2026-10-11 on the probe: Scripts/recording-latency-drill.sh 10 --system-audio --with-microphone -> file closed by macOS 4630 ms, editor playable 4646 ms. Container is not the cause: outputFileType .mov still closes at 4630 ms and still writes one mixed AAC track. Experiment: a passthrough remux (AVAssetReader->AVAssetWriter, no re-encode) of picture + one audio track takes 23 ms for a 10 s full-screen file and 46 ms for the user's 45 s one, with identical frame times and colour tags. Plan: when both sounds are on, SCRecordingOutput records picture + Mac sound only (the fast-closing case), the microphone is captured with AVCaptureSession, both are mixed live on the host clock and encoded to an AAC side file while recording, and Stop copies picture + mixed sound into the final file. Behind a new Next flag on by default; any failure falls back to the picture file with Mac sound so a recording is never lost. Adversarial: a person sees no new UI, only Play/Copy ready sooner; risks are sync (verified by cross-correlating against SCK's own Mac-sound track) and the mic's first moments if AVCaptureSession starts later than the first frame (measured below)."
+    },
+    {
+      "t": "2026-10-11T10:03:11.025Z",
+      "note": "owns these walks: a-recording-stays-and-opens-right-after-stop-walk"
+    },
+    {
+      "t": "2026-10-11T10:03:11.086Z",
+      "note": "Built: SoundMixTimeline (PhotonzCore, 14 tests), RecordingSoundWriter + RecordingSoundMerge + PCMSamples (PhotonzMedia, 7 tests), RecordingSoundMixer (app) wired into ScreenRecorder's cold start and stop, behind next-two-sounds-mixed-as-you-record (on at Next defaults; Current keeps macOS mixing). Verified on the probe with Scripts/recording-latency-drill.sh at full screen, both sounds: editor playable 60 ms (3 s), 46 ms (10 s), 92 ms (45 s); system only 25 ms, mic only 49 ms, none 49 ms. Sync: Tink onsets 1.4523/4.3729/7.2910/10.2002 s identical in SCK's own Mac-sound track, the live mix and the joined file; mic buffers arrive 12 ms after their converted host-clock stamp; mic room noise (peak 0.0016) present in the joined file. Walks: a-recording-stays-and-opens-right-after-stop-walk ok (files land 73-107 ms after Stop), the-recording-control-stays-where-you-put-it-walk ok. Tests: full run hung in the known Vision/HEIF stall (logged on find-out-why-the-whole-test-run-hangs-in-the-mac); split run green 11212 + 1143 + 118."
+    },
+    {
+      "t": "2026-10-11T10:03:11.145Z",
+      "note": "left rough: the microphone is first heard ~85 ms after the first frame (AVCaptureSession opens in parallel with the stream), so a recording's first tenth of a second has no voice. Did not earn a task: nobody has reported it and it is under a syllable; could be closed by opening the mic while the recording card is up. Also left: the stop-then-open walk no longer sees any file still closing at 0.2 s (0 of 20), so at Next defaults it now proves landing speed rather than opening mid-close; PlaytestOpenAtStop still forces a 3 s close for that."
+    },
+    {
+      "t": "2026-10-11T10:03:27.876Z",
+      "note": "With Mac sound and the microphone both on, the recorder now mixes them live while recording (Next switch next-two-sounds-mixed-as-you-record, on by default) and joins pictures + mix at Stop without re-encoding. Probe drill, full screen, both sounds: playable 60 ms after Stop for 3 s, 46 ms for 10 s, 92 ms for 45 s (were 1.6 s, 4.6 s, 20 s); one or no sound unchanged at 25-49 ms. Mac sound sync matches macOS's own track to 0.1 ms; mic stamps on the host clock (arrive 12 ms after). Commit 376031ec, audit queue/audits/2026-10-11-two-sounds-play-at-stop.json, walks ok, split test run green."
     }
-  ]
+  ],
+  "started": "2026-10-11T09:10:45.483Z",
+  "walks": [
+    "a-recording-stays-and-opens-right-after-stop-walk"
+  ],
+  "completed": "2026-10-11T10:03:27.878Z"
 }

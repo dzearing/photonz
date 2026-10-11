@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 27,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:56.803Z",
-  "updated": "2026-10-10T12:50:56.893Z",
+  "updated": "2026-10-11T01:32:48.215Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 3 of 6.",
@@ -31,6 +31,35 @@
     {
       "t": "2026-10-10T12:50:56.892Z",
       "note": "seq 3930 -> 27"
+    },
+    {
+      "t": "2026-10-10T23:43:38.902Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T23:49:03.135Z",
+      "note": "Pre-build review. First-time user: they will not go looking for a 'mesh fill' or a 'grain effect'; they reach these through two new title pages in the Library and the Add Title Page menu (Aurora: a drifting three colour mesh with grain and an underline that draws on; Behind Glass: the recording under the title blurred, dimmed and slowly zooming, sharpening as the title leaves). The pieces stay ordinary and editable: the background's Fill gets a Mesh type with a Drift knob, Effects gets Grain with an Amount, a background blur gets a Zoom, and lines and paths get Trim start and Trim end keys. What the app cannot deliver from the mock-free spec: a Library tile for Behind Glass has no recording behind it (tiles are stills of the preset alone, step 5 makes them play over the person's first frame), so its tile shows a dark page. Collisions: an opening title page at 0:00 normally pushes the recording later so nothing plays hidden; Behind Glass must NOT push, because the recording under it is its background, and it leaves through its own parts rather than the bar's fade. Grown-up tools: Premiere does this with a Gaussian Blur + Brightness on the clip, keyed by hand, and After Effects draws a rule on with Trim Paths start and end; here it is one pick from the Library, and every value is still a key you can drag. No mock page covers title backgrounds; the icon draw-on mock (icon-drawon-wt) names the same stroke motion Dash for icons."
+    },
+    {
+      "t": "2026-10-11T01:32:02.775Z",
+      "note": "owns these walks: title-backgrounds-move-walk"
+    },
+    {
+      "t": "2026-10-11T01:32:19.241Z",
+      "note": "Built: Mesh fill + Drift, Grain effect, background blur Zoom, Trim start/end keys on lines and paths, Draw On and Frost builds, glass-aware push hold, Aurora and Behind Glass pages, behind next-title-backgrounds-move (on in Next). Measured: Aurora 8.9-10.4 ms and Behind Glass 4.7-5.5 ms a 1080p frame (debug, alone); banding in a 1080p MP4 48 rows plain vs 24 with default grain. Finding: 1 px grain at 12% is wiped out by the encoder (41 vs 48 rows), so grain is 2 px per 1080 lines and defaults to 25%. Earlier rules applied to the new pages: Behind Glass frosts in over 0.7 s (nothing of a title shows on its first frame), its out is 480 ms ease in (outs end inside the last half second)."
+    },
+    {
+      "t": "2026-10-11T01:32:19.309Z",
+      "note": "left rough (under the follow-up bar, not filed): a Mesh on a path or a frame's screen does not drift on the canvas (only box and oval fills drift); mesh points have no on-canvas handles; hand drawn style arrows ignore a trim; Behind Glass over a gap is a dark page; glass under 4 pt of blur is slightly less saturated than before (boost now eases in). The icon draw-on mock (icon-drawon-wt) calls the stroke motion Dash for icons; titles use Trim start / Trim end. Library tile folded into title-tiles-play-and-a-few-knobs-restyle-a-title. Tests: whole Scripts/test.sh hit the known hang (find-out-why-the-whole-test-run-hangs-in-the-mac); split run green: core 11138, render+media minus 12 Vision/HEIF/speech suites 1128, those 12 alone 118."
+    },
+    {
+      "t": "2026-10-11T01:32:48.212Z",
+      "note": "Aurora (drifting mesh, grain, rule that draws on) and Behind Glass (the recording blurred, dimmed, settling 105 to 100%, racking back into the footage) title pages; Mesh fill with Drift, Grain effect, background blur Zoom, Trim start/end keys, Draw On and Frost builds; Next switch on by default. Verified: TitleBackgroundsTests, TitleBackgroundsRenderTests (playback/scrub/export byte-equal; Aurora 8.9-10.4 ms, Behind Glass 4.7-5.5 ms at 1080p), GrainBandingExportTests (MP4 bands 48 rows plain vs 24 with grain), split test run green, title-backgrounds-move-walk ok with 18 real captures plus 10 neighbouring walks ok. Commit e3f0814f. Audit queue/audits/2026-10-10-title-backgrounds-move.json."
     }
-  ]
+  ],
+  "started": "2026-10-10T23:43:38.901Z",
+  "walks": [
+    "title-backgrounds-move-walk"
+  ],
+  "completed": "2026-10-11T01:32:48.214Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 21,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:22:44.964Z",
-  "updated": "2026-10-10T15:45:17.329Z",
+  "updated": "2026-10-10T15:45:38.382Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i create multiple zooms on a track, id like to be able to select multiple zooms, either by shift clicking them, or clicking the zoom tab on the left to select all zooms in the row. Then I'd like to be able to modify common properties of the zoom. For example, maybe i want them all to have a consistent transition, or i want to delete a few at a time.\"\n\nFrom code reading (not run): one picked zoom only, EditorState.selectedZoom: ClipZoomRef? (EditorState.swift:1723; cleared :906). Zoom model PhotonzCore/ClipZoom.swift (easeInMS/easeOutMS :36-37, scale, followsCursor). Zoom lane UI ZoomLane.swift; menu rows EditorCommands.swift ~1118-1142 and EditorState+Zoom.swift. Make the pick a set (selectedZooms) and keep selectedZoom as 'the one in hand' only when the set has one, so the box code (showsZoomBox, EditorState+Zoom.swift:352-363) keeps working. Companion tasks filed the same day: 'Every transition can be picked from presets and tuned on a curve' (the curve the shared panel row edits) and 'Dragging a box on the timeline picks everything it touches' (marquee over zoom bars).\n\nDone 2026-10-10: EditorState.pickedZooms (Set<ClipZoomRef>) beside selectedZoom (the anchor; its didSet keeps the set honest). EditorState+Zoom: togglePickedZoom, pickAllZooms(onClip:), changeZooms/removeZooms (one perform each), zoomsActedOn(from:) for the bar's right-click, zoomOwnsPicture false when more than one is picked (no box). Core: ClipZoomsReading + PhotonzDocument.updateZooms/removeZooms (SeveralZoomsTests). ZoomInspector reads the shared values with Mixed. ZoomLane: Shift/Cmd click via NSApp.currentEvent, label tap picks the row (playtest control 'Zoom lane label'), picked bars keep a dark edge. Walk harness: windowClick takes modifiers. Walk: Scripts/playtest/pick-several-zooms-walk.json (bars at x 743/1132, lane y 897, label x 52).",
@@ -47,10 +47,15 @@
     {
       "t": "2026-10-10T15:45:17.328Z",
       "note": "left rough: a pick stays on one recording (Shift click on another clip's zoom starts a new pick there); the menu rows keep the singular 'Delete Zoom' with several picked, as Final Cut keeps 'Delete'. Neither clears the follow-up bar."
+    },
+    {
+      "t": "2026-10-10T15:45:38.380Z",
+      "note": "Shift/Command click and the Zoom lane label pick several zooms; panel shows shared values (Mixed where they differ); panel, right-click and Clip menu change or delete all picked in one undo step; no box with several picked. Commit 28b0b5d2. Verified: pick-several-zooms-walk at Next defaults (pointer clicks with Shift/Command, Delete key, right-click Delete Zoom, undo/redo), all 18 zoom walks green, tests 11040+1153+76 pass (full run hit the known Vision/HEIF hang, split per that task). Audit queue/audits/2026-10-10-pick-several-zooms.json."
     }
   ],
   "started": "2026-10-10T14:51:08.642Z",
   "walks": [
     "pick-several-zooms-walk"
-  ]
+  ],
+  "completed": "2026-10-10T15:45:38.381Z"
 }

@@ -4,12 +4,12 @@
   "goal": "While dragging a selection box on the timeline, bringing the pointer near the left, right, top or bottom edge scrolls the timeline that way so the box can reach things off screen. It starts slowly just inside the edge and speeds up the closer the pointer gets, without ever becoming hard to control, and the box keeps growing with the scroll.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 4,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:20:56.492Z",
-  "updated": "2026-10-11T12:20:56.581Z",
+  "updated": "2026-10-11T12:51:00.195Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"marquee selection on the timeline doesn't seem to have progressive scroll built in - where as we get close to the scroll edge it starts to slowly scroll in that direction so that we can select more items offscreen. as you get closer to the edge, the velocity increases but not obnoxiously\".\n\nFrom code reading (not run): vertical edge autoscroll exists only for carrying a track, TrackRowDragSession.swift:238-263 (edgeBand, edgeSpeed, speed = edgeSpeed * into * |into|, driven per frame with dt, scrolls editor.timelineTracksScroll and moves the pointer by the scrolled amount), and LayerRowDragSession.swift:293-300 for the layers list. The box: EditorState+TrackRange.swift LanePress/LaneBox and beginLanePress/endLanePress, gesture TimelineLaneMarquee (TimelineTrackRows.swift ~1010+), drawn by TimelineLaneBoxView (TimelineDock.swift ~1291); its range is in ms, so a horizontal scroll must extend the box's ms range by the scrolled time. A drag gesture gets no events while the pointer is still, so autoscroll needs a display-link/timer driver like TrackRowDragSession's. Box selection itself: dragging-a-box-on-the-timeline-picks-everything (done).",
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-11T12:20:56.580Z",
       "note": "seq 3950 -> 4"
+    },
+    {
+      "t": "2026-10-11T12:51:00.194Z",
+      "note": "seq 4 -> 30"
     }
   ]
 }

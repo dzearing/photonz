@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 19,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:16:46.883Z",
-  "updated": "2026-10-10T12:16:46.981Z",
+  "updated": "2026-10-10T13:39:07.137Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"whenever i record something, the little recorder chip is in a very awkward spot sometimes, and I need to drag it elsewhere. I'd like to be able to drag it to a preferred position and have it remember. Ideally, we default in the bottom left corner of the screen rather than center top.\"\n\nFrom code reading (not run): Sources/Photonz/Capture/RecordingControlsController.swift. makePanel (:60-81) builds a borderless NonactivatingPanel at .statusBar level, not movable (no isMovableByWindowBackground or drag handling); frame(on:) (:84-89) places it top centre, 12 pt under the menu bar (vf.midX, vf.maxY - h - 12), size 232x52. RecordingCoordinator.start shows it before the stream so SCContentFilter can exclude its window (RecordingCoordinator.swift ~47-66), and sleeps 150 ms for that; moving the window keeps the same window number so exclusion holds, but confirm. Trap: isMovableByWindowBackground on a nonactivating panel can still activate the app on mouse down in some cases; verify with the focus drill. Trap: the pending Enter-to-record latency work may create the panel earlier/offscreen; keep the remembered origin in one place both use.",
@@ -32,6 +32,43 @@
     {
       "t": "2026-10-10T12:16:46.980Z",
       "note": "seq 3930 -> 19"
+    },
+    {
+      "t": "2026-10-10T12:18:02.858Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T13:35:58.924Z",
+      "note": "owns these walks: the-recording-control-stays-where-you-put-it-walk"
+    },
+    {
+      "t": "2026-10-10T13:36:11.400Z",
+      "note": "review before building: a Premiere/QuickTime/CleanShot user expects the recording HUD to be draggable by its body and the button to stay a button; the risk was a drag gesture eating Stop and the panel taking focus. No mock exists for this control, so it keeps its look."
+    },
+    {
+      "t": "2026-10-10T13:36:11.458Z",
+      "note": "built: PhotonzCore RecordingControlPlacement (default bottom left, glass 16 pt in; spot remembered from nearest corner; clamped into visibleFrame; pushed straight out of a recorded region over its nearest edge with 12 pt gap, left alone when no edge fits) + 16 tests. App: RecordingControlsController drags by SwiftUI DragGesture on the glass using the real pointer position (NSEvent.mouseLocation, walk override playtestPointer), remembers via RecordingControlSpotStore (UserDefaults photonz.recordingControlSpot), double click resets with a 0.25 s glide. Reset is double click, not a right-click row."
+    },
+    {
+      "t": "2026-10-10T13:36:11.520Z",
+      "note": "found and fixed while walking: a press that starts on Stop is held by the button and SwiftUI hands the buffered drag to the parent gesture at release, so the control jumped a few points. The drag now ignores any press that began inside the Stop button's frame."
+    },
+    {
+      "t": "2026-10-10T13:36:11.580Z",
+      "note": "verified: walk the-recording-control-stays-where-you-put-it-walk (new action recordingControlDrill, five real recordings, no flags) green with 4 real captures; focus-drill clean (0/53 ticks lost, 0 covered); Scripts/recording-start-drill.sh 2 --region PASS with the control kept out of the video (the drill pins the control top centre, where its squares are laid out, and puts the person's spot back). Tests: full run hung in Vision/HEIF (logged on find-out-why-the-whole-test-run-hangs-in-the-mac); halves passed 11025 + 1153, the 8 hanging suites passed alone 15 + 63."
+    },
+    {
+      "t": "2026-10-10T13:36:11.639Z",
+      "note": "left rough (not filed, under the bar or a guess until the user reacts to the audit): no visible hint that the control drags or double clicks (no hand cursor for a never-active panel); control cannot be dragged onto another display; the walk does not film the file after a move (exclusion is by window id, proven at the start spot by the region start drill). All are in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-10-10T13:39:07.135Z",
+      "note": "The recording control starts bottom left (glass 16 pt in, above the Dock), drags by any part but Stop while recording without taking focus, comes back to its corner-relative spot on every later recording, keeps out of a recorded region, and double click sends it home. Core placement + 16 tests (RecordingControlPlacement), app drag/memory in RecordingControlsController. Verified by walk the-recording-control-stays-where-you-put-it-walk (5 real recordings, no flags, 4 real captures), focus drill clean, region start drill PASS, tests green in split runs (full run hung in Vision/HEIF, logged on the open look-into). Audit queue/audits/2026-10-10-recording-control-spot.json."
     }
-  ]
+  ],
+  "started": "2026-10-10T12:18:02.857Z",
+  "walks": [
+    "the-recording-control-stays-where-you-put-it-walk"
+  ],
+  "completed": "2026-10-10T13:39:07.136Z"
 }

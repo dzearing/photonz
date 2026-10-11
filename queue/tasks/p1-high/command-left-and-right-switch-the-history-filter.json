@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:16:47.065Z",
-  "updated": "2026-10-10T12:16:47.167Z",
+  "updated": "2026-10-10T14:35:43.210Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"on the history, i'd like cmd-left/right to change the filter control, so i can quickly swap to video filtering with keyboard\".\n\nFrom code reading (not run): Sources/Photonz/HistoryOverlay.swift. Filter is CaptureFilter (.all, .screenshots, .videos; PhotonzCore/CaptureFilter.swift:6-9) held in HistoryFilterChoice (:148-157) and shown by HistoryFilterBar (:37); one strip per filter with its own focus (:24), 'A new filter keeps the keyboard target' (:68). Arrows: .onKeyPress(.leftArrow)/.rightArrow -> moveSelection (:53-54), likely ignoring modifiers, so add Command handling before them (KeyPress.modifiers). Related done: walking-the-history-strip-with-the-arrow-keys-ke (arrow speed), keep it intact.",
@@ -30,6 +30,40 @@
     {
       "t": "2026-10-10T12:16:47.166Z",
       "note": "seq 3930 -> 20"
+    },
+    {
+      "t": "2026-10-10T13:51:30.798Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T13:56:02.135Z",
+      "note": "owns these walks: history-filter-command-arrows-walk, history-filter-switch-speed-walk"
+    },
+    {
+      "t": "2026-10-10T14:01:02.867Z",
+      "note": "Reproduced before the change (switch off = old code path): history open over 12 made-up captures, Right then Command Right; the filter stayed on All and the focus moved from Screenshot 0001.png to Recording 0002.mp4, i.e. Command Right acted exactly like a plain Right. Scratch walk /tmp/history-cmd-arrows-off.json, log line: '[10 expectHistory] the filter shows all with the all strip in sight (12 captures), focus on Recording 0002.mp4'."
+    },
+    {
+      "t": "2026-10-10T14:35:20.947Z",
+      "note": "Review before building: Command arrows in the editor are Nudge Earlier/Later, but those menu rows only print their key while the timeline has the keyboard, and the history strip handles Command arrows itself and returns handled even at the ends, so the key never falls through to the window behind. Finder/Safari use Command with arrows for the next page of a segmented view, so the gesture is familiar. Rapid presses: the filter's pick lands over two frames, so a second press steps on from the last pick (HistoryFilterChoice.wanted), not from what the bar shows yet."
+    },
+    {
+      "t": "2026-10-10T14:35:21.006Z",
+      "note": "Built: behind next-history-filter-keys (on by default in Next, absent from Current, since HistoryOverlay.swift is shared). CaptureFilter.stepped(by:) and HistorySelection.carry(_:from:to:) in PhotonzCore with tests; HistoryOverlay onKeyPress(keys:) splits Command from plain arrows; a switch (key or click) keeps the focused capture via land(count:at:) and jumps it into view with no sweep (focus.jumps, scrollTo with no anchor, so a capture already in view stays put). New playtest step expectHistory (filter / focused kind / capture file name) reads the strip via HistoryOverlayProbe. Tooltip key: ⌘← ⌘→."
+    },
+    {
+      "t": "2026-10-10T14:35:21.065Z",
+      "note": "Verified: history-filter-command-arrows-walk at Next defaults, 35 steps green (Command switches longest pass 4.5 to 6.2ms). All 8 history walks green incl. history-filter-switch-speed-walk (plain arrows and clicked switches under 16ms). Tests: full Scripts/test.sh hung in Vision/HEIF (known, logged on find-out-why-the-whole-test-run-hangs-in-the-mac); split run all green: 11032 + 1153 + 76. Left rough (did not clear the bar): the tooltip shows the key glyphs only, not the words Left/Right."
+    },
+    {
+      "t": "2026-10-10T14:35:43.208Z",
+      "note": "Command Left/Right step the history filter (All, Screenshots, Videos, no wrap) in Next, behind next-history-filter-keys on by default; plain arrows unchanged; a switch keeps the focused capture when the new filter has it; tooltip names the keys. Verified by history-filter-command-arrows-walk at Next defaults (35 steps green, Command steps under 7ms a pass), all 8 history walks green incl. the speed walk, unit tests green in three parts after the known Vision/HEIF hang. Audit queue/audits/2026-10-10-history-filter-keys.json. Commit 92d6119a."
     }
-  ]
+  ],
+  "started": "2026-10-10T13:51:30.797Z",
+  "walks": [
+    "history-filter-command-arrows-walk",
+    "history-filter-switch-speed-walk"
+  ],
+  "completed": "2026-10-10T14:35:43.209Z"
 }

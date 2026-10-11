@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:57.283Z",
-  "updated": "2026-10-10T12:50:57.369Z",
+  "updated": "2026-10-11T08:52:58.422Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 6 of 6.",
@@ -30,6 +30,64 @@
     {
       "t": "2026-10-10T12:50:57.368Z",
       "note": "seq 3930 -> 30"
+    },
+    {
+      "t": "2026-10-10T23:33:18.727Z",
+      "note": "From step 2 (title-text-comes-in-by-line-word-or-letter): words can now come in by line, word or letter (TextContent.reveal, TextReveal.swift). A TitleBuild of kind wipe on a text piece already compiles to a reveal (TitleCompiler.wordReveal); to use rise/blur/mask by word on headlines, give TitleBuild a unit and stagger and compile those to a reveal instead of the part's own opacity/position keys, or the line fades as a block under its words (seen in title-words-mask-reveal-walk, where a reveal added by hand runs under Midnight's own rise)."
+    },
+    {
+      "t": "2026-10-11T06:54:04.274Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T08:28:35.970Z",
+      "note": "owns these walks: title-set-keynote-clean-walk, title-set-soft-gradient-glass-walk, title-set-kinetic-bold-walk, title-set-editorial-serif-walk, title-set-tech-terminal-walk, title-set-behind-glass-walk, title-set-light-leak-walk, title-set-gradient-glow-walk, title-set-stacked-stagger-walk, title-set-split-wipe-walk, title-set-minimal-underline-walk, title-set-pill-card-walk, title-presets-gallery-walk, title-knobs-restyle-walk"
+    },
+    {
+      "t": "2026-10-11T08:52:45.535Z",
+      "note": "Review before building: no mock draws the presets, so the brief's twelve directions are the spec. A first-time user meets them as Library tiles that already play (step 5), so the names must fit a tile: Light Leak Cinematic and Gradient Text Glow were shortened to Light Leak and Gradient Glow, Recording Behind Glass kept its shipped name Behind Glass. A Final Cut user expects a title browser of animated previews you drop and type into; that is what the shelf already does. What the brief assumed and the app lacked: per word builds on a title part (built here: TitleBuild.unit/staggerMS plus Mask Reveal, Track In, Typewriter, compiled to the text's reveal), a blinking cursor (built: Blink hold), gradient text (built from a gradient box matted to the words inside a group whose glow is theirs), and sound clips for whooshes (none exist; split to titles-can-play-a-soft-whoosh-and-tick-as-they-b, p1)."
+    },
+    {
+      "t": "2026-10-11T08:52:45.598Z",
+      "note": "Decision: the plain set (Midnight to Minimal) is retired rather than deleted: BuiltInTitle.isRetired keeps it off the shelf and out of the menus, and keeps about 110 mechanism tests (design compile, restyle, fit to time) running against plain shapes. Saved titles were never tied to the enum; SavedTitlesStillOpenTests pins every old built-in saved as your own (Fixtures/saved-titles-before-the-set.json) to the shelf and to drawing what it drew."
+    },
+    {
+      "t": "2026-10-11T08:52:45.658Z",
+      "note": "Found while building: test runs measure text with the model's estimate (TextMeasurement), which for Avenir Next gives a box shorter than one line, and CoreText then draws nothing; the same estimate wraps 'CHAPTER ONE' and SF Mono lines. The app installs CoreText measurement at launch, and the walks show all of it drawing. TitleSetFramesTests installs real measurement only when PHOTONZ_TITLE_SET_FRAMES is set (a run of that suite alone). Not filed: it only bites tests that render non-SF faces."
+    },
+    {
+      "t": "2026-10-11T08:52:45.718Z",
+      "note": "Found and fixed in this task: a headline whose design writes its reveal lost a reveal set by hand in the Reveal section on any knob turn (reproduced in TitleBuildsByPieceTests.handRevealSurvivesKnobs before the fix in TitleRestyle.handReveals). Also made three pages cheaper: pushing a full-frame gradient while holding cost about 9 ms a frame for nothing visible."
+    },
+    {
+      "t": "2026-10-11T08:52:45.778Z",
+      "note": "Left rough, kept here rather than filed (none is broken; the audit's rough list puts each in front of the user): Kinetic Bold's per-word colour swap; Tech Terminal's scanlines and letter scramble; tracking on Editorial's kicker (text has no letter spacing); capitals as a text setting for Light Leak and Kinetic Bold; Gradient Glow's two parts both read Accent in the Part menu; the Part section's By/Stagger and the Reveal section both edit a title's word reveal (asked as an evaluate question); Minimal Underline over a busy light screenshot is readable, not crisp; three cards to nine pages."
+    },
+    {
+      "t": "2026-10-11T08:52:45.837Z",
+      "note": "Sound acceptance item: not built here, moved whole to titles-can-play-a-soft-whoosh-and-tick-as-they-b with the reason (no sound clips exist to use). Every other acceptance item verified: 12 built-ins with knobs (Title section + Part section with By/Stagger/Spread/Blink), TitleSetTests holds the designed rules, 72 frames in the audit (queue/audits/2026-10-11-title-set-*.png), 12 walks each insert, type and export an MP4 that loads at the right length, saved titles pinned by SavedTitlesStillOpenTests, audit at queue/audits/2026-10-11-a-set-of-titles-that-look-designed.json."
+    },
+    {
+      "t": "2026-10-11T08:52:58.419Z",
+      "note": "Twelve designed titles replace the plain set on the shelf and in the Insert menus (Sources/PhotonzCore/TitleSet.swift): Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal, Behind Glass, Light Leak, Gradient Glow, Stacked Stagger, and the lower thirds Split Wipe, Minimal Underline, Pill Card, in title safe. Title parts can bring words in by line, word or letter (plus Mask Reveal, Track In, Typewriter, and a Blink hold), editable in the Part section. Verified: TitleSetTests (designed rules per preset), TitleBuildsByPieceTests, TitleSetFramesTests (72 frames, in the audit), TitleSetPerfTests (1.7 to 8.4 ms a 1080p frame), SavedTitlesStillOpenTests; 12 title-set walks each insert, type and export an MP4 that plays; 14 title walks retargeted and green; split test run green (full run hangs, known p2). Sounds moved to titles-can-play-a-soft-whoosh-and-tick-as-they-b (no sound clips exist). Audit: queue/audits/2026-10-11-a-set-of-titles-that-look-designed.json."
     }
-  ]
+  ],
+  "started": "2026-10-11T06:54:04.273Z",
+  "walks": [
+    "title-set-keynote-clean-walk",
+    "title-set-soft-gradient-glass-walk",
+    "title-set-kinetic-bold-walk",
+    "title-set-editorial-serif-walk",
+    "title-set-tech-terminal-walk",
+    "title-set-behind-glass-walk",
+    "title-set-light-leak-walk",
+    "title-set-gradient-glow-walk",
+    "title-set-stacked-stagger-walk",
+    "title-set-split-wipe-walk",
+    "title-set-minimal-underline-walk",
+    "title-set-pill-card-walk",
+    "title-presets-gallery-walk",
+    "title-knobs-restyle-walk"
+  ],
+  "completed": "2026-10-11T08:52:58.421Z"
 }

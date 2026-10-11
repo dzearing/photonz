@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 26,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:56.631Z",
-  "updated": "2026-10-10T12:50:56.724Z",
+  "updated": "2026-10-10T23:43:13.951Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 2 of 6.",
@@ -30,6 +30,39 @@
     {
       "t": "2026-10-10T12:50:56.723Z",
       "note": "seq 3930 -> 26"
+    },
+    {
+      "t": "2026-10-10T22:20:25.764Z",
+      "note": "From step 1 (titles-move-in-parts): a Wipe on WORDS compiles to a plain fade today, because a keyed crop only cuts pictures and shapes (TitleCompiler.offs in Sources/PhotonzCore/TitleDesign.swift, the .wipe case). When words can be masked, make that case a real reveal and the built-in designs can use it on headlines."
+    },
+    {
+      "t": "2026-10-10T22:21:57.544Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T23:33:07.085Z",
+      "note": "owns these walks: title-words-mask-reveal-walk"
+    },
+    {
+      "t": "2026-10-10T23:33:07.151Z",
+      "note": "Adversarial review before build: a Premiere/AE user expects text animators per character/word with offset and order (AE Range Selector); Motion's sequence text behaviours; the mock (video-motion.html Reveal section) gives Preset + Stagger offset + Each/Total + Curve. App gap: a title's words were one layer with keyed rise/fade; a picked title piece was reachable only by double clicking into its words, so the Reveal section shows while words are open as well as when a text is picked. No prerequisite task needed."
+    },
+    {
+      "t": "2026-10-10T23:33:07.216Z",
+      "note": "Full Scripts/test.sh stalled past 20 min after walks again (same as find-out-why-the-whole-test-run-hangs-in-the-mac); split passed: core 11123, render+media minus the 8 Vision/HEIF suites 1162, those 8 alone 76. One core run hit LongTimelineCostTests holdDriftsOnALongTalk at 231ms > 150ms under parallel load; alone it passes in ms and the core rerun was green."
+    },
+    {
+      "t": "2026-10-10T23:33:18.794Z",
+      "note": "left rough (not filed, under the bar or covered): the headline's own part keys still run under a hand-added reveal (folded into a-set-of-titles-that-look-designed); reveals have no out yet; a rise on the last line can be cut at the text box's bottom edge while travelling; a reveal on a still picture with no time does not play; titleArrivalMS counts typed lines for By Line, so wrapped lines arrive a little later than it says."
+    },
+    {
+      "t": "2026-10-10T23:43:13.949Z",
+      "note": "Text on a video can come in by line, word or letter (rise and fade, mask reveal, blur in, track in, typewriter, wipe; stagger, order, each length, curve), stored once on the text (PhotonzCore/TextReveal.swift) and drawn from cached per-piece rasters (PhotonzRender/TextRevealRasterizer.swift); Reveal section in the panel (Next). Verified: TextRevealTests 21 + TextRevealRenderTests 7 (settled frames byte-equal to plain text, RTL and emoji, edit mid-reveal, playback/scrub/export byte-equal at 3 moments, 56 letters at 1080p median 3.8-4.7 ms); full suite in the known split (11123 + 1162 + 76) green; title-words-mask-reveal-walk at Next defaults with pointer clicks on Preset/By/Order plus 21 other title walks green. Commit 74b7f677. Audit queue/audits/2026-10-10-title-words-reveal.json."
     }
-  ]
+  ],
+  "started": "2026-10-10T22:21:57.543Z",
+  "walks": [
+    "title-words-mask-reveal-walk"
+  ],
+  "completed": "2026-10-10T23:43:13.950Z"
 }

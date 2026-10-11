@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 24,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:45:27.341Z",
-  "updated": "2026-10-10T12:45:27.439Z",
+  "updated": "2026-10-10T21:17:23.170Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"when i click on a title in the comp there is a noticable lag.\"\n\nFrom code reading (not run, cause unknown): a tile click goes through EditorState.selectLibraryItem (EditorState.swift:4273-4276): selectLayer(nil) then selectedLibraryItemID = id, so the whole selection didSet chain runs; the tile's own isSelected reads it (LibraryPanel.swift:721). Suspects: the inspector building the picked component/title's panel (main component lookup, property rows), the canvas re-rendering because the selection changed, or title previews (picture tiles) being rendered or text measured on the main thread at click. Profile before fixing. Companion filed the same day: polished animated title presets (the new animated previews must not make this worse).",
@@ -29,6 +29,48 @@
     {
       "t": "2026-10-10T12:45:27.437Z",
       "note": "seq 3930 -> 24"
+    },
+    {
+      "t": "2026-10-10T18:39:23.461Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-10T20:31:31.090Z",
+      "note": "owns these walks: library-tile-click-latency-walk, library-tile-click-latency-picture-walk"
+    },
+    {
+      "t": "2026-10-10T20:32:15.960Z",
+      "note": "Reproduced and measured (new walk step timeTileClicks, from letting go to the first frame on screen): every title, name card and component tile click took about 365ms median (worst 376ms), because the tile stacked onTapGesture(count: 2) over onTapGesture, so SwiftUI held each single click until the double-click window ran out. Colour tiles (no double click) were already fast."
+    },
+    {
+      "t": "2026-10-10T20:32:16.021Z",
+      "note": "Profiled the rest: after the gesture fix a click from nothing picked was about 50ms, of which about 35ms was the dock opening the tile's section in the same frame (an experiment with the section off read 14ms). Fixed by having the dock follow the pick one run loop pass later (panelLibraryItemID via NextRunLoopPass), both ways so the dip through nothing when moving tile to tile never reaches the dock; title section words also follow a pass behind (titlePresetInPanel)."
+    },
+    {
+      "t": "2026-10-10T20:32:16.082Z",
+      "note": "left rough: a tile clicked while a layer is picked also closes that layer's sections in the click's frame (one reading: 26.5ms pass, about two frames). Not filed: under the 33ms walk budget and the layer-selection path is shared by every pick; worth a task if it shows up again."
+    },
+    {
+      "t": "2026-10-10T20:32:16.145Z",
+      "note": "left rough: component tiles' section words still swap in the click's own frame when switching tile to tile (16 to 18ms median, worst 26ms); title tiles defer it. Not filed: within budget."
+    },
+    {
+      "t": "2026-10-10T20:50:14.337Z",
+      "note": "Unit tests: the whole Scripts/test.sh hung (the known stall, find-out-why-the-whole-test-run-hangs-in-the-mac); the documented split passed: 11082 + 1153 + 76. The first core-half run reported 1 issue that was not captured and did not recur in two reruns."
+    },
+    {
+      "t": "2026-10-10T21:16:59.152Z",
+      "note": "Shipped gesture: one onTapGesture per tile reading NSApp.currentEvent.clickCount (>= 2 opens, else picks). A simultaneous SwiftUI TapGesture(count: 2) was tried first: fast, but after the timeTileClicks step it finished a double click on a lone press 1.5s later (reproduced twice; six hand-like press sequences, gaps 0.57 to 1.3s, never did). The click-count version passes all double-click walks (title presets shelf, name cards, clip onto a track, component instance, starter sizing, the picture latency walk's Card double click) plus 12 Library and 25 component walks. Double click cost unchanged: 282ms busy / longest 101ms vs 334ms / 107ms before."
+    },
+    {
+      "t": "2026-10-10T21:17:23.168Z",
+      "note": "Library tile clicks went from 365ms median (worst 376) to 7-18ms median (worst 26) from letting go to the tile picked on screen; dock ready within 69ms. Cause: a double-tap gesture stacked over the click held every click for the double-click window; now one click gesture reads AppKit's click count. The dock's section follows the pick a run loop pass later so its ~35ms layout no longer shares the highlight's frame. New walk step timeTileClicks; walks library-tile-click-latency-walk and -picture-walk gate at 33ms/100ms; Library (12), component (25), title (20) and double-click walks green; unit tests green via the known split (11082 + 1153 + 76). Audit queue/audits/2026-10-10-library-tile-click-latency.json. Commit 41670627."
     }
-  ]
+  ],
+  "started": "2026-10-10T18:39:23.460Z",
+  "walks": [
+    "library-tile-click-latency-walk",
+    "library-tile-click-latency-picture-walk"
+  ],
+  "completed": "2026-10-10T21:17:23.169Z"
 }

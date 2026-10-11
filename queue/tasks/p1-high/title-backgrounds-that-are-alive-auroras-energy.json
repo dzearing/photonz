@@ -4,12 +4,12 @@
   "goal": "A title page's background should be the thing that makes it look produced: auroras rippling across the frame, streams of light flowing like wind, soft colour bubbles drifting and blooming, light rays and leaks sweeping through, an architectural line drawing sketching itself in, particles. Today the backgrounds are flat colours or a faint, nearly static gradient with noise ('Mesh'), which the user called horrible. Replace them with a library of animated looks that are obviously moving and beautiful at a glance, each with a few knobs.",
   "epic": "video-titles-graphics",
   "priority": "p1-high",
-  "seq": 5,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:25:07.384Z",
-  "updated": "2026-10-11T12:25:07.472Z",
+  "updated": "2026-10-11T12:51:59.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"the titles are still boring. there are no background motion options, the backgrounds are just colors. I'd love energy streams, moving color bubbles, light effects, anything to make it less of a powerpoint slide. The text itself doesn't even move in. It's just boring. the 'mesh' option is just.... static noise? that's hard to see? It is horrible.. Replace it with anything that's interesting - auroras, wind streams, architectural sketching, stylistic options. I asked you to research good titles and this was really not an improvement\".\n\nWhat went wrong last time: the six title tasks (titles-move-in-parts..., title-backgrounds-move..., a-set-of-titles-that-look-designed, etc.) were all closed 'done' on rule checks and timing numbers. Their own audit frames (queue/audits/2026-10-11-title-set-pages-1.png, -2.png) show flat colour or a faint gradient behind every title and the 'in' frame already showing the whole headline. This task's bar is visual and measured motion, not rules. Research: docs/design/video-titles-polish.md (Backgrounds, renderer costs). Existing pieces to replace or reuse: Mesh fill with Drift and Grain effect from title-backgrounds-move-gradients-grain-and-the-r (commit around 2026-10-11 01:32), TitleRestyle.swift Background knob, TitleSet.swift built-ins. Kernels: curl noise, layered sin ribbons with hue shift, additive blurred discs, radial light shafts with a mask, line segments with a trim drawn over time; render at half resolution where soft. Memory: mocks are the floor, legible text, no em dashes in UI copy. Companion filed the same day: 'Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds'.",
@@ -31,6 +31,14 @@
     {
       "t": "2026-10-11T12:25:07.470Z",
       "note": "seq 3950 -> 5"
+    },
+    {
+      "t": "2026-10-11T12:51:00.251Z",
+      "note": "seq 5 -> 40"
+    },
+    {
+      "t": "2026-10-11T12:51:59.662Z",
+      "note": "User 2026-10-11: build 2.5D first so the title rework can use it. Sequenced after the four 2.5D tasks (31-34). Use the depth entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle), camera pushes and depth of field from '3D transitions and title entrances' where they suit a title, alongside the 2D reveals."
     }
   ]
 }

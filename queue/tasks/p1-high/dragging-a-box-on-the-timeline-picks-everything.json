@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 23,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:22:45.530Z",
-  "updated": "2026-10-10T18:25:42.930Z",
+  "updated": "2026-10-10T18:26:12.663Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"I also expected marquee selection on the timeline, so that i could select multiple things and move or delete them.\"\n\nFrom code reading (not run): a lane box exists. TimelineLaneMarquee.gesture on empty track space (TimelineTrackRows.swift:426, 446, 516; docs at :1010-1015): a click moves the playhead, a drag draws a box, Option or the Range tool picks a time range. EditorState+TrackRange.swift: LanePress/LaneBox (:27-43), endLanePress (:91-106) -> pickWithBox(within:onTracks:) which picks whole clips as picked layers or one piece as the piece in hand; drawn by TimelineLaneBoxView (TimelineDock.swift:1291-1330). Unknown why the user did not experience it: suspects are no empty space to start on in a full timeline, zoom/title/caption lanes not taking the gesture or not being picked, and the box not crossing into the Zoom lane. Companion: 'Pick several zooms at once and change or delete them together' (filed same day) owns the zoom multi-pick model this box feeds.",
@@ -62,11 +62,16 @@
     {
       "t": "2026-10-10T18:25:42.929Z",
       "note": "owns these walks: box-picks-everything-it-touches-walk, box-pick-by-hand-walk"
+    },
+    {
+      "t": "2026-10-10T18:26:12.661Z",
+      "note": "Shipped in 5b8204c2 (Next, no flag): a box starts on empty track space, between zoom bars, and on the strip under the last track (reproduced first: before, only empty track space started one, and a recording edit has none). It picks clips, pieces, titles, sounds, zoom bars and keys it touches; Shift adds, Command flips. Dragging any picked clip, zoom bar or key carries the whole pick by the same time on its own tracks, snapping as a clip does and stopping where a zoom or key runs out of room; Delete takes all of it in one undo; Option-drag still picks a range. Panel leads with 'N picked' and the kinds above the shared sections. Core TimelineBoxPick.swift + 13 tests; split test run green (11073+1153+76; full run hit the known hang). Walks box-picks-everything-it-touches-walk and box-pick-by-hand-walk (real pointer) green, plus 18 neighbouring walks. Audit queue/audits/2026-10-10-timeline-box-picks-everything.json."
     }
   ],
   "started": "2026-10-10T17:15:39.767Z",
   "walks": [
     "box-picks-everything-it-touches-walk",
     "box-pick-by-hand-walk"
-  ]
+  ],
+  "completed": "2026-10-10T18:26:12.662Z"
 }

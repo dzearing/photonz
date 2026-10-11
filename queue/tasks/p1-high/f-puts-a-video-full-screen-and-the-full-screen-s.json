@@ -4,12 +4,12 @@
   "goal": "Watching a video, pressing F should fill the screen with it (and F or Escape bring it back), the way video players work, instead of switching to the editor. The Full Screen button's tooltip names a shortcut, Control Command F, that does nothing today; it should work everywhere, and the tooltip should name F.",
   "epic": "video-cutting",
   "priority": "p1-high",
-  "seq": 3,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:16:15.429Z",
-  "updated": "2026-10-11T12:16:15.526Z",
+  "updated": "2026-10-11T12:51:00.137Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"the video's fullscreen feature lists ctrl-cmd-f as the shortcut but that does not work. and it's a bad shortcut. i expected 'f' to just fullscreen it but it puts it into edit mode\".\n\nFrom code reading (not run): the watch view's Full Screen transport button calls hostWindow?.toggleFullScreen and advertises .panelHelp(\"Full screen (⌃⌘F)\") (TimelineDock.swift:1457-1467, only while editorState.isWatching). No menu row carries ⌃⌘F or toggleFullScreen (no 'Enter Full Screen' in EditorCommands.swift or the app's commands; the pro menu bar rearrangement likely dropped the system item), so the shortcut does nothing. F is the Frame tool's key (PhotonzCore/Tools.swift:106); picking a tool from the watch view brings the editor in. K is the Lens tool (Tools.swift:96). Double click on the canvas already toggles full screen (CanvasPointerDrags.swift:36). Memory rule: default to Photoshop's keys; that is why the editor question goes to a card, not a silent remap.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-11T12:16:15.525Z",
       "note": "seq 3950 -> 3"
+    },
+    {
+      "t": "2026-10-11T12:51:00.136Z",
+      "note": "seq 3 -> 20"
     }
   ]
 }

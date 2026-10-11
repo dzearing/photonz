@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 29,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:57.124Z",
-  "updated": "2026-10-10T12:50:57.212Z",
+  "updated": "2026-10-11T04:44:00.405Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 5 of 6.",
@@ -30,6 +30,52 @@
     {
       "t": "2026-10-10T12:50:57.211Z",
       "note": "seq 3930 -> 29"
+    },
+    {
+      "t": "2026-10-10T22:20:25.826Z",
+      "note": "From step 1 (titles-move-in-parts): the model is TitleDesign / TitlePart / TitleBuild / TitleHold in Sources/PhotonzCore/TitleDesign.swift; BuiltInTitle.design holds each preset's choreography; applyTitleDesign compiles it into keys on the group's children. Nothing in the panel edits a part's in, hold or out yet, and the title's own bar carries no key diamonds (the keys are on its parts). A part's rows on the timeline open only while that part is picked (EditorState+Tracks timelineTrackRows). titleArrivalMS(layerID:) is the moment a title has finished arriving (playhead after insert, Library tile picture)."
+    },
+    {
+      "t": "2026-10-11T01:32:19.174Z",
+      "note": "from step 3: the new Behind Glass page's Library tile is a dark page with words, because a tile is a still of the preset alone and its background is the recording under it; this task's 'own first frame behind them' is what fixes it. Aurora's tile is a still too, so its drift and grain do not show until it plays."
+    },
+    {
+      "t": "2026-10-11T03:03:57.527Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T04:43:22.262Z",
+      "note": "owns these walks: title-knobs-restyle-walk, title-tiles-play-walk"
+    },
+    {
+      "t": "2026-10-11T04:43:36.228Z",
+      "note": "Review before building: no mock draws these sections, so the panel's own controls were used; a Premiere/FCP person expects title restyling in the inspector (Essential Graphics, Motion's published parameters), which is where it is. The model could not deliver the knobs as asked: a placed title kept no design, so the group now keeps a recipe and every knob recompiles it (old keys stripped first, so changing a part's in never leaves stale keys). Glass over nothing would be a dim nothing, so Glass is only offered with a picture under the title."
+    },
+    {
+      "t": "2026-10-11T04:43:36.286Z",
+      "note": "Built: PhotonzCore/TitleRestyle.swift (TitleTheme, TitleFontPair, TitleEnergy, TitleBackgroundKind, TitleRecipe on GroupContent.titleRecipe, restyleTitle, relayOutTitle, legibility pass), TitleDesign.clearTitleDesign, TitlePreset.reel and recording backdrop (TitlePresetShelf.swift); app: EditorState+TitleRestyle.swift, TitleRestyleInspector.swift (Title + Part sections), LibraryTitleTile plays via VideoKit.LoopingFrames, commitTextEdit relays out a title in the same step and replays after 450 ms, Replay Title on the clip's right-click and in Clip. Flag next-title-restyle on in Next. TimePanelOrder: keys, title, titlePart, speed, text, reveal."
+    },
+    {
+      "t": "2026-10-11T04:43:36.343Z",
+      "note": "Review after building, on the probe: the swatch strip first made the whole panel 4-5 pt wider than its column (every dropdown below scrolled sideways); swatches shrunk to fit ten across. A bare onHover was unreachable by walks (and a test forbids it): now playtestHover. Energy reads clearly at the same 0.4 s (Punchy landed, Calm still faint). title-words-mask-reveal-walk now brings the Reveal header into reach first, since the Part section above pushes Reveal down and a minimal scroll parked its dropdown under the title bar's panel toggle."
+    },
+    {
+      "t": "2026-10-11T04:43:36.402Z",
+      "note": "left rough (not filed): the Part section is long for one part (about 14 rows); dark words keep a light halo from the typed title's shadow (step 6 owns preset looks); titles placed before this carry no recipe and show no Title section; From Recording and the replay after typing are not walked yet. Replay as a panel verb is covered by the open card the-panel-shows-what-the-picked-thing-is-and-its-how-many-buttons-may-the-right-h. A panel dropdown scrolled to the very top can sit under the title bar's panel toggle (harness press refused it); pre-existing layout, seen only by a walk, so written here rather than filed."
+    },
+    {
+      "t": "2026-10-11T04:43:36.460Z",
+      "note": "Verified: TitleRestyleTests 17 (+ reel and recording tests), TimePanelOrderTests, EveryDropdownIsClickedByAWalk, FlagDescriptionBudget; full suite hung in HEIF/Vision (logged on find-out-why-the-whole-test-run-hangs-in-the-mac), split runs green: 11172 + 1185 + 66. Walks: title-knobs-restyle-walk, title-tiles-play-walk, all 25 title walks, library-tile-click-latency-walk (picked on screen worst 27 ms)."
+    },
+    {
+      "t": "2026-10-11T04:44:00.403Z",
+      "note": "Shipped in d767f1df: titles keep a recipe (PhotonzCore/TitleRestyle.swift) so Theme, Font Pair, Energy, Intensity and Background restyle a whole title; a Part section edits each part's In/Hold/Out with Replay; typing relays out and replays; Library title tiles play on hover and loop while picked, over the recording for glass and name cards; Replay Title on right-click and in Clip. Verified by TitleRestyleTests, title-knobs-restyle-walk and title-tiles-play-walk at Next defaults, all 25 title walks, tile click latency (worst 27 ms), and split test runs (full run hit the known HEIF/Vision hang). Audit: queue/audits/2026-10-10-title-knobs.json."
     }
-  ]
+  ],
+  "started": "2026-10-11T03:03:57.524Z",
+  "walks": [
+    "title-knobs-restyle-walk",
+    "title-tiles-play-walk"
+  ],
+  "completed": "2026-10-11T04:44:00.404Z"
 }

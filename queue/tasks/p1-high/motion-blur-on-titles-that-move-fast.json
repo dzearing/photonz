@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 28,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T12:50:56.966Z",
-  "updated": "2026-10-10T12:50:57.053Z",
+  "updated": "2026-10-11T02:46:37.935Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-10): \"the comps in the library for titles are so very bland. They look like powerpoint titles. I am wondering if we can have more professionally polished animated title screens with interesting, tweakable effects. Moving backgrounds, text that comes in, looks polished and designed, maybe motion blur, not like a template. do research on what good looking intros look like and derive how to make it easy to build these.\" The research and the model are in docs/design/video-titles-polish.md (READ IT FIRST: techniques, twelve style recipes, the TitleDesign/TitlePart/behaviour model that compiles to keys, renderer costs, today's gaps with file refs). Six tasks build it in order: titles-move-in-parts, title-text-by-line-word-letter, title-backgrounds-move, motion-blur-on-titles, title-tiles-play-and-knobs, a-set-of-titles-that-look-designed. This is step 4 of 6.",
@@ -29,6 +29,35 @@
     {
       "t": "2026-10-10T12:50:57.052Z",
       "note": "seq 3930 -> 28"
+    },
+    {
+      "t": "2026-10-11T01:38:30.902Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T01:43:51.634Z",
+      "note": "Adversarial pass before building: a Premiere/AE user expects motion blur as a per-layer switch with a comp-wide shutter angle (AE: layer switch + 180 deg shutter in comp settings). Here it is an Effects row (switch + Shutter) on a layer or on a title's group, nearest setting wins, so the title as a whole is one switch and a part can opt out. Risks: (1) Core Image CIMotionBlur only handles straight moves, not scale-from or turns, and is symmetric gaussian; measured instead averaging N transformed copies of the part's own picture along its path across the shutter: full 1080p frame +0.5ms at 8 copies, +1.7ms at 32, +4ms at 64 (bench, CIContext readback included). That is the directional blur along the path, and it follows scale and rotation for free. (2) Keys are read on whole ms and a 180 deg shutter at 30 fps is 16.7ms, so quads are read per ms and resampled. (3) Word-by-word reveals move pieces inside one text layer, so the compositor smears each piece by its own pose across the shutter. (4) Held frames must be byte identical: smear is only stamped when a corner moves more than a threshold."
+    },
+    {
+      "t": "2026-10-11T02:45:59.189Z",
+      "note": "owns these walks: motion-blur-on-a-fast-slide-walk"
+    },
+    {
+      "t": "2026-10-11T02:46:15.097Z",
+      "note": "Built: MotionBlurEffect (switch + Shutter) on layers and title groups, MotionSmear in drawn(atTimeMS:), MotionSmearFilter in the renderer, per-piece smear for reveals, built-in titles wear it (next-motion-blur, on). Directional blur along the per-frame path IS the approach (averaging the part's own picture over its path across the shutter); photographed frames (walk shots 3/4/5) read smooth with no stepping, so no sub-frame re-render was added. Perf note in commit."
+    },
+    {
+      "t": "2026-10-11T02:46:15.162Z",
+      "note": "left rough (under the bar, logged here): (1) first frame at each new sample count costs ~35ms while Core Image builds it (4 shapes), so the first play of a slide may drop one frame; (2) opacity is not smeared across the shutter; (3) shutter is against the 33ms export frame, so a 60fps export smears like 30fps; (4) in the walk a Slider press at exactly 100% across the Shutter slider changed nothing ('no view bodies counted') while 97% worked; not reproduced by hand, may be the harness pressing past the track end; (5) full Scripts/test.sh hung again, folded into find-out-why-the-whole-test-run-hangs-in-the-mac below."
+    },
+    {
+      "t": "2026-10-11T02:46:37.933Z",
+      "note": "Motion Blur effect (switch + Shutter, 180 default) on any video layer or a title as a whole; per-part smear along each part's own path (slide, scale, turn, and each revealing word); built-in titles wear it (next-motion-blur, on). Commit ad742ad9. Verified: MotionBlurTests 16 + MotionBlurRenderTests 5 (held frames byte-identical on/off, playback/scrub/export byte-equal, 1080p medians 4.4-5.9ms), split suite green, walk motion-blur-on-a-fast-slide-walk green at defaults with real captures, 22 title walks green. Audit queue/audits/2026-10-10-motion-blur.json."
     }
-  ]
+  ],
+  "started": "2026-10-11T01:38:30.901Z",
+  "walks": [
+    "motion-blur-on-a-fast-slide-walk"
+  ],
+  "completed": "2026-10-11T02:46:37.934Z"
 }

@@ -1,0 +1,33 @@
+{
+  "id": "design-how-layers-turn-and-move-in-depth-2-5d-as",
+  "title": "Design how layers turn and move in depth (2.5D), as mocks",
+  "goal": "Before building 3D, decide how a person tilts a layer toward or away from them, pushes it into depth, and places the camera, so it feels native to a Mac editor (Keynote, Apple Motion) and fits Photonz's existing layout instead of bolting on a 3D app.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 31,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T12:51:59.005Z",
+  "updated": "2026-10-11T12:51:59.092Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 1 of 4.",
+  "acceptance": [
+    "Mock pages under docs/design/mocks/pages/ (built on the shared shell and UX-PATTERNS.md, not a page that invents its own UI) showing: the on-canvas 3D rotate handle (rings or arcs for X and Y around the existing rotate handle, Option or a mode for 3D, how it looks on a small layer), the depth control, the camera (where the person sets perspective/focal length and moves it: a scene or frame setting, a camera layer, or both), the panel rows (Rotation X, Rotation Y, Depth, Pivot depth, Perspective) with their key diamonds, and how a tilted layer shows on the timeline and in the layers list",
+    "The IA placement contract decides each control's area (tool bar: tools only; panel: properties; canvas: direct handles); anything it does not cover goes to the user as a decision card, with option labels saying exactly what the person will see",
+    "A short interactive or animated demo in the mock of three moves (a card flip, a title swinging in from depth, a cube transition between two clips) so the feel can be judged",
+    "A decision card links the mocks and asks the user to approve or pick between at most three handle designs; the model and renderer task does not wait on it, the controls task does",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T12:51:59.007Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T12:51:59.091Z",
+      "note": "seq 3950 -> 31"
+    }
+  ]
+}
