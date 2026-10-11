@@ -437,7 +437,7 @@ tile previews that play.
    legibility through nested groups, and keeps a reveal set by hand through
    any knob until that part's In changes. Glass dims 55%. Gradient text is a
    gradient box matted to the words, in a group whose glow is theirs.
-   Measured: 1.7 to 12.5 ms a 1080p frame median (debug, `TitleSetPerfTests`).
+   Measured: 1.7 to 8.4 ms a 1080p frame median (debug, `TitleSetPerfTests`).
    Not built: the whoosh and tick sounds (no sound clips exist; task
    `titles-can-play-a-soft-whoosh-and-tick-as-they-b`), Kinetic Bold's
    colour swap per word, the terminal's scanlines and scramble, tracking on
