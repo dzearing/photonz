@@ -218,6 +218,8 @@ private struct EffectRowView: View {
             BlurEffectRow(row: row)
         case .grain:
             GrainEffectRow(row: row)
+        case .motionBlur:
+            MotionBlurEffectRow(row: row)
         }
     }
 }
@@ -614,6 +616,28 @@ private struct BlurEffectRow: View {
                 style.updateBlurEffect(at: index) {
                     $0.zoom = min(max(v * 100, range.lowerBound), range.upperBound)
                 }
+            }
+        }
+    }
+}
+
+/// How much of each frame the shutter is open for. One number: the switch
+/// on the row says whether it smears at all, and this says how far.
+private struct MotionBlurEffectRow: View {
+    @Environment(EditorState.self) private var editorState
+    let row: LayerEffectRow
+
+    var body: some View {
+        let blurs = editorState.layerStyleSelection.motionBlurs(at: row.index)
+        let index = row.index
+        let range = MotionBlurEffect.angleRange
+        LayerStyleSlider(layerIDs: blurs.layerIDs, label: "Shutter",
+                         reading: blurs.reading { CGFloat($0.motionBlurEffect(at: index)?.shutterAngle ?? 0) },
+                         range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
+                         typing: .degrees) { style, v in
+            style.updateMotionBlurEffect(at: index) {
+                $0.shutterAngle = min(max(Double(v), range.lowerBound), range.upperBound)
+                if v > 0 { $0.isOn = true }
             }
         }
     }

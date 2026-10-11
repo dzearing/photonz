@@ -374,7 +374,26 @@ tile previews that play.
    `next-title-backgrounds-move`, on by default. Walk:
    `title-backgrounds-move-walk`; tests: `TitleBackgroundsTests`,
    `TitleBackgroundsRenderTests`, `GrainBandingExportTests`.
-4. **Motion blur on titles that move fast.**
+4. **Motion blur on titles that move fast.** Built 2026-10-10. A
+   **Motion Blur** effect (`MotionBlurEffect`: a switch and a Shutter angle,
+   180 to start, 0 to 360) on any layer on a video or on a title's group,
+   where it covers every part; a part's own, on or off, beats its title's.
+   At the moment drawn, `PhotonzCore/MotionSmear.swift` reads each part again
+   at every whole millisecond the shutter covers (centred on the frame, against
+   the 33 ms export frame), and stamps on the drawn copy where the part was at
+   8 to 64 evenly spaced moments, relative to where it is drawn
+   (`Layer.motionSmear`); a part that moved under a point gets nothing, so a
+   held frame is byte for byte the same. The renderer averages the part's own
+   finished picture over those places (`PhotonzRender/MotionSmearFilter.swift`),
+   so slides, scale-froms and turns all smear along their real path; revealing
+   words smear per piece (`TextContent.revealShutterMS`). This is the
+   directional blur along the per-frame path, and photographed frames showed
+   no need to re-render sub-frames. Every built-in title arrives wearing it
+   (switch `next-motion-blur`, on by default). Measured at 1080p
+   (drawn + renderInteractive, debug): word stagger 2.6 ms plain, 4.4 ms at
+   180, 5.9 ms at 360; full-frame slide 4.3, 5.1, 5.6 ms. Walk:
+   `motion-blur-on-a-fast-slide-walk`; tests: `MotionBlurTests`,
+   `MotionBlurRenderTests`.
 5. **Title tiles play, and a few knobs restyle a title.**
 6. **A set of titles that look designed.**
 

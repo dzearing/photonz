@@ -244,6 +244,8 @@ public enum FeatureCatalog {
 
     public static let titleBackgroundsFlag = "next-title-backgrounds-move"
 
+    public static let motionBlurFlag = "next-motion-blur"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -895,6 +897,16 @@ public enum FeatureCatalog {
                     name: titleBackgroundsFlag,
                     title: "Title backgrounds that move",
                     description: "Two more title pages, Aurora and Behind Glass, a Mesh fill that drifts, Grain in the Effects list, a Zoom on a background blur, and Trim start and Trim end keys on lines. Off means title backgrounds stay still.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: motionBlurFlag,
+                    title: "Motion blur",
+                    description: "Motion Blur in the Effects list on video, with a Shutter angle, worn by the built-in titles: fast moves smear along the way they go. Off means none is offered or added.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

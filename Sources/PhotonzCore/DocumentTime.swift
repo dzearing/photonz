@@ -234,6 +234,12 @@ extension PhotonzDocument {
         shown.layers = shown.layers.map {
             $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }
+        // ...and anything under a motion blur that moved while the shutter was
+        // open is told where it went (`MotionSmear.swift`). Straight after the
+        // motions, which is what it measures.
+        if hasMotionBlur {
+            shown.layers = withMotionSmears(shown.layers, atMS: moment, cycleMS: cycle)
+        }
         // ...and a layer faded at either end of its bar is drawn as far up as
         // the fade is (`PictureFade.swift`). After the motions, so the fade
         // takes down whatever opacity its keys left it at.

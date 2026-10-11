@@ -501,7 +501,8 @@ public enum SVGExport {
         filter.blur = max(layer.style.blurRadius, 0)
         for effect in layer.style.effects where effect.isOn {
             switch effect {
-            case .blur, .border:
+            // A still file has no shutter to smear across.
+            case .blur, .border, .motionBlur:
                 continue
             case .glow:
                 return .beyondSVG("it wears a glow")

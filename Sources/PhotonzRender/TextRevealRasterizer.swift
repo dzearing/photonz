@@ -213,7 +213,13 @@ public enum TextRevealCompositor {
     /// Each piece where `reveal` has it `elapsedMS` in, over the plate, as one
     /// picture exactly the size of the text's own: pieces never reach past
     /// the box the words are laid out in.
-    public static func image(_ pieces: TextRevealPieces, reveal: TextReveal, elapsedMS: Int) -> CIImage {
+    ///
+    /// `shutterMS`, where a motion blur covers the text, is how long the
+    /// shutter is open, centred on the moment: a piece travelling far enough
+    /// in that time is smeared along the way it went (`MotionSmear.swift`),
+    /// before its mask, which holds still.
+    public static func image(_ pieces: TextRevealPieces, reveal: TextReveal, elapsedMS: Int,
+                             shutterMS: Double? = nil) -> CIImage {
         let whole = CGRect(origin: .zero, size: pieces.pixelSize)
         var out = pieces.plate ?? CIImage(color: .clear).cropped(to: whole)
         let ranks = reveal.ranks(count: pieces.pieces.count)
@@ -222,25 +228,16 @@ public enum TextRevealCompositor {
             let pose = reveal.pose(rank: ranks[index], atElapsedMS: elapsedMS, place: piece.place)
             guard pose.opacity > 0.001, pose.shown > 0.0001 else { continue }
             var image = piece.image
-            var keep = piece.rect
-            if pose.slide > 0 {
-                // Out from behind its own line box: travelling one way, it is
-                // cut off at that box on the other two sides' axis.
-                let vertical = pose.direction == .up || pose.direction == .down
-                keep = vertical
-                    ? CGRect(x: piece.rect.minX, y: piece.box.minY - em * 0.08,
-                             width: piece.rect.width, height: piece.box.height + em * 0.16)
-                    : CGRect(x: piece.box.minX - em * 0.04, y: piece.rect.minY,
-                             width: piece.box.width + em * 0.08, height: piece.rect.height)
-                let span = vertical ? keep.height : keep.width
-                // Coming UP means it starts below; Core Image's y runs up.
-                let shift = CGFloat(pose.slide) * span
-                let move: CGPoint = switch pose.direction {
-                case .up: CGPoint(x: 0, y: -shift)
-                case .down: CGPoint(x: 0, y: shift)
-                case .left: CGPoint(x: shift, y: 0)
-                case .right: CGPoint(x: -shift, y: 0)
+            let keep = mask(of: piece, pose: pose, em: em)
+            if let shutterMS, shutterMS > 0 {
+                let travel = { (elapsed: Double) -> CGPoint in
+                    place(of: piece, pose: reveal.pose(rank: ranks[index], atElapsed: elapsed, place: piece.place),
+                          em: em)
                 }
+                image = smeared(image, travel: travel, at: Double(elapsedMS), shutterMS: shutterMS)
+            }
+            if pose.slide > 0 {
+                let move = slid(piece, pose: pose, em: em)
                 image = image.transformed(by: CGAffineTransform(translationX: move.x, y: move.y))
                 image = image.cropped(to: keep)
             }
@@ -273,5 +270,64 @@ public enum TextRevealCompositor {
             out = image.composited(over: out)
         }
         return out.cropped(to: whole)
+    }
+
+    /// What a piece sliding out from behind its own line box is cut to: that
+    /// box, on the axis it travels, and the whole piece where it is not
+    /// sliding at all.
+    private static func mask(of piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat) -> CGRect {
+        guard pose.slide > 0 else { return piece.rect }
+        return pose.direction == .up || pose.direction == .down
+            ? CGRect(x: piece.rect.minX, y: piece.box.minY - em * 0.08,
+                     width: piece.rect.width, height: piece.box.height + em * 0.16)
+            : CGRect(x: piece.box.minX - em * 0.04, y: piece.rect.minY,
+                     width: piece.box.width + em * 0.08, height: piece.rect.height)
+    }
+
+    /// How far a piece has slid out from behind its box, in pixels, y up.
+    private static func slid(_ piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat) -> CGPoint {
+        guard pose.slide > 0 else { return .zero }
+        let keep = mask(of: piece, pose: pose, em: em)
+        let vertical = pose.direction == .up || pose.direction == .down
+        let span = vertical ? keep.height : keep.width
+        // Coming UP means it starts below; Core Image's y runs up.
+        let shift = CGFloat(pose.slide) * span
+        return switch pose.direction {
+        case .up: CGPoint(x: 0, y: -shift)
+        case .down: CGPoint(x: 0, y: shift)
+        case .left: CGPoint(x: shift, y: 0)
+        case .right: CGPoint(x: -shift, y: 0)
+        }
+    }
+
+    /// Everything that carries a piece away from home in a pose, in pixels,
+    /// y up: its slide and its offset together.
+    private static func place(of piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat) -> CGPoint {
+        let slide = slid(piece, pose: pose, em: em)
+        return CGPoint(x: slide.x + pose.offsetEm.x * em, y: slide.y - pose.offsetEm.y * em)
+    }
+
+    /// A piece smeared along where `travel` has it while a shutter of
+    /// `shutterMS` is open about `elapsed`, or as it was where it moved less
+    /// than a pixel.
+    private static func smeared(_ image: CIImage, travel: (Double) -> CGPoint, at elapsed: Double,
+                                shutterMS: Double) -> CIImage {
+        let opens = elapsed - shutterMS / 2
+        var stops = [opens]
+        var whole = opens.rounded(.down) + 1
+        while whole < opens + shutterMS {
+            stops.append(whole)
+            whole += 1
+        }
+        stops.append(opens + shutterMS)
+        let path = stops.map(travel)
+        let span = zip(path, path.dropFirst()).reduce(CGFloat(0)) { $0 + hypot($1.1.x - $1.0.x, $1.1.y - $1.0.y) }
+        guard span > MotionSmear.threshold, span.isFinite else { return image }
+        let home = travel(elapsed)
+        let count = MotionSmear.sampleCount(forSpan: span)
+        return MotionSmearFilter.averaged(image, over: (0..<count).map { index in
+            let at = travel(opens + shutterMS * Double(index) / Double(count - 1))
+            return CGAffineTransform(translationX: at.x - home.x, y: at.y - home.y)
+        })
     }
 }

@@ -429,6 +429,8 @@ public enum EffectStyleNaming {
             return "\(glow.kind.title) glow • \(points(glow.radius)) • \(glow.colorHex)"
         case .grain(let grain):
             return "Grain • \(Int(grain.amount.rounded()))%"
+        case .motionBlur(let blur):
+            return "Motion blur • \(Int(blur.shutterAngle.rounded()))°"
         }
     }
 

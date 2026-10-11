@@ -113,7 +113,8 @@ extension EditorState {
     }
 
     func insertTitle(_ preset: BuiltInTitle, onTrack trackID: UUID? = nil) {
-        landTitle(onTrack: trackID) { $0.insertTitle(preset, atTimeMS: $1) }
+        let blurs = Experiments.shared.motionBlurEnabled
+        landTitle(onTrack: trackID) { $0.insertTitle(preset, atTimeMS: $1, motionBlur: blurs) }
     }
 
     func insertTitle(saved: SavedTitlePreset, onTrack trackID: UUID? = nil) {
@@ -257,7 +258,10 @@ extension EditorState {
         let landing = titleLanding(preset, at: point)
         endTitleHover()
         guard let landing, landing.allowed else { return false }
-        landTitle(onTrack: nil, atMS: landing.startMS) { $0.insertTitle(preset, atTimeMS: $1, landing: landing) }
+        landTitle(onTrack: nil, atMS: landing.startMS) {
+            $0.insertTitle(preset, atTimeMS: $1, landing: landing,
+                           motionBlur: Experiments.shared.motionBlurEnabled)
+        }
         return true
     }
 

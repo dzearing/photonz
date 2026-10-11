@@ -83,6 +83,11 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// `wordPaint`, it is set only on the frame drawn at a moment, where the
     /// renderer reads it.
     public var revealElapsedMS: Int?
+    /// How long the shutter is open over this text, in milliseconds, where a
+    /// motion blur covers it: each piece of its reveal is smeared along the
+    /// way it travels in that time (`MotionSmear.swift`). Set only on the
+    /// frame drawn at a moment, like `revealElapsedMS`.
+    public var revealShutterMS: Double?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -1718,6 +1723,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// (`moved(toMotionTimeMS:)`), never on the layer in the document, and
     /// only where something about it moves, so nothing else pays for it.
     public var drawnAtMS: Int?
+
+    /// Where this layer was while the shutter was open, relative to where it
+    /// is drawn, for a layer under a motion blur that moved far enough
+    /// (`MotionSmear.swift`). Like `drawnAtMS`, stamped only on the copy the
+    /// renderer is handed, never on the layer in the document.
+    public var motionSmear: MotionSmear?
 
     /// What this layer has been told to CHANGE over time: one entry per
     /// property that moves, read the same way the Effects list above it is

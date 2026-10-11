@@ -626,14 +626,18 @@ extension PhotonzDocument {
     /// document with no time. `landing` puts it where a tile let go over the
     /// timeline said it would go instead (`titleLanding`).
     @discardableResult
+    ///
+    /// `motionBlur` puts a Motion Blur on the title as a whole, so every part
+    /// that comes in fast is smeared by its own move (`MotionSmear.swift`).
     public mutating func insertTitle(_ preset: BuiltInTitle, atTimeMS ms: Int,
-                                     landing: ClipLanding? = nil) -> InsertedTitle? {
+                                     landing: ClipLanding? = nil, motionBlur: Bool = false) -> InsertedTitle? {
         guard hasTime else { return nil }
         let layer = preset.layer(in: canvasSize)
         guard let inserted = landTitle(layer, kind: preset.kind, lengthMS: preset.kind.lengthMS,
                                        sourceInMS: 0, atTimeMS: ms, landing: landing) else { return nil }
         // Each part on its own beat, as keys on the pieces themselves.
         applyTitleDesign(preset.design, layerID: inserted.layerID)
+        if motionBlur { addEffect(.motionBlur, layerIDs: [inserted.layerID]) }
         // A page leaves with the one fade everything on the timeline has
         // (`PictureFade`): shaded on the bar, checked under Fade Out, dragged
         // from the bar's corner, and the dissolve into what follows it. A page

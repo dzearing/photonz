@@ -386,6 +386,13 @@ struct EffectSample: View {
                     .scaledToFit()
                     .padding(8)
                     .foregroundStyle(.white.opacity(0.45)))
+        case .motionBlur:
+            base.overlay(
+                Image(systemName: "wind")
+                    .resizable()
+                    .scaledToFit()
+                    .padding(10)
+                    .foregroundStyle(.white.opacity(0.6)))
         }
     }
 
@@ -527,6 +534,10 @@ struct LibraryEffectStyleInspector: View {
         case .grain(let grain):
             slider(style, "Amount", CGFloat(grain.amount / 100), 0...1, .percent) {
                 $0.grain?.amount = Double($1) * 100
+            }
+        case .motionBlur(let blur):
+            slider(style, "Shutter", CGFloat(blur.shutterAngle), 0...360, .degrees) {
+                $0.motionBlur?.shutterAngle = Double($1)
             }
         }
     }

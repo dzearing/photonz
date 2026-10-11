@@ -185,9 +185,10 @@ extension PhotonzDocument {
     /// `landing` says when it was let go over the timeline.
     @discardableResult
     public mutating func insertTitle(_ preset: TitlePreset, atTimeMS ms: Int,
-                                     landing: ClipLanding? = nil) -> InsertedTitle? {
+                                     landing: ClipLanding? = nil, motionBlur: Bool = false) -> InsertedTitle? {
         switch preset {
-        case .builtIn(let builtIn): insertTitle(builtIn, atTimeMS: ms, landing: landing)
+        // A saved title carries whatever it was saved wearing.
+        case .builtIn(let builtIn): insertTitle(builtIn, atTimeMS: ms, landing: landing, motionBlur: motionBlur)
         case .saved(let saved): insertTitle(saved, atTimeMS: ms, landing: landing)
         }
     }

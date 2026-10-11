@@ -261,13 +261,20 @@ public struct TextReveal: Hashable, Codable, Sendable {
     /// The piece that goes on beat `rank`, `elapsed` ms into the reveal.
     public func pose(rank: Int, atElapsedMS elapsed: Int,
                      place: TextRevealPlace = TextRevealPlace(index: 0, count: 1)) -> TextRevealPose {
-        let begins = rank * staggerMS
+        pose(rank: rank, atElapsed: Double(elapsed), place: place)
+    }
+
+    /// The same, at a moment between two whole milliseconds: where a piece is
+    /// while a shutter is open across it (`MotionSmear.swift`).
+    public func pose(rank: Int, atElapsed elapsed: Double,
+                     place: TextRevealPlace = TextRevealPlace(index: 0, count: 1)) -> TextRevealPose {
+        let begins = Double(rank * staggerMS)
         var pose = TextRevealPose(direction: direction)
         if style == .typewriter {
             pose.opacity = elapsed >= begins ? 1 : 0
             return pose
         }
-        let t = min(max(Double(elapsed - begins) / Double(max(1, lengthMS)), 0), 1)
+        let t = min(max((elapsed - begins) / Double(max(1, lengthMS)), 0), 1)
         let p = curve.value(at: t)
         let left = 1 - p
         let size = amount / 100

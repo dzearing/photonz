@@ -702,6 +702,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             // cuts the finished layer: a shadow on a matted layer is cut off
             // at the same edge everything else is.
             var drawn = layerImage
+            // A part that moved while the shutter was open is its finished
+            // picture, shadow and all, smeared along the way it went
+            // (`MotionSmearFilter`). Before the mask, which holds still.
+            if let smear = layer.motionSmear {
+                drawn = MotionSmearFilter.smeared(drawn, by: smear, canvasHeight: document.canvasSize.height)
+            }
             if let matte = layer.style.matte, index > 0 {
                 let below = layers[index - 1]
                 if below.isVisible,
@@ -1063,6 +1069,7 @@ public final class DocumentRenderer: @unchecked Sendable {
             var still = text
             still.reveal = nil
             still.revealElapsedMS = nil
+            still.revealShutterMS = nil
             // Words still arriving a piece at a time are drawn from each
             // piece's own picture, kept until the words change
             // (`TextRevealRasterizer.swift`). Once the last piece is home it is
@@ -1070,8 +1077,12 @@ public final class DocumentRenderer: @unchecked Sendable {
             if let reveal = text.reveal, let elapsed = text.revealElapsedMS, text.wordPaint == nil,
                let pieces = revealPieces(for: still, size: layer.frame.size, box: boxInPoints,
                                          outlines: outlines, bake: bake, variant: variant, unit: reveal.unit),
-               !reveal.hasSettled(atElapsedMS: elapsed, count: pieces.pieces.count) {
-                image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed),
+               // Under a motion blur a piece landing still smears until the
+               // shutter that opened before it landed closes.
+               !reveal.hasSettled(atElapsedMS: elapsed - (text.revealShutterMS.map { Int($0 / 2) + 1 } ?? 0),
+                                  count: pieces.pieces.count) {
+                image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed,
+                                                             shutterMS: text.revealShutterMS),
                                   nearest: magnifyNearest, scale: contentScale / bake)
                 break
             }

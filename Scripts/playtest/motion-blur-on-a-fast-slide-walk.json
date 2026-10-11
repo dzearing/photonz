@@ -1,0 +1,319 @@
+{
+  "out": "/tmp/photonz-playtest/motion-blur-on-a-fast-slide-walk",
+  "seed": "Motion blur on a title that moves fast, at Next defaults with no switch touched: a Midnight title page put at the start (it arrives wearing Motion Blur on the title as a whole), right clicked for Animate In > Slide, then the same frame early in the slide photographed with Motion Blur on, with its switch off, and with the Shutter opened to 360 degrees, and each written out as an exported frame.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Title Page > Midnight"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "landed",
+      "note": "The title page has landed at Next defaults, the playhead where its last part has arrived"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-landed"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        960,
+        300
+      ],
+      "space": "document",
+      "choose": "Animate In > Slide"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "title-picked",
+      "note": "Animate In > Slide from the title's right-click: the whole page now slides in from the left over its first half second. The title is picked and its Effects list carries Motion Blur, switched on, Shutter 180 degrees"
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Motion Blur",
+      "present": true
+    },
+    {
+      "do": "reveal",
+      "control": "Slider",
+      "in": "Shutter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panel",
+      "stage": "2-title-effects"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-effects"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "key",
+      "key": "right"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "with",
+      "note": "THE SAME FRAME, WITH MOTION BLUR: six frames (0.2s) into the slide, the page is moving fast and every edge across the way it goes (its leading edge, the words' uprights) is smeared; the top and bottom edges stay crisp"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-slide-with-blur"
+    },
+    {
+      "do": "writeFrame",
+      "name": "3-export-with-blur",
+      "atMS": 200
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Motion Blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "without",
+      "note": "THE SAME FRAME, MOTION BLUR SWITCHED OFF: the page at the same moment is a hard-edged copy of itself, the step a person sees as judder"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-slide-without-blur"
+    },
+    {
+      "do": "writeFrame",
+      "name": "4-export-without-blur",
+      "atMS": 200
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Motion Blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Slider",
+      "in": "Shutter"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Shutter",
+      "across": 0.97
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "field": "Shutter",
+      "reads": "360"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "wide-shutter",
+      "note": "Shutter opened to 360 degrees: the same frame smeared twice as far, the heavy look of a stylised title"
+    },
+    {
+      "do": "panel",
+      "stage": "5-shutter-360"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-slide-shutter-360"
+    },
+    {
+      "do": "writeFrame",
+      "name": "5-export-shutter-360",
+      "atMS": 200
+    },
+    {
+      "do": "key",
+      "key": "end"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "held",
+      "note": "Two seconds in, the title is held still: with Motion Blur on it is exactly the picture it is with it off"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-held"
+    },
+    {
+      "do": "writeFrame",
+      "name": "6-export-held-with-blur",
+      "atMS": 2000
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Motion Blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "writeFrame",
+      "name": "6-export-held-without-blur",
+      "atMS": 2000
+    }
+  ]
+}

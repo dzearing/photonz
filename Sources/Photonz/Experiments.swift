@@ -575,6 +575,9 @@ extension Experiments {
     /// `next-title-backgrounds-move`: the Aurora and Behind Glass pages, the
     /// Mesh fill, Grain, the glass's Zoom and line trims.
     var titleBackgroundsEnabled: Bool { isEnabled(FeatureCatalog.titleBackgroundsFlag) }
+    /// `next-motion-blur`: Motion Blur in the Effects list on video, and on
+    /// the built-in titles.
+    var motionBlurEnabled: Bool { isEnabled(FeatureCatalog.motionBlurFlag) }
 
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a

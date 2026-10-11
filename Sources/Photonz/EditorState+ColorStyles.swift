@@ -476,9 +476,18 @@ extension EditorState {
     /// there is a blur in the list the menu says so by going quiet rather than
     /// letting a second one in and then ignoring it.
     /// What the Effects plus offers: every kind, less Grain where moving
-    /// title backgrounds are switched off.
+    /// title backgrounds are switched off, and less Motion Blur anywhere but
+    /// a video (a picture that does not move has nothing to smear) or where
+    /// it is switched off.
     var addableEffects: [AddableEffect] {
-        AddableEffect.allCases.filter { $0 != .grain || Experiments.shared.titleBackgroundsEnabled }
+        AddableEffect.allCases.filter { kind in
+            switch kind {
+            case .grain: return Experiments.shared.titleBackgroundsEnabled
+            case .motionBlur:
+                return Experiments.shared.motionBlurEnabled && document?.hasTime == true
+            default: return true
+            }
+        }
     }
 
     func canAddEffect(_ kind: AddableEffect) -> Bool {

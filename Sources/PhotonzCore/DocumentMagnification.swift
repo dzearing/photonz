@@ -40,6 +40,7 @@ extension Layer {
         layer.frame = frame.magnified(by: scale)
         layer.crop = crop?.magnified(by: scale)
         layer.style = style.magnified(by: scale)
+        layer.motionSmear = motionSmear?.magnified(by: scale)
         // A zoom callout points at a region of the CANVAS, so its aim has to
         // move with the canvas or it magnifies the wrong thing.
         if case .zoomCallout(var callout) = content {
@@ -147,6 +148,9 @@ extension LayerEffect {
             return .glow(glow)
         // Grain is a texture of the picture's own pixels, not a length.
         case .grain:
+            return self
+        // A shutter is a share of a frame, not a length.
+        case .motionBlur:
             return self
         }
     }

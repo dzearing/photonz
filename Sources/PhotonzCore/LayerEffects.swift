@@ -37,6 +37,11 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// tactile look of a polished title backdrop, and what stops a smooth
     /// gradient banding once it is squeezed into a movie (`GrainEffect`).
     case grain
+    /// Moving parts smeared along the way they travel while the shutter is
+    /// open, so a fast move looks filmed rather than stepped
+    /// (`MotionBlurEffect`). About time, not the picture: a part holding still
+    /// draws exactly as it would without it.
+    case motionBlur
 
     /// What the row is called on screen.
     public var title: String {
@@ -46,6 +51,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         case .border: return "Border"
         case .glow: return "Glow"
         case .grain: return "Grain"
+        case .motionBlur: return "Motion Blur"
         }
     }
 
@@ -57,7 +63,8 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     public var isCountable: Bool {
         switch self {
         // One grain, like one softness: two would be one answer twice.
-        case .blur, .grain: return false
+        // ...and one shutter: two would be one question asked twice.
+        case .blur, .grain, .motionBlur: return false
         // A card wants a dark hairline tight to its edge AND a pale halo
         // outside it, so a border is countable too. A glow likewise: a tight
         // bright core and a wide soft bloom are two of them.
@@ -76,7 +83,9 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         switch self {
         // Grain is laid over what the layer paints, wherever it is listed,
         // so it holds its place at the top beside the blur.
-        case .blur, .grain: return true
+        // Motion blur smears the finished part, whatever else it wears, so it
+        // holds its place at the top too.
+        case .blur, .grain, .motionBlur: return true
         case .shadow, .border, .glow: return false
         }
     }
@@ -90,7 +99,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// at all, which brings no colour row rather than a blank one.
     public var colorSlot: ColorSlot? {
         switch self {
-        case .blur, .grain: return nil
+        case .blur, .grain, .motionBlur: return nil
         case .shadow: return .shadow
         case .border: return .border
         case .glow: return .glow
@@ -206,6 +215,44 @@ public struct GrainEffect: Hashable, Codable, Sendable {
 
     /// Whether it puts anything on the canvas.
     public var paints: Bool { isOn && amount > 0 }
+}
+
+/// Motion blur on what moves (`EffectKind.motionBlur`).
+///
+/// A camera's shutter stays open for part of every frame, and anything moving
+/// while it is open is smeared along the way it went. The Shutter angle says
+/// how much of the frame that is, the way a film camera says it: 180 degrees
+/// (half the frame) is the film standard and the natural default; 270 to 360
+/// is the heavy smear of stylised titles. On a title's group it covers every
+/// part of the title, each smeared by its own move; a part's own Motion Blur,
+/// on or off, beats its title's (`MotionSmear.swift`).
+public struct MotionBlurEffect: Hashable, Codable, Sendable {
+    /// How much of each frame the shutter is open for, in degrees.
+    public var shutterAngle: Double
+    /// Whether it smears at all. Off keeps the angle.
+    public var isOn: Bool
+
+    /// The film standard.
+    public static let startingAngle: Double = 180
+    /// How far the Shutter field goes: nought is a shutter that never opens,
+    /// 360 is open the whole frame.
+    public static let angleRange: ClosedRange<Double> = 0...360
+
+    /// How long one frame lasts, in milliseconds: a frame of the movie an
+    /// export writes (`DocumentVideoExport.movieFPS`). Playback and scrubbing
+    /// measure the shutter against the same frame, so all three smear alike.
+    public static let frameMS: Double = 1000 / DocumentVideoExport.movieFPS
+
+    public init(shutterAngle: Double = MotionBlurEffect.startingAngle, isOn: Bool = true) {
+        self.shutterAngle = min(max(shutterAngle, Self.angleRange.lowerBound), Self.angleRange.upperBound)
+        self.isOn = isOn
+    }
+
+    /// How long the shutter is open, in milliseconds.
+    public var shutterMS: Double { shutterAngle / 360 * Self.frameMS }
+
+    /// Whether it smears anything.
+    public var smears: Bool { isOn && shutterAngle > 0 }
 }
 
 /// A ring round the layer, added rather than simply there.
@@ -476,6 +523,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     case border(BorderEffect)
     case glow(GlowEffect)
     case grain(GrainEffect)
+    case motionBlur(MotionBlurEffect)
 
     public var kind: EffectKind {
         switch self {
@@ -484,6 +532,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .border: return .border
         case .glow: return .glow
         case .grain: return .grain
+        case .motionBlur: return .motionBlur
         }
     }
 
@@ -497,6 +546,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .border(let border): return border.isOn
             case .glow(let glow): return glow.isOn
             case .grain(let grain): return grain.isOn
+            case .motionBlur(let blur): return blur.isOn
             }
         }
         set {
@@ -506,6 +556,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .border(var border): border.isOn = newValue; self = .border(border)
             case .glow(var glow): glow.isOn = newValue; self = .glow(glow)
             case .grain(var grain): grain.isOn = newValue; self = .grain(grain)
+            case .motionBlur(var blur): blur.isOn = newValue; self = .motionBlur(blur)
             }
         }
     }
@@ -521,7 +572,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     public var colorHex: String? {
         get {
             switch self {
-            case .blur, .grain: return nil
+            case .blur, .grain, .motionBlur: return nil
             case .shadow(let shadow): return shadow.colorHex
             case .border(let border): return border.colorHex
             case .glow(let glow): return glow.colorHex
@@ -530,7 +581,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set {
             guard let newValue else { return }
             switch self {
-            case .blur, .grain: return
+            case .blur, .grain, .motionBlur: return
             case .shadow(var shadow): shadow.colorHex = newValue; self = .shadow(shadow)
             case .border(var border): border.colorHex = newValue; self = .border(border)
             case .glow(var glow): glow.colorHex = newValue; self = .glow(glow)
@@ -568,10 +619,16 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set { if let newValue, case .grain = self { self = .grain(newValue) } }
     }
 
+    /// The motion blur this entry holds, or nil when it is something else.
+    public var motionBlur: MotionBlurEffect? {
+        get { if case .motionBlur(let blur) = self { return blur } else { return nil } }
+        set { if let newValue, case .motionBlur = self { self = .motionBlur(newValue) } }
+    }
+
     // Written by hand rather than synthesized, so the saved file reads
     // `{"kind":"shadow","shadow":{…}}` instead of Swift's `{"shadow":{"_0":…}}`.
     // A file is a thing people open, and a new kind should be legible in it.
-    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow, grain }
+    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow, grain, motionBlur }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -582,6 +639,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .border: self = .border(try c.decode(BorderEffect.self, forKey: .border))
         case .glow: self = .glow(try c.decode(GlowEffect.self, forKey: .glow))
         case .grain: self = .grain(try c.decode(GrainEffect.self, forKey: .grain))
+        case .motionBlur: self = .motionBlur(try c.decode(MotionBlurEffect.self, forKey: .motionBlur))
         }
     }
 
@@ -594,6 +652,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .border(let border): try c.encode(border, forKey: .border)
         case .glow(let glow): try c.encode(glow, forKey: .glow)
         case .grain(let grain): try c.encode(grain, forKey: .grain)
+        case .motionBlur(let blur): try c.encode(blur, forKey: .motionBlur)
         }
     }
 }
@@ -620,6 +679,8 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     /// Last: it is a texture rather than a halo or a line, and the rarest of
     /// the five to reach for.
     case grain
+    /// About time rather than the picture, and only on video.
+    case motionBlur
 
     public var id: String { rawValue }
 
@@ -646,6 +707,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .border: return .border
         case .blur: return .blur
         case .grain: return .grain
+        case .motionBlur: return .motionBlur
         }
     }
 
@@ -657,6 +719,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .border: return "An extra ring, inside the layer's edge or outside it"
         case .blur: return "Softens the whole layer"
         case .grain: return "Fine film grain that moves on video"
+        case .motionBlur: return "Smooths fast moves on video"
         }
     }
 
@@ -674,6 +737,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .glow: return .glow(GlowEffect())
         case .blur: return .blur(BlurEffect())
         case .grain: return .grain(GrainEffect())
+        case .motionBlur: return .motionBlur(MotionBlurEffect())
         }
     }
 }
@@ -802,6 +866,22 @@ extension LayerStyle {
     public var grain: GrainEffect? {
         effects.compactMap(\.grain).first(where: \.paints)
     }
+
+    /// The motion blur at a place in the list, or nil when the entry there is
+    /// something else.
+    public func motionBlurEffect(at index: Int) -> MotionBlurEffect? { effect(at: index)?.motionBlur }
+
+    /// Changes one motion blur in place, and does nothing at all when the
+    /// entry there is not one.
+    public mutating func updateMotionBlurEffect(at index: Int, _ mutate: (inout MotionBlurEffect) -> Void) {
+        guard var blur = motionBlurEffect(at: index) else { return }
+        mutate(&blur)
+        effects[index] = .motionBlur(blur)
+    }
+
+    /// This layer's own motion blur, on or off, or nil where it has none and
+    /// leaves the question to whatever holds it (`MotionSmear.swift`).
+    public var motionBlur: MotionBlurEffect? { effects.compactMap(\.motionBlur).first }
 
     /// The blur at a place in the list, or nil when the entry there is
     /// something else.

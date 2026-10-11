@@ -1,0 +1,31 @@
+{
+  "feature": "Motion blur on titles that move fast",
+  "epic": "video-titles-graphics",
+  "summary": "Anything that moves fast on video can be smeared along the way it goes, the way a film camera's shutter does it. Every built-in title now arrives wearing Motion Blur on the title as a whole, and any layer can be given its own from the Effects plus.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: motion-blur-on-a-fast-slide-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, right-click an empty track and choose Add Title Page > Midnight." },
+    { "do": "Right-click the title on the canvas and choose Animate In > Slide." },
+    { "do": "With the title picked, look at Effects: Motion Blur is there, switched on, Shutter 180.", "shot": "2026-10-10-motion-blur-with-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Home, then the right arrow six times: the page and its words are smeared along the slide." },
+    { "do": "Click the eye on the Motion Blur row and look at the same frame: a hard-edged copy caught mid-move.", "shot": "2026-10-10-motion-blur-without-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Turn it back on and drag Shutter to 360: the same frame smears twice as far.", "shot": "2026-10-10-motion-blur-360-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Space and watch the slide play: it should read as one smooth move rather than steps." },
+    { "do": "Pick any other layer on a video, press the Effects plus and choose Motion Blur, then key it moving." }
+  ],
+  "evaluate": [
+    "Does a title sliding in at 180 degrees look filmed rather than stepped when it plays?",
+    "Is the smear on words mid-slide too heavy to read at 180, or about right for a half-second slide?",
+    "Should every built-in title wear Motion Blur from the start, as it does now, or only the punchier ones?",
+    "Is the Effects list the place you would look for Motion Blur, with the eye as its switch?"
+  ],
+  "rough": [
+    "The mock's Effects plus (video-speed page) lists the item as 'Motion blur'; the app writes it 'Motion Blur', per UX-PATTERNS §7 (a menu row is capitalised the Mac way, Title Case).",
+    "No mock draws the Motion Blur row itself; its Shutter slider follows the other effect rows (one slider and a number in degrees).",
+    "The shutter is measured against a 30 frame a second frame (33 ms), the frame an export writes, so playback, scrubbing and export smear the same; a 60 fps export would smear as much as 30 fps does.",
+    "The first frame at each new smear length can take about 35 ms while Core Image builds that shape of picture (four shapes in all), so the very first play of a slide can drop a frame; after that a 1080p frame costs 4 to 6 ms.",
+    "Opacity is not smeared: a part fading while it moves is drawn at the frame's own opacity along the whole smear.",
+    "A title placed before this change has no Motion Blur; add it from the Effects plus on the title."
+  ]
+}
