@@ -1,0 +1,37 @@
+{
+  "id": "size-mode-measures-avatars-icons-and-stacks-and",
+  "title": "Size mode measures avatars, icons and stacks, and a rough box snaps to the thing inside it",
+  "goal": "The Measure tool's Size mode reads text and rectangular buttons well, but hovering an avatar, an icon, a round badge or a stack of overlapping avatars finds nothing. It should find those too. And when it cannot tell what the person means (one avatar or the whole stack), the person can drag a rough box around the area and Size snaps to the distinct thing inside it: the largest element that fits within the box.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T18:39:33.310Z",
+  "updated": "2026-10-11T18:39:33.411Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11): \"when i use the size tool, it doesn't find edges. for example, i hover over the avatar and it won't size it. or the stacked set of avatars. it does good on text but not components so much. and if it's having a hard time, i'd like to drag a rect around the area and have it auto size the largest box it can snap to within that area. for example, i might be forgiving if it couldn't quite determine if I wanted to select a single avatar or a whole group in the stack, i could just drag a rect around it roughly, and it would determine the size of the distinct thing in that area.\"\n\nFrom code reading (not run): Size mode uses PhotonzCore/ElementBounds.swift detect/candidates (:99, :127): an element is a PAIR of horizontal boundaries above and below the pointer whose runs agree (EdgeMap + LumaField EdgeRun), sides from nearby verticals. That cannot see a circle (no straight top or bottom run) or an overlapping stack, which matches the report. Text works via the line-of-text path (done task a-line-of-text-counts-as-an-element-size-mode-re). Related done: hover-to-measure-should-outline-the-button-or-ro, next-measure-hover-to-measure-size-readout. Memory: the user's main use is UX redlining; measurement tooling is the priority. Keep PhotonzCore pure (Vision would live in the app or PhotonzRender side).",
+  "acceptance": [
+    "Reproduce first with real screenshots (a Teams or Slack people list with round avatars, a stacked avatar group, app icons, round and pill badges, a card with a photo): hover each in Size mode at Next defaults and record what it finds in the audit, with pictures",
+    "Hover finds non-rectangular elements: circles and rounded shapes, photos and icons whose edges are curved or soft, by separating the thing from its local background (for example contrast or colour segmentation and connected regions, or Vision's object or saliency contours) rather than only paired straight edges; the box it reports is the element's bounding box measured to the outer edge, MEASURED against known sizes on at least 8 specimens (within 1 px at 1x, 2 px at 2x)",
+    "For overlapping groups (an avatar stack), hover picks the single item under the pointer; a way to step out to the whole group (for example pressing Up, or scrolling, or Option) is offered and named in the hint",
+    "Drag a box in Size mode: on release Size snaps to the largest distinct element whose bounds lie inside the box (with a small tolerance for a box drawn a little tight), so a loose box around one avatar gives that avatar and a loose box around the stack gives the stack; if nothing distinct is inside, it keeps the box as drawn and says so",
+    "While dragging, the element it would snap to is outlined live, so the person sees the result before letting go",
+    "Text and rectangular elements are measured exactly as today (no regressions on the existing measure walks)",
+    "Fast enough to feel instant: hover result under 30 ms and box snap under 100 ms on a 3456x2234 screenshot, MEASURED",
+    "Unit tests in PhotonzCore on specimen images (circle, avatar photo, stack of three, icon on a tinted tile, pill badge); a walk measures an avatar by hover and a stack by a rough box",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T18:39:33.312Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-11T18:39:33.410Z",
+      "note": "seq 3950 -> 30"
+    }
+  ]
+}
