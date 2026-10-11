@@ -632,6 +632,8 @@ extension PhotonzDocument {
         // place in time, because a part inside a copy is on screen when the
         // copy is (`ComponentsInTime.placeInTime`).
         copy.motions = layer.motions
+        // ...and so is how it is turned in space.
+        copy.turn3D = layer.turn3D
         if let nested = layer.instanceOf {
             let version = layer.instanceVersionID
             copy.children = resolvedChildren(of: nested, version: version, instance: id,

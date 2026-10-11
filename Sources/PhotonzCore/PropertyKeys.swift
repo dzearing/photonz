@@ -250,6 +250,11 @@ extension Layer {
             for property in order where keyStill(property) != nil {
                 list.append(.motion(property))
             }
+            // How it is turned and placed in space, the panel's 3D section
+            // (`video-depth.html`): every layer that draws has them.
+            for property in MotionProperty.spaceProperties where keyStill(property) != nil {
+                list.append(.motion(property))
+            }
             // Each shadow, glow and border with its own values, in the order
             // its Effects row has them: Shadow 1's five, then Shadow 2's.
             let effects: [(EffectKind, [MotionProperty])] = [
@@ -744,13 +749,20 @@ extension PhotonzDocument {
     /// A keyed crop is left out of the pose: Premiere keeps a cropped clip's
     /// box round the whole picture, and a drag on it moves the picture rather
     /// than folding the cut into its stored box.
+    ///
+    /// A turn in space is part of the pose too, and so is the camera: the
+    /// outline round a card swung on Y follows the card the camera sees
+    /// (`Space3D.swift`).
     public func posedForCanvas(atTimeMS ms: Int) -> PhotonzDocument {
-        let posing: Set<MotionProperty> = [.position, .scale, .rotation]
-        guard hasTime, layers.contains(where: { layer in
+        let posing: Set<MotionProperty> = [.position, .scale, .rotation, .rotationX, .rotationY,
+                                           .depth, .pivotDepth]
+        let cameraMoves = !(camera?.motions ?? []).isEmpty
+        guard hasTime, cameraMoves || layers.contains(where: { layer in
             (layer.motions ?? []).contains { posing.contains($0.property) }
         }) else { return self }
         let cycle = max(1, documentDurationMS)
         var posed = self
+        if cameraMoves { posed.camera = camera?.shown(atMS: ms, cycleMS: cycle) }
         posed.layers = layers.map { layer in
             guard (layer.motions ?? []).contains(where: { posing.contains($0.property) }) else { return layer }
             let clock = layer.motionClockMS(atDocumentTimeMS: ms)
@@ -761,6 +773,7 @@ extension PhotonzDocument {
             var pose = layer
             pose.frame = moved.frame
             pose.transform.rotation = moved.transform.rotation
+            pose.turn3D = moved.turn3D
             return pose
         }
         return posed

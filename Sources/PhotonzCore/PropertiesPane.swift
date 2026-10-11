@@ -106,6 +106,8 @@ public enum PropertyPicker {
                  .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor,
                  .backgroundBlur, .backgroundZoom: return "Effects"
             case .trimStart, .trimEnd: return "Appearance"
+            case .rotationX, .rotationY, .depth, .pivotDepth: return "3D"
+            case .cameraPerspective, .cameraDepth, .cameraX, .cameraY: return "Camera"
             case .textSize: return "Text"
             case .cropLeft, .cropTop, .cropRight, .cropBottom: return "Crop"
             }

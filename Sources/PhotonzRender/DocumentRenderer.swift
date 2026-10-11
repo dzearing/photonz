@@ -584,11 +584,15 @@ public final class DocumentRenderer: @unchecked Sendable {
 
         // Captions over everything, wherever their row is listed
         // (`CaptionsDrawOnTop.swift`).
+        // A document with anything turned in space, or a camera that has
+        // moved, is seen through the camera; every other document never
+        // reaches any of it and draws exactly as it did (`Space3D.swift`).
         let output = compositeLayers(document.drawingOrder, origin: .zero,
                                      onto: CIImage(color: .clear).cropped(to: extent),
                                      underlay: nil, in: document, store: store, clip: extent,
                                      onDesignedSurface: false,
-                                     contentScale: contentScale, magnifyNearest: magnifyNearest)
+                                     contentScale: contentScale, magnifyNearest: magnifyNearest,
+                                     projection: document.isSeenInSpace ? document.projection : nil)
 
         // The canvas defines the document's bounds: layers hanging outside it
         // (e.g. after a canvas-size change) must not grow the rendered frame.
@@ -606,13 +610,22 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// `onDesignedSurface` says whether a component or a screen with a painted
     /// background sits above these layers, which is what tells a label on a
     /// button apart from a caption over a screenshot (`Layer.drawnShadow`).
+    ///
+    /// `projection` is the camera these layers are seen through, nil where
+    /// nothing in the document is seen in space. `inherited` is the move in
+    /// space a group keeping its contents in space hands down, and `order`
+    /// the order such a group draws them in: furthest first.
     private func compositeLayers(_ layers: [Layer], origin: CGPoint, onto base: CIImage,
                                  underlay: CIImage?, in document: PhotonzDocument,
                                  store: ImageStore, clip: CGRect,
                                  onDesignedSurface: Bool,
-                                 contentScale: CGFloat, magnifyNearest: Bool) -> CIImage {
+                                 contentScale: CGFloat, magnifyNearest: Bool,
+                                 projection: Projection3D? = nil, inherited: Affine3D? = nil,
+                                 order: [Int]? = nil) -> CIImage {
         var output = base
-        for (index, layer) in layers.enumerated() where layer.isVisible {
+        for index in order ?? Array(layers.indices) {
+            let layer = layers[index]
+            guard layer.isVisible else { continue }
             // A layer being spent as the mask of the one above it is not in the
             // picture: it IS the shape of the picture, so it draws nothing of
             // its own (`LayerCompositing.swift`).
@@ -637,12 +650,23 @@ public final class DocumentRenderer: @unchecked Sendable {
             // the whole card, so its contents have to be one picture before
             // the turn can take them, and passing them through one by one
             // would turn each piece about its own middle instead.
-            if let group = layer.group, !group.isFrame, !layer.clipsToBounds, layer.style.isPlain,
-               layer.transform.isIdentity {
+            //
+            // A group told to keep its contents in space passes them through
+            // as well, turned along with it and drawn furthest first, which is
+            // what makes a cube out of faces (`Layer.drawsStraightThrough`).
+            if let group = layer.group, layer.drawsStraightThrough {
+                let move = projection.flatMap { _ in
+                    PhotonzDocument.joined(layer.spaceAffine(offset: origin), inherited)
+                }
+                let depthOrder = layer.keepsItsContentsInSpace && projection != nil
+                    ? PhotonzDocument.depthOrder(of: group.children, offset: frame.origin,
+                                                 inherited: move ?? .identity)
+                    : nil
                 output = compositeLayers(group.children, origin: frame.origin, onto: output,
                                          underlay: underlay, in: document, store: store, clip: clip,
                                          onDesignedSurface: holdsInside,
-                                         contentScale: contentScale, magnifyNearest: magnifyNearest)
+                                         contentScale: contentScale, magnifyNearest: magnifyNearest,
+                                         projection: projection, inherited: move, order: depthOrder)
                 continue
             }
 
@@ -661,7 +685,11 @@ public final class DocumentRenderer: @unchecked Sendable {
                                            backdrop: backdrop,
                                            onDesignedSurface: onDesignedSurface,
                                            contentScale: contentScale,
-                                           magnifyNearest: magnifyNearest) else { continue }
+                                           magnifyNearest: magnifyNearest,
+                                           space: placement(of: layer, origin: origin, in: document,
+                                                            projection: projection,
+                                                            inherited: inherited),
+                                           projection: projection) else { continue }
             // Zoom callouts carry canvas-space chrome (source outline + leader
             // lines) that lives outside the layer frame; composite it beneath
             // the magnified box.
@@ -715,7 +743,11 @@ public final class DocumentRenderer: @unchecked Sendable {
                                       backdrop: backdrop,
                                       onDesignedSurface: onDesignedSurface,
                                       contentScale: contentScale,
-                                      magnifyNearest: magnifyNearest) {
+                                      magnifyNearest: magnifyNearest,
+                                      space: placement(of: below, origin: origin, in: document,
+                                                       projection: projection,
+                                                       inherited: inherited),
+                                      projection: projection) {
                     drawn = ChromaKeyFilter.matted(drawn, by: mask, kind: matte, extent: clip,
                                                    space: compositing)
                 }
@@ -741,7 +773,9 @@ public final class DocumentRenderer: @unchecked Sendable {
     private func groupImage(_ layer: Layer, group: GroupContent, origin: CGPoint,
                             in document: PhotonzDocument, store: ImageStore,
                             backdrop: CIImage, onDesignedSurface: Bool,
-                            contentScale: CGFloat, magnifyNearest: Bool) -> CIImage? {
+                            contentScale: CGFloat, magnifyNearest: Bool,
+                            space: SpacePlacement? = nil,
+                            projection: Projection3D? = nil) -> CIImage? {
         let height = document.canvasSize.height
         let box = flipped(layer.localBounds.offsetBy(dx: origin.x, dy: origin.y), canvasHeight: height)
         // A clipping container's buffer IS its box: everything drawn into it
@@ -774,11 +808,17 @@ public final class DocumentRenderer: @unchecked Sendable {
         } else {
             surface = CIImage(color: .clear).cropped(to: buffer)
         }
+        // What the card holds is seen through the camera put back where it
+        // started: the camera's own move is the card's to take, once, below
+        // (`Projection3D.unmoved`). A layer inside that is turned in space
+        // still turns in perspective, flattened onto the card, the way CSS
+        // and Motion flatten a group.
         var image = compositeLayers(group.children, origin: childOrigin,
                                     onto: surface,
                                     underlay: backdrop, in: document, store: store, clip: buffer,
                                     onDesignedSurface: onDesignedSurface || layer.startsDesignedSurface,
-                                    contentScale: contentScale, magnifyNearest: magnifyNearest)
+                                    contentScale: contentScale, magnifyNearest: magnifyNearest,
+                                    projection: projection?.unmoved)
             .cropped(to: buffer)
 
         image = rounded(image, box: box, radii: layer.style.cornerRadii)
@@ -815,6 +855,14 @@ public final class DocumentRenderer: @unchecked Sendable {
             let offset = pivotOffset(of: layer)
             image = image.transformed(by: mirrored.affineTransform(
                 around: CGPoint(x: box.midX + offset.x, y: box.midY - offset.y)))
+        }
+        // ...and then carried into space as one card, where it is turned in
+        // space or the camera has moved: after its 2D turn, before its shadow,
+        // so the shadow falls from the card the camera sees.
+        if let space {
+            guard let placed = placedInSpace(image, space, canvasHeight: height,
+                                             fadesEdges: true) else { return nil }
+            image = placed
         }
         let silhouette = image
         image = shadowed(image, glows: layer.style.paintedGlows,
@@ -868,8 +916,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // The capture's pixel scale comes along: a measurement reads its
         // number through it, and a 2x capture copied without it read twice
         // the number the canvas shows.
-        let alone = PhotonzDocument(canvasSize: document.canvasSize, layers: [layer],
+        var alone = PhotonzDocument(canvasSize: document.canvasSize, layers: [layer],
                                     pixelScale: document.pixelScale)
+        // ...and so does the camera, so a layer turned in space is drawn where
+        // the canvas draws it (an SVG's picture of it is cut out by that box).
+        alone.camera = document.camera
         return scale == 1 ? render(alone, store: store)
                           : render(alone, store: store, scale: scale)
     }
@@ -998,12 +1049,15 @@ public final class DocumentRenderer: @unchecked Sendable {
     private func ciImage(for layer: Layer, origin: CGPoint, in document: PhotonzDocument,
                          store: ImageStore, backdrop: CIImage,
                          onDesignedSurface: Bool,
-                         contentScale: CGFloat, magnifyNearest: Bool) -> CIImage? {
+                         contentScale: CGFloat, magnifyNearest: Bool,
+                         space: SpacePlacement? = nil,
+                         projection: Projection3D? = nil) -> CIImage? {
         if let group = layer.group {
             return groupImage(layer, group: group, origin: origin, in: document,
                               store: store, backdrop: backdrop,
                               onDesignedSurface: onDesignedSurface,
-                              contentScale: contentScale, magnifyNearest: magnifyNearest)
+                              contentScale: contentScale, magnifyNearest: magnifyNearest,
+                              space: space, projection: projection)
         }
         // The layer's frame in canvas coordinates: identical to its own frame
         // at the top level, shifted by its parents' origins inside a group.
@@ -1377,6 +1431,16 @@ public final class DocumentRenderer: @unchecked Sendable {
         image = image.transformed(
             by: CGAffineTransform(translationX: frame.midX - image.extent.midX + swing.x,
                                   y: frameCenterY - image.extent.midY + swing.y))
+
+        // Into space: the finished, placed picture warped onto the corners the
+        // camera sees, after its 2D turn and before its shadow, so a shadow
+        // falls from the turned card rather than turning with it, the same
+        // bargain the 2D turn strikes (`Space3D.swift`).
+        if let space {
+            guard let placed = placedInSpace(image, space, canvasHeight: document.canvasSize.height,
+                                             fadesEdges: !isPhoto) else { return nil }
+            image = placed
+        }
 
         // Style: shadow, then opacity last so it fades content, border and
         // shadow together. Text on a designed surface leaves its contrast halo
@@ -2539,6 +2603,77 @@ public final class DocumentRenderer: @unchecked Sendable {
     ///
     /// Nought for everything that is not hanging from a mount, which is every
     /// layer in every picture drawn before pivots existed.
+    /// How one layer is carried into space: the move it makes, the camera
+    /// it is seen through, the box its front is judged by, and how soft depth
+    /// of field makes it.
+    struct SpacePlacement {
+        var turn: Affine3D
+        var projection: Projection3D
+        /// The layer's box on the canvas, top-left space.
+        var box: CGRect
+        var drawsBackFace: Bool
+        /// Blur by distance from the camera's focus, in output pixels.
+        var focusBlur: CGFloat
+    }
+
+    /// Where `layer` is carried into space, or nil where it is drawn flat:
+    /// nothing in the document is seen in space, or this layer is neither
+    /// turned nor under a camera that has moved.
+    private func placement(of layer: Layer, origin: CGPoint, in document: PhotonzDocument,
+                           projection: Projection3D?, inherited: Affine3D?) -> SpacePlacement? {
+        guard let projection else { return nil }
+        let move = PhotonzDocument.joined(layer.spaceAffine(offset: origin), inherited)
+        guard move != nil || !projection.leavesTheCanvasAlone else { return nil }
+        let turn = move ?? .identity
+        let box = (layer.isGroup ? layer.localBounds : layer.frame).offsetBy(dx: origin.x, dy: origin.y)
+        let focus = document.camera?.focus?.blurRadius(atDepth: Space3D.depth(of: box, through: turn)) ?? 0
+        return SpacePlacement(turn: turn, projection: projection, box: box,
+                              drawsBackFace: layer.turn3D?.drawsBackFace ?? true,
+                              focusBlur: CGFloat(focus))
+    }
+
+    /// A layer's finished picture, placed on the canvas (Core Image's y-up
+    /// space), carried into space: blurred by its distance from the focus,
+    /// then warped so each corner of the picture lands where the camera sees
+    /// it. Nil where the layer is not drawn: it has turned its back and does
+    /// not show it, or it has come up to the camera.
+    ///
+    /// A flat card seen in perspective is exactly a plane-to-plane map, so
+    /// four corners decide every pixel of it and one perspective warp is the
+    /// whole of the drawing: no slicing, no approximation.
+    private func placedInSpace(_ image: CIImage, _ space: SpacePlacement, canvasHeight: CGFloat,
+                               fadesEdges: Bool) -> CIImage? {
+        guard let front = Space3D.quad(of: space.box, through: space.turn, space.projection) else { return nil }
+        if !space.drawsBackFace, !Space3D.facesViewer(front) { return nil }
+        var picture = image
+        if space.focusBlur > 0.25 {
+            picture = blurred(picture, radius: space.focusBlur, fadesEdges: fadesEdges)
+        }
+        // A clear pixel round the edge, so the warp's sampling fades the edge
+        // instead of cutting it with a saw.
+        let extent = picture.extent.integral.insetBy(dx: -2, dy: -2)
+        guard !extent.isInfinite, !extent.isNull, extent.width >= 1, extent.height >= 1 else { return nil }
+        picture = picture.composited(over: CIImage(color: .clear).cropped(to: extent))
+        // The extent's corners in the document's top-left space, carried, and
+        // brought back to y-up.
+        func landed(_ x: CGFloat, _ y: CGFloat) -> CIVector? {
+            let topLeft = CGPoint(x: x, y: canvasHeight - y)
+            guard let p = space.projection.project(space.turn.apply(Point3D(topLeft))) else { return nil }
+            return CIVector(x: p.x, y: canvasHeight - p.y)
+        }
+        guard let topLeft = landed(extent.minX, extent.maxY),
+              let topRight = landed(extent.maxX, extent.maxY),
+              let bottomRight = landed(extent.maxX, extent.minY),
+              let bottomLeft = landed(extent.minX, extent.minY) else { return nil }
+        let warp = CIFilter.perspectiveTransform()
+        warp.inputImage = picture
+        warp.topLeft = topLeft.cgPointValue
+        warp.topRight = topRight.cgPointValue
+        warp.bottomRight = bottomRight.cgPointValue
+        warp.bottomLeft = bottomLeft.cgPointValue
+        return warp.outputImage
+    }
+
     private func pivotOffset(of layer: Layer) -> CGPoint {
         let pivot = layer.turnPivot
         let box = layer.isGroup ? layer.localBounds : layer.frame

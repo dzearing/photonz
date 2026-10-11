@@ -27,6 +27,9 @@ extension PhotonzDocument {
         doc.canvasSize = CGSize(width: canvasSize.width * scale,
                                 height: canvasSize.height * scale)
         doc.layers = layers.map { $0.magnified(by: scale) }
+        // The camera's move is stated in points like everything else; its
+        // angle of view has no size.
+        doc.camera = camera?.magnified(by: Double(scale))
         return doc
     }
 }
@@ -41,6 +44,7 @@ extension Layer {
         layer.crop = crop?.magnified(by: scale)
         layer.style = style.magnified(by: scale)
         layer.motionSmear = motionSmear?.magnified(by: scale)
+        layer.turn3D = turn3D?.magnified(by: Double(scale))
         // A zoom callout points at a region of the CANVAS, so its aim has to
         // move with the canvas or it magnifies the wrong thing.
         if case .zoomCallout(var callout) = content {

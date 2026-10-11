@@ -928,6 +928,14 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// Set on a title's group: the design it was built from and where its
     /// knobs stand (`TitleRestyle.swift`). Nil on every other group.
     public var titleRecipe: TitleRecipe?
+    /// Set on a group that keeps what it holds in space: its children turn
+    /// along with it and are drawn furthest first, Apple Motion's 3D group and
+    /// CSS's `preserve-3d` (`Space3D.swift`). Nil, the default, flattens: what
+    /// the group holds is drawn in the order the layers list gives it, as one
+    /// flat card, and the card turns as one, which is Keynote's and Motion's
+    /// ordinary group. Nil is every group in every document written before
+    /// this existed.
+    public var keeps3D: Bool?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -953,6 +961,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
         case variantName, captions, variantAnswers, instanceAnswers, captionsHome, title
+        case keeps3D
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -1013,6 +1022,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // document saved before stacks and grids existed is byte for byte what
         // it was.
         try c.encodeIfPresent(layout, forKey: .layout)
+        // Only a group told to keep its contents in space writes this, so
+        // every other group is byte for byte what it was.
+        if keeps3D == true { try c.encode(true, forKey: .keeps3D) }
         // A group nobody has asked about cutting off its overflow writes no
         // key, so a document saved before it could be asked is byte for byte
         // what it was.
@@ -1030,6 +1042,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         children = try c.decode([Layer].self, forKey: .children)
         isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
+        keeps3D = try c.decodeIfPresent(Bool.self, forKey: .keeps3D) == true ? true : nil
         clipsContentsSetting = try c.decodeIfPresent(Bool.self, forKey: .clipsContents)
         // A bare hex string is what this key has always held; a gradient
         // writes an object under the same key.
@@ -1659,6 +1672,11 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     public var crop: CGRect?
     /// Geometric transform (rotation/skew/flip) applied at render time, around the frame's center.
     public var transform: LayerTransform
+    /// How this layer is turned about X and Y and moved in depth, seen through
+    /// the document's camera (`Space3D.swift`). Nil is flat, which is every
+    /// layer in every document written before this existed, so those read and
+    /// write byte for byte the same.
+    public var turn3D: LayerTurn3D?
     public var style: LayerStyle
     public var isVisible: Bool
     public var isLocked: Bool
@@ -1953,6 +1971,8 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         // A copy of a layer does what the original does: copying the look and
         // dropping the movement would be half a duplicate.
         copy.motions = motions
+        // ...and is turned in space the way the original is.
+        copy.turn3D = turn3D
         // ...and it occupies the same stretch of time, for the same reason.
         copy.time = time
         // A copy of a clip somebody has cut is still cut: the pieces come
@@ -2016,6 +2036,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.textStyleID = textStyleID
         copy.effectStyleBindings = effectStyleBindings
         copy.motions = motions
+        copy.turn3D = turn3D
         copy.time = time
         copy.isARunOfText = isARunOfText
         copy.labelledBy = labelledBy

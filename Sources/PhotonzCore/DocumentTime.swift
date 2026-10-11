@@ -234,6 +234,9 @@ extension PhotonzDocument {
         shown.layers = shown.layers.map {
             $0.movedTree(atDocumentTimeMS: moment, documentCycleMS: cycle)
         }
+        // ...and the camera is where its keys have it, on the same clock
+        // (`SceneCamera.shown`).
+        shown.camera = camera?.shown(atMS: moment, cycleMS: cycle)
         // ...and anything under a motion blur that moved while the shutter was
         // open is told where it went (`MotionSmear.swift`). Straight after the
         // motions, which is what it measures.

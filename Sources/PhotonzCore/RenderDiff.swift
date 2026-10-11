@@ -123,6 +123,10 @@ public enum RenderDiff {
     public static func dirtyRegion(from old: PhotonzDocument, to new: PhotonzDocument) -> RenderDirty {
         if old == new { return .none }
         guard old.canvasSize == new.canvasSize else { return .full }
+        // A layer seen in space can land anywhere the camera puts it, nearer
+        // and so bigger than its box, and a camera that moves moves every
+        // pixel: the whole frame is drawn again (`Space3D.swift`).
+        guard !old.isSeenInSpace, !new.isSeenInSpace, old.camera == new.camera else { return .full }
 
         var dirty = CGRect.null
         markChanges(from: old.layers, to: new.layers, origin: .zero, into: &dirty)

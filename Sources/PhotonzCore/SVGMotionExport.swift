@@ -166,7 +166,9 @@ enum MotionSVG {
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd:
+             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .rotationX, .rotationY, .depth, .pivotDepth,
+             .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
                 // An animated SVG has no way to say this yet: a blur in the
                 // file is a filter, and animating its softness means writing a
                 // filter and animating the number inside it. Said out loud in
@@ -304,7 +306,9 @@ enum MotionSVG {
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd:
+             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .rotationX, .rotationY, .depth, .pivotDepth,
+             .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
             // Never reached: these are dropped before a track is asked for.
             return nil
         }
@@ -533,7 +537,9 @@ private extension MotionProperty {
              .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .glowColor, .glowOpacity,
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd: false
+             .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .rotationX, .rotationY, .depth, .pivotDepth,
+             .cameraPerspective, .cameraDepth, .cameraX, .cameraY: false
         }
     }
 }

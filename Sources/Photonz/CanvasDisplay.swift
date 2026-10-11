@@ -802,6 +802,14 @@ extension CanvasNSView {
             guard let layer = document.canvasLayer(id: id) else { continue }
             let shift = travelling.contains(id) ? delta : .zero
             let box = inkBox(of: layer)
+            // Seen in space, each member is outlined where the camera puts it.
+            if document.isSeenInSpace, let map = document.drawnMap(of: id) {
+                outlines.addPath(SelectionOutlineShape.path(
+                    box: box, cornerRadii: layer.selectionOutlineRadii(box: box), through: map,
+                    transform: CGAffineTransform(translationX: shift.x, y: shift.y)
+                        .concatenating(viewport.documentToView)))
+                continue
+            }
             outlines.addPath(SelectionOutlineShape.path(
                 box: box,
                 cornerRadii: layer.selectionOutlineRadii(box: box),
@@ -1081,8 +1089,27 @@ extension CanvasNSView {
             ? CGAffineTransform.identity
             : activeTransform.affineTransform(around: center))
             .concatenating(inheritedTurn(of: selectedLayer.id))
+        // ...or, for a layer seen in space (turned about X or Y, pushed in
+        // depth, or under a camera that has moved), the one plane map the
+        // renderer draws it with, so the outline and the handles sit on the
+        // card the camera sees (`PhotonzDocument.drawnMap`). Carried along
+        // with a move in flight, which the document has not had yet.
+        let spaceMap: Homography? = {
+            guard var shown = document, shown.isSeenInSpace else { return nil }
+            let delta = CGPoint(x: frame.minX - selectedLayer.frame.minX,
+                                y: frame.minY - selectedLayer.frame.minY)
+            if delta != .zero {
+                shown.updateLayer(id: selectedLayer.id) {
+                    $0.frame = $0.frame.offsetBy(dx: delta.x, dy: delta.y)
+                }
+            }
+            return shown.drawnMap(of: selectedLayer.id)
+        }()
         func chromePoint(_ docPoint: CGPoint) -> CGPoint {
-            viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
+            if let spaceMap, let landed = spaceMap.apply(docPoint) {
+                return viewport.viewPoint(fromDocument: landed)
+            }
+            return viewport.viewPoint(fromDocument: docPoint.applying(docToHandle))
         }
 
         // Universal blue selection box around what the layer DRAWS, for every
@@ -1100,10 +1127,16 @@ extension CanvasNSView {
             // and on a rounded box four straight lines cut every corner off
             // (seen on the probe, 2026-09-08). The handles below stay on the
             // square frame corners, which is where a drag grabs.
-            layerOutlineLayer.path = SelectionOutlineShape.path(
-                box: box,
-                cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
-                transform: docToHandle.concatenating(viewport.documentToView))
+            if let spaceMap {
+                layerOutlineLayer.path = SelectionOutlineShape.path(
+                    box: box, cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
+                    through: spaceMap, transform: viewport.documentToView)
+            } else {
+                layerOutlineLayer.path = SelectionOutlineShape.path(
+                    box: box,
+                    cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
+                    transform: docToHandle.concatenating(viewport.documentToView))
+            }
             layerOutlineLayer.isHidden = false
         }
 

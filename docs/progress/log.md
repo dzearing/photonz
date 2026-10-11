@@ -21168,3 +21168,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - New mock page `docs/design/mocks/pages/video-depth.html` (Video > Depth (2.5D)): turning layers in depth on the canvas, a 3D panel section, timeline and layers list, camera options, three playable moves.
 - Decision cards: handle design (on the controls task, recommended arcs on the turn knob) and where the camera lives (on the model task, recommended a keyable frame setting).
 - Next: the 2.5D model and renderer task, which does not wait on either card.
+
+## 2026-10-11 — 2.5D model and renderer (layers turn about X and Y and move in depth)
+
+- Changed: `Layer.turn3D` (Rotation X, Rotation Y, Depth, Pivot depth, back face), `PhotonzDocument.camera` (perspective, depth, X, Y, focus, keys), `GroupContent.keeps3D`; eight new keyable `MotionProperty` values; projection maths, click, outline and depth order in `PhotonzCore/Space3D.swift`; the renderer warps each layer's finished picture onto its projected corners (`placedInSpace`), with depth of field and depth-ordered 3D groups; canvas outline and handles follow the projected card; SVG falls back to a picture. Design note `docs/design/space-3d.md`.
+- Measured: canvas vs export 0 pixels differ; MP4 vs canvas about 1 level mean; 1080p, 10 layers, 4 tilted, 1 out of focus in 5.5ms median.
+- Next: the canvas handles, the panel's 3D section and the camera controls (`tilt-flip-and-push-layers-in-depth-from-the-canv`).
+- Open: the camera card is unanswered (built option A).

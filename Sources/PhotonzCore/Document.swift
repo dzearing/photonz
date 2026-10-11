@@ -106,6 +106,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// ever meets one (`ComponentLibrary.swift`). Top-level layers, each a
     /// main, in the order the Library lists them.
     public var componentOriginals: [Layer] = []
+    /// The camera every frame of this document is seen through
+    /// (`Space3D.swift`). Nil is the default camera, which leaves a document
+    /// nobody has turned in 3D looking exactly as it does, and is every
+    /// document written before this existed.
+    public var camera: SceneCamera?
 
     public init(canvasSize: CGSize, layers: [Layer] = [], pixelScale: CGFloat = 1,
                 colorStyles: [ColorStyle] = [], textStyles: [TextStyle] = [],
@@ -125,7 +130,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         case canvasSize, layers, pixelScale, colorStyles, textStyles, effectStyles, guides
         case gridOriginX, gridOriginY, motionCycleMS, readWords, durationMS
         case tracks, trackGroups, media, markers, markInMS, markOutMS
-        case captionLook, captionsListenedTo, componentOriginals
+        case captionLook, captionsListenedTo, componentOriginals, camera
     }
 
     /// A document with no styles in it writes no styles key, so one saved
@@ -171,6 +176,9 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // A document with no components writes no library, so every file saved
         // before originals left the canvas is byte for byte what it was.
         if !componentOriginals.isEmpty { try c.encode(componentOriginals, forKey: .componentOriginals) }
+        // A document nobody set a camera on writes none, so every file saved
+        // before the camera existed is byte for byte what it was.
+        try c.encodeIfPresent(camera, forKey: .camera)
     }
 
     public init(from decoder: Decoder) throws {
@@ -218,6 +226,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // (`History.init`, `parkOriginals`).
         componentOriginals = try c.decodeIfPresent([Layer].self, forKey: .componentOriginals)?
             .map { $0.retiringItsOutline() } ?? []
+        camera = try c.decodeIfPresent(SceneCamera.self, forKey: .camera)
         // Captions saved as a plain group of cues open as one Captions layer.
         adoptingCaptionGroups()
         // A zoom written before zooms were aimed at what is seen opens showing
@@ -490,11 +499,54 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
     /// picked without unhiding or unlocking it first.
     public func hitTestPath(_ point: CGPoint, zoom: CGFloat = 1,
                             captionPillSize: CaptionPillSizing? = nil) -> [Int]? {
+        // Where anything is seen in space, every layer is clicked where the
+        // camera PUT it: the point is carried back onto the layer's own flat
+        // plane before anything else is asked (`Space3D.swift`). `offset` is
+        // where the stack's own space starts on the canvas, `projection` the
+        // camera it is seen through and `inherited` the move a group keeping
+        // its contents in space hands down. A document nothing is turned in
+        // never reaches any of it.
+        let space = isSeenInSpace ? projection : nil
         func search(_ list: [Layer], _ point: CGPoint, _ prefix: [Int],
-                    order: [Int]? = nil) -> [Int]? {
+                    order: [Int]? = nil, offset: CGPoint = .zero,
+                    projection: Projection3D? = nil, inherited: Affine3D? = nil) -> [Int]? {
             for index in (order ?? Array(list.indices)).reversed() {
                 let layer = list[index]
                 guard layer.isVisible, !layer.isLocked else { continue }
+                var point = point
+                var move: Affine3D?
+                if let projection {
+                    move = Self.joined(layer.spaceAffine(offset: offset), inherited)
+                    // A group drawing straight through is not a card: its
+                    // children are carried one by one, below.
+                    if !(layer.isGroup && layer.drawsStraightThrough),
+                       move != nil || !projection.leavesTheCanvasAlone {
+                        let box = (layer.isGroup ? layer.localBounds : layer.frame)
+                            .offsetBy(dx: offset.x, dy: offset.y)
+                        guard let quad = Space3D.quad(of: box, through: move ?? .identity, projection),
+                              Space3D.facesViewer(quad) || layer.turn3D?.drawsBackFace != false,
+                              let map = Homography(box: box, to: quad),
+                              let back = map.inverted?.apply(CGPoint(x: point.x + offset.x,
+                                                                      y: point.y + offset.y))
+                        else { continue }
+                        point = CGPoint(x: back.x - offset.x, y: back.y - offset.y)
+                    }
+                }
+                if let group = layer.group, let projection, layer.drawsStraightThrough {
+                    // Its children draw straight onto the canvas, each carried
+                    // by the move it hands down; a group keeping them in space
+                    // draws the nearest last, so that is the one a click finds.
+                    let inner = CGPoint(x: offset.x + layer.frame.origin.x, y: offset.y + layer.frame.origin.y)
+                    let local = CGPoint(x: point.x - layer.frame.origin.x, y: point.y - layer.frame.origin.y)
+                    let order = layer.keepsItsContentsInSpace
+                        ? Self.depthOrder(of: group.children, offset: inner, inherited: move ?? .identity)
+                        : nil
+                    if let found = search(group.children, local, prefix + [index], order: order,
+                                          offset: inner, projection: projection, inherited: move) {
+                        return layer.isComponentInstance ? prefix + [index] : found
+                    }
+                    continue
+                }
                 if layer.isGroup {
                     // A turned group is clicked where the turn PUT it: the
                     // point steps back into the group's own upright space
@@ -510,7 +562,13 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
                     if layer.clipsToBounds, !layer.localBounds.contains(point) { continue }
                     let local = CGPoint(x: point.x - layer.frame.origin.x,
                                         y: point.y - layer.frame.origin.y)
-                    if let found = search(layer.children, local, prefix + [index]) {
+                    // Inside a card of its own, what the group holds is seen
+                    // through the camera put back where it started: the
+                    // card took the camera's move (`Projection3D.unmoved`).
+                    if let found = search(layer.children, local, prefix + [index],
+                                          offset: CGPoint(x: offset.x + layer.frame.origin.x,
+                                                          y: offset.y + layer.frame.origin.y),
+                                          projection: projection?.unmoved) {
                         // A copy of a component answers for everything inside
                         // it: its contents belong to its original, so a click
                         // that lands on one of them picks the whole copy.
@@ -529,7 +587,7 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
         // The top level is searched in the order it is DRAWN, so a click
         // lands on the caption that is on top of a title, not under it
         // (`CaptionsDrawOnTop.swift`).
-        return search(layers, point, [], order: Self.drawingIndices(of: layers))
+        return search(layers, point, [], order: Self.drawingIndices(of: layers), projection: space)
     }
 
     /// The layers a marquee rubber-band captures: every visible, unlocked layer
@@ -610,6 +668,11 @@ public struct PhotonzDocument: Hashable, Codable, Sendable {
             bounds = corners.dropFirst().reduce(CGRect(origin: first, size: .zero)) {
                 $0.union(CGRect(origin: $1, size: .zero))
             }
+        }
+        // Turned in space, it is caught where the camera put it, measured in
+        // the same space as the band.
+        if isSeenInSpace, let quad = drawnQuad(of: layer.id), let origin = parentOrigin(of: layer.id) {
+            bounds = Space3D.bounds(of: quad).offsetBy(dx: -origin.x, dy: -origin.y)
         }
         return rect.contains(bounds)
     }

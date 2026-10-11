@@ -1,0 +1,29 @@
+{
+  "feature": "Layers turn about X and Y and move in depth (2.5D model and renderer)",
+  "epic": "video-transitions-motion",
+  "summary": "Any layer on a video can now be swung on Y, tipped on X, pushed nearer or further and keyed over time, and it is drawn in real perspective on the canvas, in playback and in PNG, MP4 and SVG export. The canvas handles and the panel's 3D section come next.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording (File, Open, or the sample recording).",
+  "switched": {},
+  "try": [
+    { "do": "At one second, draw a box on the recording with the Rectangle tool (R), then press V." },
+    { "do": "In Properties, click Animate a property and scroll to the 3D group: pick Rotation Y.", "shot": "2026-10-11-depth-model-picker.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour. The 3D group sits below Effects in this list, out of this picture." },
+    { "do": "Step a second forward, click the Rotation Y number and type 180, then Return." },
+    { "do": "Step back a second, then forward a quarter second at a time, and watch the box swing with its right edge going away.", "shot": "2026-10-11-depth-model-quarter-flip.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Keep stepping until it shows its back; the blue outline stays on the card the whole way.", "shot": "2026-10-11-depth-model-back-face.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Space to play it, then try Depth from the same picker: start at -900 and key 0 a second later." },
+    { "do": "Export the video (File, Export) and play the file: the flip is the same as on the canvas." }
+  ],
+  "evaluate": [
+    "Does the perspective look as strong as Keynote's or Motion's default, or does 45 degrees read too flat or too steep?",
+    "Is the box swinging the way you expected for a positive Rotation Y (right edge away, as in CSS and Motion)?",
+    "Does the outline on the turned box read as the box itself rather than a frame around it?",
+    "Should a flipped card show its mirrored back by default, as here, or hide it?"
+  ],
+  "rough": [
+    "The panel's own 3D section from the mock (Rotation X, Rotation Y, Depth and Pivot depth rows with a ? beside the header) is not built yet; for now the values are reached only through Animate a property, where the 3D group lists after Effects. The section, the arcs on the turn knob and the depth arrow are task tilt-flip-and-push-layers-in-depth-from-the-canv.",
+    "The camera is in the model and the renderer (Perspective, Camera depth, Camera X and Y, focus, keys) but nothing on screen sets it yet; the Camera section on the frame and the thin Camera row on the timeline belong to task tilt-flip-and-push-layers-in-depth-from-the-canv, built as the camera card's option A (layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live, unanswered, recommended A).",
+    "A turned layer's thumbnail and its drag preview are drawn about their own small picture's middle, so their perspective is slightly off the canvas's; the canvas, playback and every export are exact.",
+    "An SVG cannot draw perspective, so a turned layer goes out as its picture and the Export sheet names it; an animated SVG leaves the 3D keys out and says so.",
+    "The frame-time checks: 1080p with ten layers, four tilted and one out of focus, draws in 5.5ms median, 8.2ms slowest."
+  ]
+}

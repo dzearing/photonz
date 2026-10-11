@@ -432,6 +432,13 @@ public enum SVGExport {
 
     /// Why this layer's STYLING has no vector answer, or nil when it has one.
     private static func styleReason(_ layer: Layer, carried: Bool) -> String? {
+        // A card seen in perspective is a plane map, which an SVG transform
+        // (a matrix of six numbers) cannot say: its far edge would come out
+        // as long as its near one. Its picture is exactly what the canvas
+        // draws (`Space3D.swift`).
+        if layer.isTurnedInSpace {
+            return "it is turned in 3D"
+        }
         if layer.style.blendMode != .normal {
             return "it is blended with what is under it"
         }

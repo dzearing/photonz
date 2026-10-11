@@ -92,6 +92,26 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// Where the drawn part of its line ends, as a percent along it: an
     /// underline drawing itself on is this going from nought to 100.
     case trimEnd
+    /// How far it is tipped about its sideways axis, in degrees: positive
+    /// tips the top edge away (`LayerTurn3D`, `Space3D.swift`).
+    case rotationX
+    /// How far it is swung about its upright axis, in degrees: positive
+    /// swings the right edge away. A card flip is this going to 180.
+    case rotationY
+    /// How far toward the viewer it is, in document points.
+    case depth
+    /// How far in front of it the point it turns about sits, in points: a
+    /// cube's face turns about the cube's middle, behind it.
+    case pivotDepth
+    /// The camera's angle of view, in degrees: how strong the perspective is
+    /// (`SceneCamera`). The four camera values are keyed on the camera, never
+    /// on a layer.
+    case cameraPerspective
+    /// How far the camera is pushed in toward the canvas, in points.
+    case cameraDepth
+    /// Where the camera has moved across and down the canvas, in points.
+    case cameraX
+    case cameraY
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -123,6 +143,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .backgroundZoom: "Background zoom"
         case .trimStart: "Trim start"
         case .trimEnd: "Trim end"
+        case .rotationX: "Rotation X"
+        case .rotationY: "Rotation Y"
+        case .depth: "Depth"
+        case .pivotDepth: "Pivot depth"
+        case .cameraPerspective: "Perspective"
+        case .cameraDepth: "Camera depth"
+        case .cameraX: "Camera X"
+        case .cameraY: "Camera Y"
         }
     }
 
@@ -163,11 +191,25 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// One of the four edges of a keyed crop.
     public var isCrop: Bool { Self.cropEdges.contains(self) }
 
+    /// The four values that turn a layer and move it in depth, in the order
+    /// the panel's 3D section lists them (`video-depth.html`).
+    public static let spaceProperties: [MotionProperty] = [.rotationX, .rotationY, .depth, .pivotDepth]
+
+    /// The four values the camera keys, in the order the frame's Camera
+    /// section lists them.
+    public static let cameraProperties: [MotionProperty] = [.cameraPerspective, .cameraDepth, .cameraX, .cameraY]
+
+    /// One of the values that turn a layer in space.
+    public var isSpace: Bool { Self.spaceProperties.contains(self) }
+
+    /// One of the camera's values, which a layer never carries.
+    public var isCamera: Bool { Self.cameraProperties.contains(self) }
+
     /// A distance in document points, which the panel writes in the app's one
     /// word for a length (`DocumentUnit`).
     public var isLength: Bool {
         [.strokeWidth, .blur, .cornerRadius, .shadow, .shadowDistance, .glow, .borderWidth, .textSize,
-         .backgroundBlur].contains(self)
+         .backgroundBlur, .depth, .pivotDepth, .cameraDepth, .cameraX, .cameraY].contains(self)
     }
 
     /// The order the menu offers them in: where it is, how big, how turned,
@@ -206,11 +248,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// the growth then magnifies, and the growth keeps its middle where the
     /// whole picture's middle is (`applied`, the scale case).
     public static let nestingOrder: [MotionProperty] =
-        [.opacity, .blur, .backgroundBlur, .backgroundZoom, .position, .rotation, .scale, .color,
+        [.opacity, .blur, .backgroundBlur, .backgroundZoom, .depth, .rotationY, .rotationX, .pivotDepth,
+         .position, .rotation, .scale, .color,
          .strokeWidth, .trimStart, .trimEnd,
          .cornerRadius, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .shadow,
          .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize,
-         .cropLeft, .cropTop, .cropRight, .cropBottom]
+         .cropLeft, .cropTop, .cropRight, .cropBottom,
+         .cameraPerspective, .cameraDepth, .cameraX, .cameraY]
 
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
@@ -338,6 +382,14 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             // to draw on.
             guard layer.drawsItsOwnOutline, let trim = layer.strokeTrimForMotion else { return nil }
             return .number((self == .trimStart ? trim.start : trim.end) * 100)
+        case .rotationX, .rotationY, .depth, .pivotDepth:
+            // Every layer that draws anything can be turned in space; sound
+            // has nothing to turn. Flat reads nought.
+            guard !layer.isSoundOnly else { return nil }
+            return .number((layer.turn3D ?? LayerTurn3D()).value(of: self) ?? 0)
+        case .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
+            // The camera's, never a layer's (`SceneCamera.current`).
+            return nil
         }
     }
 
@@ -369,7 +421,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.opacity, .number(percent)), let (.shadowOpacity, .number(percent)),
              let (.glowOpacity, .number(percent)):
             return "\(MotionNumber.text(percent))%"
-        case let (.shadowDirection, .number(degrees)): return "\(MotionNumber.text(degrees))°"
+        case let (.shadowDirection, .number(degrees)), let (.rotationX, .number(degrees)),
+             let (.rotationY, .number(degrees)), let (.cameraPerspective, .number(degrees)):
+            return "\(MotionNumber.text(degrees))°"
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
             return "\(MotionNumber.text(percent))%"
@@ -377,7 +431,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
              let (.shadow, .number(points)), let (.textSize, .number(points)),
              let (.glow, .number(points)), let (.shadowDistance, .number(points)),
-             let (.borderWidth, .number(points)):
+             let (.borderWidth, .number(points)), let (.depth, .number(points)),
+             let (.pivotDepth, .number(points)), let (.cameraDepth, .number(points)),
+             let (.cameraX, .number(points)), let (.cameraY, .number(points)):
             return "\(MotionNumber.text(points)) pt"
         case let (.position, .point(point)):
             return "\(MotionNumber.text(Double(point.x))), \(MotionNumber.text(Double(point.y)))"
@@ -1391,6 +1447,36 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(on ? 0 : 100), to: .number(on ? 100 : 0),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeOutExpo, repeats: plays)
+        case .rotationY, .rotationX:
+            // A flip: half a turn from where it is, the card flip on the mock.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(now + 180),
+                               timing: MotionTiming(startMS: 0, durationMS: 1200),
+                               curve: .easeInOut, repeats: plays)
+        case .depth:
+            // Arrives from further away: the title swinging in from depth
+            // starts 900 back and lands where it was drawn.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now - 900), to: .number(now),
+                               timing: MotionTiming(startMS: 0, durationMS: 900),
+                               curve: .easeOut, repeats: plays)
+        case .pivotDepth:
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            return LayerMotion(property: property, from: .number(now), to: .number(now - 100),
+                               timing: MotionTiming(startMS: 0, durationMS: 600),
+                               curve: .easeInOut, repeats: plays)
+        case .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
+            // A slow push in, or a slight drift: the camera moves that make a
+            // title feel shot rather than placed.
+            let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            let to: Double = switch property {
+            case .cameraPerspective: min(now + 15, SceneCamera.widestPerspective)
+            case .cameraDepth: now + 200
+            default: now + 40
+            }
+            return LayerMotion(property: property, from: .number(now), to: .number(to),
+                               timing: MotionTiming(startMS: 0, durationMS: 4000),
+                               curve: .easeInOut, repeats: plays)
         }
     }
 }
@@ -1631,6 +1717,20 @@ extension MotionProperty {
                 trim.end = min(max(percent / 100, 0), 1)
             }
             moved.setStrokeTrimForMotion(trim)
+        case let (.rotationX, .number(number)), let (.rotationY, .number(number)),
+             let (.depth, .number(number)), let (.pivotDepth, .number(number)):
+            guard number.isFinite else { break }
+            var turn = moved.turn3D ?? LayerTurn3D()
+            switch self {
+            case .rotationX: turn.rotationX = number
+            case .rotationY: turn.rotationY = number
+            // Lengths in points, magnified from above like every other: a
+            // piece pushed back 100pt inside an icon drawn at twice the size
+            // is pushed back 200pt.
+            case .depth: turn.depth = number * Double(grown)
+            default: turn.pivotDepth = number * Double(grown)
+            }
+            moved.turn3D = turn
         default:
             break
         }
@@ -1663,7 +1763,7 @@ extension PhotonzDocument {
     /// Whether anything in this document moves at all. Asked before a clock is
     /// started, so a still document costs nothing.
     public var hasMotion: Bool {
-        allLayers.contains { $0.hasMotion }
+        allLayers.contains { $0.hasMotion } || !(camera?.motions ?? []).isEmpty
     }
 
     /// How long one cycle of the loop is, in milliseconds: whatever has been
@@ -1687,6 +1787,9 @@ extension PhotonzDocument {
     public var automaticMotionCycleLengthMS: Int {
         var longest = 0
         forEachLayer { longest = max(longest, $0.motionEndMS) }
+        for motion in camera?.motions ?? [] where motion.isOn {
+            longest = max(longest, motion.timing.endMS)
+        }
         return longest
     }
 
@@ -1703,6 +1806,7 @@ extension PhotonzDocument {
         guard cycle > 0 else { return self }
         var moved = self
         moved.layers = layers.map { $0.movedTree(toMotionTimeMS: ms, cycleMS: cycle) }
+        moved.camera = camera?.shown(atMS: ms, cycleMS: cycle)
         return moved
     }
 
@@ -1730,7 +1834,7 @@ extension PhotonzDocument {
         guard cycle > 0 else { return true }
         return allLayers.allSatisfy { layer in
             (layer.motions ?? []).allSatisfy { $0.hasSettled(atMS: ms, cycleMS: cycle) }
-        }
+        } && (camera?.motions ?? []).allSatisfy { $0.hasSettled(atMS: ms, cycleMS: cycle) }
     }
 }
 

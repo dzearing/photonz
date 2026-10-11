@@ -113,7 +113,10 @@ public enum SVGExporter {
                                      box: CGRect(origin: origin, size: layer.frame.size))
         }
         let canvas = CGRect(origin: .zero, size: document.canvasSize)
-        guard let reach = document.canvasBounds(of: layer.id) else { return nil }
+        guard var reach = document.canvasBounds(of: layer.id) else { return nil }
+        // Turned in space, it reaches wherever the camera puts its corners,
+        // which a card brought near can take well past its own box.
+        if let quad = document.drawnQuad(of: layer.id) { reach = Space3D.bounds(of: quad) }
         let box = reach.insetBy(dx: -layer.reachPadding, dy: -layer.reachPadding)
             .integral.intersection(canvas)
         guard !box.isNull, box.width >= 1, box.height >= 1 else { return nil }
@@ -146,7 +149,7 @@ public enum SVGExporter {
     /// Whether a picture layer is the picture itself: nothing cropped, turned,
     /// rounded off or added to it.
     private static func isUntouched(_ layer: Layer) -> Bool {
-        layer.crop == nil && layer.transform.isIdentity
+        layer.crop == nil && layer.transform.isIdentity && !layer.isTurnedInSpace
             && !layer.style.cornerRadii.isRound
             && !layer.style.effects.contains { $0.isOn }
     }
