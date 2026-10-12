@@ -173,7 +173,8 @@ extension CanvasNSView {
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
         let cue = CanvasPointer.cue(at: uprightPoint(p, of: layer.id), layer: layer,
-                                    frame: editablePath == nil ? selectedLayerFrame : nil,
+                                    frame: editablePath == nil && offersOwnHandles(layer)
+                                        ? selectedLayerFrame : nil,
                                     zoom: viewport.zoom,
                                     captionsEnabled: Experiments.shared.arrowCaptionsEnabled,
                                     offersRotation: offersRotation(layer),
@@ -236,7 +237,7 @@ extension CanvasNSView {
            selected.offersCornerRadiusHandles,
            CornerRadiusHandles.hit(at: local, frame: frame, radii: selected.roundedCornerRadii,
                                    zoom: viewport.zoom) != nil { return false }
-        guard selected?.allowsFrameResize ?? true,
+        guard selected?.allowsFrameResize ?? true, selected.map(offersOwnHandles) ?? true,
               Handles.hit(at: local, frame: frame, zoom: viewport.zoom,
                           edgeGrab: Experiments.shared.edgeGrabEnabled) != nil else { return true }
         return false

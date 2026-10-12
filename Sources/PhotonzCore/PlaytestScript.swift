@@ -2444,6 +2444,9 @@ public enum PlaytestOutlineClaim: String, CaseIterable, Hashable, Codable, Senda
     case drawn
     /// Nothing is drawn round the picked layer.
     case none
+    /// A ring on the edge of the frame and no handles: a clip pushed in past
+    /// the frame (`PhotonzDocument.frameRing`).
+    case frame
 }
 
 public enum PlaytestTimingGrab: String, CaseIterable, Hashable, Codable, Sendable {
@@ -5553,7 +5556,7 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectPicked(layers: try f.optionalStrings("layers"),
                                  outline: try f.optionalString("outline").map {
                                      guard let claim = PlaytestOutlineClaim(rawValue: $0) else {
-                                         throw f.invalid("outline", "outline is \"drawn\" or \"none\"")
+                                         throw f.invalid("outline", "outline is \"drawn\", \"none\" or \"frame\"")
                                      }
                                      return claim
                                  })

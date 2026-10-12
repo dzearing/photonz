@@ -76,8 +76,13 @@ extension CanvasNSView {
     /// sit on the turned piece: every pointer the canvas reads for it goes
     /// through `uprightPoint` first, which undoes the card's swing and hands
     /// the sums below the same upright space they have always worked in.
+    ///
+    /// A clip pushed in past the frame does not either: it wears a ring on the
+    /// frame, and its box's corners are out on empty canvas, so a press there
+    /// must not resize or turn a picture nobody can see the edge of
+    /// (`frameRings`).
     func offersOwnHandles(_ layer: Layer) -> Bool {
-        layer.offersHandles && componentPiece(of: layer.id) == nil
+        layer.offersHandles && componentPiece(of: layer.id) == nil && frameRings[layer.id] == nil
     }
 
     /// How the containers above a layer have turned it, in canvas space.

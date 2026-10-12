@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk",
-  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the canvas draws only the frame ring and no dashed route (no Path row either, since a recording's framing has no route to show), the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back.",
+  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the canvas draws only the frame ring and no dashed route (no Path row either, since a recording's framing has no route to show), the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back. Picked at 220% the recording is ringed on the frame with no handle out on the empty canvas, at the wide shot it wears its usual box, and a title typed over the push keeps its own outline and handles.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -125,6 +125,13 @@
       "note": "Scale keyed 100% at 0:03 and 220% at 0:05: the picture is punched in at 0:05, centred where it was captured. Nothing else is keyed yet"
     },
     {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ],
+      "outline": "frame"
+    },
+    {
       "do": "snapshot",
       "name": "2-zoomed-at-5"
     },
@@ -174,6 +181,13 @@
     {
       "do": "panel",
       "stage": "3-framed"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ],
+      "outline": "frame"
     },
     {
       "do": "snapshot",
@@ -302,6 +316,13 @@
       "reads": "100"
     },
     {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ],
+      "outline": "drawn"
+    },
+    {
       "do": "snapshot",
       "name": "4-wide-at-3-unmoved"
     },
@@ -335,6 +356,76 @@
     {
       "do": "snapshot",
       "name": "5-undone"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ],
+      "outline": "frame"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        160
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "type",
+      "text": "Look here"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "6-title-on-the-zoom",
+      "note": "a title typed over the pushed-in recording at 0:05 is picked the usual way: its own outline round the words and its handles, while the recording under it is ringed on the frame only when it is the one picked"
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Look here"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-title-on-the-zoom"
     }
   ]
 }

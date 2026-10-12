@@ -1,0 +1,45 @@
+{
+  "feature": "A zoomed recording is ringed on the frame",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a recording you have pushed in on and the canvas rings the frame, where the shot is, instead of outlining the magnified picture out on the empty canvas with a handle hanging off it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample recording, pick it, and key Scale at 0:03 (Animate a property, Scale).",
+      "shot": "2026-10-12-zoom-frame-ring-4-wide-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the ruler at 0:05 and type 220 in Scale.",
+      "shot": "2026-10-12-zoom-frame-ring-2-zoomed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the picture to frame a spot.",
+      "shot": "2026-10-12-zoom-frame-ring-3-framed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the left edge of the frame: the ring sits on it and nothing hangs out on the empty canvas."
+    },
+    {
+      "do": "Click the ruler at 0:03: the clip wears its usual box and handles again."
+    },
+    {
+      "do": "At 0:05 type a title with T and pick it with V.",
+      "shot": "2026-10-12-zoom-frame-ring-6-title-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the ring on the frame tell you the recording is picked without making you look for it?",
+    "Is it right that a pushed-in clip offers no handles, so the push is changed with Scale and the framing by dragging the picture?",
+    "When you scrub from the wide shot into the push, does the box turning into a ring read as natural rather than as something switching off?"
+  ],
+  "rough": [
+    "The ring wears the app-wide picked outline (dashed blue) while the mock draws a solid accent ring (video-zoom-wt.html #frameRing); covered by a-picked-layer-wears-the-solid-accent-ring-the-m.",
+    "A click on the empty canvas just past the frame still keeps the zoomed recording picked, because its magnified picture reaches there; covered by a-click-on-the-empty-canvas-past-the-frame-lets.",
+    "The mock rings the clip with no handles at every step, the wide shot included; the app rings it only while pushed past the frame and keeps its box and handles at 100%. Put to you on decision decide-whether-a-picked-recording-at-its-own-siz-when-you-pick-a-recording-that-f."
+  ]
+}

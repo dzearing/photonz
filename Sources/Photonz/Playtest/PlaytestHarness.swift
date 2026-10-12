@@ -8840,6 +8840,23 @@ private final class Run {
             }
             return "picked: \(list(said)), with no chrome on the canvas: "
                 + canvas.playtestOutlineAbsence
+        case .frame:
+            let frame = CGRect(origin: .zero, size: editor.document?.canvasSize ?? .zero)
+            guard let drawn else {
+                throw Failure(description: "nothing is outlined on the canvas, and the step "
+                    + "claimed a ring on the frame: \(canvas.playtestOutlineAbsence)")
+            }
+            let slack: CGFloat = 2
+            guard abs(drawn.minX - frame.minX) <= slack, abs(drawn.minY - frame.minY) <= slack,
+                  abs(drawn.maxX - frame.maxX) <= slack, abs(drawn.maxY - frame.maxY) <= slack else {
+                throw Failure(description: "the outline is drawn round \(drawn.integral), and the "
+                    + "step claimed it would sit on the frame, \(frame.integral)")
+            }
+            guard !canvas.playtestFrameHandlesShown else {
+                throw Failure(description: "the outline sits on the frame, but handles are drawn "
+                    + "on it, and the step claimed there would be none")
+            }
+            return "picked: \(list(said)), ringed on the frame at \(drawn.integral) with no handles, as claimed"
         }
     }
 

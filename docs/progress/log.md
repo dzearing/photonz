@@ -21245,3 +21245,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Core in `Sources/PhotonzCore/CameraRow.swift` (`cameraKeyMoments`, `moveCameraKeys`, `removeCameraKeys`), tested by `CameraRowTests`. Walk `camera-keys-row-walk` (front: diamond taps are SwiftUI taps); harness action `cameraKeyPickedLater`.
 - Gotcha: the full test run hung again in the OS media/text work, and so did the render+media half; skipping the five suites named on find-out-why-the-whole-test-run-hangs-in-the-mac and running them alone went green.
 - Next: the user's answers on the audit (one diamond per moment vs per value; click moves the playhead).
+
+## 2026-10-12 — A zoomed recording is ringed on the frame
+
+- Picked at 220%, a recording now wears a ring on the frame and no handles or knob, instead of an outline round the magnified picture with a handle out on the empty canvas. At its own size it keeps its usual box and handles; a title over it keeps its own.
+- Core: `PhotonzDocument.frameRing` (`ClipReframe.swift`), tested by `FrameRingTests`: a ring only when a timed picture has grown past its own box AND spills past the canvas. App: `EditorState.frameRings` -> `CanvasView.frameRings`; `offersOwnHandles` is false for a ringed clip, so presses and cursor cues agree with the chrome.
+- Walk claim `expectPicked … "outline": "frame"` (ring on the frame, no handles); `framing-a-zoom-keys-its-centre-walk` uses it at 0:05 and checks a title over the push.
+- Next: card on handles at 100% (decide-whether-a-picked-recording-at-its-own-siz), the click past the frame that still picks the clip, and the mock's solid ring.

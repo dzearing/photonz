@@ -43,6 +43,7 @@ struct EditorCanvasSurface: View {
                    selectedLayerFrame: editorState.selectedLayerFrame,
                    groupContext: editorState.groupContextID,
                    multiSelectedLayerIDs: editorState.multiSelectedLayerIDs,
+                   frameRings: editorState.frameRings,
                    dragPreview: editorState.dragPreview,
                    tool: editorState.activeTool,
                    isWatching: editorState.isWatching,

@@ -223,6 +223,43 @@ extension Layer {
     }
 }
 
+// MARK: - The ring on the frame
+
+extension PhotonzDocument {
+
+    /// The ring the canvas draws round a picked clip that has been pushed in
+    /// on, in document points, or nil when it wears its usual outline and
+    /// handles.
+    ///
+    /// At 220% a recording's own box is more than twice the size of the frame,
+    /// and the picture is cut off at the frame's edge. An outline round the box
+    /// hung out on empty canvas with a handle on it, round nothing anybody
+    /// could see (2026-10-11). The zoom walkthrough rings the frame, which is
+    /// where the shot is (`video-zoom-wt.html`, `#frameRing`), and puts no
+    /// handles on it: dragging the picture frames the shot, and the size of the
+    /// push is the Scale row.
+    ///
+    /// It is a ring only where the clip has GROWN past its own box AND spills
+    /// past the canvas. A clip at its own size slid half off the canvas is
+    /// still a thing you resize by its corners, and a picture-in-picture grown
+    /// inside the frame still has every handle on screen. `drawnBox` is the
+    /// box the canvas would otherwise outline: the layer as posed at the
+    /// moment on screen.
+    public func frameRing(layerID: UUID, drawnBox: CGRect) -> CGRect? {
+        guard let layer = layer(id: layerID), layer.takesAReframe,
+              layer.transform.isIdentity, layer.turn3D == nil else { return nil }
+        let box = drawnBox.standardized
+        let rest = layer.drawnBounds().standardized
+        let slack: CGFloat = 0.5
+        guard box.width > rest.width + slack || box.height > rest.height + slack else { return nil }
+        let canvas = CGRect(origin: .zero, size: canvasSize)
+        guard !canvas.insetBy(dx: -slack, dy: -slack).contains(box) else { return nil }
+        let ring = box.intersection(canvas)
+        guard !ring.isNull, ring.width > 0, ring.height > 0 else { return nil }
+        return ring
+    }
+}
+
 // MARK: - Making the move
 
 extension PhotonzDocument {

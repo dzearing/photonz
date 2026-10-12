@@ -2687,6 +2687,18 @@ struct PlaytestScriptTests {
         #expect(layers.isEmpty)
     }
 
+    /// A clip pushed in past the frame is ringed on the frame with no handles
+    /// (`PhotonzDocument.frameRing`), and a walk says so in one word.
+    @Test func expectPickedCanClaimTheRingOnTheFrame() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectPicked", "layers": ["Tutorial Sample"], "outline": "frame" } ] }
+        """)
+        guard case .expectPicked(_, let outline) = script.steps[0] else {
+            Issue.record("expectPicked"); return
+        }
+        #expect(outline == .frame)
+    }
+
     @Test("An expectShows step names the drawing the picked copies show")
     func expectShowsNamesTheDrawing() throws {
         let script = try decode("""

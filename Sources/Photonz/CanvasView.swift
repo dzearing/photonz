@@ -49,6 +49,9 @@ struct CanvasView: NSViewRepresentable {
     let groupContext: UUID?
     /// The marquee's multi-selection, echoed from EditorState.
     let multiSelectedLayerIDs: Set<UUID>
+    /// The ring a picked clip pushed in past the frame wears instead of its
+    /// box and handles, echoed from EditorState (`EditorState.frameRings`).
+    let frameRings: [UUID: CGRect]
     let dragPreview: DragPreview?
     let tool: Tool
     /// View mode (`ViewEditMode`): the canvas is a player's picture, so a
@@ -400,7 +403,8 @@ struct CanvasView: NSViewRepresentable {
                    cropBounds: cropBounds, backgroundFillHex: backgroundFillHex,
                    selectedLayerID: selectedLayerID,
                    selectedLayerFrame: selectedLayerFrame, groupContext: groupContext,
-                   multiSelectedLayerIDs: multiSelectedLayerIDs, dragPreview: dragPreview,
+                   multiSelectedLayerIDs: multiSelectedLayerIDs, frameRings: frameRings,
+                   dragPreview: dragPreview,
                    tool: tool, captionCloseRequest: captionCloseRequest,
                    typeInLayer: typeInLayer,
                    annotationContent: annotationContent,
@@ -1121,6 +1125,11 @@ final class CanvasNSView: NSView {
     /// The marquee's multi-selection, echoed from EditorState (committed).
     /// Read by the frame chrome too, so every picked screen's name tints.
     var multiSelectedLayerIDs: Set<UUID> = []
+    /// The ring each picked clip pushed in past the frame wears, in document
+    /// points, echoed from EditorState (`PhotonzDocument.frameRing`). The
+    /// canvas cannot work it out itself: the document it holds is posed, and
+    /// the ring is read against the clip's own box.
+    var frameRings: [UUID: CGRect] = [:]
     /// Every layer currently picked, however it got there: the multi-selection
     /// plus the single primary selection. What a ⇧-sweep adds to.
     var pickedLayerIDs: Set<UUID> {

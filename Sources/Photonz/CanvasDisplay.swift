@@ -25,6 +25,7 @@ extension CanvasNSView {
                selectedLayerID: UUID?, selectedLayerFrame: CGRect?,
                groupContext: UUID?,
                multiSelectedLayerIDs: Set<UUID>,
+               frameRings: [UUID: CGRect],
                dragPreview: DragPreview?, tool: Tool, captionCloseRequest: Int,
                typeInLayer: EditorState.TypeInLayerRequest?,
                annotationContent: AnnotationContent?,
@@ -76,6 +77,7 @@ extension CanvasNSView {
             }
         }
         self.multiSelectedLayerIDs = multiSelectedLayerIDs
+        self.frameRings = frameRings
         if self.isCanvasSelected != isCanvasSelected {
             self.isCanvasSelected = isCanvasSelected
             if !isCanvasSelected { canvasResizeDrag = nil }
@@ -801,6 +803,12 @@ extension CanvasNSView {
         for id in captured.sorted(by: { $0.uuidString < $1.uuidString }) {
             guard let layer = document.canvasLayer(id: id) else { continue }
             let shift = travelling.contains(id) ? delta : .zero
+            // A clip pushed in past the frame is ringed on the frame, as it is
+            // picked on its own (`refreshLayerSelectionDisplay`).
+            if let ring = frameRings[id] {
+                outlines.addRect(viewRect(forDocRect: ring, in: viewport).insetBy(dx: 0.5, dy: 0.5))
+                continue
+            }
             let box = inkBox(of: layer)
             // Seen in space, each member is outlined where the camera puts it.
             if document.isSeenInSpace, let map = document.drawnMap(of: id) {
@@ -883,6 +891,12 @@ extension CanvasNSView {
         // — typed with the Arrow tool still in hand — has none at all.
         if tool != .select { return "the \(tool.rawValue) tool is in hand" }
         return "hidden"
+    }
+
+    /// Whether any handle or the turn knob is drawn on the picked layer, for a
+    /// walk claiming a ring with none (`PlaytestOutlineClaim.frame`).
+    var playtestFrameHandlesShown: Bool {
+        !handlesLayer.isHidden || !rotateKnobLayer.isHidden
     }
 
     var playtestSelectionOutlineBox: CGRect? {
@@ -1051,6 +1065,23 @@ extension CanvasNSView {
             snapGuideLayer.isHidden = true
             handlesLayer.isHidden = true
             rotateKnobLayer.isHidden = true
+            return
+        }
+        // **A clip pushed in past the frame wears a ring on the frame.** Its
+        // own box is the magnified picture, more than twice the frame at 220%,
+        // so an outline round it hung out on empty canvas with a handle on it
+        // (2026-10-11). The walkthrough rings the frame, where the shot is, and
+        // offers no handles: dragging the picture frames the shot and the push
+        // is the Scale row (`PhotonzDocument.frameRing`). The ring holds still
+        // while the picture slides under it, because the frame does.
+        if let ring = frameRings[selectedLayer.id], resizeDrag == nil, transformDrag == nil {
+            layerOutlineLayer.path = CGPath(
+                rect: viewRect(forDocRect: ring, in: viewport).insetBy(dx: 0.5, dy: 0.5),
+                transform: nil)
+            layerOutlineLayer.isHidden = false
+            handlesLayer.isHidden = true
+            rotateKnobLayer.isHidden = true
+            refreshSnapGuides(in: viewport)
             return
         }
         let dragInFlight = moveDrag != nil || resizeDrag != nil || transformDrag != nil
