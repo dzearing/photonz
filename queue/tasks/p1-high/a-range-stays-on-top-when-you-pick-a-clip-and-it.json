@@ -1,0 +1,36 @@
+{
+  "id": "a-range-stays-on-top-when-you-pick-a-clip-and-it",
+  "title": "A range stays on top when you pick a clip, and its right-click acts on that clip's stretch",
+  "goal": "Picking a range of time and then clicking a clip (a sound, a recording, a title) should keep the range: it stays visible and drawn above the clips, the clip is picked too, and right-clicking inside the range offers what can be done to that clip over just that stretch, such as Mute Section on a sound. Today picking anything sends the range to the background, so range edits on one clip are confusing to reach.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 12,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:33:27.599Z",
+  "updated": "2026-10-12T14:33:27.703Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"when i select a range, and then click on timeline boxes like an audio clip, I want the item to be selected, but the range to still be on top. Then I can for example, right click on the selected range and 'mute' a section. This should apply to whatever range operations we have for different types of things selected, but right now I find it confusing to use because it goes into the background whenever i select something.\"\n\nFrom code reading (not run): today a range and a pick are exclusive by design. EditorState+TrackRange.swift pickTrackRange (:444-452) lets go of the picked layers ('the way a Final Cut range replaces the clips'); trackRangeHeld (:463-468) only counts while selectedLayerID is nil and nothing else is picked, so clicking a clip effectively drops the range from being in hand; rulerRangeInHand is separate (EditorState+RulerRange.swift, menu rows :297+). The user wants the Premiere model (In/Out persists, the selection is separate, range operations apply to the selected clips within In/Out). There is no Mute Section today (no 'Mute' range op found; track mute exists at TimelineTrackRows.swift:370). Sound gain lives in the sound model (AudioMix ramps); a section mute is two ramps and a floor.",
+  "acceptance": [
+    "Reproduce first at Next defaults with both kinds of range (a ruler range / In and Out, and an Option-drag range on tracks): pick the range, click an audio clip, record what happens to the range (drawn behind, dimmed, dropped) and what the right-click offers",
+    "The range and the picked items are separate: clicking a clip, sound, title or zoom inside or outside a range picks it and the range stays held, drawn on top of the clips (the band and its edges over the clip bars, not behind), until Clear Range, Escape (which clears the range first, then the pick), or a new range replaces it",
+    "Right-click inside the range with items picked: a menu of the range operations that apply to the picked items' kinds, acting only on the picked items and only within the range. At least: for a sound, Mute Section (volume to silence across the range with short ramps so there is no click), Lower Volume..., Normalize Section, Clean Noise in Section; for a recording or video, Delete Section, Ripple Delete Section, Split at Range Edges, Speed for Section, Freeze Frame Here, Add Zoom over Range, Hide Picture for Section; for a title or graphic, Trim to Range; for keys, Delete Keys in Range. With nothing picked, the existing whole-timeline range menu (EditorState+RulerRange.swift rulerRangeMenuRows: Split at Range Edges, Merge, Cut, Copy, Delete, Ripple Delete, Clear Range, Add Captions for Range, Export Range) stays as today",
+    "An inventory in the audit lists every range operation that exists today and which item kinds each applies to, so the menu is built from one table rather than per-kind code",
+    "Each section operation is one undo step, and its result shows on the clip (for example the muted stretch draws its volume line at the floor with the ramps visible)",
+    "The same operations are in the menu bar with keys where they already have one, enabled when a range and a matching pick exist",
+    "A walk picks a range, clicks an audio clip, checks the range is still held and on top, right-clicks inside it, chooses Mute Section, and checks the sound is silent within the range and unchanged outside it (MEASURED level at three points)",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:33:27.601Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:33:27.702Z",
+      "note": "seq 3960 -> 12"
+    }
+  ]
+}
