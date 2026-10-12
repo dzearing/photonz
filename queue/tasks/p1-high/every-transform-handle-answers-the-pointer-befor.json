@@ -1,0 +1,36 @@
+{
+  "id": "every-transform-handle-answers-the-pointer-befor",
+  "title": "Every transform handle answers the pointer before you click",
+  "goal": "Any handle that transforms an object (move, resize corners and edges, rotate, the 3D tilt arcs and depth control, pivot, crop edges, path points, zoom box, measure feet) should show, as the pointer comes over it, that a press will grab it: the handle brightens or grows, the 3D arc lights in its axis colour, and the cursor changes to say what will happen. Today the 3D controls give no sign at all until you drag, so the person cannot tell whether they are on them.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 14,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:36:38.937Z",
+  "updated": "2026-10-12T14:36:39.047Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"also the transform options for 3d don't have any hover feedback so i don't know that i'm selecting them. I think the tools for transforming an object should have hover feedback so i know if I click they are going to do something.\"\n\nFrom code reading (not run): the 3D handles in Sources/Photonz/CanvasSpaceHandles.swift only set a closed hand cursor once a drag starts (:237) and refresh the grab cursor on release (:264); no hover highlight. Other handles use refreshGrabCursor / applyGrabCursor (cursor only). Design reference: the 2.5D mock docs/design/mocks/pages/video-depth.html (option A 'arcs grow when the pointer rests on them', generous hit area). Memory: legible text in every state.",
+  "acceptance": [
+    "Inventory first, written in the audit: every on-canvas handle in the app at Next defaults and what it does today on hover (cursor, highlight, nothing)",
+    "One shared hover treatment for handles, used by all of them: within the handle's hit area (which may be larger than its drawing) the handle shows a hover state (for example a brighter fill and a 1.25x scale, or an outline glow for arcs) within one frame, and the cursor changes to the right macOS cursor for the action (resize arrows by direction and turned to the layer's rotation, a rotate cursor, an open hand for move, crosshair where appropriate)",
+    "The 3D arcs: the arc under the pointer lights in its axis colour and thickens, and a small label (Tilt X, Tilt Y, Depth) appears next to the pointer after a short rest; the other arcs dim slightly",
+    "Hovering never changes the document and never takes key; it costs nothing measurable in canvas frame time (MEASURED)",
+    "Hit areas and drawings agree: a hover highlight means a press there grabs that handle, checked for every handle in the inventory by a walk or test that hovers then presses",
+    "Text and icons in any hover label stay legible over light and dark pictures",
+    "A walk hovers each handle on a picked layer (including the 3D arcs) and photographs the hover state for each",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:36:38.939Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:36:39.046Z",
+      "note": "seq 3960 -> 14"
+    }
+  ]
+}

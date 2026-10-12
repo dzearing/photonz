@@ -1,0 +1,34 @@
+{
+  "id": "rotating-a-layer-that-already-has-a-transform-up",
+  "title": "Rotating a layer that already has a transform updates live while you drag",
+  "goal": "Turning a layer with the rotate tool or its rotate handle should show the turn live, every frame, even when the layer already carries a transform (a 3D tilt or depth, a scale, a key, a group's transform). Today on such a layer the picture does not follow the drag and only jumps to the result on release.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 13,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:36:38.739Z",
+  "updated": "2026-10-12T14:36:38.845Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"If i have a transform on an object, and then i use the rotate tool, it does not live update.\"\n\nSuspect from code reading, not confirmed: the 3D handle drag has its own live preview that puts the in-flight turn3D on the layer (CanvasDisplay.swift:1135 'shown.updateLayer(id: drag.layerID) { $0.turn3D = drag.turn }'), but the 2D rotate drag may draw its in-flight preview through a path (a cached sprite or a 2D-only transform) that does not compose with turn3D or other transforms, so the canvas stays put until commit. 2.5D shipped in layers-can-turn-about-x-and-y-and-move-in-depth and tilt-flip-and-push-layers-in-depth-from-the-canv (2026-10-11). Check every in-flight drag preview (move, resize, rotate) against layers with turn3D.",
+  "acceptance": [
+    "Reproduce first at Next defaults: give a text layer and a picture a 3D tilt (Rotation Y 30), then rotate each with the rotate tool and with the rotate handle; also try a layer with scale, one with position keys, one inside a rotated group; record in the audit which ones do not update live and what the canvas shows during the drag",
+    "Rotating any layer, whatever transform it already has, updates the canvas every frame of the drag at the same frame rate as rotating a plain layer (MEASURED frames per second during a 2 s drag, plain vs tilted), and the in-flight picture matches the committed result exactly on release (no jump; pixel diff at release under 1%)",
+    "Moving and resizing a transformed layer are checked the same way and fixed if they show the same fault",
+    "The selection outline and handles follow the projected (tilted) shape during the drag",
+    "A walk tilts a layer in 3D, rotates it by dragging, and photographs mid-drag frames that must differ from the start frame",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:36:38.742Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:36:38.844Z",
+      "note": "seq 3960 -> 13"
+    }
+  ]
+}
