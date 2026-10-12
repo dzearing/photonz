@@ -1493,13 +1493,27 @@ private final class Run {
             // Whichever of the editor's surfaces holds the keyboard: a popover
             // is a window of its own, so the field a `focus` step just took
             // hold of is not always in the editor window.
-            let windows = try panelWindows()
-            guard let field = windows.compactMap({ $0.firstResponder as? NSTextView }).first else {
-                let responder = windows
-                    .map { $0.firstResponder.map { String(describing: type(of: $0)) } ?? "nil" }
-                    .joined(separator: ", ")
-                throw Failure(description: "no text field has the keyboard (first responder is \(responder))")
+            //
+            // Waited for, the way a person waits for the caret before typing:
+            // a name field an action puts up takes the keyboard a pass or two
+            // after the action, and on a busy pass that is later than the
+            // walk's fixed wait. `tutorial-component-versions-walk` typed a
+            // new version's name 0.8s after Add Version while the version was
+            // still being drawn (a 127ms pass) and failed one run in two on
+            // 2026-10-12. A field that never comes still fails, two seconds on.
+            let began = CACurrentMediaTime()
+            let field: NSTextView = try await patiently {
+                let windows = try self.panelWindows()
+                guard let field = windows.compactMap({ $0.firstResponder as? NSTextView }).first else {
+                    let responder = windows
+                        .map { $0.firstResponder.map { String(describing: type(of: $0)) } ?? "nil" }
+                        .joined(separator: ", ")
+                    throw Failure(description: "no text field has the keyboard (first responder is \(responder))")
+                }
+                return field
             }
+            let waited = CACurrentMediaTime() - began
+            let caret = waited > 0.06 ? String(format: " after %.2fs waiting for the caret", waited) : ""
             // What TYPING costs, from the key landing to the app standing
             // still. Zeroed here so the `wait` right after a `type` step
             // reports the keystroke's own main-thread cost and nothing else:
@@ -1512,7 +1526,7 @@ private final class Run {
             ViewBuildMeter.shared.reset()
             field.insertText(text, replacementRange: field.selectedRange())
             await sleep(0.05)
-            note(number, step.name, "\"\(text)\" into \(type(of: field)); "
+            note(number, step.name, "\"\(text)\" into \(type(of: field))\(caret); "
                 + ViewBuildMeter.shared.report + "; " + MainThreadMeter.shared.report)
 
         case .focus(let name):
@@ -8222,7 +8236,14 @@ private final class Run {
             // section around it takes the turn instead (`PlaytestReach.turns`).
             var round = 0.0
             let frames = reaches.map { $0.clip.convert($0.clip.bounds, to: nil) }
-            for turn in PlaytestReach.turns(for: current.box, reaches: reaches.map(\.reach),
+            // A scroller showing none of itself is not in `reaches`, so the
+            // ones that are aim at its nearest edge rather than at the control
+            // buried inside it (`PlaytestReach.aim`).
+            let aimed = PlaytestReach.aim(
+                for: current.box, window: content.convert(content.bounds, to: nil),
+                clips: Self.scrollableClips(for: current, in: content)
+                    .map { $0.convert($0.bounds, to: nil) })
+            for turn in PlaytestReach.turns(for: aimed, reaches: reaches.map(\.reach),
                                             frames: frames) {
                 round = Self.scrollClip(reaches[turn.index].clip, by: turn.by)
                 if round > 0.5 { break }

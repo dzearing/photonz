@@ -216,4 +216,49 @@ struct PlaytestReachTests {
         let turns = PlaytestReach.turns(for: tall, reaches: [CGRect(x: 1100, y: 300, width: 300, height: 100), dock])
         #expect(turns.map(\.index) == [0, 1])
     }
+
+    /// The bug this was written for (2026-10-12): a title with three shadows
+    /// at 0:03, the dock at its top. The Effects list was drawn 297 points
+    /// tall and all of it sat below the dock's bottom edge, with Shadow 3's
+    /// Distance slider 416 points further down inside the list. Only the dock
+    /// had a strip on screen, so it took the turn by the slider's whole
+    /// depth, carried the list clean off the top of the window, and the
+    /// next round found nothing left to turn. A person scrolls the dock until
+    /// the list is in view, then scrolls the list.
+    @Test("A scroller with nothing on screen is brought in first, not the control buried in it")
+    func aListOffScreenIsAimedAtBeforeWhatIsInsideIt() {
+        let slider = CGRect(x: 1590, y: -494.5, width: 54, height: 14)
+        let dockClip = CGRect(x: 1464, y: 314, width: 264, height: 676)
+        let effectsList = CGRect(x: 1464, y: -78, width: 264, height: 297)
+        let aimed = PlaytestReach.aim(for: slider, window: screen(990),
+                                      clips: [dockClip, effectsList])
+        // The list's own bottom edge, where the slider will be once the list
+        // has done its part.
+        #expect(aimed == CGRect(x: 1590, y: -78, width: 54, height: 14))
+        let turns = PlaytestReach.turns(for: aimed, reaches: [dockClip], frames: [dockClip])
+        // The dock turns just far enough to bring the list's bottom in.
+        #expect(turns.first?.by == -(314 + 78 + PlaytestReach.revealMargin))
+    }
+
+    @Test("A control whose scrollers are all on screen is aimed at where it is")
+    func aimLeavesAVisibleListAlone() {
+        let slider = CGRect(x: 1590, y: -200, width: 54, height: 14)
+        let dockClip = CGRect(x: 1464, y: 314, width: 264, height: 676)
+        let effectsList = CGRect(x: 1464, y: 300, width: 264, height: 297)
+        #expect(PlaytestReach.aim(for: slider, window: screen(990),
+                                  clips: [dockClip, effectsList]) == slider)
+    }
+
+    @Test("A list wholly above the window is aimed at by its top edge")
+    func aimAboveTakesTheTopEdge() {
+        let row = CGRect(x: 1590, y: 1500, width: 54, height: 20)
+        let dockClip = CGRect(x: 1464, y: 314, width: 264, height: 676)
+        let effectsList = CGRect(x: 1464, y: 1100, width: 264, height: 297)
+        #expect(PlaytestReach.aim(for: row, window: screen(990), clips: [dockClip, effectsList])
+                == CGRect(x: 1590, y: 1397 - 20, width: 54, height: 20))
+    }
+
+    private func screen(_ height: Double) -> CGRect {
+        CGRect(x: 0, y: 0, width: 1728, height: height)
+    }
 }

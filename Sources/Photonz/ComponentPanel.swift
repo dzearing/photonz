@@ -1373,6 +1373,9 @@ private struct ComponentVersionRow: View {
 
     @State private var draft = ""
     @FocusState private var focused: Bool
+    /// Between Add handing this row the name and the field taking the
+    /// keyboard (`claimNameIfJustAdded`).
+    @State private var isClaiming = false
 
     var body: some View {
         HStack(spacing: 6) {
@@ -1385,7 +1388,9 @@ private struct ComponentVersionRow: View {
                     .focused($focused)
                     .onSubmit(commit)
                     .nameFieldKeys(commit: commit, revert: { draft = version.name })
-                    .onChange(of: focused) { _, isFocused in if !isFocused { commit() } }
+                    .onChange(of: focused) { _, isFocused in
+                        if isFocused { tookTheName() } else { commit() }
+                    }
                 Text("showing")
                     .font(.caption2)
                     .foregroundStyle(.secondary)
@@ -1416,22 +1421,59 @@ private struct ComponentVersionRow: View {
     /// Takes the focus Add handed over, once, and selects the name so the
     /// first keystroke replaces it. A look arrives called "Variant 2", which is
     /// honest and says nothing; "Disabled" is one word of typing.
+    ///
+    /// Asked for one pass later, unlike the component's own Name field above.
+    /// Adding a version CHANGES the selection, so the whole section is rebuilt
+    /// around this row in the same pass it first appears in, and a focus asked
+    /// for before the field is in the responder chain is dropped: the keyboard
+    /// stayed on the canvas and typing went nowhere (measured on the probe on
+    /// 2026-09-13, where the walk reported "no text field has the keyboard").
+    ///
+    /// And asked AGAIN until it lands. One pass was not always enough: on a
+    /// second Add, with the version still being drawn in passes of 120ms and
+    /// more, the ask was dropped one time in two and nothing asked again, so
+    /// the name field sat there with the keyboard nowhere at all
+    /// (`tutorial-component-versions-walk`, 2026-10-12). The claim on
+    /// `componentVersionAwaitingName` is let go only once the field has the
+    /// keyboard, so a row rebuilt in the meantime picks it up for itself, or
+    /// after `focusTries` asks, so a field that cannot take it never steals
+    /// the keyboard later.
     private func claimNameIfJustAdded() {
-        guard isShown, editorState.componentVersionAwaitingName == version.id else { return }
-        editorState.componentVersionAwaitingName = nil
+        guard isShown, editorState.componentVersionAwaitingName == version.id,
+              !isClaiming else { return }
+        isClaiming = true
         draft = version.name
-        // One pass later, unlike the component's own Name field above. Adding a
-        // version CHANGES the selection, so the whole section is rebuilt around
-        // this row in the same pass it first appears in, and a focus asked for
-        // before the field is in the responder chain is dropped: the keyboard
-        // stayed on the canvas and typing went nowhere (measured on the probe
-        // on 2026-09-13, where the walk reported "no text field has the
-        // keyboard"). The component's field survives because its section is
-        // already standing.
-        DispatchQueue.main.async {
+        askForFocus(left: Self.focusTries)
+    }
+
+    /// About half a second of asking, a pass apart.
+    private static let focusTries = 10
+
+    private func askForFocus(left: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + (left == Self.focusTries ? 0 : 0.05)) {
+            guard editorState.componentVersionAwaitingName == version.id else {
+                isClaiming = false
+                return
+            }
+            guard left > 0 else {
+                editorState.componentVersionAwaitingName = nil
+                isClaiming = false
+                return
+            }
             focused = true
-            DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
+            DispatchQueue.main.async {
+                if focused { tookTheName() } else { askForFocus(left: left - 1) }
+            }
         }
+    }
+
+    /// The field has the keyboard: the claim is done, and the name is selected
+    /// so typing replaces it.
+    private func tookTheName() {
+        guard editorState.componentVersionAwaitingName == version.id else { return }
+        editorState.componentVersionAwaitingName = nil
+        isClaiming = false
+        DispatchQueue.main.async { NSApp.keyWindow?.firstResponder?.trySelectAllText() }
     }
 
     private func commit() {

@@ -190,6 +190,44 @@ public enum PlaytestReach {
         return order.filter { !alreadyHolds($0.index) } + order.filter { alreadyHolds($0.index) }
     }
 
+    /// What the scrollers that DO show on screen have to bring in, when the
+    /// ones closest round the control show none of themselves at all.
+    ///
+    /// `clips` are the whole viewports of every scroller around the control in
+    /// window coordinates, outermost first, and `window` is the window's own
+    /// content. A scroller cut down to nothing by the ones around it (the
+    /// Effects list sitting wholly under the dock's bottom edge) has no strip
+    /// to turn, so it is not in the reveal's list, and the dock around it was
+    /// told to bring in the control itself: hundreds of points down inside a
+    /// list that has not scrolled yet. The dock turned by all of that, carried
+    /// the list clear off the top of the window, and the next round found
+    /// nothing left to turn (`keys-on-a-later-shadow-walk`, 2026-10-12).
+    ///
+    /// So the box is pulled inside each hidden scroller's viewport, innermost
+    /// first, onto the edge nearest where it is: the place the control will be
+    /// once that scroller has done its part. The scrollers outside turn just
+    /// far enough to show that edge, and on the next round the list has a
+    /// strip on screen and turns for itself. The box is unchanged when every
+    /// scroller round it shows at least some of itself.
+    public static func aim(for box: CGRect, window: CGRect, clips: [CGRect]) -> CGRect {
+        var region = window
+        var hidden: [CGRect] = []
+        for clip in clips {
+            region = region.intersection(clip)
+            if region.isNull || region.isEmpty { hidden.append(clip) }
+        }
+        var aimed = box
+        for frame in hidden.reversed() {
+            let height = min(aimed.height, frame.height)
+            if aimed.minY < frame.minY {
+                aimed = CGRect(x: aimed.minX, y: frame.minY, width: aimed.width, height: height)
+            } else if aimed.maxY > frame.maxY {
+                aimed = CGRect(x: aimed.minX, y: frame.maxY - height, width: aimed.width, height: height)
+            }
+        }
+        return aimed
+    }
+
     /// What the walk prints. Plain words, naming the control, saying which of
     /// the three it is and by how much, and ending with what would fix it.
     ///
