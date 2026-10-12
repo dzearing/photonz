@@ -21238,3 +21238,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `TitleSet.swift`: twelve distinct headline entrances (rise, blur, mask, swing, typewriter, fly from depth, track, fall from large, flip, wipe, rise by letter, tilt), plain Ease out, outs inside the last 500 ms; every built-in on its own live look except Minimal Underline.
 - Reel and contact sheet: `queue/audits/2026-10-12-title-set-*`; decision card asks the user whether the set looks produced.
 - Next: act on the two open title cards (which looks to keep; whether the set looks produced).
+
+## 2026-10-12 — The camera's keys show on a thin row at the top of the timeline
+
+- Once any camera value is keyed, a thin Camera row sits under the ruler (pinned, it does not scroll with the tracks) with a diamond per moment; it goes with the last key. Click the name to pick the frame, click a diamond to go to it, drag to retime, ⌫ or right-click Delete Key; each edit one undo step.
+- Core in `Sources/PhotonzCore/CameraRow.swift` (`cameraKeyMoments`, `moveCameraKeys`, `removeCameraKeys`), tested by `CameraRowTests`. Walk `camera-keys-row-walk` (front: diamond taps are SwiftUI taps); harness action `cameraKeyPickedLater`.
+- Gotcha: the full test run hung again in the OS media/text work, and so did the render+media half; skipping the five suites named on find-out-why-the-whole-test-run-hangs-in-the-mac and running them alone went green.
+- Next: the user's answers on the audit (one diamond per moment vs per value; click moves the playhead).

@@ -5747,6 +5747,18 @@ private final class Run {
                 let copying = action == .keyLanesPickedCopyLater
                 editor.moveKeys(layerID: picked.layerID, picked.refs, byMS: 500, copying: copying)
                 actionDetail = (copying ? "copied " : "carried ") + "\(picked.refs.count) key(s) half a second later"
+            case .cameraKeyPickedLater:
+                guard let from = editor.pickedCameraKeyMS, editor.canDeletePickedCameraKey else {
+                    throw Failure(description: "cameraKeyPickedLater needs a diamond picked on the Camera row")
+                }
+                editor.beginCameraKeyDrag(fromMS: from)
+                for fraction in [0.35, 0.7, 1.0] {
+                    editor.updateCameraKeyDrag(byMS: Int((1000 * fraction).rounded()))
+                    await sleep(0.05)
+                }
+                editor.commitCameraKeyDrag()
+                actionDetail = "carried the camera key at " + MotionStripRuler.timecode(Double(from))
+                    + " to " + MotionStripRuler.timecode(Double(editor.pickedCameraKeyMS ?? from))
             case .keyLanesPickedHold, .keyLanesPickedBezier:
                 guard let picked = editor.keySelection, !picked.refs.isEmpty else {
                     throw Failure(description: "\(action.rawValue) needs keys picked on a lane")
@@ -6986,7 +6998,8 @@ private final class Run {
                  .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
                  .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
                  .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
-                 .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
+                 .keyLanesPickedBezier, .keyLanesHandleLater, .cameraKeyPickedLater,
+                 .goToNextKey, .goToPreviousKey,
                  .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelinePanAlong,
                  .timelineFiveMinutes, .clipHoldToFiveMinutes:
                 break  // handled above, in the branch that drives the timeline

@@ -363,6 +363,13 @@ struct TimelineDock: View {
                         .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
                             editorState.timelineRulerFrame = $0
                         }
+                    // The camera's keys, under the ruler and over every track,
+                    // where `video-depth.html` puts them; it stays put while
+                    // the tracks scroll, as the ruler does.
+                    if editorState.showsCameraRow {
+                        TimelineCameraRow(laneWidth: laneWidth)
+                            .padding(.top, Self.rowSpacing)
+                    }
                     ScrollView(.vertical) {
                         let order = editorState.timelineTrackRows.map(\.id)
                         VStack(alignment: .leading, spacing: Self.rowSpacing) {
@@ -654,7 +661,7 @@ struct TimelineDock: View {
     /// One track and no less: the ruler, one lane, and the scroller strip.
     private var bodyFloor: CGFloat {
         let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
-        return captionBar + Self.rulerHeight + Self.soundLaneHeight + 2 * Self.rowSpacing + Self.scrollerStrip
+        return captionBar + cameraRow + Self.rulerHeight + Self.soundLaneHeight + 2 * Self.rowSpacing + Self.scrollerStrip
     }
 
     private func dragEdge(pointerMovedDown dy: CGFloat) {
@@ -694,7 +701,12 @@ struct TimelineDock: View {
         rows += TimelineAddTrackRow.height + Self.rowSpacing
         let content = Self.rulerHeight + rows + Self.rowSpacing
         let captionBar = showsCaptionTrackBar ? CaptionTrackBarView.height + 4 : 0
-        return captionBar + min(Self.bodyCeiling, content) + Self.scrollerStrip
+        return captionBar + cameraRow + min(Self.bodyCeiling, content) + Self.scrollerStrip
+    }
+
+    /// The Camera row and the space over it, where the camera is keyed.
+    private var cameraRow: CGFloat {
+        editorState.showsCameraRow ? TimelineCameraRow.height + Self.rowSpacing : 0
     }
 
     /// One track's full height: its lane, the lanes of anything moving on

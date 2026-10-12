@@ -1497,6 +1497,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Drag the picked keys half a second later, or with Option held, copy
     /// them there.
     case keyLanesPickedLater, keyLanesPickedCopyLater
+    /// Drag the diamond picked on the timeline's Camera row a second later,
+    /// through the row's own drag, in a handful of moves the way a hand does.
+    case cameraKeyPickedLater
     /// Right-click a picked key and choose Hold, or Bezier.
     case keyLanesPickedHold, keyLanesPickedBezier
     /// Drag the leaving handle of the first picked key, on its open curve, most
@@ -1627,7 +1630,8 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .titleDragStartEarlier, .titleDragEndLater, .clipKeyAtPlayheadLater,
              .keyLanesToggle, .keyLanesPickAtPlayhead, .keyLanesPickAll,
              .keyLanesPickedLater, .keyLanesPickedCopyLater, .keyLanesPickedHold,
-             .keyLanesPickedBezier, .keyLanesHandleLater, .goToNextKey, .goToPreviousKey,
+             .keyLanesPickedBezier, .keyLanesHandleLater, .cameraKeyPickedLater,
+             .goToNextKey, .goToPreviousKey,
              .timelineZoomIn, .timelineZoomOut, .timelineFit, .timelinePanAlong,
              .timelineFiveMinutes, .clipHoldToFiveMinutes: true
         default: false

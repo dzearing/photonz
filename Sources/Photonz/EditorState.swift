@@ -1691,6 +1691,12 @@ final class EditorState {
     /// Picked keys on their way somewhere else in time, drawn where the hand
     /// has them until it lets go.
     var keyLaneDrag: KeyLaneDrag?
+    /// The diamond picked on the timeline's Camera row, by where it sits on
+    /// the document's clock (`EditorState+CameraRow`).
+    var pickedCameraKeyMS: Int?
+    /// A Camera row diamond on its way somewhere else in time: where it was
+    /// taken from and how far the hand has carried it.
+    var cameraKeyDrag: (fromMS: Int, byMS: Int)?
     /// What the NEXT hold will push (`HoldPush.swift`): the whole document, so
     /// a voice stays with the shot it belongs to, or the picture alone, so it
     /// runs on under the frozen frame.

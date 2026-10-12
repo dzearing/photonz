@@ -205,6 +205,8 @@ extension EditorState {
 
     /// Whether ⌫ means these keys: some are picked on the layer in hand.
     var canDeletePickedKeys: Bool {
+        // A diamond picked on the Camera row is keys in hand too.
+        if canDeletePickedCameraKey { return true }
         guard documentHasTime, let keySelection, !keySelection.refs.isEmpty,
               selectedLayerID == keySelection.layerID,
               !isClipLocked(keySelection.layerID) else { return false }
@@ -214,6 +216,10 @@ extension EditorState {
     /// ⌫ with keys picked: those keys go, and the layer stays.
     @discardableResult
     func deletePickedKeys() -> Bool {
+        if canDeletePickedCameraKey, let ms = pickedCameraKeyMS {
+            deleteCameraKeys(atMS: ms)
+            return true
+        }
         guard canDeletePickedKeys, let keys = keySelection else { return false }
         keySelection = nil
         perform { $0.removeKeys(layerID: keys.layerID, keys.refs) }

@@ -1,0 +1,28 @@
+{
+  "feature": "Camera keys on a thin row at the top of the timeline",
+  "epic": "video-transitions-motion",
+  "summary": "Once you key the camera (a push in, a drift), a thin Camera row appears under the timeline's ruler with a diamond at each key. Click it to get to the camera settings, drag a diamond to retime the move, and delete one with the delete key or a right click.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Choose View > Show Camera Settings, go to 1s and click the diamond beside Camera depth.", "shot": "2026-10-12-camera-row-1.png" },
+    { "do": "Go to 3s and type 400 into Camera depth: the push in plays from 1s to 3s, and the Camera row shows two diamonds." },
+    { "do": "Click the recording on the canvas, then click the word Camera at the left of the row: the panel shows the Camera section again.", "shot": "2026-10-12-camera-row-2.png" },
+    { "do": "Drag the second diamond to 4s: the push now takes three seconds.", "shot": "2026-10-12-camera-row-3.png" },
+    { "do": "Press Command-Z: the diamond goes back to 3s in one step." },
+    { "do": "Click a diamond and press Delete, or right-click it and choose Delete Key." },
+    { "do": "Delete the last diamond: the Camera row goes and the tracks close up under the ruler.", "shot": "2026-10-12-camera-row-4.png" }
+  ],
+  "evaluate": [
+    "Does the row read as the camera's own line, separate from the tracks, without looking like a track you could drop clips on?",
+    "Is one diamond for every key at a moment (depth and X keyed together show as one) what you expect, or do you want a diamond per value?",
+    "Is clicking a diamond moving the playhead to it (so the panel shows that key's values) right, or should a click only pick it?",
+    "Are the diamonds big enough to grab on a thin row?"
+  ],
+  "rough": [
+    "The depth mock describes this row only in words (Camera A, 'a thin row at the top of the timeline'); the drawn Camera track with a gradient lane is Camera B, the design not chosen on decision card layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live. The row borrows the look of a layer's key lane instead.",
+    "A diamond stands for every camera key at that moment, so dragging or deleting it moves or removes all of them together; there is no way yet to pull one value's key out from the others on this row (the panel's diamonds still key each value alone).",
+    "The row has no curve view and no easing menu, unlike a layer's key lanes. Right-click offers Go to Key, Show Camera Settings and Delete Key.",
+    "The row's diamonds are clicked with SwiftUI taps, which answer only with the app in front, so its walk takes the front and is skipped while someone is at the Mac."
+  ]
+}
