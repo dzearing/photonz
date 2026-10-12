@@ -46,7 +46,85 @@ fi
 # The whole output is kept only so the last lines can be looked at for a crash.
 # Everything is still printed as it happens.
 log="$(mktemp -t photonz-test-XXXXXX)"
-trap 'rm -f "$log"' EXIT
+parked="$(mktemp -t photonz-test-parked-XXXXXX)"
+trap 'rm -f "$log" "$parked"; [[ -n "${watch_pid:-}" ]] && kill "$watch_pid" 2>/dev/null' EXIT
+
+# A run that goes quiet AND idle is stopped, with the tests it is parked in
+# named, rather than left to sit. From 2026-10-10 the whole run sat at 0% CPU
+# for ten to twenty minutes at a time, every runner waited it out, and nothing
+# said where it was stuck until somebody ran `sample` by hand (the cause, text
+# reads starving Swift's shared pool, is in Sources/PhotonzRender/RecogniserLane.swift).
+#
+# Quiet is no new output for PHOTONZ_TEST_QUIET_LIMIT seconds (default 180).
+# Idle is the test helper using under two seconds of CPU across that time. A
+# slow test is busy, so it is never stopped however quiet it is. Drill it with
+#
+#     PHOTONZ_TEST_PARK_DRILL=1 PHOTONZ_TEST_QUIET_LIMIT=30 Scripts/test.sh --filter ParkedRunDrill
+quiet_limit="${PHOTONZ_TEST_QUIET_LIMIT:-180}"
+
+# The test helper this run started, found down our own process tree so another
+# worktree's run on the same Mac is never touched.
+our_helper() {
+  ps -A -o pid=,ppid=,comm= | awk -v root="$$" '
+    { parent[$1] = $2; name[$1] = $3 }
+    END {
+      for (p in parent) {
+        if (name[p] !~ /swiftpm-testing-helper$/) continue
+        for (q = parent[p]; q > 1; q = parent[q]) if (q == root) { print p; exit }
+      }
+    }'
+}
+
+# CPU seconds a process has used, from ps's [[dd-]hh:]mm:ss.cc.
+cpu_seconds() {
+  ps -o time= -p "$1" 2>/dev/null | awk '{
+    n = split($1, part, /[-:]/); s = 0
+    for (i = 1; i <= n; i++) s = s * 60 + part[i]
+    print int(s)
+  }'
+}
+
+watch_for_a_parked_run() {
+  local size=-1 quiet=0 helper="" cpu_then=0
+  while sleep 10; do
+    local now_size now_helper
+    now_size=$(wc -c < "$log" 2>/dev/null || echo 0)
+    now_helper=$(our_helper)
+    if [[ "$now_size" != "$size" || "$now_helper" != "$helper" || -z "$now_helper" ]]; then
+      size=$now_size; helper=$now_helper; quiet=0
+      [[ -n "$helper" ]] && cpu_then=$(cpu_seconds "$helper")
+      continue
+    fi
+    quiet=$((quiet + 10))
+    (( quiet < quiet_limit )) && continue
+    local cpu_now; cpu_now=$(cpu_seconds "$helper")
+    if (( cpu_now - cpu_then >= 2 )); then
+      # Busy, just quiet. Start the clock again from here.
+      quiet=0; cpu_then=$cpu_now; continue
+    fi
+    local shot="${TMPDIR:-/tmp}/photonz-test-parked-$(date +%Y%m%d-%H%M%S).txt"
+    sample "$helper" 2 -file "$shot" >/dev/null 2>&1
+    {
+      echo
+      echo "==> The test run has printed nothing for ${quiet}s and its helper used no CPU"
+      echo "    in that time, so it is parked, not slow. Stopping it. Tests it was in:"
+      grep -oE '[A-Za-z0-9_]+Tests\.[A-Za-z0-9_]+\(|[A-Za-z0-9_]+Tests\.swift:[0-9]+' "$shot" \
+        | sed 's/($/()/' | sort | uniq -c | sort -rn | head -20 | sed 's/^/      /'
+      echo "    Waiting in:"
+      grep -oE 'VNRecognizeTextRequest|CGImageDestinationFinalize|copyNextSampleBuffer|AVAssetReader[A-Za-z]*|FigSemaphoreWaitRelative|_dispatch_semaphore_wait_slow|_dispatch_group_wait_slow' "$shot" \
+        | sort | uniq -c | sort -rn | head -8 | sed 's/^/      /'
+      echo "    The whole sample: $shot"
+      echo
+    } | tee -a "$parked"
+    kill "$helper" 2>/dev/null
+    sleep 5
+    kill -9 "$helper" 2>/dev/null
+    return
+  done
+}
+
+watch_for_a_parked_run &
+watch_pid=$!
 
 run_tests "$@" 2>&1 | tee "$log"
 status=${PIPESTATUS[0]}
@@ -102,6 +180,13 @@ WHY
 
 WHY
   fi
+fi
+
+kill "$watch_pid" 2>/dev/null
+wait "$watch_pid" 2>/dev/null
+if [[ -s "$parked" ]]; then
+  echo "==> Stopped: the run was parked, not failing. The tests above are where it sat."
+  exit 4
 fi
 
 # The video kit (Sources/Photonz/VideoKit) must stand on its own: every video

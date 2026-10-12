@@ -751,33 +751,43 @@ public enum TextReader {
 
         var refusal = "the recogniser gave no reason"
         for attempt in 0...recogniserRetries {
-            let request = VNRecognizeTextRequest()
-            request.recognitionLevel = .accurate
-            // A label is a label, not a sentence. Correction turns "Photonz"
-            // into "Photons" and a product name into a word, which is exactly
-            // the kind of quiet wrongness this feature cannot afford.
-            request.usesLanguageCorrection = false
-            request.recognitionLanguages = ["en-US"]
-            let handler = VNImageRequestHandler(cgImage: page, options: [:])
-            do {
-                try handler.perform([request])
-            } catch {
+            switch RecogniserLane.run({ recognise(page) }) {
+            case .success(let lines):
+                return .read(lines)
+            case .failure(let error):
                 refusal = "\(error)"
                 // Waiting is the point: what has to pass is the rest of the
                 // machine, not anything about this picture.
                 if attempt < recogniserRetries {
                     Thread.sleep(forTimeInterval: 0.1 * Double(attempt + 1))
                 }
-                continue
             }
-            return .read((request.results ?? []).compactMap {
-                guard let best = $0.topCandidates(1).first,
-                      !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-                else { return nil }
-                return best.string
-            })
         }
         return .refused(refusal)
+    }
+
+    /// One go of the recogniser over a page, every line it found top down.
+    /// Always run through `RecogniserLane`, never straight from the caller.
+    private static func recognise(_ page: CGImage) -> Result<[String], any Error> {
+        let request = VNRecognizeTextRequest()
+        request.recognitionLevel = .accurate
+        // A label is a label, not a sentence. Correction turns "Photonz"
+        // into "Photons" and a product name into a word, which is exactly
+        // the kind of quiet wrongness this feature cannot afford.
+        request.usesLanguageCorrection = false
+        request.recognitionLanguages = ["en-US"]
+        let handler = VNImageRequestHandler(cgImage: page, options: [:])
+        do {
+            try handler.perform([request])
+        } catch {
+            return .failure(error)
+        }
+        return .success((request.results ?? []).compactMap {
+            guard let best = $0.topCandidates(1).first,
+                  !best.string.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+            else { return nil }
+            return best.string
+        })
     }
 
     /// Coverage as a black-on-transparent bitmap, so it can be drawn onto a
