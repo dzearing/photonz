@@ -3691,7 +3691,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `readout` is what the pill under the drag must say with the button
     /// still down. `"handle": "knob"` takes the knob itself, the flat turn,
     /// so a walk can prove the old turn still works where the arcs grow.
-    case spaceHandle(SpaceHandle?, by: CGPoint, steps: Int, modifiers: [PlaytestModifier], readout: String?)
+    ///
+    /// `watch` reads the picture WHILE the drag happens (`PlaytestDragWatch`).
+    case spaceHandle(SpaceHandle?, by: CGPoint, steps: Int, modifiers: [PlaytestModifier], readout: String?,
+                     watch: PlaytestDragWatch)
     /// Where the canvas says a press would put the first point of a shape,
     /// which is the mark drawn under the pointer while you are only hovering
     /// (`CanvasDrawLanding`).
@@ -4415,9 +4418,21 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("by", "must be a pair of numbers, [x, y]: how far the handle is dragged, in view points")
             }
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
+            let seconds = try f.optionalNumber("seconds")
+            if let seconds, seconds <= 0 {
+                throw f.invalid("seconds", "is how long the drag takes, so it must be more than 0")
+            }
+            let follows = try f.optionalNumber("followsHand")
+            if let follows, !(0...1).contains(follows) {
+                throw f.invalid("followsHand", "is the share of moves the picture must change on, "
+                    + "from 0 to 1 (0.8 is four moves in five)")
+            }
             self = .spaceHandle(handle, by: CGPoint(x: pair[0].doubleValue, y: pair[1].doubleValue),
                                 steps: max(1, steps), modifiers: try f.modifiers(),
-                                readout: try f.optionalString("readout"))
+                                readout: try f.optionalString("readout"),
+                                watch: PlaytestDragWatch(hold: try f.optionalString("hold"), seconds: seconds,
+                                                         followsHand: follows,
+                                                         landsAsHeld: try f.optionalFlag("landsAsHeld") ?? false))
         case "type":
             self = .type(try f.string("text"))
         case "focus":
@@ -6004,5 +6019,33 @@ public struct PlaytestToolBarClaim: Hashable, Sendable {
         self.zoomSlider = zoomSlider
         self.zoom = zoom
         self.onlyTools = onlyTools
+    }
+}
+
+/// What a walk reads of the canvas's PICTURE while a drag is under way, as
+/// opposed to the chrome round it: on a layer turned in 3D the two are drawn
+/// by different code, and the user saw the outline turn over a picture that
+/// stood still until the release (2026-10-12).
+public struct PlaytestDragWatch: Equatable, Sendable {
+    /// A snapshot taken with the button still down, just before the release.
+    public var hold: String?
+    /// How long the drag takes, its moves spread evenly over it. Without it
+    /// the moves come 20ms apart, as every other drag's do.
+    public var seconds: Double?
+    /// The share of moves after which the picture on the canvas must have
+    /// changed, 0 to 1. The step always says how many it was, and how many
+    /// new pictures a second that made; this turns the reading into a claim.
+    public var followsHand: Double?
+    /// Claims the picture the canvas showed with the button still down is the
+    /// one it shows once the release has been rendered: under 1% of the canvas
+    /// differs, so nothing jumped as the hand let go.
+    public var landsAsHeld: Bool
+
+    public init(hold: String? = nil, seconds: Double? = nil, followsHand: Double? = nil,
+                landsAsHeld: Bool = false) {
+        self.hold = hold
+        self.seconds = seconds
+        self.followsHand = followsHand
+        self.landsAsHeld = landsAsHeld
     }
 }

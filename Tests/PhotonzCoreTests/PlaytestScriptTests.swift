@@ -1570,6 +1570,46 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// A turn on the knob can be watched while it happens: photographed with
+    /// the button still down, spread over real seconds so the picture's rate
+    /// can be read, and held to following the hand and landing where it was
+    /// held. The user found a tilted layer standing still under a turning
+    /// knob on 2026-10-12, which a drag read only at its end never shows.
+    @Test func aSpaceHandleDragCanBeWatchedWhileItHappens() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "spaceHandle", "handle": "knob", "by": [90, 40], "steps": 120, "seconds": 2,
+              "hold": "mid-turn", "followsHand": 0.8, "landsAsHeld": true },
+            { "do": "spaceHandle", "handle": "knob", "by": [90, 40] }
+        ] }
+        """)
+        guard case .spaceHandle(let handle, let by, let steps, _, _, let watch) = script.steps[0] else {
+            Issue.record("spaceHandle"); return
+        }
+        #expect(handle == nil)
+        #expect(by == CGPoint(x: 90, y: 40))
+        #expect(steps == 120)
+        #expect(watch == PlaytestDragWatch(hold: "mid-turn", seconds: 2, followsHand: 0.8, landsAsHeld: true))
+        guard case .spaceHandle(_, _, _, _, _, let plain) = script.steps[1] else {
+            Issue.record("spaceHandle"); return
+        }
+        #expect(plain == PlaytestDragWatch())
+    }
+
+    /// A share of moves is between none and all of them.
+    @Test func aSpaceHandleDragFollowsTheHandOnAShareOfItsMoves() throws {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "spaceHandle", "handle": "knob", "by": [9, 9], "followsHand": 80 } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "spaceHandle", "handle": "knob", "by": [9, 9], "seconds": 0 } ] }
+            """)
+        }
+    }
+
     @Test func aDragCanHoldAModifierForTheWholeGesture() throws {
         // Command is the escape hatch from every magnet in this app, so a walk
         // that cannot hold it cannot check that the escape hatch still works.

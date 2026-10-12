@@ -1134,6 +1134,11 @@ extension CanvasNSView {
             if let drag = spaceHandleDrag, drag.layerID == selectedLayer.id {
                 shown.updateLayer(id: drag.layerID) { $0.turn3D = drag.turn }
             }
+            // ...and so does a flat turn or a skew on the knob, or the outline
+            // of a tilted card would stand still while the card turns.
+            if let drag = transformDrag, drag.layerID == selectedLayer.id {
+                shown.updateLayer(id: drag.layerID) { $0.transform = drag.transform }
+            }
             guard shown.isSeenInSpace else { return nil }
             let delta = CGPoint(x: frame.minX - selectedLayer.frame.minX,
                                 y: frame.minY - selectedLayer.frame.minY)

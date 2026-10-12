@@ -159,9 +159,8 @@ extension EditorState {
         for id in ids { expandedGroupIDs.formUnion(document.ancestorIDs(of: id)) }
     }
 
-    /// Live rotate/skew update. With a CA preview active the canvas applies
-    /// the transform to the floated sprite, so this only renders when the
-    /// preview pieces haven't landed yet.
+    /// Live rotate/skew update: renders the turned layer without touching
+    /// history.
     func previewLayerTransform(id: UUID, transform: LayerTransform) {
         // The A field reads this, BEFORE the guard below. While the canvas is
         // floating a sprite the document still holds the pre-drag angle, and a
@@ -169,7 +168,16 @@ extension EditorState {
         // on mouse-up — the exact "numbers jump instead of following" the four
         // fields beside it already fixed with `previewMoves`.
         previewRotations[id] = transform.rotation
-        guard dragPreview?.layerID != id else { return }
+        // A turn re-renders the picture on every move rather than turning the
+        // floated sprite. The sprite stood in for the layer here since June
+        // 2026 without ever being shown for a turn, so the picture froze a few
+        // moves into every turn while the outline went on turning (the user,
+        // 2026-10-12). Shown, it would still be wrong in three ways: it floats
+        // over everything above the layer, it turns about its own middle where
+        // a motion may hang the layer elsewhere, and a layer seen in space is
+        // not a flat picture at all. A full render per move measured 53 new
+        // pictures a second on a recording, the same as the sprite managed.
+        if dragPreview?.layerID == id { discardDragPreview() }
         guard var doc = document, doc.layer(id: id) != nil else { return }
         foldingIntoKeys(id, in: &doc) { $0.updateLayer(id: id) { $0.transform = transform } }
         submit(doc)

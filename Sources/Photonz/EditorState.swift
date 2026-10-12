@@ -4469,6 +4469,12 @@ final class EditorState {
         // the smear a person sees. It falls back to a full re-render per move,
         // the same as text does, and that keeps it right.
         if !doc.inheritedTurn(of: id).isIdentity { return }
+        // Nor can a layer drawn in space (turned about X or Y, pushed in depth,
+        // inside a card that is, or under a camera that has moved): the sprite
+        // is the layer drawn alone, through a camera of its own, and floating
+        // it flat over its frame showed it untilted for the whole of a move and
+        // stood still under a turn. It re-renders per move instead.
+        if doc.drawnMap(of: id) != nil { return }
         // Padded by the furthest the layer draws past its box: its shadow and
         // blur, the pieces inside a group, and the corners its own turn swings
         // out. Without the turn, a rotated shape had its corners cut off flat

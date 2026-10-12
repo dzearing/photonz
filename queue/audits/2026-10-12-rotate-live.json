@@ -1,0 +1,53 @@
+{
+  "feature": "Turning a layer shows the turn live, whatever it already carries",
+  "epic": "video-transitions-motion",
+  "summary": "Dragging a layer's turn knob now turns the picture on every move, about 53 new pictures a second, for a plain layer, a 3D tilted one, a title, a keyed one, a group and a piece inside a turned group. Before, the picture froze a few moves into the turn (0 new pictures a second) while the outline kept turning, then jumped on release. Moving a tilted layer now keeps its tilt while it moves.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (Help > Tutorials sample, or any recording) and draw a rectangle on it.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the rectangle and drag its turn knob slowly round in a circle.",
+      "shot": "2026-10-12-rotate-live-2-plain-mid-turn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare with the same drag before this fix: the outline has turned and the picture has not.",
+      "shot": "2026-10-12-rotate-live-before-plain-mid-turn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest on the knob, drag the green flat arc to tilt it about 30 degrees, then turn it on the knob again.",
+      "shot": "2026-10-12-rotate-live-4-tilted-mid-turn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the tilted rectangle by its middle to move it.",
+      "shot": "2026-10-12-rotate-live-6-tilted-mid-move-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type a title, tilt it the same way and turn it on its knob.",
+      "shot": "2026-10-12-rotate-live-8-tilted-title-mid-turn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Group two rectangles, turn the group, double-click one rectangle inside it and turn that.",
+      "shot": "2026-10-12-rotate-live-12-piece-in-turned-group-mid-turn-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go at any point and watch for any jump between the last moving picture and the settled one."
+    }
+  ],
+  "evaluate": [
+    "Does the picture stay glued to the knob for the whole turn, on every kind of layer you tried?",
+    "On your largest screenshots, does turning still feel smooth now that every move redraws the picture?",
+    "On a tilted layer, does the knob stay under your pointer as you turn, or does it drift at steep tilts?",
+    "Does a tilted layer keep its tilt while you move or resize it?"
+  ],
+  "rough": [
+    "No mock covers what the picture does during a turn; this is the turn behaving the way it always should have.",
+    "A turn now redraws the whole picture on every move instead of turning a floated copy. Measured: 53 new pictures a second on the sample recording and 51 on a 4000 by 3000 picture with four layers, the same rate the floated copy managed.",
+    "On a tilted layer the turn is read from the pointer's angle in the flat picture, not on the tilted card, so at steep tilts the knob may run ahead of or behind the pointer. Not measured."
+  ]
+}

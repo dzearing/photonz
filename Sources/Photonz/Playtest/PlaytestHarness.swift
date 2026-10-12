@@ -2704,7 +2704,7 @@ private final class Run {
             note(number, step.name, try checkDragReadout(says: says, absent: absent),
                  state: describe())
 
-        case .spaceHandle(let handle, let by, let steps, let modifiers, let readout):
+        case .spaceHandle(let handle, let by, let steps, let modifiers, let readout, let watch):
             // As a hand does it: rest on the knob so the arcs come out, then
             // take the arc (or the arrow) a little way along and drag it.
             let canvas = try requireCanvas()
@@ -2746,21 +2746,70 @@ private final class Run {
                     + "\(shown.depth ? "showing" : "hidden")")
             }
             if let event = mouseEvent(.leftMouseDown, at: grip, on: canvas, flags: flags) { canvas.mouseDown(with: event) }
+            // The PICTURE, read after every move: whether what the canvas shows
+            // as the document (not its outline or handles) changed since the
+            // move before. A drag that only re-draws on the release reads 0.
+            let pause = watch.seconds.map { $0 / Double(steps) } ?? 0.02
+            var lastPicture = canvas.playtestPictureKey
+            var changedMoves = 0
+            var pictureChanges = 0
+            let began = Date()
             for i in 1...steps {
                 let t = CGFloat(i) / CGFloat(steps)
                 let p = CGPoint(x: grip.x + by.x * t, y: grip.y + by.y * t)
                 if let event = mouseEvent(.leftMouseDragged, at: p, on: canvas, flags: flags) {
                     canvas.mouseDragged(with: event)
                 }
-                await sleep(0.02)
+                await sleep(pause)
+                let picture = canvas.playtestPictureKey
+                if picture != lastPicture { changedMoves += 1; pictureChanges += 1 }
+                lastPicture = picture
             }
+            let elapsed = max(Date().timeIntervalSince(began), 0.001)
             var said = ""
             if let readout {
                 said = ", " + (try checkDragReadout(says: readout, absent: false))
             }
+            // Photographed with the button still down, and the picture kept to
+            // hold the release against.
+            if let hold = watch.hold, let window = try? requireWindow(), let content = window.contentView {
+                try snapshot(content, name: hold)
+                await screenCapture(window, name: hold)
+                said += ", held \(hold).png"
+            }
+            let held = watch.landsAsHeld ? canvas.playtestPicture() : nil
             let end = CGPoint(x: grip.x + by.x, y: grip.y + by.y)
             if let event = mouseEvent(.leftMouseUp, at: end, on: canvas, flags: flags) { canvas.mouseUp(with: event) }
-            await sleep(0.1)
+            await sleep(watch.landsAsHeld ? 0.8 : 0.1)
+            let share = Double(changedMoves) / Double(steps)
+            let rate = Double(pictureChanges) / elapsed
+            said += String(format: "; the picture changed on %d of %d moves (%.0f new pictures a second over %.2fs)",
+                           changedMoves, steps, rate, elapsed)
+            if let wanted = watch.followsHand, share < wanted {
+                throw Failure(description: String(format: "the picture on the canvas did not follow the hand: it "
+                    + "changed on %d of %d moves (%.0f%%), and the walk asked for at least %.0f%%. "
+                    + "%.0f new pictures a second over the %.2fs drag",
+                    changedMoves, steps, share * 100, wanted * 100, rate, elapsed))
+            }
+            if let held {
+                guard let landed = canvas.playtestPicture() else {
+                    throw Failure(description: "the canvas had no picture to read after the release")
+                }
+                let differs = CanvasNSView.playtestPictureDifference(held, landed)
+                if let data = ImageCodec.encode(held, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(watch.hold ?? name)-held-picture.png"))
+                }
+                if let data = ImageCodec.encode(landed, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(watch.hold ?? name)-landed-picture.png"))
+                }
+                if differs >= 0.01 {
+                    throw Failure(description: String(format: "the picture jumped on the release: %.1f%% of the "
+                        + "canvas differs between the last picture with the button down and the one rendered "
+                        + "after it came up (the walk allows under 1%%)", differs * 100))
+                }
+                said += String(format: "; %.2f%% of the canvas differs between the held picture and the landed one",
+                               differs * 100)
+            }
             note(number, step.name, "\(name) taken at view \(short(grip)) and dragged "
                 + "\(short(by))\(said)", state: describe())
 
