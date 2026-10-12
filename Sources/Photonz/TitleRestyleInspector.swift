@@ -318,6 +318,7 @@ struct TitlePartInspector: View {
     static func goesByPiece(_ kind: TitleBuildKind) -> Bool {
         switch kind {
         case .fade, .rise, .blurIn, .maskReveal, .trackIn, .typewriter: true
+        case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: true
         case .scaleFrom, .wipe, .springPop, .drawOn, .frost: false
         }
     }
@@ -408,7 +409,7 @@ struct TitlePartInspector: View {
     // MARK: Knobs
 
     enum Amount {
-        case distance, blur, scale, grow, spread
+        case distance, blur, scale, grow, spread, angle, depth
 
         var label: String {
             switch self {
@@ -417,13 +418,16 @@ struct TitlePartInspector: View {
             case .scale: "Scale"
             case .grow: "Grow"
             case .spread: "Spread"
+            case .angle: "Angle"
+            case .depth: "Depth"
             }
         }
 
         var suffix: String {
             switch self {
-            case .distance, .blur: DocumentUnit.word
+            case .distance, .blur, .depth: DocumentUnit.word
             case .scale, .grow, .spread: "%"
+            case .angle: "°"
             }
         }
     }
@@ -434,12 +438,15 @@ struct TitlePartInspector: View {
         case .blurIn: .blur
         case .scaleFrom, .springPop: .scale
         case .trackIn: .spread
+        case .swingIn, .flipUp, .tiltSettle: .angle
+        case .flyInFromDepth: .depth
         case .fade, .wipe, .drawOn, .frost, .maskReveal, .typewriter: nil
         }
     }
 
     static func hasDirection(_ kind: TitleBuildKind) -> Bool {
         kind == .rise || kind == .wipe || kind == .drawOn || kind == .maskReveal
+            || kind == .swingIn || kind == .flipUp || kind == .flyInFromDepth
     }
 
     static func help(forTime label: String) -> String {
@@ -485,7 +492,7 @@ struct TitlePartInspector: View {
             suffix: amount.suffix,
             width: .flexible(least: 40),
             floor: amount == .grow ? -50 : 0,
-            ceiling: amount == .scale ? 300 : 400,
+            ceiling: amount == .scale ? 300 : amount == .angle ? 180 : amount == .depth ? 3_000 : 400,
             wholeNumbers: true,
             help: "How far, how soft or how big.",
             look: .well,

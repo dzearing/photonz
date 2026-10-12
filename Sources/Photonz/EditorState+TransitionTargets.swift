@@ -72,10 +72,13 @@ extension EditorState {
     /// the one chosen on `targets`. Never greyed: a place that cannot take a
     /// kind says so in words when it is chosen, which a greyed row cannot.
     func addTransitionMenuRow(_ targets: [TransitionTarget], current: ClipTransitionKind? = nil) -> MenuRow {
-        .submenu("Add Transition", ClipTransitionKind.allCases.map { kind -> MenuRow in
+        func row(_ kind: ClipTransitionKind) -> MenuRow {
             if kind == current { return .toggle(kind.title, isOn: true) {} }
             return .command(kind.title) { self.putTransition(kind, on: targets) }
-        })
+        }
+        // The flat ones, then the ones that turn in depth.
+        return .submenu("Add Transition", ClipTransitionKind.allCases.filter { !$0.isInDepth }.map(row)
+                            + [.separator] + ClipTransitionKind.inDepth.map(row))
     }
 
     /// The clip menu's Add Transition: at both ends of the piece clicked.

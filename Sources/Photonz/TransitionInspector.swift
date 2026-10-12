@@ -104,6 +104,10 @@ struct TransitionInspector: View {
                     CurveRow(current: transition.curve, help: "How it moves from one shot to the other.") {
                         editorState.setClipTransitionCurve($0)
                     }
+                    if transition.kind.hasDirection {
+                        direction(transition.direction)
+                    }
+                    motionBlur(transition.motionBlur)
                     if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
                         VideoKit.FieldRow(label: "Paid with") {
                             VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
@@ -165,13 +169,49 @@ struct TransitionInspector: View {
     }
 
     private func type(_ inHand: DocumentCut, current: ClipTransitionKind) -> some View {
-        VideoKit.DropdownRow(
-            label: "Type", value: current.title,
-            choices: .picking(ClipTransitionKind.allCases, current: current, title: \.title,
-                              isEnabled: { inHand.cut.canAfford($0) }) { kind in
+        // The flat ones, then the ones that turn in depth, then a hard cut.
+        let flat = ClipTransitionKind.allCases.filter { !$0.isInDepth }
+        func pick(_ kinds: [ClipTransitionKind]) -> [VideoKit.Choice] {
+            .picking(kinds, current: current, title: \.title, isEnabled: { inHand.cut.canAfford($0) }) { kind in
                 editorState.setTransition(kind, at: inHand.place)
-            } + [.divider, .item("Hard Cut") { editorState.setTransition(nil, at: inHand.place) }])
+            }
+        }
+        return VideoKit.DropdownRow(
+            label: "Type", value: current.title,
+            choices: pick(flat) + [.divider] + pick(ClipTransitionKind.inDepth)
+                + [.divider, .item("Hard Cut") { editorState.setTransition(nil, at: inHand.place) }])
         .playtestField("Type")
+    }
+
+    /// **Direction**: the way the outgoing shot leaves, for the kinds that
+    /// turn in depth.
+    private func direction(_ current: TitleDirection) -> some View {
+        let title: (TitleDirection) -> String = { $0.rawValue.capitalized }
+        return VideoKit.DropdownRow(
+            label: "Direction", value: title(current),
+            choices: .picking(TitleDirection.allCases, current: current, title: title) {
+                editorState.setClipTransitionDirection($0)
+            })
+        .panelReadout(title(current))
+        .playtestField("Direction")
+        .panelHelp("Which way the outgoing shot leaves.")
+    }
+
+    /// **Motion blur**: what moves is smeared the way a camera films it.
+    private func motionBlur(_ isOn: Bool) -> some View {
+        VideoKit.FieldRow(label: "Motion blur") {
+            HStack {
+                Spacer(minLength: 0)
+                Toggle("", isOn: Binding(get: { isOn }, set: { editorState.setClipTransitionMotionBlur($0) }))
+                    .labelsHidden()
+                    .toggleStyle(.switch)
+                    .controlSize(.mini)
+                    .playtestControl("Motion blur", detail: isOn ? "on" : "off")
+            }
+        }
+        .panelReadout(isOn ? "On" : "Off")
+        .playtestField("Motion blur")
+        .panelHelp("Smears what moves while the shutter is open.")
     }
 
     /// **Length** (`#rowLen`): the mock's "1.0s" on the row, and on a dip

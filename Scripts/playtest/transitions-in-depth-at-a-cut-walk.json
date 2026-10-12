@@ -1,0 +1,250 @@
+{
+  "out": "/tmp/photonz-playtest/transitions-in-depth-at-a-cut-walk",
+  "seed": "Two clips meet at 0:07, at Next defaults with no switch touched. Right-click b-roll, Add Transition, Cube: the cut takes a cube, and the panel shows Type, Length, Curve, Direction and Motion blur. With the playhead on the cut the canvas shows the two shots as faces of a box turning; Direction Up turns it the other way; Motion blur smears it; Type Doorway parts the outgoing shot into two doors.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording as b-roll.mp4"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "clipDragEndIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "dropOnTimeline",
+      "file": "scratch/b-roll.mp4",
+      "track": "V1",
+      "seconds": 6.95
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "b-roll",
+      "track": "V1",
+      "startsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "action",
+      "action": "clipDragStartIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "snapshot",
+      "name": "0-two-clips-meet"
+    },
+    {
+      "do": "rightClick",
+      "on": "b-roll clip",
+      "choose": "Add Transition > Cube"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    },
+    {
+      "do": "reveal",
+      "control": "Push in depth",
+      "in": "Transitions"
+    },
+    {
+      "do": "expect",
+      "control": "Cube",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-tiles",
+      "note": "The Transitions section lists the six that turn in depth after the six flat ones, each tile playing its move"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-depth-tiles"
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    },
+    {
+      "do": "expect",
+      "menu": "Direction",
+      "reads": "Left"
+    },
+    {
+      "do": "expect",
+      "field": "Motion blur",
+      "reads": "Off"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 7.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-cube",
+      "note": "THE CUBE: the playhead on the cut, half way through: the two shots are two faces of a box turning left, backed off a little so its edge never fills the frame. The panel reads Type Cube, Length, Curve Ease in out, Direction Left, Motion blur off"
+    },
+    {
+      "do": "panel",
+      "stage": "2-cube"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-a-cube-half-way"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Direction",
+      "choose": "Up"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Direction",
+      "reads": "Up"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 7.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-up",
+      "note": "Direction Up: the same cube turning upward, about its sideways axis"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-a-cube-going-up"
+    },
+    {
+      "do": "press",
+      "control": "Motion blur"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Motion blur",
+      "reads": "On"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.85
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-blur",
+      "note": "Motion blur on: the faces smear along the way they turn"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-motion-blur"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Type",
+      "choose": "Doorway"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Doorway"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 6.85
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-doorway",
+      "note": "Type Doorway: the outgoing shot parts down the middle into two doors opening toward you, b-roll coming forward behind them"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-a-doorway"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    }
+  ]
+}

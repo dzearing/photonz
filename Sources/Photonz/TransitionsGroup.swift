@@ -31,6 +31,12 @@ struct TransitionsGroup: View {
         case .push: "A pushed out"
         case .wipe: "B wiped over"
         case .blurThrough: "blur and blend"
+        case .flip: "turns over in 3D"
+        case .cube: "a box turning"
+        case .swing: "A swung away"
+        case .doorway: "A opens as doors"
+        case .revolve: "a revolving door"
+        case .pushInDepth: "slides back in 3D"
         }
     }
 

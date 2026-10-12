@@ -366,7 +366,7 @@ extension Layer {
     mutating func settleTurn3D() {
         guard let turn = turn3D else { return }
         if turn.rotationX == 0, turn.rotationY == 0, turn.depth == 0, turn.pivotDepth == 0,
-           turn.showsBackFace == nil {
+           turn.showsBackFace == nil, turn.hinge == nil {
             turn3D = nil
         }
     }

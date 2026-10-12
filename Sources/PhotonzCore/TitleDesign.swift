@@ -74,6 +74,19 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// Letters appear one after another, as typed. Anything that is not
     /// words fades.
     case typewriter
+    /// Swings in on a hinge at one edge, from turned `amount` degrees away
+    /// to facing you (`DepthTransitions.swift` has the transition kin). The
+    /// direction says which edge: up hinges it on its bottom edge.
+    case swingIn
+    /// Flips up about its own middle from facing away, `amount` degrees,
+    /// showing nothing while its back is to you.
+    case flipUp
+    /// Comes forward from `amount` points back (of a 1080 line frame),
+    /// turning to face you as it lands.
+    case flyInFromDepth
+    /// Arrives tipped back `amount` degrees and a little turned, and settles
+    /// flat.
+    case tiltSettle
 
     public var title: String {
         switch self {
@@ -88,6 +101,27 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .maskReveal: "Mask Reveal"
         case .trackIn: "Track In"
         case .typewriter: "Typewriter"
+        case .swingIn: "Swing In"
+        case .flipUp: "Flip Up"
+        case .flyInFromDepth: "Fly In From Depth"
+        case .tiltSettle: "Tilt Settle"
+        }
+    }
+
+    /// The four that turn in depth.
+    public static let inDepth: [TitleBuildKind] = [.swingIn, .flipUp, .flyInFromDepth, .tiltSettle]
+
+    /// Whether this one turns the part in depth.
+    public var isInDepth: Bool { Self.inDepth.contains(self) }
+
+    /// The curve a new one runs on. The ones in depth ease in and out, so
+    /// the turn is still plainly going on half way through; a tilt settles on
+    /// the gentlest of them.
+    public var defaultCurve: EasingCurve {
+        switch self {
+        case .swingIn, .flipUp, .flyInFromDepth: .easeInOut
+        case .tiltSettle: .easeInOutSine
+        default: .easeOutExpo
         }
     }
 
@@ -102,6 +136,10 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .scaleFrom: 110
         case .springPop: 85
         case .trackIn: 25
+        case .swingIn: 90
+        case .flipUp: 180
+        case .flyInFromDepth: 900
+        case .tiltSettle: 40
         }
     }
 
@@ -139,14 +177,14 @@ public struct TitleBuild: Hashable, Codable, Sendable {
     public var staggerMS: Int?
 
     public init(_ kind: TitleBuildKind, delayMS: Int, lengthMS: Int, amount: Double? = nil,
-                direction: TitleDirection = .up, curve: EasingCurve = .easeOutExpo,
+                direction: TitleDirection = .up, curve: EasingCurve? = nil,
                 by unit: TextRevealUnit? = nil, staggerMS: Int? = nil) {
         self.kind = kind
         self.delayMS = max(0, delayMS)
         self.lengthMS = max(1, lengthMS)
         self.amount = amount ?? kind.defaultAmount
         self.direction = direction
-        self.curve = curve
+        self.curve = curve ?? kind.defaultCurve
         self.unit = unit
         self.staggerMS = staggerMS.map { max(0, $0) }
     }
@@ -274,6 +312,9 @@ extension PhotonzDocument {
             guard !made.isEmpty || reveal != nil else { continue }
             var moved = Set(made.map(\.property))
             if reveal != nil { moved.insert(.opacity) }
+            // Turned in depth as a whole, it hangs from its hinge and hides
+            // its back the way its in and out say (`turnSetup`).
+            let setup = reveal == nil ? compiler.turnSetup(for: part) : nil
             updateLayer(id: piece.id) { edited in
                 var motions = (edited.motions ?? []).filter { !moved.contains($0.property) }
                 motions += made
@@ -282,6 +323,7 @@ extension PhotonzDocument {
                     text.reveal = reveal
                     edited.content = .text(text)
                 }
+                if let setup { edited.turn3D = setup }
             }
             wrote = true
         }
@@ -305,13 +347,20 @@ extension PhotonzDocument {
             var moved = Set(compiler.motions(for: part).map(\.property))
             let revealed = compiler.wordReveal(for: part) != nil
             if revealed { moved.insert(.opacity) }
-            guard !moved.isEmpty else { continue }
+            let turned = compiler.turnSetup(for: part) != nil
+            guard !moved.isEmpty || turned else { continue }
             updateLayer(id: piece.id) { edited in
                 let motions = (edited.motions ?? []).filter { !moved.contains($0.property) }
                 edited.motions = motions.isEmpty ? nil : motions
                 if revealed, case .text(var text) = edited.content {
                     text.reveal = nil
                     edited.content = .text(text)
+                }
+                // The hinge and the hidden back a depth build set go with it.
+                if turned {
+                    edited.turn3D?.hinge = nil
+                    edited.turn3D?.showsBackFace = nil
+                    edited.settleTurn3D()
                 }
             }
         }
@@ -395,6 +444,10 @@ struct TitleCompiler {
         case .typewriter: return .typewriter
         case .fade, .rise: return build.unit == nil ? nil : .riseAndFade
         case .blurIn: return build.unit == nil ? nil : .blurIn
+        case .swingIn: return build.unit == nil ? nil : .swingIn
+        case .flipUp: return build.unit == nil ? nil : .flipUp
+        case .flyInFromDepth: return build.unit == nil ? nil : .flyInFromDepth
+        case .tiltSettle: return build.unit == nil ? nil : .tiltSettle
         case .scaleFrom, .springPop, .drawOn, .frost: return nil
         }
     }
@@ -415,7 +468,8 @@ struct TitleCompiler {
         case .riseAndFade:
             build.kind == .fade ? 0 : build.amount * Double(unit) / Double(max(1, text.fontSize)) * 100
         case .blurIn: build.amount * Double(unit) / Double(max(1, text.fontSize)) * 100
-        case .trackIn: build.amount
+        case .trackIn, .swingIn, .flipUp, .tiltSettle: build.amount
+        case .flyInFromDepth: build.amount * Double(unit) / Double(max(1, text.fontSize)) * 100
         case .maskReveal, .typewriter, .wipe: nil
         }
         return TextReveal(style: style, unit: unitOfWords, staggerMS: build.staggerMS, lengthMS: length,
@@ -574,7 +628,57 @@ struct TitleCompiler {
             return [gone, (.position, moved(opposite(build.direction), by: 12), curve)]
         case .trackIn, .typewriter:
             return [gone]
+        case .swingIn:
+            // On its hinge (`turnSetup`), the free edge swung away.
+            let (property, sign) = swingAxis(build.direction)
+            return [gone, (property, .number(sign * build.amount), curve)]
+        case .flipUp:
+            // About its middle, its back hidden, so it shows from edge on.
+            let vertical = build.direction == .up || build.direction == .down
+            let sign: Double = build.direction == .up || build.direction == .left ? -1 : 1
+            return [(vertical ? .rotationX : .rotationY,
+                     .number(sign * (vertical ? 1 : -1) * build.amount), curve)]
+        case .flyInFromDepth:
+            let (property, sign) = swingAxis(build.direction)
+            return [gone, (.depth, .number(-build.amount * Double(unit)), curve),
+                    (property, .number(sign * 90), curve)]
+        case .tiltSettle:
+            return [gone, (.rotationX, .number(build.amount), curve),
+                    (.rotationY, .number(-0.5 * build.amount), curve),
+                    (.depth, .number(-2 * build.amount * Double(unit)), curve)]
         }
+    }
+
+    /// The property a swing in `direction` turns, and the sign that takes its
+    /// free edge away: rising up, it tips its top away about its bottom edge.
+    private func swingAxis(_ direction: TitleDirection) -> (MotionProperty, Double) {
+        switch direction {
+        case .up: (.rotationX, 1)
+        case .down: (.rotationX, -1)
+        case .left: (.rotationY, -1)
+        case .right: (.rotationY, 1)
+        }
+    }
+
+    /// What a part turning in depth needs set on its piece beside its keys:
+    /// the hinge a swing hangs from, and a flip's hidden back. Nil where
+    /// neither its in nor its out turns in depth.
+    func turnSetup(for part: TitlePart) -> LayerTurn3D? {
+        let builds = [part.in, part.out].compactMap { $0 }.filter { kind(of: $0).isInDepth }
+        guard !builds.isEmpty else { return nil }
+        var setup = piece.turn3D ?? LayerTurn3D()
+        if let swing = builds.first(where: { $0.kind == .swingIn }) {
+            setup.hinge = switch swing.direction {
+            case .up: CGPoint(x: 0.5, y: 1)
+            case .down: CGPoint(x: 0.5, y: 0)
+            case .left: CGPoint(x: 1, y: 0.5)
+            case .right: CGPoint(x: 0, y: 0.5)
+            }
+        } else {
+            setup.hinge = nil
+        }
+        setup.showsBackFace = builds.contains { $0.kind == .flipUp } ? false : nil
+        return setup
     }
 
     /// The edge a wipe cuts. Coming in, the edge it travels toward starts

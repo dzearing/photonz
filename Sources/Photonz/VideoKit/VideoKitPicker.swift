@@ -165,6 +165,9 @@ extension VideoKit {
         enum Style: CaseIterable {
             case dissolve, dipToBlack, slide, push, morph, cut
             case dipToWhite, wipe, blurThrough
+            // The ones that turn in depth: drawn from the same corners the
+            // renderer turns the shots to (`DepthTransition.quads`).
+            case flip, cube, swing, doorway, revolve, pushInDepth
         }
 
         let style: Style
@@ -218,7 +221,7 @@ extension VideoKit {
             case .cut:
                 HStack(spacing: 0) { Self.from; Self.to }
                     .overlay { Rectangle().fill(rgb(0x05060A)).frame(width: 2) }
-            case .dipToWhite, .wipe, .blurThrough:
+            case .dipToWhite, .wipe, .blurThrough, .flip, .cube, .swing, .doorway, .revolve, .pushInDepth:
                 TransitionMovie(style: style, progress: 0.5)
             }
         }
@@ -367,8 +370,42 @@ extension VideoKit {
                     }
                 case .cut:
                     if p < 0.5 { shotA(whole) } else { shotB(whole) }
+                case .flip, .cube, .swing, .doorway, .revolve, .pushInDepth:
+                    context.fill(Path(whole), with: .color(rgb(0x05060A)))
+                    #if canImport(PhotonzCore)
+                    for (part, quad) in DepthTransition.quads(Self.depthKind(style), direction: .left,
+                                                               progress: p, size: size) {
+                        guard let quad, part.opacity > 0.001 else { continue }
+                        var path = Path()
+                        path.addLines(quad)
+                        path.closeSubpath()
+                        var face = context
+                        face.opacity = part.opacity
+                        let box = path.boundingRect
+                        let colours = part.shot == .outgoing ? [rgb(0x12C2E9), rgb(0x7C4DFF)]
+                                                             : [rgb(0xFF9D5C), rgb(0xFF5D8F)]
+                        face.fill(path, with: .linearGradient(Gradient(colors: colours), startPoint: box.origin,
+                                                              endPoint: CGPoint(x: box.maxX, y: box.maxY)))
+                        face.stroke(path, with: .color(.white.opacity(0.35)), lineWidth: 0.5)
+                    }
+                    #else
+                    if p < 0.5 { shotA(whole) } else { shotB(whole) }
+                    #endif
                 }
             }
         }
+
+        #if canImport(PhotonzCore)
+        static func depthKind(_ style: TransitionThumbnail.Style) -> ClipTransitionKind {
+            switch style {
+            case .cube: .cube
+            case .swing: .swing
+            case .doorway: .doorway
+            case .revolve: .revolve
+            case .pushInDepth: .pushInDepth
+            default: .flip
+            }
+        }
+        #endif
     }
 }

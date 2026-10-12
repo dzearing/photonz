@@ -218,16 +218,57 @@ public enum TextRevealCompositor {
     /// shutter is open, centred on the moment: a piece travelling far enough
     /// in that time is smeared along the way it went (`MotionSmear.swift`),
     /// before its mask, which holds still.
+    ///
+    /// A piece that turns in depth (`TextRevealStyle.isInDepth`) is seen
+    /// through a camera `eyeDistance` pixels in front of the text's middle:
+    /// the document's own camera, measured in this picture's pixels, so the
+    /// letters foreshorten the way a layer turned by the same angle would.
     public static func image(_ pieces: TextRevealPieces, reveal: TextReveal, elapsedMS: Int,
-                             shutterMS: Double? = nil) -> CIImage {
+                             shutterMS: Double? = nil, eyeDistance: Double? = nil) -> CIImage {
         let whole = CGRect(origin: .zero, size: pieces.pixelSize)
         var out = pieces.plate ?? CIImage(color: .clear).cropped(to: whole)
         let ranks = reveal.ranks(count: pieces.pieces.count)
         let em = pieces.emPixels
+        var projection = Projection3D(camera: nil, canvas: pieces.pixelSize)
+        projection.eyeDistance = eyeDistance ?? Double(max(pieces.pixelSize.width, pieces.pixelSize.height)) * 1.2
         for (index, piece) in pieces.pieces.enumerated() {
             let pose = reveal.pose(rank: ranks[index], atElapsedMS: elapsedMS, place: piece.place)
             guard pose.opacity > 0.001, pose.shown > 0.0001 else { continue }
             var image = piece.image
+            if pose.isTurned {
+                // Turned in depth: warped to where the camera sees it, smeared
+                // between where it was while the shutter was open.
+                guard let now = turnedQuad(piece, pose: pose, em: em, height: whole.height,
+                                           projection: projection) else { continue }
+                image = warped(image, onto: now)
+                if let shutterMS, shutterMS > 0 {
+                    let opens = Double(elapsedMS) - shutterMS / 2
+                    let count = 8
+                    let quads = (0..<count).compactMap { step -> [CGPoint]? in
+                        let at = opens + shutterMS * Double(step) / Double(count - 1)
+                        return turnedQuad(piece, pose: reveal.pose(rank: ranks[index], atElapsed: at,
+                                                                   place: piece.place),
+                                          em: em, height: whole.height, projection: projection,
+                                          ignoringBack: true)
+                    }
+                    var span: CGFloat = 0
+                    for (a, b) in zip(quads, quads.dropFirst()) {
+                        var farthest: CGFloat = 0
+                        for (p, q) in zip(a, b) { farthest = max(farthest, hypot(q.x - p.x, q.y - p.y)) }
+                        span += farthest
+                    }
+                    if quads.count == count, span > MotionSmear.threshold {
+                        image = MotionSmearFilter.averaged(image, over: quads.map { MotionSmear.mapping(now, onto: $0) })
+                    }
+                }
+                if pose.opacity < 0.999 {
+                    image = image.applyingFilter("CIColorMatrix", parameters: [
+                        "inputAVector": CIVector(x: 0, y: 0, z: 0, w: CGFloat(pose.opacity)),
+                    ])
+                }
+                out = image.composited(over: out)
+                continue
+            }
             let keep = mask(of: piece, pose: pose, em: em)
             if let shutterMS, shutterMS > 0 {
                 let travel = { (elapsed: Double) -> CGPoint in
@@ -270,6 +311,46 @@ public enum TextRevealCompositor {
             out = image.composited(over: out)
         }
         return out.cropped(to: whole)
+    }
+
+    /// Where the corners of a piece's picture land, clockwise from its
+    /// top-left as Core Image counts (y up), turned the way `pose` says about
+    /// its hinge on its own line box and seen through `projection`. Nil where
+    /// it has turned its back and hides it, or come up to the camera.
+    static func turnedQuad(_ piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat, height: CGFloat,
+                           projection: Projection3D, ignoringBack: Bool = false) -> [CGPoint]? {
+        // The maths is y-down, the way a layer's turn is stated.
+        func down(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: height - p.y) }
+        let box = piece.box
+        let boxDown = CGRect(x: box.minX, y: height - box.maxY, width: box.width, height: box.height)
+        let pivot = CGPoint(x: boxDown.minX + boxDown.width * pose.hinge.x,
+                            y: boxDown.minY + boxDown.height * pose.hinge.y)
+        let turn = pose.turn3D(em: Double(em)).affine(pivot: pivot)
+        if pose.hidesBack, !ignoringBack {
+            guard let front = Space3D.quad(of: boxDown, through: turn, projection),
+                  Space3D.facesViewer(front) else { return nil }
+        }
+        let shift = CGPoint(x: pose.offsetEm.x * em, y: -pose.offsetEm.y * em)
+        let r = piece.rect.offsetBy(dx: shift.x, dy: shift.y)
+        var landed: [CGPoint] = []
+        for corner in [CGPoint(x: r.minX, y: r.maxY), CGPoint(x: r.maxX, y: r.maxY),
+                       CGPoint(x: r.maxX, y: r.minY), CGPoint(x: r.minX, y: r.minY)] {
+            guard let p = projection.project(turn.apply(Point3D(down(corner)))) else { return nil }
+            landed.append(down(p))
+        }
+        return landed
+    }
+
+    /// A piece's picture warped so the corners of its extent land on `quad`
+    /// (top-left, top-right, bottom-right, bottom-left, y up).
+    private static func warped(_ image: CIImage, onto quad: [CGPoint]) -> CIImage {
+        let warp = CIFilter(name: "CIPerspectiveTransform")
+        warp?.setValue(image, forKey: kCIInputImageKey)
+        warp?.setValue(CIVector(cgPoint: quad[0]), forKey: "inputTopLeft")
+        warp?.setValue(CIVector(cgPoint: quad[1]), forKey: "inputTopRight")
+        warp?.setValue(CIVector(cgPoint: quad[2]), forKey: "inputBottomRight")
+        warp?.setValue(CIVector(cgPoint: quad[3]), forKey: "inputBottomLeft")
+        return warp?.outputImage ?? image
     }
 
     /// What a piece sliding out from behind its own line box is cut to: that

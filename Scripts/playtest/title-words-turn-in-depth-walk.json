@@ -1,0 +1,273 @@
+{
+  "out": "/tmp/photonz-playtest/title-words-turn-in-depth-walk",
+  "seed": "A Keynote Clean title page put down at Next defaults with no switch touched, its headline picked from the Part menu and its In set in turn to Swing In, Flip Up, Fly In From Depth and Tilt Settle, by word, each photographed part way in; then Swing In for the headline whole.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Title Page > Keynote Clean"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.4,
+      "onTheClock": true
+    },
+    {
+      "do": "click",
+      "at": [
+        960,
+        700
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "0-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Title Part",
+      "choose": "Headline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Title Part",
+      "reads": "Headline"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In",
+      "choose": "Swing In"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Part In",
+      "reads": "Swing In"
+    },
+    {
+      "do": "expect",
+      "field": "Part In Direction",
+      "reads": "Up"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.35
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "swing",
+      "note": "SWING IN by word, 0.35 s in: each word hangs from its bottom edge and swings up to face you, one after another"
+    },
+    {
+      "do": "panel",
+      "stage": "swing"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-swing-in"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In",
+      "choose": "Flip Up"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Part In",
+      "reads": "Flip Up"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.4
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "flip",
+      "note": "FLIP UP by word, 0.4 s in: words flipping up about their middles, nothing shown while a word's back is to you"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-flip-up"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In",
+      "choose": "Fly In From Depth"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Part In",
+      "reads": "Fly In From Depth"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.35
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "fly",
+      "note": "FLY IN FROM DEPTH by word, 0.35 s in: words coming forward from far back, turning to face you"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-fly-in"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In",
+      "choose": "Tilt Settle"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.4,
+      "onTheClock": true
+    },
+    {
+      "do": "expect",
+      "field": "Part In",
+      "reads": "Tilt Settle"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.35
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "tilt",
+      "note": "TILT SETTLE by word, 0.35 s in: words tipped back and turned a little, settling flat"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-tilt-settle"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In By",
+      "choose": "Whole"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Part In",
+      "choose": "Swing In"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.4,
+      "onTheClock": true
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.3
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "whole",
+      "note": "SWING IN whole: the headline as one card hanging from its bottom edge, its keys on Rotation X"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-swing-in-whole"
+    }
+  ]
+}

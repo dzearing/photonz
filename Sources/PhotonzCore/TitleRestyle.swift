@@ -304,7 +304,7 @@ public struct TitleRecipe: Hashable, Codable, Sendable {
                 build.staggerMS = Int((Double(stagger) * energy.pace).rounded())
             }
             switch build.kind {
-            case .rise, .blurIn, .trackIn:
+            case .rise, .blurIn, .trackIn, .swingIn, .flipUp, .flyInFromDepth, .tiltSettle:
                 build.amount *= share
             case .scaleFrom, .springPop:
                 build.amount = 100 + (build.amount - 100) * share * energy.overshoot

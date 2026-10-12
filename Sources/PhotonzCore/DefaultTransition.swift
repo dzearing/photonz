@@ -47,8 +47,14 @@ extension ClipCut {
         for alignment in order {
             let longest = longestMS(of: kind, aligned: alignment)
             guard longest >= ClipTransition.shortestMS else { continue }
+            // A curve somebody chose stays; one nobody changed follows the
+            // kind, so a flat dissolve turned into a cube eases in and out.
+            let curve = transition.map { $0.curve == $0.kind.defaultCurve ? kind.defaultCurve : $0.curve }
+                ?? kind.defaultCurve
             return ClipTransition(kind: kind, lengthMS: min(max(ClipTransition.shortestMS, asked), longest),
-                                  alignment: alignment, holdMS: hold, curve: transition?.curve ?? .linear)
+                                  alignment: alignment, holdMS: hold, curve: curve,
+                                  direction: transition?.direction ?? .left,
+                                  motionBlur: transition?.motionBlur ?? false)
         }
         return nil
     }

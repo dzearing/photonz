@@ -1,0 +1,61 @@
+{
+  "feature": "3D transitions and title entrances",
+  "epic": "video-transitions-motion",
+  "summary": "Six transitions that turn the shots in 3D (Flip, Cube, Swing, Doorway, Revolve, Push in depth) now sit after the flat ones in the tiles, the Type menu and right-click Add Transition, each with Length, Curve, Direction and Motion blur. A title part, or its words one at a time, can come in by Swing In, Flip Up, Fly In From Depth or Tilt Settle, and go out the same ways.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording and drop a second recording onto the timeline right after it, so two clips meet.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the Transitions section in the panel and scroll its tiles: the six new ones play their move after Blur through.",
+      "shot": "2026-10-11-depth-1-depth-tiles-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the second clip and choose Add Transition, Cube."
+    },
+    {
+      "do": "Click the ruler right on the cut: the two shots are faces of a box half way round.",
+      "shot": "2026-10-11-depth-2-a-cube-half-way-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Transition section set Direction to Up, then turn Motion blur on, and press Space to play through the cut.",
+      "shot": "2026-10-11-depth-3-a-cube-going-up-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Change Type to Doorway, then Flip, Swing, Revolve and Push in depth, and play each.",
+      "shot": "2026-10-11-depth-5-a-doorway-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click Track V1, Add Track Above, then right-click Track V2, Add Title Page, Keynote Clean, and type a headline."
+    },
+    {
+      "do": "Click the title, choose Headline in the Part menu, and set Part In to Swing In: the words swing up one after another.",
+      "shot": "2026-10-11-depth-title-swing-in-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Try Flip Up, Fly In From Depth and Tilt Settle, and set By to Whole to move the headline as one card. Watch the reel too: 2026-10-11-depth-reel-contact.png and the MP4s beside it.",
+      "shot": "2026-10-11-depth-title-fly-in-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does each of the six read as a different move when you play it, or do Swing and Revolve look too alike?",
+    "Is 0.8 seconds on Ease in out the right starting length and curve for a 3D transition?",
+    "Should Motion blur start on for the 3D transitions, given it costs up to three times the drawing time?",
+    "Do the doorway's doors leave the frame too quickly, before you see them open?",
+    "Do Swing In and Tilt Settle by word feel like a produced title, or too slow to land?"
+  ],
+  "rough": [
+    "No mock covers the six new tiles or the Direction and Motion blur rows; they follow the existing tile and panel row patterns (UX-PATTERNS §4).",
+    "Cube matches the depth mock's cube (Pivot depth to the box's middle, Rotation Y 0 to 90, Depth backing off a little at the midpoint); it backs off far enough that the face coming round shows its front, so the box is about 60 percent of the frame at its middle.",
+    "Each move is measured at its midpoint in 2026-10-11-depth-reel-numbers.json: every transition shows a picture turned 20 degrees or more and corners travelling 180 to 630 points in 100 ms; the title entrances are turned 20 to 27 degrees at their midpoint. Tilt Settle meets the bar only on its gentle Ease in out sine curve, so a quicker curve makes it barely tilt half way.",
+    "Measured at 1080p with ten layers mid transition: 5.0 to 6.0 ms median a frame. With Motion blur on, 6 to 16 ms median, and a slowest frame up to 59 ms, so blur can drop frames while scrubbing.",
+    "Depth of field from the camera reaches transitions and whole parts, but not single words or letters coming in one at a time.",
+    "Flip Up hides each word until it passes edge on, so the first part of its length shows nothing; with an angle under 90 the part shows tilted before its in starts.",
+    "The title restyle walk already failed its last step before this work (a dropdown scrolled under the title bar): task the-title-restyle-walk-reaches-its-last-part-in."
+  ]
+}

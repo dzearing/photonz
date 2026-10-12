@@ -113,6 +113,12 @@ struct TransitionPicker: View {
         case .push: .push
         case .wipe: .wipe
         case .blurThrough: .blurThrough
+        case .flip: .flip
+        case .cube: .cube
+        case .swing: .swing
+        case .doorway: .doorway
+        case .revolve: .revolve
+        case .pushInDepth: .pushInDepth
         }
     }
 }

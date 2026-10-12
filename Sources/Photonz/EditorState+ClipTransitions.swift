@@ -179,6 +179,26 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// Which way the transition on the cut in hand goes.
+    func setClipTransitionDirection(_ direction: TitleDirection) {
+        guard canWorkWithClipTransitions, let inHand = cutInHand,
+              var existing = inHand.cut.transition, existing.direction != direction else { return }
+        existing.direction = direction
+        pauseDocument()
+        perform { $0.setTransition(existing, at: inHand.place) }
+        documentMomentChanged()
+    }
+
+    /// Whether the transition on the cut in hand smears what moves.
+    func setClipTransitionMotionBlur(_ isOn: Bool) {
+        guard canWorkWithClipTransitions, let inHand = cutInHand,
+              var existing = inHand.cut.transition, existing.motionBlur != isOn else { return }
+        existing.motionBlur = isOn
+        pauseDocument()
+        perform { $0.setTransition(existing, at: inHand.place) }
+        documentMomentChanged()
+    }
+
     /// How long the transition on the cut in hand is asked to be.
     func setClipTransitionLength(_ ms: Int) {
         guard canWorkWithClipTransitions, let inHand = cutInHand,
@@ -204,8 +224,8 @@ extension EditorState {
             raiseCanvasNotice(.transitionSideRefused(alignment))
             return
         }
-        let placed = ClipTransition(kind: existing.kind, lengthMS: min(existing.lengthMS, longest),
-                                    alignment: alignment, curve: existing.curve)
+        var placed = existing.withLength(min(existing.lengthMS, longest))
+        placed.alignment = alignment
         pauseDocument()
         perform { $0.setTransition(placed, at: inHand.place) }
         documentMomentChanged()

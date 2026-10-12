@@ -268,7 +268,7 @@ extension PhotonzDocument {
         // shot is faded and THEN dissolved, rather than the dissolve being
         // overwritten by the fade.
         shown.layers = shown.layers.flatMap {
-            $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand)
+            $0.withTransitionDrawn(atTimeMS: moment, framesInHand: framesInHand, projection: projection)
         }
         // ...and so does a cut between two clips (`EditPointTransitions.swift`).
         if hasEditPointTransitions {

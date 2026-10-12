@@ -1135,8 +1135,10 @@ public final class DocumentRenderer: @unchecked Sendable {
                // shutter that opened before it landed closes.
                !reveal.hasSettled(atElapsedMS: elapsed - (text.revealShutterMS.map { Int($0 / 2) + 1 } ?? 0),
                                   count: pieces.pieces.count) {
+                let eye = document.projection.eyeDistance * Double(bake)
                 image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed,
-                                                             shutterMS: text.revealShutterMS),
+                                                             shutterMS: text.revealShutterMS,
+                                                             eyeDistance: eye),
                                   nearest: magnifyNearest, scale: contentScale / bake)
                 break
             }

@@ -131,7 +131,7 @@ extension PhotonzDocument {
             }
             let clock = SmearClock(fromMS: from, moment: moment)
             return drawn.smeared(reads: reads, origins: reads.map { _ in .zero },
-                                 clock: clock, inherited: nil)
+                                 clock: clock, inherited: nil, projection: projection)
         }
     }
 }
@@ -159,7 +159,12 @@ extension Layer {
     ///
     /// `reads` is this same layer read at each whole millisecond of the
     /// clock, and `origins` where its space starts on the canvas in each.
-    func smeared(reads: [Layer], origins: [CGPoint], clock: SmearClock, inherited: Double?) -> Layer {
+    ///
+    /// `projection` is the camera the layer is seen through: a layer turned
+    /// in space is measured where the camera sees it, so a swing or a flip
+    /// smears along the way its corners actually went on the screen.
+    func smeared(reads: [Layer], origins: [CGPoint], clock: SmearClock, inherited: Double?,
+                 projection: Projection3D? = nil) -> Layer {
         guard isVisible else { return self }
         var out = self
         let shutter = shutterMS(inheriting: inherited)
@@ -174,12 +179,13 @@ extension Layer {
             let inner = zip(reads, origins).map { read, origin in
                 CGPoint(x: origin.x + read.frame.origin.x, y: origin.y + read.frame.origin.y)
             }
-            out.children = smearedChildren(reads: reads, origins: inner, clock: clock, inherited: shutter)
+            out.children = smearedChildren(reads: reads, origins: inner, clock: clock, inherited: shutter,
+                                           projection: projection)
             return out
         }
         if let shutter, clock.nowIndex < reads.count {
             let quads = zip(reads, origins).map { read, origin in
-                read.drawnQuad(origin: origin, sizedLike: reads[clock.nowIndex])
+                read.drawnQuad(origin: origin, sizedLike: reads[clock.nowIndex], projection: projection)
             }
             out.motionSmear = MotionSmear.across(quads: quads, clock: clock, shutterMS: shutter)
         }
@@ -191,13 +197,13 @@ extension Layer {
             let anchor = CGPoint(x: origins[clock.nowIndex].x + now.frame.origin.x,
                                  y: origins[clock.nowIndex].y + now.frame.origin.y)
             out.children = smearedChildren(reads: reads, origins: reads.map { _ in anchor },
-                                           clock: clock, inherited: shutter)
+                                           clock: clock, inherited: shutter, projection: projection?.unmoved)
         }
         return out
     }
 
     private func smearedChildren(reads: [Layer], origins: [CGPoint], clock: SmearClock,
-                                 inherited: Double?) -> [Layer] {
+                                 inherited: Double?, projection: Projection3D?) -> [Layer] {
         children.enumerated().map { index, child in
             // The same child in every read: in the same place in the list
             // where nothing has rearranged it, and found by name where it has.
@@ -206,7 +212,8 @@ extension Layer {
                 if index < kids.count, kids[index].id == child.id { return kids[index] }
                 return kids.first { $0.id == child.id } ?? child
             }
-            return child.smeared(reads: childReads, origins: origins, clock: clock, inherited: inherited)
+            return child.smeared(reads: childReads, origins: origins, clock: clock, inherited: inherited,
+                                 projection: projection)
         }
     }
 
@@ -217,7 +224,10 @@ extension Layer {
     /// measured by the box its contents make NOW (`reference`), carried by
     /// its own anchor and turned the way it is turned: what moves inside it is
     /// that thing's own smear, not the group's.
-    func drawnQuad(origin: CGPoint, sizedLike reference: Layer) -> [CGPoint] {
+    ///
+    /// Seen through `projection`, a layer turned in space (or under a camera
+    /// that has moved) is measured where the camera sees it.
+    func drawnQuad(origin: CGPoint, sizedLike reference: Layer, projection: Projection3D? = nil) -> [CGPoint] {
         let corners: [CGPoint]
         if isGroup {
             let box = reference.localBounds.offsetBy(dx: frame.origin.x - reference.frame.origin.x,
@@ -229,7 +239,12 @@ extension Layer {
         } else {
             corners = transformedCorners
         }
-        return corners.map { CGPoint(x: $0.x + origin.x, y: $0.y + origin.y) }
+        let placed = corners.map { CGPoint(x: $0.x + origin.x, y: $0.y + origin.y) }
+        guard let projection else { return placed }
+        guard let move = spaceAffine(offset: origin) ?? (projection.leavesTheCanvasAlone ? nil : .identity)
+        else { return placed }
+        let landed = placed.compactMap { projection.project(move.apply(Point3D($0))) }
+        return landed.count == 4 ? landed : placed
     }
 }
 
@@ -291,7 +306,7 @@ extension MotionSmear {
     /// for any slide, growth, turn or lean, which is everything a layer's
     /// motion can do to its box. A box with no area left to measure by (a
     /// line seen edge on) is carried by its middle instead.
-    static func mapping(_ from: [CGPoint], onto to: [CGPoint]) -> CGAffineTransform {
+    public static func mapping(_ from: [CGPoint], onto to: [CGPoint]) -> CGAffineTransform {
         let u = CGPoint(x: from[1].x - from[0].x, y: from[1].y - from[0].y)
         let v = CGPoint(x: from[3].x - from[0].x, y: from[3].y - from[0].y)
         let determinant = u.x * v.y - v.x * u.y

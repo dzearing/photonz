@@ -89,9 +89,51 @@ Reset Camera. Walks: `tilt-and-flip-a-title-in-3d-walk`,
 `camera-settings-on-the-frame-walk` (the `spaceHandle` step drives the arcs
 with real pointer events).
 
+## Transitions and title entrances in depth
+
+Step 4 (task `3d-transitions-and-title-entrances-flip-cube-swi`). Nothing new
+is drawn: each move is the shots or the title's parts turned with
+`LayerTurn3D`, so the warp, depth of field and the export are the ones above.
+
+- **Hinge.** `LayerTurn3D.hinge` (a fraction of the box, nil for the flat
+  turn's pivot) lets a layer turn about an edge; `Layer.spacePivot` is read by
+  `spaceAffine` and the canvas crosshair.
+- **Transitions** (`DepthTransitions.swift`): `ClipTransitionKind` Flip, Cube,
+  Swing, Doorway, Revolve, Push in depth, listed after the six flat ones in the
+  tiles, the Type menu and right-click Add Transition. `DepthTransition.parts`
+  is the one geometry the renderer (`Layer.depthTransitionDrawn`) and the
+  picker tiles read. Rule: nothing comes nearer than the canvas (each move
+  backs off into depth by as much as an edge swings toward you), except the
+  doorway's doors, which fade as they pass you. The cube also backs off
+  `0.3 x width x sin(pi p)` so the face coming round is seen from the front.
+  `ClipTransition.direction` (the way the outgoing shot leaves, Left by
+  default) and `motionBlur` (off by default) are written only when set; the
+  depth kinds default to 0.8 s on Ease in out (`defaultCurve`), and `fitted`
+  lets an untouched curve follow the kind.
+- **Motion blur.** A smear is now measured where the camera sees a layer
+  (`drawnQuad(..., projection:)`), so keyed 3D turns smear on screen; a
+  transition with Motion blur on gets its pictures smeared across a 180 degree
+  shutter (`Layer.smearedTransition`).
+- **Title builds**: `TitleBuildKind` Swing In (hinged at the edge Direction
+  names), Flip Up (back hidden), Fly In From Depth, Tilt Settle, each with its
+  out. Whole, they compile to keys on Rotation X/Y and Depth plus
+  `TitleCompiler.turnSetup` (hinge, hidden back). By line, word or letter they
+  are `TextRevealStyle`s whose `TextRevealPose` carries `turnX`, `turnY`,
+  `depthEm`, `hinge`; `TextRevealCompositor` warps each piece through the
+  document camera's eye distance and smears it by its projected corners.
+  Depth of field does not reach individual words.
+- **Measured** (2026-10-11): at the midpoint each transition shows a picture
+  turned 20 degrees or more (numbers in
+  `queue/audits/2026-10-11-depth-reel-numbers.json`); 1080p, ten layers mid
+  transition, 5.0 to 6.0 ms median, motion blur on 6 to 16 ms median
+  (`DepthTransitionRenderTests.perf`). Reel:
+  `PHOTONZ_REEL=1 PHOTONZ_REEL_DIR=queue/audits Scripts/test.sh --filter DepthReelStudy`.
+- Walks: `transitions-in-depth-at-a-cut-walk`,
+  `transition-direction-on-a-click-walk`, `title-words-turn-in-depth-walk`.
+
 ## Not done here
 
 The thin Camera row on the timeline (task
-`show-the-camera-s-keys-on-a-thin-row-at-the-top`), 3D transitions and title
-entrances (step 4). Drag sprites and layer thumbnails of a turned layer are
-drawn about their own small canvas's middle, not the frame's.
+`show-the-camera-s-keys-on-a-thin-row-at-the-top`). Drag sprites and layer
+thumbnails of a turned layer are drawn about their own small canvas's middle,
+not the frame's.

@@ -1,0 +1,82 @@
+[
+  {
+    "cornerTravelIn100msPoints" : 323,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 40.399999999999999,
+    "move" : "Flip"
+  },
+  {
+    "cornerTravelIn100msPoints" : 301,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 69.799999999999997,
+    "move" : "Cube"
+  },
+  {
+    "cornerTravelIn100msPoints" : 184,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 69.799999999999997,
+    "move" : "Swing"
+  },
+  {
+    "cornerTravelIn100msPoints" : 634,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 54.299999999999997,
+    "move" : "Doorway"
+  },
+  {
+    "cornerTravelIn100msPoints" : 318,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 28.899999999999999,
+    "move" : "Revolve"
+  },
+  {
+    "cornerTravelIn100msPoints" : 526,
+    "curve" : "Ease in out",
+    "kind" : "transition",
+    "lengthMS" : 800,
+    "midpointAngleDegrees" : 34.899999999999999,
+    "move" : "Push in depth"
+  },
+  {
+    "angleChangeIn100msDegrees" : 19.399999999999999,
+    "curve" : "Ease in out",
+    "kind" : "title entrance",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 20.199999999999999,
+    "move" : "Swing In"
+  },
+  {
+    "angleChangeIn100msDegrees" : 25.899999999999999,
+    "curve" : "Ease in out",
+    "kind" : "title entrance",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 26.899999999999999,
+    "move" : "Flip Up"
+  },
+  {
+    "angleChangeIn100msDegrees" : 19.399999999999999,
+    "curve" : "Ease in out",
+    "kind" : "title entrance",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 20.199999999999999,
+    "move" : "Fly In From Depth"
+  },
+  {
+    "angleChangeIn100msDegrees" : 10.4,
+    "curve" : "Ease in out sine",
+    "kind" : "title entrance",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 20,
+    "move" : "Tilt Settle"
+  }
+]

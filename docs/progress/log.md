@@ -21190,3 +21190,17 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Panel: 3D section (Rotation X/Y, Depth, Pivot depth once turned, Mixed, arrow nudges, diamonds) and a Camera section on the frame (card option A). Layer menu/right click: Reset 3D Rotation, Bring Nearer ⌥⌘], Send Further ⌥⌘[. View: Show Camera Settings, Reset Camera.
 - Core: `SpaceEditing.swift` + `SpaceEditingTests` (17). Walk step `spaceHandle`. Walks: tilt-and-flip-a-title-in-3d, camera-settings-on-the-frame.
 - Next: thin Camera row on the timeline (filed), then 3D transitions and title entrances.
+
+## 2026-10-11 — 3D transitions and title entrances (2.5D step 4)
+
+- Six transitions turn the shots in depth: Flip, Cube, Swing, Doorway, Revolve,
+  Push in depth (`Sources/PhotonzCore/DepthTransitions.swift`), after the flat
+  ones in the tiles, the Type menu and right-click Add Transition, with
+  Direction and Motion blur rows. `LayerTurn3D.hinge` turns a layer about an
+  edge. Smears are now measured through the camera, so 3D moves blur.
+- Title builds Swing In, Flip Up, Fly In From Depth, Tilt Settle (and outs),
+  whole as keys or by line/word/letter through the reveal compositor's
+  per-piece perspective warp.
+- Reel, contact sheet and numbers in `queue/audits/2026-10-11-depth-reel-*`;
+  decision card asks the user to judge it. Perf 5-6 ms median at 1080p.
+- Next: the title rework tasks start from these moves (see the task log).

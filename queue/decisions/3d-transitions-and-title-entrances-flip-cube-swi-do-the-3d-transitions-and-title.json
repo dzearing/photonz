@@ -1,0 +1,48 @@
+{
+  "id": "3d-transitions-and-title-entrances-flip-cube-swi-do-the-3d-transitions-and-title",
+  "taskId": "3d-transitions-and-title-entrances-flip-cube-swi",
+  "question": "Do the 3D transitions and title entrances in the reel look right?",
+  "context": "Reel: queue/audits/2026-10-11-depth-reel-contact.png and one 3 s MP4 and GIF per move beside it. Already built at Next defaults; this card only tunes them.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep all six transitions and four entrances as filmed",
+      "summary": "Flip, Cube, Swing, Doorway, Revolve and Push in depth stay in the tiles and menus, and Swing In, Flip Up, Fly In From Depth and Tilt Settle stay in the title Part In menu, exactly as the reel shows them.",
+      "pros": [
+        "Everything in the reel ships as it is",
+        "The title rework can start from these moves today"
+      ],
+      "cons": [
+        "Swing and Revolve both swing a shot on an edge, so they may read alike"
+      ],
+      "mitigation": "Each one is a few numbers in one file, so a move you dislike can be retuned without touching the rest."
+    },
+    {
+      "id": "b",
+      "label": "Keep them, but retune Swing, Revolve and Doorway",
+      "summary": "The same twelve moves, with Swing, Revolve and Doorway changed after you say what is off about them (for example doors that stay in the frame longer, or a revolve that turns about the middle).",
+      "pros": [
+        "Fixes the moves most likely to look alike or too quick"
+      ],
+      "cons": [
+        "Another round before those three are final"
+      ],
+      "mitigation": "The other moves are unaffected and stay as filmed."
+    },
+    {
+      "id": "c",
+      "label": "Ship only Flip, Cube and Push in depth, plus Swing In and Fly In From Depth",
+      "summary": "The three transitions and two entrances that read most clearly stay; Swing, Doorway, Revolve, Flip Up and Tilt Settle come out of the tiles and menus.",
+      "pros": [
+        "A shorter list that is easier to choose from"
+      ],
+      "cons": [
+        "Fewer produced-looking moves for the title rework to use"
+      ],
+      "mitigation": "The removed moves stay in the code and can come back with one line each."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-12T00:18:56.182Z"
+}

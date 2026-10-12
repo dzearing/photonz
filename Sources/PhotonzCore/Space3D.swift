@@ -45,14 +45,21 @@ public struct LayerTurn3D: Hashable, Codable, Sendable {
     /// over shows its picture mirrored. Off is how a two sided card is made,
     /// a front and a back laid back to back, each hiding when it faces away.
     public var showsBackFace: Bool?
+    /// Where on its box the layer turns in space, as a fraction of the box
+    /// (`(0, 0.5)` is the middle of its left edge): a hinge. Nil turns it
+    /// about the same point its flat turn takes (`Layer.turnPivot`), which is
+    /// every turn made by hand. A door, a swing and a title hinged at an edge
+    /// set it (`DepthTransitions.swift`, `TitleDesign.swift`).
+    public var hinge: CGPoint?
 
     public init(rotationX: Double = 0, rotationY: Double = 0, depth: Double = 0,
-                pivotDepth: Double = 0, showsBackFace: Bool? = nil) {
+                pivotDepth: Double = 0, showsBackFace: Bool? = nil, hinge: CGPoint? = nil) {
         self.rotationX = rotationX
         self.rotationY = rotationY
         self.depth = depth
         self.pivotDepth = pivotDepth
         self.showsBackFace = showsBackFace
+        self.hinge = hinge
     }
 
     /// Nothing turned and nothing moved: the layer sits on the canvas as it
@@ -68,7 +75,7 @@ public struct LayerTurn3D: Hashable, Codable, Sendable {
     private static func isNought(_ value: Double) -> Bool { !value.isFinite || abs(value) < 1e-9 }
 
     private enum CodingKeys: String, CodingKey {
-        case rotationX, rotationY, depth, pivotDepth, showsBackFace
+        case rotationX, rotationY, depth, pivotDepth, showsBackFace, hinge
     }
 
     /// Only what is not nought is written, so a layer turned about Y alone
@@ -80,6 +87,7 @@ public struct LayerTurn3D: Hashable, Codable, Sendable {
         if depth != 0 { try c.encode(depth, forKey: .depth) }
         if pivotDepth != 0 { try c.encode(pivotDepth, forKey: .pivotDepth) }
         try c.encodeIfPresent(showsBackFace, forKey: .showsBackFace)
+        try c.encodeIfPresent(hinge, forKey: .hinge)
     }
 
     public init(from decoder: Decoder) throws {
@@ -93,6 +101,7 @@ public struct LayerTurn3D: Hashable, Codable, Sendable {
         depth = try number(.depth)
         pivotDepth = try number(.pivotDepth)
         showsBackFace = try c.decodeIfPresent(Bool.self, forKey: .showsBackFace)
+        hinge = try c.decodeIfPresent(CGPoint.self, forKey: .hinge)
     }
 
     /// The turn as a move in space, about `pivot` (the 2D pivot, in the same
@@ -581,8 +590,17 @@ extension Layer {
     /// for a child). Nil for a flat layer.
     public func spaceAffine(offset: CGPoint = .zero) -> Affine3D? {
         guard let turn = spaceTurn else { return nil }
-        let pivot = turnPivot
+        let pivot = spacePivot
         return turn.affine(pivot: CGPoint(x: pivot.x + offset.x, y: pivot.y + offset.y))
+    }
+
+    /// The point this layer turns about IN SPACE, in the same space as its
+    /// frame: its hinge where its turn names one, and otherwise the point its
+    /// flat turn takes. The crosshair on the canvas sits here.
+    public var spacePivot: CGPoint {
+        guard let hinge = turn3D?.hinge else { return turnPivot }
+        let box = turnPivotBox
+        return CGPoint(x: box.minX + box.width * hinge.x, y: box.minY + box.height * hinge.y)
     }
 
     /// Whether a group draws its contents straight onto the canvas below it

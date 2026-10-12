@@ -41,6 +41,24 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
     case wipe
     /// A dissolve that goes out of focus on the way through and comes back.
     case blurThrough
+    /// The six that turn in depth (`DepthTransitions.swift`): the outgoing
+    /// shot is the front of a card and the incoming one its back, and the card
+    /// turns over.
+    case flip
+    /// The two shots are faces of a box that turns.
+    case cube
+    /// The outgoing shot swings away like a door on one edge and uncovers the
+    /// incoming one, which comes forward.
+    case swing
+    /// The outgoing shot parts down the middle into two doors that open toward
+    /// you, and the incoming one comes forward through them.
+    case doorway
+    /// The outgoing shot swings away on one edge and the incoming one swings
+    /// in on the other, like a revolving door.
+    case revolve
+    /// Both shots sink back into depth, slide across turned like cards on a
+    /// carousel, and the incoming one comes forward.
+    case pushInDepth
 
     public var title: String {
         switch self {
@@ -50,8 +68,26 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
         case .push: "Push"
         case .wipe: "Wipe"
         case .blurThrough: "Blur through"
+        case .flip: "Flip"
+        case .cube: "Cube"
+        case .swing: "Swing"
+        case .doorway: "Doorway"
+        case .revolve: "Revolve"
+        case .pushInDepth: "Push in depth"
         }
     }
+
+    /// The ones that turn the pictures in depth, in the order the picker and
+    /// the Add Transition menu list them after the flat ones.
+    public static let inDepth: [ClipTransitionKind] = [.flip, .cube, .swing, .doorway, .revolve, .pushInDepth]
+
+    /// Whether this one turns the pictures in depth.
+    public var isInDepth: Bool { Self.inDepth.contains(self) }
+
+    /// Whether it goes one way or another (the Direction row): the ones in
+    /// depth do. A doorway's doors part sideways for left and right and top
+    /// and bottom for up and down.
+    public var hasDirection: Bool { isInDepth }
 
     /// **The distinction the whole feature turns on.** The ones that need an
     /// overlap put both pieces on screen together, so they spend spare media.
@@ -65,7 +101,7 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
         switch self {
         case .dipToBlack: "#000000"
         case .dipToWhite: "#FFFFFF"
-        case .dissolve, .push, .wipe, .blurThrough: nil
+        case .dissolve, .push, .wipe, .blurThrough, .flip, .cube, .swing, .doorway, .revolve, .pushInDepth: nil
         }
     }
 
@@ -76,8 +112,14 @@ public enum ClipTransitionKind: String, CaseIterable, Hashable, Codable, Sendabl
     /// frames, and played as two hard cuts. The kinds that overlap keep four
     /// tenths, since every millisecond of theirs is spare media spent.
     public var defaultLengthMS: Int {
-        needsOverlap ? ClipTransition.defaultLengthMS : 1000
+        if isInDepth { return 800 }
+        return needsOverlap ? ClipTransition.defaultLengthMS : 1000
     }
+
+    /// The curve a new one runs on: straight for the flat ones, the way they
+    /// always ran, and easing in and out for the ones that turn in depth, so
+    /// a card leaves its rest and lands on it the way Keynote's do.
+    public var defaultCurve: EasingCurve { isInDepth ? .easeInOut : .linear }
 
     /// The few words under its name in the picker, saying what it costs;
     /// nothing for one that costs nothing, never a "no overlap".
@@ -149,18 +191,32 @@ public struct ClipTransition: Hashable, Codable, Sendable {
     /// way every transition ran before curves existed, is what a missing one
     /// reads as.
     public var curve: EasingCurve
+    /// Which way it goes, for a kind that goes one way or another
+    /// (`ClipTransitionKind.hasDirection`): the way the outgoing shot leaves,
+    /// so the incoming one arrives from the other side. Left, the way a push
+    /// has always gone, is what a missing one reads as.
+    public var direction: TitleDirection
+    /// Whether what moves is smeared along the way it went while the shutter
+    /// is open (`MotionSmear.swift`), the way a camera would film it. Off
+    /// unless asked for, so every transition written before it plays as it did.
+    public var motionBlur: Bool
 
     public init(kind: ClipTransitionKind, lengthMS: Int? = nil,
                 alignment: ClipTransitionAlignment = .across, holdMS: Int = 0,
-                curve: EasingCurve = .linear) {
+                curve: EasingCurve? = nil, direction: TitleDirection = .left,
+                motionBlur: Bool = false) {
         self.kind = kind
         self.lengthMS = max(Self.shortestMS, lengthMS ?? kind.defaultLengthMS)
         self.alignment = alignment
         self.holdMS = kind.needsOverlap ? 0 : max(0, holdMS)
-        self.curve = curve
+        self.curve = curve ?? kind.defaultCurve
+        self.direction = direction
+        self.motionBlur = motionBlur
     }
 
-    private enum CodingKeys: String, CodingKey { case kind, lengthMS, alignment, holdMS, curve }
+    private enum CodingKeys: String, CodingKey {
+        case kind, lengthMS, alignment, holdMS, curve, direction, motionBlur
+    }
 
     /// Every transition written before placement and holds existed sat across
     /// its cut and held nothing, and every one written before curves ran
@@ -171,7 +227,9 @@ public struct ClipTransition: Hashable, Codable, Sendable {
                   lengthMS: try c.decode(Int.self, forKey: .lengthMS),
                   alignment: try c.decodeIfPresent(ClipTransitionAlignment.self, forKey: .alignment) ?? .across,
                   holdMS: try c.decodeIfPresent(Int.self, forKey: .holdMS) ?? 0,
-                  curve: try c.decodeIfPresent(EasingCurve.self, forKey: .curve) ?? .linear)
+                  curve: try c.decodeIfPresent(EasingCurve.self, forKey: .curve) ?? .linear,
+                  direction: try c.decodeIfPresent(TitleDirection.self, forKey: .direction) ?? .left,
+                  motionBlur: try c.decodeIfPresent(Bool.self, forKey: .motionBlur) ?? false)
     }
 
     /// ...and one that still does writes exactly what it always wrote.
@@ -182,6 +240,8 @@ public struct ClipTransition: Hashable, Codable, Sendable {
         if alignment != .across { try c.encode(alignment, forKey: .alignment) }
         if holdMS != 0 { try c.encode(holdMS, forKey: .holdMS) }
         if curve != .linear { try c.encode(curve, forKey: .curve) }
+        if direction != .left { try c.encode(direction, forKey: .direction) }
+        if motionBlur { try c.encode(motionBlur, forKey: .motionBlur) }
     }
 
     /// Where it is drawn: where it was put for a kind that overlaps, across
@@ -206,7 +266,9 @@ public struct ClipTransition: Hashable, Codable, Sendable {
 
     /// The same transition, a different length.
     public func withLength(_ ms: Int) -> ClipTransition {
-        ClipTransition(kind: kind, lengthMS: ms, alignment: alignment, holdMS: holdMS, curve: curve)
+        var longer = self
+        longer.lengthMS = max(Self.shortestMS, ms)
+        return longer
     }
 
     /// How far through a transition on a cut at `cutAtMS` a moment is, nought
@@ -419,10 +481,16 @@ public struct ClipMoment: Hashable, Sendable {
     /// none is.
     public let kind: ClipTransitionKind?
     public let progress: Double
+    /// Which way it goes, for a kind that goes one way or another.
+    public let direction: TitleDirection
+    /// Whether what moves is smeared while the shutter is open.
+    public let motionBlur: Bool
 
     public init(sourceMS: Int, incomingSourceMS: Int? = nil, incomingOpacity: Double = 0,
                 dipColorHex: String? = nil, dipOpacity: Double = 0,
-                kind: ClipTransitionKind? = nil, progress: Double = 0) {
+                kind: ClipTransitionKind? = nil, progress: Double = 0, direction: TitleDirection = .left,
+                motionBlur: Bool = false) {
+        self.motionBlur = motionBlur
         self.sourceMS = sourceMS
         self.incomingSourceMS = incomingSourceMS
         self.incomingOpacity = incomingOpacity
@@ -430,6 +498,7 @@ public struct ClipMoment: Hashable, Sendable {
         self.dipOpacity = dipOpacity
         self.kind = kind
         self.progress = progress
+        self.direction = direction
     }
 
     /// Whether anything at all is happening here beyond one frame playing.
@@ -525,7 +594,8 @@ extension ClipPieces {
             let into = readingOn(piece: cut.index, atMS: moment)
             return ClipMoment(sourceMS: out, incomingSourceMS: into,
                               incomingOpacity: min(max(progress, 0), 1), kind: transition.kind,
-                              progress: progress)
+                              progress: progress, direction: transition.direction,
+                              motionBlur: transition.motionBlur)
         }
         // A dip spends nothing: each piece plays the frames it already had, and
         // the picture goes through a colour and comes back. All the way through
@@ -568,11 +638,12 @@ extension Layer {
     /// the renderer draws a transition without having been told transitions
     /// exist — the same trick that let a clip be a picture layer in the first
     /// place (`MovieClip.swift`).
-    func withTransitionDrawn(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil) -> [Layer] {
+    func withTransitionDrawn(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil,
+                             projection: Projection3D? = nil) -> [Layer] {
         var drawn = self
         if isGroup {
             drawn.children = children.flatMap {
-                $0.withTransitionDrawn(atTimeMS: ms, framesInHand: framesInHand)
+                $0.withTransitionDrawn(atTimeMS: ms, framesInHand: framesInHand, projection: projection)
             }
         }
         guard isVisible, let movie, let moment = clipMoment(atTimeMS: ms),
@@ -586,8 +657,14 @@ extension Layer {
             let over = drawn.transitionPartner(standingFor: id,
                                                showing: .image(movie.frameRef(atSourceMS: incoming,
                                                                               holding: framesInHand)))
-            return Layer.transitionDrawn(kind, progress: moment.progress,
-                                         outgoing: drawn, incoming: over)
+            let pictures = Layer.transitionDrawn(kind, progress: moment.progress,
+                                                 outgoing: drawn, incoming: over, direction: moment.direction)
+            guard moment.motionBlur, let projection else { return pictures }
+            return Layer.smearedTransition(pictures, atMS: ms, projection: projection) { other in
+                guard let then = clipMoment(atTimeMS: other), then.kind == kind else { return nil }
+                return Layer.transitionDrawn(kind, progress: then.progress, outgoing: drawn, incoming: over,
+                                             direction: moment.direction)
+            }
         }
         guard let hex = moment.dipColorHex else { return [drawn] }
         return [drawn, drawn.dipPanel(hex: hex, amount: moment.dipOpacity)]
@@ -636,9 +713,12 @@ extension Layer {
     /// to stand where the one on screen stood. A push and a wipe are drawn
     /// through windows, so neither shot ever spills past the frame it had.
     static func transitionDrawn(_ kind: ClipTransitionKind, progress p: Double,
-                                outgoing: Layer, incoming: Layer) -> [Layer] {
+                                outgoing: Layer, incoming: Layer, direction: TitleDirection = .left) -> [Layer] {
         let p = min(max(p, 0), 1)
         switch kind {
+        case .flip, .cube, .swing, .doorway, .revolve, .pushInDepth:
+            return depthTransitionDrawn(kind, direction: direction, progress: p,
+                                        outgoing: outgoing, incoming: incoming)
         case .dissolve, .dipToBlack, .dipToWhite:
             var into = incoming
             into.style.opacity = incoming.style.opacity * p

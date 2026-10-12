@@ -1246,8 +1246,8 @@ extension CanvasNSView {
                 // The 3D handles grow from the knob (`CanvasSpaceHandles`). A
                 // layer seen in space wears its knob off the top edge the
                 // camera sees, so the knob moves there too.
-                let pivotOffset = CGPoint(x: selectedLayer.turnPivot.x - selectedLayer.frame.minX,
-                                          y: selectedLayer.turnPivot.y - selectedLayer.frame.minY)
+                let pivotOffset = CGPoint(x: selectedLayer.spacePivot.x - selectedLayer.frame.minX,
+                                          y: selectedLayer.spacePivot.y - selectedLayer.frame.minY)
                 let corners = [CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
                                CGPoint(x: frame.maxX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.maxY)]
                     .map(chromePoint)

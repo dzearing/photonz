@@ -88,7 +88,8 @@ extension PhotonzDocument {
         // meets it, and holds nothing.
         first.transitionIn = into.arrivalTransition.map {
             ClipTransition(kind: $0.kind, lengthMS: $0.lengthMS, alignment: $0.alignment,
-                           holdMS: start - at, curve: $0.curve)
+                           holdMS: start - at, curve: $0.curve, direction: $0.direction,
+                           motionBlur: $0.motionBlur)
         }
         let sameFile = out.movie != nil && out.movie?.id == into.movie?.id
         return ClipCut(index: 0, atMS: at, outgoing: last, incoming: first,
@@ -157,7 +158,8 @@ extension PhotonzDocument {
         let hold = max(0, holdMS)
         guard hold != existing.holdMS else { return nil }
         let held = ClipTransition(kind: existing.kind, lengthMS: existing.lengthMS,
-                                  alignment: existing.alignment, holdMS: hold, curve: existing.curve)
+                                  alignment: existing.alignment, holdMS: hold, curve: existing.curve,
+                                  direction: existing.direction, motionBlur: existing.motionBlur)
         guard case let .join(clip, index) = place else {
             return setTransition(held, at: place) ? place : nil
         }
@@ -321,11 +323,19 @@ extension PhotonzDocument {
                                               pixelScale: pixelScale, framesInHand: framesInHand)
             }
             let borrowed = other.transitionPartner(standingFor: moment.onScreen, showing: content)
-            let drawn = moment.onScreenIsOutgoing
-                ? Layer.transitionDrawn(moment.transition.kind, progress: moment.progress,
-                                        outgoing: onScreen, incoming: borrowed)
-                : Layer.transitionDrawn(moment.transition.kind, progress: moment.progress,
-                                        outgoing: borrowed, incoming: onScreen)
+            let pair = moment.onScreenIsOutgoing ? (onScreen, borrowed) : (borrowed, onScreen)
+            let transition = moment.transition
+            func pictures(at progress: Double) -> [Layer] {
+                Layer.transitionDrawn(transition.kind, progress: progress, outgoing: pair.0, incoming: pair.1,
+                                      direction: transition.direction)
+            }
+            var drawn = pictures(at: moment.progress)
+            if transition.motionBlur {
+                drawn = Layer.smearedTransition(drawn, atMS: ms, projection: projection) { other in
+                    editPointMoments(atMS: other).first { $0.onScreen == moment.onScreen || $0.borrowed == moment.borrowed }
+                        .map { pictures(at: $0.progress) }
+                }
+            }
             shown.layers.replaceSubrange(index...index, with: drawn)
         }
         return shown

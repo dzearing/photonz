@@ -82,6 +82,17 @@ public enum TextRevealStyle: String, CaseIterable, Hashable, Codable, Sendable {
     case typewriter
     /// Stays still while an edge travels across and uncovers it.
     case wipe
+    /// Swings in on a hinge at one of its edges, from `amount` degrees away.
+    /// The four styles that turn in depth (`TitleBuildKind.inDepth`) measure
+    /// their angles in degrees rather than in percent of the type.
+    case swingIn
+    /// Flips up about its own middle from facing away, `amount` degrees.
+    case flipUp
+    /// Comes forward from `amount` percent of the type back, turning to face
+    /// you.
+    case flyInFromDepth
+    /// Arrives tipped back `amount` degrees and a little turned, and settles.
+    case tiltSettle
 
     public var title: String {
         switch self {
@@ -91,17 +102,44 @@ public enum TextRevealStyle: String, CaseIterable, Hashable, Codable, Sendable {
         case .trackIn: "Track In"
         case .typewriter: "Typewriter"
         case .wipe: "Wipe"
+        case .swingIn: "Swing In"
+        case .flipUp: "Flip Up"
+        case .flyInFromDepth: "Fly In From Depth"
+        case .tiltSettle: "Tilt Settle"
         }
     }
 
     /// How far, how soft or how wide, in percent of the type size, when
-    /// nobody says.
+    /// nobody says; for the ones that turn, how far in degrees.
     public var defaultAmount: Double {
         switch self {
         case .riseAndFade: 35
         case .blurIn: 12
         case .trackIn: 40
         case .maskReveal, .typewriter, .wipe: 0
+        case .swingIn: 90
+        case .flipUp: 120
+        case .flyInFromDepth: 900
+        case .tiltSettle: 40
+        }
+    }
+
+    /// The curve each piece arrives on when nobody says: the quick settle
+    /// polished intros use, and for the ones that turn in depth an ease in
+    /// and out, so the turn still shows half way through.
+    public var defaultCurve: EasingCurve {
+        switch self {
+        case .swingIn, .flipUp, .flyInFromDepth: .easeInOut
+        case .tiltSettle: .easeInOutSine
+        default: .easeOutExpo
+        }
+    }
+
+    /// Whether each piece turns in depth on its way in.
+    public var isInDepth: Bool {
+        switch self {
+        case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: true
+        default: false
         }
     }
 
@@ -146,9 +184,28 @@ public struct TextRevealPose: Hashable, Sendable {
     /// How much of it an edge travelling in `direction` has uncovered.
     public var shown: Double = 1
     public var direction: TitleDirection = .up
+    /// Its turn in depth: tipped about its sideways axis and swung about its
+    /// upright one, in degrees, the way a layer turns (`LayerTurn3D`), and
+    /// how far toward you, in multiples of the type size.
+    public var turnX: Double = 0
+    public var turnY: Double = 0
+    public var depthEm: Double = 0
+    /// What it turns about, as a fraction of its own box, y downwards.
+    public var hinge = CGPoint(x: 0.5, y: 0.5)
+    /// Whether it shows nothing once it faces away.
+    public var hidesBack = false
+
+    public var isTurned: Bool { turnX != 0 || turnY != 0 || depthEm != 0 }
 
     public var isAtRest: Bool {
-        opacity >= 1 && offsetEm == .zero && blurEm <= 0 && slide <= 0 && shown >= 1
+        opacity >= 1 && offsetEm == .zero && blurEm <= 0 && slide <= 0 && shown >= 1 && !isTurned
+    }
+
+    /// The turn as a layer's, for a piece whose type is `em` long: what the
+    /// renderer warps it by.
+    public func turn3D(em: Double) -> LayerTurn3D {
+        LayerTurn3D(rotationX: turnX, rotationY: turnY, depth: depthEm * em,
+                    showsBackFace: hidesBack ? false : nil, hinge: hinge)
     }
 }
 
@@ -176,7 +233,7 @@ public struct TextReveal: Hashable, Codable, Sendable {
     public init(style: TextRevealStyle, unit: TextRevealUnit, staggerMS: Int? = nil,
                 lengthMS: Int? = nil, order: TextRevealOrder = .forward, seed: UInt32 = 1,
                 startMS: Int = 0, amount: Double? = nil, direction: TitleDirection? = nil,
-                curve: EasingCurve = .easeOutExpo) {
+                curve: EasingCurve? = nil) {
         self.style = style
         self.unit = unit
         self.staggerMS = max(0, staggerMS ?? (style == .typewriter ? 50 : unit.defaultStaggerMS))
@@ -186,7 +243,7 @@ public struct TextReveal: Hashable, Codable, Sendable {
         self.startMS = startMS
         self.amount = amount ?? style.defaultAmount
         self.direction = direction ?? (style == .wipe ? .right : .up)
-        self.curve = curve
+        self.curve = curve ?? style.defaultCurve
     }
 
     // MARK: Pieces
@@ -297,6 +354,39 @@ public struct TextReveal: Hashable, Codable, Sendable {
             pose.shown = t <= 0 ? 0 : min(max(p, 0), 1)
         case .typewriter:
             break
+        case .swingIn:
+            // Hinged on the edge it swings from: rising up, it hangs from its
+            // bottom edge with its top swung away.
+            pose.opacity = min(max(t / 0.3, 0), 1)
+            switch direction {
+            case .up: pose.hinge = CGPoint(x: 0.5, y: 1); pose.turnX = amount * left
+            case .down: pose.hinge = CGPoint(x: 0.5, y: 0); pose.turnX = -amount * left
+            case .left: pose.hinge = CGPoint(x: 1, y: 0.5); pose.turnY = -amount * left
+            case .right: pose.hinge = CGPoint(x: 0, y: 0.5); pose.turnY = amount * left
+            }
+        case .flipUp:
+            pose.opacity = t <= 0 ? 0 : 1
+            pose.hidesBack = true
+            switch direction {
+            case .up: pose.turnX = -amount * left
+            case .down: pose.turnX = amount * left
+            case .left: pose.turnY = amount * left
+            case .right: pose.turnY = -amount * left
+            }
+        case .flyInFromDepth:
+            pose.opacity = min(max(t / 0.4, 0), 1)
+            pose.depthEm = -size * left
+            switch direction {
+            case .up: pose.turnX = 90 * left
+            case .down: pose.turnX = -90 * left
+            case .left: pose.turnY = -90 * left
+            case .right: pose.turnY = 90 * left
+            }
+        case .tiltSettle:
+            pose.opacity = min(max(t / 0.5, 0), 1)
+            pose.turnX = amount * left
+            pose.turnY = -0.5 * amount * left
+            pose.depthEm = -0.05 * amount * left
         }
         return pose
     }

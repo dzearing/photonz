@@ -35,6 +35,9 @@ extension EditorState {
         // A typewriter has its own pace; leaving one takes the usual stagger
         // back. Distances belong to the style.
         if reveal.style == .typewriter || style == .typewriter { reveal.staggerMS = fresh.staggerMS }
+        // A curve nobody changed follows the style: the ones in depth ease in
+        // and out (`TextRevealStyle.defaultCurve`).
+        if reveal.curve == reveal.style.defaultCurve { reveal.curve = fresh.curve }
         reveal.style = style
         reveal.amount = fresh.amount
         reveal.direction = fresh.direction

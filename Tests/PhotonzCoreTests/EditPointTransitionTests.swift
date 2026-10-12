@@ -41,12 +41,13 @@ struct EditPointTransitionTests {
 
     // MARK: - The six kinds
 
-    @Test("Six kinds, and the four that put both shots on screen need an overlap")
+    @Test("Six flat kinds and six in depth, and every one that puts both shots on screen needs an overlap")
     func sixKinds() {
         #expect(ClipTransitionKind.allCases.map(\.title)
-                == ["Cross dissolve", "Dip to black", "Dip to white", "Push", "Wipe", "Blur through"])
+                == ["Cross dissolve", "Dip to black", "Dip to white", "Push", "Wipe", "Blur through",
+                    "Flip", "Cube", "Swing", "Doorway", "Revolve", "Push in depth"])
         #expect(ClipTransitionKind.allCases.filter(\.needsOverlap)
-                == [.dissolve, .push, .wipe, .blurThrough])
+                == [.dissolve, .push, .wipe, .blurThrough] + ClipTransitionKind.inDepth)
         #expect(ClipTransitionKind.push.note == "needs overlap")
         // A dip needs nothing, so its tile says nothing: no "no overlap"
         // (`no-sentences-or-debug-readouts-anywhere-in-the-c`, 2026-09-25).
