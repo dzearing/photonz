@@ -1,0 +1,36 @@
+{
+  "id": "clicking-or-right-clicking-an-item-on-the-timeli",
+  "title": "Clicking or right-clicking an item on the timeline moves the playhead there",
+  "goal": "A click on any item on the timeline (a clip, a piece, a sound, a title, a caption, a zoom bar) picks it AND moves the playhead to the moment clicked, as Premiere and Final Cut users expect. A right-click moves the playhead to the moment clicked before the menu opens, so 'at playhead' commands act where the person pointed. Right-clicking inside something already picked (one item, several, or a range) moves the playhead too, but the menu's commands act on what is picked, not just the item under the pointer.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:38:29.266Z",
+  "updated": "2026-10-12T14:38:29.365Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"if I click somewhere on an item in the timeline, I not only expect it to select, but I expect the playhead (the red line) to move to that location. or, if I right click on a position within an item, I expect the playhead to move there before showing options. If i have a selection and right click on it, we can move the playhead but options apply to the range of the item or items selected.\"\n\nFrom code reading (not run): ClipPiecesBar.swift:427-449 .onTapGesture picks the clip (selectClipPiece / extendSelection) with no time and no playhead move; :450 .contextMenu is a plain SwiftUI context menu that never learns where the press was. Needs a location-aware tap (onTapGesture(coordinateSpace:) or SpatialTapGesture) mapped through the lane's ms scale, and a right-mouse-down hook (NSView rightMouseDown or a secondary-click recognizer) that scrubs before the menu is built. Same for title bars, zoom bars (ZoomLane.swift), key lanes (ClipPiecesBar.swift:1035 pickClipKey already takes atMS), caption cues. Coordinate with a-range-stays-on-top-when-you-pick-a-clip-and-it (range plus pick menus) so the two land on one right-click path.",
+  "acceptance": [
+    "Reproduce first at Next defaults: click and right-click at the middle of a clip, a sound, a title bar and a zoom bar; record that the playhead does not move today",
+    "A plain click (no drag past the drag threshold) on any timeline item picks it as today and moves the playhead to the clicked time, snapped the way playhead clicks on the ruler snap; Shift or Command click still adds or removes from the pick and also moves the playhead; a press that turns into a drag (move, trim) does NOT move the playhead",
+    "Right-click on an item: the playhead moves to the clicked time first, then the menu opens; if the item was not picked it becomes picked (as macOS does for a right-click on an unselected row); 'at playhead' rows (Split Here, Add Zoom, Add Key, Freeze Frame, Add Click at Playhead and the like) act at that moment",
+    "Right-click inside the current pick (one or several picked items, or inside a held range per a-range-stays-on-top-when-you-pick-a-clip-and-it): the playhead moves, the pick is NOT replaced, and the menu's commands apply to the whole pick or range",
+    "The playhead move is instant (same frame as the click, the picture follows at scrub speed) and does not start or stop playback; clicking during playback jumps the playback there",
+    "Double click behaviours (a caption's words, opening a title's text) still work",
+    "A walk clicks the middle of a clip and checks the playhead time, right-clicks another spot and picks Split Here and checks the cut landed there, and right-clicks inside a two-clip pick and checks the pick is kept",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:38:29.268Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:38:29.364Z",
+      "note": "seq 3960 -> 15"
+    }
+  ]
+}
