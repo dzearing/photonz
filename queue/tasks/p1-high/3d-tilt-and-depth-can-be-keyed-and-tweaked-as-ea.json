@@ -1,0 +1,35 @@
+{
+  "id": "3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea",
+  "title": "3D tilt and depth can be keyed and tweaked as easily as position",
+  "goal": "Animating in 3D should be as quick as moving something: put the playhead somewhere, tilt or push the layer (with the canvas arcs, the panel, or typed values) and that becomes a key; move the playhead, tilt again, and there is a 3D animation. Today the user cannot set key values for the new 3D options at all.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:50:05.601Z",
+  "updated": "2026-10-12T14:50:05.701Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"I can't seem to set keyframe values for the new 3d options. I want to be able to easily tweak things to animate in 3d.\"\n\nFrom code reading (not run): the 3D panel rows carry key diamonds and Add/Remove Key Here (Sources/Photonz/Space3DInspector.swift:36-87, KeyedProperty .motion(property)); MotionProperty has rotationX, rotationY, depth (PhotonzCore/LayerMotion.swift:97-102). SUSPECT, not confirmed: the canvas 3D arc drag commits to the layer's base turn3D (EditorState+Space3D.swift; in-flight preview at CanvasDisplay.swift:1135 sets $0.turn3D), not to the keyed value at the playhead, so on a keyed layer the keys win and the drag appears to do nothing. Check how 2D rotate/move resolve 'drag on a keyed layer' and use the same path. Upcoming tasks change the surfaces (transform overlay replacing the 3D section, key overlay, only-animated rows with auto-key, seq 16-20); this task fixes keying now with the current surfaces and its rule must carry into them.",
+  "acceptance": [
+    "Reproduce first at Next defaults, exactly as a person would: a text layer and a recording on the timeline; try to key Rotation X, Rotation Y and Depth by (a) the 3D section's key diamonds, (b) right-click Add Key Here, (c) dragging the canvas 3D arcs with and without existing keys, (d) Animate a property; record in the audit which fail and why",
+    "With a layer that has 3D keys, dragging the canvas 3D arcs or typing a 3D value while the playhead is on a key changes THAT key's value; between keys it adds a key at the playhead (the same rule position and rotation follow, whichever that is; the audit says the rule and it is the same for every property); the change is never silently overridden by existing keys",
+    "With a layer that has no 3D keys, a key diamond click or Add Key Here on Rotation X, Rotation Y, Depth or Pivot depth adds a key with the current value, and the row and lane appear",
+    "Camera values (perspective, push, pan, focus) key the same way",
+    "The 3D values show on the key lanes and in Show Graph like any other property, with the shared curves",
+    "A walk at Next defaults keys a text layer from Rotation Y 90 at 0 s to 0 at 1 s by dragging the arc at each moment, plays it and checks mid-frames are tilted (projected quad near edge to far edge ratio above 1.1 at 0.5 s)",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:50:05.603Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:50:05.699Z",
+      "note": "seq 3960 -> 15"
+    }
+  ]
+}
