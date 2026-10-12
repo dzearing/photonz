@@ -1,0 +1,34 @@
+{
+  "feature": "Title backgrounds that are alive",
+  "epic": "video-titles-graphics",
+  "summary": "A title page's background can now be one of ten moving looks (Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Architectural Sketch, Particles, Liquid Gradient, Grid Horizon), picked from tiles that play and tuned with four sliders. Mesh is gone from the choices.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open the sample recording, add a track above it, and right click the new track: Add Title Page > Keynote Clean.",
+  "switched": {},
+  "try": [
+    { "do": "With the title picked, click the Background row in the Title section of the panel.", "shot": "2026-10-12-live-backdrops-tiles.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Watch the tiles: each moving look plays in the title's own colours. Click Aurora.", "shot": "2026-10-12-live-backdrops-aurora-a.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Space to play the title and watch the background move behind the words." },
+    { "do": "Drag Speed, Strength, Scale and Height under the Background row while it plays." },
+    { "do": "Pick a Theme swatch (Night, Forest, Sunset) and see the look recolour and keep its sliders." },
+    { "do": "Open Background again and pick Architectural Sketch, then play from the title's start to see it draw itself in.", "shot": "2026-10-12-live-backdrops-sketch-walk.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the reel: queue/audits/2026-10-12-live-backdrops-contact.png and the ten 2026-10-12-live-backdrops-*.mp4 movies.", "shot": "2026-10-12-live-backdrops-contact.png" }
+  ],
+  "evaluate": [
+    "Does a title page now look produced rather than like a slide, at a glance, with any of the ten looks?",
+    "Is each look clearly different from the others, and is there one you would remove?",
+    "Do the words stay easy to read over every look, including the lighter subtitle line?",
+    "Is picking by watching the tiles quicker than reading a list of names?",
+    "Do the four sliders change something you can see right away?"
+  ],
+  "rough": [
+    "No mock draws the title Background picker; it uses the transition picker's tile grid so the grammar is the one you already know.",
+    "Light Leaks reads brownish rather than blazing because no look may get bright enough behind white words to hurt reading; whether to rework it is on decision title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are.",
+    "Which looks stay and which one new titles start on is that same decision, title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are; the built-in titles keep their own backgrounds until the title rebuild task (title-text-visibly-comes-in-and-every-built-in-t) applies the answer.",
+    "A theme with no colour in it (Keynote Clean's own black and white) lends the looks teal, violet and blue rather than drawing a grey aurora.",
+    "Words in a lighter second colour (a subtitle, a second line) wear a soft dark shade over a moving look so they read at its brightest; the headline keeps no shade.",
+    "The picker stays open after a click so you can try several looks; Escape or a click away closes it.",
+    "The first time a look is drawn after launch it takes about a third of a second to prepare; opening the picker prepares all ten in the background.",
+    "Measured (1080p, debug build): every look draws a frame in 2.4 to 4.6 ms at best, 2.5 to 5.2 ms median. Motion over half a second: Aurora 4.2, Energy Streams 8.1, Color Bubbles 5.6, Light Rays 7.8, Light Leaks 11.5, Wind Streams 7.7, Architectural Sketch 4.2, Particles 9.9, Liquid Gradient 5.7, Grid Horizon 6.6 levels per pixel; the retired Mesh measured 1.31 and the bar is 2.6.",
+    "A faint card from the recording shows through Keynote Clean two seconds in even on its plain Gradient background; that is older than this work and is filed as find-out-why-a-faint-card-from-the-recording-sho."
+  ]
+}

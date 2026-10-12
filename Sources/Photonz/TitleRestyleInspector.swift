@@ -23,7 +23,10 @@ struct TitleRestyleInspector: View {
                 fonts(recipe)
                 energy(recipe)
                 intensity(recipe)
-                if recipe.background != nil { background(recipe) }
+                if recipe.background != nil {
+                    background(recipe)
+                    if let live = editorState.titleLiveBackdropInHand { liveKnobs(live) }
+                }
                 sounds(recipe)
                 part()
             }
@@ -145,21 +148,72 @@ struct TitleRestyleInspector: View {
 
     // MARK: Background
 
+    /// A row like every dropdown in the panel, wearing a still of what is
+    /// picked, that opens the tiles (`TitleBackgroundPicker`): a moving look
+    /// is chosen by watching it, which a menu cannot show.
     private func background(_ recipe: TitleRecipe) -> some View {
-        let kinds = TitleBackgroundKind.allCases.filter { $0 != .glass || editorState.titleCanBeGlass }
-        let value = recipe.showsBackground ? (recipe.background?.title ?? "None") : "None"
-        var choices: [VideoKit.Choice] = [
-            .item("None", isOn: !recipe.showsBackground) { editorState.setTitleBackgroundShown(false) },
-        ]
-        choices += kinds.map { kind in
-            .item(kind.title, isOn: recipe.showsBackground && recipe.background == kind) {
-                editorState.setTitleBackground(kind)
+        let kind = recipe.showsBackground ? recipe.background : nil
+        let value = kind?.title ?? "None"
+        let state = editorState
+        return VideoKit.FieldRow(label: "Background") {
+            Button {
+                state.openTitleBackgroundPicker()
+            } label: {
+                VideoKit.SelectFace(value: value, swatch: TitleBackgroundSwatch.still(kind, theme: recipe.theme),
+                                    size: .small, isOpen: state.titleBackgroundPickerOpen)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .playtestControl("Title Background", detail: value)
+            .popover(isPresented: Binding(get: { state.titleBackgroundPickerOpen },
+                                          set: { state.titleBackgroundPickerOpen = $0 }),
+                     arrowEdge: .leading) {
+                TitleBackgroundPicker()
+                    .environment(state)
             }
         }
-        return VideoKit.DropdownRow(label: "Background", value: value, choices: choices)
-            .panelReadout(value)
-            .playtestField("Title Background")
-            .panelHelp("What is behind the words, or nothing.")
+        .panelReadout(value)
+        .playtestField("Title Background")
+        .panelHelp("What is behind the words, or nothing.")
+    }
+
+    /// The moving look's own knobs, under the Background row: Speed,
+    /// Strength, Scale and the one that is the look's own.
+    private func liveKnobs(_ live: LiveBackdrop) -> some View {
+        let state = editorState
+        return ForEach(live.knobs) { knob in
+            PanelFieldRow(knob.label) {
+                HStack(spacing: 6) {
+                    Slider(value: Binding(get: { knob.value / 100 },
+                                          set: { state.previewTitleLiveKnob(knob.id, to: ($0 * 100).rounded()) }),
+                           in: (knob.range.lowerBound / 100)...(knob.range.upperBound / 100)) { editing in
+                        if !editing, let held = state.titleLiveKnobPreview?.knobs.first(where: { $0.id == knob.id }) {
+                            state.setTitleLiveKnob(knob.id, to: held.value)
+                        }
+                    }
+                    .controlSize(.small)
+                    .frame(minWidth: PanelSliderRow.trackMinimum)
+                    .playtestControl("Slider", detail: knob.label)
+                    SliderReadout(typing: .percent, label: knob.label, value: CGFloat(knob.value / 100),
+                                  isMixed: false,
+                                  range: CGFloat(knob.range.lowerBound / 100)...CGFloat(knob.range.upperBound / 100),
+                                  identity: state.titleInHandID) { value in
+                        state.setTitleLiveKnob(knob.id, to: (Double(value) * 100).rounded())
+                    }
+                }
+            }
+            .playtestField(knob.label)
+            .panelHelp(Self.help(knob, look: live.look))
+        }
+    }
+
+    static func help(_ knob: LiveKnob, look: LiveLook) -> String {
+        switch knob.id {
+        case .speed: "How fast the background moves."
+        case .strength: "How much light it puts out."
+        case .scale: "How big its parts are."
+        case .shape: "\(look.title): \(look.shapeKnob.lowercased())."
+        }
     }
 
     // MARK: Sounds

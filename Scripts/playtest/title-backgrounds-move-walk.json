@@ -734,7 +734,7 @@
   {
    "do": "describe",
    "stage": "aurora-in",
-   "note": "AURORA from 6.0s: a three colour mesh with fine grain fades up, the title blurs in, the subtitle rises, and the rule under the title draws itself on from the left"
+   "note": "AURORA from 6.0s: an aurora rippling over fine grain fades up, the title blurs in, the subtitle rises, and the rule under the title draws itself on from the left"
   },
   {
    "do": "snapshot",
@@ -979,7 +979,7 @@
   {
    "do": "describe",
    "stage": "aurora-hold",
-   "note": "Two moments of Soft Gradient Glass's hold a second apart: the mesh has drifted between them and the grain is a fresh pattern"
+   "note": "Two moments of Soft Gradient Glass's hold a second apart: the liquid gradient has flowed between them and the grain is a fresh pattern"
   },
   {
    "do": "snapshot",

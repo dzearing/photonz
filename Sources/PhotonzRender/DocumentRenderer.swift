@@ -1485,7 +1485,9 @@ public final class DocumentRenderer: @unchecked Sendable {
         let pad = annotation.strokeOutset * bake
         let area = mask.extent.insetBy(dx: pad, dy: pad)
         guard area.width >= 1, area.height >= 1,
-              let mesh = MeshPainter.image(fill, size: area.size, atMS: ms) else { return nil }
+              let mesh = fill.kind == .live
+                ? LiveBackdropPainter.image(fill, size: area.size, atMS: ms)
+                : MeshPainter.image(fill, size: area.size, atMS: ms) else { return nil }
         let painted = mesh.transformed(by: CGAffineTransform(translationX: area.minX, y: area.minY))
             .applyingFilter("CISourceInCompositing", parameters: [kCIInputBackgroundImageKey: mask])
             .cropped(to: mask.extent)

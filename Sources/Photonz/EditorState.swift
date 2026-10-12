@@ -268,6 +268,11 @@ final class EditorState {
     /// Where the Title section's Intensity slider is while it is being
     /// dragged, before it lets go (`EditorState+TitleRestyle`).
     var titleIntensityPreview: Double?
+    /// The moving look behind the title in hand while one of its knobs is
+    /// being dragged, before it lets go.
+    var titleLiveKnobPreview: LiveBackdrop?
+    /// The Background picker's tiles are up.
+    var titleBackgroundPickerOpen = false
     /// The replay of a title's in waiting for a pause after its words were
     /// typed.
     @ObservationIgnored var titleReplayAfterTyping: Task<Void, Never>?

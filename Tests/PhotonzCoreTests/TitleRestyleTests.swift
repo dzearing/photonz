@@ -158,7 +158,12 @@ struct TitleRestyleTests {
                         $0.id != piece.id && $0.isVisible && $0.style.opacity >= 0.5 && $0.style.matte == nil
                             && TitleRestyler.paint(of: $0) != nil && $0.frame.contains(middle)
                     }), let paint = TitleRestyler.paint(of: backing) else { continue }
-                    let behind = paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]
+                    // Words wearing a shade stand over anything; a moving look
+                    // is read as drawn: its ground and the brightest it gets.
+                    if !piece.style.shadows.isEmpty { continue }
+                    let behind = paint.kind == .live
+                        ? [LivePalette(paint).ground.hexString, LivePalette(paint).extreme.hexString]
+                        : (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex])
                     for hex in behind {
                         let contrast = SegmentInk.contrast(ink, RGBA(hex: hex) ?? ink)
                         #expect(contrast >= 3, "\(preset.name) in \(theme.name): \(piece.name) \(text.colorHex) on \(hex)")

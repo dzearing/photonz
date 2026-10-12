@@ -140,6 +140,17 @@ public enum GradientPainter {
             context.scaleBy(x: 1, y: -1)
             context.draw(image, in: box)
             context.restoreGState()
+        case .live:
+            // Its still picture, for the same places a still mesh is drawn;
+            // a moving one on the canvas is worked out each frame instead
+            // (`LiveBackdropPainter`).
+            guard let image = LiveBackdropPainter.cgImage(paint, size: box.size) else { return }
+            context.saveGState()
+            context.interpolationQuality = .high
+            context.translateBy(x: 0, y: box.minY + box.maxY)
+            context.scaleBy(x: 1, y: -1)
+            context.draw(image, in: box)
+            context.restoreGState()
         }
     }
 

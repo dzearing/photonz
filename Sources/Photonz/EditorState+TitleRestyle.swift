@@ -1,6 +1,7 @@
 import AppKit
 import Foundation
 import PhotonzCore
+import PhotonzRender
 
 // A few knobs restyle a title (`TitleRestyle.swift`,
 // `docs/design/video-titles-polish.md`, "What the person sees"). The panel's
@@ -113,6 +114,40 @@ extension EditorState {
 
     func setTitleBackgroundShown(_ shown: Bool) {
         restyleTitleInHand { $0.showsBackground = shown }
+    }
+
+    /// The moving look behind the title in hand and where its knobs stand,
+    /// nil for a still background.
+    var titleLiveBackdropInHand: LiveBackdrop? {
+        if let titleLiveKnobPreview { return titleLiveKnobPreview }
+        guard let id = titleInHandID, let document,
+              document.titleRecipe(layerID: id)?.showsBackground == true else { return nil }
+        return document.titleLiveBackdrop(layerID: id)
+    }
+
+    /// A knob of the moving look being dragged: drawn, not recorded, until it
+    /// lets go.
+    func previewTitleLiveKnob(_ knob: LiveKnob.ID, to value: Double) {
+        guard let id = titleInHandID, var doc = document, doc.setTitleLiveKnob(layerID: id, knob, to: value)
+        else { return }
+        titleLiveKnobPreview = doc.titleLiveBackdrop(layerID: id)
+        submit(doc.drawn(atTimeMS: documentTimeMS))
+    }
+
+    /// A knob of the moving look let go, or a number typed: one undo step.
+    func setTitleLiveKnob(_ knob: LiveKnob.ID, to value: Double) {
+        titleLiveKnobPreview = nil
+        guard let id = titleInHandID, var probe = document, probe.setTitleLiveKnob(layerID: id, knob, to: value)
+        else { rerender(); return }
+        perform { $0.setTitleLiveKnob(layerID: id, knob, to: value) }
+        rerender()
+    }
+
+    /// Opens the Background picker, compiling every moving look in the
+    /// background so its tiles and the first frame of a pick are ready.
+    func openTitleBackgroundPicker() {
+        LiveBackdropPainter.prepare()
+        titleBackgroundPickerOpen = true
     }
 
     /// The Intensity slider moving: drawn, not recorded, until it lets go.

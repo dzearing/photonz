@@ -346,7 +346,7 @@ struct TitleBackgroundsTests {
 
     // MARK: - The two new title pages
 
-    @Test("Aurora: a drifting three colour mesh with grain, and an underline that draws itself on")
+    @Test("Aurora: a live aurora with grain, and an underline that draws itself on")
     func auroraPage() throws {
         // Retired from the shelf by the designed set, and still drawn the same.
         #expect(BuiltInTitle.aurora.isRetired)
@@ -358,9 +358,9 @@ struct TitleBackgroundsTests {
         let group = try #require(doc.layer(id: inserted.layerID))
         let background = try #require(TitleDesign.find("Background", in: group))
         let fill = try #require(background.annotation?.fill)
-        #expect(fill.kind == .mesh)
-        #expect(fill.stops.count == 3)
-        #expect(fill.drift > 0)
+        #expect(fill.kind == .live)
+        #expect(fill.live?.look == .aurora)
+        #expect(fill.moves)
         #expect((background.style.grain?.amount ?? 0) > 0)
         // The underline is a line, drawn on from nothing after the title.
         let rule = try #require(TitleDesign.find("Accent", in: group))
@@ -369,7 +369,7 @@ struct TitleBackgroundsTests {
         let late = try #require(Self.piece(doc, inserted.layerID, "Accent", atMS: 3000 + 1500))
         #expect((early.annotation?.trim?.end ?? 1) < 0.2)
         #expect(late.annotation?.trim == nil || late.annotation?.trim?.isWhole == true)
-        // The mesh keeps drifting while the title holds: two moments of the
+        // The aurora keeps moving while the title holds: two moments of the
         // hold are drawn with different clocks.
         let a = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: 4500))
         let b = try #require(Self.piece(doc, inserted.layerID, "Background", atMS: 5500))

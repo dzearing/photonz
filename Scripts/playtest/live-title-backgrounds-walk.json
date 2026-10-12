@@ -1,0 +1,268 @@
+{
+ "out": "/tmp/photonz-playtest/live-title-backgrounds-walk",
+ "seed": "Title backgrounds that are alive, at Next defaults with no switch touched: a Keynote Clean title page put at the start and typed, its Background row opened as tiles that play, Aurora picked and photographed a second apart, its knobs read, then Architectural Sketch picked and undone.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Keynote Clean"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "type",
+   "text": "Ship it faster"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.4,
+   "onTheClock": true
+  },
+  {
+   "do": "click",
+   "at": [
+    960,
+    700
+   ],
+   "space": "document"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Gradient"
+  },
+  {
+   "do": "press",
+   "control": "Title Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "describe",
+   "stage": "picker",
+   "note": "The Background row opened as tiles: None, Solid, Gradient, then ten moving looks each playing in the title's own colours (Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Architectural Sketch, Particles, Liquid Gradient, Grid Horizon). No Mesh."
+  },
+  {
+   "do": "expect",
+   "control": "Aurora",
+   "in": "Background picker",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Grid Horizon",
+   "in": "Background picker",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Mesh",
+   "in": "Background picker",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "1-background-tiles"
+  },
+  {
+   "do": "press",
+   "control": "Aurora",
+   "in": "Background picker"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Aurora"
+  },
+  {
+   "do": "expect",
+   "control": "Slider",
+   "in": "Speed",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Slider",
+   "in": "Strength",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Slider",
+   "in": "Scale",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Slider",
+   "in": "Height",
+   "present": true
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "aurora-a",
+   "note": "AURORA behind the title, a second in: ribbons of light with rays rising off them, the words white over a dark sky"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-aurora-a"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "describe",
+   "stage": "aurora-b",
+   "note": "A second later: the ribbons have slid and turned colour"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-aurora-b"
+  },
+  {
+   "do": "press",
+   "control": "Title Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Architectural Sketch",
+   "in": "Background picker"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Architectural Sketch"
+  },
+  {
+   "do": "expect",
+   "control": "Slider",
+   "in": "Line Weight",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "sketch",
+   "note": "ARCHITECTURAL SKETCH two seconds in: the building's first lines drawing themselves in over a faint blueprint grid"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-sketch"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Title Background",
+   "reads": "Aurora"
+  }
+ ]
+}

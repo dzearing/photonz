@@ -39,7 +39,11 @@ extension Paint {
     }
 
     /// Whether this paint looks different from one moment to the next.
-    public var moves: Bool { isGradient && driftLoopMS != nil }
+    public var moves: Bool {
+        guard isGradient else { return false }
+        if kind == .live { return (live?.speed ?? 0) > 0 }
+        return driftLoopMS != nil
+    }
 
     /// The colour points `ms` into the drift. A paint that does not drift
     /// holds them where they start.

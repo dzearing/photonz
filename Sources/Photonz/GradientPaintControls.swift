@@ -89,6 +89,16 @@ struct PaintFill: View {
                 } else {
                     Color(hex: paint.hex)
                 }
+            case .live:
+                // A moving look's still picture, drawn by the canvas's own
+                // code (`LiveBackdropPainter`).
+                if let picture = LiveBackdropPainter.cgImage(paint, size: size) {
+                    Image(decorative: picture, scale: 1)
+                        .resizable()
+                        .interpolation(.high)
+                } else {
+                    Color(hex: paint.hex)
+                }
             }
         }
     }
@@ -128,11 +138,13 @@ struct PaintTypeRow: View {
         }
     }
 
-    /// Every kind, less Mesh where moving title backgrounds are switched off
-    /// (unless this paint already is one, which must still say so).
+    /// Every kind a person picks here. Mesh is retired (the moving looks a
+    /// title's Background knob offers replaced it) and a moving look is
+    /// picked from that knob, so neither is offered unless this paint
+    /// already is one, which must still say so.
     private var kinds: [Paint.Kind] {
         Paint.Kind.allCases.filter {
-            $0 != .mesh || Experiments.shared.titleBackgroundsEnabled || paint.kind == .mesh
+            ($0 != .mesh && $0 != .live) || paint.kind == $0
         }
     }
 

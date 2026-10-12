@@ -108,7 +108,7 @@ struct DesignedColorPicker: View {
             header
             if supportsGradient {
                 PaintTypeRow(paint: paint, onPick: setKind)
-                if paint.isGradient {
+                if paint.isGradient, paint.kind != .live {
                     GradientGeometryRow(paint: $paint, stopIndex: $stopIndex,
                                         onDrag: previewGeometry,
                                         onCommit: commitGeometry)

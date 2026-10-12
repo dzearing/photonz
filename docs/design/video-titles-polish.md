@@ -467,6 +467,38 @@ tile previews that play.
    stable id. Walk: `title-sounds-whoosh-and-tick-walk`; tests:
    `TitleSoundsTests`, `TitleSoundSynthTests`.
 
+8. **Title backgrounds that are alive.** Built 2026-10-12, after the user
+   called the drifting Mesh "static noise" and the backgrounds "just colors".
+   Ten moving looks, each a small Metal program Core Image runs per pixel per
+   frame, never a video file (`Sources/PhotonzRender/LiveBackdrops.swift`):
+   Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind
+   Streams (streamlines of a curl flow, the contours of its stream function),
+   Architectural Sketch (a two point perspective building drawn line by line,
+   then held with a slow drift), Particles (three depths), Liquid Gradient
+   (domain warped noise with a sheen) and Grid Horizon. A look is a paint
+   kind, `Paint.Kind.live` with a `LiveBackdrop` (look, Speed, Strength,
+   Scale and one knob of its own, `Sources/PhotonzCore/LiveBackdrop.swift`),
+   so it fills a title's background shape on the same per-frame path the
+   Mesh drift used. Colours come from the theme (`TitleTheme.liveStops`:
+   ground, other backgrounds, accent), lifted to read as light
+   (`LivePalette`); a theme with no colour gets teal, violet and blue.
+   Legibility is built in: over a dark ground no pixel goes above 0.18 linear
+   luminance (white words keep 4.2:1 or better), over a light ground none
+   below 0.42 or 85% of the ground, and the title's own word-colour check
+   reads a live look against its ground and that limit, not its lights.
+   Gotcha: Core Image's `kernels(withMetalString:)` hands back the LAST
+   function for every kernel of one source whose arguments match, so each
+   look is compiled on its own (about 0.3 s, once, lazily;
+   `LiveBackdropPainter.prepare` warms them when the picker opens). Measured
+   (`LiveBackdropRenderTests`): every look draws a 1080p frame in 2.4 to
+   4.6 ms best, 2.5 to 5.2 ms median; mean pixel change over half a second
+   4.2 to 11.5 levels against the retired Mesh's 1.31 (bar 2.6). Mesh is no
+   longer offered (Background tiles nor the fill type tiles) and still opens
+   and draws in old documents. The Background row opens a popover of tiles
+   that play (`TitleBackgroundPicker`). Walk: `live-title-backgrounds-walk`;
+   tests: `LiveBackdropTests`, `LiveBackdropRenderTests`; reel:
+   `LiveBackdropReelTests` (`PHOTONZ_REEL=1`).
+
 Screen Studio cannot make text slides at all
 ([tight.studio](https://tight.studio/blog/how-to-add-text-slides-in-screen-studio/)),
 so this is a place Photonz can stand out.

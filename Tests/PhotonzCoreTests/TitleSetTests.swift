@@ -113,7 +113,7 @@ struct TitleSetTests {
 
     /// Everything drawn at a moment. Grain reseeds itself every moment,
     /// which is not the kind of moving this asks about, so a piece's clock
-    /// is kept only where a mesh drifts on it.
+    /// is kept only where a fill moves on its own (a mesh or a live look).
     static func drawn(_ doc: PhotonzDocument, atMS ms: Int) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.sortedKeys]
@@ -123,7 +123,7 @@ struct TitleSetTests {
     static func clockless(_ layer: Layer) -> Layer {
         var still = layer
         var drifts = false
-        if case .annotation(let shape) = layer.content, shape.fill?.kind == .mesh { drifts = true }
+        if case .annotation(let shape) = layer.content, shape.fill?.moves == true { drifts = true }
         if !drifts { still.drawnAtMS = nil }
         if !still.children.isEmpty { still.children = still.children.map(clockless) }
         return still
@@ -173,7 +173,11 @@ struct TitleSetTests {
             guard full || frame.insetBy(dx: -1, dy: -1).contains(middle) else { continue }
             // A line drawn beside the words is not behind them.
             guard shape.fill != nil else { continue }
-            let stops = (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
+            // A moving look is read as drawn: its ground and the brightest
+            // (or darkest) it is held to (`LivePalette`).
+            let stops = paint.kind == .live
+                ? [LivePalette(paint).ground, LivePalette(paint).extreme]
+                : (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
             let alpha = Double(piece.style.opacity)
             behind = stops.flatMap { stop in
                 behind.map { under in

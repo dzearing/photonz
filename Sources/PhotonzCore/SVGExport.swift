@@ -1852,7 +1852,7 @@ private struct Writer {
             lines.append("    <radialGradient id=\"\(id)\" gradientUnits=\"userSpaceOnUse\""
                 + " cx=\"\(n(middle.x))\" cy=\"\(n(middle.y))\""
                 + " r=\"\(n(paint.radialRadius(in: box)))\">")
-        case .solid, .angular, .mesh:
+        case .solid, .angular, .mesh, .live:
             return nil
         }
         for stop in paint.orderedStops {

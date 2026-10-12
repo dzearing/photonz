@@ -53,6 +53,35 @@ public enum TitleLook {
                            opacity: 0.45)
     }
 
+    /// The soft shade words wear over a moving title background when their
+    /// own colour would not stand out from the brightest (or darkest) the
+    /// look can draw (`LivePalette.limit`): wide, centred and opposing their
+    /// colour, so the words keep the colour they were designed in. Its exact
+    /// shape is how the title knows it put it there (`isLiveScrim`), and takes
+    /// it off again when the background stops moving.
+    public static func liveScrim(forColorHex hex: String, fontSize: CGFloat) -> ShadowStyle {
+        ShadowStyle(radius: fontSize * liveScrimShareOfSize, offset: .zero,
+                    colorHex: TextBuilder.autoContrastShadow(forColorHex: hex).colorHex,
+                    opacity: liveScrimOpacity)
+    }
+
+    static let liveScrimShareOfSize: CGFloat = 0.3
+    static let liveScrimOpacity = 0.72
+
+    /// Words as they land over a moving look they would not stand out from
+    /// everywhere: wearing the shade a restyle would give them, so laying
+    /// the title out again changes nothing.
+    public static func shadedOverALook(_ words: Layer) -> Layer {
+        guard case .text(let text) = words.content else { return words }
+        var shaded = words
+        shaded.style.shadows = [liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize)]
+        return shaded
+    }
+
+    public static func isLiveScrim(_ shadow: ShadowStyle) -> Bool {
+        shadow.offset == .zero && shadow.opacity == liveScrimOpacity && shadow.spread == 0 && shadow.kind == .drop
+    }
+
     /// How wide the tight edge is, as a share of the type: two pixels of
     /// softness on 80px words.
     public static let edgeShareOfSize: CGFloat = 1.0 / 40

@@ -52,6 +52,22 @@ public struct TitleTheme: Hashable, Codable, Sendable, Identifiable {
     /// What a solid background is painted.
     public var ground: String { flat ?? backgrounds[0] }
 
+    /// A moving look's colours out of this theme: its ground first, then the
+    /// lights, which are its other background colours and its accent
+    /// (`LivePalette` lifts them so they read as light).
+    public var liveStops: [GradientStop] { liveStops(lendingAccent: true) }
+
+    /// The same, saying whether the accent is lent as a light. A preset whose
+    /// own background is a moving look keeps exactly its own colours under
+    /// its own theme; everything else lends its accent where it has room.
+    public func liveStops(lendingAccent: Bool) -> [GradientStop] {
+        var colours = [ground] + backgrounds.dropFirst()
+        if colours.count < 4, lendingAccent { colours.append(accent) }
+        return colours.enumerated().map { index, hex in
+            GradientStop(hex: hex, position: Double(index) / Double(max(colours.count - 1, 1)))
+        }
+    }
+
     public static let originalID = "original"
     public static let recordingID = "recording"
 
@@ -219,9 +235,47 @@ public enum TitleEnergy: String, CaseIterable, Hashable, Codable, Sendable {
 
 /// What a title's background is made of.
 public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendable {
-    case solid, gradient, mesh
+    case solid, gradient
+    /// The faint drifting blend titles had before the moving looks. No longer
+    /// offered; a title saved with it still opens and draws it.
+    case mesh
     /// The recording under the title, blurred and dimmed.
     case glass
+    // The moving looks (`LiveBackdrop.swift`), one each.
+    case aurora, energyStreams, colorBubbles, lightRays, lightLeaks
+    case windStreams, sketch, particles, liquidGradient, gridHorizon
+
+    public init(look: LiveLook) {
+        switch look {
+        case .aurora: self = .aurora
+        case .energyStreams: self = .energyStreams
+        case .colorBubbles: self = .colorBubbles
+        case .lightRays: self = .lightRays
+        case .lightLeaks: self = .lightLeaks
+        case .windStreams: self = .windStreams
+        case .sketch: self = .sketch
+        case .particles: self = .particles
+        case .liquidGradient: self = .liquidGradient
+        case .gridHorizon: self = .gridHorizon
+        }
+    }
+
+    /// The moving look this background is, nil for a still one.
+    public var look: LiveLook? {
+        switch self {
+        case .solid, .gradient, .mesh, .glass: nil
+        case .aurora: .aurora
+        case .energyStreams: .energyStreams
+        case .colorBubbles: .colorBubbles
+        case .lightRays: .lightRays
+        case .lightLeaks: .lightLeaks
+        case .windStreams: .windStreams
+        case .sketch: .sketch
+        case .particles: .particles
+        case .liquidGradient: .liquidGradient
+        case .gridHorizon: .gridHorizon
+        }
+    }
 
     public var title: String {
         switch self {
@@ -229,7 +283,15 @@ public enum TitleBackgroundKind: String, CaseIterable, Hashable, Codable, Sendab
         case .gradient: "Gradient"
         case .mesh: "Mesh"
         case .glass: "Glass"
+        default: look?.title ?? rawValue
         }
+    }
+
+    /// What the Background picker offers, in its order: the still ones, then
+    /// every moving look, then Glass where the title has a picture under it.
+    /// Mesh is not among them.
+    public static func offered(glass: Bool) -> [TitleBackgroundKind] {
+        [.solid, .gradient] + LiveLook.allCases.map(TitleBackgroundKind.init(look:)) + (glass ? [.glass] : [])
     }
 }
 
@@ -374,6 +436,38 @@ extension PhotonzDocument {
             recipe.background = old.background
         }
         refitTitle(layerID: layerID, from: old, to: recipe)
+        return true
+    }
+
+    /// The moving look a title's background wears and where its knobs stand,
+    /// nil for a title whose background is still.
+    public func titleLiveBackdrop(layerID: UUID) -> LiveBackdrop? {
+        guard let recipe = titleRecipe(layerID: layerID), let group = layer(id: layerID),
+              let part = recipe.design.parts.first(where: { $0.role == .background }),
+              let piece = TitleDesign.find(part.path, in: group),
+              let paint = TitleRestyler.paint(of: piece), paint.kind == .live else { return nil }
+        return paint.live
+    }
+
+    /// Turn one knob of the moving look behind a title. Its keys and layout
+    /// are untouched: the look is drawn fresh every frame from its knobs.
+    /// False when the title has no moving look or the knob is already there.
+    @discardableResult
+    public mutating func setTitleLiveKnob(layerID: UUID, _ knob: LiveKnob.ID, to value: Double) -> Bool {
+        guard let current = titleLiveBackdrop(layerID: layerID),
+              let recipe = titleRecipe(layerID: layerID),
+              let part = recipe.design.parts.first(where: { $0.role == .background }),
+              let group = layer(id: layerID),
+              let path = TitleRestyler.locate(part.path, in: group) else { return false }
+        let turned = current.with(knob, at: value)
+        guard turned != current else { return false }
+        updateLayer(id: layerID) { title in
+            TitleRestyler.edit(&title, at: path) { piece in
+                guard case .annotation(var shape) = piece.content else { return }
+                shape.fill?.live = turned
+                piece.content = .annotation(shape)
+            }
+        }
         return true
     }
 
@@ -528,6 +622,7 @@ struct TitleRestyler {
     static func backgroundKind(of layer: Layer) -> TitleBackgroundKind {
         if layer.style.effects.contains(where: { $0.blur?.kind == .background }) { return .glass }
         guard let paint = paint(of: layer), paint.isGradient else { return .solid }
+        if paint.kind == .live, let look = paint.live?.look { return TitleBackgroundKind(look: look) }
         return paint.kind == .mesh ? .mesh : .gradient
     }
 
@@ -594,7 +689,7 @@ struct TitleRestyler {
             paint.kind = .solid
             paint.stops = []
         case .gradient:
-            if paint.kind == .solid || paint.kind == .mesh || paint.stops.count < 2 {
+            if paint.kind == .solid || paint.kind == .mesh || paint.kind == .live || paint.stops.count < 2 {
                 paint.kind = .linear
                 paint.angle = 160
                 paint.stops = [GradientStop(hex: colours[0], position: 0), GradientStop(hex: colours[0], position: 1)]
@@ -611,6 +706,17 @@ struct TitleRestyler {
                 }
             }
             paint.stops = Self.recoloured(paint.orderedStops, colours)
+        case .aurora, .energyStreams, .colorBubbles, .lightRays, .lightLeaks,
+             .windStreams, .sketch, .particles, .liquidGradient, .gridHorizon:
+            guard let look = kind.look else { break }
+            // The same look keeps where its knobs stand through a new theme;
+            // another look starts at its own.
+            if paint.kind != .live || paint.live?.look != look {
+                paint.live = LiveBackdrop(look: look)
+            }
+            paint.kind = .live
+            paint.stops = recipe.theme.liveStops(
+                lendingAccent: recipe.theme.id != TitleTheme.originalID || recipe.originalBackground?.look == nil)
         }
         shape.fill = paint
         shape.colorHex = paint.hex
@@ -682,8 +788,9 @@ struct TitleRestyler {
         text.weight = weight
         piece.content = .text(text)
         // Words that throw their own shadow to stand over the footage throw
-        // one that opposes their new colour.
-        if !piece.style.shadows.isEmpty {
+        // one that opposes their new colour. A shade a moving look gave them
+        // is the legibility pass's to decide (`legibleChildren`).
+        if !piece.style.shadows.isEmpty, !piece.style.shadows.allSatisfy(TitleLook.isLiveScrim) {
             piece.style.shadows = TitleLook.shadows(forColorHex: color, fontSize: text.fontSize)
         }
     }
@@ -781,6 +888,10 @@ struct TitleRestyler {
                 return group
             }
             guard case .text(var text) = piece.content, let ink = RGBA(hex: text.colorHex) else { return piece }
+            // A shade a moving look gave these words comes off first, and
+            // goes back on below only if they still need it.
+            var piece = piece
+            piece.style.shadows.removeAll(where: TitleLook.isLiveScrim)
             let middle = CGPoint(x: piece.frame.midX, y: piece.frame.midY)
             // A box cut to the words' shape is their fill, not their backing.
             guard let backing = here.last(where: { other in
@@ -789,9 +900,29 @@ struct TitleRestyler {
                     && !other.layer.style.effects.contains { $0.blur?.kind == .background }
                     && Self.paint(of: other.layer) != nil && other.frame.contains(middle)
             })?.layer, let paint = Self.paint(of: backing) else { return piece }
-            let behind = (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
+            // A moving look is read against what it can actually draw: its
+            // ground and the brightest (or darkest) it is held to, never its
+            // lights, which never reach the frame at full strength.
+            let behind: [RGBA]
+            if paint.kind == .live, paint.isGradient {
+                let palette = LivePalette(paint)
+                behind = [palette.ground, palette.extreme]
+            } else {
+                behind = (paint.isGradient ? paint.orderedStops.map(\.hex) : [paint.hex]).compactMap(RGBA.init(hex:))
+            }
             func worst(_ color: RGBA) -> Double {
                 behind.map { SegmentInk.contrast(color, $0) }.min() ?? 21
+            }
+            // Over a moving look, words that read on its ground keep their
+            // colour and wear a soft shade wherever the look may get too
+            // bright (or too dark) for them.
+            if paint.kind == .live, paint.isGradient, let ground = behind.first,
+               SegmentInk.contrast(ink, ground) >= 4.5 {
+                let needed = text.fontSize >= 60 * unit ? 3.0 : 4.5
+                if worst(ink) < needed, piece.style.shadows.isEmpty {
+                    piece.style.shadows = [TitleLook.liveScrim(forColorHex: text.colorHex, fontSize: text.fontSize)]
+                }
+                return piece
             }
             guard worst(ink) < 3 else { return piece }
             let choices = [recipe.theme.primary, recipe.theme.secondary, "#FFFFFF", "#111111"]

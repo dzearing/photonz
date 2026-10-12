@@ -21223,3 +21223,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Reel `queue/audits/2026-10-11-text-depth-*`, decision card for the user.
 - Open: depth of field still does not reach individual words; Tilt Settle's
   two-axis turn still leans (real 3D, asked on the card).
+
+## 2026-10-12 — Title backgrounds that are alive
+
+- Ten moving title backgrounds (Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Architectural Sketch, Particles, Liquid Gradient, Grid Horizon) as a `live` paint kind, drawn per frame by runtime-compiled Metal Core Image kernels; Background row opens a picker of playing tiles, four knobs per look. Mesh retired from the choices.
+- Legibility built in: luminance ceiling/floor per look, word colour check reads a look as drawn, lighter word colours get a soft shade.
+- Gotcha: `CIKernel.kernels(withMetalString:)` returns the last same-signature function for every kernel of one source; compile each separately.
+- Next: the title rebuild task applies the decision on which looks stay and which is the default. Open question filed: a faint recording card visible through a title page before the recording starts.

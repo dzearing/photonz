@@ -446,13 +446,15 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     }
 
     private static func aurora(_ pen: TitlePen) -> [Layer] {
-        // Three deep colours, all dark enough that white words read on every
-        // part of the blend, drifting one slow loop every twenty seconds.
-        var background = pen.fullFrame(Paint(hex: "#0E1030", kind: .mesh,
-                                             stops: [GradientStop(hex: "#0E1030", position: 0),
-                                                     GradientStop(hex: "#3A1F8F", position: 0.5),
-                                                     GradientStop(hex: "#8C2B6B", position: 1)],
-                                             angle: 200, drift: Paint.startingDrift))
+        // Curtains of green, violet and rose rippling over a deep night,
+        // never bright enough anywhere that white words stop reading
+        // (`LivePalette.darkGroundCeiling`).
+        var background = pen.fullFrame(Paint(hex: "#070B1E", kind: .live,
+                                             stops: [GradientStop(hex: "#070B1E", position: 0),
+                                                     GradientStop(hex: "#1BC79A", position: 1.0 / 3),
+                                                     GradientStop(hex: "#6A3BD8", position: 2.0 / 3),
+                                                     GradientStop(hex: "#C2408F", position: 1)],
+                                             live: LiveBackdrop(look: .aurora)))
         background.style.effects = [.grain(GrainEffect())]
         let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 112, weight: .bold,
                                 color: "#FFFFFF", top: pen.canvas.height * 0.36)
@@ -461,7 +463,7 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
                             length: pen.u(160), width: pen.u(4), color: "#FFFFFF")
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
                                    color: "#D4CCF2", top: rule.frame.maxY + pen.u(26))
-        return [background, title, rule, subtitle]
+        return [background, title, rule, TitleLook.shadedOverALook(subtitle)]
     }
 
     /// Whether this page's background is the recording under it, so it lies

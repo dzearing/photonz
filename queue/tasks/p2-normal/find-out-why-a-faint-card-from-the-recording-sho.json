@@ -1,0 +1,26 @@
+{
+  "id": "find-out-why-a-faint-card-from-the-recording-sho",
+  "title": "Find out why a faint card from the recording shows through a title page before the recording starts",
+  "goal": "In a walk, a Keynote Clean title page at the start of the sample recording showed a faint copy of a card from the recording through its black background two seconds in, when the recording does not start until about 3.5 seconds. Find out whether the title page is drawn see-through, or the canvas shows a frame it should not, and fix whichever it is.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 3990,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T03:33:58.694Z",
+  "updated": "2026-10-12T03:33:58.697Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-12 by title-backgrounds-that-are-alive-auroras-energy. Reproduction: a temporary copy of Scripts/playtest/live-title-backgrounds-walk.json cut before the Background picker, with two videoStepOneSecond + snapshot steps (setup: timelineOpen, openSampleRecording, Add Track Above, Add Title Page > Keynote Clean, type, click to pick). Picture: queue/audits/2026-10-12-title-page-faint-card-2s.png, the Ready card top left at 2 s with the background still Gradient (so it is not the moving looks). Timeline in the same run: Title Page on V2 0 to 4 s, Tutorial Sample on V1 from about 3.5 s. Not yet reproduced through DocumentRenderer alone or in an export; could be the canvas playback layer showing the movie poster under the composite. Not reproduced: why.",
+  "acceptance": [
+    "A title page at the start of a recording shows only itself until the recording starts, in the canvas and in an exported movie",
+    "The walk that put the title down photographs the moment and shows no trace of the recording"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T03:33:58.696Z",
+      "note": "created (manual)"
+    }
+  ]
+}

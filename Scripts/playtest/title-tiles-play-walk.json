@@ -161,7 +161,7 @@
   {
    "do": "describe",
    "stage": "3-pointed-plays",
-   "note": "The pointer resting on Soft Gradient Glass: its tile plays too, its mesh drifting and its rule drawing on"
+   "note": "The pointer resting on Soft Gradient Glass: its tile plays too, its liquid gradient flowing and its rule drawing on"
   },
   {
    "do": "snapshot",

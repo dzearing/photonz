@@ -1,0 +1,63 @@
+{
+  "id": "title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are",
+  "taskId": "title-text-visibly-comes-in-and-every-built-in-t",
+  "question": "Ten moving title backgrounds are built. Which do you keep, and which do new titles start on?",
+  "context": "Reel and contact sheet under queue/audits/2026-10-12-live-backdrops-*. Building did not wait on this; the companion title rebuild will act on the answer.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep all ten, titles start on Aurora",
+      "summary": "Every look stays in the Background tiles. When the built-in titles are rebuilt, a new title page starts on Aurora in its theme colours.",
+      "pros": [
+        "The look you named first, and the most obviously alive",
+        "Nothing you might want is taken away"
+      ],
+      "cons": [
+        "Ten tiles is a lot to scan in the picker"
+      ],
+      "mitigation": "The tiles play, so you judge by eye at a glance rather than reading names."
+    },
+    {
+      "id": "b",
+      "label": "Keep all ten, titles start on Liquid Gradient",
+      "summary": "Every look stays. A new title page starts on Liquid Gradient, the calmest look, closest to the product video gradients most intros use.",
+      "pros": [
+        "Calm, safe default behind any words",
+        "Works with every theme"
+      ],
+      "cons": [
+        "Less of a wow on first sight than Aurora"
+      ],
+      "mitigation": "Aurora and the rest are one click away in the tiles."
+    },
+    {
+      "id": "c",
+      "label": "Drop Light Leaks and Wind Streams, start on Aurora",
+      "summary": "Eight looks stay; Light Leaks (held brownish so white words read) and Wind Streams (busy fine lines) leave the tiles. New title pages start on Aurora.",
+      "pros": [
+        "A shorter list of the strongest looks",
+        "Removes the two that compromise most"
+      ],
+      "cons": [
+        "Loses a warm, filmic option entirely"
+      ],
+      "mitigation": "Either can come back later as its own task."
+    },
+    {
+      "id": "d",
+      "label": "Keep all ten, rework Light Leaks to be brighter",
+      "summary": "Every look stays and new title pages start on Aurora, and Light Leaks is reworked to be truly bright and warm, with the words over it given a stronger shade instead of the look being held dark.",
+      "pros": [
+        "Light Leaks would look like real film leaks",
+        "Keeps every option"
+      ],
+      "cons": [
+        "Words over it rely on a heavier shade"
+      ],
+      "mitigation": "The shade is measured to keep the words readable at every moment."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-12T03:33:26.111Z"
+}

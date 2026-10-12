@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/title-knobs-restyle-walk",
- "seed": "A few knobs restyle a title, at Next defaults with no switch touched: a Keynote Clean title page put at the start and typed, then its Theme set to Sunset from the swatches, its Font Pair to Editorial, its Energy to Punchy and Calm (each photographed at the same 0.4 s into its in), its Background to Mesh, and its headline picked from the Part menu with its In changed to Blur In and replayed.",
+ "seed": "A few knobs restyle a title, at Next defaults with no switch touched: a Keynote Clean title page put at the start and typed, then its Theme set to Sunset from the swatches, its Font Pair to Editorial, its Energy to Punchy and Calm (each photographed at the same 0.4 s into its in), its Background to Liquid Gradient from the Background tiles, and its headline picked from the Part menu with its In changed to Blur In and replayed.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -251,12 +251,21 @@
    "seconds": 0.6
   },
   {
-   "do": "panelMenu",
-   "menu": "Title Background",
-   "at": [
-    "centre"
-   ],
-   "choose": "Mesh"
+   "do": "press",
+   "control": "Title Background"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Liquid Gradient",
+   "in": "Background picker"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
   },
   {
    "do": "wait",
@@ -265,16 +274,16 @@
   {
    "do": "expect",
    "field": "Title Background",
-   "reads": "Mesh"
+   "reads": "Liquid Gradient"
   },
   {
    "do": "describe",
    "stage": "background",
-   "note": "BACKGROUND: Mesh, the theme's three colours drifting"
+   "note": "BACKGROUND: Liquid Gradient picked from the Background tiles, the theme's colours flowing behind the words"
   },
   {
    "do": "snapshot",
-   "name": "7-background-mesh"
+   "name": "7-background-liquid"
   },
   {
    "do": "panelMenu",

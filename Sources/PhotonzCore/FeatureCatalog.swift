@@ -925,7 +925,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: titleBackgroundsFlag,
                     title: "Title backgrounds that move",
-                    description: "Two more title pages, Aurora and Behind Glass, a Mesh fill that drifts, Grain in the Effects list, a Zoom on a background blur, and Trim start and Trim end keys on lines. Off means title backgrounds stay still.",
+                    description: "Ten moving title backgrounds picked from tiles that play, the Aurora and Behind Glass pages, Grain in the Effects list, a Zoom on a background blur, and Trim keys on lines. Off means title backgrounds stay still.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

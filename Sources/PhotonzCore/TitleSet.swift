@@ -286,14 +286,14 @@ extension BuiltInTitle {
     }
 
     private static func softGlass(_ pen: TitlePen) -> [Layer] {
-        // Three deep colours drifting one sweep every ten seconds, with grain.
-        var background = pen.fullFrame(Paint(hex: "#16205E", kind: .mesh,
+        // A deep liquid gradient flowing under the glass, with grain.
+        var background = pen.fullFrame(Paint(hex: "#16205E", kind: .live,
                                              stops: [GradientStop(hex: "#16205E", position: 0),
                                                      GradientStop(hex: "#4A2FA8", position: 0.5),
                                                      GradientStop(hex: "#0B4F66", position: 1)],
-                                             angle: 200, drift: 80))
+                                             live: LiveBackdrop(look: .liquidGradient)))
         background.style.effects = [.grain(GrainEffect())]
-        // Frosted glass: the mesh behind it softened, a breath of white over it.
+        // Frosted glass: the look behind it softened, a breath of white over it.
         let size = CGSize(width: pen.u(1180), height: pen.u(400))
         var panel = pen.box("Panel", CGRect(x: ((pen.canvas.width - size.width) / 2).rounded(),
                                             y: ((pen.canvas.height - size.height) / 2).rounded(),
@@ -305,7 +305,7 @@ extension BuiltInTitle {
                                 color: "#FFFFFF", top: panel.frame.minY + pen.u(112))
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 38,
                                    color: "#ECEAF8", top: title.frame.maxY + pen.u(14))
-        return [background, panel, title, subtitle]
+        return [background, panel, title, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func kinetic(_ pen: TitlePen) -> [Layer] {
@@ -420,11 +420,13 @@ extension BuiltInTitle {
     }
 
     private static func stacked(_ pen: TitlePen) -> [Layer] {
-        var background = pen.fullFrame(Paint(hex: "#0A0C1C", kind: .mesh,
+        // Streams of light running behind the stacked lines.
+        var background = pen.fullFrame(Paint(hex: "#0A0C1C", kind: .live,
                                              stops: [GradientStop(hex: "#0A0C1C", position: 0),
-                                                     GradientStop(hex: "#1B2050", position: 0.5),
-                                                     GradientStop(hex: "#2A1240", position: 1)],
-                                             angle: 200, drift: Paint.startingDrift))
+                                                     GradientStop(hex: "#1B2050", position: 1.0 / 3),
+                                                     GradientStop(hex: "#2A1240", position: 2.0 / 3),
+                                                     GradientStop(hex: "#7C8CFF", position: 1)],
+                                             live: LiveBackdrop(look: .energyStreams)))
         background.style.effects = [.grain(GrainEffect(amount: 20))]
         let left = (pen.canvas.width * 0.12).rounded()
         let mark = pen.box("Mark", CGRect(x: left, y: (pen.canvas.height * 0.22).rounded(),
@@ -436,7 +438,8 @@ extension BuiltInTitle {
                                color: "#9FA8FF", origin: CGPoint(x: left, y: title.frame.maxY - pen.u(8)))
         let subtitle = pen.words("Subtitle", "A short line about it", font: "SF Pro", size: 36,
                                  color: "#B8BCD6", origin: CGPoint(x: left, y: second.frame.maxY + pen.u(26)))
-        return [background, mark, title, second, subtitle]
+        // The lighter lines wear a soft shade where the streams run brightest.
+        return [background, mark, title, TitleLook.shadedOverALook(second), TitleLook.shadedOverALook(subtitle)]
     }
 
     // MARK: Name cards, in title safe

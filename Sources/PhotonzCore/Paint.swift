@@ -37,6 +37,10 @@ public struct Paint: Hashable, Sendable {
         /// and drifting slowly on a loop as `drift` says (`MeshPaint.swift`):
         /// the moving backdrop behind a polished title.
         case mesh
+        /// A look that moves by itself, worked out every frame
+        /// (`LiveBackdrop`): an aurora, streams of light, bubbles. Its
+        /// colours are the stops, the first the ground it moves over.
+        case live
 
         public var title: String {
             switch self {
@@ -45,6 +49,7 @@ public struct Paint: Hashable, Sendable {
             case .radial: return "Radial"
             case .angular: return "Angular"
             case .mesh: return "Mesh"
+            case .live: return "Live"
             }
         }
     }
@@ -68,14 +73,20 @@ public struct Paint: Hashable, Sendable {
     /// holds them still, 100 takes them once round their loop every
     /// `MeshPaint.loopMSAtFullDrift`. Ignored by every other kind.
     public var drift: Double
+    /// The look a `live` paint moves with and where its knobs stand. Ignored
+    /// by every other kind, and kept while the paint is something else so
+    /// flipping back is free.
+    public var live: LiveBackdrop?
 
     public init(hex: String,
                 kind: Kind = .solid,
                 stops: [GradientStop] = [],
                 angle: Double = 135,
                 center: CGPoint = CGPoint(x: 0.5, y: 0.5),
-                drift: Double = 0) {
+                drift: Double = 0,
+                live: LiveBackdrop? = nil) {
         self.kind = kind
+        self.live = live
         self.hex = hex
         self.stops = stops
         self.angle = angle
@@ -125,6 +136,7 @@ public struct Paint: Hashable, Sendable {
         guard isGradient, other.isGradient, kind == other.kind,
               angle == other.angle, center == other.center else { return false }
         if kind == .mesh, drift != other.drift { return false }
+        if kind == .live, live != other.live { return false }
         let mine = orderedStops, theirs = other.orderedStops
         guard mine.count == theirs.count else { return false }
         return zip(mine, theirs).allSatisfy {
@@ -178,6 +190,9 @@ public struct Paint: Hashable, Sendable {
             if stops.count < 3 { stops = Paint.seededMeshStops(from: stops, hex: hex) }
             if drift == 0 { drift = Paint.startingDrift }
         }
+        // A moving look starts as the liquid gradient, the one closest to a
+        // ramp, until somebody picks another.
+        if kind == .live, live == nil { live = LiveBackdrop(look: .liquidGradient) }
     }
 
     /// How fast a new mesh drifts: one slow loop every twenty seconds or so,
@@ -265,7 +280,7 @@ public struct GradientStop: Hashable, Codable, Sendable {
 extension Paint: Codable {
 
     private enum CodingKeys: String, CodingKey {
-        case kind, hex, stops, angle, cx, cy, drift
+        case kind, hex, stops, angle, cx, cy, drift, live
     }
 
     /// A flat paint writes the bare hex string the document has always held,
@@ -286,6 +301,8 @@ extension Paint: Codable {
         // Only a drifting paint says how fast: every gradient written before
         // a mesh could move is byte for byte what it was.
         if drift != 0 { try c.encode(drift, forKey: .drift) }
+        // Likewise only a paint that has been a moving look says which.
+        if let live { try c.encode(live, forKey: .live) }
     }
 
     /// A bare string is the color it always was; anything else is a gradient
@@ -303,7 +320,8 @@ extension Paint: Codable {
                   angle: try c.decodeIfPresent(Double.self, forKey: .angle) ?? 135,
                   center: CGPoint(x: try c.decodeIfPresent(CGFloat.self, forKey: .cx) ?? 0.5,
                                   y: try c.decodeIfPresent(CGFloat.self, forKey: .cy) ?? 0.5),
-                  drift: try c.decodeIfPresent(Double.self, forKey: .drift) ?? 0)
+                  drift: try c.decodeIfPresent(Double.self, forKey: .drift) ?? 0,
+                  live: try c.decodeIfPresent(LiveBackdrop.self, forKey: .live))
     }
 }
 
