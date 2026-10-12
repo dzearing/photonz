@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:25:07.384Z",
-  "updated": "2026-10-11T12:51:59.663Z",
+  "updated": "2026-10-12T03:34:58.446Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"the titles are still boring. there are no background motion options, the backgrounds are just colors. I'd love energy streams, moving color bubbles, light effects, anything to make it less of a powerpoint slide. The text itself doesn't even move in. It's just boring. the 'mesh' option is just.... static noise? that's hard to see? It is horrible.. Replace it with anything that's interesting - auroras, wind streams, architectural sketching, stylistic options. I asked you to research good titles and this was really not an improvement\".\n\nWhat went wrong last time: the six title tasks (titles-move-in-parts..., title-backgrounds-move..., a-set-of-titles-that-look-designed, etc.) were all closed 'done' on rule checks and timing numbers. Their own audit frames (queue/audits/2026-10-11-title-set-pages-1.png, -2.png) show flat colour or a faint gradient behind every title and the 'in' frame already showing the whole headline. This task's bar is visual and measured motion, not rules. Research: docs/design/video-titles-polish.md (Backgrounds, renderer costs). Existing pieces to replace or reuse: Mesh fill with Drift and Grain effect from title-backgrounds-move-gradients-grain-and-the-r (commit around 2026-10-11 01:32), TitleRestyle.swift Background knob, TitleSet.swift built-ins. Kernels: curl noise, layered sin ribbons with hue shift, additive blurred discs, radial light shafts with a mask, line segments with a trim drawn over time; render at half resolution where soft. Memory: mocks are the floor, legible text, no em dashes in UI copy. Companion filed the same day: 'Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds'.",
@@ -39,6 +39,43 @@
     {
       "t": "2026-10-11T12:51:59.662Z",
       "note": "User 2026-10-11: build 2.5D first so the title rework can use it. Sequenced after the four 2.5D tasks (31-34). Use the depth entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle), camera pushes and depth of field from '3D transitions and title entrances' where they suit a title, alongside the 2D reveals."
+    },
+    {
+      "t": "2026-10-12T01:41:15.870Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T03:34:40.688Z",
+      "note": "owns these walks: live-title-backgrounds-walk"
+    },
+    {
+      "t": "2026-10-12T03:34:40.750Z",
+      "note": "Adversarial review before building: no mock draws title backgrounds, so the picker reuses the transition picker's tile grid (pick by watching). A Premiere/AE user expects animated backgrounds as presets with a few parameters, not a node graph: that is what this is. Risk found: bright looks behind white words break 'text always legible', so every look is held under a luminance ceiling and lighter word colours get a shade."
+    },
+    {
+      "t": "2026-10-12T03:34:40.814Z",
+      "note": "Built: Paint.Kind.live + LiveBackdrop (PhotonzCore/LiveBackdrop.swift), ten Metal CI kernels compiled at runtime (PhotonzRender/LiveBackdrops.swift; each look compiled on its own because CIKernel.kernels(withMetalString:) returns the last same-signature function for all), Background picker popover with playing tiles + Speed/Strength/Scale/look knob sliders (Photonz/TitleBackgroundPicker.swift, TitleRestyleInspector). Mesh removed from Background tiles and the fill type tiles; old docs still draw it. Aurora page, Soft Gradient Glass and Stacked Stagger moved off Mesh."
+    },
+    {
+      "t": "2026-10-12T03:34:40.878Z",
+      "note": "Found in review on the real app and fixed: (1) switching a title to a moving look turned its headline grey because the word colour check read the look's light stops; now reads ground + ceiling. (2) colourless themes drew a grey aurora; they now borrow teal/violet/blue. (3) lighter word colours under 3:1 or 4.5:1 against the ceiling get TitleLook.liveScrim."
+    },
+    {
+      "t": "2026-10-12T03:34:40.941Z",
+      "note": "Verified: LiveBackdropTests (core), LiveBackdropRenderTests (motion bar vs Mesh 1.31, bar 2.6, all looks 4.2 to 11.5; legibility over every curated theme at Strength 200; 1080p 2.4 to 4.6 ms best). Full suite green in two parts (the known HEVC/text-reader hang hit three whole runs; logged on find-out-why-the-whole-test-run-hangs-in-the-mac). Walks green: live-title-backgrounds, title-knobs-restyle, title-backgrounds-move, title-tiles-play, title-presets-library-shelf, title-set-stacked-stagger, title-set-soft-gradient-glass, title-presets-gallery. Reel under queue/audits/2026-10-12-live-backdrops-*. Decision card attached to the title rebuild task. Filed find-out-why-a-faint-card-from-the-recording-sho (p2)."
+    },
+    {
+      "t": "2026-10-12T03:34:41.009Z",
+      "note": "left rough: the Background row's swatch is a still of the look (not playing) to keep the panel calm; knob help lines are generic. Neither earns a task."
+    },
+    {
+      "t": "2026-10-12T03:34:58.444Z",
+      "note": "Ten moving title backgrounds (live paint kind, runtime Metal CI kernels) picked from playing tiles in the Title section's Background row, four knobs each; Mesh retired from the choices. Measured: motion 4.2-11.5 vs Mesh 1.31 (bar 2.6), 1080p 2.4-4.6 ms best, legible over every curated theme. Walk live-title-backgrounds-walk at Next defaults; reel + contact sheet + audit queue/audits/2026-10-12-live-*; decision card on title-text-visibly-comes-in-and-every-built-in-t."
     }
-  ]
+  ],
+  "started": "2026-10-12T01:41:15.868Z",
+  "walks": [
+    "live-title-backgrounds-walk"
+  ],
+  "completed": "2026-10-12T03:34:58.445Z"
 }
