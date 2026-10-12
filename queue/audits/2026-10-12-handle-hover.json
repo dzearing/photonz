@@ -1,0 +1,61 @@
+{
+  "feature": "Every transform handle lights up under the pointer before you click",
+  "epic": "video-transitions-motion",
+  "summary": "Rest the pointer on any handle of a picked object and that handle lights up: a quarter larger, filled blue, with a soft glow, so you can see what a press will grab before you press. The 3D arcs and depth arrow light in their own colour, the others dim, and after a short rest a small name (Rotation Y, Rotation X, Depth) appears beside the pointer.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: Scripts/playtest/every-handle-lights-on-hover-walk.json and Scripts/playtest/framing-a-zoom-shows-one-box-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw a rectangle and pick it. Rest the pointer on its top left corner square.",
+      "shot": "2026-10-12-handle-hover-1-corner.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Move onto the small round dot just inside that corner (it rounds the corner).",
+      "shot": "2026-10-12-handle-hover-2-corner-dot.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest on the turn knob above the rectangle.",
+      "shot": "2026-10-12-handle-hover-3-knob.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With the arcs out, move onto the green flat arc and hold still for a moment.",
+      "shot": "2026-10-12-handle-hover-4-swing-arc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the green arc sideways to swing the rectangle, then rest on the blue depth arrow in its middle.",
+      "shot": "2026-10-12-handle-hover-5-depth-arrow.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw an arrow, pick it and rest on its middle handle (the one that bends it).",
+      "shot": "2026-10-12-handle-hover-6-arrow.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a recording, add a zoom so its box is up and rest on a corner of the box.",
+      "shot": "2026-10-12-handle-hover-7-zoom-corner.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the lit handle stand out enough on a white screenshot and on a dark one, without looking like the handle got picked?",
+    "On the 3D arcs, is the thicker arc plus the dimmed other two enough to tell which one you are on before the name appears?",
+    "Is the short wait before Rotation Y, Rotation X or Depth appears about right, or should the name come up at once?",
+    "The name sits below and to the right of the pointer. Does it ever cover the thing you are about to drag?"
+  ],
+  "rough": [
+    "Matches the mock (video-depth.html, design A) where it speaks: the arcs come out when the pointer rests on the knob. The app goes further than the mock by lighting the arc under the pointer and naming it. No mock covers hover on the other handles.",
+    "Inventory, what each handle did on hover before and does now (all at Next defaults). Eight resize squares and the edges between them: resize arrows turned to the layer, no highlight; now the square lights (an edge lights its own middle square). Turn knob: turn cursor; now lights. Four corner rounding dots: open hand; now light. 3D swing and tip arcs and the depth arrow: open hand, no highlight at all; now the one under the pointer thickens in its colour, the others dim, and its name appears after a rest. Line and arrow ends, the arrow bend handle, a caliper's feet and head dot: open hand; now light. A path's points, levers and corner rounding knobs: open hand; now light. Crop box handles: resize arrows; now light. Zoom box corners: resize arrows; now light. The canvas's own eight edge handles: resize arrows; now light. The motion pivot crosshair and the squares on a motion path: open hand; now light.",
+    "Walked and photographed: the rectangle's 13 handles, the 3D arcs and arrow flat and turned, an arrow's ends and bend handle, the crop box, a pen path's points and a zoom box's corners. The canvas's edge handles, a caliper's feet, the motion pivot and motion path squares light through the same code but no walk rests on them yet (a caliper would not draw on a blank picture in a walk).",
+    "A layer swung or tipped in 3D still draws its resize squares and corner dots on the turned card, but a press there takes nothing, so they do not light: that is a bug in the press, not the hover, filed as resize-squares-on-a-layer-turned-in-3d-take-the.",
+    "The name beside a 3D handle uses the panel's words (Rotation Y, Rotation X, Depth), which are also the words the pill under the drag starts with; the task text suggested Tilt X and Tilt Y, which nothing else in the app says.",
+    "The layer's own body still shows the plain arrow, not an open hand: the open hand on a screen's surface is what tells carrying the screen apart from sweeping a band over it, and an open hand on every body would erase that.",
+    "Names above boxes, the caption pill and a caliper's number are whole objects rather than small handles: they keep the open hand and do not light.",
+    "Cost, measured by the walk: a pointer move takes about 0.1 to 0.6ms in all, and finding and drawing the lit handle about 0.001 to 0.01ms of that.",
+    "The 3D handles' cursors are still the open hand; the arcs could carry the turn cursor instead. Left as is, since the lit arc and its name now say which turn it is."
+  ]
+}

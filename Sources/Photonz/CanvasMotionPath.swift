@@ -118,13 +118,16 @@ extension CanvasNSView {
 
         let square: CGFloat = 7
         let handles = CGMutablePath()
+        var marks: [HandleMark] = []
         for run in path.segments {
             let centre = viewport.viewPoint(fromDocument: run.middle)
             handles.addRoundedRect(in: CGRect(x: centre.x - square / 2, y: centre.y - square / 2,
                                               width: square, height: square),
                                    cornerWidth: 1.5, cornerHeight: 1.5)
+            marks.append(HandleMark(center: centre, shape: .square(square), role: .grab))
         }
         motionPathHandlesLayer.path = handles
+        markHandles(marks, on: motionPathHandlesLayer)
         motionPathHandlesLayer.fillColor = accent
         motionPathHandlesLayer.strokeColor = CGColor(gray: 1, alpha: 0.9)
         for shape in shapes { shape.isHidden = false }

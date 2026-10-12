@@ -85,7 +85,9 @@ extension CanvasNSView {
         spaceSwingLayer.strokeColor = SpaceHandleColour.swing
         spaceTipLayer.strokeColor = SpaceHandleColour.tip
         spaceDepthLayer.strokeColor = SpaceHandleColour.depth
-        for shape in [spaceSwingLayer, spaceTipLayer, spaceDepthLayer] { shape.lineWidth = 2.5 }
+        // Their widths and the dimming of the ones not under the pointer are
+        // `styleSpaceHandles` (`CanvasHandleHover`).
+        styleSpaceHandles()
         spaceCrosshairLayer.strokeColor = CGColor(gray: 1, alpha: 0.95)
         spaceCrosshairLayer.lineWidth = 1.5
     }
@@ -168,6 +170,7 @@ extension CanvasNSView {
         }
         spaceHandleRimLayer.path = rim
         spaceHandleRimLayer.isHidden = rim.isEmpty
+        styleSpaceHandles()
         return handles.knob
     }
 
@@ -235,6 +238,9 @@ extension CanvasNSView {
         spaceHandleDrag = SpaceHandleDrag(layerID: id, handle: handle, start: start, press: viewPoint,
                                           turn: start, moved: false)
         applyGrabCursor(.closedHand)
+        // The name beside the pointer has said its piece: the pill under the
+        // drag carries the value from here.
+        hideSpaceLabel()
         refreshOverlays()
         return true
     }

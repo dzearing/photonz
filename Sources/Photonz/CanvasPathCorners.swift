@@ -168,6 +168,7 @@ extension CanvasNSView {
             return
         }
         let knobs = CGMutablePath()
+        var marks: [HandleMark] = []
         for knob in content.cornerKnobs(zoom: viewport.zoom) {
             // While one is in hand with ⌥, only that corner is moving, so only
             // its knob is drawn: the others would sit still beside a gesture
@@ -177,8 +178,10 @@ extension CanvasNSView {
             // The same seven point dot the rectangle's own corner dots wear,
             // so rounding looks like rounding wherever it is done.
             knobs.addEllipse(in: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7))
+            marks.append(HandleMark(center: p, shape: .circle(7), role: .grab))
         }
         pathCornerKnobsLayer.path = knobs
+        markHandles(marks, on: pathCornerKnobsLayer)
         pathCornerKnobsLayer.fillColor = NSColor.white.cgColor
         pathCornerKnobsLayer.strokeColor = NSColor.controlAccentColor.cgColor
         pathCornerKnobsLayer.isHidden = knobs.isEmpty

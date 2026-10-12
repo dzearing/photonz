@@ -1,0 +1,56 @@
+{
+  "out": "/tmp/photonz-playtest/every-handle-lights-on-hover-walk",
+  "seed": "Every transform handle answers the pointer before you click, at Next defaults with no flag changed. A rectangle is drawn on a blank picture and picked; the pointer rests on each of its eight resize squares, its four corner dots and its turn knob in turn, and each one lights (a quarter larger, filled in the accent) and is the handle a press there takes. Then it rests on the knob so the 3D arcs come out, and on each arc and the depth arrow: the one under the pointer thickens in its own colour, the others dim, and after a short rest its name (Rotation Y, Rotation X, Depth) appears beside the pointer. The rectangle is swung in 3D and the same is checked on the turned card. Then an arrow's two ends and its bend handle, the crop box's eight handles, and the points of a closed pen path.",
+  "setup": {
+    "forget": [
+      "shapes",
+      "panel"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1120, "canvasHeight": 760, "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [300, 250], "to": [640, 470], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-rectangle", "note": "each handle of a picked rectangle lit in turn under the resting pointer: eight resize squares, four corner dots, the turn knob, then the two 3D arcs and the depth arrow with their names" },
+    { "do": "hoverHandles", "name": "1-rectangle", "atLeast": 13, "space": true },
+
+    { "do": "spaceHandle", "handle": "swing", "by": [67, 0], "readout": "Rotation Y 40°" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-turned", "note": "the same rectangle swung 40 degrees: its knob, arcs and depth arrow sit on the turned card and each still lights where it is drawn. Its resize squares are left out: on a card turned in space a press on them takes nothing yet (task resize-squares-on-a-layer-turned-in-3d-take-the)" },
+    { "do": "hoverHandles", "name": "2-turned", "atLeast": 1, "space": true, "only": ["rotate"] },
+
+    { "do": "tool", "tool": "arrow" },
+    { "do": "drag", "from": [160, 640], "to": [560, 640], "steps": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "3-arrow", "note": "a picked arrow: both ends and the bend handle light under the pointer" },
+    { "do": "hoverHandles", "name": "3-arrow", "atLeast": 3 },
+
+    { "do": "tool", "tool": "crop" },
+    { "do": "waitFor", "condition": "tool", "value": "crop" },
+    { "do": "drag", "from": [200, 160], "to": [820, 600], "steps": 8 },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "4-crop", "note": "the crop box's eight handles light under the pointer" },
+    { "do": "hoverHandles", "name": "4-crop", "atLeast": 8 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "do": "key", "key": "p" },
+    { "do": "waitFor", "condition": "tool", "value": "pen" },
+    { "do": "click", "at": [760, 450] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [1000, 450] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [1000, 220] },
+    { "do": "wait", "seconds": 0.2 },
+    { "do": "click", "at": [763, 453] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "5-path", "note": "a closed pen path with its points showing: each point lights under the pointer, the press there takes the point rather than the shape" },
+    { "do": "hoverHandles", "name": "5-path", "atLeast": 3, "only": ["grab"] }
+  ]
+}

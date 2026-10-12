@@ -383,9 +383,11 @@ struct CanvasView: NSViewRepresentable {
     /// clip goes to the zoom first, to its box when the box is up.
     var zoomOwnsPicture: Bool = false
     var zoomBoxHit: (CGPoint) -> ZoomBoxHit? = { _ in nil }
+    var zoomBoxInDocument: () -> CGRect? = { nil }
     var zoomFramesOnPress: (CGPoint) -> Bool = { _ in false }
     var onZoomBoxDown: (CGPoint) -> Bool = { _ in false }
     var onZoomBoxDrag: (CGPoint) -> Void = { _ in }
+    var onZoomCornerLit: (ResizeHandle?) -> Void = { _ in }
     var onZoomBoxRelease: (CGPoint) -> Void = { _ in }
     var onZoomBoxEscape: () -> Bool = { false }
 
@@ -544,9 +546,11 @@ struct CanvasView: NSViewRepresentable {
         view.placingMotionPivot = placingMotionPivot
         view.zoomOwnsPicture = zoomOwnsPicture
         view.zoomBoxHit = zoomBoxHit
+        view.zoomBoxInDocument = zoomBoxInDocument
         view.zoomFramesOnPress = zoomFramesOnPress
         view.onZoomBoxDown = onZoomBoxDown
         view.onZoomBoxDrag = onZoomBoxDrag
+        view.onZoomCornerLit = onZoomCornerLit
         view.onZoomBoxRelease = onZoomBoxRelease
         view.onZoomBoxEscape = onZoomBoxEscape
         view.onGridOriginChange = onGridOriginChange
@@ -759,12 +763,17 @@ final class CanvasNSView: NSView {
     /// What a press at a document point would take on the box, read by the
     /// pointer so it says what the press will do.
     var zoomBoxHit: ((CGPoint) -> ZoomBoxHit?) = { _ in nil }
+    /// Where the picked zoom's box is, in document points, so its corners
+    /// light under the pointer like every other handle (`CanvasHandleHover`).
+    var zoomBoxInDocument: (() -> CGRect?) = { nil }
     /// Whether a press at a document point puts the picked zoom's box up,
     /// read by the pointer so it says a click there frames the zoom.
     var zoomFramesOnPress: ((CGPoint) -> Bool) = { _ in false }
     var zoomBoxPressing = false
     var onZoomBoxDown: ((CGPoint) -> Bool) = { _ in false }
     var onZoomBoxDrag: ((CGPoint) -> Void) = { _ in }
+    /// The zoom box corner the pointer lights, told only when it changes.
+    var onZoomCornerLit: ((ResizeHandle?) -> Void) = { _ in }
     var onZoomBoxRelease: ((CGPoint) -> Void) = { _ in }
     /// ⎋ while the box is up: a drag on it is put back, otherwise the zoom
     /// is let go. True when it did either.
@@ -1786,6 +1795,24 @@ final class CanvasNSView: NSView {
     var spaceArcsOutFor: UUID?
     /// Where the 3D handles were last drawn, read by the press and the cue.
     var drawnSpaceHandles: DrawnSpaceHandles?
+    /// The 3D handle the pointer cue last found under the pointer, set while
+    /// the cue is read so the arc that lights is the one a press takes.
+    var cueSpaceHandle: SpaceHandle?
+    /// The 3D handle lit under the resting pointer (`CanvasHandleHover`).
+    var hoveredSpaceHandle: SpaceHandle?
+    /// The name beside a pointer resting on a 3D handle, and the wait for it.
+    let spaceLabelLayer = CAShapeLayer()
+    let spaceLabelTextLayer = CATextLayer()
+    var spaceLabelWait: Task<Void, Never>?
+    var spaceLabelShown: String?
+    // The hover every handle wears (`CanvasHandleHover`): where each drawing
+    // put its handles, what the pointer cue last said, and the lit handle.
+    var handleMarks: [ObjectIdentifier: (owner: CALayer, marks: [HandleMark])] = [:]
+    var handleHoverCue: CanvasPointerCue?
+    var handleHoverPoint: CGPoint?
+    var litHandle: HandleMark?
+    var litZoomCorner: ResizeHandle?
+    let handleHoverLayer = CAShapeLayer()
     /// After a transform commit, the sprite keeps the final delta applied
     /// until the re-rendered composite lands (no flash-back).
     var transformHold: (layerID: UUID, start: LayerTransform, transform: LayerTransform)?
@@ -2294,6 +2321,7 @@ final class CanvasNSView: NSView {
         setUpSpaceHandleChrome()
         setUpMotionPathChrome()
         setUpPathEditChrome()
+        setUpHandleHoverChrome()
 
         // Selection handles and the snap dot sit above every other overlay.
         // (A caliper's head dot is not drawn while its readout pill covers

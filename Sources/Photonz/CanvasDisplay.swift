@@ -368,6 +368,9 @@ extension CanvasNSView {
         // Last, because it is placed against boxes the refreshes above have
         // just settled, and because it draws over all of them.
         refreshDragReadout()
+        // ...and the lit handle, which lights whichever handle the refreshes
+        // above have just put under the resting pointer (`CanvasHandleHover`).
+        renderHandleHover()
     }
 
     /// Editor-only collage chrome: dashed wells with a plus glyph over every
@@ -521,11 +524,14 @@ extension CanvasNSView {
         // tiny layer: handles step outside it so there is still a middle to
         // pick the box up by. `Handles.layout` is what the press reads too.
         let cropHandleLayout = Handles.layout(in: rect, zoom: viewport.zoom)
+        var marks: [HandleMark] = []
         for handle in cropHandleLayout.handles {
             let p = viewport.viewPoint(fromDocument: cropHandleLayout.point(for: handle))
             handles.addRect(CGRect(x: p.x - 4.5, y: p.y - 4.5, width: 9, height: 9))
+            marks.append(HandleMark(center: p, shape: .square(9), role: .resize(handle)))
         }
         cropHandlesLayer.path = handles
+        markHandles(marks, on: cropHandlesLayer)
 
         cropDimLayer.isHidden = false
         cropGridLayer.isHidden = false
@@ -994,12 +1000,15 @@ extension CanvasNSView {
             layerOutlineLayer.path = CGPath(rect: rect, transform: nil)
             layerOutlineLayer.isHidden = false
             let handles = CGMutablePath()
+            var marks: [HandleMark] = []
             let canvasHandleLayout = Handles.layout(in: docRect, zoom: viewport.zoom)
             for handle in canvasHandleLayout.handles {
                 let p = viewport.viewPoint(fromDocument: canvasHandleLayout.point(for: handle))
                 handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+                marks.append(HandleMark(center: p, shape: .square(8), role: .resize(handle)))
             }
             handlesLayer.path = handles
+            markHandles(marks, on: handlesLayer)
             handlesLayer.isHidden = false
             return
         }
@@ -1199,17 +1208,21 @@ extension CanvasNSView {
                 // by, so an arrow or a caliper inside a card on a slant wears
                 // its ends on the arrow rather than beside it.
                 let turn = inheritedTurn(of: selectedLayer.id)
+                var marks: [HandleMark] = []
                 for dp in points {
                     let p = viewport.viewPoint(fromDocument: dp.applying(turn))
                     handles.addEllipse(in: CGRect(x: p.x - 5, y: p.y - 5, width: 10, height: 10))
+                    marks.append(HandleMark(center: p, shape: .circle(10), role: .grab))
                 }
                 // A picked arrow also wears a smaller handle halfway along its
                 // line, which bends it (Next, `next-arrow-bend`).
                 if let bend = offeredBendHandle(selectedLayer) {
                     let p = viewport.viewPoint(fromDocument: bend.applying(turn))
                     handles.addEllipse(in: CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+                    marks.append(HandleMark(center: p, shape: .circle(8), role: .grab))
                 }
                 handlesLayer.path = handles
+                markHandles(marks, on: handlesLayer)
                 handlesLayer.isHidden = false
             } else {
                 handlesLayer.isHidden = true
@@ -1237,11 +1250,14 @@ extension CanvasNSView {
                 // same layout, so every square drawn is a target and nothing
                 // else is.
                 let handleLayout = Handles.layout(in: frame, zoom: viewport.zoom)
+                var marks: [HandleMark] = []
                 for handle in handleLayout.handles {
                     let p = chromePoint(handleLayout.point(for: handle))
                     handles.addRect(CGRect(x: p.x - 4, y: p.y - 4, width: 8, height: 8))
+                    marks.append(HandleMark(center: p, shape: .square(8), role: .resize(handle)))
                 }
                 handlesLayer.path = handles
+                markHandles(marks, on: handlesLayer)
                 handlesLayer.isHidden = false
             } else {
                 handlesLayer.isHidden = true
@@ -1258,14 +1274,17 @@ extension CanvasNSView {
                offersOwnHandles(selectedLayer), selectedLayer.offersCornerRadiusHandles,
                CornerRadiusHandles.offered(in: frame, zoom: viewport.zoom) {
                 let dots = CGMutablePath()
+                var marks: [HandleMark] = []
                 let radii = liveRadii ?? selectedLayer.roundedCornerRadii
                 for corner in CornerRadii.Corner.allCases {
                     let p = chromePoint(CornerRadiusHandles.point(for: corner, in: frame,
                                                                   radii: radii,
                                                                   zoom: viewport.zoom))
                     dots.addEllipse(in: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7))
+                    marks.append(HandleMark(center: p, shape: .circle(7), role: .grab))
                 }
                 cornerRadiusHandlesLayer.path = dots
+                markHandles(marks, on: cornerRadiusHandlesLayer)
                 cornerRadiusHandlesLayer.isHidden = false
             }
 
@@ -1307,6 +1326,8 @@ extension CanvasNSView {
                 path.addEllipse(in: CGRect(x: knobInView.x - 5, y: knobInView.y - 5,
                                            width: 10, height: 10))
                 rotateKnobLayer.path = path
+                markHandles([HandleMark(center: knobInView, shape: .circle(10), role: .rotate)],
+                            on: rotateKnobLayer)
                 rotateKnobLayer.isHidden = false
             } else {
                 rotateKnobLayer.isHidden = true

@@ -170,6 +170,9 @@ extension CanvasNSView {
         motionPivotLayer.path = path
         motionPivotLayer.strokeColor = NSColor.controlAccentColor.cgColor
         motionPivotLayer.isHidden = false
+        // The crosshair's ring is the handle: it lights as a dot the size of
+        // the crosshair's arms.
+        markHandles([HandleMark(center: centre, shape: .circle(arm), role: .grab)], on: motionPivotLayer)
 
         // The word, because a crosshair on your own drawing is a thing you
         // have to be told the name of exactly once. It only ever shows while

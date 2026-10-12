@@ -727,6 +727,7 @@ extension CanvasNSView {
         // more dots (`PathContent.leversShowing`), which is the very thing
         // drawing them per picked point avoids.
         let levers = CGMutablePath()
+        var leverMarks: [HandleMark] = []
         let showingLevers = PathContent.leversShowing(for: pathAnchorSelection)
         for index in showingLevers.sorted() where content.anchors.indices.contains(index) {
             let anchor = content.anchors[index]
@@ -736,9 +737,11 @@ extension CanvasNSView {
                 levers.move(to: centre)
                 levers.addLine(to: p)
                 levers.addEllipse(in: CGRect(x: p.x - 3.5, y: p.y - 3.5, width: 7, height: 7))
+                leverMarks.append(HandleMark(center: p, shape: .circle(7), role: .grab))
             }
         }
         pathLeversLayer.path = levers
+        markHandles(leverMarks, on: pathLeversLayer)
         pathLeversLayer.strokeColor = accent
         pathLeversLayer.isHidden = levers.isEmpty
 
@@ -747,6 +750,8 @@ extension CanvasNSView {
         // moment you pick it up.
         let dots = CGMutablePath()
         let pickedDots = CGMutablePath()
+        var dotMarks: [HandleMark] = []
+        var pickedMarks: [HandleMark] = []
         for (index, anchor) in content.anchors.enumerated() {
             let p = chromePoint(anchor.point)
             let isPicked = pathAnchorSelection.contains(index)
@@ -759,7 +764,11 @@ extension CanvasNSView {
             // same mark the Pen gave it as it was placed.
             let into = isPicked ? pickedDots : dots
             into.addPath(PathAnchorMark(anchor).path(centredOn: p, radius: r))
+            let mark = HandleMark(center: p, shape: .circle(r * 2), role: .grab)
+            if isPicked { pickedMarks.append(mark) } else { dotMarks.append(mark) }
         }
+        markHandles(dotMarks, on: pathAnchorsLayer)
+        markHandles(pickedMarks, on: pathPickedAnchorsLayer)
         pathAnchorsLayer.path = dots
         pathAnchorsLayer.fillColor = NSColor.white.cgColor
         pathAnchorsLayer.strokeColor = accent

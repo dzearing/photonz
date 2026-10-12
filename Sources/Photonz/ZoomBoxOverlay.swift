@@ -39,11 +39,23 @@ struct ZoomBoxOverlay: View {
                     // any picture.
                     context.stroke(Path(viewBox), with: .color(.black.opacity(0.5)), lineWidth: 3)
                     context.stroke(Path(viewBox), with: .color(.white), lineWidth: 1.5)
-                    for corner in Self.corners(of: viewBox) {
+                    let lit = editorState.litZoomCorner.flatMap { Self.corner($0, of: viewBox) }
+                    for corner in Self.corners(of: viewBox) where corner != lit {
                         let square = CGRect(x: corner.x - Self.handle / 2, y: corner.y - Self.handle / 2,
                                             width: Self.handle, height: Self.handle)
                         context.fill(Path(square), with: .color(.white))
                         context.stroke(Path(square), with: .color(.black.opacity(0.6)), lineWidth: 1)
+                    }
+                    // The corner under the resting pointer, lit the way every
+                    // handle on the canvas lights (`CanvasHandleHover`): a
+                    // quarter larger, in the accent, with a white rim.
+                    if let lit {
+                        let rect = HandleHover.litRect(for: HandleMark(center: lit, shape: .square(Self.handle),
+                                                                       role: .grab))
+                        var glow = context
+                        glow.addFilter(.shadow(color: Color.accentColor.opacity(0.9), radius: 4))
+                        glow.fill(Path(rect), with: .color(.accentColor))
+                        context.stroke(Path(rect), with: .color(.white), lineWidth: 1.5)
                     }
                 }
                 .allowsHitTesting(false)
@@ -68,6 +80,16 @@ struct ZoomBoxOverlay: View {
         let a = viewport.viewPoint(fromDocument: CGPoint(x: r.minX, y: r.minY))
         let b = viewport.viewPoint(fromDocument: CGPoint(x: r.maxX, y: r.maxY))
         return CGRect(x: min(a.x, b.x), y: min(a.y, b.y), width: abs(b.x - a.x), height: abs(b.y - a.y))
+    }
+
+    private static func corner(_ handle: ResizeHandle, of r: CGRect) -> CGPoint? {
+        switch handle {
+        case .topLeft: CGPoint(x: r.minX, y: r.minY)
+        case .topRight: CGPoint(x: r.maxX, y: r.minY)
+        case .bottomRight: CGPoint(x: r.maxX, y: r.maxY)
+        case .bottomLeft: CGPoint(x: r.minX, y: r.maxY)
+        default: nil
+        }
     }
 
     private static func corners(of r: CGRect) -> [CGPoint] {

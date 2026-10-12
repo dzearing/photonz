@@ -258,9 +258,11 @@ struct EditorCanvasSurface: View {
                    placingMotionPivot: editorState.isPlacingMotionPivot,
                    zoomOwnsPicture: editorState.zoomOwnsPicture,
                    zoomBoxHit: { editorState.zoomBoxHit(at: $0) },
+                   zoomBoxInDocument: { editorState.zoomBoxInDocument },
                    zoomFramesOnPress: { editorState.zoomFramesOnPress(at: $0) },
                    onZoomBoxDown: { editorState.zoomBoxDown(at: $0) },
                    onZoomBoxDrag: { editorState.zoomBoxDragged(to: $0) },
+                   onZoomCornerLit: { if editorState.litZoomCorner != $0 { editorState.litZoomCorner = $0 } },
                    onZoomBoxRelease: { editorState.zoomBoxReleased(at: $0) },
                    onZoomBoxEscape: { editorState.zoomBoxEscape() })
             // A picked zoom's box over the whole picture (`ZoomBoxOverlay`).

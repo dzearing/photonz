@@ -83,6 +83,7 @@ extension CanvasNSView {
         refreshPathCornerHover(at: nil)
         refreshSpaceArcs(at: nil)
         applyGrabCursor(nil)
+        noteHandleHover(nil, space: nil, at: nil)
         // Nothing is being aimed at once the pointer is off the canvas, so
         // nothing is left drawn on an idle window.
         hideDrawLanding()
@@ -168,7 +169,10 @@ extension CanvasNSView {
         // after the pivot and ahead of the knob. A knob that has moved with a
         // layer seen in space is caught where it is drawn.
         let view = viewport.viewPoint(fromDocument: p)
-        if spaceHandleHit(atView: view) != nil { return (.grab, .identity) }
+        if let space = spaceHandleHit(atView: view) {
+            cueSpaceHandle = space
+            return (.grab, .identity)
+        }
         if spaceKnobHit(atView: view) { return (.rotate, apparentTransform(of: layer)) }
         // No live frame means no frame handles were offered, so none is cued —
         // which is exactly the case for a path showing its points.
@@ -270,6 +274,12 @@ extension CanvasNSView {
     /// resize and rotate hold — so nothing switches under way. That is why
     /// every drag session bails out here rather than re-reading the pointer.
     func refreshGrabCursor(at viewPoint: CGPoint? = nil) {
+        // Whatever the pointer turns out to be on, the handle a press would
+        // take lights up with it (`CanvasHandleHover`): the cue read below is
+        // the one thing that decides both.
+        var hoverCue: CanvasPointerCue?
+        cueSpaceHandle = nil
+        defer { noteHandleHover(hoverCue, space: cueSpaceHandle, at: viewPoint ?? restingPointer()) }
         // Adjusting the grid owns the pointer: an open hand over the zero
         // point's own markers, and a crosshair everywhere else, where a click
         // pins or picks up a guide.
@@ -327,6 +337,7 @@ extension CanvasNSView {
             }
             #endif
             guard let hit else { return applyGrabCursor(nil) }
+            hoverCue = hit.cue
             return applyGrabCursor(hit.cue.map { CanvasCursor.cursor(for: $0, transform: .identity) } ?? .crosshair)
         }
         // A name above a box is that box's drag handle, and `mouseDown` reads
@@ -345,6 +356,7 @@ extension CanvasNSView {
         recordPlaytestCue(hit)
         #endif
         if let hit {
+            hoverCue = hit.cue
             return applyGrabCursor(CanvasCursor.cursor(for: hit.cue, transform: hit.transform))
         }
         // The empty room on a screen is the one place on the canvas where the

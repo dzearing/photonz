@@ -1830,6 +1830,10 @@ final class EditorState {
     var zoomDrag: ZoomDragSession?
     /// A press on the picture that the zoom's box took, until it lets go.
     @ObservationIgnored var zoomBoxPress: ZoomBoxPress?
+    /// The corner of the picked zoom's box lit under the resting pointer, so
+    /// the box (drawn over the canvas) draws it lit like every other handle
+    /// (`CanvasHandleHover`). Written only when it changes.
+    var litZoomCorner: ResizeHandle?
     /// The cut whose transition picker is open, nil while none is
     /// (`EditorState+ClipTransitions`, "At this cut").
     var transitionPickerPlace: TimelineCutPlace?

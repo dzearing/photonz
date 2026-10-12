@@ -2813,6 +2813,126 @@ private final class Run {
             note(number, step.name, "\(name) taken at view \(short(grip)) and dragged "
                 + "\(short(by))\(said)", state: describe())
 
+        case .hoverHandles(let name, let atLeast, let space, let only):
+            let canvas = try requireCanvas()
+            let window = try requireWindow()
+            guard let content = window.contentView else { throw Failure(description: "the window has no content view") }
+            var moveTimes: [Double] = []
+            // Rests the pointer at a view point the way `move` does: the walk's
+            // own pointer, then the event the canvas reads it from.
+            func rest(at point: CGPoint) {
+                _ = PlaytestPointer.rest(at: canvas.convert(point, to: nil), in: window)
+                if let event = mouseEvent(.mouseMoved, at: point, on: canvas, flags: []) {
+                    let began = Date()
+                    canvas.mouseMoved(with: event)
+                    moveTimes.append(Date().timeIntervalSince(began) * 1000)
+                }
+            }
+            var seen = Set<String>()
+            let marks = canvas.visibleHandleMarks
+                .filter { mark in only.isEmpty || only.contains { mark.name.hasPrefix($0) } }
+                .filter { seen.insert("\($0.name)@\(Int($0.center.x)),\(Int($0.center.y))").inserted }
+                .sorted { ($0.center.y, $0.center.x) < ($1.center.y, $1.center.x) }
+            guard marks.count >= atLeast else {
+                throw Failure(description: "the canvas is showing \(marks.count) handle(s) and the walk "
+                    + "asked for at least \(atLeast): \(marks.map(\.name).joined(separator: ", "))")
+            }
+            var lines: [String] = []
+            var shot = 0
+            for mark in marks {
+                rest(at: mark.center)
+                await sleep(0.05)
+                let cue = canvas.playtestPointerCue
+                guard let lit = canvas.litHandle else {
+                    throw Failure(description: "the pointer rested on the \(mark.name) handle at view "
+                        + "\(short(mark.center)) and nothing lit up; the canvas says a press there "
+                        + "would be \"\(cue)\"")
+                }
+                guard lit == mark else {
+                    throw Failure(description: "the pointer rested on the \(mark.name) handle at view "
+                        + "\(short(mark.center)) and the \(lit.name) handle at \(short(lit.center)) lit "
+                        + "instead: the press there takes that one, so the two handles overlap")
+                }
+                guard cue != "none" else {
+                    throw Failure(description: "the \(mark.name) handle at view \(short(mark.center)) lit, "
+                        + "and the canvas says a press there would take nothing")
+                }
+                shot += 1
+                let picture = "\(name)-\(shot)-\(mark.name)"
+                content.layoutSubtreeIfNeeded()
+                try harnessWork { try snapshot(content, name: picture) }
+                await screenCapture(window, name: picture)
+                lines.append("\(mark.name) at \(short(mark.center)) lit, press would be \(cue)")
+            }
+            // What lighting a handle costs, measured on a real one: found
+            // among every handle on screen and drawn, 500 times over.
+            var ownShare = 0.0
+            if let first = marks.first {
+                rest(at: first.center)
+                let began = Date()
+                for _ in 0..<500 { canvas.litHandle = nil; canvas.renderHandleHover() }
+                ownShare = Date().timeIntervalSince(began) * 1000 / 500
+            }
+            if space {
+                guard let before = canvas.drawnSpaceHandles else {
+                    throw Failure(description: "no picked layer is wearing a turn knob, so there are no "
+                        + "3D handles to rest on")
+                }
+                // The knob first, so the arcs come out, as a hand finds them.
+                rest(at: before.handles.knob)
+                await sleep(0.1)
+                for handle in SpaceHandle.allCases {
+                    guard let shown = canvas.drawnSpaceHandles else {
+                        throw Failure(description: "the 3D handles went away")
+                    }
+                    let grip: CGPoint
+                    switch handle {
+                    case .swing: grip = shown.handles.swingArc.points(16)[13]
+                    case .tip: grip = shown.handles.tipArc.points(8)[2]
+                    case .depth:
+                        let arrow = shown.handles.depthArrow
+                        grip = CGPoint(x: (arrow.tail.x + arrow.head.x) / 2, y: (arrow.tail.y + arrow.head.y) / 2)
+                    }
+                    rest(at: grip)
+                    await sleep(HandleHover.labelDelay + 0.2)
+                    guard canvas.hoveredSpaceHandle == handle else {
+                        throw Failure(description: "the pointer rested on the \(handle.rawValue) handle at view "
+                            + "\(short(grip)) and \(canvas.hoveredSpaceHandle?.rawValue ?? "no 3D handle") lit")
+                    }
+                    guard canvas.spaceHandleHit(atView: grip) == handle else {
+                        throw Failure(description: "the \(handle.rawValue) handle lit at view \(short(grip)) "
+                            + "but a press there would not take it")
+                    }
+                    guard canvas.spaceLabelShown == handle.hoverLabel else {
+                        throw Failure(description: "the pointer rested on the \(handle.rawValue) handle and "
+                            + "the name beside it says \"\(canvas.spaceLabelShown ?? "nothing")\", not "
+                            + "\"\(handle.hoverLabel)\"")
+                    }
+                    shot += 1
+                    let picture = "\(name)-\(shot)-\(handle.rawValue)"
+                    content.layoutSubtreeIfNeeded()
+                    try harnessWork { try snapshot(content, name: picture) }
+                    await screenCapture(window, name: picture)
+                    lines.append("\(handle.rawValue) lit, named \"\(handle.hoverLabel)\", press takes it")
+                }
+            }
+            // Off every handle, onto bare canvas: nothing stays lit.
+            rest(at: CGPoint(x: canvas.bounds.minX + 6, y: canvas.bounds.minY + 6))
+            await sleep(0.05)
+            if let lit = canvas.litHandle {
+                throw Failure(description: "the pointer left every handle and the \(lit.name) handle stayed lit")
+            }
+            if let still = canvas.hoveredSpaceHandle {
+                throw Failure(description: "the pointer left every handle and the \(still.rawValue) arc stayed lit")
+            }
+            // What hovering costs: each pointer move, the whole of it.
+            let worst = moveTimes.max() ?? 0
+            let mean = moveTimes.isEmpty ? 0 : moveTimes.reduce(0, +) / Double(moveTimes.count)
+            note(number, step.name, "\(shot) handle(s) rested on: " + lines.joined(separator: "; ")
+                + String(format: ". A pointer move took %.2fms on average and %.2fms at worst over %d moves; "
+                    + "lighting a handle takes %.3fms of that", mean, worst, moveTimes.count, ownShare),
+                 state: describe())
+
         case .expectChrome(let within):
             let canvas = try requireCanvas()
             let peak = canvas.pathChromeDriftPeak

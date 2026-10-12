@@ -34,6 +34,7 @@
     { "do": "expectCue", "says": "draw" },
     { "do": "move", "at": [1300, 350], "space": "window" },
     { "do": "expectCue", "says": "none" },
+    { "do": "hoverHandles", "name": "1b-zoom-corner", "atLeast": 4, "only": ["resize"] },
 
     { "do": "click", "at": [260, 112], "space": "window" },
     { "do": "wait", "seconds": 0.3 },

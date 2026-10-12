@@ -3695,6 +3695,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `watch` reads the picture WHILE the drag happens (`PlaytestDragWatch`).
     case spaceHandle(SpaceHandle?, by: CGPoint, steps: Int, modifiers: [PlaytestModifier], readout: String?,
                      watch: PlaytestDragWatch)
+    /// Rests the pointer on every handle the canvas has on screen, one by one,
+    /// and on each of a picked layer's 3D handles when `space` is set
+    /// (`CanvasHandleHover.swift`). On each it claims the handle under the
+    /// pointer is the one lit, that a press there would take it, and for a 3D
+    /// handle that its name comes up beside the pointer after a rest; then it
+    /// photographs it as `<name>-<n>-<handle>`. `atLeast` is how many handles
+    /// the canvas must be showing, so a walk on the wrong picture fails rather
+    /// than passing on nothing. `only` keeps the handles whose names start
+    /// with one of its words (`rotate`, `resize`, `grab`); empty keeps all.
+    case hoverHandles(name: String, atLeast: Int, space: Bool, only: [String])
     /// Where the canvas says a press would put the first point of a shape,
     /// which is the mark drawn under the pointer while you are only hovering
     /// (`CanvasDrawLanding`).
@@ -4115,7 +4125,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4214,6 +4224,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectClipPictures: "expectClipPictures"
         case .expectReadout: "expectReadout"
         case .spaceHandle: "spaceHandle"
+        case .hoverHandles: "hoverHandles"
         case .expectLanding: "expectLanding"
         case .expectHint: "expectHint"
         case .expectCue: "expectCue"
@@ -4411,6 +4422,11 @@ public enum PlaytestStep: Sendable, Equatable {
                     + "for no pill at all. It cannot claim both and it has to claim one")
             }
             self = .expectReadout(says: says, absent: absent)
+        case "hoverHandles":
+            self = .hoverHandles(name: try f.string("name"),
+                                 atLeast: Int(try f.optionalNumber("atLeast") ?? 1),
+                                 space: try f.optionalFlag("space") ?? false,
+                                 only: try f.optionalStrings("only"))
         case "spaceHandle":
             let handle: SpaceHandle? = try f.optionalString("handle") == "knob"
                 ? nil : f.enumValue("handle", SpaceHandle.self)
