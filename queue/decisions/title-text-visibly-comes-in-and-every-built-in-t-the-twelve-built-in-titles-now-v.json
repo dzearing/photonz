@@ -1,0 +1,60 @@
+{
+  "id": "title-text-visibly-comes-in-and-every-built-in-t-the-twelve-built-in-titles-now-v",
+  "taskId": "title-text-visibly-comes-in-and-every-built-in-t",
+  "question": "The twelve built-in titles now visibly come in, each its own way, on moving backgrounds. Do they look produced?",
+  "context": "Reel: queue/audits/2026-10-12-title-set-<name>.mp4 and .gif for every built-in, contact sheet queue/audits/2026-10-12-title-set-contact.png (0, 100, 200, 300, 400, 600, 800 ms and holding, over a dark and a light recording). Building did not wait on this.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep all twelve as they are",
+      "summary": "Every built-in keeps the entrance and moving background in the reel: words rise, sharpen, slide out of a mask, swing, type, track, fly, fall from large, flip, wipe and settle in, each on its own look.",
+      "pros": [
+        "Twelve clearly different entrances, each measured to be visibly moving half way through",
+        "Every title page stands on a moving look"
+      ],
+      "cons": [
+        "Some titles take well over a second before the whole headline is up"
+      ],
+      "mitigation": "Energy Punchy on the title makes every in and out about a third quicker."
+    },
+    {
+      "id": "b",
+      "label": "Keep them, but calm Keynote Clean's specks and Tech Terminal's grid",
+      "summary": "Same entrances; Keynote Clean's drifting specks of light and Tech Terminal's green grid are made fainter so the words lead.",
+      "pros": [
+        "The two busiest backgrounds stop competing with the words"
+      ],
+      "cons": [
+        "Those two read a little more like slides again"
+      ],
+      "mitigation": "Strength is one knob under the Background row, so either can be turned back up per title."
+    },
+    {
+      "id": "c",
+      "label": "Keep them, but every entrance a third quicker by default",
+      "summary": "The same twelve entrances, but they land at what Punchy energy gives today: headlines up in well under a second.",
+      "pros": [
+        "Snappier on short screen recordings"
+      ],
+      "cons": [
+        "Half way through an in, more of the words are already there, so the move reads less"
+      ],
+      "mitigation": "Calm and Normal stay in the Energy row for anyone who wants the slower build."
+    },
+    {
+      "id": "d",
+      "label": "Rework Light Leak and Gradient Glow, keep the other ten",
+      "summary": "Ten stay as filmed. Light Leak's warm look and Gradient Glow's aurora behind its coloured words go back for another pass.",
+      "pros": [
+        "Targets the two pages whose backgrounds are the most assertive"
+      ],
+      "cons": [
+        "Another round before those two settle"
+      ],
+      "mitigation": "Say what feels off in a reaction on the audit line and it becomes the brief."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-12T08:47:56.125Z"
+}

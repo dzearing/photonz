@@ -26,223 +26,242 @@ extension BuiltInTitle {
     // MARK: How each one moves
 
     /// The design of one of the set, nil for a retired preset.
+    ///
+    /// Every headline comes in its own way (task
+    /// `title-text-visibly-comes-in-and-every-built-in-t`): the user saw the
+    /// first set's words already standing at their in, because each arrived
+    /// in a third of a second on Ease out expo and travelled twelve points.
+    /// Now a headline takes most of a second, its pieces a good beat apart on
+    /// a plain Ease out, travelling half its type or more, so half way through
+    /// its in about half of it is there (`TitleEntranceInkTests` measures it).
+    /// Outs are keys and shorter, on an ease in, and start leaving at least
+    /// 400 ms before the end so the leaving is seen too.
     var designedSet: TitleDesign? {
         typealias B = TitleBuild
         switch self {
         case .keynote:
-            // Words rise into place one after another, Apple's two frame
-            // stagger, and everything leaves together. The headline's slow
-            // push is what moves while it holds; pushing the full-frame
-            // gradient behind it too would redraw it every frame for a
-            // change nobody sees.
+            // Words rise into place one after another out of their own
+            // motion blur, then the line under them; the headline's slow push
+            // is what moves while it holds, over drifting specks of light.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint)),
+                          in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.rise, delayMS: 150, lengthMS: 500, amount: 12, by: .word, staggerMS: 80),
+                          in: B(.rise, delayMS: 200, lengthMS: 800, amount: 70, curve: .easeOut,
+                                by: .word, staggerMS: 280),
                           hold: TitleHold(.push, amount: 1.5),
-                          out: .off(.fade, delayMS: 150, lengthMS: 250)),
+                          out: .off(.rise, delayMS: 80, lengthMS: 400, amount: 36)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 420, lengthMS: 500, amount: 10, by: .word, staggerMS: 60),
-                          out: .off(.fade, delayMS: 150, lengthMS: 250)),
+                          in: B(.rise, delayMS: 1000, lengthMS: 600, amount: 24, curve: .easeOut,
+                                by: .word, staggerMS: 70),
+                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
             ])
         case .softGlass:
-            // The panel settles first, then each line sharpens inside it.
+            // The panel settles first, then each word sharpens out of a deep
+            // blur inside it.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 600, curve: .easeOutQuint)),
                 TitlePart(path: "Panel", role: .accent,
-                          in: B(.scaleFrom, delayMS: 100, lengthMS: 600, amount: 96, curve: .easeOutQuint),
+                          in: B(.scaleFrom, delayMS: 100, lengthMS: 600, amount: 92, curve: .easeOutQuint),
                           hold: TitleHold(.push, amount: 1),
-                          out: .off(.scaleFrom, delayMS: 60, lengthMS: 300, amount: 97)),
+                          out: .off(.scaleFrom, delayMS: 60, lengthMS: 360, amount: 96)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.blurIn, delayMS: 250, lengthMS: 700, amount: 12, by: .line),
-                          out: .off(.fade, delayMS: 150, lengthMS: 220)),
+                          in: B(.blurIn, delayMS: 300, lengthMS: 900, amount: 40, curve: .easeOut,
+                                by: .word, staggerMS: 300),
+                          out: .off(.blurIn, delayMS: 80, lengthMS: 400, amount: 24)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.blurIn, delayMS: 400, lengthMS: 650, amount: 10, by: .line),
-                          out: .off(.fade, delayMS: 150, lengthMS: 220)),
+                          in: B(.blurIn, delayMS: 1000, lengthMS: 600, amount: 16, curve: .easeOut,
+                                by: .word, staggerMS: 60),
+                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
             ])
         case .kinetic:
             // Each word slides up out of its own line with a little spring,
-            // and the block keeps pushing in while it holds.
+            // and the block keeps pushing in while it holds; it leaves by
+            // flying on up.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 300, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.maskReveal, delayMS: 150, lengthMS: 550, curve: .easeOutBack,
-                                by: .word, staggerMS: 60),
+                          in: B(.maskReveal, delayMS: 150, lengthMS: 700, curve: .easeOutBack,
+                                by: .word, staggerMS: 420),
                           hold: TitleHold(.push, amount: 2),
-                          out: .off(.rise, delayMS: 140, lengthMS: 250, amount: 24)),
+                          out: .off(.rise, delayMS: 80, lengthMS: 400, amount: 90)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 520, lengthMS: 450, amount: 14, by: .word, staggerMS: 45),
-                          out: .off(.fade, delayMS: 140, lengthMS: 200)),
+                          in: B(.rise, delayMS: 1100, lengthMS: 500, amount: 20, curve: .easeOut,
+                                by: .word, staggerMS: 50),
+                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
             ])
         case .editorial:
-            // The kicker first, then the serif wiped on, then the rule.
+            // The kicker first, then each line of the serif swings up on a
+            // hinge at its foot like a page turning flat, then the rule
+            // draws itself under it and the line below follows.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint),
                           hold: TitleHold(.push, amount: 2)),
                 TitlePart(path: "Kicker", role: .kicker,
                           in: B(.fade, delayMS: 120, lengthMS: 500),
-                          out: .off(.fade, delayMS: 150, lengthMS: 220)),
+                          out: .off(.fade, delayMS: 240, lengthMS: 240)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.wipe, delayMS: 300, lengthMS: 700, direction: .right),
-                          out: .off(.fade, delayMS: 180, lengthMS: 250)),
+                          in: B(.swingIn, delayMS: 300, lengthMS: 1000, amount: 90, curve: .easeOut,
+                                by: .word, staggerMS: 260),
+                          out: .off(.rise, delayMS: 80, lengthMS: 400, amount: 10)),
                 TitlePart(path: "Rule", role: .accent,
-                          in: B(.drawOn, delayMS: 750, lengthMS: 600, direction: .right),
-                          out: .off(.drawOn, delayMS: 220, lengthMS: 250)),
+                          in: B(.drawOn, delayMS: 1000, lengthMS: 600, direction: .right),
+                          out: .off(.drawOn, delayMS: 200, lengthMS: 300)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 950, lengthMS: 500, amount: 8),
-                          out: .off(.fade, delayMS: 260, lengthMS: 200)),
+                          in: B(.rise, delayMS: 1200, lengthMS: 500, amount: 12, curve: .easeOut),
+                          out: .off(.fade, delayMS: 240, lengthMS: 260)),
             ])
         case .terminal:
-            // Typed in a letter at a time, the cursor waiting after it, the
-            // progress line running out under it all; the cursor is what
-            // moves while it holds.
+            // The words are typed a letter at a time with the cursor waiting
+            // after them, the progress line running out under it all; the
+            // cursor is what moves while it holds.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.typewriter, delayMS: 200, lengthMS: 400, staggerMS: 45),
-                          out: .off(.fade, delayMS: 120, lengthMS: 200)),
+                          in: B(.typewriter, delayMS: 300, lengthMS: 800, staggerMS: 85),
+                          out: .off(.fade, delayMS: 80, lengthMS: 400)),
                 TitlePart(path: "Cursor", role: .accent,
                           in: B(.fade, delayMS: 600, lengthMS: 150),
                           hold: TitleHold(.blink),
                           out: .off(.fade, delayMS: 100, lengthMS: 100)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.typewriter, delayMS: 760, lengthMS: 400, staggerMS: 25),
-                          out: .off(.fade, delayMS: 120, lengthMS: 200)),
+                          in: B(.typewriter, delayMS: 1250, lengthMS: 600, staggerMS: 28),
+                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
                 TitlePart(path: "Progress", role: .accent,
-                          in: B(.drawOn, delayMS: 300, lengthMS: 1400, direction: .right, curve: .easeOutQuint),
-                          out: .off(.drawOn, delayMS: 80, lengthMS: 250)),
+                          in: B(.drawOn, delayMS: 400, lengthMS: 1500, direction: .right, curve: .easeOutQuint),
+                          out: .off(.drawOn, delayMS: 80, lengthMS: 300)),
             ])
         case .glass:
             // The recording frosts over as the title arrives (nothing of a
             // title is on its first frame), settles from 105% to 100% the
             // whole time it holds, and racks back into focus as the title
-            // leaves, ending exactly on the footage. The words are gone just
-            // before the glass clears.
+            // leaves, ending exactly on the footage. Each word flies forward
+            // out of the depth of the glass, turning to face you; the words
+            // are gone just before the glass clears.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.frost, delayMS: 0, lengthMS: 700, curve: .easeOutQuint),
                           hold: TitleHold(.push, amount: -5),
                           out: .off(.frost, delayMS: 0, lengthMS: 480)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.blurIn, delayMS: 200, lengthMS: 800, amount: 16, by: .line),
-                          out: .off(.fade, delayMS: 200, lengthMS: 280)),
+                          in: B(.flyInFromDepth, delayMS: 250, lengthMS: 1000, amount: 900,
+                                by: .word, staggerMS: 260),
+                          out: .off(.blurIn, delayMS: 80, lengthMS: 400, amount: 20)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 330, lengthMS: 650, amount: 14),
-                          out: .off(.fade, delayMS: 220, lengthMS: 250)),
+                          in: B(.rise, delayMS: 1150, lengthMS: 650, amount: 16, curve: .easeOut),
+                          out: .off(.fade, delayMS: 220, lengthMS: 260)),
             ])
         case .lightLeak:
-            // Two warm lights cross the dark the whole time; the capitals
-            // close up from wide tracking.
+            // Warm light leaks drift across the dark the whole time; the
+            // capitals close up from wide tracking a letter after another.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint)),
-                TitlePart(path: "Leak 1", role: .accent,
-                          in: B(.fade, delayMS: 0, lengthMS: 900, curve: .easeOutQuint),
-                          hold: TitleHold(.drift, amount: 220, direction: .right)),
-                TitlePart(path: "Leak 2", role: .accent,
-                          in: B(.fade, delayMS: 200, lengthMS: 900, curve: .easeOutQuint),
-                          hold: TitleHold(.drift, amount: 180, direction: .left)),
+                          in: B(.fade, delayMS: 0, lengthMS: 700, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.trackIn, delayMS: 300, lengthMS: 1500, amount: 25, curve: .easeOutQuint,
-                                by: .letter, staggerMS: 0),
-                          out: .off(.fade, delayMS: 150, lengthMS: 300)),
+                          in: B(.trackIn, delayMS: 300, lengthMS: 1100, amount: 70, curve: .easeOut,
+                                by: .letter, staggerMS: 40),
+                          out: .off(.blurIn, delayMS: 40, lengthMS: 460, amount: 40)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 1100, lengthMS: 600, amount: 8),
-                          out: .off(.fade, delayMS: 150, lengthMS: 250)),
+                          in: B(.rise, delayMS: 1300, lengthMS: 600, amount: 10, curve: .easeOut),
+                          out: .off(.fade, delayMS: 220, lengthMS: 280)),
             ])
         case .gradientGlow:
-            // The headline settles from 115% out of a blur while the colours
-            // inside it keep sliding.
+            // The headline falls into place from far larger out of a deep
+            // blur, while the colours inside it keep sliding.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 400, curve: .easeOutQuint)),
                 TitlePart(path: "Gradient", role: .accent,
                           hold: TitleHold(.drift, amount: 900, direction: .left)),
                 TitlePart(path: "Headline", role: .accent,
-                          in: B(.scaleFrom, delayMS: 150, lengthMS: 900, amount: 115),
-                          out: .off(.fade, delayMS: 150, lengthMS: 300)),
+                          in: B(.scaleFrom, delayMS: 200, lengthMS: 1000, amount: 170, curve: .easeOut),
+                          out: .off(.scaleFrom, delayMS: 80, lengthMS: 400, amount: 85)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.blurIn, delayMS: 150, lengthMS: 900, amount: 20)),
+                          in: B(.blurIn, delayMS: 200, lengthMS: 1000, amount: 36, curve: .easeOut)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.rise, delayMS: 600, lengthMS: 600, amount: 10),
-                          out: .off(.fade, delayMS: 150, lengthMS: 250)),
+                          in: B(.rise, delayMS: 1050, lengthMS: 600, amount: 12, curve: .easeOut),
+                          out: .off(.fade, delayMS: 220, lengthMS: 280)),
             ])
         case .stacked:
-            // Lines revealed from alternating sides a beat apart, then the
-            // mark; they leave upwards in reverse order. The mesh drifting
-            // behind them is what moves while it holds.
+            // Each line flips up word by word from facing away, a beat after
+            // the one above, then the mark pops; they leave upwards in
+            // reverse order. The streams behind them are what moves while it
+            // holds.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint)),
                 TitlePart(path: "Title", role: .headline,
-                          in: B(.maskReveal, delayMS: 150, lengthMS: 600, direction: .up),
-                          out: .off(.rise, delayMS: 160, lengthMS: 200, amount: 20)),
+                          in: B(.flipUp, delayMS: 150, lengthMS: 800, amount: 90, by: .word, staggerMS: 240),
+                          out: .off(.rise, delayMS: 60, lengthMS: 400, amount: 40)),
                 TitlePart(path: "Line 2", role: .kicker,
-                          in: B(.maskReveal, delayMS: 250, lengthMS: 600, direction: .down),
-                          out: .off(.rise, delayMS: 200, lengthMS: 200, amount: 20)),
+                          in: B(.flipUp, delayMS: 500, lengthMS: 800, amount: 90, by: .word, staggerMS: 240),
+                          out: .off(.rise, delayMS: 100, lengthMS: 380, amount: 40)),
                 TitlePart(path: "Subtitle", role: .subtitle,
-                          in: B(.maskReveal, delayMS: 350, lengthMS: 550, direction: .up),
-                          out: .off(.rise, delayMS: 240, lengthMS: 200, amount: 20)),
+                          in: B(.rise, delayMS: 1100, lengthMS: 550, amount: 16, curve: .easeOut,
+                                by: .word, staggerMS: 50),
+                          out: .off(.rise, delayMS: 200, lengthMS: 280, amount: 20)),
                 TitlePart(path: "Mark", role: .accent,
-                          in: B(.springPop, delayMS: 700, lengthMS: 500, amount: 40),
-                          out: .off(.fade, delayMS: 280, lengthMS: 180)),
+                          in: B(.springPop, delayMS: 1300, lengthMS: 500, amount: 40),
+                          out: .off(.fade, delayMS: 280, lengthMS: 200)),
             ])
         case .splitWipe:
             // The bar wipes in and the words are uncovered behind its edge;
             // out in reverse, quicker.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
-                          in: B(.wipe, delayMS: 0, lengthMS: 300, direction: .right),
-                          out: .off(.wipe, delayMS: 0, lengthMS: 200, direction: .left)),
+                          in: B(.wipe, delayMS: 0, lengthMS: 400, direction: .right, curve: .easeOutQuint),
+                          out: .off(.wipe, delayMS: 0, lengthMS: 260, direction: .left)),
                 TitlePart(path: "Edge", role: .accent,
-                          in: B(.wipe, delayMS: 60, lengthMS: 280, direction: .down),
-                          out: .off(.fade, delayMS: 0, lengthMS: 150)),
+                          in: B(.wipe, delayMS: 80, lengthMS: 300, direction: .down, curve: .easeOutQuint),
+                          out: .off(.fade, delayMS: 0, lengthMS: 200)),
                 TitlePart(path: "Name", role: .headline,
-                          in: B(.wipe, delayMS: 110, lengthMS: 380, direction: .right),
-                          out: .off(.fade, delayMS: 80, lengthMS: 150)),
+                          in: B(.wipe, delayMS: 200, lengthMS: 700, direction: .right, curve: .easeInOut),
+                          out: .off(.maskReveal, delayMS: 60, lengthMS: 420)),
                 TitlePart(path: "Role", role: .subtitle,
-                          in: B(.wipe, delayMS: 230, lengthMS: 380, direction: .right),
-                          out: .off(.fade, delayMS: 120, lengthMS: 150)),
+                          in: B(.wipe, delayMS: 550, lengthMS: 600, direction: .right, curve: .easeInOut),
+                          out: .off(.fade, delayMS: 120, lengthMS: 260)),
             ])
         case .underline:
-            // The shade softens in, the name rises, the line draws on under
-            // it, then the role.
+            // The shade softens in, the name's letters rise one after another,
+            // the line draws on under it, then the role.
             return TitleDesign(parts: [
                 TitlePart(path: "Shade", role: .background,
                           in: B(.fade, delayMS: 0, lengthMS: 500, curve: .easeOutQuint),
-                          out: .off(.fade, delayMS: 0, lengthMS: 250)),
+                          out: .off(.fade, delayMS: 0, lengthMS: 300)),
                 TitlePart(path: "Name", role: .headline,
-                          in: B(.rise, delayMS: 60, lengthMS: 500, amount: 8),
-                          out: .off(.rise, delayMS: 40, lengthMS: 220, amount: 8)),
+                          in: B(.rise, delayMS: 100, lengthMS: 650, amount: 36, curve: .easeOut,
+                                by: .letter, staggerMS: 50),
+                          out: .off(.rise, delayMS: 30, lengthMS: 450, amount: 16)),
                 TitlePart(path: "Rule", role: .accent,
-                          in: B(.drawOn, delayMS: 100, lengthMS: 400, direction: .right),
-                          out: .off(.wipe, delayMS: 100, lengthMS: 200, direction: .left)),
+                          in: B(.drawOn, delayMS: 500, lengthMS: 500, direction: .right),
+                          out: .off(.wipe, delayMS: 100, lengthMS: 260, direction: .left)),
                 TitlePart(path: "Role", role: .subtitle,
-                          in: B(.rise, delayMS: 480, lengthMS: 450, amount: 6),
+                          in: B(.rise, delayMS: 750, lengthMS: 450, amount: 8, curve: .easeOut),
                           hold: TitleHold(.drift, amount: 4, direction: .right),
-                          out: .off(.fade, delayMS: 160, lengthMS: 180)),
+                          out: .off(.fade, delayMS: 160, lengthMS: 200)),
             ])
         case .pill:
-            // The pill springs in, the mark after it, then the words sharpen.
+            // The pill springs in, the mark after it, then each word settles
+            // flat from tipped back.
             return TitleDesign(parts: [
                 TitlePart(path: "Background", role: .background,
                           in: B(.springPop, delayMS: 0, lengthMS: 550, amount: 88),
-                          out: .off(.springPop, delayMS: 0, lengthMS: 220, amount: 94)),
+                          out: .off(.springPop, delayMS: 0, lengthMS: 300, amount: 94)),
                 TitlePart(path: "Mark", role: .accent,
                           in: B(.springPop, delayMS: 120, lengthMS: 500, amount: 60),
                           hold: TitleHold(.push, amount: 6),
-                          out: .off(.fade, delayMS: 60, lengthMS: 150)),
+                          out: .off(.fade, delayMS: 60, lengthMS: 200)),
                 TitlePart(path: "Name", role: .headline,
-                          in: B(.blurIn, delayMS: 200, lengthMS: 500, amount: 8),
-                          out: .off(.fade, delayMS: 90, lengthMS: 150)),
+                          in: B(.tiltSettle, delayMS: 250, lengthMS: 800, amount: 70, curve: .easeOut,
+                                by: .word, staggerMS: 260),
+                          out: .off(.rise, delayMS: 60, lengthMS: 440, amount: 20)),
                 TitlePart(path: "Role", role: .subtitle,
-                          in: B(.blurIn, delayMS: 320, lengthMS: 500, amount: 8),
-                          out: .off(.fade, delayMS: 120, lengthMS: 150)),
+                          in: B(.rise, delayMS: 820, lengthMS: 500, amount: 10, curve: .easeOut),
+                          out: .off(.fade, delayMS: 120, lengthMS: 200)),
             ])
         default:
             return nil
@@ -272,17 +291,28 @@ extension BuiltInTitle {
         return TitlePen.grouped(page, name: kind.name)
     }
 
+    /// A moving look over `ground`, lit in `lights` (`LivePalette` reads the
+    /// stops: the first is the ground, the rest the lights).
+    static func live(_ look: LiveLook, ground: String, lights: [String], speed: Double = 100,
+                     strength: Double = 100, scale: Double = 100) -> Paint {
+        let colours = [ground] + lights
+        let stops = colours.enumerated().map { index, hex in
+            GradientStop(hex: hex, position: Double(index) / Double(max(1, colours.count - 1)))
+        }
+        return Paint(hex: ground, kind: .live, stops: stops,
+                     live: LiveBackdrop(look: look, speed: speed, strength: strength, scale: scale))
+    }
+
     private static func keynote(_ pen: TitlePen) -> [Layer] {
-        // Black with the faintest lift in the middle, near-white words.
-        let background = pen.fullFrame(Paint(hex: "#000000", kind: .radial,
-                                             stops: [GradientStop(hex: "#1C1C1F", position: 0),
-                                                     GradientStop(hex: "#000000", position: 1)],
-                                             center: CGPoint(x: 0.5, y: 0.45)))
+        // Near black with specks of cool light drifting through it in depth,
+        // near-white words.
+        let background = pen.fullFrame(live(.particles, ground: "#050507",
+                                            lights: ["#5E6B8C", "#8C7BB8", "#4A6FA5"], speed: 70, strength: 80))
         let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 120, weight: .bold,
                                 color: "#F5F5F7", top: pen.canvas.height * 0.39)
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 42,
                                    color: "#A1A1A6", top: title.frame.maxY + pen.u(14))
-        return [background, title, subtitle]
+        return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func softGlass(_ pen: TitlePen) -> [Layer] {
@@ -309,16 +339,20 @@ extension BuiltInTitle {
     }
 
     private static func kinetic(_ pen: TitlePen) -> [Layer] {
-        let background = pen.fullFrame(Paint(hex: "#1D3BFF"))
+        // Saturated blue with streaks of wind running through it.
+        let background = pen.fullFrame(live(.windStreams, ground: "#1D3BFF",
+                                            lights: ["#6C8CFF", "#59D9FF", "#A98BFF"]))
         let title = pen.centred("Title", "YOUR TITLE", font: "Avenir Next Condensed", size: 210,
                                 weight: .bold, color: "#FFFFFF", top: pen.canvas.height * 0.3)
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
                                    weight: .semibold, color: "#DDE3FF", top: title.frame.maxY + pen.u(4))
-        return [background, title, subtitle]
+        return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func editorial(_ pen: TitlePen) -> [Layer] {
-        var background = pen.fullFrame(Paint(hex: "#F4F1EA"))
+        // Warm paper an architect's sketch draws itself across, with grain.
+        var background = pen.fullFrame(live(.sketch, ground: "#F4F1EA",
+                                            lights: ["#9A4A26", "#3E5C76", "#7A5A3A"], strength: 80))
         background.style.effects = [.grain(GrainEffect(amount: 30))]
         let left = (pen.canvas.width * 0.12).rounded()
         let kicker = pen.words("Kicker", "CHAPTER ONE", font: "SF Pro", size: 28, weight: .semibold,
@@ -329,14 +363,13 @@ extension BuiltInTitle {
                             length: pen.u(360), width: pen.u(2), color: "#1A1A1A")
         let subtitle = pen.words("Subtitle", "A short line about it", font: "SF Pro", size: 28,
                                  color: "#55524C", origin: CGPoint(x: left, y: rule.frame.maxY + pen.u(24)))
-        return [background, kicker, title, rule, subtitle]
+        return [background, TitleLook.shadedOverALook(kicker), title, rule, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func terminal(_ pen: TitlePen) -> [Layer] {
-        var background = pen.fullFrame(Paint(hex: "#050A07", kind: .radial,
-                                             stops: [GradientStop(hex: "#0E2A1B", position: 0),
-                                                     GradientStop(hex: "#050A07", position: 1)],
-                                             center: CGPoint(x: 0.3, y: 0.4)))
+        // A green grid running away to a horizon in the dark.
+        var background = pen.fullFrame(live(.gridHorizon, ground: "#050A07",
+                                            lights: ["#3DFF8F", "#1FA35B", "#7CFFB8"], speed: 80))
         background.style.effects = [.grain(GrainEffect(amount: 20))]
         let left = (pen.canvas.width * 0.12).rounded()
         let green = "#3DFF8F"
@@ -353,7 +386,7 @@ extension BuiltInTitle {
                                  color: "#8FD6AE", origin: CGPoint(x: left, y: prompt.localBounds.maxY + pen.u(22)))
         let progress = pen.line("Progress", from: CGPoint(x: left, y: subtitle.frame.maxY + pen.u(36)),
                                 length: pen.u(520), width: pen.u(4), color: green)
-        return [background, prompt, subtitle, progress]
+        return [background, prompt, TitleLook.shadedOverALook(subtitle), progress]
     }
 
     private static func glass(_ pen: TitlePen) -> [Layer] {
@@ -371,31 +404,23 @@ extension BuiltInTitle {
     }
 
     private static func lightLeak(_ pen: TitlePen) -> [Layer] {
-        var background = pen.fullFrame(Paint(hex: "#08070B"))
+        // Warm light leaking across the dark, with grain.
+        var background = pen.fullFrame(live(.lightLeaks, ground: "#08070B",
+                                            lights: ["#FF7A2F", "#FF3D7F", "#FFB35C"], strength: 65))
         background.style.effects = [.grain(GrainEffect(amount: 22))]
-        // Two big soft warm lights thrown over the dark.
-        func leak(_ name: String, _ rect: CGRect, _ hex: String, _ opacity: Double, blur: CGFloat) -> Layer {
-            var light = pen.oval(name, rect, fill: Paint(hex: hex))
-            light.style.opacity = opacity
-            light.style.blendMode = .screen
-            light.style.effects = [.blur(BlurEffect(radius: pen.u(blur)))]
-            return light
-        }
-        let first = leak("Leak 1", CGRect(x: -pen.u(240), y: -pen.u(180), width: pen.u(1100), height: pen.u(900)),
-                         "#FF7A2F", 0.5, blur: 160)
-        let second = leak("Leak 2", CGRect(x: (pen.canvas.width * 0.55).rounded(), y: (pen.canvas.height * 0.42).rounded(),
-                                           width: pen.u(900), height: pen.u(760)),
-                          "#FF3D7F", 0.42, blur: 150)
         var title = pen.centred("Title", "YOUR TITLE", font: "Avenir Next", size: 88, weight: .medium,
                                 color: "#FFF6EE", top: pen.canvas.height * 0.42)
         title.style.effects = [.glow(GlowEffect(colorHex: "#FFB58A", radius: pen.u(18), size: pen.u(2), opacity: 0.55))]
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "Avenir Next", size: 30,
                                    color: "#D8CEC6", top: title.frame.maxY + pen.u(18))
-        return [background, first, second, title, subtitle]
+        return [background, title, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func gradientGlow(_ pen: TitlePen) -> [Layer] {
-        let background = pen.fullFrame(Paint(hex: "#000000"))
+        // An aurora rippling low in the black, cool teal and blue so the warm
+        // colours of the words stand out from it rather than into it.
+        let background = pen.fullFrame(live(.aurora, ground: "#000000",
+                                            lights: ["#14B8A6", "#1F6FFF", "#2EC4B6"], strength: 55))
         let title = pen.centred("Title", "Your Title", font: "SF Pro", size: 150, weight: .bold,
                                 color: "#FFFFFF", top: pen.canvas.height * 0.36)
         // The colours, cut to the shape of the words under them and twice
@@ -414,9 +439,12 @@ extension BuiltInTitle {
         var headline = TitlePen.grouped([title, gradient], name: "Headline")
         headline.style.effects = [.glow(GlowEffect(colorHex: "#B07CFF", radius: pen.u(28), size: pen.u(4),
                                                    opacity: 0.6))]
+        // The aurora behind is lit in the same colours as the words, so the
+        // coloured words throw a soft dark shade of their own to stand on.
+        headline.style.shadows = [TitleLook.liveScrim(forColorHex: "#FFFFFF", fontSize: title.text?.fontSize ?? pen.u(150))]
         let subtitle = pen.centred("Subtitle", "A short line about it", font: "SF Pro", size: 40,
                                    color: "#A1A1A6", top: title.frame.maxY + pen.u(20))
-        return [background, headline, subtitle]
+        return [background, headline, TitleLook.shadedOverALook(subtitle)]
     }
 
     private static func stacked(_ pen: TitlePen) -> [Layer] {
@@ -446,7 +474,9 @@ extension BuiltInTitle {
 
     private static func splitWipe(_ pen: TitlePen) -> Layer {
         let edge = pen.u(6), padX = pen.u(32), padY = pen.u(18)
-        var bar = pen.box("Background", pen.surfaceStart, fill: Paint(hex: "#1A4DFF"))
+        // Rays of light sweeping slowly across the colour bar.
+        var bar = pen.box("Background", pen.surfaceStart,
+                          fill: live(.lightRays, ground: "#1A4DFF", lights: ["#6E8BFF", "#59D9FF", "#9C7BFF"]))
         bar.placement = .fill
         var lip = pen.box("Edge", CGRect(x: 0, y: 0, width: edge, height: edge), fill: Paint(hex: "#FFFFFF"))
         lip.placement = LayerPlacement(horizontal: .left, vertical: .stretch)
@@ -454,7 +484,7 @@ extension BuiltInTitle {
                              color: "#FFFFFF", origin: .zero)
         let role = pen.words("Role", "Role or title", font: "SF Pro", size: 30, weight: .medium,
                              color: "#E3EAFF", origin: .zero)
-        return pen.card([bar, lip, name, role], name: TitleKind.nameCard.name, gap: pen.u(2),
+        return pen.card([bar, lip, name, TitleLook.shadedOverALook(role)], name: TitleKind.nameCard.name, gap: pen.u(2),
                         padding: GroupPadding(top: padY, right: padX, bottom: padY, left: edge + padX - pen.u(4)),
                         corner: pen.safeCorner)
     }
@@ -481,9 +511,14 @@ extension BuiltInTitle {
     }
 
     private static func pill(_ pen: TitlePen) -> Layer {
-        var pill = pen.box("Background", pen.surfaceStart, fill: Paint(hex: "#15171C"), radius: pen.u(64))
+        // Soft bubbles of colour blooming inside the dark pill.
+        var pill = pen.box("Background", pen.surfaceStart,
+                           fill: live(.colorBubbles, ground: "#15171C", lights: ["#6E8BFF", "#C46BFF", "#3D8BFF"],
+                                      strength: 80),
+                           radius: pen.u(64))
         pill.placement = .fill
-        pill.style.opacity = 0.94
+        // Solid, so white words on it read over white footage too.
+        pill.style.opacity = 1
         pill.style.shadows = [ShadowStyle(radius: pen.u(20), offset: CGSize(width: 0, height: pen.u(6)),
                                           colorHex: "#000000", opacity: 0.3)]
         let mark = pen.oval("Mark", CGRect(x: 0, y: 0, width: pen.u(64), height: pen.u(64)),
@@ -495,7 +530,8 @@ extension BuiltInTitle {
                              color: "#FFFFFF", origin: .zero)
         let role = pen.words("Role", "Role or title", font: "SF Pro", size: 28, color: "#B4BAC6",
                              origin: .zero)
-        let words = pen.stack([name, role], name: "Words", direction: .column, gap: 0, origin: .zero,
+        let words = pen.stack([name, TitleLook.shadedOverALook(role)], name: "Words",
+                              direction: .column, gap: 0, origin: .zero,
                               placement: LayerPlacement(horizontal: .left))
         return pen.card([pill, mark, words], name: TitleKind.nameCard.name, gap: pen.u(18),
                         padding: GroupPadding(top: pen.u(14), right: pen.u(40), bottom: pen.u(14), left: pen.u(14)),

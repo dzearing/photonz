@@ -21230,3 +21230,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Legibility built in: luminance ceiling/floor per look, word colour check reads a look as drawn, lighter word colours get a soft shade.
 - Gotcha: `CIKernel.kernels(withMetalString:)` returns the last same-signature function for every kernel of one source; compile each separately.
 - Next: the title rebuild task applies the decision on which looks stay and which is the default. Open question filed: a faint recording card visible through a title page before the recording starts.
+
+## 2026-10-12 — Title text visibly comes in; the built-in set rebuilt on moving looks
+
+- Reproduced the user's "the text doesn't even move in": every headline was absent on frame 0 but 82-99% in by 300-400 ms (half-second ins on Ease out expo, 8-12 pt of travel), and the old contact sheet sampled after that.
+- New render test `TitleEntranceInkTests` holds the bar for all 12 built-ins: <10% of the headline's ink on frame 0, 20-80% half way through its in, never full before 400 ms, the same going off.
+- `TitleSet.swift`: twelve distinct headline entrances (rise, blur, mask, swing, typewriter, fly from depth, track, fall from large, flip, wipe, rise by letter, tilt), plain Ease out, outs inside the last 500 ms; every built-in on its own live look except Minimal Underline.
+- Reel and contact sheet: `queue/audits/2026-10-12-title-set-*`; decision card asks the user whether the set looks produced.
+- Next: act on the two open title cards (which looks to keep; whether the set looks produced).

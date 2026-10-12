@@ -88,43 +88,48 @@ public struct InsertedTitle: Hashable, Sendable {
 /// fits its time are written against those plain shapes, and a drag that
 /// names one still resolves.
 public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable {
-    // The set, in shelf order.
-    /// Black, a big bold headline whose words rise in one after another, and
-    /// a light line under it. Apple's keynote slide.
+    // The set, in shelf order. Each headline comes in its own way and each
+    // stands on its own moving look (task
+    // `title-text-visibly-comes-in-and-every-built-in-t`).
+    /// Near black with specks of light drifting in depth, a big bold
+    /// headline whose words rise in one after another out of their own blur,
+    /// and a light line under it. Apple's keynote slide.
     case keynote
-    /// A drifting three colour mesh with grain, and a frosted panel holding
-    /// the words.
+    /// A liquid gradient flowing under a frosted panel, each word sharpening
+    /// out of a deep blur inside it.
     case softGlass
     /// Huge condensed capitals sliding up word by word out of their own
-    /// line, on one saturated colour.
+    /// line, on saturated blue with wind streaming through it.
     case kinetic
-    /// Warm paper with grain, a small kicker, a serif headline wiped on and a
+    /// Warm paper an architect's sketch draws itself across, a small kicker,
+    /// a serif headline whose words swing up on a hinge at their foot, and a
     /// hairline rule drawing itself under it.
     case editorial
-    /// A dark screen with a faint green glow, the words typed in with a
-    /// blinking cursor and a progress line.
+    /// A green grid running to a horizon in the dark, the words typed in a
+    /// letter at a time, a blinking cursor and a progress line.
     case terminal
     /// The recording under the title, blurred, dimmed and slowly settling,
-    /// sharpening into the real footage as the title leaves: the Photonz
-    /// signature, which ties the intro to the content.
+    /// each word flying forward out of its depth, sharpening into the real
+    /// footage as the title leaves: the Photonz signature, which ties the
+    /// intro to the content.
     case glass
-    /// Two warm blurred lights drifting across the dark, and wide capitals
-    /// tracking in with a glow.
+    /// Warm light leaking across the dark, and wide capitals tracking in a
+    /// letter after another with a glow.
     case lightLeak
     /// A very large headline filled with a moving gradient and a soft glow,
-    /// settling from a little larger out of a blur.
+    /// falling into place from far larger out of a deep blur, over an aurora.
     case gradientGlow
-    /// Lines of two weights revealed from alternating sides, then a small
-    /// mark popping in, over a slow dark mesh.
+    /// Lines of two weights flipping up word by word from facing away, then
+    /// a small mark popping in, over streams of light.
     case stacked
-    /// A colour bar wipes in and the name and role are revealed behind its
-    /// edge: the broadcast lower third.
+    /// A colour bar with rays sweeping across it wipes in and the name and
+    /// role are revealed behind its edge: the broadcast lower third.
     case splitWipe
-    /// No backing: the name rises in, a line draws itself under it, and the
-    /// role follows.
+    /// No backing, the deliberately bare one: the name's letters rise in one
+    /// after another, a line draws itself under it, and the role follows.
     case underline
-    /// A rounded pill with a round mark, springing in, the name and role
-    /// sharpening inside it.
+    /// A rounded pill with colour blooming inside it and a round mark,
+    /// springing in, the name's words settling flat from tipped back.
     case pill
 
     // Retired from the shelf.
@@ -342,8 +347,8 @@ public enum BuiltInTitle: String, CaseIterable, Identifiable, Hashable, Sendable
     /// moving backdrops cannot draw.
     public var hasMovingBackdrop: Bool {
         switch self {
-        case .aurora, .glass, .softGlass, .editorial, .terminal, .lightLeak, .stacked: true
-        default: false
+        case .underline, .midnight, .sunrise, .paper, .spotlight, .bar, .clean, .accent, .minimal: false
+        default: true
         }
     }
 

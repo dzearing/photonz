@@ -52,11 +52,13 @@ struct TitleSetTests {
         for retired in ["Midnight", "Sunrise", "Paper", "Spotlight", "Aurora", "Bar", "Clean", "Accent", "Minimal"] {
             #expect(!shelf.contains(retired))
         }
-        // Without moving backdrops a release still has a set to pick from.
-        let still = BuiltInTitle.presets(of: .titlePage, movingBackdrops: false)
-        #expect(still.count >= 3)
+        // Without moving backdrops a release offers only what does not move:
+        // every page now stands on a moving look (task
+        // `title-text-visibly-comes-in-and-every-built-in-t`), so that is the
+        // one bare name card.
+        let still = BuiltInTitle.shelved.filter { !$0.hasMovingBackdrop }
         #expect(still.allSatisfy { !$0.hasMovingBackdrop })
-        #expect(!BuiltInTitle.presets(of: .nameCard, movingBackdrops: false).isEmpty)
+        #expect(BuiltInTitle.presets(of: .nameCard, movingBackdrops: false) == [.underline])
     }
 
     // MARK: - Designed, not a template
@@ -69,6 +71,68 @@ struct TitleSetTests {
         }
     }
 
+    // MARK: - Words that visibly come in (`TitleEntranceInkTests` measures them)
+
+    /// What a preset's headline comes in by: the build of every part that
+    /// draws it, and what its words come in a piece at a time by.
+    static func entrance(_ preset: BuiltInTitle) -> String {
+        preset.design.parts.filter { $0.role == .headline || $0.path == "Headline" }
+            .compactMap { part in
+                part.in.map { "\($0.kind.rawValue)/\(($0.unit ?? $0.kind.defaultUnit).rawValue)" }
+            }
+            .sorted().joined(separator: "+")
+    }
+
+    @Test("Every headline comes in its own way: no two of the set share an entrance")
+    func ownEntrances() {
+        var seen: [String: String] = [:]
+        for preset in BuiltInTitle.shelved {
+            let entrance = Self.entrance(preset)
+            #expect(!entrance.isEmpty, "\(preset.name) has no headline entrance")
+            if let other = seen[entrance] {
+                Issue.record("\(preset.name) comes in as \(other) does: \(entrance)")
+            }
+            seen[entrance] = preset.name
+        }
+    }
+
+    @Test("A headline takes most of a second to come in, and the line under it comes on its own later beat")
+    func headlineThenSubtitle() {
+        for preset in BuiltInTitle.shelved {
+            guard let headline = preset.design.parts.first(where: { $0.role == .headline })?.in else {
+                Issue.record("\(preset.name) has no headline in")
+                continue
+            }
+            #expect(headline.lengthMS >= 500, "\(preset.name)'s headline pieces take \(headline.lengthMS) ms")
+            for part in preset.design.parts where part.role == .subtitle {
+                let later = (part.in?.delayMS ?? 0) - headline.delayMS
+                #expect(later >= 300, "\(preset.name) \(part.path) comes \(later) ms after the headline")
+            }
+        }
+    }
+
+    @Test("Every title stands on a moving look, except one deliberately bare name card")
+    func movingLooks() {
+        var still: [BuiltInTitle] = []
+        for preset in BuiltInTitle.shelved {
+            let title = preset.layer(in: Self.canvas)
+            let background = TitleDesign.find("Background", in: title)
+            let live = background?.annotation?.fill?.kind == .live
+            // Behind Glass is made of the recording itself, frosted.
+            let frosted = background?.style.effects.contains { $0.blur?.kind == .background } == true
+            if !live && !frosted { still.append(preset) }
+            #expect(preset.hasMovingBackdrop == (live || frosted), "\(preset.name) says it moves: \(preset.hasMovingBackdrop)")
+        }
+        #expect(still == [.underline], "standing on something still: \(still.map(\.name))")
+        // Ten looks, and the set uses most of them, not the same one twice
+        // over.
+        let looks = BuiltInTitle.shelved.compactMap {
+            TitleDesign.find("Background", in: $0.layer(in: Self.canvas))?.annotation?.fill?.live?.look
+        }
+        #expect(Set(looks).count == looks.count, "a look is used twice: \(looks)")
+        #expect(looks.count >= 9)
+    }
+
     @Test("Two type sizes at most")
     func twoSizes() {
         for preset in BuiltInTitle.shelved {
@@ -79,9 +143,14 @@ struct TitleSetTests {
         }
     }
 
-    @Test("Everything comes in on an expo or quint ease out, or a spring, and leaves quicker on an ease in")
+    @Test("Everything comes in on an ease out, a spring or an even turn, and leaves quicker on an ease in")
     func easesAndExits() {
-        let arriving: Set<EasingCurve> = [.easeOutExpo, .easeOutQuint, .easeOutBack]
+        // Ease out rather than expo for words, so half way through an in it is
+        // still plainly happening; the even ease for the ones that turn in
+        // depth (`TitleBuildKind.defaultCurve`), and in and out for a wipe
+        // that uncovers words, so its edge is seen crossing them.
+        let arriving: Set<EasingCurve> = [.easeOut, .easeOutExpo, .easeOutQuint, .easeOutBack, .easeInOutSine,
+                                          .easeInOut]
         for preset in BuiltInTitle.shelved {
             for part in preset.design.parts {
                 if let entrance = part.in, entrance.kind != .typewriter {
@@ -195,8 +264,12 @@ struct TitleSetTests {
             let title = preset.layer(in: Self.canvas)
             let pieces = Self.flattened(title)
             for (words, frame) in pieces where words.text != nil {
-                // Words that throw their own shadow stand over anything.
+                // Words that throw their own shadow stand over anything, and
+                // so do words drawn inside a group that throws one.
                 if !words.style.shadows.isEmpty { continue }
+                if title.selfAndDescendants.contains(where: { group in
+                    !group.style.shadows.isEmpty && group.children.contains { $0.id == words.id }
+                }) { continue }
                 let size = words.text?.fontSize ?? 0
                 let needed = size >= 60 ? 3.0 : 4.5
                 // Words a gradient fills are judged in each of its colours.

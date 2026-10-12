@@ -1,0 +1,34 @@
+{
+  "feature": "Built-in titles whose words visibly come in, on moving backgrounds",
+  "epic": "video-titles-graphics",
+  "summary": "Every built-in title's headline now takes most of a second to arrive and is seen moving: twelve different entrances (rise, blur, mask slide, swing, typewriter, depth fly-in, tracking, fall from large, flip, wipe, tilt), each over its own moving background except one deliberately bare name card.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Any recording open.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library's Comps shelf, search Kinetic Bold and choose Insert at Playhead on its tile.", "shot": "2026-10-12-title-entrances-kinetic-coming-in-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Home, then Space, and watch the first second: each word slides up out of its own line, one after another." },
+    { "do": "Insert Keynote Clean the same way and play it: the words rise in one at a time out of their own blur, then the line under them.", "shot": "2026-10-12-title-entrances-keynote-coming-in-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Insert Light Leak and let it hold: letters close up from wide tracking over warm light drifting across.", "shot": "2026-10-12-title-entrances-light-leak-holding-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Play to the end of any title: the headline visibly leaves over its last half second instead of blinking off." },
+    { "do": "Open queue/audits/2026-10-12-title-set-contact.png and compare the twelve at 0 to 800 ms; play any 2026-10-12-title-set-<name>.mp4." }
+  ],
+  "evaluate": [
+    "Watching any title from its first frame, can you see the headline arriving rather than already standing?",
+    "Do the twelve entrances feel different enough from each other that the set has real variety?",
+    "Is anything too slow to arrive for a short screen recording (Kinetic Bold with a long headline, Behind Glass)?",
+    "Do any backgrounds compete with the words: Keynote Clean's specks, Tech Terminal's grid, Light Leak's warmth?",
+    "Does Minimal Underline earn its place as the one bare name card?"
+  ],
+  "rough": [
+    "No mock draws the built-in title designs or their entrances; the reference is the brief in docs/design/video-titles-polish.md and the research list on the task.",
+    "Why it looked still before, reproduced on the renderer: no headline was on its first frame, but every one was fully in 300 to 400 ms later (half second ins on Ease out expo, which is nine tenths done a third of the way through, moving words 8 to 12 points), and the old contact sheet sampled its 'in' frame at 45% of the whole title's arrival, after the headline had finished.",
+    "The bar is now a test on the real renderer (TitleEntranceInkTests): under 10% of the headline's ink on the first frame, 20 to 80% half way through its in, never all there before 400 ms, and the same going off. All twelve pass.",
+    "Words come in on a plain Ease out rather than Ease out expo so the move is still visible half way through; the depth entrances keep their even curve.",
+    "Outs are keys, not a reversed reveal: words fade, rise, blur or shrink away over the last half second. A per-word out would need the reveal to run backwards, which it cannot yet.",
+    "Light Leak and the Glow's aurora were toned down after the first sheet: the aurora behind Gradient Glow now glows teal and blue, because in the words' own pink and violet it swallowed them.",
+    "Lighter second lines (subtitles, roles, the kicker) wear the soft shade the restyle already gives words over a moving look; the Pill Card is now fully opaque so its white name reads over white footage with no shade.",
+    "With the moving backgrounds switch turned off, only Minimal Underline is offered, since every other title now stands on a moving look. That switch is on at Next defaults.",
+    "Which backgrounds to keep overall is still decision title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are; whether the set looks produced is decision title-text-visibly-comes-in-and-every-built-in-t-the-twelve-built-in-titles-now-v.",
+    "Perf (1080p, debug, suite alone): every title draws a frame in 2.2 to 12.6 ms median, Gradient Glow the slowest; under the whole suite's parallel load Editorial Serif, Gradient Glow and Stacked Stagger read 17 to 20 ms, as other render perf tests also do there (logged on find-out-why-the-whole-test-run-hangs-in-the-mac)."
+  ]
+}

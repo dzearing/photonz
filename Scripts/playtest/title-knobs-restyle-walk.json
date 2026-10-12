@@ -109,7 +109,7 @@
   {
    "do": "expect",
    "field": "Title Background",
-   "reads": "Gradient"
+   "reads": "Particles"
   },
   {
    "do": "snapshot",

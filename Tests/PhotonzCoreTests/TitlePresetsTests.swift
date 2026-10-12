@@ -269,8 +269,13 @@ struct TitlePresetsTests {
         // Its animation came with it, part by part, moved to where it now
         // starts: it arrives when it did.
         #expect(other.titleArrivalMS(layerID: layer.id) == preset.design.inLengthMS)
-        let name = try #require(other.layer(id: again.wordsID))
-        #expect(other.keyedValue(layerID: name.id, .motion(.opacity), atDocumentTimeMS: 3000) == .number(0))
+        // Its words are nowhere at that start: their reveal has not begun
+        // (they come in a word at a time, task
+        // `title-text-visibly-comes-in-and-every-built-in-t`).
+        let drawn = other.drawn(atTimeMS: 3000)
+        let words = try #require(drawn.layer(id: again.wordsID)?.text)
+        let reveal = try #require(words.reveal)
+        #expect(reveal.pose(rank: 0, atElapsedMS: words.revealElapsedMS ?? 0).opacity == 0)
         #expect(again.layerID != inserted.layerID)
     }
 
