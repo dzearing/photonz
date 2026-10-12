@@ -118,19 +118,19 @@ public enum TextRevealStyle: String, CaseIterable, Hashable, Codable, Sendable {
         case .trackIn: 40
         case .maskReveal, .typewriter, .wipe: 0
         case .swingIn: 90
-        case .flipUp: 120
+        case .flipUp: 90
         case .flyInFromDepth: 900
-        case .tiltSettle: 40
+        case .tiltSettle: 60
         }
     }
 
     /// The curve each piece arrives on when nobody says: the quick settle
-    /// polished intros use, and for the ones that turn in depth an ease in
-    /// and out, so the turn still shows half way through.
+    /// polished intros use, and for the ones that turn in depth an even ease
+    /// in and out, half way turned at half time, so the turn still shows half
+    /// way through (`TitleBuildKind.defaultCurve`).
     public var defaultCurve: EasingCurve {
         switch self {
-        case .swingIn, .flipUp, .flyInFromDepth: .easeInOut
-        case .tiltSettle: .easeInOutSine
+        case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: .easeInOutSine
         default: .easeOutExpo
         }
     }
@@ -374,8 +374,10 @@ public struct TextReveal: Hashable, Codable, Sendable {
             case .right: pose.turnY = -amount * left
             }
         case .flyInFromDepth:
+            // Most of the way forward by half time, still turning to face
+            // you: the distance closes faster than the turn.
             pose.opacity = min(max(t / 0.4, 0), 1)
-            pose.depthEm = -size * left
+            pose.depthEm = -size * left * left
             switch direction {
             case .up: pose.turnX = 90 * left
             case .down: pose.turnX = -90 * left
@@ -386,7 +388,7 @@ public struct TextReveal: Hashable, Codable, Sendable {
             pose.opacity = min(max(t / 0.5, 0), 1)
             pose.turnX = amount * left
             pose.turnY = -0.5 * amount * left
-            pose.depthEm = -0.05 * amount * left
+            pose.depthEm = -0.02 * amount * left * left
         }
         return pose
     }

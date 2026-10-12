@@ -21204,3 +21204,22 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Reel, contact sheet and numbers in `queue/audits/2026-10-11-depth-reel-*`;
   decision card asks the user to judge it. Perf 5-6 ms median at 1080p.
 - Next: the title rework tasks start from these moves (see the task log).
+
+## 2026-10-11 — Text turning in depth is drawn in real perspective
+
+- Reproduced the user's "just 2d animations": through the document camera a
+  turning word measured near:far 1.04 at its midpoint, off-centre words leaned
+  like italic type, and the curve had Swing In only 20 degrees turned at half
+  time. Each turning word or letter now has its own lens
+  (`TextRevealCompositor.lens`, 1.6 times its size away, centred on it); depth
+  is kept as the same share of the lens; turned pieces may draw past the text
+  box (`reach(of:)`, the renderer grows the frame). Defaults: Ease in out sine,
+  Flip Up from 90, Tilt Settle from 60, Fly In closes its distance first.
+  Midpoint near:far 1.32 to 1.57 by word and letter; letter flip with motion
+  blur 7.9 ms median at 1080p.
+- Mock `video-depth.html`: WebKit (Ghoztty viewer, Safari) drew every stage
+  flat under a rounded overflow clip; stages now clip with clip-path, title
+  words carry their own perspective(), the card flip's camera is 400 px.
+- Reel `queue/audits/2026-10-11-text-depth-*`, decision card for the user.
+- Open: depth of field still does not reach individual words; Tilt Settle's
+  two-axis turn still leans (real 3D, asked on the card).

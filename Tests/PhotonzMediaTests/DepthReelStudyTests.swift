@@ -5,7 +5,7 @@ import Foundation
 import ImageIO
 import PhotonzCore
 @testable import PhotonzMedia
-import PhotonzRender
+@testable import PhotonzRender
 import Testing
 import UniformTypeIdentifiers
 
@@ -112,19 +112,21 @@ struct DepthReelStudyTests {
         }
     }
 
-    /// A title over the dark frame: "Ship it faster." coming in word by word.
-    static func entranceItems() -> [Item] {
+    /// A title over the dark frame: "Ship it faster." coming in word by word,
+    /// or letter by letter.
+    static func entranceItems(by unit: TextRevealUnit = .word, fontSize: CGFloat = 112) -> [Item] {
         TitleBuildKind.inDepth.map { kind in
-            let build = TitleBuild(kind, delayMS: moveStartMS, lengthMS: 900, by: .word, staggerMS: 140)
+            let build = TitleBuild(kind, delayMS: moveStartMS, lengthMS: unit == .letter ? 700 : 900, by: unit,
+                                   staggerMS: unit == .letter ? 45 : 140)
             var doc = PhotonzDocument(canvasSize: canvas)
             var back = Layer(name: "Back", content: .annotation(AnnotationContent(
                 shape: .rectangle, strokeWidth: 0, colorHex: "#141826", start: .zero,
                 end: CGPoint(x: canvas.width, y: canvas.height), fillColorHex: "#141826")),
                 frame: CGRect(origin: .zero, size: canvas))
             back.time = LayerTime(inMS: 0, outMS: lengthMS, sourceInMS: 0, sourceLengthMS: lengthMS)
-            let words = Layer(name: "Words", content: .text(TextContent(string: "Ship it faster.", fontSize: 112,
+            let words = Layer(name: "Words", content: .text(TextContent(string: "Ship it faster.", fontSize: fontSize,
                                                                          colorHex: "#FFFFFF", weight: .bold)),
-                              frame: CGRect(x: 140, y: 280, width: 1000, height: 160))
+                              frame: CGRect(x: 140, y: 360 - fontSize * 0.72, width: 1000, height: fontSize * 1.44))
             var title = Layer(name: "Title", content: .group(GroupContent(children: [words])), frame: .zero)
             title.time = LayerTime(inMS: 0, outMS: lengthMS * 2)
             doc.layers = [back]
@@ -133,9 +135,11 @@ struct DepthReelStudyTests {
             _ = doc.applyTitleDesign(TitleDesign(parts: [TitlePart(path: "Words", role: .headline, in: build)]),
                                      layerID: title.id)
             let reveal = doc.layer(id: title.id).flatMap { TitleDesign.find("Words", in: $0) }?.text?.reveal
-            let move = reveal.map { $0.lengthMS(count: 3) } ?? 900
+            let count = unit == .letter ? 13 : 3
+            let move = reveal.map { $0.lengthMS(count: count) } ?? 900
             let finished = doc
-            return Item(slug: "entrance-\(kind.rawValue)", name: "\(kind.title), by word", moveMS: move) { ms in
+            return Item(slug: "entrance-\(kind.rawValue)\(unit == .letter ? "-by-letter" : "")",
+                        name: "\(kind.title), by \(unit)", moveMS: move) { ms in
                 finished.drawn(atTimeMS: ms)
             }
         }
@@ -233,10 +237,113 @@ struct DepthReelStudyTests {
         print("[reel] contact sheet \(sheetURL.path)")
     }
 
+    /// The near and far edges of the first word or letter half way through its
+    /// own arrival, drawn through the reveal compositor at the 1080p
+    /// document camera (task `text-that-swings-flips-or-flies-in-from-depth-is`).
+    static func textNumbers() throws -> [[String: Any]] {
+        let eye = Projection3D(camera: nil, canvas: CGSize(width: 1920, height: 1080)).eyeDistance
+        var rows: [[String: Any]] = []
+        for unit in [TextRevealUnit.word, .letter] {
+            let pieces = try #require(TextRasterizer.revealPieces(
+                TextContent(string: "Ship it faster.", fontSize: 112, colorHex: "#FFFFFF", weight: .bold),
+                size: CGSize(width: 1000, height: 160), unit: unit))
+            let piece = try #require(pieces.pieces.first)
+            for kind in TitleBuildKind.inDepth {
+                let style: TextRevealStyle = switch kind {
+                case .swingIn: .swingIn
+                case .flipUp: .flipUp
+                case .flyInFromDepth: .flyInFromDepth
+                default: .tiltSettle
+                }
+                let reveal = TextReveal(style: style, unit: unit)
+                let mid = reveal.lengthMS / 2
+                func corners(_ ms: Int) -> [CGPoint]? {
+                    let pose = reveal.pose(rank: 0, atElapsedMS: ms)
+                    return TextRevealCompositor.turnedQuad(piece, pose: pose, em: pieces.emPixels,
+                                                           height: pieces.pixelSize.height, eyeDistance: eye,
+                                                           ignoringBack: true)
+                }
+                let pose = reveal.pose(rank: 0, atElapsedMS: mid)
+                let quad = try #require(corners(mid))
+                func length(_ a: CGPoint, _ b: CGPoint) -> Double { Double(hypot(a.x - b.x, a.y - b.y)) }
+                // The line box inside the padded picture, mapped the same way.
+                let h = pieces.pixelSize.height
+                let rect = CGRect(x: piece.rect.minX, y: h - piece.rect.maxY, width: piece.rect.width,
+                                  height: piece.rect.height)
+                let map = try #require(Homography(box: rect, to: quad.map { CGPoint(x: $0.x, y: h - $0.y) }))
+                let b = CGRect(x: piece.box.minX, y: h - piece.box.maxY, width: piece.box.width,
+                               height: piece.box.height)
+                let box = try [CGPoint(x: b.minX, y: b.minY), CGPoint(x: b.maxX, y: b.minY),
+                               CGPoint(x: b.maxX, y: b.maxY), CGPoint(x: b.minX, y: b.maxY)]
+                    .map { try #require(map.apply($0)) }
+                let swings = abs(pose.turnY) > abs(pose.turnX)
+                let (one, two) = swings ? (length(box[0], box[3]), length(box[1], box[2]))
+                    : (length(box[0], box[1]), length(box[3], box[2]))
+                var moved = 0.0
+                if let a = corners(mid - 50), let z = corners(mid + 50) {
+                    moved = zip(a, z).map { length($0, $1) }.max() ?? 0
+                }
+                rows.append(["move": kind.title, "by": "\(unit)", "lengthMS": reveal.lengthMS,
+                             "curve": reveal.curve.title, "startAngleDegrees": reveal.amount,
+                             "midpointAngleDegrees": (max(abs(pose.turnX), abs(pose.turnY)) * 10).rounded() / 10,
+                             "midpointNearToFarEdges": (max(one, two) / min(one, two) * 100).rounded() / 100,
+                             "edgesMeasured": swings ? "left and right" : "top and bottom",
+                             "cornerTravelIn100msPixels": moved.rounded()])
+            }
+        }
+        return rows
+    }
+
+    @Test("Film the text entrances by word and by letter beside the clip Flip")
+    func filmText() async throws {
+        let directory = URL(fileURLWithPath: ProcessInfo.processInfo.environment["PHOTONZ_REEL_DIR"]
+                            ?? FileManager.default.temporaryDirectory.path)
+        let prefix = "2026-10-11-text-depth"
+        let store = ImageStore()
+        let flip = try Self.transitionItems(store: store).filter { $0.slug == "transition-flip" }
+        let items = flip + Self.entranceItems(by: .word, fontSize: 150) + Self.entranceItems(by: .letter, fontSize: 150)
+        var sheetRows: [(String, [CGImage])] = []
+        for item in items {
+            let frame = item.frame
+            if item.slug != "transition-flip" {
+                let mp4 = directory.appendingPathComponent("\(prefix)-\(item.slug).mp4")
+                let gif = directory.appendingPathComponent("\(prefix)-\(item.slug).gif")
+                try? FileManager.default.removeItem(at: mp4)
+                try? FileManager.default.removeItem(at: gif)
+                let moviePlan = DocumentVideoExport.plan(durationMS: Self.lengthMS, canvasSize: Self.canvas,
+                                                         format: .mp4, quality: .high)
+                try await DocumentMovieWriter.write(plan: moviePlan, mix: [], soundURLs: [:], to: mp4,
+                                                    frames: { ms in DocumentRenderer().render(frame(ms), store: store) })
+                let gifPlan = DocumentVideoExport.plan(durationMS: Self.lengthMS, canvasSize: Self.canvas,
+                                                       format: .gif, quality: .small)
+                try await DocumentMovieWriter.writeAnimated(plan: gifPlan, format: .gif, to: gif,
+                                                            frames: { ms in
+                                                                DocumentRenderer().render(frame(ms), store: store)
+                                                            })
+                print("[reel] \(item.name): \(mp4.lastPathComponent), \(gif.lastPathComponent)")
+            }
+            let stills = [0.0, 0.25, 0.5, 0.75, 1.0].compactMap { share -> CGImage? in
+                let ms = Self.moveStartMS + Int(Double(item.moveMS) * share) - (share == 1 ? 1 : 0)
+                return DocumentRenderer().render(frame(min(ms, Self.lengthMS - 1)), store: store)
+            }
+            sheetRows.append((item.name, stills))
+        }
+        let sheet = try #require(Self.contactSheet(sheetRows, thumb: CGSize(width: 448, height: 252)))
+        let sheetURL = directory.appendingPathComponent("\(prefix)-contact.png")
+        let destination = try #require(CGImageDestinationCreateWithURL(sheetURL as CFURL,
+                                                                       UTType.png.identifier as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, sheet, nil)
+        #expect(CGImageDestinationFinalize(destination))
+        let numbers = try JSONSerialization.data(withJSONObject: try Self.textNumbers(),
+                                                 options: [.prettyPrinted, .sortedKeys])
+        try numbers.write(to: directory.appendingPathComponent("\(prefix)-numbers.json"))
+        print("[reel] contact sheet \(sheetURL.path)")
+    }
+
     /// One row per move: its name, then the move at 0, 25, 50, 75 and 100 per
     /// cent of the way through.
-    static func contactSheet(_ rows: [(String, [CGImage])]) -> CGImage? {
-        let thumb = CGSize(width: 320, height: 180)
+    static func contactSheet(_ rows: [(String, [CGImage])],
+                             thumb: CGSize = CGSize(width: 320, height: 180)) -> CGImage? {
         let label: CGFloat = 230, gap: CGFloat = 10, header: CGFloat = 40
         let width = Int(label + (thumb.width + gap) * 5 + gap)
         let height = Int(header + (thumb.height + gap) * CGFloat(rows.count) + gap)

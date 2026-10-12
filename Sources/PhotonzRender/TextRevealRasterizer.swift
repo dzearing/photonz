@@ -220,17 +220,25 @@ public enum TextRevealCompositor {
     /// before its mask, which holds still.
     ///
     /// A piece that turns in depth (`TextRevealStyle.isInDepth`) is seen
-    /// through a camera `eyeDistance` pixels in front of the text's middle:
-    /// the document's own camera, measured in this picture's pixels, so the
-    /// letters foreshorten the way a layer turned by the same angle would.
+    /// through its own lens, close and centred on it (`lens(for:pose:height:eyeDistance:)`),
+    /// so a word turned 60 degrees has a near edge plainly taller than its far
+    /// one wherever it sits on the line. `eyeDistance` is the document's own
+    /// camera in this picture's pixels: a lens is never weaker than it, and a
+    /// document with no perspective keeps its words flat.
+    ///
+    /// `reach` is how far, in pixels, a piece turned toward the camera may be
+    /// drawn past the box the words are laid out in (`reach(of:)`): the
+    /// picture comes back that much bigger on every side, its origin still at
+    /// nought, so nothing near the camera is cut at the box's edge.
     public static func image(_ pieces: TextRevealPieces, reveal: TextReveal, elapsedMS: Int,
-                             shutterMS: Double? = nil, eyeDistance: Double? = nil) -> CIImage {
+                             shutterMS: Double? = nil, eyeDistance: Double? = nil,
+                             reach: CGFloat = 0) -> CIImage {
         let whole = CGRect(origin: .zero, size: pieces.pixelSize)
-        var out = pieces.plate ?? CIImage(color: .clear).cropped(to: whole)
+        let ground = CIImage(color: .clear).cropped(to: whole.insetBy(dx: -max(reach, 0), dy: -max(reach, 0)))
+        var out = pieces.plate.map { $0.composited(over: ground) } ?? ground
         let ranks = reveal.ranks(count: pieces.pieces.count)
         let em = pieces.emPixels
-        var projection = Projection3D(camera: nil, canvas: pieces.pixelSize)
-        projection.eyeDistance = eyeDistance ?? Double(max(pieces.pixelSize.width, pieces.pixelSize.height)) * 1.2
+        let eye = eyeDistance ?? Double(max(pieces.pixelSize.width, pieces.pixelSize.height)) * 1.2
         for (index, piece) in pieces.pieces.enumerated() {
             let pose = reveal.pose(rank: ranks[index], atElapsedMS: elapsedMS, place: piece.place)
             guard pose.opacity > 0.001, pose.shown > 0.0001 else { continue }
@@ -239,7 +247,7 @@ public enum TextRevealCompositor {
                 // Turned in depth: warped to where the camera sees it, smeared
                 // between where it was while the shutter was open.
                 guard let now = turnedQuad(piece, pose: pose, em: em, height: whole.height,
-                                           projection: projection) else { continue }
+                                           eyeDistance: eye) else { continue }
                 image = warped(image, onto: now)
                 if let shutterMS, shutterMS > 0 {
                     let opens = Double(elapsedMS) - shutterMS / 2
@@ -248,7 +256,7 @@ public enum TextRevealCompositor {
                         let at = opens + shutterMS * Double(step) / Double(count - 1)
                         return turnedQuad(piece, pose: reveal.pose(rank: ranks[index], atElapsed: at,
                                                                    place: piece.place),
-                                          em: em, height: whole.height, projection: projection,
+                                          em: em, height: whole.height, eyeDistance: eye,
                                           ignoringBack: true)
                     }
                     var span: CGFloat = 0
@@ -310,22 +318,76 @@ public enum TextRevealCompositor {
             }
             out = image.composited(over: out)
         }
-        return out.cropped(to: whole)
+        guard reach > 0 else { return out.cropped(to: whole) }
+        return out.cropped(to: whole.insetBy(dx: -reach, dy: -reach))
+            .transformed(by: CGAffineTransform(translationX: reach, y: reach))
+    }
+
+    /// How close a turning piece's own camera stands, in multiples of the
+    /// piece's size along the way it turns. At 1.6, a word swung 45 degrees
+    /// from its edge has a near edge about 1.45 times its far one, and one
+    /// flipped 45 degrees about its middle about 1.55 times: depth a viewer
+    /// sees without studying it, the strength animated type has in a browser
+    /// with `perspective()` on each letter. The document's camera, thirteen
+    /// hundred pixels away at 1080p for a word a hundred tall, gave 1.04.
+    static let lensDistance: Double = 1.6
+
+    /// The camera a piece turning as `pose` says is seen through: straight in
+    /// front of the middle of its own line box, `lensDistance` times its size
+    /// along the way it turns away, so a word and a letter foreshorten alike
+    /// and no word leans like italic type for sitting off the middle of the
+    /// line. Never further than the document's camera (`eyeDistance`), and
+    /// flat where the document has no perspective.
+    static func lens(for piece: TextRevealPieces.Piece, pose: TextRevealPose, height: CGFloat,
+                     eyeDistance: Double) -> Projection3D {
+        var lens = Projection3D(camera: nil, canvas: .zero)
+        let box = piece.box
+        lens.centre = CGPoint(x: box.midX, y: height - box.midY)
+        guard eyeDistance.isFinite else {
+            lens.eyeDistance = .infinity
+            return lens
+        }
+        // The size it turns across: its height tipping about its sideways
+        // axis, its width swinging about its upright one, whichever it is
+        // doing more of.
+        let across = abs(pose.turnY) > abs(pose.turnX) ? Double(box.width) : Double(box.height)
+        lens.eyeDistance = min(max(across, 1) * lensDistance, eyeDistance)
+        return lens
+    }
+
+    /// How far past the box the words are laid out in a piece of `pieces`
+    /// turned toward its lens can reach, in pixels: what `image(…, reach:)`
+    /// is asked for while a reveal turns in depth. Fixed for the words, so the
+    /// picture keeps one size through the whole reveal.
+    public static func reach(of pieces: TextRevealPieces) -> CGFloat {
+        let widest = pieces.pieces.map { max($0.box.width, $0.box.height) }.max() ?? 0
+        let room = (widest * 0.25 + pieces.emPixels * 0.25).rounded(.up)
+        return min(room, max(pieces.pixelSize.width, pieces.pixelSize.height))
     }
 
     /// Where the corners of a piece's picture land, clockwise from its
     /// top-left as Core Image counts (y up), turned the way `pose` says about
-    /// its hinge on its own line box and seen through `projection`. Nil where
-    /// it has turned its back and hides it, or come up to the camera.
+    /// its hinge on its own line box and seen through its own lens
+    /// (`lens(for:pose:height:eyeDistance:)`). Nil where it has turned its
+    /// back and hides it, or come up to the camera.
     static func turnedQuad(_ piece: TextRevealPieces.Piece, pose: TextRevealPose, em: CGFloat, height: CGFloat,
-                           projection: Projection3D, ignoringBack: Bool = false) -> [CGPoint]? {
+                           eyeDistance: Double, ignoringBack: Bool = false) -> [CGPoint]? {
+        let projection = lens(for: piece, pose: pose, height: height, eyeDistance: eyeDistance)
         // The maths is y-down, the way a layer's turn is stated.
         func down(_ p: CGPoint) -> CGPoint { CGPoint(x: p.x, y: height - p.y) }
         let box = piece.box
         let boxDown = CGRect(x: box.minX, y: height - box.maxY, width: box.width, height: box.height)
         let pivot = CGPoint(x: boxDown.minX + boxDown.width * pose.hinge.x,
                             y: boxDown.minY + boxDown.height * pose.hinge.y)
-        let turn = pose.turn3D(em: Double(em)).affine(pivot: pivot)
+        // How far back it is, stated against the document's camera, is kept
+        // as the same share of the lens's distance, so it looks exactly as
+        // far off and as small as it would through the document's camera;
+        // only the foreshortening is the lens's own.
+        var turn3D = pose.turn3D(em: Double(em))
+        if projection.hasPerspective, eyeDistance.isFinite, eyeDistance > 0 {
+            turn3D.depth *= projection.eyeDistance / eyeDistance
+        }
+        let turn = turn3D.affine(pivot: pivot)
         if pose.hidesBack, !ignoringBack {
             guard let front = Space3D.quad(of: boxDown, through: turn, projection),
                   Space3D.facesViewer(front) else { return nil }

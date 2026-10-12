@@ -114,13 +114,14 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
     /// Whether this one turns the part in depth.
     public var isInDepth: Bool { Self.inDepth.contains(self) }
 
-    /// The curve a new one runs on. The ones in depth ease in and out, so
-    /// the turn is still plainly going on half way through; a tilt settles on
-    /// the gentlest of them.
+    /// The curve a new one runs on. The ones in depth ease in and out
+    /// evenly, half way turned at half time, so the turn is still plainly
+    /// going on in the middle of it: the Ease in out on the list is four
+    /// fifths of the way home by then, and a swing from 90 degrees read as a
+    /// 20 degree lean.
     public var defaultCurve: EasingCurve {
         switch self {
-        case .swingIn, .flipUp, .flyInFromDepth: .easeInOut
-        case .tiltSettle: .easeInOutSine
+        case .swingIn, .flipUp, .flyInFromDepth, .tiltSettle: .easeInOutSine
         default: .easeOutExpo
         }
     }
@@ -137,9 +138,11 @@ public enum TitleBuildKind: String, CaseIterable, Hashable, Codable, Sendable {
         case .springPop: 85
         case .trackIn: 25
         case .swingIn: 90
-        case .flipUp: 180
+        // From edge on: from any further it spends its first moments facing
+        // away with nothing to show.
+        case .flipUp: 90
         case .flyInFromDepth: 900
-        case .tiltSettle: 40
+        case .tiltSettle: 60
         }
     }
 

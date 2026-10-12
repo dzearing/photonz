@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 35,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T00:17:02.520Z",
-  "updated": "2026-10-12T00:17:02.617Z",
+  "updated": "2026-10-12T01:28:45.090Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11), looking at the 2.5D mock: \"that has no perspective, those are just 2d animations\".\n\nChecked in intake: the app's clip transitions DO render true perspective (queue/audits/2026-10-11-depth-reel-contact.png: Flip, Cube, Doorway, Revolve, Push in Depth are trapezoids; numbers in 2026-10-11-depth-reel-numbers.json). The text depth entrances in the same reel look like italic slants: PhotonzRender/TextRevealRasterizer.swift:328 places each piece with pose.turn3D(em:).affine(pivot:), a 2D affine approximation that cannot foreshorten. The mock (docs/design/mocks/pages/video-depth.html) uses real CSS 3D (perspective 900 to 1100 px on .dp-stage, direct children with matrix3d), verified structurally in Chrome; its cube reads 3D but the card flip only keystones slightly because the camera is far relative to the small card. The user likely viewed it in the Ghoztty viewer pane (WebKit). The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) depend on these entrances looking 3D, so this runs before them.",
@@ -31,6 +31,22 @@
     {
       "t": "2026-10-12T00:17:02.616Z",
       "note": "seq 3960 -> 35"
+    },
+    {
+      "t": "2026-10-12T00:46:07.728Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T00:51:22.486Z",
+      "note": "Reproduced (scratch test through TextRevealCompositor.turnedQuad, 'Ship it faster.' 112pt, 1080p document camera): at each entrance's time midpoint the near:far edge ratio is 1.04 (Swing In, Fly In, Tilt Settle) to 1.08 (Flip Up), by word and by letter, and off-centre pieces lean 15 to 35 px like italic type. Correction to the intake theory: the pieces WERE projected through a camera (turnedQuad + CIPerspectiveTransform), not a 2D affine; the camera is the document's (~1300 px away, centred on the whole text) so a 100 px word barely foreshortens and the keystone of the whole line shows as a per-word shear. Also the default curve (0.4,0,0.2,1) is 78% done at half time, so Swing In is only 20 deg turned at its midpoint. Fix: each turning piece seen through its own close lens centred on it (the way CSS perspective()/GSAP transformPerspective animate type), a symmetric curve, Flip Up from 90, and room to draw past the text box."
+    },
+    {
+      "t": "2026-10-12T01:28:45.089Z",
+      "note": "owns these walks: title-words-turn-in-depth-walk"
     }
+  ],
+  "started": "2026-10-12T00:46:07.726Z",
+  "walks": [
+    "title-words-turn-in-depth-walk"
   ]
 }

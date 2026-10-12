@@ -18,7 +18,10 @@
 #video-depth .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}
 
 /* ---------- a 3D stage: the frame a perspective camera looks through ---------- */
-.dp-stage{position:relative;overflow:hidden;perspective:1100px;perspective-origin:50% 50%;
+/* Cut to its rounded corners with clip-path, never overflow:hidden: WebKit
+   (Safari, and the Ghoztty viewer pane) draws everything under a rounded
+   overflow clip FLAT, so every turned layer here came out a 2D slant there. */
+.dp-stage{position:relative;clip-path:inset(0 round var(--r2));perspective:1100px;perspective-origin:50% 50%;
   background:radial-gradient(120% 90% at 30% 20%,#2a2f4a,#0d0f18 70%);border-radius:var(--r2);
   touch-action:none;user-select:none;-webkit-user-select:none}
 .dp-stage.dp-frame{position:absolute;inset:var(--s5) var(--s6);aspect-ratio:auto}
@@ -122,6 +125,9 @@
 .dp-moves{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
 @media (max-width:1100px){.dp-moves{grid-template-columns:1fr}}
 .dp-move .dp-stage{height:220px;perspective:900px}
+/* A card flip seen from close, so its near edge plainly outgrows its far one
+   (task text-that-swings-flips-or-flies-in-from-depth-is). */
+#mvFlip .dp-stage{perspective:400px}
 .dp-move .dp-ctl{display:flex;align-items:center;gap:var(--s2);margin-top:var(--s2)}
 .dp-move .dp-ctl input[type=range]{flex:1;accent-color:var(--accent)}
 .dp-move .dp-t{font-family:var(--mono);font-size:10px;color:var(--dim);width:40px;text-align:right}
@@ -675,8 +681,13 @@
     }},
     mvTitle:{dur:3.2,frame:function(root,t){
       [].forEach.call(root.querySelectorAll(".dp-word"),function(w,i){
-        var k=seg(t,0.3+i*0.12,1.3+i*0.12), e=easeOutBack(k);
-        w.style.transform="translateZ("+(-900*(1-e))+"px) rotateX("+(75*(1-e))+"deg)";
+        // Each word through its own close lens, 1.6 times its height away and
+        // centred on its hinge, the way the app draws a word turning in depth:
+        // the stage's camera is far too far off for a word this small to
+        // foreshorten. Its 900 back is kept as the same share of the lens, so
+        // it starts exactly as small as it would through the stage's camera.
+        var k=seg(t,0.3+i*0.12,1.3+i*0.12), e=easeOutBack(k), lens=1.6*w.offsetHeight;
+        w.style.transform="perspective("+lens+"px) translateZ("+(-900*(1-e)*lens/900)+"px) rotateX("+(75*(1-e))+"deg)";
         w.style.opacity=clamp(k*2.2,0,1);
       });
     }},

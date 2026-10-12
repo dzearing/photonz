@@ -1,0 +1,90 @@
+[
+  {
+    "by" : "word",
+    "cornerTravelIn100msPixels" : 31,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.4399999999999999,
+    "move" : "Swing In",
+    "startAngleDegrees" : 90
+  },
+  {
+    "by" : "word",
+    "cornerTravelIn100msPixels" : 28,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.5700000000000001,
+    "move" : "Flip Up",
+    "startAngleDegrees" : 90
+  },
+  {
+    "by" : "word",
+    "cornerTravelIn100msPixels" : 38,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.45,
+    "move" : "Fly In From Depth",
+    "startAngleDegrees" : 900
+  },
+  {
+    "by" : "word",
+    "cornerTravelIn100msPixels" : 30,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 600,
+    "midpointAngleDegrees" : 30,
+    "midpointNearToFarEdges" : 1.3300000000000001,
+    "move" : "Tilt Settle",
+    "startAngleDegrees" : 60
+  },
+  {
+    "by" : "letter",
+    "cornerTravelIn100msPixels" : 43,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 400,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.4399999999999999,
+    "move" : "Swing In",
+    "startAngleDegrees" : 90
+  },
+  {
+    "by" : "letter",
+    "cornerTravelIn100msPixels" : 38,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 400,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.5700000000000001,
+    "move" : "Flip Up",
+    "startAngleDegrees" : 90
+  },
+  {
+    "by" : "letter",
+    "cornerTravelIn100msPixels" : 52,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 400,
+    "midpointAngleDegrees" : 45,
+    "midpointNearToFarEdges" : 1.45,
+    "move" : "Fly In From Depth",
+    "startAngleDegrees" : 900
+  },
+  {
+    "by" : "letter",
+    "cornerTravelIn100msPixels" : 27,
+    "curve" : "Ease in out sine",
+    "edgesMeasured" : "top and bottom",
+    "lengthMS" : 400,
+    "midpointAngleDegrees" : 30,
+    "midpointNearToFarEdges" : 1.3200000000000001,
+    "move" : "Tilt Settle",
+    "startAngleDegrees" : 60
+  }
+]

@@ -119,9 +119,31 @@ is drawn: each move is the shots or the title's parts turned with
   out. Whole, they compile to keys on Rotation X/Y and Depth plus
   `TitleCompiler.turnSetup` (hinge, hidden back). By line, word or letter they
   are `TextRevealStyle`s whose `TextRevealPose` carries `turnX`, `turnY`,
-  `depthEm`, `hinge`; `TextRevealCompositor` warps each piece through the
-  document camera's eye distance and smears it by its projected corners.
-  Depth of field does not reach individual words.
+  `depthEm`, `hinge`; `TextRevealCompositor` warps each piece through its
+  own lens and smears it by its projected corners. Depth of field does not
+  reach individual words.
+- **A lens per word** (task `text-that-swings-flips-or-flies-in-from-depth-is`).
+  Through the document camera (about 1300 px away at 1080p, centred on the
+  whole text) a turning word measured near:far 1.04 at its midpoint and words
+  off the middle leaned 15 to 35 px like italic type; the user called it "just
+  2d animations". Each turning piece is now seen through its own camera
+  (`TextRevealCompositor.lens`), centred on its line box and
+  `lensDistance` (1.6) times its height (tipping) or width (swinging) away,
+  never further than the document's and flat when the document has no
+  perspective: the convention for animated type (CSS `perspective()` per
+  letter). Depth is kept as the same share of the lens, so a word looks as far
+  off and as small as before. A turned piece may draw up to
+  `TextRevealCompositor.reach(of:)` past the text box; the renderer grows the
+  layer's frame by it the way a shape's outside stroke does. The depth
+  entrances ease on Ease in out sine (half turned at half time), Flip Up starts
+  edge on (90), Tilt Settle from 60, and Fly In closes its distance by
+  `left²`. Midpoint near:far 1.32 to 1.57 by word and letter
+  (`TextDepthPerspectiveTests`, `queue/audits/2026-10-11-text-depth-numbers.json`).
+- **The mock in WebKit.** `docs/design/mocks/pages/video-depth.html` was drawn
+  flat in WebKit (Safari, the Ghoztty viewer pane): WebKit flattens 3D under a
+  rounded `overflow:hidden` clip. Its stages now clip with
+  `clip-path: inset(0 round …)`, the title words carry their own
+  `perspective()` and the card flip's camera is 400 px.
 - **Measured** (2026-10-11): at the midpoint each transition shows a picture
   turned 20 degrees or more (numbers in
   `queue/audits/2026-10-11-depth-reel-numbers.json`); 1080p, ten layers mid

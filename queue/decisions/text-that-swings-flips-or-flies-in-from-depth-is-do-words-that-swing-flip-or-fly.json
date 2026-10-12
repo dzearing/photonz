@@ -1,0 +1,48 @@
+{
+  "id": "text-that-swings-flips-or-flies-in-from-depth-is-do-words-that-swing-flip-or-fly",
+  "taskId": "text-that-swings-flips-or-flies-in-from-depth-is",
+  "question": "Do words that swing, flip or fly in now look like they turn in space?",
+  "context": "Reel: queue/audits/2026-10-11-text-depth-contact.png (clip Flip on top for comparison) and one MP4 and GIF per entrance by word and by letter beside it; WebKit before and after of the mock: queue/audits/2026-10-11-text-depth-mock-webkit-before-after.png. Already built at Next defaults; this card only tunes the strength.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep this strength",
+      "summary": "Words and letters turn with the perspective in the new reel: half way in, the near edge of a turning word is about 1.3 to 1.6 times its far edge, and a word flipping toward you may grow a little past its text box.",
+      "pros": [
+        "Depth reads at a glance, by word and by letter alike",
+        "Every word turns the same way wherever it sits on the line, with no italic lean"
+      ],
+      "cons": [
+        "Tilt Settle turns on two axes at once, so it still leans a little as it settles"
+      ],
+      "mitigation": "Tilt Settle can be made to tip only, if the lean bothers you."
+    },
+    {
+      "id": "b",
+      "label": "Stronger: a closer camera on every word",
+      "summary": "The same moves seen from even closer, so half way in a turning word has a near edge about twice its far one and swings in more dramatically.",
+      "pros": [
+        "Unmistakably 3D, even on small type"
+      ],
+      "cons": [
+        "Words reach further past their text box and can look distorted at the start of a flip"
+      ],
+      "mitigation": "The camera distance is one number and can be tuned back."
+    },
+    {
+      "id": "c",
+      "label": "Softer: the camera further back",
+      "summary": "The moves keep their angles but foreshorten less: half way in the near edge is about 1.15 times the far one, closer to how they looked before.",
+      "pros": [
+        "Calmer, closer to a subtle corporate title"
+      ],
+      "cons": [
+        "Comes back toward the flat look you rejected"
+      ],
+      "mitigation": "A title can still pick Swing In from a larger angle for more depth."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-12T01:28:55.716Z"
+}

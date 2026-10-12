@@ -1,0 +1,32 @@
+{
+  "feature": "Text that turns in depth is drawn in real perspective",
+  "epic": "video-transitions-motion",
+  "summary": "Words and letters that swing, flip, fly in or tilt into a title now turn in space: each has a near edge plainly taller than its far one half way in (1.3 to 1.6 times, was 1.04), and none of them lean like italic type. The depth mock now shows real perspective in the Ghoztty viewer and Safari, not just Chrome.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A title with a headline (Text tool, type a few words).",
+  "switched": {},
+  "try": [
+    { "do": "Select the title's headline and set its In to Swing In, by word.", "shot": "2026-10-11-text-depth-walk-swing-in-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Scrub the playhead slowly through the first second and watch each word swing up from its bottom edge." },
+    { "do": "Change In to Flip Up and scrub again: each word flips up about its middle, its near edge growing toward you.", "shot": "2026-10-11-text-depth-walk-flip-up-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Change By to Letter and press Space to play it." },
+    { "do": "Try Fly In From Depth and Tilt Settle the same way.", "shot": "2026-10-11-text-depth-walk-tilt-settle-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the reel's contact sheet (2026-10-11-text-depth-contact.png) and compare the words with the clip Flip on its top row.", "shot": "2026-10-11-text-depth-contact.png" },
+    { "do": "Open the depth mock in the viewer pane and play How it feels: the card flip, title and cube.", "shot": "2026-10-11-text-depth-mock-webkit-before-after.png" }
+  ],
+  "evaluate": [
+    "Half way through Swing In, does each word look like it is turning in space rather than slanting?",
+    "Is the strength right, or should the camera be closer or further (the decision card)?",
+    "Tilt Settle turns on two axes at once and still leans a little as it settles: is that fine, or should it only tip back?",
+    "Is starting Flip Up edge on (rather than from facing away) the flip you expect?",
+    "In the viewer pane, do the card flip, cube and turned layers on the depth mock now look 3D?"
+  ],
+  "rough": [
+    "Measured half way in, near edge to far edge (queue/audits/2026-10-11-text-depth-numbers.json): Swing In 1.44, Flip Up 1.57, Fly In From Depth 1.45, Tilt Settle 1.32 to 1.33, by word and by letter. Before: 1.04 to 1.08, with off-centre words leaning 15 to 35 px.",
+    "The mock's title swing starts each word tipped 75 degrees on an overshooting curve; the app's Fly In From Depth starts at 90 on an even ease in and out, and Swing In from 90. Settled on decision card text-that-swings-flips-or-flies-in-from-depth-is-do-words-that-swing-flip-or-fly, which tunes the strength.",
+    "Each word now has its own camera centred on it rather than sharing the frame's, so words in one line do not converge on one vanishing point; that is how animated type looks in browsers and motion tools, and it is what removes the italic lean.",
+    "A word flipping toward you may now draw past its text box (up to a quarter of the widest word, plus a quarter of the type size); past that it is still cut.",
+    "Depth of field still does not reach individual words (it never did); motion blur does, measured through each word's own camera.",
+    "As you asked on 2026-10-11 (task text-that-swings-flips-or-flies-in-from-depth-is), the mock's card flip camera moved from 900 to 400 px, its title words got their own perspective, and every stage now clips with a rounded clip-path, because WebKit drew everything under a rounded overflow clip flat. The rounded corners of a turned card inside a stage still come out square in WebKit.",
+    "Perf at 1080p, a headline flipping up by letter with motion blur on: 7.9 ms median, 11.4 ms slowest (TextDepthPerspectiveTests.perf)."
+  ]
+}

@@ -1080,7 +1080,7 @@ public final class DocumentRenderer: @unchecked Sendable {
         // than the box, and every step below has to be told, or the picture is
         // squashed back into the frame and the outside line lands inside again
         // (`BorderPosition.swift`).
-        let contentOutset = layer.contentOutset * contentScale
+        var contentOutset = layer.contentOutset * contentScale
         switch layer.content {
         // Sound is a layer that occupies time and draws not one pixel
         // (`SoundClip.swift`). Nothing to composite, so it never reaches the
@@ -1136,10 +1136,17 @@ public final class DocumentRenderer: @unchecked Sendable {
                !reveal.hasSettled(atElapsedMS: elapsed - (text.revealShutterMS.map { Int($0 / 2) + 1 } ?? 0),
                                   count: pieces.pieces.count) {
                 let eye = document.projection.eyeDistance * Double(bake)
+                // A word turned toward its lens may draw past the box the words
+                // are laid out in, and is drawn there rather than cut at it:
+                // the picture comes back that much bigger on every side, and
+                // the frame is grown to match, as a shape's outside stroke is.
+                let reach = reveal.style.isInDepth && layer.crop == nil && contentOutset == 0
+                    ? TextRevealCompositor.reach(of: pieces) : 0
                 image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed,
                                                              shutterMS: text.revealShutterMS,
-                                                             eyeDistance: eye),
+                                                             eyeDistance: eye, reach: reach),
                                   nearest: magnifyNearest, scale: contentScale / bake)
+                contentOutset = reach * contentScale / bake
                 break
             }
             guard let raster = raster(for: .text(still), size: layer.frame.size, variant: variant, rasterize: {

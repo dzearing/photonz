@@ -75,8 +75,15 @@ struct TitleDepthBuildTests {
 
     @Test("Flip Up hides its back, so it shows from edge on")
     func flipHidesItsBack() throws {
-        let (doc, id) = try TitleDesignTests.oneBox(TitlePart(path: "Box", role: .accent,
-                                                              in: TitleBuild(.flipUp, delayMS: 0, lengthMS: 600)))
+        // By default it starts edge on (task
+        // `text-that-swings-flips-or-flies-in-from-depth-is`), so none of its
+        // time is spent facing away...
+        let (plain, plainID) = try TitleDesignTests.oneBox(
+            TitlePart(path: "Box", role: .accent, in: TitleBuild(.flipUp, delayMS: 0, lengthMS: 600)))
+        #expect(abs(Self.angle(TitleDesignTests.piece(plain, plainID, "Box", atMS: 0)) - 90) < 0.01)
+        // ...and flipped from further round, its back is hidden until it turns.
+        let (doc, id) = try TitleDesignTests.oneBox(
+            TitlePart(path: "Box", role: .accent, in: TitleBuild(.flipUp, delayMS: 0, lengthMS: 600, amount: 180)))
         let start = try #require(TitleDesignTests.piece(doc, id, "Box", atMS: 0))
         #expect(start.turn3D?.showsBackFace == false)
         let facing = try #require(Self.quad(doc, id, "Box", atMS: 20))
