@@ -1,0 +1,36 @@
+{
+  "id": "text-that-swings-flips-or-flies-in-from-depth-is",
+  "title": "Text that swings, flips or flies in from depth is drawn with real perspective",
+  "goal": "The depth entrances for text (Swing In, Flip Up, Fly In From Depth, Tilt Settle, by word or letter) look like flat italic slants, not words turning in space, because each word is placed with a flat 2D transform that cannot foreshorten. Draw each word or letter with the same true perspective the 3D clip transitions use, strong enough that the depth reads at a glance, and fix the design mock's weak card flip.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 35,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T00:17:02.520Z",
+  "updated": "2026-10-12T00:17:02.617Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-11), looking at the 2.5D mock: \"that has no perspective, those are just 2d animations\".\n\nChecked in intake: the app's clip transitions DO render true perspective (queue/audits/2026-10-11-depth-reel-contact.png: Flip, Cube, Doorway, Revolve, Push in Depth are trapezoids; numbers in 2026-10-11-depth-reel-numbers.json). The text depth entrances in the same reel look like italic slants: PhotonzRender/TextRevealRasterizer.swift:328 places each piece with pose.turn3D(em:).affine(pivot:), a 2D affine approximation that cannot foreshorten. The mock (docs/design/mocks/pages/video-depth.html) uses real CSS 3D (perspective 900 to 1100 px on .dp-stage, direct children with matrix3d), verified structurally in Chrome; its cube reads 3D but the card flip only keystones slightly because the camera is far relative to the small card. The user likely viewed it in the Ghoztty viewer pane (WebKit). The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) depend on these entrances looking 3D, so this runs before them.",
+  "acceptance": [
+    "Reproduce first: render the four depth entrances by word and by letter and compare a mid-entrance frame against the clip Flip transition's; record in the audit that the words are a parallelogram (affine) rather than a trapezoid (perspective)",
+    "Each revealing word or letter is placed by projecting its four corners through the scene camera (the same perspective warp layers use, not TextRevealRasterizer's pose.turn3D(...).affine(pivot:) at :328), so a word turned 60 degrees on Y has a visibly taller near edge than far edge",
+    "VISIBLE PERSPECTIVE BAR, measured: at each entrance's midpoint the ratio between the near and far vertical edges of a turning word is at least 1.3 (a flat slant measures 1.0), and frames 100 ms apart differ obviously; numbers in the audit",
+    "Defaults chosen so it reads: a camera close enough (focal length / field of view) and angles large enough (for example Swing In from 75 degrees, Flip Up from 90, Fly In from 900 px back) that a viewer sees depth without studying it; the user's earlier complaint was that the moves looked 2D",
+    "Motion blur and depth of field still work per word; held text is pixel identical to plain text; playback, scrub and export match; per-word rasters stay cached so 1080p stays inside 16 ms, MEASURED with a perf note",
+    "The design mock docs/design/mocks/pages/video-depth.html gets a closer camera (smaller CSS perspective relative to the card) so its card flip and title swing show strong perspective, and is checked in Safari/WebKit as well as Chrome (the Ghoztty viewer pane uses WebKit)",
+    "A new reel (MP4, GIF, contact sheet) of the four entrances by word and letter, next to the clip Flip for comparison, under queue/audits/, linked from a decision card for the user to judge",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T00:17:02.522Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T00:17:02.616Z",
+      "note": "seq 3960 -> 35"
+    }
+  ]
+}

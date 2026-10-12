@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 34,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.504Z",
-  "updated": "2026-10-11T12:51:59.591Z",
+  "updated": "2026-10-12T00:17:02.682Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 4 of 4.",
@@ -31,6 +31,15 @@
     {
       "t": "2026-10-11T12:51:59.590Z",
       "note": "seq 3950 -> 34"
+    },
+    {
+      "t": "2026-10-11T23:06:19.606Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T00:17:02.681Z",
+      "note": "User 2026-10-11 says the 3D looks 2D. Intake check: the clip transitions in the reel are true perspective, but the text depth entrances are drawn with an affine approximation (TextRevealRasterizer.swift:328 .affine(pivot:)) and read as italic slants. Filed text-that-swings-flips-or-flies-in-from-depth-is (seq 35) to draw text pieces through the perspective warp; do not mark this task's entrance acceptance as meeting the bar on the slant frames."
     }
-  ]
+  ],
+  "started": "2026-10-11T23:06:19.603Z"
 }
