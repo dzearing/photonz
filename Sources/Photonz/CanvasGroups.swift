@@ -19,7 +19,7 @@ extension CanvasNSView {
     /// With the flag off (or no groups in the document) this is the plain
     /// hit test the canvas has always run.
     func groupAwarePick(at point: CGPoint, zoom: CGFloat) -> (id: UUID, context: UUID?)? {
-        guard let document else { return nil }
+        guard let document = clickable(at: point) else { return nil }
         guard groupSelectionEnabled else {
             return document.hitTest(point, zoom: zoom,
                                     captionPillSize: Self.captionPillSizing)
@@ -27,6 +27,13 @@ extension CanvasNSView {
         }
         return document.selectionTarget(at: point, zoom: zoom, inside: groupContext,
                                         captionPillSize: Self.captionPillSizing)
+    }
+
+    /// The document a click at `point` searches: a clip pushed in past the
+    /// frame is drawn only inside its ring, so a click out on the empty canvas
+    /// passes it by (`PhotonzDocument.cutOffAtTheFrame`).
+    func clickable(at point: CGPoint) -> PhotonzDocument? {
+        document?.cutOffAtTheFrame(frameRings, at: point)
     }
 
     /// How a click sizes an arrow's label: the measured pill, so the only
@@ -40,7 +47,7 @@ extension CanvasNSView {
     /// the click cannot join the selection where you already are — nothing
     /// under the pointer, or the canvas outside the group you are inside.
     func groupAwareExtend(at point: CGPoint, zoom: CGFloat) -> UUID? {
-        guard let document else { return nil }
+        guard let document = clickable(at: point) else { return nil }
         guard groupSelectionEnabled else {
             return document.hitTest(point, zoom: zoom,
                                     captionPillSize: Self.captionPillSizing)?.id
@@ -54,7 +61,7 @@ extension CanvasNSView {
     /// keeps meaning what it always meant — opening a text layer to type, or an
     /// arrow's caption.
     func groupAwareDescent(at point: CGPoint, zoom: CGFloat) -> (id: UUID, context: UUID)? {
-        guard groupSelectionEnabled, let document else { return nil }
+        guard groupSelectionEnabled, let document = clickable(at: point) else { return nil }
         return document.descendTarget(at: point, zoom: zoom, inside: groupContext,
                                       captionPillSize: Self.captionPillSizing)
     }

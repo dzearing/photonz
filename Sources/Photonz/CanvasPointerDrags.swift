@@ -169,7 +169,7 @@ extension CanvasNSView {
         // second click, and the anchor never landed — and a short edge on an
         // icon is exactly that pair of clicks.
         if event.clickCount == 2, tool.doubleClickOnEmptyCanvasZoomsWindow,
-           document?.canvasHitTest(p, zoom: viewport.zoom) == nil {
+           clickable(at: p)?.canvasHitTest(p, zoom: viewport.zoom) == nil {
             performWindowTitleBarAction()
             return
         }

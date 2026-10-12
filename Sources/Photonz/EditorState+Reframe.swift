@@ -41,23 +41,19 @@ extension EditorState {
         return inside
     }
 
-    /// The ring each picked clip that is pushed in past the frame wears on the
+    /// The ring each clip that is pushed in past the frame wears on the
     /// canvas instead of its box and handles, keyed by layer, in canvas points
-    /// (`PhotonzDocument.frameRing`). Empty for everything else, which is
-    /// almost always: only a picture on the timeline can be pushed in on.
+    /// (`PhotonzDocument.frameRings`). Every such clip, picked or not: the
+    /// canvas draws the ring only round what is picked, and a click past the
+    /// ring passes any of them by (`PhotonzDocument.cutOffAtTheFrame`). Empty
+    /// for everything else, which is almost always: only a picture on the
+    /// timeline can be pushed in on.
     var frameRings: [UUID: CGRect] {
         guard documentHasTime, let document else { return [:] }
-        let picked = multiSelectedLayerIDs.union(selectedLayerID.map { [$0] } ?? [])
-        let clips = picked.filter { document.layer(id: $0)?.takesAReframe == true }
-        guard !clips.isEmpty, let shown = canvasGeometryDocument else { return [:] }
-        var rings: [UUID: CGRect] = [:]
-        for id in clips {
-            guard let posed = shown.layer(id: id),
-                  let ring = document.frameRing(layerID: id, drawnBox: posed.drawnBounds())
-            else { continue }
-            rings[id] = ring
-        }
-        return rings
+        var clips = false
+        document.forEachLayer { clips = clips || $0.takesAReframe }
+        guard clips, let shown = canvasGeometryDocument else { return [:] }
+        return document.frameRings(shown: shown)
     }
 
     // MARK: The two moves

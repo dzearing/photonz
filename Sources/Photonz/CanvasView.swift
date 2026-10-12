@@ -49,8 +49,8 @@ struct CanvasView: NSViewRepresentable {
     let groupContext: UUID?
     /// The marquee's multi-selection, echoed from EditorState.
     let multiSelectedLayerIDs: Set<UUID>
-    /// The ring a picked clip pushed in past the frame wears instead of its
-    /// box and handles, echoed from EditorState (`EditorState.frameRings`).
+    /// The ring a clip pushed in past the frame wears instead of its box and
+    /// handles when picked, echoed from EditorState (`EditorState.frameRings`).
     let frameRings: [UUID: CGRect]
     let dragPreview: DragPreview?
     let tool: Tool
@@ -1125,10 +1125,11 @@ final class CanvasNSView: NSView {
     /// The marquee's multi-selection, echoed from EditorState (committed).
     /// Read by the frame chrome too, so every picked screen's name tints.
     var multiSelectedLayerIDs: Set<UUID> = []
-    /// The ring each picked clip pushed in past the frame wears, in document
-    /// points, echoed from EditorState (`PhotonzDocument.frameRing`). The
-    /// canvas cannot work it out itself: the document it holds is posed, and
-    /// the ring is read against the clip's own box.
+    /// The ring each clip pushed in past the frame wears when picked, in
+    /// document points, echoed from EditorState (`PhotonzDocument.frameRings`).
+    /// The canvas cannot work it out itself: the document it holds is posed,
+    /// and the ring is read against the clip's own box. A click past a ring
+    /// passes that clip by (`clickable(at:)`).
     var frameRings: [UUID: CGRect] = [:]
     /// Every layer currently picked, however it got there: the multi-selection
     /// plus the single primary selection. What a ⇧-sweep adds to.

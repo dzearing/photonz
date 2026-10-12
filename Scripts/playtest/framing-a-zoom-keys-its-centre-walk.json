@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk",
-  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the canvas draws only the frame ring and no dashed route (no Path row either, since a recording's framing has no route to show), the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back. Picked at 220% the recording is ringed on the frame with no handle out on the empty canvas, at the wide shot it wears its usual box, and a title typed over the push keeps its own outline and handles.",
+  "seed": "The zoom walkthrough's step 6, at Next defaults with no flag changed: the sample talk recording picked, Scale keyed 100% at 0:03 and 220% at 0:05, then at 0:05 the picture dragged to frame a spot. The drag keys the framing at 0:03 and 0:05 (four keys in all), a lane called Centre opens under the Scale lane, the canvas draws only the frame ring and no dashed route (no Path row either, since a recording's framing has no route to show), the Properties row reads Centre as the point of the recording in the middle of the frame, typing a centre moves the framing there, the wide shot at 0:03 is exactly where it was, and one undo takes the drag and its keys back. Picked at 220% the recording is ringed on the frame with no handle out on the empty canvas, a click on the empty canvas just past the frame lets go of it and a click on the picture picks it again, at the wide shot it wears its usual box, and a title typed over the push keeps its own outline and handles.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -134,6 +134,50 @@
     {
       "do": "snapshot",
       "name": "2-zoomed-at-5"
+    },
+    {
+      "do": "click",
+      "at": [
+        -20,
+        400
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2b-let-go",
+      "note": "a click on the empty canvas 20 points left of the frame lets go of the pushed-in recording: its magnified picture reaches out there, but nothing of it is drawn past the frame"
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "snapshot",
+      "name": "2b-let-go-past-the-frame"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        300
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ],
+      "outline": "frame"
     },
     {
       "do": "drag",

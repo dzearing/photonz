@@ -105,4 +105,62 @@ struct FrameRingTests {
         let huge = CGRect(x: -400, y: -400, width: 3000, height: 2000)
         #expect(document.frameRing(layerID: title.id, drawnBox: huge) == nil)
     }
+
+    // MARK: - A click outside the ring
+
+    @Test("Every clip pushed in past the frame is ringed, picked or not")
+    func ringsForEveryPushedInClip() {
+        let (document, id) = Self.pushedIn()
+        let shown = document.posedForCanvas(atTimeMS: 5000)
+        #expect(document.frameRings(shown: shown)
+                == [id: CGRect(origin: .zero, size: document.canvasSize)])
+        #expect(document.frameRings(shown: document.posedForCanvas(atTimeMS: 0)).isEmpty)
+    }
+
+    @Test("A click on the empty canvas past the frame lets go of a pushed-in clip")
+    func clickPastTheFrameMissesThePushedInClip() {
+        let (document, id) = Self.pushedIn()
+        let shown = document.posedForCanvas(atTimeMS: 5000)
+        let rings = document.frameRings(shown: shown)
+        let outside = CGPoint(x: -20, y: 400)
+        // The premise: the magnified box reaches out there.
+        #expect(shown.hitTest(outside)?.id == id)
+        #expect(shown.cutOffAtTheFrame(rings, at: outside).hitTest(outside) == nil)
+        #expect(shown.cutOffAtTheFrame(rings, at: outside)
+                .selectionTarget(at: outside, inside: nil) == nil)
+    }
+
+    @Test("A click on the picture inside the frame still picks the clip")
+    func clickInsideTheFramePicksThePushedInClip() {
+        let (document, id) = Self.pushedIn()
+        let shown = document.posedForCanvas(atTimeMS: 5000)
+        let rings = document.frameRings(shown: shown)
+        let inside = CGPoint(x: 300, y: 300)
+        #expect(shown.cutOffAtTheFrame(rings, at: inside).hitTest(inside)?.id == id)
+    }
+
+    @Test("Past the frame, a click reaches what is drawn under the pushed-in clip")
+    func clickPastTheFrameReachesWhatIsUnder() {
+        let (pushed, id) = Self.pushedIn()
+        let under = Layer(name: "Backdrop", content: .image(ImageRef(pixelSize: CGSize(width: 1480, height: 920))),
+                          frame: CGRect(x: -100, y: -100, width: 1480, height: 920))
+        var document = pushed
+        document.layers.insert(under, at: 0)
+        let shown = document.posedForCanvas(atTimeMS: 5000)
+        let rings = document.frameRings(shown: shown)
+        let outside = CGPoint(x: -20, y: 400)
+        #expect(shown.hitTest(outside)?.id == id)
+        #expect(shown.cutOffAtTheFrame(rings, at: outside).hitTest(outside)?.id == under.id)
+    }
+
+    @Test("A clip slid off the canvas at its own size is still clicked where it hangs")
+    func slidAtFullSizeStillTakesTheClick() {
+        var clip = Clip.clip()
+        clip.frame = clip.frame.offsetBy(dx: -300, dy: 0)
+        let document = Clip.document(clip)
+        let rings = document.frameRings(shown: document)
+        #expect(rings.isEmpty)
+        let hanging = CGPoint(x: -100, y: 300)
+        #expect(document.cutOffAtTheFrame(rings, at: hanging).hitTest(hanging)?.id == clip.id)
+    }
 }

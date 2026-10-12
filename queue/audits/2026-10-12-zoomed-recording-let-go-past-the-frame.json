@@ -1,0 +1,23 @@
+{
+  "feature": "A click past the frame lets go of a zoomed recording",
+  "epic": "video-transitions-motion",
+  "summary": "With a recording pushed in, a click on the empty canvas outside the frame now lets go of it, like a click on empty canvas does for anything else. A click on the picture inside the frame still picks it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Click the recording, open Animate a property and pick Scale at 0:03." },
+    { "do": "Move the playhead to 0:05 and type 220 in Scale.", "shot": "2026-10-12-zoomed-recording-ringed.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the empty canvas just left of the frame.", "shot": "2026-10-12-zoomed-recording-let-go-past-the-frame.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the picture inside the frame to pick the recording again." },
+    { "do": "Drag the picture to frame a different spot." }
+  ],
+  "evaluate": [
+    "Does a click past the frame let go of the recording the way you expect?",
+    "Does a click on the picture inside the frame always pick it back up?",
+    "Does dragging the picture after picking it again still frame the shot?"
+  ],
+  "rough": [
+    "No mock covers what a click past the frame does; this follows the frame ring the walkthrough draws, so the click and the ring now agree.",
+    "A recording at its own size slid partly off the canvas still picks from the part hanging off, where its outline is drawn. Only a pushed-in recording is cut off at the frame."
+  ]
+}

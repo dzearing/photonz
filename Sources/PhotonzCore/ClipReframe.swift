@@ -258,6 +258,39 @@ extension PhotonzDocument {
         guard !ring.isNull, ring.width > 0, ring.height > 0 else { return nil }
         return ring
     }
+
+    /// The ring of every clip pushed in past the frame, picked or not, keyed
+    /// by layer. `shown` is this document posed at the moment on screen
+    /// (`posedForCanvas`), which is where each clip's drawn box comes from.
+    /// Empty for almost everything: only a picture on the timeline can be
+    /// pushed in on.
+    public func frameRings(shown: PhotonzDocument) -> [UUID: CGRect] {
+        var rings: [UUID: CGRect] = [:]
+        forEachLayer { layer in
+            guard layer.takesAReframe, let posed = shown.layer(id: layer.id),
+                  let ring = frameRing(layerID: layer.id, drawnBox: posed.drawnBounds())
+            else { return }
+            rings[layer.id] = ring
+        }
+        return rings
+    }
+
+    /// The document a click at `point` searches, given the `rings` of the
+    /// clips pushed in past the frame (`frameRings(shown:)`).
+    ///
+    /// A pushed-in clip is drawn only inside its ring: past the frame its
+    /// magnified box reaches out over empty canvas with nothing of it shown.
+    /// So a click out there passes it by, the way a click on empty canvas
+    /// does for anything else, and lands on whatever is under it or on
+    /// nothing. Before this a click 20 points left of a recording at 220%
+    /// kept it picked (2026-10-12). A click inside the ring is untouched.
+    public func cutOffAtTheFrame(_ rings: [UUID: CGRect], at point: CGPoint) -> PhotonzDocument {
+        let passed = rings.filter { !$0.value.contains(point) }
+        guard !passed.isEmpty else { return self }
+        var document = self
+        for id in passed.keys { document.updateLayer(id: id) { $0.isVisible = false } }
+        return document
+    }
 }
 
 // MARK: - Making the move
