@@ -73,12 +73,13 @@
     {
       "do": "rightClick",
       "at": [
-        928.3,
+        551.9,
         893
       ],
       "space": "window",
       "shot": "2-clip-menu",
-      "choose": "Split at Playhead"
+      "choose": "Split at Playhead",
+      "comment": "A right click on the tracks puts the playhead where it lands before the menu opens. So it is made at two seconds, where the ruler put the playhead."
     },
     {
       "do": "wait",

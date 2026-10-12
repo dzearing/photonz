@@ -307,7 +307,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys) = script.steps[0] else {
+        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -328,7 +328,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
                        "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
         """)
-        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _) = script.steps[0] else {
+        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -345,10 +345,29 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label", "keys": { "Duplicate": "⌘J", "Delete": "⌘⌫" } } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, let keys) = script.steps[0] else {
+        guard case .rightClick(_, _, _, _, _, _, let keys, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(keys == ["Duplicate": "⌘J", "Delete": "⌘⌫"])
+    }
+
+    /// A right click on the timeline moves the playhead to where it lands, so
+    /// a walk aims one along a clip's bar the way `press` aims a click.
+    @Test("A rightClick step can land along its row rather than in the middle")
+    func rightClickStepCanLandAlongTheRow() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "on": "Rectangle clip", "across": 0.25 },
+                     { "do": "rightClick", "on": "Label" },
+                     { "do": "rightClick", "on": "Label", "across": 3 } ] }
+        """)
+        guard case .rightClick(_, _, _, _, _, _, _, let across) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, let middle) = script.steps[1],
+              case .rightClick(_, _, _, _, _, _, _, let clamped) = script.steps[2] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(across == 0.25)
+        #expect(middle == nil)
+        #expect(clamped == 1)
     }
 
     @Test("A rightClick step's keys must be words")
@@ -368,7 +387,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [140, 120], "choose": "Group" } ] }
         """)
-        guard case .rightClick(let on, let at, _, let choose, _, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, _, let choose, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == nil)
@@ -381,7 +400,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [40, 40], "space": "window" } ] }
         """)
-        guard case .rightClick(_, let at, _, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(_, let at, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(at == PlaytestPoint(CGPoint(x: 40, y: 40), space: .window))

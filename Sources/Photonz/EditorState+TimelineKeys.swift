@@ -363,6 +363,11 @@ enum TimelineKeyRouter {
         routes[ObjectIdentifier(window)] = nil
     }
 
+    /// The editor whose timeline is up in `window`, if one is.
+    static func editor(in window: NSWindow) -> EditorState? {
+        routes[ObjectIdentifier(window)]?.editor
+    }
+
     /// Offer a press to the timeline in `window`. True when it took it.
     static func offer(_ event: NSEvent, in window: NSWindow) -> Bool {
         // A list open over the panel is being typed into: it has every key

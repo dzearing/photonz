@@ -105,10 +105,20 @@ extension EditorState {
         let plan = ClipMenuPlan(hasPicture: layer.movie != nil,
                                 hasSound: layer.sound != nil, onTheSound: onTheSound)
 
-        rows.append(.command("Split at Playhead", TimelineMenuKeys.split, enabled: canSplitClip(layerID)) {
-            self.selectLayer(layerID)
-            self.splitClipAtPlayhead()
-        })
+        // Right clicked inside a pick of several clips, the cut and the
+        // deletes act on the whole pick (`EditorState+TimelinePointing`).
+        let targets = clipMenuTargets(layerID)
+        if targets.count > 1 {
+            rows.append(.command("Split at Playhead", TimelineMenuKeys.split,
+                                 enabled: targets.contains { canSplitClip($0) }) {
+                self.splitClipsAtPlayhead(targets)
+            })
+        } else {
+            rows.append(.command("Split at Playhead", TimelineMenuKeys.split, enabled: canSplitClip(layerID)) {
+                self.selectLayer(layerID)
+                self.splitClipAtPlayhead()
+            })
+        }
         // Clips merged into one open back into their parts.
         if layer.isMergedClip {
             rows.append(.command("Break Apart",
@@ -233,9 +243,11 @@ extension EditorState {
         // the whole clip's rows stay, without a key that does something else.
         let keys = !sectionTakesTheDelete
         rows.append(.command("Delete", keys ? TimelineMenuKeys.delete : nil, destructive: true) {
+            if targets.count > 1 { return self.deleteLayers(ids: targets) }
             self.deleteFromTimeline(layerID: layerID, piece: onePiece ? nil : index)
         })
         rows.append(.command("Ripple Delete", keys ? TimelineMenuKeys.rippleDelete : nil, destructive: true) {
+            if targets.count > 1 { return self.rippleDeleteClips(targets) }
             self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
         })
         return rows
@@ -366,6 +378,29 @@ extension EditorState {
         if sectionTakesTheDelete { return true }
         guard documentHasTime, let id = selectedLayerID, document?.layer(id: id)?.time != nil else { return false }
         return !isClipLocked(id)
+    }
+
+    /// Split at Playhead from a right click inside a pick of several clips:
+    /// each one the playhead runs through is cut there, as one undo step, and
+    /// the pick stays as it was.
+    func splitClipsAtPlayhead(_ ids: [UUID]) {
+        endTrimBeforeCutting()
+        guard documentHasTime, ids.contains(where: { canSplitClip($0) }) else { return }
+        pauseDocument()
+        switchToEditForAnEdit()
+        let atMS = documentTimeMS
+        perform { $0.splitClips(ids, atMS: atMS) }
+        documentMomentChanged()
+    }
+
+    /// Ripple Delete from a right click inside a pick of several clips: each
+    /// goes and the gap closes on its own track, as one undo step.
+    func rippleDeleteClips(_ ids: [UUID]) {
+        guard documentHasTime else { return }
+        endTrimBeforeCutting()
+        pauseDocument()
+        perform { $0.rippleDeletePicks(ids.map { TimelinePick(layerID: $0, piece: nil) }) }
+        selectLayer(nil)
     }
 
     /// ⌥⌫: ripple delete what is picked.

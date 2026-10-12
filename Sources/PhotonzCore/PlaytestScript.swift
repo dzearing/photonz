@@ -3107,8 +3107,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// (`{"Duplicate": "⌘J"}`), and fails the walk when a row prints another
     /// one or none. A printed key is a promise, so the walk that reads it can
     /// go on to press it.
+    ///
+    /// `across` lands a right click on a named row that far along its width,
+    /// nought to one, instead of in the middle, the way `press` takes it: a
+    /// right click on the timeline moves the playhead to where it lands, so a
+    /// walk says which moment on a clip's bar it means.
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
-                    ticked: [String], unticked: [String], keys: [String: String] = [:])
+                    ticked: [String], unticked: [String], keys: [String: String] = [:],
+                    across: CGFloat? = nil)
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -4727,7 +4733,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                choose: try f.optionalString("choose"),
                                ticked: try f.optionalStrings("ticked"),
                                unticked: try f.optionalStrings("unticked"),
-                               keys: try f.optionalWordsByName("keys"))
+                               keys: try f.optionalWordsByName("keys"),
+                               across: try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) })
         case "dragTile":
             let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes

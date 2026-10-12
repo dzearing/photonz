@@ -21266,3 +21266,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Fixed on the way: Lift and Extract now carry a sound's level line with the sound (`AudioLevel.removeStretch`, `LevelFollowsATakenStretchTests`).
 - Walks: `a-range-stays-on-top-of-a-pick-walk` (Next defaults), `picked-in-range-menu-bar-walk` (front).
 - Next: clean-noise-and-hide-picture-work-on-one-stretch; a-right-click-on-a-sound-s-level-line-opens-the; the user's answers on the audit.
+
+## 2026-10-12 — A click on the timeline moves the playhead (Next)
+
+- A click on a clip, a sound, a title, a caption or a zoom bar picks it and puts the playhead on the moment clicked; Shift and Command clicks too; a drag does not; while playing it jumps the playing there. A right click on one moves the playhead there before its menu is built, picks it unless it is already in the pick, and inside a pick of several its Split at Playhead, Delete and Ripple Delete act on the whole pick.
+- A right click on a cut, an edit point or a transition leaves the playhead alone, so Roll Edit to Playhead still has somewhere to roll to.
+- How: `EditorState+TimelinePointing.swift`. SwiftUI never says where a context menu was asked for, so the dock's mouse monitor notes the press (`TimelineRightPress`, offered by hand from the walk harness), and each timeline menu checks, as SwiftUI builds it, that the press is on its own row and inside its time. Core: `TimelinePointing.ms(atLaneX:)`, `PhotonzDocument.splitClips` (`TimelinePointingTests`). Walk step: `rightClick` takes `across`.
+- Walks: `clicking-a-timeline-item-moves-the-playhead-walk` (Next defaults); seven walks that right-clicked a clip and expected an at-playhead row to act at an earlier playhead now right-click at the moment they mean.
+- Next: the user's answers on the audit (Start/End at Playhead on a title bar now only reach inside the bar).

@@ -878,13 +878,17 @@ struct TimelineClipView: View {
                              height: height)
                 .frame(width: max(2, x1 - x0))
                 .offset(x: x0)
-                .onTapGesture {
+                .onTapGesture(coordinateSpace: .named(TimelineDock.tracksSpace)) { point in
                     let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
                     if flags.contains(.shift) || flags.contains(.command) {
                         editorState.extendSelection(toLayer: group.layerID)
                     } else {
                         editorState.selectLayer(group.layerID)
                     }
+                    // Picked and pointed at in one click
+                    // (`EditorState+TimelinePointing`).
+                    editorState.playheadToTimelineClick(laneX: point.x - TimelineDock.lanesLeading,
+                                                        laneWidth: laneWidth)
                 }
         }
     }

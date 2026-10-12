@@ -11,7 +11,7 @@
     { "do": "action", "action": "videoStepOneSecond" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "playheadMS": 2000, "lengthMS": 8000 },
-    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-with-ripple-trim", "choose": "Ripple Trim Start to Playhead" },
+    { "comment": "Right clicked at two seconds: a right click on the tracks puts the playhead where it lands first.", "do": "rightClick", "at": [549, 893], "space": "window", "shot": "0-clip-menu-with-ripple-trim", "choose": "Ripple Trim Start to Playhead" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectTimeline", "lengthMS": 6000, "playheadMS": 0 },
     { "do": "expectClip", "clip": "Tutorial Sample", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },

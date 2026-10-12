@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-bar-right-click-menu-walk",
-  "seed": "A title's bar on the timeline answers a right click the way a clip does, with the verbs that belong to words placed in time: Start at Playhead, End at Playhead, and Fade In and Fade Out. This walk types a title at Next defaults, puts the playhead at six seconds, right clicks the title's bar, chooses End at Playhead and reads the new out point back off the Properties pane's clip line, then does the same for the start at three seconds.",
+  "seed": "A title's bar on the timeline answers a right click the way a clip does, with the verbs that belong to words placed in time: Start at Playhead, End at Playhead, and Fade In and Fade Out. This walk types a title at Next defaults, right clicks the title's bar at six seconds (a right click puts the playhead where it lands), chooses End at Playhead and reads the new out point back off the Properties pane's clip line, then does the same for the start at five seconds.",
   "setup": {
     "forget": [
       "all"
@@ -99,6 +99,8 @@
     {
       "do": "rightClick",
       "on": "Shipping today clip",
+      "comment": "At six seconds along the bar (four to seven): a right click puts the playhead where it lands before the menu opens.",
+      "across": 0.6667,
       "choose": "End at Playhead"
     },
     {
@@ -136,8 +138,10 @@
       "seconds": 0.6
     },
     {
+      "comment": "At five seconds along the bar (four to six): a right click puts the playhead where it lands before the menu opens, so Start at Playhead from the bar moves the start later. Earlier than the bar is the menu bar's Clip > Animate > Start at Playhead.",
       "do": "rightClick",
       "on": "Shipping today clip",
+      "across": 0.5,
       "choose": "Start at Playhead"
     },
     {
@@ -146,13 +150,13 @@
     },
     {
       "do": "describe",
-      "stage": "3-started-at-three",
-      "note": "Start at Playhead at three seconds brings the words on a second earlier and leaves where they go alone"
+      "stage": "3-started-at-five",
+      "note": "Start at Playhead from a right click at five seconds on the bar brings the words on a second later and leaves where they go alone"
     },
     {
       "do": "expect",
       "field": "Clip line",
-      "reads": "Shipping today 3.0s → 6.0s · 3.0s · 1.0x"
+      "reads": "Shipping today 5.0s → 6.0s · 1.0s · 1.0x"
     },
     {
       "do": "rightClick",
@@ -184,7 +188,7 @@
     },
     {
       "do": "panel",
-      "stage": "3-started-at-three"
+      "stage": "3-started-at-five"
     },
     {
       "do": "snapshot",

@@ -135,6 +135,13 @@ struct SoundLevelLine: View {
         // moves the whole line, which is the fader.
         .contentShape(LevelBand(points: shape, width: Self.bandWidth))
         .onTapGesture { location in
+            // Picked or pinned, the playhead goes to the moment clicked, as
+            // on the rest of the clip (`EditorState+TimelinePointing`).
+            defer {
+                if let inMS = editorState.document?.layer(id: layerID)?.time?.inMS {
+                    editorState.playheadToTimelineClick(atMS: inMS + ms(atX: location.x))
+                }
+            }
             guard editorState.selectedLayerID == layerID else {
                 editorState.selectLayer(layerID)
                 return

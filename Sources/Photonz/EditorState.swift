@@ -1796,6 +1796,18 @@ final class EditorState {
     /// lane into a moment, and by a walk to find one.
     @ObservationIgnored var timelineTracksFrame: CGRect = .zero
     @ObservationIgnored var timelineLaneWidth: CGFloat = 0
+    /// The part of the tracks on screen, in the same space: a right click
+    /// in it moves the playhead before its menu opens
+    /// (`EditorState+TimelinePointing`).
+    @ObservationIgnored var timelineTracksViewport: CGRect = .zero
+    /// The moment the last right click on the tracks landed on, until the
+    /// menu it opened has learned what it was over.
+    @ObservationIgnored var timelineRightPressMS: Int?
+    /// ...and how far down the tracks' own space it landed.
+    @ObservationIgnored var timelineRightPressY: CGFloat = 0
+    /// Counts right clicks on the tracks. Every timeline menu reads it, so
+    /// each right click builds its menu afresh rather than reusing the last.
+    var timelineRightPresses = 0
     /// A drag held near an edge of the timeline scrolls it that way
     /// (`TimelineEdgeScroll`): the box, a clip, a zoom bar.
     @ObservationIgnored let timelineEdgeScroll = TimelineEdgeScroll()

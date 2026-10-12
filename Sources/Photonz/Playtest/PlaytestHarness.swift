@@ -2471,9 +2471,9 @@ private final class Run {
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
 
-        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys):
+        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, let across):
             try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
-                                  unticked: unticked, keys: keys, number: number)
+                                  unticked: unticked, keys: keys, across: across, number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
@@ -12077,10 +12077,11 @@ private final class Run {
     /// from.
     private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], keys: [String: String] = [:],
-                             number: Int) async throws {
+                             across: CGFloat? = nil, number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
         if let name {
-            let target = try rightClickTarget(name)
+            var target = try rightClickTarget(name)
+            if let across { target = target.pressed(across: across) }
             guard let window = target.window else {
                 throw Failure(description: "\"\(target.name)\" is in no window, so there is nothing to right click")
             }
@@ -12099,11 +12100,19 @@ private final class Run {
         guard let content = window.contentView else {
             throw Failure(description: "the window has no content view, so there is nothing to right click")
         }
+        // A person's right click on the tracks passes the dock's mouse monitor
+        // before any menu is built, and moves the playhead there; a click the
+        // walk makes never passes it, so it is offered by hand, first, as the
+        // monitor would (`EditorState+TimelinePointing`).
+        let onTheTracks = TimelineRightPress.offer(at: target.point, in: window)
         guard let (menu, view) = PlaytestPanelMenu.menu(rightClickingAt: target.point, in: content,
                                                         window: window) else {
             throw Failure(description: "right clicking \"\(target.name)\" raises no menu: nothing under that "
                 + "point offers one. Is there a `.contextMenu` on it?")
         }
+        // The menu, built, has picked what it is about; the pick lands a turn
+        // later, which for a person is long before they choose a row.
+        if onTheTracks { await sleep(0.05) }
         let shotURL = shot.map { out.appendingPathComponent("\($0)-sc.png") }
         let noteURL = out.appendingPathComponent("row-menu-shot.txt")
         // The old picture goes FIRST, so afterwards the file being there is

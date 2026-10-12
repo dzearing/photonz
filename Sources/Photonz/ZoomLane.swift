@@ -254,6 +254,11 @@ private struct ZoomBarsView: View {
                 if dragging {
                     editorState.commitZoomDrag()
                 } else {
+                    // The playhead to the moment clicked
+                    // (`EditorState+TimelinePointing`), BEFORE the pick: a
+                    // playhead moving puts a framed zoom's box away, and the
+                    // pick is what puts it up.
+                    editorState.playheadToTimelineClick(laneX: value.startLocation.x, laneWidth: laneWidth)
                     let ref = ClipZoomRef(layerID: layerID, zoomID: pressed.bar.zoom.id)
                     let flags = NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
                     if flags.contains(.shift) || flags.contains(.command) {
@@ -271,17 +276,32 @@ private struct ZoomBarsView: View {
                                     leading: 0, ruler: editorState.motionStripRuler, laneWidth: laneWidth)
     }
 
-    /// The bar a right click is about: the one under the pointer, else the
-    /// picked one, else the only one.
+    /// The bar a right click is about: the one it landed on, else the one
+    /// under the pointer, else the picked one, else the only one.
     private var menuBar: ZoomLane.Bar? {
+        if let pressed = rightPressedBar { return pressed }
         if let hovered { return hovered }
         let picked = editorState.selectedZoom?.layerID == layerID ? editorState.selectedZoom?.zoomID : nil
         return bars.first { $0.zoom.id == picked } ?? (bars.count == 1 ? bars.first : nil)
     }
 
+    /// The bar under the moment a right click on the tracks just landed on
+    /// (`EditorState+TimelinePointing`).
+    private var rightPressedBar: ZoomLane.Bar? {
+        guard let ms = editorState.timelineRightPressMS else { return nil }
+        let x = laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(ms))
+        return ZoomLane.bar(at: x, in: bars)
+    }
+
     @ViewBuilder private var menu: some View {
-        if let bar = menuBar {
-            MenuRowsView(rows: editorState.zoomMenuRows(ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id)))
+        // Built afresh for every right click.
+        let _ = editorState.timelineRightPresses
+        let pressed = rightPressedBar
+        if let bar = pressed ?? menuBar {
+            let ref = ClipZoomRef(layerID: layerID, zoomID: bar.zoom.id)
+            // Only a bar the click landed on is picked by it.
+            let _ = pressed != nil ? editorState.timelineMenuBuilt(for: .zoom(ref)) : ()
+            MenuRowsView(rows: editorState.zoomMenuRows(ref))
         }
     }
 }

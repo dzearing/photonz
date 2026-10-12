@@ -38,11 +38,12 @@
     {
       "do": "rightClick",
       "at": [
-        928.3,
+        550.0,
         893
       ],
       "space": "window",
-      "choose": "Add Zoom"
+      "choose": "Add Zoom",
+      "comment": "Right clicked at the moment it means: a right click on the tracks puts the playhead where it lands first."
     },
     {
       "do": "wait",

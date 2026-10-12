@@ -450,6 +450,11 @@ struct TimelineDock: View {
                         }
                     }
                     .scrollBounceBehavior(.basedOnSize)
+                    // The part of the tracks on screen: a right click in it
+                    // moves the playhead (`EditorState+TimelinePointing`).
+                    .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                        editorState.timelineTracksViewport = $0
+                    }
                     // Its own scroller, in the column kept for it, rather than
                     // the system's: an overlay scroller that comes and goes in
                     // space nothing else is using can never move a row.
@@ -1122,6 +1127,11 @@ private struct TimelineKeyboard: NSViewRepresentable {
                 guard let self, let window = self.window, event.window === window else { return event }
                 let point = self.convert(event.locationInWindow, from: nil)
                 if self.bounds.contains(point) {
+                    // A right click on the tracks moves the playhead first,
+                    // so the menu it opens acts where the pointer is.
+                    if event.type == .rightMouseDown {
+                        TimelineRightPress.offer(at: event.locationInWindow, in: window)
+                    }
                     self.editorState?.takeTimelineKeyboard()
                 } else {
                     self.editorState?.releaseTimelineKeyboard()

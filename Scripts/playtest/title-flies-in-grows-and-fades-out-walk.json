@@ -103,6 +103,15 @@
       "choose": "Animate In > Slide"
     },
     {
+      "comment": "A right click on the tracks puts the playhead where it lands before the menu opens. This walk's keys are timed from one second, so the playhead goes back there.",
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
       "do": "wait",
       "seconds": 0.6
     },

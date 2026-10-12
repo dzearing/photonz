@@ -171,9 +171,15 @@ private struct CaptionCuesHands: View {
                     guard let hit = CaptionCuesLayer.cue(at: point, in: placed) else { return }
                     editorState.clearKeySelection()
                     editorState.selectClipPiece(layerID: hit.cue.layerID, index: nil)
+                    // ...and the playhead to the moment clicked
+                    // (`EditorState+TimelinePointing`).
+                    editorState.playheadToTimelineClick(laneX: point.x, laneWidth: laneWidth)
                 }
                 .contextMenu {
-                    if let hovered { TimelineClipMenu(layerID: hovered, piece: 0) }
+                    // The cue a right click landed on, else the one under the
+                    // pointer; built afresh for every right click.
+                    let _ = editorState.timelineRightPresses
+                    if let id = rightPressedCue(placed) ?? hovered { TimelineClipMenu(layerID: id, piece: 0) }
                 }
                 .help(ClipPiecesBar.help(ClipPieces(single: LayerTime(inMS: 0, outMS: 1)), index: 0))
                 // One name for the whole painted layer, so a walk can click a
@@ -195,6 +201,13 @@ private struct CaptionCuesHands: View {
         .onGeometryChange(for: CGFloat.self) { proxy in
             proxy.frame(in: .named(TimelineDock.tracksSpace)).minY
         } action: { laneTop = $0 }
+    }
+
+    /// The cue under the moment a right click on the tracks just landed on.
+    private func rightPressedCue(_ placed: [CaptionCuesLayer.Placed]) -> UUID? {
+        guard let ms = editorState.timelineRightPressMS else { return nil }
+        let x = laneWidth * ruler.fraction(ofMS: Double(ms))
+        return CaptionCuesLayer.cue(at: CGPoint(x: x, y: 0), in: placed)?.cue.layerID
     }
 
     /// A cue taken hold of and slid along, or up or down onto another track:

@@ -1,0 +1,30 @@
+{
+  "feature": "A click on the timeline moves the playhead",
+  "epic": "video-cutting",
+  "summary": "A click on a clip, a sound, a title or a zoom bar picks it and puts the playhead where you clicked. A right click on one does the same before its menu opens, so Split at Playhead, Freeze Frame, Add Zoom and the other at-playhead rows act where you pointed. A right click inside a pick of several keeps them all picked, and its Split, Delete and Ripple Delete act on the whole pick.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Click the middle of a clip on V1.", "shot": "2026-10-12-timeline-click-playhead-1-clip-clicked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click a zoom bar on the Zoom lane.", "shot": "2026-10-12-timeline-click-playhead-2-zoom-clicked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape, then right-click the clip somewhere else and choose Split at Playhead.", "shot": "2026-10-12-timeline-click-playhead-3-split-where-pointed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click a title bar, Shift-click the clip, then right-click the clip.", "shot": "2026-10-12-timeline-click-playhead-4-menu-inside-the-pick-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Choose Delete from that menu, then press Command-Z." },
+    { "do": "Press Space to play, and click the clip while it plays." },
+    { "do": "Drag the clip a little sideways." }
+  ],
+  "evaluate": [
+    "Does the playhead landing where you clicked feel right, or would you rather a plain click only picked and left the playhead alone?",
+    "When you right-click a clip, is it clear the menu's at-playhead rows now act where you pointed?",
+    "With two clips picked, does Delete from the right-click menu taking both feel like what you meant?",
+    "Is it a loss that Start at Playhead on a title bar's right-click can now only move the start later (earlier is Clip > Animate > Start at Playhead in the menu bar, or dragging the bar's start)?"
+  ],
+  "rough": [
+    "No mock covers this: it is behaviour, not a look, and the user's words on 2026-10-12 are the spec.",
+    "A right click on a cut, an edit point or a transition band leaves the playhead where it is, because their rows (Roll Edit to Playhead) need it somewhere else; moved onto the cut they would do nothing.",
+    "A right click on empty track space, a key diamond, or a title part's own row under its track does not move the playhead; only clips, sounds, titles, captions and zoom bars do.",
+    "Start at Playhead and End at Playhead on a title bar's right-click now only reach moments inside the bar. Earlier or later than the bar is the menu bar's Clip > Animate rows or a drag on the bar's edge.",
+    "In a pick of several clips, Split at Playhead, Delete and Ripple Delete act on the whole pick, and so did Duplicate and the sound rows already. Speed, Freeze Frame and the other one-clip rows still act on the clip you right-clicked.",
+    "A click on a sound's level line still pins a level point there when the sound is already picked (it always did); it now also moves the playhead there."
+  ]
+}

@@ -424,10 +424,18 @@ struct ClipPiecesBar: View {
                 editorState.clipBarHover("\(layerID)/\(isLinkedSound)/\(index)", layerID: layerID, inside: false)
             }
             .gesture(carry(pieces, index: index))
-            .onTapGesture {
+            .onTapGesture(coordinateSpace: .named(TimelineDock.tracksSpace)) { point in
                 // A click on the clip takes it rather than any keys picked on
                 // its lanes, so ⌫ afterwards means the clip.
                 editorState.clearKeySelection()
+                // ...and puts the playhead on the moment clicked, as in
+                // Premiere: picked and pointed at in one click.
+                defer {
+                    if kind != nil {
+                        editorState.playheadToTimelineClick(laneX: point.x - TimelineDock.lanesLeading,
+                                                            laneWidth: laneWidth)
+                    }
+                }
                 // Shift or ⌘ adds the clip to what is picked, or takes it out,
                 // the way Premiere's timeline and the Layers list both do.
                 // Where the timeline is the layer list this is the only way
@@ -1567,6 +1575,10 @@ struct TimelineClipMenu: View {
     var onTheSound = false
 
     var body: some View {
+        // Built afresh for every right click, and saying what it is about
+        // as it is (`EditorState+TimelinePointing`).
+        let _ = editorState.timelineRightPresses
+        let _ = editorState.timelineMenuBuilt(for: .clip(layerID, piece: piece, onTheSound: onTheSound))
         MenuRowsView(rows: editorState.timelineClipMenuRows(layerID: layerID, piece: piece,
                                                             onTheSound: onTheSound))
     }
