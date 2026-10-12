@@ -1,0 +1,36 @@
+{
+  "id": "editing-a-title-never-starts-playback-and-every",
+  "title": "Editing a title never starts playback, and every part of it can be clicked with the Select tool",
+  "goal": "After inserting a title page and typing its words, pressing Command Return (or Escape, or clicking away) just finishes the text: nothing plays. The person is back on the Select tool with the whole title held still at its fully arrived frame, so they can click the subtitle, the accent, the background or any other part and edit it directly. Replay happens only when they ask for it.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 11,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T14:31:54.535Z",
+  "updated": "2026-10-12T14:31:54.641Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"When i add a title page it defaults to editing the title text. when i type something and press cmd enter, it starts playing. it should not. also it's pretty difficult to edit the other things on the page because of the playing. i expect to be in the v tool and click the other things\".\n\nFrom code reading (not run): committing a text edit inside a title calls replayTitleAfterTyping (EditorState+Text.swift:325), which after 450 ms calls replayTitle (EditorState+TitleRestyle.swift:210-229): pause, scrub to the title's inMS, set a stop and play the in. So the playhead lands on the title's first frame where parts have not arrived, which is also why parts are hard to click. Restyle knobs may also replay (EditorState+TitleRestyle.swift:83 'if replaying { replayTitle(id) }'); audit every caller of replayTitle. Title parts are children of a title group; check how a click resolves inside it (it likely picks the group first). This reverses the 'typing relays out and replays' item of title-tiles-play-and-a-few-knobs-restyle-a-title (done) by the user's word; the Library tiles still play on hover.",
+  "acceptance": [
+    "Reproduce first at Next defaults: insert a title page, type, press Command Return; record what plays and where the playhead goes; then try to click the subtitle and the accent and record what gets picked",
+    "Finishing a text edit inside a title (Command Return, Escape, a click elsewhere) never plays or scrubs the document; the automatic replay after typing (replayTitleAfterTyping, EditorState+TitleRestyle.swift:222, called from EditorState+Text.swift:325) is removed; Replay Title stays on the Title section's Replay button, the right-click menu and the Clip menu",
+    "Inserting a title parks the playhead at the title's held moment (every part arrived), not its first frame, so all parts are visible and clickable; it may still open the headline for typing as today",
+    "After the text edit ends the Select tool is in hand and a single click on any visible part of a title (headline, subtitle, kicker, accent, backing shape, background) picks that part directly, showing its own Part section; clicking the title's empty background picks the title as a whole; Escape steps from a part up to the whole title; double click on a text part edits its words",
+    "Playing never starts by itself anywhere while the person is editing a title (typing, restyling with Theme, Font pair, Energy, Intensity, Background, or changing a part's In/Hold/Out); each of those shows the result at the held frame, and the Part section's Replay plays just that part when asked",
+    "The Title restyle knobs still update the title live",
+    "A walk inserts a title page, types a headline, presses Command Return, checks nothing is playing and the playhead did not move, clicks the subtitle and checks it is picked, edits it, clicks the accent and checks it is picked",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T14:31:54.537Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-12T14:31:54.640Z",
+      "note": "seq 3960 -> 11"
+    }
+  ]
+}
