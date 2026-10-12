@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p2-normal",
   "seq": 340,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T09:54:10.563Z",
-  "updated": "2026-10-11T12:51:02.735Z",
+  "updated": "2026-10-11T22:32:36.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the-starter-button-comes-as-primary-secondary-or acceptance 4 (\"in light and dark\"). Today StarterStyle colours are document colours (ColorStyle has one hex), so a document reads the same whatever the appearance; the panel and canvas chrome follow the appearance. Mock dark tokens: docs/design/mocks/shared/components/tokens.css lines ~156-192 (--accent #7f9bff, --accent-ink #0b0d14, --ink #e7e9ee, --dim #b0b6c2).",
@@ -37,6 +37,16 @@
     {
       "t": "2026-10-11T12:51:02.734Z",
       "note": "seq 310 -> 340"
+    },
+    {
+      "t": "2026-10-11T22:32:36.445Z",
+      "note": "decision \"When the Mac is in dark mode, should a starter Button you dropped change to dark colours?\" resolved: Keep the colours you dropped"
+    },
+    {
+      "t": "2026-10-11T22:32:36.446Z",
+      "note": "retired by that answer: \"Keep the colours you dropped\" means this should not be built, so it will not be picked up again."
     }
-  ]
+  ],
+  "parked": false,
+  "parkReason": ""
 }

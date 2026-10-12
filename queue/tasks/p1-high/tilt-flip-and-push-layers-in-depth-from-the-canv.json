@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 33,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.344Z",
-  "updated": "2026-10-11T12:51:59.431Z",
+  "updated": "2026-10-11T22:48:50.004Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 3 of 4.",
@@ -31,6 +31,64 @@
     {
       "t": "2026-10-11T12:51:59.430Z",
       "note": "seq 3950 -> 33"
+    },
+    {
+      "t": "2026-10-11T18:17:19.562Z",
+      "note": "Handle design card opened by the 2.5D design task: tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o (recommended A, arcs on the turn knob). Mocks: docs/design/mocks/pages/video-depth.html. Build A if unanswered."
+    },
+    {
+      "t": "2026-10-11T18:18:15.568Z",
+      "note": "From the design audit: give the knob arcs a generous hit area and a pointer cue; check Option Command ] / [ (Bring Nearer / Send Further in the mock) against Premiere before shipping them; the opened property rows under a title on the timeline are drawn on video-depth.html only, follow the video timeline's existing design for how a track opens."
+    },
+    {
+      "t": "2026-10-11T19:21:26.166Z",
+      "note": "From the model task: the four 3D values are MotionProperty .rotationX/.rotationY/.depth/.pivotDepth, already in Layer.keyableProperties (picker group '3D', which lists after Effects today; the mock wants its own panel section after Position & Size). Camera keys are SceneCamera.motions with .cameraPerspective/.cameraDepth/.cameraX/.cameraY on the document clock; no UI sets them yet. For handles and readouts use PhotonzDocument.drawnMap(of:) (one plane map from the layer's upright box to the screen) and drawnQuad(of:); CanvasDisplay already maps the outline and frame handles through it. Groups: GroupContent.keeps3D (Motion's 3D group) exists in the model with no control. Design note: docs/design/space-3d.md."
+    },
+    {
+      "t": "2026-10-11T21:28:00.776Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T22:30:22.236Z",
+      "note": "owns these walks: tilt-and-flip-a-title-in-3d-walk, camera-settings-on-the-frame-walk"
+    },
+    {
+      "t": "2026-10-11T22:31:32.597Z",
+      "note": "decision \"How do you turn a layer toward or away from you on the canvas?\" resolved: Arcs on the turn knob"
+    },
+    {
+      "t": "2026-10-11T22:48:24.028Z",
+      "note": "Both cards unanswered, so built the recommended options: A for the handle (arcs on the knob) and A for the camera (a setting of the frame)."
+    },
+    {
+      "t": "2026-10-11T22:48:24.028Z",
+      "note": "Adversarial review before building: a depth arrow on every pick would clutter redlining (the main use) and take presses near the middle of small layers, so the arrow shows only once the knob is hovered or the layer is turned; the 3D section shows in documents with time, or on a still only once something is turned. The mock's arc hit areas overlap the knob centre (its SVG would swing on a knob press); here the knob keeps a 7pt middle. ⌥⌘]/[ are free in the app and unused in Premiere and Photoshop."
+    },
+    {
+      "t": "2026-10-11T22:48:24.028Z",
+      "note": "Built: core SpaceEditing.swift (SpaceHandles, SpaceDrag, set/push/reset 3D values, camera keys) + 17 tests; canvas CanvasSpaceHandles.swift; panel Space3DInspector.swift (3D + Camera sections); EditorState+Space3D.swift; Layer menu, right click, View menu rows; flag next-turn-in-depth on in Next; walk step spaceHandle (real pointer events on the arcs)."
+    },
+    {
+      "t": "2026-10-11T22:48:24.028Z",
+      "note": "Verified: walks tilt-and-flip-a-title-in-3d-walk and camera-settings-on-the-frame-walk green at Next defaults with real captures; neighbouring walks green (properties-pane, video-panel-order, dock-headers, sound-channel, sound-fades-in-the-panel, the-timeline-is-the-layer-list, a-video-clip-menu-leads-with-the-picture, a-card-flips-in-3d, canvas-grid, grid-off-takes-no-room, layers-combine, menu-checkmarks, angle-field, locked-layer, a-turned-shape-keeps-its-turn x2). Tests: whole run hit the known hang; split run all green (see find-out-why-the-whole-test-run-hangs-in-the-mac)."
+    },
+    {
+      "t": "2026-10-11T22:48:24.028Z",
+      "note": "Filed: show-the-camera-s-keys-on-a-thin-row-at-the-top (mock's Camera row on the timeline; also covers that a click on a video's picture never picks the frame). Left rough, below the bar: depth arrow rate depends on zoom; spaceHandle step not yet in the lock-safe list (unwatched under a lock); a flat layer's knob arcs stay out while the pointer is over the layer after a hover."
+    },
+    {
+      "t": "2026-10-11T22:48:37.067Z",
+      "note": "Both cards were answered A by the user at 22:31 while this ran: the handle card (arcs on the knob) and the camera card (a setting of the frame). That is what was built."
+    },
+    {
+      "t": "2026-10-11T22:48:50.002Z",
+      "note": "Arcs on the turn knob tip and swing a picked layer, a depth arrow pushes it, 3D and Camera panel sections with keys and Mixed, Layer/right-click/View menu rows; flag next-turn-in-depth on in Next. Commit 0deef2bf. Verified by SpaceEditingTests, walks tilt-and-flip-a-title-in-3d-walk and camera-settings-on-the-frame-walk at Next defaults with real captures, neighbouring walks green, split test run green. Audit queue/audits/2026-10-11-tilt-flip-and-push-layers-in-depth.json. Camera timeline row filed as show-the-camera-s-keys-on-a-thin-row-at-the-top."
     }
-  ]
+  ],
+  "started": "2026-10-11T21:28:00.775Z",
+  "walks": [
+    "tilt-and-flip-a-title-in-3d-walk",
+    "camera-settings-on-the-frame-walk"
+  ],
+  "completed": "2026-10-11T22:48:50.003Z"
 }

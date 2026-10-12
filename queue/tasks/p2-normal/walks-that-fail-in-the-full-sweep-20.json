@@ -1,0 +1,44 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-20",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-12T07:33:08.043Z",
+  "updated": "2026-10-12T12:45:13.794Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-12T07:33:07Z: 883 of 886 walks passed in 236 minutes.\n\nFailing walks (3): keys-on-a-later-shadow-walk, section-fold-motion-walk, tutorial-component-versions-walk\n\nFull output: queue/sweep/2026-10-11-203658.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T07:33:08.045Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-10-12T09:01:47.071Z",
+      "note": "rotating check 2026-10-12T09:01:46Z, 33 walks run from 342 onward in the rotation: keys-on-a-later-shadow-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-12T10:39:51.610Z",
+      "note": "rotating check 2026-10-12T10:39:51Z, 33 walks run from 398 onward in the rotation: library-tile-click-latency-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-12T12:44:03.884Z",
+      "note": "seq 4000 -> 40"
+    },
+    {
+      "t": "2026-10-12T12:45:13.792Z",
+      "note": "2026-10-12 triage: library-tile-click-latency-walk failed in the 10:39 rotating check but passed in the full set (sweep log line 407), so it looks like a latency budget missed under load rather than a regression; check it on its own twice before rewriting it. section-fold-motion-walk is the same kind of failure: 16.2 ms against a 16 ms budget."
+    }
+  ],
+  "standing": "walk-sweep"
+}

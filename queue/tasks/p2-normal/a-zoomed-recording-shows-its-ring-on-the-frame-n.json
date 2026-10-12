@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T11:42:27.207Z",
-  "updated": "2026-10-11T12:51:25.546Z",
+  "updated": "2026-10-12T12:29:05.851Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-11 by a-zoomed-recording-s-motion-path-shows-where-the. Repro: Scripts/playtest.sh Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json, picture 3-framed-at-5-sc.png (copy queue/audits/2026-10-11-zoom-no-path-3-framed-at-5-sc.png): at 220% a dashed vertical line runs at about x=288 screen points left of the frame (frame left edge ~311) with a square handle at (288,633), the magnified layer box. Mock: docs/design/mocks/pages/video-zoom-wt.html #frameRing (step 5 on: the clip outlines on the timeline, a ring lands on the frame). Layer.takesAReframe / positionReadsAsCentre names the case. Resize handles on a zoomed clip may need a UX call (drag them to change Scale, or none): decision card if unsure.",
@@ -31,9 +31,31 @@
     {
       "t": "2026-10-11T12:51:25.545Z",
       "note": "seq 10 -> 20"
+    },
+    {
+      "t": "2026-10-12T11:57:01.095Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T12:28:37.061Z",
+      "note": "Adversarial review: mock (video-zoom-wt #frameRing) draws a ring on the frame and no handles; a Premiere/FCP editor sees no box on the picture by default, so a ring is the calmer read. Risk: a still PiP or a slide-in losing its handles, so the ring needs BOTH grown past its own box AND spilling past the canvas (unit tested)."
+    },
+    {
+      "t": "2026-10-12T12:28:37.121Z",
+      "note": "Reproduced before the fix: walk picture 3-framed-at-5 showed the dashed edge at x~288 and a handle at (288,633), no ring on the frame. After: expectPicked outline frame passes at 0:05 twice, outline drawn at 0:03, title over the push keeps box/handles/knob."
+    },
+    {
+      "t": "2026-10-12T12:28:37.190Z",
+      "note": "Filed: a-click-on-the-empty-canvas-past-the-frame-lets (reproduced: click at doc (-20,400) keeps the clip picked), a-picked-layer-wears-the-solid-accent-ring-the-m (dashed vs mock solid), decide-whether-a-picked-recording-at-its-own-siz (card: handles at 100%)."
+    },
+    {
+      "t": "2026-10-12T12:29:05.849Z",
+      "note": "Picked at 220% a recording wears a ring on the frame with no handles or knob (PhotonzDocument.frameRing + FrameRingTests; EditorState.frameRings -> canvas; offersOwnHandles off for a ringed clip). framing-a-zoom-keys-its-centre-walk at Next defaults claims the ring twice at 0:05, the usual box at 0:03, and a title over the push keeping its handles; photographed. Scripts/test.sh green (12725). Audit queue/audits/2026-10-12-zoom-frame-ring.json. Commit 09b3ec12."
     }
   ],
   "walks": [
     "framing-a-zoom-keys-its-centre-walk"
-  ]
+  ],
+  "started": "2026-10-12T11:57:01.093Z",
+  "completed": "2026-10-12T12:29:05.850Z"
 }

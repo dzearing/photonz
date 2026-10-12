@@ -10917,3 +10917,249 @@
 {"t":"2026-10-11T14:21:09.285Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
 {"t":"2026-10-11T14:21:09.347Z","ev":"task_note","id":"the-menu-bar-stays-still-while-a-video-plays"}
 {"t":"2026-10-11T14:21:29.070Z","ev":"task_done","id":"the-menu-bar-stays-still-while-a-video-plays","from":"in_progress","note":"Menu bar no longer flickers during playback (Next): menu reads the playhead unwatched and refreshes only at boundaries via a MenuPlayhead fingerprint; app declares its own View and hides SwiftUI's instead of moving it. Measured 10 s long talk 293->2 rebuilds, 1172->0 bar changes, frame ticks unchanged; filmed menu bar 0 changed frames. Walk the-menu-bar-stays-still-while-playing-walk green, 23 menu walks green, test.sh green. Commit 0e87597a. Audit queue/audits/2026-10-11-the-menu-bar-stays-still-while-a-video-plays.json"}
+{"t":"2026-10-11T14:33:45.951Z","ev":"slice_pass","walks":32,"passed":32,"failed":0,"seconds":578,"of":874,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T14:33:46.129Z","ev":"task_started","id":"f-puts-a-video-full-screen-and-the-full-screen-s","title":"F puts a video full screen, and the full screen shortcut it lists works","priority":"p1-high"}
+{"t":"2026-10-11T15:02:21.148Z","ev":"task_created","id":"f-in-the-editor-the-frame-tool-or-full-screen","priority":"p2-normal","title":"F in the editor: the Frame tool or full screen"}
+{"t":"2026-10-11T15:02:34.325Z","ev":"decision_opened","id":"f-in-the-editor-the-frame-tool-or-full-screen-in-the-editor-should-f-keep-pick","taskId":"f-in-the-editor-the-frame-tool-or-full-screen","question":"In the editor, should F keep picking the Frame tool, or fill the screen the way it now does in the player?"}
+{"t":"2026-10-11T15:02:42.796Z","ev":"task_blocked","id":"f-in-the-editor-the-frame-tool-or-full-screen","from":"pending","note":"waiting on the decision card: F in the editor"}
+{"t":"2026-10-11T15:57:30.640Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T16:10:14.848Z","ev":"task_note","id":"f-puts-a-video-full-screen-and-the-full-screen-s"}
+{"t":"2026-10-11T16:10:14.909Z","ev":"task_note","id":"f-puts-a-video-full-screen-and-the-full-screen-s"}
+{"t":"2026-10-11T16:10:14.969Z","ev":"task_note","id":"f-puts-a-video-full-screen-and-the-full-screen-s"}
+{"t":"2026-10-11T16:10:15.032Z","ev":"task_note","id":"f-puts-a-video-full-screen-and-the-full-screen-s"}
+{"t":"2026-10-11T16:10:15.101Z","ev":"task_note","id":"f-puts-a-video-full-screen-and-the-full-screen-s"}
+{"t":"2026-10-11T16:10:15.164Z","ev":"task_walks","id":"f-puts-a-video-full-screen-and-the-full-screen-s","walks":["f-puts-a-video-full-screen-walk"]}
+{"t":"2026-10-11T16:10:25.701Z","ev":"task_done","id":"f-puts-a-video-full-screen-and-the-full-screen-s","from":"in_progress","note":"F toggles full screen in the player and Escape leaves it, still playing; View > Enter/Exit Full Screen on Control Command F everywhere; tip says Full Screen (F); transport tucks away during full screen playback. Commit c266c2a2. Verified by f-puts-a-video-full-screen-walk (5 real pictures) and 5 neighbouring walks; core/media/render test targets each green (whole run stalls in system image calls, known task). Editor F question is a card on f-in-the-editor-the-frame-tool-or-full-screen. Audit queue/audits/2026-10-11-f-puts-a-video-full-screen.json."}
+{"t":"2026-10-11T16:22:05.051Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":538,"of":875,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T16:22:05.214Z","ev":"task_started","id":"a-selection-box-on-the-timeline-scrolls-the-time","title":"A selection box on the timeline scrolls the timeline when it reaches an edge","priority":"p1-high"}
+{"t":"2026-10-11T16:25:55.573Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:31:17.510Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T17:52:57.361Z","ev":"task_created","id":"scrolling-the-timeline-along-time-keeps-every-fr","priority":"p2-normal","title":"Scrolling the timeline along time keeps every frame at full speed"}
+{"t":"2026-10-11T17:53:02.487Z","ev":"task_walks","id":"a-selection-box-on-the-timeline-scrolls-the-time","walks":["box-scrolls-at-the-edge-walk","box-scrolls-at-the-edge-by-hand-walk","zoom-bar-scrolls-at-the-edge-walk"]}
+{"t":"2026-10-11T17:53:32.005Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:53:32.067Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:53:32.132Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:53:32.198Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:53:32.264Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:53:32.333Z","ev":"task_note","id":"a-selection-box-on-the-timeline-scrolls-the-time"}
+{"t":"2026-10-11T17:54:02.663Z","ev":"task_done","id":"a-selection-box-on-the-timeline-scrolls-the-time","from":"in_progress","note":"A box, clip, title or zoom bar dragged near any timeline edge now scrolls it (cube curve from a shared tested PhotonzCore helper, EdgeAutoscroll; one 60 Hz display-link driver, TimelineEdgeScroll; track carry moved onto the same curve). Verified at Next defaults by box-scrolls-at-the-edge-walk (right/left/bottom, picks what scrolled in, 5 s hold at 16.7 ms every frame), box-scrolls-at-the-edge-by-hand-walk (real pointer box and clip) and zoom-bar-scrolls-at-the-edge-walk; suite green in the split run. Window no longer snaps back to a still playhead after an edit. Full-speed frame drops filed as scrolling-the-timeline-along-time-keeps-every-fr. Commit ffdf77fc."}
+{"t":"2026-10-11T18:07:41.547Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":657,"of":878,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T18:07:41.733Z","ev":"task_started","id":"design-how-layers-turn-and-move-in-depth-2-5d-as","title":"Design how layers turn and move in depth (2.5D), as mocks","priority":"p1-high"}
+{"t":"2026-10-11T18:16:57.446Z","ev":"decision_opened","id":"tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o","taskId":"tilt-flip-and-push-layers-in-depth-from-the-canv","question":"How do you turn a layer toward or away from you on the canvas?"}
+{"t":"2026-10-11T18:16:57.486Z","ev":"decision_opened","id":"layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live","taskId":"layers-can-turn-about-x-and-y-and-move-in-depth","question":"Where does the camera live?"}
+{"t":"2026-10-11T18:17:19.564Z","ev":"task_note","id":"tilt-flip-and-push-layers-in-depth-from-the-canv"}
+{"t":"2026-10-11T18:17:19.625Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T18:18:15.395Z","ev":"task_note","id":"design-how-layers-turn-and-move-in-depth-2-5d-as"}
+{"t":"2026-10-11T18:18:15.453Z","ev":"task_note","id":"design-how-layers-turn-and-move-in-depth-2-5d-as"}
+{"t":"2026-10-11T18:18:15.511Z","ev":"task_note","id":"design-how-layers-turn-and-move-in-depth-2-5d-as"}
+{"t":"2026-10-11T18:18:15.570Z","ev":"task_note","id":"tilt-flip-and-push-layers-in-depth-from-the-canv"}
+{"t":"2026-10-11T18:18:27.879Z","ev":"task_done","id":"design-how-layers-turn-and-move-in-depth-2-5d-as","from":"in_progress","note":"Mock page docs/design/mocks/pages/video-depth.html (Video > Depth (2.5D)) on the shared shell: live 3D handles in three designs on big and small layers, panel 3D rows with key diamonds synced to the canvas, timeline and layers list, two camera options, three scrubbable moves (flip, title from depth, cube). Cards opened on the controls task (handles, rec A arcs on the knob) and the model task (camera, rec A frame setting); neither blocks. Audit queue/audits/2026-10-11-design-how-layers-turn-and-move-in-depth-2-5d-as.json with three browser screenshots. Verified in Chrome with synthetic drags; mock gates pass."}
+{"t":"2026-10-11T18:18:45.573Z","ev":"task_started","id":"layers-can-turn-about-x-and-y-and-move-in-depth","title":"Layers can turn about X and Y and move in depth under a camera (2.5D model and renderer)","priority":"p1-high"}
+{"t":"2026-10-11T18:39:33.314Z","ev":"task_created","id":"size-mode-measures-avatars-icons-and-stacks-and","priority":"p1-high","title":"Size mode measures avatars, icons and stacks, and a rough box snaps to the thing inside it"}
+{"t":"2026-10-11T18:39:33.412Z","ev":"task_resequenced","id":"size-mode-measures-avatars-icons-and-stacks-and","from":3950,"to":30}
+{"t":"2026-10-11T19:00:09.511Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T19:20:51.294Z","ev":"task_walks","id":"layers-can-turn-about-x-and-y-and-move-in-depth","walks":["a-card-flips-in-3d-walk"]}
+{"t":"2026-10-11T19:21:26.168Z","ev":"task_note","id":"tilt-flip-and-push-layers-in-depth-from-the-canv"}
+{"t":"2026-10-11T19:21:26.236Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T19:21:26.302Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T19:21:26.368Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T19:21:26.433Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T19:21:26.499Z","ev":"task_note","id":"layers-can-turn-about-x-and-y-and-move-in-depth"}
+{"t":"2026-10-11T19:22:03.526Z","ev":"task_done","id":"layers-can-turn-about-x-and-y-and-move-in-depth","from":"in_progress","note":"2.5D model and renderer shipped (5e4d6a6e): Layer.turn3D (Rotation X/Y, Depth, Pivot depth, back face), document camera (perspective, push, pan, focus, keys), GroupContent.keeps3D, 8 keyable MotionProperty values offered in Animate a property; renderer warps each layer onto its projected corners with depth of field and depth order; click, outline, handles, marquee and SVG use the same corners. Verified: 22 core + 11 render + perf + MP4 tests; canvas vs export 0 px differ, MP4 ~1 level mean, SVG 0.1-0.2 mean at three moments of a flip; 1080p/10 layers/4 tilted/1 DoF 5.5ms median; walk a-card-flips-in-3d-walk at Next defaults with 5 real captures. Audit queue/audits/2026-10-11-depth-model-and-renderer.json."}
+{"t":"2026-10-11T19:34:29.268Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":584,"of":879,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T19:34:29.446Z","ev":"task_started","id":"size-mode-measures-avatars-icons-and-stacks-and","title":"Size mode measures avatars, icons and stacks, and a rough box snaps to the thing inside it","priority":"p1-high"}
+{"t":"2026-10-11T19:42:44.791Z","ev":"task_note","id":"size-mode-measures-avatars-icons-and-stacks-and"}
+{"t":"2026-10-11T21:07:29.043Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T21:14:34.554Z","ev":"task_walks","id":"size-mode-measures-avatars-icons-and-stacks-and","walks":["size-reads-avatars-and-stacks-walk"]}
+{"t":"2026-10-11T21:16:15.404Z","ev":"task_note","id":"size-mode-measures-avatars-icons-and-stacks-and"}
+{"t":"2026-10-11T21:16:15.462Z","ev":"task_note","id":"size-mode-measures-avatars-icons-and-stacks-and"}
+{"t":"2026-10-11T21:16:15.524Z","ev":"task_note","id":"size-mode-measures-avatars-icons-and-stacks-and"}
+{"t":"2026-10-11T21:16:34.471Z","ev":"task_done","id":"size-mode-measures-avatars-icons-and-stacks-and","from":"in_progress","note":"Size mode (Next) now reads round avatars, icon tiles, pills and badges, photos, and one avatar in a stack at its true size (new PhotonzCore ShapeBounds, wired into ElementBounds behind readsShapes), ] steps out to the whole stack, and a press-drag draws a rough box that snaps live to what is wholly inside it (kept as drawn with a notice when empty). Verified: ShapeBoundsTests + ShapeDetectionFixtureTests on a 2x people-panel fixture (every specimen within 2 px at 2x, 1 px at 1x), all old element/text/alignment tests unchanged, split full run green, size-reads-avatars-and-stacks-walk at Next defaults pins every reading, six existing Size walks pass. Perf optimized on 3456x2234: hover 0.05 ms mean, box snap 16 ms worst. Audit: queue/audits/2026-10-11-size-mode-shapes.json"}
+{"t":"2026-10-11T21:28:00.615Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":524,"of":880,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T21:28:00.785Z","ev":"task_started","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","title":"Tilt, flip and push layers in depth from the canvas and the panel","priority":"p1-high"}
+{"t":"2026-10-11T22:30:19.208Z","ev":"task_created","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top","priority":"p1-high","title":"Show the camera's keys on a thin row at the top of the timeline"}
+{"t":"2026-10-11T22:30:22.238Z","ev":"task_walks","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","walks":["tilt-and-flip-a-title-in-3d-walk","camera-settings-on-the-frame-walk"]}
+{"t":"2026-10-11T22:31:10.802Z","ev":"decision_resolved","id":"layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live","taskId":"layers-can-turn-about-x-and-y-and-move-in-depth","choice":"a"}
+{"t":"2026-10-11T22:31:10.833Z","ev":"task_unblocked","id":"layers-can-turn-about-x-and-y-and-move-in-depth","decision":"layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live"}
+{"t":"2026-10-11T22:31:32.566Z","ev":"decision_resolved","id":"tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o","taskId":"tilt-flip-and-push-layers-in-depth-from-the-canv","choice":"a"}
+{"t":"2026-10-11T22:31:32.599Z","ev":"task_unblocked","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","decision":"tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o"}
+{"t":"2026-10-11T22:31:35.083Z","ev":"decision_resolved","id":"f-in-the-editor-the-frame-tool-or-full-screen-in-the-editor-should-f-keep-pick","taskId":"f-in-the-editor-the-frame-tool-or-full-screen","choice":"a"}
+{"t":"2026-10-11T22:31:35.115Z","ev":"task_dropped","id":"f-in-the-editor-the-frame-tool-or-full-screen","from":"blocked","decision":"f-in-the-editor-the-frame-tool-or-full-screen-in-the-editor-should-f-keep-pick","note":"declined: F stays the Frame tool in the editor; full screen there is Control Command F"}
+{"t":"2026-10-11T22:31:45.491Z","ev":"decision_resolved","id":"a-lower-third-wears-the-mock-s-lower-third-badge-which-icon-should-the-lower-thir","taskId":"a-lower-third-wears-the-mock-s-lower-third-badge","choice":"b"}
+{"t":"2026-10-11T22:31:45.523Z","ev":"task_unblocked","id":"a-lower-third-wears-the-mock-s-lower-third-badge","decision":"a-lower-third-wears-the-mock-s-lower-third-badge-which-icon-should-the-lower-thir"}
+{"t":"2026-10-11T22:31:53.592Z","ev":"decision_resolved","id":"the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name","taskId":"the-layers-list-says-stack-words-the-way-the-aut","choice":"a"}
+{"t":"2026-10-11T22:31:53.628Z","ev":"task_dropped","id":"the-layers-list-says-stack-words-the-way-the-aut","from":"blocked","decision":"the-layers-list-says-stack-words-the-way-the-aut-how-should-the-layers-panel-name","note":"declined: Keep Stack Selection, word under the name"}
+{"t":"2026-10-11T22:31:59.916Z","ev":"decision_resolved","id":"the-design-shape-slot-tip-reads-the-way-you-choo-what-should-the-shape-slot-s-tip","taskId":"the-design-shape-slot-tip-reads-the-way-you-choo","choice":"a"}
+{"t":"2026-10-11T22:31:59.947Z","ev":"task_unblocked","id":"the-design-shape-slot-tip-reads-the-way-you-choo","decision":"the-design-shape-slot-tip-reads-the-way-you-choo-what-should-the-shape-slot-s-tip"}
+{"t":"2026-10-11T22:32:04.066Z","ev":"decision_resolved","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick","taskId":"a-hand-tool-pans-the-canvas-from-the-tool-bar","choice":"a"}
+{"t":"2026-10-11T22:32:04.095Z","ev":"task_unblocked","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar","decision":"a-hand-tool-pans-the-canvas-from-the-tool-bar-which-tool-should-the-h-key-pick"}
+{"t":"2026-10-11T22:32:09.600Z","ev":"decision_resolved","id":"a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component","taskId":"a-component-tool-places-a-component-from-the-too","choice":"a"}
+{"t":"2026-10-11T22:32:09.628Z","ev":"task_unblocked","id":"a-component-tool-places-a-component-from-the-too","decision":"a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component"}
+{"t":"2026-10-11T22:32:27.691Z","ev":"decision_resolved","id":"capture-to-a-pasted-redline-takes-no-more-steps-after-a-size-or-gap-click-should","taskId":"capture-to-a-pasted-redline-takes-no-more-steps","choice":"a"}
+{"t":"2026-10-11T22:32:27.727Z","ev":"task_unblocked","id":"capture-to-a-pasted-redline-takes-no-more-steps","decision":"capture-to-a-pasted-redline-takes-no-more-steps-after-a-size-or-gap-click-should"}
+{"t":"2026-10-11T22:32:36.417Z","ev":"decision_resolved","id":"decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho","taskId":"decide-whether-starter-components-change-colour","choice":"a"}
+{"t":"2026-10-11T22:32:36.448Z","ev":"task_dropped","id":"decide-whether-starter-components-change-colour","from":"blocked","decision":"decide-whether-starter-components-change-colour-when-the-mac-is-in-dark-mode-sho","note":"declined: Keep the colours you dropped"}
+{"t":"2026-10-11T22:48:12.931Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-11T22:48:37.069Z","ev":"task_note","id":"tilt-flip-and-push-layers-in-depth-from-the-canv"}
+{"t":"2026-10-11T22:48:50.005Z","ev":"task_done","id":"tilt-flip-and-push-layers-in-depth-from-the-canv","from":"in_progress","note":"Arcs on the turn knob tip and swing a picked layer, a depth arrow pushes it, 3D and Camera panel sections with keys and Mixed, Layer/right-click/View menu rows; flag next-turn-in-depth on in Next. Commit 0deef2bf. Verified by SpaceEditingTests, walks tilt-and-flip-a-title-in-3d-walk and camera-settings-on-the-frame-walk at Next defaults with real captures, neighbouring walks green, split test run green. Audit queue/audits/2026-10-11-tilt-flip-and-push-layers-in-depth.json. Camera timeline row filed as show-the-camera-s-keys-on-a-thin-row-at-the-top."}
+{"t":"2026-10-11T23:06:19.418Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":789,"of":882,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-11T23:06:19.614Z","ev":"task_started","id":"3d-transitions-and-title-entrances-flip-cube-swi","title":"3D transitions and title entrances: flip, cube, swing, doorway, depth push","priority":"p1-high"}
+{"t":"2026-10-12T00:07:57.249Z","ev":"task_created","id":"the-title-restyle-walk-reaches-its-last-part-in","priority":"p2-normal","title":"The title restyle walk reaches its last Part In dropdown again"}
+{"t":"2026-10-12T00:17:02.524Z","ev":"task_created","id":"text-that-swings-flips-or-flies-in-from-depth-is","priority":"p1-high","title":"Text that swings, flips or flies in from depth is drawn with real perspective"}
+{"t":"2026-10-12T00:17:02.618Z","ev":"task_resequenced","id":"text-that-swings-flips-or-flies-in-from-depth-is","from":3960,"to":35}
+{"t":"2026-10-12T00:17:02.684Z","ev":"task_note","id":"3d-transitions-and-title-entrances-flip-cube-swi"}
+{"t":"2026-10-12T00:18:43.258Z","ev":"task_walks","id":"3d-transitions-and-title-entrances-flip-cube-swi","walks":["transitions-in-depth-at-a-cut-walk","transition-direction-on-a-click-walk","title-words-turn-in-depth-walk"]}
+{"t":"2026-10-12T00:18:56.183Z","ev":"decision_opened","id":"3d-transitions-and-title-entrances-flip-cube-swi-do-the-3d-transitions-and-title","taskId":"3d-transitions-and-title-entrances-flip-cube-swi","question":"Do the 3D transitions and title entrances in the reel look right?"}
+{"t":"2026-10-12T00:27:01.245Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T00:33:33.733Z","ev":"task_note","id":"3d-transitions-and-title-entrances-flip-cube-swi"}
+{"t":"2026-10-12T00:33:33.793Z","ev":"task_note","id":"3d-transitions-and-title-entrances-flip-cube-swi"}
+{"t":"2026-10-12T00:33:33.853Z","ev":"task_note","id":"3d-transitions-and-title-entrances-flip-cube-swi"}
+{"t":"2026-10-12T00:33:54.034Z","ev":"task_done","id":"3d-transitions-and-title-entrances-flip-cube-swi","from":"in_progress","note":"Six 3D transitions (Flip, Cube, Swing, Doorway, Revolve, Push in depth) with Direction and Motion blur, and four depth title entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle) with outs, whole or by line/word/letter; commit 699f1ef4. Verified: core and render tests (midpoint >= 20 degrees, 100 ms frames differ, canvas = export), 1080p perf 5-6 ms median, three new walks green at Next defaults, reel + contact sheet + numbers in queue/audits with a decision card; split test run green (full run hit the known HEIF/Vision hang)."}
+{"t":"2026-10-12T00:46:07.561Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":575,"of":885,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T00:46:07.735Z","ev":"task_started","id":"text-that-swings-flips-or-flies-in-from-depth-is","title":"Text that swings, flips or flies in from depth is drawn with real perspective","priority":"p1-high"}
+{"t":"2026-10-12T00:51:22.488Z","ev":"task_note","id":"text-that-swings-flips-or-flies-in-from-depth-is"}
+{"t":"2026-10-12T01:28:45.091Z","ev":"task_walks","id":"text-that-swings-flips-or-flies-in-from-depth-is","walks":["title-words-turn-in-depth-walk"]}
+{"t":"2026-10-12T01:28:55.717Z","ev":"decision_opened","id":"text-that-swings-flips-or-flies-in-from-depth-is-do-words-that-swing-flip-or-fly","taskId":"text-that-swings-flips-or-flies-in-from-depth-is","question":"Do words that swing, flip or fly in now look like they turn in space?"}
+{"t":"2026-10-12T01:30:00.532Z","ev":"task_note","id":"text-that-swings-flips-or-flies-in-from-depth-is"}
+{"t":"2026-10-12T01:30:05.481Z","ev":"task_done","id":"text-that-swings-flips-or-flies-in-from-depth-is","from":"in_progress","note":"Each turning word or letter is seen through its own close lens (TextRevealCompositor.lens), can draw past its text box, and the depth entrances are half turned at half time (Flip Up from 90, Tilt Settle from 60). Midpoint near:far 1.32 to 1.57 by word and letter (was 1.04, with italic lean). Mock video-depth.html fixed for WebKit (rounded clip-path, per-word perspective, 400 px card camera), checked in a real WebKit window and Chrome. Reel + numbers + decision card; 1080p letter flip with blur 7.9 ms median; tests green split by target, title-words-turn-in-depth-walk green at defaults. Commit f874fc50."}
+{"t":"2026-10-12T01:41:15.711Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":509,"of":885,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T01:41:15.877Z","ev":"task_started","id":"title-backgrounds-that-are-alive-auroras-energy","title":"Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching","priority":"p1-high"}
+{"t":"2026-10-12T02:42:33.705Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T03:23:29.399Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T03:33:26.112Z","ev":"decision_opened","id":"title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are","taskId":"title-text-visibly-comes-in-and-every-built-in-t","question":"Ten moving title backgrounds are built. Which do you keep, and which do new titles start on?"}
+{"t":"2026-10-12T03:33:58.698Z","ev":"task_created","id":"find-out-why-a-faint-card-from-the-recording-sho","priority":"p2-normal","title":"Find out why a faint card from the recording shows through a title page before the recording starts"}
+{"t":"2026-10-12T03:34:40.690Z","ev":"task_walks","id":"title-backgrounds-that-are-alive-auroras-energy","walks":["live-title-backgrounds-walk"]}
+{"t":"2026-10-12T03:34:40.752Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-12T03:34:40.816Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-12T03:34:40.880Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-12T03:34:40.943Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-12T03:34:41.011Z","ev":"task_note","id":"title-backgrounds-that-are-alive-auroras-energy"}
+{"t":"2026-10-12T03:34:58.447Z","ev":"task_done","id":"title-backgrounds-that-are-alive-auroras-energy","from":"in_progress","note":"Ten moving title backgrounds (live paint kind, runtime Metal CI kernels) picked from playing tiles in the Title section's Background row, four knobs each; Mesh retired from the choices. Measured: motion 4.2-11.5 vs Mesh 1.31 (bar 2.6), 1080p 2.4-4.6 ms best, legible over every curated theme. Walk live-title-backgrounds-walk at Next defaults; reel + contact sheet + audit queue/audits/2026-10-12-live-*; decision card on title-text-visibly-comes-in-and-every-built-in-t."}
+{"t":"2026-10-12T07:33:08.047Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-20","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-10-12T07:33:08.133Z","ev":"sweep_pass","walks":886,"passed":883,"failed":3,"seconds":14169,"complete":true,"total":886}
+{"t":"2026-10-12T07:33:08.292Z","ev":"task_started","id":"title-text-visibly-comes-in-and-every-built-in-t","title":"Title text visibly comes in, and every built-in title is rebuilt on the live backgrounds","priority":"p1-high"}
+{"t":"2026-10-12T08:47:56.126Z","ev":"decision_opened","id":"title-text-visibly-comes-in-and-every-built-in-t-the-twelve-built-in-titles-now-v","taskId":"title-text-visibly-comes-in-and-every-built-in-t","question":"The twelve built-in titles now visibly come in, each its own way, on moving backgrounds. Do they look produced?"}
+{"t":"2026-10-12T08:48:45.573Z","ev":"task_walks","id":"title-text-visibly-comes-in-and-every-built-in-t","walks":["title-set-kinetic-bold-walk","title-set-keynote-clean-walk","title-set-light-leak-walk","title-set-gradient-glow-walk","title-set-tech-terminal-walk","live-title-backgrounds-walk","title-knobs-restyle-walk"]}
+{"t":"2026-10-12T08:48:45.632Z","ev":"task_note","id":"title-text-visibly-comes-in-and-every-built-in-t"}
+{"t":"2026-10-12T08:48:45.690Z","ev":"task_note","id":"title-text-visibly-comes-in-and-every-built-in-t"}
+{"t":"2026-10-12T08:48:45.748Z","ev":"task_note","id":"title-text-visibly-comes-in-and-every-built-in-t"}
+{"t":"2026-10-12T08:48:45.810Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T08:49:28.733Z","ev":"task_done","id":"title-text-visibly-comes-in-and-every-built-in-t","from":"in_progress","note":"Every built-in headline now visibly arrives and leaves: 12 distinct entrances measured by TitleEntranceInkTests on the real renderer (<10% on frame 0, 20-80% half way, never full before 400 ms, same going off), each on its own moving look except the bare Minimal Underline. Cause reproduced (ins over in 300-400 ms on Ease out expo; old sheet sampled late). TitleSetTests, title suites and 19 title walks green at Next defaults; split full suite green apart from frame budgets under parallel load that pass alone. Reel + contact sheet under queue/audits/2026-10-12-title-set-*, audit 2026-10-12-title-text-visibly-comes-in-and-every-built-in-t.json, decision card for the user. Commit 88195447."}
+{"t":"2026-10-12T09:01:47.073Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T09:03:58.363Z","ev":"slice_pass","walks":33,"passed":32,"failed":1,"seconds":707,"of":886,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T09:03:58.548Z","ev":"task_started","id":"a-component-tool-places-a-component-from-the-too","title":"A Component tool places a component from the tool bar","priority":"p1-high"}
+{"t":"2026-10-12T09:05:44.909Z","ev":"task_done","id":"a-component-tool-places-a-component-from-the-too","from":"in_progress","note":"The key answer (N everywhere, C stays Crop, 2026-10-11) is what shipped in 5ccaa34d, so no code changed. Component insert sits after Frame in the Design tool bar in violet, a pointer click picks it, a canvas click places the Library's picked component, and it is under More and in Edit > Tools elsewhere. Re-verified today at Next defaults: design-mode-tool-strip-walk and video-tool-bar-walk both ok. Audit 2026-10-09-component-tool now records the answer (e8165377)."}
+{"t":"2026-10-12T09:05:57.132Z","ev":"task_started","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar","title":"A Hand tool pans the canvas from the tool bar","priority":"p1-high"}
+{"t":"2026-10-12T09:24:26.061Z","ev":"task_note","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar"}
+{"t":"2026-10-12T09:24:26.127Z","ev":"task_done","id":"a-hand-tool-pans-the-canvas-from-the-tool-bar","from":"in_progress","note":"The Hand sits at the end of the tool bar and pans the canvas; per the user's 2026-10-11 answer H now picks it and Highlight moved to U in Next (release Photonz unchanged). Commit d0b81427; 12704 tests and 8 walks green at Next defaults incl. design-mode-tool-strip-walk with real captures of both tips; audit 2026-10-12-hand-tool-key."}
+{"t":"2026-10-12T09:38:46.691Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":708,"of":886,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T09:38:46.874Z","ev":"task_started","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top","title":"Show the camera's keys on a thin row at the top of the timeline","priority":"p1-high"}
+{"t":"2026-10-12T09:45:53.448Z","ev":"task_note","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top"}
+{"t":"2026-10-12T10:08:03.975Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T10:25:22.016Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T10:25:37.217Z","ev":"task_walks","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top","walks":["camera-keys-row-walk"]}
+{"t":"2026-10-12T10:26:49.860Z","ev":"task_note","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top"}
+{"t":"2026-10-12T10:26:49.920Z","ev":"task_note","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top"}
+{"t":"2026-10-12T10:27:14.679Z","ev":"task_done","id":"show-the-camera-s-keys-on-a-thin-row-at-the-top","from":"in_progress","note":"Thin Camera row under the timeline ruler holds the camera's key diamonds once any camera value is keyed (gone with the last key). Clicking its name picks the frame and shows the Camera section; diamonds click to go to the key, drag to retime and delete with ⌫ or right-click, each one undo step. Core CameraRow.swift + 13 tests; app TimelineCameraRow.swift, EditorState+CameraRow.swift. Verified by camera-keys-row-walk at Next defaults (push in 1s to 3s photographed at 1/2/3s), neighbouring walks green, tests green in a split run (full run hit the known OS hang). Commit 103c017f. Audit queue/audits/2026-10-12-camera-keys-row.json."}
+{"t":"2026-10-12T10:39:51.612Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T10:42:02.021Z","ev":"slice_pass","walks":33,"passed":32,"failed":1,"seconds":497,"of":887,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T10:42:02.191Z","ev":"task_started","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","title":"Find out why the whole test run hangs in the Mac's picture and text reading work","priority":"p2-normal"}
+{"t":"2026-10-12T11:42:35.920Z","ev":"task_walks","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","walks":[]}
+{"t":"2026-10-12T11:42:35.980Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T11:42:36.040Z","ev":"task_note","id":"find-out-why-the-whole-test-run-hangs-in-the-mac"}
+{"t":"2026-10-12T11:42:36.105Z","ev":"task_done","id":"find-out-why-the-whole-test-run-hangs-in-the-mac","from":"in_progress","note":"Cause named and reproduced: Vision text reads starve Swift's shared pool (16 reads at once park for good; on a userInitiated queue they answer). Fix in 35e19fb4: RecogniserLane routes every recognition off the pool, 4 at a time; Scripts/test.sh now stops a parked run after 3 quiet idle minutes, naming the tests (exit 4). Verified: new regression test red->green, two whole runs green (12,716 tests, 306s and 300s)."}
+{"t":"2026-10-12T11:57:00.934Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":563,"of":887,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T11:57:01.102Z","ev":"task_started","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n","title":"A zoomed recording shows its ring on the frame, not handles off the edge","priority":"p2-normal"}
+{"t":"2026-10-12T12:26:50.907Z","ev":"task_created","id":"a-click-on-the-empty-canvas-past-the-frame-lets","priority":"p2-normal","title":"A click on the empty canvas past the frame lets go of a zoomed recording"}
+{"t":"2026-10-12T12:27:10.704Z","ev":"task_created","id":"a-picked-layer-wears-the-solid-accent-ring-the-m","priority":"p2-normal","title":"A picked layer wears the solid accent ring the mocks draw"}
+{"t":"2026-10-12T12:28:01.975Z","ev":"task_created","id":"decide-whether-a-picked-recording-at-its-own-siz","priority":"p2-normal","title":"Decide whether a picked recording at its own size shows resize handles"}
+{"t":"2026-10-12T12:28:09.183Z","ev":"decision_opened","id":"decide-whether-a-picked-recording-at-its-own-siz-when-you-pick-a-recording-that-f","taskId":"decide-whether-a-picked-recording-at-its-own-siz","question":"When you pick a recording that fills the frame and is not zoomed, should it show resize handles?"}
+{"t":"2026-10-12T12:28:17.949Z","ev":"task_blocked","id":"decide-whether-a-picked-recording-at-its-own-siz","from":"pending","note":"Waiting on the card: handles on a picked recording at its own size, or always a ring"}
+{"t":"2026-10-12T12:28:37.063Z","ev":"task_note","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n"}
+{"t":"2026-10-12T12:28:37.123Z","ev":"task_note","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n"}
+{"t":"2026-10-12T12:28:37.192Z","ev":"task_note","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n"}
+{"t":"2026-10-12T12:29:05.852Z","ev":"task_done","id":"a-zoomed-recording-shows-its-ring-on-the-frame-n","from":"in_progress","note":"Picked at 220% a recording wears a ring on the frame with no handles or knob (PhotonzDocument.frameRing + FrameRingTests; EditorState.frameRings -> canvas; offersOwnHandles off for a ringed clip). framing-a-zoom-keys-its-centre-walk at Next defaults claims the ring twice at 0:05, the usual box at 0:03, and a title over the push keeping its handles; photographed. Scripts/test.sh green (12725). Audit queue/audits/2026-10-12-zoom-frame-ring.json. Commit 09b3ec12."}
+{"t":"2026-10-12T12:40:18.366Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":515,"of":887,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T12:43:12.190Z","ev":"task_done","id":"a-lower-third-wears-the-mock-s-lower-third-badge","from":"pending","note":"Tag shipped in d26ae25c (audit 2026-10-11-lower-third-tag.json); the icon card was answered Label only, as built now, so nothing is left to build. Closed by the 2026-10-12 triage."}
+{"t":"2026-10-12T12:43:12.249Z","ev":"task_dropped","id":"the-title-restyle-walk-reaches-its-last-part-in","from":"pending","note":"No longer reproduces: title-knobs-restyle-walk passed in the full sweep that finished 2026-10-12T07:33Z (queue/sweep/2026-10-11-203658.log line 734) and again when the 2026-10-12 triage ran Scripts/playtest.sh Scripts/playtest/title-knobs-restyle-walk.json --no-build on HEAD 09b3ec12: all 95 steps, 11 real pictures, walk complete. The Part In row no longer sits under the title bar since the title text rework (88195447) changed the Part section."}
+{"t":"2026-10-12T12:44:03.701Z","ev":"task_resequenced","id":"a-click-on-the-empty-canvas-past-the-frame-lets","from":4010,"to":10}
+{"t":"2026-10-12T12:44:03.767Z","ev":"task_resequenced","id":"a-part-picked-inside-a-title-shows-its-row-only","from":30,"to":20}
+{"t":"2026-10-12T12:44:03.828Z","ev":"task_resequenced","id":"find-out-why-a-faint-card-from-the-recording-sho","from":3990,"to":30}
+{"t":"2026-10-12T12:44:03.887Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-20","from":4000,"to":40}
+{"t":"2026-10-12T12:44:03.949Z","ev":"task_resequenced","id":"scrolling-the-timeline-along-time-keeps-every-fr","from":3970,"to":50}
+{"t":"2026-10-12T12:44:04.017Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":130,"to":60}
+{"t":"2026-10-12T12:44:04.075Z","ev":"task_resequenced","id":"a-picked-layer-wears-the-solid-accent-ring-the-m","from":4020,"to":70}
+{"t":"2026-10-12T12:44:04.143Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":40,"to":80}
+{"t":"2026-10-12T12:44:04.204Z","ev":"task_resequenced","id":"the-focus-check-stops-crying-theft-about-one-wal","from":50,"to":90}
+{"t":"2026-10-12T12:44:04.265Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":60,"to":100}
+{"t":"2026-10-12T12:44:04.327Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":70,"to":110}
+{"t":"2026-10-12T12:44:04.388Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":80,"to":120}
+{"t":"2026-10-12T12:44:04.448Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":90,"to":130}
+{"t":"2026-10-12T12:44:04.508Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":100,"to":140}
+{"t":"2026-10-12T12:44:04.568Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":110,"to":150}
+{"t":"2026-10-12T12:44:04.626Z","ev":"task_resequenced","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":350,"to":160}
+{"t":"2026-10-12T12:44:04.685Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":140,"to":170}
+{"t":"2026-10-12T12:44:04.743Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":150,"to":180}
+{"t":"2026-10-12T12:44:04.804Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":160,"to":190}
+{"t":"2026-10-12T12:44:04.865Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":170,"to":200}
+{"t":"2026-10-12T12:44:04.924Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":180,"to":210}
+{"t":"2026-10-12T12:44:04.984Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":190,"to":220}
+{"t":"2026-10-12T12:44:05.043Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":200,"to":230}
+{"t":"2026-10-12T12:44:05.104Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":210,"to":240}
+{"t":"2026-10-12T12:44:05.165Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":220,"to":250}
+{"t":"2026-10-12T12:44:05.223Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":230,"to":260}
+{"t":"2026-10-12T12:44:05.281Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":240,"to":270}
+{"t":"2026-10-12T12:44:05.339Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":250,"to":280}
+{"t":"2026-10-12T12:44:05.400Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":260,"to":290}
+{"t":"2026-10-12T12:44:05.461Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":270,"to":300}
+{"t":"2026-10-12T12:44:05.522Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":280,"to":310}
+{"t":"2026-10-12T12:44:05.580Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":290,"to":320}
+{"t":"2026-10-12T12:44:05.642Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":300,"to":330}
+{"t":"2026-10-12T12:44:05.701Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":310,"to":340}
+{"t":"2026-10-12T12:44:05.761Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":320,"to":350}
+{"t":"2026-10-12T12:44:05.820Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":330,"to":360}
+{"t":"2026-10-12T12:44:05.880Z","ev":"task_resequenced","id":"decide-whether-a-picked-recording-at-its-own-siz","from":4030,"to":370}
+{"t":"2026-10-12T12:44:05.938Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":60,"to":10}
+{"t":"2026-10-12T12:44:06.001Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":70,"to":20}
+{"t":"2026-10-12T12:44:06.059Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":80,"to":30}
+{"t":"2026-10-12T12:44:06.120Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":90,"to":40}
+{"t":"2026-10-12T12:44:06.180Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":100,"to":50}
+{"t":"2026-10-12T12:45:05.886Z","ev":"task_created","id":"camera-keys-ease-in-and-out-like-every-other-key","priority":"p2-normal","title":"Camera keys ease in and out like every other key"}
+{"t":"2026-10-12T12:45:13.670Z","ev":"task_resequenced","id":"camera-keys-ease-in-and-out-like-every-other-key","from":3990,"to":55}
+{"t":"2026-10-12T12:45:13.730Z","ev":"task_note","id":"the-focus-check-stops-crying-theft-about-one-wal"}
+{"t":"2026-10-12T12:45:13.795Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T12:45:13.929Z","ev":"triage","summary":"open 46 -> 45 (p1 5 blocked, p2 39 -> 38, p3 2). Closed 2: lower-third tag done (card answered label only, already built), title restyle walk dropped (passes in the full set and on HEAD when rerun). Filed 1: camera keys ease (design review, epic success item). Merged 0, moved 0, reset 0. Resequenced p1 to 10-50 and p2 to 10-370 with the focus bugs first. Logged the front-walk trend on the focus-check task and a latency note on the sweep task."}
+{"t":"2026-10-12T12:45:22.212Z","ev":"task_resequenced","id":"camera-keys-ease-in-and-out-like-every-other-key","from":55,"to":60}
+{"t":"2026-10-12T12:45:22.270Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":60,"to":70}
+{"t":"2026-10-12T12:45:22.329Z","ev":"task_resequenced","id":"a-picked-layer-wears-the-solid-accent-ring-the-m","from":70,"to":80}
+{"t":"2026-10-12T12:45:22.387Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":80,"to":90}
+{"t":"2026-10-12T12:45:22.446Z","ev":"task_resequenced","id":"the-focus-check-stops-crying-theft-about-one-wal","from":90,"to":100}
+{"t":"2026-10-12T12:45:22.511Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":100,"to":110}
+{"t":"2026-10-12T12:45:22.572Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":110,"to":120}
+{"t":"2026-10-12T12:45:22.631Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":120,"to":130}
+{"t":"2026-10-12T12:45:22.692Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":130,"to":140}
+{"t":"2026-10-12T12:45:22.750Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":140,"to":150}
+{"t":"2026-10-12T12:45:22.809Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":150,"to":160}
+{"t":"2026-10-12T12:45:22.867Z","ev":"task_resequenced","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":160,"to":170}
+{"t":"2026-10-12T12:45:22.927Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":170,"to":180}
+{"t":"2026-10-12T12:45:22.985Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":180,"to":190}
+{"t":"2026-10-12T12:45:23.045Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":190,"to":200}
+{"t":"2026-10-12T12:45:23.106Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":200,"to":210}
+{"t":"2026-10-12T12:45:23.166Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":210,"to":220}
+{"t":"2026-10-12T12:45:23.225Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":220,"to":230}
+{"t":"2026-10-12T12:45:23.285Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":230,"to":240}
+{"t":"2026-10-12T12:45:23.346Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":240,"to":250}
+{"t":"2026-10-12T12:45:23.408Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":250,"to":260}
+{"t":"2026-10-12T12:45:23.466Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":260,"to":270}
+{"t":"2026-10-12T12:45:23.527Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":270,"to":280}
+{"t":"2026-10-12T12:45:23.594Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":280,"to":290}
+{"t":"2026-10-12T12:45:23.654Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":290,"to":300}
+{"t":"2026-10-12T12:45:23.715Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":300,"to":310}
+{"t":"2026-10-12T12:45:23.775Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":310,"to":320}
+{"t":"2026-10-12T12:45:23.837Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":320,"to":330}
+{"t":"2026-10-12T12:45:23.900Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":330,"to":340}
+{"t":"2026-10-12T12:45:23.961Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":340,"to":350}
+{"t":"2026-10-12T12:45:24.026Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":350,"to":360}
+{"t":"2026-10-12T12:45:24.085Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":360,"to":370}
+{"t":"2026-10-12T12:45:24.149Z","ev":"task_resequenced","id":"decide-whether-a-picked-recording-at-its-own-siz","from":370,"to":380}
+{"t":"2026-10-12T12:46:48.966Z","ev":"digest","file":"2026-10-12.md"}

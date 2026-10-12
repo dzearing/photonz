@@ -1,0 +1,41 @@
+{
+  "id": "f-in-the-editor-the-frame-tool-or-full-screen",
+  "title": "F in the editor: the Frame tool or full screen",
+  "goal": "In the player F now fills the screen. In the editor F still picks the Frame tool. The user decides whether F should fill the screen in the editor too, the way Photoshop's F changes the screen mode, which would move the Frame tool to another key.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 3960,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T15:02:21.144Z",
+  "updated": "2026-10-11T22:31:35.114Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Raised by f-puts-a-video-full-screen-and-the-full-screen-s (acceptance: \"If the person should get F for full screen there too ... raise it as a decision card with the key moves spelled out in the option labels\"). Tool keys: PhotonzCore/Tools.swift shortcutKey (frame f, lens k). Player rule: PhotonzCore/PlayerFullScreen.swift command(for:watching:isFullScreen:) returns nil when not watching; widening it is where option b would land. Photoshop: F cycles screen modes, K is the Frame tool.",
+  "acceptance": [
+    "The user has picked an option on the decision card",
+    "If F becomes full screen in the editor: F fills the screen and brings it back in both a picture and a recording, the Frame tool and Lens show their new keys in the tool bar tips and the tutorials, and no two tools share a key",
+    "If F stays the Frame tool: the task is retired with nothing changed"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T15:02:21.146Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-11T15:02:42.791Z",
+      "note": "waiting on the decision card: F in the editor"
+    },
+    {
+      "t": "2026-10-11T22:31:35.112Z",
+      "note": "decision \"In the editor, should F keep picking the Frame tool, or fill the screen the way it now does in the player?\" resolved: F stays the Frame tool in the editor; full screen there is Control Command F"
+    },
+    {
+      "t": "2026-10-11T22:31:35.113Z",
+      "note": "retired by that answer: \"F stays the Frame tool in the editor; full screen there is Control Command F\" means this should not be built, so it will not be picked up again."
+    }
+  ],
+  "parked": false,
+  "parkReason": ""
+}

@@ -4,12 +4,12 @@
   "goal": "The mock draws the layer names on the icon timing strip in a narrower column than the app does, which gives the bars more room but makes long names wrap sooner and moves where the bars start. The user decides which width the strip should have.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 220,
+  "seq": 260,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-05T08:57:40.392Z",
-  "updated": "2026-10-11T12:51:02.035Z",
+  "updated": "2026-10-12T12:45:23.407Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found writing the 2026-10-05 audit for layer-names-on-the-timing-strip-read-whole-besid. Mock: icon-animate-wt.html, .track.bl-lt .tl width 58px at 9.5px. App: MotionStripView.labelWidth 92 (name room 72 after the kind mark). The column has been 92 since e4607244; the strip and the video timeline lanes were kept starting at the same point (commit 17ce4476 message). Comparison picture: queue/audits/2026-10-05-timing-strip-wrapped-names-vs-mock.png.",
@@ -53,6 +53,14 @@
     {
       "t": "2026-10-11T12:51:02.034Z",
       "note": "seq 190 -> 220"
+    },
+    {
+      "t": "2026-10-12T12:44:05.163Z",
+      "note": "seq 220 -> 250"
+    },
+    {
+      "t": "2026-10-12T12:45:23.406Z",
+      "note": "seq 250 -> 260"
     }
   ],
   "walks": [

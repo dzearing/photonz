@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 32,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.170Z",
-  "updated": "2026-10-11T12:51:59.271Z",
+  "updated": "2026-10-11T22:31:10.832Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 2 of 4.",
@@ -32,6 +32,51 @@
     {
       "t": "2026-10-11T12:51:59.270Z",
       "note": "seq 3950 -> 32"
+    },
+    {
+      "t": "2026-10-11T18:17:19.623Z",
+      "note": "Camera card opened by the 2.5D design task: layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live (recommended A, camera settings on the frame, keyable). The model does not wait on the handle card. Mocks: docs/design/mocks/pages/video-depth.html (the cube move shows why Pivot depth is needed)."
+    },
+    {
+      "t": "2026-10-11T18:18:45.567Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T19:20:51.292Z",
+      "note": "owns these walks: a-card-flips-in-3d-walk"
+    },
+    {
+      "t": "2026-10-11T19:21:26.234Z",
+      "note": "Adversarial pass before building: a Premiere/FCP editor expects Rotation X/Y rows under Transform and keys on the clip; Motion/Keynote users expect a flat card that flips with perspective and a camera angle. Mock assumption the app could not deliver: a camera to set (decision card open, built A: camera on the frame, keyable). Group semantics decided by Keynote/Motion/CSS agreement: flatten by default, keeps3D option for Motion's 3D group, top level always stack order so a title pushed back still draws over its clip (docs/design/space-3d.md)."
+    },
+    {
+      "t": "2026-10-11T19:21:26.300Z",
+      "note": "Built: PhotonzCore/Space3D.swift (LayerTurn3D on Layer.turn3D, SceneCamera on document.camera, Affine3D/Projection3D/Homography, spaceChain/drawnQuad/drawnMap, depth order), 8 new MotionProperty cases with apply/format/starting, camera keys sampled in drawn(atTimeMS:) and moved(toMotionTimeMS:), posedForCanvas poses 3D + camera, hit test carries clicks back onto the plane (back faces hidden when asked), marquee, RenderDiff full when seen in space, magnification. Renderer: placedInSpace warps each finished picture with CIPerspectiveTransform after its 2D turn and before its shadow, DoF blur first, keeps3D groups pass through in depth order, flattened cards see an unmoved camera. App: selection outline and handles through drawnMap. SVG: turned layers fall back to their picture boxed by the projected quad."
+    },
+    {
+      "t": "2026-10-11T19:21:26.366Z",
+      "note": "Measured: canvas (renderInteractive) vs export render 0 of 120000 pixels differ at 300/600/900ms of a keyed flip; MP4 vs canvas mean red difference 1.08/0.70/0.88 levels, 0.6-1% edge pixels >48 off (compression); still SVG vs canvas mean 0.19/0.09/0.19 at 30/60/150 deg, edge pixels the same as any 2D picture fallback (688 for a 2D-turned glow card). PERF 1920x1080, 10 layers, 4 tilted, 1 out of focus: 5.5ms median, 8.2ms slowest over 30 frames (same layers flat, fresh renderer each frame: 6.8ms). Flat documents never enter the path: byte-identical render test."
+    },
+    {
+      "t": "2026-10-11T19:21:26.431Z",
+      "note": "Tests: Space3DTests (22, core), Space3DRenderTests (11), Space3DPerfTests, Space3DExportTests (MP4). Full Scripts/test.sh hung at 0% CPU in the known HEIF/Vision parks (folded into find-out-why-the-whole-test-run-hangs-in-the-mac); split run: core 11290 with 1 load-only timing red (LongTimelineCostTests 162ms vs 150, passes alone 3/3 in 47ms), render+media minus the slow readers 1214 with TitleSetFrames/MotionBlur 1080p checks at 16-17.7ms under load (alone: 2-10ms medians, pass), slow readers alone 72 pass. Walks: a-card-flips-in-3d-walk (new, Next defaults, 5 real captures), and property counts updated 14->18 and 19->23 in key-a-title-s-scale, properties-pane, properties-reset: all pass, plus a-turned-shape-keeps-its-turn-on-a-video, animate-a-property-list/find, an-editing-session, angle-field."
+    },
+    {
+      "t": "2026-10-11T19:21:26.497Z",
+      "note": "Left rough, not filed (below the bar or covered): drag sprites and layers-list thumbnails of a turned layer project about their own small canvas middle (cosmetic, covered when the controls task builds the canvas handles); a flattened group's buffer is its renderBounds, so a child tilted toward the camera can be cut at the group's edge; lens/zoom callout turned in 3D read the canvas flat; SVG of a document whose camera has moved still writes layers flat (no UI can move the camera yet; fold into the camera controls). Audit queue/audits/2026-10-11-depth-model-and-renderer.json."
+    },
+    {
+      "t": "2026-10-11T19:22:03.523Z",
+      "note": "2.5D model and renderer shipped (5e4d6a6e): Layer.turn3D (Rotation X/Y, Depth, Pivot depth, back face), document camera (perspective, push, pan, focus, keys), GroupContent.keeps3D, 8 keyable MotionProperty values offered in Animate a property; renderer warps each layer onto its projected corners with depth of field and depth order; click, outline, handles, marquee and SVG use the same corners. Verified: 22 core + 11 render + perf + MP4 tests; canvas vs export 0 px differ, MP4 ~1 level mean, SVG 0.1-0.2 mean at three moments of a flip; 1080p/10 layers/4 tilted/1 DoF 5.5ms median; walk a-card-flips-in-3d-walk at Next defaults with 5 real captures. Audit queue/audits/2026-10-11-depth-model-and-renderer.json."
+    },
+    {
+      "t": "2026-10-11T22:31:10.831Z",
+      "note": "decision \"Where does the camera live?\" resolved: Camera settings on the frame"
     }
-  ]
+  ],
+  "started": "2026-10-11T18:18:45.566Z",
+  "walks": [
+    "a-card-flips-in-3d-walk"
+  ],
+  "completed": "2026-10-11T19:22:03.524Z"
 }

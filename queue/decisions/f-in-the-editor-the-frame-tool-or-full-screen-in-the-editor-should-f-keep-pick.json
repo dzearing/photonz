@@ -1,0 +1,58 @@
+{
+  "id": "f-in-the-editor-the-frame-tool-or-full-screen-in-the-editor-should-f-keep-pick",
+  "taskId": "f-in-the-editor-the-frame-tool-or-full-screen",
+  "question": "In the editor, should F keep picking the Frame tool, or fill the screen the way it now does in the player?",
+  "context": "The player now takes F for full screen (asked for on 2026-10-11). In the editor F is still the Frame tool. Photoshop uses F to change the screen mode and K for its Frame tool, but in Photonz K is Lens.",
+  "options": [
+    {
+      "id": "a",
+      "label": "F stays the Frame tool in the editor; full screen there is Control Command F",
+      "summary": "Nothing changes in the editor. F fills the screen only while you are watching a video. In the editor you use View > Enter Full Screen or Control Command F, like any Mac app.",
+      "pros": [
+        "No key a person already knows moves",
+        "The player keeps its own simple key"
+      ],
+      "cons": [
+        "F means two things: full screen in the player, the Frame tool in the editor"
+      ],
+      "mitigation": "The player has no tools at all, so F there can never pick one by surprise.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "F is full screen everywhere; the Frame tool moves to K and Lens loses its key",
+      "summary": "F fills the screen and brings it back in the player and the editor, for pictures and videos, the way Photoshop's F changes its screen mode. The Frame tool takes K, which is Photoshop's key for it, and Lens is picked from the tool bar with no letter.",
+      "pros": [
+        "One meaning for F everywhere",
+        "Photoshop's keys for both full screen and the Frame tool"
+      ],
+      "cons": [
+        "Anyone used to F for Frame has to relearn it",
+        "Lens has no key"
+      ],
+      "mitigation": "The tool bar tips show the new keys, and Lens could take a free letter later."
+    },
+    {
+      "id": "c",
+      "label": "F is full screen everywhere; the Frame tool loses its key",
+      "summary": "F fills the screen in the player and the editor. Lens keeps K, and the Frame tool is picked from the tool bar with no letter.",
+      "pros": [
+        "One meaning for F everywhere",
+        "Lens keeps its key"
+      ],
+      "cons": [
+        "The Frame tool has no key",
+        "Not where Photoshop users look for Frame (K)"
+      ],
+      "mitigation": "The Frame tool could take another free letter later."
+    }
+  ],
+  "recommended": "a",
+  "status": "resolved",
+  "created": "2026-10-11T15:02:34.324Z",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-10-11T22:31:35.082Z"
+  }
+}

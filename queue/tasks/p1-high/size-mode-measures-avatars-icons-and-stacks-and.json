@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T18:39:33.310Z",
-  "updated": "2026-10-11T18:39:33.411Z",
+  "updated": "2026-10-11T21:16:34.470Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"when i use the size tool, it doesn't find edges. for example, i hover over the avatar and it won't size it. or the stacked set of avatars. it does good on text but not components so much. and if it's having a hard time, i'd like to drag a rect around the area and have it auto size the largest box it can snap to within that area. for example, i might be forgiving if it couldn't quite determine if I wanted to select a single avatar or a whole group in the stack, i could just drag a rect around it roughly, and it would determine the size of the distinct thing in that area.\"\n\nFrom code reading (not run): Size mode uses PhotonzCore/ElementBounds.swift detect/candidates (:99, :127): an element is a PAIR of horizontal boundaries above and below the pointer whose runs agree (EdgeMap + LumaField EdgeRun), sides from nearby verticals. That cannot see a circle (no straight top or bottom run) or an overlapping stack, which matches the report. Text works via the line-of-text path (done task a-line-of-text-counts-as-an-element-size-mode-re). Related done: hover-to-measure-should-outline-the-button-or-ro, next-measure-hover-to-measure-size-readout. Memory: the user's main use is UX redlining; measurement tooling is the priority. Keep PhotonzCore pure (Vision would live in the app or PhotonzRender side).",
@@ -32,6 +32,39 @@
     {
       "t": "2026-10-11T18:39:33.410Z",
       "note": "seq 3950 -> 30"
+    },
+    {
+      "t": "2026-10-11T19:34:29.439Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T19:42:44.789Z",
+      "note": "Reproduced on a rendered 2x people panel (Scripts/make-shapes-fixture.swift -> Tests/PhotonzRenderTests/Fixtures/people-panel-2x.png), ElementBounds.candidates today: 64x64 photo avatar reads 64x42 (fragment); 80x80 pale avatar reads 44x95; stacked avatar reads 46x48; +3 pill reads the whole card (496x672); initials avatar, icon tiles, pill/count badges and the photo already read right; the 160x56 bordered button reads 155x52 (baseline, unchanged)."
+    },
+    {
+      "t": "2026-10-11T21:14:34.552Z",
+      "note": "owns these walks: size-reads-avatars-and-stacks-walk"
+    },
+    {
+      "t": "2026-10-11T21:16:15.402Z",
+      "note": "Adversarial review before building: a Photoshop/Figma user expects hover to pick the innermost thing and a way out to the group; Figma's own answer is a selection box. ] already steps out the ladder in Size mode, so the stack is a ] rung and the inspector's key tip now names it. Risks found and handled: shadows (a soft band round a rung keeps the old reading), white buttons in filled banners (the control, never the banner), letters cut out of initials avatars and glyphs on tiles (the container), text lines (letters never become rungs), Current's caliper readout placement (shape reader is off unless Next Size mode asks)."
+    },
+    {
+      "t": "2026-10-11T21:16:15.460Z",
+      "note": "Measured (optimized, 3456x2234): hover shape read 0.05 ms mean / 0.22 ms worst, stack lookup 0.24 ms, box snap 0.03-0.09 ms for ordinary boxes and 16 ms for a box round the whole screen. Fixture: photo avatar 32x32, pale 40x40, initials 32x32 from fill and letters, presence dot 10x10, four stacked avatars 24x24 each with ] to 104x24, +3 pill 40x24, icon tiles 40x40 from tile or glyph, pill 40x20, badge 18x18, photo 152x88: all within 2 px at 2x; painted 1x disc and off-grid disc within 1 px."
+    },
+    {
+      "t": "2026-10-11T21:16:15.522Z",
+      "note": "Left rough, not filed (no reproduction / below the bar): luma-only separation misses a shape the page's own brightness; an avatar stack drawn with no separating ring is expected to read as one piece on hover (not tried); shapes over 160 pt either way are left to the pair reader; the bordered Save button keeps the pair reader's 78x26 (true 80x28) because a tie keeps the old number. Each is in the audit's rough list for the user to react to."
+    },
+    {
+      "t": "2026-10-11T21:16:34.468Z",
+      "note": "Size mode (Next) now reads round avatars, icon tiles, pills and badges, photos, and one avatar in a stack at its true size (new PhotonzCore ShapeBounds, wired into ElementBounds behind readsShapes), ] steps out to the whole stack, and a press-drag draws a rough box that snaps live to what is wholly inside it (kept as drawn with a notice when empty). Verified: ShapeBoundsTests + ShapeDetectionFixtureTests on a 2x people-panel fixture (every specimen within 2 px at 2x, 1 px at 1x), all old element/text/alignment tests unchanged, split full run green, size-reads-avatars-and-stacks-walk at Next defaults pins every reading, six existing Size walks pass. Perf optimized on 3456x2234: hover 0.05 ms mean, box snap 16 ms worst. Audit: queue/audits/2026-10-11-size-mode-shapes.json"
     }
-  ]
+  ],
+  "started": "2026-10-11T19:34:29.437Z",
+  "walks": [
+    "size-reads-avatars-and-stacks-walk"
+  ],
+  "completed": "2026-10-11T21:16:34.469Z"
 }

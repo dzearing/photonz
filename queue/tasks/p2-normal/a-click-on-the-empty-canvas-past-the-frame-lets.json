@@ -1,0 +1,34 @@
+{
+  "id": "a-click-on-the-empty-canvas-past-the-frame-lets",
+  "title": "A click on the empty canvas past the frame lets go of a zoomed recording",
+  "goal": "With a recording pushed in to 220% and picked, clicking the empty canvas just outside the frame keeps the recording picked, because its magnified picture reaches out there even though nothing of it is drawn. A click on empty canvas should let go of it, the way it does for anything else.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T12:26:50.903Z",
+  "updated": "2026-10-12T12:44:03.700Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-12 by a-zoomed-recording-shows-its-ring-on-the-frame-n. Script: the steps of Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json up to snapshot 2-zoomed-at-5, then {click at [-20,400] space document}, wait, {expectPicked layers []}. Ran: Scripts/playtest.sh /tmp/ringcheck/offcanvas-click-walk.json --no-build. Output: \"[30 expectPicked] FAILED: the layers picked are Tutorial Sample, not nothing\". Cause: the canvas hit test reads the POSED document (canvasGeometryDocument), where the pushed-in clip frame is 2816 wide, and nothing clips it to the canvas. The outline now rings the frame (PhotonzDocument.frameRing), so the hit should agree: a timed picture grown past its own box should not be hit outside the canvas. Entry points: PhotonzDocument.hitTest / canvasHitTest (LayerGrouping.swift), CanvasNSView.groupAwarePick.",
+  "acceptance": [
+    "With the sample recording at 220% and picked, a click on the empty canvas 20 points left of the frame leaves nothing picked",
+    "A click on the picture inside the frame still picks the recording and a drag there still frames the shot",
+    "A walk at Next defaults proves both"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T12:26:50.905Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-12T12:44:03.699Z",
+      "note": "seq 4010 -> 10"
+    }
+  ],
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ]
+}

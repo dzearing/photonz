@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T05:57:27.788Z",
-  "updated": "2026-10-11T12:51:01.435Z",
+  "updated": "2026-10-12T12:43:12.189Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-captions.html .l3badge (line ~39, ~477): top:-11px left:0 of the plate, var(--comp) fill, 8.5px 640 weight, ic-component icon. The app plate hugs the words inside the Captions box (TextRasterizer.drawPlate), so the tag needs the plate rect, not the box. Chrome overlay like the AUTO · EN badge (CaptionGuides.swift CaptionBadge). Found by the-lower-third-caption-style-sits-low-left-on-i.",
@@ -54,10 +54,19 @@
     {
       "t": "2026-10-11T12:51:01.434Z",
       "note": "seq 20 -> 120"
+    },
+    {
+      "t": "2026-10-11T22:31:45.521Z",
+      "note": "decision \"Which icon should the Lower-third tag on the captions wear?\" resolved: Label only, as built now"
+    },
+    {
+      "t": "2026-10-12T12:43:12.187Z",
+      "note": "Tag shipped in d26ae25c (audit 2026-10-11-lower-third-tag.json); the icon card was answered Label only, as built now, so nothing is left to build. Closed by the 2026-10-12 triage."
     }
   ],
   "started": "2026-10-11T11:56:31.525Z",
   "walks": [
     "lower-third-sits-low-left-walk"
-  ]
+  ],
+  "completed": "2026-10-12T12:43:12.188Z"
 }

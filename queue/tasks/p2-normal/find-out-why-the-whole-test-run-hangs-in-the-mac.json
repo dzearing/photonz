@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T11:00:59.694Z",
-  "updated": "2026-10-11T12:51:25.477Z",
+  "updated": "2026-10-12T11:42:36.104Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen by runner on a-spinner-can-turn-about-the-middle-of-the-artbo, 03:10-03:50. `Scripts/test.sh` twice sat at 0% CPU for 9-19 min (swiftpm-testing-helper). `sample <pid>` showed threads parked in CGImageDestinationFinalize > HEIFWritePlugin > CMPhoto > VCPHEVC (PackageIOTests, ImageCodecTests), VNRecognizeTextRequest (ReadPageWeightFixtureTests, ReadRunAsTextFixtureTests, ARefusedReadIsToldApartTests via TextReader) and AVAssetReader (SoundFile.peaks). `swift test --skip-build --filter ImageCodecTests` alone: 6 pass in 0.05s. Split run passed: `Scripts/test.sh --skip 'PhotonzRenderTests|PhotonzMediaTests'` 11003 pass in 42s; `swift test --skip-build --filter 'PhotonzRenderTests|PhotonzMediaTests'` 1223 pass in 240s. Previous commit 3a5cfc74 at 02:44 passed its run, so this may be transient (VTEncoderXPCService/aned state). Also: `timeout` is not on this Mac, so a bounded run needs a poll loop.",
@@ -109,6 +109,73 @@
     {
       "t": "2026-10-11T12:51:25.476Z",
       "note": "seq 40 -> 10"
+    },
+    {
+      "t": "2026-10-11T15:57:30.638Z",
+      "note": "seen again 2026-10-11 by f-puts-a-video-full-screen-and-the-full-screen-s: three whole runs of Scripts/test.sh stalled at 0% CPU after ~10 min, sample showed threads parked in ImageCodec.encode (PackageIOTests.swift:39) and TextReader.reading (TheReaderSaysWhenItWasRefusedTests.swift:43, ReadSizeGroundTruthTests.swift:165). The same suites alone pass in 0.9s; --filter PhotonzCoreTests (11255), PhotonzMediaTests (118) and PhotonzRenderTests (1154) each pass separately."
+    },
+    {
+      "t": "2026-10-11T17:31:17.508Z",
+      "note": "Seen again 2026-10-11 ~10:00 by the runner on a-selection-box-on-the-timeline-scrolls-the-time: Scripts/test.sh and then swift test --filter 'PhotonzRenderTests|PhotonzMediaTests' each sat at 0% CPU 9-10 min; sample showed the same parks (IIO_Writer_HEIF / CGImageDestinationFinalize, VNRecognizeTextRequest). Split run all green: --skip Render|Media 11268 pass in 35s; Render|Media minus ImageCodec/PackageIO/ReadPageWeightFixture/ReadRunAsTextFixture/ARefusedReadIsToldApart/SoundFile 1215 pass in 253s; each of those alone passes (ReadRunAsTextFixtureTests 79s)."
+    },
+    {
+      "t": "2026-10-11T19:00:09.509Z",
+      "note": "Seen again 2026-10-11 ~11:50 by layers-can-turn-about-x-and-y-and-move-in-depth: full Scripts/test.sh sat at 0% CPU in swiftpm-testing-helper at 10:37 elapsed; sample showed the same parks (HEIFWritePlugin / CGImageDestinationFinalize under ImageCodec.encode, VNRecognizeTextRequest under TextReader.reading / measureEachOf). Killed it and ran split."
+    },
+    {
+      "t": "2026-10-11T21:07:29.041Z",
+      "note": "Seen again 2026-10-11 ~13:30 by size-mode-measures-avatars-icons-and-stacks-and: full Scripts/test.sh ran past 20 min and was killed. Split run green: --skip Render|Media 11316 pass in 40s; Render|Media minus ImageCodec/PackageIO/ReadPageWeightFixture/ReadRunAsTextFixture/ARefusedReadIsToldApart/SoundFile 1244 tests, 2 title frame-time tests over 16 ms under load (17.5, 24.2 ms) that pass alone; the six alone all pass."
+    },
+    {
+      "t": "2026-10-11T22:48:12.929Z",
+      "note": "Seen again 2026-10-11 ~15:10 by tilt-flip-and-push-layers-in-depth-from-the-canv: whole Scripts/test.sh ran past 20 min and was stopped. Split run green: --skip Render|Media 11333 pass in 39s; Render|Media minus the six 1244 tests, only TitleSetFramesTests median 21ms over 16 under load, passes alone in 7s; the six alone all pass."
+    },
+    {
+      "t": "2026-10-12T00:27:01.243Z",
+      "note": "Seen again 2026-10-11 ~17:20 by 3d-transitions-and-title-entrances-flip-cube-swi: full Scripts/test.sh at 0% CPU in swiftpm-testing-helper at ~11 min; sample showed VNRecognizeTextRequest and IIO_Writer_HEIF::write under CGImageDestinationFinalize. Split run green: --skip Render|Media 11357 pass in 40s; Render|Media minus the six 1249 tests, only TitleSetFramesTests median 19.2ms under load (passes alone in 7s); the six alone pass."
+    },
+    {
+      "t": "2026-10-12T02:42:33.702Z",
+      "note": "Seen again 2026-10-12 by the live title backgrounds task: Scripts/test.sh at 0% CPU for 10 minutes; sample of swiftpm-testing-helper showed threads parked in semaphore waits under PackageIOTests (aSmallPictureIsPreviewedAtItsOwnSize, aPictureWritesNoMediaTable, documentRoundTrips..., saveOverAnExisting...) and TheReaderSaysWhenItWasRefused (VNCRImageReaderDetector queue). Killed and re-run."
+    },
+    {
+      "t": "2026-10-12T03:23:29.397Z",
+      "note": "2026-10-12: three full runs in a row parked at 0% CPU; sample shows PackageIOTests stuck in CGImageDestinationFinalize > CMPhoto > VCPHEVC (hardware HEVC encode) and the text reader suites on VNCRImageReaderDetector. Workaround that gave a full green: Scripts/test.sh --skip 'PackageIOTests|TheReaderSaysWhenItWasRefused|RunWordsForARow|ARefusedReadIsToldApart|ReadPageWeightFixture|ReadRunAsTextFixture|ReadSizeGroundTruth|ImageCodec' (12,620 passed in 279 s) then --filter the same (75 passed in 98 s)."
+    },
+    {
+      "t": "2026-10-12T08:48:45.808Z",
+      "note": "Seen again 2026-10-12 ~00:56 by title-text-visibly-comes-in: full Scripts/test.sh parked at 0% CPU for 19 min; killed, split run (skip list from the last entry) passed 12625 apart from frame-time budgets under load (TitleSetFramesTests 17-20 ms, TextDepthPerspectiveTests 22 ms, MotionBlurRenderTests 17.7 ms) that all pass alone; the skipped 75 pass in 98 s."
+    },
+    {
+      "t": "2026-10-12T10:08:03.973Z",
+      "note": "Seen again 2026-10-12 02:57-03:08 by runner on show-the-camera-s-keys-on-a-thin-row-at-the-top: full Scripts/test.sh sat at 0% CPU ~9 min in swiftpm-testing-helper after the sound tests. sample <pid> 2s: TextReader 78 frames, VCPHEVC 19, HEIFWritePlugin 16, VNRecognizeTextRequest 10, CGImageDestinationFinalize 8. Killed it and ran the split from this task's notes."
+    },
+    {
+      "t": "2026-10-12T10:25:22.014Z",
+      "note": "2026-10-12 again: the render+media half (swift test --filter 'PhotonzRenderTests|PhotonzMediaTests') ALSO hung at 0% CPU after ~100s, same frames (TextReader/VNRecognizeTextRequest, HEIFWritePlugin, CGImageDestinationFinalize). Workaround that went green: that half with --skip 'PackageIOTests|ImageCodecTests|ReadPageWeightFixtureTests|ReadRunAsTextFixtureTests|ARefusedReadIsToldApartTests|TextReader' (1267 pass, 252s), then those suites alone (57 pass, 76s). So the hang needs them running alongside the rest; alone they pass."
+    },
+    {
+      "t": "2026-10-12T10:42:02.185Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T11:42:35.918Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-12T11:42:35.978Z",
+      "note": "CAUSE reproduced (pool starvation by text reads): VNRecognizeTextRequest hands part of each read to another thread at the caller's QoS and waits. From Swift's pool that is default QoS, and with every pool thread waiting in a read, nothing at default QoS runs at all (a plain DispatchQueue.global().async from a full pool never ran in 20s). Drills in the real runner (temp ZZPoolStarveDrillTests, deleted): 16 concurrent TextReader.words on the pool, nothing else running -> parked for good; 15 pool threads held + read on the last -> parked; same on a plain Thread -> parked; same on a .userInitiated queue -> 0.8s. 32 concurrent HEIF encodes on the pool -> 0.5s, so the HEIF/VCPHEVC and AVAssetReader parks were bystanders. Full Scripts/test.sh on HEAD before the fix parked at 0% CPU after ~3 min (sample: 10 threads TextReader.swift:763, 8 ImageCodec.swift:77)."
+    },
+    {
+      "t": "2026-10-12T11:42:36.038Z",
+      "note": "FIX 35e19fb4: Sources/PhotonzRender/RecogniserLane.swift (userInitiated concurrent queue, width = cores/4, main thread inline) wraps the one Vision perform in TextReader.reading. Also protects the app: EditorState+RunWords reads rows in a task group. Scripts/test.sh: parked-run watch (180s quiet + <2s helper CPU -> sample, name tests, kill, exit 4; drill PHOTONZ_TEST_PARK_DRILL=1 PHOTONZ_TEST_QUIET_LIMIT=30 --filter ParkedRunDrill, verified stops in 84s naming aTestThatWaitsForNothing). TextReadsOnAFullPoolTests hangs on old code, 4.3s on new. Two full Scripts/test.sh runs green: 12716 in 306s, 12716 in 300s. Folded TitleSetFramesTests frame-time check passed in both full runs. Not re-tested straight after a batch of probe walks (my repro hung without walks, so walks were not the trigger). Left rough, no task: PlaytestLabelReader (probe-only) calls Vision directly; it runs on main so it is not exposed."
+    },
+    {
+      "t": "2026-10-12T11:42:36.102Z",
+      "note": "Cause named and reproduced: Vision text reads starve Swift's shared pool (16 reads at once park for good; on a userInitiated queue they answer). Fix in 35e19fb4: RecogniserLane routes every recognition off the pool, 4 at a time; Scripts/test.sh now stops a parked run after 3 quiet idle minutes, naming the tests (exit 4). Verified: new regression test red->green, two whole runs green (12,716 tests, 306s and 300s)."
     }
-  ]
+  ],
+  "started": "2026-10-12T10:42:02.183Z",
+  "walks": [],
+  "completed": "2026-10-12T11:42:36.103Z"
 }

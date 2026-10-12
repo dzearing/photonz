@@ -1,0 +1,57 @@
+{
+  "id": "show-the-camera-s-keys-on-a-thin-row-at-the-top",
+  "title": "Show the camera's keys on a thin row at the top of the timeline",
+  "goal": "Once the camera is keyed (a slow push in, a drift), a thin Camera row appears at the top of the video timeline holding its key diamonds, so a camera move can be seen, picked and retimed like any other keyed value, as the depth mock draws it.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 3950,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-11T22:30:19.204Z",
+  "updated": "2026-10-12T10:27:14.678Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From tilt-flip-and-push-layers-in-depth-from-the-canv (2026-10-11). Mock: docs/design/mocks/pages/video-depth.html, \"Camera A · a setting of the frame\": \"Keyed camera moves show on a thin row at the top of the timeline.\" Model: SceneCamera.motions on the document clock; PhotonzDocument.cameraKeyDiamond/toggleCameraKey/setCameraValue in Sources/PhotonzCore/SpaceEditing.swift; panel rows in Sources/Photonz/Space3DInspector.swift (CameraInspector). Also: in a video the recording fills the frame, so a click on the picture never picks the frame (the mock says click empty canvas); today the camera is reached by View > Show Camera Settings or the Canvas row in the layers list. Clicking the Camera row is the natural second way in.",
+  "acceptance": [
+    "Keying any Camera value (Perspective, Camera depth, Camera X, Camera Y) makes a thin Camera row appear at the top of the timeline with one diamond per key; with no camera keys there is no row",
+    "Clicking the Camera row picks the frame and shows the Camera section in the panel",
+    "Camera keys can be dragged along the row and deleted, each one undo step",
+    "A walk at Next defaults keys a push in over two seconds and photographs the row and the frames"
+  ],
+  "log": [
+    {
+      "t": "2026-10-11T22:30:19.206Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-12T09:38:46.866Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T09:45:53.446Z",
+      "note": "Adversarial pass: Premiere/AE editors expect a summary row whose diamonds are moments (AE's summary keys), so keys on several camera values at one moment draw as one diamond and drag/delete together. Row pinned under the ruler (does not scroll with tracks) so it stays at the top. Click on a diamond goes to it (panel shows values there), as a layer key click does. Core: Sources/PhotonzCore/CameraRow.swift + CameraRowTests (13 tests)."
+    },
+    {
+      "t": "2026-10-12T10:25:37.215Z",
+      "note": "owns these walks: camera-keys-row-walk"
+    },
+    {
+      "t": "2026-10-12T10:26:49.858Z",
+      "note": "Built: core Sources/PhotonzCore/CameraRow.swift (cameraKeyMoments, moveCameraKeys, removeCameraKeys; 13 tests in CameraRowTests). App: TimelineCameraRow.swift pinned between ruler and tracks in TimelineDock (counted in the dock's natural height), EditorState+CameraRow.swift (pick row/diamond, drag, delete; ⌫ routed through canDeletePickedKeys/deletePickedKeys). Walk camera-keys-row-walk (front: true, because diamond taps are SwiftUI taps like key lanes) passes at Next defaults; key-lanes, camera-settings-on-the-frame and a-card-flips-in-3d walks still pass. Tests: full run hung in the known OS media/text hang (logged on find-out-why-the-whole-test-run-hangs-in-the-mac); split run 11390 + 1267 + 57 all pass."
+    },
+    {
+      "t": "2026-10-12T10:26:49.918Z",
+      "note": "left rough (no task, under the bar): one diamond per moment means camera values keyed together cannot be retimed apart on this row; no curve view or easing menu on the row; row walk needs the front. All in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-10-12T10:27:14.676Z",
+      "note": "Thin Camera row under the timeline ruler holds the camera's key diamonds once any camera value is keyed (gone with the last key). Clicking its name picks the frame and shows the Camera section; diamonds click to go to the key, drag to retime and delete with ⌫ or right-click, each one undo step. Core CameraRow.swift + 13 tests; app TimelineCameraRow.swift, EditorState+CameraRow.swift. Verified by camera-keys-row-walk at Next defaults (push in 1s to 3s photographed at 1/2/3s), neighbouring walks green, tests green in a split run (full run hit the known OS hang). Commit 103c017f. Audit queue/audits/2026-10-12-camera-keys-row.json."
+    }
+  ],
+  "started": "2026-10-12T09:38:46.865Z",
+  "walks": [
+    "camera-keys-row-walk"
+  ],
+  "completed": "2026-10-12T10:27:14.677Z"
+}

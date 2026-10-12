@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 120,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.505Z",
-  "updated": "2026-10-11T12:51:00.734Z",
+  "updated": "2026-10-12T09:24:26.126Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tHand, title \"Hand (H)\"; UX-PATTERNS D4 lists Hand as a shared tool in every app strip. ToolBarFold.videoLeading earlier left Hand out as \"not a tool in this app\": a runner's call, not the user's; the user's 2026-09-29 rule is only that zoom is not a tool. Add .tool(.hand) to WindowModes.designStrip in its own family after Measure. Memory: Photoshop shortcut parity says relocate the non-PS feature on conflict, so Highlight would move, which changes picture users' keys: card it.",
@@ -59,6 +59,22 @@
     {
       "t": "2026-10-11T12:51:00.733Z",
       "note": "seq 70 -> 120"
+    },
+    {
+      "t": "2026-10-11T22:32:04.093Z",
+      "note": "decision \"Which tool should the H key pick: the Hand or Highlight?\" resolved: H picks the Hand, Highlight moves to U"
+    },
+    {
+      "t": "2026-10-12T09:05:57.127Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T09:24:26.059Z",
+      "note": "Applied the answer (d0b81427): H picks the Hand wherever the Hand is on the bar (Next defaults), Highlight moved to U; the release Photonz keeps H on Highlight because it has no Hand. Tool.shortcutKey(handOnBar:) in core, Tool.barKey in the app, Edit > Tools infers it from its list. U was free (no tool, timeline leaves it to the canvas, only Cmd-Opt-U union uses it). Walks moved off H: blend-mode, tool-bar-families, turn-into-a-path. Verified: 12704 tests pass; design-mode-tool-strip-walk (pointer hover reads Hand H, H picks the Hand, U picks Highlight and its tip reads Highlight U, 17 real captures) plus 7 related walks green. Audit 2026-10-12-hand-tool-key. Nothing new to file."
+    },
+    {
+      "t": "2026-10-12T09:24:26.124Z",
+      "note": "The Hand sits at the end of the tool bar and pans the canvas; per the user's 2026-10-11 answer H now picks it and Highlight moved to U in Next (release Photonz unchanged). Commit d0b81427; 12704 tests and 8 walks green at Next defaults incl. design-mode-tool-strip-walk with real captures of both tips; audit 2026-10-12-hand-tool-key."
     }
   ],
   "walks": [
@@ -67,5 +83,6 @@
     "one-glass-tool-bar-walk",
     "video-tool-bar-walk"
   ],
-  "started": "2026-10-09T18:01:06.953Z"
+  "started": "2026-10-12T09:05:57.126Z",
+  "completed": "2026-10-12T09:24:26.125Z"
 }

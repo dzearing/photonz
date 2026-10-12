@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 34,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.504Z",
-  "updated": "2026-10-12T00:17:02.682Z",
+  "updated": "2026-10-12T00:33:54.033Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 4 of 4.",
@@ -39,7 +39,33 @@
     {
       "t": "2026-10-12T00:17:02.681Z",
       "note": "User 2026-10-11 says the 3D looks 2D. Intake check: the clip transitions in the reel are true perspective, but the text depth entrances are drawn with an affine approximation (TextRevealRasterizer.swift:328 .affine(pivot:)) and read as italic slants. Filed text-that-swings-flips-or-flies-in-from-depth-is (seq 35) to draw text pieces through the perspective warp; do not mark this task's entrance acceptance as meeting the bar on the slant frames."
+    },
+    {
+      "t": "2026-10-12T00:18:43.256Z",
+      "note": "owns these walks: transitions-in-depth-at-a-cut-walk, transition-direction-on-a-click-walk, title-words-turn-in-depth-walk"
+    },
+    {
+      "t": "2026-10-12T00:33:33.731Z",
+      "note": "Adversarial pass before building: no mock draws the six tiles, so they follow the existing tile/row patterns; the depth mock's cube (pivot depth to the middle, Y 0-90, depth backing off) is the floor for Cube. A Premiere/FCP editor finds them where the flat ones are (tiles, Type menu, right-click Add Transition). Risk found and fixed on the real build: with a 45 degree camera a frame-wide cube showed its incoming face from behind until late, so Cube backs off 0.3 x width x sin(pi p) more; and a cube put on from the right-click menu started on Linear because fitted() kept the old curve, now an untouched curve follows the kind (Ease in out for the depth kinds)."
+    },
+    {
+      "t": "2026-10-12T00:33:33.791Z",
+      "note": "For the title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t): start headlines from Swing In by word (hinged on the bottom edge, 120-140 ms stagger, Ease in out, 900 ms) and Fly In From Depth by word for bold kinetic looks; Tilt Settle whole for subtitles and cards; Flip Up by letter for short kickers. Outs are the same kinds. All are TitleBuildKind cases, so a preset just names them in its TitlePart.in/out."
+    },
+    {
+      "t": "2026-10-12T00:33:33.851Z",
+      "note": "Left rough (not filed, in the audit's rough): depth of field does not reach words coming in one at a time; Flip Up shows nothing for the first part of its length; motion blur on a transition costs up to 16 ms median and 59 ms worst at 1080p; the doorway's doors leave the frame quickly. Filed separately: the-title-restyle-walk-reaches-its-last-part-in (pre-existing walk failure, reproduced on HEAD with no changes). Full suite hung in the known HEIF/Vision park (logged on find-out-why-the-whole-test-run-hangs-in-the-mac); split run all green."
+    },
+    {
+      "t": "2026-10-12T00:33:54.031Z",
+      "note": "Six 3D transitions (Flip, Cube, Swing, Doorway, Revolve, Push in depth) with Direction and Motion blur, and four depth title entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle) with outs, whole or by line/word/letter; commit 699f1ef4. Verified: core and render tests (midpoint >= 20 degrees, 100 ms frames differ, canvas = export), 1080p perf 5-6 ms median, three new walks green at Next defaults, reel + contact sheet + numbers in queue/audits with a decision card; split test run green (full run hit the known HEIF/Vision hang)."
     }
   ],
-  "started": "2026-10-11T23:06:19.603Z"
+  "started": "2026-10-11T23:06:19.603Z",
+  "walks": [
+    "transitions-in-depth-at-a-cut-walk",
+    "transition-direction-on-a-click-walk",
+    "title-words-turn-in-depth-walk"
+  ],
+  "completed": "2026-10-12T00:33:54.032Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 31,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.005Z",
-  "updated": "2026-10-11T12:51:59.092Z",
+  "updated": "2026-10-11T18:18:27.878Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 1 of 4.",
@@ -28,6 +28,28 @@
     {
       "t": "2026-10-11T12:51:59.091Z",
       "note": "seq 3950 -> 31"
+    },
+    {
+      "t": "2026-10-11T18:07:41.727Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T18:18:15.393Z",
+      "note": "Adversarial pass before building: Option-drag is already taken on the canvas (corner = skew, body = duplicate, rounding dot = all corners), so no design relies on Option on the frame; 3D lives on the turn knob (A/B) or rings (C). Placement: tool bar gains nothing (turning is a handle, not a tool), 3D rows go in the panel under Position & Size, Reset 3D Rotation / Bring Nearer / Send Further go in the Layer menu and right-click. The camera has no row in the placement contract, so it is its own card. Final Cut users expect rings (option C); Photoshop users have no 3D left, so Keynote's knob habits win."
+    },
+    {
+      "t": "2026-10-11T18:18:15.451Z",
+      "note": "Built docs/design/mocks/pages/video-depth.html (nav: Video > Depth (2.5D)): live editor shell with a tilted title (arcs on the knob, depth arrow, panel 3D rows synced both ways, timeline with opened Rotation Y / Depth rows and a Cube band), three live handle designs each with big and small layer, three scrubbable moves (flip, title from depth, cube), layers-list thumbnail, two camera options. Verified in Chrome: synthetic drags on arcs, tabs, rings and depth arrow change the values and the panel follows; check-reserved and check-shortcuts pass."
+    },
+    {
+      "t": "2026-10-11T18:18:15.509Z",
+      "note": "Cards: tilt-flip-and-push-layers-in-depth-from-the-canv-how-do-you-turn-a-layer-toward-o (handles, on the controls task, rec A) and layers-can-turn-about-x-and-y-and-move-in-depth-where-does-the-camera-live (camera, on the model task, rec A). Neither task is blocked: both build the recommendation if unanswered, as their checklists say. Rough items all folded into those two tasks (perspective strength -> model; arc hit areas, bracket keys, timeline property rows -> controls); nothing new filed."
+    },
+    {
+      "t": "2026-10-11T18:18:27.876Z",
+      "note": "Mock page docs/design/mocks/pages/video-depth.html (Video > Depth (2.5D)) on the shared shell: live 3D handles in three designs on big and small layers, panel 3D rows with key diamonds synced to the canvas, timeline and layers list, two camera options, three scrubbable moves (flip, title from depth, cube). Cards opened on the controls task (handles, rec A arcs on the knob) and the model task (camera, rec A frame setting); neither blocks. Audit queue/audits/2026-10-11-design-how-layers-turn-and-move-in-depth-2-5d-as.json with three browser screenshots. Verified in Chrome with synthetic drags; mock gates pass."
     }
-  ]
+  ],
+  "started": "2026-10-11T18:07:41.724Z",
+  "completed": "2026-10-11T18:18:27.877Z"
 }

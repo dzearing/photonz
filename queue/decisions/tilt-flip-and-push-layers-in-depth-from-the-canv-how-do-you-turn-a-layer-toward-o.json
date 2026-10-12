@@ -51,6 +51,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-11T18:16:57.445Z"
+  "status": "resolved",
+  "created": "2026-10-11T18:16:57.445Z",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-10-11T22:31:32.565Z"
+  }
 }

@@ -1,0 +1,33 @@
+{
+  "id": "the-title-restyle-walk-reaches-its-last-part-in",
+  "title": "The title restyle walk reaches its last Part In dropdown again",
+  "goal": "The walk that restyles a title with a few knobs fails on its last step: by then the Part In dropdown has scrolled up under the window title bar, so a pointer click on it lands on the title bar instead. Either the panel should keep a clicked row clear of the title bar or the walk should scroll it back into view first.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 3980,
+  "status": "dropped",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T00:07:57.245Z",
+  "updated": "2026-10-12T12:43:12.248Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-11 on HEAD 0deef2bf with no working changes (sources stashed, probe rebuilt): `Scripts/playtest.sh Scripts/playtest/title-knobs-restyle-walk.json` -> step 85 (panelMenu): the \"Part In\" dropdown did not open for a person hand at centre ((1640, 972), the click landed on NSHostingView<...TitlebarPanelToggle...>); face (1566, 960) 148x24. Same failure with the 3D transitions task changes. The row sits under the glass title bar after the Part section grows (Out Rise/Direction/Fade rows).",
+  "acceptance": [
+    "title-knobs-restyle-walk passes at Next defaults",
+    "A panel row scrolled under the title bar can still be clicked open, or the walk reveals the row before clicking it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T00:07:57.247Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-12T12:43:12.247Z",
+      "note": "No longer reproduces: title-knobs-restyle-walk passed in the full sweep that finished 2026-10-12T07:33Z (queue/sweep/2026-10-11-203658.log line 734) and again when the 2026-10-12 triage ran Scripts/playtest.sh Scripts/playtest/title-knobs-restyle-walk.json --no-build on HEAD 09b3ec12: all 95 steps, 11 real pictures, walk complete. The Part In row no longer sits under the title bar since the title text rework (88195447) changed the Part section."
+    }
+  ],
+  "walks": [
+    "title-knobs-restyle-walk"
+  ]
+}

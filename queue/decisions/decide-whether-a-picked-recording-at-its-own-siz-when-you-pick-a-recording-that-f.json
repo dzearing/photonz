@@ -1,0 +1,38 @@
+{
+  "id": "decide-whether-a-picked-recording-at-its-own-siz-when-you-pick-a-recording-that-f",
+  "taskId": "decide-whether-a-picked-recording-at-its-own-siz",
+  "question": "When you pick a recording that fills the frame and is not zoomed, should it show resize handles?",
+  "context": "The zoom walkthrough (video-zoom-wt.html, frameRing) rings the clip and shows no handles at every step. The app now rings a recording only while it is pushed in past the frame.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Handles at its own size, ring when zoomed",
+      "summary": "At the wide shot a picked recording shows its blue box and eight handles, like any picture. Once it is pushed in past the frame the box becomes a ring on the frame with no handles.",
+      "pros": [
+        "You can still shrink a recording into a corner by its handles, picture-in-picture style",
+        "What ships today, nothing changes"
+      ],
+      "cons": [
+        "The look of the pick changes as you scrub into a push",
+        "Differs from the zoom walkthrough, which never shows handles on the clip"
+      ],
+      "mitigation": "The ring sits exactly where the box was, so only the eight small squares come and go."
+    },
+    {
+      "id": "b",
+      "label": "Always a ring, never handles",
+      "summary": "A picked recording that fills the frame always shows a ring on the frame and no handles, zoomed or not, as the walkthrough draws it. Size and framing change through Scale and by dragging the picture.",
+      "pros": [
+        "Matches the mock at every step",
+        "The pick looks the same however far in you are"
+      ],
+      "cons": [
+        "Shrinking a full-frame recording into a corner needs the Scale row rather than a corner drag"
+      ],
+      "mitigation": "Scale and dragging the picture still do it, and a recording smaller than the frame keeps its handles."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-12T12:28:09.182Z"
+}

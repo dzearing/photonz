@@ -1,0 +1,38 @@
+{
+  "id": "a-picked-layer-wears-the-solid-accent-ring-the-m",
+  "title": "A picked layer wears the solid accent ring the mocks draw",
+  "goal": "Every mock draws a picked thing with a solid accent-coloured ring; the app draws a faint dashed blue line instead, on every layer and on the zoomed recording ring alike. Build the mock ring, or put the choice to the user if a solid line cannot stay legible over arbitrary screenshots.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 80,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T12:27:10.700Z",
+  "updated": "2026-10-12T12:45:22.328Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-12 while building a-zoomed-recording-shows-its-ring-on-the-frame-n: the frame ring now lands on the frame (picture /tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk/3-framed-at-5-sc.png, copied to queue/audits/2026-10-12-zoom-frame-ring-3-framed-sc.png) but wears the app-wide layerOutlineLayer style: systemBlue at 0.6 alpha, lineWidth 2, lineDashPattern [2,4] (CanvasView.swift around line 2163). Mock: docs/design/mocks/shared/components/selection.css .sel-ring, and video-zoom-wt.html #frameRing. Changing it touches every picked layer, so check legibility over screenshots (the dashes were likely chosen for that) and open a decision card with both filmed if a solid ring does not hold up.",
+  "acceptance": [
+    "A picked layer at Next defaults is outlined with a solid accent ring of the mock weight (selection.css .sel-ring: 1.5px accent)",
+    "The ring stays legible over a white screenshot, a blue one and a dark one, in light and dark",
+    "Walk pictures of a picked layer and of a pushed-in recording show the solid ring"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T12:27:10.702Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-12T12:44:04.073Z",
+      "note": "seq 4020 -> 70"
+    },
+    {
+      "t": "2026-10-12T12:45:22.327Z",
+      "note": "seq 70 -> 80"
+    }
+  ],
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ]
+}

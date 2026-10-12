@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:16:15.429Z",
-  "updated": "2026-10-11T12:51:00.137Z",
+  "updated": "2026-10-11T16:10:25.700Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words: \"the video's fullscreen feature lists ctrl-cmd-f as the shortcut but that does not work. and it's a bad shortcut. i expected 'f' to just fullscreen it but it puts it into edit mode\".\n\nFrom code reading (not run): the watch view's Full Screen transport button calls hostWindow?.toggleFullScreen and advertises .panelHelp(\"Full screen (⌃⌘F)\") (TimelineDock.swift:1457-1467, only while editorState.isWatching). No menu row carries ⌃⌘F or toggleFullScreen (no 'Enter Full Screen' in EditorCommands.swift or the app's commands; the pro menu bar rearrangement likely dropped the system item), so the shortcut does nothing. F is the Frame tool's key (PhotonzCore/Tools.swift:106); picking a tool from the watch view brings the editor in. K is the Lens tool (Tools.swift:96). Double click on the canvas already toggles full screen (CanvasPointerDrags.swift:36). Memory rule: default to Photoshop's keys; that is why the editor question goes to a card, not a silent remap.",
@@ -35,6 +35,43 @@
     {
       "t": "2026-10-11T12:51:00.136Z",
       "note": "seq 3 -> 20"
+    },
+    {
+      "t": "2026-10-11T14:33:46.122Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-11T16:10:14.846Z",
+      "note": "Reproduced at Next defaults (probe walk, front): F in the player -> Edit mode with the Frame tool ('f taken by timeline', expectTimeline: Edit mode, frame in hand). Control Command F -> 'taken by responder chain', nothing happened; View menu (menus step) had no full screen row at all. AppKit's own row, if any, would sit in SwiftUI's built-in View, which MenuBarArranger hides on the pro menu bar."
+    },
+    {
+      "t": "2026-10-11T16:10:14.907Z",
+      "note": "Adversarial review: a QuickTime/YouTube user expects F and Escape; a Premiere user gets full screen from the Mac's own Control Command F; F in the editor stays Frame (Photoshop parity question goes to a card on f-in-the-editor-the-frame-tool-or-full-screen). Risks found while building: macOS drops a toggle asked for mid-slide (F twice quickly left it full screen) -> the latest ask is kept and carried out a turn after the slide lands; the walk's plain wait returns before the slide ends (it happens outside the app) -> full screen waits use onTheClock."
+    },
+    {
+      "t": "2026-10-11T16:10:14.967Z",
+      "note": "Built: PhotonzCore/PlayerFullScreen.swift (keys, menu words, tuck-away rule; PlayerFullScreenTests), EditorState+FullScreen.swift (toggle, will/did notices, 5 Hz pointer look only while full screen, NSCursor hidden until moved), View > Enter/Exit Full Screen on Control Command F (pro menu bar), transport tip 'Full Screen (F)' and exit arrows while full screen, expectTimeline fullScreen/controlsTucked claims. Walk f-puts-a-video-full-screen-walk green; every-command-in-the-menu-bar, pro-menu-bar, menu-checkmarks, view-mode-and-edit-mode, the-menu-bar-stays-still-while-playing walks green."
+    },
+    {
+      "t": "2026-10-11T16:10:15.030Z",
+      "note": "Tests: whole Scripts/test.sh stalled three times at 0% CPU inside ImageIO/Vision calls in render tests (folded into find-out-why-the-whole-test-run-hangs-in-the-mac); each target run alone passes: PhotonzCoreTests 11255, PhotonzMediaTests 118, PhotonzRenderTests 1154 (= all 12527). One earlier whole run finished with a perf miss (TitleSetFramesTests median 18 ms vs 16) on a loaded machine; it passed in the render run alone."
+    },
+    {
+      "t": "2026-10-11T16:10:15.099Z",
+      "note": "left rough: the transport tucking away leaves an empty dark band rather than growing the picture (kept still on purpose so nothing jumps); asked in the audit's evaluate, no task. Walk cannot read a transport tip by hover; tip covered by unit test only."
+    },
+    {
+      "t": "2026-10-11T16:10:15.162Z",
+      "note": "owns these walks: f-puts-a-video-full-screen-walk"
+    },
+    {
+      "t": "2026-10-11T16:10:25.698Z",
+      "note": "F toggles full screen in the player and Escape leaves it, still playing; View > Enter/Exit Full Screen on Control Command F everywhere; tip says Full Screen (F); transport tucks away during full screen playback. Commit c266c2a2. Verified by f-puts-a-video-full-screen-walk (5 real pictures) and 5 neighbouring walks; core/media/render test targets each green (whole run stalls in system image calls, known task). Editor F question is a card on f-in-the-editor-the-frame-tool-or-full-screen. Audit queue/audits/2026-10-11-f-puts-a-video-full-screen.json."
     }
-  ]
+  ],
+  "started": "2026-10-11T14:33:46.120Z",
+  "walks": [
+    "f-puts-a-video-full-screen-walk"
+  ],
+  "completed": "2026-10-11T16:10:25.699Z"
 }

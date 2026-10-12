@@ -4,12 +4,12 @@
   "goal": "When you pick a piece inside a title or a name card (its background, its words), the timeline row that opens for it runs across the whole video instead of only the title's few seconds, so it reads as if that piece is on screen the whole time. Its row should span the title it belongs to.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T22:20:32.540Z",
-  "updated": "2026-10-11T12:51:25.608Z",
+  "updated": "2026-10-12T12:44:03.766Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in titles-move-in-parts-walk before the parts' rows were made to open only for the part in hand: queue/audits/2026-10-10-titles-in-parts-part-lanes.png shows the Background and Accent rows of a Midnight title page running past the end of the Title Page bar (4s) to the end of the 11s timeline. MotionStrip.stripGroup passes bar: layer.time, which is nil for a piece inside a placed group, and the timeline draws that row as a full-width bar. Likely fix: pass the enclosing placed layer's time (the shift walk already knows it) for a piece with no time of its own. Not re-run since the rows were hidden by default; reproduce by double-clicking into an inserted title and picking Background.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-11T12:51:25.607Z",
       "note": "seq 20 -> 30"
+    },
+    {
+      "t": "2026-10-12T12:44:03.765Z",
+      "note": "seq 30 -> 20"
     }
   ]
 }

@@ -5,11 +5,11 @@
   "epic": "ui-components",
   "priority": "p1-high",
   "seq": 110,
-  "status": "blocked",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T17:03:36.419Z",
-  "updated": "2026-10-11T12:51:00.674Z",
+  "updated": "2026-10-12T09:05:44.908Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found finishing design-mode-puts-the-ui-tool-strip-in-the-tool-b (2026-10-09). Mock: docs/design/mocks/pages/ui-entry-wt.html tool strip id tComp, title \"Component insert (C)\", style color:var(--comp); UX-PATTERNS D4 UI design. Strip lives in WindowModes.designStrip (Sources/PhotonzCore/WindowMode.swift): add .tool(.component) after .tool(.frame) once the Tool case exists. Key conflict: Tool.shortcutKey gives C to crop/trim. Acceptance of the strip task says every tool keeps its key in every mode, so no mode-dependent C.",
@@ -55,11 +55,24 @@
     {
       "t": "2026-10-11T12:51:00.673Z",
       "note": "seq 60 -> 110"
+    },
+    {
+      "t": "2026-10-11T22:32:09.626Z",
+      "note": "decision \"Which key picks up the Component insert tool?\" resolved: N everywhere, C stays Crop"
+    },
+    {
+      "t": "2026-10-12T09:03:58.542Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T09:05:44.906Z",
+      "note": "The key answer (N everywhere, C stays Crop, 2026-10-11) is what shipped in 5ccaa34d, so no code changed. Component insert sits after Frame in the Design tool bar in violet, a pointer click picks it, a canvas click places the Library's picked component, and it is under More and in Edit > Tools elsewhere. Re-verified today at Next defaults: design-mode-tool-strip-walk and video-tool-bar-walk both ok. Audit 2026-10-09-component-tool now records the answer (e8165377)."
     }
   ],
   "walks": [
     "design-mode-tool-strip-walk",
     "video-tool-bar-walk"
   ],
-  "started": "2026-10-09T17:20:04.117Z"
+  "started": "2026-10-12T09:03:58.540Z",
+  "completed": "2026-10-12T09:05:44.907Z"
 }

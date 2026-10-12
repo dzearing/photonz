@@ -1,0 +1,41 @@
+{
+  "id": "decide-whether-a-picked-recording-at-its-own-siz",
+  "title": "Decide whether a picked recording at its own size shows resize handles",
+  "goal": "The zoom walkthrough draws a picked recording with a ring on the frame and no handles at every step, the wide shot included. The app now rings it only while it is pushed in, and at its own size it still wears the eight handles any picture has. The user picks which.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 380,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T12:28:01.971Z",
+  "updated": "2026-10-12T12:45:24.148Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From a-zoomed-recording-shows-its-ring-on-the-frame-n (2026-10-12). Rule today: PhotonzDocument.frameRing returns a ring only when the posed box has grown past the clip own box AND spills past the canvas; EditorState.frameRings feeds the canvas, and CanvasNSView.offersOwnHandles is false for a ringed clip. Ringing every timed picture would be: drop the grown-past check for a clip that fills the frame. Picture at 100%: queue/audits/2026-10-12-zoom-frame-ring-4-wide-sc.png.",
+  "acceptance": [
+    "The user has answered the card",
+    "A walk at Next defaults photographs a picked recording at 100% showing what the answer says"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T12:28:01.973Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-12T12:28:17.945Z",
+      "note": "Waiting on the card: handles on a picked recording at its own size, or always a ring"
+    },
+    {
+      "t": "2026-10-12T12:44:05.877Z",
+      "note": "seq 4030 -> 370"
+    },
+    {
+      "t": "2026-10-12T12:45:24.147Z",
+      "note": "seq 370 -> 380"
+    }
+  ],
+  "walks": [
+    "framing-a-zoom-keys-its-centre-walk"
+  ]
+}
