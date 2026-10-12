@@ -265,7 +265,7 @@ struct LensTests {
         #expect(Tool.lens.annotationShape == nil)
         #expect(Tool.lens.colorControl == .hidden)
         #expect(!Tool.lens.paints)
-        #expect(Tool.lens.shortcutKey == "k")
+        #expect(Tool.lens.shortcutKey(handOnBar: true) == "k")
     }
 
     /// One box, not two. The lens TAKES the zoom callout's slot rather than

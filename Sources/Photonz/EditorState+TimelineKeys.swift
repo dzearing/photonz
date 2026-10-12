@@ -51,7 +51,7 @@ extension EditorState {
             // letters: T for a title or R for a box picks the tool here, and
             // picking it brings the editor (`ViewEditMode`).
             if isWatching, press.modifiers.isEmpty, !press.isRepeat, case .letter(let letter) = press.key,
-               let tool = Tool.allCases.first(where: { $0.shortcutKey == letter }),
+               let tool = Tool.allCases.first(where: { $0.barKey == letter }),
                ViewEditMode.pickingStartsAnEdit(tool) {
                 setTool(tool)
                 return true

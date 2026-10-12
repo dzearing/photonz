@@ -24,10 +24,11 @@ struct ArrowCaptionEntryTests {
     /// key, while the field is open.
     @Test func toolShortcutLettersTypeIntoTheCaption() {
         for tool in Tool.allCases {
-            guard let key = tool.shortcutKey else { continue }
-            #expect(ArrowCaptionEntry.action(for: .text(String(key))) == .type,
-                    "\(key) must type, not pick \(tool)")
-            #expect(ArrowCaptionEntry.action(for: .text(String(key).uppercased())) == .type)
+            for case let key? in [tool.shortcutKey(handOnBar: false), tool.shortcutKey(handOnBar: true)] {
+                #expect(ArrowCaptionEntry.action(for: .text(String(key))) == .type,
+                        "\(key) must type, not pick \(tool)")
+                #expect(ArrowCaptionEntry.action(for: .text(String(key).uppercased())) == .type)
+            }
         }
         #expect(ArrowCaptionEntry.action(for: .text(" ")) == .type)
     }

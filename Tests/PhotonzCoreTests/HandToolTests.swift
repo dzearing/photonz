@@ -26,13 +26,39 @@ struct HandToolTests {
         #expect(Tool.hand.doubleClickOnEmptyCanvasZoomsWindow)
     }
 
-    @Test("Until its letter is decided the Hand takes no key, so H stays Highlight's")
-    func handHasNoKeyYet() {
-        #expect(Tool.hand.shortcutKey == nil)
-        #expect(Tool.highlight.shortcutKey == "h")
+    @Test("With the Hand on the bar, H picks the Hand and Highlight moves to U")
+    func handTakesH() {
+        // The user's answer on 2026-10-11: H picks the Hand, the way it does in
+        // Photoshop and in every strip the mocks draw, and Highlight moves.
+        #expect(Tool.hand.shortcutKey(handOnBar: true) == "h")
+        #expect(Tool.hand.shortcutHint(handOnBar: true) == "H")
+        #expect(Tool.highlight.shortcutKey(handOnBar: true) == "u")
+        #expect(Tool.highlight.shortcutHint(handOnBar: true) == "U")
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: true) == "h" } == [.hand])
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: true) == "u" } == [.highlight])
         #expect(ToolGroup.containing(.hand) == nil)
-        let owners = Tool.allCases.filter { $0.shortcutKey == "h" }
-        #expect(owners == [.highlight])
+    }
+
+    @Test("Without the Hand on the bar, which is the release Photonz, H stays Highlight's")
+    func withoutTheHandHStaysHighlight() {
+        #expect(Tool.highlight.shortcutKey(handOnBar: false) == "h")
+        #expect(Tool.hand.shortcutKey(handOnBar: false) == nil)
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: false) == "h" } == [.highlight])
+        #expect(!Tool.allCases.contains { $0.shortcutKey(handOnBar: false) == "u" })
+    }
+
+    @Test("The Hand moves only its own letter and Highlight's, never another tool's")
+    func onlyTwoLettersMove() {
+        for tool in Tool.allCases where tool != .hand && tool != .highlight {
+            #expect(tool.shortcutKey(handOnBar: true) == tool.shortcutKey(handOnBar: false),
+                    "\(tool) changes its letter with the Hand")
+        }
+    }
+
+    @Test("U is free: the timeline leaves it to the canvas")
+    func uIsFree() {
+        #expect(TimelineKeys.leavesToTheCanvas("u"))
+        #expect(TimelineKeys.leavesToTheCanvas("h"))
     }
 
     // MARK: The bar
@@ -54,16 +80,33 @@ struct HandToolTests {
         #expect(ToolBarLayout.families.entry(for: .hand) == nil)
     }
 
-    @Test("Edit > Tools lists the Hand last, with no letter printed beside it")
+    @Test("Edit > Tools lists the Hand last with H beside it, and Highlight with U")
     func handInTheToolsMenu() {
         let bar = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
                                     withComponent: true, withHand: true)
         let tools = ToolMenu.tools(bar, bounds: [.crop])
         #expect(tools.last == .hand)
         #expect(ToolMenu.printedKey(for: .hand, among: tools, active: .select,
-                                    remembered: { $0.tools[0] }) == nil)
+                                    remembered: { $0.tools[0] }) == "h")
+        #expect(ToolMenu.printedKey(for: .highlight, among: tools, active: .select,
+                                    remembered: { $0.tools[0] }) == "u")
+        #expect(ToolMenu.tool(forKey: "h", among: tools, active: .select,
+                              remembered: { $0.tools[0] }) == .hand)
+        #expect(ToolMenu.tool(forKey: "u", among: tools, active: .select,
+                              remembered: { $0.tools[0] }) == .highlight)
+    }
+
+    @Test("A bar without the Hand still hands H to Highlight in Edit > Tools")
+    func noHandInTheToolsMenu() {
+        let bar = ToolBarLayout.bar(withFrame: true, withLens: true, withPen: true,
+                                    withComponent: true)
+        let tools = ToolMenu.tools(bar, bounds: [.crop])
         #expect(ToolMenu.tool(forKey: "h", among: tools, active: .select,
                               remembered: { $0.tools[0] }) == .highlight)
+        #expect(ToolMenu.printedKey(for: .highlight, among: tools, active: .select,
+                                    remembered: { $0.tools[0] }) == "h")
+        #expect(ToolMenu.tool(forKey: "u", among: tools, active: .select,
+                              remembered: { $0.tools[0] }) == nil)
     }
 
     // MARK: The drag

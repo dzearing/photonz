@@ -1,0 +1,24 @@
+{
+  "feature": "Hand tool: H picks the Hand",
+  "epic": "ui-building",
+  "summary": "As you chose on 2026-10-11, H now picks the Hand, the way it does in Photoshop and in every tool bar your mocks draw, and Highlight moved to U. The release Photonz has no Hand, so H stays Highlight there.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/design-mode-tool-strip-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a new window, pick the Design UI tile and press New UI canvas." },
+    { "do": "Rest the pointer on the hand at the right end of the tool bar: the tip reads Hand H.", "shot": "2026-10-12-hand-tool-key-1-hand-tip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Zoom in, press H, and drag the canvas: the view moves." },
+    { "do": "Press V, then choose Show Everything from the mode menu." },
+    { "do": "Press U: Highlight lights, and its tip reads Highlight U.", "shot": "2026-10-12-hand-tool-key-2-highlight-tip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open Edit > Tools: Highlight shows U and the Hand shows H." }
+  ],
+  "evaluate": [
+    "Does H for the Hand feel right in a picture window too, not only in Design?",
+    "Is U easy enough to find for Highlight, or would you rather it had another letter?",
+    "Did anything you used to do with H now surprise you?"
+  ],
+  "rough": [
+    "People already used to H for Highlight in Next will get the Hand; the tip and Edit > Tools say U straight away (your call on 2026-10-11).",
+    "Space still does not borrow the Hand while held, because Space plays and pauses here."
+  ]
+}

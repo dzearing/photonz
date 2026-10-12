@@ -312,11 +312,11 @@ struct AnnotationBuilderTests {
     // for the vector Pen.
 
     @Test func arrowIsOnAAndNeverOnP() {
-        #expect(Tool.arrow.shortcutKey == "a")
+        #expect(Tool.arrow.shortcutKey(handOnBar: true) == "a")
         // P belongs to the Pen everywhere else in the product, and now the Pen
         // is here to claim it. Nothing else may.
-        #expect(Tool.pen.shortcutKey == "p")
-        #expect(Tool.allCases.filter { $0.shortcutKey == "p" } == [.pen])
+        #expect(Tool.pen.shortcutKey(handOnBar: true) == "p")
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: true) == "p" } == [.pen])
     }
 
     /// One letter, one slot. Two tools may share a letter only where they
@@ -325,10 +325,11 @@ struct AnnotationBuilderTests {
     /// bargain said with two letters instead of none
     /// (`docs/design/video-surface.md` §10.2). Two tools in different slots
     /// sharing a letter would be a letter that means two things.
-    @Test func noTwoToolsClaimTheSameKey() {
+    @Test(arguments: [false, true])
+    func noTwoToolsClaimTheSameKey(handOnBar: Bool) {
         var seen: [Character: Tool] = [:]
         for tool in Tool.allCases {
-            guard let key = tool.shortcutKey else { continue }
+            guard let key = tool.shortcutKey(handOnBar: handOnBar) else { continue }
             if let other = seen[key] {
                 let family = ToolGroup.containing(tool)
                 if family == nil || family != ToolGroup.containing(other) {
@@ -343,17 +344,16 @@ struct AnnotationBuilderTests {
         // A tool a person can pick from the bar can be picked from the keyboard.
         // The marquee family is the one exception: the three region selectors
         // share a slot and M / ⇧M / W are resolved by the group, not per tool.
-        // The Hand waits on the user: the mocks and Photoshop give it H, which
-        // is Highlight's here, so which keeps it is on a decision card and the
-        // Hand takes no letter until then (`Tool.shortcutKey`).
-        for tool in Tool.allCases where !tool.isRegionSelectionTool && tool != .hand {
-            #expect(tool.shortcutKey != nil, "\(tool) has no keyboard shortcut")
+        // The Hand is only on a bar that has it, and there it takes H.
+        for tool in Tool.allCases where !tool.isRegionSelectionTool {
+            #expect(tool.shortcutKey(handOnBar: true) != nil, "\(tool) has no keyboard shortcut")
         }
     }
 
-    @Test func shortcutKeysAreLowercaseLetters() {
+    @Test(arguments: [false, true])
+    func shortcutKeysAreLowercaseLetters(handOnBar: Bool) {
         for tool in Tool.allCases {
-            guard let key = tool.shortcutKey else { continue }
+            guard let key = tool.shortcutKey(handOnBar: handOnBar) else { continue }
             #expect(key.isLetter && key.isLowercase, "\(tool) key \(key) is not a lowercase letter")
         }
     }
@@ -361,9 +361,9 @@ struct AnnotationBuilderTests {
     @Test func theKeyHintMatchesTheKey() {
         // What a tooltip or menu row prints is derived from the same letter the
         // shortcut fires on, so the two can never disagree.
-        #expect(Tool.arrow.shortcutHint == "A")
-        #expect(Tool.select.shortcutHint == "V")
-        #expect(Tool.rectSelect.shortcutHint == nil)
+        #expect(Tool.arrow.shortcutHint(handOnBar: true) == "A")
+        #expect(Tool.select.shortcutHint(handOnBar: true) == "V")
+        #expect(Tool.rectSelect.shortcutHint(handOnBar: true) == nil)
     }
 
 }
@@ -568,8 +568,8 @@ struct ToolBarLayoutTests {
 
     /// F is free: it collides with no tool letter already spent.
     @Test func theFrameToolTakesTheDesignToolLetter() {
-        #expect(Tool.frame.shortcutKey == "f")
-        #expect(Tool.allCases.filter { $0.shortcutKey == "f" }.count == 1)
+        #expect(Tool.frame.shortcutKey(handOnBar: true) == "f")
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: true) == "f" }.count == 1)
         #expect(!Tool.frame.createsAnnotationByDrag)
     }
 

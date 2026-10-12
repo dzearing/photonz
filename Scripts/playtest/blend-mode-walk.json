@@ -68,7 +68,7 @@
     { "do": "describe", "stage": "8-undone", "note": "THE TEST for undo: each choice was one step, so four presses walk back through them to the solid box it started as" },
     { "do": "snapshot", "name": "8-undone" },
 
-    { "do": "key", "key": "h" },
+    { "do": "key", "key": "u" },
     { "do": "drag", "from": [520, 330], "to": [820, 410], "steps": 10 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "describe", "stage": "9-highlight", "note": "a highlight mark, the one layer with no Blending row: mixing is what makes it a highlighter, so the panel says so rather than offering five choices that would all do nothing" },

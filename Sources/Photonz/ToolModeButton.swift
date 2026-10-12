@@ -82,7 +82,7 @@ struct ToolModeButton<Mode: Hashable>: View {
     /// The tool's display name, for the tooltip.
     let toolTitle: String
     /// The tool's key, which both picks the tool up and cycles its modes.
-    /// Comes from `Tool.shortcutKey`; nil for a tool whose letter is resolved
+    /// Comes from `Tool.barKey`; nil for a tool whose letter is resolved
     /// by a group rather than by the tool itself.
     let key: KeyEquivalent?
     /// Whether the tip and the list print the key. False on a video while the

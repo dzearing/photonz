@@ -18,7 +18,9 @@ struct MotionPivotPlacingTests {
     @Test("No tool already answers Y, so the key does one thing")
     func noToolOwnsTheKey() {
         let key = MotionPivot.PlaceOnCanvas.key
-        #expect(!Tool.allCases.contains { $0.shortcutKey == key })
+        for handOnBar in [false, true] {
+            #expect(!Tool.allCases.contains { $0.shortcutKey(handOnBar: handOnBar) == key })
+        }
     }
 
     @Test("The timeline leaves Y to the canvas, so a video window never takes it first")

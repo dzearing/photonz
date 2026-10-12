@@ -29,11 +29,11 @@ struct ComponentToolTests {
 
     @Test("It answers to N, a letter no other tool and no Photoshop tool claims")
     func key() {
-        #expect(Tool.component.shortcutKey == "n")
-        #expect(Tool.component.shortcutHint == "N")
-        #expect(Tool.allCases.filter { $0.shortcutKey == "n" } == [.component])
+        #expect(Tool.component.shortcutKey(handOnBar: true) == "n")
+        #expect(Tool.component.shortcutHint(handOnBar: true) == "N")
+        #expect(Tool.allCases.filter { $0.shortcutKey(handOnBar: true) == "n" } == [.component])
         // Crop keeps Photoshop's C.
-        #expect(Tool.crop.shortcutKey == "c")
+        #expect(Tool.crop.shortcutKey(handOnBar: true) == "c")
     }
 
     // MARK: The bar

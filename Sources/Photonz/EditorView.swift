@@ -1359,7 +1359,7 @@ struct EditorView: View {
         return TimelineKeys.leavesToTheCanvas(key)
     }
 
-    private func barTeachesKey(of tool: Tool) -> Bool { barTeachesKey(tool.shortcutKey) }
+    private func barTeachesKey(of tool: Tool) -> Bool { barTeachesKey(tool.barKey) }
 
     /// The Blade on a video's bar: the timeline's own Blade, lit whichever bar
     /// armed it. B arms it from the canvas; while the timeline has the
@@ -1583,17 +1583,17 @@ struct EditorView: View {
         /// marquee slot borrows M from the group it stands for; Resize is a
         /// ⌥⌘I menu command and keeps its hint in the menu bar where chords
         /// belong, so it prints nothing here.
-        var shortcutKey: Character? {
+        @MainActor var shortcutKey: Character? {
             switch self {
             case .marquee: "m"
             // Each shape keeps its own letter, so the family prints none.
             case .shapes, .resize: nil
             case .blade: "b"
-            default: tool?.shortcutKey
+            default: tool?.barKey
             }
         }
 
-        var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
+        @MainActor var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
 
         /// The `Tool` this slot activates, if any (resize opens a dialog; the
         /// marquee slot resolves to the remembered variant, so both are nil).
@@ -3136,7 +3136,7 @@ struct EditorView: View {
         }
     }
 
-    /// The key is never passed in: it comes from `Tool.shortcutKey`, so the
+    /// The key is never passed in: it comes from `Tool.barKey`, so the
     /// letter this button fires on and the letter its tooltip prints are the
     /// same fact read twice. Hand-written literals here are how the redline
     /// surface ended up teaching P for the Arrow while the Pen owns P
@@ -3146,7 +3146,7 @@ struct EditorView: View {
                             @ViewBuilder icon: () -> some View) -> some View {
         let isActive = barLights(tool)
         let shiftHint = modifiers.contains(.shift) ? "⇧" : ""
-        let keyLabel = barTeachesKey(of: tool) ? tool.shortcutHint.map { "\(shiftHint)\($0)" } : nil
+        let keyLabel = barTeachesKey(of: tool) ? tool.barKeyHint.map { "\(shiftHint)\($0)" } : nil
         let keyHint = keyLabel.map { " (\($0))" } ?? ""
         let key = tool.keyEquivalent
         return Button {
@@ -3378,10 +3378,23 @@ struct PaintBucketIcon: View {
 }
 
 extension Tool {
-    /// `Tool.shortcutKey` in SwiftUI's currency. The letter itself is a
-    /// product decision and lives in PhotonzCore, where a test holds it still;
-    /// this is only the type conversion.
-    var keyEquivalent: KeyEquivalent? { shortcutKey.map { KeyEquivalent($0) } }
+    /// The letter this tool answers to on this release's bar. It moves with the
+    /// Hand: where the Hand is on the bar H is the Hand's and Highlight's is U,
+    /// and the release Photonz, which has no Hand, keeps H on Highlight. The
+    /// letters themselves are a product decision and live in PhotonzCore
+    /// (`Tool.shortcutKey(handOnBar:)`), where a test holds them still; every
+    /// surface that prints or fires a tool's letter reads it from here.
+    @MainActor var barKey: Character? {
+        shortcutKey(handOnBar: Experiments.shared.handToolEnabled)
+    }
+
+    /// `barKey` as a tooltip or a menu row prints it.
+    @MainActor var barKeyHint: String? {
+        shortcutHint(handOnBar: Experiments.shared.handToolEnabled)
+    }
+
+    /// `barKey` in SwiftUI's currency.
+    @MainActor var keyEquivalent: KeyEquivalent? { barKey.map { KeyEquivalent($0) } }
 }
 
 /// The editor has no inputs: everything it draws it reads from the window's

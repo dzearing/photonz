@@ -12,8 +12,8 @@ struct TrimToolTests {
 
     @Test("both members answer to C, so nothing anybody has learned moves")
     func bothAnswerToC() {
-        #expect(Tool.crop.shortcutKey == "c")
-        #expect(Tool.trim.shortcutKey == "c")
+        #expect(Tool.crop.shortcutKey(handOnBar: true) == "c")
+        #expect(Tool.trim.shortcutKey(handOnBar: true) == "c")
         #expect(ToolGroup.bounds.tools == [.crop, .trim])
         #expect(ToolGroup.containing(.trim) == .bounds)
         #expect(ToolGroup.containing(.crop) == .bounds)
@@ -66,6 +66,6 @@ struct TrimToolTests {
         #expect(Tool.trim.colorControl == .hidden)
         #expect(Tool.trim.paints == false)
         #expect(Tool.trim.preservesLayerSelection)
-        #expect(Tool.trim.shortcutHint == "C")
+        #expect(Tool.trim.shortcutHint(handOnBar: true) == "C")
     }
 }

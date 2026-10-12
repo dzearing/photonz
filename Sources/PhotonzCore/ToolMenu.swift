@@ -39,15 +39,21 @@ public enum ToolMenu {
     /// letter would hand you another member.
     public static func printedKey(for tool: Tool, among tools: [Tool], active: Tool,
                                   remembered: (ToolGroup) -> Tool) -> Character? {
-        guard let key = tool.shortcutKey ?? ToolGroup.containing(tool)?.groupKey else { return nil }
+        guard let key = tool.shortcutKey(handOnBar: tools.contains(.hand))
+                ?? ToolGroup.containing(tool)?.groupKey else { return nil }
         return self.tool(forKey: key, among: tools, active: active, remembered: remembered) == tool ? key : nil
     }
 
     /// The tool a plain press of `key` hands you, read live: the family rule
-    /// for a family's letter, the one tool that owns it otherwise.
+    /// for a family's letter, the one tool that owns it otherwise. A list with
+    /// the Hand in it is a bar with the Hand on it, so H is the Hand's there
+    /// and Highlight's U (`Tool.shortcutKey(handOnBar:)`).
     public static func tool(forKey key: Character, among tools: [Tool], active: Tool,
                             remembered: (ToolGroup) -> Tool) -> Tool? {
-        let owners = tools.filter { ($0.shortcutKey ?? ToolGroup.containing($0)?.groupKey) == key }
+        let handOnBar = tools.contains(.hand)
+        let owners = tools.filter {
+            ($0.shortcutKey(handOnBar: handOnBar) ?? ToolGroup.containing($0)?.groupKey) == key
+        }
         guard let first = owners.first else { return nil }
         guard let group = ToolGroup.containing(first) else { return first }
         return group.tool(forKey: key, active: active, remembered: remembered(group), offered: Set(tools))

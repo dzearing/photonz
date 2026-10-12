@@ -141,7 +141,7 @@ struct ToolGroupButton: View {
 
     private var tooltip: String {
         let members = group.tools.map { tool -> String in
-            let key = tool.shortcutHint ?? keyLabel
+            let key = tool.barKeyHint ?? keyLabel
             return key.map { "\(tool.barTitle) (\($0))" } ?? tool.barTitle
         }
         var text = "\(group.title): \(members.joined(separator: ", ")). \(cycleLine)."
@@ -184,7 +184,7 @@ struct ToolGroupButton: View {
         .fixedSize()
         // The hint names the member the button stands for; the family and
         // its letters are one press-and-hold away, in the list.
-        .toolTip(remembered.barTitle, key: remembered.shortcutHint ?? keyLabel, fallback: tooltip)
+        .toolTip(remembered.barTitle, key: remembered.barKeyHint ?? keyLabel, fallback: tooltip)
         .accessibilityLabel("\(group.title): \(remembered.barTitle)")
         .background {
             ToolGroupShortcuts(group: group, pick: pick, cycle: cycle)

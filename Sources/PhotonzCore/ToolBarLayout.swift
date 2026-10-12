@@ -75,7 +75,7 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
         var keys: [Character] = []
         if let groupKey { keys.append(groupKey) }
         for tool in tools(offered: offered) {
-            if let key = tool.shortcutKey, !keys.contains(key) { keys.append(key) }
+            if let key = tool.familyKey, !keys.contains(key) { keys.append(key) }
         }
         return keys
     }
@@ -89,8 +89,8 @@ public enum ToolGroup: String, CaseIterable, Hashable, Codable, Sendable {
     /// The wand has W of its own, so it is never what M hands you.
     public func tools(answeringTo key: Character, offered: Set<Tool>? = nil) -> [Tool] {
         let members = tools(offered: offered)
-        if key == groupKey { return members.filter { $0.shortcutKey == nil } }
-        return members.filter { $0.shortcutKey == key }
+        if key == groupKey { return members.filter { $0.familyKey == nil } }
+        return members.filter { $0.familyKey == key }
     }
 
     /// The tool a plain press of `key` picks up, given the tool in hand and

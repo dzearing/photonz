@@ -56,6 +56,13 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
 
     /// The single key that picks this tool, everywhere in the product.
     ///
+    /// `handOnBar` is whether this bar carries the Hand (`next-hand-tool`, on
+    /// at Next defaults and never in the release Photonz). Two letters depend
+    /// on it and no others: with the Hand there, H picks the Hand and
+    /// Highlight moves to U; without it, H is Highlight's as it always was.
+    /// That was the user's answer on 2026-10-11, following the house rule that
+    /// on a clash Photoshop keeps its key and the other tool moves.
+    ///
     /// Photoshop parity is the house rule, so V/C/T/L/R/O/G land where a
     /// Photoshop user reaches for them. Two deliberate departures, both because
     /// Photoshop has no equivalent tool to be compatible with:
@@ -73,7 +80,7 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// when you press it again (`ToolGroup.tool(forKey:active:remembered:)`),
     /// which is Photoshop's M with its shift preference turned off; ⇧M walks
     /// the whole slot, wand included.
-    public var shortcutKey: Character? {
+    public func shortcutKey(handOnBar: Bool) -> Character? {
         switch self {
         case .select: "v"
         // One letter for the pair that changes a thing's bounds: C hands you
@@ -87,12 +94,14 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         case .line: "l"
         case .rectangle: "r"
         case .ellipse: "o"
-        case .highlight: "h"
+        // U is free here and in Photoshop's own map is a shape, which is near
+        // enough to a highlighter box to be found.
+        case .highlight: handOnBar ? "u" : "h"
         case .text: "t"
         case .zoomCallout: "z"
         // K is one of the two letters Photoshop leaves unassigned, so a tool
-        // Photoshop has no equivalent for displaces nothing. B, E, S, J, U and
-        // Y all belong to brushes, erasers and stamps this app will want later.
+        // Photoshop has no equivalent for displaces nothing. B, E, S, J and Y
+        // all belong to brushes, erasers and stamps this app will want later.
         case .lens: "k"
         case .measure: "i"
         case .fill: "g"
@@ -108,11 +117,9 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
         // letter Photoshop leaves unassigned and no tool here uses, so the
         // component tool takes it rather than making C mean two things.
         case .component: "n"
-        // The mocks and Photoshop print H, which Highlight has owned here since
-        // the first picture tool bar. Which of the two keeps it is the user's
-        // call, so the Hand takes no letter until that is answered and is
-        // picked from the bar, under More, or from Edit > Tools.
-        case .hand: nil
+        // The mocks and Photoshop print H. A bar without the Hand has nothing
+        // for it to pick, so it takes no letter there.
+        case .hand: handOnBar ? "h" : nil
         case .rectSelect, .ellipseSelect: nil
         }
     }
@@ -120,9 +127,14 @@ public enum Tool: String, CaseIterable, Hashable, Codable, Sendable {
     /// How the key is PRINTED in a tooltip or a menu row. Derived from
     /// `shortcutKey`, so what a surface teaches can never drift from what the
     /// keyboard actually does.
-    public var shortcutHint: String? {
-        shortcutKey.map { String($0).uppercased() }
+    public func shortcutHint(handOnBar: Bool) -> String? {
+        shortcutKey(handOnBar: handOnBar).map { String($0).uppercased() }
     }
+
+    /// The letter of a tool that sits in a family. No family holds Highlight
+    /// or the Hand, so whether the Hand is on the bar never moves a family
+    /// member's letter (`HandToolTests.onlyTwoLettersMove`).
+    var familyKey: Character? { shortcutKey(handOnBar: false) }
 
     /// The annotation shape this tool draws, nil for non-annotation tools.
     public var annotationShape: AnnotationShape? {
