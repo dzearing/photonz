@@ -7,8 +7,10 @@ import PhotonzRender
 // `docs/design/video-titles-polish.md`, "What the person sees"). The panel's
 // Title section turns the knobs of the picked title, or of the title a picked
 // part sits in; its Part section changes one part's in, hold and out. Each
-// change is one undo step, and anything that changes how the title moves plays
-// its in again so the change is seen, not imagined.
+// change is one undo step. Nothing here ever starts playing by itself: a
+// change is shown on the title held still with every part arrived, and plays
+// only when somebody asks for Replay (the user, 2026-10-12: typing then ⌘↩
+// "starts playing. it should not").
 extension EditorState {
 
     // MARK: Reading
@@ -74,13 +76,27 @@ extension EditorState {
 
     // MARK: The knobs
 
-    /// One undo step that turns knobs on the title in hand. `replaying` plays
-    /// its in again afterwards, for a change to how it moves.
-    func restyleTitleInHand(replaying: Bool = false, _ change: @escaping (inout TitleRecipe) -> Void) {
+    /// One undo step that turns knobs on the title in hand, then shows it
+    /// held still with every part arrived.
+    func restyleTitleInHand(_ change: @escaping (inout TitleRecipe) -> Void) {
         guard let id = titleInHandID, var probe = document, probe.restyleTitle(layerID: id, change) else { return }
         discardDragPreview()
         perform { $0.restyleTitle(layerID: id, change) }
-        if replaying { replayTitle(id) } else { documentMomentChanged() }
+        holdTitleStill(id)
+    }
+
+    /// Stops anything playing and, when the playhead is not already on a
+    /// moment of the title where every part has arrived, parks it on the
+    /// first such moment, so every part is on screen to be seen and clicked.
+    func holdTitleStill(_ id: UUID) {
+        pauseDocument()
+        guard let document, let time = document.layer(id: id)?.time else { documentMomentChanged(); return }
+        let held = min(time.inMS + document.titleArrivalMS(layerID: id), max(time.inMS, time.outMS - 1))
+        let now = documentTimeMS
+        if now < held || now >= time.outMS {
+            moveDocumentPlayhead(toMS: held)
+        }
+        documentMomentChanged()
     }
 
     func setTitleTheme(_ theme: TitleTheme) {
@@ -92,7 +108,7 @@ extension EditorState {
     }
 
     func setTitleEnergy(_ energy: TitleEnergy) {
-        restyleTitleInHand(replaying: true) { $0.energy = energy }
+        restyleTitleInHand { $0.energy = energy }
     }
 
     /// Whether the picked title plays its whoosh and ticks.
@@ -179,10 +195,10 @@ extension EditorState {
     // MARK: A part
 
     /// Change the picked part: its in, its hold or its out.
-    func editTitlePart(replaying: Bool = true, _ change: @escaping (inout TitlePart) -> Void) {
+    func editTitlePart(_ change: @escaping (inout TitlePart) -> Void) {
         guard let part = titlePartInHand else { return }
         let index = part.index
-        restyleTitleInHand(replaying: replaying) { recipe in
+        restyleTitleInHand { recipe in
             guard recipe.design.parts.indices.contains(index) else { return }
             change(&recipe.design.parts[index])
         }
@@ -217,15 +233,22 @@ extension EditorState {
         if !isDocumentPlaying { documentPlaybackStopMS = nil }
     }
 
-    /// Words typed into a title: lay it out again with the words in the same
-    /// step, then, after a short pause, play its in again.
-    func replayTitleAfterTyping(_ id: UUID) {
-        titleReplayAfterTyping?.cancel()
-        titleReplayAfterTyping = Task { @MainActor [weak self] in
-            try? await Task.sleep(for: .milliseconds(450))
-            guard !Task.isCancelled, let self, self.editingTextLayerID == nil,
-                  self.document?.layer(id: id) != nil else { return }
-            self.replayTitle(id)
+    /// The Part section's Replay: the picked part's own in, from its first
+    /// key to its last, with every other part of the title drawn at rest so
+    /// only this one moves. Back to the held title once it has arrived.
+    func replayTitlePart() {
+        guard let part = titlePartInHand, let document,
+              let time = document.layer(id: part.titleID)?.time,
+              let span = document.titlePartArrival(layerID: part.titleID, pieceID: part.piece.id)
+        else { replayTitle(); return }
+        pauseDocument()
+        scrubDocument(toMS: time.inMS + span.lowerBound)
+        documentPlaybackStopMS = min(time.inMS + span.upperBound + 350, max(time.inMS, time.outMS - 1))
+        playDocument()
+        if isDocumentPlaying {
+            titlePartReplaying = (part.titleID, part.piece.id)
+        } else {
+            documentPlaybackStopMS = nil
         }
     }
 

@@ -1,0 +1,31 @@
+{
+  "feature": "Editing a title never starts playback, and every part can be clicked",
+  "epic": "video-titles-graphics",
+  "task": "editing-a-title-never-starts-playback-and-every",
+  "summary": "Typing a title's words and pressing Command Return no longer plays anything: the words stay picked, the title sits still with every part on screen, and one click with the Select tool picks the subtitle, the accent or any other part.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: editing-a-title-never-plays-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, add a track above V1, right-click the new track and choose Add Title Page > Stacked Stagger.", "shot": "2026-10-12-title-editing-never-plays-1-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type a headline and press Command Return. Nothing plays; the headline stays picked." },
+    { "do": "Click the small line under the headline once.", "shot": "2026-10-12-title-editing-never-plays-2-subtitle-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Double click that line, type new words, press Command Return." },
+    { "do": "Click the small square accent once.", "shot": "2026-10-12-title-editing-never-plays-4-accent-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape to step up to the whole title, then set Energy to Punchy. It does not play.", "shot": "2026-10-12-title-editing-never-plays-5-whole-title-punchy-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape again, click the second line, then press Replay in the Part section.", "shot": "2026-10-12-title-editing-never-plays-6-part-replaying-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "After Command Return, is everything on the title there to click straight away?",
+    "Does one click on a part feel like picking a layer of a graphic in Premiere's Program monitor?",
+    "Once you have pressed Escape to hold the whole title, is it right that the next click keeps the whole title (so you can drag it), with a second Escape or a double click to get back to a part?",
+    "When the Part section's Replay plays one part, does holding every other part still read as replaying just that part?",
+    "Is it right that a right click on a title you are not inside opens the whole title's menu (Animate In and the rest), and on a part only once you are working inside the title?"
+  ],
+  "rough": [
+    "No mock covers what happens after typing in a title or what a click on a title picks, the title walkthrough page included.",
+    "After Escape the whole title stays whole under a click so it can be dragged as one; reaching a part again takes a second Escape (letting go) or a double click. That is my reading of the task's 'Escape steps up to the whole title', not something the user said.",
+    "Replay Title is on the title's clip menu on the timeline and in the Clip menu; the canvas right-click on a title has never carried it and still does not.",
+    "A part's Replay holds every other part where it rests and plays the part from its first key to its last; a moving background keeps its rest frame during that replay too.",
+    "With a layer picked, a double click on a Library title tile inserts nothing (the shelf jumps between the two clicks). Older than this change but easier to hit now that typed words stay picked: filed as double-clicking-a-library-title-tile-inserts-it."
+  ]
+}

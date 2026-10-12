@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 11,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:31:54.535Z",
-  "updated": "2026-10-12T14:31:54.641Z",
+  "updated": "2026-10-12T16:37:01.534Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"When i add a title page it defaults to editing the title text. when i type something and press cmd enter, it starts playing. it should not. also it's pretty difficult to edit the other things on the page because of the playing. i expect to be in the v tool and click the other things\".\n\nFrom code reading (not run): committing a text edit inside a title calls replayTitleAfterTyping (EditorState+Text.swift:325), which after 450 ms calls replayTitle (EditorState+TitleRestyle.swift:210-229): pause, scrub to the title's inMS, set a stop and play the in. So the playhead lands on the title's first frame where parts have not arrived, which is also why parts are hard to click. Restyle knobs may also replay (EditorState+TitleRestyle.swift:83 'if replaying { replayTitle(id) }'); audit every caller of replayTitle. Title parts are children of a title group; check how a click resolves inside it (it likely picks the group first). This reverses the 'typing relays out and replays' item of title-tiles-play-and-a-few-knobs-restyle-a-title (done) by the user's word; the Library tiles still play on hover.",
@@ -31,6 +31,42 @@
     {
       "t": "2026-10-12T14:31:54.640Z",
       "note": "seq 3960 -> 11"
+    },
+    {
+      "t": "2026-10-12T15:36:57.163Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T16:36:29.640Z",
+      "note": "owns these walks: editing-a-title-never-plays-walk"
+    },
+    {
+      "t": "2026-10-12T16:37:01.211Z",
+      "note": "Reproduced at Next defaults (Keynote Clean on V2, typed, Cmd-Return): expectTimeline read 'playing at 1.0, playhead 951ms' 0.7 s after Cmd-Return, and nothing was picked (selected nil): starting to type drops the pick and the commit never gave it back, and the replay scrubbed to the title's first frame, where the subtitle had not arrived. Insert already parked the playhead at the held moment (1850 ms for Stacked Stagger); a click on any part from the top level picked the Title Page group."
+    },
+    {
+      "t": "2026-10-12T16:37:01.275Z",
+      "note": "Adversarial review before building: a Premiere user clicks a layer of a graphic in the Program monitor and gets that layer, so a title is see-through to a click. Risk: then nothing on the canvas picks the whole title to drag (a title page's Background covers the frame). Answer: Escape steps up to the whole title, and a title held whole stays whole under the next click, so it drags as one; Shift-click from the top level adds whole titles; a right-click on a title you are not inside opens the whole title's menu (Animate In etc., which motion-blur-on-a-fast-slide-walk relies on)."
+    },
+    {
+      "t": "2026-10-12T16:37:01.341Z",
+      "note": "Shipped: core PhotonzDocument.titlePartTarget (LayerGrouping.swift), used by selectionTarget/descendTarget with a new holding: param, extendTarget adds whole titles; titlePartArrival + drawn(atTimeMS:onlyMoving:inTitle:) (TitleDesign.swift) for the Part Replay that plays just that part with the rest held still. App: replayTitleAfterTyping removed; commit and Escape-cancel of a title's words keep that part picked with the title as context and call holdTitleStill (pause, park on the held moment only if the playhead is before it or past the title); restyleTitleInHand never replays (Energy and part In/Out included); Part section Replay -> replayTitlePart; canvas right-click on a title not entered aims at the title. Tests: TitlePartClickTests (15). Walk: editing-a-title-never-plays-walk (new, no flags, pointer clicks)."
+    },
+    {
+      "t": "2026-10-12T16:37:01.406Z",
+      "note": "Acceptance note: 'the playhead did not move' holds (1850 ms before and after Cmd-Return in the walk). Escape on an open title text field cancels the draft (as before) and now leaves that part picked without playing. Replay Title stays on the title clip's timeline right-click and the Clip menu; the canvas right-click never had it."
+    },
+    {
+      "t": "2026-10-12T16:37:01.471Z",
+      "note": "Walks: all 43 title walks run; a-part-in-a-title-rows (double click into a held title) fixed in core; title-presets-library-shelf-walk needed two Escapes before its tile double click because a layer now stays picked, which exposed a real older bug filed as double-clicking-a-library-title-tile-inserts-it (p2, reproduced). motion-blur-on-a-fast-slide-walk fixed by the right-click rule. title-knobs-restyle-walk note updated. Scripts/test.sh: 12753 tests passed."
+    },
+    {
+      "t": "2026-10-12T16:37:01.533Z",
+      "note": "Rough dispositions: audit rough lines 2-4 (Escape-then-click keeps the whole title, Replay Title not on the canvas menu, moving backgrounds held during a part replay) are judgement calls for the user to react to on the audit, not filed; line 5 filed as double-clicking-a-library-title-tile-inserts-it."
     }
+  ],
+  "started": "2026-10-12T15:36:57.160Z",
+  "walks": [
+    "editing-a-title-never-plays-walk"
   ]
 }

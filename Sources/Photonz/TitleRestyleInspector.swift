@@ -310,9 +310,9 @@ struct TitlePartInspector: View {
                 build("Out", part.out, id: inHand.piece.id) { change in
                     editorState.editTitlePart { change(&$0.out) }
                 }
-                Button("Replay") { editorState.replayTitle() }
+                Button("Replay") { editorState.replayTitlePart() }
                     .controlSize(.small)
-                    .panelHelp("Plays the title's in again")
+                    .panelHelp("Plays this part's in again")
                     .playtestControl("Replay", detail: "Part")
             }
         }
@@ -429,7 +429,7 @@ struct TitlePartInspector: View {
             VideoKit.DropdownRow(
                 label: "Hold", value: Self.title(hold.kind),
                 choices: .picking(TitleHoldKind.allCases, current: hold.kind, title: Self.title) { kind in
-                    editorState.editTitlePart(replaying: false) { part in
+                    editorState.editTitlePart { part in
                         part.hold.kind = kind
                         if part.hold.amount == 0, kind != .blink { part.hold.amount = kind == .drift ? 16 : 3 }
                     }
@@ -440,11 +440,11 @@ struct TitlePartInspector: View {
             if hold.kind != .none, hold.kind != .blink {
                 let amount = hold.kind == .drift ? Amount.distance : Amount.grow
                 amountField(amount, hold.amount, id: id, row: "Hold") { value in
-                    editorState.editTitlePart(replaying: false) { $0.hold.amount = value }
+                    editorState.editTitlePart { $0.hold.amount = value }
                 }
                 if hold.kind == .drift {
                     direction(hold.direction, row: "Hold") { direction in
-                        editorState.editTitlePart(replaying: false) { $0.hold.direction = direction }
+                        editorState.editTitlePart { $0.hold.direction = direction }
                     }
                 }
             }

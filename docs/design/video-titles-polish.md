@@ -252,8 +252,13 @@ Timings at Normal energy. "Knobs" is what the person can tweak.
    (`Sources/Photonz/LibraryTitleTile.swift`), which hides exactly what makes a
    title good.
 2. **Pick and drop**, as today: double click, insert or drag.
-3. **Type on the canvas.** Lines re-lay out, backing shapes follow the text,
-   and the animation replays from its in point after a short pause.
+3. **Type on the canvas.** Lines re-lay out and backing shapes follow the
+   text. Nothing plays: finishing the words (Command Return, Escape or a click
+   away) leaves them picked with the title held still, every part arrived, so
+   the next click reaches any other part (the user, 2026-10-12, reversing the
+   replay after typing). A single click on any part of a title picks that part;
+   Escape steps up to the whole title, which then stays whole under a click so
+   it can be dragged.
 4. **A few knobs first**, in a Title section, in this order: Theme (swatches,
    plus From Recording, which samples two or three colours from the clip); Font
    pair (four or five curated pairs); Energy (Calm, Normal, Punchy: durations
@@ -414,8 +419,13 @@ tile previews that play.
    section (In, Hold, Out with Length, Delay, Distance or Blur or Scale,
    Direction, Curve, and Replay), leading a title's panel after Properties;
    Replay Title is also on the title's right-click and in Clip. Typing into a
-   title lays it out again in the same undo step and replays its in after a
-   short pause. Library tiles play while pointed at and loop while picked
+   title lays it out again in the same undo step; nothing plays by itself
+   (typing, Theme, Font Pair, Energy, Intensity, Background, a part's In, Hold
+   or Out all show on the title held still), and the Part section's Replay
+   plays just that part, the others held at rest
+   (`PhotonzDocument.drawn(atTimeMS:onlyMoving:inTitle:)`). A click on a title
+   picks the part under the pointer (`titlePartTarget`); a right click on a
+   title you are not inside is about the whole title. Library tiles play while pointed at and loop while picked
    (`TitlePreset.reel`, drawn once off the main thread and played by Core
    Animation), over the recording's own first frame for glass and name cards.
    Switch `next-title-restyle`, on by default. Walks:

@@ -452,7 +452,7 @@
   {
    "do": "describe",
    "stage": "part",
-   "note": "PART: the headline picked from the Title section's Part menu: its In, Hold and Out with their knobs, and Replay. Its In changed from Rise to Blur In, and the title played its in again"
+   "note": "PART: the headline picked from the Title section's Part menu: its In, Hold and Out with their knobs, and Replay. Its In changed from Rise to Blur In, shown on the title held still with nothing playing"
   },
   {
    "do": "snapshot",

@@ -25,7 +25,10 @@ extension CanvasNSView {
                                     captionPillSize: Self.captionPillSizing)
                 .map { ($0.id, nil) }
         }
+        // A title held whole stays whole under the click, so it can be
+        // dragged as one; otherwise a click on a title picks its part.
         return document.selectionTarget(at: point, zoom: zoom, inside: groupContext,
+                                        holding: selectedLayerID,
                                         captionPillSize: Self.captionPillSizing)
     }
 
@@ -63,6 +66,7 @@ extension CanvasNSView {
     func groupAwareDescent(at point: CGPoint, zoom: CGFloat) -> (id: UUID, context: UUID)? {
         guard groupSelectionEnabled, let document = clickable(at: point) else { return nil }
         return document.descendTarget(at: point, zoom: zoom, inside: groupContext,
+                                      holding: selectedLayerID,
                                       captionPillSize: Self.captionPillSizing)
     }
 

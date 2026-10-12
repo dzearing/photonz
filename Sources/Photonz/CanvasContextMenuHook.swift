@@ -40,7 +40,15 @@ extension CanvasNSView {
               gridAdjust == nil, textSession == nil, canvasNameField == nil,
               let viewport else { return nil }
         let point = viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil))
-        let pick = groupAwarePick(at: point, zoom: viewport.zoom)
+        var pick = groupAwarePick(at: point, zoom: viewport.zoom)
+        // A right click on a title you are not already working inside is
+        // about the title as a whole (Animate In, Replay Title, Save as
+        // Preset), the way a clip's is; once a part of it is picked, a right
+        // click on a part is about that part.
+        if let title = pick?.context, title != groupContext,
+           document?.layer(id: title)?.group?.titleRecipe != nil {
+            pick = (title, document?.parentID(of: title))
+        }
         return (pick?.id, pick?.context, point)
     }
 }

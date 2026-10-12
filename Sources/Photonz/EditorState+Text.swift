@@ -313,8 +313,10 @@ extension EditorState {
                 // button and looked like it had been thrown away.
                 // Words typed into a title lay the whole title out again in
                 // the same step, so its backing follows them and every part
-                // moves into its new place, then its in plays again after a
-                // short pause (`TitleRestyle.swift`).
+                // moves into its new place (`TitleRestyle.swift`). Nothing
+                // plays: the words stay picked inside the title, held still
+                // with every part arrived, so the next click can reach any
+                // other part of it.
                 let title = Experiments.shared.titleRestyleEnabled
                     ? document?.titleLayerID(containing: layerID) : nil
                 perform { document in
@@ -322,7 +324,7 @@ extension EditorState {
                                             canvasFrame: CGRect(origin: origin, size: size))
                     if let title { document.relayOutTitle(layerID: title) }
                 }
-                if let title { replayTitleAfterTyping(title) }
+                if let title { keepTitlePartPicked(layerID, in: title) }
             }
         } else {
             guard !isEmpty else { return }
@@ -371,8 +373,22 @@ extension EditorState {
 
     /// Inline edit abandoned (Esc): a hidden re-edited layer comes back as-is.
     func cancelTextEdit() {
+        let edited = editingTextLayerID
         editingTextLayerID = nil
+        if Experiments.shared.titleRestyleEnabled, let edited,
+           let title = document?.titleLayerID(containing: edited) {
+            keepTitlePartPicked(edited, in: title)
+        }
         rerender()
+    }
+
+    /// Typing in a title over, kept or not: the words it was in stay picked,
+    /// inside their title, with the Select tool's next click free to pick any
+    /// other part, and the title held still where every part has arrived.
+    private func keepTitlePartPicked(_ id: UUID, in title: UUID) {
+        guard document?.layer(id: id) != nil else { return }
+        selectLayer(id, inGroup: title)
+        holdTitleStill(title)
     }
 
     static let textStylesKey = "textStyles"

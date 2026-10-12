@@ -110,12 +110,17 @@ extension PhotonzDocument {
     /// picks that thing without stepping in first, and the screen comes back
     /// as the context so the next click stays at that level. A click on the
     /// screen's own empty surface still picks the screen itself.
+    ///
+    /// A title is the other exception: see `titlePartTarget`. `holding` is
+    /// the layer already picked, which only a title reads.
     public func selectionTarget(at point: CGPoint, zoom: CGFloat = 1,
                                 inside context: UUID?,
+                                holding: UUID? = nil,
                                 captionPillSize: CaptionPillSizing? = nil)
     -> (id: UUID, context: UUID?)? {
         guard let hit = hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize)
         else { return nil }
+        if let title = titlePartTarget(along: hit, inside: context, holding: holding) { return title }
         // Walk out from where we are: the deepest context the click is
         // actually inside wins, so clicking a sibling keeps you at that level.
         var candidate = context
@@ -138,6 +143,36 @@ extension PhotonzDocument {
             return (onIt.id, outermost.id)
         }
         return (outermost.id, nil)
+    }
+
+    /// A title is see-through to a click: whatever part of its design lies
+    /// under the pointer (headline, subtitle, kicker, accent, backing shape,
+    /// background) is picked straight away, with the title as the context, the
+    /// way a click on a graphic in Premiere's Program monitor picks the layer
+    /// of it you clicked. Escape then steps up to the whole title, and a title
+    /// already held whole stays whole under the next click, so it can be
+    /// dragged as one. A click inside the title that lands on nothing of its
+    /// design picks the title whole. Nil when the click is not on a title, or
+    /// when somebody has stepped into something deeper inside one on purpose,
+    /// where the ordinary walk carries on.
+    func titlePartTarget(along hit: [Int], inside context: UUID?, holding: UUID?)
+    -> (id: UUID, context: UUID?)? {
+        guard !hit.isEmpty else { return nil }
+        for depth in 1...hit.count {
+            guard let title = layer(atPath: Array(hit.prefix(depth))) else { return nil }
+            guard let recipe = title.group?.titleRecipe else { continue }
+            if let context, context != title.id, isDescendant(context, of: title.id) { return nil }
+            let above = depth > 1 ? layer(atPath: Array(hit.prefix(depth - 1)))?.id : nil
+            if holding == title.id { return (title.id, above) }
+            let parts = Set(recipe.design.parts.compactMap { TitleDesign.find($0.path, in: title)?.id })
+            for end in stride(from: hit.count, to: depth, by: -1) {
+                if let piece = layer(atPath: Array(hit.prefix(end))), parts.contains(piece.id) {
+                    return (piece.id, title.id)
+                }
+            }
+            return (title.id, above)
+        }
+        return nil
     }
 
     /// Whether `id` is a screen sitting straight on the canvas — the one kind
@@ -170,6 +205,11 @@ extension PhotonzDocument {
         // working on every screen: a plain click picks the button, and the
         // ⇧-click aimed at the same button would find nothing to add.
         if level == nil, let screen = pick.context, isTopLevelFrame(screen) { return pick.id }
+        // A plain click on a title picks the part under it, but a ⇧-click from
+        // the top level adds the title whole, so two titles can be picked
+        // together the way two groups can.
+        if level == nil, let title = pick.context, layers.contains(where: { $0.id == title }),
+           layer(id: title)?.group?.titleRecipe != nil { return title }
         return nil
     }
 
@@ -178,12 +218,15 @@ extension PhotonzDocument {
     /// the new context, or nil when there is nothing deeper under the pointer —
     /// which is when a double click means whatever it already meant (opening a
     /// text layer for typing, a caption for editing).
+    /// A title held whole goes one level in like any group, to the part
+    /// under the pointer.
     public func descendTarget(at point: CGPoint, zoom: CGFloat = 1,
                               inside context: UUID?,
+                              holding: UUID? = nil,
                               captionPillSize: CaptionPillSizing? = nil)
     -> (id: UUID, context: UUID)? {
         guard let hit = hitTestPath(point, zoom: zoom, captionPillSize: captionPillSize),
-              let current = selectionTarget(at: point, zoom: zoom, inside: context,
+              let current = selectionTarget(at: point, zoom: zoom, inside: context, holding: holding,
                                             captionPillSize: captionPillSize),
               let currentPath = path(of: current.id),
               layer(id: current.id)?.isGroup == true,

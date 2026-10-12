@@ -241,6 +241,7 @@ extension EditorState {
     /// speed where it is rather than starting over.
     func playDocument(rate: Double = 1) {
         guard documentHasTime, rate != 0 else { return }
+        titlePartReplaying = nil
         // The file is not there yet: play the moment it is.
         if recordingStillLanding {
             playWhenLanded = rate > 0
@@ -277,6 +278,7 @@ extension EditorState {
 
     func pauseDocument() {
         if playWhenLanded { playWhenLanded = false }
+        titlePartReplaying = nil
         guard isDocumentPlaying else { return }
         noteRecordingPlace()
         isDocumentPlaying = false
@@ -319,9 +321,13 @@ extension EditorState {
                 if rate > 0, landing >= end {
                     // It finishes rather than looping: a recording has a last
                     // frame, and sitting on it is what having watched it looks
-                    // like.
+                    // like. A part's own Replay settles back on the title
+                    // held with every part arrived, so parts that come in
+                    // later than it never flash off at the stop.
                     documentTimeMS = end
+                    let replayedTitle = titlePartReplaying?.title
                     pauseDocument()
+                    if let replayedTitle { holdTitleStill(replayedTitle) }
                     return
                 }
                 if rate < 0, landing <= 0 {

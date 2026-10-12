@@ -273,9 +273,10 @@ final class EditorState {
     var titleLiveKnobPreview: LiveBackdrop?
     /// The Background picker's tiles are up.
     var titleBackgroundPickerOpen = false
-    /// The replay of a title's in waiting for a pause after its words were
-    /// typed.
-    @ObservationIgnored var titleReplayAfterTyping: Task<Void, Never>?
+    /// The Part section's Replay running: the one part of the title that
+    /// moves while every other part is drawn at rest. Gone the moment
+    /// playback stops.
+    @ObservationIgnored var titlePartReplaying: (title: UUID, piece: UUID)?
     @ObservationIgnored var titlePresetPicturesInFlight: Set<String> = []
     /// A title tile held over the timeline, read off its drag once it arrives
     /// (`TitlePresetDrag.swift`).
@@ -5000,7 +5001,12 @@ final class EditorState {
             var inHand = movieFramesStorage?.inHand
             inHand?.travel = playheadTravel
             inHand?.nearest = !isDocumentPlaying
-            document = document.drawn(atTimeMS: documentTimeMS, framesInHand: inHand)
+            if let replaying = titlePartReplaying, isDocumentPlaying {
+                document = document.drawn(atTimeMS: documentTimeMS, onlyMoving: replaying.piece,
+                                          inTitle: replaying.title, framesInHand: inHand)
+            } else {
+                document = document.drawn(atTimeMS: documentTimeMS, framesInHand: inHand)
+            }
             // A zoom picked while the transport is stopped shows the whole
             // picture, so its box can be seen and moved over what it frames.
             document = withZoomInHandUnzoomed(document)

@@ -394,6 +394,70 @@ extension PhotonzDocument {
         }
         return min(last, time.lengthMS)
     }
+
+    /// When one part of a title comes in, counted from the title's first
+    /// frame: from its first key of the in (or its first word starting) to
+    /// the last. What the Part section's Replay plays. Nil for a part with no
+    /// in, or a piece that is not in this title.
+    public func titlePartArrival(layerID: UUID, pieceID: UUID) -> ClosedRange<Int>? {
+        guard let title = layer(id: layerID), let time = title.time,
+              let piece = title.selfAndDescendants.first(where: { $0.id == pieceID }), piece.id != title.id
+        else { return nil }
+        var first: Int?
+        var last: Int?
+        func saw(_ start: Int, _ end: Int) {
+            first = min(first ?? start, start)
+            last = max(last ?? end, end)
+        }
+        for inner in piece.selfAndDescendants where inner.id == piece.id || inner.time == nil {
+            if let text = inner.text, let reveal = text.reveal {
+                let count = TextReveal.spans(in: text.string, unit: reveal.unit)?.count
+                    ?? max(1, text.string.split(whereSeparator: \.isNewline).count)
+                let start = reveal.startMS - time.sourceInMS
+                let ends = start + reveal.lengthMS(count: count)
+                if ends < time.lengthMS { saw(max(0, start), ends) }
+            }
+            for motion in inner.motions ?? [] where motion.repeats == .once && motion.isOn {
+                let keys = motion.keyframes.map { $0.atMS - time.sourceInMS }.filter { $0 < time.lengthMS / 2 }
+                if let start = keys.min(), let end = keys.max(), end > start { saw(max(0, start), end) }
+            }
+        }
+        guard let first, let last, last > first else { return nil }
+        return first...min(last, time.lengthMS)
+    }
+
+    /// The document drawn at `ms` with one part of a title on its own clock
+    /// and every other part of that title held where it rests, all arrived:
+    /// what the Part section's Replay shows, so only the part being replayed
+    /// moves. Outside the title's own time it is the plain drawing.
+    public func drawn(atTimeMS ms: Int, onlyMoving pieceID: UUID, inTitle titleID: UUID,
+                      framesInHand: MovieFramesInHand? = nil) -> PhotonzDocument {
+        var now = drawn(atTimeMS: ms, framesInHand: framesInHand)
+        guard let time = layer(id: titleID)?.time, ms >= time.inMS, ms < time.outMS,
+              let moving = now.layer(id: pieceID) else { return now }
+        let held = min(time.inMS + titleArrivalMS(layerID: titleID), max(time.inMS, time.outMS - 1))
+        guard var still = drawn(atTimeMS: held).layer(id: titleID),
+              Self.replace(pieceID, with: moving, in: &still) else { return now }
+        now.updateLayer(id: titleID) { $0 = still }
+        return now
+    }
+
+    private static func replace(_ id: UUID, with piece: Layer, in layer: inout Layer) -> Bool {
+        guard !layer.children.isEmpty else { return false }
+        var children = layer.children
+        for index in children.indices {
+            if children[index].id == id {
+                children[index] = piece
+                layer.children = children
+                return true
+            }
+            if replace(id, with: piece, in: &children[index]) {
+                layer.children = children
+                return true
+            }
+        }
+        return false
+    }
 }
 
 /// One part's keys, for one piece of one title.
