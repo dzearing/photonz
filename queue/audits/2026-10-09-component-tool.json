@@ -34,11 +34,10 @@
   "evaluate": [
     "Does the violet button read as the component tool next to Frame, and does it go white on blue cleanly when picked?",
     "Is the capsule naming the component the right place to say what a click places, or would you rather the Library had to be open?",
-    "After a click it hands back to Select with the copy picked. Would you rather it stayed in hand so a row of buttons is a row of clicks?",
-    "Is N the right letter, or do you want the mock's C (see the card)?"
+    "After a click it hands back to Select with the copy picked. Would you rather it stayed in hand so a row of buttons is a row of clicks?"
   ],
   "rough": [
-    "The mock's tip says C; the tool answers to N because C is Crop here and in Photoshop. Settled by decision card a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component.",
+    "The mock's tip says C; the tool answers to N because C is Crop here and in Photoshop. Settled by decision card a-component-tool-places-a-component-from-the-too-which-key-picks-up-the-component, your call on 2026-10-11: N everywhere, C stays Crop.",
     "The app goes further than the mock: the mock has no capsule saying which component the tool holds, and no mock frame shows the tool's click at all (the walkthrough places its Button by dragging from the Library, step 7).",
     "A press places on the press; dragging after the press does not slide the new copy along with the pointer yet.",
     "The right hand panel has no Component tool section; the Library's Components shelf is the panel's place to choose, and picking a tile there picks it in the capsule too.",
