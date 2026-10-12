@@ -452,15 +452,18 @@ extension EditorState {
     }
 
     /// Put down a box's pieces, a range on some tracks and a picked gap.
-    func letGoOfTimelinePicks() {
+    /// `keepingRange` leaves the range in hand, for a pick made under it
+    /// (`EditorState+RangeSection`).
+    func letGoOfTimelinePicks(keepingRange: Bool = false) {
         if !timelinePicks.isEmpty { timelinePicks = [] }
         if !boxExtras.isEmpty { boxExtras = TimelineBoxExtras() }
-        if trackRangeInHand != nil { trackRangeInHand = nil }
+        if !keepingRange, trackRangeInHand != nil { trackRangeInHand = nil }
         if timelineGapInHand != nil { timelineGapInHand = nil }
     }
 
-    /// The range on some tracks while it is still the thing in hand: nothing
-    /// else has been picked since.
+    /// The range on some tracks while it is the thing in hand on its own:
+    /// nothing else has been picked since. A clip picked under it leaves it
+    /// in hand, acting on the clip (`EditorState+RangeSection`).
     var trackRangeHeld: TrackRange? {
         guard documentHasTime, let range = trackRangeInHand, selectedLayerID == nil,
               multiSelectedLayerIDs.isEmpty, selectedEditPoint == nil, !canDeletePickedKeys else { return nil }

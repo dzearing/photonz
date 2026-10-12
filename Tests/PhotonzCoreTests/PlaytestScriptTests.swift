@@ -4771,7 +4771,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectLevel", "clip": "b-roll", "points": 3, "dipsBelowDB": -20 } ] }
         """)
-        guard case .expectLevel(let clip, let points, let dipsBelowDB, let flat) = script.steps[0] else {
+        guard case .expectLevel(let clip, let points, let dipsBelowDB, let flat, _, _) = script.steps[0] else {
             Issue.record("expectLevel"); return
         }
         #expect(clip == "b-roll")
@@ -4786,11 +4786,35 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectLevel", "clip": "b-roll", "flat": true } ] }
         """)
-        guard case .expectLevel(_, let points, _, let flat) = script.steps[0] else {
+        guard case .expectLevel(_, let points, _, let flat, _, _) = script.steps[0] else {
             Issue.record("expectLevel"); return
         }
         #expect(points == nil)
         #expect(flat == true)
+    }
+
+    // Mute Section is proved by what plays, not by the points: the walk
+    // reads the mix at moments inside and outside the range
+    // (`a-range-stays-on-top-when-you-pick-a-clip-and-it`).
+    @Test("An expectLevel step can claim where a clip is heard in silence and where at its full level")
+    func expectLevelClaimsWhatIsHeard() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLevel", "clip": "Sample Music", "silentAt": [4.5], "fullAt": [2, 8] } ] }
+        """)
+        guard case .expectLevel(let clip, let points, _, _, let silentAt, let fullAt) = script.steps[0] else {
+            Issue.record("expectLevel"); return
+        }
+        #expect(clip == "Sample Music")
+        #expect(points == nil)
+        #expect(silentAt == [4.5])
+        #expect(fullAt == [2, 8])
+    }
+
+    @Test("A moment heard both silent and full can never pass")
+    func expectLevelRefusesSilentAndFullAtOnce() throws {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "expectLevel", "clip": "a", "silentAt": [2], "fullAt": [2] } ] }"#)
+        }
     }
 
     @Test("An expectLevel step has to name its clip and claim something that could be true")

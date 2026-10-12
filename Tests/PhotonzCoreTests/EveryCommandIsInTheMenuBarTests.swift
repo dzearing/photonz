@@ -103,6 +103,13 @@ struct EveryCommandIsInTheMenuBarTests {
         // A Library tile is a thing in the panel, not in the document; the bar
         // brings media in from a file.
         "Add at Playhead": "Import Media…",
+        // What a range does to a clip picked under it: the right click and
+        // Sequence > Picked in Range are built from one table and one function
+        // (`EditorState+RangeSection`), the Lower Volume steps included.
+        "-%.0f dB": "Picked in Range",
+        // On the ruler with a clip picked under the range, the rows for every
+        // track are one submenu in; each is a Sequence row of its own.
+        "All Tracks": "Split at Range Edges",
     ]
 
     /// A right-click row with no menu bar row, and why.

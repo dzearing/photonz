@@ -1,0 +1,72 @@
+{
+  "feature": "A range stays on top of a pick",
+  "epic": "video-cutting",
+  "summary": "Draw a range and then click a clip or a sound: the range stays drawn over the clips and the clip is picked too. Right-clicking it inside the range offers what can be done to that clip over just that stretch: Mute Section, Lower Volume, Normalize Section, Split at Range Edges, Delete Section, Ripple Delete Section, Speed for Section, Freeze Frame for Section, Add Zoom over Range, Trim to Range for a title, Delete Keys in Range. Along the way, Delete and Ripple Delete over a range now carry a sound's volume line with the sound; before, a duck or a mute after the gap ended up seconds away.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording (the sample one is fine) and add a sound under it, so there is a sound clip on its own track.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag along the ruler from 0:03 to 0:06.",
+      "shot": "2026-10-12-range-on-a-pick-1-ruler-range.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the sound inside the green band.",
+      "shot": "2026-10-12-range-on-a-pick-2-music-picked-under-the-range.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the sound inside the band.",
+      "shot": "2026-10-12-range-on-a-pick-3-range-menu-on-the-music.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose Mute Section, then play across 0:03.",
+      "shot": "2026-10-12-range-on-a-pick-4-music-muted-in-the-range.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Cmd-Z once, then Shift-Cmd-Z."
+    },
+    {
+      "do": "Press Escape: the range goes and the sound stays picked."
+    },
+    {
+      "do": "Option-drag on the sound's track from 0:08 to 0:10, then click the sound inside it.",
+      "shot": "2026-10-12-range-on-a-pick-7-music-picked-under-a-track-range.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Delete.",
+      "shot": "2026-10-12-range-on-a-pick-8-delete-takes-the-music-s-part.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "With a sound picked under the range, does the green wash over its blue ring still read as 'the next command acts on this stretch of this clip'?",
+    "Should the section rows (Mute Section first) lead the clip's right-click menu, or should the clip's own rows come first?",
+    "Is it right that Delete with a clip picked under a range takes only that stretch of the clip, not the whole clip?",
+    "Are -3, -6, -12 and -20 dB the Lower Volume steps you would reach for?",
+    "Would you look for these rows in the menu bar under Sequence > Picked in Range?"
+  ],
+  "rough": [
+    "Clean Noise in Section and Hide Picture for Section are not offered yet: the app can only clean a whole sound and only hide a whole picture. Filed as clean-noise-and-hide-picture-work-on-one-stretch.",
+    "The task named Freeze Frame Here; the row is Freeze Frame for Section, because it holds the range's first frame for the range's length rather than freezing at the playhead.",
+    "Normalize Section raises a stretch at most +6 dB, which is as high as the volume line goes; a quieter stretch stops there. The whole-clip Normalize uses gain and goes further.",
+    "Lower Volume is a submenu of four steps rather than a box to type a number in.",
+    "A right-click anywhere on a picked clip leads with the section rows, even on a part of the clip outside the range, because the clip's menu does not know where along the clip it was opened.",
+    "Marks set with I and O are still marks, not a range in hand, so they do not offer the section rows; a range drawn on the ruler or across tracks does.",
+    "A right-click on a sound's volume line opens no menu at all (it was like this before). Filed as a-right-click-on-a-sound-s-level-line-opens-the.",
+    "No mock page covers ranges or what they do to a pick; this is built to your words of 2026-10-12 and Premiere's In and Out."
+  ],
+  "inventory": [
+    "A range on the ruler with nothing picked (every track): Add Transition (Cmd-T), Split at Range Edges, Merge into One Clip, Cut (Cmd-X), Copy (Cmd-C), Delete (Delete, Premiere's Lift), Ripple Delete (Shift-Delete, Premiere's Extract), Clear Range (Option-X), Add Captions for Range, Export Range. Unchanged.",
+    "A range across some tracks (Option-drag or the Range tool) with nothing picked: Add Transition, Split at Range Edges, Delete, Ripple Delete, on its tracks only. Unchanged.",
+    "With things picked under either range, one table decides the rows, by what each picked thing is:",
+    "A sound (a sound clip, or a recording's own sound): Mute Section, Lower Volume (-3, -6, -12, -20 dB), Normalize Section, Split at Range Edges, Delete Section (Delete), Ripple Delete Section (Shift-Delete). Clean Noise in Section is in the table, not offered yet.",
+    "A recording or video: Split at Range Edges, Delete Section, Ripple Delete Section, Speed for Section (0.25x to 30x), Freeze Frame for Section, Add Zoom over Range. Hide Picture for Section is in the table, not offered yet.",
+    "A title, shape or picture placed in time: Trim to Range.",
+    "Anything with keys inside the range: Delete Keys in Range.",
+    "Every section row is also under Sequence > Picked in Range, lit only when it fits what is picked; Delete Section and Ripple Delete Section are the Clip menu's Delete rows, on their keys."
+  ]
+}

@@ -14,8 +14,9 @@ import PhotonzCore
 // A range just drawn is the thing in hand: nothing else is picked, it is
 // washed down through every track, ⌫ lifts it, ⇧⌫ (and ⌥⌫) takes it out and
 // closes the gap, ⌘T puts the default transition on every cut inside it, and
-// a click on the ruler outside it lets it go. Picking anything else puts it
-// down, and the marks stay on the ruler as marks.
+// a click on the ruler outside it lets it go. Clicking a clip under it picks
+// the clip and keeps the range, washed over the clips still: the range then
+// acts on that clip over its stretch (`EditorState+RangeSection`).
 
 extension EditorState {
 
@@ -171,8 +172,9 @@ extension EditorState {
         rulerRangeInHand = self.document?.markedRangeMS
     }
 
-    /// The range drawn on the ruler, while it is still the thing in hand: the
-    /// marks have not moved since and nothing else has been picked.
+    /// The range drawn on the ruler, while it is the thing in hand on its own:
+    /// the marks have not moved since and nothing else has been picked. With
+    /// a clip picked under it, it acts on the clip instead (`rangeSection`).
     var rulerRangeHeld: Range<Int>? {
         guard documentHasTime, let range = rulerRangeInHand, document?.markedRangeMS == range,
               selectedLayerID == nil, multiSelectedLayerIDs.isEmpty, selectedEditPoint == nil,

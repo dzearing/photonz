@@ -21258,3 +21258,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `MotionStripGroup.span`: a row with no time of its own carries the stretch of the placed thing it is inside; `drawnMS(documentLengthMS:)` is the one rule for where a row's bar is drawn (own bar, else span, else end to end). The timeline's whole-way bar, Blade and Track Select hit areas read it.
 - New walk step `expectRowSpan` claims where a timeline row is drawn; `a-part-in-a-title-rows-across-the-title-walk` uses it at Next defaults.
 - Next: nothing open from this.
+
+## 2026-10-12 — A range stays on top of a pick (Next)
+
+- A range drawn on the ruler, or Option-dragged across tracks, stays in hand when a clip is clicked: it stays drawn over the clips and the clip is picked too. Right-click inside it leads with what the range does to the pick; Delete / Shift-Delete take the pick's part of it; Escape lets the range go before the pick.
+- Core: `SectionOperation` table and the section edits (`RangeSection.swift`, `RangeSectionTests`). App: `EditorState+RangeSection.swift`; Sequence > Picked in Range in the menu bar. Walk steps: `expectLevel` `silentAt` / `fullAt` read the mix.
+- Fixed on the way: Lift and Extract now carry a sound's level line with the sound (`AudioLevel.removeStretch`, `LevelFollowsATakenStretchTests`).
+- Walks: `a-range-stays-on-top-of-a-pick-walk` (Next defaults), `picked-in-range-menu-bar-walk` (front).
+- Next: clean-noise-and-hide-picture-work-on-one-stretch; a-right-click-on-a-sound-s-level-line-opens-the; the user's answers on the audit.

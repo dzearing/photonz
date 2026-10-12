@@ -924,9 +924,11 @@ final class EditorState {
                 if selectedLayerID != nil, selectedEditPoint != nil { selectedEditPoint = nil }
                 // ...and so does a zoom on another clip.
                 if let zoom = selectedZoom, zoom.layerID != selectedLayerID { selectedZoom = nil }
-                // ...and so do pieces a box picked and a range on some tracks
-                // (`EditorState+TrackRange`): one thing is in hand at a time.
-                if selectedLayerID != nil { letGoOfTimelinePicks() }
+                // ...and so do pieces a box picked and a picked gap
+                // (`EditorState+TrackRange`). A range on some tracks stays:
+                // a range and a pick are two things in hand at once, and the
+                // range then acts on the pick (`EditorState+RangeSection`).
+                if selectedLayerID != nil { letGoOfTimelinePicks(keepingRange: true) }
                 // ...and so do tracks picked on their headers: a track left
                 // picked under a clip would come back into hand the moment
                 // the clip went, and a second ⌫ would take a track nobody was
@@ -1007,7 +1009,7 @@ final class EditorState {
             // at all because one of them is already under your eyes.
             let gained = multiSelectedLayerIDs.subtracting(oldValue)
             if !gained.isEmpty { revealInLayersList(gained) }
-            if !multiSelectedLayerIDs.isEmpty { letGoOfTimelinePicks() }
+            if !multiSelectedLayerIDs.isEmpty { letGoOfTimelinePicks(keepingRange: true) }
             if !multiSelectedLayerIDs.isEmpty, !selectedTrackIDs.isEmpty { selectedTrackIDs = [] }
             if !multiSelectedLayerIDs.isEmpty, selectedLibraryItemID != nil { selectedLibraryItemID = nil }
             // A half-typed style name belongs to the layers that were picked
@@ -1862,8 +1864,9 @@ final class EditorState {
     /// A marker being dragged along the ruler while the hand is down, which
     /// the ruler draws where it would land; moved there on letting go.
     var rulerMarkerDraft: RulerMarkerDraft?
-    /// The range last drawn on the ruler, which is the thing in hand for as
-    /// long as the marks stay on it and nothing else is picked.
+    /// The range last drawn on the ruler, which is in hand for as long as the
+    /// marks stay on it; a clip picked under it is picked as well
+    /// (`EditorState+RangeSection`).
     var rulerRangeInHand: Range<Int>?
     /// Which window a range of time was copied in, so ⌘V lays it back in
     /// only where the pictures and recordings it reads are

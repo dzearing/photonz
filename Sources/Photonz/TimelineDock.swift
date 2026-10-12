@@ -563,10 +563,12 @@ struct TimelineDock: View {
     }
 
     /// A range drawn on the ruler washed down through the tracks while it is
-    /// the thing in hand, so it reads as a stretch of every track. Marks set
-    /// with I and O stay on the ruler alone, as in Premiere.
+    /// in hand, so it reads as a stretch of every track. It stays over the
+    /// clips when one is picked under it, since the range then acts on that
+    /// pick (`EditorState+RangeSection`). Marks set with I and O stay on the
+    /// ruler alone, as in Premiere.
     @ViewBuilder private func rangeWash(laneWidth: CGFloat) -> some View {
-        if let range = editorState.rulerRangeDraft ?? editorState.rulerRangeHeld {
+        if let range = editorState.rulerRangeDraft ?? editorState.rulerRangeKept {
             let ruler = editorState.motionStripRuler
             let x0 = laneWidth * ruler.fraction(ofMS: Double(range.lowerBound))
             let x1 = laneWidth * ruler.fraction(ofMS: Double(range.upperBound))
@@ -1331,7 +1333,7 @@ struct TimelineLaneBoxView: View {
                 } else {
                     marquee(box)
                 }
-            } else if let held = editorState.trackRangeHeld {
+            } else if let held = editorState.trackRangeKept {
                 band(held.range, tracks: Array(held.trackIDs))
                     .panelReadout("track range \(held.range.lowerBound)ms to \(held.range.upperBound)ms on "
                                   + "\(held.trackIDs.count) tracks")

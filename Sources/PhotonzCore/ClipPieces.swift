@@ -742,6 +742,17 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         return true
     }
 
+    /// The piece at `index` turned into its own first frame, held for as long
+    /// as it played, arriving at its cut the way it did (`RangeSection.swift`).
+    /// Refused for a piece that is already a hold.
+    @discardableResult
+    public mutating func freeze(ofPiece index: Int) -> Bool {
+        guard let piece = piece(at: index), !piece.isHeld else { return false }
+        pieces[index] = ClipPiece(sourceInMS: piece.sourceInMS, lengthMS: piece.lengthMS, speedPercent: 0,
+                                  transitionIn: piece.transitionIn)
+        return true
+    }
+
     /// What is on the cut a piece arrives at, written down
     /// (`ClipTransitions.swift`). Everything that decides WHETHER it may be
     /// written is `setTransition(_:atCut:)`; this is only the writing.
@@ -897,7 +908,7 @@ extension PhotonzDocument {
     /// One edit to one clip's pieces: read them, change them, write them back
     /// with the layer's stretch kept in step. Nothing is written when the edit
     /// refuses, so a refused cut is not an undo step that does nothing.
-    private mutating func editClip(_ id: UUID,
+    mutating func editClip(_ id: UUID,
                                    _ edit: (inout ClipPieces, LayerTime) -> Bool) -> Bool {
         guard let layer = layer(id: id), let time = layer.time,
               var pieces = layer.clipPieces else { return false }

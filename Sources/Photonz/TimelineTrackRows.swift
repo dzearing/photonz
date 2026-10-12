@@ -753,6 +753,13 @@ struct TimelineTrackMenu: View {
             MenuRowsView(rows: editorState.timelineGapMenuRows(gap))
             Divider()
         }
+        // A range over this track with things picked under it: what it does
+        // to them leads (`EditorState+RangeSection`).
+        if editorState.rangeSection != nil,
+           editorState.rangeKept?.trackIDs.map({ $0.contains(track.id) }) ?? true {
+            MenuRowsView(rows: editorState.rangeSectionMenuRows())
+            Divider()
+        }
         // A range on this track, or pieces a box picked: what they act on
         // leads (`EditorState+TrackRange`).
         if editorState.trackRangeHeld?.trackIDs.contains(track.id) == true

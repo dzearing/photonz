@@ -95,6 +95,11 @@ extension PhotonzDocument {
                 clip.setClipPieces(left)
                 // One that started inside the stretch starts at the join.
                 clip.time = clip.time?.moved(toInMS: min(time.inMS, from))
+                // Its level line loses the same stretch (`RangeSection.swift`).
+                if var level = clip.soundLevel {
+                    level.removeStretch(fromMS: from - time.inMS, toMS: end - time.inMS)
+                    clip.setSoundLevel(level)
+                }
             }
             cut.insert(layer.id)
         }
@@ -242,6 +247,13 @@ extension PhotonzDocument {
             updateLayer(id: id) { clip in
                 clip.setClipPieces(pieces)
                 clip.time = clip.time?.moved(toInMS: keepFrom)
+                // A clip that lost its start loses the start of its level
+                // line with it, so what is left of the line is still over
+                // what is left of the sound (`RangeSection.swift`).
+                if keepFrom > time.inMS, var level = clip.soundLevel {
+                    level.removeStretch(fromMS: 0, toMS: keepFrom - time.inMS)
+                    clip.setSoundLevel(level)
+                }
             }
             return true
         }

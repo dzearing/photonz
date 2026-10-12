@@ -122,6 +122,9 @@ extension EditorState {
         case .clearOut:
             clearMarkOut()
         case .clearMarks:
+            // A range on some tracks goes first, before whatever is picked
+            // under it (`EditorState+RangeSection`).
+            if !isWatching, !isHoldingATimelineDrag, trackRangeInHand != nil { return letGoOfRangeKept() }
             // Nothing marked, or the tracks out of sight in View: Escape
             // carries on to the canvas, which lets go of a pick.
             guard canClearMarkInOut, !isWatching, !isHoldingATimelineDrag else { return false }
@@ -309,6 +312,9 @@ extension EditorState {
             return true
         }
         if canDeletePickedKeys { return deletePickedKeys() }
+        // A clip picked under a range: its part of the range goes, not the
+        // clip (`EditorState+RangeSection`).
+        if deleteRangeSection() { return true }
         // Tracks picked on their headers, with nothing else picked: they go,
         // and everything on them (`EditorState+Tracks`).
         if !tracksInHand.isEmpty {

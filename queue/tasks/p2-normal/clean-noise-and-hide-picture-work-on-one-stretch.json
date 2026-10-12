@@ -1,0 +1,28 @@
+{
+  "id": "clean-noise-and-hide-picture-work-on-one-stretch",
+  "title": "Clean Noise and Hide Picture work on one stretch of a clip",
+  "goal": "With a range held over a picked clip, the right-click offers Mute Section, Speed for Section and the rest, but not Clean Noise in Section for a sound or Hide Picture for Section for a recording, because the app can only clean a whole sound and only show or hide a whole picture. Make both possible for just the stretch inside the range.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 4010,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T18:05:22.679Z",
+  "updated": "2026-10-12T18:05:22.682Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "The table is SectionOperation in Sources/PhotonzCore/RangeSection.swift; both rows exist with isAvailable == false, so turning them on is: a document edit in RangeSection.swift (tested), the row's action in Sources/Photonz/EditorState+RangeSection.swift sectionRow/canDo, and isAvailable true. Clean Noise today is AudioLevel.noiseReduction for the whole layer (NoiseCleaning.swift); a section version could split the clip at the range edges into its own layer, or carry per-stretch reduction. Hide Picture has no per-stretch model at all.",
+  "acceptance": [
+    "Clean Noise in Section is offered for a sound picked under a range and cleans the sound inside the range only, as one step to undo",
+    "Hide Picture for Section is offered for a recording picked under a range and blanks its picture inside the range only, keeping its sound, as one step to undo",
+    "Both appear in Sequence > Picked in Range, lit when they apply",
+    "A walk proves each one inside and outside the range"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T18:05:22.681Z",
+      "note": "created (manual)"
+    }
+  ]
+}

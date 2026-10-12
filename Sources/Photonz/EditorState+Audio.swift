@@ -387,7 +387,7 @@ extension EditorState {
 
     /// A sound's shape as Normalize measures it: a cleaned sound's own,
     /// made first if it has to be, never the stand-in the lane draws.
-    private func measuredShape(of played: SoundRef) async -> Waveform? {
+    func measuredShape(of played: SoundRef) async -> Waveform? {
         guard played.cleaning != nil else { return await soundShape(of: played) }
         if await SoundLibrary.shared.readyURL(for: played) != nil,
            let exact = SoundLibrary.shared.exactWaveform(for: played) {

@@ -1,0 +1,108 @@
+{
+  "out": "/tmp/photonz-playtest/picked-in-range-menu-bar-walk",
+  "seed": "At Next defaults, no flag set: what a range does to a clip picked under it is in the menu bar too, under Sequence > Picked in Range, every row from the same table as the right click, lit only when a range and a pick it fits are in hand. The Clip menu's Delete reads Delete Section then, on its own key. The window is in front for the whole walk, since a menu bar belongs to the app in front.",
+  "setup": {
+    "front": true,
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 10.0
+    },
+    {
+      "do": "menus",
+      "stage": "1-sequence-menu-with-nothing-picked",
+      "menu": "Sequence"
+    },
+    {
+      "do": "dragRuler",
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        660,
+        938
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Sample Music"
+      ],
+      "rangeOn": [
+        "every track"
+      ],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "menus",
+      "stage": "2-clip-menu-says-delete-section",
+      "menu": "Clip"
+    },
+    {
+      "do": "menus",
+      "stage": "3-sequence-menu-with-the-music-picked-in-a-range",
+      "menu": "Sequence",
+      "choose": "Sequence > Picked in Range > Mute Section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "silentAt": [
+        4.5
+      ],
+      "fullAt": [
+        2.0,
+        8.0
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-muted-from-the-menu-bar",
+      "note": "Sequence > Picked in Range > Mute Section silences the music between 0:03 and 0:06, the same edit as the right click"
+    }
+  ]
+}

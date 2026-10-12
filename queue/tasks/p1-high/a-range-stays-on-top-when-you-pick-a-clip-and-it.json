@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 12,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:33:27.599Z",
-  "updated": "2026-10-12T14:33:27.703Z",
+  "updated": "2026-10-12T18:06:45.274Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"when i select a range, and then click on timeline boxes like an audio clip, I want the item to be selected, but the range to still be on top. Then I can for example, right click on the selected range and 'mute' a section. This should apply to whatever range operations we have for different types of things selected, but right now I find it confusing to use because it goes into the background whenever i select something.\"\n\nFrom code reading (not run): today a range and a pick are exclusive by design. EditorState+TrackRange.swift pickTrackRange (:444-452) lets go of the picked layers ('the way a Final Cut range replaces the clips'); trackRangeHeld (:463-468) only counts while selectedLayerID is nil and nothing else is picked, so clicking a clip effectively drops the range from being in hand; rulerRangeInHand is separate (EditorState+RulerRange.swift, menu rows :297+). The user wants the Premiere model (In/Out persists, the selection is separate, range operations apply to the selected clips within In/Out). There is no Mute Section today (no 'Mute' range op found; track mute exists at TimelineTrackRows.swift:370). Sound gain lives in the sound model (AudioMix ramps); a section mute is two ramps and a floor.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-10-12T14:33:27.702Z",
       "note": "seq 3960 -> 12"
+    },
+    {
+      "t": "2026-10-12T16:53:33.598Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T16:57:23.680Z",
+      "note": "Reproduced at Next defaults (walk /tmp/rangerepro/repro.json, sample recording + sample music): (1) ruler range 0:03-0:06 drawn, then Sample Music clicked: In/Out stay 3000/6000 but the wash down the tracks vanishes, only the ruler band is left (2-ruler-range-then-clip-sc.png); right-click on the music inside the range offers the plain clip menu (Split at Playhead ... Delete, Ripple Delete), no range rows. (2) Option-drag range on Audio 2 0:03-0:06, then the clip clicked: expectTimelinePick says 'picked Sample Music', rangeOn [] - the range is dropped outright. Cause: selectedLayerID didSet calls letGoOfTimelinePicks (clears trackRangeInHand) and rulerRangeHeld/trackRangeHeld are nil whenever anything is picked."
+    },
+    {
+      "t": "2026-10-12T18:06:45.010Z",
+      "note": "owns these walks: a-range-stays-on-top-of-a-pick-walk, picked-in-range-menu-bar-walk"
+    },
+    {
+      "t": "2026-10-12T18:06:45.076Z",
+      "note": "Review before building: a Premiere editor expects In/Out to persist while clips are selected and Lift/Extract or effects to act on the selected clips within In/Out; the app drew a ruler range only while nothing was picked and dropped a track range on any clip click. Risks weighed: (a) Delete with a range and a picked clip: chose Delete Section (range on top, matching Escape order) but only when the pick overlaps the range and nothing smaller (zoom, keys, cut) was picked on top, else the old pick behaviour; (b) a box pick still replaces a range (a new pick of time), a click on empty track space still lets a track range go; (c) marks set with I and O stay marks, not a range in hand, as before. No mock covers this surface."
+    },
+    {
+      "t": "2026-10-12T18:06:45.142Z",
+      "note": "Built: core table SectionOperation + section edits (Sources/PhotonzCore/RangeSection.swift, 31 tests in RangeSectionTests); app layer EditorState+RangeSection.swift (rangeKept / rangeSection / sectionTakesTheDelete, rows, edits as one undo step each); selection no longer drops trackRangeInHand (letGoOfTimelinePicks(keepingRange:)); wash and band draw rulerRangeKept / trackRangeKept; clip, ruler and lane right-clicks lead with the section rows (ruler: whole-range rows move to an All Tracks submenu); Delete/Ripple Delete route to the section (key path, Clip menu rows titled Delete Section / Ripple Delete Section, clip menu's own Delete loses its key hint then); Escape clears a track range before the pick (ruler range already did); Sequence > Picked in Range in the menu bar. Harness: expectLevel silentAt/fullAt read the mix; expectTimelinePick reports a kept ruler range as 'every track'."
+    },
+    {
+      "t": "2026-10-12T18:06:45.207Z",
+      "note": "Found and fixed on the way (reproduced first, tests failed without the fix): Lift and Extract left a sound's level points where they were while the sound moved, so after Delete Section the music's second half went silent at 0:13 (picture in /tmp/photonz-playtest run before the fix). AudioLevel.removeStretch now carries the line in MarkedStretch keep() and extractStretch; tests LevelFollowsATakenStretchTests."
+    },
+    {
+      "t": "2026-10-12T18:06:45.273Z",
+      "note": "Review after building (real app, probe): range, pick and wash read together; Mute Section measured silent at 3.2/4.5/5.8s and full at 1.5/8/12s; Normalize Section raised the sample music's 3-6s by +2.7 dB to -1 dBFS; Lower Volume -12 dB landed at -9.3 dB on top of it. Rough items: Clean Noise / Hide Picture for a stretch -> filed clean-noise-and-hide-picture-work-on-one-stretch; right-click on a sound's level line opens nothing (pre-existing, reproduced) -> filed a-right-click-on-a-sound-s-level-line-opens-the; Freeze Frame Here renamed Freeze Frame for Section, Normalize Section capped at +6 dB, Lower Volume as a 4-step submenu, section rows lead a picked clip's menu even outside the range, I/O marks not a range in hand -> left rough here (judgement calls the user can react to on the audit, none broken)."
     }
+  ],
+  "started": "2026-10-12T16:53:33.594Z",
+  "walks": [
+    "a-range-stays-on-top-of-a-pick-walk",
+    "picked-in-range-menu-bar-walk"
   ]
 }

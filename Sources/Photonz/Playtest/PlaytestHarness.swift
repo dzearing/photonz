@@ -2804,9 +2804,9 @@ private final class Run {
             note(number, step.name, try await checkWaveform(clip: clip, within: within),
                  state: describe())
 
-        case .expectLevel(let clip, let points, let dipsBelowDB, let flat):
-            note(number, step.name, try checkLevel(clip: clip, points: points,
-                                                   dipsBelowDB: dipsBelowDB, flat: flat),
+        case .expectLevel(let clip, let points, let dipsBelowDB, let flat, let silentAt, let fullAt):
+            note(number, step.name, try checkLevel(clip: clip, points: points, dipsBelowDB: dipsBelowDB, flat: flat,
+                                                   silentAt: silentAt, fullAt: fullAt),
                  state: describe())
 
         case .expectClipPictures(let clip, let absent, let within):
@@ -8758,7 +8758,8 @@ private final class Run {
     /// Where a clip's level line has been left, read out of the document: the
     /// points it carries and how loud each is, in decibels of its own shape
     /// (the fader is the Volume row's business, not the line's).
-    private func checkLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?) throws -> String {
+    private func checkLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?,
+                            silentAt: [Double] = [], fullAt: [Double] = []) throws -> String {
         let editor = try requireEditor()
         guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
             throw Failure(description: "there is no clip called \(clip) in the document")
@@ -8787,11 +8788,38 @@ private final class Run {
             let isFlat = Set(line.map(\.gain)).count <= 1
             if isFlat != flat { wrong.append(flat ? "it is not flat" : "it is flat") }
         }
+        // What is HEARD, out of the mix the player and the export both play:
+        // every layer of that name, since a Delete Section leaves a sound in
+        // two (`RangeSection.swift`).
+        var heard: [String] = []
+        if !silentAt.isEmpty || !fullAt.isEmpty, let document = editor.document {
+            let ids = Set(document.flattenedLayers.filter { $0.name == clip }.map(\.id))
+            let fader = layer.soundLevel?.gain ?? AudioLevel.unityGain
+            func level(_ seconds: Double) -> Double {
+                let ms = Int((seconds * 1000).rounded())
+                return document.audioMix(atMS: ms).filter { ids.contains($0.layerID) }
+                    .map { $0.gain(atMS: ms) }.max() ?? 0
+            }
+            for seconds in silentAt {
+                let gain = level(seconds)
+                heard.append(String(format: "%.2fs ", seconds) + said(gain))
+                if gain > 0 { wrong.append(String(format: "at %.2fs it is heard at %@, not silence", seconds, said(gain))) }
+            }
+            for seconds in fullAt {
+                let gain = level(seconds)
+                heard.append(String(format: "%.2fs ", seconds) + said(gain))
+                if abs(gain - fader) > 0.001 {
+                    wrong.append(String(format: "at %.2fs it is heard at %@, not its full %@", seconds,
+                                        said(gain), said(fader)))
+                }
+            }
+        }
+        let measured = heard.isEmpty ? "" : "; heard " + heard.joined(separator: ", ")
         guard wrong.isEmpty else {
             throw Failure(description: "\(clip)'s level line is not where the walk said: "
-                + wrong.joined(separator: "; ") + " (\(reading))")
+                + wrong.joined(separator: "; ") + " (\(reading)\(measured))")
         }
-        return "\(clip)'s level line is where the walk said: \(reading)"
+        return "\(clip)'s level line is where the walk said: \(reading)\(measured)"
     }
 
     private func checkWaveform(clip: String, within: Double) async throws -> String {
@@ -16884,7 +16912,10 @@ private final class Run {
             let track = document.track(id: gap.trackID)?.name ?? "?"
             return (clips + ["Gap on \(track)"], [], gap.range)
         }
-        guard let held = editor.trackRangeHeld else { return (clips, [], nil) }
+        // A range stays in hand under a pick (`EditorState+RangeSection`):
+        // one drawn on the ruler is over every track.
+        if let range = editor.rulerRangeKept { return (clips, ["every track"], range) }
+        guard let held = editor.trackRangeKept else { return (clips, [], nil) }
         let rangeOn = document.timelineTracks.filter { held.trackIDs.contains($0.id) }.map(\.name)
         return (clips, rangeOn, held.range)
     }

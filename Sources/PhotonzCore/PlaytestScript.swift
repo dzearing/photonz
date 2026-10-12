@@ -3666,7 +3666,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// (`flat`, which is what an undone dip must be). It reads the document,
     /// not the bar, because a drag posted to the window that reached nothing
     /// leaves a picture much like one that did.
-    case expectLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?)
+    ///
+    /// `silentAt` and `fullAt` are moments of the document, in seconds, where
+    /// the clip must be heard in silence, or at the level its fader alone
+    /// gives: read out of the mix the player and the export both play
+    /// (`audioMix`), so it is what is heard, not what the line looks like.
+    case expectLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?,
+                     silentAt: [Double] = [], fullAt: [Double] = [])
     /// CLAIMS that the clip named `clip` shows pictures of what is in it along
     /// its bar on the timeline, every picture on screen read and the strip in
     /// full, waiting up to `within` seconds (three unless said otherwise) for
@@ -5003,9 +5009,15 @@ public enum PlaytestStep: Sendable, Equatable {
             let points = try f.optionalNumber("points")
             let dipsBelowDB = try f.optionalNumber("dipsBelowDB")
             let flat = try f.optionalFlag("flat")
-            guard points != nil || dipsBelowDB != nil || flat != nil else {
+            let silentAt = try f.optionalNumbers("silentAt")
+            let fullAt = try f.optionalNumbers("fullAt")
+            guard points != nil || dipsBelowDB != nil || flat != nil || !silentAt.isEmpty || !fullAt.isEmpty else {
                 throw f.invalid("points", "expectLevel has to claim something: "
-                    + "a number of \"points\", a \"dipsBelowDB\" or \"flat\"")
+                    + "a number of \"points\", a \"dipsBelowDB\", \"flat\", \"silentAt\" or \"fullAt\"")
+            }
+            if let both = silentAt.first(where: { fullAt.contains($0) }) {
+                throw f.invalid("silentAt", "a clip cannot be heard both in silence and at its full level "
+                    + "at \(both)s, so no level could ever pass")
             }
             if let points, points < 0 || points != points.rounded() {
                 throw f.invalid("points", "a number of points is a whole number, zero or more, not \(points)")
@@ -5014,7 +5026,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("flat", "a flat line cannot also dip, so no level could ever pass")
             }
             self = .expectLevel(clip: try f.string("clip"), points: points.map { Int($0) },
-                                dipsBelowDB: dipsBelowDB, flat: flat)
+                                dipsBelowDB: dipsBelowDB, flat: flat, silentAt: silentAt, fullAt: fullAt)
         case "expectClipPictures":
             let within = try f.optionalNumber("within") ?? 3
             guard within >= 0 else {

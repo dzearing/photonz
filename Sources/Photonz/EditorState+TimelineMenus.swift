@@ -92,6 +92,11 @@ extension EditorState {
         if pieces.count > 1, isPiecePickedByBox(layerID: layerID, index: index) {
             rows += trackThingMenuRows() + [.separator]
         }
+        // Picked under a range in hand: what the range does to it leads
+        // (`EditorState+RangeSection`).
+        if rangeSection?.ids.contains(layerID) == true {
+            rows += rangeSectionMenuRows() + [.separator]
+        }
         let piece = pieces.piece(at: index)
         let underPlayhead = time.contains(ms: documentTimeMS)
         // A video leads with its picture and keeps its sound one submenu
@@ -224,10 +229,13 @@ extension EditorState {
         }
         rows.append(.separator)
         let onePiece = pieces.count <= 1
-        rows.append(.command("Delete", TimelineMenuKeys.delete, destructive: true) {
+        // Under a range ⌫ and ⇧⌫ take the section, and its rows above say so;
+        // the whole clip's rows stay, without a key that does something else.
+        let keys = !sectionTakesTheDelete
+        rows.append(.command("Delete", keys ? TimelineMenuKeys.delete : nil, destructive: true) {
             self.deleteFromTimeline(layerID: layerID, piece: onePiece ? nil : index)
         })
-        rows.append(.command("Ripple Delete", TimelineMenuKeys.rippleDelete, destructive: true) {
+        rows.append(.command("Ripple Delete", keys ? TimelineMenuKeys.rippleDelete : nil, destructive: true) {
             self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
         })
         return rows
@@ -355,6 +363,7 @@ extension EditorState {
         if rulerRangeHeld != nil { return canTakeOutMarkedStretch }
         if trackRangeHeld != nil || timelinePicksHeld != nil { return canTakeOutTrackThing }
         if timelineGapHeld != nil { return canCloseGapInHand }
+        if sectionTakesTheDelete { return true }
         guard documentHasTime, let id = selectedLayerID, document?.layer(id: id)?.time != nil else { return false }
         return !isClipLocked(id)
     }
@@ -374,6 +383,9 @@ extension EditorState {
             closeGapInHand()
             return
         }
+        // A clip picked under a range: its part of the range comes out and
+        // the gap closes on its track (`EditorState+RangeSection`).
+        if rippleDeleteRangeSection() { return }
         guard canRippleDeleteInHand, let id = selectedLayerID else { return }
         let count = document?.layer(id: id)?.clipPieces?.count ?? 1
         rippleDelete(layerID: id, piece: count > 1 ? selectedClipPieceIndex : nil)
@@ -550,7 +562,14 @@ extension EditorState {
         // A click on the stretch is about the stretch: what a range acts on
         // leads (`EditorState+RulerRange`), Delete and Ripple Delete being
         // Lift and Extract by the names a range is deleted by.
-        if onTheStretch { rows += rulerRangeMenuRows() + [.separator] }
+        // With things picked under the range, what it does to them leads,
+        // and what it does to every track is one row further in
+        // (`EditorState+RangeSection`).
+        if onTheStretch, rulerRangeKept != nil, rangeSection != nil {
+            rows += rangeSectionMenuRows() + [.submenu("All Tracks", rulerRangeMenuRows()), .separator]
+        } else if onTheStretch {
+            rows += rulerRangeMenuRows() + [.separator]
+        }
         if let markerHere {
             rows.append(.command("Remove Marker") { self.removeMarker(markerHere) })
         } else {

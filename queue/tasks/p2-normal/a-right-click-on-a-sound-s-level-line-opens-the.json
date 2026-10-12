@@ -1,0 +1,27 @@
+{
+  "id": "a-right-click-on-a-sound-s-level-line-opens-the",
+  "title": "A right click on a sound's level line opens the sound's menu",
+  "goal": "Right-clicking the middle of a sound clip on the timeline, where its volume line runs, opens nothing at all; a right-click a little lower on the same clip opens its menu. A right-click anywhere on a clip should open that clip's menu, the line included.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 4000,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T18:05:16.249Z",
+  "updated": "2026-10-12T18:05:16.252Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-12 by the runner on a-range-stays-on-top-when-you-pick-a-clip-and-it. Walk /tmp/rangerepro/line.json: sample recording, soundAddSample (Sample Music on Audio 2, 0-14s, probe window 1728x990), then {\"do\":\"rightClick\",\"at\":[935,924],\"space\":\"window\"} -> 'right clicking \"the picture at (935, 924)\" raises no menu: nothing under that point offers one'. y=924 is the level line; {\"rightClick\",\"at\":[1000,938]} on the same clip opens the 16-row clip menu. {\"rightClick\",\"on\":\"Sample Music clip\"} (the clip's middle) also raises no menu. Likely the level-line overlay in ClipPiecesBar takes the hit without a .contextMenu.",
+  "acceptance": [
+    "A right-click with the pointer on a sound clip's level line, between its points, opens the same menu as a right-click elsewhere on the clip",
+    "A right-click on a level point still opens that clip's menu (or a point menu, if one exists), never nothing",
+    "A walk right-clicks the level line of the sample music by window point and chooses a row from the menu"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T18:05:16.251Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -1,0 +1,322 @@
+{
+  "out": "/tmp/photonz-playtest/a-range-stays-on-top-of-a-pick-walk",
+  "seed": "At Next defaults, no flag set: the sample recording on V1 and the sample music under it on its own track. A range drawn on the ruler from 0:03 to 0:06 stays in hand when the music is clicked: the wash stays over the clips, the music is picked as well, and a right click on the music inside the range leads with what the range does to it. Mute Section silences the music between 0:03 and 0:06 and nowhere else, measured in the mix, as one step to undo. The same goes for an Option-drag range on the music's track alone: a click on the music keeps it, Delete takes the music's part of it and leaves the gap, and Escape lets the range go before the pick.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 10.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "track": "Audio 2",
+      "startsAt": 0.0,
+      "endsAt": 14.0
+    },
+    {
+      "do": "dragRuler",
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [],
+      "rangeOn": [
+        "every track"
+      ],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-ruler-range",
+      "note": "a range drawn on the ruler from 0:03 to 0:06: the green band on the ruler and its wash down every track, nothing picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-ruler-range"
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        660,
+        938
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Sample Music"
+      ],
+      "rangeOn": [
+        "every track"
+      ],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "expectTimeline",
+      "markInMS": 3000,
+      "markOutMS": 6000,
+      "withinMS": 40
+    },
+    {
+      "do": "describe",
+      "stage": "2-music-picked-under-the-range",
+      "note": "a click with the pointer on the music inside the range: the music is picked (its blue ring) and the range is still in hand, its wash still drawn over the clips, not behind them"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-music-picked-under-the-range"
+    },
+    {
+      "do": "rightClick",
+      "at": [
+        700,
+        938
+      ],
+      "space": "window",
+      "shot": "3-range-menu-on-the-music",
+      "choose": "Mute Section",
+      "keys": {
+        "Delete Section": "⌫",
+        "Ripple Delete Section": "⇧⌫",
+        "Clear Range": "⌥X"
+      }
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 4,
+      "silentAt": [
+        3.2,
+        4.5,
+        5.8
+      ],
+      "fullAt": [
+        1.5,
+        8.0,
+        12.0
+      ]
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Sample Music"
+      ],
+      "rangeOn": [
+        "every track"
+      ],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-music-muted-in-the-range",
+      "note": "Mute Section from the right click on the music inside the range: its level line drops to the floor from 0:03 to 0:06 with a short ramp at each side, the music is silent in the mix at 0:03.2, 0:04.5 and 0:05.8 and at its full level at 0:01.5, 0:08 and 0:12; the range and the pick are both still in hand"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-music-muted-in-the-range"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 0,
+      "fullAt": [
+        4.5
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5-one-undo",
+      "note": "one Undo takes the whole mute back: no points on the line, the music at its full level at 0:04.5"
+    },
+    {
+      "do": "action",
+      "action": "redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "silentAt": [
+        4.5
+      ]
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimeline",
+      "hasIn": false,
+      "hasOut": false
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Sample Music"
+      ],
+      "rangeOn": []
+    },
+    {
+      "do": "describe",
+      "stage": "6-escape-lets-the-range-go-first",
+      "note": "Escape lets the range go and leaves the music picked; a second Escape would let go of the music"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Audio 2",
+      "from": 8.0,
+      "to": 10.0,
+      "option": true
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [],
+      "rangeOn": [
+        "Audio 2"
+      ],
+      "from": 8.0,
+      "to": 10.0
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1250,
+        938
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Sample Music"
+      ],
+      "rangeOn": [
+        "Audio 2"
+      ],
+      "from": 8.0,
+      "to": 10.0
+    },
+    {
+      "do": "describe",
+      "stage": "7-music-picked-under-a-track-range",
+      "note": "an Option-drag on Audio 2 from 0:08 to 0:10, then a click on the music inside it: the band stays over Audio 2 and the music is picked as well"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-music-picked-under-a-track-range"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "silentAt": [
+        9.0
+      ],
+      "fullAt": [
+        7.5,
+        11.0
+      ]
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 1
+    },
+    {
+      "do": "describe",
+      "stage": "8-delete-takes-the-music-s-part",
+      "note": "Delete with the music picked under the range takes the music's part of it and leaves the gap: nothing heard at 0:09, the music still plays at 0:07.5 and 0:11, and the recording above is not cut"
+    },
+    {
+      "do": "snapshot",
+      "name": "8-delete-takes-the-music-s-part"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimelinePick",
+      "rangeOn": []
+    }
+  ]
+}

@@ -728,10 +728,15 @@ struct EditorCommands: Commands {
         let trackRange = trackHeld && editor?.trackRangeHeld != nil
         // ...and a gap a click picked, which ⌫ closes (`EditorState+TimelineGap`).
         let gapHeld = onTimeline && !rangeHeld && !trackHeld && editor?.timelineGapHeld != nil
-        Button(keysPicked ? "Delete Keys" : rangeHeld || trackRange ? "Delete Range"
+        // ...and a clip picked under a range, whose part of the range ⌫
+        // takes (`EditorState+RangeSection`).
+        let sectionHeld = onTimeline && !keysPicked && (editor?.sectionTakesTheDelete ?? false)
+        Button(keysPicked ? "Delete Keys" : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
                : trackHeld ? "Delete Pieces" : gapHeld ? "Delete Gap" : "Delete This Piece") {
             if keysPicked {
                 editor?.deletePickedKeys()
+            } else if sectionHeld {
+                editor?.deleteRangeSection()
             } else if rangeHeld {
                 editor?.liftMarkedStretch()
             } else if trackHeld {
@@ -751,7 +756,7 @@ struct EditorCommands: Commands {
         // for the measurement, including the half that says a text
         // field with the keyboard still keeps the key.
         .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
-        .disabled(!(keysPicked || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
+        .disabled(!(keysPicked || sectionHeld || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
                     || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
                     || (gapHeld && (editor?.canCloseGapInHand ?? false))
                     || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
@@ -768,7 +773,9 @@ struct EditorCommands: Commands {
     // with Foreground in Edit, and one key on two rows lies on one of them.
     @ViewBuilder private var rippleDeleteRow: some View {
         let pro = Experiments.shared.proMenuBarEnabled
-        Button("Ripple Delete") { editor?.rippleDeleteInHand() }
+        Button(editor?.sectionTakesTheDelete == true ? "Ripple Delete Section" : "Ripple Delete") {
+            editor?.rippleDeleteInHand()
+        }
             .keyboardShortcut(pro
                 ? (timelineKeys ? KeyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent),
                                                    modifiers: .shift) : nil)
@@ -1437,6 +1444,13 @@ struct EditorCommands: Commands {
         }
         Button("Export Range…") { editor?.exportRange() }
             .disabled(editor?.document?.markedRangeMS == nil)
+        // What a range does to the clips picked under it, every row from the
+        // one table, lit only where a range and a pick it fits are in hand
+        // (`EditorState+RangeSection`).
+        Menu("Picked in Range") {
+            MenuRowsView(rows: editor?.rangeSectionMenuBarRows() ?? [])
+        }
+        .disabled(editor?.rangeSection == nil)
     }
 
     /// Sequence ▸ Track: everything a track's header offers, on the track in
