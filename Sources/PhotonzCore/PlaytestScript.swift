@@ -2888,6 +2888,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// gap a click picked is the clip "Gap on <track>", and `from` and `to`
     /// are its ends.
     case expectTimelinePick(clips: [String]?, rangeOn: [String]?, from: Double?, to: Double?)
+    /// Where a row's bar is DRAWN on the timeline, by the row's name, and FAIL
+    /// when it is not so: alongside the bar of the row `sameAs`, or from
+    /// `startsAt` to `endsAt` in seconds, give or take `within`. A row with no
+    /// times of its own is drawn across what it is inside, which `expectClip`
+    /// cannot see because it reads the layer's own times.
+    case expectRowSpan(row: String, sameAs: String?, startsAt: Double?, endsAt: Double?, within: Double)
     /// Where a clip on the timeline is, by its name, and FAIL when it is not
     /// so: which track it is on, when it starts and when it ends, in seconds,
     /// give or take `within`. `count` is how many clips are called that,
@@ -4100,7 +4106,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4149,6 +4155,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragTracks: "dragTracks"
         case .boxToEdge: "boxToEdge"
         case .expectTimelinePick: "expectTimelinePick"
+        case .expectRowSpan: "expectRowSpan"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
         case .snapshot: "snapshot"
@@ -4572,6 +4579,16 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectTimelinePick(clips: clips, rangeOn: rangeOn, from: try f.optionalNumber("from"),
                                        to: try f.optionalNumber("to"))
+        case "expectRowSpan":
+            let sameAs = try f.optionalString("sameAs")
+            let startsAt = try f.optionalNumber("startsAt")
+            let endsAt = try f.optionalNumber("endsAt")
+            guard sameAs != nil || startsAt != nil || endsAt != nil else {
+                throw f.invalid("sameAs", "expectRowSpan says which row the bar runs alongside, or where it starts "
+                                + "or ends")
+            }
+            self = .expectRowSpan(row: try f.string("row"), sameAs: sameAs, startsAt: startsAt, endsAt: endsAt,
+                                  within: try f.optionalNumber("within") ?? 0.05)
         case "expectClip":
             let count = try f.optionalNumber("count").map { Int($0) }
             let track = try f.optionalString("track")

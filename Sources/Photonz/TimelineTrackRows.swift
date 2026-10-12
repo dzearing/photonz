@@ -858,11 +858,13 @@ struct TimelineClipView: View {
                               soundTint: VideoKit.Palette.soundTrack(soundNumber))
             }
         } else {
-            // A layer that is there the whole way through: one clip the
-            // length of the document. It has no ends to drag because it has
-            // no times of its own; picking it is all a press does.
-            let x0 = laneWidth * ruler.fraction(ofMS: 0)
-            let x1 = laneWidth * ruler.fraction(ofMS: Double(editorState.documentLengthMS))
+            // A layer with no times of its own: one clip the length of the
+            // document, or of the title it is a part of, since a title's
+            // Background is on screen only while the title is. It has no ends
+            // to drag; picking it is all a press does.
+            let drawn = group.drawnMS(documentLengthMS: editorState.documentLengthMS)
+            let x0 = laneWidth * ruler.fraction(ofMS: Double(drawn.inMS))
+            let x1 = laneWidth * ruler.fraction(ofMS: Double(drawn.outMS))
             VideoKit.ClipBar(title: group.layerName, kind: kind,
                              isSelected: editorState.isLayerSelected(group.layerID)
                                  || editorState.goesWithTracksInHand(group.layerID, asSound: isLinkedSound),
@@ -893,8 +895,9 @@ struct TimelineBlade: View {
 
     var body: some View {
         let ruler = editorState.motionStripRuler
-        let startMS = Double(group.bar?.inMS ?? 0)
-        let endMS = Double(group.bar?.outMS ?? editorState.documentLengthMS)
+        let drawn = group.drawnMS(documentLengthMS: editorState.documentLengthMS)
+        let startMS = Double(drawn.inMS)
+        let endMS = Double(drawn.outMS)
         let x0 = max(0, laneWidth * ruler.fraction(ofMS: startMS))
         let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: endMS))
         Color.clear
@@ -929,8 +932,9 @@ struct TimelineTrackSelect: View {
 
     var body: some View {
         let ruler = editorState.motionStripRuler
-        let startMS = Double(group.bar?.inMS ?? 0)
-        let endMS = Double(group.bar?.outMS ?? editorState.documentLengthMS)
+        let drawn = group.drawnMS(documentLengthMS: editorState.documentLengthMS)
+        let startMS = Double(drawn.inMS)
+        let endMS = Double(drawn.outMS)
         let x0 = max(0, laneWidth * ruler.fraction(ofMS: startMS))
         let x1 = min(laneWidth, laneWidth * ruler.fraction(ofMS: endMS))
         Color.clear

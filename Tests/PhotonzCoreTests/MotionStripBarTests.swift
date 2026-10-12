@@ -79,6 +79,78 @@ struct MotionStripBarTests {
         #expect(doc.motionStrip().map(\.layerName) == ["Piece 3", "Piece 2", "Piece 1"])
     }
 
+    // MARK: - A part inside something placed
+
+    /// A title placed from nought to four seconds, with a Background inside it
+    /// that fades up and has no in or out of its own.
+    static func titleWithABackground() -> (PhotonzDocument, Layer) {
+        var background = shape("Background")
+        background.motions = [LayerMotion(property: .opacity, from: .number(0), to: .number(1),
+                                          timing: MotionTiming(startMS: 0, durationMS: 300))]
+        var title = Layer(name: "Title Page", content: .group(GroupContent(children: [background])),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        title.time = LayerTime(inMS: 0, outMS: 4000)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+        var recording = shape("Recording")
+        recording.time = LayerTime(inMS: 0, outMS: 11_000)
+        doc.layers = [recording, title]
+        return (doc, background)
+    }
+
+    /// The row of a part with no time of its own runs across the title it is
+    /// in, not the whole document: drawn the document's length, it said the
+    /// background is on screen long after the title has gone
+    /// (`a-part-picked-inside-a-title-shows-its-row-only`).
+    @Test func aPartInsideAPlacedTitleIsDrawnAcrossTheTitle() throws {
+        let (doc, background) = Self.titleWithABackground()
+        let row = try #require(doc.motionStrip().first { $0.layerID == background.id })
+        // Still no bar of its own: nothing a hand can trim or slide.
+        #expect(row.bar == nil)
+        #expect(row.span == LayerTime(inMS: 0, outMS: 4000))
+        let drawn = row.drawnMS(documentLengthMS: 11_000)
+        #expect(drawn.inMS == 0)
+        #expect(drawn.outMS == 4000)
+    }
+
+    @Test func thePartsLanesAreWhereTheyWere() throws {
+        var (doc, background) = Self.titleWithABackground()
+        doc.layers[1].time = LayerTime(inMS: 2000, outMS: 6000)
+        let row = try #require(doc.motionStrip().first { $0.layerID == background.id })
+        #expect(row.lanes.first?.timing == MotionTiming(startMS: 2000, durationMS: 300))
+        #expect(row.drawnMS(documentLengthMS: 11_000).inMS == 2000)
+        #expect(row.drawnMS(documentLengthMS: 11_000).outMS == 6000)
+    }
+
+    @Test func aPartTwoGroupsDeepStillRunsAcrossTheTitle() throws {
+        var (doc, background) = Self.titleWithABackground()
+        let inner = Layer(name: "Card", content: .group(GroupContent(children: [background])),
+                          frame: CGRect(x: 0, y: 0, width: 100, height: 100))
+        doc.layers[1].content = .group(GroupContent(children: [inner]))
+        let row = try #require(doc.motionStrip().first { $0.layerID == background.id })
+        #expect(row.span == LayerTime(inMS: 0, outMS: 4000))
+    }
+
+    @Test func aLayerThatIsInsideNothingPlacedRunsTheWholeWay() {
+        var bell = Self.shape("Bell body")
+        bell.motions = [Self.rotation(start: 0, over: 900)]
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+        doc.layers = [bell]
+        let row = doc.motionStrip()[0]
+        #expect(row.span == nil)
+        #expect(row.drawnMS(documentLengthMS: 5000).inMS == 0)
+        #expect(row.drawnMS(documentLengthMS: 5000).outMS == 5000)
+    }
+
+    @Test func aClipIsDrawnAcrossItsOwnStretch() {
+        var clip = Self.shape("Piece 1")
+        clip.time = LayerTime(inMS: 500, outMS: 2500)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
+        doc.layers = [clip]
+        let drawn = doc.motionStrip()[0].drawnMS(documentLengthMS: 5000)
+        #expect(drawn.inMS == 500)
+        #expect(drawn.outMS == 2500)
+    }
+
     // MARK: - What a drag can catch on
 
     @Test func theEndsOfAClipAreSomethingAnotherBarCanLineUpWith() {

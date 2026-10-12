@@ -2257,6 +2257,44 @@ private final class Run {
                  + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))"),
                  state: describe())
 
+        case .expectRowSpan(let row, let sameAs, let startsAt, let endsAt, let within):
+            let editor = try requireEditor()
+            // Every row the timeline is drawing, the parts opened under a
+            // title included, and where each one's bar runs.
+            let length = editor.documentLengthMS
+            let drawn = editor.timelineTrackRows.flatMap { $0.clips + $0.inner }
+            func seconds(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+            func span(_ group: MotionStripGroup) -> (inMS: Int, outMS: Int) { group.drawnMS(documentLengthMS: length) }
+            let said = drawn.map { "\($0.layerName) \(seconds(span($0).inMS)) to \(seconds(span($0).outMS))" }
+                .joined(separator: "; ")
+            func find(_ name: String) throws -> MotionStripGroup {
+                guard let found = drawn.first(where: { $0.layerName.lowercased() == name.lowercased() }) else {
+                    throw Failure(description: "no row called \"\(name)\" is on the timeline; it draws \(said)")
+                }
+                return found
+            }
+            let mine = span(try find(row))
+            var wantIn = startsAt.map { Int(($0 * 1000).rounded()) }
+            var wantOut = endsAt.map { Int(($0 * 1000).rounded()) }
+            if let sameAs {
+                let theirs = span(try find(sameAs))
+                wantIn = wantIn ?? theirs.inMS
+                wantOut = wantOut ?? theirs.outMS
+            }
+            let slack = Int((within * 1000).rounded())
+            var wrong: [String] = []
+            if let wantIn, abs(mine.inMS - wantIn) > slack {
+                wrong.append("starts at \(seconds(mine.inMS)), and the walk expected \(seconds(wantIn))")
+            }
+            if let wantOut, abs(mine.outMS - wantOut) > slack {
+                wrong.append("ends at \(seconds(mine.outMS)), and the walk expected \(seconds(wantOut))")
+            }
+            guard wrong.isEmpty else {
+                throw Failure(description: "\(row)'s row " + wrong.joined(separator: " and ") + "; the timeline draws \(said)")
+            }
+            note(number, step.name, "\(row)'s row runs \(seconds(mine.inMS)) to \(seconds(mine.outMS))"
+                 + (sameAs.map { ", alongside \($0)" } ?? ""), state: describe())
+
         case .expectClip(let named, let track, let startsAt, let endsAt, let count, let pieces, let within):
             note(number, step.name, try checkClip(named: named, track: track, startsAt: startsAt,
                                                   endsAt: endsAt, count: count, pieces: pieces,

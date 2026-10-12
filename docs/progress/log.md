@@ -21252,3 +21252,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Core: `PhotonzDocument.frameRing` (`ClipReframe.swift`), tested by `FrameRingTests`: a ring only when a timed picture has grown past its own box AND spills past the canvas. App: `EditorState.frameRings` -> `CanvasView.frameRings`; `offersOwnHandles` is false for a ringed clip, so presses and cursor cues agree with the chrome.
 - Walk claim `expectPicked … "outline": "frame"` (ring on the frame, no handles); `framing-a-zoom-keys-its-centre-walk` uses it at 0:05 and checks a title over the push.
 - Next: card on handles at 100% (decide-whether-a-picked-recording-at-its-own-siz), the click past the frame that still picks the clip, and the mock's solid ring.
+
+## 2026-10-12 — A part inside a title rows across the title only (Next)
+
+- `MotionStripGroup.span`: a row with no time of its own carries the stretch of the placed thing it is inside; `drawnMS(documentLengthMS:)` is the one rule for where a row's bar is drawn (own bar, else span, else end to end). The timeline's whole-way bar, Blade and Track Select hit areas read it.
+- New walk step `expectRowSpan` claims where a timeline row is drawn; `a-part-in-a-title-rows-across-the-title-walk` uses it at Next defaults.
+- Next: nothing open from this.

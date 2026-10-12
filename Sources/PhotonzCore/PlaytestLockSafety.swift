@@ -201,6 +201,9 @@ public enum PlaytestLockSafety {
         // never a name. The first locked run of marquee-and-track-range-walk
         // is its watch; if it refuses there, take it out.
         "dragTracks", "expectTimelinePick",
+        // Added 2026-10-12, watched only unlocked: it reads where the editor
+        // draws a timeline row's bar, never a name off the screen.
+        "expectRowSpan",
         // Added 2026-10-11 by reading, NOT yet watched under a lock: the same
         // press and drag as dragTracks, held at an edge while the timeline
         // scrolls, reading only the editor. box-scrolls-at-the-edge-walk is

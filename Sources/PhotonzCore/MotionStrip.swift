@@ -113,6 +113,16 @@ public struct MotionStripGroup: Identifiable, Hashable, Sendable {
     /// The stretch of the document's time this layer occupies, nil for a layer
     /// that is simply there the whole way through.
     public var bar: LayerTime?
+    /// For a row with no stretch of its own, the stretch of the placed thing
+    /// it is inside: a title's Background is on screen while the title is, so
+    /// its row runs across the title and stops where the title stops. Nil at
+    /// the top of the stack, where a row with no times is there the whole way.
+    ///
+    /// Kept apart from `bar` on purpose. A bar has ends to drag and pieces to
+    /// cut; this is only where the row is drawn, and dragging it would be
+    /// trimming a part that has no in or out to trim
+    /// (`a-part-picked-inside-a-title-shows-its-row-only`).
+    public var span: LayerTime?
     /// Whether this row's bar carries a SOUND, which is the one thing that
     /// makes a bar taller: a waveform squeezed into eighteen points is a smear,
     /// and a level line with nowhere to go up or down is not draggable
@@ -127,13 +137,21 @@ public struct MotionStripGroup: Identifiable, Hashable, Sendable {
 
     public var id: UUID { layerID }
 
+    /// Where the row's bar is drawn on a document `documentLengthMS` long: its
+    /// own stretch, else the stretch of what it is inside, else end to end.
+    public func drawnMS(documentLengthMS: Int) -> (inMS: Int, outMS: Int) {
+        guard let time = bar ?? span else { return (0, documentLengthMS) }
+        return (time.inMS, time.outMS)
+    }
+
     public init(layerID: UUID, layerName: String, lanes: [MotionStripLane],
-                bar: LayerTime? = nil, isSound: Bool = false,
+                bar: LayerTime? = nil, span: LayerTime? = nil, isSound: Bool = false,
                 trackKind: TimelineTrackKind = .overlay, mark: LayerMark) {
         self.layerID = layerID
         self.layerName = layerName
         self.lanes = lanes
         self.bar = bar
+        self.span = span
         self.isSound = isSound
         self.trackKind = trackKind
         self.mark = mark
@@ -187,14 +205,19 @@ extension PhotonzDocument {
         // strip said the badge moves three seconds before it is on screen,
         // while the canvas played it correctly
         // (`components-on-the-timeline-animated-the-way-ever`).
-        func walk(_ list: [Layer], shiftMS: Int) {
+        // The same goes for WHERE its row runs: a part with no time of its
+        // own is on screen while the thing it is inside is.
+        func walk(_ list: [Layer], shiftMS: Int, inside: LayerTime?) {
             for layer in list.reversed() {
                 let shift = layer.occupiesTime ? layer.motionShiftMS : shiftMS
-                if let group = stripGroup(layer, shiftMS: shift) { groups.append(group) }
-                if layer.isGroup { walk(layer.children, shiftMS: shift) }
+                if var group = stripGroup(layer, shiftMS: shift) {
+                    if group.bar == nil { group.span = inside }
+                    groups.append(group)
+                }
+                if layer.isGroup { walk(layer.children, shiftMS: shift, inside: layer.time ?? inside) }
             }
         }
-        walk(layers, shiftMS: 0)
+        walk(layers, shiftMS: 0, inside: nil)
         return groups
     }
 

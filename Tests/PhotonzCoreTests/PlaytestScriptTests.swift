@@ -3130,6 +3130,31 @@ struct PlaytestScriptTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTimelinePick"))
     }
 
+    @Test("An expectRowSpan step names a timeline row and where its bar runs, or the row it runs alongside")
+    func expectRowSpanParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRowSpan", "row": "Background", "sameAs": "Title Page" },
+                     { "do": "expectRowSpan", "row": "Accent", "startsAt": 0, "endsAt": 4, "within": 0.1 } ] }
+        """)
+        guard case .expectRowSpan(let row, let sameAs, let startsAt, let endsAt, let within) = script.steps[0]
+        else { Issue.record("expectRowSpan"); return }
+        #expect(row == "Background")
+        #expect(sameAs == "Title Page")
+        #expect(startsAt == nil && endsAt == nil)
+        #expect(within == 0.05)
+        guard case .expectRowSpan(_, let other, let start, let end, let slack) = script.steps[1]
+        else { Issue.record("expectRowSpan"); return }
+        #expect(other == nil)
+        #expect(start == 0 && end == 4 && slack == 0.1)
+        #expect(PlaytestStep.names.contains("expectRowSpan"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectRowSpan"))
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectRowSpan", "row": "Background" } ] }
+            """)
+        }
+    }
+
     @Test("A sample can be copied in under a name of the walk's own")
     func sampleCopiesTakeAName() {
         #expect(PlaytestSampleFile.copy("sample:recording")?.fileName == "Tutorial Sample.mp4")

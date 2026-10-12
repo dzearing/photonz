@@ -1,0 +1,39 @@
+{
+ "out": "/tmp/photonz-playtest/a-part-in-a-title-rows-across-the-title-walk",
+ "seed": "A part picked inside a title shows its row across the title only, at Next defaults with no switch touched: a Keynote Clean title page put on a new track over the recording from the empty track's right-click, then its Background picked by double-clicking into the title on the canvas, and the timeline photographed. The Background row's bar starts and ends with the Title Page bar above it, not at the end of the recording.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  { "do": "action", "action": "openSampleRecording" },
+  { "do": "wait", "seconds": 2.0 },
+  { "do": "action", "action": "videoPause" },
+  { "do": "tool", "tool": "select" },
+  { "do": "wait", "seconds": 0.6 },
+  { "do": "key", "key": "home" },
+  { "do": "wait", "seconds": 0.6 },
+  { "do": "rightClick", "on": "Track V1", "choose": "Add Track Above" },
+  { "do": "wait", "seconds": 0.6 },
+  { "do": "rightClick", "on": "Track V2", "choose": "Add Title Page > Keynote Clean" },
+  { "do": "wait", "seconds": 1.2 },
+  { "do": "key", "key": "escape" },
+  { "do": "wait", "seconds": 0.4 },
+  { "do": "key", "key": "escape" },
+  { "do": "wait", "seconds": 0.4 },
+  { "do": "key", "key": "home" },
+  { "do": "wait", "seconds": 0.6 },
+  { "do": "expectClip", "clip": "Title Page", "track": "V2", "startsAt": 0 },
+  { "comment": "A double-click near the frame's corner goes into the title and picks the Background under the pointer, the way a person reaches a part.", "do": "click", "at": [30, 30], "count": 2 },
+  { "do": "wait", "seconds": 0.8 },
+  { "do": "expectRowSpan", "row": "Background", "sameAs": "Title Page" },
+  {
+   "do": "describe",
+   "stage": "part-row",
+   "note": "The title page's Background picked by double-clicking the frame's corner. Its row opens under the Title Page bar on V2, and its bar starts where the title starts and ends where the title ends, a few seconds in, not at the end of the recording. The Opacity lane under it is where it was, a short bar at the start."
+  },
+  { "do": "snapshot", "name": "part-row" }
+ ]
+}

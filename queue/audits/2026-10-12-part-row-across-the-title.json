@@ -1,0 +1,24 @@
+{
+  "feature": "A part picked inside a title shows its row across the title only",
+  "epic": "video-titles-graphics",
+  "summary": "When you pick a piece inside a title (its background, its words), the row that opens for it on the timeline now starts and ends with the title, instead of running to the end of the video.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-part-in-a-title-rows-across-the-title-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording and show the timeline (Cmd 2)." },
+    { "do": "Right-click track V1 and choose Add Track Above." },
+    { "do": "Right-click the new V2 and choose Add Title Page > Keynote Clean, then press Escape twice." },
+    { "do": "Double-click near the corner of the picture to pick the title's Background.", "shot": "2026-10-12-part-row-across-the-title.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the Background row under Title Page: its bar ends where the title ends, at 4s." },
+    { "do": "Drag the Title Page bar along V2 and pick the Background again: its row follows the title." }
+  ],
+  "evaluate": [
+    "Does the Background row now read as part of the title, rather than something on screen for the whole video?",
+    "Is the Opacity lane under it still where you expect, a short bar at the start?",
+    "Would you expect the part's row to be draggable on its own, or is picking it all a click should do?"
+  ],
+  "rough": [
+    "The part's row has no ends to drag, as before: it has no in or out of its own, so it only shows where the part is on screen.",
+    "Matches the timeline mock's rule that a bar runs only while its thing is on screen; no mock frame draws a title's parts opened under it."
+  ]
+}
