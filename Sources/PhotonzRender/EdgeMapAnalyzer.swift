@@ -112,21 +112,34 @@ public enum EdgeMapAnalyzer {
             // The same brightness, kept at one byte per pixel, is what element
             // detection walks along a boundary to find where it ends.
             var bytes = [UInt8](repeating: 0, count: w * h)
+            // And the colour beside it, so a button as bright as its page but
+            // another colour still stands out from it (`LumaField.opponent`).
+            var redGreen = [UInt8](repeating: 128, count: w * h)
+            var yellowBlue = [UInt8](repeating: 128, count: w * h)
             rgba.withUnsafeBufferPointer { src in
                 l.withUnsafeMutableBufferPointer { dst in
                     bytes.withUnsafeMutableBufferPointer { small in
-                        for i in 0..<(w * h) {
-                            let o = i * 4
-                            let value = 0.299 * Double(src[o]) + 0.587 * Double(src[o + 1])
-                                + 0.114 * Double(src[o + 2])
-                            dst[i] = value / 255
-                            small[i] = UInt8(min(max(value.rounded(), 0), 255))
+                        redGreen.withUnsafeMutableBufferPointer { rg in
+                            yellowBlue.withUnsafeMutableBufferPointer { yb in
+                                for i in 0..<(w * h) {
+                                    let o = i * 4
+                                    let value = 0.299 * Double(src[o]) + 0.587 * Double(src[o + 1])
+                                        + 0.114 * Double(src[o + 2])
+                                    dst[i] = value / 255
+                                    small[i] = UInt8(min(max(value.rounded(), 0), 255))
+                                    let colour = LumaField.opponent(r: Int(src[o]), g: Int(src[o + 1]),
+                                                                    b: Int(src[o + 2]))
+                                    rg[i] = colour.redGreen
+                                    yb[i] = colour.yellowBlue
+                                }
+                            }
                         }
                     }
                 }
             }
             luma = l
-            field = LumaField(width: w, height: h, samples: bytes)
+            field = LumaField(width: w, height: h, samples: bytes,
+                              redGreen: redGreen, yellowBlue: yellowBlue)
         }
 
         return Analysis(edges: EdgeMap(width: w, height: h, gxMagnitude: gx,

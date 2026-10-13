@@ -83,7 +83,7 @@ extension CanvasNSView {
            event.modifierFlags.intersection([.command, .option, .control]).isEmpty,
            let characters = event.charactersIgnoringModifiers,
            characters == "[" || characters == "]" {
-            let level = max(0, measureCandidateLevel + (characters == "]" ? 1 : -1))
+            let level = max(-measureLadderBelowStart, measureCandidateLevel + (characters == "]" ? 1 : -1))
             measureCandidateLevel = level
             onCandidateLevelChange(level)
             refreshMeasureCreation(modifierFlags: event.modifierFlags)

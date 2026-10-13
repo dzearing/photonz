@@ -88,10 +88,18 @@ public enum TextLineBounds {
                 let base = y * w
                 for x in stride(from: bx0, through: bx1, by: 2) { histogram[Int(s[base + x])] += 1 }
             }
+            // Votes are pooled over a few levels either way: on a gradient
+            // (a button's fill, top to bottom) no single level is common, and
+            // the white of the letters on it would win outright.
+            var prefix = [Int](repeating: 0, count: 257)
+            for value in 0..<256 { prefix[value + 1] = prefix[value] + histogram[value] }
             var background = 0, votes = -1
-            for value in 0..<256 where histogram[value] > votes {
-                background = value
-                votes = histogram[value]
+            for value in 0..<256 {
+                let pooled = prefix[min(255, value + 3) + 1] - prefix[max(0, value - 3)]
+                if pooled > votes || (pooled == votes && histogram[value] > histogram[background]) {
+                    background = value
+                    votes = pooled
+                }
             }
             @inline(__always) func ink(_ x: Int, _ y: Int) -> Bool {
                 abs(Int(s[y * w + x]) - background) >= threshold

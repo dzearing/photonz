@@ -471,14 +471,16 @@ extension CanvasNSView {
         return box.isNull || box.width <= 0 || box.height <= 0 ? nil : box
     }
 
-    /// What a box snaps to: everything wholly inside it, read off the picture
-    /// (`ShapeBounds.content`). A box drawn four points tight still reaches
-    /// the edge just outside it, and a word it cuts in half is left out whole.
+    /// What a box snaps to, read off the picture (`ObjectBounds.snap`): the
+    /// biggest button, pill or card wholly inside it, past its glow, or the
+    /// group of everything wholly inside it. A box drawn four points tight
+    /// still reaches the edge just outside it, and a word it cuts in half is
+    /// left out whole.
     private func sizeBoxTarget(_ box: CGRect) -> CGRect? {
         let scale = Double(max(1, document?.pixelScale ?? 1))
-        return ShapeBounds.content(in: box, luma: lumaField, slack: 4 * scale,
-                                   link: Double(AlignmentScan.visibleGap) * scale / 2,
-                                   minElement: 4 * scale)
+        return ObjectBounds.snap(box, field: lumaField, slack: 4 * scale,
+                                 link: Double(AlignmentScan.visibleGap) * scale / 2,
+                                 minElement: 4 * scale)
     }
 
     /// Draws the box being dragged (dashed, in the measure ink) and, live,
@@ -594,18 +596,24 @@ extension CanvasNSView {
             // rectangle you made a moment ago is the easiest thing in the
             // document to measure, not something to guess from gradients. The
             // picture reader then carries the ladder on out past it.
-            let ladder = LayerElements.merged(
-                drawn: LayerElements.candidates(at: probe, in: document),
-                picture: ElementBounds.candidates(
-                    at: probe, in: edgeMap, luma: lumaField,
-                    // Ten logical points is the smallest thing worth calling an
-                    // element, whatever the capture's scale; a line of text ends
-                    // at the same visible gap the alignment scan splits items on.
-                    minElement: max(10, 10 * document.pixelScale),
-                    textGap: AlignmentScan.visibleGap * max(1, document.pixelScale),
-                    readsShapes: true))
-            guard let rect = ladder.isEmpty
-                    ? nil : ladder[min(max(measureCandidateLevel, 0), ladder.count - 1)] else {
+            let picture = ElementBounds.ladder(
+                at: probe, in: edgeMap, luma: lumaField,
+                // Ten logical points is the smallest thing worth calling an
+                // element, whatever the capture's scale; a line of text ends
+                // at the same visible gap the alignment scan splits items on.
+                minElement: max(10, 10 * document.pixelScale),
+                textGap: AlignmentScan.visibleGap * max(1, document.pixelScale),
+                readsShapes: true)
+            let drawn = LayerElements.candidates(at: probe, in: document)
+            // A button's label sits one `[` below the button the ladder starts
+            // on. A shape you drew under the pointer comes first and exactly,
+            // and the picture's ladder carries on out past it from its start.
+            let ladder = drawn.isEmpty
+                ? picture
+                : ElementBounds.Ladder(rungs: LayerElements.merged(
+                    drawn: drawn, picture: Array(picture.rungs.dropFirst(picture.start))))
+            measureLadderBelowStart = ladder.start
+            guard let rect = ladder.rung(measureCandidateLevel) else {
                 hideMeasureHoverReadout()
                 return
             }

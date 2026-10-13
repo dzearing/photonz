@@ -20,19 +20,50 @@ public struct LumaField: Equatable, Sendable {
     /// Perceptual luma, 0 (black) … 255 (white), `samples[y * width + x]`.
     public let samples: [UInt8]
 
+    /// The two colour-opponent channels beside the luma, one byte each, 128
+    /// for grey (`opponent(r:g:b:)`). A red button as bright as the grey page
+    /// it sits on is invisible in `samples` and plain here, which is what
+    /// lets Size mode read it (`ObjectBounds`). Empty for a field built from
+    /// brightness alone, and every reader then falls back to brightness.
+    public let redGreen: [UInt8]
+    public let yellowBlue: [UInt8]
+
+    /// Whether the field carries colour as well as brightness.
+    public var hasColour: Bool { !redGreen.isEmpty }
+
     /// Mis-sized input yields the empty field rather than trapping — the same
     /// forgiving contract `EdgeMap` has, since both are built from image data
-    /// that can fail to decode.
-    public init(width: Int, height: Int, samples: [UInt8]) {
+    /// that can fail to decode. Colour planes of the wrong size are dropped and
+    /// the field reads by brightness alone.
+    public init(width: Int, height: Int, samples: [UInt8],
+                redGreen: [UInt8] = [], yellowBlue: [UInt8] = []) {
         guard width > 0, height > 0, samples.count == width * height else {
             self.width = 0
             self.height = 0
             self.samples = []
+            self.redGreen = []
+            self.yellowBlue = []
             return
         }
         self.width = width
         self.height = height
         self.samples = samples
+        let sized = redGreen.count == samples.count && yellowBlue.count == samples.count
+        self.redGreen = sized ? redGreen : []
+        self.yellowBlue = sized ? yellowBlue : []
+    }
+
+    /// One sRGB pixel (gamma encoded, 0...255 a channel) as luma and two
+    /// opponent channels, each 0...255 with grey at 128 in the last two.
+    /// Gamma-encoded values are already close to perceptual, and the three
+    /// come out on one scale, so the largest of the three differences between
+    /// two pixels is a fair "how different do these look".
+    public static func opponent(r: Int, g: Int, b: Int) -> (luma: UInt8, redGreen: UInt8, yellowBlue: UInt8) {
+        let l = 0.299 * Double(r) + 0.587 * Double(g) + 0.114 * Double(b)
+        let rg = Double(r - g) / 2 + 128
+        let yb = Double(r + g) / 4 - Double(b) / 2 + 128
+        func byte(_ v: Double) -> UInt8 { UInt8(min(max(v.rounded(), 0), 255)) }
+        return (byte(l), byte(rg), byte(yb))
     }
 
     /// The field for an image that has not been analyzed yet. Detection degrades

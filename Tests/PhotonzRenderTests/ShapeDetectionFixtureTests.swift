@@ -139,18 +139,21 @@ struct ShapeDetectionFixtureTests {
     @Test func textAndTheButtonReadAsTheyDidBefore() {
         // The name beside an avatar is a line of text.
         #expect(reads(100, 33)?.hasSuffix("by 12 px") == true || reads(100, 33)?.hasSuffix("by 13 px") == true)
-        // The bordered button reads what the pair reader always read for it;
-        // its value is pinned so a change to it is a decision, not a drift.
+        // The bordered button reads to the outer edge of its border: the pair
+        // reader's 78 x 26 is the inside of it, and when two readings of one
+        // thing tie the outer one wins (2026-10-13).
         #expect(reads(300, 234) == reads(320, 234))
-        #expect(reads(300, 234) == "78 px by 26 px" || reads(300, 234) == "80 px by 28 px")
+        #expect(reads(300, 234) == "80 px by 28 px")
+        expectEdges(ladder(300, 234).first, CGRect(x: 280, y: 220, width: 80, height: 28))
     }
 
     // MARK: A box
 
     private func snap(_ logical: CGRect) -> CGRect? {
-        ShapeBounds.content(in: CGRect(x: 2 * logical.minX, y: 2 * logical.minY,
-                                       width: 2 * logical.width, height: 2 * logical.height),
-                            luma: Self.analysis.luma, slack: 8, link: 8, minElement: 4)
+        // As the app asks: the object reader and the group reader together.
+        ObjectBounds.snap(CGRect(x: 2 * logical.minX, y: 2 * logical.minY,
+                                 width: 2 * logical.width, height: 2 * logical.height),
+                          field: Self.analysis.luma, slack: 8, link: 8, minElement: 8)
     }
 
     @Test func aRoughBoxAroundTheStackSnapsToTheStack() {

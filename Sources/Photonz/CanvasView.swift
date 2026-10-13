@@ -1372,8 +1372,12 @@ final class CanvasNSView: NSView {
     /// What the Measure tool does when you click (Next). Distance is the only
     /// mode that draws nothing under an idle pointer.
     var measureToolMode: MeasureToolMode = .distance
-    /// Which rung of the element ladder Size mode shows (`[` / `]`).
+    /// Which rung of the element ladder Size mode shows (`[` / `]`), counted
+    /// from the rung the ladder starts on.
     var measureCandidateLevel = 0
+    /// How many rungs the ladder under the pointer has below the one it starts
+    /// on (a button's own label is one below the button), so `[` stops there.
+    var measureLadderBelowStart = 0
     /// The rect Size mode is previewing right now — exactly what a click
     /// commits, so what you see and what you get can never disagree.
     var measureElementPreview: CGRect?

@@ -138,15 +138,98 @@ public enum ElementBounds {
                                   textGap: Double = TextLineBounds.defaultGap,
                                   limit: Int = candidateLimit,
                                   readsShapes: Bool = false) -> [CGRect] {
-        guard !edges.isEmpty, !luma.isEmpty, maxRadius > 0, limit > 0 else { return [] }
+        let found = ladder(at: point, in: edges, luma: luma, maxRadius: maxRadius,
+                           spanRadius: spanRadius, minElement: minElement, textGap: textGap,
+                           limit: limit, readsShapes: readsShapes)
+        return Array(found.rungs.dropFirst(found.start).prefix(limit))
+    }
+
+    /// The ladder Size mode steps along, and the rung it starts on.
+    ///
+    /// Usually that is the first, innermost rung. On a control's own label
+    /// (the words on a button, a pill, a tab) it is the control, and the
+    /// label is the rung below it: pointing at the words means the button,
+    /// and `[` still reaches the words. Everything below `start` is what `[`
+    /// steps down to; `candidates` hands back the ladder from `start` on.
+    public struct Ladder: Equatable, Sendable {
+        public var rungs: [CGRect]
+        public var start: Int
+
+        public init(rungs: [CGRect], start: Int = 0) {
+            self.rungs = rungs
+            self.start = rungs.isEmpty ? 0 : min(max(0, start), rungs.count - 1)
+        }
+
+        /// The rung `level` steps from the start (negative steps down), held
+        /// to the ladder's ends.
+        public func rung(_ level: Int) -> CGRect? {
+            guard !rungs.isEmpty else { return nil }
+            return rungs[min(max(start + level, 0), rungs.count - 1)]
+        }
+    }
+
+    public static func ladder(at point: CGPoint, in edges: EdgeMap,
+                              luma: LumaField,
+                              maxRadius: Double = defaultMaxRadius,
+                              spanRadius: Double = defaultSpanRadius,
+                              minElement: Double = defaultMinElement,
+                              textGap: Double = TextLineBounds.defaultGap,
+                              limit: Int = candidateLimit,
+                              readsShapes: Bool = false) -> Ladder {
+        guard !edges.isEmpty, !luma.isEmpty, maxRadius > 0, limit > 0 else { return Ladder(rungs: []) }
         var shape = readsShapes
             ? ShapeBounds.shape(at: point, in: luma, minElement: minElement, maxRadius: maxRadius)
             : nil
+        let text = TextLineBounds.detect(at: point, in: luma, gap: textGap,
+                                         minElement: minElement, maxRadius: maxRadius)
+        // Buttons, pills and cards: big ones, gradient ones, ones with a glow,
+        // ones the page's own brightness in another colour (`ObjectBounds`).
+        // A letter or a word read as an object is the line reader's business.
+        var objects: [CGRect] = []
+        if readsShapes {
+            let read = ObjectBounds.reading(at: point, in: luma, minElement: minElement)
+            let slack = CGFloat(probeSlack)
+            objects = read.objects.filter { object in
+                text.map { !$0.insetBy(dx: -slack, dy: -slack).contains(object) } ?? true
+            }
+            if let inner = objects.first {
+                if let found = shape, same(found.bounds, inner) {
+                    // Two readings of one thing: a spec quotes the outer edge.
+                    if inner.insetBy(dx: -1, dy: -1).contains(found.bounds) { shape?.bounds = inner }
+                    objects.removeFirst()
+                } else if shape == nil {
+                    shape = ShapeBounds.Reading(bounds: inner, onBody: true, background: read.background)
+                    objects.removeFirst()
+                }
+            }
+        }
+        var found = baseLadder(at: point, shape: shape, text: text, in: edges, luma: luma,
+                               maxRadius: maxRadius, spanRadius: spanRadius, minElement: minElement,
+                               limit: limit)
+        for object in objects {
+            // A pair reading of the same thing that stops where its round ends
+            // begin is the object read short: the object takes its place.
+            if let short = found.rungs.firstIndex(where: { readsShort($0, object) }) {
+                found.rungs[short] = object
+                continue
+            }
+            let rungs = insert(object, into: found.rungs)
+            if rungs.count > found.rungs.count,
+               let at = rungs.firstIndex(of: object), at <= found.start, found.start < found.rungs.count {
+                found.start += 1
+            }
+            found.rungs = rungs
+        }
+        return Ladder(rungs: Array(found.rungs.prefix(found.start + limit)), start: found.start)
+    }
+
+    private static func baseLadder(at point: CGPoint, shape: ShapeBounds.Reading?, text: CGRect?,
+                                   in edges: EdgeMap, luma: LumaField, maxRadius: Double,
+                                   spanRadius: Double, minElement: Double, limit: Int) -> Ladder {
+        var shape = shape
         // With a shape in hand the whole pair ladder is needed, to see which
         // of its rungs hold the shape and which are pieces of its picture.
         let pairLimit = shape == nil ? limit : candidateLimit
-        let text = TextLineBounds.detect(at: point, in: luma, gap: textGap,
-                                         minElement: minElement, maxRadius: maxRadius)
         if let found = shape, found.onBody, let text,
            text.insetBy(dx: CGFloat(-probeSlack), dy: CGFloat(-probeSlack)).contains(found.bounds) {
             // The line reader ran through a shape. An avatar or an icon beside
@@ -162,12 +245,12 @@ public enum ElementBounds {
                                   spanRadius: spanRadius, minElement: minElement,
                                   limit: candidateLimit)
             let ladder = shaped(found, rungs, luma: luma)
-            return Array(insert(text, into: ladder).prefix(limit))
+            return Ladder(rungs: Array(insert(text, into: ladder).prefix(limit)))
         }
         guard let text else {
             let rungs = pairRungs(at: point, in: edges, luma: luma, maxRadius: maxRadius,
                                   spanRadius: spanRadius, minElement: minElement, limit: pairLimit)
-            return Array(shaped(shape, rungs, luma: luma).prefix(limit))
+            return Ladder(rungs: Array(shaped(shape, rungs, luma: luma).prefix(limit)))
         }
         return textLadder(text, at: point, shape: shape, in: edges, luma: luma,
                           maxRadius: maxRadius, spanRadius: spanRadius,
@@ -175,10 +258,11 @@ public enum ElementBounds {
     }
 
     /// The ladder when a line of text is under the pointer: the line first,
-    /// unless a control is wearing it as its label.
+    /// unless a control is wearing it as its label, when the control is where
+    /// the ladder starts and the line is one `[` below it.
     private static func textLadder(_ text: CGRect, at point: CGPoint, shape: ShapeBounds.Reading?,
                                    in edges: EdgeMap, luma: LumaField, maxRadius: Double,
-                                   spanRadius: Double, minElement: Double, limit: Int) -> [CGRect] {
+                                   spanRadius: Double, minElement: Double, limit: Int) -> Ladder {
         let slack = CGFloat(probeSlack)
         func holds(_ rung: CGRect) -> Bool { rung.insetBy(dx: -slack, dy: -slack).contains(text) }
         let pairLimit = shape == nil ? limit : candidateLimit
@@ -197,13 +281,16 @@ public enum ElementBounds {
         rungs = shaped(shape, rungs, luma: luma)
         let containing = rungs.filter(holds)
         if let control = containing.first, hugs(control, text) {
-            return Array(rungs.prefix(limit))
+            if rungs.first == control, grows(control, beyond: text) {
+                return Ladder(rungs: [text] + Array(rungs.prefix(limit)), start: 1)
+            }
+            return Ladder(rungs: Array(rungs.prefix(limit)))
         }
         var ladder = [text]
         for rect in containing where ladder.count < limit && grows(rect, beyond: ladder.last) {
             ladder.append(rect)
         }
-        return ladder
+        return Ladder(rungs: ladder)
     }
 
     // MARK: Shapes on the ladder
@@ -235,7 +322,14 @@ public enum ElementBounds {
         guard shape.onBody else { return insert(b, into: rungs) }
         let group = ShapeBounds.group(of: shape, in: luma)
         if let first = rungs.first {
-            if same(first, b) { return group.map { insert($0, into: rungs) } ?? rungs }
+            if same(first, b) {
+                // Two readings of one thing. A spec quotes the outer edge of a
+                // border, and the shape reader reads to the last pixel that
+                // differs from the page, so the outer of the two wins.
+                var rungs = rungs
+                if b.insetBy(dx: -1, dy: -1).contains(first) { rungs[0] = b }
+                return group.map { insert($0, into: rungs) } ?? rungs
+            }
             if b.insetBy(dx: -sameReading, dy: -sameReading).contains(first),
                isHalo(b, around: first, luma: luma, background: shape.background) {
                 return rungs
@@ -245,6 +339,16 @@ public enum ElementBounds {
         if let group, grows(group, beyond: b) { ladder.append(group) }
         for rung in rungs where grows(rung, beyond: ladder.last) { ladder.append(rung) }
         return ladder
+    }
+
+    /// Whether `rung` is `object` read short: inside it, the same along one
+    /// axis, and nine tenths of it or more along the other. Two straight
+    /// edges across a pill stop where its round ends begin.
+    private static func readsShort(_ rung: CGRect, _ object: CGRect) -> Bool {
+        guard object.insetBy(dx: -1, dy: -1).contains(rung), !same(rung, object) else { return false }
+        let rows = abs(rung.minY - object.minY) <= sameReading && abs(rung.maxY - object.maxY) <= sameReading
+        let columns = abs(rung.minX - object.minX) <= sameReading && abs(rung.maxX - object.maxX) <= sameReading
+        return (rows && rung.width >= 0.9 * object.width) || (columns && rung.height >= 0.9 * object.height)
     }
 
     private static func same(_ a: CGRect, _ b: CGRect) -> Bool {
@@ -325,7 +429,9 @@ public enum ElementBounds {
         guard Double(rung.height) <= captionHeightRatio * Double(text.height) else { return false }
         let leftPad = Double(text.minX - rung.minX)
         let rightPad = Double(rung.maxX - text.maxX)
-        let tolerance = max(4, 0.1 * Double(rung.width))
+        // A fifth of the width: a button with an icon on one side of its
+        // words (a download arrow) pushes the words that far off centre.
+        let tolerance = max(4, 0.2 * Double(rung.width))
         return abs(leftPad - rightPad) <= tolerance
     }
 

@@ -1,0 +1,47 @@
+{
+  "out": "/tmp/photonz-playtest/size-reads-buttons-and-pills-walk",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "move", "at": [520, 330] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "1-hover-the-pill-by-its-round-end" },
+    { "do": "click", "at": [520, 330] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 2, "reads": ["274 px", "62 px"] },
+    { "do": "describe", "stage": "1-pill", "note": "the purple download pill, hovered on its round end, measured 274 by 62: its fill, not its glow" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "move", "at": [700, 335] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "2-hover-the-label-offers-the-pill" },
+    { "do": "click", "at": [700, 335] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 4, "reads": ["274 px", "62 px", "274 px", "62 px"] },
+    { "do": "describe", "stage": "2-pill-from-its-label", "note": "a click on a letter of the label measured the pill, 274 by 62" },
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [700, 335] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "[" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "3-left-bracket-steps-to-the-label" },
+    { "do": "click", "at": [700, 335] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 6, "reads": ["274 px", "62 px", "274 px", "62 px", "158 px", "15 px"] },
+    { "do": "describe", "stage": "3-label", "note": "on the label the pill came first, and [ stepped down to the words Download for Mac" },
+    { "do": "key", "key": "]" },
+    { "do": "measureMode", "mode": "size" },
+
+    { "do": "drag", "from": [462, 242], "to": [1062, 414], "steps": 8, "hold": "4-the-users-rough-box-round-the-pill" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectMeasures", "count": 8, "reads": ["274 px", "62 px", "274 px", "62 px", "158 px", "15 px", "274 px", "62 px"] },
+    { "do": "describe", "stage": "4-pill-by-box", "note": "the 300 by 86 box the user drew round the pill now measures the pill" },
+    { "do": "snapshot", "name": "5-the-pill-by-box" }
+  ]
+}

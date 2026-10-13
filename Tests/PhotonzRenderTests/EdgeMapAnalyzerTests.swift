@@ -46,6 +46,26 @@ struct EdgeMapAnalyzerTests {
         #expect(near(vertical, 80))
     }
 
+    @Test func theLumaFieldCarriesColourSoARedAsBrightAsGreyStillReads() {
+        // A #d0604a square on a #7f7f7f page: the same luma, another colour.
+        let w = 40, h = 30
+        let context = CGContext(data: nil, width: w, height: h, bitsPerComponent: 8,
+                                bytesPerRow: w * 4, space: CGColorSpace(name: CGColorSpace.sRGB)!,
+                                bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+        context.setFillColor(CGColor(srgbRed: 127 / 255, green: 127 / 255, blue: 127 / 255, alpha: 1))
+        context.fill(CGRect(x: 0, y: 0, width: w, height: h))
+        context.setFillColor(CGColor(srgbRed: 208 / 255, green: 96 / 255, blue: 74 / 255, alpha: 1))
+        context.fill(CGRect(x: 10, y: 10, width: 20, height: 10))
+        let field = EdgeMapAnalyzer.analyzeFully(context.makeImage()!).luma
+        #expect(field.hasColour)
+        let page = 2 * w + 2, square = 15 * w + 20
+        #expect(abs(Int(field.samples[page]) - Int(field.samples[square])) <= 1)
+        #expect(field.redGreen[page] == 128)
+        #expect(Int(field.redGreen[square]) - Int(field.redGreen[page]) >= 50)
+        #expect(field.redGreen[square] == LumaField.opponent(r: 208, g: 96, b: 74).redGreen)
+        #expect(field.yellowBlue[square] == LumaField.opponent(r: 208, g: 96, b: 74).yellowBlue)
+    }
+
     @Test func rectangleEdgesAreLocalNotGlobal() {
         // A window that does not overlap the rectangle's span sees nothing.
         let img = rectImage(width: 200, height: 160,
