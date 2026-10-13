@@ -175,6 +175,81 @@ struct SpaceEditingTests {
         #expect(doc.layer(id: id)?.turn3D?.rotationY == 40)
     }
 
+    // MARK: A tilt keys like a move
+
+    @Test("On a layer whose place is keyed, a tilt is a key at the playhead, the way a move is")
+    func tiltKeysWhereThePlaceIsKeyed() throws {
+        var (doc, id) = Self.withTitle()
+        // The track's diamond keys where it is, its size, angle and opacity.
+        let keyed = doc.toggleTransformKey(layerID: id, atDocumentTimeMS: 3000)
+        #expect(keyed)
+        doc.setSpaceTurn(LayerTurn3D(rotationY: 90), layerID: id, atDocumentTimeMS: 3000)
+        #expect(doc.keyCount(layerID: id, .motion(.rotationY)) == 1)
+        #expect(doc.keyDiamond(layerID: id, .motion(.rotationY), atDocumentTimeMS: 3000) == .onKey)
+        // A second later the arc swings it back: a second key, and a swing.
+        doc.setSpaceTurn(LayerTurn3D(rotationY: 0), layerID: id, atDocumentTimeMS: 4000)
+        #expect(doc.keyCount(layerID: id, .motion(.rotationY)) == 2)
+        #expect(doc.spaceValue(.rotationY, layerID: id, atDocumentTimeMS: 3000) == 90)
+        #expect(doc.spaceValue(.rotationY, layerID: id, atDocumentTimeMS: 4000) == 0)
+        let half = try #require(doc.spaceValue(.rotationY, layerID: id, atDocumentTimeMS: 3500))
+        #expect(half > 0 && half < 90)
+        // The layer's own value never moved: the keys hold the tilt.
+        #expect(doc.layer(id: id)?.turn3D == nil)
+    }
+
+    @Test("A tilt between the place's keys holds the old tilt at the keys either side, as a reframe does")
+    func tiltBetweenPlaceKeysAnchors() {
+        var (doc, id) = Self.withTitle()
+        doc.setSpaceValue(.rotationX, 10, layerIDs: [id], atDocumentTimeMS: 2000)
+        _ = doc.startKeying(layerID: id, .motion(.position), atDocumentTimeMS: 3000)
+        _ = doc.setKeyedValue(.point(CGPoint(x: 300, y: 100)), layerID: id, .motion(.position),
+                              atDocumentTimeMS: 5000)
+        doc.setSpaceValue(.rotationX, 40, layerIDs: [id], atDocumentTimeMS: 4000)
+        #expect(doc.keyCount(layerID: id, .motion(.rotationX)) == 3)
+        #expect(doc.spaceValue(.rotationX, layerID: id, atDocumentTimeMS: 3000) == 10)
+        #expect(doc.spaceValue(.rotationX, layerID: id, atDocumentTimeMS: 4000) == 40)
+        #expect(doc.spaceValue(.rotationX, layerID: id, atDocumentTimeMS: 5000) == 10)
+        #expect(doc.layer(id: id)?.turn3D?.rotationX == 10)
+    }
+
+    @Test("A 3D value keyed makes the others key too: Depth typed while Rotation Y is keyed")
+    func oneSpaceKeyKeysTheRest() {
+        var (doc, id) = Self.withTitle()
+        _ = doc.startKeying(layerID: id, .motion(.rotationY), atDocumentTimeMS: 3000)
+        doc.setSpaceValue(.depth, -300, layerIDs: [id], atDocumentTimeMS: 3000)
+        #expect(doc.keyCount(layerID: id, .motion(.depth)) == 1)
+        #expect(doc.spaceValue(.depth, layerID: id, atDocumentTimeMS: 3000) == -300)
+        doc.pushDepth(by: 100, layerIDs: [id], atDocumentTimeMS: 3500)
+        #expect(doc.keyCount(layerID: id, .motion(.depth)) == 2)
+        #expect(doc.spaceValue(.depth, layerID: id, atDocumentTimeMS: 3500) == -200)
+    }
+
+    @Test("A layer with nothing keyed takes a tilt as its own value, as a move with no keys does")
+    func tiltWithNothingKeyedIsItsOwn() {
+        var (doc, id) = Self.withTitle()
+        _ = doc.startKeying(layerID: id, .motion(.opacity), atDocumentTimeMS: 3000)
+        doc.setSpaceTurn(LayerTurn3D(rotationY: 30), layerID: id, atDocumentTimeMS: 3000)
+        // Opacity is a look, not where it is: its keys do not make a tilt a key.
+        #expect(doc.keyCount(layerID: id, .motion(.rotationY)) == 0)
+        #expect(doc.layer(id: id)?.turn3D?.rotationY == 30)
+    }
+
+    @Test("How tilted a layer is drawn: its near edge over its far edge, 1 for a flat layer")
+    func drawnTilt() {
+        var (doc, id) = Self.withTitle()
+        #expect(doc.drawnTilt(of: id, atDocumentTimeMS: 3000) == 1)
+        let keyed = doc.toggleTransformKey(layerID: id, atDocumentTimeMS: 3000)
+        #expect(keyed)
+        doc.setSpaceValue(.rotationY, 60, layerIDs: [id], atDocumentTimeMS: 3000)
+        doc.setSpaceValue(.rotationY, 0, layerIDs: [id], atDocumentTimeMS: 4000)
+        #expect(doc.drawnTilt(of: id, atDocumentTimeMS: 3000) > 1.1)
+        #expect(doc.drawnTilt(of: id, atDocumentTimeMS: 3500) > 1.01)
+        #expect(abs(doc.drawnTilt(of: id, atDocumentTimeMS: 4000) - 1) < 0.001)
+        // Pushed straight back it is smaller, not tilted.
+        doc.setSpaceValue(.depth, -400, layerIDs: [id], atDocumentTimeMS: 4000)
+        #expect(abs(doc.drawnTilt(of: id, atDocumentTimeMS: 4000) - 1) < 0.001)
+    }
+
     @Test("Reset 3D Rotation faces the camera again, keys and all, and keeps the depth")
     func resetRotation() {
         var (doc, id) = Self.withTitle()

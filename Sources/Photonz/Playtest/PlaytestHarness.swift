@@ -2656,6 +2656,10 @@ private final class Run {
                                   within: within),
                  state: describe())
 
+        case .expectTilt(let layerName, let atLeast, let flat):
+            note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
+                 state: describe())
+
         case .expectSVG(let pictured, let contains):
             note(number, step.name, try checkSVG(pictured: pictured, contains: contains),
                  state: describe())
@@ -10753,6 +10757,27 @@ private final class Run {
 
     /// How round a path's corners are drawn, asked of the document
     /// (`PlaytestStep.expectCorners`).
+    private func checkTilt(_ layerName: String?, atLeast: Double?, flat: Bool) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document open") }
+        let found = layerName.map { name in document.allLayers.last { $0.name == name } }
+            ?? editor.selectedLayerID.flatMap { document.layer(id: $0) }
+        guard let layer = found else {
+            throw Failure(description: layerName.map { "no layer called \"\($0)\"" } ?? "nothing is picked")
+        }
+        let ms = editor.documentTimeMS
+        let tilt = document.drawnTilt(of: layer.id, atDocumentTimeMS: ms)
+        let reads = "\(layer.name) at \(ms) ms is drawn with its near edge \(String(format: "%.2f", tilt))"
+            + " times its far one"
+        if flat, abs(tilt - 1) > 0.01 {
+            throw Failure(description: "\(reads), not facing the camera")
+        }
+        if let atLeast, tilt < atLeast {
+            throw Failure(description: "\(reads), not the \(String(format: "%.2f", atLeast)) claimed")
+        }
+        return reads + ", as claimed"
+    }
+
     private func checkCorners(_ layerName: String?, corner: Int?, radius: CGFloat?,
                               rounded: Int?, within: CGFloat) throws -> String {
         let editor = try requireEditor()

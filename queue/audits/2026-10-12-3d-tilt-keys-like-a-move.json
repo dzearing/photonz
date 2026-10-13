@@ -1,0 +1,29 @@
+{
+  "feature": "3D tilt and depth key as easily as a move",
+  "epic": "video-transitions-motion",
+  "summary": "Once a layer's place is animating (its track's key diamond, or any place or 3D key), tilting it with the canvas arcs, pushing it with the depth arrow or typing a 3D value makes a key at the playhead, the same way a move does. Before this, the move keyed and the tilt silently changed the layer's own value instead.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording, type a title at 0:00 with the Text tool, then pick it with the Select tool. Walk: Scripts/playtest/tilt-keys-like-a-move-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Click the key diamond on the title's track header to key its place at 0:00." },
+    { "do": "Rest on the turn knob and drag the flat green arc right until the pill says Rotation Y 90°.", "shot": "2026-10-12-tilt-keys-1-keyed-at-90-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Move the playhead to 0:01 and drag the arc back until the pill says Rotation Y 0°." },
+    { "do": "Scrub back to 0:00.5: the title is still part way round.", "shot": "2026-10-12-tilt-keys-3-half-way-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type -300 into Depth in the panel's 3D section there.", "shot": "2026-10-12-tilt-keys-4-depth-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Space from 0:00 and watch it swing round and sink back." }
+  ],
+  "evaluate": [
+    "After keying the track, did the arc drag make a key without you touching the 3D section?",
+    "Is the rule easy to predict: a value keys once where the layer is, is animating, and otherwise just changes?",
+    "Depth typed half way held its old value at the keys either side (0:00 and 0:01). Is that what you expected, or should it hold from there on?",
+    "Should a tilt on a layer with no keys at all also start keying, or is the track diamond the right switch?"
+  ],
+  "rough": [
+    "Reproduced first at Next defaults. Only one route failed: a title keyed from its track diamond and then tilted with the arcs left Rotation Y not keyed while a move keyed. Every other route already worked and still does: the 3D section's diamonds, right-click Add Key Here on a 3D row, Animate a property's 3D group, typing in a 3D or Animating row, arc drags on an already keyed value (on a key it changes that key, between keys it adds one), the recording clip, a piece of a Keynote Clean title page, Show Graph on a Rotation X lane and the camera's diamonds.",
+    "The rule, the same for every value of where a layer is (position, size, angle, Rotation X and Y, Depth, Pivot depth): a keyed value keys at the playhead; on a layer whose place is animating, an unkeyed one starts keying, holding its old value at the place's keys either side; with nothing keyed, it is the layer's own value. Opacity and the other looks are not part of it.",
+    "A tilt on a layer with nothing keyed at all is still the layer's own value, as a move is. Keying every change automatically is the auto-key work in a-layer-s-track-shows-only-what-is-animated-and.",
+    "The 3D section sits about 550 points down the panel, under Effects, so a person has to scroll to find its diamonds. The transform overlay that replaces it is design-the-transform-overlay-and-a-simpler-way-t.",
+    "Half way between two keys the swing is about 78% done, because the shared Ease In and Out curve starts fast. Every keyed value moves the same way; this change does not alter it.",
+    "No visual change. The 3D rows and lanes match video-depth.html's 3D section as they did before."
+  ]
+}

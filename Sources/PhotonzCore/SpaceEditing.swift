@@ -270,10 +270,40 @@ extension PhotonzDocument {
         return first
     }
 
-    /// Writes one 3D value on each of `ids` at `ms`: a key there where the
-    /// value is keyed (in a document with time), the layer's own otherwise.
-    /// A layer left with nothing turned goes back to having no turn at all,
-    /// so it saves byte for byte as it did before it was ever touched.
+    /// The values that say where a layer is, in the plane and in space: what
+    /// the track's diamond keys (`transformKeyProperties`) less its opacity,
+    /// which is a look, plus the four 3D values.
+    public static let placeProperties: [MotionProperty] =
+        [.position, .scale, .rotation] + MotionProperty.spaceProperties
+
+    /// Whether where a layer is, is animating: any of `placeProperties` keyed.
+    /// On such a layer a 3D value changed by hand is a key at the playhead,
+    /// the way a move is once the track's diamond has keyed its place.
+    func animatesItsPlace(_ layer: Layer) -> Bool {
+        (layer.motions ?? []).contains { Self.placeProperties.contains($0.property) }
+    }
+
+    /// The moments either side of `ms` where anything about a layer's place
+    /// has a key: where a 3D value starting to key holds the value it had, so
+    /// the layer stays as it was at every moment the hand did not touch (the
+    /// same rule a reframe's Centre follows, `reframeAnchors`).
+    func placeAnchors(layerID: UUID, atDocumentTimeMS ms: Int) -> [Int] {
+        guard let layer = layer(id: layerID) else { return [] }
+        let keyed = Set((layer.motions ?? []).map(\.property)).filter { Self.placeProperties.contains($0) }
+        return [false, true].compactMap { forward in
+            let moments = keyed.compactMap {
+                neighbourKeyTime(layerID: layerID, .motion($0), from: ms, forward: forward)
+            }
+            return forward ? moments.min() : moments.max()
+        }
+    }
+
+    /// Writes one 3D value on each of `ids` at `ms`. In a document with time
+    /// it is a key there where the value is keyed, and also where the layer's
+    /// place is animating (`animatesItsPlace`): a tilt keys like a move. The
+    /// layer's own value otherwise. A layer left with nothing turned goes back
+    /// to having no turn at all, so it saves byte for byte as it did before it
+    /// was ever touched.
     public mutating func setSpaceValue(_ property: MotionProperty, _ value: Double, layerIDs ids: [UUID],
                                        atDocumentTimeMS ms: Int, ease: KeyEase? = nil) {
         guard property.isSpace, value.isFinite else { return }
@@ -281,6 +311,25 @@ extension PhotonzDocument {
             guard let layer = layer(id: id), !layer.isSoundOnly else { continue }
             if hasTime, layer.keyedMotion(property) != nil {
                 setKeyedValue(.number(value), layerID: id, .motion(property), atDocumentTimeMS: ms, ease: ease)
+            } else if hasTime, animatesItsPlace(layer) {
+                // Starts keying holding the value it has at the place's keys
+                // either side, then the hand's value at the playhead.
+                let keyed = KeyedProperty.motion(property)
+                let held = layer.keyStill(property).flatMap { value -> Double? in
+                    if case let .number(number) = value { return number }
+                    return nil
+                } ?? 0
+                for (index, anchor) in placeAnchors(layerID: id, atDocumentTimeMS: ms).enumerated() {
+                    if index == 0 {
+                        startKeying(layerID: id, keyed, atDocumentTimeMS: anchor, ease: ease)
+                    } else {
+                        setKeyedValue(.number(held), layerID: id, keyed, atDocumentTimeMS: anchor, ease: ease)
+                    }
+                }
+                if keyCount(layerID: id, keyed) == 0 {
+                    startKeying(layerID: id, keyed, atDocumentTimeMS: ms, ease: ease)
+                }
+                setKeyedValue(.number(value), layerID: id, keyed, atDocumentTimeMS: ms, ease: ease)
             } else {
                 updateLayer(id: id) { edited in
                     var turn = edited.turn3D ?? LayerTurn3D()
@@ -452,4 +501,26 @@ extension PhotonzDocument {
     /// View, Reset Camera: the camera every document starts with, keys and
     /// all gone.
     public mutating func resetCamera() { camera = nil }
+}
+
+// MARK: - How tilted a layer is drawn
+
+extension PhotonzDocument {
+
+    /// How tilted a layer is DRAWN at `ms`: the longer of each pair of
+    /// opposite edges of the quad the camera sees it as, over the shorter,
+    /// whichever pair differs more. 1 for a layer drawn flat or only pushed
+    /// straight back; above 1 once its near edge is taller than its far one.
+    /// What a walk reads to claim a keyed tilt really plays.
+    public func drawnTilt(of id: UUID, atDocumentTimeMS ms: Int) -> Double {
+        let posed = hasTime ? posedForCanvas(atTimeMS: ms) : self
+        guard let quad = posed.drawnQuad(of: id), quad.count == 4 else { return 1 }
+        func length(_ a: CGPoint, _ b: CGPoint) -> Double { Double(hypot(b.x - a.x, b.y - a.y)) }
+        let edges = (0..<4).map { length(quad[$0], quad[($0 + 1) % 4]) }
+        func ratio(_ a: Double, _ b: Double) -> Double {
+            guard min(a, b) > 1e-9 else { return 1 }
+            return max(a, b) / min(a, b)
+        }
+        return max(ratio(edges[0], edges[2]), ratio(edges[1], edges[3]))
+    }
 }

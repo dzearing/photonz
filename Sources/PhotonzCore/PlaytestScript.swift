@@ -3438,6 +3438,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// is how a walk claims ⌥ rounded one corner and left the rest alone.
     case expectCorners(layer: String?, corner: Int?, radius: CGFloat?, rounded: Int?,
                        within: CGFloat)
+    /// CLAIMS how tilted a layer is DRAWN at the playhead, asked of the
+    /// document: the longer of each pair of opposite edges of the quad the
+    /// camera sees it as, over the shorter (`PhotonzDocument.drawnTilt`).
+    /// `atLeast` claims it is turned at least that much (1.1 is a near edge a
+    /// tenth taller than the far one); `flat` claims it faces the camera.
+    /// `layer` names it; left off it is the picked layer. A picture cannot
+    /// say a swing between two keys is still turned half way through, and a
+    /// panel value cannot say the picture follows it.
+    case expectTilt(layer: String?, atLeast: Double?, flat: Bool)
     /// What the document would be WRITTEN as, asked without saving anything.
     ///
     /// `pictured` is how many layers have no vector answer and would ride out
@@ -4131,7 +4140,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectTilt", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4212,6 +4221,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expect: "expect"
         case .expectMeasures: "expectMeasures"
         case .expectCorners: "expectCorners"
+        case .expectTilt: "expectTilt"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
         case .expectHistory: "expectHistory"
@@ -5098,6 +5108,17 @@ public enum PlaytestStep: Sendable, Equatable {
                                   radius: radius.map { CGFloat($0) },
                                   rounded: rounded.map { Int($0) },
                                   within: CGFloat(try f.optionalNumber("within") ?? 0.5))
+        case "expectTilt":
+            let atLeast = try f.optionalNumber("atLeast")
+            let flat = try f.optionalFlag("flat") ?? false
+            guard (atLeast != nil) != flat else {
+                throw f.invalid("atLeast", "expectTilt claims one thing: \"atLeast\" for how far its near "
+                    + "edge outgrows its far one, or \"flat\": true for facing the camera")
+            }
+            if let atLeast, atLeast < 1 {
+                throw f.invalid("atLeast", "a tilt is near edge over far edge, 1 or more, not \(atLeast)")
+            }
+            self = .expectTilt(layer: try f.optionalString("layer"), atLeast: atLeast, flat: flat)
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")
