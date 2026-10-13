@@ -162,6 +162,8 @@ s = pickSlice({ walks, cursor: 0, changed: [], always: ['gone-walk'], minutes: 1
 check('a name that is no longer a walk in the set is left out', !s.walks.includes('gone-walk') && s.always.length === 0, s.always);
 check('the end to end editing session walk is in every check',
   DEFAULTS.everyCheck.includes('an-editing-session-walk'), DEFAULTS.everyCheck);
+check('the 3D grippers walk is in every check',
+  DEFAULTS.everyCheck.includes('3d-grippers-on-a-picked-layer-walk'), DEFAULTS.everyCheck);
 
 console.log('how long a walk takes, measured off the checks that ran (2026-10-06: planned at 12s, ran at 17.6s)');
 // Until 2026-10-06 a check was planned at a fixed twelve seconds a walk, so it

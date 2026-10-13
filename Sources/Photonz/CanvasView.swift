@@ -1815,9 +1815,6 @@ final class CanvasNSView: NSView {
     /// A 3D handle in the hand: an arc on the turn knob or the depth arrow
     /// (`CanvasSpaceHandles.swift`).
     var spaceHandleDrag: SpaceHandleDrag?
-    /// The picked layer whose knob arcs are out, after the pointer rested on
-    /// its knob.
-    var spaceArcsOutFor: UUID?
     /// Where the 3D handles were last drawn, read by the press and the cue.
     var drawnSpaceHandles: DrawnSpaceHandles?
     /// The 3D handle the pointer cue last found under the pointer, set while

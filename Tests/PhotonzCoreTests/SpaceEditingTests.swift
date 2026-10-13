@@ -74,15 +74,49 @@ struct SpaceEditingTests {
         #expect(h.hit(at: CGPoint(x: 300, y: 200), arcs: true, depth: true) == nil)
     }
 
-    @Test("The arcs come out on the knob and stay while the hand is over the layer")
-    func revealAndHold() {
-        let h = Self.flat
-        let drawn = CGRect(x: 100, y: 100, width: 400, height: 200)
-        #expect(h.reveals(at: CGPoint(x: 305, y: 85)))
-        #expect(!h.reveals(at: CGPoint(x: 300, y: 200)))
-        #expect(h.holds(at: CGPoint(x: 300, y: 200), over: drawn))
-        #expect(h.holds(at: CGPoint(x: 340, y: 60), over: drawn))
-        #expect(!h.holds(at: CGPoint(x: 700, y: 500), over: drawn))
+    @Test("A picked layer wears both arcs and the depth arrow at once, with nothing to hover")
+    func pickedLayerWearsAll() {
+        // The user, 2026-10-13: the grippers show when the layer is picked,
+        // not only while the pointer rests on the knob.
+        #expect(SpaceHandles.showing(holding: nil) == SpaceHandles.Showing(arcs: true, depth: true))
+        // Swinging or tipping keeps everything out; pushing in depth puts
+        // the arcs away so only the arrow in hand is drawn.
+        #expect(SpaceHandles.showing(holding: .swing) == SpaceHandles.Showing(arcs: true, depth: true))
+        #expect(SpaceHandles.showing(holding: .tip) == SpaceHandles.Showing(arcs: true, depth: true))
+        #expect(SpaceHandles.showing(holding: .depth) == SpaceHandles.Showing(arcs: false, depth: true))
+    }
+
+    /// A small chip, 44 by 22, flat: top edge at y 100, middle at y 111.
+    static let chip = SpaceHandles(topMid: CGPoint(x: 300, y: 100), middle: CGPoint(x: 300, y: 111),
+                                   pivot: CGPoint(x: 300, y: 111))
+
+    @Test("On a small layer the depth arrow reaches its top right corner, and the corner keeps it")
+    func boxKeepsItsCorner() {
+        let corner = CGPoint(x: 322, y: 100)
+        // Without the box in the argument the arrow would take the corner...
+        #expect(Self.chip.hit(at: corner, arcs: true, depth: true) == .depth)
+        // ...but the resize square is drawn right there, so it keeps it.
+        #expect(Self.chip.hit(at: corner, arcs: true, depth: true, boxReach: 0) == nil)
+        // A press on the arrow's head, clear of the box, still pushes.
+        let head = Self.chip.depthArrow.head
+        #expect(Self.chip.hit(at: head, arcs: true, depth: true, boxReach: nil) == .depth)
+        // Where the arrow is nearer than the box mark in reach, the arrow wins.
+        let onShaft = CGPoint(x: 318, y: 93)
+        #expect(Self.chip.hit(at: onShaft, arcs: true, depth: true, boxReach: 6) == .depth)
+        // A tie goes to the box: a resize has no other way in on the canvas.
+        #expect(Self.chip.hit(at: onShaft, arcs: true, depth: true,
+                              boxReach: Self.chip.reach(of: .depth, at: onShaft)) == nil)
+    }
+
+    @Test("On a layer about 76 wide the tall arc passes its top right corner, and the corner keeps it")
+    func tallArcYieldsToCorner() {
+        let h = SpaceHandles(topMid: CGPoint(x: 300, y: 100), middle: CGPoint(x: 300, y: 130),
+                             pivot: CGPoint(x: 300, y: 130))
+        let corner = CGPoint(x: 338, y: 100)
+        #expect(h.hit(at: corner, arcs: true, depth: false) == .tip)
+        #expect(h.hit(at: corner, arcs: true, depth: false, boxReach: 0) == nil)
+        // The arc's upper end, well clear of the box, still tips.
+        #expect(h.hit(at: h.tipArc.end, arcs: true, depth: false, boxReach: nil) == .tip)
     }
 
     @Test("On a layer turned a quarter, the arcs turn with its top edge")

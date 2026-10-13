@@ -1615,6 +1615,28 @@ struct PlaytestScriptTests {
         #expect(plain == PlaytestDragWatch())
     }
 
+    /// Whether the picked layer wears its 3D arcs and depth arrow with the
+    /// pointer away from it. The user found them "gone" on 2026-10-13: they
+    /// came out only while the pointer rested on the knob.
+    @Test func aWalkCanClaimThe3DHandlesAreDrawn() throws {
+        let script = try decode("""
+        { "steps": [
+            { "do": "expectSpaceHandles", "arcs": true, "depth": true },
+            { "do": "expectSpaceHandles", "arcs": false }
+        ] }
+        """)
+        #expect(script.steps[0] == .expectSpaceHandles(arcs: true, depth: true))
+        #expect(script.steps[1] == .expectSpaceHandles(arcs: false, depth: nil))
+        #expect(script.steps[0].name == "expectSpaceHandles")
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectSpaceHandles"))
+        // A claim about nothing is a mistake in the walk.
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectSpaceHandles" } ] }
+            """)
+        }
+    }
+
     /// A share of moves is between none and all of them.
     @Test func aSpaceHandleDragFollowsTheHandOnAShareOfItsMoves() throws {
         #expect(throws: (any Error).self) {

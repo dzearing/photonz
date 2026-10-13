@@ -2660,6 +2660,9 @@ private final class Run {
             note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
                  state: describe())
 
+        case .expectSpaceHandles(let arcs, let depth):
+            note(number, step.name, try await checkSpaceHandles(arcs: arcs, depth: depth), state: describe())
+
         case .expectTransformBar(let present, let withinFrames, let side, let fields, let live):
             note(number, step.name,
                  try await patiently {
@@ -10817,6 +10820,33 @@ private final class Run {
             + "inside the canvas and clear of the tool bar, showing \(shown.joined(separator: ", "))"
             + (lit.isEmpty ? "" : ", outlining \(lit.joined(separator: ", "))")
             + "; it came in \(took)"
+    }
+
+    /// Which 3D handles the picked layer wears with the pointer off on a bare
+    /// corner of the canvas, read from the shapes actually on screen.
+    private func checkSpaceHandles(arcs: Bool?, depth: Bool?) async throws -> String {
+        let canvas = try requireCanvas()
+        let window = try requireWindow()
+        let away = CGPoint(x: canvas.bounds.minX + 6, y: canvas.bounds.minY + 6)
+        _ = PlaytestPointer.rest(at: canvas.convert(away, to: nil), in: window)
+        if let event = mouseEvent(.mouseMoved, at: away, on: canvas, flags: []) { canvas.mouseMoved(with: event) }
+        await sleep(0.15)
+        guard let shown = canvas.drawnSpaceHandles, shown.layerID == canvas.selectedLayerID else {
+            throw Failure(description: "no picked layer is wearing a turn knob, so it wears no 3D handles")
+        }
+        func drawn(_ shape: CAShapeLayer) -> Bool { !shape.isHidden && shape.path != nil }
+        let arcsDrawn = drawn(canvas.spaceSwingLayer) && drawn(canvas.spaceTipLayer)
+        let depthDrawn = drawn(canvas.spaceDepthLayer)
+        let reads = "with the pointer away at view \(short(away)), the arcs are "
+            + (arcsDrawn ? "drawn" : "not drawn") + " and the depth arrow is "
+            + (depthDrawn ? "drawn" : "not drawn")
+        if let arcs, arcs != arcsDrawn {
+            throw Failure(description: reads + ", not the arcs " + (arcs ? "drawn" : "away") + " claimed")
+        }
+        if let depth, depth != depthDrawn {
+            throw Failure(description: reads + ", not the arrow " + (depth ? "drawn" : "away") + " claimed")
+        }
+        return reads + ", as claimed"
     }
 
     private func checkTilt(_ layerName: String?, atLeast: Double?, flat: Bool) throws -> String {

@@ -5,17 +5,18 @@ import PhotonzCore
 // (Next, `next-turn-in-depth`; mock `video-depth.html`, design A on the
 // decision card `...-how-do-you-turn-a-layer-toward-o`).
 //
-// The turn knob grows two arcs when the pointer rests on it: drag the flat one
-// sideways to swing the layer (Rotation Y), the tall one up or down to tip it
+// A picked layer wears two arcs on its turn knob: drag the flat one sideways
+// to swing the layer (Rotation Y), the tall one up or down to tip it
 // (Rotation X). The knob itself still turns the layer flat, as it always has.
 // An arrow off the layer's pivot pushes it away when dragged up and pulls it
 // nearer when dragged down. Shift steps a turn in 15 degree steps, and a pill
 // under the layer says the one value the drag is changing.
 //
-// A layer that is NOT turned in space wears nothing new until the pointer
-// rests on its knob, so plain 2D editing, and a marked-up screenshot, look
-// exactly as they did. A layer that is turned keeps its depth arrow and a
-// crosshair on its pivot, because the pivot is where its turn is taken.
+// They are out as soon as the layer is picked with the Select tool. Until
+// 2026-10-13 the arcs came out only while the pointer rested on the knob, and
+// the user took them for gone. Where one passes over a resize square (a small
+// layer's top right corner), the square keeps the press
+// (`SpaceHandles.hit(boxReach:)`).
 //
 // Where everything sits and what a drag does is `SpaceHandles` and `SpaceDrag`
 // (PhotonzCore), tested there. This file only finds the three points on
@@ -48,9 +49,6 @@ struct DrawnSpaceHandles {
     /// The layer is seen in space (the document is), so its knob is where
     /// `handles` put it rather than where the flat knob sits.
     let inSpace: Bool
-    /// The layer as drawn, in view points: the arcs stay out while the pointer
-    /// is over it.
-    let drawn: CGRect
 }
 
 extension CanvasNSView {
@@ -107,7 +105,7 @@ extension CanvasNSView {
     /// camera sees). Returns where the knob is to be drawn.
     @discardableResult
     func drawSpaceHandles(for layer: Layer, topMid: CGPoint, middle: CGPoint, pivot: CGPoint,
-                          flatKnob: CGPoint?, drawn: CGRect, turned: Bool) -> CGPoint? {
+                          flatKnob: CGPoint?) -> CGPoint? {
         let handles = flatKnob.map { knob in
             // Keep the flat knob exactly where it has always been: the arcs
             // grow from it rather than moving it.
@@ -120,14 +118,14 @@ extension CanvasNSView {
             // No arcs and no arrow, but a knob that has moved with the layer
             // still has to be caught where it is drawn.
             drawnSpaceHandles = DrawnSpaceHandles(layerID: layer.id, handles: handles, arcs: false,
-                                                  depth: false, inSpace: flatKnob == nil, drawn: drawn)
+                                                  depth: false, inSpace: flatKnob == nil)
             return handles.knob
         }
-        let holding = spaceHandleDrag?.layerID == layer.id
-        let arcs = holding ? spaceHandleDrag?.handle != .depth : spaceArcsOutFor == layer.id
-        let depth = holding || turned || spaceArcsOutFor == layer.id
+        let held = spaceHandleDrag.flatMap { $0.layerID == layer.id ? $0.handle : nil }
+        let showing = SpaceHandles.showing(holding: held)
+        let arcs = showing.arcs, depth = showing.depth
         drawnSpaceHandles = DrawnSpaceHandles(layerID: layer.id, handles: handles, arcs: arcs,
-                                              depth: depth, inSpace: flatKnob == nil, drawn: drawn)
+                                              depth: depth, inSpace: flatKnob == nil)
         let rim = CGMutablePath()
         func put(_ path: CGPath?, on shape: CAShapeLayer) {
             guard let path else {
@@ -195,29 +193,37 @@ extension CanvasNSView {
         }
     }
 
-    // MARK: The pointer resting
-
-    /// Brings the arcs out when the pointer rests on the picked layer's knob,
-    /// and puts them away once it has left the layer. Called on every pointer
-    /// move.
-    func refreshSpaceArcs(at viewPoint: CGPoint?) {
-        guard spaceHandleDrag == nil else { return }
-        let wanted: UUID? = {
-            guard spaceHandlesOffered, let viewPoint, let shown = drawnSpaceHandles else { return nil }
-            if spaceArcsOutFor == shown.layerID,
-               shown.handles.holds(at: viewPoint, over: shown.drawn) { return shown.layerID }
-            return shown.handles.reveals(at: viewPoint) ? shown.layerID : nil
-        }()
-        guard wanted != spaceArcsOutFor else { return }
-        spaceArcsOutFor = wanted
-        refreshOverlays()
-    }
-
     /// The 3D handle a press at `viewPoint` would take, or nil.
     func spaceHandleHit(atView viewPoint: CGPoint) -> SpaceHandle? {
         guard spaceHandlesOffered, let shown = drawnSpaceHandles, shown.layerID == selectedLayerID,
               let layer = document?.canvasLayer(id: shown.layerID), !layer.isLocked else { return nil }
-        return shown.handles.hit(at: viewPoint, arcs: shown.arcs, depth: shown.depth)
+        return shown.handles.hit(at: viewPoint, arcs: shown.arcs, depth: shown.depth,
+                                 boxReach: boxReach(atView: viewPoint, of: layer, inSpace: shown.inSpace))
+    }
+
+    /// How near, in view points, a press at `viewPoint` is to a mark the
+    /// picked layer's own box would take it with (a resize square, the knob, a
+    /// rounding dot), or nil where the box takes it nowhere. Asked the way
+    /// `motionPivotTakesPress` asks it (`docs/design/canvas-hit-order.md`).
+    /// A layer seen in space draws its box through the camera, which the
+    /// upright reading does not follow, so it competes nowhere there.
+    private func boxReach(atView viewPoint: CGPoint, of layer: Layer, inSpace: Bool) -> CGFloat? {
+        guard !inSpace, let viewport else { return nil }
+        let offersHandles = offersOwnHandles(layer)
+        let frame = offersHandles && editablePath == nil && layer.allowsFrameResize
+            ? selectedLayerFrame : nil
+        let knob = offersRotation(layer)
+            ? layer.rotateKnobPoint(zoom: viewport.zoom)
+                .map { CanvasPointer.handleSpacePoint($0, layer: layer) }
+            : nil
+        let p = viewport.documentPoint(fromView: viewPoint)
+        return CanvasHitOrder.boxGrabDistance(
+            at: handleSpacePoint(p, layer: layer), frame: frame, zoom: viewport.zoom, knob: knob,
+            roundingDots: Experiments.shared.cornerHandlesEnabled && offersHandles
+                && layer.offersCornerRadiusHandles && selectedLayerFrame != nil,
+            radii: layer.roundedCornerRadii,
+            edgeGrab: Experiments.shared.edgeGrabEnabled)
+            .map { $0 * viewport.zoom }
     }
 
     /// Whether `viewPoint` is on the knob of a picked layer seen in space,

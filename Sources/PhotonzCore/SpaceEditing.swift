@@ -7,9 +7,10 @@ import Foundation
 // is how a person gets it there (`docs/design/mocks/pages/video-depth.html`,
 // design A on the decision card `...-how-do-you-turn-a-layer-toward-o`):
 //
-// - Two arcs on the turn knob. Rest on the knob and they appear; the flat arc
-//   drags sideways to swing the layer (Rotation Y), the tall arc up and down to
-//   tip it (Rotation X). The knob itself still turns it flat, as it always did.
+// - Two arcs on the turn knob, out as soon as the layer is picked (the user,
+//   2026-10-13: hidden until the knob was hovered, they read as gone). The flat
+//   arc drags sideways to swing the layer (Rotation Y), the tall arc up and
+//   down to tip it (Rotation X). The knob itself still turns it flat.
 // - A depth arrow off the pivot: drag it up to push the layer away.
 // - The panel's 3D rows and the Layer menu's Reset 3D Rotation, Bring Nearer
 //   and Send Further.
@@ -53,11 +54,6 @@ public struct SpaceHandles: Hashable, Sendable {
     /// Generous on purpose: the arcs are small targets (the design audit,
     /// 2026-10-11).
     public static let grabReach: CGFloat = 9
-    /// Resting this close to the knob brings the arcs out.
-    public static let revealReach: CGFloat = 12
-    /// Once out, the arcs stay while the pointer is this close to the knob,
-    /// so the hand can travel to the far end of an arc without losing it.
-    public static let holdReach: CGFloat = 62
     /// Half the flat arc's span, and how far it bows out from the knob.
     public static let swingHalfSpan: CGFloat = 26
     public static let swingBow: CGFloat = 10
@@ -147,40 +143,57 @@ public struct SpaceHandles: Hashable, Sendable {
         hypot(p.x - knob.x, p.y - knob.y) <= Self.knobKeeps
     }
 
+    /// Which of the handles a picked layer wears.
+    public struct Showing: Hashable, Sendable {
+        /// The two arcs on the knob.
+        public let arcs: Bool
+        /// The depth arrow, and the crosshair on the pivot it leaves from.
+        public let depth: Bool
+
+        public init(arcs: Bool, depth: Bool) {
+            self.arcs = arcs
+            self.depth = depth
+        }
+    }
+
+    /// What a picked layer wears with `holding` in the hand (nil: nothing
+    /// held). Everything, at once: the user had to rest on the knob to find
+    /// the arcs and took them for gone (2026-10-13). Pushing in depth puts the
+    /// arcs away, so only the arrow in hand is drawn.
+    public static func showing(holding: SpaceHandle?) -> Showing {
+        Showing(arcs: holding != .depth, depth: true)
+    }
+
+    /// How far `p` is from `handle` as drawn, in view points.
+    public func reach(of handle: SpaceHandle, at p: CGPoint) -> CGFloat {
+        switch handle {
+        case .swing: swingArc.distance(to: p)
+        case .tip: tipArc.distance(to: p)
+        case .depth: Self.distance(p, toSegment: depthArrow.tail, depthArrow.head)
+        }
+    }
+
     /// The handle a press at `p` takes, of the ones showing, or nil. The knob
     /// keeps its own middle: a press there still turns the layer flat. Where
     /// two are in reach, the nearer wins.
-    public func hit(at p: CGPoint, arcs: Bool, depth: Bool) -> SpaceHandle? {
-        var best: (SpaceHandle, CGFloat)?
-        func consider(_ handle: SpaceHandle, _ d: CGFloat) {
-            guard d <= Self.grabReach, d < (best?.1 ?? .infinity) else { return }
-            best = (handle, d)
-        }
-        if arcs {
-            if onKnob(p) { return nil }
-            consider(.swing, swingArc.distance(to: p))
-            consider(.tip, tipArc.distance(to: p))
-        }
-        if depth {
-            let arrow = depthArrow
-            consider(.depth, Self.distance(p, toSegment: arrow.tail, arrow.head))
-        }
-        return best?.0
-    }
-
-    /// Whether resting at `p` brings the arcs out.
-    public func reveals(at p: CGPoint) -> Bool {
-        hypot(p.x - knob.x, p.y - knob.y) <= Self.revealReach
-    }
-
-    /// Whether arcs already out stay out with the pointer at `p`: near the
-    /// knob, or anywhere over `drawn` (the layer as drawn, in view points),
-    /// so the hand can go from the knob to the depth arrow without the
-    /// handles vanishing on the way.
-    public func holds(at p: CGPoint, over drawn: CGRect) -> Bool {
-        if hypot(p.x - knob.x, p.y - knob.y) <= Self.holdReach { return true }
-        return drawn.insetBy(dx: -Self.depthEnd - Self.grabReach, dy: -Self.depthEnd - Self.grabReach)
-            .contains(p)
+    ///
+    /// `boxReach` is how near, in view points, the press is to a mark the
+    /// layer's own box would take it with (a resize square, the knob, a
+    /// rounding dot: `CanvasHitOrder.boxGrabDistance`), nil where the box takes
+    /// it nowhere. The box keeps a press it is at least as near to: on a small
+    /// layer the arrow and the tall arc pass right over a corner square, and a
+    /// resize has no other way in on the canvas.
+    public func hit(at p: CGPoint, arcs: Bool, depth: Bool, boxReach: CGFloat? = nil) -> SpaceHandle? {
+        if arcs, onKnob(p) { return nil }
+        var shown: [SpaceHandle] = []
+        if arcs { shown += [.swing, .tip] }
+        if depth { shown.append(.depth) }
+        let best = shown.map { ($0, reach(of: $0, at: p)) }
+            .filter { $0.1 <= Self.grabReach }
+            .min { $0.1 < $1.1 }
+        guard let best else { return nil }
+        if let boxReach, boxReach <= best.1 { return nil }
+        return best.0
     }
 
     static func distance(_ p: CGPoint, toSegment a: CGPoint, _ b: CGPoint) -> CGFloat {

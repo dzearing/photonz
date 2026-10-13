@@ -1303,21 +1303,11 @@ extension CanvasNSView {
                 // camera sees, so the knob moves there too.
                 let pivotOffset = CGPoint(x: selectedLayer.spacePivot.x - selectedLayer.frame.minX,
                                           y: selectedLayer.spacePivot.y - selectedLayer.frame.minY)
-                let corners = [CGPoint(x: frame.minX, y: frame.minY), CGPoint(x: frame.maxX, y: frame.minY),
-                               CGPoint(x: frame.maxX, y: frame.maxY), CGPoint(x: frame.minX, y: frame.maxY)]
-                    .map(chromePoint)
-                let xs = corners.map(\.x), ys = corners.map(\.y)
-                let drawnBox = CGRect(x: xs.min() ?? 0, y: ys.min() ?? 0,
-                                      width: (xs.max() ?? 0) - (xs.min() ?? 0),
-                                      height: (ys.max() ?? 0) - (ys.min() ?? 0))
-                let turnedInSpace = spaceHandleDrag.map { $0.layerID == selectedLayer.id && !$0.turn.isFlat }
-                    ?? selectedLayer.isTurnedInSpace
                 if let placed = drawSpaceHandles(
                     for: selectedLayer, topMid: topMid,
                     middle: chromePoint(CGPoint(x: frame.midX, y: frame.midY)),
                     pivot: chromePoint(CGPoint(x: frame.minX + pivotOffset.x, y: frame.minY + pivotOffset.y)),
-                    flatKnob: spaceMap == nil ? knobInView : nil, drawn: drawnBox,
-                    turned: turnedInSpace) {
+                    flatKnob: spaceMap == nil ? knobInView : nil) {
                     knobInView = placed
                 }
                 let path = CGMutablePath()

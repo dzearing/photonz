@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/3d-grippers-on-a-picked-layer-walk",
+  "seed": "The 3D grippers are on a picked layer the moment it is picked, at Next defaults with no flag changed. A title is typed over a recording and picked with the Select tool: with the pointer off on a bare corner of the canvas it already wears the green swing arc and the red tip arc on its turn knob and the blue depth arrow off its middle. The flat arc dragged sideways swings it 40 degrees and the title is drawn turned. Then a small rectangle is drawn and picked: it wears the same grippers, and its top right corner, which the depth arrow passes over on a layer that small, still resizes it.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [520, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster." },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectSpaceHandles", "arcs": true, "depth": true },
+    { "do": "describe", "stage": "1-title-picked", "note": "the title just picked, the pointer off in a corner: the turn knob wears the green flat arc across it and the red tall arc beside it, and the blue depth arrow leaves the crosshair on its middle, with no hover at all" },
+    { "do": "snapshot", "name": "1-title-picked" },
+    { "do": "expectTilt", "flat": true },
+    { "do": "spaceHandle", "handle": "swing", "by": [67, 0] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Transform Tilt Y", "reads": "40" },
+    { "do": "expectTilt", "atLeast": 1.05 },
+    { "do": "expectSpaceHandles", "arcs": true, "depth": true },
+    { "do": "describe", "stage": "2-title-swung", "note": "the flat arc dragged sideways: the title swung 40 degrees, its far edge shorter, and the grippers are still on it with the pointer gone" },
+    { "do": "snapshot", "name": "2-title-swung" },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [760, 520], "to": [810, 544], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectSpaceHandles", "arcs": true, "depth": true },
+    { "do": "describe", "stage": "3-small-rectangle-picked", "note": "a small rectangle, 50 by 24, just picked: the same arcs on its knob and the depth arrow off its middle, the arrow reaching past its top right corner" },
+    { "do": "snapshot", "name": "3-small-rectangle-picked" },
+    { "do": "drag", "from": [810, 520], "to": [850, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "field": "Transform W", "reads": "90" },
+    { "do": "expectTilt", "flat": true },
+    { "do": "describe", "stage": "4-corner-resized", "note": "the small rectangle's top right corner dragged out: it grew to 90 wide and stayed flat, so the depth arrow over the corner did not take the press" },
+    { "do": "snapshot", "name": "4-corner-resized" }
+  ]
+}

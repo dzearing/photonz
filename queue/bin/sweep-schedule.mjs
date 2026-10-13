@@ -61,7 +61,10 @@ export const DEFAULTS = {
   // an-editing-session-walk opens a talking recording at Next defaults, cuts
   // it, adds a clip, a transition and a moving title, plays it through
   // looking for a blank frame, and writes the MP4 (asked for on 2026-09-23).
-  everyCheck: ['an-editing-session-walk'],
+  // 3d-grippers-on-a-picked-layer-walk picks a layer and checks its 3D arcs
+  // and depth arrow are drawn with no hover, then swings it: the user found
+  // them gone on 2026-10-13 and asked that they never silently go again.
+  everyCheck: ['an-editing-session-walk', '3d-grippers-on-a-picked-layer-walk'],
 };
 
 const HOUR = 3600 * 1000;

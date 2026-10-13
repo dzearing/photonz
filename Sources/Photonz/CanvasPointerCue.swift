@@ -49,8 +49,6 @@ extension CanvasNSView {
         refreshPointerIconFrame(at: convert(event.locationInWindow, from: nil))
         refreshNameLabelHover(at: convert(event.locationInWindow, from: nil))
         refreshPathCornerHover(at: convert(event.locationInWindow, from: nil))
-        // The knob's 3D arcs come out while the pointer rests on it.
-        refreshSpaceArcs(at: convert(event.locationInWindow, from: nil))
         refreshGrabCursor(at: convert(event.locationInWindow, from: nil))
     }
 
@@ -81,7 +79,6 @@ extension CanvasNSView {
         // the way to being read would be no better than the one it replaced.
         refreshNameLabelHover(at: nil)
         refreshPathCornerHover(at: nil)
-        refreshSpaceArcs(at: nil)
         applyGrabCursor(nil)
         noteHandleHover(nil, space: nil, at: nil)
         // Nothing is being aimed at once the pointer is off the canvas, so

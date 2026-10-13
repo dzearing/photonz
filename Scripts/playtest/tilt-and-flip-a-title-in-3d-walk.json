@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tilt-and-flip-a-title-in-3d-walk",
-  "seed": "Tilt, flip and push layers in depth from the canvas and the transform bar, at Next defaults with no flag changed. A title is typed over a recording at one second and picked: it wears the knob it always has and nothing new. Resting on the knob brings out the two arcs; the flat arc dragged sideways swings the title 40 degrees on Y, the transform bar under it shows Tilt Y at 40. The title's track diamond keys its place there, so a second later the arc swinging it on to 180 is a key too, so the title flips over one second; the walk scrubs through the flip and photographs it. The depth arrow pushes it back. Then a rectangle is drawn, turned flat by the knob itself and moved, and its 3D rows stay at 0: plain 2D editing is unchanged.",
+  "seed": "Tilt, flip and push layers in depth from the canvas and the transform bar, at Next defaults with no flag changed. A title is typed over a recording at one second and picked: it wears the knob with its two arcs and the depth arrow at once; the flat arc dragged sideways swings the title 40 degrees on Y, the transform bar under it shows Tilt Y at 40. The title's track diamond keys its place there, so a second later the arc swinging it on to 180 is a key too, so the title flips over one second; the walk scrubs through the flip and photographs it. The depth arrow pushes it back. Then a rectangle is drawn, turned flat by the knob itself and moved, and its 3D rows stay at 0: plain 2D editing is unchanged.",
   "setup": {
     "forget": [
       "all"
@@ -23,7 +23,8 @@
     { "do": "wait", "seconds": 1.0 },
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "1-picked-flat", "note": "the title picked: its box, its handles and the turn knob above it, exactly as before. No arcs, no arrow, nothing new until the pointer rests on the knob" },
+    { "do": "describe", "stage": "1-picked-flat", "note": "the title picked: its box, its handles, the turn knob above it with the green flat arc and the red tall arc, and the blue depth arrow off its middle, all out without any hover" },
+    { "do": "expectSpaceHandles", "arcs": true, "depth": true },
     { "do": "snapshot", "name": "1-picked-flat" },
     { "do": "expectTransformBar", "present": false },
     { "do": "spaceHandle", "handle": "swing", "by": [67, 0] },

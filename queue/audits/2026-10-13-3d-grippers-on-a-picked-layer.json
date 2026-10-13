@@ -1,0 +1,27 @@
+{
+  "feature": "3D rotation grippers on a picked layer",
+  "epic": "video-transitions-motion",
+  "summary": "Picking a layer with the Select tool now shows its 3D grippers straight away: the green swing arc and red tip arc on the turn knob and the blue depth arrow off its middle. No resting on the knob first.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/3d-grippers-on-a-picked-layer-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, add a title, press V and click the title.", "shot": "2026-10-13-3d-grippers-1-title-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Move the pointer away: the arcs and the arrow stay." },
+    { "do": "Drag the green flat arc sideways to swing the title.", "shot": "2026-10-13-3d-grippers-2-title-swung-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw a small rectangle and pick it: it wears the same grippers.", "shot": "2026-10-13-3d-grippers-3-small-rectangle-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag its top right corner: it resizes, even though the depth arrow passes over it.", "shot": "2026-10-13-3d-grippers-4-corner-resized-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick a marked-up screenshot layer and check the grippers do not get in the way of moving it." }
+  ],
+  "evaluate": [
+    "Are these the grippers you had in mind, in the place you expected them?",
+    "On a small layer, do the arcs and arrow feel too busy around the box?",
+    "On a screenshot you are redlining, is having the arcs and the arrow always out acceptable, or do you want a way to hide them?",
+    "Does grabbing a small layer near its middle still move it the way you expect?"
+  ],
+  "rough": [
+    "The mock's Depth page (option A) brings the arcs out only while the pointer rests on the knob; they now show as soon as the layer is picked, your call on 2026-10-13.",
+    "The depth arrow and the pivot crosshair are now on every picked layer, screenshots included, as the mock's Depth page draws them for all three options.",
+    "On a layer about 40 points across, the depth arrow covers much of its upper right quarter: a press there pushes it in depth instead of moving it. Resize squares and the knob keep their presses; the body does not.",
+    "On a small layer the swing arc's right arrowhead and the depth arrow's head sit close together; a press goes to whichever is nearer."
+  ]
+}
