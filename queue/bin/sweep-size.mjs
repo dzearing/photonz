@@ -192,6 +192,14 @@ const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'e
   'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
 export const multPhrase = (s) => `${WORDS[s.ceilingMultiple] || s.ceilingMultiple} times the 600s ceiling`;
 
+// The number a multiple sentence says, whether written as a word or digits.
+export function multValue(phrase) {
+  const said = phrase.split(' ')[0];
+  if (/^\d+$/.test(said)) return Number(said);
+  const i = WORDS.indexOf(said);
+  return i < 0 ? null : i;
+}
+
 // Every file that tells a person how big the sweep is. A file listed here and
 // missing the sentence FAILS the check: deleting the sentence would otherwise
 // be a silent way to switch the check off for that file.
@@ -243,7 +251,13 @@ export function checkQuotes(repo = REPO) {
         }
       }
       for (const m of text.matchAll(MULT_RE)) {
-        if (m[0] !== wantMult) {
+        // Held to the same band as the minutes it is worked out from. It was
+        // an exact match until 2026-10-13, and a whole number of 600s ceilings
+        // ticks over every few hours of walk growth: 21 became 22 four hours
+        // after the docs were last brought into line, and CI stayed red from
+        // then on, which also meant the tests behind this step never ran.
+        const saidMult = multValue(m[0]);
+        if (saidMult === null || off(saidMult, size.ceilingMultiple) > TOLERANCE.minutesPercent) {
           problems.push({ file: rel, line: i + 1, said: m[0], want: wantMult, why: `it says "${m[0]}"; a full sweep is ${wantMult}` });
         }
       }

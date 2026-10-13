@@ -52,8 +52,14 @@ struct CaptionCostTests {
             _ = TextRasterizer.rasterize(text, size: size, scale: 2)
         }
         print("[perf] popping caption at 1080p, 2x: \(String(format: "%.2f", each))ms per frame")
+        // Half a 60fps frame on the calibration machine, scaled by how much
+        // slower this one measures, the way every budget in MachineSpeed is.
+        // It was a flat 8ms until 2026-10-13: this machine reads about 4.5ms,
+        // and the GitHub VM read 6.5 to 12.5ms on unchanged code, so CI failed
+        // on it in about half its runs.
+        let bound = 8 * max(1, MachineSpeed.factor(.filterGraph))
         if MachineSpeed.isGating {
-            #expect(each < 8, "half a 60fps frame at most")
+            #expect(each < bound, "half a 60fps frame at most, on a machine this fast")
         }
     }
 }

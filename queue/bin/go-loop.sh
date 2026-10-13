@@ -311,6 +311,30 @@ refresh_dev_app() { # $1 = git rev before the task ran
     || echo "[go-loop] $(date +%T) dev app refresh failed; see the log" | tee -a "$LOG"
 }
 
+# Keep every quote of the walk sweep's size true. CI fails on any that drifts
+# out of band (queue/bin/sweep-size.mjs --check), and walks arrive at about
+# twenty a day, so a number typed in by hand is wrong within days: between
+# 2026-09-13 and 2026-10-13 that step failed CI on most pushes to main, and
+# because it runs first, the tests behind it never ran at all. So the loop
+# brings the quotes back into line after every task, before it pushes.
+# A quoting file the person has uncommitted edits in is left alone: committing
+# it would commit their half-done work along with the number.
+keep_sweep_size_true() {
+  (( SANDBOX == 0 )) || return 0
+  node queue/bin/sweep-size.mjs --check > /dev/null 2>&1 && return 0
+  local files
+  files=$(node -e "import('./queue/bin/sweep-size.mjs').then(m => console.log(m.QUOTERS.join('\n')))") || return 0
+  # shellcheck disable=SC2086
+  if ! git diff --quiet HEAD -- $files 2>/dev/null; then
+    echo "[go-loop] $(date +%T) the sweep's size is quoted wrongly, but a quoting file has uncommitted edits; left for whoever is editing it" | tee -a "$LOG"
+    return 0
+  fi
+  node queue/bin/sweep-size.mjs --write >> "$LOG" 2>&1 || return 0
+  # shellcheck disable=SC2086
+  git commit -q -m "The sweep's size is quoted as it really is: $(node queue/bin/sweep-size.mjs --phrase)" -- $files >> "$LOG" 2>&1 \
+    && echo "[go-loop] $(date +%T) brought the sweep's size back into line" | tee -a "$LOG"
+}
+
 # Kill anything a runner left spinning on the user's machine. A runner testing
 # the perf gate once spawned ten CPU burners on purpose and cleaned up with
 # `kill $(jobs -p)`, which is empty in a non-interactive shell: ten cores were
@@ -771,6 +795,7 @@ TASK FILE: $TASK_FILE" "$SESSION"
   # ...and this catches anything it left CHANGED. Before the next task is
   # claimed, so that task starts from a tree it owns.
   settle_leftovers task "$TASK_ID" "$OUTCOME" "$TASK_TITLE"
+  keep_sweep_size_true
   # Runners push their own commits; this catches anything they left behind.
   [[ $SANDBOX == 0 ]] && { git push -q origin main >> "$LOG" 2>&1 || true; }
 

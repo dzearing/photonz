@@ -14,7 +14,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import {
   walkCount, perWalkSeconds, sweepSize, capSecondsFor, awakeSecondsFor,
-  sizePhrase, multPhrase, checkQuotes, writeQuotes, QUOTERS, BUDGET_SECONDS_PER_WALK,
+  sizePhrase, multPhrase, multValue, checkQuotes, writeQuotes, QUOTERS, BUDGET_SECONDS_PER_WALK,
 } from './sweep-size.mjs';
 
 let bad = 0;
@@ -138,6 +138,27 @@ try {
   writeFileSync('CLAUDE.md', kept);
 }
 check('and the file is put back exactly as it was', readFileSync('CLAUDE.md', 'utf8') === kept);
+
+// The multiple ticks over every few hours of walk growth, so it is held to the
+// same band as the minutes rather than matched exactly: on 2026-10-07 the docs
+// said 21 four hours after they were brought into line, the truth was 22, and
+// CI stayed red for a week.
+console.log('a multiple one off, and one far off');
+try {
+  const real = sweepSize().ceilingMultiple;
+  const near = multPhrase({ ceilingMultiple: real + 1 });
+  writeFileSync('CLAUDE.md', kept.replace(/\b(?:[a-z]+|\d+) times the 600s ceiling\b/, near));
+  check('one ceiling over is inside the band',
+    !checkQuotes().problems.some((p) => p.file === 'CLAUDE.md' && /times the 600s ceiling/.test(p.why)), near);
+  const far = multPhrase({ ceilingMultiple: Math.round(real * 0.6) });
+  writeFileSync('CLAUDE.md', kept.replace(/\b(?:[a-z]+|\d+) times the 600s ceiling\b/, far));
+  check('six tenths of the truth is outside it',
+    checkQuotes().problems.some((p) => p.file === 'CLAUDE.md' && /times the 600s ceiling/.test(p.why)), far);
+  check('a multiple written as a word reads as its number', multValue('eighteen times the 600s ceiling') === 18);
+  check('and one written in digits too', multValue('25 times the 600s ceiling') === 25);
+} finally {
+  writeFileSync('CLAUDE.md', kept);
+}
 
 // ---- 5. --write fixes it ----------------------------------------------------
 console.log('putting it right');
