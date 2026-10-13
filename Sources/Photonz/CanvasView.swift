@@ -1901,7 +1901,20 @@ final class CanvasNSView: NSView {
                               holding held: SnapHold = .none)
         -> Snapping.FrameResult {
         let local = handleSpacePoint(p, layer: layer)
-        var frame = Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
+        var frame = layer.map {
+            ZoomCalloutBuilder.draggedFrame($0, from: start, handle: handle, to: local,
+                                            keepingShape: preserveAspect)
+        } ?? Handles.resize(start, dragging: handle, to: local, preserveAspect: preserveAspect)
+        // A callout keeping its source's shape takes no magnet at all: catching
+        // an edge would move one side and hand back the stretched picture the
+        // shape is being kept to prevent.
+        if preserveAspect, layer?.resizeKeepsShapeByDefault == true {
+            if let layer {
+                frame = Handles.anchoredFrame(start: start, proposed: frame, handle: handle,
+                                              transform: layer.transform)
+            }
+            return Snapping.FrameResult(frame: frame)
+        }
         // The magnets act on the edge the pointer is holding, before anything
         // downstream re-derives a height from it, so a re-wrapped text block is
         // measured at the width the drag actually settled on.

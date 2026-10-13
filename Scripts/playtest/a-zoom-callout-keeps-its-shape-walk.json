@@ -1,0 +1,51 @@
+{
+  "out": "/tmp/photonz-playtest/a-zoom-callout-keeps-its-shape",
+  "seed": "Resizing a zoom callout's magnified box keeps the SOURCE's shape with no key held, so the picture in it is never stretched, and the magnification follows the width. Shift lets the shape go and the source reshapes with the box about its own centre, so even then nothing stretches. The user, 2026-10-13: when i resize the magnification window, it does not preserve aspect ratio by default. Next defaults, no switch: Z is the Lens set to Magnify. Points are document points (1440 x 960); the callout made here lands at (444, 260, 240 x 160) from a 120 x 80 source.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "z" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "drag", "from": [300, 300], "to": [420, 380], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-made", "note": "a 120 x 80 source magnified 2x into a 240 x 160 box" },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2, "unstretched": true },
+    { "do": "snapshot", "name": "1-made" },
+
+    { "do": "drag", "from": [684, 420], "to": [764, 440], "steps": 12, "hold": "2-corner-held" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-corner", "note": "THE TEST: the bottom-right corner pulled out and a little down. The box stays 3:2, the source's shape, held at its top-left corner, and the magnification follows the width (320 wide is 2.67x). The held picture shows the Magnification readout moving with the hand" },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2.667, "unstretched": true },
+    { "do": "expectBox", "layer": "Magnify", "at": [444, 260], "size": [320, 213.3], "within": 1 },
+    { "do": "snapshot", "name": "2-corner" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2 },
+    { "do": "drag", "from": [684, 340], "to": [744, 330], "steps": 12 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-edge", "note": "THE TEST for an edge: the right edge pulled 60 out. The box grows taller about the middle of that edge, so it is still 3:2 and 2.5x" },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2.5, "unstretched": true },
+    { "do": "expectBox", "layer": "Magnify", "at": [444, 240], "size": [300, 200], "within": 1 },
+    { "do": "snapshot", "name": "3-edge" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [564, 420], "to": [564, 480], "steps": 12, "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-shift-free", "note": "THE TEST for Shift: the bottom edge pulled 60 down with Shift held. The box goes 240 x 220, a new shape, and the source outline grows taller about its own centre to match, so the picture is still the source at 2x and not stretched" },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2, "unstretched": true },
+    { "do": "expectBox", "layer": "Magnify", "at": [444, 260], "size": [240, 220], "within": 1 },
+    { "do": "snapshot", "name": "4-shift-free" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-undone", "note": "one undo puts the box AND its source back: 240 x 160 from 120 x 80" },
+    { "do": "expectCallout", "keepsShape": true, "magnification": 2, "unstretched": true },
+    { "do": "expectBox", "layer": "Magnify", "at": [444, 260], "size": [240, 160], "within": 1 },
+    { "do": "snapshot", "name": "5-undone" }
+  ]
+}

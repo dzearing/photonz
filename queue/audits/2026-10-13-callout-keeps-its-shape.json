@@ -1,0 +1,28 @@
+{
+  "feature": "Resizing a zoom callout keeps its shape",
+  "epic": "measure-redline",
+  "summary": "Dragging a corner or edge of a magnified box now keeps the shape of the region it magnifies, so the picture never stretches and the magnification follows the size. Hold Shift to change the box's shape: the outlined region changes shape with it, so the picture still isn't stretched.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screenshot. Walk: Scripts/playtest/a-zoom-callout-keeps-its-shape-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press Z and drag a box over some text to make a magnifier, then press V.", "shot": "2026-10-13-callout-keeps-shape-before.png", "shotNote": "BEFORE this change, from the old build: a corner pulled out made the box 320 x 180 from a 3:2 region, and the word is stretched wide. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the magnified box's bottom-right corner out and a little down.", "shot": "2026-10-13-callout-keeps-shape-corner-held.png", "shotNote": "Taken with the button still down: the box stays 3:2 (320 x 213), the panel already reads 2.7x. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Undo, then drag the right edge outwards.", "shot": "2026-10-13-callout-keeps-shape-edge.png", "shotNote": "The box grows taller about the middle of that edge: 300 x 200, 2.5x. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Undo, then hold Shift and drag the bottom edge down.", "shot": "2026-10-13-callout-keeps-shape-shift.png", "shotNote": "The box goes 240 x 220 and the red outline on the region grows taller to match, so the word is still 2x and not stretched. Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command-Z once: the box and its outlined region both go back." }
+  ],
+  "evaluate": [
+    "Does keeping the shape with no key held feel right for a magnifier, the way pictures resize in Photoshop?",
+    "With Shift held, is it clear that the outlined region is what changes shape, or would you expect the region to stay put?",
+    "Does the Magnification number following the box size while you drag read as what you'd expect?",
+    "Is losing the snap guides during a shape-kept resize a fair trade (an edge that snapped would stretch the picture)?"
+  ],
+  "rough": [
+    "No mock covers resizing a callout, so there is no mock frame to compare against.",
+    "Elsewhere in Photonz Shift KEEPS proportions; on a magnifier it frees them, because kept is the default there. This follows Photoshop's rule for pictures, but it is the one place in Photonz where Shift means the opposite.",
+    "Option from the centre is not offered: Option on a corner already tilts (skews) a layer in Photonz, and that was left alone.",
+    "The region being magnified has no handles of its own on the canvas yet, so it can only be reshaped by resizing the box with Shift held. If you want to drag the region itself, that's a new feature to ask for.",
+    "A shape-kept resize takes no snap guides, since snapping one edge would stretch the picture again.",
+    "A magnifier saved before this change with a stretched box goes back to its region's shape the first time a handle is dragged."
+  ]
+}

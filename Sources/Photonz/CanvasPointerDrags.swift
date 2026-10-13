@@ -1049,7 +1049,11 @@ extension CanvasNSView {
             // that means "ignore the magnets" everywhere on the canvas, and a
             // ratio nobody may quietly break. Either one hands back exactly the
             // resize this has always done.
-            let aspect = event.modifierFlags.contains(.shift)
+            // A zoom callout is the other way round: its box keeps its source's
+            // shape with no key held, because any other shape is the picture
+            // stretched, and ⇧ lets it go (the source then reshapes with it).
+            let shift = event.modifierFlags.contains(.shift)
+            let aspect = layer?.resizeKeepsShapeByDefault == true ? !shift : shift
             let held = snapHold(freeing: event.modifierFlags.contains(.command))
             let snapping = !aspect && !held.isFree
             // Same rule as a move: a piece on a slant has nothing to say to the

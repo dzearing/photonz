@@ -119,15 +119,66 @@ public enum ZoomCalloutBuilder {
     /// Frame edit on a callout: magnification follows the frame so the stored
     /// value (what the inspector slider shows, and what scales the source
     /// outline's corner radius) keeps matching what's rendered.
+    ///
+    /// The box never takes a shape its source does not have, because the
+    /// picture is the source blown up onto the box and two shapes mean a
+    /// stretched picture. A box handed a new shape (Shift on a handle, a
+    /// height typed on its own, a group scaled one way) takes the source with
+    /// it: the source keeps its width and its centre, and its height becomes
+    /// the box's at the same magnification. A box of the same shape, which is
+    /// every plain handle drag (`draggedFrame`), leaves the source exactly as
+    /// it was.
     public static func resized(_ layer: Layer, to frame: CGRect) -> Layer {
         var layer = layer
         layer.frame = frame
         if var callout = layer.zoomCallout, callout.sourceRect.width > 0 {
-            callout.magnification = frame.width / callout.sourceRect.width
+            let magnification = frame.width / callout.sourceRect.width
+            callout.magnification = magnification
+            let source = callout.sourceRect.standardized
+            let height = abs(frame.height) / magnification
+            // A hair of slack, so float noise from a shape-keeping drag never
+            // nudges a pixel-aligned source off its pixels.
+            if magnification > 0, height.isFinite, abs(height - source.height) > 0.001 {
+                callout.sourceRect = CGRect(x: source.minX, y: source.midY - height / 2,
+                                            width: source.width, height: height)
+            }
             layer.content = .zoomCallout(callout)
         }
         return layer
     }
+
+    /// The box a handle drag on `layer` lands on, before any magnet: `start`
+    /// is the box when the handle was taken, `p` the pointer in the same space.
+    ///
+    /// A callout keeping its shape (the default; Shift lets it go) keeps its
+    /// SOURCE's proportions, so the magnified picture is the source and never
+    /// a stretched copy of it. A corner holds its opposite corner and an edge
+    /// grows the other side about its own middle, the way a shape-kept drag
+    /// does on any layer. A box already out of shape (a callout saved before
+    /// this rule) is brought back to the source's shape by the first drag
+    /// rather than having the stretch locked in.
+    ///
+    /// Anything else, or a callout let go, is the plain resize every layer has.
+    public static func draggedFrame(_ layer: Layer, from start: CGRect, handle: ResizeHandle,
+                                    to p: CGPoint, keepingShape: Bool) -> CGRect {
+        guard keepingShape, let source = layer.zoomCallout?.sourceRect.standardized,
+              source.width > 0, source.height > 0, start.width > 0 else {
+            return Handles.resize(start, dragging: handle, to: p, preserveAspect: keepingShape)
+        }
+        let size = CGSize(width: start.width, height: start.width * source.height / source.width)
+        let anchor = Handles.point(for: handle.opposite, in: start)
+        let held = Handles.point(for: handle.opposite, in: CGRect(origin: .zero, size: size))
+        let shaped = CGRect(origin: CGPoint(x: anchor.x - held.x, y: anchor.y - held.y), size: size)
+        return Handles.resize(shaped, dragging: handle, to: p, preserveAspect: true)
+    }
+}
+
+extension Layer {
+    /// Whether a handle drag keeps this layer's proportions with no key held,
+    /// so Shift is the key that lets them go rather than the one that keeps
+    /// them. Only a zoom callout: its picture is its source blown up, and a
+    /// box of another shape is that picture stretched.
+    public var resizeKeepsShapeByDefault: Bool { zoomCallout != nil }
 }
 
 extension PhotonzDocument {

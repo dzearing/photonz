@@ -1236,6 +1236,14 @@ public final class DocumentRenderer: @unchecked Sendable {
             let flipped = CGRect(x: source.origin.x,
                                  y: document.canvasSize.height - source.maxY,
                                  width: source.width, height: source.height)
+            // The WHOLE source, past the canvas edge included, is what the box
+            // is blown up from, so the picture has one scale on both axes. A
+            // source reaching off the picture (a box let go with Shift and
+            // pulled taller than there is room for) shows that overhang
+            // empty; blowing up only the on-canvas part would stretch it.
+            let whole = callout.sourceRect.standardized
+            let wholeFlipped = CGRect(x: whole.minX, y: document.canvasSize.height - whole.maxY,
+                                      width: whole.width, height: whole.height)
             let box = CGRect(x: frame.minX,
                              y: document.canvasSize.height - frame.maxY,
                              width: frame.width, height: frame.height)
@@ -1247,9 +1255,9 @@ public final class DocumentRenderer: @unchecked Sendable {
             // there is no turn, which keeps an upright callout the pixels it
             // has always been.
             if let turn = canvasTurn(of: layer, box: box), box.width >= 1, box.height >= 1 {
-                let onto = CGAffineTransform(translationX: -flipped.minX, y: -flipped.minY)
-                    .concatenating(CGAffineTransform(scaleX: box.width / flipped.width,
-                                                     y: box.height / flipped.height))
+                let onto = CGAffineTransform(translationX: -wholeFlipped.minX, y: -wholeFlipped.minY)
+                    .concatenating(CGAffineTransform(scaleX: box.width / wholeFlipped.width,
+                                                     y: box.height / wholeFlipped.height))
                     .concatenating(CGAffineTransform(translationX: box.minX, y: box.minY))
                 // Only the sliver of canvas the turned box actually shows: at
                 // a turn its corners reach past the source region, and cutting
@@ -1258,9 +1266,16 @@ public final class DocumentRenderer: @unchecked Sendable {
                 image = upright(backdrop.cropped(to: needed).transformed(by: onto),
                                 box: box, turn: turn)
             } else {
-                image = backdrop.cropped(to: flipped)
-                    .transformed(by: CGAffineTransform(translationX: -flipped.origin.x,
-                                                       y: -flipped.origin.y))
+                var read = backdrop.cropped(to: flipped)
+                // Only when the source hangs off the picture: an empty sheet the
+                // whole source's size under it, so the extent the box is scaled
+                // from is the whole source. A source on the picture is the
+                // pixels it has always been.
+                if flipped != wholeFlipped {
+                    read = read.composited(over: CIImage(color: .clear).cropped(to: wholeFlipped))
+                }
+                image = read.transformed(by: CGAffineTransform(translationX: -wholeFlipped.origin.x,
+                                                               y: -wholeFlipped.origin.y))
             }
         // Handled above, before the switch: a group has no pixels of its own,
         // it draws what it holds.

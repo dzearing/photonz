@@ -63,6 +63,29 @@ struct ZoomCalloutRenderingTests {
                      frame: frame, style: style)
     }
 
+    /// A source reaching past the canvas edge (a box let go with Shift and
+    /// pulled taller than the picture has room for) magnifies at ONE scale:
+    /// the part past the edge is empty, never the rest stretched to fill it.
+    @Test func aSourcePastTheCanvasEdgeIsNotStretched() {
+        let store = ImageStore()
+        let base = store.register(quadrantImage(size: 200))
+        var doc = PhotonzDocument.withBaseImage(base)
+        doc.canvasSize = CGSize(width: 200, height: 200)
+        // Source x 150..190, y 150..230: only its top 50 points are on the
+        // canvas, all white. At 2x the box is 80 x 160, so its top 100 points
+        // are white and the 60 below are the source's empty overhang, which
+        // shows the picture under the box (blue, bottom-left quadrant).
+        doc.addLayer(calloutLayer(source: CGRect(x: 150, y: 150, width: 40, height: 80),
+                                  magnification: 2,
+                                  frame: CGRect(x: 0, y: 0, width: 80, height: 160)))
+        let output = DocumentRenderer().render(doc, store: store)!
+        let top = pixel(output, x: 40, y: 50)
+        #expect(top.r > 240 && top.g > 240 && top.b > 240, "top of the box should be the white source, got \(top)")
+        let overhang = pixel(output, x: 40, y: 140)
+        #expect(overhang.b > 240 && overhang.r < 16 && overhang.g < 16,
+                "past the source's on-canvas part the picture underneath shows, got \(overhang)")
+    }
+
     @Test func magnifiesSourceRegionIntoFrame() {
         let store = ImageStore()
         // 100×100 quadrant base: source box sits inside the green TR quadrant.

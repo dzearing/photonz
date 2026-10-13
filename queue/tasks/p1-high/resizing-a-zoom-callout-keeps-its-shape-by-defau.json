@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:47:24.811Z",
-  "updated": "2026-10-13T01:47:24.915Z",
+  "updated": "2026-10-13T12:40:11.484Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i resize the magnification window, it does not preserve aspect ratio by default\". Context: the zoom callout in the user's previous screenshot (2026-10-12 18.46.00), a magnified box linked by leader lines to its source box.\n\nFrom code reading (not run): ZoomCalloutBuilder.resized(_:to:) (PhotonzCore/ZoomCalloutEditing.swift:122-129) accepts any frame and sets magnification = frame.width / sourceRect.width; height is unconstrained, so the magnified box can take any shape. frame(for:of:) (:110-116) derives the box from the source size times magnification, which is what an aspect-locked resize should keep. The canvas drag lives in CanvasPointerDrags.swift. Check the Lens's resize too and apply the same default if the user would call it a 'magnification window'.",
@@ -31,6 +31,30 @@
     {
       "t": "2026-10-13T01:47:24.914Z",
       "note": "seq 3960 -> 6"
+    },
+    {
+      "t": "2026-10-13T11:39:35.319Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T11:51:22.935Z",
+      "note": "Reproduced on the pre-fix build at Next defaults (Z = Lens set to Magnify, drag 300,300 to 420,380 on settings-pane-2x.png): source 120x80 (3:2), box (444,260,240x160). Corner drag 684,420 -> 764,440 left the box 320x180 (1.78:1, 18.5% off the source) at 2.7x; right-edge drag 684,340 -> 744,330 left 276x160 (1.73:1) at 2.3x. Picture visibly stretched ('pture' pulled wide). Renderer scales box.w/src.w and box.h/src.h independently. Note: the canvas has NO source-box handles today (nothing on the canvas resizes the source), so acceptance item 5 has nothing to keep working; the core rule (box shape change reshapes the source) covers any future source handle. Option on a corner already means skew in Photonz, so there is no Option-from-centre; Photonz elsewhere uses Shift = keep proportions, free by default; callouts invert it (Photoshop's pixel-layer convention)."
+    },
+    {
+      "t": "2026-10-13T12:40:11.353Z",
+      "note": "owns these walks: a-zoom-callout-keeps-its-shape-walk"
+    },
+    {
+      "t": "2026-10-13T12:40:11.414Z",
+      "note": "Shipped: ZoomCalloutBuilder.draggedFrame (PhotonzCore/ZoomCalloutEditing.swift) locks a handle drag to the SOURCE's aspect (corner holds opposite corner, edge grows the other side about its middle; a legacy stretched box comes back to the source shape on its first drag); Layer.resizeKeepsShapeByDefault flips Shift for callouts in CanvasPointerDrags; CanvasView.resizedFrame skips magnets for a shape-kept callout. ZoomCalloutBuilder.resized reshapes the source about its centre (width kept, height = box h / magnification) whenever the box gets another shape (Shift, typed H, group scale), so the picture can never stretch. DocumentRenderer scales the callout from the WHOLE source, so a source hanging off the canvas shows its overhang empty instead of stretching the rest (an extra composite only in that case; on-canvas sources render the same pixels). Tests: ZoomCalloutKeepsItsShapeTests (10 sizes, every corner, edges, Shift, legacy) + ZoomCalloutRenderingTests.aSourcePastTheCanvasEdgeIsNotStretched. New walk step expectCallout (keepsShape/magnification/unstretched pixel check), documented in playtest-harness.md, lock-safe by reading. The pixel check was shown to fail on a stretched picture (source reshape disabled temporarily: 11.4/255, threshold 4; honest reads 0.6-1.2). Walk green at Next defaults; callout*, lens, magnify-lens, crisp-zoom, a-dragged-lens walks green. Full suite 12890 green on the 4th run (runs 1-3 failed only 16ms wall-clock perf gates, folded into the-full-test-run-passes-every-time-not-one-run). Modifier convention elsewhere: Shift keeps proportions, Option on a corner skews, so no Option-from-centre."
+    },
+    {
+      "t": "2026-10-13T12:40:11.483Z",
+      "note": "left rough, not filed: the source region has no canvas handles of its own (acceptance item 5 assumed it had); only Shift on the box reshapes it. Not broken, nobody has asked for source handles; the core rule already keeps any future source handle in step."
     }
+  ],
+  "started": "2026-10-13T11:39:35.316Z",
+  "walks": [
+    "a-zoom-callout-keeps-its-shape-walk"
   ]
 }

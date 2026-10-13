@@ -3456,6 +3456,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// say a swing between two keys is still turned half way through, and a
     /// panel value cannot say the picture follows it.
     case expectTilt(layer: String?, atLeast: Double?, flat: Bool)
+    /// CLAIMS how a zoom callout's magnified box sits against its source,
+    /// asked of the document. `keepsShape` claims the box is the source's
+    /// shape, to `within` percent (0.5 by default); `magnification` claims
+    /// box width over source width, to a hundredth; `unstretched` claims the
+    /// PICTURE in the box is the source blown up by one number on both axes,
+    /// by drawing the source that way and comparing pixels. `layer` names
+    /// it; left off it is the picked layer. A snapshot shows a stretched
+    /// picture to a person who knows the source, and to nobody else.
+    case expectCallout(layer: String?, keepsShape: Bool, magnification: Double?,
+                       unstretched: Bool, within: Double)
     /// CLAIMS what 3D handles the picked layer wears on the canvas, read with
     /// the pointer moved off to a bare corner of the canvas first, so nothing
     /// a hover brings out counts: `arcs` the two on the turn knob, `depth`
@@ -4175,7 +4185,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4257,6 +4267,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectMeasures: "expectMeasures"
         case .expectCorners: "expectCorners"
         case .expectTilt: "expectTilt"
+        case .expectCallout: "expectCallout"
         case .expectSpaceHandles: "expectSpaceHandles"
         case .expectTransformBar: "expectTransformBar"
         case .expectSVG: "expectSVG"
@@ -5160,6 +5171,19 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("atLeast", "a tilt is near edge over far edge, 1 or more, not \(atLeast)")
             }
             self = .expectTilt(layer: try f.optionalString("layer"), atLeast: atLeast, flat: flat)
+        case "expectCallout":
+            let keepsShape = try f.optionalFlag("keepsShape") ?? false
+            let unstretched = try f.optionalFlag("unstretched") ?? false
+            let magnification = try f.optionalNumber("magnification")
+            guard keepsShape || unstretched || magnification != nil else {
+                throw f.invalid("keepsShape", "expectCallout has to claim something: \"keepsShape\", "
+                    + "\"unstretched\" or \"magnification\"")
+            }
+            let within = try f.optionalNumber("within") ?? 0.5
+            if within < 0 { throw f.invalid("within", "a slack is zero or more percent, not \(within)") }
+            self = .expectCallout(layer: try f.optionalString("layer"), keepsShape: keepsShape,
+                                  magnification: magnification, unstretched: unstretched,
+                                  within: within)
         case "expectSpaceHandles":
             let arcs = try f.optionalFlag("arcs")
             let depth = try f.optionalFlag("depth")

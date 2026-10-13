@@ -2674,6 +2674,12 @@ private final class Run {
             note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
                  state: describe())
 
+        case .expectCallout(let layerName, let keepsShape, let magnification, let unstretched, let within):
+            note(number, step.name,
+                 try checkCallout(layerName, keepsShape: keepsShape, magnification: magnification,
+                                  unstretched: unstretched, within: within),
+                 state: describe())
+
         case .expectSpaceHandles(let arcs, let depth):
             note(number, step.name, try await checkSpaceHandles(arcs: arcs, depth: depth), state: describe())
 
@@ -10896,6 +10902,113 @@ private final class Run {
             throw Failure(description: "\(reads), not the \(String(format: "%.2f", atLeast)) claimed")
         }
         return reads + ", as claimed"
+    }
+
+    private func checkCallout(_ layerName: String?, keepsShape: Bool, magnification: Double?,
+                              unstretched: Bool, within: Double) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else { throw Failure(description: "no document open") }
+        let found = layerName.map { name in document.allLayers.last { $0.name == name } }
+            ?? editor.selectedLayerID.flatMap { document.layer(id: $0) }
+        guard let layer = found, let callout = layer.zoomCallout else {
+            throw Failure(description: layerName.map { "no callout called \"\($0)\"" }
+                ?? "the picked layer is not a callout")
+        }
+        let box = layer.frame.standardized
+        let source = callout.sourceRect.standardized
+        guard box.height > 0, source.height > 0, source.width > 0 else {
+            throw Failure(description: "\(layer.name) has an empty box \(box) or source \(source)")
+        }
+        let boxShape = box.width / box.height
+        let sourceShape = source.width / source.height
+        let off = abs(boxShape - sourceShape) / sourceShape * 100
+        let times = box.width / source.width
+        func f(_ v: CGFloat, _ digits: Int = 3) -> String { String(format: "%.\(digits)f", Double(v)) }
+        var reads = "\(layer.name): box \(f(box.width, 1)) x \(f(box.height, 1)) (\(f(boxShape)):1), source "
+            + "\(f(source.width, 1)) x \(f(source.height, 1)) (\(f(sourceShape)):1), \(f(off, 2))% apart, "
+            + "\(f(times, 2))x"
+        if keepsShape, off > within {
+            throw Failure(description: "\(reads): the box is not its source's shape, \(within)% allowed")
+        }
+        if let magnification, abs(Double(times) - magnification) > 0.01 {
+            throw Failure(description: "\(reads), not the \(magnification)x claimed")
+        }
+        if unstretched {
+            let difference = try calloutPictureDifference(layer, in: document, store: editor.store)
+            reads += ", picture \(f(difference, 1))/255 from the source blown up evenly"
+            if difference > 4 {
+                throw Failure(description: "\(reads): the picture in the box is stretched")
+            }
+        }
+        return reads + ", as claimed"
+    }
+
+    /// How far, on average per channel out of 255, the picture inside a
+    /// callout's box is from its source blown up by ONE number on both axes
+    /// (the box's width over the source's) and centred, read over the middle
+    /// of the box so the ring and rounded corners stay out of it. A stretched
+    /// picture missed by 11 on a mostly flat screenshot; an honest one by the
+    /// resampling's one or so. Four is the line.
+    private func calloutPictureDifference(_ layer: Layer, in document: PhotonzDocument,
+                                          store: ImageStore) throws -> CGFloat {
+        guard let callout = layer.zoomCallout else { return 0 }
+        var without = document
+        without.updateLayer(id: layer.id) { $0.isVisible = false }
+        guard let drawn = DocumentRenderer().render(document, store: store),
+              let under = DocumentRenderer().render(without, store: store) else {
+            throw Failure(description: "the document did not render")
+        }
+        let box = layer.frame.standardized
+        let source = callout.sourceRect.standardized
+        let times = box.width / source.width
+        let side = Int(box.width.rounded()), tall = Int(box.height.rounded())
+        guard side > 8, tall > 8,
+              let space = CGColorSpace(name: CGColorSpace.sRGB) else {
+            throw Failure(description: "the callout box \(box) is too small to read")
+        }
+        func draw(_ paint: (CGContext) -> Void) throws -> [UInt8] {
+            var bytes = [UInt8](repeating: 0, count: side * tall * 4)
+            let made = bytes.withUnsafeMutableBytes { raw -> Bool in
+                guard let context = CGContext(data: raw.baseAddress, width: side, height: tall,
+                                              bitsPerComponent: 8, bytesPerRow: side * 4, space: space,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                else { return false }
+                context.interpolationQuality = .high
+                paint(context)
+                return true
+            }
+            guard made else { throw Failure(description: "could not draw the callout to compare") }
+            return bytes
+        }
+        let canvasHeight = document.canvasSize.height
+        // Both pictures are drawn into a box-sized context, bottom-up: the
+        // composite placed so the box fills it, and the canvas without the
+        // callout placed so the SOURCE's centre lands on the box's centre at
+        // one scale on both axes.
+        let inBox = try draw { context in
+            context.draw(drawn, in: CGRect(x: -box.minX, y: -(canvasHeight - box.maxY),
+                                           width: CGFloat(drawn.width), height: CGFloat(drawn.height)))
+        }
+        let blownUp = try draw { context in
+            let x = box.width / 2 - (source.midX) * times
+            let y = box.height / 2 - (canvasHeight - source.midY) * times
+            context.draw(under, in: CGRect(x: x, y: y, width: CGFloat(under.width) * times,
+                                           height: CGFloat(under.height) * times))
+        }
+        let marginX = max(Int(box.width * 0.15), Int(layer.style.borderWidth) + 4)
+        let marginY = max(Int(box.height * 0.15), Int(layer.style.borderWidth) + 4)
+        var total = 0, count = 0
+        for row in marginY..<(tall - marginY) {
+            for column in marginX..<(side - marginX) {
+                let at = (row * side + column) * 4
+                for channel in 0..<3 {
+                    total += abs(Int(inBox[at + channel]) - Int(blownUp[at + channel]))
+                    count += 1
+                }
+            }
+        }
+        guard count > 0 else { throw Failure(description: "the callout box \(box) is too small to read") }
+        return CGFloat(total) / CGFloat(count)
     }
 
     private func checkCorners(_ layerName: String?, corner: Int?, radius: CGFloat?,
