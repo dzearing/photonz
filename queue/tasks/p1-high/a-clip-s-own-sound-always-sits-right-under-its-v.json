@@ -1,0 +1,36 @@
+{
+  "id": "a-clip-s-own-sound-always-sits-right-under-its-v",
+  "title": "A clip's own sound always sits right under its video, visibly attached",
+  "goal": "The sound that came with a recording belongs to it: on the timeline it is drawn directly under that recording's video row, joined to it so it reads as one clip with two parts, and it stays there when tracks are added, deleted, reordered or the clip moves to another track. Today it lands on whatever audio track is free at the bottom of the timeline (the user's screenshot: the recording on V3, two empty tracks V2 and V1 below it, and its sound on 'Audio' under those), and it shifts around when tracks are inserted or deleted.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T14:15:46.174Z",
+  "updated": "2026-10-13T14:15:46.281Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i delete tracks, or insert, the audio of a track can move around. Audio that is attached to a track should always appear below it, and have some sort of ui affordance that it is attached.\" Screenshot: tracks V3 (Recording 2026-10-10 at 19.3x), V2 (empty), V1 (empty), Audio (the recording's sound with a volume line), +.\n\nFrom code reading (not run): PhotonzCore/DocumentTracks.swift trackLayout (~:280-315): a clip's sound ('speakers') goes to its pinned soundTrackID if that audio track is free, else to the first free audio track or a new linked audio track; audio tracks sit in their own section below the video tracks, so the sound is never under its own video. linkedSoundsByTrack (:364), linkedSoundClipIDs (:367), linkedSoundTrackID (:349); track edits addTrack (:520) and deleteTrack (:557). This is a Final Cut style 'audio under its video' model rather than Premiere's A tracks; the user's word decides it. Coordinate with the volume line work (an-audio-clip-answers-right-click-and-its-volume) which draws on this row.",
+  "acceptance": [
+    "Reproduce first at Next defaults with the user's layout (recording on V3, empty V2 and V1, its sound on Audio): add a track above and below, delete V2, move the clip to V1, reorder tracks; record where the sound row goes each time",
+    "An attached (linked, not detached) sound is drawn as a sound row directly under its own clip's video track, as part of that track (a sub-row that moves with it), never separated from it by another track; when several clips with sound share a video track, their sounds share that track's sound sub-row (and stack into a second sub-row only where they overlap)",
+    "A clear attachment affordance: the video bar and its sound bar are joined (a shared left edge bracket or connector line between them, the same tint family, a small link mark on the sound bar), and picking either shows both as one clip; the track header shows the sub-row as belonging to its video track (indented under it, no separate A track name)",
+    "Adding, deleting or reordering tracks and moving the clip between tracks always keeps the sound directly under its video; MEASURED by a walk that does each of these and checks the sound row's position",
+    "Detach Audio turns the sound into its own clip on a real audio track (the Audio section at the bottom), losing the attachment affordance; Attach (or undo) brings it back under the video",
+    "Mute and volume work as today on the attached row; the volume line rules from the volume line task apply",
+    "Old documents open with attached sounds under their videos; pinned soundTrackID values migrate",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T14:15:46.176Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T14:15:46.280Z",
+      "note": "seq 3960 -> 2"
+    }
+  ]
+}
