@@ -1,0 +1,35 @@
+{
+  "id": "an-audio-clip-answers-right-click-and-its-volume",
+  "title": "An audio clip answers right-click, and its volume line's segments can be picked and shaped",
+  "goal": "Right-clicking anywhere on an audio clip opens its menu (sound commands, and the range and playhead behaviours already promised). On its volume line, the stretch between two level points can be clicked to pick it, dragged to bend it, and right-clicked to choose its shape (the shared curves: Linear, Ease In, Ease Out, Smooth, and the rest, plus Hold), so fades and dips can be shaped the way a person wants. Points pick on click and Backspace deletes them.",
+  "epic": "video-audio",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:36:54.404Z",
+  "updated": "2026-10-13T01:36:54.506Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).",
+  "acceptance": [
+    "Reproduce first at Next defaults with a detached sound and a recording's own sound: right-click on the waveform, on the volume line, on a level point, and between points; click a segment; record in the audit what happens (suspects below) and whether today's f197e266 right-click playhead change is involved",
+    "Right-click anywhere on an audio clip (waveform, line, empty part of the bar) moves the playhead there (per clicking-or-right-clicking-an-item-on-the-timeli) and opens the clip's menu with its sound rows; on a point or a segment the menu leads with that point's or segment's rows",
+    "The volume line follows the same point and segment rules as the value graph (the-value-graph-lets-you-add-points-pick-the-seg), in one shared implementation: click on the line between points adds a point there; a segment highlights on hover and picks on click (Shift adds); a picked segment shows its bend handle(s) and dragging bends it; right-click a segment offers the shared curve list and Hold; points pick on click and Backspace deletes picked points (one undo step); dragging a point moves time and level, Shift locks an axis",
+    "The fader drag (moving the whole line up or down) stays, started from the line away from points and segments' bend handles, or with a modifier the audit names; it no longer steals clicks meant for segments",
+    "The sound plays exactly what the line draws (MEASURED level at 25/50/75% of a bent segment against the curve, within 0.5 dB) and export matches",
+    "A walk adds three level points to a sound, picks the middle segment, sets Ease Out from its right-click, checks the levels, deletes a point with Backspace, and right-clicks the waveform and checks a menu opened",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:36:54.406Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:36:54.504Z",
+      "note": "seq 3960 -> 15"
+    }
+  ]
+}
