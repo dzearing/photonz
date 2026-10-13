@@ -1,0 +1,35 @@
+{
+  "id": "measurements-are-named-for-their-mode-and-every",
+  "title": "Measurements are named for their mode, and every caliper has the same appearance controls",
+  "goal": "A measurement made in Size mode is a layer called Size, one made in Gap mode is called Gap, one made in Distance mode is called Distance (with its number, for example 'Gap 24'). Clicking any caliper, whichever mode made it, shows the same appearance controls (line colour, chip fill, text colour, thickness, label size, units, effects), so a Size caliper's colour can be changed exactly like a Distance caliper's. Today a Size caliper's colour cannot be changed.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:52:01.142Z",
+  "updated": "2026-10-13T01:52:01.240Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when I measure with size, the layer should be size. when i measure with gap, the layer should be gap. the calipers you use with size, gap, or distance, they all should have the exact same configurable appearance options... makes no sense why i click on a size caliper and can't change the color\".\n\nFrom code reading (not run): MeasureInspector.swift shows its own look controls only when !shapePartsEnabled (:52, :100); in Next (shape parts on) colours live in the Appearance section's parts; the Role control (Size vs Spacing, :84-97) picks remembered colours. Size measurements come from EditorState+Measure.swift addElementSize (:97-135) with role .size and measureStyles.content(for: .size). Unknown which of these hides or blocks the colour for Size; reproduce. Companion: a-size-measurement-is-one-group-a-faint-red-box (seq 7) changes what Size commits; keep the two consistent.",
+  "acceptance": [
+    "Reproduce first at Next defaults: make a Size, a Gap and a Distance measurement; for each record the layer name in the Layers list and Measurements panel, and every appearance control the panel offers when it is picked (and where: Measurement section, Appearance section, collapsed or not); record exactly why the Size caliper's colour cannot be changed",
+    "Layer names: Size, Gap, Distance (and Alignment if that mode makes layers) plus the reading, using the document's unit; the Size group from a-size-measurement-is-one-group-a-faint-red-box is named 'Size ...' and its parts Box, Width, Height",
+    "Every caliper, whatever mode or role made it, shows the identical set of appearance controls in the identical place (one view, no per-mode or per-role branching that hides controls); changing a colour on a Size caliper changes it, one undo step, and is remembered for the next Size measurement the same way the others remember theirs",
+    "The Size/Spacing role (measureRolesEnabled) only sets the starting colours; it never locks or hides a control",
+    "Several calipers picked across modes: the shared controls show Mixed and set all of them",
+    "A walk makes one measurement in each mode, checks the names, picks each and changes its line colour, and checks the colour changed on the canvas",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:52:01.144Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:52:01.239Z",
+      "note": "seq 3960 -> 7"
+    }
+  ]
+}
