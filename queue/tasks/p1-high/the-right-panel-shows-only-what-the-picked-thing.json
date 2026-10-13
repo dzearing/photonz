@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:53.964Z",
-  "updated": "2026-10-13T01:52:44.879Z",
+  "updated": "2026-10-13T05:43:05.762Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" Screenshot: a green rectangle picked with the Select tool while the right panel shows MEASURE TOOL (Mode Size, '[ and ] pick a smaller or larger', Snap Edges, Show All), then LAYERS 2, then LIBRARY (Media / Comps).\n\nCode: section choice and content in Sources/Photonz/InspectorPanel.swift (sectionContent ~:1403, MeasureToolInspector at :1426, Space3DInspector at :1526). Related: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?'): the user's answer here points the same way; resolve or fold that card with these words. Memory: one purpose per area (inspector = properties of the picked thing).",
@@ -34,6 +34,39 @@
     {
       "t": "2026-10-13T01:52:44.878Z",
       "note": "User 2026-10-13, second example: 'the \"Masked by\" is confusing. what's this for when i select a caliper?' The Compositing rows (Key, Masked by; CompositingInspector.swift, shown 'if !selection.isEmpty' at :25) appear for every pick, including calipers and other measurements where they mean nothing. Add to this task's acceptance: Key and Masked by show only for layers where they apply (pictures, recordings, shapes, text, groups that can be masked), never for calipers, size boxes, guides or other redline annotations; the walk checks a picked caliper's panel has no Key or Masked by row."
+    },
+    {
+      "t": "2026-10-13T05:09:50.490Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T05:42:53.028Z",
+      "note": "owns these walks: panel-shows-what-is-picked-walk, panel-shows-what-is-picked-video-walk"
+    },
+    {
+      "t": "2026-10-13T05:43:05.506Z",
+      "note": "Adversarial pass before building: a Photoshop user expects Properties above Layers, each with its own height; moving Layers under the pick in ONE scrolling column would push the list down under the pointer every time you pick a row in it. That is why where the lists go is a card, not a quiet reorder."
+    },
+    {
+      "t": "2026-10-13T05:43:05.571Z",
+      "note": "Reproduction: 13 states driven by two new walks (panel-shows-what-is-picked-walk, ...-video-walk). The user's state (Measure Tool showing with Select in hand) did NOT reproduce on today's build: every tool section was already gated on activeTool. Closest: Measure in hand and a rectangle picked from its Layers row shows Measure Tool above the rectangle's sections, which is the rule. Inventory and section lists per state are in the decision brief."
+    },
+    {
+      "t": "2026-10-13T05:43:05.639Z",
+      "note": "Shipped 5dea8135: PanelToolSettings (core, tested) is the one rule over tool sections, applied in InspectorPanel.withTheToolInHand behind next-tool-settings; Layer.canBeMasked takes Masked by off measurements and sounds; expectSections gains absent and always fails on a stray tool section; Inspector row of the placement contract states the rule. 3D section was already withdrawn by next-transform-bar (on at defaults). Canvas section already shows only when the Canvas row itself is picked; read 'document sections show when nothing is picked' as 'only then', not as adding Canvas to an empty pick."
+    },
+    {
+      "t": "2026-10-13T05:43:05.701Z",
+      "note": "Before/after section counts (sections, Layers included): nothing+Select 2/2, rectangle+Select 5/5, rectangle+Measure 6/6, nothing+Measure 3/3, caliper+Select 7/7 (one row fewer: Masked by), text+Select 7/7, screenshot+Select 2/2, clip+Select 10/10, title+Select 8/8. Counts only drop once the card on Layers and Library is answered."
+    },
+    {
+      "t": "2026-10-13T05:43:05.761Z",
+      "note": "left rough: a caliper shows empty Effects (No effects) and Motion (No motion) sections; both do apply to a caliper, so not filed. The other card on this area ('How many buttons may the right hand panel keep?', task the-panel-shows-what-the-picked-thing-is-and-its) asks about one-shot buttons, which the user's words here do not answer; left for the user, noted on that task."
     }
+  ],
+  "started": "2026-10-13T05:09:50.489Z",
+  "walks": [
+    "panel-shows-what-is-picked-walk",
+    "panel-shows-what-is-picked-video-walk"
   ]
 }

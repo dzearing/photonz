@@ -1,0 +1,68 @@
+{
+  "id": "the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit",
+  "taskId": "the-right-panel-shows-only-what-the-picked-thing",
+  "question": "Where do Layers and Library sit when something is picked?",
+  "context": "Found while inventorying the panel on 2026-10-13: with a rectangle picked the panel shows Layers, Appearance, Effects, Motion, then Library; with a caliper picked it adds Measurements; on a video a title brings Captions and Transitions. Those lists are about the document, not the pick, and are what makes the panel feel clogged. Shipped already: a tool's settings only with that tool in hand, Masked by off measurements.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Pick on top, lists folded below",
+      "summary": "The picked thing's sections lead the panel. Layers, Measurements, Library, Captions and Transitions sit under them, folded to their headers until you open one; an opened list stays open.",
+      "pros": [
+        "The panel reads as the picked thing first, with almost nothing else in view",
+        "No new layout to learn: the same one column panel"
+      ],
+      "cons": [
+        "Picking from the Layers list needs a click to open it first",
+        "With a list open, picking a row moves that list down the panel under your pointer, by the height of the new pick's sections"
+      ],
+      "mitigation": "Folding remembers your choice, so someone who lives in Layers opens it once."
+    },
+    {
+      "id": "b",
+      "label": "Pick on top, lists in a pane at the bottom",
+      "summary": "The panel splits like Photoshop's Properties over Layers: the picked thing's sections scroll in the top part, and Layers, Measurements and Library share a pane at the bottom that keeps its height when the pick changes. A grip between them sets the split.",
+      "pros": [
+        "Photoshop users find it where they expect it",
+        "Nothing jumps: picking a row never moves the list you clicked in",
+        "The pick's sections are always first"
+      ],
+      "cons": [
+        "Less height for each half on a laptop window",
+        "A bigger change to build than folding"
+      ],
+      "mitigation": "The bottom pane can be folded to its header with the same chevron every section has."
+    },
+    {
+      "id": "c",
+      "label": "Lists on the left, the pick on the right",
+      "summary": "Layers, Measurements and Library move to a sidebar on the left edge of the window, the way Figma and Final Cut place them; the right panel holds only the picked thing and the tool in hand.",
+      "pros": [
+        "Each side has one job",
+        "The right panel is short and never scrolls past a list"
+      ],
+      "cons": [
+        "Takes canvas width on both sides",
+        "Moves something every current user has learned to find on the right"
+      ],
+      "mitigation": "The left sidebar has its own toggle in the title bar and starts open only on a picture."
+    },
+    {
+      "id": "d",
+      "label": "Keep the lists on top",
+      "summary": "Layers stays at the top with the pick's sections under it, as today. Only the rule already shipped applies: no tool's settings with another tool in hand, no Masked by on a measurement.",
+      "pros": [
+        "Nothing moves",
+        "Picking a row never shifts the list"
+      ],
+      "cons": [
+        "The pick's own sections start below a list that can be tall",
+        "Library and the other lists still sit beside every pick"
+      ],
+      "mitigation": "Layers can be folded by hand, and the Sections menu can hide Library."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-10-13T05:42:20.194Z"
+}

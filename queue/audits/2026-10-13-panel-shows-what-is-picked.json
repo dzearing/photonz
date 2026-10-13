@@ -1,0 +1,48 @@
+{
+  "feature": "The right panel shows what the pick and the tool in hand need",
+  "epic": "ui-building",
+  "summary": "A tool's settings now show only while that tool is in hand, under Layers and above the pick's sections. A picked caliper no longer offers Masked by. Where Layers and Library go is on a card for you.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: panel-shows-what-is-picked-walk, panel-shows-what-is-picked-video-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "New blank canvas, draw a rectangle with the Rectangle tool (U), then press V. The panel shows Layers, Appearance, Effects, Motion and no Measure Tool.",
+      "shot": "2026-10-13-panel-picked-02-rectangle-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press I for Measure and click the Rectangle row in Layers. Measure Tool sits straight under Layers, above the rectangle's own sections.",
+      "shot": "2026-10-13-panel-picked-03-rectangle-measure-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press V again. Measure Tool leaves with the tool."
+    },
+    {
+      "do": "Draw a distance with Measure, press V and pick the Measure row. Appearance has Opacity, Blending and Role, and no Masked by.",
+      "shot": "2026-10-13-panel-picked-06-measurement-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick the rectangle again. Masked by is back, because a shape over a picture can take its shape."
+    },
+    {
+      "do": "Open a recording, add a title with T, press V. No 3D section and no tool's settings.",
+      "shot": "2026-10-13-panel-picked-title-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "With Measure in hand and a rectangle picked, is the Measure Tool section above the rectangle's sections where you want it, or should the tool's settings stay only in the capsule over the tool bar?",
+    "Is a caliper's Appearance (Opacity, Blending, Role) now only what you would set on a caliper?",
+    "Does the empty Effects and Motion on a caliper still read as clutter to you?",
+    "Of the four layouts on the card, does B (Photoshop's Properties over Layers) match how you work?"
+  ],
+  "rough": [
+    "Your screenshot (Measure Tool beside a rectangle picked with Select) did not reproduce in 13 states on today's build; the walk now fails if it ever happens.",
+    "Layers, Measurements and Library still sit around every pick, and on a video Captions and Transitions do; that is the open card the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit.",
+    "The section counts before and after are equal in every state but the caliper's rows: the count only drops once the card is answered (decision the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit).",
+    "A caliper still shows empty Effects and Motion sections with a plus each; left in this task's log, since effects and motion do apply to a caliper.",
+    "No mock draws the picture editor's panel by pick, so there is no frame to set beside it; the video panel order is unchanged and matches video-panel-order-walk."
+  ]
+}
