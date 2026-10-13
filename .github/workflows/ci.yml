@@ -6,13 +6,66 @@ on:
   pull_request:
     branches: [main]
 
+# The loop pushes to main about 30 times a day, often faster than a run
+# finishes. A newer push makes the older run's answer moot, so it is cancelled
+# rather than billed: 330 of 997 runs in 2026-09-13..10-13 started while the
+# one before was still going.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  test:
-    name: Build & test (arm64)
-    runs-on: macos-26
-    timeout-minutes: 55
+  # macOS minutes bill at 10x Linux. Nearly half the loop's commits touch only
+  # queue/ records, docs or markdown, and building the app for those proves
+  # nothing new, so this decides whether the macOS job runs at all. It fails
+  # open: anything it cannot work out means "run it".
+  changes:
+    name: Does the app need building
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      app: ${{ steps.diff.outputs.app }}
     steps:
+      - id: diff
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+          HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          app=true
+          if [[ -n "$BASE" && "$BASE" != 0000000000000000000000000000000000000000 ]] &&
+             files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$BASE...$HEAD" --jq '.files[].filename'); then
+            # compare lists at most 300 files; past that, assume code changed.
+            if (( $(printf '%s\n' "$files" | grep -c .) < 300 )); then
+              # queue/bin is code: FlagDefaultsReaderTests runs its scripts.
+              code=$( { printf '%s\n' "$files" | grep -Ev '^docs/|^queue/|\.md$'
+                        printf '%s\n' "$files" | grep -E '^queue/bin/'; } || true)
+              [[ -z "$code" ]] && app=false
+              printf 'Changed:\n%s\n\nApp-relevant:\n%s\n' "$files" "${code:-(none)}"
+            fi
+          fi
+          echo "app=$app" | tee -a "$GITHUB_OUTPUT"
+
+  # The queue's own checks are plain Node, so they run on Linux, on every push.
+  # Each step runs even when one before it failed, so each says its own answer.
+  queue:
+    name: Queue checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      # queue/audits is ~3 GB of screenshots nothing in CI reads; skipping it
+      # took checkout from over two minutes to seconds.
       - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/queue/audits/
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       # queue/playtest.lock says "a person is playtesting on THIS machine", so it
       # is only ever true where it was made. Committed on 2026-08-23, it rode the
@@ -35,6 +88,7 @@ jobs:
       # hour and three quarters. It is counted now, and this is what stops the
       # next hundred walks making them wrong again in silence.
       - name: The sweep's size is the size it really is
+        if: ${{ !cancelled() }}
         run: |
           node queue/bin/sweep-size.mjs
           node queue/bin/sweep-size.mjs --check
@@ -46,6 +100,7 @@ jobs:
       # for a day. These hold the reading of a run and the picking-up of a
       # killed one honest.
       - name: A sweep that is cut short still counts
+        if: ${{ !cancelled() }}
         run: |
           node queue/bin/sweep-parse-drill.mjs
           node queue/bin/sweep-interrupt-drill.mjs
@@ -55,7 +110,22 @@ jobs:
       # on 2026-09-21: 438 of 553 named as failing, on code that had passed 537
       # of 544 that morning, and the loop sent runners at that list for a day.
       - name: A sweep that goes blind says so
+        if: ${{ !cancelled() }}
         run: node queue/bin/sweep-blind-drill.mjs
+
+  test:
+    name: Build & test (arm64)
+    needs: changes
+    if: needs.changes.outputs.app == 'true'
+    runs-on: macos-26
+    timeout-minutes: 55
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout-cone-mode: false
+          sparse-checkout: |
+            /*
+            !/queue/audits/
 
       - name: Swift version
         run: swift --version
@@ -74,16 +144,9 @@ jobs:
         # the headless CI VM and the whole process wedges. Serial is ~seconds here.
         run: Scripts/test.sh --no-parallel
 
+      # Built, not uploaded: nothing downloads it and release.yml builds its own.
       # --release, not the bare default. The default variant is the DEV bundle,
       # which meant this step built "dist/Photonz Dev.app" while the upload
       # below asked for dist/Photonz.app and quietly got nothing.
       - name: Build release app bundle
         run: Scripts/build-app.sh --release
-
-      - name: Upload app artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: Photonz.app
-          path: dist/Photonz.app
-          if-no-files-found: error
-          retention-days: 7
