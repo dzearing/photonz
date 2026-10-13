@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T05:15:38.959Z",
-  "updated": "2026-10-13T06:39:31.665Z",
+  "updated": "2026-10-13T06:40:04.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13), screenshot 2026-10-12 22.13.22: a full-canvas recording picked; the transform bar (X 0, Y 0, W 3456, H 2234, angle, Tilt X, Tilt Y, Depth -109, Reset) sits across the top edge covering the top handles and the 3D arcs: \"why is this weird toolbar 1. look different then the pill shaped one (different material, different border), 2, why is it covering up the most important aspect of the photo (the transform grippers? it should be a rectangular thing off to the side with some name value pairs. Maybe it just becomes an 'i' icon that gets added to the existing toolbar, and you can click to expand a popup with the transform values\".\n\nShipped bar: a-small-overlay-shows-transform-values-to-type-i (done, 231c7cfe): 'rides under the layer in hand, placed and dismissed per video-animate.html'; with a layer filling the canvas it falls to the top edge, over the handles. Files: Sources/Photonz/TransformValueBar.swift, EditorState+TransformBar.swift. Tool bar: the floating bottom tool bar (Liquid Glass pill). The panel's 3D section stays withdrawn (the user wanted it gone).",
@@ -44,6 +44,14 @@
     {
       "t": "2026-10-13T06:39:31.664Z",
       "note": "owns these walks: transform-values-info-walk, show-transform-values-menu-walk, transform-bar-walk"
+    },
+    {
+      "t": "2026-10-13T06:40:04.726Z",
+      "note": "left rough (not filed, user-designed surface, listed in the audit for their reaction): the 9-row 3D list is ~260pt tall on a short canvas; the centred bar shifts ~20pt when Info comes and goes with the pick. Full suite green on rerun (first two runs had TextDepthPerspectiveTests 1080p flip perf over 16ms under full-suite load; passes alone; same parallel-load flake earlier runners saw)."
+    },
+    {
+      "t": "2026-10-13T06:40:04.795Z",
+      "note": "Info (i) button at the tool bar's right end while something is picked; it, F8 and Layer > Show Transform Values open a popover in the bar's glass and corner (TransformValuesPopover.swift) that slides off every handle; canvas bar gone. Verified: core tests (placement, sections, F8 key), full suite 12,838 green, 11 walks green incl. new transform-values-info-walk (full-canvas recording, X 100, drag live, Reset) and show-transform-values-menu-walk (menu + F8, app in front). Audit queue/audits/2026-10-12-transform-values-info.json. Commit 1cd96c89."
     }
   ],
   "started": "2026-10-13T05:54:24.124Z",
@@ -51,5 +59,6 @@
     "transform-values-info-walk",
     "show-transform-values-menu-walk",
     "transform-bar-walk"
-  ]
+  ],
+  "completed": "2026-10-13T06:40:04.796Z"
 }
