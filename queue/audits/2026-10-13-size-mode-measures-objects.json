@@ -1,0 +1,50 @@
+{
+  "feature": "Size mode measures buttons, pills and cards",
+  "epic": "measure-redline",
+  "summary": "Hovering or roughly boxing a button now measures the button: a big gradient pill with a glow (your Download for Mac pill reads 274 by 62), a button the same brightness as its page in another colour, a card under a soft shadow, at any size. The glow and the shadow are left out.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open your capture of the download page (Screenshot 2026-10-12 at 18.43.43), or Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png, which is a crop of it.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press I for Measure, pick Size, and hover the round left end of the purple pill.",
+      "shot": "2026-10-13-size-objects-1-pill.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hover a letter of Download for Mac: the outline still sits on the pill, 274 by 62.",
+      "shot": "2026-10-13-size-objects-2-label.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press [ to step down to the words themselves (158 by 15), and ] to step back to the pill.",
+      "shot": "2026-10-13-size-objects-3-words.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag a rough box round the pill that also crosses the small print under it, and let go.",
+      "shot": "2026-10-13-size-objects-4-box.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Check the box measured the pill, 274 by 62, not the box you drew.",
+      "shot": "2026-10-13-size-objects-5-box-measured.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hover a white card with a drop shadow, or a coloured button on a grey page, in any capture of your own."
+    }
+  ],
+  "evaluate": [
+    "Does hovering anywhere on a button, its label included, outline the button you meant?",
+    "Does the outline land on the edge of the fill, never out in the glow or shadow?",
+    "Is starting on the button and pressing [ for its words the right way round on a label?",
+    "Does a rough box round a button snap to it as often as you expect, including when the box crosses nearby text?",
+    "Does hovering still feel instant on a full screen capture?"
+  ],
+  "rough": [
+    "No mock covers how Size mode reads the picture; nothing on screen changed apart from what it measures.",
+    "Pressing ] from the pill steps to a box that runs from the pill's top down into the line of small print under it: an older reading that pairs the pill's top with the small print. It was there before this change and is left in the task log.",
+    "A hover reads at most a million pixels of picture (about 700 by 350 points of card at 2x). Past that a big panel is read only by its straight edges, as before.",
+    "Your pill is 62.5 points tall in the capture; the readout rounds it to 62."
+  ]
+}
