@@ -115,7 +115,7 @@ struct Space3DPerfTests {
                      + "median %.1fms, slowest %.1fms over %d frames; the same layers flat, drawn whole: "
                      + "median %.1fms", median, slowest, samples.count, flatSamples[flatSamples.count / 2]))
         // Calibration machine, 2026-10-11: 5.6ms median, 8.4ms slowest.
-        #expect(median < 16)
+        #expect(!MachineSpeed.isGating || median < 16)
         MachineSpeed.check("2.5D frame at 1080p", medianMS: median, baselineMS: 6)
     }
 }

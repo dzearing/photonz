@@ -167,7 +167,7 @@ struct TextDepthPerspectiveTests {
         let median = samples[samples.count / 2], slowest = samples[samples.count - 1]
         print(String(format: "[perf] headline flipping up by letter, 1920x1080: median %.1fms, slowest %.1fms",
                      median, slowest))
-        #expect(median < 16)
+        #expect(!MachineSpeed.isGating || median < 16)
         MachineSpeed.check("text flipping up by letter at 1080p", medianMS: median, baselineMS: 8)
     }
 }

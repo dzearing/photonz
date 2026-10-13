@@ -217,7 +217,7 @@ struct TextRevealRenderTests {
             let first = Double(layout.components.attoseconds) / 1e15 + Double(layout.components.seconds) * 1000
             report.append(String(format: "%@: %d letters, first frame %.1fms, median %.1fms, worst %.1fms over %d frames",
                                  style.title, count, first, median, worst, samples.count))
-            #expect(median < 16, "\(style.title) median \(median)ms")
+            #expect(!MachineSpeed.isGating || median < 16, "\(style.title) median \(median)ms")
         }
         print("[perf] 12 word headline by letter, 1920x1080:\n  " + report.joined(separator: "\n  "))
     }

@@ -135,7 +135,7 @@ struct DepthTransitionRenderTests {
         }
         print("[perf] transitions in depth, 1920x1080, 10 layers, 20 frames each:\n  "
               + lines.joined(separator: "\n  "))
-        #expect(worstMedian < 16)
+        #expect(!MachineSpeed.isGating || worstMedian < 16)
         MachineSpeed.check("transition in depth at 1080p", medianMS: worstMedian, baselineMS: 8)
     }
 

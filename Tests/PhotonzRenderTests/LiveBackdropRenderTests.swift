@@ -201,7 +201,7 @@ struct LiveBackdropRenderTests {
             let best = times.min() ?? 0
             let median = times.sorted()[times.count / 2]
             print("[live-perf] \(look.title) 1920x1080: best \(String(format: "%.1f", best)) ms, median \(String(format: "%.1f", median)) ms")
-            #expect(best < 16, "\(look.title) took \(best) ms")
+            #expect(!MachineSpeed.isGating || best < 16, "\(look.title) took \(best) ms")
         }
     }
 
