@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/keys-copy-between-layers-walk",
- "seed": "Keys copy between layers and the playhead lands on them. At Next defaults with no flag changed, this walk keys a title's Scale and Opacity, copies all four keys with Command C, types a second title and pastes them at the playhead with Command V, then drags the playhead near a key and watches it snap, steps key to key with Shift K and Option K, and dips the recording's sound under the second title by clicking three points onto its level line and dragging the middle one down. One undo puts the whole drag back.",
+ "seed": "Keys copy between layers and the playhead lands on them. At Next defaults with no flag changed, this walk keys a title's Scale and Opacity, copies all four keys with Command C, types a second title and pastes them at the playhead with Command V, then drags the playhead near a key and watches it snap, steps key to key with Shift K and Option K, and dips the recording's sound under the second title by Command-clicking three points onto its level line and dragging the middle one down. One undo puts the whole drag back.",
  "setup": {
   "timelineOpen": true,
   "forget": [
@@ -411,64 +411,42 @@
    "seconds": 0.6
   },
   {
-   "do": "windowDrag",
-   "from": [
-    837.6,
-    884
-   ],
-   "to": [
-    837.6,
-    884
-   ],
-   "steps": 1
-  },
-  {
-   "do": "wait",
-   "seconds": 0.4
-  },
-  {
-   "do": "windowDrag",
-   "from": [
+   "do": "windowClick",
+   "at": [
     644.5,
     884
    ],
-   "to": [
-    644.5,
-    884
-   ],
-   "steps": 1
+   "modifiers": [
+    "command"
+   ]
   },
   {
    "do": "wait",
    "seconds": 0.3
   },
   {
-   "do": "windowDrag",
-   "from": [
+   "do": "windowClick",
+   "at": [
     837.6,
     884
    ],
-   "to": [
-    837.6,
-    884
-   ],
-   "steps": 1
+   "modifiers": [
+    "command"
+   ]
   },
   {
    "do": "wait",
    "seconds": 0.3
   },
   {
-   "do": "windowDrag",
-   "from": [
+   "do": "windowClick",
+   "at": [
     1030.6,
     884
    ],
-   "to": [
-    1030.6,
-    884
-   ],
-   "steps": 1
+   "modifiers": [
+    "command"
+   ]
   },
   {
    "do": "wait",
@@ -483,7 +461,7 @@
   {
    "do": "describe",
    "stage": "5-points",
-   "note": "With both titles' lanes closed by their arrows, the recording's sound shows under it. A click picks it, then three clicks on its level line put three points on it under the second title"
+   "note": "With both titles' lanes closed by their arrows, the recording's sound shows under it. Three Command-clicks on its level line pick it and put three points on it under the second title (a plain click picks, UX-PATTERNS D21)"
   },
   {
    "do": "snapshot",

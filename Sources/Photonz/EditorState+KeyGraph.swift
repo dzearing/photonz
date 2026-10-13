@@ -111,10 +111,32 @@ extension EditorState {
         }
         let refs = segmentsInHand(layerID: layerID, ref)
         let current = document.stretchesCurve(layerID: layerID, refs)
+        var rows = segmentCurveRows(current: current) { curve in
+            self.curveSegments(layerID: layerID, refs, curve)
+        } draw: {
+            self.drawingStretchCurve = KeySelection(layerID: layerID, refs: [], segments: refs)
+        }
+        rows.append(.separator)
+        rows.append(.command("Add Point Here") {
+            self.addKeyOnGraph(layerID: layerID, motionID: motionID, atMS: ms)
+        })
+        let points = pickedKeys(layerID: layerID)
+        rows.append(.separator)
+        rows.append(.command(points.count > 1 ? "Delete \(points.count) Points" : "Delete Point",
+                             enabled: !points.isEmpty, destructive: true) {
+            self.keySelection = KeySelection(layerID: layerID, refs: [], segments: refs)
+            self.perform { $0.removeKeys(layerID: layerID, points) }
+        })
+        return rows
+    }
+
+    /// The rows every segment's right click leads with, on any animated line
+    /// (D21): the shared curve list ticked where `current` says, Hold, a curve
+    /// drawn before, Draw a Curve, then Copy and Paste Ease.
+    func segmentCurveRows(current: EasingCurve?, choose: @escaping @MainActor (EasingCurve) -> Void,
+                          draw: @escaping @MainActor () -> Void) -> [MenuRow] {
         func row(_ curve: EasingCurve, _ title: String? = nil) -> MenuRow {
-            var made = MenuRow.toggle(title ?? curve.title, isOn: current == curve) {
-                self.curveSegments(layerID: layerID, refs, curve)
-            }
+            var made = MenuRow.toggle(title ?? curve.title, isOn: current == curve) { choose(curve) }
             made.image = CurveMenuImage.image(for: curve)
             return made
         }
@@ -126,26 +148,13 @@ extension EditorState {
         if let current, current.isDrawn, !EasingCurve.named.contains(current) {
             rows.append(row(current, StretchCurve.title(current)))
         }
-        rows.append(.command("Draw a Curve\u{2026}") {
-            self.drawingStretchCurve = KeySelection(layerID: layerID, refs: [], segments: refs)
-        })
+        rows.append(.command("Draw a Curve\u{2026}") { draw() })
         rows.append(.separator)
         rows.append(.command("Copy Ease", enabled: current != nil) {
             self.copiedStretchCurve = current
         })
         rows.append(.command("Paste Ease", enabled: copiedStretchCurve != nil) {
-            if let copied = self.copiedStretchCurve { self.curveSegments(layerID: layerID, refs, copied) }
-        })
-        rows.append(.separator)
-        rows.append(.command("Add Point Here") {
-            self.addKeyOnGraph(layerID: layerID, motionID: motionID, atMS: ms)
-        })
-        let points = pickedKeys(layerID: layerID)
-        rows.append(.separator)
-        rows.append(.command(points.count > 1 ? "Delete \(points.count) Points" : "Delete Point",
-                             enabled: !points.isEmpty, destructive: true) {
-            self.keySelection = KeySelection(layerID: layerID, refs: [], segments: refs)
-            self.perform { $0.removeKeys(layerID: layerID, points) }
+            if let copied = self.copiedStretchCurve { choose(copied) }
         })
         return rows
     }

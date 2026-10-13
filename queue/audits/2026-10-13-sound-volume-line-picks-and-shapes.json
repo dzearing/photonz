@@ -1,0 +1,30 @@
+{
+  "feature": "A sound's volume line picks, shapes and answers right-click",
+  "epic": "video-audio",
+  "summary": "A right-click anywhere on a sound clip now opens its menu, the volume line included. The line follows the same rule as every animated line: a click picks a dot or the segment between two, only Command-click adds a dot, and a segment's right-click sets its curve (Ease out, Hold and the rest). The mix plays the bent line as drawn.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording and add the sample music (Add Sound) so it sits on Audio 2.",
+  "switched": {},
+  "try": [
+    { "do": "Pick the music, type 3 into Fades > In, then Command-click its volume line three times further along. Three dots appear and nothing you hear changes.", "shot": "2026-10-13-sound-volume-line-1-points-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click a dot, then click the line between two dots. Each click picks that one thing and adds nothing; Shift-click adds to the pick." },
+    { "do": "Right-click the fade's segment (the rise at the start) and choose Ease out.", "shot": "2026-10-13-sound-volume-line-2-segment-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the picked segment: white on an accent edge, with a bend handle at its middle. Drag the handle up or down to bend it by hand. The panel's Fades section shows a Segment row with its curve.", "shot": "2026-10-13-sound-volume-line-3-eased-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click a dot and press Backspace. The dot goes; Command-Z brings it back in one step." },
+    { "do": "Right-click the waveform, the line past the last dot, and the recording's own sound on the Audio track. Each opens the clip's menu.", "shot": "2026-10-13-sound-volume-line-4-line-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the line up or down away from the dots and the bend handle: it is still the fader for the whole clip." }
+  ],
+  "evaluate": [
+    "Can you now pick the dot or the segment you mean on the first try, without adding stray dots?",
+    "Is one bend handle at a segment's middle enough to shape a fade or a dip, or do you want the two handles the value graph shows?",
+    "Does a right-click on a segment lead with the right rows, with the clip's own rows underneath where you expect them?",
+    "Does the eased fade sound the way the line looks when you play it?"
+  ],
+  "rough": [
+    "This Mac's walks could not bring the probe to the front, so plain clicks never reached it. The plain-click rules (a click picks a dot or a segment, a single or double click never adds) are proven by unit tests and by a-sound-s-volume-line-plain-clicks-walk, which takes the front and comes round in the whole set. Command-click, right-click and Backspace were checked here for real.",
+    "A picked dot is white on an accent ring, where video-audio.html draws an active dot larger in its warning colour: settled by your rule on 2026-10-13 (\"a selected thing should turn white\").",
+    "A picked segment shows one bend handle at its middle (an even bend through the hand), not the two Bezier handles the value graph shows. A level line has no key handles to hang them from, and two handles next to a dot fight it for the click. Evaluate line 2 asks whether one is enough.",
+    "Right-click no longer moves the playhead anywhere on the timeline (your later rule on 2026-10-13); the task's older wording asked for it to move.",
+    "The task asked for a walk that double-clicks to add two dots; your later rule says only Command-click adds and a double click does nothing special, so the walks Command-click and check that a double click adds nothing.",
+    "Dragging a dot and the bend handle by hand were not driven by a walk on this Mac (the probe could not take the front for a drag); both write one undo step through the same code the menu uses."
+  ]
+}

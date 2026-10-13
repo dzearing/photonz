@@ -21334,3 +21334,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A right-click on any dot picks it once per right-click, without moving the playhead.
 - New walk step `expectKeyPick`; walk `every-key-dot-picks-walk` (Next defaults). UX-PATTERNS D21 extended.
 - Open: the probe could not take the front, so plain clicks were proved only through Command-click; filed `the-keyframe-anything-and-keys-copy-between-laye` for two key walks failing at HEAD.
+
+## 2026-10-13 — A sound's volume line picks, shapes and answers right-click
+
+- Right-click anywhere on a sound clip opens its menu; the volume line used to swallow the press (no `.contextMenu` on its hit band). Point and segment rows lead, the clip's rows follow.
+- The volume line follows UX-PATTERNS D21 on `AnimatedLine`: click picks a dot or segment, only Command-click adds, Shift extends, Backspace deletes picked dots in one undo, picked is white on accent, hover brightens. A picked segment has one bend handle; its right-click offers the shared curve list (now `segmentCurveRows`, shared with the key graph) and Hold.
+- PhotonzCore: `AudioLevelPoint.curve`, `AudioLevelSegments.swift`; the mix and export read the same `moments`/`gain`, so a bent segment plays as drawn (tested within 0.5 dB).
+- Walk step `expectSoundLine`; walks `a-sound-s-volume-line-picks-and-shapes-walk`, `a-sound-s-volume-line-plain-clicks-walk` (needs the front).
+- Next: `find-out-whether-a-key-segment-s-right-click-cur` (SwiftUI reuses stale menu row actions; the key graph captures its segments the way the sound line did before the fix).

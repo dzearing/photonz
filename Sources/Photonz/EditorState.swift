@@ -954,6 +954,7 @@ final class EditorState {
                 // ...and so do keys picked on another layer's lanes, so ⌫ can
                 // never throw away keys nobody is looking at.
                 if let keys = keySelection, keys.layerID != selectedLayerID { keySelection = nil }
+                if let line = soundLinePick, line.layerID != selectedLayerID { soundLinePick = nil }
                 // The chip that says what a path's points do belongs to the
                 // path that was picked; the canvas lets those points go at the
                 // same moment (`CanvasNSView.selectedLayerID`), so the line
@@ -1702,6 +1703,12 @@ final class EditorState {
     }
     /// The keys picked on a layer's lanes (`EditorState+KeyLanes`).
     var keySelection: KeySelection?
+    /// The points and segments picked on a sound's volume line
+    /// (`EditorState+SoundLine`).
+    var soundLinePick: SoundLinePick?
+    /// The segments of a sound's volume line Draw a Curve is drawing for,
+    /// while its editor is open.
+    var drawingSoundCurve: SoundLinePick?
     /// The tracks whose lanes somebody has closed with the arrow on the
     /// header. Open is the default, so a value keyed for the first time shows
     /// its lane at once, the way the mock draws it (`video-move-wt.html`).

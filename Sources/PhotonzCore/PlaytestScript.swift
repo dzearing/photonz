@@ -2906,6 +2906,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// list for none. `segments` names the picked segments the same way, by
     /// the key each starts at; left out, the segments are not claimed.
     case expectKeyPick(keys: [String], segments: [String]?)
+    /// CLAIMS how the volume line of the clip named `clip` stands, and FAILS
+    /// when it does not: `curves` is each segment's curve in order, as its
+    /// right-click names it ("Linear", "Ease out", "Hold"); `pickedPoints`
+    /// and `pickedSegments` are the points and segments picked on it,
+    /// counting from one (a segment by the point it starts at), an empty list
+    /// for none; `followsLineAt` are moments of the document, in seconds,
+    /// where what the mix plays (the plan the player and the export are both
+    /// handed) must be within half a decibel of what the line draws. A claim
+    /// left out is not checked; at least one is made.
+    case expectSoundLine(clip: String, curves: [String]?, pickedPoints: [Int]?, pickedSegments: [Int]?,
+                         followsLineAt: [Double])
     /// Where a row's bar is DRAWN on the timeline, by the row's name, and FAIL
     /// when it is not so: alongside the bar of the row `sameAs`, or from
     /// `startsAt` to `endsAt` in seconds, give or take `within`. A row with no
@@ -4205,7 +4216,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4255,6 +4266,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .boxToEdge: "boxToEdge"
         case .expectTimelinePick: "expectTimelinePick"
         case .expectKeyPick: "expectKeyPick"
+        case .expectSoundLine: "expectSoundLine"
         case .expectRowSpan: "expectRowSpan"
         case .expectClip: "expectClip"
         case .dragOver: "dragOver"
@@ -4716,6 +4728,25 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectKeyPick(keys: try f.optionalStrings("keys"),
                                   segments: f.has("segments") ? try f.optionalStrings("segments") : nil)
+        case "expectSoundLine":
+            let curves = f.has("curves") ? try f.optionalStrings("curves") : nil
+            func places(_ field: String) throws -> [Int]? {
+                guard f.has(field) else { return nil }
+                let numbers = try f.optionalNumbers(field)
+                guard numbers.allSatisfy({ $0 >= 1 && $0 == $0.rounded() }) else {
+                    throw f.invalid(field, "points and segments are counted from one, not \(numbers)")
+                }
+                return numbers.map { Int($0) }
+            }
+            let points = try places("pickedPoints")
+            let segments = try places("pickedSegments")
+            let follows = try f.optionalNumbers("followsLineAt")
+            guard curves != nil || points != nil || segments != nil || !follows.isEmpty else {
+                throw f.invalid("curves", "expectSoundLine has to claim something: \"curves\", "
+                    + "\"pickedPoints\", \"pickedSegments\" or \"followsLineAt\"")
+            }
+            self = .expectSoundLine(clip: try f.string("clip"), curves: curves, pickedPoints: points,
+                                    pickedSegments: segments, followsLineAt: follows)
         case "expectRowSpan":
             let sameAs = try f.optionalString("sameAs")
             let startsAt = try f.optionalNumber("startsAt")

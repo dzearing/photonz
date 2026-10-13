@@ -225,11 +225,25 @@ struct SoundFadesInspector: View {
                     }
                 }
                 curve
+                segmentCurve(layer.id)
             }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    /// The curve of the segments picked on the volume line, where one is
+    /// (UX-PATTERNS D21): the same answer the segment's right click gives.
+    @ViewBuilder
+    private func segmentCurve(_ id: UUID) -> some View {
+        let starts = editorState.soundLinePick(layerID: id).segments
+        if !starts.isEmpty {
+            CurveRow(label: "Segment", current: editorState.pickedSoundSegmentsCurve(layerID: id),
+                     help: "How the picked segment of the volume line runs.", row: "Sound segment curve") {
+                editorState.curveSoundSegments(layerID: id, starts, $0)
+            }
+        }
     }
 
     /// The one Curve row every transition is tuned with (`CurveRow`).

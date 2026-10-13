@@ -111,10 +111,19 @@ leaves no segment at all.
 - **A level that just sits there** is no points at all.
 
 The line across the layer's bar in the timeline draws all of it, with a dot at
-every moment somebody has pinned it. Click the line to pin it, drag a dot to
-move it in time and level at once, double click to take it out. The Sound
-section carries the fader, the reading in decibels, and a Flatten for taking
-every point off.
+every moment somebody has pinned it. It follows the rule every animated line
+on the timeline follows (UX-PATTERNS D21, the user 2026-10-13): a click on a
+dot picks it, a click on the line between two dots picks that segment, and only
+a Command-click on the line adds a dot (holding the level there, so nothing you
+hear changes). A plain click or a double click never adds one. Shift adds to
+the pick, a picked dot or segment is white on an accent edge, and Backspace
+deletes the picked dots in one undo step. Drag a dot to move it in time and
+level at once (Shift keeps it to one direction). A picked segment shows a bend
+handle at its middle to drag, and its right click offers the shared curve list
+and Hold; each segment keeps its own curve (`AudioLevelPoint.curve`,
+`AudioLevelSegments.swift`), and the mix plays it as drawn. The Sound section
+carries the fader, the reading in decibels, and a Flatten for taking every
+point off.
 
 **Fades have their own section as well, as the mock draws them** (2026-09-25,
 task `a-sound-shows-its-fade-in-and-fade-out-as-the-mo`). Under Sound, headed
@@ -552,8 +561,11 @@ segment is a drag on the clip.
   it takes the clip's sound away and keeps its picture.
 - Fades are two points on the level (`AudioLevel.setFadeIn/Out`), written by a
   handle at each top corner of a sound segment. Dragging the level line up or
-  down is the fader; a click on the line pins a point. The rest of the segment
-  picks up and moves the clip.
+  down is the fader; a click on the line picks a dot or a segment and a
+  Command-click adds a dot (D21, never a plain click). A right click anywhere
+  on the bar, the line included, opens the clip's menu, led by the dot's or
+  segment's own rows when it lands on one. The rest of the segment picks up
+  and moves the clip.
 
 ## A transition carries the sound (2026-09-27)
 

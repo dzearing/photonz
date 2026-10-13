@@ -219,6 +219,8 @@ extension EditorState {
 
     func clearKeySelection() {
         if keySelection != nil { keySelection = nil }
+        // A sound's volume line is an animated line too (`EditorState+SoundLine`).
+        clearSoundLinePick()
     }
 
     // MARK: Dragging
@@ -284,6 +286,8 @@ extension EditorState {
     var canDeletePickedKeys: Bool {
         // A diamond picked on the Camera row is keys in hand too.
         if canDeletePickedCameraKey { return true }
+        // ...and points or a segment picked on a sound's volume line.
+        if canDeletePickedSoundPoints { return true }
         // A segment picked on a graph is in hand too, so ⌫ never reaches past
         // it to the clip; it deletes only the points picked with it.
         guard documentHasTime, let keySelection, !keySelection.linePick.isEmpty,
@@ -299,6 +303,7 @@ extension EditorState {
             deleteCameraKeys(atMS: ms)
             return true
         }
+        if deletePickedSoundPoints() { return true }
         guard canDeletePickedKeys, let keys = keySelection else { return false }
         guard !keys.refs.isEmpty else { return true }
         keySelection = nil

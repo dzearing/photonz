@@ -3394,3 +3394,13 @@ where it is, so the ring stays in view, and a drag moves that key in space.
 A right-click on any dot picks it unless it already is, once per right-click,
 and never moves the playhead. Canonical page: `pages/video-animate.html`, THE GRAPH; where the
 mock says double-click or ⌥-click adds, this rule (the user's later word) wins.
+
+A **sound's volume line** follows the same table (2026-10-13): its level points
+are the dots, the stretch between two is a segment with a curve of its own, a
+right-click on a segment leads with the curve list and then the clip's own
+menu, and a drag on the line away from the dots and the bend handle is still
+the fader. A picked segment shows one bend handle at its middle (a level line
+has no key handles to show); dragging it bends the segment through the hand.
+Rows of a menu built for a dot or segment read what they act on from the pick
+when they RUN, never from what they captured: SwiftUI keeps a context menu's
+row actions from an earlier build while it shows new titles.

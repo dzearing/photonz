@@ -24,10 +24,16 @@ public struct AudioLevelPoint: Hashable, Codable, Sendable, Comparable {
     public var atMS: Int
     /// Nought is silence, one is the level it was recorded at.
     public var gain: Double
+    /// How the line runs from this point to the next: the segment's own curve
+    /// from the one list (`EasingCurve`), Hold being `.steps(1)`. Nil on every
+    /// point nobody has shaped, which runs straight (or on the Fades curve,
+    /// along a fade), so a document from before segments reads back the same.
+    public var curve: EasingCurve?
 
-    public init(atMS: Int, gain: Double) {
+    public init(atMS: Int, gain: Double, curve: EasingCurve? = nil) {
         self.atMS = max(0, atMS)
         self.gain = AudioLevel.bounded(gain)
+        self.curve = curve
     }
 
     public static func < (a: AudioLevelPoint, b: AudioLevelPoint) -> Bool { a.atMS < b.atMS }
@@ -50,7 +56,7 @@ public struct AudioLevel: Hashable, Codable, Sendable {
     /// The fader: the level of the whole layer.
     public var gain: Double
     /// Where the level is pinned as the layer runs, in order, one per moment.
-    public private(set) var points: [AudioLevelPoint]
+    public internal(set) var points: [AudioLevelPoint]
     /// How the fade in rises and the fade out falls, from the one list of
     /// curves (`EasingCurve`). The fade out is the fade in played backwards,
     /// as the mock draws it. Straight unless somebody picked one, which is
@@ -170,6 +176,12 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         let span = after.atMS - before.atMS
         guard span > 0 else { return after.gain }
         let through = Double(ms - before.atMS) / Double(span)
+        // A segment somebody shaped runs on its own curve, overshoot held
+        // between silence and the loudest a level may be.
+        if let curve = before.curve {
+            guard curve != .linear else { return before.gain + (after.gain - before.gain) * through }
+            return Self.bounded(before.gain + (after.gain - before.gain) * curve.value(at: through))
+        }
         if fadeCurve != .linear {
             // A curve can overshoot on its way; it may never ask for less
             // than silence.
@@ -209,17 +221,41 @@ public struct AudioLevel: Hashable, Codable, Sendable {
         guard toMS > fromMS else { return [fromMS] }
         var found = Set([fromMS, toMS])
         for point in points where point.atMS > fromMS && point.atMS < toMS { found.insert(point.atMS) }
-        if fadeCurve != .linear {
-            for stretch in [fadeInStretch, fadeOutStretch].compactMap({ $0 }) {
-                let span = stretch.upperBound - stretch.lowerBound
-                let steps = min(Self.curveSteps, max(1, span / Self.shortestCurveStepMS))
-                for step in 1..<max(steps, 1) {
-                    let ms = stretch.lowerBound + span * step / steps
-                    if ms > fromMS && ms < toMS { found.insert(ms) }
+        for index in points.indices.dropLast() {
+            guard let curve = stretchCurve(index), curve != .linear else { continue }
+            let start = points[index].atMS, end = points[index + 1].atMS
+            let span = end - start
+            guard span > 1, start < toMS, end > fromMS else { continue }
+            var corners: [Int] = []
+            if case let .steps(count) = curve {
+                // A step is a jump: the moment before it and the moment of it,
+                // so the ramp between them is one millisecond long.
+                let steps = max(1, count)
+                for step in 1...steps {
+                    let ms = start + span * step / steps
+                    corners += [ms - 1, ms]
                 }
+            } else {
+                let steps = min(Self.curveSteps, max(1, span / Self.shortestCurveStepMS))
+                for step in 1..<max(steps, 1) { corners.append(start + span * step / steps) }
             }
+            for ms in corners where ms > fromMS && ms < toMS { found.insert(ms) }
         }
         return found.sorted()
+    }
+
+    /// The curve stretch `index` (from `points[index]` to the next) runs on,
+    /// as a curve from the first point's level to the second's: the
+    /// segment's own where somebody shaped it, the Fades curve along a fade
+    /// (played backwards on the way out), straight otherwise. Nil where no
+    /// stretch starts at `index`.
+    func stretchCurve(_ index: Int) -> EasingCurve? {
+        guard index >= 0, index + 1 < points.count else { return nil }
+        if let curve = points[index].curve { return curve }
+        guard fadeCurve != .linear else { return .linear }
+        if index == 0, fadeInStretch != nil { return fadeCurve }
+        if index == points.count - 2, fadeOutStretch != nil { return fadeCurve.playedBackwards }
+        return .linear
     }
 
     /// How finely a curved fade is followed: at most this many straight
@@ -231,9 +267,11 @@ public struct AudioLevel: Hashable, Codable, Sendable {
 
     // MARK: - Editing it
 
-    /// Pin the level at a moment. A point where one already is moves it.
+    /// Pin the level at a moment. A point where one already is moves it, and
+    /// keeps the curve of the segment it starts.
     public mutating func setPoint(atMS ms: Int, gain: Double) {
-        points = Self.tidied(points + [AudioLevelPoint(atMS: ms, gain: gain)])
+        let curve = points.first { $0.atMS == ms }?.curve
+        points = Self.tidied(points + [AudioLevelPoint(atMS: ms, gain: gain, curve: curve)])
     }
 
     /// Take a point out. The level between its neighbours closes up by itself,

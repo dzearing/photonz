@@ -1,0 +1,367 @@
+{
+  "out": "/tmp/photonz-playtest/a-sound-s-volume-line-picks-and-shapes-walk",
+  "seed": "The sample recording at Next defaults, nothing switched, with the sample music added on Audio 2 and faded in over three seconds. Command-click puts three level points on its volume line, each holding the level so nothing you hear changes; Command-click on a point picks it and adds nothing. A right-click on the fade's segment offers the shared curve list and Ease out bends it, and the mix plays the bent segment within half a decibel of the line. Hold steps the next one. Backspace takes a picked point away in one undo step, a right-click on a point offers Delete Point, and a right-click anywhere on the clip (its waveform, its line, its middle, and the recording's own sound) opens the clip's menu. Command-click and right-click are the clicks that reach a probe behind another app; the plain clicks are a-sound-s-volume-line-plain-clicks-walk.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "focus",
+      "field": "Fade in"
+    },
+    {
+      "do": "type",
+      "text": "3"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 2
+    },
+    {
+      "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
+      "do": "windowClick",
+      "at": [
+        721,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1057,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1393,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5,
+      "fullAt": [
+        4,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "pickedPoints": [
+        5
+      ],
+      "curves": [
+        "Linear",
+        "Linear",
+        "Linear",
+        "Linear"
+      ]
+    },
+    {
+      "comment": "Command-click on a point adds it to the pick and never lands a second point on it.",
+      "do": "windowClick",
+      "on": "Sample Music level point 3",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "pickedPoints": [
+        3,
+        5
+      ],
+      "pickedSegments": []
+    },
+    {
+      "do": "describe",
+      "stage": "1-points-picked",
+      "note": "Five points on the music's volume line: silence at the start, the top of the three second fade, and three Command-clicked on. Two of them picked, drawn white on an accent ring"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-points-picked"
+    },
+    {
+      "comment": "THE SECOND TEST: a right-click on the fade's segment picks it and offers the shared curve list; Ease out bends it.",
+      "do": "rightClick",
+      "on": "Segment Sample Music level 1",
+      "shot": "2-segment-menu",
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "curves": [
+        "Ease out",
+        "Linear",
+        "Linear",
+        "Linear"
+      ],
+      "pickedSegments": [
+        1
+      ],
+      "pickedPoints": [],
+      "followsLineAt": [
+        0.75,
+        1.5,
+        2.25
+      ]
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5
+    },
+    {
+      "comment": "The panel's Fades section speaks for the picked segment too.",
+      "do": "expect",
+      "menu": "Sound segment curve",
+      "reads": "Ease out"
+    },
+    {
+      "do": "describe",
+      "stage": "3-eased",
+      "note": "The fade's segment picked, white on an accent edge, bent to Ease out: it rises fast and lands soft, with a white bend handle at its middle"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-eased"
+    },
+    {
+      "comment": "Hold on the next segment: the level holds until the next point, then steps.",
+      "do": "rightClick",
+      "on": "Segment Sample Music level 2",
+      "choose": "Hold"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "curves": [
+        "Ease out",
+        "Hold",
+        "Linear",
+        "Linear"
+      ],
+      "pickedSegments": [
+        2
+      ],
+      "followsLineAt": [
+        3.5,
+        4.5
+      ]
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "curves": [
+        "Ease out",
+        "Linear",
+        "Linear",
+        "Linear"
+      ]
+    },
+    {
+      "comment": "THE THIRD TEST: a point picked and Backspace takes it, in one undo step.",
+      "do": "windowClick",
+      "on": "Sample Music level point 4",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "pickedPoints": [
+        4
+      ]
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Sample Music",
+      "track": "Audio 2",
+      "startsAt": 0,
+      "endsAt": 14
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5
+    },
+    {
+      "comment": "A right-click on a point offers Delete Point, ahead of the clip's own rows.",
+      "do": "rightClick",
+      "on": "Sample Music level point 3",
+      "choose": "Delete Point"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 4
+    },
+    {
+      "comment": "THE FOURTH TEST: a right-click anywhere on the clip opens its menu. The waveform under the line:",
+      "do": "rightClick",
+      "at": [
+        1000,
+        938
+      ],
+      "space": "window"
+    },
+    {
+      "comment": "...the line itself past the last point, where it was dead before:",
+      "do": "rightClick",
+      "at": [
+        1600,
+        924
+      ],
+      "space": "window",
+      "shot": "4-line-menu"
+    },
+    {
+      "comment": "...the clip by name, its middle, which is on the line:",
+      "do": "rightClick",
+      "on": "Sample Music clip"
+    },
+    {
+      "comment": "...and the recording's own sound, on its line:",
+      "do": "rightClick",
+      "at": [
+        935,
+        886
+      ],
+      "space": "window"
+    },
+    {
+      "do": "describe",
+      "stage": "5-done",
+      "note": "Four points left, the fade still eased"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-done"
+    }
+  ]
+}

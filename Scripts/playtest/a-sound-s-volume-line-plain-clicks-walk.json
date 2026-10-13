@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/a-sound-s-volume-line-plain-clicks-walk",
+  "seed": "The sample recording at Next defaults, nothing switched, with the sample music added on Audio 2. Command-click puts two level points on its volume line (the user, 2026-10-13: add only with Command; a double click does nothing special). Then the plain clicks: a click on each point picks it alone, a click on the line between them picks that segment, and neither a single click nor a double click on the line ever adds a point. Shift-click adds to the pick. Plain clicks reach the probe only while it is in front, so this walk takes the front.",
+  "setup": { "timelineOpen": true, "forget": ["all"], "front": true },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 0.0 },
+    { "do": "action", "action": "soundAddSample" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "windowClick", "at": [609, 924], "modifiers": ["command"] },
+    { "do": "windowClick", "at": [1169, 924], "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectLevel", "clip": "Sample Music", "points": 2 },
+
+    { "comment": "A plain click on each point picks it alone and adds nothing.", "do": "windowClick", "on": "Sample Music level point 1" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [1], "pickedSegments": [] },
+    { "do": "windowClick", "on": "Sample Music level point 2" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [2], "pickedSegments": [] },
+    { "do": "expectLevel", "clip": "Sample Music", "points": 2 },
+
+    { "comment": "A plain click on the line between them picks that segment and adds nothing.", "do": "windowClick", "on": "Segment Sample Music level 1" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [], "pickedSegments": [1] },
+    { "do": "expectLevel", "clip": "Sample Music", "points": 2 },
+    { "do": "describe", "stage": "1-segment-picked", "note": "The segment between the two points picked: white on an accent edge" },
+    { "do": "snapshot", "name": "1-segment-picked" },
+
+    { "comment": "A double click on the line still adds nothing.", "do": "windowClick", "on": "Segment Sample Music level 1", "count": 2 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLevel", "clip": "Sample Music", "points": 2 },
+    { "comment": "...and neither does a plain click on the line past the last point.", "do": "windowClick", "at": [1500, 924] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLevel", "clip": "Sample Music", "points": 2 },
+    { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [], "pickedSegments": [] },
+
+    { "comment": "Shift adds to the pick.", "do": "windowClick", "on": "Sample Music level point 1" },
+    { "do": "windowClick", "on": "Segment Sample Music level 1", "modifiers": ["shift"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [1], "pickedSegments": [1] },
+    { "do": "describe", "stage": "2-point-and-segment", "note": "A point and the segment after it picked together, both white" },
+    { "do": "snapshot", "name": "2-point-and-segment" }
+  ]
+}

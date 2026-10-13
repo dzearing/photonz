@@ -187,7 +187,8 @@ struct EditorCanvasSurface: View {
                    // ⌫ with keys picked on the layer's lanes takes the keys
                    // and leaves the layer (`EditorState+KeyLanes`).
                    onDeleteLayer: { id in
-                       if editorState.keySelection?.layerID == id, editorState.deletePickedKeys() { return }
+                       if editorState.keySelection?.layerID == id || editorState.soundLinePick?.layerID == id,
+                          editorState.deletePickedKeys() { return }
                        // ...and with a zoom picked, the zoom (`EditorState+Zoom`).
                        if editorState.selectedZoom?.layerID == id {
                            editorState.removeZoomInHand()

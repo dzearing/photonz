@@ -731,7 +731,9 @@ struct EditorCommands: Commands {
         // ...and a clip picked under a range, whose part of the range ⌫
         // takes (`EditorState+RangeSection`).
         let sectionHeld = onTimeline && !keysPicked && (editor?.sectionTakesTheDelete ?? false)
-        Button(keysPicked ? "Delete Keys" : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
+        // Points picked on a sound's volume line go the way keys do.
+        let pointsPicked = keysPicked && (editor?.canDeletePickedSoundPoints ?? false)
+        Button(pointsPicked ? "Delete Points" : keysPicked ? "Delete Keys" : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
                : trackHeld ? "Delete Pieces" : gapHeld ? "Delete Gap" : "Delete This Piece") {
             if keysPicked {
                 editor?.deletePickedKeys()

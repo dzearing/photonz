@@ -42,9 +42,9 @@
     { "do": "panel", "stage": "5-level-beside-diamond" },
     { "do": "snapshot", "name": "5-level-beside-diamond" },
 
-    { "do": "windowClick", "at": [700, 933] },
+    { "do": "windowClick", "at": [700, 933], "modifiers": ["command"] },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "describe", "stage": "6-point-pinned", "note": "A click on the line pins a level point there: 11 points, filled cyan, ringed in the panel colour" },
+    { "do": "describe", "stage": "6-point-pinned", "note": "A Command-click on the line pins a level point there (a plain click picks, UX-PATTERNS D21): 11 points, filled white on an accent ring while it is picked" },
     { "do": "snapshot", "name": "6-point-pinned" },
     { "do": "windowDrag", "from": [700, 933], "to": [700, 941], "steps": 8, "hold": "7-point-dragging-held" },
     { "do": "wait", "seconds": 0.8 },

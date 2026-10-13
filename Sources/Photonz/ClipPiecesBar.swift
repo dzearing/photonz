@@ -555,6 +555,11 @@ struct ClipPiecesBar: View {
                            lineColor: kind == nil ? .white.opacity(0.95) : soundTint.opacity(0.95),
                            lineWidth: kind == nil ? 2 : 1.5,
                            pointColor: kind == nil ? .accentColor : soundTint,
+                           // A right click on the line is a right click on
+                           // the clip too: its menu sits under the line's rows.
+                           clipMenu: kind == nil ? nil : SoundLevelLine.ClipMenuTarget(
+                               piece: { pieces.count > 1 ? pieces.pieceIndex(atMS: $0) ?? 0 : 0 },
+                               onTheSound: isLinkedSound),
                            onLevelInHand: { levelInHand = $0 })
                 .mask { quietMask(pieces, fromFraction: shown.startFraction,
                                   toFraction: shown.endFraction, width: shown.width) }

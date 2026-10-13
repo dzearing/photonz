@@ -3286,6 +3286,37 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectSoundLine step claims a volume line's segment curves, its pick, and that the mix follows it")
+    func expectSoundLineParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSoundLine", "clip": "Sample Music", "curves": ["Linear", "Ease out"],
+                       "pickedPoints": [2], "pickedSegments": [], "followsLineAt": [2.5, 3, 3.5] },
+                     { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [] } ] }
+        """)
+        guard case .expectSoundLine(let clip, let curves, let points, let segments, let follows) = script.steps[0]
+        else { Issue.record("expectSoundLine"); return }
+        #expect(clip == "Sample Music")
+        #expect(curves == ["Linear", "Ease out"])
+        #expect(points == [2])
+        #expect(segments == [])
+        #expect(follows == [2.5, 3, 3.5])
+        guard case .expectSoundLine(_, let noCurves, let none, let noSegments, let noFollows) = script.steps[1]
+        else { Issue.record("second"); return }
+        #expect(noCurves == nil && none == [] && noSegments == nil && noFollows.isEmpty)
+        #expect(PlaytestStep.names.contains("expectSoundLine"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectSoundLine"))
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectSoundLine", "clip": "Sample Music" } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectSoundLine", "clip": "Sample Music", "pickedPoints": [0] } ] }
+            """)
+        }
+    }
+
     @Test("An expectRowSpan step names a timeline row and where its bar runs, or the row it runs alongside")
     func expectRowSpanParses() throws {
         let script = try decode("""

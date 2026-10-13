@@ -220,6 +220,9 @@ public enum PlaytestLockSafety {
         // Added 2026-10-13 by reading: it reads which keys the editor has
         // picked, never a name off the screen.
         "expectKeyPick",
+        // Added 2026-10-13 by reading: it reads a sound's level, its pick and
+        // the mix out of the editor, never a name off the screen.
+        "expectSoundLine",
         // Added 2026-10-12, watched only unlocked: it reads where the editor
         // draws a timeline row's bar, never a name off the screen.
         "expectRowSpan",

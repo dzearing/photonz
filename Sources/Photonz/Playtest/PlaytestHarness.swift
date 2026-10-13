@@ -2258,6 +2258,10 @@ private final class Run {
                  + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))"),
                  state: describe())
 
+        case .expectSoundLine(let clip, let curves, let points, let segments, let follows):
+            note(number, step.name, try checkSoundLine(clip: clip, curves: curves, pickedPoints: points,
+                                                       pickedSegments: segments, followsLineAt: follows),
+                 state: describe())
         case .expectKeyPick(let keys, let segments):
             let editor = try requireEditor()
             // Every key and segment picked, named as its lane names it.
@@ -9043,6 +9047,58 @@ private final class Run {
                 + wrong.joined(separator: "; ") + " (\(reading)\(measured))")
         }
         return "\(clip)'s level line is where the walk said: \(reading)\(measured)"
+    }
+
+    /// A sound's volume line, segment by segment (`expectSoundLine`).
+    private func checkSoundLine(clip: String, curves: [String]?, pickedPoints: [Int]?, pickedSegments: [Int]?,
+                                followsLineAt: [Double]) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document,
+              let layer = document.flattenedLayers.first(where: { $0.name == clip }) else {
+            throw Failure(description: "there is no clip called \(clip) in the document")
+        }
+        guard layer.sound != nil else { throw Failure(description: "\(clip) has no sound, so it has no volume line") }
+        let level = layer.soundLevel ?? AudioLevel()
+        let points = level.points
+        let drawnCurves = points.dropLast().map { point in
+            level.segmentCurve(startingAtMS: point.atMS).map { StretchCurve.title($0) } ?? "Linear"
+        }
+        let pick = editor.soundLinePick(layerID: layer.id)
+        let dots = points.indices.filter { pick.dots.contains(points[$0].atMS) }.map { $0 + 1 }
+        let stretches = points.indices.dropLast().filter { pick.segments.contains(points[$0].atMS) }.map { $0 + 1 }
+        var wrong: [String] = []
+        if let curves, curves != drawnCurves {
+            wrong.append("its segments run on \(drawnCurves), not \(curves)")
+        }
+        if let pickedPoints, pickedPoints.sorted() != dots {
+            wrong.append("the points picked are \(dots), not \(pickedPoints.sorted())")
+        }
+        if let pickedSegments, pickedSegments.sorted() != stretches {
+            wrong.append("the segments picked are \(stretches), not \(pickedSegments.sorted())")
+        }
+        // What the mix plays against what the line draws, gain included, in
+        // decibels: the plan the player and the export are both handed.
+        var heard: [String] = []
+        if let inMS = layer.time?.inMS {
+            let mix = editor.audioPlan.filter { $0.layerID == layer.id }
+            for seconds in followsLineAt {
+                let ms = Int((seconds * 1000).rounded())
+                let drawn = level.gain(atLayerMS: ms - inMS) * level.clipGain
+                let played = mix.filter { $0.contains(ms: ms) }.map { $0.gain(atMS: ms) }.max() ?? 0
+                func db(_ gain: Double) -> Double { 20 * log10(max(gain, 1e-6)) }
+                let gap = abs(db(played) - db(drawn))
+                heard.append(String(format: "%.2fs plays %.2f dB, draws %.2f dB", seconds, db(played), db(drawn)))
+                if gap > 0.5 { wrong.append(String(format: "at %.2fs the mix is %.2f dB away from the line", seconds, gap)) }
+            }
+        }
+        let reading = "points " + points.map { String(format: "%.2fs", Double($0.atMS) / 1000) }.joined(separator: ", ")
+            + "; curves \(drawnCurves); picked points \(dots), segments \(stretches)"
+            + (heard.isEmpty ? "" : "; " + heard.joined(separator: "; "))
+        guard wrong.isEmpty else {
+            throw Failure(description: "\(clip)'s volume line is not as the walk said: "
+                + wrong.joined(separator: "; ") + " (\(reading))")
+        }
+        return "\(clip)'s volume line is as the walk said: \(reading)"
     }
 
     private func checkWaveform(clip: String, within: Double) async throws -> String {
