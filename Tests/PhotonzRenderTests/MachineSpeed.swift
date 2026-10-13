@@ -29,9 +29,10 @@ import Testing
 //
 //   * `.filterGraph` — a fixed Core Image filter chain over a modest image.
 //     This is what a composite, an interactive patch and a zoom tile cost.
-//   * `.pixelPush` — 12 million pixels produced and read all the way back.
-//     This is what an export costs, and it is the one that blows out on a
-//     machine with no real GPU behind it.
+//   * `.pixelPush` — ten layers, turned and shadowed, stacked onto a 48
+//     megapixel canvas and read all the way back. This is what an export
+//     costs, and it is the one that blows out on a machine with no real GPU
+//     behind it.
 //
 // Neither yardstick runs a single line of Photonz code, on purpose: if the
 // composite path regresses, the subject moves and the reference does not, so
@@ -141,22 +142,24 @@ enum MachineSpeed {
         /// A Core Image filter chain: blur, colour, composite. Tracks the cost
         /// of compositing a document.
         case filterGraph = "filter graph"
-        /// A 2x-sized picture built and forced all the way back to bytes: 48
-        /// megapixels out, the way an export at 2x is 48 megapixels out.
-        /// Tracks the cost of writing a file.
+        /// Ten layers stacked onto a 2x-sized canvas and forced all the way
+        /// back to bytes: 48 megapixels out, the way an export at 2x is 48
+        /// megapixels out. Tracks the cost of writing a file.
         case pixelPush = "pixel push"
 
         /// What this workload measured on the calibration machine, below.
         var baselineMS: Double {
             switch self {
             case .filterGraph: return 8.0
-            case .pixelPush: return 61.0
+            case .pixelPush: return 146.0
             }
         }
     }
 
     // Calibration machine: the arm64 Mac this repo is developed on, measured
-    // 2026-09-12 with the suite serialized and nothing else running. Re-record
+    // 2026-09-12 with the suite serialized and nothing else running. The pixel
+    // push number was re-recorded on 2026-10-13 on the same machine, when its
+    // workload changed shape (see `pixelPushRound`), not because a runner moved. Re-record
     // both numbers (they are printed on every run) only when the calibration
     // machine itself changes, and say so in docs/progress/perf.md — moving them
     // to match a slow runner would undo the whole point of this file.
@@ -224,7 +227,10 @@ enum MachineSpeed {
     // Big enough that the reading is tens of milliseconds: a one-millisecond
     // ruler is mostly per-call overhead and tracks nothing.
     private static let filterGraphSource = CIImage(cgImage: texture(width: 2400, height: 1800))
-    private static let pixelPushSource = CIImage(cgImage: texture(width: 2000, height: 1500))
+    private static let pixelPushCanvas = CIImage(cgImage: texture(width: 4000, height: 3000))
+        .transformed(by: CGAffineTransform(scaleX: 2, y: 2))
+    private static let pixelPushLayer = CIImage(cgImage: texture(width: 1600, height: 1200))
+        .transformed(by: CGAffineTransform(scaleX: 2, y: 2))
 
     private static func filterGraphRound() -> () -> Void {
         let source = filterGraphSource
@@ -244,28 +250,42 @@ enum MachineSpeed {
         }
     }
 
-    /// Deliberately shaped like an export: a picture drawn at four times the
-    /// area of the source, with a little filtering on it, then forced out to
-    /// bytes. A probe that only read back 12 megapixels of a trivial graph
-    /// measured a shared runner at 3.4x while the real export on the same run
-    /// came in at 8.2x, which left the export budget with six percent of
-    /// headroom. What is slow on that hardware is producing a big picture, not
-    /// copying one, so the ruler has to produce a big picture too.
+    /// Deliberately shaped like an export: a 48 megapixel canvas with ten
+    /// layers stacked onto it, every other one turned and each with a soft
+    /// shadow under it, forced out to bytes.
+    ///
+    /// Twice this ruler has been the wrong shape and twice it showed up the
+    /// same way, as the export budget failing CI on unchanged code. First it
+    /// read 12 megapixels back from a trivial graph and measured a shared
+    /// runner at 3.4x while the export came in at 8.2x. Then it built one big
+    /// picture with one blur, and from 2026-09-13 to 2026-10-13 read the GitHub
+    /// VM at 2.6 to 4.3x while the export on the same run read 5.4 to 11x, so
+    /// the budget failed about half the runs it was reached in. Measured side
+    /// by side on three of those VMs and on the calibration machine
+    /// (2026-10-13), the export took 2.0 to 2.1 times longer against that
+    /// ruler on the VM than at home, and 1.2 to 1.5 times against this one.
+    /// What that hardware is slow at is laying many big layers on top of each
+    /// other, so the ruler has to lay many big layers too.
     private static func pixelPushRound() -> () -> Void {
-        let source = pixelPushSource
-        let big = CGRect(x: 0, y: 0, width: source.extent.width * 4,
-                         height: source.extent.height * 4)
+        let canvas = pixelPushCanvas
+        let layer = pixelPushLayer
+        let big = canvas.extent
         return {
-            let enlarged = source
-                .transformed(by: CGAffineTransform(scaleX: 4, y: 4))
-                .cropped(to: big)
-            let graded = enlarged
-                .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 6])
-                .cropped(to: big)
-                .applyingFilter("CIColorControls", parameters: [kCIInputBrightnessKey: 0.02])
-            let stacked = graded.applyingFilter("CISourceOverCompositing",
-                                                parameters: [kCIInputBackgroundImageKey: enlarged])
-            let out = probeContext.createCGImage(stacked, from: big)
+            var stacked = canvas
+            for i in 0..<10 {
+                var placed = layer
+                if i.isMultiple(of: 2) {
+                    placed = placed.transformed(by: CGAffineTransform(rotationAngle: .pi / 8))
+                }
+                placed = placed.transformed(by: CGAffineTransform(translationX: CGFloat(300 + i * 500),
+                                                                  y: CGFloat(200 + i * 350)))
+                let shadow = placed
+                    .applyingFilter("CIColorMatrix",
+                                    parameters: ["inputAVector": CIVector(x: 0, y: 0, z: 0, w: 0.4)])
+                    .applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 40])
+                stacked = placed.composited(over: shadow.composited(over: stacked))
+            }
+            let out = probeContext.createCGImage(stacked.cropped(to: big), from: big)
             _ = out?.dataProvider?.data
         }
     }

@@ -90,7 +90,7 @@ workloads made of plain Core Image and no Photonz code at all:
 | Yardstick | What it runs | Calibration reading | Which budgets use it |
 | --- | --- | --- | --- |
 | `filter graph` | Two gaussian blurs, a colour grade and a composite over a textured 2400x1800 image | 8.0ms | full render, grouped render, interactive edits, zoom tiles |
-| `pixel push` | A picture built at four times the source area, filtered, and forced all the way back to bytes: 48 megapixels out, the way an export at 2x is 48 megapixels out | 61.0ms | the 2x export |
+| `pixel push` | Ten layers, every other one turned and each with a soft shadow, stacked onto a 48 megapixel canvas and forced all the way back to bytes, the way an export at 2x is 48 megapixels out | 146.0ms (re-recorded 2026-10-13 when the workload changed; was 61.0ms for a single enlarged picture) | the 2x export |
 
 Two of them because one scalar cannot describe a machine that is 4.5x slower at
 one of these and 8x slower at the other. Each ruler has to be shaped like what
@@ -98,7 +98,11 @@ it scales, too: a first attempt at the export ruler only read 12 megapixels
 back from a trivial graph, measured the shared runner at 3.4x while the real
 export on the same run came in at 8.2x, and left the export budget with six
 percent of headroom. What is slow on that hardware is producing a big picture,
-not copying one. The yardsticks use their own
+not copying one. The second shape, one big picture with one blur, read the GitHub VM
+at 2.6 to 4.3x while the export on the same runs read 5.4 to 11x, and the
+export budget failed CI on about half the runs that reached it until
+2026-10-13. Measured side by side on three VMs, what that hardware is slow at
+is laying many big layers on top of each other, so the ruler now stacks ten. The yardsticks use their own
 `CIContext` with its own fixed options, so a change to how the app builds its
 renderer never moves the ruler, and neither of them runs app code, so a
 regression in the composite path moves the subject while the reference stays
