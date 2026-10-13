@@ -2661,8 +2661,9 @@ private final class Run {
             note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, dark: dark),
                  state: describe())
 
-        case .expectMeasures(let count, let reads):
-            note(number, step.name, try checkMeasures(count, reads: reads), state: describe())
+        case .expectMeasures(let count, let reads, let inks):
+            note(number, step.name, try checkMeasures(count, reads: reads, inks: inks),
+                 state: describe())
 
         case .expectCorners(let layerName, let corner, let radius, let rounded, let within):
             note(number, step.name,
@@ -9222,7 +9223,8 @@ private final class Run {
         TutorialController.shared.choose(choice)
     }
 
-    private func checkMeasures(_ count: Int, reads: [String]? = nil) throws -> String {
+    private func checkMeasures(_ count: Int, reads: [String]? = nil,
+                               inks: [String]? = nil) throws -> String {
         let editor = try requireEditor()
         let landed = (editor.document?.allLayers ?? []).filter { $0.measure != nil }
         func plural(_ n: Int) -> String { n == 1 ? "measurement" : "measurements" }
@@ -9230,6 +9232,17 @@ private final class Run {
             throw Failure(description: "\(landed.count) \(plural(landed.count)) on the canvas, not \(count)"
                 + "; the caliper is \(canvas?.playtestMeasuringReport ?? "on no canvas")"
                 + (landed.isEmpty ? "" : "; landed: \(landed.map(\.name).joined(separator: ", "))"))
+        }
+        if let inks {
+            let worn = landed.compactMap { $0.measure?.strokeColorHex.uppercased() }
+            guard worn == inks.map({ $0.uppercased() }) else {
+                throw Failure(description: "the calipers are drawn in \(worn.joined(separator: ", ")), "
+                    + "not \(inks.joined(separator: ", ")); landed: "
+                    + landed.map(\.name).joined(separator: ", "))
+            }
+            if reads == nil {
+                return "\(count) \(plural(count)) on the canvas, drawn in \(worn.joined(separator: ", ")), as claimed"
+            }
         }
         if let reads {
             let scale = editor.document?.pixelScale ?? 1

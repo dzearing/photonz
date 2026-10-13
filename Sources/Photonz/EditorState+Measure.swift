@@ -61,6 +61,7 @@ extension EditorState {
                     headOffset: CGFloat?) {
         var content = measureStyle
         content.mode = mode
+        content.madeBy = namedMode(.distance)
         content.headOffset = headOffset
             ?? MeasureBuilder.clearingHeadOffset(content: content, from: start, to: end,
                                                  canvas: document?.canvasSize)
@@ -106,6 +107,7 @@ extension EditorState {
         var template = Experiments.shared.measureRolesEnabled
             ? measureStyles.content(for: .size) : measureStyle
         template.role = .size
+        template.madeBy = namedMode(.size)
         var width = template
         width.mode = .horizontal
         width.headOffset = MeasureBuilder.clearingHeadOffset(content: width, from: widthFeet.0,
@@ -154,6 +156,14 @@ extension EditorState {
         finishCreating(group.id)
     }
 
+    /// The mode a new measurement records, which names it ("Gap 16",
+    /// "Distance 240") whatever its role (`MeasureNaming`). Only where a Size
+    /// measurement is a group (the release with layer groups): the release
+    /// without keeps every caliper called Measure, as it always has.
+    private func namedMode(_ mode: MeasureToolMode) -> MeasureToolMode? {
+        Experiments.shared.layerGroupsEnabled ? mode : nil
+    }
+
     /// The style the canvas should preview the active Measure mode in. Gap mode
     /// previews in the Spacing ink it will actually commit, and Size mode in
     /// Size's, so what you see under the pointer is what lands.
@@ -173,6 +183,7 @@ extension EditorState {
         guard gap.length > 0, let canvas = document?.canvasSize else { return }
         var content = measureStyleForActiveMode
         content.mode = gap.axis
+        content.madeBy = namedMode(.gap)
         // The head reaches far enough that the readout sits clear of the gap
         // itself — a pill parked on a 12 px space hides the very thing measured.
         content.headOffset = MeasureBuilder.clearingHeadOffset(content: content, from: gap.start,

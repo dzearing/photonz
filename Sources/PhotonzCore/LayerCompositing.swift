@@ -359,7 +359,9 @@ extension Layer {
     public var canBeMasked: Bool {
         switch content {
         case .measure, .sound: false
-        default: true
+        // A Size measurement is a measurement like any caliper, and a caliper
+        // is never masked: the row would sit above its Caliper and Chip rows.
+        default: !isSizeMeasurement
         }
     }
 }

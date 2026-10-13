@@ -2870,7 +2870,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2 } ] }
         """)
-        guard case .expectMeasures(let count, let reads) = script.steps[0] else {
+        guard case .expectMeasures(let count, let reads, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
@@ -2886,7 +2886,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2, "reads": ["32 px", "32 px"] } ] }
         """)
-        guard case .expectMeasures(let count, let reads) = script.steps[0] else {
+        guard case .expectMeasures(let count, let reads, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
@@ -2894,6 +2894,25 @@ struct PlaytestScriptTests {
         #expect(throws: (any Error).self) {
             try decode("""
             { "steps": [ { "do": "expectMeasures", "count": 2, "reads": ["32 px"] } ] }
+            """)
+        }
+    }
+
+    // A colour picked on a caliper is only proved by the caliper wearing it
+    // (the user, 2026-10-13: a Size caliper's colour could not be changed).
+    @Test("An expectMeasures step can claim the colour each caliper is drawn in")
+    func expectMeasuresCanClaimTheInks() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectMeasures", "count": 2, "inks": ["#B0184A", "#0A84FF"] } ] }
+        """)
+        guard case .expectMeasures(let count, _, let inks) = script.steps[0] else {
+            Issue.record("expectMeasures"); return
+        }
+        #expect(count == 2)
+        #expect(inks == ["#B0184A", "#0A84FF"])
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectMeasures", "count": 2, "inks": ["#B0184A"] } ] }
             """)
         }
     }
@@ -3860,7 +3879,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 0 } ] }
         """)
-        guard case .expectMeasures(let count, _) = script.steps[0] else {
+        guard case .expectMeasures(let count, _, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 0)

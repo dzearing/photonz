@@ -158,6 +158,12 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// a column of numbers lined up by hand stays lined up. False for every
     /// document saved before this field existed.
     public var labelPinned: Bool
+    /// Which mode of the Measure tool made it: Size, Gap or Distance. It names
+    /// the measurement ("Gap 16", "Distance 240") whatever its role, which only
+    /// picks the colours it starts in. Nil for every document saved before this
+    /// field existed, and for calipers the release without mode names makes:
+    /// those keep the names they always had.
+    public var madeBy: MeasureToolMode?
 
     public init(start: CGPoint = .zero, end: CGPoint = .zero,
                 headOffset: CGFloat = MeasureContent.defaultHeadOffset,
@@ -288,6 +294,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         case role
         case alignment
         case labelPlacement, labelNudge, labelCrossReach, labelPinned
+        case madeBy
         case strokeColorHex, chipColorHex, chipOpacity, textColorHex
         case chipBorderColorHex, chipBorderWidth
         // Legacy keys from the pre-caliper measure model (decode-only) and the
@@ -328,6 +335,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         try c.encode(labelNudge, forKey: .labelNudge)
         try c.encode(labelPinned, forKey: .labelPinned)
         try c.encode(labelCrossReach, forKey: .labelCrossReach)
+        // Only when known, so a document with no mode names saves unchanged.
+        try c.encodeIfPresent(madeBy, forKey: .madeBy)
     }
 
     /// Decodes new caliper payloads directly and **migrates** legacy measures
@@ -373,6 +382,7 @@ public struct MeasureContent: Hashable, Codable, Sendable {
         labelNudge = try c.decodeIfPresent(CGFloat.self, forKey: .labelNudge) ?? 0
         labelPinned = try c.decodeIfPresent(Bool.self, forKey: .labelPinned) ?? false
         labelCrossReach = try c.decodeIfPresent(CGFloat.self, forKey: .labelCrossReach) ?? 0
+        madeBy = try c.decodeIfPresent(MeasureToolMode.self, forKey: .madeBy)
 
         // Legacy `mode` may be "free" (no longer a case) — decode as a raw string.
         let modeString = try c.decodeIfPresent(String.self, forKey: .mode)

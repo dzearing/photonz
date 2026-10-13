@@ -61,6 +61,15 @@ public enum MeasureSpecList {
             guard check.itemsAreElements else { return edges }
             return "\(edges), \(countPhrase(check.items.count))"
         }
+        // The mode that made it names it, whatever its role: a Distance in the
+        // Size role used to be listed as "Width" (the user, 2026-10-13: "when
+        // i measure with gap, the layer should be gap").
+        switch content.madeBy {
+        case .gap: return MeasureNaming.gapWord
+        case .distance: return MeasureNaming.distanceWord
+        case .size: return content.mode == .horizontal ? "Width" : "Height"
+        case .alignment, nil: break
+        }
         switch content.role {
         case .spacing: return "Gap"
         case .size: return content.mode == .horizontal ? "Width" : "Height"
@@ -86,7 +95,12 @@ public enum MeasureSpecList {
         }
         guard let content = layer.measure else { return layer.name }
         let stock = [MeasureBuilder.defaultName, MeasureBuilder.defaultAlignmentName, ""]
-        return stock.contains(layer.name) ? derivedName(for: content) : layer.name
+        // "Gap 16" is the layer's automatic name; the row shows the 16 as its
+        // value already, so it says only what it is, the way a Size row does.
+        if stock.contains(layer.name) || MeasureNaming.isAutomaticName(layer.name, for: content) {
+            return derivedName(for: content)
+        }
+        return layer.name
     }
 
     /// The role word a spec line carries in parentheses.

@@ -1,0 +1,572 @@
+{
+ "out": "/tmp/photonz-playtest/measurements-named-for-their-mode-walk",
+ "seed": "The user, 2026-10-13: when I measure with size the layer should be size, when I measure with gap it should be gap, and every caliper, whichever mode made it, should have exactly the same appearance options; it makes no sense that clicking a size caliper does not let me change its colour. At Next defaults, with no switch touched, one Gap, one Size and one Distance measurement are made on a real Retina settings screenshot. Each must land named for its mode with its reading (Gap 16, Size 124 x 30, Distance 124) and be listed in Measurements as Gap, Size and Distance. Then each is picked from the Layers list, the Size one as its whole group, and its Caliper colour is changed from the Appearance section's own colour well: every one of them must show that row on screen, and the caliper on the canvas must come out in the new colour. Last, all three are picked together and one colour sets them all.",
+ "setup": {
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "open",
+   "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+   "width": 1280,
+   "height": 840
+  },
+  {
+   "do": "wait",
+   "seconds": 1
+  },
+  {
+   "do": "key",
+   "key": "i"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "measure"
+  },
+  {
+   "do": "waitFor",
+   "condition": "edgeMap",
+   "timeout": 15
+  },
+  {
+   "do": "measureMode",
+   "mode": "gap"
+  },
+  {
+   "do": "move",
+   "at": [
+    720,
+    432
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    720,
+    432
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "measureMode",
+   "mode": "size"
+  },
+  {
+   "do": "move",
+   "at": [
+    356,
+    786
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    356,
+    786
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Twist",
+   "in": "Size 124 × 30"
+  },
+  {
+   "do": "press",
+   "control": "Twist",
+   "in": "Size 124 × 30"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "selectRow",
+   "row": "Height"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panel",
+   "stage": "4-size-part"
+  },
+  {
+   "do": "expectSections",
+   "absent": [
+    "Arrange"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "4-size-part",
+   "note": "a part of the Size measurement picked on its own shows its rows in the same place as any caliper: no Arrange section above Appearance pushing the Caliper colour below the fold"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-size-part"
+  },
+  {
+   "do": "key",
+   "key": "i"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "measure"
+  },
+  {
+   "do": "measureMode",
+   "mode": "distance"
+  },
+  {
+   "do": "click",
+   "at": [
+    236,
+    696
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    476,
+    696
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    476,
+    656
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectRows",
+   "rows": [
+    "Distance 124",
+    "Size 124 × 30",
+    "  Height",
+    "  Width",
+    "  Box",
+    "Gap 16",
+    "Background"
+   ]
+  },
+  {
+   "do": "expect",
+   "row": "Distance",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "row": "Gap",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "row": "Size",
+   "present": true
+  },
+  {
+   "do": "expectMeasures",
+   "count": 4,
+   "inks": [
+    "#0A84FF",
+    "#FF3B30",
+    "#FF3B30",
+    "#FF3B30"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "1-named",
+   "note": "THE FIRST CLAIM: each measurement is a layer named for the mode that made it, with its reading: Gap 16, Size 124 x 30, Distance 124. Measurements lists them as Gap, Size and Distance. The Distance used to be a layer called Measure and a row called Width"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-named-for-their-mode"
+  },
+  {
+   "do": "selectRow",
+   "row": "Size 124 × 30"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Size 124 × 30"
+   ]
+  },
+  {
+   "do": "panel",
+   "stage": "2-size-group"
+  },
+  {
+   "do": "expect",
+   "control": "Color",
+   "in": "Caliper",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Color",
+   "in": "Chip Text",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Size",
+   "in": "Role",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Blending",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "2-size-group",
+   "note": "THE SECOND CLAIM: the Size measurement picked whole offers the same Role, Caliper, Chip, Chip Fill, Chip Edge and Chip Text rows a loose caliper does, and no Masked by above them. It used to offer no colour at all"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-size-group-appearance"
+  },
+  {
+   "do": "reveal",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Shades 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectMeasures",
+   "count": 4,
+   "inks": [
+    "#0A84FF",
+    "#FFBBB8",
+    "#FFBBB8",
+    "#FF3B30"
+   ]
+  },
+  {
+   "do": "snapshot",
+   "name": "3-size-recoloured"
+  },
+  {
+   "do": "selectRow",
+   "row": "Gap 16"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Shades 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panel",
+   "stage": "5-gap"
+  },
+  {
+   "do": "expectMeasures",
+   "count": 4,
+   "inks": [
+    "#B8DBFF",
+    "#FFBBB8",
+    "#FFBBB8",
+    "#FF3B30"
+   ]
+  },
+  {
+   "do": "selectRow",
+   "row": "Distance 124"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "reveal",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Shades 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "panel",
+   "stage": "6-distance"
+  },
+  {
+   "do": "expectMeasures",
+   "count": 4,
+   "inks": [
+    "#B8DBFF",
+    "#FFBBB8",
+    "#FFBBB8",
+    "#FFBBB8"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "6-each-recoloured",
+   "note": "THE THIRD CLAIM: the Gap, the Size and the Distance each took a new caliper colour from the same row in the same place"
+  },
+  {
+   "do": "snapshot",
+   "name": "6-each-recoloured"
+  },
+  {
+   "do": "selectRow",
+   "row": "Gap 16"
+  },
+  {
+   "do": "selectRow",
+   "row": "Size 124 × 30",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "selectRow",
+   "row": "Distance 124",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "panel",
+   "stage": "7-all-three"
+  },
+  {
+   "do": "snapshot",
+   "name": "7-all-three"
+  },
+  {
+   "do": "expect",
+   "control": "Color",
+   "in": "Caliper",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "7-all-three",
+   "note": "THE FOURTH CLAIM: a Gap, a Size and a Distance picked together share one Caliper row reading Mixed and a Role with neither lit, and one colour picked there sets all of them"
+  },
+  {
+   "do": "reveal",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "press",
+   "control": "Color",
+   "in": "Caliper"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "press",
+   "control": "Shades 4"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expectMeasures",
+   "count": 4,
+   "inks": [
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF"
+   ]
+  },
+  {
+   "do": "snapshot",
+   "name": "8-all-one-colour"
+  },
+  {
+   "do": "key",
+   "key": "i"
+  },
+  {
+   "do": "waitFor",
+   "condition": "tool",
+   "value": "measure"
+  },
+  {
+   "do": "measureMode",
+   "mode": "size"
+  },
+  {
+   "do": "move",
+   "at": [
+    175,
+    786
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    175,
+    786
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectMeasures",
+   "count": 6,
+   "inks": [
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF",
+    "#4DA4FF"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "9-remembered",
+   "note": "THE LAST CLAIM: the next Size measurement comes out in the caliper colour last given, the way every caliper remembers its role's colours"
+  }
+ ]
+}

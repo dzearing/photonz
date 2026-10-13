@@ -127,13 +127,29 @@ extension EditorState {
         selectedMeasureLayer?.measure?.role ?? measureStyles.role
     }
 
+    /// The calipers Appearance's measurement rows speak for: every caliper
+    /// picked, and both calipers of a picked Size measurement, so a Size
+    /// measurement offers the same Role, Chip and Unit as any caliper and
+    /// several picked across modes are set together. The release without the
+    /// parts split keeps its one-measurement section: there it is the picked
+    /// measurement alone, as it always was.
+    var measureLookLayers: [Layer] {
+        guard Experiments.shared.shapePartsEnabled else {
+            return selectedMeasureLayer.map { [$0] } ?? []
+        }
+        guard let document else { return [] }
+        return colorSlotTargetIDs.compactMap { document.layer(id: $0) }
+            .filter { $0.measure != nil && !$0.isLocked }
+    }
+
     /// The Role control (§5, `next-measure-roles`): switching the selected
     /// measurement's role applies that role's remembered ink in ONE undo step,
-    /// and the role becomes what the next caliper starts as.
+    /// and the role becomes what the next caliper starts as. It only ever sets
+    /// colours to start from: every colour row stays there and stays editable.
     func setMeasureRole(_ role: MeasureRole) {
         updateMeasureStyles { $0.role = role }
         let ink = measureStyles.colors(for: role)
-        applyMeasureRestyle {
+        applyMeasureRestyle(skippingGuides: true) {
             MeasureBuilder.restyled($0, strokeColorHex: ink.strokeColorHex,
                                     chipColorHex: ink.chipColorHex,
                                     chipOpacity: ink.chipOpacity,
@@ -158,10 +174,15 @@ extension EditorState {
     /// size and publish the preview so the glass pill resizes too (no history).
     func previewMeasureLabelScale(_ scale: CGFloat) {
         updateMeasureStyles { $0.labelSizePx = scale * MeasureContent.labelFontSize }
-        guard let layer = selectedMeasureLayer, var doc = document else { return }
-        measureLabelPreview = (layer.id, scale)
-        doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
-        if let frame = doc.canvasLayer(id: layer.id)?.frame { previewMoves = [layer.id: frame] }
+        let layers = measureLookLayers
+        guard let first = layers.first, var doc = document else { return }
+        measureLabelPreview = (first.id, scale)
+        var moves: [UUID: CGRect] = [:]
+        for layer in layers {
+            doc.updateLayer(id: layer.id) { $0 = MeasureBuilder.restyled($0, labelScale: scale) }
+            if let frame = doc.canvasLayer(id: layer.id)?.frame { moves[layer.id] = frame }
+        }
+        previewMoves = moves
         submit(doc)
     }
 
@@ -173,10 +194,10 @@ extension EditorState {
         // A much bigger readout can no longer fit where the small one did, so
         // it gets to pick again (UX-PATTERNS D14).
         let canvas = document?.canvasSize
-        let others = placedReadoutRects(excluding: selectedMeasureLayer?.id)
         applyMeasureRestyle {
             MeasureBuilder.replanningLabel(MeasureBuilder.restyled($0, labelScale: scale),
-                                           canvas: canvas, avoiding: others)
+                                           canvas: canvas,
+                                           avoiding: self.placedReadoutRects(excluding: $0.id))
         }
     }
 
@@ -476,9 +497,16 @@ extension EditorState {
         }
     }
 
-    private func applyMeasureRestyle(_ restyle: (Layer) -> Layer) {
-        guard let layer = selectedMeasureLayer else { return }
-        let updated = restyle(layer)
-        perform { $0.updateLayer(id: layer.id) { $0 = updated } }
+    /// Restyles every caliper the measurement rows speak for, in one undo
+    /// step. A Role skips alignment guides, which have no role to switch.
+    private func applyMeasureRestyle(skippingGuides: Bool = false,
+                                     _ restyle: (Layer) -> Layer) {
+        let layers = measureLookLayers
+            .filter { !skippingGuides || $0.measure?.alignment == nil }
+        guard !layers.isEmpty else { return }
+        let updated = layers.map(restyle)
+        perform { doc in
+            for layer in updated { doc.updateLayer(id: layer.id) { $0 = layer } }
+        }
     }
 }

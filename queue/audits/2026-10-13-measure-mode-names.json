@@ -1,0 +1,52 @@
+{
+  "feature": "Measurements named for their mode, one set of caliper controls",
+  "epic": "measure-redline",
+  "summary": "A Gap lands as a layer called Gap 16 and a Distance as Distance 124 (a Size is still Size 124 × 30). Any caliper, including a whole Size measurement, shows the same Role, Caliper, Thickness and Chip rows in the same place, and a colour you pick there sticks and is used for the next measurement.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/measurements-named-for-their-mode-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot, press I, and make one Gap, one Size and one Distance measurement.",
+      "shot": "2026-10-13-measure-mode-names-1-named-for-their-mode.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the Layers list (Gap 16, Size 124 × 30, Distance 124) and the Measurements list (Gap, Size, Distance)."
+    },
+    {
+      "do": "Click the Size row in Layers: Appearance shows Role, Caliper, Thickness and Chip.",
+      "shot": "2026-10-13-measure-mode-names-2-size-group-appearance.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Caliper colour well and pick a colour: both of the Size measurement's calipers change.",
+      "shot": "2026-10-13-measure-mode-names-3-size-recoloured.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open the Size group and click Height: no Arrange section, the Caliper row sits where it does for a Gap.",
+      "shot": "2026-10-13-measure-mode-names-4-size-part.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Command-click the Gap, Size and Distance rows: Caliper reads Mixed and no Role is lit; pick one colour and all three take it.",
+      "shot": "2026-10-13-measure-mode-names-7-all-three.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Measure another button in Size mode: it comes out in the colour you just gave."
+    }
+  ],
+  "evaluate": [
+    "Is 'Gap 16' / 'Distance 124' in Layers, with just 'Gap' / 'Distance' in Measurements (the number beside it), the naming you wanted?",
+    "Picking a whole Size measurement now shows its calipers' colours; is that where you looked for them, or did you expect to open the group first?",
+    "With several calipers picked, does Caliper reading Mixed and the Role row with nothing lit read clearly to you?",
+    "Should a colour change on one Size caliper also become the colour for the next Distance, or only the next Size (today it follows the role)?"
+  ],
+  "rough": [
+    "On a small window the Chip rows still sit below the fold of Appearance's own scroller for every caliper, the same as before; the Caliper row itself is on screen. That is the dock's rule that Appearance scrolls inside itself (your call on 2026-09-20, 'Guarantee the fold').",
+    "The redline mock names rows by element ('Save Changes · width') and shows one Color row in a Measurement section; the app names them by mode and puts the look in Appearance's part rows. Both follow your later answers: the look moved into Appearance on your call on 2026-09-09, and names by mode are your call on 2026-10-13.",
+    "A picked Size measurement keeps a Corner Radius row at the end of Appearance, which rounds its Box. Masked by is gone from it, the way a caliper never had one.",
+    "Old documents and the Current release keep the name Measure: only measurements made where Size is a group record their mode."
+  ]
+}

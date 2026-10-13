@@ -82,7 +82,8 @@ struct MeasurePartSettings: View {
         let reading = editorState.measureReading(ids) { $0.strokeWidth }
         return HStack(spacing: 8) {
             Text("Thickness").font(.caption).foregroundStyle(.secondary)
-            SegmentedControl("Thickness", selection: reading ?? 1,
+            // Nil while the calipers disagree, so no segment is lit: Mixed.
+            SegmentedControl("Thickness", selection: reading,
                              options: [.init(CGFloat(1), "1 px"), .init(CGFloat(2), "2 px"),
                                        .init(CGFloat(3), "3 px")],
                              form: .natural) {
@@ -125,10 +126,11 @@ struct MeasureChipSettings: View {
     let leadsWithColumn: Bool
 
     var body: some View {
-        // ONE measurement only, the way the section it came from always was:
-        // the label-size slider previews on a single layer, and a unit is
-        // something a person sets on the measurement they are looking at.
-        if let layer = editorState.selectedMeasureLayer, let c = layer.measure {
+        // Every caliper the rows below speak for: one picked, several picked
+        // across modes, or both of a picked Size measurement's. Where they
+        // disagree the control says so and one move sets them all.
+        let layers = editorState.measureLookLayers
+        if let layer = layers.first, let c = layer.measure {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .top, spacing: ColorPartLayout.spacing) {
                     PanelRowHead(title: "Chip", leadsWithColumn: leadsWithColumn) {
@@ -137,8 +139,8 @@ struct MeasureChipSettings: View {
                     Spacer(minLength: 0)
                 }
                 OwnedSettings(owner: "Chip") {
-                    chipSize(c, id: layer.id)
-                    unit(c)
+                    chipSize(c, layers: layers)
+                    unit(layers)
                 }
             }
             .playtestField("Chip")
@@ -148,9 +150,12 @@ struct MeasureChipSettings: View {
 
     /// The readout's size, in the pixels the slider shows rather than the scale
     /// the model keeps, so the number means what it says.
-    private func chipSize(_ c: MeasureContent, id: UUID) -> some View {
+    private func chipSize(_ c: MeasureContent, layers: [Layer]) -> some View {
         // During a drag the committed document has not changed, so read the
         // live preview value or the thumb snaps back.
+        let scales = layers.compactMap { $0.measure?.labelScale }
+        let isMixed = editorState.measureLabelPreview == nil
+            && !scales.allSatisfy { $0 == c.labelScale }
         let liveScale = editorState.measureLabelPreview?.scale ?? c.labelScale
         let px = liveScale * MeasureContent.labelFontSize
         let lo = Double(MeasureContent.labelSizeRangePx.lowerBound)
@@ -161,11 +166,9 @@ struct MeasureChipSettings: View {
                 Spacer()
                 SliderReadout(
                     typing: .points, label: "Chip size", value: px,
-                    isMixed: false,
+                    isMixed: isMixed,
                     range: MeasureContent.labelSizeRangePx,
-                    // One measurement only, so the number always speaks for
-                    // the one chip on screen.
-                    identity: id,
+                    identity: AnyHashable(layers.map(\.id)),
                     // A typed size is ONE undo step, the same as letting go of
                     // the knob is: a commit with no preview behind it.
                     land: {
@@ -192,10 +195,13 @@ struct MeasureChipSettings: View {
 
     /// What the number is read in. Both are pixels; the choice is whether they
     /// are the ones on screen or the ones in the bitmap.
-    private func unit(_ c: MeasureContent) -> some View {
-        HStack(spacing: 8) {
+    private func unit(_ layers: [Layer]) -> some View {
+        let units = Set(layers.compactMap { $0.measure?.unit })
+        return HStack(spacing: 8) {
             Text("Unit").font(.caption).foregroundStyle(.secondary)
-            SegmentedControl("Unit", selection: c.unit,
+            // No segment lit while they disagree: Mixed, and either press
+            // sets them all.
+            SegmentedControl("Unit", selection: units.count == 1 ? units.first : nil,
                              options: [.init(MeasureUnit.points, "Logical"),
                                        .init(MeasureUnit.pixels, "Actual")],
                              form: .natural) {
@@ -225,11 +231,14 @@ struct MeasureRoleRow: View {
     /// The body, built by `readingForTheLookRows`: nothing in it shows a
     /// key on where a layer is.
     @ViewBuilder private var lookBody: some View {
-        if Experiments.shared.measureRolesEnabled,
-           let c = editorState.selectedMeasureLayer?.measure, c.alignment == nil {
+        // Every caliper picked, or inside a picked Size measurement, has a
+        // role; a guide has none. Where they disagree no segment is lit.
+        let roles = Set(editorState.measureLookLayers.compactMap(\.measure)
+            .filter { $0.alignment == nil }.map(\.role))
+        if Experiments.shared.measureRolesEnabled, !roles.isEmpty {
             HStack(spacing: 8) {
                 Text("Role").font(.caption).foregroundStyle(.secondary)
-                SegmentedControl("Role", selection: c.role,
+                SegmentedControl("Role", selection: roles.count == 1 ? roles.first : nil,
                                  options: [.init(MeasureRole.size, "Size"),
                                            .init(MeasureRole.spacing, "Spacing")],
                                  form: .natural) {

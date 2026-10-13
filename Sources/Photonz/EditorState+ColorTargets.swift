@@ -32,7 +32,7 @@ extension EditorState {
 
     /// The picked layers one colour of a row reaches.
     private func reach(_ part: ColorTarget.Part) -> [UUID] {
-        part.layerIDs ?? colorStyleTargetIDs
+        part.layerIDs ?? colorSlotTargetIDs
     }
 
     /// What the row shows: what the layers it speaks for are painted, and the
@@ -47,7 +47,7 @@ extension EditorState {
         guard let document = lookReadingDocument else {
             return ColorStyleSelection(slot: target.lead, members: [], selectionCount: 0)
         }
-        let all = colorStyleTargetIDs
+        let all = colorSlotTargetIDs
         if let place = target.effectIndex {
             return document.colorStyleSelection(layerIDs: reach(target.parts[0]), effectAt: place)
         }

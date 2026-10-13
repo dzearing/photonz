@@ -245,7 +245,7 @@
     },
     {
       "do": "selectRow",
-      "row": "Measure"
+      "row": "Distance 200"
     },
     {
       "do": "wait",

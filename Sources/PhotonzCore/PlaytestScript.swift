@@ -3435,8 +3435,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// should have landed here.
     /// `reads`, when given, is what they say, in the order they landed, one
     /// entry per measurement (`"32 px"`), so a Size click proves the number
-    /// and not just that something landed.
-    case expectMeasures(count: Int, reads: [String]?)
+    /// and not just that something landed. `inks`, the same way, is the
+    /// colour each caliper is drawn in (`"#FF3B30"`), so a walk that recolours
+    /// one proves the caliper wears it.
+    case expectMeasures(count: Int, reads: [String]?, inks: [String]?)
     /// CLAIMS how round a path's corners are, asked of the document: `radius`
     /// is what every sharp corner draws at (to within `within` points), and
     /// `rounded` is how many of them are rounded at all. The only way a walk
@@ -5245,7 +5247,11 @@ public enum PlaytestStep: Sendable, Equatable {
             if let reads, reads.count != Int(howMany) {
                 throw f.invalid("reads", "names \(reads.count) readings for \(Int(howMany)) measurements; claim one per measurement, in the order they landed")
             }
-            self = .expectMeasures(count: Int(howMany), reads: reads)
+            let inks = f.has("inks") ? try f.optionalStrings("inks") : nil
+            if let inks, inks.count != Int(howMany) {
+                throw f.invalid("inks", "names \(inks.count) colours for \(Int(howMany)) measurements; claim one per measurement, in the order they landed")
+            }
+            self = .expectMeasures(count: Int(howMany), reads: reads, inks: inks)
         case "expectSVG":
             let pictured: Int?
             if fields["pictured"] != nil {

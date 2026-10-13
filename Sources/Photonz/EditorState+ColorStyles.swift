@@ -105,7 +105,7 @@ extension EditorState {
         guard Experiments.shared.shapePartsEnabled, let document else {
             return ColorTarget(slot)
         }
-        let row = document.layerPartRow(layerIDs: colorStyleTargetIDs, slot: slot)
+        let row = document.layerPartRow(layerIDs: colorSlotTargetIDs, slot: slot)
         return row.flatMap { ColorTarget($0.colors, rowID: $0.id) } ?? ColorTarget(slot)
     }
 
@@ -285,6 +285,19 @@ extension EditorState {
             return document.layer(id: only) == nil ? [] : [only]
         }
         return document.allLayerIDs.filter { picked.contains($0) }
+    }
+
+    /// The picked layers a COLOUR reaches: the same as `colorStyleTargetIDs`,
+    /// except that a picked Size measurement stands for its two calipers. A
+    /// group has no colour of its own, so without this a Size measurement
+    /// offered no Caliper or Chip row at all, while a loose caliper beside it
+    /// did (the user, 2026-10-13: "makes no sense why i click on a size
+    /// caliper and can't change the color"). Opacity, Blending and Effects
+    /// still read the group itself, so they fade or shadow the whole thing.
+    var colorSlotTargetIDs: [UUID] {
+        let picked = colorStyleTargetIDs
+        guard let document else { return picked }
+        return document.measureLookIDs(picked)
     }
 
     /// What the Effects and Shadow rows show: the picked layers that can be
@@ -725,7 +738,9 @@ extension EditorState {
     /// `PhotonzCore/LayerParts.swift`; this is just the selection it reads.
     var layerPartRows: [LayerPartRow] {
         guard let document else { return [] }
-        return document.layerPartRows(layerIDs: colorStyleTargetIDs)
+        // A picked Size measurement is read as its two calipers, so it offers
+        // the Caliper and Chip rows every other caliper does (`MeasureNaming`).
+        return document.layerPartRows(layerIDs: colorSlotTargetIDs)
     }
 
     /// Letting a colour go on a part whose switch is OFF: the part comes on
@@ -817,14 +832,14 @@ extension EditorState {
         guard let document = lookReadingDocument else {
             return ColorStyleSelection(slot: slot, members: [], selectionCount: 0)
         }
-        return document.colorStyleSelection(layerIDs: colorStyleTargetIDs, slot: slot)
+        return document.colorStyleSelection(layerIDs: colorSlotTargetIDs, slot: slot)
     }
 
     /// The slots the selection actually has a color in. What a style can be
     /// saved from or applied to.
     var colorStyleSlots: [ColorSlot] {
         guard let document else { return [] }
-        return document.colorStyleSlots(layerIDs: colorStyleTargetIDs)
+        return document.colorStyleSlots(layerIDs: colorSlotTargetIDs)
     }
 
     /// The rows the Color section shows, in inspector order: every slot the
@@ -833,7 +848,7 @@ extension EditorState {
     /// the way back to a fill.
     var colorRowSlots: [ColorSlot] {
         guard let document else { return [] }
-        let slots = document.colorRowSlots(layerIDs: colorStyleTargetIDs)
+        let slots = document.colorRowSlots(layerIDs: colorSlotTargetIDs)
         // An arrow's head and its label's three are parts, and parts are what
         // the Appearance list is for. This is the Color section the release
         // BEFORE that split still uses, and nothing about that release changes
@@ -860,7 +875,7 @@ extension EditorState {
     /// be absent at all, and on only when every layer it speaks for has one.
     func colorSwitch(slot: ColorSlot) -> ColorSwitch {
         guard let document else { return ColorSwitch(slot: slot, layerIDs: [], onCount: 0) }
-        return document.colorSwitch(layerIDs: colorStyleTargetIDs, slot: slot)
+        return document.colorSwitch(layerIDs: colorSlotTargetIDs, slot: slot)
     }
 
     /// The checkbox on a color row: switches a box's inside, or a frame's
@@ -893,7 +908,7 @@ extension EditorState {
     func saveColorStyle(slot: ColorSlot, name: String? = nil) -> UUID? {
         guard colorStylesEnabled else { return nil }
         colorStyleNaming = nil
-        let targets = colorStyleTargetIDs
+        let targets = colorSlotTargetIDs
         guard !targets.isEmpty else { return nil }
         discardDragPreview()
         var saved: UUID?
@@ -1124,6 +1139,17 @@ extension EditorState {
             }
             return
         }
+        // A caliper's colours arm the NEXT MEASUREMENT of its role, whichever
+        // mode made it: a Size caliper recoloured here is how the next Size
+        // measurement comes out, exactly as a Gap's is for the next Gap.
+        if Self.measurePartSlots.contains(slot) {
+            let calipers = targets.filter { document.layer(id: $0)?.measure != nil }
+            if !calipers.isEmpty { rememberMeasureColors(of: calipers) }
+            let rest = targets.filter { !calipers.contains($0) }
+            guard !rest.isEmpty else { return }
+            armToolsFromSelection(slot: slot, targets: rest, rememberingBorder: rememberingBorder)
+            return
+        }
         let arming = document.toolArming(layerIDs: targets, slot: slot)
         if !arming.isEmpty {
             for entry in arming {
@@ -1147,7 +1173,7 @@ extension EditorState {
 
     /// What the picked layers are painted with in a slot, when they agree.
     func selectionPaint(slot: ColorSlot) -> Paint? {
-        lookReadingDocument?.sharedPaint(layerIDs: colorStyleTargetIDs, slot: slot)
+        lookReadingDocument?.sharedPaint(layerIDs: colorSlotTargetIDs, slot: slot)
     }
 
     /// What a colour row's chip shows: the paint in flight while a drag is
