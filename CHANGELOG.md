@@ -2,6 +2,44 @@
 
 All notable user-visible changes. Format: `## <version> — <date>`, newest first.
 
+## 0.17.0 — 2026-10-13
+
+**Layers can turn in depth.** Any layer can now tilt, flip and move nearer or further away, seen through a camera with real perspective. Pick a layer and its 3D grippers are already on it: a flat arc swings it, a tall arc tips it, and an arrow off its pivot pushes it into the distance. Hold Shift to step by 15 degrees, and a small label shows the value as you drag. The same values sit in the panel, and older documents open exactly as they were.
+
+**Transitions and titles that move in 3D.** Six new transitions turn one shot into the next in depth: flip, cube, swing, doorway, revolve and push. Each has its own length, curve, direction and motion blur. Title words can swing in, flip up, tilt or fly in from far away. Text that turns is drawn in true perspective, so the near edge looks nearer and the words never lean like italics.
+
+**Titles that look designed.** The Library now has twelve title styles, from Keynote Clean and Editorial Serif to Tech Terminal and Kinetic Bold, plus three new lower thirds. A title arrives in parts: the background first, then the headline, then the subtitle and accents, and it leaves in reverse. Words can come in a line, a word or a letter at a time, type out with a blinking cursor, or wipe in behind a mask. Fast movement gets motion blur, and a Sounds switch adds a soft whoosh and a tick as the title builds.
+
+**Restyle a title with a few knobs.** Change a title's theme, font pair, energy, intensity or background, and it lays itself out again with its words still easy to read. Original is always one click away. Title tiles in the Library play when you point at them, and a click picks one straight away. Editing a title's words or turning a knob never sets it playing, and one click picks any part of it.
+
+**Title backgrounds that are alive.** A title page can sit on one of ten moving looks: Aurora, Energy Streams, Color Bubbles, Light Rays, Light Leaks, Wind Streams, Architectural Sketch, Particles, Liquid Gradient and Grid Horizon. You pick them from tiles that play, and you can set the speed, strength and scale of each. Backgrounds can also be moving gradients, grain, or your recording behind frosted glass.
+
+**More of a layer can be animated.** Tilt and depth take keys just as easily as moving a layer does. A shadow's distance, direction, colour and opacity can be animated, and so can a glow's colour and a border's width and colour. Camera moves show as diamonds on a thin row at the top of the timeline, where you can click, drag or delete them. Every transition is tuned with a single Curve row, and two new curves, Ease out quint and Ease out expo, join the list everywhere.
+
+**Faster timeline editing.** Drag a box across the timeline to pick everything it touches, then move or delete it all together. Drag near any edge and the timeline scrolls that way. A range you drew stays in place when you pick a clip, and right-clicking inside it acts on that clip's stretch. A click on the timeline moves the playhead there. Command with an arrow key nudges a clip by one frame, Option drag leaves a copy behind, and a copied clip pastes at the playhead. Several picked clips move to other tracks together, and you can pick several zooms and change them at once.
+
+**Premiere's moves, in more places.** X marks the clip under the playhead, and Shift I and Shift O jump to the In and Out marks. Shift M and Command Shift M jump between markers. Clips and the playhead snap to markers, and you can drag a marker to a new moment. Command R opens the picked clip's speed. Click a gap and press Delete to close it, and any titles and music after it come along. A cut can be rolled to the playhead, and a clip a track will not take tells you why.
+
+**A timeline you can read at a glance.** A gap shows as a dashed, hatched slot, a transition as a band across its cut, and a held frame as a still. A clip you have sped up or slowed down shows how long it originally was. An empty track looks empty, and the Captions track sits under the picture tracks while its words still show on top. Double-click a track group's name to rename it.
+
+**Recordings are ready the moment you stop.** A recording is in history and opens the instant you stop, every time, including full-screen recordings that capture both the Mac's sound and the microphone. Saving an edited recording puts the finished video in history too. A recording that is only cut exports by copying the pieces it keeps, which is much faster. Copy an edit to the clipboard as a video or a GIF, and a GIF plays at the same speed as your edit. You can drag the recording control anywhere and it remembers where you put it. Command Left and Right switch the history filter.
+
+**Watching and playing.** F puts a video in full screen and Escape brings it back, and Control Command F works too. Full-screen Retina recordings keep up as they play, even across cuts and when played backwards with J. The menu bar stays still while a video plays.
+
+**Sound you can see.** A sound's waveform is drawn as one filled shape that follows its fades and volume. Its fade and level points are easier to see and grab, and its trim grip works wherever you take hold of it. Sound you detached can go back into its picture. You can choose the captions language before they are written, join two caption lines into one, and move a word back to the line before.
+
+**Measuring finds the real thing.** Size mode now reads buttons, pills, cards, avatars, icons, badges and stacks. It tells them apart by colour and looks past their glow, at any size. Draw a rough box and it snaps to whatever is inside it. A size measurement is a single item, a faint box with its width and height, that moves, hides and deletes as one and lists as one row. Resizing a zoom callout keeps the shape of what it magnifies, and Shift lets you change that shape. A Magnify lens you drag around leaves no trail behind it.
+
+**Lighter window shadows.** When you capture a window by clicking it, its shadow is now much softer than the one macOS draws. The shadow is a real effect, so you can open the capture later and make it darker, lighter or turn it off. Option-click still captures the window with no shadow at all.
+
+**A calmer canvas and panel.** Position, size and rotation now open from an Info button at the end of the tool bar, or with F8, and they never sit over your picture. Every handle lights up when the pointer rests on it, so you know what a press will grab. Zooming brings up a small zoom control in the corner that fades away on its own. The panel shows a tool's settings only while you are using that tool, and menus and choices throughout the panel share one look. H picks the Hand and Highlight moves to U.
+
+**Starting and building a UI design.** A new window opens on a start page with templates and your recent work, and Design UI starts you on a ready-made login screen. The starter Button comes as Primary, Secondary or Ghost, in three sizes, with an optional icon. A component can have a variant and a size at once, and Edit Original shows you a live copy as you change it. Path corners round when you pull a knob in from the corner, and Pen points show what kind they are as you draw. Copying a drawing also puts it on the clipboard as SVG.
+
+**Next is where all of this lives.** Open Experiments from the app menu to switch between Current and Next. Both ship in the same app, so there is nothing extra to install, and switching takes a relaunch.
+
+**Fixes worth naming.** Turning a layer shows the turn as it happens, every time. A zoom on a cropped video shows exactly the box you drew. A border on a picture that fills the frame shows up. A dip to black or white fades out and back in. Playing backwards at 8x keeps the picture moving. A clip on a locked track stays put. Clicking the empty canvas lets go of a zoomed recording. Blue buttons stay readable when another app is in front, and a new name field always takes your typing.
+
 ## 0.16.0 — 2026-10-04
 
 **Record your screen and edit it in the same window.** A recording is now a document like any other. It is ready the moment you stop, it shows in history straight away, and it opens on a sharp first frame. An untouched recording opens to watch: the picture fills the window over the play controls, with nothing else in the way. One switch at the right of the title bar, or Command 2, brings the full editor in, and Command 1 tucks it away again. Save keeps your edit as a project you can open later, and Revert to Original takes you back to what you recorded.
