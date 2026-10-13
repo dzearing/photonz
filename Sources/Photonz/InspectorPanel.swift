@@ -1092,7 +1092,7 @@ struct InspectorPanel: View {
 
     private var orderedAvailableSections: [InspectorSectionID] {
         let available = availableSections
-        let inOrder = withoutLayersUnderATimeline(timeOrdered(order).filter { available.contains($0) })
+        let inOrder = withoutLayersUnderATimeline(withTheToolInHand(timeOrdered(order).filter { available.contains($0) }))
         // ...and then the panel's own rule about which of the OPTIONAL sections
         // are worth showing at all (Next, `next-panel-sections`). The test
         // above says a section applies to what is picked; this one says the
@@ -1107,6 +1107,17 @@ struct InspectorPanel: View {
                                            choices: sectionVisibility.choices,
                                            in: situation)
         }
+    }
+
+    /// A tool's settings only while that tool is in hand, directly above the
+    /// pick's own sections (`PanelToolSettings`, Next). The conditions that
+    /// add a tool section already ask for its tool; this is the one rule over
+    /// them, so a saved order cannot bury the section under the pick and no
+    /// tool's section can outlive the tool.
+    private func withTheToolInHand(_ sections: [InspectorSectionID]) -> [InspectorSectionID] {
+        guard Experiments.shared.toolSettingsEnabled else { return sections }
+        return PanelToolSettings.arrange(sections.map(\.rawValue), toolInHand: editorState.activeTool)
+            .compactMap(InspectorSectionID.init(rawValue:))
     }
 
     /// Where the timeline is on screen, it is the layer list, so the panel

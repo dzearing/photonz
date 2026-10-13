@@ -1,0 +1,437 @@
+{
+  "out": "/tmp/photonz-playtest/panel-shows-what-is-picked-walk",
+  "seed": "The right panel shows only what the picked thing and the tool in hand need. It photographs the panel with nothing picked, a rectangle, text, a measurement, a screenshot, a recording's clip and a title picked, and with Select, Measure, Pen and Text in hand. Every expectSections step fails if a tool's settings section shows while a different tool is in hand, which is what the user saw on 2026-10-13: the Measure Tool's settings beside a rectangle picked with Select. A picked caliper has no Masked by or Key row.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        880,
+        580
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool",
+        "Canvas"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "01-nothing-select",
+      "note": "nothing picked, Select in hand: the lists only"
+    },
+    {
+      "do": "snapshot",
+      "name": "01-nothing-select"
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        150
+      ],
+      "to": [
+        500,
+        350
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Rectangle"
+      ]
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "02-rectangle-select",
+      "note": "the user's screenshot: a rectangle picked with Select, and no Measure Tool section"
+    },
+    {
+      "do": "snapshot",
+      "name": "02-rectangle-select"
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Magic Wand"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "03-rectangle-measure",
+      "note": "Measure in hand and the rectangle picked from its row: the tool's settings sit above the rectangle's own"
+    },
+    {
+      "do": "snapshot",
+      "name": "03-rectangle-measure"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "04-rectangle-back-to-select",
+      "note": "Select back in hand with the rectangle still picked: the Measure Tool section goes with the tool"
+    },
+    {
+      "do": "click",
+      "at": [
+        880,
+        580
+      ]
+    },
+    {
+      "do": "key",
+      "key": "i"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "leading": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "05-nothing-measure",
+      "note": "nothing picked, Measure in hand: its settings"
+    },
+    {
+      "do": "snapshot",
+      "name": "05-nothing-measure"
+    },
+    {
+      "do": "measureMode",
+      "mode": "distance"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        100
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        800,
+        100
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        800,
+        100
+      ]
+    },
+    {
+      "do": "move",
+      "at": [
+        700,
+        60
+      ]
+    },
+    {
+      "do": "click",
+      "at": [
+        700,
+        60
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectMeasures",
+      "count": 1
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Measure"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "expect",
+      "field": "Masked by",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "field": "Key",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "06-measurement-select",
+      "note": "a caliper picked with Select: no Measure Tool, no Masked by, no Key"
+    },
+    {
+      "do": "snapshot",
+      "name": "06-measurement-select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Masked by",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "07-rectangle-over-picture",
+      "note": "the rectangle over the background still has its Masked by row"
+    },
+    {
+      "do": "click",
+      "at": [
+        880,
+        580
+      ]
+    },
+    {
+      "do": "tool",
+      "tool": "pen"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "08-nothing-pen",
+      "note": "nothing picked, Pen in hand"
+    },
+    {
+      "do": "snapshot",
+      "name": "08-nothing-pen"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "09-nothing-text",
+      "note": "nothing picked, Text in hand"
+    },
+    {
+      "do": "snapshot",
+      "name": "09-nothing-text"
+    },
+    {
+      "do": "click",
+      "at": [
+        300,
+        480
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "10-text-select",
+      "note": "text picked with Select"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-text-select"
+    },
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png",
+      "width": 1280,
+      "height": 840
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Background"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "11-screenshot-select",
+      "note": "a screenshot picked with Select"
+    },
+    {
+      "do": "snapshot",
+      "name": "11-screenshot-select"
+    }
+  ]
+}

@@ -348,6 +348,20 @@ extension Layer {
         if case .image = content { return true }
         return false
     }
+
+    /// Whether this layer could sensibly take its shape from the one under it.
+    ///
+    /// A measurement is a note ABOUT the picture, drawn over it, not part of
+    /// it: cutting a caliper to the shape of the button it measures means
+    /// nothing, so the row is not offered on one (the user, 2026-10-13: "the
+    /// Masked by is confusing. what's this for when i select a caliper?"). A
+    /// sound draws nothing to cut.
+    public var canBeMasked: Bool {
+        switch content {
+        case .measure, .sound: false
+        default: true
+        }
+    }
 }
 
 extension LayerStyleSelection {

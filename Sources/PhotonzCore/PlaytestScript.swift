@@ -3916,7 +3916,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// ...and, with `layers`, whether the Layers list is in the dock at all:
     /// false where a timeline is on screen and stands in for it, true once
     /// the timeline is folded away (`TimelineIsTheLayerList`).
-    case expectSections(leading: [String], layers: Bool?)
+    /// ...and, with `absent`, sections that must NOT be in the dock. Every
+    /// claim also fails when a tool's settings section is showing with
+    /// another tool in hand (`PanelToolSettings.strays`).
+    case expectSections(leading: [String], layers: Bool?, absent: [String])
     /// The named thing in the right hand panel must be ALL on screen: inside
     /// the window, and inside whatever is scrolling it.
     ///
@@ -5642,11 +5645,12 @@ public enum PlaytestStep: Sendable, Equatable {
         case "expectSections":
             let leading = try f.optionalStrings("leading")
             let layers = try f.optionalFlag("layers")
-            guard !leading.isEmpty || layers != nil else {
+            let absent = try f.optionalStrings("absent")
+            guard !leading.isEmpty || layers != nil || !absent.isEmpty else {
                 throw f.invalid("leading", "expectSections has to name the sections the panel must start with, "
-                    + "in order, or say whether the Layers list is there")
+                    + "in order, say whether the Layers list is there, or name sections that must be absent")
             }
-            self = .expectSections(leading: leading, layers: layers)
+            self = .expectSections(leading: leading, layers: layers, absent: absent)
         case "expectInView":
             self = .expectInView(field: try f.string("field"),
                                  whole: try f.optionalFlag("whole") ?? false)

@@ -3288,7 +3288,7 @@ struct PlaytestScriptTests {
         let gone = try decode("""
         { "steps": [ { "do": "expectSections", "layers": false, "leading": ["Time"] } ] }
         """)
-        guard case .expectSections(let leading, let layers) = gone.steps[0] else {
+        guard case .expectSections(let leading, let layers, _) = gone.steps[0] else {
             Issue.record("expectSections"); return
         }
         #expect(leading == ["Time"])
@@ -3296,7 +3296,7 @@ struct PlaytestScriptTests {
         let back = try decode("""
         { "steps": [ { "do": "expectSections", "layers": true } ] }
         """)
-        guard case .expectSections(let none, let present) = back.steps[0] else {
+        guard case .expectSections(let none, let present, _) = back.steps[0] else {
             Issue.record("expectSections"); return
         }
         #expect(none.isEmpty)
@@ -3306,6 +3306,19 @@ struct PlaytestScriptTests {
             { "steps": [ { "do": "expectSections" } ] }
             """)
         }
+    }
+
+    @Test("An expectSections step can claim sections are NOT in the panel")
+    func expectSectionsClaimsWhatIsAbsent() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectSections", "absent": ["Measure Tool", "Canvas"] } ] }
+        """)
+        guard case .expectSections(let leading, let layers, let absent) = script.steps[0] else {
+            Issue.record("expectSections"); return
+        }
+        #expect(leading.isEmpty)
+        #expect(layers == nil)
+        #expect(absent == ["Measure Tool", "Canvas"])
     }
 
     // Playing a recording flickered while every walk that played one passed,

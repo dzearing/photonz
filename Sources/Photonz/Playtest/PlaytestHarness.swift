@@ -3078,9 +3078,9 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
-        case .expectSections(let leading, let layers):
+        case .expectSections(let leading, let layers, let absent):
             note(number, step.name,
-                 try await patiently { try self.checkSections(leading: leading, layers: layers) },
+                 try await patiently { try self.checkSections(leading: leading, layers: layers, absent: absent) },
                  state: describe())
 
         case .expectInView(let field, let whole):
@@ -11176,9 +11176,25 @@ private final class Run {
     /// capture with a ruler.
     /// Whether the dock's sections, top to bottom and with Layers aside,
     /// start with `leading`.
-    private func checkSections(leading: [String], layers: Bool? = nil) throws -> String {
+    private func checkSections(leading: [String], layers: Bool? = nil, absent: [String] = []) throws -> String {
         let probe = InspectorLayoutProbe.shared
         let all = probe.visible.map(\.title)
+        // Always: no tool's settings with another tool in hand (the user,
+        // 2026-10-13, Measure Tool showing while a rectangle was picked with
+        // Select).
+        let tool = editor?.activeTool ?? .select
+        let strays = PanelToolSettings.strays(probe.visible.map(\.rawValue), toolInHand: tool)
+        guard strays.isEmpty else {
+            let names = strays.compactMap(InspectorSectionID.init(rawValue:)).map(\.title)
+            throw Failure(description: "the panel shows \(names.joined(separator: ", ")) with \(tool.rawValue) in hand; "
+                + "a tool's settings belong only to that tool; it shows: \(all.joined(separator: ", "))")
+        }
+        let present = absent.filter(all.contains)
+        guard present.isEmpty else {
+            throw Failure(description: "the panel shows \(present.joined(separator: ", ")), which the walk said "
+                + "would not be there; it shows: \(all.joined(separator: ", "))")
+        }
+        let absentSays = absent.isEmpty ? nil : "no \(absent.joined(separator: ", "))"
         let hasLayers = all.contains(InspectorSectionID.layers.title)
         if let layers, layers != hasLayers {
             throw Failure(description: layers
@@ -11187,14 +11203,17 @@ private final class Run {
                 : "the panel still has its Layers list, and the walk said the timeline stands in for it; "
                     + "it shows: \(all.joined(separator: ", "))")
         }
-        let listSays = layers.map { $0 ? "the Layers list is there" : "there is no Layers list" }
-        guard !leading.isEmpty else { return listSays ?? "" }
+        let listSays = [layers.map { $0 ? "the Layers list is there" : "there is no Layers list" }, absentSays]
+            .compactMap { $0 }.joined(separator: "; ")
+        guard !leading.isEmpty else {
+            return (listSays.isEmpty ? "" : listSays + "; ") + "it shows: \(all.joined(separator: ", "))"
+        }
         let shown = all.filter { $0 != InspectorSectionID.layers.title }
         guard Array(shown.prefix(leading.count)) == leading else {
             throw Failure(description: "the panel starts \(shown.prefix(leading.count + 2).joined(separator: ", ")), "
                 + "not \(leading.joined(separator: ", ")); all of it: \(shown.joined(separator: ", "))")
         }
-        return (listSays.map { $0 + "; " } ?? "") + "the panel starts \(leading.joined(separator: ", "))"
+        return (listSays.isEmpty ? "" : listSays + "; ") + "the panel starts \(leading.joined(separator: ", "))"
             + (shown.count > leading.count ? ", then \(shown.dropFirst(leading.count).joined(separator: ", "))" : "")
     }
 

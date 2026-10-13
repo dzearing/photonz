@@ -1,0 +1,136 @@
+{
+  "out": "/tmp/photonz-playtest/panel-shows-what-is-picked-video-walk",
+  "seed": "The right panel on a video shows only what the picked clip or title needs: no tool's settings with Select in hand, no 3D section (its values are on the transform bar). Every expectSections step fails if a tool's settings section shows while a different tool is in hand.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "windowLaptop"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool",
+        "3D"
+      ],
+      "leading": [
+        "Properties"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-clip-select",
+      "note": "a recording's clip picked with Select"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-clip-select"
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        520,
+        300
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster."
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSections",
+      "absent": [
+        "Measure Tool",
+        "3D"
+      ],
+      "leading": [
+        "Properties"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-title-select",
+      "note": "a title picked with Select"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-select"
+    }
+  ]
+}

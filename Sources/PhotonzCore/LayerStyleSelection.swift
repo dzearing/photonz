@@ -78,7 +78,9 @@ public struct LayerStyleSelection: Hashable, Sendable {
         /// leave those out (`LayerCompositing.swift`).
         public let hasPixelsToKey: Bool
         /// True when there is a layer directly under this one among its own
-        /// siblings, which is the only thing a matte can borrow a shape from.
+        /// siblings, which is the only thing a matte can borrow a shape from,
+        /// and this layer is one a shape means anything on (`canBeMasked`:
+        /// never a measurement).
         public let hasSomethingBelow: Bool
 
         public init(id: UUID, style: LayerStyle, cornerRadiusLimit: Double,
@@ -317,7 +319,7 @@ extension PhotonzDocument {
                 hasFixedMixing: layer.mixingIsFixed,
                 hasOpenLine: layer.ringsAnOpenLine,
                 hasPixelsToKey: layer.canBeKeyed,
-                hasSomethingBelow: siblings(of: id).map { $0.index > 0 } ?? false))
+                hasSomethingBelow: layer.canBeMasked && (siblings(of: id).map { $0.index > 0 } ?? false)))
         }
         return LayerStyleSelection(members: members, selectionCount: layerIDs.count)
     }
