@@ -1,0 +1,35 @@
+{
+  "id": "every-key-dot-can-be-clicked-to-pick-it-and-back",
+  "title": "Every key dot can be clicked to pick it and Backspace deletes it",
+  "goal": "Any dot that stands for a key, on a property lane in the timeline, on the clip's key line, in a value graph, or on the motion path drawn on the canvas, picks on a click (highlighted so the person can see it), and Backspace or Delete removes the picked keys. Today clicking the dots does not pick them, so a key cannot be removed that way.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 15,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:35:44.573Z",
+  "updated": "2026-10-13T01:35:44.669Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-12): \"i click on any of these dots and cant select them. want to be able to select, hit backspace and have the point disappear\". No screenshot came through; from the conversation (3D keying, graphs, key overlays) 'these dots' are key dots, so the task covers every surface that draws them.\n\nSuspect from code reading, not confirmed: KeyLanesView.swift key glyph (:410-430) has .gesture(keyDrag(...)) BEFORE .onTapGesture; a DragGesture with minimumDistance 0 in the same file (:466) would take every press and the tap never fires. Check which drag keyDrag is and make tap and drag coexist (minimumDistance > 0 for the drag, or a single gesture that decides on release). Delete of keys: EditorCommands.swift:720-737 only when onTimeline && canDeletePickedKeys; EditorCanvasSurface.swift:179 deletes picked keys from the canvas when keySelection.layerID matches; canDeletePickedKeys at EditorState+KeyLanes.swift:207. Related queued: the graph editor task (the-value-graph-lets-you-add-points-pick-the-seg) and the key overlay task (clicking-a-key-opens-the-same-overlay-to-set-tha) build on picking working.",
+  "acceptance": [
+    "Reproduce first at Next defaults: key a layer's position, scale, opacity and Rotation Y; click each kind of dot (lane keys, the clip's summary key line, graph points with Show Graph, motion path dots on the canvas) and record which pick and which do not, and what Backspace does after each",
+    "A single click on any key dot picks it within one frame with a clear picked look (filled, accent colour, slightly larger); Shift or Command adds; clicking empty lane space drops the pick; a press that moves past the drag threshold still drags the key as today (click and drag must not steal each other)",
+    "Backspace and Delete remove the picked keys in one undo step from wherever the pick was made (timeline, graph or canvas), regardless of which pane last had focus, as long as keys are the current pick; the menu bar's Delete shows it is acting on keys",
+    "Right-click on a dot picks it (if not already) and offers Delete Key, easing, Copy/Paste",
+    "Same rule for every property, including the 3D ones and camera values",
+    "A walk keys four properties, clicks a dot on each surface, presses Backspace, and checks the key is gone and the others are untouched",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:35:44.575Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:35:44.668Z",
+      "note": "seq 3960 -> 15"
+    }
+  ]
+}
