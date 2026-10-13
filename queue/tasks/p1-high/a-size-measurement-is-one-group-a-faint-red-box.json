@@ -1,0 +1,36 @@
+{
+  "id": "a-size-measurement-is-one-group-a-faint-red-box",
+  "title": "A Size measurement is one group: a faint red box over the area plus its width and height",
+  "goal": "Measuring the size of something puts down one thing, not two loose calipers: a group named for what it measures (for example 'Size 320 x 48') holding a box that tints the measured area in the Size colour at 10% opacity, the width caliper and the height caliper. The group moves, hides and deletes as one, and expands in the Layers list so each of its three parts can be picked and changed.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 7,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:48:46.521Z",
+  "updated": "2026-10-13T01:48:46.618Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i measure the size of a box, i'd like the box to have a semitransparent (10% opacity) red box outlining the space being measured. I'd like the size tool to be one layer group but can be expanded to modify the 3 parts.\"\n\nFrom code reading (not run): EditorState+Measure.swift addElementSize (:97-135) builds a width and a height MeasureContent (role .size, Size ink when measureRolesEnabled), plans readouts, and adds the two layers loose (perform { addLayer(width); addLayer(height) }), placed in time on video. No box, no group. Groups exist (GroupContent); the spec list names Width/Height from role .size (PhotonzCore/MeasureSpecList.swift:41). Memory: the user's main use is UX redlining.",
+  "acceptance": [
+    "Size mode (hover click, rough box, or [ / ] picks) commits one group containing: a rectangle exactly over the measured area (no stroke, fill in the Size role's colour, red by default, at 10% opacity, editable like any shape's fill and opacity), the width caliper and the height caliper (as today, readouts placed the same way)",
+    "The group's name says the size ('Size 320 x 48', using the document's unit) and updates if a part is edited; in the Layers list it is collapsed by default and expands to show Box, Width, Height",
+    "Picking the group on the canvas picks it whole (moving it moves all three, Delete removes all three, one undo step); double click or the Layers list picks a part; the box's fill, the calipers' colours and readouts are editable on the part",
+    "The Measurements panel lists the group as one size entry with its two numbers; Copy as Spec List and the copied redline still give Width and Height as today",
+    "The box tint is legible-safe: it never hides what is under it (10% default), and the Size style in the Library can change its default colour and opacity for new measurements",
+    "Existing documents with loose width and height calipers open unchanged",
+    "A walk measures a button in Size mode, checks one group with three children, checks the box's fill opacity is 10% and colour is the Size colour, moves the group, expands it and changes the box opacity",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:48:46.523Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:48:46.617Z",
+      "note": "seq 3960 -> 7"
+    }
+  ]
+}
