@@ -209,7 +209,10 @@ struct MotionBlurRenderTests {
             let worst = samples.max() ?? 0
             report.append(String(format: "%@: median %.1fms, worst %.1fms over %d frames",
                                  name, median, worst, samples.count))
-            #expect(!MachineSpeed.isGating || median < 16, "\(name) median \(median)ms")
+            // At most 5.8ms on the calibration machine (2026-10-13). The gate
+            // is the shared one, scaled by how fast this machine is: a flat
+            // 16ms failed on the GitHub VM on unchanged code.
+            MachineSpeed.check("\(name) at 1080p", medianMS: median, baselineMS: 6)
         }
         print("[perf] motion blur at 1920x1080 (drawn + renderInteractive):\n  " + report.joined(separator: "\n  "))
     }

@@ -115,7 +115,10 @@ struct Space3DPerfTests {
                      + "median %.1fms, slowest %.1fms over %d frames; the same layers flat, drawn whole: "
                      + "median %.1fms", median, slowest, samples.count, flatSamples[flatSamples.count / 2]))
         // Calibration machine, 2026-10-11: 5.6ms median, 8.4ms slowest.
-        #expect(!MachineSpeed.isGating || median < 16)
+        // The frame budget is the shared one, scaled by how fast this machine
+        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
+        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
+        // times slower than the calibration Mac, on unchanged code.
         MachineSpeed.check("2.5D frame at 1080p", medianMS: median, baselineMS: 6)
     }
 }

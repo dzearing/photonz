@@ -167,7 +167,10 @@ struct TextDepthPerspectiveTests {
         let median = samples[samples.count / 2], slowest = samples[samples.count - 1]
         print(String(format: "[perf] headline flipping up by letter, 1920x1080: median %.1fms, slowest %.1fms",
                      median, slowest))
-        #expect(!MachineSpeed.isGating || median < 16)
+        // The frame budget is the shared one, scaled by how fast this machine
+        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
+        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
+        // times slower than the calibration Mac, on unchanged code.
         MachineSpeed.check("text flipping up by letter at 1080p", medianMS: median, baselineMS: 8)
     }
 }

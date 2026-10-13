@@ -201,7 +201,10 @@ struct LiveBackdropRenderTests {
             let best = times.min() ?? 0
             let median = times.sorted()[times.count / 2]
             print("[live-perf] \(look.title) 1920x1080: best \(String(format: "%.1f", best)) ms, median \(String(format: "%.1f", median)) ms")
-            #expect(!MachineSpeed.isGating || best < 16, "\(look.title) took \(best) ms")
+            // At most 5.4ms on the calibration machine (2026-10-13), and 7.8
+            // to 12.4ms on the GitHub VM, within a few ms of a flat 16. The
+            // gate is the shared one, scaled by how fast this machine is.
+            MachineSpeed.check("\(look.title) live backdrop at 1080p", medianMS: best, baselineMS: 5.5)
         }
     }
 

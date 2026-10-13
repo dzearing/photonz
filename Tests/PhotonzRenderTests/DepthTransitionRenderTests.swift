@@ -135,7 +135,10 @@ struct DepthTransitionRenderTests {
         }
         print("[perf] transitions in depth, 1920x1080, 10 layers, 20 frames each:\n  "
               + lines.joined(separator: "\n  "))
-        #expect(!MachineSpeed.isGating || worstMedian < 16)
+        // The frame budget is the shared one, scaled by how fast this machine
+        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
+        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
+        // times slower than the calibration Mac, on unchanged code.
         MachineSpeed.check("transition in depth at 1080p", medianMS: worstMedian, baselineMS: 8)
     }
 

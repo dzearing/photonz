@@ -211,7 +211,11 @@ struct TitleSetPerfTests {
             }
             let median = best.median
             report.append(String(format: "%@: median %.1fms, worst %.1fms", preset.name, median, best.worst))
-            #expect(!MachineSpeed.isGating || median < 16, "\(preset.name) median \(median)ms")
+            // Measured alone at 2.3 to 12.8ms a frame on the calibration
+            // machine on 2026-10-13 (Gradient Glow the slowest). The gate is
+            // the shared one, scaled by how fast this machine is: a flat 16ms
+            // failed eight of the twelve on the GitHub VM on unchanged code.
+            MachineSpeed.check("\(preset.name) title frame at 1080p", medianMS: median, baselineMS: 13)
         }
         print("[perf] the title set at 1920x1080 (drawn + renderInteractive):\n  " + report.joined(separator: "\n  "))
     }
