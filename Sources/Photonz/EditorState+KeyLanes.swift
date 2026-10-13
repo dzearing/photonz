@@ -2,10 +2,26 @@ import AppKit
 import Foundation
 import PhotonzCore
 
-/// The keys picked on one layer's lanes.
+/// The keys picked on one layer's lanes, and the segments between keys
+/// picked on its graphs, each named by the key it starts at
+/// (`AnimatedLinePick`).
 struct KeySelection: Equatable {
     var layerID: UUID
     var refs: Set<KeyRef>
+    var segments: Set<KeyRef> = []
+
+    var linePick: AnimatedLinePick<KeyRef> { AnimatedLinePick(dots: refs, segments: segments) }
+
+    init(layerID: UUID, refs: Set<KeyRef>, segments: Set<KeyRef> = []) {
+        self.layerID = layerID
+        self.refs = refs
+        self.segments = segments
+    }
+
+    init?(layerID: UUID, _ pick: AnimatedLinePick<KeyRef>) {
+        guard !pick.isEmpty else { return nil }
+        self.init(layerID: layerID, refs: pick.dots, segments: pick.segments)
+    }
 }
 
 /// Picked keys being dragged along their lanes: how far, and whether Option
@@ -62,10 +78,15 @@ extension EditorState {
     /// The curve a lane opens into, drawn with a handle drag still in the air
     /// where there is one.
     func keyGraph(layerID: UUID, motionID: UUID,
-                  handle: (ref: KeyRef, side: KeyHandleSide, point: CGPoint)? = nil) -> KeyGraph? {
+                  handle: (ref: KeyRef, side: KeyHandleSide, point: CGPoint)? = nil,
+                  point: (ref: KeyRef, byMS: Int, value: Double?)? = nil) -> KeyGraph? {
         guard var document = shownDocument ?? document else { return nil }
         if let handle {
             document.setKeyHandle(layerID: layerID, handle.ref, handle.side, toGraphPoint: handle.point)
+        }
+        // A point in the hand on the graph, drawn where it would land.
+        if let point {
+            document.moveKeyOnGraph(layerID: layerID, point.ref, byMS: point.byMS, toValue: point.value)
         }
         return document.keyGraph(layerID: layerID, motionID: motionID)
     }
@@ -107,9 +128,9 @@ extension EditorState {
             activeKeyProperty = .motion(property)
         }
         if extending {
-            var refs = pickedKeys(layerID: layerID)
-            if refs.contains(ref) { refs.remove(ref) } else { refs.insert(ref) }
-            keySelection = refs.isEmpty ? nil : KeySelection(layerID: layerID, refs: refs)
+            var pick = linePick(layerID: layerID)
+            pick.pick(dot: ref, extending: true)
+            keySelection = KeySelection(layerID: layerID, pick)
             return
         }
         keySelection = KeySelection(layerID: layerID, refs: [ref])
@@ -207,7 +228,9 @@ extension EditorState {
     var canDeletePickedKeys: Bool {
         // A diamond picked on the Camera row is keys in hand too.
         if canDeletePickedCameraKey { return true }
-        guard documentHasTime, let keySelection, !keySelection.refs.isEmpty,
+        // A segment picked on a graph is in hand too, so ⌫ never reaches past
+        // it to the clip; it deletes only the points picked with it.
+        guard documentHasTime, let keySelection, !keySelection.linePick.isEmpty,
               selectedLayerID == keySelection.layerID,
               !isClipLocked(keySelection.layerID) else { return false }
         return true
@@ -221,6 +244,7 @@ extension EditorState {
             return true
         }
         guard canDeletePickedKeys, let keys = keySelection else { return false }
+        guard !keys.refs.isEmpty else { return true }
         keySelection = nil
         perform { $0.removeKeys(layerID: keys.layerID, keys.refs) }
         return true

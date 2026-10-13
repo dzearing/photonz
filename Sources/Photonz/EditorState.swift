@@ -1711,6 +1711,12 @@ final class EditorState {
     /// Picked keys on their way somewhere else in time, drawn where the hand
     /// has them until it lets go.
     var keyLaneDrag: KeyLaneDrag?
+    /// A segment's curve copied with Copy Ease, for Paste Ease on another
+    /// (`EditorState+KeyGraph`).
+    var copiedStretchCurve: EasingCurve?
+    /// The segments a segment's Draw a Curve is drawing for, while its
+    /// editor is open on the graph.
+    var drawingStretchCurve: KeySelection?
     /// The diamond picked on the timeline's Camera row, by where it sits on
     /// the document's clock (`EditorState+CameraRow`).
     var pickedCameraKeyMS: Int?
@@ -1822,6 +1828,11 @@ final class EditorState {
     @ObservationIgnored var timelineRightPressMS: Int?
     /// ...and how far down the tracks' own space it landed.
     @ObservationIgnored var timelineRightPressY: CGFloat = 0
+    /// The moment the last right click on the tracks landed on, kept after
+    /// the menu it opened is built: a graph's line reads it to tell which
+    /// segment or point its menu is about (`KeyLanesView`), and SwiftUI may
+    /// build that menu a turn after the press.
+    @ObservationIgnored var timelineLastRightPressMS: Int?
     /// Counts right clicks on the tracks. Every timeline menu reads it, so
     /// each right click builds its menu afresh rather than reusing the last.
     var timelineRightPresses = 0

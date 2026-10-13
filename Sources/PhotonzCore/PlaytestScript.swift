@@ -2822,6 +2822,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// the way a hand's does: the timeline's top edge, a clip. Window points,
     /// top left, unless `space` says other.
     case windowClick(at: PlaytestPoint, count: Int, modifiers: [PlaytestModifier])
+    /// A `windowClick` aimed at the middle of something the app names for a
+    /// walk (`"on"`), wherever it is laid out: a segment of a value graph,
+    /// whose place moves with the zoom and the values.
+    case windowClickOn(control: String, count: Int, modifiers: [PlaytestModifier])
     /// A grip on the timeline, found by its name in the app's own register,
     /// pulled `by` points sideways in `steps` real mouse moves posted to the
     /// window, with the grip's drawn position read back after every move
@@ -4235,7 +4239,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dropImage: "dropImage"
         case .dragFile: "dragFile"
         case .windowDrag: "windowDrag"
-        case .windowClick: "windowClick"
+        case .windowClick, .windowClickOn: "windowClick"
         case .dragGrip: "dragGrip"
         case .dropOnTimeline: "dropOnTimeline"
         case .dropOnLibrary: "dropOnLibrary"
@@ -4608,6 +4612,10 @@ public enum PlaytestStep: Sendable, Equatable {
             guard held >= 0, held <= 20 else { throw f.invalid("holdSeconds", "between 0 and 20 seconds") }
             self = .windowDrag(from: from, to: to, steps: max(1, steps), hold: try f.optionalString("hold"),
                                holdSeconds: held)
+        case "windowClick" where fields["on"] != nil:
+            self = .windowClickOn(control: try f.string("on"),
+                                  count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
+                                  modifiers: try f.modifiers())
         case "windowClick":
             var at = try f.point("at")
             if fields["space"] == nil { at.space = .window }

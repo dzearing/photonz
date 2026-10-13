@@ -3355,3 +3355,32 @@ Crop, and it is not a duplicate to be removed.
 
 Canonical page: `pages/comp-video.html` §07 (the trimming clip).
 Full write-up: `docs/design/video-surface.md` §10.
+
+---
+
+### D21 — Every animated line answers a click the same way: it picks, and only ⌘-click adds
+
+Anything drawn as a line through dots on the timeline is one kind of thing: a
+value graph opened under a row, a key lane's line, a sound's volume line, and
+the next one built (the motion path on the canvas, the Camera row). The user,
+2026-10-13: "I don't want to add dots by default. I want to select things. I want
+to add dots by cmd clicking on the line." So every one of them follows this
+table, from one implementation (`AnimatedLine` in
+`Sources/PhotonzCore/AnimatedLine.swift`), never its own:
+
+| You do | What happens |
+| --- | --- |
+| Click a dot | Picks it alone (and the playhead goes to it). |
+| Click the line between two dots | Picks that **segment** alone. A plain click never adds a dot. |
+| ⇧-click a dot or a segment | Adds it to the pick, or takes it out. |
+| ⌘-click the line | Adds a dot there, holding the value the line has, so the shape does not change. ⌘-click on a dot adds the dot to the pick instead. |
+| Double-click | Nothing more than two clicks: it picks. |
+| Click the line before the first dot or after the last | That is no segment: the lane's own click (the playhead goes there, the pick is let go). ⌘-click there adds a dot. |
+| Rest the pointer on a dot or a segment | It brightens a little, so the hand sees what a click will take. |
+| Picked | Drawn in **white**: a white dot, and a white segment on an accent edge so it reads on a light lane and a dark one. A picked segment shows the two handles that shape it. |
+| Right-click a segment | The curve list (D17), then Hold, Draw a Curve…, Copy Ease, Paste Ease, Add Point Here, Delete. Picks it unless it is already picked; never moves the playhead. |
+| ⌫ | Deletes the picked dots in one undo step. A picked segment alone deletes nothing, and never reaches past it to the clip. |
+
+A dot is found before the line it sits on (7 points of reach), the line within
+6 points of it. Canonical page: `pages/video-animate.html`, THE GRAPH; where the
+mock says double-click or ⌥-click adds, this rule (the user's later word) wins.

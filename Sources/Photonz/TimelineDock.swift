@@ -255,7 +255,9 @@ struct TimelineDock: View {
     /// turned it down on 2026-09-25: the time is in the transport, the value
     /// in the panel, and a bar of controls carries no sentence about state.
     @ViewBuilder private var keyBar: some View {
-        if editorState.keySelection != nil {
+        // Keys, not segments alone: a picked segment's curve is named in the
+        // panel's Curve row and on its own right click.
+        if let picked = editorState.keySelection, !picked.refs.isEmpty {
             HStack(spacing: 4) {
                 Text("EASING")
                     .font(.system(size: 10, weight: .semibold))

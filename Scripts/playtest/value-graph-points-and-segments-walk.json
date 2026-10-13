@@ -1,0 +1,341 @@
+{
+  "out": "/tmp/photonz-playtest/value-graph-points-and-segments-walk",
+  "seed": "The value graph takes points you add and segments you pick, the same rule as every animated line. At Next defaults with no flag changed, this walk keys a title's Scale at one and three seconds, opens its graph, single-clicks and double-clicks the line between the points and checks nothing was added, Command-clicks the line to add a third point, right-clicks the second segment and sets Ease out from the shared curve list, reads the value at three moments, then picks the added point with a click and deletes it with Backspace.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "rightClick",
+      "on": "Key Scale 1",
+      "choose": "Show Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-graph",
+      "note": "Scale keyed 100% at 0:01 and 200% at 0:03 on a title, its lane opened into its graph. Two points and one segment between them"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-graph"
+    },
+    {
+      "comment": "A plain click on the line between the two points picks that segment and adds nothing.",
+      "do": "windowClick",
+      "on": "Segment Scale 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-segment-picked",
+      "note": "THE FIRST TEST: a single click on the line picked the segment (drawn white, its two handles out) and no point was added"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-segment-picked"
+    },
+    {
+      "comment": "A double click on the line still adds nothing (the user, 2026-10-13: add only with Command).",
+      "do": "windowClick",
+      "on": "Segment Scale 1",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "comment": "Command-click on the line adds a point there.",
+      "do": "windowClick",
+      "on": "Segment Scale 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Segment Scale 2",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "3-point-added",
+      "note": "THE SECOND TEST: Command-click on the line added a third point, on the line, picked; the curve kept its shape and is now two segments"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-point-added"
+    },
+    {
+      "comment": "Right-click the second segment and choose Ease out from the shared curve list.",
+      "do": "rightClick",
+      "on": "Segment Scale 2",
+      "shot": "4-segment-menu",
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "4-eased",
+      "note": "THE THIRD TEST: the segment's right-click offers the shared curve list, Hold, Draw a Curve, Copy and Paste Ease, Add Point Here and Delete; Ease out chosen for the second segment"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-eased"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-at-2.5",
+      "note": "value read at 0:02.5"
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "196.4"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.75
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-at-2.75",
+      "note": "value read at 0:02.75"
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "199.2"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.25
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-at-2.25",
+      "note": "value read at 0:02.25"
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "190.5"
+    },
+    {
+      "comment": "Pick the added point with a click and delete it with Backspace.",
+      "do": "windowClick",
+      "on": "Key Scale 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "6-deleted",
+      "note": "THE FOURTH TEST: a click picked the middle point and Backspace took it away, leaving the two first keys and the title"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-deleted"
+    }
+  ]
+}

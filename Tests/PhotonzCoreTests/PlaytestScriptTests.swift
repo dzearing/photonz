@@ -656,6 +656,20 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("windowClick"))
     }
 
+    @Test("A windowClick step can aim at a named spot instead of a point")
+    func windowClickOnANamedSpot() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "windowClick", "on": "Segment Scale 1", "modifiers": ["command"] } ] }
+        """)
+        guard case .windowClickOn(let control, let count, let modifiers) = script.steps[0] else {
+            Issue.record("windowClickOn"); return
+        }
+        #expect(control == "Segment Scale 1")
+        #expect(count == 1)
+        #expect(modifiers == [.command])
+        #expect(script.steps[0].name == "windowClick")
+    }
+
     @Test("A dragGrip step pulls a named timeline grip by real mouse moves and can claim it followed")
     func dragGripStep() throws {
         let script = try decode("""

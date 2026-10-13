@@ -1,0 +1,58 @@
+{
+  "feature": "The value graph: points you add, segments you pick",
+  "epic": "video-transitions-motion",
+  "summary": "On an opened graph a click on the line between two points picks that segment (drawn white, its handles out), a Command-click adds a point that keeps the curve's shape, and a segment's right-click sets its curve from the shared list. A plain or double click never adds a point.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/value-graph-points-and-segments-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Type a title, key its Scale at 0:01 and set 200% at 0:03, then right-click a Scale key and choose Show Graph.",
+      "shot": "2026-10-13-value-graph-1-graph-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the line half way between the two points: the segment turns white and shows its handles, and no point is added."
+    },
+    {
+      "do": "Double-click the same spot: still no new point."
+    },
+    {
+      "do": "Command-click the line: a third point appears on the line, picked, and the curve keeps its shape.",
+      "shot": "2026-10-13-value-graph-3-point-added-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the second segment and choose Ease out.",
+      "shot": "2026-10-13-value-graph-4-segment-menu-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the panel's Curve row: it reads Ease out for that segment, and the line settles into the last point.",
+      "shot": "2026-10-13-value-graph-4-eased-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the middle point and press Backspace: it goes, and the title keeps its other two keys."
+    },
+    {
+      "do": "Drag a point up and to the right: it moves in time and value, catching the playhead, other keys and frames; hold Shift to keep it to one direction."
+    }
+  ],
+  "evaluate": [
+    "Does a click on the line now pick what you meant, every time, without ever adding a point?",
+    "Is the white picked segment easy to tell from the rest of the line, and does hovering it make clear what a click will take?",
+    "Is Command-click the right way to add, or do you also want double-click to add?",
+    "Is the segment's right-click the list you expected, and is Ease out there doing what you meant?",
+    "Does a point added on the line really leave the motion looking the same?"
+  ],
+  "rough": [
+    "The mock adds a point with a double-click or Option-click and paints a picked segment blue; this follows your later rule instead (Command-click adds, double-click only picks, picked is white): your call on 2026-10-13, written down as UX-PATTERNS D21.",
+    "The mock's timeline bar Easing naming a picked segment's curve, and a way to zoom the graph's value range, are not built yet: the-value-graph-zooms-its-value-range-and-the-ti. Until then the bar hides when only a segment is picked, and the panel's Curve row speaks for it.",
+    "The key overlay opening from a graph point waits on clicking-a-key-opens-the-same-overlay-to-set-tha, which builds the overlay itself.",
+    "Key lanes when closed and a sound's volume line still use their old clicks: every-key-dot-can-be-clicked-to-pick-it-and-back and an-audio-clip-answers-right-click-and-its-volume adopt this same rule next.",
+    "A key's own right-click keeps Premiere's per-key list (Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier); the shared curve list is on a segment's right-click. Same as the mock's split between a key and a segment.",
+    "Adding a point mid-segment keeps the shape exactly for every Bezier curve; on a bounce, elastic or steps segment both halves keep that curve, which is close but not identical.",
+    "The walk's plain clicks, the double-click and the drag of a point need the probe in front, and it could not come forward while you were using the Mac, so those steps were checked here only by unit tests and by the Command-click and right-click steps (which did land). The walk is marked to take the front and comes round in the whole set.",
+    "The pictures were taken with the window behind another app, so picked controls show their background look."
+  ]
+}

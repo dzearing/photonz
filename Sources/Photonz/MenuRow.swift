@@ -83,6 +83,8 @@ struct MenuRow: Identifiable {
     var isEnabled: Bool = true
     var isDestructive: Bool = false
     var kind: Kind = .command
+    /// A small picture beside the title: a curve's shape in a curve list.
+    var image: NSImage?
     var run: @MainActor () -> Void = {}
 
     static var separator: MenuRow { MenuRow(kind: .separator) }
@@ -116,7 +118,7 @@ struct MenuRowsView: View {
             case .separator:
                 Divider()
             case .toggle(let isOn):
-                let toggle = Toggle(row.title, isOn: Binding(get: { isOn }, set: { _ in row.run() }))
+                let toggle = Toggle(isOn: Binding(get: { isOn }, set: { _ in row.run() })) { label(row) }
                 if let shortcut = row.shortcut {
                     toggle.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
                 } else {
@@ -131,8 +133,17 @@ struct MenuRowsView: View {
     }
 
     @ViewBuilder
+    private func label(_ row: MenuRow) -> some View {
+        if let image = row.image {
+            Label { Text(row.title) } icon: { Image(nsImage: image) }
+        } else {
+            Text(row.title)
+        }
+    }
+
+    @ViewBuilder
     private func command(_ row: MenuRow) -> some View {
-        let button = Button(row.title, role: row.isDestructive ? .destructive : nil) { row.run() }
+        let button = Button(role: row.isDestructive ? .destructive : nil) { row.run() } label: { label(row) }
             .disabled(!row.isEnabled)
         if let shortcut = row.shortcut {
             button.keyboardShortcut(shortcut.keyEquivalent, modifiers: shortcut.modifiers)
@@ -157,6 +168,7 @@ private final class MenuRowItem: NSMenuItem {
             keyEquivalentModifierMask = shortcut.appKitFlags
         }
         if case .toggle(let isOn) = row.kind { state = isOn ? .on : .off }
+        image = row.image
         isEnabled = row.isEnabled
         target = self
         action = #selector(fire)

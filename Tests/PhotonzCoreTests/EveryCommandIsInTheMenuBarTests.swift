@@ -87,6 +87,11 @@ struct EveryCommandIsInTheMenuBarTests {
         "Add Key Here": "Key at Playhead",
         "Remove Key": "Remove Key at Playhead",
         "Remove Key Here": "Remove Key at Playhead",
+        // A graph segment's right click: the points picked with it are keys,
+        // and a click on a segment puts the playhead in it, where Key at
+        // Playhead adds the point.
+        "Delete Point": "Delete Keys",
+        "Add Point Here": "Key at Playhead",
         // The motion list's Remove stops that property moving.
         "Remove": "Stop Animating",
         "Unmute Track": "Mute Track",

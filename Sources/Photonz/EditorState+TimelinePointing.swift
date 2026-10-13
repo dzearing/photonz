@@ -69,6 +69,7 @@ extension EditorState {
                                            laneWidth: timelineLaneWidth, ruler: motionStripRuler)
         else { return false }
         timelineRightPressMS = ms
+        timelineLastRightPressMS = ms
         timelineRightPressY = point.y - timelineTracksFrame.minY
         timelineRightPresses &+= 1
         // Only the menu this press opens may learn from it: that one is built

@@ -71,6 +71,13 @@ public struct KeyGraph: Hashable, Sendable {
     public let property: MotionProperty
     /// The curve, first to last: `x` is the document's clock, `y` the value.
     public let points: [CGPoint]
+    /// The curve again, one stretch at a time: `stretches[i]` runs from key
+    /// `i` to key `i + 1`, which is what a click on the line picks.
+    public let stretches: [[CGPoint]]
+    /// The flat line before the first key and after the last, out to the
+    /// clip's ends: on the curve, but no stretch of it.
+    public let before: [CGPoint]
+    public let after: [CGPoint]
     public let keys: [KeyGraphKey]
     /// The lowest and highest the value goes, overshoot included.
     public let low: Double
@@ -194,7 +201,7 @@ extension PhotonzDocument {
         }
     }
 
-    private mutating func replaceMotions(layerID: UUID, _ made: [UUID: LayerMotion?],
+    mutating func replaceMotions(layerID: UUID, _ made: [UUID: LayerMotion?],
                                          stills: [(LayerMotion, MotionValue)] = []) {
         updateLayer(id: layerID) { edited in
             let kept = (edited.motions ?? []).compactMap { motion -> LayerMotion? in
@@ -322,7 +329,7 @@ extension PhotonzDocument {
     /// itself, or for a position the distance travelled along the path so
     /// far, so one curve still says how the move eases. Nil for a colour,
     /// which has no axis to plot on.
-    private func graphHeights(_ motion: LayerMotion) -> [Double]? {
+    func graphHeights(_ motion: LayerMotion) -> [Double]? {
         var heights: [Double] = []
         var travelled = 0.0
         var last: CGPoint?
@@ -358,10 +365,13 @@ extension PhotonzDocument {
         let fallback = KeyEase(following: motion.curve)
 
         var points: [CGPoint] = []
+        var stretches: [[CGPoint]] = []
         let start = layer.time?.inMS ?? min(0, at[0])
         let end = layer.time?.outMS ?? max(durationMS ?? 0, at[at.count - 1])
+        let first = CGPoint(x: Double(at[0]), y: heights[0])
+        let before = start < at[0] ? [CGPoint(x: Double(start), y: heights[0]), first] : []
         if start < at[0] { points.append(CGPoint(x: Double(start), y: heights[0])) }
-        points.append(CGPoint(x: Double(at[0]), y: heights[0]))
+        points.append(first)
         var graphKeys: [KeyGraphKey] = []
         for index in keys.indices {
             let key = keys[index]
@@ -375,6 +385,8 @@ extension PhotonzDocument {
             }
             if index < keys.count - 1 {
                 let next = keys[index + 1]
+                let stretchStart = points.count - 1
+                defer { stretches.append(Array(points[stretchStart...])) }
                 if ease != .hold {
                     let handle = key.leavingHandle(fallback)
                     leaving = Self.graphPoint(handle, from: (at[index], heights[index]),
@@ -395,6 +407,8 @@ extension PhotonzDocument {
                                          documentMS: at[index], value: heights[index], ease: ease,
                                          arriving: arriving, leaving: leaving))
         }
+        let last = CGPoint(x: Double(at[at.count - 1]), y: heights[heights.count - 1])
+        let after = end > at[at.count - 1] ? [last, CGPoint(x: Double(end), y: heights[heights.count - 1])] : []
         if end > at[at.count - 1] {
             points.append(CGPoint(x: Double(end), y: heights[heights.count - 1]))
         }
@@ -408,6 +422,7 @@ extension PhotonzDocument {
             if y > high + 1e-6 { high = y }
         }
         return KeyGraph(motionID: motion.id, property: motion.property, points: points,
+                        stretches: stretches, before: before, after: after,
                         keys: graphKeys, low: low, high: high)
     }
 

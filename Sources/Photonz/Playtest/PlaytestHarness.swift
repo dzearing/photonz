@@ -1847,44 +1847,17 @@ private final class Run {
             note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
                  + "posted to the window in \(steps) moves\(held)\(scrolled)\(front.note)")
         case .windowClick(let at, let count, let modifiers):
-            // A click, or two in a row, posted to the window the way
-            // `windowDrag` posts its press, so it lands on whatever SwiftUI
-            // view is under the point. Each press carries its place in the
-            // run, which is how AppKit tells a double-click from two clicks.
-            let window = try requireWindow()
-            let point = try windowPoint(at)
-            let flags = eventFlags(modifiers)
-            var stamp = ProcessInfo.processInfo.systemUptime
-            func event(_ type: NSEvent.EventType, clicks: Int, pressure: Float) -> NSEvent? {
-                stamp += 0.016
-                return NSEvent.mouseEvent(
-                    with: type, location: point, modifierFlags: type == .mouseMoved ? [] : flags, timestamp: stamp,
-                    windowNumber: window.windowNumber, context: nil, eventNumber: 0,
-                    clickCount: clicks, pressure: pressure)
+            try await windowClick(at: try windowPoint(at), saying: "\(short(at.point)) \(at.space.rawValue)",
+                                  count: count, modifiers: modifiers, number: number)
+        case .windowClickOn(let control, let count, let modifiers):
+            // The middle of something the app names for a walk, measured as
+            // it is laid out now, so a walk need not know where it is drawn.
+            let target = try rightClickTarget(control)
+            if let trouble = Self.reachTrouble(target) {
+                throw Failure(description: "a person could not click \"\(control)\": " + trouble)
             }
-            let front = await takeTheFrontForADrag()
-            if let moved = event(.mouseMoved, clicks: 0, pressure: 0) { NSApp.postEvent(moved, atStart: false) }
-            await sleep(0.15)
-            for click in 1...count {
-                guard let down = event(.leftMouseDown, clicks: click, pressure: 1),
-                      let up = event(.leftMouseUp, clicks: click, pressure: 0) else { break }
-                // Delivered as `press` delivers its click: the release queued
-                // first, so a view tracking the mouse finds it, and the press
-                // taken out of the queue by the meter, which leaves out what
-                // the menu bar spends on it when the person's pointer rests
-                // there. Left to the run loop, five quick clicks paid it five
-                // times over in the guarded wait after them, 16 to 19ms passes
-                // no person's click makes (`takeWalkMouseDown`).
-                NSApp.postEvent(up, atStart: false)
-                NSApp.postEvent(down, atStart: true)
-                NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
-                await sleep(0.13)
-            }
-            await sleep(0.3)
-            await giveTheFrontBack(front)
-            let held = modifiers.isEmpty ? "" : " holding " + modifiers.map(\.rawValue).joined(separator: "+")
-            note(number, "windowClick", "\(count == 2 ? "double-click" : "\(count) click(s)") at "
-                 + "\(short(at.point)) \(at.space.rawValue)\(held), posted to the window\(front.note)")
+            try await windowClick(at: target.point, saying: "the middle of \"\(control)\"",
+                                  count: count, modifiers: modifiers, number: number)
         case .dragGrip(let control, let by, let steps, let within, let hold, let modifiers, let cancel):
             // A grip on the timeline pulled by real mouse moves, and where it
             // was DRAWN read back after every one (`GripTrace`). The fault it
@@ -16805,6 +16778,49 @@ private final class Run {
     /// offered in. A window-space point is written the way a person reads the
     /// window — down from the top-left corner — and turned here into the
     /// bottom-left origin AppKit hands a destination.
+    /// A real click, or a run of them, posted to the window at `point`, in
+    /// the window's own space (`windowClick`).
+    private func windowClick(at point: CGPoint, saying: String, count: Int, modifiers: [PlaytestModifier],
+                             number: Int) async throws {
+        // A click, or two in a row, posted to the window the way
+        // `windowDrag` posts its press, so it lands on whatever SwiftUI
+        // view is under the point. Each press carries its place in the
+        // run, which is how AppKit tells a double-click from two clicks.
+        let window = try requireWindow()
+                let flags = eventFlags(modifiers)
+        var stamp = ProcessInfo.processInfo.systemUptime
+        func event(_ type: NSEvent.EventType, clicks: Int, pressure: Float) -> NSEvent? {
+            stamp += 0.016
+            return NSEvent.mouseEvent(
+                with: type, location: point, modifierFlags: type == .mouseMoved ? [] : flags, timestamp: stamp,
+                windowNumber: window.windowNumber, context: nil, eventNumber: 0,
+                clickCount: clicks, pressure: pressure)
+        }
+        let front = await takeTheFrontForADrag()
+        if let moved = event(.mouseMoved, clicks: 0, pressure: 0) { NSApp.postEvent(moved, atStart: false) }
+        await sleep(0.15)
+        for click in 1...count {
+            guard let down = event(.leftMouseDown, clicks: click, pressure: 1),
+                  let up = event(.leftMouseUp, clicks: click, pressure: 0) else { break }
+            // Delivered as `press` delivers its click: the release queued
+            // first, so a view tracking the mouse finds it, and the press
+            // taken out of the queue by the meter, which leaves out what
+            // the menu bar spends on it when the person's pointer rests
+            // there. Left to the run loop, five quick clicks paid it five
+            // times over in the guarded wait after them, 16 to 19ms passes
+            // no person's click makes (`takeWalkMouseDown`).
+            NSApp.postEvent(up, atStart: false)
+            NSApp.postEvent(down, atStart: true)
+            NSApp.sendEvent(MainThreadMeter.shared.takeWalkMouseDown(down))
+            await sleep(0.13)
+        }
+        await sleep(0.3)
+        await giveTheFrontBack(front)
+        let held = modifiers.isEmpty ? "" : " holding " + modifiers.map(\.rawValue).joined(separator: "+")
+        note(number, "windowClick", "\(count == 2 ? "double-click" : "\(count) click(s)") at "
+             + "\(saying)\(held), posted to the window\(front.note)")
+    }
+
     private func windowPoint(_ at: PlaytestPoint) throws -> CGPoint {
         guard case .window = at.space else {
             return try requireCanvas().convert(viewPoint(at), to: nil)

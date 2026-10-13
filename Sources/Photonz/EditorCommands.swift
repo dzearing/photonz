@@ -928,6 +928,14 @@ struct EditorCommands: Commands {
             }
         }
         .disabled(editor?.betweenKeysCurve == nil)
+        // The segments picked on a graph (`EditorState+KeyGraph`), the same
+        // rows as a segment's right click.
+        Button("Draw a Curve\u{2026}") { editor?.drawCurveForPickedSegments() }
+            .disabled(!(editor?.hasPickedSegments ?? false))
+        Button("Copy Ease") { editor?.copyPickedSegmentsEase() }
+            .disabled(editor?.pickedSegmentsCurveInHand == nil)
+        Button("Paste Ease") { editor?.pastePickedSegmentsEase() }
+            .disabled(!(editor?.hasPickedSegments ?? false) || editor?.copiedStretchCurve == nil)
     }
 
     // MARK: Marks
