@@ -1,0 +1,36 @@
+{
+  "id": "a-captured-window-s-shadow-is-much-lighter-and-c",
+  "title": "A captured window's shadow is much lighter, and can be adjusted",
+  "goal": "A window captured by clicking it keeps a shadow, but today it is macOS's own shadow baked into the picture, which reads far too dark (especially on the dark canvas and when pasted into other apps). It should be noticeably more transparent by default and adjustable afterwards like any other shadow.",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:40:54.545Z",
+  "updated": "2026-10-13T01:40:54.655Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"you added a large dropshadow. i don't mind the shadow but it's TOO dark. should be quite a bit more transparent.\" Screenshot 2026-10-12 18.39.57: a captured Photonz window on the dark canvas with a wide, very dark shadow around it.\n\nFrom code reading (not run): window captures keep macOS's real shadow: ScreenCapturer.swift:109 config.ignoreShadows = false and :147 ignoreShadows = !includeShadow; RectSelection.swift:173-176 tries .withShadow then .bareBounds (WindowShot styles); preference Experiments.windowCaptureIncludesShadow (CaptureCenter.swift:256, :305). The shadow is baked pixels, so it cannot be lightened afterwards today. Architecture rule (CLAUDE.md): layer styling such as shadow is non-destructive, applied at render time, never baked into pixels. Layer shadow controls exist (shadowOpacity etc., PhotonzCore/LayerMotion.swift).",
+  "acceptance": [
+    "Reproduce first: capture a window by clicking it (light and dark windows, over light and dark desktops); measure the shadow's darkest alpha and its reach in the captured PNG and on the canvas; record in the audit",
+    "Window captures keep the window's true shape (rounded corners, exact edges) but the shadow is no longer baked in: the capture is the bare window and the shadow is a non-destructive layer shadow (Layer styling, applied at render time) that matches macOS's shadow geometry (offset, blur, spread) at a much lighter default, roughly 40% of macOS's opacity, chosen by comparing side by side and written with numbers in the audit",
+    "The shadow is editable in the layer's shadow controls (opacity, blur, distance, colour) and can be switched off; the existing 'include shadow' capture preference still decides whether a shadow is added at all",
+    "Copy, drag-out, paste into other apps and export include the lighter shadow, with transparent pixels around it (not a dark box), MEASURED alpha at three points of the shadow",
+    "The capture's canvas size leaves room for the shadow's reach so it is never clipped",
+    "Captures made before this keep their baked shadow (no change to old images)",
+    "A walk or drill captures a window, checks the layer has a shadow style at the new default and that the bare image has no shadow pixels beyond its edge",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:40:54.547Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:40:54.654Z",
+      "note": "seq 3960 -> 3"
+    }
+  ]
+}
