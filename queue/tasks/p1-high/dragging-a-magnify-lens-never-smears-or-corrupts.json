@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:46:46.286Z",
-  "updated": "2026-10-13T01:46:46.380Z",
+  "updated": "2026-10-13T11:25:17.171Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i use a lens with magnify and then drag it around, it corrupts the image\". Screenshot 2026-10-12 18.46.00: recording 'Recording 2026-10-10 at 19.44.21' (3456x2234) with a Magnify 2.0x rectangle lens over a web page; around the lens a large stair-stepped grey smear covers the page (the shapes of earlier lens positions), with the lens itself drawn correctly.\n\nFrom code reading (not run): the renderer's lens reads the composite BELOW it (DocumentRenderer.swift:1203-1219, LensFilter.image(of:over:box:)), which looks right, so the fault is likely in the canvas's incremental/drag path rather than the lens filter: dirty-region or tile invalidation that does not include the lens's previous box (a lens changes pixels it does not 'cover' in the usual sense, and its old area must be redrawn), or a drag sprite carrying a stale backdrop. Not confirmed. Rendering change touches the composite path: perf note required.",
@@ -30,6 +30,43 @@
     {
       "t": "2026-10-13T01:46:46.379Z",
       "note": "seq 3960 -> 5"
+    },
+    {
+      "t": "2026-10-13T10:06:30.526Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T11:24:26.459Z",
+      "note": "owns these walks: a-dragged-lens-leaves-no-trail-walk"
+    },
+    {
+      "t": "2026-10-13T11:24:50.761Z",
+      "note": "Reproduced. The user's window was a still screenshot (Edge, 18:43:43), not the recording behind it; the original picture is clean. Five drags of a native Magnify lens (200 frames) and Pixelate drags read 0.00% against a fresh render, but a Pixelate lens switched to Magnify failed: the FRESH render itself had the magnifier's edge pixels stretched to the canvas edges, half see-through (26.94% of the frame on the 18:43 screenshot). The patched canvas only shows that inside each frame's dirty rect, so a drag piles it up as stair-stepped grey. Same on Blur, Greyscale, Invert, Brightness, and on a native magnifier whose corners are set to 0 (51%)."
+    },
+    {
+      "t": "2026-10-13T11:24:50.824Z",
+      "note": "Cause: DocumentRenderer.laid() ends in .cropped(to: extent).insertingIntermediate(). When the layer below the ring was edge-clamped (the CILanczosScaleTransform enlarge path: clampedToExtent -> lanczos -> crop), the intermediate is drawn over whatever ROI the next step asks and the crop in front of it does not hold. A crop after it is elided as redundant, and any kernel after it breaks the strip join (theRowTheEdgeRunsThroughIsHalfCovered). Fix: CISourceInCompositing against white cropped to extent.integral BEFORE the intermediate. Rounded corners hid it (rounded() multiplies by a mask), which is why freshly drawn magnifiers were fine."
+    },
+    {
+      "t": "2026-10-13T11:24:50.886Z",
+      "note": "Tests: LensDragSmearTests (all five kinds switched to Magnify leak 0 outside RenderDiff.visualBounds; a dragged switched magnifier's renderInteractive frames match render() i.e. export at 1x; an enlarged picture with a square ring stays in its box) all failed first (33% leak, 15-33% per frame). FrameAgreementTests for the new pure measure. Walk: a-dragged-lens-leaves-no-trail-walk with new drag option expectFresh and step expectFresh (FreshFrameTally keeps every frame during the drag at hand speed and compares after). Failed on the old renderer at 46.27%, passes now with 157 drag frames + 5 checks at 0.00%."
+    },
+    {
+      "t": "2026-10-13T11:24:50.948Z",
+      "note": "Perf (composite path): 12MP/10-layer full render 24.1-24.3ms alone after (baseline 26ms); interactive edit 5.4ms after vs 5.7 before; styled group 22.4 vs 22.5; crisp tiles 9.4-10.2 vs 9.3. One extra cheap kernel per ring layer with a big middle. Lens drag on the 3456x2234 recording: 150 frames for 150 moves in 3.42s; rectangle 150 moves 3.44s. Full suite: 12879 passed on the third run; the first two failed 3 wall-clock 16ms budgets that pass alone, folded into the-full-test-run-passes-every-time-not-one-run."
+    },
+    {
+      "t": "2026-10-13T11:24:51.008Z",
+      "note": "Left rough, not filed: a lens switched to Magnify keeps square corners and one ring where a fresh magnifier has rounded corners and a shadow. Not a defect now that it draws right; nobody has asked for the two to match."
+    },
+    {
+      "t": "2026-10-13T11:25:17.169Z",
+      "note": "Fixed in DocumentRenderer.laid(): a square ring round anything enlarged let its edge-stretched pixels escape a drawn-out intermediate, so a Magnify lens switched from Blur/Pixelate (square corners + ring) smeared across the canvas and drags left it behind in patches. Reproduced first in the probe (26.94% of a fresh render) and in LensDragSmearTests (33% leak); now 0. New walk check expectFresh; a-dragged-lens-leaves-no-trail-walk fails at 46.27% on the old renderer, passes with 157 drag frames + 5 checks at 0.00% on a screenshot and a recording. Full suite 12879 green; perf unchanged within noise. Audit queue/audits/2026-10-13-dragging-a-magnify-lens-never-smears-or-corrupts.json."
     }
-  ]
+  ],
+  "started": "2026-10-13T10:06:30.525Z",
+  "walks": [
+    "a-dragged-lens-leaves-no-trail-walk"
+  ],
+  "completed": "2026-10-13T11:25:17.170Z"
 }
