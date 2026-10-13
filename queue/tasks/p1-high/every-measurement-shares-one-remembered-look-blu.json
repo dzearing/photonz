@@ -1,0 +1,35 @@
+{
+  "id": "every-measurement-shares-one-remembered-look-blu",
+  "title": "Every measurement shares one remembered look, blue by default, and any change to a caliper becomes the new default",
+  "goal": "Size, Gap and Distance measurements all wear the same look: by default a calm blue to blue grey set (dark navy readout chip with a blue ring and white number, blue caliper lines, and for Size a faint blue box over the measured area), like the user's screenshot. Changing the colour or look of any caliper, including the width or height caliper inside a Size group, makes that the look every new measurement in any mode starts with. There is no separate Size versus Gap colour.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T13:55:47.700Z",
+  "updated": "2026-10-13T13:55:47.795Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i make a size measurement and change the colors used for the calipers, it doesn't seem to remember the next time I use it. I'd like the defaults for all measurements to be shades of bluish to bluish grey and all match. like this [screenshot]. But if i change either caliper in the size group, it remembers for all new calipers used in measurement tools. gap vs size shouldn't be different for example.\" Screenshot 2026-10-13 06.54.34: calipers with dark navy pill chips, blue ring, white '19 px', '48 px', '174 px', thin blue lines, and a faint blue box over 'edited'.\n\nThis REVERSES two earlier choices: the per-role colours (Size red, Spacing blue: PhotonzCore/MeasureStyles.swift ~:90-110 role, sizeColors, spacingColors; content(for role:) :297) and the red 10% Size box from a-size-measurement-is-one-group-a-faint-red-box (now blue, matching). Remembering: EditorState+MeasurePanel.swift rememberMeasureColors(of:) (:283) and updateMeasureStyles (:295), persisted in UserDefaults measureStylesKey; addElementSize (EditorState+Measure.swift:97) reads measureStyles.content(for: .size). Related done: measurements-are-named-for-their-mode-and-every (same appearance controls for all calipers).",
+  "acceptance": [
+    "Reproduce first at Next defaults: make a Size measurement, change its width caliper's line and chip colours (through the panel), make another Size and a Gap; record which colours each new one took and why the change was not remembered (suspect: edits on a caliper inside the Size group do not reach rememberMeasureColors / MeasureStyles.absorb)",
+    "One shared remembered look for all measurement modes: MeasureStyles keeps one set of colours (line, chip fill, chip ring, text) and the Size box tint; the per-role sizeColors/spacingColors split stops deciding a new caliper's colours (the Role control, if it stays, never changes colours); existing remembered per-role styles migrate to the shared one using the last edited set",
+    "New defaults (for anyone who has not tuned them, and for the shipped Size and Spacing styles in the Library): taken from the user's screenshot (Screenshot 2026-10-13 at 06.54.34): chip fill dark navy (about #23345A), chip ring and caliper line mid blue (about #4D7FD6), number white, Size box tint the same blue at 10% (replacing yesterday's red); exact values chosen by sampling the screenshot and written in the audit; legible on light and dark pictures (checked on both)",
+    "Any colour or look change on any caliper (Size width or height inside the group, a Gap, a Distance, the Size box's tint) updates the shared remembered look at once, so the next measurement in ANY mode starts with it; MEASURED by a walk",
+    "Old documents' measurements keep the colours they were drawn with",
+    "A walk changes the Size group's width caliper line to green, then makes a Gap and a Distance and checks both start green; resets, and checks a fresh install's first Size, Gap and Distance are the blue set",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T13:55:47.703Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T13:55:47.794Z",
+      "note": "seq 3960 -> 2"
+    }
+  ]
+}
