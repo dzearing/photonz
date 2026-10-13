@@ -53,27 +53,31 @@ extension CanvasNSView {
     /// not flash a number at you.
     var dragReadoutSubject: (kind: DragReadout.Kind, box: CGRect, reading: DragReadout.Subject)? {
         guard Experiments.shared.dragReadoutEnabled else { return nil }
+        // With the transform bar on, a move, a resize and a 3D handle are
+        // read on the bar under the layer, with the value in hand outlined;
+        // a pill in the same place would cover it (`TransformValueBar`).
+        let barCarries = Experiments.shared.transformBarEnabled
         // A path point or lever first, for the same reason `mouseDragged`
         // reads it first: with points showing, the drag belongs to them.
         if let drag = pathAnchorDrag, drag.moved, let box = selectedLayerFrame {
             return reading(.reshape, canvasBox: box, of: drag.layerID)
         }
         // A 3D handle reads the one value it is changing, under the layer.
-        if let drag = spaceHandleDrag, drag.moved, let box = selectedLayerFrame {
+        if !barCarries, let drag = spaceHandleDrag, drag.moved, let box = selectedLayerFrame {
             return (.resize, box, .space(drag.handle, drag.turn))
         }
         // A corner knob reads the radius it is pulling, under the shape.
         if let drag = pathCornerDrag, drag.moved, let box = selectedLayerFrame {
             return (.reshape, box, .radius(drag.radius))
         }
-        if let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
+        if !barCarries, let resizeDrag, resizeDrag.frame != resizeDrag.startFrame {
             return reading(.resize, canvasBox: resizeDrag.frame, of: resizeDrag.layerID)
         }
-        if let moveDrag, moveDrag.moved {
+        if let moveDrag, moveDrag.moved, !barCarries || moveDrag.copying {
             let box = CGRect(origin: moveDrag.snapped.origin, size: moveDrag.size)
             return reading(.move, canvasBox: box, of: moveDrag.layerID)
         }
-        if let multiMove, multiMove.moved {
+        if let multiMove, multiMove.moved, !barCarries || multiMove.copying {
             // A whole selection has no one layer and no one parent, so the box
             // the selection makes on the canvas IS the reading.
             let box = CGRect(origin: multiMove.snapped.origin, size: multiMove.plan.bounds.size)

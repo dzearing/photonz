@@ -889,7 +889,12 @@ struct InspectorPanel: View {
         if editorState.keyLayer != nil || editorState.timelinePickSummary != nil { set.insert(.keys) }
         // How the picked layers are turned in space, and the camera when the
         // frame itself is picked (Next, `next-turn-in-depth`).
-        if editorState.showsSpaceSection { set.insert(.space3D) }
+        // With the transform bar on, the 3D values live on the bar beside the
+        // layer and the section is withdrawn (`video-animate.html`; Reset 3D
+        // Rotation, Bring Nearer and Send Further stay in the Layer menu).
+        if editorState.showsSpaceSection, !Experiments.shared.transformBarEnabled {
+            set.insert(.space3D)
+        }
         if editorState.showsCameraSection { set.insert(.camera) }
         // The picked shapes' own settings: thickness, corners, an arrow's head
         // and caption — for EVERYTHING picked, like the rows above. Present

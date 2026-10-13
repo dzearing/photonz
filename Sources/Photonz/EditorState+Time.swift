@@ -242,6 +242,9 @@ extension EditorState {
     func playDocument(rate: Double = 1) {
         guard documentHasTime, rate != 0 else { return }
         titlePartReplaying = nil
+        // Play is another operation: the transform bar goes (scrubbing keeps
+        // it, and its numbers follow the playhead).
+        dropTransformBar()
         // The file is not there yet: play the moment it is.
         if recordingStillLanding {
             playWhenLanded = rate > 0

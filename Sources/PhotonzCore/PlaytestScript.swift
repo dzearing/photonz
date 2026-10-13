@@ -3447,6 +3447,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// say a swing between two keys is still turned half way through, and a
     /// panel value cannot say the picture follows it.
     case expectTilt(layer: String?, atLeast: Double?, flat: Bool)
+    /// CLAIMS the transform bar beside the picked layer (`TransformBar`):
+    /// `present` whether it is on screen, and that it came or went within
+    /// `withinFrames` screen refreshes of being asked (one unless said);
+    /// while it is up,
+    /// that it sits inside the canvas and clear of the tool bar, and
+    /// optionally on which `side` of the layer, which `fields` it shows in
+    /// order, and which of them are `live` (outlined while the hand changes
+    /// them).
+    case expectTransformBar(present: Bool, withinFrames: Int, side: String?,
+                            fields: [String], live: [String]?)
     /// What the document would be WRITTEN as, asked without saving anything.
     ///
     /// `pictured` is how many layers have no vector answer and would ride out
@@ -4140,7 +4150,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectTilt", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4222,6 +4232,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectMeasures: "expectMeasures"
         case .expectCorners: "expectCorners"
         case .expectTilt: "expectTilt"
+        case .expectTransformBar: "expectTransformBar"
         case .expectSVG: "expectSVG"
         case .expectWindows: "expectWindows"
         case .expectHistory: "expectHistory"
@@ -5119,6 +5130,22 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("atLeast", "a tilt is near edge over far edge, 1 or more, not \(atLeast)")
             }
             self = .expectTilt(layer: try f.optionalString("layer"), atLeast: atLeast, flat: flat)
+        case "expectTransformBar":
+            guard let present = try f.optionalFlag("present") else {
+                throw f.invalid("present", "expectTransformBar has to say whether the bar is up: "
+                    + "\"present\": true or false")
+            }
+            let side = try f.optionalString("side")
+            if let side, side != "below", side != "above" {
+                throw f.invalid("side", "the bar sits \"below\" or \"above\" the layer, not \"\(side)\"")
+            }
+            let withinFrames = try f.optionalNumber("withinFrames") ?? 1
+            guard withinFrames >= 0, withinFrames == withinFrames.rounded() else {
+                throw f.invalid("withinFrames", "is a whole number of screen refreshes, 0 or more")
+            }
+            self = .expectTransformBar(present: present, withinFrames: Int(withinFrames), side: side,
+                                       fields: try f.optionalStrings("fields"),
+                                       live: fields["live"] == nil ? nil : try f.optionalStrings("live"))
         case "expectMeasures":
             guard fields["count"] != nil else {
                 throw f.invalid("count", "expectMeasures has to say how many measurements must be on the canvas; 0 means none should have landed")

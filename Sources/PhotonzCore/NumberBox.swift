@@ -113,9 +113,14 @@ public enum NumberBox {
     ///     have moved on under the box since (a drag in flight when the canvas
     ///     takes the keyboard), and landing the old number would drag it back
     ///     part way, as an undo step of its own.
+    ///   - sums: whether the box takes sums (`TypedSum`): `+40` from the
+    ///     number it shows, `1920/2` worked out. The transform bar's boxes do;
+    ///     the panel's read a leading plus as a plain number, as they always
+    ///     have.
     public static func landing(draft: String, showing: Showing, canClear: Bool,
                                floor: CGFloat?, ceiling: CGFloat? = nil,
-                               wholeNumbers: Bool, offered: String? = nil) -> Landing {
+                               wholeNumbers: Bool, offered: String? = nil,
+                               sums: Bool = false) -> Landing {
         if let offered, draft == offered { return .putBack }
         if draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             // Clearing takes a value away, so there has to be one. A box only
@@ -125,7 +130,9 @@ public enum NumberBox {
             guard canClear, case .number = showing else { return .putBack }
             return .clear
         }
-        guard let typed = LayerGeometry.parse(draft) else { return .putBack }
+        let current: CGFloat? = if case .number(let text) = showing { LayerGeometry.parse(text) } else { nil }
+        guard let typed = sums ? TypedSum.value(draft, from: current) : LayerGeometry.parse(draft)
+        else { return .putBack }
         return .land(held(wholeNumbers ? typed.rounded() : typed, floor: floor, ceiling: ceiling))
     }
 

@@ -1,0 +1,34 @@
+{
+  "out": "/tmp/photonz-playtest/show-transform-values-menu-walk",
+  "seed": "Layer, Show Transform Values brings the transform bar up without a drag, at Next defaults with no flag changed (video-animate.html, the interaction table). A title is typed over a recording and picked: no bar. The Layer menu's row brings it up under the title with X, Y, W, H and the angle, nothing outlined. The menu bar is only live with the app in front, so this walk takes the front.",
+  "setup": {
+    "forget": [
+      "all"
+    ],
+    "timelineOpen": true,
+    "front": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "text" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "click", "at": [520, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster." },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTransformBar", "present": false },
+    { "do": "menus", "stage": "1-layer-menu", "menu": "Layer", "choose": "Layer > Show Transform Values" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectTransformBar", "present": true, "side": "below", "fields": ["X", "Y", "W", "H", "Angle"], "live": [] },
+    { "do": "describe", "stage": "2-shown", "note": "Layer, Show Transform Values put the bar under the title with nothing in hand: X, Y, W, H, the angle and Reset, no field outlined" },
+    { "do": "snapshot", "name": "2-shown" }
+  ]
+}

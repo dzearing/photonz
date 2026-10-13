@@ -206,6 +206,7 @@ extension CanvasNSView {
            let delta = Nudge.delta(keyCode: event.keyCode, large: coarseNudge,
                                    grid: nudgeGrid, from: plan.bounds.origin) {
             onMoveSelectionCommit(plan.origins(offsetBy: delta), false)
+            announceNudge()
             refreshOverlays()
             return
         }
@@ -231,6 +232,7 @@ extension CanvasNSView {
             let frame = layer.withoutSlack(layer.frame).offsetBy(dx: delta.dx, dy: delta.dy)
             selectedLayerFrame = frame
             onFrameCommit(id, frame)
+            announceNudge()
             refreshOverlays()
             return
         }
@@ -383,6 +385,9 @@ extension CanvasNSView {
                 refreshOverlays()
                 return
             }
+            // The transform bar goes first, and only it: the layer stays
+            // picked, and the next Escape lets go of it as it always has.
+            if onTransformBarEscape() { return }
             if marquee != nil || selection != nil {
                 marquee = nil
                 marqueeClickTarget = nil // the band was abandoned, so it picks nothing

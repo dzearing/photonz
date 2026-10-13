@@ -1,0 +1,31 @@
+{
+  "feature": "Transform values beside the object",
+  "epic": "video-transitions-motion",
+  "summary": "Move, size, turn or tilt a layer and a small glass bar comes up under it with X, Y, W, H, the angle and, once it is in 3D, Tilt X, Tilt Y, Depth and Pivot, to type into, plus Reset. The panel's 3D section is gone; its values live on the bar.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, add a title with the Text tool, pick it with Select.",
+  "switched": {},
+  "try": [
+    { "do": "Drag the knob above the title to turn it.", "shot": "2026-10-13-transform-bar-2-turned-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Rest on the knob and drag the flat arc sideways to swing it in 3D; watch Tilt Y light up while you drag.", "shot": "2026-10-13-transform-bar-3-mid-swing-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click X on the bar, type 1920/2 and press Return; click the angle, type +10 and press Return.", "shot": "2026-10-13-transform-bar-5-typed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click Reset.", "shot": "2026-10-13-transform-bar-6-reset-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape: the bar goes, the title stays picked. Press the right arrow: it comes back." },
+    { "do": "Pick the Text tool (T): the bar goes.", "shot": "2026-10-13-transform-bar-8-tool-changed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick the title again and choose Layer > Show Transform Values: the bar comes up without a drag." }
+  ],
+  "evaluate": [
+    "Does the bar land where your eye already is, without ever sitting on the handle you are holding?",
+    "Is typing a sum like +10 or 1920/2 into a field what you expected it to do?",
+    "Does Reset put back what you expected, leaving the position alone?",
+    "Do you miss the panel's 3D section, or is the bar enough for tilt and depth?",
+    "Does the bar go away at the right moments (another tool, Escape, Play, a click on empty canvas, a menu) and stay when you scrub?"
+  ],
+  "rough": [
+    "The mock draws a link between W and H; the bar's W and H are independent, as the panel's are, so no link is drawn yet. Filed as the-transform-bar-keeps-width-and-height-in-prop.",
+    "Reset gives back an animated size (a keyed scale) but leaves a plain layer's own size alone, because a plain layer has no other size to go back to; the mock's size is one scale percentage. Covered by the-transform-bar-keeps-width-and-height-in-prop.",
+    "The app goes further than the mock with a Pivot field on the bar once the layer is turned, because the panel's 3D section had one and nothing it held could be lost.",
+    "A click on a moment of the clip's key line does not open the bar yet; that belongs with the key overlay, clicking-a-key-opens-the-same-overlay-to-set-tha.",
+    "While the bar is on, a move or resize no longer shows the small dark readout pill under the layer: the bar carries the same numbers, with the one being changed outlined. A sweep and a path reshape still show the pill.",
+    "All pictures were taken with the window behind another app, so the accent colours read in their background look."
+  ]
+}

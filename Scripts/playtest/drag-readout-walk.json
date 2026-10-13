@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/drag-readout",
-  "setup": { "forget": ["grid", "tools", "shapes", "panel"] },
+  "setup": { "forget": ["grid", "tools", "shapes", "panel"], "flags": { "next-transform-bar": false } },
   "steps": [
     { "do": "blank", "canvasWidth": 900, "canvasHeight": 700, "width": 1280, "height": 900 },
     { "do": "wait", "seconds": 1 },

@@ -252,6 +252,8 @@ extension EditorState {
         // too. Text of its own leaves the tool holding nothing.
         textStyles.adopt(content, styleID: layer.textStyleID)
         saveTextStyles()
+        // Typing is another operation: the transform bar goes.
+        dropTransformBar()
         editingTextLayerID = layerID
         if let document { submit(document) }
     }

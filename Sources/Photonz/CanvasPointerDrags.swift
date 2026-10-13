@@ -531,6 +531,7 @@ extension CanvasNSView {
                 frameSize: layer.frame.size, transform: layer.transform)
             applyGrabCursor(CanvasCursor.cursor(for: .rotate, transform: apparentTransform(of: layer)))
             onDragBegin(id)
+            announceTransform(.rotate)
             refreshOverlays()
             return
         }
@@ -570,6 +571,7 @@ extension CanvasNSView {
                     startTransform: layer.transform,
                     center: CGPoint(x: layer.frame.midX, y: layer.frame.midY),
                     frameSize: layer.frame.size, transform: layer.transform)
+                announceTransform(.skew)
             } else {
                 let untransformed = selectedLayer?.transform.isIdentity ?? true
                 resizeDrag = ResizeDrag(
@@ -580,6 +582,7 @@ extension CanvasNSView {
                     snapped: Snapping.FrameResult(frame: frame))
                 applyGrabCursor(CanvasCursor.cursor(for: .resize(handle),
                                                     transform: apparentTransform(of: selectedLayer)))
+                announceTransform(.resize(handle))
             }
             onDragBegin(id)
             refreshOverlays()
@@ -1079,7 +1082,10 @@ extension CanvasNSView {
                 let travel = hypot(proposed.x - drag.startOrigin.x, proposed.y - drag.startOrigin.y)
                 drag.moved = travel * viewport.zoom >= 4
                 // The press has become a drag: now the sprite is worth making.
-                if drag.moved, !drag.copying { onDragBegin(drag.layerID) }
+                if drag.moved, !drag.copying {
+                    onDragBegin(drag.layerID)
+                    announceTransform(.move)
+                }
             }
             if drag.moved {
                 // ⌘ drags free, the way it already does for a measure foot or a
@@ -1143,6 +1149,7 @@ extension CanvasNSView {
                 let travel = hypot(proposed.x - drag.plan.bounds.origin.x,
                                    proposed.y - drag.plan.bounds.origin.y)
                 drag.moved = travel * viewport.zoom >= 4
+                if drag.moved, !copyDragModifier(event) { announceTransform(.move) }
             }
             if copyDragModifier(event) { drag.copying = true }
             if drag.moved {
@@ -1234,6 +1241,12 @@ extension CanvasNSView {
 
     override func mouseUp(with event: NSEvent) {
         guard let viewport, !isWatching else { return }
+        // The hand lets go of whatever transform it was making: the bar stays
+        // up and stops outlining the value it was changing.
+        if transformGestureLive {
+            transformGestureLive = false
+            onTransformGesture(nil)
+        }
         if zoomBoxPressing {
             zoomBoxPressing = false
             onZoomBoxRelease(viewport.documentPoint(fromView: convert(event.locationInWindow, from: nil)))

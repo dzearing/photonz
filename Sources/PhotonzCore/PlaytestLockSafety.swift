@@ -135,6 +135,10 @@ public enum PlaytestLockSafety {
         // Added 2026-10-12 by reading: it asks the document how the picked
         // layer is drawn at the playhead, the same kind of read, and no name.
         "expectTilt",
+        // Added 2026-10-13 by reading: it asks the editor whether its
+        // transform bar is up and the probe where it was laid out, its own
+        // state, and no name.
+        "expectTransformBar",
         "expectEdited", "expectIconPreviews", "expectPath", "expectPicked", "expectRecording",
         "expectStoredRecording",
         // Watched on 2026-09-20, forced under a lock: it asks the editor for

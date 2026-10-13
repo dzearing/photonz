@@ -53,6 +53,25 @@ struct NumberBoxTests {
         #expect(landing == .land(296))
     }
 
+    @Test("A box that takes sums works them out from the number it shows")
+    func sumsLand() {
+        #expect(NumberBox.landing(draft: "+40", showing: .number("960"), canClear: false,
+                                  floor: nil, wholeNumbers: false, sums: true) == .land(1000))
+        #expect(NumberBox.landing(draft: "*2", showing: .number("150"), canClear: false,
+                                  floor: nil, wholeNumbers: false, sums: true) == .land(300))
+        #expect(NumberBox.landing(draft: "1920/2", showing: .number("0"), canClear: false,
+                                  floor: nil, wholeNumbers: false, sums: true) == .land(960))
+        // Mixed has no one number to work from, so a step from it is nothing,
+        // while a whole sum still lands on every thing the box speaks for.
+        #expect(NumberBox.landing(draft: "+40", showing: .standIn(MixedValue.text), canClear: false,
+                                  floor: nil, wholeNumbers: false, sums: true) == .putBack)
+        #expect(NumberBox.landing(draft: "100+20", showing: .standIn(MixedValue.text), canClear: false,
+                                  floor: nil, wholeNumbers: false, sums: true) == .land(120))
+        // A box that does not take sums reads +40 as forty, as it always has.
+        #expect(NumberBox.landing(draft: "+40", showing: .number("960"), canClear: false,
+                                  floor: nil, wholeNumbers: false) == .land(40))
+    }
+
     @Test("A draft nobody typed in lands nothing, even when the thing moved under it")
     func anUntouchedDraftLandsNothing() {
         // X showed 120 when it took the keyboard, then a drag moved the shape

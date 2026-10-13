@@ -238,6 +238,7 @@ extension CanvasNSView {
         spaceHandleDrag = SpaceHandleDrag(layerID: id, handle: handle, start: start, press: viewPoint,
                                           turn: start, moved: false)
         applyGrabCursor(.closedHand)
+        announceTransform(.tilt(handle))
         // The name beside the pointer has said its piece: the pill under the
         // drag carries the value from here.
         hideSpaceLabel()

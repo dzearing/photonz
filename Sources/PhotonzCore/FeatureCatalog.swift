@@ -64,6 +64,11 @@ public enum FeatureCatalog {
     /// and View menu rows for them (`SpaceEditing.swift`, `video-depth.html`).
     public static let turnInDepthFlag = "next-turn-in-depth"
 
+    /// A small glass bar of transform values beside a layer while it is moved,
+    /// sized, turned or tilted, with a Reset; the panel's 3D section gives its
+    /// rows to it (`TransformBar.swift`, `video-animate.html`).
+    public static let transformBarFlag = "next-transform-bar"
+
     public static let grabCueFlag = "next-grab-cue"
     /// Edit's panel built behind View with the rest of Edit, so its sections
     /// come in with the slide rather than just after it (`EditModeArrival`).
@@ -443,6 +448,16 @@ public enum FeatureCatalog {
                     name: turnInDepthFlag,
                     title: "Turn layers in 3D",
                     description: "Rest on a picked layer's turn knob for two arcs that tip or swing it in 3D, with an arrow to push it away and 3D and Camera panel sections. Off means layers turn flat only.",
+                    area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: transformBarFlag,
+                    title: "Type transform values beside the object",
+                    description: "Moving, sizing, turning or tilting a layer brings up a small bar under it with its position, size, angle and 3D values to type into, and a Reset. Off means the panel's 3D section holds them.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

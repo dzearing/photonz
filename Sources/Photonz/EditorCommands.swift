@@ -2196,6 +2196,13 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("p", modifiers: [.command, .option])
                     .disabled(!(editor?.canOpenExactPlacement ?? false))
             }
+            // The transform bar beside the picked layer, without a drag
+            // (`video-animate.html`, "Layer ▸ Show Transform Values").
+            if Experiments.shared.transformBarEnabled {
+                if !Experiments.shared.geometryFieldsEnabled { Divider() }
+                Button("Show Transform Values") { editor?.showTransformValues() }
+                    .disabled(!(editor?.canShowTransformValues ?? false))
+            }
             Divider()
             // The arrange commands, Duplicate and Delete act on the whole
             // selection: the multi-selection a shift-click, command-click or

@@ -273,6 +273,10 @@ struct CanvasView: NSViewRepresentable {
     let onCornerRadiiCommit: (UUID, CornerRadii) -> Void
     var onSpaceTurnPreview: (UUID, LayerTurn3D) -> Void = { _, _ in }
     var onSpaceTurnCommit: (UUID, LayerTurn3D) -> Void = { _, _ in }
+    /// A transform starting on the canvas, or nil when the hand lets go; and
+    /// Escape asking the transform bar to go (`EditorState+TransformBar`).
+    var onTransformGesture: (TransformBar.Gesture?) -> Void = { _ in }
+    var onTransformBarEscape: () -> Bool = { false }
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
     let onCaptionPlacePreview: (UUID, CGPoint) -> Void
     let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
@@ -507,6 +511,8 @@ struct CanvasView: NSViewRepresentable {
         view.onCornerRadiiCommit = onCornerRadiiCommit
         view.onSpaceTurnPreview = onSpaceTurnPreview
         view.onSpaceTurnCommit = onSpaceTurnCommit
+        view.onTransformGesture = onTransformGesture
+        view.onTransformBarEscape = onTransformBarEscape
         view.onCaptionPlacePreview = onCaptionPlacePreview
         view.onCaptionPlaceCommit = onCaptionPlaceCommit
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
@@ -672,6 +678,25 @@ final class CanvasNSView: NSView {
     /// hand is down, then once when it lets go.
     var onSpaceTurnPreview: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
     var onSpaceTurnCommit: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
+    /// The transform bar: a transform starting (nil when the hand lets go),
+    /// and Escape asking it to go.
+    var onTransformGesture: ((TransformBar.Gesture?) -> Void) = { _ in }
+    var onTransformBarEscape: (() -> Bool) = { false }
+    /// Whether a transform the bar was told about is still in hand.
+    var transformGestureLive = false
+
+    /// Tells the transform bar a transform started on the picked layer.
+    func announceTransform(_ gesture: TransformBar.Gesture) {
+        transformGestureLive = true
+        onTransformGesture(gesture)
+    }
+
+    /// An arrow key moved the picked layers: the bar comes up, with nothing
+    /// in hand to outline.
+    func announceNudge() {
+        onTransformGesture(.nudge)
+        onTransformGesture(nil)
+    }
     /// A selected arrow's caption pill being dragged: live (no history), the
     /// drop (one undo step), and Esc (restores the render).
     var onCaptionPlacePreview: ((UUID, CGPoint) -> Void) = { _, _ in }

@@ -21281,3 +21281,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - UX-PATTERNS v2.6: "Named exception: the value overlay" in the placement contract; the panel's 3D section is withdrawn.
 - Card on `a-layer-s-track-shows-only-what-is-animated-and`: when does a change on a layer with keys become a key (always / record switch / only on a key moment); that task is blocked on it. The overlay, key bar and graph build tasks have their acceptance updated to the mock and go ahead.
 - Next: `a-small-overlay-shows-transform-values-to-type-i`.
+
+## 2026-10-13: the transform bar (go loop)
+
+- Moving, sizing, turning or tilting a layer brings up a glass bar of typed values under it (X, Y, W, H, angle; Tilt X, Tilt Y, Depth, Pivot in 3D) with Reset; sums like +10 and 1920/2 work. Panel 3D section withdrawn (flag `next-transform-bar`, on at Next). Layer > Show Transform Values.
+- New walk step `expectTransformBar`; walks `transform-bar-walk`, `show-transform-values-menu-walk`.
+- Next: W/H proportion link (`the-transform-bar-keeps-width-and-height-in-prop`), then the key overlay task.

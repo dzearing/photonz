@@ -99,6 +99,15 @@ struct PanelNumberField: View {
     /// preset sizes on the Size box, the way Photoshop's size field is a box
     /// and a list in one. Only drawn in the `well` look.
     var presets: Presets?
+    /// Whether the box takes sums (`TypedSum`): `+40` from the number it
+    /// shows, `*2`, `1920/2`. The transform bar's boxes do; the panel's read a
+    /// leading plus as a plain number, as they always have.
+    var sums = false
+    /// Whether the hand is changing this value right now, which the bar look
+    /// outlines (`TransformBar.liveFields`).
+    var isLive = false
+    /// A mark drawn in front of the name in the bar look: the key diamond.
+    var accessory: AnyView?
     /// Lands the number, and hands back what the thing really became.
     ///
     /// A layer can refuse part of what was typed — a text box will not go
@@ -119,6 +128,11 @@ struct PanelNumberField: View {
         /// number, and the number flush right. A click anywhere on the well,
         /// the name included, puts the keyboard in the number.
         case well
+        /// The transform bar's field (`video-animate.html`, `.va-f`): a short
+        /// label and a number on the bar's glass with no box round it, a soft
+        /// plate under the pointer, an outline while the hand is changing it
+        /// and the focus ring while you type.
+        case bar
     }
 
     /// The list at the end of a `well`: what it is called, what it says it
@@ -170,6 +184,7 @@ struct PanelNumberField: View {
         switch look {
         case .field: fieldBody
         case .well: wellBody
+        case .bar: barBody
         }
     }
 
@@ -215,6 +230,53 @@ struct PanelNumberField: View {
         .kitHover(label) { isHovering = $0 }
         .modifier(OptionalPanelHelp(text: help))
         .modifier(OptionalPlaytestControl(playtest: playtest))
+    }
+
+    /// The bar's field: on glass, so its words are the system's label colours,
+    /// which read over any picture in light and dark.
+    private var barBody: some View {
+        HStack(spacing: 4) {
+            if let accessory { accessory }
+            // The angle mark is a glyph, drawn at the mock's 14pt (`.va-ang`).
+            Text(leading ?? label)
+                .font(.system(size: leading == "\u{2220}" ? 14 : 11, weight: .semibold))
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+                .fixedSize()
+                .accessibilityHidden(true)
+            box
+            if let suffix {
+                Text(suffix)
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.secondary)
+                    .fixedSize()
+                    .padding(.leading, -2)
+                    .accessibilityHidden(true)
+            }
+        }
+        .padding(.horizontal, 6)
+        .frame(height: VideoKit.Metrics.controlSmall)
+        .background(RoundedRectangle(cornerRadius: 7).fill(barPlate))
+        .overlay {
+            if isFocused {
+                RoundedRectangle(cornerRadius: 7).strokeBorder(VideoKit.Palette.accent, lineWidth: 2)
+            } else if isLive {
+                RoundedRectangle(cornerRadius: 7).strokeBorder(VideoKit.Palette.accent, lineWidth: 1.5)
+            }
+        }
+        .contentShape(RoundedRectangle(cornerRadius: 7))
+        .onTapGesture { isFocused = true }
+        .kitHover(label) { isHovering = $0 }
+        .modifier(OptionalPanelHelp(text: help))
+        .modifier(OptionalPlaytestControl(playtest: playtest))
+    }
+
+    /// Nothing at rest, so the glass reads as one bar; a plate under the
+    /// pointer and while typing (`.va-f:hover`, `.va-f:focus-within`).
+    private var barPlate: AnyShapeStyle {
+        if isFocused { return AnyShapeStyle(.background.opacity(0.7)) }
+        if isHovering { return AnyShapeStyle(.primary.opacity(0.08)) }
+        return AnyShapeStyle(Color.clear)
     }
 
     /// The well's edge: the accent while you type in it, a hint of it under
@@ -303,7 +365,7 @@ struct PanelNumberField: View {
     private func landDraft() -> Bool {
         switch NumberBox.landing(draft: draft, showing: showing, canClear: clear != nil,
                                  floor: floor, ceiling: ceiling, wholeNumbers: wholeNumbers,
-                                 offered: offered) {
+                                 offered: offered, sums: sums) {
         case .putBack:
             offer(showing.text)
             return false
@@ -416,6 +478,9 @@ private struct BoxLook: ViewModifier {
         case .well:
             content.textFieldStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
+        case .bar:
+            content.textFieldStyle(.plain)
+                .font(.system(size: 11.5, weight: .medium, design: .monospaced))
         }
     }
 }
