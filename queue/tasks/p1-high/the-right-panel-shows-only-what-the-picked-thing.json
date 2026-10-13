@@ -1,0 +1,35 @@
+{
+  "id": "the-right-panel-shows-only-what-the-picked-thing",
+  "title": "The right panel shows only what the picked thing and the tool in hand need",
+  "goal": "The right panel should answer one question: what is this thing I have picked, and what can I set on it right now. Settings for a tool that is not in hand (Measure Tool settings while a rectangle is picked with Select), sections that do not apply to the pick, and permanent blocks that have nothing to do with the moment do not appear. The user called the current panel 'clogged with useless non contextual crap'.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:39:53.964Z",
+  "updated": "2026-10-13T01:39:54.057Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" Screenshot: a green rectangle picked with the Select tool while the right panel shows MEASURE TOOL (Mode Size, '[ and ] pick a smaller or larger', Snap Edges, Show All), then LAYERS 2, then LIBRARY (Media / Comps).\n\nCode: section choice and content in Sources/Photonz/InspectorPanel.swift (sectionContent ~:1403, MeasureToolInspector at :1426, Space3DInspector at :1526). Related: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?'): the user's answer here points the same way; resolve or fold that card with these words. Memory: one purpose per area (inspector = properties of the picked thing).",
+  "acceptance": [
+    "Inventory first, in the audit: every panel section (InspectorPanel.swift sectionContent and its section list) with the exact condition that shows it today, and screenshots of the panel for: nothing picked, a rectangle picked, text picked, a screenshot picked, a recording clip picked, a title picked, a measurement picked, each of Select, Measure, Pen, Text tools in hand",
+    "The rule, written into the IA placement contract (docs/design/mocks/shared/UX-PATTERNS.md, Inspector row) and applied: a section shows only when it applies to the picked thing or to the tool in hand. Tool settings (Measure Tool, Pen, Brush, Text defaults) show ONLY while that tool is in hand and nothing else is picked, or above the pick's own sections while the tool is in hand; never while another tool is in hand. Sections about the document as a whole (canvas size, frame) show when nothing is picked",
+    "The 3D section is gone from the panel (values live in the floating transform overlay, a-small-overlay-shows-transform-values-to-type-i), and nothing else re-adds per-property blocks that the overlay now owns",
+    "Layers and Library: decided by the IA contract; if they stay in the panel they sit below the pick's sections and collapse by default; if they should move (a sidebar, a popover, the toolbar's Library button), that is a decision card with option labels saying exactly where they go",
+    "With a rectangle picked and Select in hand (the user's screenshot), the panel shows the rectangle's sections first and no Measure Tool section; MEASURED in the audit: the count of sections shown in each of the inventory's states before and after",
+    "A walk captures the panel in each inventory state and fails if a tool's settings section appears while another tool is in hand",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:39:53.966Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:39:54.056Z",
+      "note": "seq 3960 -> 2"
+    }
+  ]
+}

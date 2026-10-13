@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:16.562Z",
-  "updated": "2026-10-13T01:39:16.666Z",
+  "updated": "2026-10-13T01:39:35.245Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"wtf did you do anything today? what happened to the 3d rotation grippers when selecting a thing???????/ you deleted them! I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" then \"am i on an old build???\"\n\nChecked in intake: the dev app (built 2026-10-12 17:57) has every app commit (none to Sources after it); next-turn-in-depth is on by default in Next and not overridden in the user's settings; spaceHandlesOffered = flag && tool == .select (CanvasSpaceHandles.swift:70). By design the arcs show only while spaceArcsOutFor == layer (resting on the knob, :127, :202-214), the card's recommended option A, built while the card 'How do you turn a layer toward or away from you on the canvas?' was unanswered. The user's answer is now plain: show them when the layer is picked. Resolve that card accordingly with the user's words.",
@@ -29,6 +29,10 @@
     {
       "t": "2026-10-13T01:39:16.664Z",
       "note": "seq 3960 -> 1"
+    },
+    {
+      "t": "2026-10-13T01:39:35.244Z",
+      "note": "User screenshots 2026-10-13: a picked screenshot layer and a picked green rectangle, Select tool in hand, show only the 2D handles (8 squares, corner radius dots) and the rotate knob on its stalk at the top; no 3D arcs or depth arrow anywhere. Messages: 'there are no 3d rotation anything here', 'no rotation here'."
     }
   ]
 }
