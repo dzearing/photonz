@@ -13,7 +13,7 @@ jobs:
     runs-on: macos-26
     # Generous: Apple's notary service is usually minutes but can crawl for
     # 30+ min during slow stretches; don't let the job cancel a good build.
-    timeout-minutes: 75
+    timeout-minutes: 90
     env:
       # True once the Apple Developer secrets are configured; every signing/
       # notarization step keys off this so the pipeline still works (ad-hoc)
@@ -46,9 +46,10 @@ jobs:
           fi
 
       - name: Run tests
-        # 45: this step builds everything as well as testing it, and the
-        # suite outgrew 12 minutes on a hired runner (see ci.yml).
-        timeout-minutes: 45
+        # 65: this step builds everything as well as testing it. At 45 the
+        # v0.16.0 run used nearly all of it, and the suite has grown about 15%
+        # since (11,211 to 12,914 tests by v0.17.0).
+        timeout-minutes: 65
         # --no-parallel: see ci.yml — serial avoids the headless-runner test hang.
         run: Scripts/test.sh --no-parallel
 

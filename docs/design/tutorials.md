@@ -198,7 +198,7 @@ were: canvas, panel, panel.frame, tool.arrow, tool.crop, tool.frame, tool.line, 
 This one runs in the sweep rather than in the test run, and it adds NO walks to
 it: the thirty odd tutorial walks were already there, and they now assert
 instead of only photographing. The full sweep is
-about 770 walks and about 210 minutes,
+about 910 walks and about 245 minutes,
 so a walk per guide on top of the walk per guide we already had would have been
 pure cost.
 
