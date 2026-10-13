@@ -21319,3 +21319,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - The clip menu's Add Key row says where the key goes: "Add Key at 0:02.00" (`TimelinePointing.atPlayhead`).
 - New walk `right-click-keeps-the-playhead-walk` (runs while the person works). `clicking-a-timeline-item-moves-the-playhead-walk` rewritten; it needs the Mac to itself and has not run since.
 - Open: should the ruler menu's rows act at the playhead too? Asked in the audit.
+
+## 2026-10-13: v0.17.0 released
+
+- Released v0.17.0 (https://github.com/dzearing/photonz/releases/tag/v0.17.0, latest, Photonz.dmg 21.9 MB attached and downloads with auth; site version.json reads 0.17.0). Covers 2.5D layers and 3D transitions, the twelve-title set and live backgrounds, timeline editing (box select, edge scroll, ranges, markers), instant recordings, Size/Gap measuring, lighter window shadows, the Info popover and the contextual panel.
+- CI had been red since the walk set reached 906: 11 files quoted the old sweep size; fixed with queue/bin/sweep-size.mjs --write. Release test step raised to 65 min (job 90), CI to 55 (job 70), for a 12,914-test suite.
+- First Release run failed on seven newer 16 ms frame budgets that ignored PHOTONZ_PERF_GATE=report (17 to 43 ms on the runner); they now go through MachineSpeed.isGating. Tag deleted, fixed, re-tagged on 4e18eb18; second run green (49 min).
+- OPEN, for the user: the repo is now PRIVATE (it was public on 2026-10-04; nothing in the loop changed it). Public downloads of every release, including the site's 'releases/latest/download/Photonz.dmg' button, return 404, and macOS runner minutes are now billed on every CI push.
