@@ -1,0 +1,29 @@
+{
+  "feature": "A right-click on the timeline never moves the playhead",
+  "epic": "video-cutting",
+  "summary": "Park the playhead where you want it, right-click a clip anywhere, and Add Key, Split at Playhead, Freeze Frame or Add Zoom act at the parked playhead. The right-click still picks the thing it lands on. A plain left click still moves the playhead as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (Help > Sample Recording) with the timeline open.",
+  "switched": {},
+  "try": [
+    { "do": "Click the ruler at 2s to park the playhead there." },
+    { "do": "Right-click the recording's clip near 5s and choose Add Key at 0:02.00.", "shot": "2026-10-13-right-click-keeps-playhead-1-keyed-at-the-parked-playhead-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the clip again near 7s: the row now reads Remove Key at 0:02.00. Press Escape." },
+    { "do": "Right-click the clip near 6s and choose Split at Playhead: the cut lands at 2s.", "shot": "2026-10-13-right-click-keeps-playhead-2-split-at-the-parked-playhead-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the sound, the zoom bar and the scrub bar: the playhead stays at 2s each time." },
+    { "do": "Right-click the title bar: the title is picked and the playhead is still at 2s.", "shot": "2026-10-13-right-click-keeps-playhead-3-title-picked-playhead-parked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Left-click the clip near 5s: the playhead jumps there, as before." }
+  ],
+  "evaluate": [
+    "Can you now park the playhead, right-click a clip anywhere and add a key exactly where you parked it?",
+    "Does 'Add Key at 0:02.00' make it plain where the key will go, or would you rather it said just 'Add Key at Playhead'?",
+    "The ruler and scrub bar menu still acts where you right-clicked (Add Marker, Set In, Set Out, Split Everything Here, Add Zoom), and moves the playhead there once you pick a row. Is that right for the ruler, or should those rows act at the playhead too?",
+    "When the playhead is parked outside the clip you right-click, Add Key, Split, Freeze Frame and the trims are greyed out. Is that clear enough?"
+  ],
+  "rough": [
+    "No mock draws what a right-click does to the playhead; this follows your word of 2026-10-13, reversing your ask of 2026-10-12.",
+    "Only Add Key says the time in its name. Split at Playhead, Ripple Trim to Playhead and Add Click at Playhead say 'at Playhead' without the time, and Freeze Frame and Add Zoom say neither.",
+    "Control-click follows the same path as a right-click in code, but no walk can make a real Control-click, so it was not tried by hand.",
+    "The rows that act at the clicked moment and not the playhead are all on the ruler and scrub bar menu: Add Marker, Set In, Set Out, Split Everything Here and Add Zoom. Only Split Everything Here says 'Here' in its name.",
+    "The walk that also proves left clicks (clicking-a-timeline-item-moves-the-playhead-walk) needs the Mac to itself, and someone was at the Mac all through this task, so its new right-click checks have not run yet. The new right-click-keeps-the-playhead-walk covers the same right-clicks and runs while you work."
+  ]
+}

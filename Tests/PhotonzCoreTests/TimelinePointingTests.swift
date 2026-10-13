@@ -33,6 +33,16 @@ struct TimelinePointingTests {
         #expect(TimelinePointing.ms(atLaneX: 10, laneWidth: 0, ruler: ruler) == nil)
     }
 
+    // MARK: - Where the playhead is, said in a menu row
+
+    @Test("A right-click row that acts at the playhead says where it is, to the hundredth")
+    func rowSaysWhere() {
+        #expect(TimelinePointing.atPlayhead("Add Key", ms: 2000) == "Add Key at 0:02.00")
+        #expect(TimelinePointing.atPlayhead("Remove Key", ms: 4875) == "Remove Key at 0:04.87")
+        #expect(TimelinePointing.atPlayhead("Add Key", ms: 61_250) == "Add Key at 1:01.25")
+        #expect(TimelinePointing.atPlayhead("Add Key", ms: -5) == "Add Key at 0:00.00")
+    }
+
     // MARK: - A cut through the whole pick
 
     @Test("Split at Playhead on several picked clips cuts every one the moment runs through, as one edit")

@@ -209,9 +209,12 @@ extension EditorState {
             rows.append(contentsOf: titlePresetSaveMenuRows(layerID: layerID))
             // Where it is, its size, its angle and its opacity, keyed at the
             // playhead: the header diamond's verb, where the hand already is.
+            // A right click leaves the playhead parked, so the row says where
+            // the key goes (`TimelinePointing.atPlayhead`).
             if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
                 let onKey = document.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
-                rows.append(.command(onKey ? "Remove Key" : "Add Key", enabled: underPlayhead) {
+                rows.append(.command(TimelinePointing.atPlayhead(onKey ? "Remove Key" : "Add Key", ms: documentTimeMS),
+                                     enabled: underPlayhead) {
                     self.selectLayer(layerID)
                     self.toggleHeaderKey(layerID)
                 })

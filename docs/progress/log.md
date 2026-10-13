@@ -21312,3 +21312,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   - Once the tests ran again, six 1080p frame gates added since 2026-10-07 failed on the VM: each had a flat `median < 16` (the VM draws them 2.4-4.5x slower). They now use `MachineSpeed.check` with baselines recorded here.
   - The earlier "Run tests" failures (to 2026-10-04) were the old 12-minute step timeout, already raised to 40.
 - Not changed: `BusyVideoSizeTests` failed in a local full run while a runner's suite encoded alongside it, and passed 7/7 alone; its own comment documents that load effect.
+
+## 2026-10-13 — A right-click on the timeline never moves the playhead
+
+- Reverses the 2026-10-12 behaviour at the user's word: a right click (or Control-click) on a clip, piece, sound, title, caption or zoom bar picks it and leaves the playhead parked, so Add Key, Split at Playhead, Freeze Frame and Add Zoom act there. A left click still moves the playhead.
+- The clip menu's Add Key row says where the key goes: "Add Key at 0:02.00" (`TimelinePointing.atPlayhead`).
+- New walk `right-click-keeps-the-playhead-walk` (runs while the person works). `clicking-a-timeline-item-moves-the-playhead-walk` rewritten; it needs the Mac to itself and has not run since.
+- Open: should the ruler menu's rows act at the playhead too? Asked in the audit.

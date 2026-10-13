@@ -1814,7 +1814,7 @@ final class EditorState {
     @ObservationIgnored var timelineTracksFrame: CGRect = .zero
     @ObservationIgnored var timelineLaneWidth: CGFloat = 0
     /// The part of the tracks on screen, in the same space: a right click
-    /// in it moves the playhead before its menu opens
+    /// in it picks what its menu is about, and leaves the playhead alone
     /// (`EditorState+TimelinePointing`).
     @ObservationIgnored var timelineTracksViewport: CGRect = .zero
     /// The moment the last right click on the tracks landed on, until the

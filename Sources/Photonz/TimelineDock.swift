@@ -1127,9 +1127,10 @@ private struct TimelineKeyboard: NSViewRepresentable {
                 guard let self, let window = self.window, event.window === window else { return event }
                 let point = self.convert(event.locationInWindow, from: nil)
                 if self.bounds.contains(point) {
-                    // A right click on the tracks moves the playhead first,
-                    // so the menu it opens acts where the pointer is.
-                    if event.type == .rightMouseDown {
+                    // A right click (or a Control-click) on the tracks is
+                    // noted, so the menu it opens picks what it landed on.
+                    // It never moves the playhead.
+                    if event.type == .rightMouseDown || EditorState.isControlClick(event) {
                         TimelineRightPress.offer(at: event.locationInWindow, in: window)
                     }
                     self.editorState?.takeTimelineKeyboard()

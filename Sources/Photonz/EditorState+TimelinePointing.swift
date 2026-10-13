@@ -1,13 +1,13 @@
 // A click on something on the timeline picks it AND puts the playhead on the
-// moment under the pointer, the way Premiere and Final Cut do. A right click
-// on a clip, a sound, a title, a caption or a zoom puts the playhead there
-// first and then opens the menu, so "at playhead" rows act where the pointer
-// was; it picks what it landed on unless that is already part of what is
-// picked, and then the menu acts on the whole pick (the user, 2026-10-12).
+// moment under the pointer, the way Premiere and Final Cut do.
 //
-// A right click on a cut, an edit point or a transition leaves the playhead
-// where it is: their menus' rows (Roll Edit to Playhead) are about a playhead
-// somewhere else, and one moved onto the cut would leave them nothing to do.
+// A right click (or a Control-click) never moves the playhead (the user,
+// 2026-10-13, reversing their 2026-10-12 ask): a person parks the playhead at
+// a moment, then right clicks the clip anywhere and chooses Add Key, Split at
+// Playhead, Freeze Frame or Add Zoom at that parked moment. It picks what it
+// landed on unless that is already part of what is picked, and then the menu
+// acts on the whole pick. Rows that act at the playhead say where it is when
+// the playhead may be far from the pointer ("Add Key at 0:02.00").
 //
 // A right click has two halves, because SwiftUI tells nobody where it landed:
 //
@@ -23,7 +23,7 @@
 //    (`timelineMenuBuilt(for:)`). Others are rebuilt in the same pass (a zoom
 //    lane's menu took a press meant for the clip above it), so a menu only
 //    counts when the press landed on its own row and inside its own time,
-//    and that one moves the playhead, before its own rows are worked out.
+//    and that one picks what it is about.
 
 import AppKit
 import PhotonzCore
@@ -41,7 +41,8 @@ extension EditorState {
     /// A plain click on something on the timeline, after it is picked: the
     /// playhead goes to the moment under the pointer, `laneX` points from the
     /// lane's left edge. It plays on from there when it was playing, and stays
-    /// paused when it was not.
+    /// paused when it was not. A Control-click is a right click, and leaves
+    /// the playhead where it is.
     func playheadToTimelineClick(laneX: CGFloat, laneWidth: CGFloat) {
         guard documentHasTime,
               let ms = TimelinePointing.ms(atLaneX: laneX, laneWidth: laneWidth, ruler: motionStripRuler)
@@ -51,7 +52,7 @@ extension EditorState {
 
     /// The same, for a click that already knows its moment.
     func playheadToTimelineClick(atMS ms: Int) {
-        guard documentHasTime else { return }
+        guard documentHasTime, !Self.isControlClick(NSApp.currentEvent) else { return }
         scrubDocument(toMS: ms)
     }
 
@@ -77,16 +78,24 @@ extension EditorState {
     }
 
     /// A timeline menu being built, before it works out its rows. When the
-    /// right click just made landed on what it is about, the playhead goes to
-    /// the moment clicked now, so the rows read it there, and the thing gets
-    /// picked unless it is already part of the pick, the way Finder picks a
-    /// file you right click. The pick waits for the menu to be built.
+    /// right click just made landed on what it is about, the thing gets picked
+    /// unless it is already part of the pick, the way Finder picks a file you
+    /// right click. The playhead stays where it was parked, so the rows act
+    /// there. The pick waits for the menu to be built.
     func timelineMenuBuilt(for target: TimelineMenuTarget) {
         guard let ms = timelineRightPressMS, rightPress(atMS: ms, y: timelineRightPressY, landsOn: target)
         else { return }
         timelineRightPressMS = nil
-        scrubDocument(toMS: ms)
         DispatchQueue.main.async { [weak self] in self?.pickForRightPress(target) }
+    }
+
+    /// A left press with Control held: the Mac's right click.
+    static func isControlClick(_ event: NSEvent?) -> Bool {
+        guard let event else { return false }
+        switch event.type {
+        case .leftMouseDown, .leftMouseUp, .leftMouseDragged: return event.modifierFlags.contains(.control)
+        default: return false
+        }
     }
 
     /// Whether a right click at `ms`, `y` down the tracks, is on `target`: a

@@ -3119,8 +3119,8 @@ public enum PlaytestStep: Sendable, Equatable {
     ///
     /// `across` lands a right click on a named row that far along its width,
     /// nought to one, instead of in the middle, the way `press` takes it: a
-    /// right click on the timeline moves the playhead to where it lands, so a
-    /// walk says which moment on a clip's bar it means.
+    /// walk says which moment on a clip's bar it means, which decides what
+    /// the right click picks (it never moves the playhead).
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                     ticked: [String], unticked: [String], keys: [String: String] = [:],
                     across: CGFloat? = nil)
