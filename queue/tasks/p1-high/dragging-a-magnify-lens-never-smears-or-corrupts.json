@@ -1,0 +1,35 @@
+{
+  "id": "dragging-a-magnify-lens-never-smears-or-corrupts",
+  "title": "Dragging a Magnify lens never smears or corrupts the picture",
+  "goal": "Moving a lens (Magnify, and every other lens kind) around the canvas must show the picture underneath correctly at every frame: today dragging a Magnify lens over a recording leaves a stair-stepped grey smear across the picture around and behind where it has been, so the image looks corrupted.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:46:46.286Z",
+  "updated": "2026-10-13T01:46:46.380Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i use a lens with magnify and then drag it around, it corrupts the image\". Screenshot 2026-10-12 18.46.00: recording 'Recording 2026-10-10 at 19.44.21' (3456x2234) with a Magnify 2.0x rectangle lens over a web page; around the lens a large stair-stepped grey smear covers the page (the shapes of earlier lens positions), with the lens itself drawn correctly.\n\nFrom code reading (not run): the renderer's lens reads the composite BELOW it (DocumentRenderer.swift:1203-1219, LensFilter.image(of:over:box:)), which looks right, so the fault is likely in the canvas's incremental/drag path rather than the lens filter: dirty-region or tile invalidation that does not include the lens's previous box (a lens changes pixels it does not 'cover' in the usual sense, and its old area must be redrawn), or a drag sprite carrying a stale backdrop. Not confirmed. Rendering change touches the composite path: perf note required.",
+  "acceptance": [
+    "Reproduce first with the user's setup: a recording document (3456x2234) at Next defaults, a Magnify lens at 2x, rectangle shape, dragged around slowly and quickly; also on a still screenshot; also Blur, Pixelate and the other lens kinds. Record frame captures of the corruption and whether it persists after letting go, after undo, after scrubbing, and in export (is it only on screen, or in the document's output)",
+    "Find and name the cause in the audit with evidence (suspects: the canvas's cached tiles not invalidated where the lens WAS, so old lens output stays painted; the in-flight drag sprite or preview reusing a stale backdrop; a backdrop read that includes earlier lens output, a feedback loop); a regression test reproduces it first",
+    "After the fix: during a lens drag every frame matches a fresh full render of the document at that lens position (MEASURED pixel difference under 0.5% on 30 sampled drag frames, slow and fast), and after release the canvas matches export exactly",
+    "Dragging stays smooth (MEASURED frame rate during a 3 s drag on the 3456x2234 recording, no worse than dragging a plain rectangle there)",
+    "The same holds for resizing the lens and for changing its magnification while it sits over the picture",
+    "A walk drags a Magnify lens across a recording and a screenshot, captures frames, and fails on any frame that differs from a fresh render beyond the bound",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:46:46.288Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:46:46.379Z",
+      "note": "seq 3960 -> 5"
+    }
+  ]
+}
