@@ -53,10 +53,11 @@ extension CanvasNSView {
     /// not flash a number at you.
     var dragReadoutSubject: (kind: DragReadout.Kind, box: CGRect, reading: DragReadout.Subject)? {
         guard Experiments.shared.dragReadoutEnabled else { return nil }
-        // With the transform bar on, a move, a resize and a 3D handle are
-        // read on the bar under the layer, with the value in hand outlined;
-        // a pill in the same place would cover it (`TransformValueBar`).
-        let barCarries = Experiments.shared.transformBarEnabled
+        // With the transform values open, a move, a resize and a 3D handle
+        // are read there, with the value in hand outlined, and a pill would
+        // say the same thing twice (`TransformValuesPopover`). Closed, the
+        // pill reads the drag as it always has.
+        let barCarries = isTransformValuesOpen()
         // A path point or lever first, for the same reason `mouseDragged`
         // reads it first: with points showing, the drag belongs to them.
         if let drag = pathAnchorDrag, drag.moved, let box = selectedLayerFrame {

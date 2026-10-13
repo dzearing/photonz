@@ -21287,3 +21287,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Moving, sizing, turning or tilting a layer brings up a glass bar of typed values under it (X, Y, W, H, angle; Tilt X, Tilt Y, Depth, Pivot in 3D) with Reset; sums like +10 and 1920/2 work. Panel 3D section withdrawn (flag `next-transform-bar`, on at Next). Layer > Show Transform Values.
 - New walk step `expectTransformBar`; walks `transform-bar-walk`, `show-transform-values-menu-walk`.
 - Next: W/H proportion link (`the-transform-bar-keeps-width-and-height-in-prop`), then the key overlay task.
+
+## 2026-10-12 — Transform values move behind an Info button on the tool bar
+
+- The canvas transform bar is gone. While something is picked (Select in hand), the tool bar carries an Info (i) button at its right end (`EditorChromeLayout.ToolBarSection.info`); it, F8 and Layer ▸ Show Transform Values open a popover rising out of it (`TransformValuesPopover.swift`, was `TransformValueBar.swift`) in the bar's own glass and corner (`ToolBarSpacing.cornerRadius`). Placement is `TransformBar.popoverFrame` + `handleKeepOut`: slides sideways off every square, the knob, 3D arcs and depth arrow.
+- It never opens by itself: a canvas gesture only outlines its live row when it is open (`noteTransformGesture`); closed, the drag readout pill is back (drag-readout-walk no longer forces the flag off).
+- Rows are name left / number right (`PanelNumberField` look `.row`, box fills the row so a click anywhere lands in it); Escape in a box closes the popover (`escape:` hook). Angle is now labelled Rotation (walk field `Transform Rotation`).
+- `expectTransformBar` lost `side` and now checks the popover is off every handle spot. Walk key `f8` added. Walks updated: transform-bar, 3d-grippers, camera-settings, every-handle-lights, rotate-a-tilted, tilt-and-flip, tilt-keys, show-transform-values-menu, drag-readout; new transform-values-info-walk (full-canvas recording, the user's case).
+- UX-PATTERNS v2.7: "Named exception: the transform values" replaces the value overlay; the key overlay task now has to use this popover's look.
+- Open: the 9-row 3D list is ~260pt tall on a short canvas; the bar shifts ~20pt when Info comes and goes.

@@ -527,6 +527,7 @@ public struct PlaytestKey: Hashable, Sendable {
         "down": ("\u{F701}", 125), "up": ("\u{F700}", 126),
         "home": ("\u{F729}", 115), "end": ("\u{F72B}", 119),
         "forwarddelete": ("\u{F728}", 117),
+        "f8": ("\u{F70B}", 100),
     ]
 }
 
@@ -3454,15 +3455,14 @@ public enum PlaytestStep: Sendable, Equatable {
     /// The user took the arcs for gone on 2026-10-13, when they came out only
     /// while the pointer rested on the knob.
     case expectSpaceHandles(arcs: Bool?, depth: Bool?)
-    /// CLAIMS the transform bar beside the picked layer (`TransformBar`):
-    /// `present` whether it is on screen, and that it came or went within
-    /// `withinFrames` screen refreshes of being asked (one unless said);
-    /// while it is up,
-    /// that it sits inside the canvas and clear of the tool bar, and
-    /// optionally on which `side` of the layer, which `fields` it shows in
-    /// order, and which of them are `live` (outlined while the hand changes
-    /// them).
-    case expectTransformBar(present: Bool, withinFrames: Int, side: String?,
+    /// CLAIMS the transform values popover the tool bar's Info button opens
+    /// (`TransformBar`): `present` whether it is on screen, and that it came
+    /// or went within `withinFrames` screen refreshes of being asked (one
+    /// unless said); while it is up, that it sits inside the canvas, over the
+    /// tool bar and clear of every handle, the knob and its 3D arcs, and
+    /// optionally which `fields` it lists in order and which of them are
+    /// `live` (outlined while the hand changes them).
+    case expectTransformBar(present: Bool, withinFrames: Int,
                             fields: [String], live: [String]?)
     /// What the document would be WRITTEN as, asked without saving anything.
     ///
@@ -5154,15 +5154,15 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("present", "expectTransformBar has to say whether the bar is up: "
                     + "\"present\": true or false")
             }
-            let side = try f.optionalString("side")
-            if let side, side != "below", side != "above" {
-                throw f.invalid("side", "the bar sits \"below\" or \"above\" the layer, not \"\(side)\"")
+            if fields["side"] != nil {
+                throw f.invalid("side", "the transform values no longer sit beside the layer: they "
+                    + "rise out of the tool bar's Info button, clear of every handle, and the step checks that")
             }
             let withinFrames = try f.optionalNumber("withinFrames") ?? 1
             guard withinFrames >= 0, withinFrames == withinFrames.rounded() else {
                 throw f.invalid("withinFrames", "is a whole number of screen refreshes, 0 or more")
             }
-            self = .expectTransformBar(present: present, withinFrames: Int(withinFrames), side: side,
+            self = .expectTransformBar(present: present, withinFrames: Int(withinFrames),
                                        fields: try f.optionalStrings("fields"),
                                        live: fields["live"] == nil ? nil : try f.optionalStrings("live"))
         case "expectMeasures":

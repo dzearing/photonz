@@ -21,7 +21,11 @@
 
     { "do": "spaceHandle", "handle": "swing", "by": [50, 0] },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Info" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Transform Tilt Y", "reads": "30" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "snapshot", "name": "3-tilted-before" },
     { "do": "spaceHandle", "handle": "knob", "by": [-60, 60], "steps": 120, "seconds": 2, "hold": "4-tilted-mid-turn", "followsHand": 0.8, "landsAsHeld": true },
     { "do": "wait", "seconds": 0.6 },

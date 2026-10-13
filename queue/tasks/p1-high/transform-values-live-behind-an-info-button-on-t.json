@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T05:15:38.959Z",
-  "updated": "2026-10-13T05:15:39.057Z",
+  "updated": "2026-10-13T06:39:31.665Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13), screenshot 2026-10-12 22.13.22: a full-canvas recording picked; the transform bar (X 0, Y 0, W 3456, H 2234, angle, Tilt X, Tilt Y, Depth -109, Reset) sits across the top edge covering the top handles and the 3D arcs: \"why is this weird toolbar 1. look different then the pill shaped one (different material, different border), 2, why is it covering up the most important aspect of the photo (the transform grippers? it should be a rectangular thing off to the side with some name value pairs. Maybe it just becomes an 'i' icon that gets added to the existing toolbar, and you can click to expand a popup with the transform values\".\n\nShipped bar: a-small-overlay-shows-transform-values-to-type-i (done, 231c7cfe): 'rides under the layer in hand, placed and dismissed per video-animate.html'; with a layer filling the canvas it falls to the top edge, over the handles. Files: Sources/Photonz/TransformValueBar.swift, EditorState+TransformBar.swift. Tool bar: the floating bottom tool bar (Liquid Glass pill). The panel's 3D section stays withdrawn (the user wanted it gone).",
@@ -32,6 +32,24 @@
     {
       "t": "2026-10-13T05:15:39.056Z",
       "note": "seq 3970 -> 1"
+    },
+    {
+      "t": "2026-10-13T05:54:24.125Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T05:57:14.603Z",
+      "note": "Pre-build review: (1) First-time user: an (i) at the bar's end is the Mac's universal 'info' mark, Photoshop's Info panel key is F8, so the menu row gets F8. (2) A tool bar is tools only by contract; Info is not a tool, so the placement table must name it (the user's own ask, 2026-10-12) and ToolBarPurposeTests must allow exactly that one section. (3) The bar is centred, so Info coming and going on pick resizes it instantly (same as the style swatch, 10.7 note); no spring on selection. (4) Full-canvas layer: its handles sit on the image edges, the popover rises from the bar's right end, so it can land on the bottom-right corner or bottom-middle handle; it slides sideways off any handle, knob or 3D arc. (5) The old bar came up on every drag; the popover never opens by itself, only by Info, F8 or the menu, and stays open through drags with the live value outlined. With it closed a drag shows the old drag readout pill again. (6) The key overlay (clicking-a-key-opens-the-same-overlay-to-set-tha) is not built yet, so its style rule is folded into that task rather than built here."
+    },
+    {
+      "t": "2026-10-13T06:39:31.664Z",
+      "note": "owns these walks: transform-values-info-walk, show-transform-values-menu-walk, transform-bar-walk"
     }
+  ],
+  "started": "2026-10-13T05:54:24.124Z",
+  "walks": [
+    "transform-values-info-walk",
+    "show-transform-values-menu-walk",
+    "transform-bar-walk"
   ]
 }

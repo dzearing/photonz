@@ -1,5 +1,6 @@
-// When the transform bar came and went, and where it sat, for a walk to hold
-// it to one frame and to the canvas (`expectTransformBar`).
+// When the transform values popover came and went, and where it sat, for a
+// walk to hold it to one frame, to the canvas and off every handle
+// (`expectTransformBar`).
 //
 // "Within one frame" is counted in display refreshes, not milliseconds: from
 // the moment the editor asks for the bar to come or go, how many times the
@@ -20,12 +21,12 @@ import QuartzCore
 final class TransformBarMeter: NSObject {
     static let shared = TransformBarMeter()
 
-    /// Everything the bar was placed by, as it was last laid out.
+    /// Everything the popover was placed by, as it was last laid out.
     struct Place: Equatable {
         var canvas: CGSize
         var floor: CGFloat
-        var box: CGRect
-        var side: TransformBar.Side
+        var anchorX: CGFloat
+        var keepOut: [CGRect]
     }
 
     /// When the editor last asked for the bar to come or go.
@@ -75,11 +76,11 @@ final class TransformBarMeter: NSObject {
         link = nil
     }
 
-    /// Where the bar sits, in the canvas view's points.
+    /// Where the popover sits, in the canvas view's points.
     var frame: CGRect? {
         guard let place, size != .zero else { return nil }
-        return TransformBar.frame(around: place.box, bar: size, canvas: place.canvas,
-                                  floor: place.floor, side: place.side)
+        return TransformBar.popoverFrame(anchorX: place.anchorX, size: size, canvas: place.canvas,
+                                         floor: place.floor, keepOut: place.keepOut)
     }
 }
 #endif

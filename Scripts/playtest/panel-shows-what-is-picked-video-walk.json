@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/panel-shows-what-is-picked-video-walk",
-  "seed": "The right panel on a video shows only what the picked clip or title needs: no tool's settings with Select in hand, no 3D section (its values are on the transform bar). Every expectSections step fails if a tool's settings section shows while a different tool is in hand.",
+  "seed": "The right panel on a video shows only what the picked clip or title needs: no tool's settings with Select in hand, no 3D section (its values are on the transform values). Every expectSections step fails if a tool's settings section shows while a different tool is in hand.",
   "setup": {
     "timelineOpen": true,
     "forget": [

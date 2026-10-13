@@ -20,9 +20,9 @@ document disagrees with this table, the table wins.
 | Area | Its one purpose | What goes there | What never does |
 | --- | --- | --- | --- |
 | **Title bar** | Which document, and how you are looking at the window | Document name and state (edited, recording), the window's mode (View / Edit), the panel toggles | Document actions, tools, readouts, settings |
-| **Tool bar** (floating, bottom of the canvas) | Pick the thing you will use on the canvas | Tools only (something you pick, then use on the canvas), plus the colour pair a painting tool uses, plus More for the tools that do not fit | Zoom, view options (grid, rulers), readouts, settings, one-shot commands |
+| **Tool bar** (floating, bottom of the canvas) | Pick the thing you will use on the canvas | Tools only (something you pick, then use on the canvas), plus the colour pair a painting tool uses, plus More for the tools that do not fit, plus Info at its right end while something is picked (named exception below) | Zoom, view options (grid, rulers), readouts, settings, one-shot commands |
 | **Tool options** (the capsule over the tool bar) | Tune the tool in your hand | The settings of the tool in hand, only while it is in hand, and its commit / cancel while a tool is mid-edit (Crop's tick and cross) | Anything about the selection or the document |
-| **Canvas** | The work, handled directly | The document, handles, guides, measurements drawn on the work, a readout only while a drag is live, the transform overlay while a transform is in hand (named exception below) | Persistent panels, buttons, status pills |
+| **Canvas** | The work, handled directly | The document, handles, guides, measurements drawn on the work, a readout only while a drag is live | Persistent panels, buttons, status pills |
 | **Inspector** (right panel) | What the selection IS | Properties of the selection as label / value rows; the dock's other groups list the document's parts (Layers) and what you can add (Library), and a list may carry its own +. A section shows only when it applies to the picked thing or to the tool in hand: a tool's settings only while that tool is in hand, directly above the pick's own sections, never with another tool in hand (`PanelToolSettings`); the document's own settings (Canvas) only when the document itself is what is picked; a row only on a layer it means something on (no Masked by or Key on a measurement). Where Layers and Library sit is the card "Where do Layers and Library sit when something is picked?" | One-shot verbs as buttons (Flatten, Clear, Copy Measurement), explanations, document commands. Whether a section keeps its one main action (Add Captions, Normalize) is the open card "How many buttons may the right hand panel keep?" |
 | **Transport** (video) | Play the time | Play / pause, step, scrubber, time, volume, full screen, the timeline toggle | Edit actions, meters, export, anything that is not playback |
 | **Timeline** (video) | Time and tracks | Tracks, clips, cuts, keys, the key overlay on a picked key (named exception below), the ruler, and its own bar as `video.html` draws it: the timeline's tools (Select, Track Select, Range, Blade), snapping, Easing while keys are picked, what letting go of a drag will do; add track | Readouts that are not time, meters, a close button (the transport's toggle opens and closes it), zoom sliders |
@@ -59,39 +59,50 @@ it. Gone, it takes no clicks. One click on the percent opens the zoom stops, a
 double click goes to 100%. Picture and video alike, Next only
 (`next-canvas-zoom-control`, `CanvasZoomControl`).
 
-**Named exception: the value overlay** (the user, 2026-10-12: "when we move
-or change transitions, we can show a small toolbar like overlay which shows the
-transform values for typing things in. But doing some other operation or
-changing the tool makes the transform overlay disappear. On the overlay there
-should be a reset button", and "when I have a keyframe and click the opacity
-dot, I want the same overlay to appear"). One small Liquid Glass bar of label
-and value fields, with a Reset, that has two homes and no others:
+**Named exception: the transform values** (the user, 2026-10-12, rewriting
+the value overlay that stood here, after seeing it on a full-canvas recording: "why is
+this weird toolbar 1. look different then the pill shaped one (different
+material, different border), 2, why is it covering up the most important
+aspect of the photo (the transform grippers? it should be a rectangular thing
+off to the side with some name value pairs. Maybe it just becomes an 'i' icon
+that gets added to the existing toolbar, and you can click to expand a popup
+with the transform values"). Nothing transform-related ever floats over the
+picture or its handles. Instead:
 
-* **The transform overlay, on the canvas.** It appears when a transform starts
-  on a layer (a drag on the frame or a handle, the turn knob or its tilt arcs,
-  an arrow-key nudge, a transform command, a click on a moment of the clip's key
-  line) and holds X, Y, W, H and the angle, plus Tilt X, Tilt Y and Depth once
-  the layer is turned in 3D. It sits 12 points under the object's frame, above
-  it (over the turn knob) when a bottom handle is in hand or there is no room
-  below, slid sideways to stay 12 points inside the canvas, and never over the
-  tool bar; it follows the object during a drag and keeps the side it chose
-  when the drag began. It leaves with the next operation of another kind
-  (another tool, typing, drawing, picking something else, opening a menu),
-  with Play, Escape, or a click on empty canvas; scrubbing keeps it. It never
-  takes key unless a field is clicked. Reset puts size, turn, tilt and depth
-  back and leaves position where it is.
-* **The key overlay, on the timeline.** The same element anchored above a
-  picked key (on a row or a graph point), never over it: the property's name,
-  its value at that key in its units, Mixed when picked keys differ, and Reset
-  to the property's default. It does not carry Easing: that stays in the
-  timeline bar while keys are picked and on the right-click of a key or a
-  segment, so the control is not in two places.
+* **Info on the tool bar.** While something with a transform is picked and
+  Select is in hand, the tool bar carries an Info button (the `info.circle`
+  mark) at its right end, after a hairline, in the bar's own button style, lit
+  while its popover is open. It is the one thing on the tool bar that is not a
+  tool, and `ToolBarPurposeTests` names it. Layer ▸ Show Transform Values and
+  F8 (Photoshop's key for its Info panel) open and close the same popover.
+* **The popover.** It rises out of the Info button, 8 points over the tool
+  bar (or the tool settings over it), in exactly the bar's material and corner
+  (`.glassEffect(.regular)`, the bar's half-height radius, no stroke). Where it
+  would cover a handle of the picked layer, its turn knob, a 3D arc or the
+  depth arrow, it slides sideways until it covers none. Inside, one row per
+  value that applies, name left and number right: X, Y, W, H, Rotation, and
+  Tilt X, Tilt Y, Depth and Pivot once the layer is in 3D; Reset at the foot
+  puts size, turn, tilt and depth back and leaves the position alone. Every
+  number takes typing and simple sums (`+10`, `1920/2`); Tab moves down,
+  Return commits, Escape closes. It never opens by itself: a drag, a handle or
+  an arrow key with it open outlines the row it is changing and the numbers
+  follow the hand; with it closed the drag readout reads the drag as it always
+  has. It closes on Escape, a click on empty canvas, picking something else,
+  another tool, typing, opening a menu, or Play; scrubbing keeps it.
+* **The key overlay, on the timeline.** A picked key's value is typed in the
+  same kind of popover, anchored to the key (on a row or a graph point) and
+  never over it: the property's name, its value at that key in its units,
+  Mixed when picked keys differ, and Reset to the property's default. It does
+  not carry Easing: that stays in the timeline bar while keys are picked and on
+  the right-click of a key or a segment, so the control is not in two places.
 
-The panel keeps Position & Size; the overlay is its second door while the
-layer is in hand, the way the tool settings are in the capsule and the panel.
+The panel keeps Position & Size; the popover is its second door while the
+layer is picked, the way the tool settings are in the capsule and the panel.
 The panel's 3D section is withdrawn: Tilt X, Tilt Y and Depth live in the
-overlay, and Reset 3D Rotation, Bring Nearer and Send Further stay in the Layer
-menu and the layer's right-click. Drawn on `pages/video-animate.html`.
+popover, and Reset 3D Rotation, Bring Nearer and Send Further stay in the Layer
+menu and the layer's right-click. `pages/video-animate.html` still draws the
+older bar beside the layer; the user's words above replace it, and the mock is
+left as drawn.
 
 **A request that names a system look gets one filmed card, not a second
 build.** When a request names a system look or material (Liquid Glass, "the
@@ -116,7 +127,12 @@ table puts it, and what was moved or filed.
 **Held by tests.** `ToolBarPurposeTests` lists everything the tool bar can carry
 and fails if any of it is not a tool, the colour pair or More.
 
-**Status: v2.6. The placement contract names the value overlay (2026-10-12):
+**Status: v2.7. The value overlay becomes the transform values (2026-10-12):
+an Info button at the tool bar's right end while something is picked opens
+them in a popover in the bar's own glass, and nothing transform-related floats
+over the picture any more (task
+`transform-values-live-behind-an-info-button-on-t`).
+v2.6. The placement contract names the value overlay (2026-10-12):
 one glass bar of typeable values that appears on the canvas while a transform
 is in hand and on the timeline beside a picked key, and the panel's 3D section
 leaves for it (`pages/video-animate.html`, task

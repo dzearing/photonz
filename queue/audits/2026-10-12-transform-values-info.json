@@ -1,0 +1,53 @@
+{
+  "feature": "Transform values behind an Info button on the tool bar",
+  "epic": "video-transitions-motion",
+  "summary": "Nothing about a layer's transform floats over the picture any more. With something picked, the tool bar has an Info button at its right end; it opens the layer's X, Y, W, H, Rotation (and the 3D values once it is turned) in a popover rising out of the bar, in the bar's own glass, that slides aside from any handle.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: transform-values-info-walk, show-transform-values-menu-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording and click the picture with Select (V) to pick the whole recording.",
+      "shot": "2026-10-12-transform-values-info-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the (i) button at the right end of the tool bar.",
+      "shot": "2026-10-12-transform-values-info-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click X, type 100 and press Return."
+    },
+    {
+      "do": "Drag the recording on the canvas with the popover open and watch X and Y.",
+      "shot": "2026-10-12-transform-values-info-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 15 into Rotation, then click Reset.",
+      "shot": "2026-10-12-transform-values-info-4.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Escape, then press F8 (or Layer > Show Transform Values) to open it again.",
+      "shot": "2026-10-12-transform-values-info-5.png"
+    },
+    {
+      "do": "Pick the Text tool (T) and see the popover close."
+    }
+  ],
+  "evaluate": [
+    "Does the popover read as part of the tool bar it rose out of (same glass, same corner)?",
+    "With a full-canvas recording picked, are the top handles and the 3D arcs always in plain sight?",
+    "Is the Info button where you would look for it, and is F8 the key you would reach for?",
+    "Is it right that the values never open by themselves on a drag, only when you ask?",
+    "Does the tool bar shifting by one button when you pick or let go of something bother you?"
+  ],
+  "rough": [
+    "video-animate.html still draws the old bar under the layer; your own words on 2026-10-12 replace it (your call on 2026-10-12), and the mock is left as drawn.",
+    "The tool bar is centred, so Info coming and going with the pick moves both ends of the bar by about 20 points, instantly (the 10.7 rule: no spring on a selection).",
+    "On a short canvas with the timeline open, the 3D list (nine rows) is about 260 points tall and covers a good part of the picture's lower right, though never a handle.",
+    "The key overlay on the timeline (clicking a key to type its value) is not built yet; its task now says it must use this popover's look (clicking-a-key-opens-the-same-overlay-to-set-tha).",
+    "With the popover closed, a drag shows the old drag readout pill again, as it did before the bar."
+  ]
+}

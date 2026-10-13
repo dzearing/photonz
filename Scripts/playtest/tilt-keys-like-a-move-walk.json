@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/tilt-keys-like-a-move-walk",
-  "seed": "3D tilt and depth key as easily as a move, at Next defaults with no flag changed. A title is typed over a recording at nought seconds and keyed from its track's diamond, the way a person keys a layer's place. The flat arc swings it to 90 on Y there: because its place is animating, the tilt is a key, the same as a move would be. A second later the arc swings it back to 0, which is a second key, and the title now swings round over one second: half way, it is still turned, its near edge taller than its far one. A move at one second keys the place too, so tilt and place follow one rule. Then Depth is typed into the transform bar between keys, which adds a Depth key without disturbing the others, and Show Graph opens the Rotation Y lane into its curve.",
+  "seed": "3D tilt and depth key as easily as a move, at Next defaults with no flag changed. A title is typed over a recording at nought seconds and keyed from its track's diamond, the way a person keys a layer's place. The flat arc swings it to 90 on Y there: because its place is animating, the tilt is a key, the same as a move would be. A second later the arc swings it back to 0, which is a second key, and the title now swings round over one second: half way, it is still turned, its near edge taller than its far one. A move at one second keys the place too, so tilt and place follow one rule. Then Depth is typed into the transform values between keys, which adds a Depth key without disturbing the others, and Show Graph opens the Rotation Y lane into its curve.",
   "setup": {
     "forget": [
       "all"
@@ -28,9 +28,11 @@
     { "do": "expect", "control": "Key Title", "in": "Track Title", "reads": "on a key" },
     { "do": "spaceHandle", "handle": "swing", "by": [150, 0] },
     { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Info" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Transform Tilt Y", "reads": "90" },
     { "do": "expect", "field": "Transform Tilt Y Key", "reads": "on a key" },
-    { "do": "describe", "stage": "1-keyed-at-90", "note": "THE FIRST TEST: the title keyed from its track's diamond, then swung to 90 on Y with the flat arc at nought seconds. Its place is animating, so the tilt became a key at the playhead: the Tilt Y field on the transform bar wears a filled diamond and a Rotation Y lane has joined the title's keys" },
+    { "do": "describe", "stage": "1-keyed-at-90", "note": "THE FIRST TEST: the title keyed from its track's diamond, then swung to 90 on Y with the flat arc at nought seconds. Its place is animating, so the tilt became a key at the playhead: the Tilt Y row in the transform values wears a filled diamond and a Rotation Y lane has joined the title's keys" },
     { "do": "panel", "stage": "1-keyed-at-90" },
     { "do": "snapshot", "name": "1-keyed-at-90" },
     { "do": "action", "action": "videoStepOneSecond" },
@@ -41,6 +43,8 @@
     { "do": "expect", "field": "Transform Tilt Y", "reads": "0" },
     { "do": "expect", "field": "Transform Tilt Y Key", "reads": "on a key" },
     { "do": "expectTilt", "flat": true },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "drag", "from": [620, 340], "to": [660, 370], "steps": 8 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expect", "control": "Key", "in": "Position", "reads": "on a key" },
@@ -53,6 +57,8 @@
     { "do": "expectTilt", "atLeast": 1.1 },
     { "do": "describe", "stage": "3-half-way", "note": "THE SECOND TEST: half way through the swing in time, the title is still turned: its near edge is taller than its far one" },
     { "do": "snapshot", "name": "3-half-way" },
+    { "do": "press", "control": "Info" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "press", "control": "Transform Depth" },
     { "do": "key", "key": "a", "modifiers": ["command"] },
     { "do": "type", "text": "-300" },

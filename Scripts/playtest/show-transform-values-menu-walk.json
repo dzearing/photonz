@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/show-transform-values-menu-walk",
-  "seed": "Layer, Show Transform Values brings the transform bar up without a drag, at Next defaults with no flag changed (video-animate.html, the interaction table). A title is typed over a recording and picked: no bar. The Layer menu's row brings it up under the title with X, Y, W, H and the angle, nothing outlined. The menu bar is only live with the app in front, so this walk takes the front.",
+  "seed": "Layer, Show Transform Values opens the transform values popover over the tool bar, and F8 opens and closes it, at Next defaults with no flag changed. A title is typed over a recording and picked: nothing open. The Layer menu's row opens it with X, Y, W, H and Rotation, nothing outlined; Escape closes it; F8 opens it again, as Photoshop's F8 opens its Info panel. The menu bar is only live with the app in front, so this walk takes the front.",
   "setup": {
     "forget": [
       "all"
@@ -27,8 +27,16 @@
     { "do": "expectTransformBar", "present": false },
     { "do": "menus", "stage": "1-layer-menu", "menu": "Layer", "choose": "Layer > Show Transform Values" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expectTransformBar", "present": true, "side": "below", "fields": ["X", "Y", "W", "H", "Angle"], "live": [] },
-    { "do": "describe", "stage": "2-shown", "note": "Layer, Show Transform Values put the bar under the title with nothing in hand: X, Y, W, H, the angle and Reset, no field outlined" },
-    { "do": "snapshot", "name": "2-shown" }
+    { "do": "expectTransformBar", "present": true, "fields": ["X", "Y", "W", "H", "Rotation"], "live": [] },
+    { "do": "describe", "stage": "2-shown", "note": "Layer, Show Transform Values opened the popover over the tool bar's Info button with nothing in hand: X, Y, W, H, Rotation and Reset, no row outlined" },
+    { "do": "snapshot", "name": "2-shown" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectTransformBar", "present": false },
+    { "do": "shortcut", "key": "f8", "menuItem": "Show Transform Values" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectTransformBar", "present": true, "fields": ["X", "Y", "W", "H", "Rotation"] },
+    { "do": "describe", "stage": "3-f8", "note": "Escape closed it and F8 opened it again" },
+    { "do": "snapshot", "name": "3-f8" }
   ]
 }

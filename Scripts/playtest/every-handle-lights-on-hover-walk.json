@@ -20,7 +20,11 @@
     { "do": "hoverHandles", "name": "1-rectangle", "atLeast": 13, "space": true },
 
     { "do": "spaceHandle", "handle": "swing", "by": [67, 0] },
+    { "do": "press", "control": "Info" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Transform Tilt Y", "reads": "40" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.3 },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-turned", "note": "the same rectangle swung 40 degrees: its knob, arcs and depth arrow sit on the turned card and each still lights where it is drawn. Its resize squares are left out: on a card turned in space a press on them takes nothing yet (task resize-squares-on-a-layer-turned-in-3d-take-the)" },
     { "do": "hoverHandles", "name": "2-turned", "atLeast": 1, "space": true, "only": ["rotate"] },

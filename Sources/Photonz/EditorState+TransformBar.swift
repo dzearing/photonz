@@ -2,26 +2,27 @@ import CoreGraphics
 import Foundation
 import PhotonzCore
 
-/// What the transform bar is holding while it is up: the layers it is about,
-/// the side of them it sits on, the values the hand is changing, and whether
-/// a 3D handle has been used on them.
+/// What the transform values popover is holding while it is open: the layers
+/// it is about, the values the hand is changing, and whether a 3D handle has
+/// been used on them.
 struct TransformBarHold: Equatable {
     var layerIDs: Set<UUID>
-    var side: TransformBar.Side
     var live: Set<TransformBar.Field>
     var usedSpace: Bool
 }
 
-/// The small glass bar of transform values beside the layer in hand (Next,
-/// `next-transform-bar`; `TransformBar.swift`; `pages/video-animate.html`).
+/// The picked layer's transform values, in the popover the tool bar's Info
+/// button opens (Next, `next-transform-bar`; `TransformBar.swift`;
+/// `TransformValuesPopover`).
 ///
-/// It comes up when a transform starts on the canvas (a drag on the layer, a
-/// handle, the knob or its 3D arcs, an arrow-key nudge) or from Layer, Show
-/// Transform Values, and it stays while that layer stays picked and nothing
-/// else is done. Another tool, typing, picking something else, opening a menu,
-/// Play, Escape or a click on empty canvas take it down. Every value it lands
-/// goes through `perform`, keyed at the playhead wherever a canvas drag on the
-/// same layer would key, so the bar and the hand never disagree.
+/// It opens only when asked: the Info button, Layer, Show Transform Values, or
+/// F8. It never comes up by itself, so nothing about a transform is ever
+/// drawn over the picture. While it is open a drag, a handle, the knob, its 3D
+/// arcs or an arrow key outline the value they change and the numbers follow
+/// the hand. Another tool, typing, picking something else, opening a menu,
+/// Play, Escape or a click on empty canvas close it. Every value it lands goes
+/// through `perform`, keyed at the playhead wherever a canvas drag on the same
+/// layer would key, so the popover and the hand never disagree.
 @MainActor
 extension EditorState {
 
@@ -39,62 +40,63 @@ extension EditorState {
         return !hold.layerIDs.isEmpty && hold.layerIDs == transformBarTargets
     }
 
-    /// A transform starting on the canvas: brings the bar up, or keeps it up
-    /// for the same layers, on the side this gesture wants and outlining what
-    /// it changes. A bar already up for a nudge keeps its side: arrow keys
-    /// have no hand to get out of the way of.
-    func raiseTransformBar(_ gesture: TransformBar.Gesture) {
-        guard Experiments.shared.transformBarEnabled else { return }
-        let ids = transformBarTargets
-        guard !ids.isEmpty else { return }
-        let space = gesture.usesSpace && Experiments.shared.turnInDepthEnabled
-        if var hold = transformBar, hold.layerIDs == ids {
-            if gesture != .nudge, gesture != .command { hold.side = TransformBar.side(for: gesture) }
-            hold.live = TransformBar.liveFields(for: gesture)
-            hold.usedSpace = hold.usedSpace || space
-            if hold != transformBar { transformBar = hold }
-            return
-        }
-        transformBar = TransformBarHold(layerIDs: ids, side: TransformBar.side(for: gesture),
-                                        live: TransformBar.liveFields(for: gesture),
-                                        usedSpace: space)
+    /// A transform starting on the canvas. With the popover open for these
+    /// layers it outlines what the gesture changes; with it closed it does
+    /// nothing at all, because the values never come up by themselves (the
+    /// user, 2026-10-12: the bar that did covered the handles).
+    func noteTransformGesture(_ gesture: TransformBar.Gesture) {
+        guard Experiments.shared.transformBarEnabled, var hold = transformBar,
+              hold.layerIDs == transformBarTargets else { return }
+        hold.live = TransformBar.liveFields(for: gesture)
+        hold.usedSpace = hold.usedSpace || (gesture.usesSpace && Experiments.shared.turnInDepthEnabled)
+        if hold != transformBar { transformBar = hold }
     }
 
-    /// The hand let go: nothing is outlined any more, and the bar stays.
+    /// Opens the popover for what is picked, nothing outlined.
+    func openTransformValues() {
+        guard canShowTransformValues else { return }
+        if let hold = transformBar, hold.layerIDs == transformBarTargets { return }
+        transformBar = TransformBarHold(layerIDs: transformBarTargets, live: [], usedSpace: false)
+    }
+
+    /// The Info button, the menu row and F8: open it, or close it when open.
+    func toggleTransformValues() {
+        if showsTransformBar { dropTransformBar() } else { openTransformValues() }
+    }
+
+    /// The hand let go: nothing is outlined any more, and the popover stays.
     func endTransformBarGesture() {
         guard var hold = transformBar, !hold.live.isEmpty else { return }
         hold.live = []
         transformBar = hold
     }
 
-    /// Takes the bar down.
+    /// Closes the popover.
     func dropTransformBar() {
         if transformBar != nil { transformBar = nil }
     }
 
-    /// Escape on the canvas: takes the bar down and nothing else, so the next
-    /// Escape lets go of the layer the way it always has. False when there was
-    /// no bar to take down.
+    /// Escape on the canvas or in one of its boxes: closes the popover and
+    /// nothing else, so the next Escape lets go of the layer the way it always
+    /// has. False when there was nothing open to close.
     func escapeTransformBar() -> Bool {
         guard showsTransformBar else { return false }
         dropTransformBar()
         return true
     }
 
-    /// Layer, Show Transform Values: the bar without a drag.
+    /// Whether there is anything for the popover to list: something picked
+    /// that a number can land on, with Select in hand. It is also when the
+    /// tool bar carries its Info button.
     var canShowTransformValues: Bool {
         Experiments.shared.transformBarEnabled && !transformBarTargets.isEmpty
-            && activeTool == .select
-    }
-
-    func showTransformValues() {
-        guard canShowTransformValues else { return }
-        raiseTransformBar(.command)
+            && activeTool == .select && !isDocumentPlaying && !isWatching
+            && editingTextLayerID == nil
     }
 
     // MARK: What it shows
 
-    /// The values on the bar: the box and the angle, then the space values
+    /// The values in the popover: the box and the angle, then the space values
     /// once a picked layer is in space or a 3D handle was used on it.
     var transformBarFields: [TransformBar.Field] {
         let inSpace = Experiments.shared.turnInDepthEnabled
@@ -323,20 +325,22 @@ extension EditorState {
 
     // MARK: Where it sits
 
-    /// The box the picked layers make on screen, in the canvas view's own
-    /// points: every corner as it is drawn, turned and tilted ones included.
-    var transformBarBox: CGRect? {
-        guard let viewport, let posed = canvasGeometryDocument else { return nil }
-        let corners = transformBarTargets.flatMap { id -> [CGPoint] in
-            if let quad = posed.drawnQuad(of: id) { return quad }
-            return canvasLayer(id: id)?.transformedCorners ?? []
+    /// What the popover keeps off, in the canvas view's own points: every
+    /// picked layer's eight squares as drawn, turned and tilted ones included,
+    /// its turn knob, and its 3D arcs and depth arrow where it wears them
+    /// (`TransformBar.handleKeepOut`).
+    var transformValuesKeepOut: [CGRect] {
+        guard let viewport, let posed = canvasGeometryDocument else { return [] }
+        return transformBarTargets.flatMap { id -> [CGRect] in
+            let corners = posed.drawnQuad(of: id) ?? canvasLayer(id: id)?.transformedCorners ?? []
+            guard corners.count == 4 else { return [] }
+            let quad = corners.map { viewport.viewPoint(fromDocument: $0) }
+            let topMid = CGPoint(x: (quad[0].x + quad[1].x) / 2, y: (quad[0].y + quad[1].y) / 2)
+            let middle = CGPoint(x: quad.map(\.x).reduce(0, +) / 4, y: quad.map(\.y).reduce(0, +) / 4)
+            let handles = SpaceHandles(topMid: topMid, middle: middle, pivot: middle)
+            let space = Experiments.shared.turnInDepthEnabled ? handles : nil
+            return TransformBar.handleKeepOut(quad: quad, knob: handles.knob, space: space)
         }
-        guard !corners.isEmpty else { return nil }
-        let points = corners.map { viewport.viewPoint(fromDocument: $0) }
-        let xs = points.map(\.x), ys = points.map(\.y)
-        guard let minX = xs.min(), let maxX = xs.max(), let minY = ys.min(), let maxY = ys.max()
-        else { return nil }
-        return CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
     }
 }
 

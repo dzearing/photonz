@@ -1278,6 +1278,9 @@ struct PlaytestScriptTests {
         #expect(PlaytestKey("c")?.keyCode == 8)
         #expect(PlaytestKey("4")?.keyCode == 21)
         #expect(PlaytestKey("return")?.keyCode == 36)
+        // F8, Show Transform Values, as Photoshop's F8 is its Info panel.
+        #expect(PlaytestKey("f8")?.keyCode == 100)
+        #expect(PlaytestKey("f8")?.characters == "\u{F70B}")
         #expect(PlaytestKey("return")?.characters == "\r")
         #expect(PlaytestKey("escape")?.keyCode == 53)
         #expect(PlaytestKey("tab")?.keyCode == 48)

@@ -155,12 +155,13 @@ struct EditorCanvasSurface: View {
                    onSpaceTurnCommit: { editorState.commitSpaceTurn(id: $0, $1) },
                    onTransformGesture: { gesture in
                        if let gesture {
-                           editorState.raiseTransformBar(gesture)
+                           editorState.noteTransformGesture(gesture)
                        } else {
                            editorState.endTransformBarGesture()
                        }
                    },
                    onTransformBarEscape: { editorState.escapeTransformBar() },
+                   isTransformValuesOpen: { editorState.showsTransformBar },
                    onCaptionPlacePreview: { editorState.previewCaptionPlacement(id: $0, center: $1) },
                    onCaptionPlaceCommit: { editorState.commitCaptionPlacement(id: $0, center: $1) },
                    onCaptionPlaceCancel: { editorState.cancelCaptionPlacement() },
@@ -275,8 +276,9 @@ struct EditorCanvasSurface: View {
                    onZoomBoxEscape: { editorState.zoomBoxEscape() })
             // A picked zoom's box over the whole picture (`ZoomBoxOverlay`).
             .overlay(alignment: .topLeading) { ZoomBoxOverlay() }
-            // The transform values beside the layer in hand (`TransformValueBar`).
-            .overlay(alignment: .topLeading) { TransformValueBar() }
+            // The transform values, rising out of the tool bar's Info button
+            // (`TransformValuesPopover`).
+            .overlay(alignment: .topLeading) { TransformValuesPopover() }
             // The exact position and size numbers, hung off the selection
             // itself (`ExactPlacement`). Here rather than on the panel because
             // the anchor is worked out in the canvas view's own coordinates,

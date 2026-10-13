@@ -17,10 +17,25 @@ struct ToolBarPurposeTests {
     /// Every section the one glass bar can draw. A new section is a new kind
     /// of thing on the bar, so it fails here until the contract says it
     /// belongs there.
-    @Test func theBarsSectionsAreTheToolsAndTheColourPair() {
-        #expect(EditorChromeLayout.ToolBarSection.allCases == [.tools, .color])
-        #expect(EditorChromeLayout.toolBarSections(showsColor: true) == [.tools, .color])
-        #expect(EditorChromeLayout.toolBarSections(showsColor: false) == [.tools])
+    ///
+    /// Info is the one section that is not a tool, named by the contract (the
+    /// user, 2026-10-12: "maybe it just becomes an 'i' icon that gets added to
+    /// the existing toolbar"): it opens the picked layer's transform values,
+    /// so it is there only while something is picked, at the bar's right end.
+    @Test func theBarsSectionsAreTheToolsTheColourPairAndInfo() {
+        #expect(EditorChromeLayout.ToolBarSection.allCases == [.tools, .color, .info])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsInfo: false) == [.tools, .color])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsInfo: false) == [.tools])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsInfo: true) == [.tools, .info])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsInfo: true)
+                == [.tools, .color, .info])
+    }
+
+    /// The transform values popover wears the bar's own glass and corner, so
+    /// it reads as part of the bar it rose out of.
+    @Test func theInfoPopoverHasTheBarsCorner() {
+        let bar = EditorChromeLayout.ToolBarSpacing.oneGlass
+        #expect(bar.cornerRadius == bar.height / 2)
     }
 
     /// Every slot of every bar the flags can build, and the video's own front

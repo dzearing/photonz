@@ -714,9 +714,9 @@ struct GridToolBarCapsuleTests {
         // The tool bar holds tools. Zoom is not a tool (the user, 2026-09-29):
         // it is pinch, Cmd +/-, Cmd 0, Cmd 1 and the View menu, never a
         // control on this bar, whatever else is on it.
-        #expect(EditorChromeLayout.toolBarSections(showsColor: false) == [.tools])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: false, showsInfo: false) == [.tools])
         for color in [false, true] {
-            #expect(!EditorChromeLayout.toolBarSections(showsColor: color)
+            #expect(!EditorChromeLayout.toolBarSections(showsColor: color, showsInfo: false)
                 .map(\.rawValue).contains("zoom"))
         }
     }
@@ -724,7 +724,7 @@ struct GridToolBarCapsuleTests {
     @Test func theOneBarPutsTheColourPairAfterTheTools() {
         // The mock's order: the tool strip and More, then the colour pair and
         // its swap.
-        #expect(EditorChromeLayout.toolBarSections(showsColor: true) == [.tools, .color])
+        #expect(EditorChromeLayout.toolBarSections(showsColor: true, showsInfo: false) == [.tools, .color])
     }
 
     @Test func theOneBarCarriesNoGrid() {
@@ -732,7 +732,7 @@ struct GridToolBarCapsuleTests {
         // menu's (Show Grid, Grid Settings, Snap to Grid, Adjust Grid), not a
         // section of the bar that holds tools (the placement contract).
         for color in [false, true] {
-            #expect(!EditorChromeLayout.toolBarSections(showsColor: color)
+            #expect(!EditorChromeLayout.toolBarSections(showsColor: color, showsInfo: false)
                 .map(\.rawValue).contains("grid"))
         }
         #expect(EditorChromeLayout.gridChipParts(canvasWidth: 1600, isGridVisible: true,
@@ -752,7 +752,7 @@ struct GridToolBarCapsuleTests {
         // A hairline before a section exactly when something came before it:
         // never at the ends of the bar, never two in a row where a section
         // is missing.
-        let sections = EditorChromeLayout.toolBarSections(showsColor: true)
+        let sections = EditorChromeLayout.toolBarSections(showsColor: true, showsInfo: false)
         let hairlines = sections.indices.filter {
             EditorChromeLayout.toolBarHasHairline(before: $0)
         }

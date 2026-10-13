@@ -3,10 +3,9 @@ import Foundation
 import PhotonzCore
 import Testing
 
-/// The small glass bar of transform values that rides beside a layer while it
-/// is in hand (`a-small-overlay-shows-transform-values-to-type-i`,
-/// `pages/video-animate.html`, "Where the bar sits").
-@Suite("Transform bar: which values, where it sits, and what a typed sum means")
+/// The picked layer's transform values, in the popover the tool bar's Info
+/// button opens (`transform-values-live-behind-an-info-button-on-t`).
+@Suite("Transform values: which values, where the popover sits, and what a typed sum means")
 struct TransformBarTests {
 
     // MARK: Which fields
@@ -30,6 +29,7 @@ struct TransformBarTests {
         #expect(TransformBar.Field.x.label == "X")
         #expect(TransformBar.Field.width.label == "W")
         #expect(TransformBar.Field.tiltY.label == "Tilt Y")
+        #expect(TransformBar.Field.angle.label == "Rotation")
         #expect(TransformBar.Field.angle.unit == "°")
         #expect(TransformBar.Field.tiltX.unit == "°")
         #expect(TransformBar.Field.depth.unit == nil)
@@ -51,22 +51,7 @@ struct TransformBarTests {
         #expect(TransformBar.Field.pivotDepth.property == .pivotDepth)
     }
 
-    // MARK: Which side, which fields are live
-
-    @Test("A bottom handle in hand puts the bar above; everything else keeps it below")
-    func sides() {
-        for handle in [ResizeHandle.bottom, .bottomLeft, .bottomRight] {
-            #expect(TransformBar.side(for: .resize(handle)) == .above)
-        }
-        for handle in [ResizeHandle.top, .topLeft, .topRight, .left, .right] {
-            #expect(TransformBar.side(for: .resize(handle)) == .below)
-        }
-        #expect(TransformBar.side(for: .move) == .below)
-        #expect(TransformBar.side(for: .rotate) == .below)
-        #expect(TransformBar.side(for: .tilt(.swing)) == .below)
-        #expect(TransformBar.side(for: .nudge) == .below)
-        #expect(TransformBar.side(for: .command) == .below)
-    }
+    // MARK: Which fields are live
 
     @Test("The field a gesture is changing is the one outlined")
     func liveFields() {
@@ -90,77 +75,89 @@ struct TransformBarTests {
         #expect(!TransformBar.Gesture.move.usesSpace)
     }
 
-    // MARK: Where it sits
+    // MARK: Where the popover sits
 
     static let canvas = CGSize(width: 1000, height: 700)
-    static let bar = CGSize(width: 400, height: 32)
-    /// The top of the tool bar: the bar never comes down past it.
+    static let popover = CGSize(width: 200, height: 180)
+    /// The top of the tool bar, or of the tool settings over it.
     static let floor: CGFloat = 640
 
-    @Test("Under the object, 12 points below its frame, centred on it")
-    func underTheObject() {
-        let box = CGRect(x: 400, y: 200, width: 200, height: 100)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .below)
-        #expect(frame.minY == 312)
-        #expect(frame.midX == box.midX)
-        #expect(frame.size == Self.bar)
+    @Test("Rises from the Info button, 8 points over the tool bar, centred on the button")
+    func risesFromTheButton() {
+        let frame = TransformBar.popoverFrame(anchorX: 600, size: Self.popover, canvas: Self.canvas,
+                                              floor: Self.floor, keepOut: [])
+        #expect(frame.maxY == Self.floor - TransformBar.popoverGap)
+        #expect(frame.midX == 600)
+        #expect(frame.size == Self.popover)
     }
 
-    @Test("Above it, clear of the turn knob, while a bottom handle is in hand")
-    func aboveForABottomHandle() {
-        let box = CGRect(x: 400, y: 200, width: 200, height: 100)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .above)
-        #expect(frame.maxY == box.minY - TransformBar.knobClearance - TransformBar.gap)
-        #expect(frame.maxY <= box.minY - 12)
+    @Test("Stays 12 points inside the canvas when the button is near an edge")
+    func insideTheCanvas() {
+        let right = TransformBar.popoverFrame(anchorX: 980, size: Self.popover, canvas: Self.canvas,
+                                              floor: Self.floor, keepOut: [])
+        #expect(right.maxX == Self.canvas.width - TransformBar.margin)
+        let short = TransformBar.popoverFrame(anchorX: 500, size: CGSize(width: 200, height: 900),
+                                              canvas: Self.canvas, floor: Self.floor, keepOut: [])
+        #expect(short.minY == TransformBar.margin)
     }
 
-    @Test("Above it when there is no room between the object and the tool bar")
-    func aboveWhenNoRoomBelow() {
-        let box = CGRect(x: 400, y: 560, width: 200, height: 60)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .below)
-        #expect(frame.maxY <= box.minY)
-        #expect(frame.maxY <= Self.floor)
+    @Test("Slides sideways off a handle it would cover, to the nearer clear side")
+    func slidesOffAHandle() {
+        let handle = CGRect(x: 640, y: 560, width: 20, height: 20)
+        let frame = TransformBar.popoverFrame(anchorX: 620, size: Self.popover, canvas: Self.canvas,
+                                              floor: Self.floor, keepOut: [handle])
+        #expect(!frame.intersects(handle))
+        #expect(frame.maxX == handle.minX - TransformBar.popoverGap)
+        #expect(frame.maxY == Self.floor - TransformBar.popoverGap)
     }
 
-    @Test("Below it when the side asked for is above and there is no room at the top")
-    func belowWhenNoRoomAbove() {
-        let box = CGRect(x: 400, y: 20, width: 200, height: 60)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .above)
-        #expect(frame.minY == box.maxY + 12)
+    @Test("Slides past a second handle when the first slide lands on it")
+    func slidesPastTwoHandles() {
+        let near = CGRect(x: 590, y: 560, width: 20, height: 20)
+        let next = CGRect(x: 400, y: 560, width: 20, height: 20)
+        let frame = TransformBar.popoverFrame(anchorX: 600, size: Self.popover, canvas: Self.canvas,
+                                              floor: Self.floor, keepOut: [near, next])
+        #expect(!frame.intersects(near))
+        #expect(!frame.intersects(next))
+        #expect(frame.minX >= TransformBar.margin)
+        #expect(frame.maxX <= Self.canvas.width - TransformBar.margin)
     }
 
-    @Test("Slid sideways to stay 12 points inside the canvas")
-    func againstTheEdge() {
-        let left = CGRect(x: -40, y: 200, width: 120, height: 80)
-        let atLeft = TransformBar.frame(around: left, bar: Self.bar, canvas: Self.canvas,
-                                        floor: Self.floor, side: .below)
-        #expect(atLeft.minX == 12)
-        let right = CGRect(x: 950, y: 200, width: 120, height: 80)
-        let atRight = TransformBar.frame(around: right, bar: Self.bar, canvas: Self.canvas,
-                                         floor: Self.floor, side: .below)
-        #expect(atRight.maxX == Self.canvas.width - 12)
+    @Test("A handle above or below its span leaves it where it is")
+    func handleElsewhere() {
+        let high = CGRect(x: 590, y: 100, width: 20, height: 20)
+        let frame = TransformBar.popoverFrame(anchorX: 600, size: Self.popover, canvas: Self.canvas,
+                                              floor: Self.floor, keepOut: [high])
+        #expect(frame.midX == 600)
     }
 
-    @Test("A layer smaller than the bar has the bar centred under it, at its own size")
-    func smallLayer() {
-        let box = CGRect(x: 480, y: 300, width: 20, height: 14)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .below)
-        #expect(frame.midX == box.midX)
-        #expect(frame.size == Self.bar)
+    @Test("A layer filling the canvas: clear of its bottom corners and bottom middle")
+    func fullCanvasLayer() {
+        // The image fitted in the canvas with the tool bar over its lower edge.
+        let quad = [CGPoint(x: 40, y: 20), CGPoint(x: 960, y: 20),
+                    CGPoint(x: 960, y: 610), CGPoint(x: 40, y: 610)]
+        let keepOut = TransformBar.handleKeepOut(quad: quad, knob: CGPoint(x: 500, y: 2), space: nil)
+        // Eight squares and the knob.
+        #expect(keepOut.count == 9)
+        for anchor in stride(from: CGFloat(120), through: 900, by: 60) {
+            let frame = TransformBar.popoverFrame(anchorX: anchor, size: Self.popover,
+                                                  canvas: Self.canvas, floor: Self.floor, keepOut: keepOut)
+            for box in keepOut { #expect(!frame.intersects(box), "anchor \(anchor) covers \(box)") }
+        }
     }
 
-    @Test("Never over the tool bar and never off the top, even for a layer filling the canvas")
-    func hugeLayer() {
-        let box = CGRect(x: -100, y: -100, width: 1200, height: 900)
-        let frame = TransformBar.frame(around: box, bar: Self.bar, canvas: Self.canvas,
-                                       floor: Self.floor, side: .below)
-        #expect(frame.minY >= 12)
-        #expect(frame.maxY <= Self.floor)
+    @Test("The knob's 3D arcs and the depth arrow are kept clear as well as the squares")
+    func spaceHandlesKeptClear() {
+        let quad = [CGPoint(x: 300, y: 300), CGPoint(x: 700, y: 300),
+                    CGPoint(x: 700, y: 600), CGPoint(x: 300, y: 600)]
+        let space = SpaceHandles(topMid: CGPoint(x: 500, y: 300), middle: CGPoint(x: 500, y: 450),
+                                 pivot: CGPoint(x: 500, y: 450))
+        let keepOut = TransformBar.handleKeepOut(quad: quad, knob: nil, space: space)
+        #expect(keepOut.count == 8 + 4)
+        let tip = space.tipArc.points().first ?? .zero
+        #expect(keepOut.contains { $0.contains(tip) })
+        #expect(keepOut.contains { $0.contains(space.depthArrow.head) })
+        #expect(keepOut.contains { $0.contains(space.knob) })
     }
 
     // MARK: Reset

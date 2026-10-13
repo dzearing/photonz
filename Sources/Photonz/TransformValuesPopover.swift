@@ -2,59 +2,84 @@ import AppKit
 import PhotonzCore
 import SwiftUI
 
-/// The transform bar: one small Liquid Glass bar of label and value fields,
-/// with a Reset, beside the layer in hand (Next, `next-transform-bar`;
-/// `pages/video-animate.html`, `.va-bar`; the placement contract's "Named
-/// exception: the value overlay").
+/// The picked layer's transform values: a popover rising out of the tool
+/// bar's Info button, one row per value, name left and number right, with
+/// Reset at the foot (Next, `next-transform-bar`; the placement contract's
+/// "Named exception: the transform values").
 ///
-/// Canvas furniture, like the zoom control: it exists only while a transform
-/// is in hand, never takes the keyboard unless a field is clicked, and sits by
-/// `TransformBar.frame`'s one rule, under the object, above it while a bottom
-/// handle is held, inside the canvas and clear of the tool bar.
+/// The user, 2026-10-12, of the bar that used to ride beside the layer: "why
+/// is this weird toolbar 1. look different then the pill shaped one
+/// (different material, different border), 2, why is it covering up the most
+/// important aspect of the photo (the transform grippers?". So it wears the
+/// tool bar's own glass and corner (`ToolBarSpacing.cornerRadius`, the same
+/// `.glassEffect(.regular)` with no stroke the bar has), opens only when
+/// asked, and slides sideways off any handle, the knob or its 3D arcs
+/// (`TransformBar.popoverFrame`).
 ///
 /// Its own view, read on its own, so a drag that moves its numbers re-runs
 /// this body and nothing else of the editor's.
-struct TransformValueBar: View {
+struct TransformValuesPopover: View {
     @Environment(EditorState.self) private var editorState
+
+    /// The Info button's tip, and what a walk presses it by.
+    static let infoHelp = "Transform Values (F8)"
+    static let infoControl = "Info"
+    /// The popover's width: the longest name, a number and its unit.
+    static let width: CGFloat = 176
 
     var body: some View {
         GeometryReader { proxy in
-            if editorState.showsTransformBar, let hold = editorState.transformBar,
-               let box = editorState.transformBarBox {
+            if editorState.showsTransformBar, let hold = editorState.transformBar {
                 let floor = floor(in: proxy.size)
+                let anchorX = anchorX(in: proxy)
+                let keepOut = editorState.transformValuesKeepOut
                 // Placed by its own size in the same pass it is laid out in,
                 // so it lands where it belongs on the very first frame rather
                 // than being measured and moved a frame later.
-                let place = { (bar: ViewDimensions) in
-                    TransformBar.frame(around: box, bar: CGSize(width: bar.width, height: bar.height),
-                                       canvas: proxy.size, floor: floor, side: hold.side)
+                let place = { (popover: ViewDimensions) in
+                    TransformBar.popoverFrame(anchorX: anchorX,
+                                              size: CGSize(width: popover.width, height: popover.height),
+                                              canvas: proxy.size, floor: floor, keepOut: keepOut)
                 }
-                bar(hold)
+                popover(hold)
                     .fixedSize()
-                    .modifier(TransformBarMetering(canvas: proxy.size, floor: floor, box: box,
-                                                   side: hold.side))
+                    .modifier(TransformBarMetering(canvas: proxy.size, floor: floor,
+                                                   anchorX: anchorX, keepOut: keepOut))
                     .alignmentGuide(.leading) { -place($0).minX }
                     .alignmentGuide(.top) { -place($0).minY }
                     .frame(width: proxy.size.width, height: proxy.size.height, alignment: .topLeading)
-                    .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 3)),
+                    .transition(.asymmetric(insertion: .opacity.combined(with: .offset(y: 4)),
                                             removal: .identity))
             }
         }
-        // It arrives with the mock's short fade (`va-in`, 0.14s) and leaves at
-        // once, whatever animation the change that took it down was made in: a
-        // tool picked inside a spring kept the bar up for the spring's length.
+        // It rises with a short fade and leaves at once, whatever animation
+        // the change that closed it was made in: a tool picked inside a spring
+        // kept it up for the spring's length.
         .transaction(value: editorState.showsTransformBar) { transaction in
             transaction.animation = editorState.showsTransformBar ? .easeOut(duration: 0.14) : nil
         }
-        // A menu opening anywhere is another operation (UX-PATTERNS, "the value
-        // overlay"): the bar goes the moment one starts tracking.
+        // A menu opening anywhere is another operation: the popover closes the
+        // moment one starts tracking. (F8 and Layer, Show Transform Values
+        // still open it: the row's action runs after the menu has closed it.)
         .onReceive(NotificationCenter.default.publisher(for: NSMenu.didBeginTrackingNotification)) { _ in
             editorState.dropTransformBar()
         }
     }
 
-    /// The lowest the bar may come: clear of the tool bar and the tool's own
-    /// settings above it.
+    /// The middle of the Info button across the canvas, or, on a bar drawn
+    /// before the button has reported where it is, the bar's right end.
+    private func anchorX(in proxy: GeometryProxy) -> CGFloat {
+        if let anchor = editorState.transformInfoAnchor {
+            return anchor.midX - proxy.frame(in: .global).minX
+        }
+        let bar = EditorChromeLayout.toolBarFrame(canvasSize: proxy.size,
+                                                  toolBarWidth: editorState.toolBarWidth,
+                                                  bar: Experiments.shared.toolBar)
+        return bar.maxX - Experiments.shared.toolBar.endPadding - EditorChromeLayout.toolBarControlSize / 2
+    }
+
+    /// The lowest the popover may come: clear of the tool bar and the tool's
+    /// own settings above it.
     private func floor(in canvas: CGSize) -> CGFloat {
         let spacing = Experiments.shared.toolBar
         var top = EditorChromeLayout.toolBarFrame(canvasSize: canvas,
@@ -65,12 +90,13 @@ struct TransformValueBar: View {
             height: editorState.toolSettingsSize.height, bar: spacing) {
             top = min(top, capsule.minY)
         }
-        return top - 8
+        return top
     }
 
-    private func bar(_ hold: TransformBarHold) -> some View {
+    private func popover(_ hold: TransformBarHold) -> some View {
         let fields = editorState.transformBarFields
-        return HStack(spacing: 1) {
+        let corner = Experiments.shared.toolBar.cornerRadius
+        return VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(fields.enumerated()), id: \.element) { index, field in
                 if index > 0, Self.startsGroup(field) { separator }
                 TransformBarField(field: field, isLive: hold.live.contains(field))
@@ -82,36 +108,40 @@ struct TransformValueBar: View {
                 .help("Reset size, turn and tilt. Position stays.")
                 .playtestControl("Reset", detail: "Transform values")
         }
-        .padding(4)
-        .glassEffect(.regular, in: .rect(cornerRadius: 12))
+        .padding(10)
+        .frame(width: Self.width)
+        // The tool bar's own glass and corner, and like the bar no stroke:
+        // the popover reads as part of the bar it rose out of.
+        .glassEffect(.regular, in: .rect(cornerRadius: corner))
+        .contentShape(.rect(cornerRadius: corner))
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Transform values")
         .playtestField("Transform values")
     }
 
-    /// Where the mock draws a hairline: before the size, the angle, the space
-    /// values and Reset.
+    /// Where a hairline goes: before the angle, the space values and Reset.
     private static func startsGroup(_ field: TransformBar.Field) -> Bool {
-        field == .width || field == .angle || field == .tiltX
+        field == .angle || field == .tiltX
     }
 
     private var separator: some View {
         Rectangle()
             .fill(.separator)
-            .frame(width: 1, height: 16)
-            .padding(.horizontal, 3)
+            .frame(height: 1)
+            .padding(.horizontal, 6)
+            .padding(.vertical, 3)
     }
 }
 
-/// One value on the bar: its key diamond once the property animates, its
-/// label, its number and its unit.
+/// One row of the popover: its key diamond once the property animates, its
+/// name on the left, its number and unit on the right.
 private struct TransformBarField: View {
     @Environment(EditorState.self) private var editorState
     let field: TransformBar.Field
     let isLive: Bool
 
-    /// The name a walk and a screen reader know this field by. Prefixed, so
-    /// it never answers for the panel's own X or W.
+    /// The name a walk and a screen reader know this row by. Prefixed, so it
+    /// never answers for the panel's own X or W.
     private var name: String { "Transform \(field.label)" }
 
     var body: some View {
@@ -123,31 +153,32 @@ private struct TransformBarField: View {
                     showing: showing,
                     label: name,
                     identity: editorState.transformBar?.layerIDs,
-                    leading: field == .angle ? "\u{2220}" : field.label,
+                    leading: field.label,
                     suffix: field.unit,
-                    width: .fixed(field.isSpace ? 44 : 40),
-                    help: field == .angle ? "Rotation" : nil,
+                    width: .flexible(least: 56),
                     playtest: (name, "Transform values"),
                     stepEach: { direction, coarse in
                         editorState.stepTransformBarValue(field, direction: direction, coarse: coarse)
                     },
                     spell: { SpaceRowText.text(Double($0)) },
-                    look: .bar,
+                    look: .row,
                     sums: true,
                     isLive: isLive,
                     accessory: key == .dormant ? nil : AnyView(TransformBarDiamond(state: key)),
+                    escape: { _ = editorState.escapeTransformBar() },
                     land: { value in editorState.setTransformBarValue(field, value) })
             } else {
                 // A number the picked layers work out for themselves (a box a
                 // stack places, a locked layer): read, never typed.
                 HStack(spacing: 4) {
-                    Text(field == .angle ? "\u{2220}" : field.label)
+                    Text(field.label)
                         .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.secondary)
+                    Spacer(minLength: 12)
                     Text(showing.text)
                         .font(.system(size: 11.5, weight: .medium, design: .monospaced))
                         .foregroundStyle(.secondary)
-                        .frame(width: 40, alignment: .trailing)
+                        .frame(width: 56, alignment: .trailing)
                 }
                 .padding(.horizontal, 6)
                 .frame(height: VideoKit.Metrics.controlSmall)
@@ -174,7 +205,7 @@ private struct TransformBarField: View {
     }
 }
 
-/// The mark in front of a field whose property animates: filled on a key,
+/// The mark in front of a row whose property animates: filled on a key,
 /// hollow between keys (`.va-kd`).
 private struct TransformBarDiamond: View {
     let state: KeyDiamond
@@ -195,7 +226,7 @@ private struct TransformBarDiamond: View {
     }
 }
 
-/// Reset: a text button on a soft plate (`.va-tb`).
+/// Reset: a text button on a soft plate the popover's width.
 private struct TransformBarButtonStyle: ButtonStyle {
     @Environment(\.isEnabled) private var isEnabled
 
@@ -204,6 +235,7 @@ private struct TransformBarButtonStyle: ButtonStyle {
             .font(.system(size: 11, weight: .semibold))
             .foregroundStyle(isEnabled ? AnyShapeStyle(.primary) : AnyShapeStyle(.secondary))
             .padding(.horizontal, 9)
+            .frame(maxWidth: .infinity)
             .frame(height: VideoKit.Metrics.controlSmall)
             .background(RoundedRectangle(cornerRadius: 7)
                 .fill(.primary.opacity(configuration.isPressed ? 0.16 : 0.08)))
@@ -211,14 +243,14 @@ private struct TransformBarButtonStyle: ButtonStyle {
     }
 }
 
-/// Tells the probe when the bar came and went and where it sat, so a walk can
-/// hold it to one frame and to the canvas (`TransformBarMeter`). Nothing at
-/// all in the shipping app.
+/// Tells the probe when the popover came and went and where it sat, so a walk
+/// can hold it to one frame, to the canvas and off every handle
+/// (`TransformBarMeter`). Nothing at all in the shipping app.
 private struct TransformBarMetering: ViewModifier {
     let canvas: CGSize
     let floor: CGFloat
-    let box: CGRect
-    let side: TransformBar.Side
+    let anchorX: CGFloat
+    let keepOut: [CGRect]
 
     func body(content: Content) -> some View {
         #if PHOTONZ_PLAYTEST
@@ -226,7 +258,8 @@ private struct TransformBarMetering: ViewModifier {
             .onAppear { TransformBarMeter.shared.drawn(true) }
             .onDisappear { TransformBarMeter.shared.drawn(false) }
             .onGeometryChange(for: CGSize.self) { $0.size } action: { TransformBarMeter.shared.size = $0 }
-            .onChange(of: TransformBarMeter.Place(canvas: canvas, floor: floor, box: box, side: side),
+            .onChange(of: TransformBarMeter.Place(canvas: canvas, floor: floor, anchorX: anchorX,
+                                                  keepOut: keepOut),
                       initial: true) { _, place in
                 TransformBarMeter.shared.place = place
             }

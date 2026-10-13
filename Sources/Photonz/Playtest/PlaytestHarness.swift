@@ -2663,10 +2663,10 @@ private final class Run {
         case .expectSpaceHandles(let arcs, let depth):
             note(number, step.name, try await checkSpaceHandles(arcs: arcs, depth: depth), state: describe())
 
-        case .expectTransformBar(let present, let withinFrames, let side, let fields, let live):
+        case .expectTransformBar(let present, let withinFrames, let fields, let live):
             note(number, step.name,
                  try await patiently {
-                     try self.checkTransformBar(present: present, withinFrames: withinFrames, side: side,
+                     try self.checkTransformBar(present: present, withinFrames: withinFrames,
                                                 fields: fields, live: live)
                  },
                  state: describe())
@@ -10768,10 +10768,11 @@ private final class Run {
 
     /// How round a path's corners are drawn, asked of the document
     /// (`PlaytestStep.expectCorners`).
-    /// The transform bar, as the editor holds it and as the probe saw it laid
-    /// out (`TransformBarMeter`): up or gone, how long that took from being
-    /// asked, and while it is up, where it sits and what it shows.
-    private func checkTransformBar(present: Bool, withinFrames: Int, side: String?,
+    /// The transform values popover, as the editor holds it and as the probe
+    /// saw it laid out (`TransformBarMeter`): open or closed, how long that
+    /// took from being asked, and while it is open, that it sits inside the
+    /// canvas, over the tool bar, off every handle, and what it lists.
+    private func checkTransformBar(present: Bool, withinFrames: Int,
                                    fields: [String], live: [String]?) throws -> String {
         let editor = try requireEditor()
         let meter = TransformBarMeter.shared
@@ -10780,46 +10781,47 @@ private final class Run {
         } ?? "no time taken yet"
         guard editor.showsTransformBar == present, meter.isDrawn == present else {
             throw Failure(description: present
-                ? "the transform bar is not up (the editor \(editor.showsTransformBar ? "holds" : "does not hold") "
-                    + "one, and \(meter.isDrawn ? "one is" : "none is") in the window)"
-                : "the transform bar is still up (the editor \(editor.showsTransformBar ? "holds" : "does not hold") "
-                    + "one, and \(meter.isDrawn ? "one is" : "none is") in the window)")
+                ? "the transform values are not open (the editor \(editor.showsTransformBar ? "holds" : "does not hold") "
+                    + "them, and \(meter.isDrawn ? "a popover is" : "none is") in the window)"
+                : "the transform values are still open (the editor \(editor.showsTransformBar ? "holds" : "does not hold") "
+                    + "them, and \(meter.isDrawn ? "a popover is" : "none is") in the window)")
         }
         if let frames = meter.lastFrames, frames > withinFrames {
-            throw Failure(description: "the transform bar took \(took) to \(present ? "come" : "go") "
+            throw Failure(description: "the transform values took \(took) to \(present ? "open" : "close") "
                 + "after the editor asked: more than the \(withinFrames) refresh(es) claimed, so the "
-                + "screen showed a frame \(present ? "without it" : "with it still up")")
+                + "screen showed a frame \(present ? "without them" : "with them still up")")
         }
-        guard present else { return "no transform bar, as claimed; it went in \(took)" }
+        guard present else { return "no transform values open, as claimed; they closed in \(took)" }
         guard let frame = meter.frame, let place = meter.place else {
-            throw Failure(description: "the transform bar is up but has not been laid out yet")
+            throw Failure(description: "the transform values are open but have not been laid out yet")
         }
         let margin = TransformBar.margin - 0.5
         guard frame.minX >= margin, frame.maxX <= place.canvas.width - margin,
               frame.minY >= margin, frame.maxY <= place.floor + 0.5 else {
-            throw Failure(description: "the transform bar sits at \(short(frame.origin)), "
+            throw Failure(description: "the transform values sit at \(short(frame.origin)), "
                 + "\(Int(frame.width))x\(Int(frame.height)), outside the canvas less its 12pt margin "
-                + "or below the top of the tool bar (\(Int(place.floor)))")
+                + "or down over the tool bar (\(Int(place.floor)))")
         }
-        let onSide = frame.minY >= place.box.maxY ? "below" : frame.maxY <= place.box.minY ? "above" : "over"
-        if let side, side != onSide {
-            throw Failure(description: "the transform bar sits \(onSide) the layer, not \(side)")
+        if let covered = place.keepOut.first(where: { $0.intersects(frame) }) {
+            throw Failure(description: "the transform values at \(short(frame.origin)), "
+                + "\(Int(frame.width))x\(Int(frame.height)), cover a handle at \(short(covered.origin))")
         }
         let shown = editor.transformBarFields.map(\.label)
         if !fields.isEmpty, shown != fields {
-            throw Failure(description: "the transform bar shows \(shown.joined(separator: ", ")), "
+            throw Failure(description: "the transform values list \(shown.joined(separator: ", ")), "
                 + "not \(fields.joined(separator: ", "))")
         }
         let lit = editor.transformBarFields.filter { editor.transformBar?.live.contains($0) ?? false }.map(\.label)
         if let live, Set(lit) != Set(live) {
-            throw Failure(description: "the transform bar outlines "
+            throw Failure(description: "the transform values outline "
                 + (lit.isEmpty ? "nothing" : lit.joined(separator: ", "))
                 + ", not " + (live.isEmpty ? "nothing" : live.joined(separator: ", ")))
         }
-        return "the transform bar is up \(onSide) the layer at \(short(frame.origin)), "
-            + "inside the canvas and clear of the tool bar, showing \(shown.joined(separator: ", "))"
+        return "the transform values are open at \(short(frame.origin)), "
+            + "\(Int(frame.width))x\(Int(frame.height)), over the tool bar, inside the canvas and "
+            + "off all \(place.keepOut.count) handle spots, listing \(shown.joined(separator: ", "))"
             + (lit.isEmpty ? "" : ", outlining \(lit.joined(separator: ", "))")
-            + "; it came in \(took)"
+            + "; they came in \(took)"
     }
 
     /// Which 3D handles the picked layer wears with the pointer off on a bare

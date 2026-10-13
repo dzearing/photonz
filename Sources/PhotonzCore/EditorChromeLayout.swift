@@ -390,6 +390,9 @@ public enum EditorChromeLayout {
 
         /// One tool's share of the bar: its 28pt control and the gap after it.
         public var slotWidth: CGFloat { toolBarControlSize + toolGap }
+        /// The bar's corner: a capsule's, half its height. The transform
+        /// values popover rising out of it wears the same one.
+        public var cornerRadius: CGFloat { height / 2 }
         /// The widest slot: the selection group's button runs 54pt with its
         /// mode glyph and chooser.
         public var widestSlotWidth: CGFloat { 54 + toolGap }
@@ -437,14 +440,21 @@ public enum EditorChromeLayout {
     /// fails on a new case until the contract says it belongs here.
     public enum ToolBarSection: String, Sendable, CaseIterable {
         case tools, color
+        /// The Info button that opens the picked layer's transform values
+        /// (the placement contract's one named section that is not a tool).
+        case info
     }
 
     /// The sections on the bar right now, left to right.
     ///
     /// The tools are always there. The colour pair is there only for a tool
-    /// that paints (`Tool.colorControl`).
-    public static func toolBarSections(showsColor: Bool) -> [ToolBarSection] {
-        showsColor ? [.tools, .color] : [.tools]
+    /// that paints (`Tool.colorControl`), and Info only while something is
+    /// picked that has transform values, always last.
+    public static func toolBarSections(showsColor: Bool, showsInfo: Bool) -> [ToolBarSection] {
+        var sections: [ToolBarSection] = [.tools]
+        if showsColor { sections.append(.color) }
+        if showsInfo { sections.append(.info) }
+        return sections
     }
 
     /// Whether a hairline goes before the section at `index`: between every

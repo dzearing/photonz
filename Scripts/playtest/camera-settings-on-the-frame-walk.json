@@ -25,6 +25,8 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "spaceHandle", "handle": "swing", "by": [-50, 0] },
+    { "do": "press", "control": "Info" },
+    { "do": "wait", "seconds": 0.4 },
     { "do": "expect", "field": "Transform Tilt Y", "reads": "-30" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "menus", "stage": "1-view-menu", "menu": "View", "choose": "View > Show Camera Settings" },

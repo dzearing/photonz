@@ -64,9 +64,9 @@ public enum FeatureCatalog {
     /// and View menu rows for them (`SpaceEditing.swift`, `video-depth.html`).
     public static let turnInDepthFlag = "next-turn-in-depth"
 
-    /// A small glass bar of transform values beside a layer while it is moved,
-    /// sized, turned or tilted, with a Reset; the panel's 3D section gives its
-    /// rows to it (`TransformBar.swift`, `video-animate.html`).
+    /// The picked layer's transform values in a popover the tool bar's Info
+    /// button opens, with a Reset; the panel's 3D section gives its rows to it
+    /// (`TransformBar.swift`, `TransformValuesPopover`).
     public static let transformBarFlag = "next-transform-bar"
 
     public static let grabCueFlag = "next-grab-cue"
@@ -456,8 +456,8 @@ public enum FeatureCatalog {
             Definition(
                 flag: FeatureFlag(
                     name: transformBarFlag,
-                    title: "Type transform values beside the object",
-                    description: "Moving, sizing, turning or tilting a layer brings up a small bar under it with its position, size, angle and 3D values to type into, and a Reset. Off means the panel's 3D section holds them.",
+                    title: "Type transform values from the tool bar",
+                    description: "An Info button on the tool bar, while something is picked, opens its position, size, rotation and 3D values to type into, and a Reset, without covering the picture. Off means the panel's 3D section holds them.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

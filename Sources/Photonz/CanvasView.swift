@@ -273,10 +273,12 @@ struct CanvasView: NSViewRepresentable {
     let onCornerRadiiCommit: (UUID, CornerRadii) -> Void
     var onSpaceTurnPreview: (UUID, LayerTurn3D) -> Void = { _, _ in }
     var onSpaceTurnCommit: (UUID, LayerTurn3D) -> Void = { _, _ in }
-    /// A transform starting on the canvas, or nil when the hand lets go; and
-    /// Escape asking the transform bar to go (`EditorState+TransformBar`).
+    /// A transform starting on the canvas, or nil when the hand lets go;
+    /// Escape asking the transform values to close; and whether they are open
+    /// (`EditorState+TransformBar`).
     var onTransformGesture: (TransformBar.Gesture?) -> Void = { _ in }
     var onTransformBarEscape: () -> Bool = { false }
+    var isTransformValuesOpen: () -> Bool = { false }
     /// A selected arrow's caption pill dragged to a spot: live, drop, Esc.
     let onCaptionPlacePreview: (UUID, CGPoint) -> Void
     let onCaptionPlaceCommit: (UUID, CGPoint) -> Void
@@ -513,6 +515,7 @@ struct CanvasView: NSViewRepresentable {
         view.onSpaceTurnCommit = onSpaceTurnCommit
         view.onTransformGesture = onTransformGesture
         view.onTransformBarEscape = onTransformBarEscape
+        view.isTransformValuesOpen = isTransformValuesOpen
         view.onCaptionPlacePreview = onCaptionPlacePreview
         view.onCaptionPlaceCommit = onCaptionPlaceCommit
         view.onCaptionPlaceCancel = onCaptionPlaceCancel
@@ -678,21 +681,22 @@ final class CanvasNSView: NSView {
     /// hand is down, then once when it lets go.
     var onSpaceTurnPreview: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
     var onSpaceTurnCommit: ((UUID, LayerTurn3D) -> Void) = { _, _ in }
-    /// The transform bar: a transform starting (nil when the hand lets go),
-    /// and Escape asking it to go.
+    /// The transform values: a transform starting (nil when the hand lets
+    /// go), Escape asking them to close, and whether they are open.
     var onTransformGesture: ((TransformBar.Gesture?) -> Void) = { _ in }
     var onTransformBarEscape: (() -> Bool) = { false }
-    /// Whether a transform the bar was told about is still in hand.
+    var isTransformValuesOpen: (() -> Bool) = { false }
+    /// Whether a transform the values were told about is still in hand.
     var transformGestureLive = false
 
-    /// Tells the transform bar a transform started on the picked layer.
+    /// Tells the transform values a transform started on the picked layer.
     func announceTransform(_ gesture: TransformBar.Gesture) {
         transformGestureLive = true
         onTransformGesture(gesture)
     }
 
-    /// An arrow key moved the picked layers: the bar comes up, with nothing
-    /// in hand to outline.
+    /// An arrow key moved the picked layers: open transform values outline
+    /// X and Y, then let go at once.
     func announceNudge() {
         onTransformGesture(.nudge)
         onTransformGesture(nil)

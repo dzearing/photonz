@@ -103,11 +103,14 @@ struct PanelNumberField: View {
     /// shows, `*2`, `1920/2`. The transform bar's boxes do; the panel's read a
     /// leading plus as a plain number, as they always have.
     var sums = false
-    /// Whether the hand is changing this value right now, which the bar look
+    /// Whether the hand is changing this value right now, which the row look
     /// outlines (`TransformBar.liveFields`).
     var isLive = false
-    /// A mark drawn in front of the name in the bar look: the key diamond.
+    /// A mark drawn in front of the name in the row look: the key diamond.
     var accessory: AnyView?
+    /// What Escape does after putting the number back, for a box whose
+    /// Escape also closes what it sits in: the transform values popover.
+    var escape: (() -> Void)?
     /// Lands the number, and hands back what the thing really became.
     ///
     /// A layer can refuse part of what was typed — a text box will not go
@@ -128,11 +131,11 @@ struct PanelNumberField: View {
         /// number, and the number flush right. A click anywhere on the well,
         /// the name included, puts the keyboard in the number.
         case well
-        /// The transform bar's field (`video-animate.html`, `.va-f`): a short
-        /// label and a number on the bar's glass with no box round it, a soft
-        /// plate under the pointer, an outline while the hand is changing it
-        /// and the focus ring while you type.
-        case bar
+        /// A row of the transform values popover: the name on the left and
+        /// the number on the right, on the popover's glass with no box round
+        /// it, a soft plate under the pointer, an outline while the hand is
+        /// changing it and the focus ring while you type.
+        case row
     }
 
     /// The list at the end of a `well`: what it is called, what it says it
@@ -184,7 +187,7 @@ struct PanelNumberField: View {
         switch look {
         case .field: fieldBody
         case .well: wellBody
-        case .bar: barBody
+        case .row: rowBody
         }
     }
 
@@ -232,18 +235,19 @@ struct PanelNumberField: View {
         .modifier(OptionalPlaytestControl(playtest: playtest))
     }
 
-    /// The bar's field: on glass, so its words are the system's label colours,
-    /// which read over any picture in light and dark.
-    private var barBody: some View {
+    /// The popover's row: on glass, so its words are the system's label
+    /// colours, which read over any picture in light and dark.
+    private var rowBody: some View {
         HStack(spacing: 4) {
             if let accessory { accessory }
-            // The angle mark is a glyph, drawn at the mock's 14pt (`.va-ang`).
             Text(leading ?? label)
-                .font(.system(size: leading == "\u{2220}" ? 14 : 11, weight: .semibold))
+                .font(.system(size: 11, weight: .semibold))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
                 .fixedSize()
                 .accessibilityHidden(true)
+            // The box fills the rest of the row, number flush right, so a
+            // click anywhere right of the name lands in the box itself.
             box
             if let suffix {
                 Text(suffix)
@@ -271,8 +275,8 @@ struct PanelNumberField: View {
         .modifier(OptionalPlaytestControl(playtest: playtest))
     }
 
-    /// Nothing at rest, so the glass reads as one bar; a plate under the
-    /// pointer and while typing (`.va-f:hover`, `.va-f:focus-within`).
+    /// Nothing at rest, so the glass reads as one surface; a plate under the
+    /// pointer and while typing.
     private var barPlate: AnyShapeStyle {
         if isFocused { return AnyShapeStyle(.background.opacity(0.7)) }
         if isHovering { return AnyShapeStyle(.primary.opacity(0.08)) }
@@ -324,7 +328,10 @@ struct PanelNumberField: View {
             // it can hand the keyboard back as well.
             .onSubmit { landDraft() }
             .numberFieldKeys(commit: { finish { landDraft() } },
-                             revert: { finish { offer(showing.text) } },
+                             revert: {
+                                 finish { offer(showing.text) }
+                                 escape?()
+                             },
                              step: { direction, coarse in step(direction, coarse) })
             .onAppear { offer(showing.text) }
             // Only while nobody is typing. A number that changes underneath a
@@ -478,7 +485,7 @@ private struct BoxLook: ViewModifier {
         case .well:
             content.textFieldStyle(.plain)
                 .font(.system(size: 11, weight: .medium))
-        case .bar:
+        case .row:
             content.textFieldStyle(.plain)
                 .font(.system(size: 11.5, weight: .medium, design: .monospaced))
         }

@@ -2196,11 +2196,16 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("p", modifiers: [.command, .option])
                     .disabled(!(editor?.canOpenExactPlacement ?? false))
             }
-            // The transform bar beside the picked layer, without a drag
-            // (`video-animate.html`, "Layer ▸ Show Transform Values").
+            // The picked layer's transform values, in the popover the tool
+            // bar's Info button opens (`TransformValuesPopover`). F8 is
+            // Photoshop's key for its Info panel. The row opens and closes it:
+            // chosen from the menu it is always opening, because the menu
+            // starting to track has already closed it.
             if Experiments.shared.transformBarEnabled {
                 if !Experiments.shared.geometryFieldsEnabled { Divider() }
-                Button("Show Transform Values") { editor?.showTransformValues() }
+                Button("Show Transform Values") { editor?.toggleTransformValues() }
+                    .keyboardShortcut(KeyEquivalent(Character(UnicodeScalar(NSF8FunctionKey) ?? " ")),
+                                      modifiers: [])
                     .disabled(!(editor?.canShowTransformValues ?? false))
             }
             Divider()

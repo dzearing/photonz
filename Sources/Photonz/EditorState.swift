@@ -251,7 +251,7 @@ final class EditorState {
     /// They used to be a section sitting open in the panel for every layer;
     /// now they are asked for, from the Layer menu or the layer's own row.
     var isExactPlacementPresented = false
-    /// The transform bar beside the layer in hand, while it is up (Next,
+    /// The transform values popover, while it is open (Next,
     /// `next-transform-bar`, `EditorState+TransformBar.swift`).
     var transformBar: TransformBarHold? {
         didSet {
@@ -260,6 +260,10 @@ final class EditorState {
             #endif
         }
     }
+    /// Where the tool bar's Info button is, in window points, so the popover
+    /// it opens rises out of it (`TransformValuesPopover`). Nil while the
+    /// button is not on the bar.
+    var transformInfoAnchor: CGRect?
     /// The layer Save as Preset… is naming, while its sheet is up
     /// (`EditorState+TitlePresets`).
     var titlePresetSaving: UUID?
@@ -924,7 +928,7 @@ final class EditorState {
             if oldValue != selectedLayerID {
                 if !multiSelectedLayerIDs.isEmpty { multiSelectedLayerIDs = [] }
                 // Picking something else is another operation: the transform
-                // bar was about the layer that was in hand.
+                // values were about the layer that was in hand.
                 if transformBar != nil { transformBar = nil }
                 // A piece belongs to the clip it was picked on. Picking
                 // something else lets it go, so ⌫ can never throw away a piece
@@ -4010,7 +4014,7 @@ final class EditorState {
         // The pivot is put down with Select in hand; another tool's press
         // means that tool's gesture, not this.
         if tool != .select, motionPivotPlacement != nil { endPlacingMotionPivot() }
-        // Another tool is another operation: the transform bar goes.
+        // Another tool is another operation: the transform values close.
         dropTransformBar()
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise

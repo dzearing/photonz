@@ -1059,7 +1059,8 @@ struct EditorView: View {
     /// 10.7 note on `toolsBar` is why nothing here animates on a selection.
     private var oneGlassBar: some View {
         let sections = EditorChromeLayout.toolBarSections(
-            showsColor: editorState.activeTool.colorControl != .hidden)
+            showsColor: editorState.activeTool.colorControl != .hidden,
+            showsInfo: editorState.canShowTransformValues)
         return HStack(spacing: barSpacing.sectionGap) {
             ForEach(Array(sections.enumerated()), id: \.element) { index, section in
                 if EditorChromeLayout.toolBarHasHairline(before: index) {
@@ -1081,7 +1082,32 @@ struct EditorView: View {
         switch section {
         case .tools: toolsSection
         case .color: colorBar
+        case .info: infoButton
         }
+    }
+
+    /// Info, at the bar's right end while something is picked: opens the
+    /// picked layer's transform values in a popover rising out of it, never
+    /// over the picture (the user, 2026-10-12: "Maybe it just becomes an 'i'
+    /// icon that gets added to the existing toolbar, and you can click to
+    /// expand a popup with the transform values"; `TransformValuesPopover`).
+    /// Lit while the popover is open. It comes and goes with the pick without
+    /// a spring, for the 10.7 reason on `toolsBar`.
+    private var infoButton: some View {
+        let open = editorState.showsTransformBar
+        return Button { editorState.toggleTransformValues() } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 15, weight: .medium))
+        }
+        .buttonStyle(.tool(isActive: open))
+        .help(TransformValuesPopover.infoHelp)
+        .playtestControl(TransformValuesPopover.infoControl,
+                         detail: "Tool bar, transform values \(open ? "open" : "closed")")
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            if editorState.transformInfoAnchor != frame { editorState.transformInfoAnchor = frame }
+        }
+        .onDisappear { editorState.transformInfoAnchor = nil }
+        .toolBarGroup("Info", padding: 12, isSection: isOneGlassBar)
     }
 
     /// The tools as the bar has room for them: the families bar folded to
@@ -1113,6 +1139,7 @@ struct EditorView: View {
             // picture gets narrow.
             gridChip
             zoomBar
+            if editorState.canShowTransformValues { infoButton }
         }
     }
 
