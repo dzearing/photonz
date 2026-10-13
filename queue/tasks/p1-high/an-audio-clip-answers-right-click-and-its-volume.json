@@ -4,12 +4,12 @@
   "goal": "Right-clicking anywhere on an audio clip opens its menu (sound commands, and the range and playhead behaviours already promised). On its volume line, the stretch between two level points can be clicked to pick it, dragged to bend it, and right-clicked to choose its shape (the shared curves: Linear, Ease In, Ease Out, Smooth, and the rest, plus Hold), so fades and dips can be shaped the way a person wants. Points pick on click and Backspace deletes them.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 80,
+  "seq": 1.7,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:36:54.404Z",
-  "updated": "2026-10-13T12:56:14.576Z",
+  "updated": "2026-10-13T14:09:47.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).\n\nFolded in 2026-10-13 from a-right-click-on-a-sound-s-level-line-opens-the (dropped as a duplicate). Reproduced 2026-10-12 by the runner on a-range-stays-on-top-when-you-pick-a-clip-and-it. Walk /tmp/rangerepro/line.json: sample recording, soundAddSample (Sample Music on Audio 2, 0-14s, probe window 1728x990), then {\"do\":\"rightClick\",\"at\":[935,924],\"space\":\"window\"} gave: right clicking \"the picture at (935, 924)\" raises no menu: nothing under that point offers one. y=924 is the level line; {\"rightClick\",\"at\":[1000,938]} on the same clip opens the 16-row clip menu. {\"rightClick\",\"on\":\"Sample Music clip\"} (the clip middle) also raises no menu. Likely the level-line overlay in ClipPiecesBar takes the hit without a .contextMenu.",
@@ -49,6 +49,14 @@
     {
       "t": "2026-10-13T12:56:14.575Z",
       "note": "triage 2026-10-13 design review: video-audio.md still documents the click-adds-a-point behaviour the user rejected on 2026-10-13"
+    },
+    {
+      "t": "2026-10-13T14:09:47.546Z",
+      "note": "USER 2026-10-13 (later, refines the earlier rule; supersedes it where they differ): \"I still can not adjust the volume line in an audio clip as i expect. I click on a dot on the line, it adds another dot. I don't want to add dots by default. I want to select things. I want to add dots by cmd clicking on the line. I want to hover over a selectable thing and have it brighten a bit. I want to select a dot or segment by clicking on a dot or a segment. if a segment is selected, I want to be able to choose a different easing model somehow\". Final rule for every animated line (sound volume line, key lanes, value graphs), one shared implementation: (1) a plain click NEVER adds a dot; (2) Command-click on the line adds a dot (double-click does nothing special); (3) hovering a dot or a segment brightens it a little (the shared HandleHover treatment), so the person sees what a click will take; (4) click a dot selects it, click a segment selects it, Shift adds, Backspace deletes selected dots; (5) a selected segment shows its easing and can change it: right-click the segment for the shared curve list (Linear, Ease In, Ease Out, Smooth, the rest, Hold, Draw a Curve), and the Info popover / panel shows the picked segment's Curve row; (6) selected things are drawn distinctly (white). The user is waiting on this: run these three before other work."
+    },
+    {
+      "t": "2026-10-13T14:09:47.763Z",
+      "note": "seq 80 -> 1.7"
     }
   ]
 }

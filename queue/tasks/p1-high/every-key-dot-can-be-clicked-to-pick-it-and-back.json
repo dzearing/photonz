@@ -4,12 +4,12 @@
   "goal": "Any dot that stands for a key, on a property lane in the timeline, on the clip's key line, in a value graph, or on the motion path drawn on the canvas, picks on a click (highlighted so the person can see it), and Backspace or Delete removes the picked keys. Today clicking the dots does not pick them, so a key cannot be removed that way.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 70,
+  "seq": 1.6,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:35:44.573Z",
-  "updated": "2026-10-13T12:55:23.276Z",
+  "updated": "2026-10-13T14:09:47.695Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"i click on any of these dots and cant select them. want to be able to select, hit backspace and have the point disappear\". No screenshot came through; from the conversation (3D keying, graphs, key overlays) 'these dots' are key dots, so the task covers every surface that draws them.\n\nSuspect from code reading, not confirmed: KeyLanesView.swift key glyph (:410-430) has .gesture(keyDrag(...)) BEFORE .onTapGesture; a DragGesture with minimumDistance 0 in the same file (:466) would take every press and the tap never fires. Check which drag keyDrag is and make tap and drag coexist (minimumDistance > 0 for the drag, or a single gesture that decides on release). Delete of keys: EditorCommands.swift:720-737 only when onTimeline && canDeletePickedKeys; EditorCanvasSurface.swift:179 deletes picked keys from the canvas when keySelection.layerID matches; canDeletePickedKeys at EditorState+KeyLanes.swift:207. Related queued: the graph editor task (the-value-graph-lets-you-add-points-pick-the-seg) and the key overlay task (clicking-a-key-opens-the-same-overlay-to-set-tha) build on picking working.",
@@ -43,6 +43,14 @@
     {
       "t": "2026-10-13T12:55:23.275Z",
       "note": "seq 15 -> 70"
+    },
+    {
+      "t": "2026-10-13T14:09:47.478Z",
+      "note": "USER 2026-10-13 (later, refines the earlier rule; supersedes it where they differ): \"I still can not adjust the volume line in an audio clip as i expect. I click on a dot on the line, it adds another dot. I don't want to add dots by default. I want to select things. I want to add dots by cmd clicking on the line. I want to hover over a selectable thing and have it brighten a bit. I want to select a dot or segment by clicking on a dot or a segment. if a segment is selected, I want to be able to choose a different easing model somehow\". Final rule for every animated line (sound volume line, key lanes, value graphs), one shared implementation: (1) a plain click NEVER adds a dot; (2) Command-click on the line adds a dot (double-click does nothing special); (3) hovering a dot or a segment brightens it a little (the shared HandleHover treatment), so the person sees what a click will take; (4) click a dot selects it, click a segment selects it, Shift adds, Backspace deletes selected dots; (5) a selected segment shows its easing and can change it: right-click the segment for the shared curve list (Linear, Ease In, Ease Out, Smooth, the rest, Hold, Draw a Curve), and the Info popover / panel shows the picked segment's Curve row; (6) selected things are drawn distinctly (white). The user is waiting on this: run these three before other work."
+    },
+    {
+      "t": "2026-10-13T14:09:47.694Z",
+      "note": "seq 70 -> 1.6"
     }
   ]
 }
