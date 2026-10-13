@@ -1,0 +1,36 @@
+{
+  "id": "gap-mode-measures-the-space-the-pointer-is-actua",
+  "title": "Gap mode measures the space the pointer is actually in, between the nearest distinct things around it",
+  "goal": "Hovering in empty space in Gap mode must measure that space: the distance between the nearest distinct things that face each other ACROSS the pointer. Hovering in the dark band between two lines of text measures from the bottom of the upper line to the top of the lower line, not some small gap beside a letter of the line below.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T13:58:24.868Z",
+  "updated": "2026-10-13T13:58:24.977Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"The gap tool often gets confused about what we're measuring. for example, I hover in between the text lines here and it is picking up some vertical measure seemingly related to the text below, even though I'm not hovering over the text. I'm hovering over the black area, and the closest 'distinct' edge is above and below, not to the sides. that's how gap should prioritize.\"\n\nFrom code reading (not run): CanvasMeasure.swift :623-635 calls ElementBounds.gap(at:in:drawn:) (PhotonzCore/ElementBounds.swift ~:691-709): 'the two facing edges of whatever sits on either side of it, across the tighter of the two axes ... When both axes read, the shorter span wins'. A short pair formed by glyph edges near the pointer beats the real line gap. Text lines are already recognised as elements in Size mode (done task a-line-of-text-counts-as-an-element-size-mode-re); reuse that line reading for Gap. Memory: the user's main use is UX redlining.",
+  "acceptance": [
+    "Reproduce first with the user's screenshot (Screenshot 2026-10-13 at 06.55.59: 'Screenshots' over 'recordings', pointer in the band between them, reading '6 px' near the 'r' below) and a specimen set: stacked text lines, stacked cards, side by side buttons, an icon beside a label, a row of chips, text over a divider. Record what Gap reads today at several pointer spots in each",
+    "A candidate pair of edges counts only if BOTH edges extend across the pointer's position on the other axis (the upper line's bottom runs over the pointer's x and the lower line's top runs over it too; a letter's side edge that does not cover the pointer's y on its own row is not a side), so edges off to the side of where the pointer is never win",
+    "Between valid axes, prefer the pair whose two sides are each a distinct element (a text line read as a whole line, a box, a card, a button) over edges inside an element (letter strokes, glyph counters); then the nearer pair; 'shorter span wins' only breaks remaining ties",
+    "Text lines are read as whole lines (their ink's top and bottom across the line), so line to line gaps read cap/ascender bottom to top as a spec would quote, not per glyph; the audit says which edge of a line is used (ink bottom including descenders, by default) and why",
+    "MEASURED on every specimen: the reading matches a hand measured value within 1 px at 1x and 2 px at 2x, for at least 5 pointer positions per specimen; no regression on the existing Gap walks",
+    "Hover result under 30 ms on a 3456x2234 capture",
+    "Unit tests on the specimens; a walk hovers between two text lines and checks the readout is the line gap and runs vertically across the pointer",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T13:58:24.870Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T13:58:24.976Z",
+      "note": "seq 3960 -> 3"
+    }
+  ]
+}
