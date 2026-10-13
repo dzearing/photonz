@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:53.964Z",
-  "updated": "2026-10-13T01:39:54.057Z",
+  "updated": "2026-10-13T01:52:44.879Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" Screenshot: a green rectangle picked with the Select tool while the right panel shows MEASURE TOOL (Mode Size, '[ and ] pick a smaller or larger', Snap Edges, Show All), then LAYERS 2, then LIBRARY (Media / Comps).\n\nCode: section choice and content in Sources/Photonz/InspectorPanel.swift (sectionContent ~:1403, MeasureToolInspector at :1426, Space3DInspector at :1526). Related: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?'): the user's answer here points the same way; resolve or fold that card with these words. Memory: one purpose per area (inspector = properties of the picked thing).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-13T01:39:54.056Z",
       "note": "seq 3960 -> 2"
+    },
+    {
+      "t": "2026-10-13T01:52:44.878Z",
+      "note": "User 2026-10-13, second example: 'the \"Masked by\" is confusing. what's this for when i select a caliper?' The Compositing rows (Key, Masked by; CompositingInspector.swift, shown 'if !selection.isEmpty' at :25) appear for every pick, including calipers and other measurements where they mean nothing. Add to this task's acceptance: Key and Masked by show only for layers where they apply (pictures, recordings, shapes, text, groups that can be masked), never for calipers, size boxes, guides or other redline annotations; the walk checks a picked caliper's panel has no Key or Masked by row."
     }
   ]
 }
