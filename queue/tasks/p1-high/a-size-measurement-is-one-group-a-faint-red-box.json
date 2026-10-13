@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:48:46.521Z",
-  "updated": "2026-10-13T12:55:22.970Z",
+  "updated": "2026-10-13T13:41:12.485Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i measure the size of a box, i'd like the box to have a semitransparent (10% opacity) red box outlining the space being measured. I'd like the size tool to be one layer group but can be expanded to modify the 3 parts.\"\n\nFrom code reading (not run): EditorState+Measure.swift addElementSize (:97-135) builds a width and a height MeasureContent (role .size, Size ink when measureRolesEnabled), plans readouts, and adds the two layers loose (perform { addLayer(width); addLayer(height) }), placed in time on video. No box, no group. Groups exist (GroupContent); the spec list names Width/Height from role .size (PhotonzCore/MeasureSpecList.swift:41). Memory: the user's main use is UX redlining.",
@@ -35,6 +35,39 @@
     {
       "t": "2026-10-13T12:55:22.969Z",
       "note": "seq 7 -> 20"
+    },
+    {
+      "t": "2026-10-13T12:58:34.417Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T13:40:18.889Z",
+      "note": "owns these walks: a-size-measurement-is-one-group-walk"
+    },
+    {
+      "t": "2026-10-13T13:40:54.182Z",
+      "note": "Adversarial review before building: a Photoshop user expects a measurement they can move as one and open to edit, which groups give. Risks found: the box could be read as an element by Size mode's own reader (excluded in LayerElements), readouts and foot snapping only looked at top-level calipers (now read every caliper in canvas space), box fill/opacity edits would have armed the rectangle tool (now remembered for the next Size box instead), and picking the group showed group Layout rows (Arrangement, Hug/Fixed) that mean nothing for a measurement (now hidden for a Size group and its parts)."
+    },
+    {
+      "t": "2026-10-13T13:40:54.244Z",
+      "note": "Built: PhotonzCore/MeasureSizeGroup.swift (builder, automatic name 'Size 274 × 62', keepSizeMeasureNamesInStep run in every perform), GroupContent.measuresSize (written only when true), MeasureStyles.sizeBoxColorPick/sizeBoxOpacity (box follows Size ink until picked), MeasureSpecList rows/spec lines for groups, LayerElements/MeasureSnapping/Contents/Placement selections. App: addElementSize builds the group when next-layer-groups is on (Current keeps loose calipers), Measurements row value/swatch, box memory routing. Harness: new expectSizeMeasure step (lock-safe, documented). Tests: MeasureSizeGroupTests (25)."
+    },
+    {
+      "t": "2026-10-13T13:40:54.302Z",
+      "note": "Verified: Scripts/test.sh 12914 tests passed. Walk a-size-measurement-is-one-group-walk green at Next defaults: one group of Box/Width/Height, box 10% in caliper ink at the measured rect, picked whole, Shift-Right moves all three, one undo step, Layers rows Size/Height/Width/Box, Box opacity to 25, next box starts at 25, Delete removes all three, spec list still Width + Height lines. Updated walks expecting loose calipers: dock-picked-first, measure-row-menu, number-keeps-clear, size-measures-a-drawn-shape; 38 Size-touching walks green."
+    },
+    {
+      "t": "2026-10-13T13:40:54.361Z",
+      "note": "Name format uses × (as the spec list header already does) rather than the x in the task's example. 'Size style in the Library' does not exist (the Library has no measure styles); met instead by remember-last-edit, the app's convention, and said in the audit's rough. Left rough (not filed, unverified): dragging the picked group's corner handle resizes it like any group, which likely stretches the calipers' placement rather than re-measuring; if the user reacts to that audit line it becomes a task."
+    },
+    {
+      "t": "2026-10-13T13:41:12.483Z",
+      "note": "Size mode commits one group 'Size 274 × 62' (Box at 10% in Size ink over the measured area + Width + Height): moves/hides/undoes/deletes as one, opens in Layers as Box/Width/Height, one Size row in Measurements, spec list unchanged, box colour/opacity remembered for the next measurement. Core MeasureSizeGroup + tests (12914 pass); walk a-size-measurement-is-one-group-walk green at Next defaults; audit queue/audits/2026-10-13-size-measurement-group.json."
     }
-  ]
+  ],
+  "started": "2026-10-13T12:58:34.416Z",
+  "walks": [
+    "a-size-measurement-is-one-group-walk"
+  ],
+  "completed": "2026-10-13T13:41:12.484Z"
 }

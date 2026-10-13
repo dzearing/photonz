@@ -1,0 +1,29 @@
+{
+  "feature": "A Size measurement is one group with a faint red box",
+  "epic": "measure-redline",
+  "summary": "A Size click now puts down one thing named for what it measured (Size 274 × 62): a faint red box exactly over the measured area, plus the width and height calipers. It moves, hides, undoes and deletes as one, and opens in the Layers list as Box, Width, Height so each part can be changed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-size-measurement-is-one-group-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press I, choose Size, and click a button.", "shot": "2026-10-13-size-group-1-landed.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the Layers list: one row, Size 274 × 62, with 3 inside. The Measurements list has one Size row reading 274 × 62 px." },
+    { "do": "Press Shift-Right: the box and both calipers move together. Press Cmd-Z twice: the nudge comes back, then the whole measurement goes." },
+    { "do": "Click the arrow beside Size 274 × 62 in Layers and pick Box." },
+    { "do": "Set Opacity to 25 in Appearance, or change the Fill colour.", "shot": "2026-10-13-size-group-2-opened.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Measure another button: its box starts at the opacity and colour you just set." },
+    { "do": "Choose Copy as Spec List from the Measurements menu: it still gives a Width line and a Height line." }
+  ],
+  "evaluate": [
+    "Is 10% the right faintness: can you see the measured area on light and dark screenshots without it hiding the button?",
+    "Should picking the measurement on the canvas pick the group (as now), or go straight to the caliper you clicked?",
+    "Is Size 274 × 62 the right name for the group, or would you rather it read W 274 H 62?",
+    "When you change the box's colour, should the next measurement's calipers follow it too, or only the box (as now)?"
+  ],
+  "rough": [
+    "The redline mock draws a Size measurement as two calipers with no box and no group; this follows your request of 2026-10-13 (your call on 2026-10-13).",
+    "There is no Size style in the Library to set the box's default colour and opacity. Instead the box remembers the last colour and opacity you gave one, the way every other tool remembers its last style.",
+    "Dragging a corner handle of the picked group resizes it like any group, which stretches the calipers' positions rather than re-measuring. Move it, or re-measure, rather than resize it.",
+    "Picking the group shows the group's Appearance (Opacity, Blending); the caliper colours and label size are on the Width and Height parts, one click deeper.",
+    "Documents with loose width and height calipers from before open unchanged and stay loose; nothing converts them."
+  ]
+}
