@@ -21274,3 +21274,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - How: `EditorState+TimelinePointing.swift`. SwiftUI never says where a context menu was asked for, so the dock's mouse monitor notes the press (`TimelineRightPress`, offered by hand from the walk harness), and each timeline menu checks, as SwiftUI builds it, that the press is on its own row and inside its time. Core: `TimelinePointing.ms(atLaneX:)`, `PhotonzDocument.splitClips` (`TimelinePointingTests`). Walk step: `rightClick` takes `across`.
 - Walks: `clicking-a-timeline-item-moves-the-playhead-walk` (Next defaults); seven walks that right-clicked a clip and expected an at-playhead row to act at an earlier playhead now right-click at the moment they mean.
 - Next: the user's answers on the audit (Start/End at Playhead on a title bar now only reach inside the bar).
+
+## 2026-10-12 · Mock: the transform overlay and a simpler way to animate
+
+- New live mock page `docs/design/mocks/pages/video-animate.html` (Prototype > Video > Animate with the overlay): the transform bar under a layer while it is handled (X, Y, W, H, angle, plus Tilt X, Tilt Y, Depth once turned; Reset; placement rules with six specimens), the same bar opened from a key, the in-lane graph with segment picking, handles, the shared easing list on right-click and double-click to add a point, a track that lists only animated properties with Delete and Animate, and one interaction table for every property plus a placement check.
+- UX-PATTERNS v2.6: "Named exception: the value overlay" in the placement contract; the panel's 3D section is withdrawn.
+- Card on `a-layer-s-track-shows-only-what-is-animated-and`: when does a change on a layer with keys become a key (always / record switch / only on a key moment); that task is blocked on it. The overlay, key bar and graph build tasks have their acceptance updated to the mock and go ahead.
+- Next: `a-small-overlay-shows-transform-values-to-type-i`.

@@ -1,0 +1,1248 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-animate</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-animate · the transform overlay, the key overlay, the value graph and
+   a track that lists only what is animated.
+   From the user's own description (2026-10-12, task
+   design-the-transform-overlay-and-a-simpler-way-t). Chrome is the shared
+   shell; this page authors content only. Every local class carries the va-
+   prefix (AGENTS.md, "PREFIX every page-local class"). */
+
+#video-animate .win.shell{height:860px;min-height:0;position:relative}
+#video-animate .cnv>.canvas{min-height:0;background:radial-gradient(620px 320px at 50% 38%,#171a26,#0a0c11)}
+
+/* ---------- the frame and the layer ---------- */
+.va-frame{position:absolute;left:50%;top:44%;width:66%;aspect-ratio:16/9;transform:translate(-50%,-50%);
+  perspective:1100px;clip-path:inset(0 round 8px);background:#0d0f18}
+.va-rec{position:absolute;inset:0;background:linear-gradient(180deg,#f5f7fb,#dfe5f1)}
+.va-rec::before{content:"";display:block;height:6%;background:#e6e9f0;border-bottom:1px solid #cfd5e2}
+.va-rec i{display:block;margin:2.2% 4%;height:3.4%;border-radius:4px;background:#c5cde0}
+.va-rec i:nth-child(2){width:52%}.va-rec i:nth-child(3){width:70%;background:#7c8cff}.va-rec i:nth-child(4){width:40%}
+.va-card{position:absolute;left:50%;top:50%;transform-style:preserve-3d;border-radius:.16em;
+  background:linear-gradient(135deg,#12c2e9,#7c4dff 60%,#ff5d8f);color:#fff;display:flex;flex-direction:column;
+  justify-content:center;padding:0 .7em;font-weight:760;letter-spacing:-.02em;will-change:transform}
+.va-card .va-ck{font-size:.32em;font-weight:650;letter-spacing:.08em;text-transform:uppercase;opacity:.85}
+.va-card .va-ch{font-size:1em;line-height:1.05;white-space:nowrap}
+.va-card .va-m{position:absolute;width:0;height:0}
+.va-card .va-m.tl{left:0;top:0}.va-card .va-m.tr{right:0;top:0}.va-card .va-m.br{right:0;bottom:0}.va-card .va-m.bl{left:0;bottom:0}
+.va-card .va-m.t{left:50%;top:0}.va-card .va-m.b{left:50%;bottom:0}.va-card .va-m.l{left:0;top:50%}.va-card .va-m.r{right:0;top:50%}
+.va-card .va-m.c{left:50%;top:50%}
+.va-ov{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;z-index:3}
+.va-hitzone{position:absolute;inset:0;z-index:2;touch-action:none}
+
+/* ---------- THE OVERLAY: one bar, two homes ----------
+   Liquid Glass, the system label colours on it, so it reads over any picture
+   in light and dark. A field is a short label and a value, nothing else. */
+.va-bar{position:absolute;z-index:30;display:none;align-items:center;gap:1px;padding:4px;white-space:nowrap;
+  background:var(--glass-chrome);backdrop-filter:var(--lg-blur);-webkit-backdrop-filter:var(--lg-blur);
+  border:1px solid var(--edge-lo);border-radius:12px;box-shadow:inset 0 1px 0 var(--edge-hi),var(--lg-shadow);
+  animation:va-in .14s var(--ease-decel,ease-out)}
+.va-bar.on{display:flex}
+@keyframes va-in{from{opacity:0;transform:translateY(3px) scale(.98)}to{opacity:1;transform:none}}
+.va-f{display:flex;align-items:center;gap:4px;height:24px;padding:0 6px 0 6px;border-radius:7px;cursor:text;position:relative}
+.va-f:hover{background:var(--panel-2)}
+.va-f>label{font-size:11px;color:var(--dim);font-weight:600;cursor:text}
+.va-f>input{width:40px;border:0;padding:0;background:transparent;color:var(--ink);font:500 11.5px/1 var(--mono);text-align:right;outline:none}
+.va-f>input::placeholder{color:var(--faint)}
+.va-f.wide>input{width:48px}
+.va-f>.u{font-size:10px;color:var(--faint);margin-left:-2px}
+.va-f.live{box-shadow:inset 0 0 0 1.5px var(--accent)}
+.va-f:focus-within{background:var(--panel);box-shadow:var(--ring)}
+.va-f .va-kd{width:7px;height:7px;transform:rotate(45deg);border:1.3px solid var(--faint);border-radius:1px;flex:none;margin-right:1px}
+.va-f .va-kd.on{background:var(--comp);border-color:var(--comp)}
+.va-f .va-kd[hidden]{display:none}
+.va-name{font-size:10.5px;font-weight:650;color:var(--ink);padding:0 4px 0 6px}
+.va-sep{width:1px;height:16px;background:var(--line-soft);margin:0 3px;flex:none}
+.va-link{width:14px;height:24px;display:grid;place-items:center;color:var(--faint)}
+.va-ib{width:26px;height:24px;border:0;border-radius:7px;background:transparent;color:var(--dim);display:grid;place-items:center;cursor:pointer;flex:none}
+.va-ib:hover{background:var(--panel-2);color:var(--ink)}
+.va-ib:focus-visible{outline:none;box-shadow:var(--ring)}
+.va-ang{font-size:14px;line-height:1;color:var(--dim)}
+.va-tb{height:24px;padding:0 9px;border:0;border-radius:7px;background:var(--panel-2);color:var(--ink);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;flex:none}
+.va-tb:hover{background:var(--line-soft)}
+.va-tb:focus-visible{outline:none;box-shadow:var(--ring)}
+.va-sw{width:14px;height:14px;border-radius:4px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.2)}
+
+/* ---------- the panel (no 3D section any more) ---------- */
+.va-sec{padding:var(--s2) var(--pad-sm)}
+.va-sec+.va-sec{border-top:1px solid var(--edge-lo)}
+.va-sech{font-size:10px;font-weight:660;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);margin-bottom:var(--s1)}
+.va-numgrid{display:grid;grid-template-columns:1fr 1fr;gap:var(--s1) var(--s2)}
+.va-numgrid .stepper{min-width:0;width:auto}
+
+/* ---------- the timeline ---------- */
+#vaTl{--gutter:96px;flex:0 0 auto;padding:0;display:flex;flex-direction:column;min-height:0}
+#vaTl .va-tlz{padding:var(--s1) var(--s3) var(--s3);position:relative;user-select:none;-webkit-user-select:none}
+#vaTl .track{margin:3px 0}
+#vaTl .track .tl{width:var(--gutter);text-transform:none;letter-spacing:.02em;font-size:10px;overflow:hidden;white-space:nowrap;display:flex;align-items:center;gap:4px}
+#vaTl .track .lane{height:30px}
+#vaTl .lane>.clip{position:absolute;top:0;height:30px}
+.va-ruler .lane{height:16px!important}
+.va-ruler .lane span{position:absolute;top:2px;font:9px var(--mono);color:var(--faint);transform:translateX(-50%)}
+.va-ruler .lane span::after{content:"";position:absolute;left:50%;top:12px;width:1px;height:4px;background:var(--line-soft)}
+.va-ruler .lane{cursor:pointer}
+.va-tclip{background:linear-gradient(135deg,#6b47c9,#9a5cff);color:#fff;align-items:flex-start!important;padding-top:3px!important}
+.va-tclip.sel{box-shadow:0 0 0 1.5px #fff inset}
+/* the clip's KEY LINE: one diamond per moment anything is keyed, along the
+   clip's foot. Hollow = a moment with nothing keyed yet (Add Key). */
+.va-kl{position:absolute;left:0;right:0;bottom:0;height:12px;cursor:default}
+.va-kl::before{content:"";position:absolute;left:var(--a,0);width:var(--w,0);top:5.5px;height:1px;background:rgba(255,255,255,.55)}
+.va-mk{position:absolute;top:2px;width:8px;height:8px;margin-left:-4px;transform:rotate(45deg);border-radius:1px;
+  background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.35);cursor:pointer}
+.va-mk::after{content:"";position:absolute;inset:-5px}
+.va-mk.empty{background:transparent;box-shadow:inset 0 0 0 1.5px #fff,0 0 0 1px rgba(0,0,0,.25)}
+.va-mk.pick{background:var(--warn);box-shadow:0 0 0 1.5px #fff}
+.va-disc{width:12px;height:12px;display:inline-grid;place-items:center;color:var(--faint);cursor:pointer;transition:transform .15s ease;border:0;background:none;padding:0}
+.va-disc.open{transform:rotate(90deg)}
+/* a property row: only rows that are animating exist */
+.va-pr .tl{color:var(--dim)!important;padding-left:14px;cursor:default;border-radius:5px}
+.va-pr .tl:hover{color:var(--ink)!important}
+.va-pr.pick .tl{background:var(--accent-soft);color:var(--ink)!important}
+.va-pr .lane{height:20px!important;border-top:1px dashed var(--edge-lo)}
+.va-pr.graph .lane{height:96px!important;background:color-mix(in srgb,var(--panel-2) 70%,transparent);border-radius:6px;border-top:0}
+.va-pr.pick .lane{background:color-mix(in srgb,var(--accent) 7%,transparent)}
+.va-pr.pick.graph .lane{background:color-mix(in srgb,var(--accent) 7%,var(--panel-2))}
+.va-pr .va-gi{margin-left:auto;opacity:0;color:var(--faint);border:0;background:none;padding:0 2px;cursor:pointer;display:grid;place-items:center}
+.va-pr .tl:hover .va-gi,.va-pr.graph .va-gi{opacity:1}
+.va-pr.graph .va-gi{color:var(--accent)}
+.va-pr.new .tl,.va-pr.new .lane{animation:va-row-in .32s var(--ease-decel,ease-out)}
+@keyframes va-row-in{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.va-line{position:absolute;top:50%!important;height:1px;margin-top:-.5px;background:color-mix(in srgb,var(--comp) 55%,transparent)}
+.va-kd2{position:absolute;top:50%!important;width:9px;height:9px;margin:-4.5px 0 0 -4.5px;transform:rotate(45deg);
+  background:var(--comp);border-radius:1px;box-shadow:0 0 0 1.5px var(--panel);cursor:pointer}
+.va-kd2::after{content:"";position:absolute;inset:-5px}
+.va-kd2:hover{background:color-mix(in srgb,var(--comp) 75%,white)}
+.va-kd2.pick{background:var(--warn);box-shadow:0 0 0 1.5px var(--panel),0 0 0 3px color-mix(in srgb,var(--warn) 40%,transparent)}
+.va-ph{position:absolute;top:0;bottom:0;width:2px;margin-left:-1px;background:var(--crit);z-index:8;pointer-events:none}
+.va-ph::before{content:"";position:absolute;top:0;left:-4px;width:10px;height:8px;background:var(--crit);clip-path:polygon(0 0,100% 0,50% 100%)}
+.va-tlbar-ease[hidden]{display:none}
+
+/* ---------- THE GRAPH, drawn in its lane ---------- */
+.va-g{position:absolute;inset:0;width:100%;height:100%;overflow:visible;touch-action:none;cursor:default}
+.va-g .grid{stroke:var(--line-soft);stroke-width:1}
+.va-g .axis{font:9px var(--mono);fill:var(--faint)}
+.va-g .seg{fill:none;stroke:var(--comp);stroke-width:1.6;stroke-linecap:round}
+.va-g .seg.hov{stroke-width:3;stroke:color-mix(in srgb,var(--comp) 70%,white)}
+.va-g .seg.pick{stroke:var(--accent);stroke-width:3.2}
+.va-g .ext{fill:none;stroke:var(--comp);stroke-width:1.2;stroke-dasharray:3 3;opacity:.5}
+.va-g .pt{fill:var(--comp);stroke:var(--panel);stroke-width:1.5;cursor:grab}
+.va-g .pt.hov{fill:color-mix(in srgb,var(--comp) 70%,white)}
+.va-g .pt.pick{fill:var(--warn)}
+.va-g .hl{stroke:var(--accent);stroke-width:1}
+.va-g .hd{fill:var(--panel);stroke:var(--accent);stroke-width:1.5;cursor:grab}
+.va-g .ghost{fill:none;stroke:var(--ink);stroke-width:1.2;stroke-dasharray:2 2}
+.va-g .phl{stroke:var(--crit);stroke-width:1.5}
+
+/* ---------- menus ---------- */
+.va-menu{position:fixed;z-index:60;display:none;min-width:196px;max-height:none}
+.va-menu.on{display:block}
+.va-menu .menuitem{cursor:default;user-select:none}
+.va-menu .menuitem.dis{opacity:.45;pointer-events:none}
+.va-menu .menuitem .chev{margin-left:auto;color:var(--faint)}
+.va-menu .menuitem.on-row{background:var(--accent-soft)}
+.va-menu .mnote{display:none}
+.va-sub{position:fixed;z-index:61;display:none;min-width:168px}
+.va-sub.on{display:block}
+
+/* ---------- specimens ---------- */
+.va-specs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:var(--gap)}
+@media (max-width:1100px){.va-specs{grid-template-columns:1fr}}
+.va-spec{background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r4);overflow:hidden;display:flex;flex-direction:column}
+.va-spec h3{margin:0;padding:var(--s2) var(--pad-sm) 0;font-size:12px}
+.va-spec p{margin:0;padding:var(--s1) var(--pad-sm) var(--s3);font-size:11px;line-height:1.5;color:var(--dim)}
+.va-spec p b{color:var(--ink)}
+.va-mini{position:relative;height:240px;margin:var(--s2) var(--pad-sm) 0;border-radius:var(--r2);overflow:hidden;
+  background:radial-gradient(420px 220px at 50% 40%,#171a26,#0a0c11)}
+.va-mini .va-mf{position:absolute;background:linear-gradient(180deg,#f5f7fb,#dfe5f1);border-radius:4px}
+.va-mini .va-mo{position:absolute;border-radius:5px;background:linear-gradient(135deg,#12c2e9,#7c4dff 60%,#ff5d8f)}
+.va-mini svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.va-mini .va-bar{display:flex;transform-origin:0 0;animation:none}
+.va-mini .va-hand{position:absolute;width:16px;height:16px;margin:-2px 0 0 -3px;pointer-events:none}
+.va-mtb{position:absolute;left:50%;bottom:8px;transform:translateX(-50%);height:20px;width:120px;border-radius:10px;
+  background:var(--glass-chrome);border:1px solid var(--edge-lo)}
+.va-klane{position:relative;height:110px;margin:var(--s2) var(--pad-sm) 0;border-radius:var(--r2);background:var(--panel-2)}
+.va-klane .va-krow{position:absolute;left:0;right:0;bottom:22px;height:20px;border-top:1px dashed var(--edge-lo)}
+.va-klane .va-krl{position:absolute;left:8px;bottom:26px;font-size:10px;color:var(--dim)}
+.va-klane .va-bar{display:flex;animation:none}
+
+/* before / after */
+.va-ba{display:grid;grid-template-columns:1fr 1fr;gap:var(--gap)}
+@media (max-width:1100px){.va-ba{grid-template-columns:1fr}}
+.va-ba .timeline{min-height:0;border-radius:var(--r4);border:1px solid var(--edge-lo)}
+.va-ba .track{margin:2px 0}
+.va-ba .track .tl{width:96px;text-transform:none;letter-spacing:.02em;font-size:10px}
+.va-ba .track .lane{height:24px}
+.va-ba .lane>.clip{position:absolute;top:0;height:24px}
+.va-ba .va-pr .lane{height:16px!important}
+.va-ba .va-pr.dead .tl{color:var(--faint)!important}
+.va-bah{font-size:11px;font-weight:650;margin:0 0 var(--s1)}
+.va-bah span{font-weight:500;color:var(--dim)}
+
+/* the graph specimen */
+.va-gspec{background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r4);padding:var(--s2) var(--s3) var(--s3)}
+.va-gspec .track .tl{width:96px;text-transform:none;letter-spacing:.02em;font-size:10px}
+.va-gspec .va-pr.graph .lane{height:190px!important}
+.va-gread{display:flex;gap:var(--s4);font:10px var(--mono);color:var(--dim);margin-top:var(--s2);flex-wrap:wrap}
+.va-gread b{color:var(--ink);font-weight:600}
+
+/* tables */
+.va-tbl{width:100%;border-collapse:collapse;font-size:11px;background:var(--panel);border:1px solid var(--edge-lo);border-radius:var(--r4);overflow:hidden}
+.va-tbl th,.va-tbl td{text-align:left;vertical-align:top;padding:7px var(--pad-sm);border-bottom:1px solid var(--edge-lo);line-height:1.45}
+.va-tbl th{font-size:10px;font-weight:660;letter-spacing:.06em;text-transform:uppercase;color:var(--faint);background:var(--panel-2)}
+.va-tbl td:first-child{font-weight:600;color:var(--ink);white-space:nowrap}
+.va-tbl td{color:var(--dim)}
+.va-tbl td b{color:var(--ink)}
+.va-tbl kbd{font:10px var(--mono);padding:1px 4px;border-radius:4px;background:var(--panel-2);border:1px solid var(--line-soft);color:var(--ink)}
+.va-ok{color:var(--ok,#3ecf8e)!important;font-weight:650}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+<section class="screen on" id="video-animate">
+  <div class="scen-head"><span class="pip" style="background:#9a5cff"></span><h2>Animate with the overlay</h2><span class="k">· type transform values beside the object, and animate only what you touch</span></div>
+
+  <p class="pglead">Move, resize, turn or tilt a layer and a <b>small glass bar</b> appears beside it with the numbers to type
+    into and a Reset. Click a key on the timeline and <b>the same bar</b> opens beside the key, holding that property's
+    value there. A layer's track lists <b>only what is animated</b>: change something on a layer that has keys and it
+    joins; pick a row and press Delete and it leaves. The graph under a row takes <b>points you add</b> and
+    <b>segments you pick</b>, and every property behaves the same way.</p>
+
+  <div class="seg" id="vaScen" style="margin-bottom:var(--s3)"><button class="on" data-scen="anim">A title that slides and fades in</button><button data-scen="plain">A title with no keys yet</button></div>
+
+  <!-- ========== THE EDITOR, live ========== -->
+  <div class="win tall cq shell" data-shell="launch-teaser · 1920 x 1080 · 0:08" data-ws="video" id="vaWin">
+    <div class="edit lean" id="vaShell" data-dock="open">
+      <div class="cnv" id="vaCnv">
+        <div class="canvas">
+          <div class="va-frame" id="vaFrame">
+            <div class="va-rec"><i></i><i></i><i></i><i></i></div>
+            <div class="va-card" id="vaCard"><span class="va-ck">Launch</span><span class="va-ch">Ship it faster.</span></div>
+          </div>
+        </div>
+        <div class="va-hitzone" id="vaHit"></div>
+        <svg class="va-ov" id="vaOv"></svg>
+
+        <!-- THE TRANSFORM OVERLAY. Canvas furniture that exists only while a
+             transform is in hand (UX-PATTERNS, "Named exception: the value
+             overlay"). Built from the layer's own values; the 3D group is
+             there only once the layer is turned in 3D. -->
+        <div class="va-bar" id="vaBar" role="toolbar" aria-label="Transform values"></div>
+
+        <div class="cnv-act">
+          <button class="tool on" data-dock-toggle="#vaShell" title="Show or hide the panel (⌥⌘L)" aria-pressed="true"><i class="ic sm ic-sidebar"></i></button>
+        </div>
+        <!-- The tool bar gains nothing: the overlay is not a tool. -->
+        <div class="tbar" id="vaTbar">
+          <span class="tstrip" data-radio=".tool">
+            <button class="tool on" data-tool="select" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="blade" title="Blade (B)"><i class="ic sm ic-blade"></i></button>
+            <button class="tool" data-tool="text" title="Text (T)"><i class="ic sm ic-text"></i></button>
+            <button class="tool" data-tool="shape" title="Shape (R)"><i class="ic sm ic-square"></i></button>
+            <span class="tsep"></span>
+            <button class="tool" data-tool="hand" title="Hand (H)"><i class="ic sm ic-hand"></i></button>
+          </span>
+        </div>
+      </div>
+
+      <div class="splitter v" data-min="212" data-max="420"></div>
+
+      <div class="pdock" id="vaDock">
+        <div class="dgrp grow" id="vaProps">
+          <div class="dgrp-h"><span class="ttl">Properties</span><span class="cnt">Title</span></div>
+          <div class="dgrp-b" style="padding:0">
+            <!-- Position & Size stays: the panel says what the selection IS.
+                 The overlay is its second door, named in the contract. There
+                 is no 3D section any more: its rows live in the overlay. -->
+            <div class="va-sec">
+              <div class="va-sech">Position &amp; Size</div>
+              <div class="va-numgrid">
+                <span class="stepper sm"><span class="k">X</span><input data-pf="x" aria-label="X"></span>
+                <span class="stepper sm"><span class="k">Y</span><input data-pf="y" aria-label="Y"></span>
+                <span class="stepper sm"><span class="k">W</span><input data-pf="w" aria-label="Width"></span>
+                <span class="stepper sm"><span class="k">H</span><input data-pf="h" aria-label="Height"></span>
+                <span class="stepper sm"><span class="k">A</span><input data-pf="a" aria-label="Rotation"><span class="u">°</span></span>
+              </div>
+            </div>
+            <div class="va-sec">
+              <div class="va-sech">Look</div>
+              <div class="va-numgrid">
+                <span class="stepper sm"><span class="k">Opacity</span><input data-pf="op" aria-label="Opacity"><span class="u">%</span></span>
+                <span class="stepper sm"><span class="k">Blur</span><input data-pf="bl" aria-label="Blur"></span>
+              </div>
+            </div>
+            <div class="va-sec">
+              <div class="va-sech">Effects</div>
+              <div class="efx click"><span class="en"></span><span class="nm">Drop shadow</span><span class="emeta" id="vaShadowMeta">18</span></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="drail">
+        <button class="drailtab" data-group="#vaProps" title="Properties"><i class="ic sm ic-sliders"></i><span class="lb">Properties</span></button>
+      </div>
+    </div>
+
+    <div class="transport">
+      <span class="grp vol"><button class="btn ghost icon sm" title="Volume"><i class="ic ic-volume"></i></button></span>
+      <span class="grp">
+        <button class="btn ghost icon sm" title="Go to Previous Key (⌥K)" id="vaPrevK"><i class="ic ic-skip-back"></i></button>
+        <button class="btn primary icon" title="Play or pause (Space)" id="vaPlay"><i class="ic ic-play"></i></button>
+        <button class="btn ghost icon sm" title="Go to Next Key (⇧K)" id="vaNextK"><i class="ic ic-skip-forward"></i></button>
+      </span>
+      <span class="tc cur" id="vaTc">0:01.0</span>
+      <span class="scrub" id="vaScrub" role="slider" aria-label="Scrub" tabindex="0"><span class="fill"></span><span class="knob"></span></span>
+      <span class="tc">0:08</span>
+    </div>
+
+    <div class="timeline" id="vaTl">
+      <div class="tlbar">
+        <span class="tstrip" data-radio=".tool">
+          <button class="tool on" title="Select (V)"><i class="ic sm ic-cursor"></i></button>
+          <button class="tool" title="Blade (B)"><i class="ic sm ic-blade"></i></button>
+        </span>
+        <span class="tspacer"></span>
+        <!-- Easing while keys or segments are picked: where the contract
+             already puts it. The key overlay does not repeat it. -->
+        <span class="va-tlbar-ease" id="vaEaseWrap" hidden><span class="lbl">Easing</span>
+          <span class="select sm" tabindex="0" role="button" id="vaEase"><span class="lead">Ease out</span><span class="car"><i class="ic xs ic-chevron-down"></i></span></span></span>
+      </div>
+      <div class="va-tlz" id="vaTlz"></div>
+    </div>
+
+    <div class="va-bar" id="vaKeyBar" role="toolbar" aria-label="Key value"></div>
+    <div class="popover menu va-menu" id="vaMenu"></div>
+    <div class="popover menu va-sub" id="vaSub"></div>
+  </div>
+
+  <div class="caption">
+    <div class="c"><div class="lab">Try it</div><p>Drag the title to move it, a corner to size it, the knob above it to turn it, and the knob's <b>flat</b> or <b>tall arc</b> to tilt it. The bar appears under it: type <b>+40</b> into X, press Tab, type <b>12</b> into the angle. <b>Reset</b> puts size, turn and tilt back; position stays. Pick another tool, press Esc or click empty canvas and it goes.</p></div>
+    <div class="c"><div class="lab g2">Keys</div><p>Click a <b>diamond on the Opacity row</b>: the playhead jumps to it and the bar opens beside it. Type 40. Click a diamond on the <b>clip's key line</b>: the bar opens on the canvas instead, ready for you to drag or type; whatever you change there is keyed at that moment.</p></div>
+    <div class="c"><div class="lab g2">Only what is animated</div><p>The track lists only Position and Opacity. Click <b>Opacity</b>'s name and press Delete: it leaves, and the title keeps the opacity it had. Right-click the clip's key line for <b>Animate</b> to bring it back, or move the playhead and turn the title: Rotation joins on its own.</p></div>
+  </div>
+
+  <!-- ========== WHERE THE BAR SITS ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#6f9bff"></span><h2>Where the bar sits</h2><span class="k">· never on the handle in your hand, never off the canvas</span></div>
+  <p class="pglead">One rule, applied in order: <b>under the object</b>, 12 points below its frame; <b>above it</b> (over the turn knob) when you are dragging a bottom handle or there is no room below; slid sideways so it stays <b>12 points inside the canvas</b>; and never over the tool bar. It follows the object while you drag and keeps the side it chose when the drag began, so it never jumps under your pointer.</p>
+  <div class="va-specs" id="vaPlaces"></div>
+
+  <!-- ========== THE KEY OVERLAY ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#3ecf8e"></span><h2>The same bar, opened from a key</h2><span class="k">· one property, its value at that key, and Reset</span></div>
+  <p class="pglead">Click a key on any row and the bar opens <b>above the key</b>, never over it: the property's name, its value in its own units, and Reset to the property's default. Return or Tab commits, Esc closes. Easing is not repeated here: it stays in the timeline bar while keys are picked, and on the right-click of a key or a segment.</p>
+  <div class="va-specs" id="vaKeys"></div>
+
+  <!-- ========== THE GRAPH ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#ffb36b"></span><h2>The graph: points you add, segments you pick</h2><span class="k">· in the row's own lane, on the timeline's clock</span></div>
+  <p class="pglead">Right-click a row and choose <b>Show Graph</b> (or click the curve at the end of its name): the row grows and draws the value over time, lined up with the playhead. <b>Click a segment</b> to pick it and its two handles appear; drag them to shape the ease, or <b>right-click it</b> for the easing list. <b>Double-click the line</b> (or Option-click it) to add a point there. Drag a point to move it in time and value; Shift keeps it to one direction.</p>
+  <div class="va-gspec">
+    <div class="track va-ruler" id="vaGRuler"><span class="tl"></span><div class="lane abs"></div></div>
+    <div class="track va-pr graph pick" id="vaGRow"><span class="tl">Scale<button class="va-gi" title="Hide Graph"><i class="ic xs ic-curves"></i></button></span><div class="lane abs"><svg class="va-g" id="vaGSvg"></svg></div></div>
+    <div class="va-gread" id="vaGRead"></div>
+  </div>
+  <div class="caption">
+    <div class="c"><div class="lab">Hover</div><p>Resting on the line lights up the segment under the pointer, so you can see what a click will pick. Holding <b>Option</b> shows a hollow point where a click would add one.</p></div>
+    <div class="c"><div class="lab g2">Pick</div><p>A picked segment turns blue and shows its handles. Shift-click adds more segments or points. The timeline bar's <b>Easing</b> then names the curve and sets it for everything picked.</p></div>
+    <div class="c"><div class="lab g2">Units</div><p>The value axis is in the property's own units and fits itself to the curve. Position plots the distance travelled, so its points move in time only; type its X and Y in the key's bar.</p></div>
+  </div>
+
+  <!-- ========== ONLY WHAT IS ANIMATED ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#ff6b5e"></span><h2>A track lists only what is animated</h2><span class="k">· Add Key on a title, today and after</span></div>
+  <div class="va-ba">
+    <div>
+      <p class="va-bah">Today <span>· Add Key opens a row for everything that could move</span></p>
+      <div class="timeline"><div class="va-tlz" style="padding:var(--s2) var(--s3)">
+        <div class="track"><span class="tl">▾ Titles</span><div class="lane abs"><div class="clip va-tclip" style="left:4%;width:70%"><span class="lbl">Ship it faster.</span></div></div></div>
+        <div class="track va-pr dead"><span class="tl">Position</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Scale</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Rotation</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Opacity</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Blur</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Corner radius</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Shadow size</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">Text size</span><div class="lane abs"><span class="va-kd2" style="left:20%"></span></div></div>
+        <div class="track va-pr dead"><span class="tl">…</span><div class="lane abs"></div></div>
+      </div></div>
+    </div>
+    <div>
+      <p class="va-bah">After <span>· Add Key puts one hollow moment on the key line; rows join as you change things</span></p>
+      <div class="timeline"><div class="va-tlz" style="padding:var(--s2) var(--s3)">
+        <div class="track"><span class="tl">▾ Titles</span><div class="lane abs"><div class="clip va-tclip" style="left:4%;width:70%"><span class="lbl">Ship it faster.</span><span class="va-kl" style="--a:0;--w:0"><span class="va-mk empty" style="left:22%"></span></span></div></div></div>
+      </div></div>
+      <p class="note" style="margin:var(--s2) 0">Then, at 0:03, drag the title to the right:</p>
+      <div class="timeline"><div class="va-tlz" style="padding:var(--s2) var(--s3)">
+        <div class="track"><span class="tl">▾ Titles</span><div class="lane abs"><div class="clip va-tclip" style="left:4%;width:70%"><span class="lbl">Ship it faster.</span><span class="va-kl" style="--a:22%;--w:33%"><span class="va-mk" style="left:22%"></span><span class="va-mk" style="left:55%"></span></span></div></div></div>
+        <div class="track va-pr"><span class="tl">Position</span><div class="lane abs"><span class="va-line" style="left:19.4%;width:23.1%"></span><span class="va-kd2" style="left:19.4%"></span><span class="va-kd2" style="left:42.5%"></span></div></div>
+      </div></div>
+    </div>
+  </div>
+  <div class="caption">
+    <div class="c"><div class="lab">Joining</div><p>On a layer that has keys, any change keys itself at the playhead, from the canvas, the bar or the panel. A property that was not animating joins with its <b>old value kept at the layer's other key moments</b>, so the change belongs to that moment only.</p></div>
+    <div class="c"><div class="lab g2">Leaving</div><p>Click a row's name to pick the row, then <b>Delete</b>: its keys go in one undo step, the row leaves, and the property keeps the value it had at the playhead.</p></div>
+    <div class="c"><div class="lab g2">Adding back</div><p>Right-click the clip's key line (or the clip) for <b>Animate</b>, grouped as the panel is: Transform, 3D, Look, Effects. It puts a key at the playhead and the row appears. The same list is Clip ▸ Animate in the menu bar.</p></div>
+  </div>
+
+  <!-- ========== ONE TABLE FOR EVERY PROPERTY ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#9a5cff"></span><h2>One interaction table, every property</h2><span class="k">· position, scale, rotation, opacity, tilt, depth, colour, blur and the rest</span></div>
+  <table class="va-tbl">
+    <thead><tr><th>You do</th><th>Where</th><th>What happens, for any property</th></tr></thead>
+    <tbody>
+      <tr><td>Move, size, turn or tilt</td><td>Canvas</td><td>The <b>transform bar</b> appears under the object with X, Y, W, H and angle; Tilt X, Tilt Y and Depth join once the layer is turned in 3D. The fields the drag is changing are outlined. Layer ▸ Show Transform Values brings it up without a drag.</td></tr>
+      <tr><td>Type a value</td><td>Any field</td><td>Numbers or sums (<kbd>+10</kbd>, <kbd>*2</kbd>). <kbd>Return</kbd> commits, <kbd>Tab</kbd> moves on, <kbd>Esc</kbd> puts it back. One undo step per commit.</td></tr>
+      <tr><td>Reset</td><td>Either bar</td><td>Transform bar: size, turn, tilt and depth go back to their defaults; position stays. Key bar: that key takes the property's default.</td></tr>
+      <tr><td>Bar goes away</td><td>Anywhere</td><td>Another tool, another kind of edit (typing, drawing, picking something else, opening a menu), Play, <kbd>Esc</kbd>, or a click on empty canvas. Scrubbing keeps it and its numbers follow the playhead.</td></tr>
+      <tr><td>Click a key</td><td>A row, or a graph point</td><td>Picks it, moves the playhead to it, and opens the <b>key bar</b> above it with that property's value there. <kbd>Shift</kbd>-click adds; the bar says Mixed where picked keys differ, and a typed value sets them all.</td></tr>
+      <tr><td>Click a key moment</td><td>The clip's key line</td><td>Picks every key at that moment, moves the playhead there, picks the layer and opens the <b>transform bar</b> on the canvas. Whatever you change is keyed at that moment.</td></tr>
+      <tr><td>Drag a key</td><td>Row, key line or graph</td><td>Moves it in time, snapping to frames, the playhead and other keys. On the graph it also moves in value; <kbd>Shift</kbd> keeps it to one direction. <kbd>⌥</kbd>-drag copies.</td></tr>
+      <tr><td>Change a value</td><td>Canvas, bar or panel</td><td>On a layer with no keys: just changes it. On a layer that has keys: <b>keys it at the playhead</b>; a property that was not animating joins, its row appears, and its old value stays at the layer's other key moments.</td></tr>
+      <tr><td>Drag on the canvas, a row picked</td><td>Canvas</td><td>Moves every key of that row by the same amount (for Position, the whole path), instead of keying the playhead.</td></tr>
+      <tr><td>Click a row's name</td><td>Track</td><td>Picks the row. <kbd>Delete</kbd> stops animating it: keys gone, row gone, the value at the playhead stays. Undo brings it all back.</td></tr>
+      <tr><td>Right-click</td><td>Key line or clip</td><td><b>Animate ▸</b> (Transform, 3D, Look, Effects), Add Key, Remove Key. Add Key on a layer with no keys puts a hollow moment on the key line: nothing is keyed until you change something.</td></tr>
+      <tr><td>Right-click</td><td>A row</td><td>Show Graph, Easing ▸ (every segment of the row), Stop Animating.</td></tr>
+      <tr><td>Right-click</td><td>A key or a segment</td><td>The easing list (the same ten curves everywhere, then Draw a Curve), Hold, Copy Ease, Paste Ease, Add Point Here (segment), Delete.</td></tr>
+      <tr><td>Hover the graph line</td><td>Graph</td><td>Lights the segment under the pointer. <kbd>⌥</kbd> shows a hollow point where a click would add one.</td></tr>
+      <tr><td>Click a segment</td><td>Graph</td><td>Picks it and shows its two handles; drag them to shape the ease (it becomes a drawn curve). <kbd>Shift</kbd>-click adds.</td></tr>
+      <tr><td>Double-click the line</td><td>Graph</td><td>Adds a point there with the value the line has, so the shape does not change. <kbd>⌥</kbd>-click does the same.</td></tr>
+      <tr><td>What the graph plots</td><td>Graph</td><td>The value, in the property's units, fitted to the lane. Position plots the distance travelled (its X and Y are typed in the key bar). Colour has no graph: its row and key bar carry a swatch.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- ========== PLACEMENT CHECK ========== -->
+  <div class="scen-head" style="margin-top:var(--s6)"><span class="pip" style="background:#6f9bff"></span><h2>Checked against the placement contract</h2><span class="k">· UX-PATTERNS, "every area has one purpose"</span></div>
+  <table class="va-tbl">
+    <thead><tr><th>Piece</th><th>Area</th><th>Why it belongs there</th><th>Check</th></tr></thead>
+    <tbody>
+      <tr><td>Transform bar</td><td>Canvas</td><td>Canvas furniture that exists only while a transform is in hand, like the zoom control. Named in the contract as "the value overlay".</td><td class="va-ok">Named exception</td></tr>
+      <tr><td>Key bar</td><td>Timeline</td><td>The same element, anchored to a picked key: it edits the key, which is the timeline's.</td><td class="va-ok">Named exception</td></tr>
+      <tr><td>X, Y, W, H, angle</td><td>Panel and the bar</td><td>The panel says what the layer is; the bar is the second door while you are handling it, as the tool settings are in the capsule and the panel.</td><td class="va-ok">Two doors, named</td></tr>
+      <tr><td>Tilt X, Tilt Y, Depth</td><td>The bar only</td><td>The panel's 3D section leaves, as you asked. Reset 3D Rotation, Bring Nearer and Send Further stay in the Layer menu and the layer's right-click.</td><td class="va-ok">One door</td></tr>
+      <tr><td>Easing</td><td>Timeline bar, right-click</td><td>Already in the timeline bar while keys are picked; the key bar does not repeat it.</td><td class="va-ok">No duplicate</td></tr>
+      <tr><td>Animate ▸</td><td>Right-click, menu bar</td><td>A verb for the thing under the pointer (the clip's key line); Clip ▸ Animate holds the same list.</td><td class="va-ok">Verb, and in the menu</td></tr>
+      <tr><td>Show Graph</td><td>Right-click a row, row name</td><td>Already a row command and a menu toggle; the graph stays in the lane, as you chose on 2026-09-26.</td><td class="va-ok">Unchanged</td></tr>
+      <tr><td>Tool bar</td><td>Tool bar</td><td>Gains nothing.</td><td class="va-ok">Tools only</td></tr>
+    </tbody>
+  </table>
+
+  <div class="caption">
+    <div class="c"><div class="lab">What a Photoshop user expects</div><p>Free Transform shows X, Y, W, H and the angle as numbers while you handle the layer, with a link between W and H. The bar is that, beside the object instead of at the top of the window.</p></div>
+    <div class="c"><div class="lab g2">What a Premiere or After Effects user expects</div><p>After Effects' <kbd>U</kbd>: only the properties that have keys. A diamond per key, a click to pick it, Delete to remove. The graph editor's segments, handles and easing presets, in the row instead of a separate window.</p></div>
+    <div class="c"><div class="lab g2">Open question</div><p>When a change on a layer with keys is keyed: always, only while a record switch is on, or only on a key moment. The decision card asks; this page draws the first.</p></div>
+  </div>
+</section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(function(){
+  "use strict";
+  var $=function(s,r){return (r||document).querySelector(s);};
+  var $$=function(s,r){return [].slice.call((r||document).querySelectorAll(s));};
+  var clamp=function(v,a,b){return Math.max(a,Math.min(b,v));};
+  var NS="http://www.w3.org/2000/svg";
+  var CURVE=window.PZ&&PZ.curve;
+  var FPS=30, DUR=8, CLIP={a:0.3,b:7.2}, BASE_W=900, BASE_H=300;
+  var near=function(a,b){return Math.abs(a-b)<0.5/FPS;};
+  var snapT=function(t){return Math.round(t*FPS)/FPS;};
+  var fmtT=function(t){var s=Math.max(0,t);return "0:"+(s<10?"0":"")+s.toFixed(1);};
+
+  /* ================= THE PROPERTY CATALOGUE =================
+     One entry per animatable value. Every surface on the page (the bars, the
+     rows, the graph, the Animate menu) reads it, which is the point: there is
+     no per-property UI. */
+  var P={
+    position:{label:"Position",group:"Transform",point:true,def:{x:960,y:540}},
+    scale:{label:"Scale",group:"Transform",unit:"%",def:100,min:5},
+    rotation:{label:"Rotation",group:"Transform",unit:"°",def:0},
+    tiltX:{label:"Tilt X",group:"3D",unit:"°",def:0},
+    tiltY:{label:"Tilt Y",group:"3D",unit:"°",def:0},
+    depth:{label:"Depth",group:"3D",unit:"",def:0},
+    opacity:{label:"Opacity",group:"Look",unit:"%",def:100,min:0,max:100},
+    blur:{label:"Blur",group:"Look",unit:"",def:0,min:0},
+    shadow:{label:"Shadow size",group:"Effects",unit:"",def:18,min:0}
+  };
+  var ORDER=Object.keys(P), GROUPS=["Transform","3D","Look","Effects"];
+  var clone=function(v){return (v&&typeof v==="object")?{x:v.x,y:v.y}:v;};
+  var mix=function(a,b,e){return (a&&typeof a==="object")?{x:a.x+(b.x-a.x)*e,y:a.y+(b.y-a.y)*e}:a+(b-a)*e;};
+  var ease=function(id,f){ if(id==="hold") return f>=1?1:0; return CURVE?CURVE.at(id,f):f; };
+  function evalKeys(k,t){
+    if(t<=k[0].t) return clone(k[0].v);
+    if(t>=k[k.length-1].t) return clone(k[k.length-1].v);
+    for(var i=0;i<k.length-1;i++){ var a=k[i],b=k[i+1];
+      if(t>=a.t&&t<=b.t){ var f=(t-a.t)/Math.max(1e-6,b.t-a.t); return mix(a.v,b.v,ease(a.e,f)); } }
+    return clone(k[0].v);
+  }
+  function curveName(id){
+    if(id==="hold") return "Hold";
+    if(String(id).indexOf("custom:")===0) return "Drawn curve";
+    var c=CURVE&&CURVE.get(id); return c?c.label:id;
+  }
+  function bez(id){
+    if(String(id).indexOf("custom:")===0) return id.slice(7).split(",").map(Number);
+    var c=CURVE&&CURVE.get(id); if(!c) return null;
+    var m=/cubic-bezier\(([^)]+)\)/.exec(c.css); if(m) return m[1].split(",").map(Number);
+    if(id==="linear") return [0,0,1,1];
+    return null;
+  }
+
+  /* ================= DOCUMENT STATE ================= */
+  var S;
+  function scenario(kind){
+    S={t:1.8,
+      base:{position:{x:960,y:500},scale:100,rotation:0,tiltX:0,tiltY:0,depth:0,opacity:100,blur:0,shadow:18},
+      tracks:{}, empty:[], graphs:{}, picked:{keys:[],row:null,moment:null}, sel:true,
+      bar:null, barSide:"below", live:[], open:true, playing:false, used3d:false, fresh:null};
+    if(kind==="anim"){
+      S.tracks.position=[{t:1.0,v:{x:560,y:500},e:"ease-out"},{t:2.6,v:{x:960,y:500},e:"ease-out"}];
+      S.tracks.opacity=[{t:1.0,v:0,e:"ease-in-out"},{t:2.0,v:100,e:"ease-in-out"}];
+    }
+  }
+  scenario("anim");
+  var valueAt=function(p,t){ var k=S.tracks[p]; return (k&&k.length)?evalKeys(k,t==null?S.t:t):clone(S.base[p]); };
+  var animating=function(){ return Object.keys(S.tracks).length>0||S.empty.length>0; };
+  function moments(){
+    var ts=S.empty.slice();
+    Object.keys(S.tracks).forEach(function(p){ S.tracks[p].forEach(function(k){ ts.push(k.t); }); });
+    ts.sort(function(a,b){return a-b;});
+    return ts.filter(function(t,i){ return i===0||!near(t,ts[i-1]); });
+  }
+  var is3d=function(){ return S.used3d||["tiltX","tiltY","depth"].some(function(p){ return S.tracks[p]||Math.abs(S.base[p])>0.01; }); };
+
+  /* The one write path. On a layer with keys every change is keyed at the
+     playhead (card option A); a property joining keeps its old value at the
+     layer's other key moments, so the change belongs to this moment. */
+  function setVal(p,v){
+    var d=P[p]; if(!d.point){ if(d.min!=null) v=Math.max(d.min,v); if(d.max!=null) v=Math.min(d.max,v); }
+    if(!animating()){ S.base[p]=v; return; }
+    var tr=S.tracks[p], t=S.t;
+    if(!tr){ var old=clone(S.base[p]);
+      tr=S.tracks[p]=moments().map(function(m){ return {t:m,v:clone(old),e:"ease-in-out"}; });
+      S.fresh=p; }
+    var hit=null; tr.forEach(function(k){ if(near(k.t,t)) hit=k; });
+    if(hit) hit.v=clone(v); else { tr.push({t:t,v:clone(v),e:"ease-in-out"}); tr.sort(function(a,b){return a.t-b.t;}); }
+    S.empty=S.empty.filter(function(m){ return !near(m,t); });
+  }
+  function stopAnimating(p){
+    S.base[p]=valueAt(p); delete S.tracks[p]; delete S.graphs[p];
+    if(S.picked.row===p) S.picked.row=null;
+    S.picked.keys=S.picked.keys.filter(function(x){ return x.p!==p; });
+  }
+
+  /* ================= THE CANVAS ================= */
+  var cnv=$("#vaCnv"), frame=$("#vaFrame"), card=$("#vaCard"), ov=$("#vaOv"), hitz=$("#vaHit"), bar=$("#vaBar"), tbar=$("#vaTbar");
+  ["tl","tr","br","bl","t","b","l","r","c"].forEach(function(k){ var m=document.createElement("span"); m.className="va-m "+k; card.appendChild(m); });
+  var K=function(){ return frame.clientWidth/1920; };
+  function renderLayer(){
+    var k=K(), pos=valueAt("position"), s=valueAt("scale")/100, rz=valueAt("rotation"),
+        tx=valueAt("tiltX"), ty=valueAt("tiltY"), z=valueAt("depth"), op=valueAt("opacity"), bl=valueAt("blur"), sh=valueAt("shadow");
+    card.style.width=BASE_W*k+"px"; card.style.height=BASE_H*k+"px"; card.style.fontSize=(96*k)+"px";
+    card.style.marginLeft=(-BASE_W*k/2)+"px"; card.style.marginTop=(-BASE_H*k/2)+"px";
+    card.style.transform="translate3d("+((pos.x-960)*k)+"px,"+((pos.y-540)*k)+"px,"+(z*k)+"px) rotateX("+tx+"deg) rotateY("+ty+"deg) rotateZ("+rz+"deg) scale("+s+")";
+    card.style.opacity=clamp(op,0,100)/100;
+    card.style.filter=bl>0.05?"blur("+(bl*k)+"px)":"";
+    card.style.boxShadow="0 "+(sh*k*.7)+"px "+(sh*k*1.8)+"px rgba(0,0,0,.45)";
+  }
+  function pt(k){ var r=card.querySelector(".va-m."+k).getBoundingClientRect(), c=cnv.getBoundingClientRect(); return {x:r.left-c.left,y:r.top-c.top}; }
+  function geo(){
+    var g={}; ["tl","tr","br","bl","t","b","l","r","c"].forEach(function(k){ g[k]=pt(k); });
+    var dx=g.t.x-g.c.x, dy=g.t.y-g.c.y, L=Math.hypot(dx,dy)||1;
+    g.knob={x:g.t.x+dx/L*26,y:g.t.y+dy/L*26};
+    var xs=[g.tl.x,g.tr.x,g.br.x,g.bl.x,g.knob.x], ys=[g.tl.y,g.tr.y,g.br.y,g.bl.y,g.knob.y];
+    g.bb={minX:Math.min.apply(0,xs)-5,maxX:Math.max.apply(0,xs)+5,minY:Math.min.apply(0,ys)-6,maxY:Math.max.apply(0,ys)+5};
+    return g;
+  }
+  function mk(svg,tag,a){ var n=document.createElementNS(NS,tag); for(var k in a) n.setAttribute(k,a[k]); svg.appendChild(n); return n; }
+  var hoverKnob=false, drag=null;
+  function drawSel(){
+    ov.innerHTML="";
+    if(!S.sel||S.playing) return;
+    var g=geo(), acc="var(--accent)";
+    mk(ov,"path",{d:"M"+g.tl.x+","+g.tl.y+"L"+g.tr.x+","+g.tr.y+"L"+g.br.x+","+g.br.y+"L"+g.bl.x+","+g.bl.y+"Z",fill:"none",stroke:"#4c8dff","stroke-width":1.25});
+    mk(ov,"line",{x1:g.t.x,y1:g.t.y,x2:g.knob.x,y2:g.knob.y,stroke:"#4c8dff","stroke-width":1.25});
+    ["tl","tr","br","bl","t","b","l","r"].forEach(function(k){ mk(ov,"rect",{x:g[k].x-3.5,y:g[k].y-3.5,width:7,height:7,rx:1.5,fill:"#fff",stroke:"#4c8dff","stroke-width":1.25}); });
+    var arcs=hoverKnob||(drag&&(drag.kind==="swing"||drag.kind==="tip"));
+    if(arcs){
+      mk(ov,"ellipse",{cx:g.knob.x,cy:g.knob.y,rx:17,ry:6.5,fill:"none",stroke:"#3ecf8e","stroke-width":drag&&drag.kind==="swing"?3:2});
+      mk(ov,"ellipse",{cx:g.knob.x,cy:g.knob.y,rx:6.5,ry:17,fill:"none",stroke:"#ff6b5e","stroke-width":drag&&drag.kind==="tip"?3:2});
+    }
+    mk(ov,"circle",{cx:g.knob.x,cy:g.knob.y,r:5,fill:"#fff",stroke:"#4c8dff","stroke-width":1.5});
+  }
+  function inQuad(p,g){
+    var q=[g.tl,g.tr,g.br,g.bl], ins=false;
+    for(var i=0,j=3;i<4;j=i++){ var a=q[i],b=q[j];
+      if(((a.y>p.y)!==(b.y>p.y))&&(p.x<(b.x-a.x)*(p.y-a.y)/(b.y-a.y)+a.x)) ins=!ins; }
+    return ins;
+  }
+  function hitTest(p){
+    if(!S.sel) return inQuad(p,geo())?"move":null;
+    var g=geo(), d=function(a){ return Math.hypot(p.x-a.x,p.y-a.y); };
+    if(d(g.knob)<8) return "knob";
+    if(hoverKnob||drag){ var dx=p.x-g.knob.x, dy=p.y-g.knob.y;
+      var f=Math.abs((dx*dx)/(17*17)+(dy*dy)/(6.5*6.5)-1), t=Math.abs((dx*dx)/(6.5*6.5)+(dy*dy)/(17*17)-1);
+      if(Math.hypot(dx,dy)<24){ if(f<.55&&Math.abs(dx)>=Math.abs(dy)) return "swing"; if(t<.55) return "tip"; } }
+    var hs=["tl","tr","br","bl","t","b","l","r"]; for(var i=0;i<hs.length;i++) if(d(g[hs[i]])<7) return hs[i];
+    if(inQuad(p,g)) return "move";
+    return null;
+  }
+  var LIVE={move:["x","y"],tl:["w","h"],tr:["w","h"],br:["w","h"],bl:["w","h"],t:["w","h"],b:["w","h"],l:["w","h"],r:["w","h"],knob:["a"],swing:["ty"],tip:["tx"]};
+  var CUR={move:"move",knob:"grab",swing:"ew-resize",tip:"ns-resize",tl:"nwse-resize",br:"nwse-resize",tr:"nesw-resize",bl:"nesw-resize",t:"ns-resize",b:"ns-resize",l:"ew-resize",r:"ew-resize"};
+  var local=function(e){ var c=cnv.getBoundingClientRect(); return {x:e.clientX-c.left,y:e.clientY-c.top}; };
+  hitz.addEventListener("pointermove",function(e){
+    if(drag) return;
+    var p=local(e), g=geo(), was=hoverKnob;
+    hoverKnob=S.sel&&Math.hypot(p.x-g.knob.x,p.y-g.knob.y)<26;
+    var h=hitTest(p); hitz.style.cursor=h?CUR[h]:"default";
+    if(was!==hoverKnob) drawSel();
+  });
+  hitz.addEventListener("pointerdown",function(e){
+    if(e.button!==0) return;
+    closeMenu(); closeKeyBar();
+    var p=local(e), h=hitTest(p);
+    if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+    if(!h){ S.sel=false; S.bar=null; S.picked={keys:[],row:null,moment:null}; renderAll(); return; }
+    S.sel=true; S.picked.keys=[]; S.picked.row=null;
+    if(S.playing) stopPlay();
+    var g=geo();
+    drag={kind:h,p0:p,c:g.c,pos:valueAt("position"),s:valueAt("scale"),rz:valueAt("rotation"),tx:valueAt("tiltX"),ty:valueAt("tiltY"),
+          d0:Math.hypot(p.x-g.c.x,p.y-g.c.y)||1,a0:Math.atan2(p.y-g.c.y,p.x-g.c.x)};
+    S.bar="transform"; S.barSide=(h==="b"||h==="bl"||h==="br")?"above":"below"; S.live=LIVE[h]||[];
+    if(h==="swing"||h==="tip") S.used3d=true;
+    hitz.setPointerCapture(e.pointerId);
+    renderAll();
+  });
+  hitz.addEventListener("pointermove",function(e){
+    if(!drag) return;
+    var p=local(e), k=K(), dx=p.x-drag.p0.x, dy=p.y-drag.p0.y;
+    if(drag.kind==="move") setVal("position",{x:Math.round(drag.pos.x+dx/k),y:Math.round(drag.pos.y+dy/k)});
+    else if(drag.kind==="knob"){ var a=Math.atan2(p.y-drag.c.y,p.x-drag.c.x); var r=drag.rz+(a-drag.a0)*180/Math.PI; if(e.shiftKey) r=Math.round(r/15)*15; setVal("rotation",Math.round(r*10)/10); }
+    else if(drag.kind==="swing"){ var v=drag.ty+dx*0.6; if(e.shiftKey) v=Math.round(v/15)*15; setVal("tiltY",Math.round(clamp(v,-180,180))); }
+    else if(drag.kind==="tip"){ var w=drag.tx-dy*0.6; if(e.shiftKey) w=Math.round(w/15)*15; setVal("tiltX",Math.round(clamp(w,-180,180))); }
+    else { var d=Math.hypot(p.x-drag.c.x,p.y-drag.c.y); setVal("scale",Math.round(drag.s*d/drag.d0)); }
+    renderAll();
+  });
+  var endDrag=function(){ if(!drag) return; drag=null; S.live=[]; renderAll(); };
+  hitz.addEventListener("pointerup",endDrag); hitz.addEventListener("pointercancel",endDrag);
+
+  /* ================= THE TRANSFORM BAR ================= */
+  function fld(f,lab,unit,key,wide){
+    return '<span class="va-f'+(wide?" wide":"")+'" data-f="'+f+'"><i class="va-kd" data-kp="'+key+'" hidden></i><label for="vaF'+f+'">'+lab+'</label>'+
+      '<input id="vaF'+f+'" data-f="'+f+'" inputmode="decimal" autocomplete="off" spellcheck="false">'+(unit?'<span class="u">'+unit+'</span>':'')+'</span>';
+  }
+  var bar3d=null;
+  function buildBar(){
+    var three=is3d(); if(three===bar3d) return; bar3d=three;
+    bar.innerHTML=fld("x","X","","position")+fld("y","Y","","position")+'<span class="va-sep"></span>'+
+      fld("w","W","","scale")+'<span class="va-link" title="Width and height stay in proportion"><i class="ic xs ic-link"></i></span>'+fld("h","H","","scale")+
+      '<span class="va-sep"></span>'+fld("a",'<span class="va-ang" title="Rotation">∠</span>',"°","rotation")+
+      (three?'<span class="va-sep"></span>'+fld("tx","Tilt X","°","tiltX")+fld("ty","Tilt Y","°","tiltY")+fld("z","Depth","","depth"):"")+
+      '<span class="va-sep"></span><button class="va-tb" data-reset title="Reset size, turn and tilt (position stays)">Reset</button>';
+  }
+  function fieldVals(){
+    var pos=valueAt("position"), s=valueAt("scale")/100, r=function(v){ return String(Math.round(v*10)/10); };
+    return {x:r(pos.x),y:r(pos.y),w:r(BASE_W*s),h:r(BASE_H*s),a:r(valueAt("rotation")),tx:r(valueAt("tiltX")),ty:r(valueAt("tiltY")),z:r(valueAt("depth")),
+            op:r(valueAt("opacity")),bl:r(valueAt("blur"))};
+  }
+  function keyState(p){ var tr=S.tracks[p]; if(!tr) return null; return tr.some(function(k){ return near(k.t,S.t); })?"on":"hollow"; }
+  function placeRect(bb,W,H,bw,bh,side,floor){
+    var gap=12, below=bb.maxY+gap, above=bb.minY-gap-bh, top;
+    if(side==="above") top=above>=12?above:below; else top=(below+bh<=floor)?below:above;
+    top=clamp(top,12,Math.max(12,floor-bh));
+    var left=clamp((bb.minX+bb.maxX)/2-bw/2,12,Math.max(12,W-12-bw));
+    return {left:left,top:top};
+  }
+  function renderBar(){
+    var show=S.bar==="transform"&&S.sel&&!S.playing;
+    bar.classList.toggle("on",show); if(!show) return;
+    buildBar();
+    var v=fieldVals();
+    $$("input",bar).forEach(function(i){ if(document.activeElement!==i) i.value=v[i.getAttribute("data-f")]; });
+    $$(".va-f",bar).forEach(function(f){ f.classList.toggle("live",S.live.indexOf(f.getAttribute("data-f"))>=0); });
+    $$(".va-kd",bar).forEach(function(d){ var st=keyState(d.getAttribute("data-kp")); d.hidden=!st; d.classList.toggle("on",st==="on");
+      d.title=st==="on"?"Keyed at the playhead":"Animating; a change adds a key here"; });
+    var g=geo(), tb=tbar.getBoundingClientRect(), c=cnv.getBoundingClientRect();
+    var r=placeRect(g.bb,cnv.clientWidth,cnv.clientHeight,bar.offsetWidth,bar.offsetHeight,S.barSide,tb.top-c.top-8);
+    bar.style.left=r.left+"px"; bar.style.top=r.top+"px";
+  }
+  /* numbers or sums: 120, +10, -5, *2, /4, 100+20 */
+  function parse(str,cur){
+    str=String(str).trim().replace(/[°%px\s]/g,""); if(str==="") return NaN;
+    if(/^[+*/]/.test(str)||(/^-/.test(str)&&/^-\d*\.?\d+$/.test(str)===false)) str=cur+str;
+    if(!/^[-+*/().\d]+$/.test(str)) return NaN;
+    try{ var v=Function('"use strict";return ('+str+")")(); return isFinite(v)?v:NaN; }catch(_){ return NaN; }
+  }
+  function commitField(f,raw){
+    var v=fieldVals(), n=parse(raw,parseFloat(v[f])); if(isNaN(n)) return;
+    var pos=valueAt("position");
+    if(f==="x") setVal("position",{x:n,y:pos.y});
+    else if(f==="y") setVal("position",{x:pos.x,y:n});
+    else if(f==="w") setVal("scale",n/BASE_W*100);
+    else if(f==="h") setVal("scale",n/BASE_H*100);
+    else if(f==="a") setVal("rotation",n);
+    else if(f==="tx"){ S.used3d=true; setVal("tiltX",n); }
+    else if(f==="ty"){ S.used3d=true; setVal("tiltY",n); }
+    else if(f==="z"){ S.used3d=true; setVal("depth",n); }
+    else if(f==="op") setVal("opacity",n);
+    else if(f==="bl") setVal("blur",n);
+  }
+  function wireFields(root){
+    root.addEventListener("focusin",function(e){ if(e.target.matches("input")) setTimeout(function(){ e.target.select(); },0); });
+    root.addEventListener("keydown",function(e){
+      var i=e.target; if(!i.matches("input")) return;
+      if(e.key==="Enter"){ e.preventDefault(); commitField(i.getAttribute("data-f"),i.value); i.blur(); renderAll(); }
+      else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); i.blur(); renderAll(); }
+      else if(e.key==="ArrowUp"||e.key==="ArrowDown"){ e.preventDefault(); var st=(e.shiftKey?10:1)*(e.key==="ArrowUp"?1:-1);
+        commitField(i.getAttribute("data-f"),String(parseFloat(i.value)+st)); renderAll(); i.value=fieldVals()[i.getAttribute("data-f")]; i.select(); }
+    });
+    root.addEventListener("change",function(e){ var i=e.target; if(i.matches("input")){ commitField(i.getAttribute("data-f"),i.value); renderAll(); } });
+  }
+  wireFields(bar);
+  bar.addEventListener("click",function(e){
+    if(e.target.closest("[data-reset]")){
+      ["scale","rotation","tiltX","tiltY","depth"].forEach(function(p){
+        var cur=valueAt(p); if(Math.abs(cur-P[p].def)>0.001) setVal(p,P[p].def); });
+      S.used3d=false; renderAll();
+    }
+  });
+  bar.addEventListener("pointerdown",function(e){ e.stopPropagation(); });
+
+  /* the panel's Position & Size and Look: the same write path */
+  var panel=$("#vaProps");
+  $$("input[data-pf]",panel).forEach(function(i){ i.setAttribute("data-f",i.getAttribute("data-pf")); });
+  wireFields(panel);
+  function renderPanel(){
+    var v=fieldVals();
+    $$("input[data-pf]",panel).forEach(function(i){ if(document.activeElement!==i) i.value=v[i.getAttribute("data-pf")]; });
+    $("#vaShadowMeta").textContent=Math.round(valueAt("shadow"));
+  }
+
+  /* ================= THE TIMELINE ================= */
+  var tlz=$("#vaTlz"), win=$("#vaWin");
+  var pct=function(t){ return (t/DUR*100)+"%"; };
+  function laneX(lane,t){ return t/DUR*lane.clientWidth; }
+  function renderTL(){
+    var h='<div class="track va-ruler"><span class="tl"></span><div class="lane abs" data-ruler>';
+    for(var s=0;s<=DUR;s++) h+='<span style="left:'+pct(s)+'">'+s+'s</span>';
+    h+='</div></div>';
+    var ms=moments(), first=ms.length?ms[0]:0, last=ms.length?ms[ms.length-1]:0, cw=CLIP.b-CLIP.a;
+    h+='<div class="track"><span class="tl"><button class="va-disc ic xs ic-chevron-right'+(S.open?" open":"")+'" data-disc title="Show or hide the animated rows"></button> Titles</span>'+
+       '<div class="lane abs"><div class="clip va-tclip'+(S.sel?" sel":"")+'" data-clip style="left:'+pct(CLIP.a)+';width:'+pct(cw)+'"><span class="lbl">Ship it faster.</span>'+
+       '<span class="va-kl" data-kl style="--a:'+((first-CLIP.a)/cw*100)+'%;--w:'+((last-first)/cw*100)+'%">';
+    ms.forEach(function(m){
+      var empty=S.empty.some(function(x){ return near(x,m); })&&!Object.keys(S.tracks).some(function(p){ return S.tracks[p].some(function(k){ return near(k.t,m); }); });
+      var pick=S.picked.moment!=null&&near(S.picked.moment,m);
+      h+='<span class="va-mk'+(empty?" empty":"")+(pick?" pick":"")+'" data-m="'+m+'" style="left:'+((m-CLIP.a)/cw*100)+'%" title="Key at '+fmtT(m)+'"></span>';
+    });
+    h+='</span></div></div></div>';
+    if(S.open) ORDER.forEach(function(p){
+      var tr=S.tracks[p]; if(!tr) return;
+      var g=!!S.graphs[p], cls="track va-pr"+(g?" graph":"")+(S.picked.row===p?" pick":"")+(S.fresh===p?" new":"");
+      h+='<div class="'+cls+'" data-row="'+p+'"><span class="tl" data-rl="'+p+'">'+P[p].label+
+         '<button class="va-gi" data-gt="'+p+'" title="'+(g?"Hide Graph":"Show Graph")+'"><i class="ic xs ic-curves"></i></button></span><div class="lane abs" data-lane="'+p+'">';
+      if(g) h+='<svg class="va-g" data-g="'+p+'"></svg>';
+      else {
+        if(tr.length>1) h+='<span class="va-line" style="left:'+pct(tr[0].t)+';width:'+pct(tr[tr.length-1].t-tr[0].t)+'"></span>';
+        tr.forEach(function(k,i){ var pk=S.picked.keys.some(function(x){ return x.k===k; });
+          h+='<span class="va-kd2'+(pk?" pick":"")+'" data-p="'+p+'" data-i="'+i+'" style="left:'+pct(k.t)+'" title="'+P[p].label+' key at '+fmtT(k.t)+'"></span>'; });
+      }
+      h+='</div></div>';
+    });
+    h+='<div class="track"><span class="tl"><i class="ic xs ic-image"></i> V1</span><div class="lane abs"><div class="clip v1" style="left:0;width:'+pct(DUR)+'"><span class="lbl">screen-recording.mov</span></div></div></div>';
+    h+='<div class="track"><span class="tl"><i class="ic xs ic-audio"></i> Audio</span><div class="lane abs"><div class="clip aud" style="left:0;width:'+pct(DUR)+'"><span class="lbl">music.wav</span></div></div></div>';
+    h+='<span class="va-ph" id="vaPh"></span>';
+    tlz.innerHTML=h;
+    S.fresh=null;
+    var lane=$(".lane",tlz), lr=lane.getBoundingClientRect(), zr=tlz.getBoundingClientRect();
+    $("#vaPh").style.left=(lr.left-zr.left+laneX(lane,S.t))+"px";
+    $$("svg[data-g]",tlz).forEach(function(svg){ var p=svg.getAttribute("data-g"); editorGraph(p).svg=svg; drawGraph(editorGraph(p)); });
+    var anyPick=S.picked.keys.length>0||(S.picked.moment!=null);
+    $("#vaEaseWrap").hidden=!anyPick;
+    if(anyPick){ var e=S.picked.keys.length?S.picked.keys[0].k.e:null; $("#vaEase .lead").textContent=e?curveName(e):"Mixed"; }
+  }
+  function tFromEvent(e){ var lane=$(".lane",tlz), r=lane.getBoundingClientRect(); return clamp((e.clientX-r.left)/r.width*DUR,0,DUR); }
+
+  var tdrag=null;
+  tlz.addEventListener("pointerdown",function(e){
+    if(e.button!==0) return;
+    closeMenu();
+    var t=e.target;
+    if(t.closest("[data-disc]")){ S.open=!S.open; renderAll(); return; }
+    if(t.closest("[data-gt]")){ var gp=t.closest("[data-gt]").getAttribute("data-gt"); S.graphs[gp]=!S.graphs[gp]; renderAll(); return; }
+    if(t.closest("[data-ruler]")){ closeKeyBar(); setT(snapT(tFromEvent(e))); tdrag={kind:"scrub"}; return; }
+    var kd=t.closest(".va-kd2");
+    if(kd){ var p=kd.getAttribute("data-p"), k=S.tracks[p][+kd.getAttribute("data-i")];
+      pickKey(p,k,e.shiftKey); S.picked.moment=null;
+      if(!e.shiftKey) setT(k.t);
+      S.bar=null; S.sel=true;
+      tdrag={kind:"key",x0:e.clientX,moved:false,list:S.picked.keys.map(function(x){ return {k:x.k,t0:x.k.t}; }),opt:e.altKey};
+      renderAll(); openKeyBar(keyAnchor({p:p,k:k})); return; }
+    var mk2=t.closest(".va-mk");
+    if(mk2){ var m=+mk2.getAttribute("data-m"); closeKeyBar();
+      S.picked={keys:[],row:null,moment:m}; ORDER.forEach(function(p){ (S.tracks[p]||[]).forEach(function(k){ if(near(k.t,m)) S.picked.keys.push({p:p,k:k}); }); });
+      setT(m); S.sel=true; S.bar="transform"; S.barSide="below"; S.live=[];
+      tdrag={kind:"moment",x0:e.clientX,moved:false,m0:m,list:S.picked.keys.map(function(x){ return {k:x.k,t0:x.k.t}; })};
+      renderAll(); return; }
+    var rl=t.closest("[data-rl]");
+    if(rl){ closeKeyBar(); S.picked={keys:[],row:rl.getAttribute("data-rl"),moment:null}; S.bar=null; renderAll(); return; }
+    if(t.closest("[data-clip]")){ closeKeyBar(); S.sel=true; S.picked={keys:[],row:null,moment:null}; renderAll(); return; }
+    if(!t.closest("svg[data-g]")){ closeKeyBar(); S.picked={keys:[],row:null,moment:null}; renderAll(); }
+  });
+  window.addEventListener("pointermove",function(e){
+    if(!tdrag) return;
+    if(tdrag.kind==="scrub"){ setT(snapT(tFromEvent(e))); return; }
+    var lane=$(".lane",tlz), dt=(e.clientX-tdrag.x0)/lane.clientWidth*DUR;
+    if(!tdrag.moved&&Math.abs(e.clientX-tdrag.x0)<3) return;
+    tdrag.moved=true; closeKeyBar();
+    tdrag.list.forEach(function(x){ x.k.t=clamp(snapT(x.t0+dt),CLIP.a,CLIP.b); });
+    if(tdrag.kind==="moment"){ var nm=clamp(snapT(tdrag.m0+dt),CLIP.a,CLIP.b);
+      S.empty=S.empty.map(function(m){ return near(m,S.picked.moment)?nm:m; }); S.picked.moment=nm; S.t=nm; }
+    Object.keys(S.tracks).forEach(function(p){ S.tracks[p].sort(function(a,b){ return a.t-b.t; }); });
+    renderAll();
+  });
+  window.addEventListener("pointerup",function(){ if(tdrag){ var k=tdrag; tdrag=null; if(k.kind==="key"&&k.moved&&S.picked.keys.length){ setT(S.picked.keys[0].k.t); openKeyBar(keyAnchor(S.picked.keys[0])); } } });
+  function keyEl(x){ var tr=S.tracks[x.p]; if(!tr) return null; var i=tr.indexOf(x.k); return $('.va-kd2[data-p="'+x.p+'"][data-i="'+i+'"]',tlz); }
+  /* the bar is anchored to a KEY, not to an element: the rows are redrawn on
+     every change, so the anchor is looked up again each time it is placed */
+  function keyAnchor(x){ return function(){ var el=keyEl(x); return el?el.getBoundingClientRect():null; }; }
+  function pickKey(p,k,add){
+    var has=S.picked.keys.some(function(x){ return x.k===k; });
+    if(add){ if(has) S.picked.keys=S.picked.keys.filter(function(x){ return x.k!==k; }); else S.picked.keys.push({p:p,k:k}); }
+    else if(!has) S.picked.keys=[{p:p,k:k}];
+    S.picked.row=null;
+  }
+  function setT(t){ S.t=clamp(t,0,DUR); renderAll(); }
+
+  /* ================= THE KEY BAR ================= */
+  var kbar=$("#vaKeyBar"), kAnchor=null;
+  function keyFieldsHTML(){
+    var by={}; S.picked.keys.forEach(function(x){ (by[x.p]=by[x.p]||[]).push(x.k); });
+    var h="", ps=ORDER.filter(function(p){ return by[p]; });
+    ps.forEach(function(p,ix){
+      var ks=by[p], d=P[p];
+      if(ix) h+='<span class="va-sep"></span>';
+      h+='<span class="va-name">'+d.label+'</span>';
+      var same=function(get){ var a=get(ks[0].v); return ks.every(function(k){ return Math.abs(get(k.v)-a)<1e-6; })?String(Math.round(a*10)/10):""; };
+      if(d.point){
+        h+='<span class="va-f"><label>X</label><input data-kf="'+p+'" data-ax="x" value="'+same(function(v){return v.x;})+'" placeholder="Mixed" inputmode="decimal"></span>';
+        h+='<span class="va-f"><label>Y</label><input data-kf="'+p+'" data-ax="y" value="'+same(function(v){return v.y;})+'" placeholder="Mixed" inputmode="decimal"></span>';
+      } else h+='<span class="va-f"><input data-kf="'+p+'" value="'+same(function(v){return v;})+'" placeholder="Mixed" inputmode="decimal">'+(d.unit?'<span class="u">'+d.unit+'</span>':'')+'</span>';
+    });
+    h+='<span class="va-sep"></span><button class="va-tb" data-kreset title="Reset to the default">Reset</button>';
+    return h;
+  }
+  function openKeyBar(anchor){
+    if(!S.picked.keys.length) return closeKeyBar();
+    kAnchor=anchor; kbar.innerHTML=keyFieldsHTML(); kbar.classList.add("on"); placeKeyBar();
+  }
+  function placeKeyBar(){
+    if(!kAnchor||!kbar.classList.contains("on")) return;
+    var a=kAnchor(); if(!a||!a.width) return closeKeyBar(); var w=win.getBoundingClientRect();
+    var left=clamp(a.left+a.width/2-w.left-kbar.offsetWidth/2,8,win.clientWidth-8-kbar.offsetWidth);
+    var top=a.top-w.top-10-kbar.offsetHeight; if(top<8) top=a.bottom-w.top+10;
+    kbar.style.left=left+"px"; kbar.style.top=top+"px";
+  }
+  function closeKeyBar(){ kbar.classList.remove("on"); kAnchor=null; }
+  kbar.addEventListener("pointerdown",function(e){ e.stopPropagation(); });
+  kbar.addEventListener("focusin",function(e){ if(e.target.matches("input")) setTimeout(function(){ e.target.select(); },0); });
+  function commitKey(i){
+    var p=i.getAttribute("data-kf"), ax=i.getAttribute("data-ax");
+    S.picked.keys.forEach(function(x){ if(x.p!==p) return;
+      var cur=ax?x.k.v[ax]:x.k.v, n=parse(i.value,cur); if(isNaN(n)) return;
+      var d=P[p]; if(!d.point){ if(d.min!=null) n=Math.max(d.min,n); if(d.max!=null) n=Math.min(d.max,n); }
+      if(ax){ var v=clone(x.k.v); v[ax]=n; x.k.v=v; } else x.k.v=n; });
+    renderAll();
+  }
+  kbar.addEventListener("keydown",function(e){
+    var i=e.target; if(!i.matches("input")) return;
+    if(e.key==="Enter"){ e.preventDefault(); commitKey(i); i.blur(); }
+    else if(e.key==="Escape"){ e.preventDefault(); e.stopPropagation(); closeKeyBar(); }
+  });
+  kbar.addEventListener("change",function(e){ if(e.target.matches("input")) commitKey(e.target); });
+  kbar.addEventListener("click",function(e){
+    if(!e.target.closest("[data-kreset]")) return;
+    S.picked.keys.forEach(function(x){ x.k.v=clone(P[x.p].def); });
+    renderAll(); kbar.innerHTML=keyFieldsHTML(); placeKeyBar();
+  });
+
+  /* ================= MENUS ================= */
+  /* Menus open at the pointer wherever it is on the page, so they live on the
+     body: a glass window is a containing block for anything fixed inside it. */
+  var menu=$("#vaMenu"), sub=$("#vaSub"), menuCtx=null, easeClip=null;
+  document.body.appendChild(menu); document.body.appendChild(sub);
+  document.addEventListener("scroll",function(){ closeMenu(); },true);
+  function closeMenu(){ menu.classList.remove("on"); sub.classList.remove("on"); menuCtx=null; }
+  function openMenu(html,x,y,ctx){
+    closeKeyBar(); S.bar=null; renderBar(); drawSel();
+    menu.innerHTML=html; menuCtx=ctx; menu.classList.add("on"); sub.classList.remove("on");
+    menu.style.left=clamp(x,8,innerWidth-menu.offsetWidth-8)+"px";
+    menu.style.top=clamp(y,8,innerHeight-menu.offsetHeight-8)+"px";
+  }
+  var item=function(act,label,opts){ opts=opts||{}; return '<div class="menuitem'+(opts.dis?" dis":"")+'" data-act="'+act+'"'+(opts.arg!=null?' data-arg="'+opts.arg+'"':"")+'>'+(opts.ic?'<i class="ic '+opts.ic+'"></i> ':"")+label+(opts.sub?'<i class="ic xs ic-chevron-right chev"></i>':"")+(opts.sc?'<span class="sc">'+opts.sc+'</span>':"")+'</div>'; };
+  var sep='<div class="menu-sep"></div>';
+  function easeRows(){ return (CURVE?CURVE.menuHTML({note:false}):"")+sep+item("hold","Hold")+item("copyEase","Copy Ease")+item("pasteEase","Paste Ease",{dis:!easeClip}); }
+  function onKeyLine(e){ return !!e.target.closest("[data-kl],[data-clip]"); }
+  tlz.addEventListener("contextmenu",function(e){
+    e.preventDefault();
+    var kd=e.target.closest(".va-kd2"), rl=e.target.closest("[data-row]");
+    if(kd){ var p=kd.getAttribute("data-p"), k=S.tracks[p][+kd.getAttribute("data-i")];
+      if(!S.picked.keys.some(function(x){ return x.k===k; })) { pickKey(p,k,false); S.picked.moment=null; renderTL(); }
+      openMenu(easeRows()+sep+item("delKeys","Delete",{sc:"⌫"}),e.clientX,e.clientY,{kind:"keys"}); return; }
+    if(rl&&!e.target.closest("svg[data-g]")){ var rp=rl.getAttribute("data-row"); S.picked={keys:[],row:rp,moment:null}; renderTL();
+      openMenu(item("graph",S.graphs[rp]?"Hide Graph":"Show Graph",{arg:rp})+item("rowEase","Easing",{arg:rp,sub:true})+sep+item("stop","Stop Animating",{arg:rp,sc:"⌫"}),e.clientX,e.clientY,{kind:"row",p:rp}); return; }
+    if(onKeyLine(e)){ var t=snapT(S.t), onKey=moments().some(function(m){ return near(m,t); });
+      openMenu(item("animate","Animate",{sub:true})+item("addKey","Add Key",{dis:onKey||S.t<CLIP.a||S.t>CLIP.b})+item("removeKey","Remove Key",{dis:!onKey})+sep+
+        item("noop","Split at Playhead")+item("noop","Speed",{sub:true})+item("noop","Delete",{sc:"⌫"}),e.clientX,e.clientY,{kind:"keyline"}); return; }
+  });
+  function animateSub(){
+    var h="", first=true;
+    GROUPS.forEach(function(g){
+      var ps=ORDER.filter(function(p){ return P[p].group===g&&!S.tracks[p]; }); if(!ps.length) return;
+      if(!first) h+=sep; first=false;
+      h+='<div class="mlabel">'+g+'</div>'; ps.forEach(function(p){ h+=item("anim",P[p].label,{arg:p}); });
+    });
+    return h||'<div class="menuitem dis">Everything is animating</div>';
+  }
+  menu.addEventListener("pointerover",function(e){
+    var it=e.target.closest(".menuitem"); if(!it) return;
+    var act=it.getAttribute("data-act");
+    if(act==="animate"||act==="rowEase"){
+      sub.innerHTML=act==="animate"?animateSub():(CURVE?CURVE.menuHTML({note:false}):"")+sep+item("hold","Hold");
+      sub.setAttribute("data-for",act==="rowEase"?it.getAttribute("data-arg"):"");
+      sub.classList.add("on");
+      var r=it.getBoundingClientRect();
+      var left=r.right+2; if(left+sub.offsetWidth>innerWidth-8) left=r.left-sub.offsetWidth-2;
+      sub.style.left=left+"px"; sub.style.top=clamp(r.top-5,8,innerHeight-sub.offsetHeight-8)+"px";
+    } else if(!e.target.closest(".va-sub")) sub.classList.remove("on");
+  });
+  function applyEase(id,keys){ keys.forEach(function(x){ x.k.e=id; }); }
+  function rowKeys(p){ return (S.tracks[p]||[]).map(function(k){ return {p:p,k:k}; }); }
+  function onMenuClick(e){
+    var it=e.target.closest(".menuitem"); if(!it||it.classList.contains("dis")) return;
+    var act=it.getAttribute("data-act"), arg=it.getAttribute("data-arg"), cv=it.getAttribute("data-curve"), ctx=menuCtx||{};
+    var fromSub=!!e.target.closest(".va-sub"), subFor=sub.getAttribute("data-for");
+    if(act==="animate"||act==="rowEase") return;
+    if(ctx.kind==="graph"){ graphMenuAct(ctx.G,act,cv); closeMenu(); return; }
+    var targets=fromSub&&subFor?rowKeys(subFor):S.picked.keys;
+    if(cv){ applyEase(cv==="custom"?"custom:.34,.56,.64,1":cv,targets); }
+    else if(act==="hold") applyEase("hold",targets);
+    else if(act==="copyEase"&&targets.length) easeClip=targets[0].k.e;
+    else if(act==="pasteEase"&&easeClip) applyEase(easeClip,targets);
+    else if(act==="delKeys") deleteKeys();
+    else if(act==="graph"){ S.graphs[arg]=!S.graphs[arg]; }
+    else if(act==="stop") stopAnimating(arg);
+    else if(act==="anim"){ var t=clamp(snapT(S.t),CLIP.a,CLIP.b);
+      S.tracks[arg]=[{t:t,v:clone(S.base[arg]),e:"ease-in-out"}]; S.fresh=arg; S.empty=S.empty.filter(function(m){ return !near(m,t); });
+      if(P[arg].group==="3D") S.used3d=true; S.open=true; }
+    else if(act==="addKey"){ var t2=clamp(snapT(S.t),CLIP.a,CLIP.b);
+      if(Object.keys(S.tracks).length) Object.keys(S.tracks).forEach(function(p){ setVal(p,valueAt(p)); });
+      else S.empty.push(t2); }
+    else if(act==="removeKey"){ var t3=snapT(S.t); S.empty=S.empty.filter(function(m){ return !near(m,t3); });
+      Object.keys(S.tracks).forEach(function(p){ S.tracks[p]=S.tracks[p].filter(function(k){ return !near(k.t,t3); }); if(!S.tracks[p].length) stopAnimating(p); }); }
+    closeMenu(); renderAll();
+  }
+  menu.addEventListener("click",onMenuClick); sub.addEventListener("click",onMenuClick);
+  document.addEventListener("pointerdown",function(e){ if(!e.target.closest(".va-menu,.va-sub")) closeMenu(); },true);
+  $("#vaEase").addEventListener("click",function(e){
+    var r=e.currentTarget.getBoundingClientRect();
+    openMenu(easeRows(),r.left,r.bottom+4,{kind:"keys"});
+    menu.style.top=clamp(r.top-menu.offsetHeight-4,8,9999)+"px";
+  });
+  function deleteKeys(){
+    S.picked.keys.forEach(function(x){ var tr=S.tracks[x.p]; if(!tr) return; S.tracks[x.p]=tr.filter(function(k){ return k!==x.k; }); if(!S.tracks[x.p].length){ S.base[x.p]=clone(x.k.v); delete S.tracks[x.p]; delete S.graphs[x.p]; } });
+    S.picked={keys:[],row:null,moment:null}; closeKeyBar();
+  }
+
+  /* ================= THE GRAPH (one engine, every property) ================= */
+  var GRAPHS={};
+  function editorGraph(p){
+    return GRAPHS[p]||(GRAPHS[p]={p:p,svg:null,keys:function(){ return S.tracks[p]||[]; },t0:0,t1:DUR,
+      now:function(){ return S.t; },sel:{pts:[],segs:[]},hov:null,ghost:null,changed:function(){ renderLayer(); renderBar(); renderPanel(); }});
+  }
+  function heights(G){
+    var ks=G.keys(); if(!P[G.p].point) return ks.map(function(k){ return k.v; });
+    var d=0, out=[]; ks.forEach(function(k,i){ if(i) d+=Math.hypot(k.v.x-ks[i-1].v.x,k.v.y-ks[i-1].v.y); out.push(d); }); return out;
+  }
+  function gGeom(G){
+    var svg=G.svg, W=svg.clientWidth||svg.getBoundingClientRect().width, H=svg.clientHeight||svg.getBoundingClientRect().height;
+    var ks=G.keys(), hs=heights(G), lo=Infinity, hi=-Infinity;
+    hs.forEach(function(v){ lo=Math.min(lo,v); hi=Math.max(hi,v); });
+    ks.forEach(function(k,i){ if(i<ks.length-1){ for(var s=1;s<20;s++){ var v=hs[i]+(hs[i+1]-hs[i])*ease(k.e,s/20); lo=Math.min(lo,v); hi=Math.max(hi,v); } } });
+    if(!isFinite(lo)){ lo=0; hi=1; }
+    if(hi-lo<1e-6){ lo-=10; hi+=10; }
+    var pad=(hi-lo)*.14; lo-=pad; hi+=pad;
+    var top=8, bot=H-8;
+    return {W:W,H:H,lo:lo,hi:hi,hs:hs,ks:ks,
+      x:function(t){ return (t-G.t0)/(G.t1-G.t0)*W; }, t:function(x){ return G.t0+x/W*(G.t1-G.t0); },
+      y:function(v){ return bot-(v-lo)/(hi-lo)*(bot-top); }, v:function(y){ return lo+(bot-y)/(bot-top)*(hi-lo); }};
+  }
+  function segPts(G,g,i){
+    var a=g.ks[i], b=g.ks[i+1], out=[];
+    for(var s=0;s<=40;s++){ var f=s/40, t=a.t+(b.t-a.t)*f, v=g.hs[i]+(g.hs[i+1]-g.hs[i])*ease(a.e,f); out.push([g.x(t),g.y(v)]); }
+    if(a.e==="hold") out=[[g.x(a.t),g.y(g.hs[i])],[g.x(b.t),g.y(g.hs[i])],[g.x(b.t),g.y(g.hs[i+1])]];
+    return out;
+  }
+  function handles(G,g,i){
+    var a=g.ks[i], b=g.ks[i+1], c=bez(a.e); if(!c||a.e==="hold") return null;
+    return [{x:g.x(a.t+(b.t-a.t)*c[0]),y:g.y(g.hs[i]+(g.hs[i+1]-g.hs[i])*c[1])},{x:g.x(a.t+(b.t-a.t)*c[2]),y:g.y(g.hs[i]+(g.hs[i+1]-g.hs[i])*c[3])}];
+  }
+  function fmtV(G,v){ var u=P[G.p].unit; return (Math.round(v*10)/10)+(G.p==="position"?"":u||""); }
+  function drawGraph(G){
+    var svg=G.svg; if(!svg) return; svg.innerHTML="";
+    var g=gGeom(G); G.g=g; if(!g.ks.length) return;
+    [0.25,0.5,0.75].forEach(function(f){ var y=8+(g.H-16)*f; mk(svg,"line",{class:"grid",x1:0,x2:g.W,y1:y,y2:y});
+      var tx=mk(svg,"text",{class:"axis",x:4,y:y-3}); tx.textContent=fmtV(G,g.v(y)); });
+    var px=g.x(G.now()); mk(svg,"line",{class:"phl",x1:px,x2:px,y1:0,y2:g.H});
+    var k0=g.ks[0], kn=g.ks[g.ks.length-1];
+    mk(svg,"line",{class:"ext",x1:0,x2:g.x(k0.t),y1:g.y(g.hs[0]),y2:g.y(g.hs[0])});
+    mk(svg,"line",{class:"ext",x1:g.x(kn.t),x2:g.W,y1:g.y(g.hs[g.hs.length-1]),y2:g.y(g.hs[g.hs.length-1])});
+    for(var i=0;i<g.ks.length-1;i++){
+      var pts=segPts(G,g,i), pick=G.sel.segs.indexOf(g.ks[i])>=0, hov=G.hov&&G.hov.seg===i;
+      mk(svg,"path",{class:"seg"+(pick?" pick":"")+(hov&&!pick?" hov":""),d:"M"+pts.map(function(p){ return p[0]+","+p[1]; }).join("L")});
+      if(pick){ var hd=handles(G,g,i); if(hd){
+        mk(svg,"line",{class:"hl",x1:g.x(g.ks[i].t),y1:g.y(g.hs[i]),x2:hd[0].x,y2:hd[0].y});
+        mk(svg,"line",{class:"hl",x1:g.x(g.ks[i+1].t),y1:g.y(g.hs[i+1]),x2:hd[1].x,y2:hd[1].y});
+        mk(svg,"circle",{class:"hd",cx:hd[0].x,cy:hd[0].y,r:4.5}); mk(svg,"circle",{class:"hd",cx:hd[1].x,cy:hd[1].y,r:4.5}); } }
+    }
+    g.ks.forEach(function(k,i){ var x=g.x(k.t), y=g.y(g.hs[i]), pick=G.sel.pts.indexOf(k)>=0||S.picked.keys.some(function(q){ return q.k===k; });
+      mk(svg,"rect",{class:"pt"+(pick?" pick":"")+(G.hov&&G.hov.pt===i?" hov":""),x:x-5,y:y-5,width:10,height:10,rx:1.5,transform:"rotate(45 "+x+" "+y+")"}); });
+    if(G.ghost) { mk(svg,"circle",{class:"ghost",cx:G.ghost.x,cy:G.ghost.y,r:5}); }
+    if(G.read) G.read();
+  }
+  function gHit(G,p){
+    var g=G.g; if(!g) return null;
+    for(var i=0;i<g.ks.length;i++){ if(Math.hypot(p.x-g.x(g.ks[i].t),p.y-g.y(g.hs[i]))<8) return {pt:i}; }
+    for(var j=0;j<g.ks.length-1;j++){ if(G.sel.segs.indexOf(g.ks[j])<0) continue; var hd=handles(G,g,j); if(!hd) continue;
+      for(var q=0;q<2;q++) if(Math.hypot(p.x-hd[q].x,p.y-hd[q].y)<7) return {hd:q,seg:j}; }
+    var best=null;
+    for(var s=0;s<g.ks.length-1;s++){ var pts=segPts(G,g,s);
+      for(var n=0;n<pts.length-1;n++){ var d=distSeg(p,pts[n],pts[n+1]); if(d.d<7&&(!best||d.d<best.d)) best={seg:s,d:d.d,x:d.x,y:d.y}; } }
+    return best;
+  }
+  function distSeg(p,a,b){ var dx=b[0]-a[0], dy=b[1]-a[1], L=dx*dx+dy*dy||1, u=clamp(((p.x-a[0])*dx+(p.y-a[1])*dy)/L,0,1), x=a[0]+u*dx, y=a[1]+u*dy; return {d:Math.hypot(p.x-x,p.y-y),x:x,y:y}; }
+  function addPoint(G,t){
+    var ks=G.keys(), v=evalKeys(ks,t), prev=ks.filter(function(k){ return k.t<t; }).pop();
+    var nk={t:snapT(t),v:v,e:prev?prev.e:"ease-in-out"}; ks.push(nk); ks.sort(function(a,b){ return a.t-b.t; });
+    G.sel={pts:[nk],segs:[]}; return nk;
+  }
+  function graphMenuAct(G,act,cv){
+    var segs=G.sel.segs.length?G.sel.segs:G.sel.pts;
+    if(cv) segs.forEach(function(k){ k.e=cv==="custom"?"custom:.34,.56,.64,1":cv; });
+    else if(act==="hold") segs.forEach(function(k){ k.e="hold"; });
+    else if(act==="copyEase"&&segs.length) easeClip=segs[0].e;
+    else if(act==="pasteEase"&&easeClip) segs.forEach(function(k){ k.e=easeClip; });
+    else if(act==="addPoint"&&G.menuT!=null) addPoint(G,G.menuT);
+    else if(act==="delPts") delPts(G);
+    drawGraph(G); G.changed();
+  }
+  function delPts(G){ var ks=G.keys(); G.sel.pts.forEach(function(k){ var i=ks.indexOf(k); if(i>=0&&ks.length>1) ks.splice(i,1); }); G.sel={pts:[],segs:[]}; }
+  function wireGraph(host,getG){
+    var gd=null;
+    var lp=function(G,e){ var r=G.svg.getBoundingClientRect(); return {x:e.clientX-r.left,y:e.clientY-r.top}; };
+    host.addEventListener("pointermove",function(e){
+      var G=getG(e); if(!G||gd) return; var p=lp(G,e), h=gHit(G,p);
+      G.hov=h?{pt:h.pt,seg:h.pt==null&&h.hd==null?h.seg:null}:null;
+      G.ghost=(e.altKey&&h&&h.pt==null&&h.hd==null)?{x:h.x,y:h.y}:null;
+      G.svg.style.cursor=h?(h.pt!=null||h.hd!=null?"grab":(e.altKey?"copy":"pointer")):"default";
+      drawGraph(G);
+    });
+    host.addEventListener("pointerleave",function(e){ var G=getG(e); if(G&&!gd){ G.hov=null; G.ghost=null; drawGraph(G); } });
+    host.addEventListener("pointerdown",function(e){
+      var G=getG(e); if(!G||e.button!==0) return; e.stopPropagation(); closeMenu(); closeKeyBar();
+      var p=lp(G,e), h=gHit(G,p), ks=G.keys(); if(!h){ G.sel={pts:[],segs:[]}; drawGraph(G); return; }
+      if(h.pt!=null){ var k=ks[h.pt];
+        if(e.shiftKey){ var i=G.sel.pts.indexOf(k); if(i>=0) G.sel.pts.splice(i,1); else G.sel.pts.push(k); }
+        else if(G.sel.pts.indexOf(k)<0) G.sel={pts:[k],segs:[]};
+        if(G.onPick) G.onPick(k);
+        gd={G:G,kind:"pt",k:k,p0:p,t0:k.t,v0:G.g.hs[h.pt],moved:false};
+      } else if(h.hd!=null){ gd={G:G,kind:"hd",q:h.hd,seg:ks[h.seg],i:h.seg}; }
+      else if(e.altKey){ addPoint(G,G.g.t(h.x)); G.changed(); }
+      else { var sk=ks[h.seg];
+        if(e.shiftKey){ var j=G.sel.segs.indexOf(sk); if(j>=0) G.sel.segs.splice(j,1); else G.sel.segs.push(sk); }
+        else G.sel={pts:[],segs:[sk]}; }
+      try{ G.svg.setPointerCapture(e.pointerId); }catch(_){} drawGraph(G); if(G.read) G.read();
+    });
+    host.addEventListener("dblclick",function(e){
+      var G=getG(e); if(!G) return; var p=lp(G,e), h=gHit(G,p);
+      if(h&&h.pt==null&&h.hd==null){ addPoint(G,G.g.t(h.x)); G.changed(); drawGraph(G); }
+    });
+    window.addEventListener("pointermove",function(e){
+      if(!gd) return; var G=gd.G; if(!G) return; var p=lp(G,e), g=G.g, ks=G.keys();
+      if(gd.kind==="pt"){
+        var dx=p.x-gd.p0.x, dy=p.y-gd.p0.y; if(!gd.moved&&Math.hypot(dx,dy)<3) return; gd.moved=true;
+        if(e.shiftKey){ if(Math.abs(dx)>Math.abs(dy)) dy=0; else dx=0; }
+        var i=ks.indexOf(gd.k), lo=i>0?ks[i-1].t+1/FPS:G.t0, hi=i<ks.length-1?ks[i+1].t-1/FPS:G.t1;
+        gd.k.t=clamp(snapT(g.t(g.x(gd.t0)+dx)),lo,hi);
+        if(!P[G.p].point){ var d=P[G.p], nv=g.v(g.y(gd.v0)+dy); if(d.min!=null) nv=Math.max(d.min,nv); if(d.max!=null) nv=Math.min(d.max,nv); gd.k.v=Math.round(nv*10)/10; }
+      } else if(gd.kind==="hd"){
+        var a=ks[gd.i], b=ks[gd.i+1], c=bez(a.e)||[.4,0,.2,1];
+        var fx=clamp((g.t(p.x)-a.t)/(b.t-a.t),0,1), span=(g.hs[gd.i+1]-g.hs[gd.i])||1, fy=clamp((g.v(p.y)-g.hs[gd.i])/span,-1,2);
+        if(gd.q===0){ c[0]=fx; c[1]=fy; } else { c[2]=fx; c[3]=fy; }
+        a.e="custom:"+c.map(function(n){ return Math.round(n*100)/100; }).join(",");
+      }
+      drawGraph(G); G.changed();
+    });
+    var up=function(){ gd=null; }; window.addEventListener("pointerup",up); window.addEventListener("pointercancel",up);
+    host.addEventListener("contextmenu",function(e){
+      var G=getG(e); if(!G) return; e.preventDefault(); e.stopPropagation();
+      var p=lp(G,e), h=gHit(G,p), ks=G.keys();
+      if(h&&h.pt!=null){ if(G.sel.pts.indexOf(ks[h.pt])<0) G.sel={pts:[ks[h.pt]],segs:[]}; }
+      else if(h&&h.seg!=null){ if(G.sel.segs.indexOf(ks[h.seg])<0) G.sel={pts:[],segs:[ks[h.seg]]}; G.menuT=G.g.t(h.x); }
+      else return;
+      drawGraph(G);
+      var onSeg=h.pt==null;
+      openMenu(easeRows()+sep+(onSeg?item("addPoint","Add Point Here"):"")+item("delPts","Delete",{dis:!G.sel.pts.length,sc:"⌫"}),e.clientX,e.clientY,{kind:"graph",G:G});
+    });
+  }
+  wireGraph(tlz,function(e){ var svg=e&&e.target&&e.target.closest?e.target.closest("svg[data-g]"):null; return svg?editorGraph(svg.getAttribute("data-g")):null; });
+  // a point picked on an editor graph is a picked key: the key bar opens from it
+  ORDER.forEach(function(p){ editorGraph(p).onPick=function(k){ S.picked={keys:[{p:p,k:k}],row:null,moment:null}; setT(k.t);
+    var G=editorGraph(p), g=G.g, i=g.ks.indexOf(k), r=G.svg.getBoundingClientRect();
+    openKeyBar(function(){ var G2=editorGraph(p); if(!G2.svg||!G2.g) return null; var rr=G2.svg.getBoundingClientRect(), j=G2.g.ks.indexOf(k); if(j<0) return null;
+      var x=rr.left+G2.g.x(k.t), y=rr.top+G2.g.y(G2.g.hs[j]); return {left:x-5,right:x+5,top:y-6,bottom:y+6,width:10,height:12}; }); }; });
+
+  /* ================= TRANSPORT ================= */
+  var scrub=$("#vaScrub");
+  function renderTransport(){ var f=S.t/DUR*100; $(".fill",scrub).style.width=f+"%"; $(".knob",scrub).style.left=f+"%"; $("#vaTc").textContent=fmtT(S.t);
+    $("#vaPlay").innerHTML='<i class="ic '+(S.playing?"ic-pause":"ic-play")+'"></i>'; }
+  var sdrag=false;
+  scrub.addEventListener("pointerdown",function(e){ sdrag=true; scrub.setPointerCapture(e.pointerId); sc(e); });
+  scrub.addEventListener("pointermove",function(e){ if(sdrag) sc(e); });
+  scrub.addEventListener("pointerup",function(){ sdrag=false; });
+  function sc(e){ var r=scrub.getBoundingClientRect(); closeKeyBar(); setT(snapT(clamp((e.clientX-r.left)/r.width,0,1)*DUR)); }
+  var raf=null, last=null;
+  function stopPlay(){ S.playing=false; if(raf) cancelAnimationFrame(raf); raf=null; renderAll(); }
+  $("#vaPlay").addEventListener("click",function(){
+    if(S.playing) return stopPlay();
+    S.playing=true; S.bar=null; closeKeyBar(); closeMenu(); last=null; if(S.t>=CLIP.b-0.05) S.t=0;
+    var tick=function(now){ if(!S.playing) return; if(last!=null) S.t+=(now-last)/1000; last=now;
+      if(S.t>=DUR){ S.t=DUR; return stopPlay(); } renderLayer(); renderTransport(); var ph=$("#vaPh"), lane=$(".lane",tlz), lr=lane.getBoundingClientRect(), zr=tlz.getBoundingClientRect();
+      ph.style.left=(lr.left-zr.left+laneX(lane,S.t))+"px"; raf=requestAnimationFrame(tick); };
+    renderAll(); raf=requestAnimationFrame(tick);
+  });
+  function goKey(dir){ var ms=moments(), t=S.t, n=null;
+    ms.forEach(function(m){ if(dir>0&&m>t+1e-3&&(n==null||m<n)) n=m; if(dir<0&&m<t-1e-3&&(n==null||m>n)) n=m; });
+    if(n!=null){ closeKeyBar(); setT(n); } }
+  $("#vaNextK").addEventListener("click",function(){ goKey(1); }); $("#vaPrevK").addEventListener("click",function(){ goKey(-1); });
+
+  /* ================= TOOLS, KEYS ================= */
+  $$("#vaTbar .tool").forEach(function(b){ b.addEventListener("click",function(){ if(b.getAttribute("data-tool")!=="select"){ S.bar=null; closeKeyBar(); renderAll(); } }); });
+  document.addEventListener("keydown",function(e){
+    if(!win.isConnected) return;
+    var inField=e.target.matches&&e.target.matches("input,textarea");
+    if(e.key==="Escape"&&!inField){
+      if(menu.classList.contains("on")) return closeMenu();
+      if(kbar.classList.contains("on")) return closeKeyBar();
+      if(S.bar){ S.bar=null; return renderAll(); }
+      S.picked={keys:[],row:null,moment:null}; renderAll();
+    }
+    if((e.key==="Backspace"||e.key==="Delete")&&!inField){
+      if(GS.sel.pts.length&&document.activeElement===document.body&&gspecHot){ e.preventDefault(); delPts(GS); drawGraph(GS); return; }
+      if(S.picked.row){ e.preventDefault(); stopAnimating(S.picked.row); renderAll(); }
+      else if(S.picked.keys.length){ e.preventDefault(); deleteKeys(); renderAll(); }
+    }
+  });
+
+  function renderAll(){ renderLayer(); renderTL(); drawSel(); renderBar(); renderPanel(); renderTransport(); placeKeyBar(); }
+
+  $$("#vaScen button").forEach(function(b){ b.addEventListener("click",function(){
+    $$("#vaScen button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    closeKeyBar(); closeMenu(); scenario(b.getAttribute("data-scen")); GRAPHS={}; bar3d=null; renderAll(); }); });
+
+  /* ================= THE GRAPH SPECIMEN ================= */
+  var gspecHot=false;
+  var GS={p:"scale",svg:$("#vaGSvg"),t0:0,t1:4,sel:{pts:[],segs:[]},hov:null,ghost:null,
+    _k:[{t:0.4,v:60,e:"ease-out"},{t:1.6,v:112,e:"ease-in-out"},{t:3.4,v:100,e:"ease-in-out"}],
+    keys:function(){ return GS._k; }, now:function(){ return 2.1; }, changed:function(){}};
+  GS.sel.segs=[GS._k[0]];
+  GS.read=function(){
+    var k=GS._k, seg=GS.sel.segs[0], pt=GS.sel.pts[0];
+    $("#vaGRead").innerHTML="<span>Points <b>"+k.length+"</b></span>"+
+      (seg?"<span>Picked segment <b>"+fmtTs(seg.t)+" to "+fmtTs(k[k.indexOf(seg)+1]?k[k.indexOf(seg)+1].t:seg.t)+"</b> · <b>"+curveName(seg.e)+"</b></span>":"")+
+      (pt?"<span>Picked point <b>"+fmtTs(pt.t)+"</b> · <b>"+Math.round(pt.v)+"%</b></span>":"")+
+      "<span>At the playhead <b>"+Math.round(evalKeys(k,2.1))+"%</b></span>";
+  };
+  var fmtTs=function(t){ return t.toFixed(2)+"s"; };
+  var gr=$("#vaGRuler .lane"); for(var s=0;s<=4;s+=0.5) gr.insertAdjacentHTML("beforeend",'<span style="left:'+(s/4*100)+'%">'+s+'s</span>');
+  var gspec=$(".va-gspec");
+  gspec.addEventListener("pointerenter",function(){ gspecHot=true; }); gspec.addEventListener("pointerleave",function(){ gspecHot=false; });
+  wireGraph(gspec,function(e){ return GS; });
+
+  /* ================= PLACEMENT SPECIMENS ================= */
+  function miniBar(three,typing){
+    var f=function(l,v,u,on,foc){ return '<span class="va-f'+(on?" live":"")+'"'+(foc?' style="background:var(--panel);box-shadow:var(--ring)"':"")+'><label>'+l+'</label><input value="'+v+'" tabindex="-1" readonly>'+(u?'<span class="u">'+u+'</span>':'')+'</span>'; };
+    return '<div class="va-bar on">'+f("X",typing?"+40":"960","",false,typing)+f("Y","540")+'<span class="va-sep"></span>'+f("W","900")+'<span class="va-link"><i class="ic xs ic-link"></i></span>'+f("H","300")+
+      '<span class="va-sep"></span>'+f('<span class="va-ang">∠</span>',"0","°")+(three?'<span class="va-sep"></span>'+f("Tilt X","0","°")+f("Tilt Y","-32","°",true)+f("Depth","0"):"")+
+      '<span class="va-sep"></span><button class="va-tb" tabindex="-1">Reset</button></div>';
+  }
+  var PLACES=[
+    {h:"Moving",o:{x:.5,y:.4,w:.28,h:.2},side:"below",grab:"c",p:"Under the object, clear of the turn knob above it. It follows the object as you drag."},
+    {h:"Dragging a bottom corner",o:{x:.5,y:.56,w:.28,h:.2},side:"above",grab:"br",p:"Your hand is at the bottom, so the bar goes <b>above</b>, over the knob, and stays there until you let go."},
+    {h:"Near the bottom of the frame",o:{x:.5,y:.84,w:.3,h:.18},side:"below",grab:"c",p:"No room between the object and the tool bar, so it goes above. It never covers the tool bar."},
+    {h:"Against the edge",o:{x:.1,y:.36,w:.22,h:.18},side:"below",grab:"c",p:"Slid sideways to stay 12 points inside the canvas, still under the object."},
+    {h:"A small layer",o:{x:.5,y:.38,w:.08,h:.06},side:"below",grab:"c",p:"The bar is wider than the layer and centred under it. Its size never depends on the layer's."},
+    {h:"Typing a value",o:{x:.5,y:.4,w:.28,h:.2},side:"below",grab:"none",typing:true,p:"Click a field to type. Sums work: <b>+40</b> moves it 40 to the right. Tab goes on, Return commits, Esc puts the old value back."},
+    {h:"Turned in 3D",o:{x:.5,y:.4,w:.2,h:.24,ry:-32},side:"below",grab:"knob",three:true,wide:true,p:"Tilt X, Tilt Y and Depth join the bar once the layer is turned. Flat layers never show them."}
+  ];
+  var places=$("#vaPlaces");
+  PLACES.forEach(function(s){
+    var el=document.createElement("div"); el.className="va-spec"; if(s.wide) el.style.gridColumn="1 / -1";
+    el.innerHTML='<h3>'+s.h+'</h3><div class="va-mini"><div class="va-mf"></div><div class="va-mo"></div><svg></svg>'+miniBar(s.three,s.typing)+'<div class="va-mtb"></div></div><p>'+s.p+'</p>';
+    places.appendChild(el);
+  });
+  function layoutPlaces(){
+    $$(".va-mini",places).forEach(function(m,ix){
+      var s=PLACES[ix], W=m.clientWidth, H=m.clientHeight, fw=W*.86, fh=fw*9/16; if(fh>H*.78){ fh=H*.78; fw=fh*16/9; }
+      var fx=(W-fw)/2, fy=(H-fh)/2-12, mf=$(".va-mf",m); mf.style.cssText="left:"+fx+"px;top:"+fy+"px;width:"+fw+"px;height:"+fh+"px";
+      var ow=s.o.w*fw, oh=s.o.h*fh, ox=fx+s.o.x*fw-ow/2, oy=fy+s.o.y*fh-oh/2;
+      if(s.o.x<.2) ox=fx-ow*.25;
+      var mo=$(".va-mo",m); mo.style.cssText="left:"+ox+"px;top:"+oy+"px;width:"+ow+"px;height:"+oh+"px"+(s.o.ry?";transform:perspective(300px) rotateY("+s.o.ry+"deg)":"");
+      var svg=$("svg",m); svg.innerHTML="";
+      var bb={minX:ox-4,maxX:ox+ow+4,minY:oy-24,maxY:oy+oh+4};
+      mk(svg,"rect",{x:ox,y:oy,width:ow,height:oh,fill:"none",stroke:"#4c8dff","stroke-width":1});
+      [[ox,oy],[ox+ow,oy],[ox,oy+oh],[ox+ow,oy+oh]].forEach(function(c){ mk(svg,"rect",{x:c[0]-2.5,y:c[1]-2.5,width:5,height:5,fill:"#fff",stroke:"#4c8dff","stroke-width":1}); });
+      mk(svg,"line",{x1:ox+ow/2,y1:oy,x2:ox+ow/2,y2:oy-18,stroke:"#4c8dff"}); mk(svg,"circle",{cx:ox+ow/2,cy:oy-18,r:3.5,fill:"#fff",stroke:"#4c8dff"});
+      var gp=s.grab==="none"?null:s.grab==="br"?[ox+ow,oy+oh]:s.grab==="knob"?[ox+ow/2,oy-18]:[ox+ow/2,oy+oh/2];
+      if(gp) mk(svg,"path",{d:"M"+gp[0]+","+gp[1]+" l0,13 l3.5,-3.2 l2.6,5.6 l2,-.9 l-2.6,-5.6 l4.6,-.2z",fill:"#fff",stroke:"#000","stroke-width":.9});
+      var b=$(".va-bar",m), sc=Math.min(1,(W-24)/b.scrollWidth); b.style.transform="scale("+sc+")";
+      var bw=b.offsetWidth*sc, bh=b.offsetHeight*sc, tb=$(".va-mtb",m), floor=tb.offsetTop-6;
+      var r=placeRect(bb,W,H,bw,bh,s.side,floor); b.style.left=r.left+"px"; b.style.top=r.top+"px";
+    });
+  }
+
+  /* ================= KEY BAR SPECIMENS ================= */
+  var KEYS=[
+    {h:"An opacity key",row:"Opacity",x:.55,bar:'<span class="va-name">Opacity</span><span class="va-f"><input value="40" readonly tabindex="-1"><span class="u">%</span></span>',p:"One field in the property's units. Typing 40 sets the key; the canvas shows it at once because the playhead is on the key."},
+    {h:"A position key",row:"Position",x:.4,bar:'<span class="va-name">Position</span><span class="va-f"><label>X</label><input value="560" readonly tabindex="-1"></span><span class="va-f"><label>Y</label><input value="500" readonly tabindex="-1"></span>',p:"A point takes two fields. Its graph plots the distance travelled, so this bar is where X and Y are typed."},
+    {h:"A colour key",row:"Color",x:.62,bar:'<span class="va-name">Color</span><span class="va-f" style="cursor:pointer"><span class="va-sw" style="background:#ff5d8f"></span><input value="FF5D8F" readonly tabindex="-1" style="width:52px;text-align:left"></span>',p:"A swatch and its hex: click the swatch for the colour picker. Colour has no graph, so its row and this bar are all it needs."},
+    {h:"Two keys that differ",row:"Opacity",x:.5,two:true,bar:'<span class="va-name">Opacity</span><span class="va-f"><input value="" placeholder="Mixed" readonly tabindex="-1"><span class="u">%</span></span>',p:"Shift-click a second key: the field says Mixed until you type, then every picked key takes the value."},
+    {h:"A tilt key",row:"Tilt Y",x:.45,bar:'<span class="va-name">Tilt Y</span><span class="va-f"><input value="-32" readonly tabindex="-1"><span class="u">°</span></span>',p:"Tilt and depth keys open the same bar as every other key. There is one element and no per-property panel."},
+    {h:"Near the top of the timeline",row:"Position",x:.08,flip:true,bar:'<span class="va-name">Position</span><span class="va-f"><label>X</label><input value="560" readonly tabindex="-1"></span><span class="va-f"><label>Y</label><input value="500" readonly tabindex="-1"></span>',p:"Above the key when there is room, below it when there is not, and slid in from the window's edge. Never over the key itself."}
+  ];
+  var keysEl=$("#vaKeys");
+  KEYS.forEach(function(s){
+    var el=document.createElement("div"); el.className="va-spec";
+    var dots=s.two?'<span class="va-kd2 pick" style="left:'+(s.x*100-14)+'%;top:auto;bottom:'+(22+10)+'px;position:absolute"></span>':"";
+    el.innerHTML='<h3>'+s.h+'</h3><div class="va-klane"><span class="va-krl">'+s.row+'</span><div class="va-krow"></div>'+dots+
+      '<span class="va-kd2 pick" data-anchor style="position:absolute;left:'+(s.x*100)+'%;top:auto;bottom:'+(22+10)+'px;margin-bottom:-4.5px"></span>'+
+      '<div class="va-bar on">'+s.bar+'<span class="va-sep"></span><button class="va-tb" tabindex="-1" title="Reset to the default">Reset</button>'+'</div></div><p>'+s.p+'</p>';
+    keysEl.appendChild(el);
+  });
+  function layoutKeys(){
+    $$(".va-klane",keysEl).forEach(function(l,ix){
+      var s=KEYS[ix], a=$("[data-anchor]",l), b=$(".va-bar",l), W=l.clientWidth;
+      var ax=a.offsetLeft, ay=a.offsetTop;
+      var left=clamp(ax-b.offsetWidth/2,6,W-6-b.offsetWidth), top=ay-14-b.offsetHeight;
+      if(s.flip){ l.style.height="110px"; $(".va-krow",l).style.bottom="70px"; $(".va-krl",l).style.bottom="74px"; a.style.bottom="80px"; ay=a.offsetTop; top=ay+16; }
+      b.style.left=left+"px"; b.style.top=top+"px";
+    });
+  }
+
+  function layoutAll(){ renderAll(); layoutPlaces(); layoutKeys(); if(GS.svg) drawGraph(GS); }
+  window.addEventListener("resize",layoutAll);
+  if(window.ResizeObserver) new ResizeObserver(function(){ layoutAll(); }).observe(cnv);
+  requestAnimationFrame(function(){ layoutAll(); });
+})();
+</script>
+</body>
+</html>

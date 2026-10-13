@@ -1,0 +1,58 @@
+{
+  "id": "design-the-transform-overlay-and-a-simpler-way-t-when-you-change-something-on-a-l",
+  "taskId": "design-the-transform-overlay-and-a-simpler-way-t",
+  "question": "When you change something on a layer that already has keys, when should the change become a key?",
+  "context": "Mocks: Prototype, Video, Animate with the overlay (http://127.0.0.1:8791/index.html#video-animate). The editor at the top draws option A and is live: move the playhead and drag or turn the title.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Always: any change keys itself",
+      "summary": "Once a layer has a key, every change you make (dragging it, typing in the bar, the panel) puts a key at the playhead, and a property that was not animating joins with its own row. No switch to remember.",
+      "pros": [
+        "Nothing to turn on: you click a key moment or move the playhead and change things",
+        "Matches what you described: tweak something and it is added to that key",
+        "What Position already does today"
+      ],
+      "cons": [
+        "To move a whole animation somewhere else you must pick all its keys first",
+        "A change you meant for the whole clip makes a key instead"
+      ],
+      "mitigation": "Undo takes the key back in one step, and picking a row then dragging on the canvas moves every key of it together."
+    },
+    {
+      "id": "b",
+      "label": "A record switch in the timeline bar",
+      "summary": "A record button in the timeline bar, like Apple Motion. While it is on, changes become keys; while it is off, a change moves the value at every key by the same amount.",
+      "pros": [
+        "You decide every time",
+        "Moving a whole animation is just a drag with record off"
+      ],
+      "cons": [
+        "A mode you have to notice: changes go wrong silently when it is in the wrong state",
+        "Another control in the timeline bar"
+      ],
+      "mitigation": "The button glows red and the bar fields show the key diamonds while it is on."
+    },
+    {
+      "id": "c",
+      "label": "Only on a key moment",
+      "summary": "A change becomes a key only while the playhead sits on one of the layer's key moments (or you clicked one). Anywhere else, a change moves the value at every key by the same amount.",
+      "pros": [
+        "No switch",
+        "Easy to move a whole animation: park the playhead between keys and drag"
+      ],
+      "cons": [
+        "To add a key at a new time you must use Add Key first",
+        "Whether a drag keys or shifts depends on exactly where the playhead is"
+      ],
+      "mitigation": "The bar fields show a filled diamond when the change will key and a hollow one when it will shift."
+    }
+  ],
+  "recommended": "a",
+  "status": "withdrawn",
+  "created": "2026-10-13T01:28:37.136Z",
+  "withdrawn": {
+    "reason": "Moved onto the build task it gates (a-layer-s-track-shows-only-what-is-animated-and), so answering it releases that task",
+    "at": "2026-10-13T01:29:03.336Z"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "feature": "Transform overlay, key overlay, graph and animated-only tracks, as mocks",
+  "epic": "video-transitions-motion",
+  "summary": "A live mock page draws what you described: a glass bar of typeable transform values beside a layer while you handle it, the same bar beside a key you click, a graph where you pick segments and add points, and a track that lists only what is animated. One card asks when a change on a layer with keys becomes a key.",
+  "setup": "Mock page only, no app change: open http://127.0.0.1:8791/index.html#video-animate (Prototype, Video, Animate with the overlay). Every part of it is live in the browser. The pictures are photographs of that page, since this task changed no app code.",
+  "switched": {},
+  "try": [
+    {
+      "do": "In the editor at the top, drag the title, then a corner, then the knob above it. Watch the bar under it.",
+      "shot": "2026-10-12-animate-mock-transform-bar.png"
+    },
+    {
+      "do": "Rest on the knob and drag its flat green arc sideways: Tilt X, Tilt Y and Depth join the bar, and a Tilt Y row joins the track."
+    },
+    {
+      "do": "Click the second diamond on the Opacity row, type 40 and press Return.",
+      "shot": "2026-10-12-animate-mock-key-bar.png"
+    },
+    {
+      "do": "Click the word Opacity in the track and press Delete; then right-click the clip and choose Animate, Opacity."
+    },
+    {
+      "do": "Right-click the Rotation row (after turning the title) and choose Show Graph."
+    },
+    {
+      "do": "In The graph section, click the second segment, right-click it and pick Ease out back; double-click the first segment to add a point.",
+      "shot": "2026-10-12-animate-mock-graph.png"
+    },
+    {
+      "do": "Answer the card on the dashboard: When you change something on a layer that already has keys, when should the change become a key?"
+    }
+  ],
+  "evaluate": [
+    "Is under the object the right home for the bar, or would you rather it sat in one fixed place at the top of the canvas?",
+    "Should Reset leave position alone, as drawn, or put the layer back in the middle too?",
+    "On the graph, is a plain click picking the segment and a double-click adding a point the right split, or do you want a plain click to add a point?",
+    "Is a hollow diamond on the clip's key line the right result of Add Key on a layer with nothing animated yet?",
+    "Does the panel keeping Position & Size beside the bar feel right, now that its 3D section is gone?"
+  ],
+  "rough": [
+    "No mock covered these surfaces before: this page is the first for the bar, the key bar and the animated-only track.",
+    "video.html draws the value graph in the right panel; it stays in the row's lane as you chose on 2026-09-26 (card a-keyed-value-s-curve-opens-where-you-want-it-where-should-a-keyed-value-s-cur).",
+    "The bar's angle label is a small angle sign; the app may draw the system's angle symbol instead. The overlay build task decides (a-small-overlay-shows-transform-values-to-type-i).",
+    "The bar says Tilt X and Tilt Y where the app's rows still say Rotation X and Rotation Y; the overlay build task renames them everywhere (a-small-overlay-shows-transform-values-to-type-i).",
+    "A key bar over a key on the top row sits on the clip beside it and can hide the clip's key line there; it never covers the key itself.",
+    "Add Key making an empty key moment needs something the app's model does not have yet; the last build task owns it (a-layer-s-track-shows-only-what-is-animated-and)."
+  ]
+}
