@@ -1,0 +1,37 @@
+{
+  "id": "transform-values-live-behind-an-info-button-on-t",
+  "title": "Transform values live behind an Info button on the tool bar, never over the picture",
+  "goal": "The floating transform bar looks different from the tool bar and lands on top of the selection's grippers. Replace it: the floating tool bar gains an Info (i) button while something is picked; clicking it opens a popover above the tool bar, in the same glass and border as the tool bar, with the transform as a short list of name and value rows (X, Y, W, H, Rotation, and Tilt X, Tilt Y, Depth, Pivot for a layer in 3D) that can be typed into, plus Reset. Nothing transform-related ever floats over the picture or its handles.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T05:15:38.959Z",
+  "updated": "2026-10-13T05:15:39.057Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13), screenshot 2026-10-12 22.13.22: a full-canvas recording picked; the transform bar (X 0, Y 0, W 3456, H 2234, angle, Tilt X, Tilt Y, Depth -109, Reset) sits across the top edge covering the top handles and the 3D arcs: \"why is this weird toolbar 1. look different then the pill shaped one (different material, different border), 2, why is it covering up the most important aspect of the photo (the transform grippers? it should be a rectangular thing off to the side with some name value pairs. Maybe it just becomes an 'i' icon that gets added to the existing toolbar, and you can click to expand a popup with the transform values\".\n\nShipped bar: a-small-overlay-shows-transform-values-to-type-i (done, 231c7cfe): 'rides under the layer in hand, placed and dismissed per video-animate.html'; with a layer filling the canvas it falls to the top edge, over the handles. Files: Sources/Photonz/TransformValueBar.swift, EditorState+TransformBar.swift. Tool bar: the floating bottom tool bar (Liquid Glass pill). The panel's 3D section stays withdrawn (the user wanted it gone).",
+  "acceptance": [
+    "The transform value bar (TransformValueBar.swift, EditorState+TransformBar.swift, shipped 231c7cfe) no longer appears over the canvas in any state; Layer > Show Transform Values opens the new popover instead",
+    "The floating tool bar shows an Info button (SF Symbol info.circle or the mock's equivalent) at its right end, separated like the bar's other groups, only while something is picked; it uses the tool bar's own button style",
+    "Clicking it (or the menu row, with a key the audit names) opens a popover anchored to the button, opening upward, in exactly the tool bar's material, corner radius and border (MEASURED: same material and border values in code, and a side by side screenshot in the audit), never covering the picked layer's handles: if it would, it shifts sideways",
+    "Inside: a two-column list, name left and value right, one row per value that applies, typeable (numbers and simple sums like +10), Tab moves down, Return commits, Escape closes; Reset at the bottom; values update live while the person drags the layer with the popover open",
+    "The popover stays open while the person drags handles (so they can watch the numbers) and closes on Escape, a click outside it and the canvas, or picking another tool",
+    "The key value editing from clicking-a-key-opens-the-same-overlay-to-set-tha uses this same popover style (anchored to the key) rather than the old bar",
+    "The UX-PATTERNS placement contract's 'value overlay' exception is rewritten to this: transform values live in the tool bar's Info popover",
+    "A walk picks a full-canvas recording (the user's case), checks no bar covers the top handles or 3D arcs, opens Info, types X 100, checks the layer moved, presses Reset, and photographs the popover next to the tool bar",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T05:15:38.962Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T05:15:39.056Z",
+      "note": "seq 3970 -> 1"
+    }
+  ]
+}
