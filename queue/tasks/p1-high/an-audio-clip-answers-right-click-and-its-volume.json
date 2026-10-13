@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:36:54.404Z",
-  "updated": "2026-10-13T01:36:54.506Z",
+  "updated": "2026-10-13T05:13:35.093Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-13T01:36:54.504Z",
       "note": "seq 3960 -> 15"
+    },
+    {
+      "t": "2026-10-13T05:13:35.092Z",
+      "note": "USER RULE 2026-10-13 (supersedes any acceptance item here that conflicts, e.g. 'click on the line adds a point'): \"every time i click on the line, a new dot appears. I want to 1. be able to select a dot. 2. only add if I double click or command click, otherwise the segment is selected. 3. select segments. A selected thing should turn white or something distinct. I want to add 2 dots, select either, or select the segment in between them. this goes for any animated value on the timeline\". Screenshot 2026-10-12 22.11.41: a sound's volume line with five dots; every click added one. So, for EVERY animated line on the timeline (sound volume line, key lanes, value graphs), one shared implementation: single click on a dot selects it; single click on the line between dots selects that segment; double click or Command click on the line adds a dot; a selected dot or segment is drawn distinctly (white fill or white stroke, clearly different from unselected, legible on every lane colour); Shift adds to the selection; Backspace deletes selected dots; right-click a segment for its curve. Update this task's acceptance to these rules and add a walk that: adds two dots by double click, selects each, selects the segment between them, and checks a single click never adds a dot."
     }
   ]
 }
