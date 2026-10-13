@@ -288,9 +288,8 @@ struct MeasurePartRowTests {
 @Suite("A measurement's remembered colours know about its chip edge")
 struct MeasureChipEdgeStyleTests {
 
-    @Test func theShippedSetsRingTheChipInTheirOwnInk() {
-        #expect(MeasureRoleColors.sizeDefault.chipBorderColorHex == "#FF3B30")
-        #expect(MeasureRoleColors.spacingDefault.chipBorderColorHex == "#0A84FF")
+    @Test func theShippedSetRingsTheChipInItsOwnInk() {
+        #expect(MeasureColors.standard.chipBorderColorHex == MeasureColors.standard.strokeColorHex)
     }
 
     @Test func aRememberedSetFromBeforeTheEdgeExistedRingsItInItsInk() throws {
@@ -298,14 +297,15 @@ struct MeasureChipEdgeStyleTests {
         {"strokeColorHex":"#0A84FF","chipColorHex":"#1B3A66",
          "chipOpacity":1,"textColorHex":"#FFFFFF"}
         """.data(using: .utf8)!
-        let decoded = try JSONDecoder().decode(MeasureRoleColors.self, from: json)
+        let decoded = try JSONDecoder().decode(MeasureColors.self, from: json)
         #expect(decoded.chipBorderColorHex == "#0A84FF")
     }
 
-    @Test func aNewCaliperTakesTheRolesRememberedEdge() {
+    @Test func aNewCaliperTakesTheRememberedEdge() {
         var styles = MeasureStyles()
-        styles.updateColors(for: .size) { $0.chipBorderColorHex = "#34C759" }
+        styles.colors.chipBorderColorHex = "#34C759"
         #expect(styles.content(for: .size).chipBorderColorHex == "#34C759")
+        #expect(styles.content(for: .spacing).chipBorderColorHex == "#34C759")
     }
 
     @Test func stylingAMeasurementRemembersItsEdgeForTheNextOne() {
@@ -314,7 +314,7 @@ struct MeasureChipEdgeStyleTests {
         content.chipBorderColorHex = "#34C759"
         content.chipBorderWidth = 4
         styles.absorb(content)
-        #expect(styles.colors(for: content.role).chipBorderColorHex == "#34C759")
+        #expect(styles.colors.chipBorderColorHex == "#34C759")
         #expect(styles.chipBorderWidth == 4)
     }
 }

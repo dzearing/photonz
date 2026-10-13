@@ -92,8 +92,7 @@ struct MeasureInspector: View {
                             editorState.setMeasureRole($0)
                         }
                         .controlSize(.small)
-                        .panelHelp("What this measurement calls out. Switching applies that "
-                              + "role's remembered colors, and new measurements start "
+                        .panelHelp("What this measurement calls out. New measurements start "
                               + "with the last-used role.")
                     }
                 }

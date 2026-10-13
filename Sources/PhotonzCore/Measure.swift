@@ -125,8 +125,8 @@ public struct MeasureContent: Hashable, Codable, Sendable {
     /// "Label size" slider. 1 = default.
     public var labelScale: CGFloat
     /// Size vs Spacing (§5, `next-measure-roles`). Purely semantic — rendering
-    /// reads the color fields, which the role's remembered set feeds at
-    /// creation/switch time. Every document saved before roles decodes `.size`.
+    /// reads the color fields, which the one shared remembered set feeds at
+    /// creation. Every document saved before roles decodes `.size`.
     public var role: MeasureRole
     /// Present when this measure is an **alignment check** (§9): the feet are
     /// the two ends of a dashed guide line, `headOffset` is 0, and the label

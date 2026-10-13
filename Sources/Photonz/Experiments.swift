@@ -183,7 +183,7 @@ extension Experiments {
     var measureReadoutSlideEnabled: Bool { isEnabled(FeatureCatalog.measureReadoutSlideFlag) }
 
     /// `next-measure-roles`: whether measurements carry Size/Spacing roles —
-    /// the inspector's Role control, per-role remembered colors, the canvas
+    /// the inspector's Role control, the canvas
     /// legend, and the tool options' Show filter. Exists only in the Next
     /// release's catalog, so Current always reads false.
     var measureRolesEnabled: Bool { isEnabled(FeatureCatalog.measureRolesFlag) }

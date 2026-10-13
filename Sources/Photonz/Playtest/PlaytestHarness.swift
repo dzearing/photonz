@@ -2665,8 +2665,8 @@ private final class Run {
             note(number, step.name, try checkIconPreviews(sides: sides, absent: absent, dark: dark),
                  state: describe())
 
-        case .expectMeasures(let count, let reads, let inks):
-            note(number, step.name, try checkMeasures(count, reads: reads, inks: inks),
+        case .expectMeasures(let count, let reads, let inks, let chips):
+            note(number, step.name, try checkMeasures(count, reads: reads, inks: inks, chips: chips),
                  state: describe())
 
         case .expectCorners(let layerName, let corner, let radius, let rounded, let within):
@@ -9280,7 +9280,7 @@ private final class Run {
     }
 
     private func checkMeasures(_ count: Int, reads: [String]? = nil,
-                               inks: [String]? = nil) throws -> String {
+                               inks: [String]? = nil, chips: [String]? = nil) throws -> String {
         let editor = try requireEditor()
         let landed = (editor.document?.allLayers ?? []).filter { $0.measure != nil }
         func plural(_ n: Int) -> String { n == 1 ? "measurement" : "measurements" }
@@ -9288,6 +9288,17 @@ private final class Run {
             throw Failure(description: "\(landed.count) \(plural(landed.count)) on the canvas, not \(count)"
                 + "; the caliper is \(canvas?.playtestMeasuringReport ?? "on no canvas")"
                 + (landed.isEmpty ? "" : "; landed: \(landed.map(\.name).joined(separator: ", "))"))
+        }
+        if let chips {
+            let worn = landed.compactMap { $0.measure?.chipColorHex.uppercased() }
+            guard worn == chips.map({ $0.uppercased() }) else {
+                throw Failure(description: "the chips are filled \(worn.joined(separator: ", ")), "
+                    + "not \(chips.joined(separator: ", ")); landed: "
+                    + landed.map(\.name).joined(separator: ", "))
+            }
+            if reads == nil, inks == nil {
+                return "\(count) \(plural(count)) on the canvas, their chips filled \(worn.joined(separator: ", ")), as claimed"
+            }
         }
         if let inks {
             let worn = landed.compactMap { $0.measure?.strokeColorHex.uppercased() }
@@ -9297,7 +9308,8 @@ private final class Run {
                     + landed.map(\.name).joined(separator: ", "))
             }
             if reads == nil {
-                return "\(count) \(plural(count)) on the canvas, drawn in \(worn.joined(separator: ", ")), as claimed"
+                return "\(count) \(plural(count)) on the canvas, drawn in \(worn.joined(separator: ", "))"
+                    + (chips == nil ? "" : " with the chips claimed") + ", as claimed"
             }
         }
         if let reads {

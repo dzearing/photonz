@@ -256,20 +256,21 @@ struct MeasureSizeGroupTests {
 
     // MARK: - What new measurements start with
 
-    @Test func newBoxesStartFaintInTheSizeInk() {
+    @Test func newBoxesStartFaintInTheMeasureInk() {
         let styles = MeasureStyles()
         #expect(styles.sizeBoxOpacity == 0.1)
-        #expect(styles.sizeBoxColorHex == styles.sizeColors.strokeColorHex)
+        #expect(styles.sizeBoxColorHex == styles.colors.strokeColorHex)
+        #expect(styles.sizeBoxColorHex == MeasureColors.standard.strokeColorHex)
     }
 
-    /// Until somebody picks a box colour of its own, the box follows Size's
-    /// ink, so retuning Size retunes the box with it.
-    @Test func theBoxFollowsSizeUntilGivenAColourOfItsOwn() {
+    /// Until somebody picks a box colour of its own, the box follows the
+    /// calipers' ink, so retuning a caliper retunes the box with it.
+    @Test func theBoxFollowsTheCalipersUntilGivenAColourOfItsOwn() {
         var styles = MeasureStyles()
-        styles.updateColors(for: .size) { $0.strokeColorHex = "#00FF00" }
+        styles.colors.strokeColorHex = "#00FF00"
         #expect(styles.sizeBoxColorHex == "#00FF00")
         styles.sizeBoxColorHex = "#123456"
-        styles.updateColors(for: .size) { $0.strokeColorHex = "#FF0000" }
+        styles.colors.strokeColorHex = "#FF0000"
         #expect(styles.sizeBoxColorHex == "#123456")
     }
 
@@ -290,7 +291,7 @@ struct MeasureSizeGroupTests {
         let styles = try JSONDecoder().decode(MeasureStyles.self, from: Data(old.utf8))
         #expect(styles.strokeWidth == 3)
         #expect(styles.sizeBoxOpacity == 0.1)
-        #expect(styles.sizeBoxColorHex == styles.sizeColors.strokeColorHex)
+        #expect(styles.sizeBoxColorHex == styles.colors.strokeColorHex)
     }
 
     // MARK: - What the panel offers

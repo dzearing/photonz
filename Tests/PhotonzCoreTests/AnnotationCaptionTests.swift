@@ -631,12 +631,12 @@ struct AnnotationCaptionPillTests {
         // The measure chip ships opaque; the caption used to be 92%, which read
         // as a different, softer control next to a caliper's readout.
         #expect(AnnotationContent.captionChipOpacity
-                == Double(MeasureRoleColors.sizeDefault.chipOpacity))
+                == Double(MeasureColors.standard.chipOpacity))
     }
 
     @Test func textIsTheMeasureReadoutColor() {
         #expect(AnnotationContent.captionTextDefaultHex
-                == MeasureRoleColors.sizeDefault.textColorHex)
+                == MeasureColors.standard.textColorHex)
     }
 
     @Test func borderIsAHairlineNextToTheShaft() {

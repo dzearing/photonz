@@ -21342,3 +21342,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - PhotonzCore: `AudioLevelPoint.curve`, `AudioLevelSegments.swift`; the mix and export read the same `moments`/`gain`, so a bent segment plays as drawn (tested within 0.5 dB).
 - Walk step `expectSoundLine`; walks `a-sound-s-volume-line-picks-and-shapes-walk`, `a-sound-s-volume-line-plain-clicks-walk` (needs the front).
 - Next: `find-out-whether-a-key-segment-s-right-click-cur` (SwiftUI reuses stale menu row actions; the key graph captures its segments the way the sound line did before the fix).
+
+## 2026-10-13 — Every measurement shares one remembered look (go loop)
+
+- Size, Gap and Distance start in one blue set sampled from the user's screenshot: #3774D5 line and ring, #233963 chip, white number, Size box the same blue at 10%. `MeasureStyles.colors` (one `MeasureColors`, renamed from `MeasureRoleColors`) replaces the per-role sizeColors/spacingColors; the Role control only retags.
+- Older memories move over: the last-used role's set if tuned, else the other if tuned, else the new blue; a box pick still on the old red follows the ink.
+- The remembered look is one per app (`MeasureMemory.shared`), following UserDefaults changes, instead of a copy per editor window that could overwrite another window's change.
+- Fixed: a chip ring switched off came back on after a relaunch.
+- Walk step `expectMeasures` takes `chips`; new walk `every-measurement-shares-one-look-walk`.
+- Open: `the-measuring-legend-says-something-useful-now-t` (the legend's two rows now share one swatch).

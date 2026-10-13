@@ -107,7 +107,7 @@ struct MeasureSpecListTests {
 
         #expect(MeasureSpecList.displayName(for: widthLayer) == "Width")
         #expect(MeasureSpecList.displayName(for: heightLayer) == "Height")
-        #expect(width.strokeColorHex == styles.colors(for: .size).strokeColorHex)
+        #expect(width.strokeColorHex == styles.colors.strokeColorHex)
 
         var doc = PhotonzDocument(canvasSize: CGSize(width: 640, height: 420))
         doc.addLayer(widthLayer)

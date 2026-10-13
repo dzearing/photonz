@@ -2884,7 +2884,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2 } ] }
         """)
-        guard case .expectMeasures(let count, let reads, _) = script.steps[0] else {
+        guard case .expectMeasures(let count, let reads, _, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
@@ -2900,7 +2900,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2, "reads": ["32 px", "32 px"] } ] }
         """)
-        guard case .expectMeasures(let count, let reads, _) = script.steps[0] else {
+        guard case .expectMeasures(let count, let reads, _, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
@@ -2919,7 +2919,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 2, "inks": ["#B0184A", "#0A84FF"] } ] }
         """)
-        guard case .expectMeasures(let count, _, let inks) = script.steps[0] else {
+        guard case .expectMeasures(let count, _, let inks, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 2)
@@ -2927,6 +2927,25 @@ struct PlaytestScriptTests {
         #expect(throws: (any Error).self) {
             try decode("""
             { "steps": [ { "do": "expectMeasures", "count": 2, "inks": ["#B0184A"] } ] }
+            """)
+        }
+    }
+
+    // One remembered look for every mode (the user, 2026-10-13) is the chip as
+    // much as the line, so a walk can claim the chip each caliper wears too.
+    @Test("An expectMeasures step can claim the chip each caliper's number sits on")
+    func expectMeasuresCanClaimTheChips() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectMeasures", "count": 2, "chips": ["#233963", "#0B3D1A"] } ] }
+        """)
+        guard case .expectMeasures(let count, _, _, let chips) = script.steps[0] else {
+            Issue.record("expectMeasures"); return
+        }
+        #expect(count == 2)
+        #expect(chips == ["#233963", "#0B3D1A"])
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "expectMeasures", "count": 2, "chips": ["#233963"] } ] }
             """)
         }
     }
@@ -3945,7 +3964,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectMeasures", "count": 0 } ] }
         """)
-        guard case .expectMeasures(let count, _, _) = script.steps[0] else {
+        guard case .expectMeasures(let count, _, _, _) = script.steps[0] else {
             Issue.record("expectMeasures"); return
         }
         #expect(count == 0)

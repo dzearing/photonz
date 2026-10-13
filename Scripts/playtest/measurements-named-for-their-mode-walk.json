@@ -209,10 +209,10 @@
    "do": "expectMeasures",
    "count": 4,
    "inks": [
-    "#0A84FF",
-    "#FF3B30",
-    "#FF3B30",
-    "#FF3B30"
+    "#3774D5",
+    "#3774D5",
+    "#3774D5",
+    "#3774D5"
    ]
   },
   {
@@ -308,10 +308,10 @@
    "do": "expectMeasures",
    "count": 4,
    "inks": [
-    "#0A84FF",
-    "#FFBBB8",
-    "#FFBBB8",
-    "#FF3B30"
+    "#3774D5",
+    "#C4D6F3",
+    "#C4D6F3",
+    "#3774D5"
    ]
   },
   {
@@ -342,7 +342,7 @@
   },
   {
    "do": "press",
-   "control": "Shades 2"
+   "control": "Shades 3"
   },
   {
    "do": "wait",
@@ -364,10 +364,10 @@
    "do": "expectMeasures",
    "count": 4,
    "inks": [
-    "#B8DBFF",
-    "#FFBBB8",
-    "#FFBBB8",
-    "#FF3B30"
+    "#9AB9EA",
+    "#C4D6F3",
+    "#C4D6F3",
+    "#3774D5"
    ]
   },
   {
@@ -394,7 +394,7 @@
   },
   {
    "do": "press",
-   "control": "Shades 2"
+   "control": "Shades 5"
   },
   {
    "do": "wait",
@@ -416,10 +416,10 @@
    "do": "expectMeasures",
    "count": 4,
    "inks": [
-    "#B8DBFF",
-    "#FFBBB8",
-    "#FFBBB8",
-    "#FFBBB8"
+    "#9AB9EA",
+    "#C4D6F3",
+    "#C4D6F3",
+    "#3D78D6"
    ]
   },
   {
@@ -506,10 +506,10 @@
    "do": "expectMeasures",
    "count": 4,
    "inks": [
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF"
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0"
    ]
   },
   {
@@ -555,12 +555,12 @@
    "do": "expectMeasures",
    "count": 6,
    "inks": [
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF",
-    "#4DA4FF"
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0",
+    "#6B99E0"
    ]
   },
   {

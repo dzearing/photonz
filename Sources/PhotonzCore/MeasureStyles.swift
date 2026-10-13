@@ -1,11 +1,11 @@
 import CoreGraphics
 import Foundation
 
-/// One measurement role's remembered ink (§5, `next-measure-roles`): the five
-/// color fields a caliper draws with. `MeasureStyles` keeps one of these per
-/// `MeasureRole`, so switching a measurement's role applies that role's set and
-/// style edits absorb into the edited role's memory only.
-public struct MeasureRoleColors: Equatable, Codable, Sendable {
+/// The measure tool's remembered ink: the five colour fields a caliper draws
+/// with. `MeasureStyles` keeps ONE of these for every mode and role, so a Size
+/// caliper recoloured is what the next Gap and Distance start with too (the
+/// user, 2026-10-13: "gap vs size shouldn't be different").
+public struct MeasureColors: Equatable, Codable, Sendable {
     /// Caliper ink: its legs and its head line.
     public var strokeColorHex: String
     /// The label chip's fill.
@@ -32,13 +32,22 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
         self.chipBorderColorHex = chipBorderColorHex ?? strokeColorHex
     }
 
-    /// The shipped redliner set — what Size measurements (and every pre-roles
-    /// caliper) default to: red ink, solid darker-red chip, white numbers.
-    public static let sizeDefault = MeasureRoleColors(strokeColorHex: "#FF3B30",
-                                                      chipColorHex: "#8C201A")
-    /// The mock's Spacing set: blue ink, solid darker-blue chip, white numbers.
-    public static let spacingDefault = MeasureRoleColors(strokeColorHex: "#0A84FF",
-                                                         chipColorHex: "#1B3A66")
+    /// The shipped set every new measurement starts in until somebody tunes
+    /// it: mid blue caliper and ring, a solid dark navy chip, white numbers.
+    /// Sampled from the user's screenshot of 2026-10-13.
+    public static let standard = MeasureColors(strokeColorHex: "#3774D5",
+                                               chipColorHex: "#233963")
+
+    /// What Size measurements used to start in before the sets were merged,
+    /// kept only so a memory that never moved off it moves to `standard`.
+    public static let formerSize = MeasureColors(strokeColorHex: "#FF3B30",
+                                                 chipColorHex: "#8C201A")
+    /// What Gap measurements used to start in, for the same reason.
+    public static let formerSpacing = MeasureColors(strokeColorHex: "#0A84FF",
+                                                    chipColorHex: "#1B3A66")
+
+    /// A set somebody actually chose, rather than one a build shipped.
+    var isTuned: Bool { self != .standard && self != .formerSize && self != .formerSpacing }
 
     /// Spelled out because both halves of the coding are written by hand now,
     /// so nothing is synthesised to hang them on.
@@ -47,10 +56,10 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
     }
 
     /// Tolerant like `MeasureStyles`: a blob from a build that predates a field
-    /// fills that field in (from the red set) rather than dropping the memory.
+    /// fills that field in (from the shipped set) rather than dropping the memory.
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
-        let d = MeasureRoleColors.sizeDefault
+        let d = MeasureColors.standard
         self.init(
             strokeColorHex: try c.decodeIfPresent(String.self, forKey: .strokeColorHex)
                 ?? d.strokeColorHex,
@@ -59,9 +68,12 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
             textColorHex: try c.decodeIfPresent(String.self, forKey: .textColorHex) ?? d.textColorHex,
             // A remembered set written before the chip had a ring of its own
             // rings it in that set's ink, which is what it drew.
-            chipBorderColorHex: c.contains(.chipBorderColorHex)
-                ? try c.decodeIfPresent(String.self, forKey: .chipBorderColorHex)
-                : nil)
+            chipBorderColorHex: try c.decodeIfPresent(String.self, forKey: .chipBorderColorHex))
+        // A ring written as switched off (the key there, holding null) stays
+        // off. The init reads nil as "ring it in the ink", so it is said here.
+        if c.contains(.chipBorderColorHex), try c.decodeNil(forKey: .chipBorderColorHex) {
+            chipBorderColorHex = nil
+        }
     }
 
     /// Written by hand so a ring switched OFF stays off: the synthesised
@@ -86,21 +98,21 @@ public struct MeasureRoleColors: Equatable, Codable, Sendable {
 /// next caliper you draw (this session or after a relaunch) looks like the last
 /// one you tuned.
 ///
-/// Colors are remembered **per role** (§5, `next-measure-roles`): Size keeps
-/// the shipped red set, Spacing defaults to the mock's blue set, and `role` is
-/// the last-used role — together they are what a NEW caliper takes. Width,
-/// label size, unit, and decimals stay shared across roles. (The defaults are
-/// NOT `MeasureContent`'s own defaults — those stay pinned to the
-/// pre-color-split look so existing documents keep decoding to what they
-/// always drew.)
+/// Colours are remembered ONCE for every mode and role (`colors`): recolouring
+/// a Size caliper, a Gap or a Distance is what the next measurement of any
+/// kind starts in. Until 2026-10-13 Size and Spacing each kept a set of their
+/// own (red and blue), so a Size recoloured left the next Gap blue and the
+/// user read that as the colour not being remembered. `role` is still the
+/// last-used role, which tags and names a new caliper and never colours it.
+/// (The defaults are NOT `MeasureContent`'s own defaults — those stay pinned
+/// to the pre-color-split look so existing documents keep decoding to what
+/// they always drew.)
 public struct MeasureStyles: Equatable, Codable, Sendable {
     /// The role a NEW caliper takes — the last-used one (creation or a Role
-    /// switch absorbs it, like every other default).
+    /// switch absorbs it, like every other default). It never decides colour.
     public var role: MeasureRole
-    /// Size's remembered ink (the shipped red set until tuned).
-    public var sizeColors: MeasureRoleColors
-    /// Spacing's remembered ink (the mock's blue set until tuned).
-    public var spacingColors: MeasureRoleColors
+    /// The one remembered ink every new measurement starts in.
+    public var colors: MeasureColors
     public var strokeWidth: CGFloat
     /// How thick the readout chip's ring is, shared across roles the way the
     /// caliper's own thickness is. Zero means the next caliper's chip has no
@@ -124,8 +136,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// "Edges". Rides with the styles so it stays how you left it.
     public var snapsToCenters: Bool
     /// The colour a Size measurement's box is tinted, when somebody has picked
-    /// one for it. Nil follows Size's own ink, so the box is red while Size is
-    /// red and turns with it.
+    /// one for it. Nil follows the calipers' ink, so the box is blue while
+    /// they are blue and turns with them.
     public var sizeBoxColorPick: String?
     /// How faint a Size measurement's box starts (its Opacity), 0…1.
     public var sizeBoxOpacity: CGFloat {
@@ -135,13 +147,12 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// The colour the next Size measurement's box is tinted. Setting it is a
     /// pick of its own, which stops it following Size's ink.
     public var sizeBoxColorHex: String {
-        get { sizeBoxColorPick ?? sizeColors.strokeColorHex }
+        get { sizeBoxColorPick ?? colors.strokeColorHex }
         set { sizeBoxColorPick = newValue }
     }
 
     public init(role: MeasureRole = .size,
-                sizeColors: MeasureRoleColors = .sizeDefault,
-                spacingColors: MeasureRoleColors = .spacingDefault,
+                colors: MeasureColors = .standard,
                 strokeWidth: CGFloat = 2,
                 chipBorderWidth: CGFloat? = nil,
                 labelSizePx: CGFloat = 20,
@@ -156,8 +167,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                 sizeBoxColorPick: String? = nil,
                 sizeBoxOpacity: CGFloat = MeasureSizeGroup.defaultBoxOpacity) {
         self.role = role
-        self.sizeColors = sizeColors
-        self.spacingColors = spacingColors
+        self.colors = colors
         self.strokeWidth = strokeWidth
         self.chipBorderWidth = max(chipBorderWidth ?? strokeWidth, 0)
         self.labelSizePx = Self.clampedLabelSize(labelSizePx)
@@ -174,46 +184,33 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             MeasureContent.labelSizeRangePx.upperBound)
     }
 
-    // MARK: Per-role colors
+    // MARK: The shared colours, field by field
 
-    public func colors(for role: MeasureRole) -> MeasureRoleColors {
-        switch role {
-        case .size: sizeColors
-        case .spacing: spacingColors
-        }
-    }
-
-    public mutating func updateColors(for role: MeasureRole,
-                                      _ mutate: (inout MeasureRoleColors) -> Void) {
-        switch role {
-        case .size: mutate(&sizeColors)
-        case .spacing: mutate(&spacingColors)
-        }
-    }
-
-    /// The ACTIVE (last-used) role's ink — what the next caliper draws with.
-    /// Setters write into that role's memory only.
+    /// The remembered ink, read and written one field at a time.
     public var strokeColorHex: String {
-        get { colors(for: role).strokeColorHex }
-        set { updateColors(for: role) { $0.strokeColorHex = newValue } }
+        get { colors.strokeColorHex }
+        set { colors.strokeColorHex = newValue }
     }
     public var chipColorHex: String {
-        get { colors(for: role).chipColorHex }
-        set { updateColors(for: role) { $0.chipColorHex = newValue } }
+        get { colors.chipColorHex }
+        set { colors.chipColorHex = newValue }
     }
     public var chipOpacity: CGFloat {
-        get { colors(for: role).chipOpacity }
-        set { updateColors(for: role) { $0.chipOpacity = newValue } }
+        get { colors.chipOpacity }
+        set { colors.chipOpacity = newValue }
     }
     public var textColorHex: String {
-        get { colors(for: role).textColorHex }
-        set { updateColors(for: role) { $0.textColorHex = newValue } }
+        get { colors.textColorHex }
+        set { colors.textColorHex = newValue }
     }
 
     // MARK: Persistence
 
     enum CodingKeys: String, CodingKey {
-        case role, sizeColors, spacingColors
+        case role, colors
+        // The per-role sets from before the colours were shared: read once,
+        // to move whatever somebody tuned into `colors`, and never written.
+        case sizeColors, spacingColors
         case strokeWidth, chipBorderWidth
         case labelSizePx, unit, decimals, layerStyle, snapsToCenters
         case sizeBoxColor, sizeBoxOpacity
@@ -225,30 +222,22 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
 
     /// Every field is optional on decode: a prefs blob written by a build that
     /// predates a field must fill that field in, not fail and drop the whole
-    /// remembered style. Flat pre-roles color keys seed the Size memory.
+    /// remembered style. A blob from before the colours were shared moves the
+    /// set somebody actually tuned into the shared one (`movedColors`).
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
         let d = MeasureStyles()
-        var size = try c.decodeIfPresent(MeasureRoleColors.self, forKey: .sizeColors)
-        if size == nil {
-            // Colors tuned before roles existed were tuned on the only (red)
-            // set — they become Size's memory.
-            let flat = MeasureRoleColors.sizeDefault
-            size = MeasureRoleColors(
-                strokeColorHex: try c.decodeIfPresent(String.self, forKey: .strokeColorHex)
-                    ?? flat.strokeColorHex,
-                chipColorHex: try c.decodeIfPresent(String.self, forKey: .chipColorHex)
-                    ?? flat.chipColorHex,
-                chipOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .chipOpacity)
-                    ?? flat.chipOpacity,
-                textColorHex: try c.decodeIfPresent(String.self, forKey: .textColorHex)
-                    ?? flat.textColorHex)
+        let role = try c.decodeIfPresent(MeasureRole.self, forKey: .role) ?? d.role
+        let shared = try c.decodeIfPresent(MeasureColors.self, forKey: .colors)
+        var boxPick = try c.decodeIfPresent(String.self, forKey: .sizeBoxColor)
+        if shared == nil, boxPick?.uppercased() == MeasureColors.formerSize.strokeColorHex {
+            // A box left on the old red was the old red because Size was: it
+            // follows the new ink rather than staying the one red thing left.
+            boxPick = nil
         }
         self.init(
-            role: try c.decodeIfPresent(MeasureRole.self, forKey: .role) ?? d.role,
-            sizeColors: size ?? .sizeDefault,
-            spacingColors: try c.decodeIfPresent(MeasureRoleColors.self, forKey: .spacingColors)
-                ?? d.spacingColors,
+            role: role,
+            colors: try shared ?? Self.movedColors(from: c, role: role),
             strokeWidth: try c.decodeIfPresent(CGFloat.self, forKey: .strokeWidth) ?? d.strokeWidth,
             chipBorderWidth: try c.decodeIfPresent(CGFloat.self, forKey: .chipBorderWidth),
             labelSizePx: try c.decodeIfPresent(CGFloat.self, forKey: .labelSizePx) ?? d.labelSizePx,
@@ -257,16 +246,40 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             layerStyle: try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? d.layerStyle,
             snapsToCenters: try c.decodeIfPresent(Bool.self, forKey: .snapsToCenters)
                 ?? d.snapsToCenters,
-            sizeBoxColorPick: try c.decodeIfPresent(String.self, forKey: .sizeBoxColor),
+            sizeBoxColorPick: boxPick,
             sizeBoxOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .sizeBoxOpacity)
                 ?? d.sizeBoxOpacity)
+    }
+
+    /// The shared set a memory from an older build moves to: the last-used
+    /// role's set if somebody tuned it, else the other role's if THAT was
+    /// tuned, else the shipped blue. A set still on what a build shipped (the
+    /// old red or blue) was never chosen, so it is not carried over.
+    private static func movedColors(from c: KeyedDecodingContainer<CodingKeys>,
+                                    role: MeasureRole) throws -> MeasureColors {
+        var size = try c.decodeIfPresent(MeasureColors.self, forKey: .sizeColors)
+        let spacing = try c.decodeIfPresent(MeasureColors.self, forKey: .spacingColors)
+        if size == nil, c.contains(.strokeColorHex) || c.contains(.chipColorHex) {
+            // Colours tuned before roles existed were the only set there was.
+            let d = MeasureColors.standard
+            size = MeasureColors(
+                strokeColorHex: try c.decodeIfPresent(String.self, forKey: .strokeColorHex)
+                    ?? d.strokeColorHex,
+                chipColorHex: try c.decodeIfPresent(String.self, forKey: .chipColorHex)
+                    ?? d.chipColorHex,
+                chipOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .chipOpacity)
+                    ?? d.chipOpacity,
+                textColorHex: try c.decodeIfPresent(String.self, forKey: .textColorHex)
+                    ?? d.textColorHex)
+        }
+        let order = role == .spacing ? [spacing, size] : [size, spacing]
+        return order.compactMap { $0 }.first(where: \.isTuned) ?? .standard
     }
 
     public func encode(to encoder: Encoder) throws {
         var c = encoder.container(keyedBy: CodingKeys.self)
         try c.encode(role, forKey: .role)
-        try c.encode(sizeColors, forKey: .sizeColors)
-        try c.encode(spacingColors, forKey: .spacingColors)
+        try c.encode(colors, forKey: .colors)
         try c.encode(strokeWidth, forKey: .strokeWidth)
         try c.encode(chipBorderWidth, forKey: .chipBorderWidth)
         try c.encode(labelSizePx, forKey: .labelSizePx)
@@ -276,7 +289,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         try c.encode(snapsToCenters, forKey: .snapsToCenters)
         try c.encodeIfPresent(sizeBoxColorPick, forKey: .sizeBoxColor)
         try c.encode(sizeBoxOpacity, forKey: .sizeBoxOpacity)
-        // Write-only mirror of the active role's colors under the flat pre-roles
+        // Write-only mirror of the shared colours under the flat pre-roles
         // keys, so a build from before the split still reads a sensible set.
         try c.encode(strokeColorHex, forKey: .strokeColorHex)
         try c.encode(chipColorHex, forKey: .chipColorHex)
@@ -287,15 +300,16 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// The label scale (`MeasureContent.labelScale`) this pixel size means.
     public var labelScale: CGFloat { labelSizePx / MeasureContent.labelFontSize }
 
-    /// The template a new caliper starts from: the last-used role, drawn in that
-    /// role's remembered ink. Axis, feet, and head offset are set per placement,
-    /// so the geometry here is placeholder.
+    /// The template a new caliper starts from: the last-used role, drawn in the
+    /// remembered ink. Axis, feet, and head offset are set per placement, so
+    /// the geometry here is placeholder.
     public var content: MeasureContent { content(for: role) }
 
     /// The same template forced to a specific role — how Gap mode gets a
-    /// Spacing callout without disturbing the remembered last-used role.
+    /// Spacing callout without disturbing the remembered last-used role. The
+    /// role tags it; the colours are the same shared set whatever the role.
     public func content(for role: MeasureRole) -> MeasureContent {
-        let ink = colors(for: role)
+        let ink = colors
         return MeasureContent(mode: .horizontal, strokeWidth: strokeWidth,
                               strokeColorHex: ink.strokeColorHex, chipColorHex: ink.chipColorHex,
                               chipOpacity: ink.chipOpacity, textColorHex: ink.textColorHex,
@@ -309,17 +323,15 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     }
 
     /// Remember an edited caliper's styling as the new default — how a tweak in
-    /// the inspector becomes what the NEXT caliper starts with. Colors file
-    /// under the content's role; the role itself becomes the last-used one.
+    /// the inspector becomes what the NEXT caliper starts with, in every mode.
+    /// The role becomes the last-used one.
     public mutating func absorb(_ content: MeasureContent) {
         role = content.role
-        updateColors(for: content.role) {
-            $0.strokeColorHex = content.strokeColorHex
-            $0.chipColorHex = content.chipColorHex
-            $0.chipOpacity = content.chipOpacity
-            $0.textColorHex = content.textColorHex
-            $0.chipBorderColorHex = content.hasChipBorder ? content.chipBorderColorHex : nil
-        }
+        colors.strokeColorHex = content.strokeColorHex
+        colors.chipColorHex = content.chipColorHex
+        colors.chipOpacity = content.chipOpacity
+        colors.textColorHex = content.textColorHex
+        colors.chipBorderColorHex = content.hasChipBorder ? content.chipBorderColorHex : nil
         strokeWidth = content.strokeWidth
         if content.hasChipBorder { chipBorderWidth = content.chipBorderWidth }
         labelSizePx = content.labelPointSize

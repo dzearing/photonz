@@ -1,0 +1,49 @@
+{
+  "feature": "Every measurement shares one remembered look",
+  "epic": "measure-redline",
+  "summary": "Size, Gap and Distance now start in the same blue set: blue lines and ring, dark navy chip, white number, and a faint blue box for Size. Recolouring any caliper, including the Width or Height inside a Size group, is what the next measurement of every mode starts with, in every open window.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/every-measurement-shares-one-look-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screenshot, press I, and make a Size, a Gap and a Distance measurement.",
+      "shot": "2026-10-13-shared-measure-look-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Do the same on a dark screenshot and check every number still reads.",
+      "shot": "2026-10-13-shared-measure-look-dark.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In Layers, open the Size group, pick Width, and set its Caliper colour to green."
+    },
+    {
+      "do": "Press I and make a Gap and a Distance: both start green.",
+      "shot": "2026-10-13-shared-measure-look-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Make another Size: both calipers and its box start green.",
+      "shot": "2026-10-13-shared-measure-look-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With two editor windows open, recolour a caliper in one, then measure in the other: it starts in the new colour."
+    }
+  ],
+  "evaluate": [
+    "Is the blue set close enough to your screenshot (line and ring #3774D5, chip #233963, white number)?",
+    "On a dark picture, are the thin blue lines strong enough, or should the line be lighter than the ring?",
+    "Is the Size box at 10% faint enough to see the content and strong enough to see the box? Your screenshot's box reads closer to 25%.",
+    "Does it now feel like the colour you last picked always comes back, whichever mode you measure in?"
+  ],
+  "rough": [
+    "The redline mock draws Size red and Gap blue; every mode now shares one blue set instead, your call on 2026-10-13 (\"gap vs size shouldn't be different\").",
+    "The canvas legend still lists Size and Spacing, but both rows now show the same blue swatch, so it keys nothing: the-measuring-legend-says-something-useful-now-t asks you what it should do.",
+    "The Size box stays at 10% as the task asked; your screenshot's box reads nearer 25% over a dark page, your call on 2026-10-13 (10% in the task) until you say otherwise.",
+    "Anyone who had tuned Size or Gap colours keeps the set they tuned (the last-used role's, or the other one if only that was tuned); anyone still on the old red or blue moves to the new blue, and a Size box left on the old red follows the new ink.",
+    "The Role control no longer changes colours at all; it only retags the measurement and names it.",
+    "Fixed on the way: a chip ring switched off came back on after a relaunch; it now stays off."
+  ]
+}

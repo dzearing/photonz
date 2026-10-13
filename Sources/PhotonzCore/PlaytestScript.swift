@@ -3456,9 +3456,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `reads`, when given, is what they say, in the order they landed, one
     /// entry per measurement (`"32 px"`), so a Size click proves the number
     /// and not just that something landed. `inks`, the same way, is the
-    /// colour each caliper is drawn in (`"#FF3B30"`), so a walk that recolours
-    /// one proves the caliper wears it.
-    case expectMeasures(count: Int, reads: [String]?, inks: [String]?)
+    /// colour each caliper is drawn in (`"#3774D5"`), so a walk that recolours
+    /// one proves the caliper wears it, and `chips` the fill of the chip its
+    /// number sits on.
+    case expectMeasures(count: Int, reads: [String]?, inks: [String]?, chips: [String]?)
     /// CLAIMS how round a path's corners are, asked of the document: `radius`
     /// is what every sharp corner draws at (to within `within` points), and
     /// `rounded` is how many of them are rounded at all. The only way a walk
@@ -5302,7 +5303,11 @@ public enum PlaytestStep: Sendable, Equatable {
             if let inks, inks.count != Int(howMany) {
                 throw f.invalid("inks", "names \(inks.count) colours for \(Int(howMany)) measurements; claim one per measurement, in the order they landed")
             }
-            self = .expectMeasures(count: Int(howMany), reads: reads, inks: inks)
+            let chips = f.has("chips") ? try f.optionalStrings("chips") : nil
+            if let chips, chips.count != Int(howMany) {
+                throw f.invalid("chips", "names \(chips.count) chip colours for \(Int(howMany)) measurements; claim one per measurement, in the order they landed")
+            }
+            self = .expectMeasures(count: Int(howMany), reads: reads, inks: inks, chips: chips)
         case "expectSVG":
             let pictured: Int?
             if fields["pictured"] != nil {

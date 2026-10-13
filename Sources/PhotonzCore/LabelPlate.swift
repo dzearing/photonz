@@ -8,7 +8,7 @@ import Foundation
 /// file: the measure readout and the arrow caption have always been the same
 /// capsule — a solid plate in the owning object's own colour, darkened until
 /// white text reads on it, with white text on it (`PillRasterizer`,
-/// `MeasureRoleColors.sizeDefault`: "red ink, solid darker-red chip, white
+/// `MeasureColors.standard`: "blue ink, solid dark navy chip, white
 /// numbers"). The rule lived inside `AnnotationContent.captionChipColor`; it is
 /// here now so the canvas name chips can be the same treatment rather than a
 /// second one invented beside it.

@@ -863,11 +863,15 @@ final class EditorState {
     /// never saved, because the look is sized to this one picture.
     var titleTextStyles: TextStyles?
     /// The measure tool's persisted memory: colors, thickness, label size, unit.
-    /// Every measure setter writes it back to UserDefaults, so the next caliper —
-    /// this session or after a relaunch — starts where the last one left off.
+    /// One for the whole app (`MeasureMemory`), saved as it changes, so the next
+    /// caliper in any window, this session or after a relaunch, starts where
+    /// the last one left off.
     // strokeWidth is in LOGICAL pixels (rendered ×pixelScale) so a 1px sizer line
     // aligns with the image's pixel grid.
-    var measureStyles: MeasureStyles = EditorState.loadMeasureStyles()
+    var measureStyles: MeasureStyles {
+        get { MeasureMemory.shared.styles }
+        set { MeasureMemory.shared.styles = newValue }
+    }
     /// The zoom callout tool's persisted memory: box or circle. The Zoom
     /// Callout Tool section sets it, drawing a callout reads it, and changing a
     /// picked callout's shape absorbs into it the way every other style edit

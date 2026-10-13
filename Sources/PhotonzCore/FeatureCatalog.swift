@@ -497,7 +497,7 @@ public enum FeatureCatalog {
                 flag: FeatureFlag(
                     name: measureRolesFlag,
                     title: "Measurement roles",
-                    description: "Each measurement is a Size or Spacing callout with its own colors, set from a Role control in the panel, with a legend on the canvas and a Show filter.",
+                    description: "Each measurement is a Size or Spacing callout, set from a Role control in the panel, with a legend on the canvas and a Show filter. Every role shares one remembered look.",
                     area: .measuring,
                     isEnabled: false,
                     parameters: []),

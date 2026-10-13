@@ -101,12 +101,9 @@ extension EditorState {
         let heightFeet = (CGPoint(x: rect.maxX, y: rect.minY), CGPoint(x: rect.maxX, y: rect.maxY))
         // A width is a Size callout whatever you measured last: starting from
         // the popover's last-used role left both calipers tagged Spacing (and
-        // listed as "Gap") right after a Gap click. With roles on they take
-        // Size's own ink, like Gap mode takes Spacing's; with roles off the
-        // one shared ink stays, only the role is pinned so the names derive.
-        var template = Experiments.shared.measureRolesEnabled
-            ? measureStyles.content(for: .size) : measureStyle
-        template.role = .size
+        // listed as "Gap") right after a Gap click. The ink is the one every
+        // mode shares, so only the role is pinned.
+        var template = measureStyles.content(for: .size)
         template.madeBy = namedMode(.size)
         var width = template
         width.mode = .horizontal
@@ -164,9 +161,9 @@ extension EditorState {
         Experiments.shared.layerGroupsEnabled ? mode : nil
     }
 
-    /// The style the canvas should preview the active Measure mode in. Gap mode
-    /// previews in the Spacing ink it will actually commit, and Size mode in
-    /// Size's, so what you see under the pointer is what lands.
+    /// The style the canvas should preview the active Measure mode in, tagged
+    /// with the role it will commit. Every mode draws in the same shared ink,
+    /// so what you see under the pointer is what lands.
     var measureStyleForActiveMode: MeasureContent {
         guard Experiments.shared.measureRolesEnabled else { return measureStyle }
         switch measureToolMode {

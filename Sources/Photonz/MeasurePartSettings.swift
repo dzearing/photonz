@@ -218,8 +218,9 @@ struct MeasureChipSettings: View {
 
 /// What a measurement calls out: a size, or a spacing.
 ///
-/// It sits at the TOP of Appearance, above the parts, because switching it
-/// repaints every one of them from that role's remembered set. An alignment
+/// It sits at the TOP of Appearance, above the parts. It retags the picked
+/// measurements and never repaints them: every role shares one remembered
+/// look (the user, 2026-10-13). An alignment
 /// guide is its own kind of measurement and offers no role at all.
 struct MeasureRoleRow: View {
     @Environment(EditorState.self) private var editorState
@@ -245,8 +246,8 @@ struct MeasureRoleRow: View {
                     editorState.setMeasureRole($0)
                 }
                 .controlSize(.small)
-                .panelHelp("What this measurement calls out. Switching applies that role's "
-                      + "remembered colors, and new measurements start with the last-used role.")
+                .panelHelp("What this measurement calls out. New measurements start with "
+                      + "the last-used role.")
                 Spacer(minLength: 0)
             }
             .playtestField("Role")

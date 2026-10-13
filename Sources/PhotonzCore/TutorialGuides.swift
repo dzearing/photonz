@@ -2627,8 +2627,9 @@ public enum TutorialSampleScreen {
     /// They are exactly what the tool would have left behind: the gap between
     /// the two buttons, and the Save button's width and height.
     private static func sampleMeasurements() -> [Layer] {
-        let spacing = MeasureRoleColors.spacingDefault
-        let size = MeasureRoleColors.sizeDefault
+        // Every mode starts in the same remembered look, so the samples do too.
+        let spacing = MeasureColors.standard
+        let size = MeasureColors.standard
         return [
             measurement(from: CGPoint(x: saveFrame.minX, y: saveFrame.maxY + 30),
                         to: CGPoint(x: saveFrame.maxX, y: saveFrame.maxY + 30),
@@ -2941,7 +2942,7 @@ public enum TutorialSampleScreen {
 
     private static func measurement(from start: CGPoint, to end: CGPoint,
                                     mode: MeasureMode, role: MeasureRole,
-                                    colors: MeasureRoleColors, headOffset: CGFloat) -> Layer {
+                                    colors: MeasureColors, headOffset: CGFloat) -> Layer {
         let content = MeasureContent(headOffset: headOffset,
                                      mode: mode,
                                      strokeWidth: 2,

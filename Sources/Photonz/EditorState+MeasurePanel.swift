@@ -120,13 +120,6 @@ extension EditorState {
         pasteboard.setString(text, forType: .string)
     }
 
-    /// The role memory a style edit files under: the SELECTED measurement's
-    /// role (§5's absorb rule), or the last-used role when no measure is
-    /// selected and the edit only retunes the tool's defaults.
-    private var editedMeasureRole: MeasureRole {
-        selectedMeasureLayer?.measure?.role ?? measureStyles.role
-    }
-
     /// The calipers Appearance's measurement rows speak for: every caliper
     /// picked, and both calipers of a picked Size measurement, so a Size
     /// measurement offers the same Role, Chip and Unit as any caliper and
@@ -143,18 +136,12 @@ extension EditorState {
     }
 
     /// The Role control (§5, `next-measure-roles`): switching the selected
-    /// measurement's role applies that role's remembered ink in ONE undo step,
-    /// and the role becomes what the next caliper starts as. It only ever sets
-    /// colours to start from: every colour row stays there and stays editable.
+    /// measurement's role retags it in ONE undo step, and the role becomes what
+    /// the next caliper starts as. It never changes a colour: every mode and
+    /// role shares one remembered look (the user, 2026-10-13).
     func setMeasureRole(_ role: MeasureRole) {
         updateMeasureStyles { $0.role = role }
-        let ink = measureStyles.colors(for: role)
-        applyMeasureRestyle(skippingGuides: true) {
-            MeasureBuilder.restyled($0, strokeColorHex: ink.strokeColorHex,
-                                    chipColorHex: ink.chipColorHex,
-                                    chipOpacity: ink.chipOpacity,
-                                    textColorHex: ink.textColorHex, role: role)
-        }
+        applyMeasureRestyle(skippingGuides: true) { MeasureBuilder.restyled($0, role: role) }
     }
 
     /// The unit shown by new measures and the selected one. Each setter restyles
@@ -202,8 +189,7 @@ extension EditorState {
     }
 
     /// The caliper's ink: legs, head line, AND the chip's ring. Absorbs into the
-    /// edited measurement's ROLE memory (§5), so retuning a Spacing caliper
-    /// never repaints what the next Size caliper starts as.
+    /// one remembered look, so the next measurement of any mode starts there.
     ///
     /// This is the Stroke swatch in the Measurement section, which only the
     /// release WITHOUT the parts split still draws, and there the one swatch has
@@ -213,12 +199,9 @@ extension EditorState {
     /// Caliper row, which leaves the ring alone — that is the whole point of the
     /// parts, and the paint bucket is still the way to say "all of it".
     func setMeasureStrokeColor(_ hex: String, commit: Bool) {
-        let role = editedMeasureRole
         updateMeasureStyles {
-            $0.updateColors(for: role) {
-                $0.strokeColorHex = hex
-                $0.chipBorderColorHex = hex
-            }
+            $0.colors.strokeColorHex = hex
+            $0.colors.chipBorderColorHex = hex
         }
         applyMeasureRestyle {
             MeasureBuilder.restyled($0, strokeColorHex: hex, chipBorderColorHex: hex)
@@ -229,9 +212,9 @@ extension EditorState {
     /// The label chip's fill — color and alpha together, because the inspector
     /// picks both from one swatch (its opacity slider IS the chip's alpha).
     func setMeasureChipColor(_ hex: String, opacity: CGFloat, commit: Bool) {
-        let role = editedMeasureRole
         updateMeasureStyles {
-            $0.updateColors(for: role) { $0.chipColorHex = hex; $0.chipOpacity = opacity }
+            $0.colors.chipColorHex = hex
+            $0.colors.chipOpacity = opacity
         }
         applyMeasureRestyle {
             MeasureBuilder.restyled($0, chipColorHex: hex, chipOpacity: opacity)
@@ -241,8 +224,7 @@ extension EditorState {
 
     /// The numeric readout's color.
     func setMeasureTextColor(_ hex: String, commit: Bool) {
-        let role = editedMeasureRole
-        updateMeasureStyles { $0.updateColors(for: role) { $0.textColorHex = hex } }
+        updateMeasureStyles { $0.colors.textColorHex = hex }
         applyMeasureRestyle { MeasureBuilder.restyled($0, textColorHex: hex) }
         if commit { recordRecentColor(hex: hex) }
     }
@@ -309,25 +291,14 @@ extension EditorState {
         }
     }
 
-    /// Mutate the measure tool's remembered style and persist it — every measure
-    /// setter goes through here so "it stays how I left it" needs no bookkeeping
-    /// at the call sites.
+    /// Mutate the measure tool's remembered style — every measure setter goes
+    /// through here so "it stays how I left it" needs no bookkeeping at the
+    /// call sites. `MeasureMemory` saves it and every window shares it.
     func updateMeasureStyles(_ mutate: (inout MeasureStyles) -> Void) {
         mutate(&measureStyles)
-        if let data = try? JSONEncoder().encode(measureStyles) {
-            UserDefaults.standard.set(data, forKey: Self.measureStylesKey)
-        }
     }
 
     static let measureStylesKey = "measureStyles"
-
-    static func loadMeasureStyles() -> MeasureStyles {
-        guard let data = UserDefaults.standard.data(forKey: measureStylesKey),
-              let styles = try? JSONDecoder().decode(MeasureStyles.self, from: data) else {
-            return MeasureStyles()
-        }
-        return styles
-    }
 
     static let calloutStylesKey = "calloutStyles"
 

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-size-measurement-is-one-group-walk",
-  "seed": "The user, 2026-10-13: when I measure the size of a box I would like a semitransparent (10% opacity) red box over the space being measured, and the size to be one layer group that can be expanded to change its three parts. At Next defaults, with no switch touched, Size mode measures the purple download pill on a real Retina screenshot. The click has to leave ONE group named for its size, holding a Box tinted in the calipers' red at 10% opacity exactly over the pill, a Width and a Height. The group is picked whole, nudged as one, listed as one Size row in Measurements, and the spec list still says Width and Height. Then the group is opened in the layers list, its Box picked, and the Box's opacity changed to 25%.",
+  "seed": "The user, 2026-10-13: when I measure the size of a box I would like a semitransparent (10% opacity) red box over the space being measured, and the size to be one layer group that can be expanded to change its three parts. At Next defaults, with no switch touched, Size mode measures the purple download pill on a real Retina screenshot. The click has to leave ONE group named for its size, holding a Box tinted in the calipers' ink (blue by default since 2026-10-13, it was red) at 10% opacity exactly over the pill, a Width and a Height. The group is picked whole, nudged as one, listed as one Size row in Measurements, and the spec list still says Width and Height. Then the group is opened in the layers list, its Box picked, and the Box's opacity changed to 25%.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png", "width": 1280, "height": 840 },
@@ -17,7 +17,7 @@
     { "do": "expectMeasures", "count": 2, "reads": ["274 px", "62 px"] },
     { "do": "expectSizeMeasure", "count": 1, "name": "Size 274 × 62", "boxOpacity": 0.1, "boxInSizeInk": true, "at": [492, 270] },
     { "do": "expectPicked", "layers": ["Size 274 × 62"] },
-    { "do": "describe", "stage": "1-measured", "note": "THE FIRST CLAIM: one click on the pill left one group, Size 274 × 62, holding a faint red Box, a Width and a Height, and the group is picked whole" },
+    { "do": "describe", "stage": "1-measured", "note": "THE FIRST CLAIM: one click on the pill left one group, Size 274 × 62, holding a faint Box in the calipers' blue, a Width and a Height, and the group is picked whole" },
     { "do": "snapshot", "name": "1-one-size-group" },
 
     { "do": "panel", "stage": "2-panel" },

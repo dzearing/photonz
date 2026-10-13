@@ -138,7 +138,7 @@ struct MeasureToolModeTests {
         styles.role = .size
         let spacing = styles.content(for: .spacing)
         #expect(spacing.role == .spacing)
-        #expect(spacing.strokeColorHex == styles.colors(for: .spacing).strokeColorHex)
+        #expect(spacing.strokeColorHex == styles.colors.strokeColorHex)
         #expect(styles.role == .size)
         #expect(styles.content.role == .size)
     }

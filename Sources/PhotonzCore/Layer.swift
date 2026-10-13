@@ -554,12 +554,12 @@ extension AnnotationContent {
     /// The pill's fill opacity — as solid as the measure chip. It used to be
     /// 92%, which read as a softer, different control beside a caliper's
     /// readout; the two labels are one treatment.
-    public static let captionChipOpacity = Double(MeasureRoleColors.sizeDefault.chipOpacity)
+    public static let captionChipOpacity = Double(MeasureColors.standard.chipOpacity)
 
     /// The caption's text color unless a label says otherwise — the measure
     /// readout's white. Renamed off `captionTextColorHex`, which is now the
     /// label's OWN colour, so the two can never be mistaken for each other.
-    public static let captionTextDefaultHex = MeasureRoleColors.sizeDefault.textColorHex
+    public static let captionTextDefaultHex = MeasureColors.standard.textColorHex
 
     /// The pill's border, in the arrow's own ink like the measure chip's border
     /// is in the caliper's: heavy enough to read on a thin arrow, still a
