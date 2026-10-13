@@ -1,0 +1,36 @@
+{
+  "id": "size-mode-measures-real-buttons-and-objects-not",
+  "title": "Size mode measures real buttons and objects, not just text: large pills, gradients and glows",
+  "goal": "Hovering or roughly boxing a button like a big purple 'Download for Mac' pill should give the button's width and height. Today Size reads text well but on objects it falls back to whatever box the person drew. It must read any visually distinct object: large ones, gradient filled ones, ones with a soft glow or shadow around them, ones close to the page's brightness but a different colour, bordered ones.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:45:28.494Z",
+  "updated": "2026-10-13T01:45:28.596Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"the size tool's edge detection is great for text but hoooooorible for just objects. For example, i select this button, and it will NOT measure the width /height of the button. it just chooses whatever i select.\" Screenshot: a large purple gradient pill 'Download for Mac' with a purple glow on a near black page; the reading is 300 px by 86 px for the dashed box the user drew, not the pill.\n\nWhy, from the shipped task's own log (size-mode-measures-avatars-icons-and-stacks-and, done 2026-10-11): 'luma-only separation misses a shape the page's own brightness ... shapes over 160 pt either way are left to the pair reader ... the bordered Save button keeps the pair reader's 78x26 (true 80x28) because a tie keeps the old number'. ShapeBounds caps reach at 160 pt (PhotonzCore/ShapeBounds.swift:467). The pill is wider than 160 pt and has a glow halo, so ShapeBounds skips it and the pair reader (ElementBounds, paired straight horizontal edges) finds nothing; the box is kept as drawn. Memory: the user's main use is UX redlining.",
+  "acceptance": [
+    "Reproduce first with the user's screenshot (Screenshot 2026-10-12 at 18.44.20, the photonz.app download pill on a near black page with a purple glow) and a specimen set: big pills and buttons over 160 pt wide, gradient fills, glow and shadow halos, a colour button at the same brightness as its page, bordered buttons (the 'Save' 78x26 vs true 80x28 case), cards. Record what hover and a rough box give today",
+    "Detection separates objects by colour as well as brightness (for example distance in a perceptual colour space against the local background), has no 160 pt size cap (or a cap far above any UI element, MEASURED cost), and treats a soft glow or shadow as NOT part of the object: the edge is placed where the fill ends, not where the halo fades",
+    "A rough box around the pill snaps to the pill's own bounds even when the box also overlaps nearby text, as long as the pill is the largest distinct thing wholly inside; hover anywhere on the pill (including on its label text) offers the pill, with [ and ] stepping between the label and the pill",
+    "MEASURED against known sizes for every specimen within 1 px at 1x and 2 px at 2x, including the user's pill (its true size from the page CSS or a pixel measurement written in the audit); no regression on text, avatars, stacks or the existing Size walks",
+    "Ties prefer the reading closer to the true outer edge, so the bordered Save button reads 80x28",
+    "Hover under 30 ms and box snap under 100 ms on a 3456x2234 capture",
+    "Unit tests on the specimen set; a walk measures the user's pill by hover and by a rough box",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:45:28.496Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:45:28.594Z",
+      "note": "seq 3960 -> 4"
+    }
+  ]
+}
