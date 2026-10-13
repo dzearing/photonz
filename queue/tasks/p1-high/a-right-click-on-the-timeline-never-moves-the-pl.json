@@ -1,0 +1,36 @@
+{
+  "id": "a-right-click-on-the-timeline-never-moves-the-pl",
+  "title": "A right-click on the timeline never moves the playhead",
+  "goal": "Right-clicking a clip, a sound, a title or anything else on the timeline opens its menu and leaves the playhead exactly where it was, so the person can park the playhead at a moment, then right-click the clip anywhere and choose Add Key (or Split, Freeze Frame, Add Zoom and the other 'at playhead' commands) at that parked moment. A plain left click still moves the playhead as it does now.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T14:04:58.262Z",
+  "updated": "2026-10-13T14:04:58.359Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i right click on a clip and the playhead is elsewhere, don't change the playhead position. I can't move to a particular place now and right click to add a keyframe without moving the playhead\". This reverses the user's 2026-10-12 ask ('if I right click on a position within an item, I expect the playhead to move there before showing options'), shipped in f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu'. Latest word wins.\n\nFrom code reading: TimelineDock.swift ~:1126-1135 a local event monitor on .rightMouseDown calls TimelineRightPress.offer(at:in:) 'A right click on the tracks moves the playhead first, so the menu it opens acts where the pointer is'; the playhead logic lives in EditorState+TimelinePointing.swift (from f197e266). SoundLane and ClipPiecesBar menus may also scrub; audit every right-click path.",
+  "acceptance": [
+    "Reproduce first at Next defaults: park the playhead at 2.0 s, right-click a clip at 5 s, choose Add Key; record that today the playhead jumps to 5 s and the key lands there",
+    "Right-click (and Control-click) anywhere on the timeline (clips, pieces, sounds, title bars, zoom bars, key lanes, empty track space, the ruler) never moves the playhead; 'at playhead' rows act at the parked playhead; the menu shows where that is when it matters (for example 'Add Key at 0:02.00')",
+    "Right-click still picks the item under the pointer if it was not picked, keeps an existing pick or held range when clicked inside it, and offers the range's section commands per a-range-stays-on-top-when-you-pick-a-clip-and-it",
+    "A plain left click on an item still moves the playhead to the clicked moment and picks it (unchanged from clicking-or-right-clicking-an-item-on-the-timeli); dragging never moves it",
+    "Rows that genuinely need the clicked moment rather than the playhead (if any, for example 'Split Here' on a gap) say so in their names ('Split at Pointer') and the audit lists them",
+    "The playhead-moves-on-right-click acceptance of clicking-or-right-clicking-an-item-on-the-timeli is reversed by the user's word; update that task's walk so it does not fail on the new behaviour",
+    "A walk parks the playhead, right-clicks a clip elsewhere, adds a key, and checks the playhead did not move and the key is at the parked time",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T14:04:58.264Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T14:04:58.358Z",
+      "note": "seq 3960 -> 1"
+    }
+  ]
+}
