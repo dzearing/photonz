@@ -4,12 +4,12 @@
   "goal": "Measuring the size of something puts down one thing, not two loose calipers: a group named for what it measures (for example 'Size 320 x 48') holding a box that tints the measured area in the Size colour at 10% opacity, the width caliper and the height caliper. The group moves, hides and deletes as one, and expands in the Layers list so each of its three parts can be picked and changed.",
   "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 7,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:48:46.521Z",
-  "updated": "2026-10-13T01:48:46.618Z",
+  "updated": "2026-10-13T12:55:22.970Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i measure the size of a box, i'd like the box to have a semitransparent (10% opacity) red box outlining the space being measured. I'd like the size tool to be one layer group but can be expanded to modify the 3 parts.\"\n\nFrom code reading (not run): EditorState+Measure.swift addElementSize (:97-135) builds a width and a height MeasureContent (role .size, Size ink when measureRolesEnabled), plans readouts, and adds the two layers loose (perform { addLayer(width); addLayer(height) }), placed in time on video. No box, no group. Groups exist (GroupContent); the spec list names Width/Height from role .size (PhotonzCore/MeasureSpecList.swift:41). Memory: the user's main use is UX redlining.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-13T01:48:46.617Z",
       "note": "seq 3960 -> 7"
+    },
+    {
+      "t": "2026-10-13T12:55:22.969Z",
+      "note": "seq 7 -> 20"
     }
   ]
 }

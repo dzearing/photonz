@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 3,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:40:54.545Z",
-  "updated": "2026-10-13T07:40:29.287Z",
+  "updated": "2026-10-13T07:40:55.103Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"you added a large dropshadow. i don't mind the shadow but it's TOO dark. should be quite a bit more transparent.\" Screenshot 2026-10-12 18.39.57: a captured Photonz window on the dark canvas with a wide, very dark shadow around it.\n\nFrom code reading (not run): window captures keep macOS's real shadow: ScreenCapturer.swift:109 config.ignoreShadows = false and :147 ignoreShadows = !includeShadow; RectSelection.swift:173-176 tries .withShadow then .bareBounds (WindowShot styles); preference Experiments.windowCaptureIncludesShadow (CaptureCenter.swift:256, :305). The shadow is baked pixels, so it cannot be lightened afterwards today. Architecture rule (CLAUDE.md): layer styling such as shadow is non-destructive, applied at render time, never baked into pixels. Layer shadow controls exist (shadowOpacity etc., PhotonzCore/LayerMotion.swift).",
@@ -59,10 +59,15 @@
     {
       "t": "2026-10-13T07:40:29.286Z",
       "note": "owns these walks: a-captured-window-s-shadow-is-light-and-editable-walk"
+    },
+    {
+      "t": "2026-10-13T07:40:55.101Z",
+      "note": "Window clicks are shot bare and given macOS's own shadow shape at 40% of the darkness macOS drew, read per window, as a layer style on an unlocked Window layer. The PNG is flattened from it (transparent around, Display P3 kept, dark window rim kept) and a .photonz sidecar beside it makes the shadow editable and switchable on edit. Verified: 20 unit tests, probe drill PASS on inactive/active light/dark windows (three-point alpha ours vs macOS 54/134, 32/81, 9/24), walk a-captured-window-s-shadow-is-light-and-editable-walk green at Next defaults, full suite green. Audit queue/audits/2026-10-13-window-capture-shadow.json. Commit a5c89826."
     }
   ],
   "started": "2026-10-13T06:55:10.176Z",
   "walks": [
     "a-captured-window-s-shadow-is-light-and-editable-walk"
-  ]
+  ],
+  "completed": "2026-10-13T07:40:55.102Z"
 }

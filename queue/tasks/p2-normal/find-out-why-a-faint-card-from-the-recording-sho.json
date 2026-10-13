@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T03:33:58.694Z",
-  "updated": "2026-10-12T12:44:03.827Z",
+  "updated": "2026-10-12T13:59:12.762Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-12 by title-backgrounds-that-are-alive-auroras-energy. Reproduction: a temporary copy of Scripts/playtest/live-title-backgrounds-walk.json cut before the Background picker, with two videoStepOneSecond + snapshot steps (setup: timelineOpen, openSampleRecording, Add Track Above, Add Title Page > Keynote Clean, type, click to pick). Picture: queue/audits/2026-10-12-title-page-faint-card-2s.png, the Ready card top left at 2 s with the background still Gradient (so it is not the moving looks). Timeline in the same run: Title Page on V2 0 to 4 s, Tutorial Sample on V1 from about 3.5 s. Not yet reproduced through DocumentRenderer alone or in an export; could be the canvas playback layer showing the movie poster under the composite. Not reproduced: why.",
@@ -25,6 +25,41 @@
     {
       "t": "2026-10-12T12:44:03.826Z",
       "note": "seq 3990 -> 30"
+    },
+    {
+      "t": "2026-10-12T13:53:53.534Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T13:59:04.843Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-12T13:59:04.903Z",
+      "note": "Reproduced and measured: NOT a bug. The original picture was taken at about 3.52 s, not 2 s. Its own timeline shows the playhead at x=735 of a ruler where 0s=188 and 4s=813, i.e. 3.5 s, and the readout says 0:03. The walk never sent the playhead home after typing: committing the text plays the title in, so the playhead was already at about 2.2 s (measured: 2230 ms before the first step) and two one-second steps landed past 3.5 s."
+    },
+    {
+      "t": "2026-10-12T13:59:04.962Z",
+      "note": "Why the card shows at 3.5 s: by design. A title page put at 0:00 pushes the recording later by its length less its fade out (TitlePresets.swift pushPictureAfterOpeningTitle, tested in TitlePageAtStartTests), so the 4 s page with its 0.5 s fade out dissolves onto the recording from 3.5 s to 4.0 s, Premiere's dissolve at the cut. The faint card is the first frames of that dissolve."
+    },
+    {
+      "t": "2026-10-12T13:59:05.024Z",
+      "note": "Canvas proof (/tmp/faint-card/faint-card-ink.json, Ink theme + Gradient background like the original, seek to start then step): mean brightness of the card area in the real window capture is 13.34 at 1, 2, 3, 3.25 and 3.5 s, identical to the hundredth, then 128.71 at 3.75 s mid-dissolve. Same with the Original theme (36.28 flat through 3.5 s)."
+    },
+    {
+      "t": "2026-10-12T13:59:05.083Z",
+      "note": "Export proof (startExportAt1080p + awaitExport, then ffmpeg frames): card area 13.22 / 13.16 / 13.23 / 13.26 / 13.25 at 1.0 / 2.0 / 3.0 / 3.4 / 3.48 s (compression noise only), then 27.58 at 3.52 s (a faint card exactly like the original picture), 73.56 at 3.6, 134.58 at 3.75. So the canvas and the export both show only the title until the dissolve starts."
+    },
+    {
+      "t": "2026-10-12T13:59:12.645Z",
+      "note": "left rough: the exported movie opens on one black frame (mean 0.00 at 0.0 s) and the title's look fades up over about 0.2 s with Fade In None (0.05 s: 11, 0.1 s: 17, 0.2 s: 21, settled about 22); the canvas at 0:00 is black too. Reads as the title's own entrance, so not filed: nothing says a person would see it as wrong. Search found no task on it."
+    },
+    {
+      "t": "2026-10-12T13:59:12.760Z",
+      "note": "Not a bug: the 'two seconds in' picture was really taken at about 3.52 s (its own playhead and 0:03 readout), the first frames of the designed half-second dissolve from an opening title page onto the recording it pushes to 3.5 s. Measured in real window captures (card area flat at 1, 2, 3, 3.25, 3.5 s, Ink and Original themes) and in a 1080p export read with ffmpeg (flat through 3.48 s, faint card only from 3.52 s). The playhead was already at 2.2 s after typing, which is why two steps landed in the dissolve. No code change."
     }
-  ]
+  ],
+  "started": "2026-10-12T13:53:53.531Z",
+  "walks": [],
+  "completed": "2026-10-12T13:59:12.761Z"
 }

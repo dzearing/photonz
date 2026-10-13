@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T12:26:50.903Z",
-  "updated": "2026-10-12T12:44:03.700Z",
+  "updated": "2026-10-12T13:05:54.466Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-12 by a-zoomed-recording-shows-its-ring-on-the-frame-n. Script: the steps of Scripts/playtest/framing-a-zoom-keys-its-centre-walk.json up to snapshot 2-zoomed-at-5, then {click at [-20,400] space document}, wait, {expectPicked layers []}. Ran: Scripts/playtest.sh /tmp/ringcheck/offcanvas-click-walk.json --no-build. Output: \"[30 expectPicked] FAILED: the layers picked are Tutorial Sample, not nothing\". Cause: the canvas hit test reads the POSED document (canvasGeometryDocument), where the pushed-in clip frame is 2816 wide, and nothing clips it to the canvas. The outline now rings the frame (PhotonzDocument.frameRing), so the hit should agree: a timed picture grown past its own box should not be hit outside the canvas. Entry points: PhotonzDocument.hitTest / canvasHitTest (LayerGrouping.swift), CanvasNSView.groupAwarePick.",
@@ -26,9 +26,23 @@
     {
       "t": "2026-10-12T12:44:03.699Z",
       "note": "seq 4010 -> 10"
+    },
+    {
+      "t": "2026-10-12T12:47:10.707Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T13:05:31.693Z",
+      "note": "Reproduced first: /tmp/ringcheck/offcanvas-click-walk.json failed 'the layers picked are Tutorial Sample, not nothing'. Fix: PhotonzDocument.frameRings(shown:) rings every pushed-in clip (picked or not); PhotonzDocument.cutOffAtTheFrame(rings, at:) hides from a click any clip whose ring the point is outside, so it passes by to what is under or to nothing. EditorState.frameRings now covers every clip (drawing still only rings picked ones); CanvasNSView routes groupAwarePick/Extend/Descent and the double-click empty-canvas test through clickable(at:). 5 FrameRingTests added. Repro walk now ok; framing-a-zoom-keys-its-centre-walk gained the click-past-the-frame / click-to-repick steps and is green, as are punch-in-and-hold, pick-several-zooms, curves-on-a-zoom-and-a-dissolve, framing-a-zoom-shows-one-box, a-zoom-is-shaped-by-hand. Full suite green (12730 tests). Left rough (no task): a nested clip inside a group is not cut off (frameRing is top-level only already)."
+    },
+    {
+      "t": "2026-10-12T13:05:54.464Z",
+      "note": "A click on the empty canvas past a pushed-in recording's frame now lets go of it; a click on the picture still picks it and a drag still frames the shot. Core: PhotonzDocument.frameRings(shown:) + cutOffAtTheFrame (5 new FrameRingTests); canvas clicks route through it. Verified: repro walk now ok, framing-a-zoom-keys-its-centre-walk extended with both checks at Next defaults and green, 5 neighbouring zoom walks green, full suite green. Audit: queue/audits/2026-10-12-zoomed-recording-let-go-past-the-frame.json. Commit 7539fd28."
     }
   ],
   "walks": [
     "framing-a-zoom-keys-its-centre-walk"
-  ]
+  ],
+  "started": "2026-10-12T12:47:10.706Z",
+  "completed": "2026-10-12T13:05:54.465Z"
 }

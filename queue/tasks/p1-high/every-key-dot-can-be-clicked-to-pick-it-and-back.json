@@ -4,12 +4,12 @@
   "goal": "Any dot that stands for a key, on a property lane in the timeline, on the clip's key line, in a value graph, or on the motion path drawn on the canvas, picks on a click (highlighted so the person can see it), and Backspace or Delete removes the picked keys. Today clicking the dots does not pick them, so a key cannot be removed that way.",
   "epic": "video-transitions-motion",
   "priority": "p1-high",
-  "seq": 15,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:35:44.573Z",
-  "updated": "2026-10-13T05:13:35.242Z",
+  "updated": "2026-10-13T12:55:23.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"i click on any of these dots and cant select them. want to be able to select, hit backspace and have the point disappear\". No screenshot came through; from the conversation (3D keying, graphs, key overlays) 'these dots' are key dots, so the task covers every surface that draws them.\n\nSuspect from code reading, not confirmed: KeyLanesView.swift key glyph (:410-430) has .gesture(keyDrag(...)) BEFORE .onTapGesture; a DragGesture with minimumDistance 0 in the same file (:466) would take every press and the tap never fires. Check which drag keyDrag is and make tap and drag coexist (minimumDistance > 0 for the drag, or a single gesture that decides on release). Delete of keys: EditorCommands.swift:720-737 only when onTimeline && canDeletePickedKeys; EditorCanvasSurface.swift:179 deletes picked keys from the canvas when keySelection.layerID matches; canDeletePickedKeys at EditorState+KeyLanes.swift:207. Related queued: the graph editor task (the-value-graph-lets-you-add-points-pick-the-seg) and the key overlay task (clicking-a-key-opens-the-same-overlay-to-set-tha) build on picking working.",
@@ -20,7 +20,8 @@
     "Right-click on a dot picks it (if not already) and offers Delete Key, easing, Copy/Paste",
     "Same rule for every property, including the 3D ones and camera values",
     "A walk keys four properties, clicks a dot on each surface, presses Backspace, and checks the key is gone and the others are untouched",
-    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not.",
+    "On a key lane and the clip key line, the same rule as the value graph and the sound volume line, one implementation shared by all three: One shared rule for every animated line on the timeline (the user, 2026-10-13): a single click on a dot picks it, a single click on the line between two dots picks that segment, and only a double click or a Command click on the line adds a dot. A single click never adds a dot. A picked dot or segment is drawn in a clearly different look (white fill or white stroke), legible on every lane colour; Shift adds to the pick; Backspace deletes picked dots in one undo step"
   ],
   "log": [
     {
@@ -34,6 +35,14 @@
     {
       "t": "2026-10-13T05:13:35.241Z",
       "note": "USER RULE 2026-10-13 (supersedes any acceptance item here that conflicts, e.g. 'click on the line adds a point'): \"every time i click on the line, a new dot appears. I want to 1. be able to select a dot. 2. only add if I double click or command click, otherwise the segment is selected. 3. select segments. A selected thing should turn white or something distinct. I want to add 2 dots, select either, or select the segment in between them. this goes for any animated value on the timeline\". Screenshot 2026-10-12 22.11.41: a sound's volume line with five dots; every click added one. So, for EVERY animated line on the timeline (sound volume line, key lanes, value graphs), one shared implementation: single click on a dot selects it; single click on the line between dots selects that segment; double click or Command click on the line adds a dot; a selected dot or segment is drawn distinctly (white fill or white stroke, clearly different from unselected, legible on every lane colour); Shift adds to the selection; Backspace deletes selected dots; right-click a segment for its curve. Update this task's acceptance to these rules and add a walk that: adds two dots by double click, selects each, selects the segment between them, and checks a single click never adds a dot."
+    },
+    {
+      "t": "2026-10-13T12:54:39.852Z",
+      "note": "triage 2026-10-13: the user's 2026-10-13 rule for every animated line added to the checklist (it was in the log only)"
+    },
+    {
+      "t": "2026-10-13T12:55:23.275Z",
+      "note": "seq 15 -> 70"
     }
   ]
 }

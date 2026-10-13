@@ -2,14 +2,14 @@
   "id": "the-grid-s-controls-come-back-to-the-tool-bar-as",
   "title": "The grid's controls come back to the tool bar as the contract's one exception",
   "goal": "On 2026-09-29 the grid left the tool bar for the View menu, because the new placement contract says the tool bar holds tools and a way of looking at the picture is never a control in a bar. On 2026-09-06 the user had asked for the grid to be worked from the tool bar. This task exists only if the user wants that back: the grid's icon, cell size and Adjust Grid gear return to the bar, and the contract names the grid as its one exception.",
-  "epic": "design-system",
+  "epic": "icon-grid",
   "priority": "p1-high",
-  "seq": 30,
+  "seq": 120,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-09-30T06:06:49.350Z",
-  "updated": "2026-10-12T12:44:06.058Z",
+  "updated": "2026-10-13T12:55:23.584Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reverting is small: EditorChromeLayout.ToolBarSection gains .grid back, toolBarSections(showsColor:showsGrid:), gridChipParts/gridSettingsAnchor drop the oneGlass argument, EditorView.toolBarSection gets case .grid: gridChip, CanvasGridControls.cellRow goes, and the four walks lose flags {next-one-glass-tool-bar: false}. See the IA task's commit. The 2026-09-06 asks: the-grid-is-worked-from-the-tool-bar-and-you-can, the-grid-tool-bar-is-two-buttons-and-adjust-mode.",
@@ -62,6 +62,14 @@
     {
       "t": "2026-10-12T12:44:06.057Z",
       "note": "seq 80 -> 30"
+    },
+    {
+      "t": "2026-10-13T12:54:51.898Z",
+      "note": "triage 2026-10-13: retagged from design-system (staged next) to icon-grid (staged now): the icon-grid success list asks for keylines from the Grid and snap group, and this card decides where that group lives"
+    },
+    {
+      "t": "2026-10-13T12:55:23.582Z",
+      "note": "seq 30 -> 120"
     }
   ],
   "walks": [

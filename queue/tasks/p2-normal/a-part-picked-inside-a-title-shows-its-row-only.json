@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T22:20:32.540Z",
-  "updated": "2026-10-12T12:44:03.766Z",
+  "updated": "2026-10-12T13:42:18.797Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen in titles-move-in-parts-walk before the parts' rows were made to open only for the part in hand: queue/audits/2026-10-10-titles-in-parts-part-lanes.png shows the Background and Accent rows of a Midnight title page running past the end of the Title Page bar (4s) to the end of the 11s timeline. MotionStrip.stripGroup passes bar: layer.time, which is nil for a piece inside a placed group, and the timeline draws that row as a full-width bar. Likely fix: pass the enclosing placed layer's time (the shift walk already knows it) for a piece with no time of its own. Not re-run since the rows were hidden by default; reproduce by double-clicking into an inserted title and picking Background.",
@@ -34,6 +34,31 @@
     {
       "t": "2026-10-12T12:44:03.765Z",
       "note": "seq 30 -> 20"
+    },
+    {
+      "t": "2026-10-12T13:16:36.836Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T13:19:10.375Z",
+      "note": "Reproduced in the probe at Next defaults: Keynote Clean title page on V2 (0s to 4s), double-click its corner to pick Background, and the Background row bar runs 0s to 11.5s (whole timeline). Cause: MotionStripGroup.bar is the part's own layer.time (nil) and TimelineClipView draws a nil bar the document's length."
+    },
+    {
+      "t": "2026-10-12T13:41:49.467Z",
+      "note": "owns these walks: a-part-in-a-title-rows-across-the-title-walk"
+    },
+    {
+      "t": "2026-10-12T13:42:18.727Z",
+      "note": "Fixed in 48e4bdd1: MotionStripGroup.span + drawnMS; timeline bar, Blade and Track Select read it. Walk a-part-in-a-title-rows-across-the-title-walk (Next defaults, new expectRowSpan step) passes: Background row 0.00s to 4.00s alongside Title Page. titles-move-in-parts, track-select-forward, component-on-the-timeline, icon-into-a-component-onto-the-timeline walks ok. Scripts/test.sh: first run reported 1 issue (output not captured; likely a load-timing test), re-run passed 12736/12736. Nothing filed: no rough edge cleared the bar."
+    },
+    {
+      "t": "2026-10-12T13:42:18.795Z",
+      "note": "A part picked inside a title now draws its timeline row from the title's start to its end (MotionStripGroup.span, TimelineTrackRows). Verified by new walk a-part-in-a-title-rows-across-the-title-walk at Next defaults (expectRowSpan Background = Title Page 0s-4s, real capture), unit tests in MotionStripBarTests, full suite green. Audit 2026-10-12-part-row-across-the-title."
     }
-  ]
+  ],
+  "started": "2026-10-12T13:16:36.830Z",
+  "walks": [
+    "a-part-in-a-title-rows-across-the-title-walk"
+  ],
+  "completed": "2026-10-12T13:42:18.796Z"
 }

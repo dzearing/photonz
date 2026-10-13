@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 13,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:36:38.739Z",
-  "updated": "2026-10-12T14:36:38.845Z",
+  "updated": "2026-10-12T19:26:35.446Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"If i have a transform on an object, and then i use the rotate tool, it does not live update.\"\n\nSuspect from code reading, not confirmed: the 3D handle drag has its own live preview that puts the in-flight turn3D on the layer (CanvasDisplay.swift:1135 'shown.updateLayer(id: drag.layerID) { $0.turn3D = drag.turn }'), but the 2D rotate drag may draw its in-flight preview through a path (a cached sprite or a 2D-only transform) that does not compose with turn3D or other transforms, so the canvas stays put until commit. 2.5D shipped in layers-can-turn-about-x-and-y-and-move-in-depth and tilt-flip-and-push-layers-in-depth-from-the-canv (2026-10-11). Check every in-flight drag preview (move, resize, rotate) against layers with turn3D.",
@@ -29,6 +29,39 @@
     {
       "t": "2026-10-12T14:36:38.844Z",
       "note": "seq 3960 -> 13"
+    },
+    {
+      "t": "2026-10-12T18:23:53.482Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T19:24:57.884Z",
+      "note": "owns these walks: rotate-a-tilted-layer-live-walk"
+    },
+    {
+      "t": "2026-10-12T19:26:20.863Z",
+      "note": "Reproduced at Next defaults on the sample recording with a new spaceHandle reading (picture changes per move, held vs landed diff). BEFORE: plain rectangle 1 of 120 moves changed (0 pictures/s); rectangle tilted Y 30: 1 of 120 (0/s); tilted title 120/120 (53/s, text never used the sprite); rectangle with a Position key 120/120 (53/s, keyed layers never used it). The mid-turn capture shows the outline turned and the picture still: the user's report, and not only for transformed layers."
+    },
+    {
+      "t": "2026-10-12T19:26:20.928Z",
+      "note": "Cause: since June 2026 (f73bfacd) CanvasDisplay.previewedFrame had no case for a transform drag, so the floated sprite was hidden for turns, while EditorState.previewLayerTransform returned early whenever a sprite existed. Once the sprite render landed (~100ms in) nothing redrew until mouse-up. Also beginLayerDrag sprited layers drawn in space: the sprite is a flat render, so a tilted layer moved untilted."
+    },
+    {
+      "t": "2026-10-12T19:26:20.997Z",
+      "note": "Fix (a84977bd): previewLayerTransform discards the sprite and re-renders per move (a sprite would also float over layers above, turn about the wrong pivot for a motion-hung layer, and is wrong for 3D). beginLayerDrag skips the sprite when drawnMap(of:) != nil, so moves/resizes of a tilted layer re-render and keep the tilt. The in-space chrome map carries transformDrag.transform so the outline/handles follow the tilted card mid-turn. AFTER: every case 117-120 of 120 moves, 52-53 pictures/s, 0.00% held-vs-landed; 51/s on a 4000x3000 picture. 13 related walks green; Scripts/test.sh 12785 tests passed."
+    },
+    {
+      "t": "2026-10-12T19:26:21.065Z",
+      "note": "Left rough (log only): spriteDeltaTransform and transformHold in CanvasDisplay are now unreachable for turns (the sprite is always discarded first); harmless, kept. Unconfirmed: after a knob turn of a group a click computed onto a piece picked the recording; my coordinate mapping was not verified and a turnKnob-turned group picks its piece fine, so not filed. Knob angle on a tilted layer is read in the flat canvas plane (audit rough, unmeasured). Filed p2 open question find-out-whether-moving-a-layer-that-sits-under."
+    },
+    {
+      "t": "2026-10-12T19:26:35.444Z",
+      "note": "Turning a layer on its knob now redraws the picture on every move for plain, 3D-tilted, title, keyed, grouped and in-group layers (was 0 pictures/s on plain and tilted, now 52-53/s, 51/s on 4000x3000, 0.00% jump on release); tilted layers keep their tilt while moved; 3D outline follows the turn. Commit a84977bd. Verified by rotate-a-tilted-layer-live-walk (green, no flags) plus 13 related walks and Scripts/test.sh. Audit queue/audits/2026-10-12-rotate-live.json."
     }
-  ]
+  ],
+  "started": "2026-10-12T18:23:53.481Z",
+  "walks": [
+    "rotate-a-tilted-layer-live-walk"
+  ],
+  "completed": "2026-10-12T19:26:35.445Z"
 }

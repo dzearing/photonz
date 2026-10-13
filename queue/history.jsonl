@@ -11163,3 +11163,283 @@
 {"t":"2026-10-12T12:45:24.085Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":360,"to":370}
 {"t":"2026-10-12T12:45:24.149Z","ev":"task_resequenced","id":"decide-whether-a-picked-recording-at-its-own-siz","from":370,"to":380}
 {"t":"2026-10-12T12:46:48.966Z","ev":"digest","file":"2026-10-12.md"}
+{"t":"2026-10-12T12:47:10.713Z","ev":"task_started","id":"a-click-on-the-empty-canvas-past-the-frame-lets","title":"A click on the empty canvas past the frame lets go of a zoomed recording","priority":"p2-normal"}
+{"t":"2026-10-12T13:05:31.695Z","ev":"task_note","id":"a-click-on-the-empty-canvas-past-the-frame-lets"}
+{"t":"2026-10-12T13:05:54.467Z","ev":"task_done","id":"a-click-on-the-empty-canvas-past-the-frame-lets","from":"in_progress","note":"A click on the empty canvas past a pushed-in recording's frame now lets go of it; a click on the picture still picks it and a drag still frames the shot. Core: PhotonzDocument.frameRings(shown:) + cutOffAtTheFrame (5 new FrameRingTests); canvas clicks route through it. Verified: repro walk now ok, framing-a-zoom-keys-its-centre-walk extended with both checks at Next defaults and green, 5 neighbouring zoom walks green, full suite green. Audit: queue/audits/2026-10-12-zoomed-recording-let-go-past-the-frame.json. Commit 7539fd28."}
+{"t":"2026-10-12T13:16:36.668Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":485,"of":887,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T13:16:36.842Z","ev":"task_started","id":"a-part-picked-inside-a-title-shows-its-row-only","title":"A part picked inside a title shows its row only across the title","priority":"p2-normal"}
+{"t":"2026-10-12T13:19:10.377Z","ev":"task_note","id":"a-part-picked-inside-a-title-shows-its-row-only"}
+{"t":"2026-10-12T13:41:49.469Z","ev":"task_walks","id":"a-part-picked-inside-a-title-shows-its-row-only","walks":["a-part-in-a-title-rows-across-the-title-walk"]}
+{"t":"2026-10-12T13:42:18.730Z","ev":"task_note","id":"a-part-picked-inside-a-title-shows-its-row-only"}
+{"t":"2026-10-12T13:42:18.798Z","ev":"task_done","id":"a-part-picked-inside-a-title-shows-its-row-only","from":"in_progress","note":"A part picked inside a title now draws its timeline row from the title's start to its end (MotionStripGroup.span, TimelineTrackRows). Verified by new walk a-part-in-a-title-rows-across-the-title-walk at Next defaults (expectRowSpan Background = Title Page 0s-4s, real capture), unit tests in MotionStripBarTests, full suite green. Audit 2026-10-12-part-row-across-the-title."}
+{"t":"2026-10-12T13:53:53.371Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":536,"of":888,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T13:53:53.541Z","ev":"task_started","id":"find-out-why-a-faint-card-from-the-recording-sho","title":"Find out why a faint card from the recording shows through a title page before the recording starts","priority":"p2-normal"}
+{"t":"2026-10-12T13:59:04.846Z","ev":"task_walks","id":"find-out-why-a-faint-card-from-the-recording-sho","walks":[]}
+{"t":"2026-10-12T13:59:04.905Z","ev":"task_note","id":"find-out-why-a-faint-card-from-the-recording-sho"}
+{"t":"2026-10-12T13:59:04.964Z","ev":"task_note","id":"find-out-why-a-faint-card-from-the-recording-sho"}
+{"t":"2026-10-12T13:59:05.026Z","ev":"task_note","id":"find-out-why-a-faint-card-from-the-recording-sho"}
+{"t":"2026-10-12T13:59:05.085Z","ev":"task_note","id":"find-out-why-a-faint-card-from-the-recording-sho"}
+{"t":"2026-10-12T13:59:12.647Z","ev":"task_note","id":"find-out-why-a-faint-card-from-the-recording-sho"}
+{"t":"2026-10-12T13:59:12.763Z","ev":"task_done","id":"find-out-why-a-faint-card-from-the-recording-sho","from":"in_progress","note":"Not a bug: the 'two seconds in' picture was really taken at about 3.52 s (its own playhead and 0:03 readout), the first frames of the designed half-second dissolve from an opening title page onto the recording it pushes to 3.5 s. Measured in real window captures (card area flat at 1, 2, 3, 3.25, 3.5 s, Ink and Original themes) and in a 1080p export read with ffmpeg (flat through 3.48 s, faint card only from 3.52 s). The playhead was already at 2.2 s after typing, which is why two steps landed in the dissolve. No code change."}
+{"t":"2026-10-12T13:59:33.236Z","ev":"task_started","id":"walks-that-fail-in-the-full-sweep-20","title":"Walks that fail in the full sweep","priority":"p2-normal"}
+{"t":"2026-10-12T14:31:54.539Z","ev":"task_created","id":"editing-a-title-never-starts-playback-and-every","priority":"p1-high","title":"Editing a title never starts playback, and every part of it can be clicked with the Select tool"}
+{"t":"2026-10-12T14:31:54.642Z","ev":"task_resequenced","id":"editing-a-title-never-starts-playback-and-every","from":3960,"to":11}
+{"t":"2026-10-12T14:33:27.603Z","ev":"task_created","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it","priority":"p1-high","title":"A range stays on top when you pick a clip, and its right-click acts on that clip's stretch"}
+{"t":"2026-10-12T14:33:27.704Z","ev":"task_resequenced","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it","from":3960,"to":12}
+{"t":"2026-10-12T14:36:38.744Z","ev":"task_created","id":"rotating-a-layer-that-already-has-a-transform-up","priority":"p1-high","title":"Rotating a layer that already has a transform updates live while you drag"}
+{"t":"2026-10-12T14:36:38.846Z","ev":"task_resequenced","id":"rotating-a-layer-that-already-has-a-transform-up","from":3960,"to":13}
+{"t":"2026-10-12T14:36:38.941Z","ev":"task_created","id":"every-transform-handle-answers-the-pointer-befor","priority":"p1-high","title":"Every transform handle answers the pointer before you click"}
+{"t":"2026-10-12T14:36:39.048Z","ev":"task_resequenced","id":"every-transform-handle-answers-the-pointer-befor","from":3960,"to":14}
+{"t":"2026-10-12T14:38:29.270Z","ev":"task_created","id":"clicking-or-right-clicking-an-item-on-the-timeli","priority":"p1-high","title":"Clicking or right-clicking an item on the timeline moves the playhead there"}
+{"t":"2026-10-12T14:38:29.366Z","ev":"task_resequenced","id":"clicking-or-right-clicking-an-item-on-the-timeli","from":3960,"to":15}
+{"t":"2026-10-12T14:46:58.205Z","ev":"task_created","id":"design-the-transform-overlay-and-a-simpler-way-t","priority":"p1-high","title":"Design the transform overlay and a simpler way to animate, as mocks"}
+{"t":"2026-10-12T14:46:58.293Z","ev":"task_resequenced","id":"design-the-transform-overlay-and-a-simpler-way-t","from":3960,"to":16}
+{"t":"2026-10-12T14:46:58.374Z","ev":"task_created","id":"a-small-overlay-shows-transform-values-to-type-i","priority":"p1-high","title":"A small overlay shows transform values to type in, and replaces the 3D panel section"}
+{"t":"2026-10-12T14:46:58.474Z","ev":"task_resequenced","id":"a-small-overlay-shows-transform-values-to-type-i","from":3960,"to":17}
+{"t":"2026-10-12T14:46:58.554Z","ev":"task_created","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","priority":"p1-high","title":"Clicking a key opens the same overlay to set that key's value"}
+{"t":"2026-10-12T14:46:58.644Z","ev":"task_resequenced","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","from":3960,"to":18}
+{"t":"2026-10-12T14:46:58.724Z","ev":"task_created","id":"the-value-graph-lets-you-add-points-pick-the-seg","priority":"p1-high","title":"The value graph lets you add points, pick the segments between them and change their easing"}
+{"t":"2026-10-12T14:46:58.813Z","ev":"task_resequenced","id":"the-value-graph-lets-you-add-points-pick-the-seg","from":3960,"to":19}
+{"t":"2026-10-12T14:46:58.902Z","ev":"task_created","id":"a-layer-s-track-shows-only-what-is-animated-and","priority":"p1-high","title":"A layer's track shows only what is animated, and you add or remove animated properties directly"}
+{"t":"2026-10-12T14:46:58.993Z","ev":"task_resequenced","id":"a-layer-s-track-shows-only-what-is-animated-and","from":3960,"to":20}
+{"t":"2026-10-12T14:50:05.605Z","ev":"task_created","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea","priority":"p1-high","title":"3D tilt and depth can be keyed and tweaked as easily as position"}
+{"t":"2026-10-12T14:50:05.702Z","ev":"task_resequenced","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea","from":3960,"to":15}
+{"t":"2026-10-12T15:20:10.418Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-20","walks":["keys-on-a-later-shadow-walk","section-fold-motion-walk","tutorial-component-versions-walk","library-tile-click-latency-walk"]}
+{"t":"2026-10-12T15:20:10.483Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T15:20:10.549Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T15:20:10.617Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-20"}
+{"t":"2026-10-12T15:20:29.347Z","ev":"task_done","id":"walks-that-fail-in-the-full-sweep-20","from":"in_progress","note":"Commit 31f9e820. All four walks pass twice or more in a row on their own. keys-on-a-later-shadow-walk: the harness's reveal was wrong (it overshot a list sitting wholly below the fold); fixed with PlaytestReach.aim plus unit tests, walk unchanged, 3/3. tutorial-component-versions-walk: a real app bug, a new state's name field sometimes never took the keyboard; the row now keeps asking until it lands, 6/6 (was 3 failures in 5). library-tile-click-latency-walk (7 in a row) and section-fold-motion-walk (2 in a row, flakes about 1 in 3 or 4 under load by 1 to 5ms on a random section): budgets missed under load, budgets left alone, findings in the log. Scripts/test.sh green (12739 tests)."}
+{"t":"2026-10-12T15:36:56.979Z","ev":"slice_pass","walks":36,"passed":36,"failed":0,"seconds":572,"of":888,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T15:36:57.165Z","ev":"task_started","id":"editing-a-title-never-starts-playback-and-every","title":"Editing a title never starts playback, and every part of it can be clicked with the Select tool","priority":"p1-high"}
+{"t":"2026-10-12T16:36:13.859Z","ev":"task_created","id":"double-clicking-a-library-title-tile-inserts-it","priority":"p2-normal","title":"Double clicking a Library title tile inserts it even while a layer is picked"}
+{"t":"2026-10-12T16:36:29.642Z","ev":"task_walks","id":"editing-a-title-never-starts-playback-and-every","walks":["editing-a-title-never-plays-walk"]}
+{"t":"2026-10-12T16:37:01.213Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:01.277Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:01.343Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:01.409Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:01.473Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:01.535Z","ev":"task_note","id":"editing-a-title-never-starts-playback-and-every"}
+{"t":"2026-10-12T16:37:20.194Z","ev":"task_done","id":"editing-a-title-never-starts-playback-and-every","from":"in_progress","note":"Finishing a title's words (Cmd-Return, Escape, click away) never plays: the part stays picked inside the title, held at the moment every part has arrived. Restyle knobs never replay; the Part section's Replay plays just that part with the rest held still. One Select-tool click picks any part of a title (core titlePartTarget), Escape steps up to the whole title, right-click on a title not entered opens the whole title's menu. Verified: reproduced first (playing at 1.0 after Cmd-Return), TitlePartClickTests (15), Scripts/test.sh 12753 passed, editing-a-title-never-plays-walk ok at Next defaults with pointer clicks, all 43 title walks ok after fixes. Audit queue/audits/2026-10-12-title-editing-never-plays.json. Follow-up: double-clicking-a-library-title-tile-inserts-it."}
+{"t":"2026-10-12T16:53:33.428Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":794,"of":889,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T16:53:33.600Z","ev":"task_started","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it","title":"A range stays on top when you pick a clip, and its right-click acts on that clip's stretch","priority":"p1-high"}
+{"t":"2026-10-12T16:57:23.682Z","ev":"task_note","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it"}
+{"t":"2026-10-12T18:05:16.253Z","ev":"task_created","id":"a-right-click-on-a-sound-s-level-line-opens-the","priority":"p2-normal","title":"A right click on a sound's level line opens the sound's menu"}
+{"t":"2026-10-12T18:05:22.683Z","ev":"task_created","id":"clean-noise-and-hide-picture-work-on-one-stretch","priority":"p2-normal","title":"Clean Noise and Hide Picture work on one stretch of a clip"}
+{"t":"2026-10-12T18:06:45.012Z","ev":"task_walks","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it","walks":["a-range-stays-on-top-of-a-pick-walk","picked-in-range-menu-bar-walk"]}
+{"t":"2026-10-12T18:06:45.079Z","ev":"task_note","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it"}
+{"t":"2026-10-12T18:06:45.145Z","ev":"task_note","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it"}
+{"t":"2026-10-12T18:06:45.209Z","ev":"task_note","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it"}
+{"t":"2026-10-12T18:06:45.275Z","ev":"task_note","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it"}
+{"t":"2026-10-12T18:07:27.299Z","ev":"task_done","id":"a-range-stays-on-top-when-you-pick-a-clip-and-it","from":"in_progress","note":"A range (ruler or Option-drag across tracks) stays in hand and drawn over the clips when a clip is picked; right-click on the pick, the ruler stretch or a lane under it leads with the section rows from one table (SectionOperation, Sources/PhotonzCore/RangeSection.swift; app EditorState+RangeSection.swift): Mute Section, Lower Volume, Normalize Section, Split at Range Edges, Delete/Ripple Delete Section, Speed/Freeze Frame for Section, Add Zoom over Range, Trim to Range, Delete Keys in Range, each one undo step; Delete/Shift-Delete take the section; Escape clears the range before the pick; Sequence > Picked in Range in the menu bar. Also fixed Lift/Extract leaving a sound's level line behind. Verified: 31 new core tests + full suite (12,783) green; a-range-stays-on-top-of-a-pick-walk at Next defaults measures silence at 3.2/4.5/5.8s and full level at 1.5/8/12s, one undo step, Escape order, track-range Delete; picked-in-range-menu-bar-walk; 50 related walks green. Audit queue/audits/2026-10-12-range-on-a-pick.json. Clean Noise / Hide Picture for a stretch filed as clean-noise-and-hide-picture-work-on-one-stretch."}
+{"t":"2026-10-12T18:23:53.307Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":584,"of":891,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T18:23:53.484Z","ev":"task_started","id":"rotating-a-layer-that-already-has-a-transform-up","title":"Rotating a layer that already has a transform updates live while you drag","priority":"p1-high"}
+{"t":"2026-10-12T19:24:57.886Z","ev":"task_walks","id":"rotating-a-layer-that-already-has-a-transform-up","walks":["rotate-a-tilted-layer-live-walk"]}
+{"t":"2026-10-12T19:25:51.431Z","ev":"task_created","id":"find-out-whether-moving-a-layer-that-sits-under","priority":"p2-normal","title":"Find out whether moving a layer that sits under another draws it on top until you let go"}
+{"t":"2026-10-12T19:26:20.865Z","ev":"task_note","id":"rotating-a-layer-that-already-has-a-transform-up"}
+{"t":"2026-10-12T19:26:20.930Z","ev":"task_note","id":"rotating-a-layer-that-already-has-a-transform-up"}
+{"t":"2026-10-12T19:26:20.999Z","ev":"task_note","id":"rotating-a-layer-that-already-has-a-transform-up"}
+{"t":"2026-10-12T19:26:21.067Z","ev":"task_note","id":"rotating-a-layer-that-already-has-a-transform-up"}
+{"t":"2026-10-12T19:26:35.447Z","ev":"task_done","id":"rotating-a-layer-that-already-has-a-transform-up","from":"in_progress","note":"Turning a layer on its knob now redraws the picture on every move for plain, 3D-tilted, title, keyed, grouped and in-group layers (was 0 pictures/s on plain and tilted, now 52-53/s, 51/s on 4000x3000, 0.00% jump on release); tilted layers keep their tilt while moved; 3D outline follows the turn. Commit a84977bd. Verified by rotate-a-tilted-layer-live-walk (green, no flags) plus 13 related walks and Scripts/test.sh. Audit queue/audits/2026-10-12-rotate-live.json."}
+{"t":"2026-10-12T19:38:58.733Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":587,"of":892,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T19:38:58.906Z","ev":"task_started","id":"every-transform-handle-answers-the-pointer-befor","title":"Every transform handle answers the pointer before you click","priority":"p1-high"}
+{"t":"2026-10-12T20:29:19.478Z","ev":"task_created","id":"resize-squares-on-a-layer-turned-in-3d-take-the","priority":"p2-normal","title":"Resize squares on a layer turned in 3D take the press where they are drawn"}
+{"t":"2026-10-12T20:29:22.960Z","ev":"task_walks","id":"every-transform-handle-answers-the-pointer-befor","walks":["every-handle-lights-on-hover-walk","framing-a-zoom-shows-one-box-walk"]}
+{"t":"2026-10-12T20:36:48.115Z","ev":"task_note","id":"every-transform-handle-answers-the-pointer-befor"}
+{"t":"2026-10-12T20:36:48.182Z","ev":"task_note","id":"every-transform-handle-answers-the-pointer-befor"}
+{"t":"2026-10-12T20:36:48.248Z","ev":"task_note","id":"every-transform-handle-answers-the-pointer-befor"}
+{"t":"2026-10-12T20:36:53.267Z","ev":"task_done","id":"every-transform-handle-answers-the-pointer-befor","from":"in_progress","note":"Shipped in 19001c56: every transform handle lights under the resting pointer (quarter larger, accent fill, glow) via one shared treatment, HandleHover (PhotonzCore, 8 tests) + CanvasHandleHover; the pointer cue decides which mark lights so it is always the handle a press takes. 3D arcs/depth arrow thicken in their colour, others dim, and name themselves (Rotation Y/X, Depth) after 0.35s. Zoom box corners lit by the box overlay. Verified: new walk every-handle-lights-on-hover-walk (rectangle 16 handles incl. 3D, turned card, arrow, crop, pen path; 31 real captures) and framing-a-zoom-shows-one-box-walk at Next defaults, both green; 8 related walks green; full suite green. Hover cost measured 0.001-0.01ms per move. Audit queue/audits/2026-10-12-handle-hover.json. Follow-up: resize-squares-on-a-layer-turned-in-3d-take-the."}
+{"t":"2026-10-12T20:51:44.881Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":729,"of":893,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-12T20:51:45.060Z","ev":"task_started","id":"clicking-or-right-clicking-an-item-on-the-timeli","title":"Clicking or right-clicking an item on the timeline moves the playhead there","priority":"p1-high"}
+{"t":"2026-10-12T20:56:59.691Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-12T23:39:08.362Z","ev":"task_walks","id":"clicking-or-right-clicking-an-item-on-the-timeli","walks":["clicking-a-timeline-item-moves-the-playhead-walk"]}
+{"t":"2026-10-12T23:39:08.429Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-12T23:39:08.492Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-12T23:39:08.559Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-12T23:39:08.624Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-12T23:39:33.183Z","ev":"task_done","id":"clicking-or-right-clicking-an-item-on-the-timeli","from":"in_progress","note":"Shipped in f197e266 (Next, shared timeline code): a click on a clip, sound, title, caption or zoom bar picks it and moves the playhead to the moment clicked; a right click moves it before the menu is built and picks the item unless already picked; inside a multi-pick, Split/Delete/Ripple Delete act on the whole pick and the pick is kept; cuts and edit points leave the playhead alone (Roll Edit to Playhead). Verified: clicking-a-timeline-item-moves-the-playhead-walk at Next defaults (no flags), 176 recording walks rerun (7 updated to right-click at the moment they mean), Scripts/test.sh 12,800 green, audit queue/audits/2026-10-12-timeline-click-playhead.json."}
+{"t":"2026-10-13T00:00:19.588Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":1072,"of":894,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T00:00:19.762Z","ev":"task_started","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea","title":"3D tilt and depth can be keyed and tweaked as easily as position","priority":"p1-high"}
+{"t":"2026-10-13T00:12:00.433Z","ev":"task_note","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea"}
+{"t":"2026-10-13T00:56:20.189Z","ev":"task_walks","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea","walks":["tilt-keys-like-a-move-walk"]}
+{"t":"2026-10-13T00:56:34.630Z","ev":"task_note","id":"design-the-transform-overlay-and-a-simpler-way-t"}
+{"t":"2026-10-13T00:56:34.696Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-13T00:56:34.763Z","ev":"task_note","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea"}
+{"t":"2026-10-13T00:56:34.829Z","ev":"task_note","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea"}
+{"t":"2026-10-13T00:57:06.644Z","ev":"task_done","id":"3d-tilt-and-depth-can-be-keyed-and-tweaked-as-ea","from":"in_progress","note":"A tilt, push or typed 3D value now keys at the playhead once the layer's place is animating, the same as a move (PhotonzCore SpaceEditing.setSpaceValue, anchors at the place's neighbouring keys). Reproduced first: track diamond then arc left Rotation Y unkeyed; all other routes (diamonds, Add Key Here, Animate a property, typed, keyed arcs, recording, title pieces, Show Graph, camera) already worked. Unit tests in SpaceEditingTests, new expectTilt walk step, walk tilt-keys-like-a-move-walk (1.27 tilt at 0.5s), 12 related walks green, Scripts/test.sh green (12805). Audit queue/audits/2026-10-12-3d-tilt-keys-like-a-move.json. Commit 772eabaa."}
+{"t":"2026-10-13T01:10:49.208Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":665,"of":895,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T01:10:49.391Z","ev":"task_started","id":"design-the-transform-overlay-and-a-simpler-way-t","title":"Design the transform overlay and a simpler way to animate, as mocks","priority":"p1-high"}
+{"t":"2026-10-13T01:15:59.863Z","ev":"task_note","id":"design-the-transform-overlay-and-a-simpler-way-t"}
+{"t":"2026-10-13T01:28:37.137Z","ev":"decision_opened","id":"design-the-transform-overlay-and-a-simpler-way-t-when-you-change-something-on-a-l","taskId":"design-the-transform-overlay-and-a-simpler-way-t","question":"When you change something on a layer that already has keys, when should the change become a key?"}
+{"t":"2026-10-13T01:29:03.308Z","ev":"decision_opened","id":"a-layer-s-track-shows-only-what-is-animated-and-when-you-change-something-on-a-l","taskId":"a-layer-s-track-shows-only-what-is-animated-and","question":"When you change something on a layer that already has keys, when should the change become a key?"}
+{"t":"2026-10-13T01:29:03.337Z","ev":"decision_withdrawn","id":"design-the-transform-overlay-and-a-simpler-way-t-when-you-change-something-on-a-l","taskId":"design-the-transform-overlay-and-a-simpler-way-t","question":"When you change something on a layer that already has keys, when should the change become a key?","reason":"Moved onto the build task it gates (a-layer-s-track-shows-only-what-is-animated-and), so answering it releases that task"}
+{"t":"2026-10-13T01:29:24.944Z","ev":"task_note","id":"a-small-overlay-shows-transform-values-to-type-i"}
+{"t":"2026-10-13T01:29:25.003Z","ev":"task_note","id":"clicking-a-key-opens-the-same-overlay-to-set-tha"}
+{"t":"2026-10-13T01:29:25.061Z","ev":"task_note","id":"the-value-graph-lets-you-add-points-pick-the-seg"}
+{"t":"2026-10-13T01:29:30.480Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-13T01:29:30.548Z","ev":"task_blocked","id":"a-layer-s-track-shows-only-what-is-animated-and","from":"pending","note":"Waits on the card about when a change becomes a key; the mock is drawn and the other three build tasks go ahead"}
+{"t":"2026-10-13T01:30:04.662Z","ev":"task_note","id":"design-the-transform-overlay-and-a-simpler-way-t"}
+{"t":"2026-10-13T01:30:32.579Z","ev":"task_done","id":"design-the-transform-overlay-and-a-simpler-way-t","from":"in_progress","note":"Live mock page docs/design/mocks/pages/video-animate.html (Prototype > Video > Animate with the overlay): transform bar with placement rules, key bar, in-lane graph with segment pick/handles/easing menu/double-click to add, animated-only track with Delete and Animate, one interaction table for every property, placement check. UX-PATTERNS v2.6 names the value overlay. Card on a-layer-s-track-shows-only-what-is-animated-and (blocked on it); the other three build tasks have acceptance updated to the mock. Verified in Chrome: drags, auto-key joins, key bar typing sets canvas opacity to 40%, Delete and Animate rows, graph menu and add point; check-easing and the other mock gates pass. Audit queue/audits/2026-10-12-design-the-transform-overlay-and-a-simpler-way-t.json. Commit b1a20639."}
+{"t":"2026-10-13T01:30:51.303Z","ev":"task_started","id":"a-small-overlay-shows-transform-values-to-type-i","title":"A small overlay shows transform values to type in, and replaces the 3D panel section","priority":"p1-high"}
+{"t":"2026-10-13T01:35:44.577Z","ev":"task_created","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","priority":"p1-high","title":"Every key dot can be clicked to pick it and Backspace deletes it"}
+{"t":"2026-10-13T01:35:44.670Z","ev":"task_resequenced","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","from":3960,"to":15}
+{"t":"2026-10-13T01:36:54.408Z","ev":"task_created","id":"an-audio-clip-answers-right-click-and-its-volume","priority":"p1-high","title":"An audio clip answers right-click, and its volume line's segments can be picked and shaped"}
+{"t":"2026-10-13T01:36:54.507Z","ev":"task_resequenced","id":"an-audio-clip-answers-right-click-and-its-volume","from":3960,"to":15}
+{"t":"2026-10-13T01:39:16.566Z","ev":"task_created","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag","priority":"p1-high","title":"The 3D rotation handles are on a picked layer again, visible without hunting"}
+{"t":"2026-10-13T01:39:16.667Z","ev":"task_resequenced","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag","from":3960,"to":1}
+{"t":"2026-10-13T01:39:16.736Z","ev":"task_note","id":"a-small-overlay-shows-transform-values-to-type-i"}
+{"t":"2026-10-13T01:39:35.246Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T01:39:53.968Z","ev":"task_created","id":"the-right-panel-shows-only-what-the-picked-thing","priority":"p1-high","title":"The right panel shows only what the picked thing and the tool in hand need"}
+{"t":"2026-10-13T01:39:54.058Z","ev":"task_resequenced","id":"the-right-panel-shows-only-what-the-picked-thing","from":3960,"to":2}
+{"t":"2026-10-13T01:40:54.549Z","ev":"task_created","id":"a-captured-window-s-shadow-is-much-lighter-and-c","priority":"p1-high","title":"A captured window's shadow is much lighter, and can be adjusted"}
+{"t":"2026-10-13T01:40:54.656Z","ev":"task_resequenced","id":"a-captured-window-s-shadow-is-much-lighter-and-c","from":3960,"to":3}
+{"t":"2026-10-13T01:45:28.498Z","ev":"task_created","id":"size-mode-measures-real-buttons-and-objects-not","priority":"p1-high","title":"Size mode measures real buttons and objects, not just text: large pills, gradients and glows"}
+{"t":"2026-10-13T01:45:28.597Z","ev":"task_resequenced","id":"size-mode-measures-real-buttons-and-objects-not","from":3960,"to":4}
+{"t":"2026-10-13T01:46:46.290Z","ev":"task_created","id":"dragging-a-magnify-lens-never-smears-or-corrupts","priority":"p1-high","title":"Dragging a Magnify lens never smears or corrupts the picture"}
+{"t":"2026-10-13T01:46:46.381Z","ev":"task_resequenced","id":"dragging-a-magnify-lens-never-smears-or-corrupts","from":3960,"to":5}
+{"t":"2026-10-13T01:47:24.815Z","ev":"task_created","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau","priority":"p1-high","title":"Resizing a zoom callout keeps its shape by default"}
+{"t":"2026-10-13T01:47:24.916Z","ev":"task_resequenced","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau","from":3960,"to":6}
+{"t":"2026-10-13T01:48:46.525Z","ev":"task_created","id":"a-size-measurement-is-one-group-a-faint-red-box","priority":"p1-high","title":"A Size measurement is one group: a faint red box over the area plus its width and height"}
+{"t":"2026-10-13T01:48:46.619Z","ev":"task_resequenced","id":"a-size-measurement-is-one-group-a-faint-red-box","from":3960,"to":7}
+{"t":"2026-10-13T01:52:01.146Z","ev":"task_created","id":"measurements-are-named-for-their-mode-and-every","priority":"p1-high","title":"Measurements are named for their mode, and every caliper has the same appearance controls"}
+{"t":"2026-10-13T01:52:01.241Z","ev":"task_resequenced","id":"measurements-are-named-for-their-mode-and-every","from":3960,"to":7}
+{"t":"2026-10-13T01:52:44.880Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T01:54:49.853Z","ev":"task_created","id":"a-zoom-callout-fills-the-space-between-its-two-l","priority":"p1-high","title":"A zoom callout fills the space between its two lines with a faint tint of the line colour"}
+{"t":"2026-10-13T01:54:49.946Z","ev":"task_resequenced","id":"a-zoom-callout-fills-the-space-between-its-two-l","from":3960,"to":8}
+{"t":"2026-10-13T02:46:23.995Z","ev":"task_created","id":"the-transform-bar-keeps-width-and-height-in-prop","priority":"p1-high","title":"The transform bar keeps width and height in proportion, with the link the mock draws"}
+{"t":"2026-10-13T02:47:22.363Z","ev":"task_walks","id":"a-small-overlay-shows-transform-values-to-type-i","walks":["transform-bar-walk","show-transform-values-menu-walk","tilt-and-flip-a-title-in-3d-walk","tilt-keys-like-a-move-walk"]}
+{"t":"2026-10-13T02:47:22.425Z","ev":"task_note","id":"a-small-overlay-shows-transform-values-to-type-i"}
+{"t":"2026-10-13T02:47:22.486Z","ev":"task_note","id":"a-small-overlay-shows-transform-values-to-type-i"}
+{"t":"2026-10-13T02:47:22.545Z","ev":"task_note","id":"a-small-overlay-shows-transform-values-to-type-i"}
+{"t":"2026-10-13T02:47:46.454Z","ev":"task_done","id":"a-small-overlay-shows-transform-values-to-type-i","from":"in_progress","note":"Shipped in 231c7cfe: a glass bar of typed transform values (X, Y, W, H, angle; Tilt X/Y, Depth, Pivot in 3D; sums; Reset) rides under the layer in hand, placed and dismissed per video-animate.html; panel 3D section withdrawn; Layer > Show Transform Values. Verified by transform-bar-walk and show-transform-values-menu-walk at Next defaults (bar arrives and leaves with 0 screen refreshes between), 6 migrated walks and 14 move/size walks green, Scripts/test.sh 12825 green. Audit queue/audits/2026-10-13-transform-bar.json; W/H link filed as the-transform-bar-keeps-width-and-height-in-prop."}
+{"t":"2026-10-13T03:03:12.571Z","ev":"slice_pass","walks":38,"passed":38,"failed":0,"seconds":665,"of":897,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T03:03:12.744Z","ev":"task_started","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag","title":"The 3D rotation handles are on a picked layer again, visible without hunting","priority":"p1-high"}
+{"t":"2026-10-13T03:38:40.898Z","ev":"task_walks","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag","walks":["3d-grippers-on-a-picked-layer-walk","tilt-and-flip-a-title-in-3d-walk"]}
+{"t":"2026-10-13T03:39:31.683Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T03:39:31.744Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T03:39:31.804Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T03:39:31.865Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T03:39:31.924Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T03:39:45.836Z","ev":"task_done","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag","from":"in_progress","note":"Picking a layer with the Select tool now shows the swing and tip arcs and the depth arrow at once, no hover (CanvasSpaceHandles + SpaceHandles.showing/hit(boxReach:) in PhotonzCore). Small layers keep every resize corner. Verified by the new 3d-grippers-on-a-picked-layer-walk (now in every rotating check), 34 related walks and Scripts/test.sh green. Audit: queue/audits/2026-10-13-3d-grippers-on-a-picked-layer.json. Commit 200648c0."}
+{"t":"2026-10-13T05:09:50.326Z","ev":"sweep_pass","walks":301,"passed":301,"failed":0,"seconds":5376,"complete":false,"total":898,"interrupted":true}
+{"t":"2026-10-13T05:09:50.492Z","ev":"task_started","id":"the-right-panel-shows-only-what-the-picked-thing","title":"The right panel shows only what the picked thing and the tool in hand need","priority":"p1-high"}
+{"t":"2026-10-13T05:13:35.094Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T05:13:35.169Z","ev":"task_note","id":"the-value-graph-lets-you-add-points-pick-the-seg"}
+{"t":"2026-10-13T05:13:35.243Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T05:13:35.325Z","ev":"task_resequenced","id":"the-value-graph-lets-you-add-points-pick-the-seg","from":19,"to":15}
+{"t":"2026-10-13T05:15:38.964Z","ev":"task_created","id":"transform-values-live-behind-an-info-button-on-t","priority":"p1-high","title":"Transform values live behind an Info button on the tool bar, never over the picture"}
+{"t":"2026-10-13T05:15:39.058Z","ev":"task_resequenced","id":"transform-values-live-behind-an-info-button-on-t","from":3970,"to":1}
+{"t":"2026-10-13T05:15:39.124Z","ev":"task_note","id":"clicking-a-key-opens-the-same-overlay-to-set-tha"}
+{"t":"2026-10-13T05:42:20.195Z","ev":"decision_opened","id":"the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit","taskId":"the-right-panel-shows-only-what-the-picked-thing","question":"Where do Layers and Library sit when something is picked?"}
+{"t":"2026-10-13T05:42:53.030Z","ev":"task_walks","id":"the-right-panel-shows-only-what-the-picked-thing","walks":["panel-shows-what-is-picked-walk","panel-shows-what-is-picked-video-walk"]}
+{"t":"2026-10-13T05:43:05.508Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T05:43:05.573Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T05:43:05.641Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T05:43:05.703Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T05:43:05.763Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-13T05:43:05.823Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
+{"t":"2026-10-13T05:43:09.888Z","ev":"task_blocked","id":"the-right-panel-shows-only-what-the-picked-thing","from":"in_progress","note":"Shipped the decidable part (5dea8135): a tool's settings only with that tool in hand, above the pick's sections; no Masked by on measurements; walks panel-shows-what-is-picked(-video) guard it in 13 states. Waiting on the card: where Layers and Library sit when something is picked."}
+{"t":"2026-10-13T05:54:23.950Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":500,"of":900,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T05:54:24.127Z","ev":"task_started","id":"transform-values-live-behind-an-info-button-on-t","title":"Transform values live behind an Info button on the tool bar, never over the picture","priority":"p1-high"}
+{"t":"2026-10-13T05:57:14.605Z","ev":"task_note","id":"transform-values-live-behind-an-info-button-on-t"}
+{"t":"2026-10-13T06:20:59.975Z","ev":"task_note","id":"clicking-a-key-opens-the-same-overlay-to-set-tha"}
+{"t":"2026-10-13T06:39:31.666Z","ev":"task_walks","id":"transform-values-live-behind-an-info-button-on-t","walks":["transform-values-info-walk","show-transform-values-menu-walk","transform-bar-walk"]}
+{"t":"2026-10-13T06:40:04.728Z","ev":"task_note","id":"transform-values-live-behind-an-info-button-on-t"}
+{"t":"2026-10-13T06:40:04.798Z","ev":"task_done","id":"transform-values-live-behind-an-info-button-on-t","from":"in_progress","note":"Info (i) button at the tool bar's right end while something is picked; it, F8 and Layer > Show Transform Values open a popover in the bar's glass and corner (TransformValuesPopover.swift) that slides off every handle; canvas bar gone. Verified: core tests (placement, sections, F8 key), full suite 12,838 green, 11 walks green incl. new transform-values-info-walk (full-canvas recording, X 100, drag live, Reset) and show-transform-values-menu-walk (menu + F8, app in front). Audit queue/audits/2026-10-12-transform-values-info.json. Commit 1cd96c89."}
+{"t":"2026-10-13T06:55:10.003Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":645,"of":901,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T06:55:10.179Z","ev":"task_started","id":"a-captured-window-s-shadow-is-much-lighter-and-c","title":"A captured window's shadow is much lighter, and can be adjusted","priority":"p1-high"}
+{"t":"2026-10-13T06:55:21.863Z","ev":"task_note","id":"a-captured-window-s-shadow-is-much-lighter-and-c"}
+{"t":"2026-10-13T07:40:29.048Z","ev":"task_note","id":"a-captured-window-s-shadow-is-much-lighter-and-c"}
+{"t":"2026-10-13T07:40:29.109Z","ev":"task_note","id":"a-captured-window-s-shadow-is-much-lighter-and-c"}
+{"t":"2026-10-13T07:40:29.170Z","ev":"task_note","id":"a-captured-window-s-shadow-is-much-lighter-and-c"}
+{"t":"2026-10-13T07:40:29.229Z","ev":"task_note","id":"a-captured-window-s-shadow-is-much-lighter-and-c"}
+{"t":"2026-10-13T07:40:29.288Z","ev":"task_walks","id":"a-captured-window-s-shadow-is-much-lighter-and-c","walks":["a-captured-window-s-shadow-is-light-and-editable-walk"]}
+{"t":"2026-10-13T07:40:55.104Z","ev":"task_done","id":"a-captured-window-s-shadow-is-much-lighter-and-c","from":"in_progress","note":"Window clicks are shot bare and given macOS's own shadow shape at 40% of the darkness macOS drew, read per window, as a layer style on an unlocked Window layer. The PNG is flattened from it (transparent around, Display P3 kept, dark window rim kept) and a .photonz sidecar beside it makes the shadow editable and switchable on edit. Verified: 20 unit tests, probe drill PASS on inactive/active light/dark windows (three-point alpha ours vs macOS 54/134, 32/81, 9/24), walk a-captured-window-s-shadow-is-light-and-editable-walk green at Next defaults, full suite green. Audit queue/audits/2026-10-13-window-capture-shadow.json. Commit a5c89826."}
+{"t":"2026-10-13T07:52:43.447Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":549,"of":902,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T07:52:43.626Z","ev":"task_started","id":"size-mode-measures-real-buttons-and-objects-not","title":"Size mode measures real buttons and objects, not just text: large pills, gradients and glows","priority":"p1-high"}
+{"t":"2026-10-13T08:02:41.091Z","ev":"task_note","id":"size-mode-measures-real-buttons-and-objects-not"}
+{"t":"2026-10-13T09:49:31.969Z","ev":"task_walks","id":"size-mode-measures-real-buttons-and-objects-not","walks":["size-reads-buttons-and-pills-walk","size-reads-avatars-and-stacks-walk"]}
+{"t":"2026-10-13T09:49:41.459Z","ev":"task_created","id":"the-full-test-run-passes-every-time-not-one-run","priority":"p2-normal","title":"The full test run passes every time, not one run in two"}
+{"t":"2026-10-13T09:50:15.236Z","ev":"task_note","id":"size-mode-measures-real-buttons-and-objects-not"}
+{"t":"2026-10-13T09:50:15.296Z","ev":"task_note","id":"size-mode-measures-real-buttons-and-objects-not"}
+{"t":"2026-10-13T09:50:15.356Z","ev":"task_note","id":"size-mode-measures-real-buttons-and-objects-not"}
+{"t":"2026-10-13T09:50:33.923Z","ev":"task_done","id":"size-mode-measures-real-buttons-and-objects-not","from":"in_progress","note":"Size mode now reads buttons, pills and cards by where their fill ends: colour as well as brightness, no 160 pt cap, glows and shadows left out. The user's pill reads 274x62 (true 548x125 px at 2x) by hover on its fill, by hover on its label ([ steps to the words, 158x15) and by the user's own rough box. All six specimens at 1x and 2x within 1 px / 2 px; bordered Save now 80x28. New ObjectBounds (PhotonzCore), colour planes in LumaField, ladder start index, TextLineBounds pooled background. Release timing on the 3456x2234 capture: hover 3.5-18 ms, box 5.6-31 ms. Verified: full Scripts/test.sh green (12871), size-reads-buttons-and-pills-walk and 42 other measure/size/box walks green at Next defaults. Commits 536cb027, c1984e5e. Audit queue/audits/2026-10-13-size-mode-measures-objects.json."}
+{"t":"2026-10-13T10:06:30.339Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":801,"of":903,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T10:06:30.528Z","ev":"task_started","id":"dragging-a-magnify-lens-never-smears-or-corrupts","title":"Dragging a Magnify lens never smears or corrupts the picture","priority":"p1-high"}
+{"t":"2026-10-13T11:18:06.150Z","ev":"task_note","id":"the-full-test-run-passes-every-time-not-one-run"}
+{"t":"2026-10-13T11:24:26.461Z","ev":"task_walks","id":"dragging-a-magnify-lens-never-smears-or-corrupts","walks":["a-dragged-lens-leaves-no-trail-walk"]}
+{"t":"2026-10-13T11:24:50.763Z","ev":"task_note","id":"dragging-a-magnify-lens-never-smears-or-corrupts"}
+{"t":"2026-10-13T11:24:50.826Z","ev":"task_note","id":"dragging-a-magnify-lens-never-smears-or-corrupts"}
+{"t":"2026-10-13T11:24:50.888Z","ev":"task_note","id":"dragging-a-magnify-lens-never-smears-or-corrupts"}
+{"t":"2026-10-13T11:24:50.950Z","ev":"task_note","id":"dragging-a-magnify-lens-never-smears-or-corrupts"}
+{"t":"2026-10-13T11:24:51.010Z","ev":"task_note","id":"dragging-a-magnify-lens-never-smears-or-corrupts"}
+{"t":"2026-10-13T11:25:17.172Z","ev":"task_done","id":"dragging-a-magnify-lens-never-smears-or-corrupts","from":"in_progress","note":"Fixed in DocumentRenderer.laid(): a square ring round anything enlarged let its edge-stretched pixels escape a drawn-out intermediate, so a Magnify lens switched from Blur/Pixelate (square corners + ring) smeared across the canvas and drags left it behind in patches. Reproduced first in the probe (26.94% of a fresh render) and in LensDragSmearTests (33% leak); now 0. New walk check expectFresh; a-dragged-lens-leaves-no-trail-walk fails at 46.27% on the old renderer, passes with 157 drag frames + 5 checks at 0.00% on a screenshot and a recording. Full suite 12879 green; perf unchanged within noise. Audit queue/audits/2026-10-13-dragging-a-magnify-lens-never-smears-or-corrupts.json."}
+{"t":"2026-10-13T11:39:35.135Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":677,"of":904,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T11:39:35.321Z","ev":"task_started","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau","title":"Resizing a zoom callout keeps its shape by default","priority":"p1-high"}
+{"t":"2026-10-13T11:51:22.937Z","ev":"task_note","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau"}
+{"t":"2026-10-13T12:22:29.514Z","ev":"task_note","id":"the-full-test-run-passes-every-time-not-one-run"}
+{"t":"2026-10-13T12:28:06.028Z","ev":"task_note","id":"the-full-test-run-passes-every-time-not-one-run"}
+{"t":"2026-10-13T12:40:11.355Z","ev":"task_walks","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau","walks":["a-zoom-callout-keeps-its-shape-walk"]}
+{"t":"2026-10-13T12:40:11.416Z","ev":"task_note","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau"}
+{"t":"2026-10-13T12:40:11.485Z","ev":"task_note","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau"}
+{"t":"2026-10-13T12:40:32.033Z","ev":"task_done","id":"resizing-a-zoom-callout-keeps-its-shape-by-defau","from":"in_progress","note":"A zoom callout's box now keeps its source's shape when a corner or edge is dragged (magnification follows the width); Shift frees it and the source reshapes about its centre, so the picture never stretches; one undo restores both. Reproduced on the old build first (3:2 source in a 1.78:1 box). Core: ZoomCalloutBuilder.draggedFrame/resized + Layer.resizeKeepsShapeByDefault; canvas drag flips Shift for callouts; renderer scales from the whole source. Verified: ZoomCalloutKeepsItsShapeTests + render test, new walk a-zoom-callout-keeps-its-shape-walk at Next defaults with new expectCallout pixel check (shown to fail on a stretched picture), neighbouring callout/lens walks green, full suite 12890 green. Audit queue/audits/2026-10-13-callout-keeps-its-shape.json."}
+{"t":"2026-10-13T12:51:33.594Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":503,"of":905,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T12:54:32.566Z","ev":"task_dropped","id":"a-right-click-on-a-sound-s-level-line-opens-the","from":"pending","note":"duplicate of an-audio-clip-answers-right-click-and-its-volume (p1, the user's own ask, which already says a right-click anywhere on an audio clip, line included, opens its menu); the reproduction and window points are folded into that task's notes and checklist"}
+{"t":"2026-10-13T12:54:47.004Z","ev":"task_reprioritized","id":"the-transform-bar-keeps-width-and-height-in-prop","from":"p1-high","to":"p2-normal"}
+{"t":"2026-10-13T12:54:47.065Z","ev":"task_walks","id":"the-transform-bar-keeps-width-and-height-in-prop","walks":["transform-values-info-walk"]}
+{"t":"2026-10-13T12:55:22.909Z","ev":"task_resequenced","id":"the-right-panel-shows-only-what-the-picked-thing","from":2,"to":10}
+{"t":"2026-10-13T12:55:22.971Z","ev":"task_resequenced","id":"a-size-measurement-is-one-group-a-faint-red-box","from":7,"to":20}
+{"t":"2026-10-13T12:55:23.034Z","ev":"task_resequenced","id":"measurements-are-named-for-their-mode-and-every","from":7,"to":30}
+{"t":"2026-10-13T12:55:23.093Z","ev":"task_resequenced","id":"a-zoom-callout-fills-the-space-between-its-two-l","from":8,"to":40}
+{"t":"2026-10-13T12:55:23.155Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":10,"to":50}
+{"t":"2026-10-13T12:55:23.216Z","ev":"task_resequenced","id":"the-value-graph-lets-you-add-points-pick-the-seg","from":15,"to":60}
+{"t":"2026-10-13T12:55:23.277Z","ev":"task_resequenced","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","from":15,"to":70}
+{"t":"2026-10-13T12:55:23.341Z","ev":"task_resequenced","id":"an-audio-clip-answers-right-click-and-its-volume","from":15,"to":80}
+{"t":"2026-10-13T12:55:23.402Z","ev":"task_resequenced","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","from":18,"to":90}
+{"t":"2026-10-13T12:55:23.463Z","ev":"task_resequenced","id":"a-layer-s-track-shows-only-what-is-animated-and","from":20,"to":100}
+{"t":"2026-10-13T12:55:23.523Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":20,"to":110}
+{"t":"2026-10-13T12:55:23.585Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":30,"to":120}
+{"t":"2026-10-13T12:55:23.645Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":40,"to":130}
+{"t":"2026-10-13T12:55:23.706Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":50,"to":140}
+{"t":"2026-10-13T12:55:23.766Z","ev":"task_resequenced","id":"the-full-test-run-passes-every-time-not-one-run","from":4040,"to":10}
+{"t":"2026-10-13T12:55:23.827Z","ev":"task_resequenced","id":"resize-squares-on-a-layer-turned-in-3d-take-the","from":4030,"to":20}
+{"t":"2026-10-13T12:55:23.890Z","ev":"task_resequenced","id":"double-clicking-a-library-title-tile-inserts-it","from":3990,"to":30}
+{"t":"2026-10-13T12:55:23.954Z","ev":"task_resequenced","id":"the-transform-bar-keeps-width-and-height-in-prop","from":3960,"to":40}
+{"t":"2026-10-13T12:55:24.014Z","ev":"task_resequenced","id":"scrolling-the-timeline-along-time-keeps-every-fr","from":50,"to":50}
+{"t":"2026-10-13T12:55:24.075Z","ev":"task_resequenced","id":"camera-keys-ease-in-and-out-like-every-other-key","from":60,"to":60}
+{"t":"2026-10-13T12:55:24.137Z","ev":"task_resequenced","id":"find-out-whether-moving-a-layer-that-sits-under","from":4020,"to":70}
+{"t":"2026-10-13T12:55:24.198Z","ev":"task_resequenced","id":"clean-noise-and-hide-picture-work-on-one-stretch","from":4010,"to":80}
+{"t":"2026-10-13T12:55:24.261Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":70,"to":90}
+{"t":"2026-10-13T12:55:24.323Z","ev":"task_resequenced","id":"a-picked-layer-wears-the-solid-accent-ring-the-m","from":80,"to":100}
+{"t":"2026-10-13T12:55:24.384Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":90,"to":110}
+{"t":"2026-10-13T12:55:24.444Z","ev":"task_resequenced","id":"the-focus-check-stops-crying-theft-about-one-wal","from":100,"to":120}
+{"t":"2026-10-13T12:55:24.503Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":110,"to":130}
+{"t":"2026-10-13T12:55:24.562Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":120,"to":140}
+{"t":"2026-10-13T12:55:24.620Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":130,"to":150}
+{"t":"2026-10-13T12:55:24.680Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":140,"to":160}
+{"t":"2026-10-13T12:55:24.737Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":150,"to":170}
+{"t":"2026-10-13T12:55:24.798Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":160,"to":180}
+{"t":"2026-10-13T12:55:24.861Z","ev":"task_resequenced","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":170,"to":190}
+{"t":"2026-10-13T12:55:24.923Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":180,"to":200}
+{"t":"2026-10-13T12:55:24.984Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":190,"to":210}
+{"t":"2026-10-13T12:55:25.045Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":200,"to":220}
+{"t":"2026-10-13T12:55:25.106Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":210,"to":230}
+{"t":"2026-10-13T12:55:25.167Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":220,"to":240}
+{"t":"2026-10-13T12:55:25.229Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":230,"to":250}
+{"t":"2026-10-13T12:55:25.290Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":240,"to":260}
+{"t":"2026-10-13T12:55:25.349Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":250,"to":270}
+{"t":"2026-10-13T12:55:25.413Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":260,"to":280}
+{"t":"2026-10-13T12:55:25.480Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":270,"to":290}
+{"t":"2026-10-13T12:55:25.544Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":280,"to":300}
+{"t":"2026-10-13T12:55:25.606Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":290,"to":310}
+{"t":"2026-10-13T12:55:25.667Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":300,"to":320}
+{"t":"2026-10-13T12:55:25.727Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":310,"to":330}
+{"t":"2026-10-13T12:55:25.787Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":320,"to":340}
+{"t":"2026-10-13T12:55:25.846Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":330,"to":350}
+{"t":"2026-10-13T12:55:25.908Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":340,"to":360}
+{"t":"2026-10-13T12:55:25.978Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":350,"to":370}
+{"t":"2026-10-13T12:55:26.041Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":360,"to":380}
+{"t":"2026-10-13T12:55:26.102Z","ev":"task_resequenced","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":370,"to":390}
+{"t":"2026-10-13T12:55:26.161Z","ev":"task_resequenced","id":"decide-whether-a-picked-recording-at-its-own-siz","from":380,"to":400}
+{"t":"2026-10-13T12:56:25.423Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
+{"t":"2026-10-13T12:56:25.453Z","ev":"triage","summary":"open 57 -> 56 (p1 15 -> 14: 8 pending/7 blocked -> 7/7; p2 40 -> 40: 19/21; p3 2). Merged 1: sound level-line right-click folded into the user audio-clip task. Moved 1: transform W/H link p1 -> p2 (loop follow-up, retargeted from the removed bar to the Info popover). Retagged 2 off design-system (next) onto now epics. Groomed 6: the user click-picks rule into the three dot and line tasks plus design-rule and video-audio doc rewrites; key overlay checklist no longer points at the rejected bar. Resequenced p1 10-140, p2 10-400 with the flaky full test run first. Guard reset 0, leftovers 0, spot-check: no new loop-filed p1 bug."}
+{"t":"2026-10-13T12:58:13.734Z","ev":"digest","file":"2026-10-13.md"}

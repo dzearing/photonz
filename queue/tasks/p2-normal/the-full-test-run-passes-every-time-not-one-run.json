@@ -1,0 +1,43 @@
+{
+  "id": "the-full-test-run-passes-every-time-not-one-run",
+  "title": "The full test run passes every time, not one run in two",
+  "goal": "Three video and title tests fail at random when the whole test suite runs and pass when run on their own, so a loop task can be refused its commit by a test that has nothing to do with its change. Make them hold up under the full run's load.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T09:49:41.455Z",
+  "updated": "2026-10-13T12:55:23.765Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-13 by the runner on size-mode-measures-real-buttons-and-objects-not, four full runs of `Scripts/test.sh` on a quiet machine (no process over 50% CPU), code unrelated to these tests: run 1 failed 3 issues; run 2 failed `TitleSetFramesTests.swift:214` (median 17.72 ms vs < 16) and `GrainBandingExportTests.swift:106` ((grainy * 3 → 93) <= (plain * 2 → 88)); run 3 failed `VideoCutExportTests.swift:69` (.readerGaveUp(\"no picture came out of the recording for 30 seconds\")); run 4 passed all 12871. `Scripts/test.sh --filter \"VideoCutExportTests|TitleSetFramesTests|GrainBandingExportTests\"` passed 10/10 alone each time. The title-frame one is a wall-clock budget, not a ratio against a ruler like the PerfClock/CPUYardstick checks.",
+  "acceptance": [
+    "Four full runs of Scripts/test.sh in a row on an otherwise quiet machine pass with no failures",
+    "The title-frame time check, the grain banding check and the cut export check still fail when what they guard really regresses (say how this was shown)",
+    "Nothing is skipped or loosened without a comment saying what was measured"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T09:49:41.457Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-13T11:18:06.148Z",
+      "note": "also seen 2026-10-13 by dragging-a-magnify-lens-never-smears-or-corrupts, two full runs both failed the same 3 wall-clock 16ms budgets: TextDepthPerspectiveTests.swift:170 (median 28.07ms), MotionBlurRenderTests.swift:212 (16.72ms), DepthTransitionRenderTests.swift:138 (17.23ms). Alone (--filter 'DepthTransitionRender') they passed 3 of 3 with and without that task's renderer change, medians 5-12ms."
+    },
+    {
+      "t": "2026-10-13T12:22:29.512Z",
+      "note": "also flaked 2026-10-13 under the full run: Space3DPerfTests.swift:118 '1080p, ten layers, four tilted and one out of focus: a frame in under 16ms' median 26.04ms (load average 6.9); alone (Scripts/test.sh --filter Space3DPerf) median 5.0ms, passed. Seen while landing resizing-a-zoom-callout-keeps-its-shape-by-defau, whose change does not touch that test's layers (no callouts)."
+    },
+    {
+      "t": "2026-10-13T12:28:06.026Z",
+      "note": "and the next full run (2026-10-13 05:27) failed TextDepthPerspectiveTests.swift:170 'a headline flipping up by letter, motion blur on: a frame in under 16ms' at median 16.42ms; the 16ms perf gates are the flaky ones under the parallel suite."
+    },
+    {
+      "t": "2026-10-13T12:55:23.764Z",
+      "note": "seq 4040 -> 10"
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-12T07:33:08.043Z",
-  "updated": "2026-10-12T12:45:13.794Z",
+  "updated": "2026-10-12T15:20:29.346Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-12T07:33:07Z: 883 of 886 walks passed in 236 minutes.\n\nFailing walks (3): keys-on-a-later-shadow-walk, section-fold-motion-walk, tutorial-component-versions-walk\n\nFull output: queue/sweep/2026-10-11-203658.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -38,7 +38,39 @@
     {
       "t": "2026-10-12T12:45:13.792Z",
       "note": "2026-10-12 triage: library-tile-click-latency-walk failed in the 10:39 rotating check but passed in the full set (sweep log line 407), so it looks like a latency budget missed under load rather than a regression; check it on its own twice before rewriting it. section-fold-motion-walk is the same kind of failure: 16.2 ms against a 16 ms budget."
+    },
+    {
+      "t": "2026-10-12T13:59:33.230Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T15:20:10.416Z",
+      "note": "owns these walks: keys-on-a-later-shadow-walk, section-fold-motion-walk, tutorial-component-versions-walk, library-tile-click-latency-walk"
+    },
+    {
+      "t": "2026-10-12T15:20:10.481Z",
+      "note": "keys-on-a-later-shadow-walk: the WALK HARNESS was wrong, not the app. A title's panel now has Reveal (and 3D) above Effects, so the whole Effects list starts under the dock's bottom edge. The reveal turned the dock by the slider's full depth inside the unscrolled list (810pt), carried the list off the top of the window, and the next round had nothing to turn. Fix: PlaytestReach.aim pulls the target onto the nearest edge of any scroller with nothing on screen, so the dock brings the list in and the list then scrolls itself (3 new PlaytestReachTests). Walk unchanged; passed 3 runs in a row, plus 14 other reveal walks green."
+    },
+    {
+      "t": "2026-10-12T15:20:10.547Z",
+      "note": "tutorial-component-versions-walk: a REAL app bug. After a second Add State the new state's name field sometimes never took the keyboard at all (walk run with a patient type step still failed after 2s: 3 of 5 runs). ComponentVersionRow asked for focus once, one pass later, and dropped the claim immediately. It now keeps asking (10 tries, 50ms apart) and lets the claim go only when the field has the keyboard, so a rebuilt row can pick it up. The harness's type step also waits up to 2s for a caret now. Passed 6 of 6 after, plus 8 other component-state walks green."
+    },
+    {
+      "t": "2026-10-12T15:20:10.615Z",
+      "note": "library-tile-click-latency-walk and section-fold-motion-walk: timing budgets missed under load, not regressions. Tile walk: failed 2 of the first 6 runs (35-36ms vs 33ms, both on click 2 of Kinetic Bold), then passed 7 in a row with worst 18-26ms, matching what the walk was written against. Fold walk: fails about 1 run in 3 or 4, each time on a different section (16.2 to 21.2ms against 16ms) with load average around 4.3 from other work on the Mac; typical folds 8 to 13ms. Both passed twice in a row. Budgets left alone on purpose. Left rough (does not clear the follow-up bar, a person cannot see a 3ms miss): the fold walk's headroom is about 3ms and shrinks as the dock gains sections, so it will keep flaking in sweeps under load."
+    },
+    {
+      "t": "2026-10-12T15:20:29.344Z",
+      "note": "Commit 31f9e820. All four walks pass twice or more in a row on their own. keys-on-a-later-shadow-walk: the harness's reveal was wrong (it overshot a list sitting wholly below the fold); fixed with PlaytestReach.aim plus unit tests, walk unchanged, 3/3. tutorial-component-versions-walk: a real app bug, a new state's name field sometimes never took the keyboard; the row now keeps asking until it lands, 6/6 (was 3 failures in 5). library-tile-click-latency-walk (7 in a row) and section-fold-motion-walk (2 in a row, flakes about 1 in 3 or 4 under load by 1 to 5ms on a random section): budgets missed under load, budgets left alone, findings in the log. Scripts/test.sh green (12739 tests)."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-12T13:59:33.229Z",
+  "walks": [
+    "keys-on-a-later-shadow-walk",
+    "section-fold-motion-walk",
+    "tutorial-component-versions-walk",
+    "library-tile-click-latency-walk"
+  ],
+  "completed": "2026-10-12T15:20:29.345Z"
 }

@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 4,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:45:28.494Z",
-  "updated": "2026-10-13T01:45:28.596Z",
+  "updated": "2026-10-13T09:50:33.922Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"the size tool's edge detection is great for text but hoooooorible for just objects. For example, i select this button, and it will NOT measure the width /height of the button. it just chooses whatever i select.\" Screenshot: a large purple gradient pill 'Download for Mac' with a purple glow on a near black page; the reading is 300 px by 86 px for the dashed box the user drew, not the pill.\n\nWhy, from the shipped task's own log (size-mode-measures-avatars-icons-and-stacks-and, done 2026-10-11): 'luma-only separation misses a shape the page's own brightness ... shapes over 160 pt either way are left to the pair reader ... the bordered Save button keeps the pair reader's 78x26 (true 80x28) because a tie keeps the old number'. ShapeBounds caps reach at 160 pt (PhotonzCore/ShapeBounds.swift:467). The pill is wider than 160 pt and has a glow halo, so ShapeBounds skips it and the pair reader (ElementBounds, paired straight horizontal edges) finds nothing; the box is kept as drawn. Memory: the user's main use is UX redlining.",
@@ -31,6 +31,40 @@
     {
       "t": "2026-10-13T01:45:28.594Z",
       "note": "seq 3960 -> 4"
+    },
+    {
+      "t": "2026-10-13T07:52:43.624Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T08:02:41.089Z",
+      "note": "Reproduced on the user's own capture (Screenshot 18.43.43, 3456x2234 at 2x, cropped to Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png; pill fill measured pixel by pixel at 548x125 px = 274x62.5 pt). TODAY: the user's 300x86 pt box round the pill snaps to nothing (box kept as drawn, exactly the report); hover on the pill's round end reads nothing, hover mid-pill reads a partial 534.5x125 (pair reader catches the straight part only). Specimen set (Scripts/make-objects-fixture.swift, objects-1x/2x): at 2x hover reads NOTHING on the 240pt glow pill, the 280pt dark button, the red button as bright as its grey page and the shadowed card; the box reads nothing on the glow pill, a 46x13 piece of the red button, the card plus its shadow (+11 px) and the blue pill plus its glow (+26 px)."
+    },
+    {
+      "t": "2026-10-13T09:49:31.967Z",
+      "note": "owns these walks: size-reads-buttons-and-pills-walk, size-reads-avatars-and-stacks-walk"
+    },
+    {
+      "t": "2026-10-13T09:50:15.234Z",
+      "note": "Adversarial review before building: a Photoshop/Figma person expects a button's size from anywhere on it, label included, and the outer edge of a border; nothing a mock assumes is missing (Size mode, [ and ], box already exist). Risks named and tested: photo patches read as objects (rule: a patch touched by busy paint is part of the bigger thing, tested on the people-panel photo), glow and shadow (stability of the region box, not a threshold), cost on a full screen (one pixel budget a hover)."
+    },
+    {
+      "t": "2026-10-13T09:50:15.294Z",
+      "note": "After building, reviewed in the probe: the label hover first outlined 267 not 274 (pair reader cut short at the round ends; the walk was green because it only checked the clicks). Fixed (a pair rung matching an object on one axis and 90% of the other is the object read short) and the walk now clicks the label. Box round one stacked avatar briefly read a patch of its photo (avatar walk caught it); fixed (the object wins a box only when soft paint alone touches it)."
+    },
+    {
+      "t": "2026-10-13T09:50:15.354Z",
+      "note": "Left rough (did not earn a task): ] from the pill steps to a pair-reader rung joining the pill's top to the small print's baseline (558x180 px), pre-existing; a box round the whole screen snaps to the biggest object its five seeds find when the group reader cannot read the rim (no one draws that box); 62.5 pt rounds to 62 in the readout. Filed: the-full-test-run-passes-every-time-not-one-run (three video/title tests fail at random under the full suite, pass alone)."
+    },
+    {
+      "t": "2026-10-13T09:50:33.920Z",
+      "note": "Size mode now reads buttons, pills and cards by where their fill ends: colour as well as brightness, no 160 pt cap, glows and shadows left out. The user's pill reads 274x62 (true 548x125 px at 2x) by hover on its fill, by hover on its label ([ steps to the words, 158x15) and by the user's own rough box. All six specimens at 1x and 2x within 1 px / 2 px; bordered Save now 80x28. New ObjectBounds (PhotonzCore), colour planes in LumaField, ladder start index, TextLineBounds pooled background. Release timing on the 3456x2234 capture: hover 3.5-18 ms, box 5.6-31 ms. Verified: full Scripts/test.sh green (12871), size-reads-buttons-and-pills-walk and 42 other measure/size/box walks green at Next defaults. Commits 536cb027, c1984e5e. Audit queue/audits/2026-10-13-size-mode-measures-objects.json."
     }
-  ]
+  ],
+  "started": "2026-10-13T07:52:43.623Z",
+  "walks": [
+    "size-reads-buttons-and-pills-walk",
+    "size-reads-avatars-and-stacks-walk"
+  ],
+  "completed": "2026-10-13T09:50:33.921Z"
 }

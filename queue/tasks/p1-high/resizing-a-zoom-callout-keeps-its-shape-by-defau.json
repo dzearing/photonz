@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 6,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:47:24.811Z",
-  "updated": "2026-10-13T12:40:11.484Z",
+  "updated": "2026-10-13T12:40:32.032Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i resize the magnification window, it does not preserve aspect ratio by default\". Context: the zoom callout in the user's previous screenshot (2026-10-12 18.46.00), a magnified box linked by leader lines to its source box.\n\nFrom code reading (not run): ZoomCalloutBuilder.resized(_:to:) (PhotonzCore/ZoomCalloutEditing.swift:122-129) accepts any frame and sets magnification = frame.width / sourceRect.width; height is unconstrained, so the magnified box can take any shape. frame(for:of:) (:110-116) derives the box from the source size times magnification, which is what an aspect-locked resize should keep. The canvas drag lives in CanvasPointerDrags.swift. Check the Lens's resize too and apply the same default if the user would call it a 'magnification window'.",
@@ -51,10 +51,15 @@
     {
       "t": "2026-10-13T12:40:11.483Z",
       "note": "left rough, not filed: the source region has no canvas handles of its own (acceptance item 5 assumed it had); only Shift on the box reshapes it. Not broken, nobody has asked for source handles; the core rule already keeps any future source handle in step."
+    },
+    {
+      "t": "2026-10-13T12:40:32.030Z",
+      "note": "A zoom callout's box now keeps its source's shape when a corner or edge is dragged (magnification follows the width); Shift frees it and the source reshapes about its centre, so the picture never stretches; one undo restores both. Reproduced on the old build first (3:2 source in a 1.78:1 box). Core: ZoomCalloutBuilder.draggedFrame/resized + Layer.resizeKeepsShapeByDefault; canvas drag flips Shift for callouts; renderer scales from the whole source. Verified: ZoomCalloutKeepsItsShapeTests + render test, new walk a-zoom-callout-keeps-its-shape-walk at Next defaults with new expectCallout pixel check (shown to fail on a stretched picture), neighbouring callout/lens walks green, full suite 12890 green. Audit queue/audits/2026-10-13-callout-keeps-its-shape.json."
     }
   ],
   "started": "2026-10-13T11:39:35.316Z",
   "walks": [
     "a-zoom-callout-keeps-its-shape-walk"
-  ]
+  ],
+  "completed": "2026-10-13T12:40:32.031Z"
 }

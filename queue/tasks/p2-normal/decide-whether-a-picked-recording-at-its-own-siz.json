@@ -4,12 +4,12 @@
   "goal": "The zoom walkthrough draws a picked recording with a ring on the frame and no handles at every step, the wide shot included. The app now rings it only while it is pushed in, and at its own size it still wears the eight handles any picture has. The user picks which.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 380,
+  "seq": 400,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T12:28:01.971Z",
-  "updated": "2026-10-12T12:45:24.148Z",
+  "updated": "2026-10-13T12:55:26.160Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-zoomed-recording-shows-its-ring-on-the-frame-n (2026-10-12). Rule today: PhotonzDocument.frameRing returns a ring only when the posed box has grown past the clip own box AND spills past the canvas; EditorState.frameRings feeds the canvas, and CanvasNSView.offersOwnHandles is false for a ringed clip. Ringing every timed picture would be: drop the grown-past check for a clip that fills the frame. Picture at 100%: queue/audits/2026-10-12-zoom-frame-ring-4-wide-sc.png.",
@@ -33,6 +33,10 @@
     {
       "t": "2026-10-12T12:45:24.147Z",
       "note": "seq 370 -> 380"
+    },
+    {
+      "t": "2026-10-13T12:55:26.159Z",
+      "note": "seq 380 -> 400"
     }
   ],
   "walks": [

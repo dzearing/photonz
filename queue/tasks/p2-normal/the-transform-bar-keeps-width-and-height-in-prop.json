@@ -1,0 +1,47 @@
+{
+  "id": "the-transform-bar-keeps-width-and-height-in-prop",
+  "title": "Width and height in the transform values keep their proportion, with a link to turn it off",
+  "goal": "The transform mock draws a link between width and height, so typing a new width brings the height along. Today the two are independent. The floating bar this was filed against has since been replaced by the Info popover on the tool bar, so the link belongs there: on by default, one click to unlink.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T02:46:23.991Z",
+  "updated": "2026-10-13T12:55:23.953Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left from a-small-overlay-shows-transform-values-to-type-i (2026-10-13). Bar view: Sources/Photonz/TransformValueBar.swift; values land through EditorState+TransformBar.swift setTransformBarValue via LayerGeometrySelection.applying. Mock: .va-link in video-animate.html buildBar (between W and H). The mock models size as one scale percentage, which is why its W and H move together.\n\nTriage 2026-10-13: the canvas bar (TransformValueBar.swift) this was filed against was replaced the same night by TransformValuesPopover.swift (task transform-values-live-behind-an-info-button-on-t, commit 1cd96c89). Build the link there.",
+  "acceptance": [
+    "The transform values popover (the tool bar Info button) shows a link between W and H, drawn as pages/video-animate.html draws it between the two fields",
+    "With the link on, a width typed into the popover changes the height in proportion, in one undo step, and the reverse",
+    "Clicking the link turns it off and on, and the state reads back to a walk",
+    "A walk at Next defaults opens Info on a picked layer, types a width with the link on and checks both numbers, then unlinks and checks the height stays"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T02:46:23.993Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-13T12:54:46.942Z",
+      "note": "triage 2026-10-13: retargeted from the floating bar (now gone) to the Info popover that replaced it; moved to p2 because the loop filed it as a follow-up, not the user, and the user's own p1 asks go first"
+    },
+    {
+      "t": "2026-10-13T12:54:47.002Z",
+      "note": "priority p1-high -> p2-normal"
+    },
+    {
+      "t": "2026-10-13T12:54:47.063Z",
+      "note": "walks transform-bar-walk -> transform-values-info-walk"
+    },
+    {
+      "t": "2026-10-13T12:55:23.952Z",
+      "note": "seq 3960 -> 40"
+    }
+  ],
+  "walks": [
+    "transform-values-info-walk"
+  ]
+}

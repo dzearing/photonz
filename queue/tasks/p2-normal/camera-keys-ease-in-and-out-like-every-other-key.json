@@ -9,7 +9,7 @@
   "release": "next",
   "area": "video",
   "created": "2026-10-12T12:45:05.882Z",
-  "updated": "2026-10-12T12:45:22.211Z",
+  "updated": "2026-10-13T12:55:24.074Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-10-12 digest design review. Epic success item: any animatable value takes easing and bezier curves from right-click (objectives.json, video-transitions-motion). Audit 2026-10-12-camera-keys-row.json rough: the row has no curve view and no easing menu; right-click offers Go to Key, Show Camera Settings and Delete Key. Core: Sources/PhotonzCore/CameraRow.swift, SceneCamera.motions; app TimelineCameraRow.swift, EditorState+CameraRow.swift. One diamond stands for every camera value keyed at that moment, so an ease picked there applies to all of them; that is fine to start. If camera keys already carry easing somewhere else (the Camera section), reach that from the row rather than adding a second way.",
@@ -31,6 +31,10 @@
     {
       "t": "2026-10-12T12:45:22.210Z",
       "note": "seq 55 -> 60"
+    },
+    {
+      "t": "2026-10-13T12:55:24.072Z",
+      "note": "seq 60 -> 60"
     }
   ]
 }

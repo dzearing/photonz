@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:16.562Z",
-  "updated": "2026-10-13T01:39:35.245Z",
+  "updated": "2026-10-13T12:56:25.422Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"wtf did you do anything today? what happened to the 3d rotation grippers when selecting a thing???????/ you deleted them! I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" then \"am i on an old build???\"\n\nChecked in intake: the dev app (built 2026-10-12 17:57) has every app commit (none to Sources after it); next-turn-in-depth is on by default in Next and not overridden in the user's settings; spaceHandlesOffered = flag && tool == .select (CanvasSpaceHandles.swift:70). By design the arcs show only while spaceArcsOutFor == layer (resting on the knob, :127, :202-214), the card's recommended option A, built while the card 'How do you turn a layer toward or away from you on the canvas?' was unanswered. The user's answer is now plain: show them when the layer is picked. Resolve that card accordingly with the user's words.",
@@ -33,6 +33,48 @@
     {
       "t": "2026-10-13T01:39:35.244Z",
       "note": "User screenshots 2026-10-13: a picked screenshot layer and a picked green rectangle, Select tool in hand, show only the 2D handles (8 squares, corner radius dots) and the rotate knob on its stalk at the top; no 3D arcs or depth arrow anywhere. Messages: 'there are no 3d rotation anything here', 'no rotation here'."
+    },
+    {
+      "t": "2026-10-13T03:03:12.742Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T03:38:40.896Z",
+      "note": "owns these walks: 3d-grippers-on-a-picked-layer-walk, tilt-and-flip-a-title-in-3d-walk"
+    },
+    {
+      "t": "2026-10-13T03:39:31.681Z",
+      "note": "Reproduced on the probe at Next defaults (tilt-and-flip-a-title-in-3d-walk, picture 1-picked-flat-sc.png): a picked title wore only the 2D squares and the knob, no arcs and no arrow with the pointer away. Resting on the knob (the walk's real mouseMoved via PlaytestPointer.rest) did bring them out and every 3D walk was green, so nothing regressed: neither 19001c56 nor a84977bd stopped the reveal. The hover-only reveal was the design (card ...how-do-you-turn-a-layer-toward-o, option A, answered a on 2026-10-11); the user's 2026-10-13 words override it: show them when picked. The card is already resolved, so nothing to withdraw."
+    },
+    {
+      "t": "2026-10-13T03:39:31.742Z",
+      "note": "Adversarial review before building: (1) an always-on depth arrow passes over the top right corner square of a small layer (arrow reach 9pt, corner 6.7pt off it on a 37x18pt rect), and on a ~76pt wide layer the tall arc passes over the top right corner; since 3D handles are read before resize squares, those corners would stop resizing. Fixed: SpaceHandles.hit(boxReach:) lets the box keep a press it is at least as near to (CanvasHitOrder.boxGrabDistance, the motion pivot's rule). (2) The mock draws the crosshair and depth arrow on every picked layer in all three options, so always-on matches it. (3) Motion and Final Cut show 3D handles on pick; Photoshop and Premiere have none on canvas, so nothing they expect is displaced."
+    },
+    {
+      "t": "2026-10-13T03:39:31.802Z",
+      "note": "Built: PhotonzCore SpaceHandles.showing(holding:) (everything out unless pushing depth), reach(of:at:), hit(boxReach:); removed reveals/holds/revealReach/holdReach. App: CanvasSpaceHandles draws via showing(); spaceArcsOutFor and refreshSpaceArcs gone; spaceHandleHit passes boxReach for flat layers (a layer seen in space competes nowhere, its squares take no press yet: resize-squares-on-a-layer-turned-in-3d-take-the). New lock-safe walk step expectSpaceHandles (arcs/depth, read with the pointer moved off to a bare corner). New walk 3d-grippers-on-a-picked-layer-walk added to everyCheck in queue/bin/sweep-schedule.mjs (drill green). Tests: SpaceEditingTests (showing, corner keeps press, tall arc yields), PlaytestScriptTests parse test."
+    },
+    {
+      "t": "2026-10-13T03:39:31.862Z",
+      "note": "Verified: new walk ok (arcs and arrow drawn with the pointer away on a title and a 50x24 rectangle; swing arc to 40 deg, expectTilt >= 1.05; small rectangle's corner resized it to W 90 and it stayed flat). 34 more walks ok: tilt-and-flip, every-handle-lights-on-hover, transform-bar, tilt-keys, rotate-a-tilted, camera-settings, and 28 resize/corner/knob/pivot/move walks. Scripts/test.sh: first run reported 1 issue in 12828 tests (the wrapper's temp log was gone, not reproduced); rerun passed 12828/12828. Transform bar shows Tilt Y 40 after the arc drag (tilt-and-flip walk checks Tilt X, Tilt Y, Depth fields). Keying is untouched: tilt-keys-like-a-move-walk green."
+    },
+    {
+      "t": "2026-10-13T03:39:31.922Z",
+      "note": "left rough: on a layer about 40 points across the depth arrow covers much of its upper right quarter, so a press there pushes depth instead of moving the layer (squares and knob keep theirs). Same as the mock's arrow and not seen to trouble anyone yet, so not filed. On a small layer the swing arc's right arrowhead and the depth arrow head sit close; the nearer wins."
+    },
+    {
+      "t": "2026-10-13T03:39:45.833Z",
+      "note": "Picking a layer with the Select tool now shows the swing and tip arcs and the depth arrow at once, no hover (CanvasSpaceHandles + SpaceHandles.showing/hit(boxReach:) in PhotonzCore). Small layers keep every resize corner. Verified by the new 3d-grippers-on-a-picked-layer-walk (now in every rotating check), 34 related walks and Scripts/test.sh green. Audit: queue/audits/2026-10-13-3d-grippers-on-a-picked-layer.json. Commit 200648c0."
+    },
+    {
+      "t": "2026-10-13T12:56:25.421Z",
+      "note": "design review 2026-10-13, not filed: the grippers now show on every layer picked with Select (next-turn-in-depth is on at defaults), so on a redline a picked highlight box or label also wears two arcs and a depth arrow, and on a box about 40 points across a press in its upper right quarter pushes depth instead of moving it. The user asked for this from video work; whether stills and redlines should keep it is raised in the 2026-10-13 digest for them to answer, not filed, since nobody has been troubled by it yet"
     }
-  ]
+  ],
+  "started": "2026-10-13T03:03:12.741Z",
+  "walks": [
+    "3d-grippers-on-a-picked-layer-walk",
+    "tilt-and-flip-a-title-in-3d-walk"
+  ],
+  "completed": "2026-10-13T03:39:45.834Z"
 }

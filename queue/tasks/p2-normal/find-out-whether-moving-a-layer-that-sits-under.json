@@ -1,0 +1,30 @@
+{
+  "id": "find-out-whether-moving-a-layer-that-sits-under",
+  "title": "Find out whether moving a layer that sits under another draws it on top until you let go",
+  "goal": "While a layer is dragged, the canvas floats a copy of it over a picture of everything else, so a layer that sits under another may be drawn over it for the whole drag and drop back under on release. Seen for a turn (now fixed by redrawing per move); not yet confirmed for a move.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-12T19:25:51.427Z",
+  "updated": "2026-10-13T12:55:24.136Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence (2026-10-12, rotating-a-layer-that-already-has-a-transform-up): before turns were moved off the sprite, turning the recording (Tutorial Sample) with rectangles above it showed the turned recording sprite covering every rectangle in the held picture (/tmp held/landed picture pair, 9.1% of canvas differed). The sprite is DragPreview: underlay = render(hiding: id), sprite = renderSprite(for: id), previewSpriteLayer sits above contentLayer (EditorState.beginLayerDrag, CanvasDisplay.refreshPreviewSprite), so moves use the same arrangement. Reproduction attempt for a MOVE: blank 1200x800, rectangle then ellipse overlapping, drag the rectangle with hold; inconclusive because both shapes drew in the same red. Retry with a second fill colour.",
+  "acceptance": [
+    "A walk moves a layer that sits partly under a different coloured layer and photographs it mid-drag with the button down",
+    "If the lower layer is drawn on top mid-drag, the move keeps it under (or redraws per move) and the mid-drag picture matches the released one under 1% (spaceHandle-style landsAsHeld check)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-12T19:25:51.429Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-13T12:55:24.135Z",
+      "note": "seq 4020 -> 70"
+    }
+  ]
+}

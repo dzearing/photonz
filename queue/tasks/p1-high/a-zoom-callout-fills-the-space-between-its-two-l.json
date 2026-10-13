@@ -4,12 +4,12 @@
   "goal": "The two lines that join a zoom callout's source box to its magnified box enclose a band of space. Fill that band with the line colour at 10% opacity by default, so the callout reads as one beam from the source to the magnifier; the fill's opacity is adjustable (and can be set to 0 to turn it off).",
   "epic": "measure-redline",
   "priority": "p1-high",
-  "seq": 8,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:54:49.849Z",
-  "updated": "2026-10-13T01:54:49.945Z",
+  "updated": "2026-10-13T12:55:23.092Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"the zoom lens has lines connecting the closest edge of the target to the closest edge of the zoom. I'd like the area in between to be filled the line color but be 10% opacity (configurable).\" ('zoom lens' here is the zoom callout: source box, magnified box, two leader lines.)\n\nFrom code reading (not run): leader lines come from PhotonzCore Geometry.leaderLines(source:callout:) and the turned variant (Geometry.swift:334-360, nearest corners); drawn by PhotonzRender/ZoomCalloutOverlayRasterizer.swift (:66) and previewed in Sources/Photonz/CanvasAnnotationPreview.swift (:392). ZoomCalloutContent (PhotonzCore/Layer.swift:752) has sourceRect, magnification, shape; add a fill opacity (Codable default). The band polygon is the two leader segments' endpoints in order; for circles use the external tangents.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-13T01:54:49.944Z",
       "note": "seq 3960 -> 8"
+    },
+    {
+      "t": "2026-10-13T12:55:23.091Z",
+      "note": "seq 8 -> 40"
     }
   ]
 }

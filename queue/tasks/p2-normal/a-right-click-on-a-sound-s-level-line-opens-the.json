@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 4000,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T18:05:16.249Z",
-  "updated": "2026-10-12T18:05:16.252Z",
+  "updated": "2026-10-13T12:54:32.565Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-12 by the runner on a-range-stays-on-top-when-you-pick-a-clip-and-it. Walk /tmp/rangerepro/line.json: sample recording, soundAddSample (Sample Music on Audio 2, 0-14s, probe window 1728x990), then {\"do\":\"rightClick\",\"at\":[935,924],\"space\":\"window\"} -> 'right clicking \"the picture at (935, 924)\" raises no menu: nothing under that point offers one'. y=924 is the level line; {\"rightClick\",\"at\":[1000,938]} on the same clip opens the 16-row clip menu. {\"rightClick\",\"on\":\"Sample Music clip\"} (the clip's middle) also raises no menu. Likely the level-line overlay in ClipPiecesBar takes the hit without a .contextMenu.",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-12T18:05:16.251Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-13T12:54:32.564Z",
+      "note": "duplicate of an-audio-clip-answers-right-click-and-its-volume (p1, the user's own ask, which already says a right-click anywhere on an audio clip, line included, opens its menu); the reproduction and window points are folded into that task's notes and checklist"
     }
   ]
 }

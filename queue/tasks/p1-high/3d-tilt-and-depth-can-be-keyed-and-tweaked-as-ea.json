@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 15,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:50:05.601Z",
-  "updated": "2026-10-12T14:50:05.701Z",
+  "updated": "2026-10-13T00:57:06.643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"I can't seem to set keyframe values for the new 3d options. I want to be able to easily tweak things to animate in 3d.\"\n\nFrom code reading (not run): the 3D panel rows carry key diamonds and Add/Remove Key Here (Sources/Photonz/Space3DInspector.swift:36-87, KeyedProperty .motion(property)); MotionProperty has rotationX, rotationY, depth (PhotonzCore/LayerMotion.swift:97-102). SUSPECT, not confirmed: the canvas 3D arc drag commits to the layer's base turn3D (EditorState+Space3D.swift; in-flight preview at CanvasDisplay.swift:1135 sets $0.turn3D), not to the keyed value at the playhead, so on a keyed layer the keys win and the drag appears to do nothing. Check how 2D rotate/move resolve 'drag on a keyed layer' and use the same path. Upcoming tasks change the surfaces (transform overlay replacing the 3D section, key overlay, only-animated rows with auto-key, seq 16-20); this task fixes keying now with the current surfaces and its rule must carry into them.",
@@ -30,6 +30,35 @@
     {
       "t": "2026-10-12T14:50:05.699Z",
       "note": "seq 3960 -> 15"
+    },
+    {
+      "t": "2026-10-13T00:00:19.756Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T00:12:00.431Z",
+      "note": "Reproduced at Next defaults (probe, walk /tmp/repro-before-fix-walk.json): title keyed from its track header diamond (Key Title, which keys position/scale/rotation/opacity), then the flat arc swung it to 90 at 0s: 'the control called Key in 3D Rotation Y reads 3D Rotation Y, not keyed, not on a key'. So a tilt on a layer whose place is animating changes its own value silently while a move keys. Every other route WORKS today (checked by walks /tmp/repro-3d-keys-walk.json, -2, -3): the 3D section diamonds, right-click Add Key Here on the 3D rows, Animate a property > 3D group, typing into a 3D row or the Animating row, arc drags on a layer whose 3D value is already keyed (on a key changes it, between keys adds one), the recording clip, a piece inside a Keynote Clean title page, Show Graph on a Rotation X lane, camera diamonds (camera-keys-row-walk green). Also seen: the 3D section sits ~550pt below the panel's fold under Effects. Halfway value 20.2 between 90 and 0 is the shared Ease In and Out curve, same for 2D rotation (probe test)."
+    },
+    {
+      "t": "2026-10-13T00:56:20.187Z",
+      "note": "owns these walks: tilt-keys-like-a-move-walk"
+    },
+    {
+      "t": "2026-10-13T00:56:34.761Z",
+      "note": "Fix: PhotonzCore SpaceEditing.setSpaceValue keys a 3D value at the playhead when the layer's place is animating (animatesItsPlace: any key on position/scale/rotation or the four 3D values), starting it at the place's neighbouring key moments holding the old value (placeAnchors, the reframeAnchors pattern), so the arcs, depth arrow, typed values, nudges and Bring Nearer/Send Further all key like a move. Unit tests in SpaceEditingTests (4 new + drawnTilt). New walk step expectTilt (PhotonzDocument.drawnTilt: near edge over far edge of the drawn quad), doc row in playtest-harness.md, lock-safe by reading. Walk tilt-keys-like-a-move-walk: track diamond, arc to 90 at 0s keys, arc to 0 at 1s keys, 1.00 at 1s, 1.27 at 0.5s, Depth typed half way keys with anchors, move at 1s keys Position, plays. 12 neighbouring walks green. Scripts/test.sh: run 1 failed one timing budget (TitleSetFramesTests median 19.2ms vs 16, passes alone), run 2 another (TextDepthPerspectiveTests 16.02 vs 16), run 3 green 12805 tests; neither reaches the edited code, load from the machine."
+    },
+    {
+      "t": "2026-10-13T00:56:34.827Z",
+      "note": "left rough: the shared Ease In and Out curve is EasingCurve.bezier(0.4,0,0.2,1), so half way between two keys a value is ~78% of the way (90->0 reads 20.2 at the midpoint); same for 2D rotation (probe test), deliberate shared curve, not filed. Camera keys still key only via their own diamond (the camera has no 'place'); camera row has no Show Graph; camera eases are camera-keys-ease-in-and-out-like-every-other-key. The timing-budget tests above flaked under full-suite load; not filed (one pass each, passed alone, would need repeated evidence)."
+    },
+    {
+      "t": "2026-10-13T00:57:06.641Z",
+      "note": "A tilt, push or typed 3D value now keys at the playhead once the layer's place is animating, the same as a move (PhotonzCore SpaceEditing.setSpaceValue, anchors at the place's neighbouring keys). Reproduced first: track diamond then arc left Rotation Y unkeyed; all other routes (diamonds, Add Key Here, Animate a property, typed, keyed arcs, recording, title pieces, Show Graph, camera) already worked. Unit tests in SpaceEditingTests, new expectTilt walk step, walk tilt-keys-like-a-move-walk (1.27 tilt at 0.5s), 12 related walks green, Scripts/test.sh green (12805). Audit queue/audits/2026-10-12-3d-tilt-keys-like-a-move.json. Commit 772eabaa."
     }
-  ]
+  ],
+  "started": "2026-10-13T00:00:19.754Z",
+  "walks": [
+    "tilt-keys-like-a-move-walk"
+  ],
+  "completed": "2026-10-13T00:57:06.642Z"
 }

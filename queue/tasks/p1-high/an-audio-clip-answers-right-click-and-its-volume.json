@@ -4,23 +4,26 @@
   "goal": "Right-clicking anywhere on an audio clip opens its menu (sound commands, and the range and playhead behaviours already promised). On its volume line, the stretch between two level points can be clicked to pick it, dragged to bend it, and right-clicked to choose its shape (the shared curves: Linear, Ease In, Ease Out, Smooth, and the rest, plus Hold), so fades and dips can be shaped the way a person wants. Points pick on click and Backspace deletes them.",
   "epic": "video-audio",
   "priority": "p1-high",
-  "seq": 15,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:36:54.404Z",
-  "updated": "2026-10-13T05:13:35.093Z",
+  "updated": "2026-10-13T12:56:14.576Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).",
+  "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).\n\nFolded in 2026-10-13 from a-right-click-on-a-sound-s-level-line-opens-the (dropped as a duplicate). Reproduced 2026-10-12 by the runner on a-range-stays-on-top-when-you-pick-a-clip-and-it. Walk /tmp/rangerepro/line.json: sample recording, soundAddSample (Sample Music on Audio 2, 0-14s, probe window 1728x990), then {\"do\":\"rightClick\",\"at\":[935,924],\"space\":\"window\"} gave: right clicking \"the picture at (935, 924)\" raises no menu: nothing under that point offers one. y=924 is the level line; {\"rightClick\",\"at\":[1000,938]} on the same clip opens the 16-row clip menu. {\"rightClick\",\"on\":\"Sample Music clip\"} (the clip middle) also raises no menu. Likely the level-line overlay in ClipPiecesBar takes the hit without a .contextMenu.",
   "acceptance": [
     "Reproduce first at Next defaults with a detached sound and a recording's own sound: right-click on the waveform, on the volume line, on a level point, and between points; click a segment; record in the audit what happens (suspects below) and whether today's f197e266 right-click playhead change is involved",
     "Right-click anywhere on an audio clip (waveform, line, empty part of the bar) moves the playhead there (per clicking-or-right-clicking-an-item-on-the-timeli) and opens the clip's menu with its sound rows; on a point or a segment the menu leads with that point's or segment's rows",
-    "The volume line follows the same point and segment rules as the value graph (the-value-graph-lets-you-add-points-pick-the-seg), in one shared implementation: click on the line between points adds a point there; a segment highlights on hover and picks on click (Shift adds); a picked segment shows its bend handle(s) and dragging bends it; right-click a segment offers the shared curve list and Hold; points pick on click and Backspace deletes picked points (one undo step); dragging a point moves time and level, Shift locks an axis",
+    "The volume line follows the same point and segment rules as the value graph and the key lanes, in one shared implementation. One shared rule for every animated line on the timeline (the user, 2026-10-13): a single click on a dot picks it, a single click on the line between two dots picks that segment, and only a double click or a Command click on the line adds a dot. A single click never adds a dot. A picked dot or segment is drawn in a clearly different look (white fill or white stroke), legible on every lane colour; Shift adds to the pick; Backspace deletes picked dots in one undo step. A picked segment shows its bend handle(s) and dragging bends it; right-click a segment offers the shared curve list and Hold; dragging a point moves time and level, Shift locks an axis",
     "The fader drag (moving the whole line up or down) stays, started from the line away from points and segments' bend handles, or with a modifier the audit names; it no longer steals clicks meant for segments",
     "The sound plays exactly what the line draws (MEASURED level at 25/50/75% of a bent segment against the curve, within 0.5 dB) and export matches",
     "A walk adds three level points to a sound, picks the middle segment, sets Ease Out from its right-click, checks the levels, deletes a point with Backspace, and right-clicks the waveform and checks a menu opened",
-    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not.",
+    "The right-click that opens nothing today is fixed at the exact spots it was seen: on the Sample Music clip on Audio 2 in a 1728 by 990 probe window, a right-click at window point (935, 924) on the level line, and a right-click on the clip by name (its middle), both open the clip menu",
+    "A walk double-clicks the volume line twice to add two dots, picks each dot, picks the segment between them, and checks that a single click on the line never adds a dot",
+    "docs/design/video-audio.md stops saying a click on the line pins a point (around line 555) and says the shared rule instead"
   ],
   "log": [
     {
@@ -34,6 +37,18 @@
     {
       "t": "2026-10-13T05:13:35.092Z",
       "note": "USER RULE 2026-10-13 (supersedes any acceptance item here that conflicts, e.g. 'click on the line adds a point'): \"every time i click on the line, a new dot appears. I want to 1. be able to select a dot. 2. only add if I double click or command click, otherwise the segment is selected. 3. select segments. A selected thing should turn white or something distinct. I want to add 2 dots, select either, or select the segment in between them. this goes for any animated value on the timeline\". Screenshot 2026-10-12 22.11.41: a sound's volume line with five dots; every click added one. So, for EVERY animated line on the timeline (sound volume line, key lanes, value graphs), one shared implementation: single click on a dot selects it; single click on the line between dots selects that segment; double click or Command click on the line adds a dot; a selected dot or segment is drawn distinctly (white fill or white stroke, clearly different from unselected, legible on every lane colour); Shift adds to the selection; Backspace deletes selected dots; right-click a segment for its curve. Update this task's acceptance to these rules and add a walk that: adds two dots by double click, selects each, selects the segment between them, and checks a single click never adds a dot."
+    },
+    {
+      "t": "2026-10-13T12:54:32.502Z",
+      "note": "triage 2026-10-13: acceptance brought in line with the user's 2026-10-13 rule (a single click picks, a double click or Command click adds); folded in the level-line right-click reproduction from a-right-click-on-a-sound-s-level-line-opens-the, now dropped as its duplicate"
+    },
+    {
+      "t": "2026-10-13T12:55:23.339Z",
+      "note": "seq 15 -> 80"
+    },
+    {
+      "t": "2026-10-13T12:56:14.575Z",
+      "note": "triage 2026-10-13 design review: video-audio.md still documents the click-adds-a-point behaviour the user rejected on 2026-10-13"
     }
   ]
 }

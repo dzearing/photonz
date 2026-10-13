@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 14,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:36:38.937Z",
-  "updated": "2026-10-12T14:36:39.047Z",
+  "updated": "2026-10-12T20:36:53.266Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"also the transform options for 3d don't have any hover feedback so i don't know that i'm selecting them. I think the tools for transforming an object should have hover feedback so i know if I click they are going to do something.\"\n\nFrom code reading (not run): the 3D handles in Sources/Photonz/CanvasSpaceHandles.swift only set a closed hand cursor once a drag starts (:237) and refresh the grab cursor on release (:264); no hover highlight. Other handles use refreshGrabCursor / applyGrabCursor (cursor only). Design reference: the 2.5D mock docs/design/mocks/pages/video-depth.html (option A 'arcs grow when the pointer rests on them', generous hit area). Memory: legible text in every state.",
@@ -31,6 +31,36 @@
     {
       "t": "2026-10-12T14:36:39.046Z",
       "note": "seq 3960 -> 14"
+    },
+    {
+      "t": "2026-10-12T19:38:58.904Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-12T20:29:22.958Z",
+      "note": "owns these walks: every-handle-lights-on-hover-walk, framing-a-zoom-shows-one-box-walk"
+    },
+    {
+      "t": "2026-10-12T20:36:48.113Z",
+      "note": "Adversarial pass before building: the cursor side already existed for most handles (CanvasPointer cue mirrors the press); the gap was a visible highlight. Chose one shared mark registry keyed by the drawing layer so a hidden layer's handles never light, and let the cue decide which mark lights, so hover can never promise a different handle than the press takes. 3D arc names use the panel's words (Rotation Y/X, Depth), not the task's Tilt X/Y example."
+    },
+    {
+      "t": "2026-10-12T20:36:48.180Z",
+      "note": "Found: on a layer turned in 3D the resize squares and corner dots are drawn on the turned card but a press there takes nothing (cue 'none'); filed resize-squares-on-a-layer-turned-in-3d-take-the (p2, reproduced by the walk)."
+    },
+    {
+      "t": "2026-10-12T20:36:48.246Z",
+      "note": "left rough, not filed: canvas edge handles, caliper feet, motion pivot and motion path squares light through the same code but no walk rests on them (a caliper would not draw on a blank picture in a walk); the 3D handles keep the open-hand cursor; a layer body keeps the plain arrow because the open hand on a screen's surface is what tells carry from sweep. Full suite: 12793 tests green on one run; a later run had one render timing test at 16.39ms vs 16ms (TextDepthPerspectiveTests), green alone, untouched by this change."
+    },
+    {
+      "t": "2026-10-12T20:36:53.264Z",
+      "note": "Shipped in 19001c56: every transform handle lights under the resting pointer (quarter larger, accent fill, glow) via one shared treatment, HandleHover (PhotonzCore, 8 tests) + CanvasHandleHover; the pointer cue decides which mark lights so it is always the handle a press takes. 3D arcs/depth arrow thicken in their colour, others dim, and name themselves (Rotation Y/X, Depth) after 0.35s. Zoom box corners lit by the box overlay. Verified: new walk every-handle-lights-on-hover-walk (rectangle 16 handles incl. 3D, turned card, arrow, crop, pen path; 31 real captures) and framing-a-zoom-shows-one-box-walk at Next defaults, both green; 8 related walks green; full suite green. Hover cost measured 0.001-0.01ms per move. Audit queue/audits/2026-10-12-handle-hover.json. Follow-up: resize-squares-on-a-layer-turned-in-3d-take-the."
     }
-  ]
+  ],
+  "started": "2026-10-12T19:38:58.903Z",
+  "walks": [
+    "every-handle-lights-on-hover-walk",
+    "framing-a-zoom-shows-one-box-walk"
+  ],
+  "completed": "2026-10-12T20:36:53.265Z"
 }
