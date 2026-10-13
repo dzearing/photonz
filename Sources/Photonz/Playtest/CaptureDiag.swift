@@ -79,7 +79,7 @@ enum CaptureDiag {
         var selection: RectSelectionController?
         selection = RectSelectionController(
             windowPicking: true,
-            onComplete: { _, _, _ in selection = nil },
+            onComplete: { _, _, _, _ in selection = nil },
             onCancel: { selection = nil })
 
         let t0 = Date()

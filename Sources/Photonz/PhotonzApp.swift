@@ -96,6 +96,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             // Non-shipping builds only; the probe alone acts on either of these.
             ProbeGrants.recordOnLaunch()
             CaptureDiag.runIfRequested()
+            WindowShotDiag.runIfRequested()
             AudioCaptureDiag.runIfRequested()
             RecordingLatencyDiag.runIfRequested()
             RecordingStartLatencyDiag.runIfRequested()

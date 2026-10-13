@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:40:54.545Z",
-  "updated": "2026-10-13T01:40:54.655Z",
+  "updated": "2026-10-13T07:40:29.287Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"you added a large dropshadow. i don't mind the shadow but it's TOO dark. should be quite a bit more transparent.\" Screenshot 2026-10-12 18.39.57: a captured Photonz window on the dark canvas with a wide, very dark shadow around it.\n\nFrom code reading (not run): window captures keep macOS's real shadow: ScreenCapturer.swift:109 config.ignoreShadows = false and :147 ignoreShadows = !includeShadow; RectSelection.swift:173-176 tries .withShadow then .bareBounds (WindowShot styles); preference Experiments.windowCaptureIncludesShadow (CaptureCenter.swift:256, :305). The shadow is baked pixels, so it cannot be lightened afterwards today. Architecture rule (CLAUDE.md): layer styling such as shadow is non-destructive, applied at render time, never baked into pixels. Layer shadow controls exist (shadowOpacity etc., PhotonzCore/LayerMotion.swift).",
@@ -31,6 +31,38 @@
     {
       "t": "2026-10-13T01:40:54.654Z",
       "note": "seq 3960 -> 3"
+    },
+    {
+      "t": "2026-10-13T06:55:10.177Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T06:55:21.861Z",
+      "note": "Epic capture-clickthrough is staged later, but this is the user's own report (p1, source user), so it is worked rather than dropped."
+    },
+    {
+      "t": "2026-10-13T07:40:29.046Z",
+      "note": "Reproduced with the new probe drill --window-shot-diag on real titled windows (2x). macOS shadow fits a blurred offset box to within 0.6 alpha levels: inactive blur 11.75pt / 8pt down / opacity 0.25 light, 0.43 dark; active blur 19.5pt / 18pt down / 0.39 light, 0.68 dark; plus a 1px black hairline (0.2-0.95). The user's dark active window is the 0.68 case."
+    },
+    {
+      "t": "2026-10-13T07:40:29.107Z",
+      "note": "Built: window clicks are shot bare; macOS's shadowed shot is read for shape and darkness (WindowShot.readSystemShadow, PhotonzCore) and the window gets [soft, hairline] drop shadows at 40% as a layer style (WindowShot.document). WindowCaptureShadow (PhotonzRender) flattens it in the window's own colour space (P3 kept) and takes the window pixels out of the shadowed shot masked by the bare alpha, because the bare shot loses a dark window's light 2px rim. CaptureStore.add writes the PNG then the .photonz sidecar, so history copy/drag/paste get the lighter shadow and editing reopens the layer."
+    },
+    {
+      "t": "2026-10-13T07:40:29.168Z",
+      "note": "Verified: 20 unit tests (measured profiles as fixtures, three-point alpha at 40%, transparent corners, rim kept, P3 kept); drill PASS on inactive and active light/dark windows (alpha below active dark: 134/54, 81/32, 24/9); walk a-captured-window-s-shadow-is-light-and-editable-walk green at Next defaults (Window layer unlocked, Shadow 1 opacity 27%, switch off/on). Full suite 12853 tests green."
+    },
+    {
+      "t": "2026-10-13T07:40:29.227Z",
+      "note": "left rough (not filed, below the bar until the user answers the audit question): switching the whole shadow off is two clicks because the hairline is its own Shadow 2; panel shows shadow numbers in image px like every capture; edge line set in px from the 2x measurement, untested at 1x."
+    },
+    {
+      "t": "2026-10-13T07:40:29.286Z",
+      "note": "owns these walks: a-captured-window-s-shadow-is-light-and-editable-walk"
     }
+  ],
+  "started": "2026-10-13T06:55:10.176Z",
+  "walks": [
+    "a-captured-window-s-shadow-is-light-and-editable-walk"
   ]
 }

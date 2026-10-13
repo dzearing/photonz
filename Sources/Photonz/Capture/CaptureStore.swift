@@ -2,6 +2,7 @@ import AppKit
 import Observation
 import PhotonzCore
 import PhotonzMedia
+import PhotonzRender
 import UniformTypeIdentifiers
 
 /// The capture history, backed **directly by a user folder** (default
@@ -246,11 +247,23 @@ final class CaptureStore {
     // MARK: - Adding
 
     /// Write a screenshot into the folder; returns the new entry (after reload).
+    /// `layers` is what the picture was flattened from, when it was: written
+    /// beside it as the layered copy an editor opens instead of the flat
+    /// pixels (a clicked window and its shadow, `WindowCaptureShadow`). The
+    /// picture goes first, so the layered copy is never older than it.
     @discardableResult
-    func add(_ image: CGImage, takenAt date: Date = .now, scale: CGFloat = 1) -> CaptureEntry? {
+    func add(_ image: CGImage, takenAt date: Date = .now, scale: CGFloat = 1,
+             layers: WindowCaptureShadow.Built? = nil) -> CaptureEntry? {
         ensureDirectory()
         let url = uniqueURL(prefix: "Screenshot", date: date, ext: "png")
         writePNG(image, to: url, scale: scale)
+        if let layers {
+            do {
+                try PackageIO.write(layers.document, store: layers.store, to: EditorState.sidecarURL(for: url))
+            } catch {
+                NSLog("Couldn't keep the layers beside \(url.lastPathComponent): \(error)")
+            }
+        }
         reload()
         // Match by file name: the URL `contentsOfDirectory` yields can differ
         // (percent-encoding, symlink resolution) from our constructed one.

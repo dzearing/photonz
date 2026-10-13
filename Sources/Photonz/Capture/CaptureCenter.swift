@@ -255,7 +255,7 @@ final class CaptureCenter {
                 windowPicking: Experiments.shared.windowCaptureEnabled,
                 windowShadow: Experiments.shared.windowCaptureIncludesShadow,
                 producesImage: false,
-                onComplete: { [weak self] screen, rect, _ in
+                onComplete: { [weak self] screen, rect, _, _ in
                     // Recording wants the LIVE region, not the frozen crop — the
                     // frozen overlay is gone by the time the stream starts.
                     self?.rectSelection = nil
@@ -303,14 +303,17 @@ final class CaptureCenter {
         rectSelection = RectSelectionController(
             windowPicking: Experiments.shared.windowCaptureEnabled,
             windowShadow: Experiments.shared.windowCaptureIncludesShadow,
-            onComplete: { [weak self] screen, rect, frozenCrop in
+            onComplete: { [weak self] screen, rect, frozenCrop, layers in
                 guard let self else { return }
                 self.rectSelection = nil
                 // Freeze-frame path: the selection was dragged over a frozen
                 // screenshot and the crop comes straight out of that bitmap —
                 // exactly what the user saw. Live re-capture only as fallback.
+                // A clicked window keeps its layers beside the picture, so its
+                // shadow can still be changed.
                 if let frozenCrop {
-                    if let entry = self.store.add(frozenCrop, scale: screen.backingScaleFactor) {
+                    if let entry = self.store.add(frozenCrop, scale: screen.backingScaleFactor,
+                                                  layers: layers) {
                         self.onCaptureComplete?(entry)
                     }
                 } else {

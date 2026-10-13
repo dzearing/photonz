@@ -1,0 +1,109 @@
+{
+  "out": "/tmp/photonz-playtest/a-captured-window-s-shadow-is-light-and-editable",
+  "seed": "A window captured by clicking it used to keep macOS's own shadow baked into the picture, far too dark on the canvas and pasted elsewhere (the user, 2026-10-13). It now comes in as the bare window on one layer wearing a lighter copy of macOS's shadow as a layer style. This walk opens a real click capture of a dark, active window (made by the probe's --window-shot-diag), picks the window, and holds its shadow to being there, editable and switchable in the panel, with no flag changed from Next's defaults.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/window-capture-shadow.png"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "expectLayers",
+      "atLeast": 1,
+      "atMost": 1
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "click",
+      "at": [
+        719,
+        551
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "1-window-picked",
+      "note": "THE TEST: the capture opens as one Window layer, picked, with its shadow as Shadow 1 in Effects and the hairline as Shadow 2"
+    },
+    {
+      "do": "panel",
+      "stage": "1-window-picked"
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Shadow 1",
+      "reads": "on"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-window-picked"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Shadow 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Shadow 1",
+      "reads": "off"
+    },
+    {
+      "do": "expectEdited",
+      "edited": true
+    },
+    {
+      "do": "describe",
+      "stage": "2-shadow-off",
+      "note": "the window's shadow switched off in the panel: the canvas keeps only the hairline at the window's edge"
+    },
+    {
+      "do": "render",
+      "name": "2-shadow-off-canvas"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-shadow-off"
+    },
+    {
+      "do": "press",
+      "control": "Switch",
+      "in": "Shadow 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Switch",
+      "in": "Shadow 1",
+      "reads": "on"
+    }
+  ]
+}

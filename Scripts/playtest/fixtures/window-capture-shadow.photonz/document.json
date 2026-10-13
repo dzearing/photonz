@@ -1,0 +1,112 @@
+{
+  "canvasSize" : [
+    1438,
+    1102
+  ],
+  "layers" : [
+    {
+      "content" : {
+        "image" : {
+          "_0" : {
+            "id" : "FDACDB33-7001-48DA-839B-61717D76C815",
+            "pixelSize" : [
+              1200,
+              864
+            ]
+          }
+        }
+      },
+      "frame" : [
+        [
+          119,
+          83
+        ],
+        [
+          1200,
+          864
+        ]
+      ],
+      "id" : "A6A0AE09-C014-4C99-86BC-1B17E048EF79",
+      "isLocked" : false,
+      "isVisible" : true,
+      "name" : "Window",
+      "style" : {
+        "blendMode" : "normal",
+        "blurRadius" : 0,
+        "borderColorHex" : "#000000",
+        "borderWidth" : 0,
+        "cornerRadius" : 0,
+        "effects" : [
+          {
+            "kind" : "shadow",
+            "shadow" : {
+              "colorHex" : "#000000",
+              "offset" : [
+                0,
+                36
+              ],
+              "opacity" : 0.274,
+              "radius" : 39,
+              "spread" : 1.5
+            }
+          },
+          {
+            "kind" : "shadow",
+            "shadow" : {
+              "colorHex" : "#000000",
+              "offset" : [
+                0,
+                0
+              ],
+              "opacity" : 0.4,
+              "radius" : 0.5,
+              "spread" : 1
+            }
+          }
+        ],
+        "opacity" : 1,
+        "ringIsAnEffect" : true,
+        "shadow" : {
+          "colorHex" : "#000000",
+          "offset" : [
+            0,
+            36
+          ],
+          "opacity" : 0.274,
+          "radius" : 39,
+          "spread" : 1.5
+        },
+        "shadows" : [
+          {
+            "colorHex" : "#000000",
+            "offset" : [
+              0,
+              36
+            ],
+            "opacity" : 0.274,
+            "radius" : 39,
+            "spread" : 1.5
+          },
+          {
+            "colorHex" : "#000000",
+            "offset" : [
+              0,
+              0
+            ],
+            "opacity" : 0.4,
+            "radius" : 0.5,
+            "spread" : 1
+          }
+        ]
+      },
+      "transform" : {
+        "flipHorizontal" : false,
+        "flipVertical" : false,
+        "rotation" : 0,
+        "skewX" : 0,
+        "skewY" : 0
+      }
+    }
+  ],
+  "pixelScale" : 2
+}

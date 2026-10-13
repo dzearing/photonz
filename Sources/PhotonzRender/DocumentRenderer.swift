@@ -341,6 +341,16 @@ public final class DocumentRenderer: @unchecked Sendable {
         return context.createCGImage(output, from: output.extent)
     }
 
+    /// The same picture written in `colorSpace` rather than sRGB, so a
+    /// picture shot in Display P3 keeps the colours sRGB cannot hold: the mix
+    /// itself is in extended sRGB, which holds them, and only the writing out
+    /// would clip them. Anything but an RGB space writes sRGB.
+    public func render(_ document: PhotonzDocument, store: ImageStore, colorSpace: CGColorSpace) -> CGImage? {
+        guard let output = compositeImage(document, store: store) else { return nil }
+        guard colorSpace.model == .rgb else { return context.createCGImage(output, from: output.extent) }
+        return context.createCGImage(output, from: output.extent, format: .RGBA8, colorSpace: colorSpace)
+    }
+
     // MARK: - Incremental rendering
 
     /// Interactive frames accumulate in a persistent bitmap so a re-render

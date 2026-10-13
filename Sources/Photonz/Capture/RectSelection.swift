@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzRender
 
 /// Full-screen "grab a rectangle" mode (⇧⌘4), freeze-frame style: every display
 /// is covered by a shielding-level panel (nothing underneath stays interactive
@@ -17,10 +18,12 @@ import PhotonzCore
 ///
 /// With window picking on (`next-window-capture`), the window under the pointer
 /// lights up with its app and size, and a click (a press that barely moves)
-/// captures exactly that window: on its own, with its shadow and see-through
-/// rounded corners like the built-in window capture (Option while clicking for
+/// captures exactly that window: on its own, with see-through rounded corners
+/// and a shadow like the built-in window capture (Option while clicking for
 /// the bare bounds, or the other way round when the flag's shadow choice is
-/// off). That shot is taken live at the click; if it cannot be, the window's
+/// off). The shadow is not macOS's own: the window is shot bare and given a
+/// lighter copy of it as a layer style (`WindowCaptureShadow`), so it can be
+/// changed afterwards. That shot is taken live at the click; if it cannot be, the window's
 /// bounds are cropped from the frozen picture instead. A drag still selects a
 /// region.
 @MainActor
@@ -34,15 +37,17 @@ final class RectSelectionController {
     /// the rect, so it skips the crop and the per-window shot.
     private let producesImage: Bool
     /// The cropped frozen image is non-nil in screenshot mode; region-recording
-    /// ignores it and uses the (screen, rect) to record live.
-    private let onComplete: (NSScreen, CGRect, CGImage?) -> Void
+    /// ignores it and uses the (screen, rect) to record live. A clicked window
+    /// with its shadow also hands over the layers the picture was flattened
+    /// from, so they can be kept beside it.
+    private let onComplete: (NSScreen, CGRect, CGImage?, WindowCaptureShadow.Built?) -> Void
     private let onCancel: () -> Void
     private var began = false
 
     init(windowPicking: Bool = false,
          windowShadow: Bool = true,
          producesImage: Bool = true,
-         onComplete: @escaping (NSScreen, CGRect, CGImage?) -> Void,
+         onComplete: @escaping (NSScreen, CGRect, CGImage?, WindowCaptureShadow.Built?) -> Void,
          onCancel: @escaping () -> Void) {
         self.windowPicking = windowPicking
         self.windowShadow = windowShadow
@@ -147,42 +152,55 @@ final class RectSelectionController {
                         picked: ScreenWindow? = nil, optionHeld: Bool = false) {
         dismiss()
         guard producesImage else {
-            onComplete(screen, rect, nil)
+            onComplete(screen, rect, nil, nil)
             return
         }
         let scale = screen.backingScaleFactor
         let cropped = { frozen.flatMap { Self.crop($0, to: rect, of: screen) } }
         guard let picked else {
-            onComplete(screen, rect, cropped())
+            onComplete(screen, rect, cropped(), nil)
             return
         }
         // A clicked window: shot on its own by the window server, live, in
-        // the look the click asked for. A shadowed shot that comes back no
-        // bigger than the window had the shadow squeezed inside it, so try
-        // the bare bounds; a failed or unfaithful bare shot leaves the frozen
-        // crop, exactly what a click captured before.
+        // the look the click asked for. A failed or unfaithful bare shot
+        // leaves the frozen crop, exactly what a click captured before.
         let style = WindowShot.style(includeShadow: windowShadow, optionHeld: optionHeld)
         Task {
-            let image = await Self.windowShot(of: picked, style: style, scale: scale)
-            onComplete(screen, rect, image ?? cropped())
+            let shot = await Self.windowShot(of: picked, style: style, scale: scale)
+            onComplete(screen, rect, shot?.image ?? cropped(), shot?.layers)
         }
     }
 
-    private static func windowShot(of window: ScreenWindow, style: WindowShot.Style,
-                                   scale: CGFloat) async -> CGImage? {
-        let styles: [WindowShot.Style] = style == .withShadow ? [.withShadow, .bareBounds] : [.bareBounds]
-        for candidate in styles {
-            guard let image = try? await ScreenCapturer.captureWindow(
-                id: window.id, includeShadow: candidate == .withShadow) else { continue }
+    /// One clicked window, as a capture keeps it. Always shot bare, since
+    /// that is the window itself. With the shadow, macOS's own shadowed shot
+    /// is taken too, only to read how macOS drew it (its shape follows whether
+    /// the window was in front, its darkness the window's appearance); the
+    /// window then gets a lighter copy of that shadow as a layer style, drawn
+    /// into the picture at render time. A shadowed shot no bigger than the
+    /// window had the shadow squeezed inside it and is not read; the lightest
+    /// macOS shadow stands in.
+    static func windowShot(of window: ScreenWindow, style: WindowShot.Style,
+                           scale: CGFloat) async -> (image: CGImage, layers: WindowCaptureShadow.Built?)? {
+        func faithful(_ image: CGImage, _ look: WindowShot.Style) -> Bool {
             let size = CGSize(width: image.width, height: image.height)
-            if WindowShot.isFaithful(pixelSize: size, windowSize: window.frame.size, scale: scale,
-                                     style: candidate) {
-                return image
+            guard WindowShot.isFaithful(pixelSize: size, windowSize: window.frame.size, scale: scale,
+                                        style: look) else {
+                NSLog("Window shot (\(look)) came back \(image.width)x\(image.height) for a "
+                      + "\(window.frame.size) pt window at \(scale)x")
+                return false
             }
-            NSLog("Window shot (\(candidate)) came back \(image.width)x\(image.height) for a "
-                  + "\(window.frame.size) pt window at \(scale)x; trying the next fallback")
+            return true
         }
-        return nil
+        guard let bare = try? await ScreenCapturer.captureWindow(id: window.id, includeShadow: false),
+              faithful(bare, .bareBounds) else { return nil }
+        guard style == .withShadow else { return (bare, nil) }
+        let systemShot = try? await ScreenCapturer.captureWindow(id: window.id, includeShadow: true)
+        let shadowed = systemShot.flatMap { faithful($0, .withShadow) ? $0 : nil }
+        let built = await Task.detached(priority: .userInitiated) {
+            WindowCaptureShadow.build(bare: bare, scale: scale, shadowed: shadowed)
+        }.value
+        guard let built else { return (bare, nil) }
+        return (built.image, built)
     }
 
     private func cancel() {

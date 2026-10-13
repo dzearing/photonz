@@ -1,0 +1,30 @@
+{
+  "feature": "A clicked window's shadow is lighter and can be changed",
+  "epic": "capture-clickthrough",
+  "summary": "A window you capture by clicking it now comes in with a shadow 40% as dark as the one macOS draws, in macOS's own shape. The shadow is an effect on the window's layer, so you can soften, move, recolour or switch it off afterwards. The saved, copied and dragged picture has the lighter shadow and is clear around it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Window capture with shadow is on by default; Option while clicking still gives the bare window.",
+  "switched": {},
+  "try": [
+    { "do": "Press Shift Command 4, then click a dark window that is in front, and paste the result into a white page in another app.", "shot": "2026-10-13-window-capture-shadow-compare.png", "shotNote": "Built from real shots by the probe's window shot drill. Left is macOS's own shot of the window, right is what Photonz now saves. Rows: active dark window on dark, then on white; active light window on dark, then on white." },
+    { "do": "Open that capture from history to edit it, and click the window on the canvas.", "shot": "2026-10-13-window-capture-shadow-1-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In Effects, drag Shadow 1's Opacity to taste, or change its Softness, Distance or Color." },
+    { "do": "Click Shadow 1's eye to switch the shadow off, and again to bring it back.", "shot": "2026-10-13-window-capture-shadow-2-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command S, then copy the capture from history and paste it somewhere: the shadow is the one you set." },
+    { "do": "Option click a window instead: it comes in bare, with no shadow and no layers beside it." }
+  ],
+  "evaluate": [
+    "Is 40% of macOS's darkness the right default, or should it be lighter still on a dark window?",
+    "Does the window still sit on a white page clearly enough with the lighter shadow?",
+    "Is it clear that Shadow 1 is the shadow and Shadow 2 is the thin line along the window's edge?",
+    "Do you want to switch the edge line and the shadow off with one click instead of two?"
+  ],
+  "rough": [
+    "No mock covers window capture or its shadow, so there is no mock frame to set this beside; the comparison is against macOS's own shot instead.",
+    "Measured on macOS 26 at 2x (window shot drill, 2026-10-13). macOS's shadow is one of two shapes, inactive (blur 11.75 pt, 8 pt down) and active (blur 19.5 pt, 18 pt down), and its darkness depends on the window: 0.25 for an inactive light window up to 0.68 for an active dark one. Each click reads which shape and how dark from macOS's own shot and gives the window that shape at 40% (0.27 for the active dark window in the pictures).",
+    "Alpha at three points below an active dark window, macOS against Photonz: 134 vs 54 at 8 px, 81 vs 32 at 40 px, 24 vs 9 at 80 px (out of 255). Active light window: 76 vs 31, 46 vs 18, 14 vs 5. Every corner of the saved picture is fully clear.",
+    "The shadow is two effects, the soft shadow and a one pixel line along the window's edge that macOS also draws, so switching the whole shadow off is two clicks.",
+    "The shadow's numbers in the panel are in image pixels (Softness 39 px on a 2x capture), the same as every other capture's effects.",
+    "Captures made before this keep the shadow baked into their picture; only new clicks get the lighter, editable one.",
+    "Not tested on a 1x display: the edge line is set in pixels from the 2x measurement."
+  ]
+}

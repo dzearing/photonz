@@ -21296,3 +21296,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - `expectTransformBar` lost `side` and now checks the popover is off every handle spot. Walk key `f8` added. Walks updated: transform-bar, 3d-grippers, camera-settings, every-handle-lights, rotate-a-tilted, tilt-and-flip, tilt-keys, show-transform-values-menu, drag-readout; new transform-values-info-walk (full-canvas recording, the user's case).
 - UX-PATTERNS v2.7: "Named exception: the transform values" replaces the value overlay; the key overlay task now has to use this popover's look.
 - Open: the 9-row 3D list is ~260pt tall on a short canvas; the bar shifts ~20pt when Info comes and goes.
+
+## 2026-10-13 — A clicked window's shadow is lighter and editable
+
+- Window clicks are shot bare; macOS's own shadowed shot is only read (shape: inactive/active; darkness per window) and the window gets that shadow at 40% as a layer style (`WindowShot` in PhotonzCore, `WindowCaptureShadow` in PhotonzRender). The capture PNG is flattened from it and a `.photonz` sidecar is written beside it, so editing reopens an unlocked "Window" layer with Shadow 1 (soft) and Shadow 2 (edge hairline).
+- The window's pixels come from the shadowed shot masked by the bare alpha: the bare shot drops a dark window's light rim. Output keeps the window's colour space (Display P3); `DocumentRenderer.render(_:store:colorSpace:)` added for it.
+- Probe drill `--window-shot-diag [--active]` measures macOS vs ours end to end; walk `a-captured-window-s-shadow-is-light-and-editable-walk`.
+- Open: switching the whole shadow off is two clicks (audit asks the user).
