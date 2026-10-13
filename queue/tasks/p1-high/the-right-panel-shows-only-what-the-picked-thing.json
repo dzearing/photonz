@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 2,
-  "status": "in_progress",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:53.964Z",
-  "updated": "2026-10-13T05:43:05.762Z",
+  "updated": "2026-10-13T05:43:09.887Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" Screenshot: a green rectangle picked with the Select tool while the right panel shows MEASURE TOOL (Mode Size, '[ and ] pick a smaller or larger', Snap Edges, Show All), then LAYERS 2, then LIBRARY (Media / Comps).\n\nCode: section choice and content in Sources/Photonz/InspectorPanel.swift (sectionContent ~:1403, MeasureToolInspector at :1426, Space3DInspector at :1526). Related: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?'): the user's answer here points the same way; resolve or fold that card with these words. Memory: one purpose per area (inspector = properties of the picked thing).",
@@ -62,6 +62,10 @@
     {
       "t": "2026-10-13T05:43:05.761Z",
       "note": "left rough: a caliper shows empty Effects (No effects) and Motion (No motion) sections; both do apply to a caliper, so not filed. The other card on this area ('How many buttons may the right hand panel keep?', task the-panel-shows-what-the-picked-thing-is-and-its) asks about one-shot buttons, which the user's words here do not answer; left for the user, noted on that task."
+    },
+    {
+      "t": "2026-10-13T05:43:09.884Z",
+      "note": "Shipped the decidable part (5dea8135): a tool's settings only with that tool in hand, above the pick's sections; no Masked by on measurements; walks panel-shows-what-is-picked(-video) guard it in 13 states. Waiting on the card: where Layers and Library sit when something is picked."
     }
   ],
   "started": "2026-10-13T05:09:50.489Z",
