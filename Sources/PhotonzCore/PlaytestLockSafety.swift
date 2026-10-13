@@ -138,6 +138,9 @@ public enum PlaytestLockSafety {
         // Added 2026-10-13 by reading: it asks the document for a callout's
         // box and source and renders the document itself, and no name.
         "expectCallout",
+        // Added 2026-10-13 by reading: it asks the document for the newest
+        // Size measurement's group and its three parts, and no name.
+        "expectSizeMeasure",
         // Added 2026-10-13 by reading: it asks the canvas which 3D handles it
         // drew for the picked layer, its own state, and no name.
         "expectSpaceHandles",

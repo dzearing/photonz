@@ -123,6 +123,21 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
     /// centers" (measure points also magnetize to element/gap centers), false =
     /// "Edges". Rides with the styles so it stays how you left it.
     public var snapsToCenters: Bool
+    /// The colour a Size measurement's box is tinted, when somebody has picked
+    /// one for it. Nil follows Size's own ink, so the box is red while Size is
+    /// red and turns with it.
+    public var sizeBoxColorPick: String?
+    /// How faint a Size measurement's box starts (its Opacity), 0…1.
+    public var sizeBoxOpacity: CGFloat {
+        didSet { sizeBoxOpacity = min(max(sizeBoxOpacity, 0), 1) }
+    }
+
+    /// The colour the next Size measurement's box is tinted. Setting it is a
+    /// pick of its own, which stops it following Size's ink.
+    public var sizeBoxColorHex: String {
+        get { sizeBoxColorPick ?? sizeColors.strokeColorHex }
+        set { sizeBoxColorPick = newValue }
+    }
 
     public init(role: MeasureRole = .size,
                 sizeColors: MeasureRoleColors = .sizeDefault,
@@ -137,7 +152,9 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
                 decimals: Int = 0,
                 layerStyle: LayerStyle = LayerStyle(),
                 // The mock's default: `Snap: Edges and centers`.
-                snapsToCenters: Bool = true) {
+                snapsToCenters: Bool = true,
+                sizeBoxColorPick: String? = nil,
+                sizeBoxOpacity: CGFloat = MeasureSizeGroup.defaultBoxOpacity) {
         self.role = role
         self.sizeColors = sizeColors
         self.spacingColors = spacingColors
@@ -148,6 +165,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         self.decimals = decimals
         self.layerStyle = layerStyle
         self.snapsToCenters = snapsToCenters
+        self.sizeBoxColorPick = sizeBoxColorPick
+        self.sizeBoxOpacity = min(max(sizeBoxOpacity, 0), 1)
     }
 
     private static func clampedLabelSize(_ value: CGFloat) -> CGFloat {
@@ -197,6 +216,7 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         case role, sizeColors, spacingColors
         case strokeWidth, chipBorderWidth
         case labelSizePx, unit, decimals, layerStyle, snapsToCenters
+        case sizeBoxColor, sizeBoxOpacity
         // Pre-roles flat color keys: decoded to seed the Size memory (the only
         // set that existed), and mirrored on encode so an older build reading
         // this blob still sees the active colors.
@@ -236,7 +256,10 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
             decimals: try c.decodeIfPresent(Int.self, forKey: .decimals) ?? d.decimals,
             layerStyle: try c.decodeIfPresent(LayerStyle.self, forKey: .layerStyle) ?? d.layerStyle,
             snapsToCenters: try c.decodeIfPresent(Bool.self, forKey: .snapsToCenters)
-                ?? d.snapsToCenters)
+                ?? d.snapsToCenters,
+            sizeBoxColorPick: try c.decodeIfPresent(String.self, forKey: .sizeBoxColor),
+            sizeBoxOpacity: try c.decodeIfPresent(CGFloat.self, forKey: .sizeBoxOpacity)
+                ?? d.sizeBoxOpacity)
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -251,6 +274,8 @@ public struct MeasureStyles: Equatable, Codable, Sendable {
         try c.encode(decimals, forKey: .decimals)
         try c.encode(layerStyle, forKey: .layerStyle)
         try c.encode(snapsToCenters, forKey: .snapsToCenters)
+        try c.encodeIfPresent(sizeBoxColorPick, forKey: .sizeBoxColor)
+        try c.encode(sizeBoxOpacity, forKey: .sizeBoxOpacity)
         // Write-only mirror of the active role's colors under the flat pre-roles
         // keys, so a build from before the split still reads a sensible set.
         try c.encode(strokeColorHex, forKey: .strokeColorHex)

@@ -23,10 +23,9 @@
     { "do": "snapshot", "name": "size-over-a-drawn-shape" },
     { "do": "click", "at": [430, 330] },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "describe", "stage": "3-measured-drawn", "note": "THE SECOND CLAIM: the click left two measurements, Width = 260 px and Height = 180 px, on the picture and in the list" },
+    { "do": "describe", "stage": "3-measured-drawn", "note": "THE SECOND CLAIM: the click left one Size measurement, 260 by 180, on the picture and one Size row in the list" },
     { "do": "panel", "stage": "drawn-measured" },
-    { "do": "expect", "row": "Width", "present": true },
-    { "do": "expect", "row": "Height", "present": true },
+    { "do": "expect", "row": "Size", "present": true },
     { "do": "snapshot", "name": "size-measured-a-drawn-shape" },
 
     { "do": "action", "action": "closeDocument" },

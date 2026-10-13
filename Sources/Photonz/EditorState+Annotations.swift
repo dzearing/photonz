@@ -446,7 +446,12 @@ extension EditorState {
         if let layer = selectedAnnotationLayer, let shape = layer.annotation?.shape {
             discardDragPreview()
             perform { $0.updateLayer(id: layer.id) { $0 = AnnotationBuilder.restyled($0, fill: .some(paint)) } }
-            annotationStyles.setFillPaint(paint, forShape: shape)
+            if document?.isSizeMeasureBox(layer.id) == true {
+                // The next measurement's box, not the next rectangle.
+                if let paint { updateMeasureStyles { $0.sizeBoxColorHex = paint.hex } }
+            } else {
+                annotationStyles.setFillPaint(paint, forShape: shape)
+            }
         } else {
             // Including "no fill": taking the inside away is a pick like any
             // other, and the box stops being Accent just the same.
@@ -895,7 +900,11 @@ extension EditorState {
         guard let shape = document?.layer(id: layerID)?.annotation?.shape else { return }
         discardDragPreview()
         perform { $0.updateLayer(id: layerID) { $0 = AnnotationBuilder.restyled($0, fillColorHex: .some(hex)) } }
-        annotationStyles.setFillColorHex(hex, forShape: shape)
+        if document?.isSizeMeasureBox(layerID) == true {
+            if let hex { updateMeasureStyles { $0.sizeBoxColorHex = hex } }
+        } else {
+            annotationStyles.setFillColorHex(hex, forShape: shape)
+        }
         saveAnnotationStyles()
         if let hex { recordRecentColor(hex: hex) }
     }

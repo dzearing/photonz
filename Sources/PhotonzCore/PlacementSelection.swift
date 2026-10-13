@@ -147,6 +147,9 @@ extension PhotonzDocument {
         // set it would be taking an answer and losing it. The single-layer
         // panel already refuses (`sectionsAPieceDoesNotOwn`); this is the same
         // refusal said for several.
+        // A Size measurement's parts sit where they measured, and nothing
+        // resizes the group round them, so there is nothing to say here.
+        guard !container.isSizeMeasurement else { return .none }
         let placed = known.filter { componentPiece(of: $0) == nil }
         guard !placed.isEmpty else { return .none }
         let resolved = placed.compactMap { layer(id: $0)?.resolvedPlacement(in: container) }

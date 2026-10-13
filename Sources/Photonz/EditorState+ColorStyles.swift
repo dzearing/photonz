@@ -1109,6 +1109,21 @@ extension EditorState {
     func armToolsFromSelection(slot: ColorSlot, targets: [UUID],
                                        rememberingBorder: Bool = true) {
         guard let document else { return }
+        // A Size measurement's box arms the NEXT MEASUREMENT's box, not the
+        // rectangle tool, so painting it never leaves the box tool drawing in
+        // a measurement's colour.
+        let boxes = targets.filter { document.isSizeMeasureBox($0) }
+        if !boxes.isEmpty {
+            if slot == .fill,
+               let paint = document.sharedPaint(layerIDs: boxes, slot: .fill) {
+                updateMeasureStyles { $0.sizeBoxColorHex = paint.hex }
+            }
+            let rest = targets.filter { !boxes.contains($0) }
+            if !rest.isEmpty {
+                armToolsFromSelection(slot: slot, targets: rest, rememberingBorder: rememberingBorder)
+            }
+            return
+        }
         let arming = document.toolArming(layerIDs: targets, slot: slot)
         if !arming.isEmpty {
             for entry in arming {

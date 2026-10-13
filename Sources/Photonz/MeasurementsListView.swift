@@ -102,7 +102,8 @@ struct MeasurementsListView: View {
 
     private func row(_ layer: Layer) -> some View {
         let isSelected = editorState.isLayerSelected(layer.id)
-        let content = layer.measure
+        let content = MeasureSpecList.swatchContent(for: layer)
+        let value = MeasureSpecList.rowValue(for: layer, pixelScale: pixelScale)
         return HStack(spacing: 8) {
             swatch(content)
             if renamingLayerID == layer.id {
@@ -125,8 +126,8 @@ struct MeasurementsListView: View {
                     .onTapGesture(count: 2) { beginRename(layer) }
             }
             Spacer(minLength: 4)
-            if let content {
-                Text(content.label(pixelScale: pixelScale))
+            if let value {
+                Text(value)
                     .font(.callout)
                     .monospacedDigit()
                     .lineLimit(1)

@@ -2680,6 +2680,12 @@ private final class Run {
                                   unstretched: unstretched, within: within),
                  state: describe())
 
+        case .expectSizeMeasure(let count, let name, let boxOpacity, let boxInSizeInk, let at, let within):
+            note(number, step.name,
+                 try checkSizeMeasure(count: count, name: name, boxOpacity: boxOpacity,
+                                      boxInSizeInk: boxInSizeInk, at: at, within: within),
+                 state: describe())
+
         case .expectSpaceHandles(let arcs, let depth):
             note(number, step.name, try await checkSpaceHandles(arcs: arcs, depth: depth), state: describe())
 
@@ -9364,6 +9370,75 @@ private final class Run {
             held.append("\(corner.rawValue) on screen \(short(point))")
         }
         return "\"\(layerName)\" " + held.joined(separator: ", ")
+    }
+
+    /// The newest Size measurement, read off the document: one group holding
+    /// a Box, a Width and a Height and nothing else, then whatever the step
+    /// claims about its name, its box's opacity and ink, and where the box
+    /// sits (`MeasureSizeGroup`).
+    private func checkSizeMeasure(count: Int?, name: String?, boxOpacity: Double?,
+                                  boxInSizeInk: Bool, at: PlaytestPoint?,
+                                  within: Double) throws -> String {
+        let editor = try requireEditor()
+        guard let document = editor.document else {
+            throw Failure(description: "no document is open, so nothing has been measured")
+        }
+        let groups = document.allLayers.filter(\.isSizeMeasurement)
+        if let count, groups.count != count {
+            throw Failure(description: "\(groups.count) Size measurements in the document, not \(count)"
+                + "; measurements on the canvas: "
+                + document.allLayers.filter(\.isMeasurement).map(\.name).joined(separator: ", "))
+        }
+        guard let group = groups.last else {
+            if count == 0 { return "no Size measurement in the document, as claimed" }
+            let loose = document.allLayers.filter { $0.measure != nil }.count
+            throw Failure(description: "no Size measurement group in the document"
+                + (loose > 0 ? "; \(loose) loose calipers are" : ""))
+        }
+        let parts = group.children
+        let kinds = parts.map { part -> String in
+            if part.annotation?.shape == .rectangle { return "Box" }
+            if let m = part.measure { return MeasureSpecList.derivedName(for: m) }
+            return part.name
+        }
+        guard kinds == ["Box", "Width", "Height"] else {
+            throw Failure(description: "\(group.name) holds \(kinds.joined(separator: ", ")), "
+                + "not Box, Width, Height")
+        }
+        var said = ["\(group.name) holds Box, Width, Height"]
+        if let name {
+            guard group.name == name else {
+                throw Failure(description: "the Size measurement is called \"\(group.name)\", not \"\(name)\"")
+            }
+        }
+        let box = parts[0]
+        if let boxOpacity {
+            guard abs(box.style.opacity - boxOpacity) < 0.005 else {
+                throw Failure(description: "the box's opacity is \(box.style.opacity), not \(boxOpacity)")
+            }
+            said.append("its box at \(Int((box.style.opacity * 100).rounded()))% opacity")
+        }
+        if boxInSizeInk {
+            let ink = parts[1].measure?.strokeColorHex.uppercased()
+            let fill = box.annotation?.fill?.hex.uppercased()
+            guard let ink, fill == ink else {
+                throw Failure(description: "the box is filled \(fill ?? "with nothing"), "
+                    + "and its calipers are drawn in \(ink ?? "nothing")")
+            }
+            said.append("filled \(ink), its calipers' ink")
+        }
+        if let at {
+            let want = try documentPoint(at)
+            guard let frame = document.canvasLayer(id: box.id)?.frame else {
+                throw Failure(description: "the box has no place on the canvas")
+            }
+            guard abs(frame.minX - want.x) <= within, abs(frame.minY - want.y) <= within else {
+                throw Failure(description: "the box's top left is at (\(frame.minX), \(frame.minY)), "
+                    + "not (\(want.x), \(want.y))")
+            }
+            said.append("its box's top left at (\(Int(frame.minX)), \(Int(frame.minY)))")
+        }
+        return said.joined(separator: ", ") + ", as claimed"
     }
 
     private func checkFeet(_ layerName: String?, start: PlaytestPoint?, end: PlaytestPoint?,

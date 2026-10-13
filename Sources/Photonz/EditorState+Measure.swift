@@ -16,7 +16,7 @@ extension EditorState {
     /// (UX-PATTERNS D14 rule 4).
     func placedReadoutRects(excluding id: UUID? = nil) -> [CGRect] {
         guard let document else { return [] }
-        return document.layers.compactMap { layer in
+        return document.canvasMeasureLayers.compactMap { layer in
             layer.id == id ? nil : MeasureBuilder.readoutRect(of: layer)
         }
     }
@@ -127,15 +127,31 @@ extension EditorState {
         var heightLayer = MeasureBuilder.layer(content: height, from: heightFeet.0, to: heightFeet.1)
         widthLayer.style = measureStyles.layerStyle
         heightLayer.style = measureStyles.layerStyle
-        let placedWidth = placedInTimeIfDrawnOnVideo(widthLayer)
-        let placedHeight = placedInTimeIfDrawnOnVideo(heightLayer)
-        perform {
-            $0.addLayer(placedWidth)
-            $0.addLayer(placedHeight)
+        // Where layers can hold layers, the size lands as ONE thing: a group
+        // holding a faint box over the measured area and both calipers, so it
+        // moves, hides and deletes as one and opens in the layers list to
+        // change a part (`MeasureSizeGroup`).
+        guard Experiments.shared.layerGroupsEnabled else {
+            let placedWidth = placedInTimeIfDrawnOnVideo(widthLayer)
+            let placedHeight = placedInTimeIfDrawnOnVideo(heightLayer)
+            perform {
+                $0.addLayer(placedWidth)
+                $0.addLayer(placedHeight)
+            }
+            recordRecentColor(hex: width.strokeColorHex)
+            noteMeasurementLanded()
+            finishCreating(widthLayer.id)
+            return
         }
+        let group = placedInTimeIfDrawnOnVideo(
+            MeasureSizeGroup.group(measuring: rect, width: widthLayer, height: heightLayer,
+                                   boxColorHex: measureStyles.sizeBoxColorHex,
+                                   boxOpacity: measureStyles.sizeBoxOpacity,
+                                   pixelScale: document?.pixelScale ?? 1))
+        perform { $0.addLayer(group) }
         recordRecentColor(hex: width.strokeColorHex)
         noteMeasurementLanded()
-        finishCreating(widthLayer.id)
+        finishCreating(group.id)
     }
 
     /// The style the canvas should preview the active Measure mode in. Gap mode
@@ -432,7 +448,7 @@ extension EditorState {
         guard activeTool == .measure, let document else { return false }
         if Experiments.shared.measureModesEnabled { return measureModeHint != nil }
         guard !measureHintDismissed else { return false }
-        return !document.layers.contains { $0.measure != nil }
+        return !document.layers.contains(where: \.isMeasurement)
     }
 
     /// The chip's lead, set in its own weight: the mode's name. Nil in Current,

@@ -13,8 +13,33 @@ public enum MeasureSpecList {
     /// The document's measure layers in panel order: top-most first. Hidden
     /// ones stay in (the panel shows them with the eye off); text export
     /// filters to visible itself.
+    ///
+    /// A Size measurement is ONE row: its group, which holds the width and the
+    /// height (`MeasureSizeGroup`).
     public static func measureLayers(in document: PhotonzDocument) -> [Layer] {
-        document.layers.reversed().filter { $0.measure != nil }
+        document.layers.reversed().filter(\.isMeasurement)
+    }
+
+    /// The calipers and guides a row stands for: itself, or a size group's
+    /// width and height.
+    public static func measures(of layer: Layer) -> [Layer] {
+        layer.isSizeMeasurement ? MeasureSizeGroup.calipers(of: layer)
+            : (layer.measure != nil ? [layer] : [])
+    }
+
+    /// What a row reads beside its name: a caliper's readout ("120 px"), or a
+    /// size group's two numbers ("320 × 48 px").
+    public static func rowValue(for layer: Layer, pixelScale: CGFloat) -> String? {
+        if layer.isSizeMeasurement {
+            return MeasureSizeGroup.valueText(of: layer, pixelScale: pixelScale)
+        }
+        return layer.measure?.label(pixelScale: pixelScale)
+    }
+
+    /// The caliper whose ink a row's swatch wears: its own, or a size group's
+    /// width caliper.
+    public static func swatchContent(for layer: Layer) -> MeasureContent? {
+        layer.measure ?? MeasureSizeGroup.calipers(of: layer).first?.measure
     }
 
     /// The automatic row name (decision D3): what the measurement is, worded by
@@ -54,6 +79,11 @@ public enum MeasureSpecList {
     /// The name a row (and the spec list) shows: a custom name survives a
     /// rename; the builder's stock names mean "not renamed", so those derive.
     public static func displayName(for layer: Layer) -> String {
+        if layer.isSizeMeasurement {
+            // Its automatic name carries the numbers, which the row already
+            // shows as its value, so the row says only what it is.
+            return MeasureSizeGroup.isAutomaticName(layer.name) ? MeasureSizeGroup.word : layer.name
+        }
         guard let content = layer.measure else { return layer.name }
         let stock = [MeasureBuilder.defaultName, MeasureBuilder.defaultAlignmentName, ""]
         return stock.contains(layer.name) ? derivedName(for: content) : layer.name
@@ -72,13 +102,25 @@ public enum MeasureSpecList {
         return "- \(displayName(for: layer)): \(value) (\(roleWord(for: content)))"
     }
 
+    /// Every spec line a row gives: its own, or a size group's Width line and
+    /// Height line, exactly what the two loose calipers gave before they were
+    /// one group. A part hidden inside a shown group is left out when
+    /// `visibleOnly`, the way a hidden row is.
+    public static func specLines(for layer: Layer, in document: PhotonzDocument,
+                                 visibleOnly: Bool = false) -> [String] {
+        measures(of: layer)
+            .filter { !visibleOnly || layer.measure != nil || $0.isVisible }
+            .compactMap { specLine(for: $0, in: document) }
+    }
+
     /// The header's size, in the unit the lines use. A 2x capture used to
     /// head its list with the canvas in device pixels (1440 × 960) above rows
     /// in logical pixels (124), two units in one list with no scale stated.
     /// The header now follows the rows: logical size plus "@2x" unless every
     /// listed measurement reads device pixels, in which case the device size.
     public static func headerSize(document: PhotonzDocument) -> String {
-        let listed = measureLayers(in: document).filter(\.isVisible).compactMap(\.measure)
+        let listed = measureLayers(in: document).filter(\.isVisible)
+            .flatMap { measures(of: $0) }.compactMap(\.measure)
         let scale = document.pixelScale > 0 ? document.pixelScale : 1
         let devicePixels = !listed.isEmpty && listed.allSatisfy { $0.unit == .pixels }
         let divisor: CGFloat = devicePixels ? 1 : scale
@@ -100,7 +142,7 @@ public enum MeasureSpecList {
         let header = "\(name) · \(headerSize(document: document))"
         let lines = measureLayers(in: document)
             .filter(\.isVisible)
-            .compactMap { specLine(for: $0, in: document) }
+            .flatMap { specLines(for: $0, in: document, visibleOnly: true) }
         return ([header] + lines).joined(separator: "\n")
     }
 
@@ -112,7 +154,7 @@ public enum MeasureSpecList {
     public static func render(document: PhotonzDocument, ids: Set<UUID>) -> String {
         measureLayers(in: document)
             .filter { ids.contains($0.id) }
-            .compactMap { specLine(for: $0, in: document) }
+            .flatMap { specLines(for: $0, in: document) }
             .joined(separator: "\n")
     }
 }

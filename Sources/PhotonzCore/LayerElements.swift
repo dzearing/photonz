@@ -100,7 +100,7 @@ public enum LayerElements {
                 // box is stored unturned, so offering it would outline a
                 // rectangle that is not the shape a person is looking at, and
                 // quote a width nobody could see.
-                guard layer.isVisible, layer.measure == nil, isSquareOn(layer.transform)
+                guard layer.isVisible, !layer.isMeasurement, isSquareOn(layer.transform)
                 else { continue }
                 let box = layer.contentBounds.standardized.offsetBy(dx: origin.x, dy: origin.y)
                 if box.width > 0, box.height > 0, !isBackdrop(box, canvas: canvas) {

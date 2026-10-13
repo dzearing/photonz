@@ -107,9 +107,10 @@ extension EditorState {
     /// A row's context menu Copy Measurement: that one row's line, whether or
     /// not it is selected, without disturbing the selection.
     func copyMeasurement(id: UUID) {
-        guard let document, let layer = document.layer(id: id),
-              let line = MeasureSpecList.specLine(for: layer, in: document) else { return }
-        copyText(line)
+        guard let document, let layer = document.layer(id: id) else { return }
+        let lines = MeasureSpecList.specLines(for: layer, in: document)
+        guard !lines.isEmpty else { return }
+        copyText(lines.joined(separator: "\n"))
         showCopyConfirmation(.measurements(count: 1))
     }
 

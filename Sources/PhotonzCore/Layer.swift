@@ -936,6 +936,11 @@ public struct GroupContent: Hashable, Codable, Sendable {
     /// ordinary group. Nil is every group in every document written before
     /// this existed.
     public var keeps3D: Bool?
+    /// Set on the group a Size measurement lands as: a faint box over what was
+    /// measured, its width caliper and its height caliper (`MeasureSizeGroup`).
+    /// Nil on every other group, and on every group written before a size was
+    /// one thing rather than two loose calipers.
+    public var measuresSize: Bool?
 
     public init(children: [Layer] = [], isFrame: Bool = false,
                 clipsContents: Bool? = nil, backgroundHex: String? = nil,
@@ -961,7 +966,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         case properties, overrides, followedStyle, instanceSize, contentPlacement, layout
         case versionID, versionName, instanceVersion, columns, shared, pieceTextStyles
         case variantName, captions, variantAnswers, instanceAnswers, captionsHome, title
-        case keeps3D
+        case keeps3D, measuresSize
     }
 
     /// Only a frame writes the frame keys and only a main writes the component
@@ -1025,6 +1030,9 @@ public struct GroupContent: Hashable, Codable, Sendable {
         // Only a group told to keep its contents in space writes this, so
         // every other group is byte for byte what it was.
         if keeps3D == true { try c.encode(true, forKey: .keeps3D) }
+        // Only a Size measurement writes this, so every other group is byte
+        // for byte what it was.
+        if measuresSize == true { try c.encode(true, forKey: .measuresSize) }
         // A group nobody has asked about cutting off its overflow writes no
         // key, so a document saved before it could be asked is byte for byte
         // what it was.
@@ -1043,6 +1051,7 @@ public struct GroupContent: Hashable, Codable, Sendable {
         children = try c.decode([Layer].self, forKey: .children)
         isFrame = try c.decodeIfPresent(Bool.self, forKey: .isFrame) ?? false
         keeps3D = try c.decodeIfPresent(Bool.self, forKey: .keeps3D) == true ? true : nil
+        measuresSize = try c.decodeIfPresent(Bool.self, forKey: .measuresSize) == true ? true : nil
         clipsContentsSetting = try c.decodeIfPresent(Bool.self, forKey: .clipsContents)
         // A bare hex string is what this key has always held; a gradient
         // writes an object under the same key.

@@ -3466,6 +3466,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// picture to a person who knows the source, and to nobody else.
     case expectCallout(layer: String?, keepsShape: Bool, magnification: Double?,
                        unstretched: Bool, within: Double)
+    /// CLAIMS what the newest Size measurement is, asked of the document: ONE
+    /// group holding a Box, a Width and a Height, and nothing else. `count`
+    /// claims how many Size groups the document holds; `name` the group's
+    /// name; `boxOpacity` the box's Opacity (0 to 1, to a hundredth);
+    /// `boxInSizeInk: true` that the box is filled in the same ink as its
+    /// calipers; `at` where the box's top left sits, in document points, to
+    /// `within` (half a point).
+    case expectSizeMeasure(count: Int?, name: String?, boxOpacity: Double?,
+                           boxInSizeInk: Bool, at: PlaytestPoint?, within: Double)
     /// CLAIMS what 3D handles the picked layer wears on the canvas, read with
     /// the pointer moved off to a bare corner of the canvas first, so nothing
     /// a hover brings out counts: `arcs` the two on the turn knob, `depth`
@@ -4185,7 +4194,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4268,6 +4277,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectCorners: "expectCorners"
         case .expectTilt: "expectTilt"
         case .expectCallout: "expectCallout"
+        case .expectSizeMeasure: "expectSizeMeasure"
         case .expectSpaceHandles: "expectSpaceHandles"
         case .expectTransformBar: "expectTransformBar"
         case .expectSVG: "expectSVG"
@@ -5184,6 +5194,21 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .expectCallout(layer: try f.optionalString("layer"), keepsShape: keepsShape,
                                   magnification: magnification, unstretched: unstretched,
                                   within: within)
+        case "expectSizeMeasure":
+            let count = try f.optionalNumber("count")
+            if let count, count < 0 || count != count.rounded() {
+                throw f.invalid("count", "a count of Size measurements is a whole number, zero or more, not \(count)")
+            }
+            let boxOpacity = try f.optionalNumber("boxOpacity")
+            if let boxOpacity, !(0...1).contains(boxOpacity) {
+                throw f.invalid("boxOpacity", "an opacity is 0 to 1, not \(boxOpacity)")
+            }
+            let within = try f.optionalNumber("within") ?? 0.5
+            if within < 0 { throw f.invalid("within", "a slack is zero or more points, not \(within)") }
+            self = .expectSizeMeasure(count: count.map { Int($0) }, name: try f.optionalString("name"),
+                                      boxOpacity: boxOpacity,
+                                      boxInSizeInk: try f.optionalFlag("boxInSizeInk") ?? false,
+                                      at: fields["at"] == nil ? nil : try f.point("at"), within: within)
         case "expectSpaceHandles":
             let arcs = try f.optionalFlag("arcs")
             let depth = try f.optionalFlag("depth")

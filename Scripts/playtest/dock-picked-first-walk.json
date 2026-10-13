@@ -63,7 +63,12 @@
     { "do": "panel", "stage": "2-text" },
     { "do": "snapshot", "name": "dock-picked-first-2-text" },
 
-    { "do": "selectRow", "row": "Measure" },
+    { "comment": "A Size measurement is one group since 2026-10-13: open it and pick its Height caliper, the part that has a Measurement section.", "do": "selectRow", "row": "Size 124 × 30" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "reveal", "control": "Twist", "in": "Size 124 × 30" },
+    { "do": "press", "control": "Twist", "in": "Size 124 × 30" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "selectRow", "row": "Height" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "waitFor", "condition": "sectionInView", "value": "Measurement", "timeout": 4 },
     { "do": "describe", "stage": "3-measure", "note": "THE TEST for a measurement, and the one this walk used to have to give up on: the section was 470pt tall against a 344pt slot, so no ordering could fit it. Its settings now read one to a line and its read-only numbers fold away, and the whole section is in dockInView." },

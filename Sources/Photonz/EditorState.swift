@@ -4662,6 +4662,9 @@ final class EditorState {
             // A title's whoosh and ticks follow it wherever the edit took it,
             // and go with it, in the same step (`TitleSounds.swift`).
             document.keepTitleSoundsInStep(since: was)
+            // A Size measurement's name says what its calipers read, so an
+            // edit to one renames the group in the same step.
+            document.keepSizeMeasureNamesInStep(since: was)
             document.dropTracksEmptied(since: was)
         }) {
             report = history?.record(prepared) ?? EditReport()

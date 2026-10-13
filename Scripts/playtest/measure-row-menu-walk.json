@@ -67,7 +67,7 @@
     },
     {
       "do": "scrollPanel",
-      "row": "Height",
+      "row": "Size",
       "by": -600
     },
     {
@@ -76,7 +76,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Height",
+      "on": "Size",
       "shot": "measure-row-menu-1-shown",
       "ticked": [
         "Visible"
@@ -89,7 +89,7 @@
     },
     {
       "do": "scrollPanel",
-      "row": "Height",
+      "row": "Size",
       "by": -600
     },
     {
@@ -98,7 +98,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Height",
+      "on": "Size",
       "choose": "Visible"
     },
     {
@@ -107,7 +107,7 @@
     },
     {
       "do": "scrollPanel",
-      "row": "Height",
+      "row": "Size",
       "by": -600
     },
     {
@@ -116,7 +116,7 @@
     },
     {
       "do": "rightClick",
-      "on": "Height",
+      "on": "Size",
       "shot": "measure-row-menu-2-hidden",
       "unticked": [
         "Visible"

@@ -912,7 +912,7 @@ extension CanvasNSView {
     /// Every readout already on the canvas, in document space — what a hovered
     /// preview steers around, same as a committed measurement does.
     private func placedReadoutRects() -> [CGRect] {
-        (document?.layers ?? []).compactMap { MeasureBuilder.readoutRect(of: $0) }
+        (document?.canvasMeasureLayers ?? []).compactMap { MeasureBuilder.readoutRect(of: $0) }
     }
 
     /// Draws the measure tool's creation chrome — the snapping dot(s) and the

@@ -386,7 +386,9 @@ extension PhotonzDocument {
         guard !picked.isEmpty else { return .none }
         // Clips merged into one hold clips on a clock, not pieces on a
         // page: there is nothing in one to arrange (`MergedClip.swift`).
-        let containers = picked.filter { $0.isGroup && $0.merged == nil }
+        // Nor does a Size measurement: its box and calipers are where they
+        // measured, not pieces to arrange (`MeasureSizeGroup`).
+        let containers = picked.filter { $0.isGroup && $0.merged == nil && !$0.isSizeMeasurement }
         guard !containers.isEmpty else { return .none }
         let own = containers.filter { ownsContentRules(id: $0.id) }
         let isFollowed = own.isEmpty

@@ -460,6 +460,13 @@ extension EditorState {
     /// taken off with the cross is gone for good.
     private func captureStyleDefault(layerID: UUID) {
         guard let layer = document?.layer(id: layerID) else { return }
+        // A Size measurement's box is remembered for the next measurement,
+        // never for the next rectangle somebody draws: its faintness is the
+        // box's, and a box tool that started drawing at 10% would be a bug.
+        if document?.isSizeMeasureBox(layerID) == true {
+            updateMeasureStyles { $0.sizeBoxOpacity = CGFloat(layer.style.opacity) }
+            return
+        }
         if let shape = layer.annotation?.shape {
             annotationStyles.remember(layer.style, forShape: shape)
             saveAnnotationStyles()

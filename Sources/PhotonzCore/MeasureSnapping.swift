@@ -118,7 +118,14 @@ public enum MeasureSnapping {
     /// The measurement layers a drag may line up with: visible, and not the one
     /// in hand.
     private static func others(in document: PhotonzDocument, excluding id: UUID?) -> [Layer] {
-        document.layers.filter { $0.id != id && $0.isVisible && $0.measure != nil }
+        // Inside a Size measurement's group too, in canvas space, and only
+        // where the group itself is shown.
+        document.canvasMeasureLayers.filter { layer in
+            layer.id != id && layer.isVisible
+                && document.ancestorIDs(of: layer.id).allSatisfy {
+                    document.layer(id: $0)?.isVisible != false
+                }
+        }
     }
 
     /// Sorted, with lines that land on top of each other collapsed — two
