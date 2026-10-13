@@ -242,6 +242,9 @@ struct CanvasView: NSViewRepresentable {
     let onMotionPathBendCommit: () -> Void
     let onMotionPathBendCancel: () -> Void
     let onMotionPathStraighten: (UUID, Int) -> Void
+    /// A key's circle clicked (Shift or Command adding it), and dragged.
+    let onMotionPathKeyPick: (UUID, KeyRef, Bool) -> Void
+    let onMotionPathKeyMovePreview: (UUID, Int, CGPoint) -> Void
     /// Space: watch it loop, or stop watching. Answered by the canvas rather
     /// than by a menu because the only other Space in the app belongs to the
     /// video transport, in a window this one never shares.
@@ -492,6 +495,8 @@ struct CanvasView: NSViewRepresentable {
         view.onMotionPathBendCommit = onMotionPathBendCommit
         view.onMotionPathBendCancel = onMotionPathBendCancel
         view.onMotionPathStraighten = onMotionPathStraighten
+        view.onMotionPathKeyPick = onMotionPathKeyPick
+        view.onMotionPathKeyMovePreview = onMotionPathKeyMovePreview
         view.onMotionPlayToggle = onMotionPlayToggle
         view.canPlayMotion = canPlayMotion
         view.onDocumentPlayToggle = onDocumentPlayToggle
@@ -657,6 +662,8 @@ final class CanvasNSView: NSView {
     var onMotionPathBendCommit: (() -> Void) = {}
     var onMotionPathBendCancel: (() -> Void) = {}
     var onMotionPathStraighten: ((UUID, Int) -> Void) = { _, _ in }
+    var onMotionPathKeyPick: ((UUID, KeyRef, Bool) -> Void) = { _, _, _ in }
+    var onMotionPathKeyMovePreview: ((UUID, Int, CGPoint) -> Void) = { _, _, _ in }
     var onMotionPlayToggle: (() -> Void) = {}
     var canPlayMotion = false
     var onDocumentPlayToggle: (() -> Void) = {}
@@ -1309,6 +1316,7 @@ final class CanvasNSView: NSView {
     let motionPathLineLayer = CAShapeLayer()
     let motionPathHaloLayer = CAShapeLayer()
     let motionPathKeysLayer = CAShapeLayer()
+    let motionPathPickedKeysLayer = CAShapeLayer()
     let motionPathHandlesLayer = CAShapeLayer()
     /// The shape the points on screen were last drawn FROM, and the space they
     /// were mapped out through. Kept so a walk can ask, while the button is

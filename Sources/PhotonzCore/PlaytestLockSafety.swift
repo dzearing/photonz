@@ -217,6 +217,9 @@ public enum PlaytestLockSafety {
         // never a name. The first locked run of marquee-and-track-range-walk
         // is its watch; if it refuses there, take it out.
         "dragTracks", "expectTimelinePick",
+        // Added 2026-10-13 by reading: it reads which keys the editor has
+        // picked, never a name off the screen.
+        "expectKeyPick",
         // Added 2026-10-12, watched only unlocked: it reads where the editor
         // draws a timeline row's bar, never a name off the screen.
         "expectRowSpan",

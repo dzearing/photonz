@@ -122,7 +122,9 @@ extension EditorState {
     /// A click on a key: it alone is picked and the playhead goes to it, so
     /// the panel's diamonds say what is keyed there. Shift or Command adds it
     /// to what is picked, or takes it out.
-    func pickKey(layerID: UUID, _ ref: KeyRef, atMS ms: Int, extending: Bool) {
+    /// A right click picks it with `movingPlayhead` false: a right click never
+    /// moves the playhead (`EditorState+TimelinePointing`).
+    func pickKey(layerID: UUID, _ ref: KeyRef, atMS ms: Int, extending: Bool, movingPlayhead: Bool = true) {
         if selectedLayerID != layerID { selectLayer(layerID) }
         if let property = document?.layer(id: layerID)?.motions?.first(where: { $0.id == ref.motionID })?.property {
             activeKeyProperty = .motion(property)
@@ -134,8 +136,62 @@ extension EditorState {
             return
         }
         keySelection = KeySelection(layerID: layerID, refs: [ref])
+        guard movingPlayhead else { return }
         if isDocumentPlaying { pauseDocument() }
         scrubDocument(toMS: ms)
+    }
+
+    /// A click on a diamond on the clip, which stands for every key at its
+    /// moment: those keys are picked and the playhead goes there. Shift or
+    /// Command adds them to the pick, or takes them out where they all are
+    /// in it already.
+    func pickClipKeys(layerID: UUID, _ refs: Set<KeyRef>, atMS ms: Int, extending: Bool,
+                      movingPlayhead: Bool = true) {
+        guard !refs.isEmpty else { return }
+        if selectedLayerID != layerID { selectLayer(layerID) }
+        if extending {
+            let picked = pickedKeys(layerID: layerID)
+            var pick = linePick(layerID: layerID)
+            pick.dots = refs.isSubset(of: picked) ? picked.subtracting(refs) : picked.union(refs)
+            keySelection = KeySelection(layerID: layerID, pick)
+            return
+        }
+        keySelection = KeySelection(layerID: layerID, refs: refs)
+        guard movingPlayhead else { return }
+        if isDocumentPlaying { pauseDocument() }
+        scrubDocument(toMS: ms)
+    }
+
+    /// How much of the timeline's clock `points` spans across the lanes, at
+    /// the zoom it is at.
+    func timelineMS(spanningPoints points: CGFloat) -> Int {
+        guard timelineLaneWidth > 0 else { return 0 }
+        return Int(motionStripRuler.msSpanning(fraction: Double(points / timelineLaneWidth)).rounded())
+    }
+
+    /// Whether the right click just made landed on a key's dot at `ms`: on
+    /// the lane `motionID` names, or on the clip's own bar where it is nil.
+    func rightPressLanded(onKeyAtMS ms: Int, layerID: UUID, lane motionID: UUID?) -> Bool {
+        guard let pressMS = timelineLastRightPressMS,
+              abs(pressMS - ms) <= timelineMS(spanningPoints: AnimatedLine.dotReach + 1) else { return false }
+        let y = timelineRightPressY
+        if let motionID {
+            return keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: motionID)]?.contains(y) == true
+        }
+        return !keyLaneRows.values.contains { $0.contains(y) } && !zoomLaneRows.values.contains { $0.contains(y) }
+    }
+
+    /// A key's menu as it opens: when the right click landed on its dot, the
+    /// keys it stands for are picked unless they already are, the playhead
+    /// staying where it was parked (the Finder way, `EditorState+TimelinePointing`).
+    func keyMenuOpened(layerID: UUID, _ refs: Set<KeyRef>, atMS ms: Int, lane motionID: UUID?) {
+        guard keyMenuPressServed != timelineRightPresses, !refs.isEmpty,
+              rightPressLanded(onKeyAtMS: ms, layerID: layerID, lane: motionID) else { return }
+        keyMenuPressServed = timelineRightPresses
+        guard !refs.isSubset(of: pickedKeys(layerID: layerID)) else { return }
+        DispatchQueue.main.async { [weak self] in
+            self?.pickClipKeys(layerID: layerID, refs, atMS: ms, extending: false, movingPlayhead: false)
+        }
     }
 
     /// A box drawn round keys: those are picked, added to what already is

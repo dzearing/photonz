@@ -1,0 +1,50 @@
+{
+  "feature": "Every key dot picks on a click, Backspace deletes it",
+  "epic": "video-transitions-motion",
+  "summary": "A key dot on a lane, a diamond on the clip's own bar and a ring on the motion path on the canvas now each pick on a click, drawn white, and Backspace deletes what is picked while every other key stays. A shut lane follows the same rule as the open graph: click the line between two dots to pick that stretch, Command-click it to add a dot.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Type a title on a recording, key its Position, Scale, Opacity and Rotation Y at one second and again at three. Walk: every-key-dot-picks-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click the Scale dot at three seconds on its lane under the Title track, then press Backspace.",
+      "shot": "2026-10-13-every-key-dot-2-lane-dot-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With the title picked, click the ring where its route starts on the canvas, then press Backspace.",
+      "shot": "2026-10-13-every-key-dot-3-ring-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the line between the two Opacity dots: it picks that stretch. Command-click it: a dot is added there, picked.",
+      "shot": "2026-10-13-every-key-dot-4-added-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the Rotation Y dot at three seconds.",
+      "shot": "2026-10-13-every-key-dot-5-menu-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the white diamond on the title's clip at one second, then press Backspace.",
+      "shot": "2026-10-13-every-key-dot-6-clip-diamond-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Shift-click two dots on different lanes, then press Backspace once, then Command-Z once."
+    }
+  ],
+  "evaluate": [
+    "Can you tell at a glance which dot is picked on every lane colour, and on the clip bar?",
+    "Is a diamond on the clip picking every key at its moment what you expect, or should it pick only the clip's own summary?",
+    "On the canvas, is it right that clicking a ring leaves the playhead where it is (so the ring stays in view), while a dot on the timeline moves the playhead to it?",
+    "Does dragging a ring on the canvas to move that key's place feel like the way to reshape a route?",
+    "Does a shut lane picking a stretch between two dots, instead of drawing a box, get in your way?"
+  ],
+  "rough": [
+    "The walk could only land clicks with Command held: macOS would not let the probe come to the front this session, and a plain click on a window behind another app is swallowed. With nothing picked a Command-click picks exactly as a plain click does, so the walk proves the pick, the delete and the add, but the plain click itself was not driven by a walk here.",
+    "When the playhead sits on a key, that key's ring is under the layer's middle, where the 3D handles are drawn; those handles keep the press there and the ring cannot be clicked. Pick that key on its lane instead, or move the playhead off it.",
+    "A ring under the resting pointer shows the brightened hover look rather than white, so in the canvas picture the picked ring reads blue until the pointer moves away.",
+    "No mock draws a picked dot, a picked stretch on a shut lane, or a picked ring on the canvas; the white picked look is the user's rule of 2026-10-13, written as UX-PATTERNS D21."
+  ]
+}

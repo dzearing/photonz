@@ -23,6 +23,9 @@ public struct ClipKeyMark: Hashable, Sendable {
     public let documentMS: Int
     /// What is keyed there, in the panel's order.
     public let properties: [MotionProperty]
+    /// Every key it stands for, which a click on it picks and Backspace then
+    /// deletes.
+    public var refs: Set<KeyRef> = []
 }
 
 // MARK: - The marks
@@ -62,22 +65,24 @@ extension PhotonzDocument {
     /// `PropertyKeys.nearMS` of each other are one diamond.
     public func clipKeyMarks(layerID: UUID) -> [ClipKeyMark] {
         guard let layer = layer(id: layerID) else { return [] }
-        var found: [(ms: Int, property: MotionProperty)] = []
+        var found: [(ms: Int, property: MotionProperty, ref: KeyRef)] = []
         for motion in keyedMotions(of: layer) {
             for key in motion.keyframes {
-                if let ms = clipKeyDocumentMS(layer, clock: key.atMS) { found.append((ms, motion.property)) }
+                if let ms = clipKeyDocumentMS(layer, clock: key.atMS) {
+                    found.append((ms, motion.property, KeyRef(motionID: motion.id, clockMS: key.atMS)))
+                }
             }
         }
         found.sort { $0.ms < $1.ms }
         let order = MotionProperty.allCases
         var marks: [ClipKeyMark] = []
-        var group: [(ms: Int, property: MotionProperty)] = []
+        var group: [(ms: Int, property: MotionProperty, ref: KeyRef)] = []
         func close() {
             guard let first = group.first else { return }
             let properties = Set(group.map(\.property)).sorted {
                 (order.firstIndex(of: $0) ?? 0) < (order.firstIndex(of: $1) ?? 0)
             }
-            marks.append(ClipKeyMark(documentMS: first.ms, properties: properties))
+            marks.append(ClipKeyMark(documentMS: first.ms, properties: properties, refs: Set(group.map(\.ref))))
             group = []
         }
         for item in found {

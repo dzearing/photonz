@@ -138,6 +138,8 @@ struct EditorCanvasSurface: View {
                    onMotionPathBendCommit: { editorState.commitMotionPathBend() },
                    onMotionPathBendCancel: { editorState.cancelMotionPathBend() },
                    onMotionPathStraighten: { editorState.straightenMotionPath(layerID: $0, segment: $1) },
+                   onMotionPathKeyPick: { editorState.pickMotionPathKey(layerID: $0, $1, extending: $2) },
+                   onMotionPathKeyMovePreview: { editorState.previewMotionPathKeyMove(layerID: $0, key: $1, to: $2) },
                    onMotionPlayToggle: { editorState.toggleMotionPreview() },
                    canPlayMotion: editorState.canPlayMotion,
                    onDocumentPlayToggle: { editorState.toggleDocumentPlayback() },

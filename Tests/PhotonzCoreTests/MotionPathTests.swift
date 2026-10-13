@@ -238,6 +238,32 @@ struct MotionPathTests {
         #expect(doc.layer(id: id)?.keyedMotion(.position)?.pathShape == .curved)
     }
 
+    /// Each ring on the path is a key, named so a click on it picks that key
+    /// (task `every-key-dot-can-be-clicked-to-pick-it-and-back`).
+    @Test func everyRingOnThePathNamesItsKey() throws {
+        let (doc, id) = Self.keyedAcross()
+        let path = try #require(doc.motionPath(layerID: id))
+        let motion = try #require(doc.layer(id: id)?.keyedMotion(.position))
+        #expect(path.keyRefs == [KeyRef(motionID: motion.id, clockMS: 0), KeyRef(motionID: motion.id, clockMS: 4000)])
+        #expect(path.keyRefs.count == path.keyPoints.count)
+    }
+
+    /// A ring dragged on the canvas moves that key's place, so the path runs
+    /// through where it was let go; the other key stays.
+    @Test func aRingDraggedOnTheCanvasMovesItsKey() throws {
+        var (doc, id) = Self.keyedAcross()
+        doc.moveMotionPathKey(layerID: id, key: 1, toCanvasPoint: CGPoint(x: 750, y: 300))
+        let path = try #require(doc.motionPath(layerID: id))
+        #expect(Self.near(path.keyPoints[1], CGPoint(x: 750, y: 300)))
+        #expect(Self.near(path.keyPoints[0], CGPoint(x: 150, y: 525)))
+        let motion = try #require(doc.layer(id: id)?.keyedMotion(.position))
+        #expect(Self.near(Self.point(motion.keyframes[1].value), CGPoint(x: 700, y: 275)))
+        // A key that is not there changes nothing.
+        let before = doc
+        doc.moveMotionPathKey(layerID: id, key: 7, toCanvasPoint: .zero)
+        #expect(doc == before)
+    }
+
     @Test func aLayerWithOneKeyOrNoMoveHasNoCanvasPath() {
         let (doc, id) = PropertyKeysTestsFixtures.titleOnly()
         #expect(doc.motionPath(layerID: id) == nil)

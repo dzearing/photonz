@@ -105,4 +105,20 @@ struct AnimatedLineTests {
         pick.pick(dot: 2, extending: true)
         #expect(pick.isEmpty)
     }
+
+    // MARK: - A closed key lane
+
+    /// A key lane drawn shut is the same kind of line, flat: its diamonds
+    /// along the middle and a straight segment between each pair, with no
+    /// line either side (the lane's own click takes that).
+    @Test func aClosedLaneIsAFlatLineOfItsKeys() {
+        let line = AnimatedLine(flatThrough: [300, 100, 200], atY: 9)
+        #expect(line.dots == [CGPoint(x: 100, y: 9), CGPoint(x: 200, y: 9), CGPoint(x: 300, y: 9)])
+        #expect(line.segments.count == 2)
+        #expect(line.before.isEmpty && line.after.isEmpty)
+        #expect(line.hit(CGPoint(x: 150, y: 11)) == .segment(0))
+        #expect(line.hit(CGPoint(x: 203, y: 9)) == .dot(1))
+        #expect(line.hit(CGPoint(x: 50, y: 9)) == nil)
+        #expect(AnimatedLine(flatThrough: [40], atY: 9).segments.isEmpty)
+    }
 }

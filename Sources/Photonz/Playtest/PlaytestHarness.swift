@@ -2258,6 +2258,33 @@ private final class Run {
                  + (reading.rangeOn.isEmpty ? "" : "; a range on \(reading.rangeOn.joined(separator: ", "))"),
                  state: describe())
 
+        case .expectKeyPick(let keys, let segments):
+            let editor = try requireEditor()
+            // Every key and segment picked, named as its lane names it.
+            var pickedKeys: [String] = [], pickedSegments: [String] = []
+            if let pick = editor.keySelection {
+                for lane in editor.keyLanes(layerID: pick.layerID) {
+                    for (index, key) in lane.keys.enumerated() {
+                        if pick.refs.contains(key.ref) { pickedKeys.append("\(lane.title) \(index + 1)") }
+                        if pick.segments.contains(key.ref) { pickedSegments.append("\(lane.title) \(index + 1)") }
+                    }
+                }
+            }
+            func said(_ names: [String]) -> String { names.isEmpty ? "none" : names.sorted().joined(separator: ", ") }
+            func same(_ a: [String], _ b: [String]) -> Bool {
+                Set(a.map { $0.lowercased() }) == Set(b.map { $0.lowercased() })
+            }
+            var wrong: [String] = []
+            if !same(keys, pickedKeys) {
+                wrong.append("the keys picked are \(said(pickedKeys)), and the walk expected \(said(keys))")
+            }
+            if let segments, !same(segments, pickedSegments) {
+                wrong.append("the segments picked are \(said(pickedSegments)), and the walk expected \(said(segments))")
+            }
+            guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ")) }
+            note(number, step.name, "keys picked: \(said(pickedKeys)); segments picked: \(said(pickedSegments))",
+                 state: describe())
+
         case .expectRowSpan(let row, let sameAs, let startsAt, let endsAt, let within):
             let editor = try requireEditor()
             // Every row the timeline is drawing, the parts opened under a

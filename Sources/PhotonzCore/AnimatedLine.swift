@@ -59,6 +59,14 @@ public struct AnimatedLine: Hashable, Sendable {
         self.after = after
     }
 
+    /// A key lane drawn shut: its keys along a flat line at `y`, a straight
+    /// segment between each pair and no line either side, so a click off the
+    /// keys is the lane's own.
+    public init(flatThrough xs: [CGFloat], atY y: CGFloat) {
+        let dots = xs.sorted().map { CGPoint(x: $0, y: y) }
+        self.init(dots: dots, segments: zip(dots, dots.dropFirst()).map { [$0, $1] })
+    }
+
     /// What is under `point`: the nearest dot within reach first, so a dot is
     /// never lost under the line it sits on, then the nearest stretch of line.
     public func hit(_ point: CGPoint) -> AnimatedLineHit? {

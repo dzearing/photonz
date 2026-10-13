@@ -67,6 +67,8 @@ struct ClipPiecesBar: View {
 
     /// A key diamond in the hand: where it was, and where it would land.
     @State private var keyDrag: KeyDrag?
+    /// The key diamond the pointer rests on, by its moment.
+    @State private var hoveredKeyMS: Int?
 
     private struct KeyDrag: Equatable {
         let fromMS: Int
@@ -1006,9 +1008,11 @@ struct ClipPiecesBar: View {
     /// How near the playhead, in points, a dragged key has to come to land on it.
     private static let keySnap: CGFloat = 6
 
-    /// One key diamond on the clip. Drag it along to move every key at that
-    /// moment; click it to put the playhead on it; right-click it for how it
-    /// eases, and to delete it.
+    /// One key diamond on the clip, standing for every key at its moment.
+    /// Click it to pick those keys (Shift or Command adds them), so Backspace
+    /// deletes them; drag it along to move them; right-click it for how they
+    /// ease, Copy, Paste and Delete (task
+    /// `every-key-dot-can-be-clicked-to-pick-it-and-back`).
     private func keyDiamond(_ mark: ClipKeyMark, index: Int, ruler: MotionStripRuler) -> some View {
         let dragging = keyDrag?.fromMS == mark.documentMS
         let ms = dragging ? (keyDrag?.toMS ?? mark.documentMS) : mark.documentMS
@@ -1016,7 +1020,8 @@ struct ClipPiecesBar: View {
         let ease = editorState.document?.clipKeyEase(layerID: layerID, atMS: mark.documentMS)
         let eased = ease.map { $0 != .linear } ?? true
         let names = mark.properties.map(\.title).joined(separator: ", ")
-        return VideoKit.KeyMark(isEased: eased)
+        let isPicked = !mark.refs.isEmpty && mark.refs.isSubset(of: editorState.pickedKeys(layerID: layerID))
+        return VideoKit.KeyMark(isEased: eased, isPicked: isPicked, isHovered: hoveredKeyMS == mark.documentMS)
             .scaleEffect(dragging ? 1.35 : 1)
             // A small square to hold, not the bar's full height: a key at the
             // very start or end of a clip sits on its trim grip, and the grip
@@ -1040,11 +1045,23 @@ struct ClipPiecesBar: View {
                     }
                     keyDrag = nil
                 })
-            .onTapGesture { editorState.pickClipKey(layerID: layerID, atMS: mark.documentMS) }
+            .onTapGesture {
+                let flags = KeyClick.flags
+                guard !flags.contains(.control) else { return }
+                editorState.pickClipKeys(layerID: layerID, mark.refs, atMS: mark.documentMS,
+                                         extending: flags.contains(.shift) || flags.contains(.command))
+            }
+            .playtestHover("Key \(index + 1) \(layerName)") { inside in
+                if inside { hoveredKeyMS = mark.documentMS } else if hoveredKeyMS == mark.documentMS { hoveredKeyMS = nil }
+            }
             .contextMenu {
-                MenuRowsView(rows: editorState.clipKeyMenuRows(layerID: layerID, atMS: mark.documentMS))
+                TimelineKeyMenu(layerID: layerID, refs: mark.refs, atMS: mark.documentMS, lane: nil) {
+                    editorState.clipKeyMenuRows(layerID: layerID, atMS: mark.documentMS)
+                }
             }
             .playtestControl("Key \(index + 1)", detail: layerName)
+            .panelReadout("clip key \(index + 1) at \(MotionStripRuler.timecode(Double(mark.documentMS)))"
+                          + (isPicked ? ", picked" : ""))
             .panelHelp("\(MotionStripRuler.timecode(Double(mark.documentMS))): \(names)")
             // Placed by padding rather than an offset, so the diamond's frame
             // is where it is drawn and a walk's right click lands on it.

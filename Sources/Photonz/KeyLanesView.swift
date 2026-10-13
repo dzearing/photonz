@@ -219,7 +219,10 @@ private struct KeyLaneView: View {
                                                    handle: handleDrag.map { ($0.ref, $0.side, $0.point) },
                                                    point: pointDrag.map { ($0.ref, $0.byMS, $0.value) })
                             : nil
-        let line = graph.map { animatedLine($0, ruler: ruler) }
+        // Open or shut, the lane is one animated line (`AnimatedLine`): a
+        // click picks a dot or the segment between two, ⌘-click adds.
+        let line = graph.map { animatedLine($0, ruler: ruler) } ?? closedLine(ruler)
+        let keys = lineKeys(graph)
         ZStack(alignment: .topLeading) {
             RoundedRectangle(cornerRadius: 5)
                 .fill(VideoKit.Palette.panel2)
@@ -230,19 +233,19 @@ private struct KeyLaneView: View {
                 .contextMenu {
                     MenuRowsView(rows: editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID))
                 }
-            if let graph, let line {
+            if let graph {
                 curve(graph, line: line, ruler: ruler)
-                lineSurface(graph, line: line, ruler: ruler)
+                lineSurface(keys, line: line, ruler: ruler)
                 handles(graph, ruler: ruler)
             } else {
-                segments(ruler: ruler)
+                segments(line, keys: keys)
+                lineSurface(keys, line: line, ruler: ruler)
             }
-            keys(graph: graph, ruler: ruler)
+            self.keys(graph: graph, ruler: ruler)
         }
         .frame(width: laneWidth, height: height, alignment: .topLeading)
         .clipShape(TimelineEdgeClip())
         .onContinuousHover(coordinateSpace: .local) { phase in
-            guard let line else { return }
             switch phase {
             case .active(let at): hovered = line.hit(at)
             case .ended: hovered = nil
@@ -270,8 +273,8 @@ private struct KeyLaneView: View {
     }
 
     /// Where the editor points: the first segment it is drawing for.
-    private func drawingAnchor(_ line: AnimatedLine?) -> CGRect {
-        guard let line, let graph = editorState.keyGraph(layerID: layerID, motionID: lane.motionID),
+    private func drawingAnchor(_ line: AnimatedLine) -> CGRect {
+        guard let graph = editorState.keyGraph(layerID: layerID, motionID: lane.motionID),
               let drawing = editorState.drawingStretchCurve,
               let index = graph.keys.dropLast().firstIndex(where: { drawing.segments.contains($0.ref) }),
               line.segments.indices.contains(index) else {
@@ -320,14 +323,42 @@ private struct KeyLaneView: View {
 
     // MARK: The lane closed: diamonds joined by a line
 
+    /// The lane shut, as the line rule sees it: its keys along the middle.
+    private func closedLine(_ ruler: MotionStripRuler) -> AnimatedLine {
+        AnimatedLine(flatThrough: lane.keys.map { x(shownMS($0), ruler) }, atY: height / 2)
+    }
+
+    /// The keys the line's dots stand for, first to last.
+    private func lineKeys(_ graph: KeyGraph?) -> [LineKey] {
+        if let graph { return graph.keys.map { LineKey(ref: $0.ref, ms: $0.documentMS) } }
+        return lane.keys.sorted { $0.documentMS < $1.documentMS }.map { LineKey(ref: $0.ref, ms: $0.documentMS) }
+    }
+
     /// `.kfseg`: the accent line between each pair of keys, faint, so the
-    /// stretch where the value is changing reads at a glance.
-    private func segments(ruler: MotionStripRuler) -> some View {
-        let spots = lane.keys.map { x(shownMS($0), ruler) }.sorted()
-        return Canvas { context, size in
-            guard spots.count > 1, let first = spots.first, let last = spots.last else { return }
-            let rect = CGRect(x: first, y: size.height / 2 - 1, width: last - first, height: 2)
-            context.fill(Path(roundedRect: rect, cornerRadius: 1), with: .color(.accentColor.opacity(0.45)))
+    /// stretch where the value is changing reads at a glance. A picked segment
+    /// is white on an accent edge, as on the graph; the one under the pointer
+    /// brightens.
+    private func segments(_ line: AnimatedLine, keys: [LineKey]) -> some View {
+        let pickedSegments = editorState.pickedSegments(layerID: layerID)
+        let picked = keys.indices.filter { pickedSegments.contains(keys[$0].ref) }
+        let hoveredSegment: Int? = if case let .segment(index) = hovered { index } else { nil }
+        let accent = Color.accentColor
+        return Canvas { context, _ in
+            for (index, segment) in line.segments.enumerated() {
+                guard let a = segment.first, let b = segment.last else { continue }
+                var stretch = Path()
+                stretch.move(to: a)
+                stretch.addLine(to: b)
+                if picked.contains(index) {
+                    context.stroke(stretch, with: .color(accent), style: StrokeStyle(lineWidth: 5, lineCap: .round))
+                    context.stroke(stretch, with: .color(.white), style: StrokeStyle(lineWidth: 2.2, lineCap: .round))
+                } else if index == hoveredSegment {
+                    context.stroke(stretch, with: .color(accent.mix(with: .white, by: 0.3)),
+                                   style: StrokeStyle(lineWidth: 3, lineCap: .round))
+                } else {
+                    context.stroke(stretch, with: .color(accent.opacity(0.45)), lineWidth: 2)
+                }
+            }
         }
         .allowsHitTesting(false)
     }
@@ -502,16 +533,25 @@ private struct KeyLaneView: View {
     private func keyView(_ key: LaneKey, index: Int, ruler: MotionStripRuler, y keyY: CGFloat) -> some View {
         let isPicked = picked.contains(key.ref)
         let at = x(shownMS(key), ruler)
-        return placed(KeyGlyph(ease: key.ease, isPicked: isPicked)
+        return placed(KeyGlyph(ease: key.ease, isPicked: isPicked, isHovered: hovered == .dot(index))
             .scaleEffect(isPicked && drag != nil ? 1.25 : 1)
             .frame(width: Self.grab, height: Self.grab)
             .contentShape(Rectangle())
             .gesture(keyDrag(key, ruler: ruler))
-            .onTapGesture {
-                let flags = NSEvent.modifierFlags
-                editorState.pickKey(layerID: layerID, key.ref, atMS: key.documentMS,
-                                    extending: flags.contains(.shift) || flags.contains(.command))
-            }, key, index: index, isPicked: isPicked, x: at, y: keyY)
+            .onTapGesture { dotClick(key, index: index) },
+            key, index: index, isPicked: isPicked, x: at, y: keyY)
+    }
+
+    /// A click on a dot, open lane or shut: the line rule picks it, Shift or
+    /// Command adding it to the pick or taking it out.
+    private func dotClick(_ key: LaneKey, index: Int) {
+        let flags = Self.clickFlags
+        guard !flags.contains(.control),
+              case let .pickDot(_, extending) = AnimatedLine.action(for: .dot(index),
+                                                                    command: flags.contains(.command),
+                                                                    shift: flags.contains(.shift))
+        else { return }
+        editorState.pickKey(layerID: layerID, key.ref, atMS: key.documentMS, extending: extending)
     }
 
     /// A point on the open graph: a click picks it (the line rule,
@@ -527,15 +567,7 @@ private struct KeyLaneView: View {
             .frame(width: Self.grab, height: Self.grab)
             .contentShape(Rectangle())
             .gesture(graphKeyDrag(key, index: index, startValue: start, ruler: ruler, low: low, high: high))
-            .onTapGesture {
-                let flags = Self.clickFlags
-                guard !flags.contains(.control),
-                      case let .pickDot(_, extending) = AnimatedLine.action(for: .dot(index),
-                                                                            command: flags.contains(.command),
-                                                                            shift: flags.contains(.shift))
-                else { return }
-                editorState.pickKey(layerID: layerID, key.ref, atMS: key.documentMS, extending: extending)
-            },
+            .onTapGesture { dotClick(key, index: index) },
             key, index: index, isPicked: isPicked, x: at, y: keyY)
     }
 
@@ -547,7 +579,9 @@ private struct KeyLaneView: View {
                         x at: CGFloat, y keyY: CGFloat) -> some View {
         glyph
             .contextMenu {
-                MenuRowsView(rows: editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.documentMS))
+                TimelineKeyMenu(layerID: layerID, refs: [key.ref], atMS: key.documentMS, lane: lane.motionID) {
+                    editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.documentMS)
+                }
             }
             .help("\(lane.title) \(key.reading) at \(MotionStripRuler.timecode(Double(key.documentMS))), "
                   + key.ease.title)
@@ -644,24 +678,29 @@ private struct KeyLaneView: View {
     /// a press, so the lane around it still scrubs and draws boxes. A click
     /// picks a segment, ⌘-click adds a point there, and a right click opens
     /// the segment's own menu.
-    private func lineSurface(_ graph: KeyGraph, line: AnimatedLine, ruler: MotionStripRuler) -> some View {
+    private func lineSurface(_ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) -> some View {
         let strokes = line.segments + [line.before, line.after]
         let pickedSegments = editorState.pickedSegments(layerID: layerID)
         return ZStack(alignment: .topLeading) {
             Color.clear
                 .frame(width: laneWidth, height: height)
                 .contentShape(LineStrip(lines: strokes, width: AnimatedLine.lineReach * 2))
-                .onTapGesture(coordinateSpace: .local) { at in lineClick(at, graph, line: line, ruler: ruler) }
+                .onTapGesture(coordinateSpace: .local) { at in lineClick(at, keys, line: line, ruler: ruler) }
+                // A press that travels draws a box round keys, as it does
+                // from the bare lane either side.
+                .gesture(DragGesture(minimumDistance: Self.boxThreshold, coordinateSpace: .named(space))
+                    .onChanged { onBox(rect($0), false) }
+                    .onEnded { onBox(rect($0), true) })
                 .contextMenu {
                     // Read so every right click builds the menu afresh, from
                     // where it landed (`EditorState+TimelinePointing`).
                     let _ = editorState.timelineRightPresses
-                    BuiltAsItOpens { lineMenuRows(graph, line: line, ruler: ruler) }
+                    BuiltAsItOpens { lineMenuRows(keys, line: line, ruler: ruler) }
                 }
             // A name for each segment, at its middle, for a walk to aim at.
             ForEach(Array(line.segments.enumerated()), id: \.offset) { index, segment in
                 let middle = Self.middle(of: segment)
-                let ref = graph.keys[index].ref
+                let ref = keys[index].ref
                 let curve = editorState.document?.stretchesCurve(layerID: layerID, [ref])
                 Color.clear
                     .frame(width: 6, height: 6)
@@ -675,17 +714,17 @@ private struct KeyLaneView: View {
         }
     }
 
-    private func lineClick(_ at: CGPoint, _ graph: KeyGraph, line: AnimatedLine, ruler: MotionStripRuler) {
+    private func lineClick(_ at: CGPoint, _ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) {
                 let flags = Self.clickFlags
                 guard !flags.contains(.control) else { return }
                 let ms = msAt(at.x, ruler)
                 switch AnimatedLine.action(for: line.hit(at), command: flags.contains(.command),
                                            shift: flags.contains(.shift)) {
                 case let .pickDot(index, extending):
-                    let key = graph.keys[index]
-                    editorState.pickKey(layerID: layerID, key.ref, atMS: key.documentMS, extending: extending)
+                    let key = keys[index]
+                    editorState.pickKey(layerID: layerID, key.ref, atMS: key.ms, extending: extending)
                 case let .pickSegment(index, extending):
-                    editorState.pickSegment(layerID: layerID, graph.keys[index].ref, atMS: ms, extending: extending)
+                    editorState.pickSegment(layerID: layerID, keys[index].ref, atMS: ms, extending: extending)
                 case .addDot:
                     editorState.addKeyOnGraph(layerID: layerID, motionID: lane.motionID,
                                               atMS: msAt(line.nearestPoint(to: at).x, ruler))
@@ -697,9 +736,7 @@ private struct KeyLaneView: View {
 
     /// The keys held with the click being handled: the click's own, which is
     /// what a person held as they clicked, and what a walk's posted click says.
-    static var clickFlags: NSEvent.ModifierFlags {
-        NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
-    }
+    static var clickFlags: NSEvent.ModifierFlags { KeyClick.flags }
 
     private func msAt(_ laneX: CGFloat, _ ruler: MotionStripRuler) -> Int {
         Int(ruler.ms(atFraction: Double(min(max(0, laneX / laneWidth), 1))).rounded())
@@ -708,7 +745,7 @@ private struct KeyLaneView: View {
     /// The right click on the line: built as the menu opens, from where the
     /// press landed (`TimelineRightPress`), so it is the menu of the segment
     /// or the point under the pointer.
-    private func lineMenuRows(_ graph: KeyGraph, line: AnimatedLine, ruler: MotionStripRuler) -> [MenuRow] {
+    private func lineMenuRows(_ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) -> [MenuRow] {
         guard let ms = editorState.timelineLastRightPressMS,
               let row = editorState.keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: lane.motionID)] else {
             return editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID)
@@ -717,10 +754,11 @@ private struct KeyLaneView: View {
         switch line.hit(at) {
         case let .segment(index):
             return editorState.segmentMenuRows(layerID: layerID, motionID: lane.motionID,
-                                               graph.keys[index].ref, atMS: ms)
+                                               keys[index].ref, atMS: ms)
         case let .dot(index):
-            let key = graph.keys[index]
-            return editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.documentMS)
+            let key = keys[index]
+            editorState.keyMenuOpened(layerID: layerID, [key.ref], atMS: key.ms, lane: lane.motionID)
+            return editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.ms)
         case .beyond, nil:
             return editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID)
         }
@@ -853,6 +891,39 @@ struct KeyGlyphShape: Shape {
         }
         path.closeSubpath()
         return path
+    }
+}
+
+/// A key on an animated line, as the line rule names it.
+private struct LineKey {
+    let ref: KeyRef
+    let ms: Int
+}
+
+/// The keys held with a click being handled: the click's own, which is what
+/// a person held as they clicked, and what a walk's posted click says.
+enum KeyClick {
+    static var flags: NSEvent.ModifierFlags {
+        NSApp.currentEvent?.modifierFlags ?? NSEvent.modifierFlags
+    }
+}
+
+/// A key's right click menu, on a lane or on its clip: built as it opens,
+/// and picking the keys it is about unless they already are, the playhead
+/// staying where it was parked (`EditorState+TimelinePointing`).
+struct TimelineKeyMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let layerID: UUID
+    let refs: Set<KeyRef>
+    let atMS: Int
+    /// The lane it is on, or nil on the clip's own bar.
+    let lane: UUID?
+    let rows: @MainActor () -> [MenuRow]
+
+    var body: some View {
+        let _ = editorState.timelineRightPresses
+        let _ = editorState.keyMenuOpened(layerID: layerID, refs, atMS: atMS, lane: lane)
+        MenuRowsView(rows: rows())
     }
 }
 

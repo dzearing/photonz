@@ -293,6 +293,11 @@ public struct MotionPathOnCanvas: Hashable, Sendable {
     public let layerID: UUID
     public let motionID: UUID
     public let segments: [MotionPathSegment]
+    /// Each key, first to last, one per point of `keyPoints`: what a click on
+    /// its ring picks.
+    public var keyRefs: [KeyRef] = []
+    /// Which rings are picked, by their place in `keyPoints`, drawn white.
+    public var pickedKeys: Set<Int> = []
     /// Where each key sits, first to last.
     public var keyPoints: [CGPoint] {
         guard let first = segments.first else { return [] }
@@ -330,7 +335,20 @@ extension PhotonzDocument {
             layerID: layerID, motionID: motion.id,
             segments: segments.map {
                 MotionPathSegment(start: shifted($0.start), end: shifted($0.end), bend: $0.bend)
-            })
+            },
+            keyRefs: motion.keyframes.map { KeyRef(motionID: motion.id, clockMS: $0.atMS) })
+    }
+
+    /// Key `key` of a layer's path moved so its ring sits on `point`, in
+    /// canvas points: the ring let go there. Nothing where there is no such
+    /// key.
+    public mutating func moveMotionPathKey(layerID: UUID, key: Int, toCanvasPoint point: CGPoint) {
+        guard let layer = layer(id: layerID), let motion = layer.keyedMotion(.position),
+              motion.keyframes.indices.contains(key) else { return }
+        let offset = motionPathOffset(of: layer)
+        let local = CGPoint(x: point.x - offset.x, y: point.y - offset.y)
+        replaceMotions(layerID: layerID, [motion.id: motion.settingKey(atMS: motion.keyframes[key].atMS,
+                                                                        value: .point(local))])
     }
 
     /// Stretch `segment` of a layer's path bent so its middle passes through

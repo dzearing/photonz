@@ -5,8 +5,19 @@ import PhotonzCore
 /// and where its middle is now, in canvas points.
 struct MotionPathBendPreview: Equatable {
     let layerID: UUID
+    /// The stretch being bent, or with `movesKey`, the key being moved.
     let segment: Int
     var point: CGPoint
+    var movesKey = false
+
+    /// The document with this hand applied.
+    func applied(to document: inout PhotonzDocument) {
+        if movesKey {
+            document.moveMotionPathKey(layerID: layerID, key: segment, toCanvasPoint: point)
+        } else {
+            document.bendMotionPath(layerID: layerID, segment: segment, throughCanvasPoint: point)
+        }
+    }
 }
 
 /// A moving layer draws its path on the canvas, and dragging the path bends it
@@ -24,10 +35,12 @@ extension EditorState {
     var motionPathOverlay: MotionPathOnCanvas? {
         guard let layer = keyLayer, var document else { return nil }
         if let preview = motionPathPreview, preview.layerID == layer.id {
-            document.bendMotionPath(layerID: layer.id, segment: preview.segment,
-                                    throughCanvasPoint: preview.point)
+            preview.applied(to: &document)
         }
-        return document.motionPath(layerID: layer.id)
+        guard var path = document.motionPath(layerID: layer.id) else { return nil }
+        let picked = pickedKeys(layerID: layer.id)
+        path.pickedKeys = Set(path.keyRefs.indices.filter { picked.contains(path.keyRefs[$0]) })
+        return path
     }
 
     /// What the Path control in Properties shows: nil where there is no path,
@@ -36,7 +49,7 @@ extension EditorState {
         guard let layer = keyLayer, !layer.positionReadsAsCentre,
               let motion = layer.keyedMotion(.position),
               !motion.pathSegments.isEmpty else { return nil }
-        if let preview = motionPathPreview, preview.layerID == layer.id {
+        if let preview = motionPathPreview, preview.layerID == layer.id, !preview.movesKey {
             return .curved
         }
         return motion.pathShape
@@ -47,8 +60,7 @@ extension EditorState {
     func withPreviewedMotionPath(_ document: PhotonzDocument) -> PhotonzDocument {
         guard let preview = motionPathPreview else { return document }
         var document = document
-        document.bendMotionPath(layerID: preview.layerID, segment: preview.segment,
-                                throughCanvasPoint: preview.point)
+        preview.applied(to: &document)
         return document
     }
 
@@ -62,8 +74,23 @@ extension EditorState {
     func commitMotionPathBend() {
         guard let preview = motionPathPreview else { return }
         motionPathPreview = nil
-        perform { $0.bendMotionPath(layerID: preview.layerID, segment: preview.segment,
-                                    throughCanvasPoint: preview.point) }
+        perform { preview.applied(to: &$0) }
+    }
+
+    /// A key's circle moving under the hand: the path and the layer follow it.
+    func previewMotionPathKeyMove(layerID: UUID, key: Int, to point: CGPoint) {
+        guard !isClipLocked(layerID) else { return }
+        motionPathPreview = MotionPathBendPreview(layerID: layerID, segment: key, point: point, movesKey: true)
+        rerender()
+    }
+
+    /// A key's circle clicked: that key is picked, as a click on its dot on
+    /// the timeline picks it. The playhead stays: moving it would carry the
+    /// layer onto the circle and hide it under the layer's own handles, and
+    /// the person is working in space here, not in time.
+    func pickMotionPathKey(layerID: UUID, _ ref: KeyRef, extending: Bool) {
+        guard let key = keyLanes(layerID: layerID).flatMap(\.keys).first(where: { $0.ref == ref }) else { return }
+        pickKey(layerID: layerID, ref, atMS: key.documentMS, extending: extending, movingPlayhead: false)
     }
 
     /// A press that went nowhere, or Escape part way: nothing is written.
@@ -94,6 +121,21 @@ extension EditorState {
         guard let point, let path = motionPathOverlay,
               let shape = motionPathShape else { return nil }
         let reach = 12 / max(zoom, 0.01)
+        // A key's circle: that key's menu, the one its dot on the timeline
+        // opens, and the key picked unless it already is.
+        let rings = path.keyPoints.indices.filter {
+            hypot(path.keyPoints[$0].x - point.x, path.keyPoints[$0].y - point.y) <= 9 / max(zoom, 0.01)
+        }
+        if let index = rings.first, path.keyRefs.indices.contains(index),
+           let key = keyLanes(layerID: path.layerID).flatMap(\.keys).first(where: { $0.ref == path.keyRefs[index] }) {
+            if !pickedKeys(layerID: path.layerID).contains(key.ref) {
+                DispatchQueue.main.async { [weak self] in
+                    self?.pickKey(layerID: path.layerID, key.ref, atMS: key.documentMS, extending: false,
+                                  movingPlayhead: false)
+                }
+            }
+            return keyMenuRows(layerID: path.layerID, key.ref, atMS: key.documentMS)
+        }
         guard let segment = path.segments.firstIndex(where: {
             hypot($0.middle.x - point.x, $0.middle.y - point.y) <= reach
         }) else { return nil }

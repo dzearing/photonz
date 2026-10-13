@@ -339,14 +339,23 @@ extension VideoKit {
         /// Eased rather than linear: its corners soften, the way Premiere
         /// draws an eased key rounder than a linear one.
         var isEased = false
+        /// Picked: larger, on a thick accent edge, so it reads apart from the
+        /// white diamonds beside it on any clip colour.
+        var isPicked = false
+        /// The pointer resting on it: a little larger, so the hand sees what
+        /// a click will take.
+        var isHovered = false
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: isEased ? 2.5 : 0)
+            let side: CGFloat = isPicked ? 9 : isHovered ? 8 : 7
             shape
                 .fill(Color.white)
-                .overlay(shape.strokeBorder(Color.black.opacity(0.25), lineWidth: 1))
-                .frame(width: 7, height: 7)
+                .overlay(shape.strokeBorder(isPicked ? Color.accentColor : Color.black.opacity(isHovered ? 0.45 : 0.25),
+                                            lineWidth: isPicked ? 2 : 1))
+                .frame(width: side, height: side)
                 .rotationEffect(.degrees(45))
+                .shadow(color: isPicked ? Color.black.opacity(0.5) : .clear, radius: 1.5)
         }
     }
 

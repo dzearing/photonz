@@ -142,7 +142,7 @@ extension CanvasNSView {
         else { return nil }
         // The square on the middle of a moving layer's path, read where
         // `mouseDown` reads it: ahead of the layer underneath.
-        if motionPathHandleHit(at: p) != nil { return (.grab, .identity) }
+        if motionPathHandleHit(at: p) != nil || motionPathKeyHit(at: p) != nil { return (.grab, .identity) }
         // A picked arrow's bend handle, read first in `mouseDown` too.
         if offeredBendHandle(layer) != nil,
            AnnotationEndpoints.bendHit(at: uprightPoint(p, of: layer.id), layer: layer,

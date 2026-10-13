@@ -1,0 +1,624 @@
+{
+  "out": "/tmp/photonz-playtest/every-key-dot-picks-walk",
+  "seed": "Every key dot picks on a click and Backspace deletes it. At Next defaults with no flag changed, this walk types a title on the sample recording, keys its Position, Scale, Opacity and Rotation Y at one second and three, then picks one dot on each surface that draws keys and deletes it with Backspace, checking the other keys stay: a dot on the Scale lane, the ring at the end of the motion path on the canvas, a dot Command-clicked onto the Opacity lane's line, a right-clicked Rotation Y dot, and the clip's own diamond at one second, which stands for every key there.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position X Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "120"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position Y Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "380"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Path",
+      "present": false
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Opacity",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Rotation Y",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Position X Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "820"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Position Y Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.7
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "380"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Scale"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Opacity"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Rotation Y"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Rotation Y 2",
+      "present": true
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": []
+    },
+    {
+      "do": "describe",
+      "stage": "1-keyed",
+      "note": "A title keyed on Position, Scale, Opacity and Rotation Y at one second and three: each value has its lane of two dots under the Title track, the clip carries a diamond at each moment, and the canvas draws the route with a ring on each key"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-keyed"
+    },
+    {
+      "comment": "THE FIRST TEST, a dot on a lane. A click lands only with Command while the probe is behind another app; with nothing picked, Command-click picks the dot alone, exactly as a plain click does.",
+      "do": "windowClick",
+      "on": "Key Scale 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Scale 2"
+      ],
+      "segments": []
+    },
+    {
+      "do": "describe",
+      "stage": "2-lane-dot-picked",
+      "note": "THE FIRST TEST: the Scale dot at three seconds is picked, drawn white on an accent edge, and nothing else is"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-lane-dot-picked"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Rotation Y 2",
+      "present": true
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": []
+    },
+    {
+      "comment": "THE SECOND TEST, a ring on the motion path on the canvas: the title's middle at one second, where the route starts.",
+      "do": "click",
+      "at": [
+        254,
+        425
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Position 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-ring-picked",
+      "note": "THE SECOND TEST: a click on the ring at the start of the route picked the Position key at one second: the ring is white and larger, and its dot on the Position lane is white too"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-ring-picked"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Rotation Y 2",
+      "present": true
+    },
+    {
+      "comment": "THE THIRD TEST, the line between two dots on a closed lane: Command-click adds a dot there, picked.",
+      "do": "windowClick",
+      "on": "Segment Opacity 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 3",
+      "present": true
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Opacity 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-dot-added",
+      "note": "THE THIRD TEST: Command-click half way along the Opacity lane's line added a dot there, picked, holding the value the line had"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-dot-added"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 3",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "comment": "THE FOURTH TEST: a right click on a dot picks it and offers its menu.",
+      "do": "rightClick",
+      "on": "Key Rotation Y 2",
+      "shot": "5-key-menu",
+      "choose": "Copy Key"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Rotation Y 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5-right-clicked",
+      "note": "THE FOURTH TEST: the right click picked the Rotation Y dot at three seconds and its menu offered the ways a value moves through a key, Copy Key, Paste Keys and Delete Key"
+    },
+    {
+      "comment": "Command-click on a picked dot takes it out of the pick.",
+      "do": "windowClick",
+      "on": "Key Rotation Y 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": []
+    },
+    {
+      "comment": "THE FIFTH TEST, a diamond on the clip's own key line: it stands for every key at one second.",
+      "do": "windowClick",
+      "on": "Key 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Scale 1",
+        "Opacity 1",
+        "Rotation Y 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-clip-diamond-picked",
+      "note": "THE FIFTH TEST: a click on the clip's diamond at one second picked every key there (Scale, Opacity and Rotation Y), and the diamond is drawn picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-clip-diamond-picked"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Rotation Y 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Rotation Y 2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Position 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 1",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "7-moment-deleted",
+      "note": "THE FIFTH TEST, after Backspace: the keys at one second are gone on every lane and the keys at three seconds stayed, each now the lane's first; the title is still there"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-moment-deleted"
+    }
+  ]
+}

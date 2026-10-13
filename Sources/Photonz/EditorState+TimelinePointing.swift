@@ -113,6 +113,12 @@ extension EditorState {
         case .clip(let id, _, let onTheSound):
             if zoomLaneRows.values.contains(where: { $0.contains(y) })
                 || keyLaneRows.values.contains(where: { $0.contains(y) }) { return false }
+            // A key's diamond on the clip opens its own menu and picks its
+            // keys (`EditorState+KeyLanes`), never the clip.
+            let reach = timelineMS(spanningPoints: AnimatedLine.dotReach + 1)
+            if !onTheSound, clipKeyMarks(layerID: id).contains(where: { abs($0.documentMS - ms) <= reach }) {
+                return false
+            }
             guard let lane = trackDropRows.values.first(where: { $0.minY <= y && y <= $0.maxY }),
                   let row = timelineTrackRows.first(where: { $0.track.id == lane.trackID }),
                   (onTheSound ? row.linked : row.clips).contains(where: { $0.layerID == id }),

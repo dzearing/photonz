@@ -21326,3 +21326,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - CI had been red since the walk set reached 906: 11 files quoted the old sweep size; fixed with queue/bin/sweep-size.mjs --write. Release test step raised to 65 min (job 90), CI to 55 (job 70), for a 12,914-test suite.
 - First Release run failed on seven newer 16 ms frame budgets that ignored PHOTONZ_PERF_GATE=report (17 to 43 ms on the runner); they now go through MachineSpeed.isGating. Tag deleted, fixed, re-tagged on 4e18eb18; second run green (49 min).
 - OPEN, for the user: the repo is now PRIVATE (it was public on 2026-10-04; nothing in the loop changed it). Public downloads of every release, including the site's 'releases/latest/download/Photonz.dmg' button, return 404, and macOS runner minutes are now billed on every CI push.
+
+## 2026-10-13 — Every key dot picks on a click (go loop)
+
+- A shut key lane is now the same animated line as its open graph (AnimatedLine, flat): a click picks a dot or the stretch between two, Command-click adds a dot, hover brightens, picked is white.
+- A diamond on a clip's own bar picks every key at its moment (it only moved the playhead before, so Backspace took the clip); a ring on the canvas motion path picks its Position key and drags it in space.
+- A right-click on any dot picks it once per right-click, without moving the playhead.
+- New walk step `expectKeyPick`; walk `every-key-dot-picks-walk` (Next defaults). UX-PATTERNS D21 extended.
+- Open: the probe could not take the front, so plain clicks were proved only through Command-click; filed `the-keyframe-anything-and-keys-copy-between-laye` for two key walks failing at HEAD.

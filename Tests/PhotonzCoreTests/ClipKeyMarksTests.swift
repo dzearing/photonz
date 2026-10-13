@@ -122,6 +122,23 @@ struct ClipKeyMarksTests {
         #expect(marks[1].properties == [.scale])
     }
 
+    /// A mark stands for every key at its moment, so a click on it picks
+    /// exactly those keys and Backspace deletes exactly those (task
+    /// `every-key-dot-can-be-clicked-to-pick-it-and-back`).
+    @Test func aMarkNamesEveryKeyAtItsMoment() throws {
+        let (doc, id) = Self.keyed()
+        let marks = doc.clipKeyMarks(layerID: id)
+        let lanes = doc.keyLanes(layerID: id)
+        let atThree = Set(lanes.flatMap(\.keys).filter { $0.documentMS == 3000 }.map(\.ref))
+        let atSix = Set(lanes.flatMap(\.keys).filter { $0.documentMS == 6000 }.map(\.ref))
+        #expect(atThree.count == 2)
+        #expect(marks[0].refs == atThree)
+        #expect(marks[1].refs == atSix)
+        var deleted = doc
+        deleted.removeKeys(layerID: id, marks[1].refs)
+        #expect(deleted.clipKeyMarks(layerID: id).map(\.documentMS) == [3000])
+    }
+
     @Test func aLayerWithNothingKeyedHasNoMarks() {
         let (doc, id) = Self.withTitle()
         #expect(doc.clipKeyMarks(layerID: id).isEmpty)

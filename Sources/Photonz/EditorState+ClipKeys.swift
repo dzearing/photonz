@@ -52,8 +52,16 @@ extension EditorState {
         rows.append(.separator)
         rows.append(.command("Go to Key") { self.pickClipKey(layerID: layerID, atMS: ms) })
         rows.append(.separator)
+        let refs = clipKeyMarks(layerID: layerID).first { $0.documentMS == ms }?.refs ?? []
+        rows.append(.command(refs.count > 1 ? "Copy \(refs.count) Keys" : "Copy Key", KeyClipboardKeys.copy,
+                             enabled: !refs.isEmpty) {
+            self.copyKeys(layerID: layerID, refs)
+        })
+        rows.append(pasteKeysRow(layerID: layerID))
+        rows.append(.separator)
         rows.append(.command("Delete Key", destructive: true) {
             self.selectLayer(layerID)
+            self.clearKeySelection()
             self.perform { $0.removeClipKeys(layerID: layerID, atMS: ms) }
         })
         return rows

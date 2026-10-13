@@ -3265,6 +3265,27 @@ struct PlaytestScriptTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTimelinePick"))
     }
 
+    @Test("An expectKeyPick step names the keys and segments picked, by lane and place")
+    func expectKeyPickParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectKeyPick", "keys": ["Scale 1", "Opacity 2"], "segments": ["Scale 1"] },
+                     { "do": "expectKeyPick", "keys": [] } ] }
+        """)
+        guard case .expectKeyPick(let keys, let segments) = script.steps[0] else { Issue.record("expectKeyPick"); return }
+        #expect(keys == ["Scale 1", "Opacity 2"])
+        #expect(segments == ["Scale 1"])
+        guard case .expectKeyPick(let none, let noSegments) = script.steps[1] else { Issue.record("none"); return }
+        #expect(none == [])
+        #expect(noSegments == nil)
+        #expect(PlaytestStep.names.contains("expectKeyPick"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectKeyPick"))
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectKeyPick" } ] }
+            """)
+        }
+    }
+
     @Test("An expectRowSpan step names a timeline row and where its bar runs, or the row it runs alongside")
     func expectRowSpanParses() throws {
         let script = try decode("""

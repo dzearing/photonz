@@ -3382,5 +3382,15 @@ table, from one implementation (`AnimatedLine` in
 | ⌫ | Deletes the picked dots in one undo step. A picked segment alone deletes nothing, and never reaches past it to the clip. |
 
 A dot is found before the line it sits on (7 points of reach), the line within
-6 points of it. Canonical page: `pages/video-animate.html`, THE GRAPH; where the
+6 points of it.
+
+A key lane drawn shut is the same line, flat: its diamonds and a straight
+segment between each pair, picked, ⌘-clicked and right-clicked exactly as on its
+open graph. Two more dots follow the dot rows of the table (2026-10-13): the
+**diamond on a clip's own bar** stands for every key at its moment, so a click
+picks all of them and ⌫ deletes them; the **ring on a motion path** on the
+canvas picks its Position key (a larger white ring) and leaves the playhead
+where it is, so the ring stays in view, and a drag moves that key in space.
+A right-click on any dot picks it unless it already is, once per right-click,
+and never moves the playhead. Canonical page: `pages/video-animate.html`, THE GRAPH; where the
 mock says double-click or ⌥-click adds, this rule (the user's later word) wins.

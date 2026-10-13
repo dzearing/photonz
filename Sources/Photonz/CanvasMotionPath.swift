@@ -11,7 +11,10 @@ import SwiftUI
 // seen in space rather than in time. A circle sits on each key, and a small
 // square sits on the middle of each stretch. Dragging the square bends that
 // stretch into an arc through wherever it is let go; a double-click on it puts
-// the stretch back on its line.
+// the stretch back on its line. A click on a circle picks that key, the way a
+// click on its dot on the timeline does (Shift or Command adds it), drawn
+// white, so Backspace deletes it; dragging a circle moves the key to where it
+// is let go (task `every-key-dot-can-be-clicked-to-pick-it-and-back`).
 //
 // Everything that decides WHERE the path runs lives in `MotionPath.swift`
 // (PhotonzCore) and is tested there. This file draws, and hands one finished
@@ -21,7 +24,13 @@ import SwiftUI
 /// The handle under the hand.
 struct MotionPathDrag {
     let layerID: UUID
+    /// The stretch whose square is held, or with `key` set, the key whose
+    /// circle is.
     let segment: Int
+    var key: KeyRef?
+    /// Shift or Command held as the circle was pressed: a click adds it to
+    /// the pick.
+    var extending = false
     /// Where the handle was when it was taken hold of, in document points.
     let start: CGPoint
     /// Latched once the pointer has really travelled, so a click that wobbles
@@ -52,6 +61,24 @@ extension CanvasNSView {
         return best.map { (path.layerID, $0.0, $0.1) }
     }
 
+    /// The key whose circle a press at `p` (document points) lands on.
+    func motionPathKeyHit(at p: CGPoint) -> (layerID: UUID, index: Int, ref: KeyRef, point: CGPoint)? {
+        guard tool == .select, let viewport, let path = motionPath else { return nil }
+        let here = viewport.viewPoint(fromDocument: p)
+        let points = path.keyPoints
+        let nearest = points.indices.min {
+            let a = viewport.viewPoint(fromDocument: points[$0]), b = viewport.viewPoint(fromDocument: points[$1])
+            return hypot(a.x - here.x, a.y - here.y) < hypot(b.x - here.x, b.y - here.y)
+        }
+        guard let index = nearest, path.keyRefs.indices.contains(index) else { return nil }
+        let there = viewport.viewPoint(fromDocument: points[index])
+        guard hypot(there.x - here.x, there.y - here.y) <= CanvasNSView.motionPathGrabRadius else { return nil }
+        // With the playhead on a key, its ring sits in the layer's middle,
+        // under the 3D handles drawn over it: those keep their press.
+        if spaceHandleHit(atView: here) != nil || spaceKnobHit(atView: here) { return nil }
+        return (path.layerID, index, path.keyRefs[index], points[index])
+    }
+
     // MARK: - The chrome
 
     func setUpMotionPathChrome() {
@@ -67,10 +94,14 @@ extension CanvasNSView {
         motionPathKeysLayer.lineWidth = 1.25
         motionPathKeysLayer.isHidden = true
         motionPathKeysLayer.zPosition = 98
+        motionPathPickedKeysLayer.lineWidth = 2
+        motionPathPickedKeysLayer.isHidden = true
+        motionPathPickedKeysLayer.zPosition = 98
         motionPathHandlesLayer.lineWidth = 1
         motionPathHandlesLayer.isHidden = true
         motionPathHandlesLayer.zPosition = 98
-        for shape in [motionPathHaloLayer, motionPathLineLayer, motionPathKeysLayer, motionPathHandlesLayer] {
+        for shape in [motionPathHaloLayer, motionPathLineLayer, motionPathKeysLayer, motionPathPickedKeysLayer,
+                      motionPathHandlesLayer] {
             layer?.addSublayer(shape)
         }
     }
@@ -79,7 +110,8 @@ extension CanvasNSView {
     /// every stretch. Drawn in view space so it is the same weight at every
     /// zoom, and only while the moving layer is the one picked.
     func refreshMotionPathChrome() {
-        let shapes = [motionPathLineLayer, motionPathHaloLayer, motionPathKeysLayer, motionPathHandlesLayer]
+        let shapes = [motionPathLineLayer, motionPathHaloLayer, motionPathKeysLayer, motionPathPickedKeysLayer,
+                      motionPathHandlesLayer]
         guard tool == .select, !zoomOwnsPicture, let viewport, let path = motionPath, !isMotionPathHiddenForDrag else {
             for shape in shapes {
                 shape.isHidden = true
@@ -106,15 +138,29 @@ extension CanvasNSView {
         motionPathLineLayer.path = line
         motionPathLineLayer.strokeColor = accent
 
-        let ring: CGFloat = 7
+        // A picked key is a larger white ring on a thicker accent edge, the
+        // same white a picked dot on the timeline is.
         let keys = CGMutablePath()
-        for point in path.keyPoints {
+        let picked = CGMutablePath()
+        var ringMarks: [HandleMark] = []
+        var pickedMarks: [HandleMark] = []
+        for (index, point) in path.keyPoints.enumerated() {
             let centre = viewport.viewPoint(fromDocument: point)
-            keys.addEllipse(in: CGRect(x: centre.x - ring / 2, y: centre.y - ring / 2, width: ring, height: ring))
+            let isPicked = path.pickedKeys.contains(index)
+            let ring: CGFloat = isPicked ? 10 : 7
+            (isPicked ? picked : keys).addEllipse(in: CGRect(x: centre.x - ring / 2, y: centre.y - ring / 2,
+                                                              width: ring, height: ring))
+            let mark = HandleMark(center: centre, shape: .circle(ring), role: .grab)
+            if isPicked { pickedMarks.append(mark) } else { ringMarks.append(mark) }
         }
         motionPathKeysLayer.path = keys
+        markHandles(ringMarks, on: motionPathKeysLayer)
         motionPathKeysLayer.fillColor = NSColor.windowBackgroundColor.cgColor
         motionPathKeysLayer.strokeColor = accent
+        motionPathPickedKeysLayer.path = picked
+        markHandles(pickedMarks, on: motionPathPickedKeysLayer)
+        motionPathPickedKeysLayer.fillColor = NSColor.white.cgColor
+        motionPathPickedKeysLayer.strokeColor = accent
 
         let square: CGFloat = 7
         let handles = CGMutablePath()
@@ -143,6 +189,14 @@ extension CanvasNSView {
     /// A press with a path showing. True when a handle took it, which stops
     /// the press from also picking up the layer underneath.
     func motionPathMouseDown(at p: CGPoint, event: NSEvent) -> Bool {
+        if motionPathHandleHit(at: p) == nil, let ring = motionPathKeyHit(at: p) {
+            guard event.clickCount == 1 else { return true }
+            let flags = event.modifierFlags
+            motionPathDrag = MotionPathDrag(layerID: ring.layerID, segment: ring.index, key: ring.ref,
+                                            extending: flags.contains(.shift) || flags.contains(.command),
+                                            start: ring.point, moved: false)
+            return true
+        }
         guard let hit = motionPathHandleHit(at: p) else { return false }
         if event.clickCount == 2 {
             motionPathDrag = nil
@@ -159,9 +213,14 @@ extension CanvasNSView {
     func motionPathMouseDragged(to p: CGPoint) {
         guard var drag = motionPathDrag else { return }
         if !drag.moved, hypot(p.x - drag.start.x, p.y - drag.start.y) < 0.5 { return }
+        if !drag.moved { applyGrabCursor(.closedHand) }
         drag.moved = true
         motionPathDrag = drag
-        onMotionPathBendPreview(drag.layerID, drag.segment, p)
+        if drag.key != nil {
+            onMotionPathKeyMovePreview(drag.layerID, drag.segment, p)
+        } else {
+            onMotionPathBendPreview(drag.layerID, drag.segment, p)
+        }
     }
 
     /// The button up: one undo step for the whole bend, none for a press
@@ -170,7 +229,13 @@ extension CanvasNSView {
         guard let drag = motionPathDrag else { return }
         motionPathDrag = nil
         applyGrabCursor(nil)
-        if drag.moved { onMotionPathBendCommit() } else { onMotionPathBendCancel() }
+        if drag.moved {
+            onMotionPathBendCommit()
+            return
+        }
+        onMotionPathBendCancel()
+        // A circle clicked and not moved: its key is picked.
+        if let key = drag.key { onMotionPathKeyPick(drag.layerID, key, drag.extending) }
     }
 
     /// Escape with a handle in hand: the path goes back where it was.
