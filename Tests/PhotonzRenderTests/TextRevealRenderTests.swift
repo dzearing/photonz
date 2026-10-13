@@ -217,7 +217,10 @@ struct TextRevealRenderTests {
             let first = Double(layout.components.attoseconds) / 1e15 + Double(layout.components.seconds) * 1000
             report.append(String(format: "%@: %d letters, first frame %.1fms, median %.1fms, worst %.1fms over %d frames",
                                  style.title, count, first, median, worst, samples.count))
-            #expect(!MachineSpeed.isGating || median < 16, "\(style.title) median \(median)ms")
+            // At most 5.1ms on the calibration machine (2026-10-13). The gate
+            // is the shared one, scaled by how fast this machine is: a flat
+            // 16ms failed on the GitHub VM on unchanged code.
+            MachineSpeed.check("\(style.title) by letter at 1080p", medianMS: median, baselineMS: 5.5)
         }
         print("[perf] 12 word headline by letter, 1920x1080:\n  " + report.joined(separator: "\n  "))
     }
