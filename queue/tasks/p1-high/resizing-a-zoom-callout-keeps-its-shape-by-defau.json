@@ -1,0 +1,36 @@
+{
+  "id": "resizing-a-zoom-callout-keeps-its-shape-by-defau",
+  "title": "Resizing a zoom callout keeps its shape by default",
+  "goal": "Dragging a corner or edge of a zoom callout's magnified box resizes it with the source box's aspect ratio locked, so the magnified picture never stretches or stops matching what it points at, and the magnification follows the size. Holding Shift frees the aspect (the source box changes shape to match, so the picture is still never stretched), the way pictures resize in Photonz and other Mac design apps.",
+  "epic": "measure-redline",
+  "priority": "p1-high",
+  "seq": 6,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T01:47:24.811Z",
+  "updated": "2026-10-13T01:47:24.915Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-13): \"when i resize the magnification window, it does not preserve aspect ratio by default\". Context: the zoom callout in the user's previous screenshot (2026-10-12 18.46.00), a magnified box linked by leader lines to its source box.\n\nFrom code reading (not run): ZoomCalloutBuilder.resized(_:to:) (PhotonzCore/ZoomCalloutEditing.swift:122-129) accepts any frame and sets magnification = frame.width / sourceRect.width; height is unconstrained, so the magnified box can take any shape. frame(for:of:) (:110-116) derives the box from the source size times magnification, which is what an aspect-locked resize should keep. The canvas drag lives in CanvasPointerDrags.swift. Check the Lens's resize too and apply the same default if the user would call it a 'magnification window'.",
+  "acceptance": [
+    "Reproduce first at Next defaults: make a zoom callout, drag each corner and each edge of the magnified box; record in the audit the box and source aspect ratios and whether the picture stretches or crops",
+    "Corner drags keep the magnified box's aspect equal to the source box's (MEASURED within 0.5% at 10 sizes), anchored at the opposite corner (Option from the centre), and magnification = box width / source width; edge drags also keep the aspect, growing the other dimension around the edge's middle",
+    "Shift frees the aspect: the source box's shape changes to match the new box shape (same source centre, magnification from the width), so the magnified picture is never stretched",
+    "The magnification label and the panel slider update live during the drag; the result is one undo step",
+    "The source box's own handles keep working; resizing the source keeps the magnified box's aspect matching it the same way",
+    "Consistent with how other picture layers resize (state in the audit which modifier convention Photonz uses elsewhere and follow it)",
+    "A walk resizes a callout by a corner and an edge and checks the aspect ratios match the source, then with Shift and checks the picture is not stretched (pixel check)",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T01:47:24.813Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-13T01:47:24.914Z",
+      "note": "seq 3960 -> 6"
+    }
+  ]
+}
