@@ -5,16 +5,17 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 17,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:46:58.370Z",
-  "updated": "2026-10-12T14:46:58.473Z",
+  "updated": "2026-10-13T01:39:16.735Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"I don't really see the point of adding a 3d pane just to show the rotation values. I think when we move or change transitions, we can show a small toolbar like overlay which shows the transform values for typing things in. But doing some other operation or changing the tool makes the transform overlay disappear. On the overlay there should be a reset button to reset to defaults. Also similarly, for when I have a keyframe and click the opacity dot, I want the same overlay to appear to tweak the opacity. Also editing the graph of a particular item like scale is really hard. I can right click on the scale, say show graph, but then when the graph is there, how do I add points on it? I click on the line, doesn't add a point, i can select a point but then if I have 2 points, I can't select the line in between. I want to be able to easily create nice transitions by adding points, selecting the segments between them, right clicking and changing their easing, etc. I need the ia to be consistent across the properties. When I add a 'key' to a video, it adds all of the animatable properties below it. I really wish there was a more scalable solution to the ux here, because we really should only show the properties being animated. And, if we want to clear one of them, i should be able to select one of the rows and hit delete to remove the whole property from being animated. but there should be a way to add it back. like maybe the keyframe line should be selectable and right clicked to animate a variety of things. or I can click it, tweak something (like transform) and the options are automatically added to that keyframe.\"\n\nFive tasks, in order: the design (mocks), then the transform overlay, the key value overlay, the graph editor, and only-animated-properties with auto-key. Code pointers (read, not run): the 3D section is Space3DInspector (Sources/Photonz/Space3DInspector.swift, shown at InspectorPanel.swift:1526) with EditorState+Space3D.swift; key lanes and the graph toggle are KeyLanesView.swift (segments at :270, lane menus :156, :213, :423) and EditorState+KeyLanes.swift (:283 'Show Graph'); Add Key on a clip is EditorState+TimelineMenus.swift:199 and per property EditorState+PropertyKeys.swift:177 addKeyHere; the property strip is MotionStripView.swift. The shared curve list is EasingCurve (PhotonzCore/LayerMotion.swift) with Draw a Curve, and CurveRow from every-transition-can-be-picked-from-presets-and. Memory rules: one purpose per area (the IA contract in docs/design/mocks/shared/UX-PATTERNS.md decides placement), mocks are the floor, legible text, no em dashes in UI copy. This is step 2 of 5.",
   "acceptance": [
     "Built to the approved mock from 'Design the transform overlay and a simpler way to animate, as mocks' (mocks are the floor)",
+    "Placement and dismissal follow the mock's rules: 12pt under the object's frame, above it (over the turn knob) while a bottom handle is in hand or with no room below, slid to stay 12pt inside the canvas, never over the tool bar, keeping the side chosen at drag start; Reset is a text button that resets size, turn, tilt and depth and leaves position; the field the drag changes is outlined; a field shows a key diamond (filled on a key, hollow when animating) once the property animates; Layer > Show Transform Values opens it without a drag",
     "The overlay appears when a transform starts (drag on a handle, nudge with arrows, a transform command) on any layer and stays while that object stays picked and nothing else is done; it shows only the values that apply (X, Y, W, H, Rotation for 2D; Tilt X, Tilt Y, Depth when the layer is in 3D or the 3D handles were used), updates live during the drag, and each field takes typed numbers and arithmetic (+10, *2) with Tab between fields and Return to commit",
     "Reset returns the shown transform values to their defaults (no rotation, no tilt, depth 0, original size and the like) in one undo step",
     "It disappears on: picking another tool, starting another kind of operation (typing text, drawing, picking another object, opening a menu), Escape, or clicking empty canvas; it never takes key from the canvas unless the person clicks into a field",
@@ -31,6 +32,19 @@
     {
       "t": "2026-10-12T14:46:58.472Z",
       "note": "seq 3960 -> 17"
+    },
+    {
+      "t": "2026-10-13T01:29:24.942Z",
+      "note": "Mock is ready: docs/design/mocks/pages/video-animate.html (Prototype > Video > Animate with the overlay). Build to it; the placement contract (UX-PATTERNS 'Named exception: the value overlay') names where it lives. Acceptance updated to the mock's answers. This task does not wait on the open card about auto-key."
+    },
+    {
+      "t": "2026-10-13T01:30:51.297Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T01:39:16.734Z",
+      "note": "USER 2026-10-13, angry: the 3D rotation grippers on the canvas must stay (filed the-3d-rotation-handles-are-on-a-picked-layer-ag at seq 1 to bring them back always-visible on pick). This task removes the 3D SECTION from the right panel and puts values in the floating overlay; it must never remove or hide canvas handles. User: 'remove the stupid right side pane ... clogging up the right pane with useless non contextual crap'."
     }
-  ]
+  ],
+  "started": "2026-10-13T01:30:51.296Z"
 }
