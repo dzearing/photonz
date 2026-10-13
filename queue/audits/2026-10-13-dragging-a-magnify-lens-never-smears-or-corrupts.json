@@ -1,0 +1,25 @@
+{
+  "feature": "A dragged Magnify lens leaves no trail",
+  "epic": "measure-redline",
+  "summary": "A Magnify lens with square corners and a ring no longer smears grey across the picture as you drag it. The cause was in drawing, not dragging: a square ring round anything enlarged let its stretched edge pixels run out to the end of the canvas, and the canvas only redraws the area round a moving lens, so each frame left a patch behind. That is how a Blur or Pixelate lens switched to Magnify looked, which is how your 18:46 screenshot was made.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-dragged-lens-leaves-no-trail-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press K, pick Pixelate in the capsule and drag a box over some text." },
+    { "do": "In the panel's Lens section set Does to Magnify. The box moves beside the region and wears a red ring, with square corners." },
+    { "do": "Drag the magnifier slowly across the picture, then quickly back.", "shot": "2026-10-13-lens-drag-trail-held.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go and look at where it has been: the picture there is the picture.", "shot": "2026-10-13-lens-drag-trail-after.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pull its corner to resize it, then pull Magnification to 4x." },
+    { "do": "Do the same on a paused recording.", "shot": "2026-10-13-lens-drag-trail-recording.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the lens you switched from Pixelate to Magnify on 2026-10-12 now drag cleanly over the same screenshot?",
+    "Does dragging a big magnifier over a full-screen recording feel as quick as dragging a rectangle?",
+    "Any other layer that is enlarged and wears a square ring (a small picture blown up with a border) looks clean too: is there one you use that does not?"
+  ],
+  "rough": [
+    "Measured: every frame of 157 drag frames, slow and quick, on a screenshot and a recording, plus 5 checks after switching, resizing and pulling to 4x, matched the same document drawn from scratch (0.00% differing; the walk fails past 0.5%). The same walk on the old renderer failed at 46.27%.",
+    "Measured smoothness on your 3456x2234 recording: a 150-move Magnify drag drew a new frame for all 150 moves in 3.42 s, and a plain rectangle's 150 moves took 3.44 s. The walk moves at about 44 moves a second, slower than a real hand's 120.",
+    "A lens switched to Magnify still has square corners and one ring, where a freshly drawn magnifier has rounded corners and a shadow. That was not the bug and is unchanged."
+  ]
+}

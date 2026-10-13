@@ -2741,10 +2741,18 @@ public enum PlaytestStep: Sendable, Equatable {
     /// live edge, and a plain group and a copy of a component both move their
     /// contents under the hand, so a second box on any of them would be one
     /// edge claimed twice. Left off entirely, a drag claims nothing either way.
+    ///
+    /// `expectFresh` is the most of the picture, in percent, that may differ
+    /// from the same document drawn from scratch, on every move of the drag
+    /// and once it has landed. The canvas patches its picture in place as
+    /// things move, so anything it forgets to draw again stays painted where
+    /// it was; a fresh render has nothing to remember. It is how a walk proves
+    /// a dragged lens leaves no trail (the user found a Magnify lens smearing
+    /// grey across a screenshot on 2026-10-12).
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
               hold: String?, readout: String?, wobble: CGFloat, cancel: Bool,
-              showsBox: Bool?)
+              showsBox: Bool?, expectFresh: Double? = nil)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -3715,6 +3723,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// pill at all. The absent form is how a walk proves the reading goes the
     /// instant the button comes up rather than lingering over the canvas.
     case expectReadout(says: String?, absent: Bool)
+    /// CLAIMS the picture the canvas is showing now differs from the same
+    /// document drawn from scratch over no more than `percent` of it, once the
+    /// render the last step asked for has come in. A lens resized, switched to
+    /// another kind or turned up on its slider must leave nothing of what it
+    /// drew before; `drag` with `expectFresh` holds a drag to the same claim on
+    /// every move.
+    case expectFresh(percent: Double)
     /// One of a picked layer's 3D handles taken the way a hand takes it
     /// (`CanvasSpaceHandles.swift`): the pointer rests on the turn knob so the
     /// arcs come out, then presses on the arc or the depth arrow and drags it
@@ -4160,7 +4175,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4261,6 +4276,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectLevel: "expectLevel"
         case .expectClipPictures: "expectClipPictures"
         case .expectReadout: "expectReadout"
+        case .expectFresh: "expectFresh"
         case .spaceHandle: "spaceHandle"
         case .hoverHandles: "hoverHandles"
         case .expectLanding: "expectLanding"
@@ -4450,7 +4466,10 @@ public enum PlaytestStep: Sendable, Equatable {
                          readout: try f.optionalString("readout"),
                          wobble: CGFloat(try f.optionalNumber("wobble") ?? 0),
                          cancel: try f.optionalFlag("cancel") ?? false,
-                         showsBox: try f.optionalFlag("showsBox"))
+                         showsBox: try f.optionalFlag("showsBox"),
+                         expectFresh: try f.optionalNumber("expectFresh"))
+        case "expectFresh":
+            self = .expectFresh(percent: try f.optionalNumber("percent") ?? 0.5)
         case "expectReadout":
             let says = try f.optionalString("says")
             let absent = try f.optionalFlag("absent") ?? false

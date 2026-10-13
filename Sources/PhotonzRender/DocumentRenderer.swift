@@ -2158,9 +2158,22 @@ public final class DocumentRenderer: @unchecked Sendable {
         // some way the faster of the two — 35ms to 26ms on the twelve-
         // megapixel benchmark — because everything downstream reads a picture
         // instead of running the band again.
+        //
+        // Cut to the layer by a filter rather than only by a crop, before it is
+        // drawn out. A drawn-out picture is drawn over whatever area the next
+        // step asks of it, and a crop in front of it does not hold there: when
+        // the picture underneath was held at its own edge to be enlarged (a
+        // magnifier, any photo blown up), its edge pixels came back stretched
+        // to the end of the canvas. A square magnifier with a ring smeared its
+        // edges across the whole screenshot that way, and dragging it left the
+        // smear behind in patches (reported by the user, 2026-10-12;
+        // `LensDragSmearTests`). The white box is cut on whole pixels: a layer
+        // ending part way through a pixel already has that pixel's share right.
         return confined.applyingFilter("CIBlendWithMask", parameters: [
             kCIInputBackgroundImageKey: image,
             kCIInputMaskImageKey: covered
+        ]).applyingFilter("CISourceInCompositing", parameters: [
+            kCIInputBackgroundImageKey: CIImage(color: .white).cropped(to: extent.integral)
         ]).cropped(to: extent).insertingIntermediate()
     }
 

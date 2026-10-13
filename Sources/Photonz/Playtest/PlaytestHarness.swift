@@ -1397,7 +1397,7 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
-                   let readout, let wobble, let cancel, let showsBox):
+                   let readout, let wobble, let cancel, let showsBox, let expectFresh):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -1417,6 +1417,7 @@ private final class Run {
             let along = CGPoint(x: (b.x - a.x) / length, y: (b.y - a.y) / length)
             let across = CGPoint(x: -along.y, y: along.x)
             let shake: [CGFloat] = [0, 1, -0.7, 0.4, -0.3, 0.9, -0.9, 0.2]
+            let freshness = FreshFrameTally()
             var guides = SnapGuideTally()
             // The grid line the drag is standing on, read the same way: which
             // lines it stepped through, and which one it was on at the end.
@@ -1433,6 +1434,7 @@ private final class Run {
                 guides.record(canvas.liveSnapGuides)
                 gridLines.record(canvas.liveGridSnapLines)
                 await sleep(0.02)
+                if expectFresh != nil { freshness.sample(try requireEditor(), moment: "move \(i)") }
                 // Changing your mind half way, with the button still down.
                 // Handed to the canvas the way AppKit hands a key to whatever
                 // holds the keyboard, and then the travel CARRIES ON, because
@@ -1470,6 +1472,18 @@ private final class Run {
             let heldCursor = Self.cursorName()
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
+            var fresh = ""
+            if let expectFresh {
+                // Landed: the committed render, once it has come in.
+                await sleep(0.6)
+                freshness.sample(try requireEditor(), moment: "landed")
+                await freshness.compare()
+                if let failing = freshness.failure(bound: expectFresh / 100) {
+                    try? freshness.writeWorst(to: out, name: "\(step.name)-\(number)-not-fresh")
+                    throw Failure(description: failing)
+                }
+                fresh = ", " + freshness.reading
+            }
             var boxed = ""
             if let showsBox {
                 boxed = ", " + (try checkResizeBox(outlined: outlined, of: resized,
@@ -1484,7 +1498,7 @@ private final class Run {
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)"
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)"
                      + "\(cancel ? ", called off with Escape half way and carried on to the end" : ""), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())
@@ -2714,6 +2728,18 @@ private final class Run {
                                smooth: smooth, halfSmooth: halfSmooth, rings: rings, width: width,
                                fill: fill, ink: ink, picked: picked, anchorAt: anchorAt),
                  state: describe())
+
+        case .expectFresh(let percent):
+            // The render the last step asked for, landed.
+            await sleep(0.4)
+            let tally = FreshFrameTally()
+            tally.sample(try requireEditor(), moment: "now")
+            await tally.compare()
+            if let failing = tally.failure(bound: percent / 100) {
+                try? tally.writeWorst(to: out, name: "\(step.name)-\(number)-not-fresh")
+                throw Failure(description: failing)
+            }
+            note(number, step.name, tally.reading, state: describe())
 
         case .expectReadout(let says, let absent):
             note(number, step.name, try checkDragReadout(says: says, absent: absent),

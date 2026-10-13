@@ -360,6 +360,9 @@ public enum PlaytestLockSafety {
         "expectReadout", "exportQuality", "expectLanding", "expectListStill", "panelEdge",
         "panelStart", "dragHandle", "dragOver", "dragRow", "dragSection", "expectChrome",
         "expectSVG", "expectOneUnit",
+        // Reads the canvas's own frame and draws the document again; it asks
+        // nothing of accessibility.
+        "expectFresh",
     ]
 
     /// Why a lock stops the rest, in the words the refusal says out loud.

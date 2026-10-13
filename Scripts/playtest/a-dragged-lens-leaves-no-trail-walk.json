@@ -1,0 +1,300 @@
+{
+  "out": "/tmp/photonz-playtest/a-dragged-lens-leaves-no-trail-walk",
+  "seed": "The user dragged a Magnify lens over a screenshot on 2026-10-12 and a stair-stepped grey smear spread across the picture behind it. The lens had been a Pixelate lens switched to Magnify, so it was square cornered with a ring, and a square ring round anything enlarged let the enlarged picture's edge pixels stretch out to the edge of the canvas. The canvas only redraws the area round a moving lens, so each frame of a drag left a patch of that stretch behind. Every check here compares the picture on screen with the same document drawn from scratch, on every move of every drag and after every change, and fails past half a percent. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "../../Tests/PhotonzRenderTests/Fixtures/app-window-2x.png",
+      "width": 2000,
+      "height": 1300
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "key",
+      "key": "k"
+    },
+    {
+      "do": "waitFor",
+      "condition": "tool",
+      "value": "lens"
+    },
+    {
+      "do": "action",
+      "action": "armLensPixelate"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "drag",
+      "from": [
+        600,
+        400
+      ],
+      "to": [
+        1100,
+        800
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "v"
+    },
+    {
+      "do": "action",
+      "action": "pullLensAmount"
+    },
+    {
+      "do": "expectFresh"
+    },
+    {
+      "do": "describe",
+      "stage": "1-pixelate",
+      "note": "a Pixelate lens, turned up, over the screenshot"
+    },
+    {
+      "do": "action",
+      "action": "lensMagnify"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectFresh"
+    },
+    {
+      "do": "describe",
+      "stage": "2-magnify",
+      "note": "THE CASE THE USER HIT: the same lens switched to Magnify, square cornered with a ring. Nothing past its box, its outline and its leader lines may change"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-switched-to-magnify"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1624,
+        600
+      ],
+      "to": [
+        1300,
+        1200
+      ],
+      "steps": 60,
+      "expectFresh": 0.5,
+      "hold": "3-held-slow"
+    },
+    {
+      "do": "describe",
+      "stage": "3-dragged-slowly",
+      "note": "THE TEST: dragged slowly down and to the left across the screenshot, every frame the canvas showed on the way matched a fresh render of the same moment, and so did the picture once it landed"
+    },
+    {
+      "do": "drag",
+      "from": [
+        1300,
+        1200
+      ],
+      "to": [
+        1700,
+        700
+      ],
+      "steps": 6,
+      "expectFresh": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-dragged-quickly",
+      "note": "and quickly back up: a quick hand makes the canvas skip frames, and the ones it did draw still matched"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-after-the-drags"
+    },
+    {
+      "do": "drag",
+      "from": [
+        2200,
+        1100
+      ],
+      "to": [
+        2400,
+        1250
+      ],
+      "steps": 30,
+      "expectFresh": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-resized",
+      "note": "THE TEST for resizing: the box pulled bigger by its corner, every frame matching a fresh render"
+    },
+    {
+      "do": "action",
+      "action": "magnifyCallout"
+    },
+    {
+      "do": "expectFresh"
+    },
+    {
+      "do": "describe",
+      "stage": "6-magnified-more",
+      "note": "THE TEST for the slider: Magnification pulled to 4x while it sits over the picture"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-at-4x"
+    },
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoSeekMiddle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "lens"
+    },
+    {
+      "do": "action",
+      "action": "armLensMagnify"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "drag",
+      "from": [
+        200,
+        200
+      ],
+      "to": [
+        500,
+        400
+      ],
+      "steps": 10
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "expectFresh"
+    },
+    {
+      "do": "describe",
+      "stage": "7-recording",
+      "note": "a Magnify lens drawn on a recording, at Next defaults, where the canvas draws the picture at the size it is shown"
+    },
+    {
+      "do": "drag",
+      "from": [
+        824,
+        300
+      ],
+      "to": [
+        500,
+        550
+      ],
+      "steps": 60,
+      "expectFresh": 0.5,
+      "hold": "8-held-on-the-recording"
+    },
+    {
+      "do": "describe",
+      "stage": "8-dragged-on-the-recording",
+      "note": "THE TEST on a recording: the magnifier dragged slowly across a paused video, every frame matching a fresh render"
+    },
+    {
+      "do": "drag",
+      "from": [
+        500,
+        550
+      ],
+      "to": [
+        900,
+        300
+      ],
+      "steps": 6,
+      "expectFresh": 0.5
+    },
+    {
+      "do": "action",
+      "action": "lensPixelate"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "lensMagnify"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectFresh"
+    },
+    {
+      "do": "describe",
+      "stage": "9-switched-on-the-recording",
+      "note": "the user's own case on a recording: switched to Pixelate and back, which leaves it square cornered with a ring"
+    },
+    {
+      "do": "drag",
+      "from": [
+        600,
+        400
+      ],
+      "to": [
+        380,
+        560
+      ],
+      "steps": 40,
+      "expectFresh": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "10-dragged-after-the-switch",
+      "note": "THE TEST for the user's report: that square magnifier dragged part way off the frame, every frame matching a fresh render. Before the fix this left the stretched edges behind as a grey smear"
+    },
+    {
+      "do": "snapshot",
+      "name": "10-after-the-switch-and-drag"
+    }
+  ]
+}

@@ -935,7 +935,7 @@ struct PlaytestScriptTests {
         #expect(at.point == CGPoint(x: 100, y: 200) && at.space == .document && moveMods.isEmpty)
         guard case .click(let click, let count, let clickMods) = script.steps[5] else { Issue.record("click"); return }
         #expect(click.space == .view && count == 2 && clickMods.isEmpty)
-        guard case .drag(let from, let to, let steps, _, _, _, _, _, _, _) = script.steps[6] else { Issue.record("drag"); return }
+        guard case .drag(let from, let to, let steps, _, _, _, _, _, _, _, _) = script.steps[6] else { Issue.record("drag"); return }
         #expect(from.point == CGPoint(x: 10, y: 10) && to.point == CGPoint(x: 200, y: 120) && steps == 4)
         guard case .type(let text) = script.steps[7] else { Issue.record("type"); return }
         #expect(text == "Primary button")
@@ -993,7 +993,7 @@ struct PlaytestScriptTests {
         """)
         guard case .click(let at, let count, let mods) = script.steps[0] else { Issue.record("click"); return }
         #expect(at.space == .document && count == 1 && mods.isEmpty)
-        guard case .drag(_, _, let steps, _, _, _, _, _, _, _) = script.steps[1] else { Issue.record("drag"); return }
+        guard case .drag(_, _, let steps, _, _, _, _, _, _, _, _) = script.steps[1] else { Issue.record("drag"); return }
         #expect(steps == PlaytestStep.defaultDragSteps)
         #expect(script.out == nil)
     }
@@ -1501,8 +1501,26 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "hold": "snapped" } ] }
         """)
-        guard case .drag(_, _, _, _, _, let hold, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, let hold, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(hold == "snapped")
+    }
+
+    @Test func aDragAndAStepCanClaimThePictureMatchesAFreshRender() throws {
+        // A lens that leaves a trail is only visible against the same document
+        // drawn from scratch, so the claim is a bound on how much may differ.
+        let script = try decode("""
+        { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "expectFresh": 0.5 },
+                     { "do": "drag", "from": [0, 0], "to": [9, 9] },
+                     { "do": "expectFresh" }, { "do": "expectFresh", "percent": 2 } ] }
+        """)
+        guard case .drag(_, _, _, _, _, _, _, _, _, _, let fresh) = script.steps[0],
+              case .drag(_, _, _, _, _, _, _, _, _, _, let none) = script.steps[1],
+              case .expectFresh(let byDefault) = script.steps[2],
+              case .expectFresh(let said) = script.steps[3] else { Issue.record("steps"); return }
+        #expect(fresh == 0.5)
+        #expect(none == nil)
+        #expect(byDefault == 0.5)
+        #expect(said == 2)
     }
 
     @Test func aDragCanClaimWhatTheReadingUnderItSaysMidGesture() throws {
@@ -1511,7 +1529,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "readout": "12 × 8" } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, let readout, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, let readout, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(readout == "12 × 8")
     }
 
@@ -1519,7 +1537,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, let readout, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, let readout, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(readout == nil)
     }
 
@@ -1530,7 +1548,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "showsBox": true } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox) = script.steps[0] else {
+        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox, _) = script.steps[0] else {
             Issue.record("drag"); return
         }
         #expect(showsBox == true)
@@ -1542,7 +1560,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "showsBox": false } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox) = script.steps[0] else {
+        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox, _) = script.steps[0] else {
             Issue.record("drag"); return
         }
         #expect(showsBox == false)
@@ -1552,7 +1570,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox) = script.steps[0] else {
+        guard case .drag(_, _, _, _, _, _, _, _, _, let showsBox, _) = script.steps[0] else {
             Issue.record("drag"); return
         }
         #expect(showsBox == nil)
@@ -1660,7 +1678,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "modifiers": ["command"] } ] }
         """)
-        guard case .drag(_, _, _, let modifiers, _, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, let modifiers, _, _, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(modifiers == [.command])
     }
 
@@ -1670,7 +1688,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "halfway": ["shift"] } ] }
         """)
-        guard case .drag(_, _, _, let modifiers, let halfway, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, let modifiers, let halfway, _, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(modifiers == [])
         #expect(halfway == [.shift])
     }
@@ -1681,7 +1699,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "modifiers": ["shift"], "halfway": [] } ] }
         """)
-        guard case .drag(_, _, _, let modifiers, let halfway, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, let modifiers, let halfway, _, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(modifiers == [.shift])
         #expect(halfway == [])
     }
@@ -1690,7 +1708,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "modifiers": ["shift"] } ] }
         """)
-        guard case .drag(_, _, _, _, let halfway, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, let halfway, _, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(halfway == nil)
     }
 
@@ -1700,7 +1718,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "wobble": 1.5 } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, let wobble, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, _, let wobble, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(wobble == 1.5)
     }
 
@@ -1708,7 +1726,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, let wobble, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, _, let wobble, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(wobble == 0)
     }
 
@@ -1720,7 +1738,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9], "cancel": true } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, _, let cancel, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, _, _, let cancel, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(cancel)
     }
 
@@ -1728,7 +1746,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
         """)
-        guard case .drag(_, _, _, _, _, _, _, _, let cancel, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, _, _, _, let cancel, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(!cancel)
     }
 
@@ -1765,7 +1783,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "drag", "from": [0, 0], "to": [9, 9] } ] }
         """)
-        guard case .drag(_, _, _, _, _, let hold, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
+        guard case .drag(_, _, _, _, _, let hold, _, _, _, _, _) = script.steps[0] else { Issue.record("drag"); return }
         #expect(hold == nil)
     }
 
