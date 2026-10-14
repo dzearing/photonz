@@ -1506,7 +1506,26 @@ final class EditorState {
     /// are looking at a recording is not part of the recording, so it is
     /// nobody's undo step and two windows on one document may be looking at
     /// different seconds of it.
-    var timelineZoom: TimelineZoom = .fit
+    ///
+    /// Kept as its two numbers, so a view that reads only how far in it is (a
+    /// clip's bar, drawn from its own start) is not drawn again on every frame
+    /// of a scroll along time, which moves only where it is.
+    var timelineZoom: TimelineZoom {
+        get { TimelineZoom(scale: timelineZoomScale, startMS: timelineZoomStartMS) }
+        set {
+            if newValue.scale != timelineZoomScale { timelineZoomScale = newValue.scale }
+            if newValue.startMS != timelineZoomStartMS { timelineZoomStartMS = newValue.startMS }
+            let stretch = TimelineDrawnStretch(windowStartMS: newValue.startMS,
+                                               visibleMS: newValue.visibleMS(documentMS: timelineLengthForZoomMS))
+            if stretch != timelineDrawnStretch { timelineDrawnStretch = stretch }
+        }
+    }
+    private(set) var timelineZoomScale: Double = 1
+    private(set) var timelineZoomStartMS: Double = 0
+    /// Where the window stood the last time it had moved half its own width:
+    /// what a clip's bar is cut down to, so a scroll redraws a bar only that
+    /// often and slides it in between (`timelineDrawnMS`).
+    private(set) var timelineDrawnStretch = TimelineDrawnStretch(windowStartMS: 0, visibleMS: 1)
     /// How tall the timeline's rows are: a pinch grows them with time, ⇧
     /// alone, ⌘-scroll too (`EditorState+TimelineZoom`). Beside the document
     /// like the zoom, never in it.

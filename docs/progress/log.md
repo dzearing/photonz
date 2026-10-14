@@ -21427,3 +21427,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A drag from one resizes along the card's plane (`PhotonzDocument.spaceResizedFrame`): Newton on four numbers so the opposite handle stays where it is drawn and the held one stays under the pointer (a plain repeat closed a tenth of the gap a step at 55 degrees). No magnets pull a turned card.
 - The flat knob is no longer cued or weighed by the pivot on a card in space; its knob is the one drawn off the edge the camera sees.
 - Walk: `every-handle-lights-on-hover-walk` checks all 16 handles on the turned card and drags a corner. Tests: `TurnedCardHandlesTests`.
+
+## 2026-10-14 — Scrolling the timeline along time holds sixty frames a second
+
+- A clip's bar is drawn against a ruler measured from its own start (`MotionStripRuler.measured(fromMS:)`, `EditorState.motionStripRuler(measuredFromMS:)`) and slid into place by `SlidAlongTheTimeline`, a modifier with a pass of its own. It is cut down to a stretch a window wider either side (`TimelineDrawnStretch`, `timelineDrawnMS`) that moves every half window, so a held scroll rebuilds a bar about once a second instead of every frame. The zoom is stored as its scale and start (`timelineZoomScale`, `timelineZoomStartMS`) so reading the scale does not watch the pan.
+- `DrawnOnItsOwn` fences what follows the window from the view holding it: each track's lane (its header no longer rebuilds), the bar's window label and readout, the name and sound tag kept in sight at the lane's left edge. The lane box gesture reads its ruler when the hand moves, not when the grid is built, so the dock's grid no longer rebuilds on a pan.
+- Drag-time readouts, the transition length bubble and the clip name field sit in a lane overlay laid out against the window.
+- Measured on `box-scrolls-at-the-edge-walk`, three runs: right edge p95 33.3 to 16.7 ms, left edge p95 16.7, five second hold 16.7 across; clip bar bodies per 3 s hold 428 to 24; track row and dock grid bodies 0. Its log line now carries the hold's main thread and body counts.
+- Left: walk-only cost, the harness's window watcher takes 7 to 10 percent of the main thread in any walk. Spikes of 40 to 60 ms show at the moment a box picks a new clip.

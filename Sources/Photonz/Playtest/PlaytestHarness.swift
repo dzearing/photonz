@@ -2220,7 +2220,15 @@ private final class Run {
                 editor.laneBoxHand(laneX: x, contentY: y, snapMS: 0)
                 await sleep(0.03)
             }
+            // Zeroed for the hold, so the line says what each frame of the
+            // scrolling rebuilt and how busy it kept the main thread: a pan
+            // that wakes the rest of the window shows up as editor or panel
+            // bodies here (`scrolling-the-timeline-along-time-keeps-every-fr`).
+            MainThreadMeter.shared.install()
+            MainThreadMeter.shared.reset()
+            ViewBuildMeter.shared.reset()
             await sleep(holdSeconds)
+            let holdCost = MainThreadMeter.shared.report + "; " + ViewBuildMeter.shared.report
             if let hold, let window = try? requireWindow(), let content = window.contentView {
                 try snapshot(content, name: hold)
                 await screenCapture(window, name: hold)
@@ -2240,7 +2248,8 @@ private final class Run {
                  + "\(editor.timelineWindowReading) (\(Int(run.pannedMS.rounded())) ms), the tracks scrolled "
                  + "\(Int(run.scrolledY.rounded())) pt; \(frames.count) frames, ms between them p50 \(quantile(0.5)) "
                  + "p95 \(quantile(0.95)) max \(quantile(1)); picked "
-                 + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", ")),
+                 + (reading.clips.isEmpty ? "nothing" : reading.clips.sorted().joined(separator: ", "))
+                 + "; while held: " + holdCost,
                  state: describe())
 
         case .expectTimelinePick(let clips, let rangeOn, let fromSeconds, let toSeconds):

@@ -47,7 +47,9 @@ struct TimelineTrackRow: View {
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: TimelineDock.gap) {
                 header
-                lane
+                // The lane follows the timeline's window and the header does
+                // not, so a scroll along time redraws the lane alone.
+                DrawnOnItsOwn { lane }
             }
             .frame(height: laneHeight)
             .playtestField("Track \(track.name)")
@@ -58,8 +60,10 @@ struct TimelineTrackRow: View {
                     // cue, and reading all 170 cues' words on every step of
                     // the playhead to throw most of them away was a cost of
                     // every far jump (`first-long-jump-when-zoomed-in-walk`).
-                    CaptionWordsLane(cueIDs: Self.cuesInSight(row.clips, ruler: editorState.motionStripRuler),
-                                     laneWidth: laneWidth)
+                    DrawnOnItsOwn {
+                        CaptionWordsLane(cueIDs: Self.cuesInSight(row.clips, ruler: editorState.motionStripRuler),
+                                         laneWidth: laneWidth)
+                    }
                 }
                 .frame(height: CaptionWordsLane.height)
             }
@@ -417,6 +421,9 @@ struct TimelineTrackRow: View {
     static func laneSpace(_ track: UUID) -> String { "timeline-lane-\(track.uuidString)" }
 
     private var lane: some View {
+        #if PHOTONZ_PLAYTEST
+        ViewBuildMeter.shared.built(.trackLane)
+        #endif
         let ruler = editorState.motionStripRuler
         return ZStack(alignment: .topLeading) {
             // The same wash as the header's, so a picked track reads as one
@@ -956,7 +963,6 @@ struct TimelineClipView: View {
     var soundNumber = 0
 
     var body: some View {
-        let ruler = editorState.motionStripRuler
         let own = isCaptionCue ? .caption : TimelineTrackRow.clipKind(group.trackKind)
         let kind = alternate && own == .video ? VideoKit.ClipKind.videoAlternate : own
         if let bar = group.bar {
@@ -975,6 +981,10 @@ struct TimelineClipView: View {
             // document, or of the title it is a part of, since a title's
             // Background is on screen only while the title is. It has no ends
             // to drag; picking it is all a press does.
+            // The window is read here and not above: a clip with a bar slides
+            // itself along (`ClipPiecesBar`), and reading it for every clip
+            // drew them all again on every frame of a scroll.
+            let ruler = editorState.motionStripRuler
             let drawn = group.drawnMS(documentLengthMS: editorState.documentLengthMS)
             let x0 = laneWidth * ruler.fraction(ofMS: Double(drawn.inMS))
             let x1 = laneWidth * ruler.fraction(ofMS: Double(drawn.outMS))
@@ -1136,9 +1146,9 @@ enum TimelineLaneScrub {
 /// that covers only part of it (a gap).
 enum TimelineLaneMarquee {
     @MainActor
-    static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
-                        trackID: UUID, in space: CoordinateSpace = .local) -> some Gesture {
-        gesture(editorState, ruler: ruler, laneWidth: laneWidth, in: space) {
+    static func gesture(_ editorState: EditorState, ruler: @autoclosure @escaping @MainActor () -> MotionStripRuler,
+                        laneWidth: CGFloat, trackID: UUID, in space: CoordinateSpace = .local) -> some Gesture {
+        gesture(editorState, ruler: ruler(), laneWidth: laneWidth, in: space) {
             editorState.trackDropRows[trackID]?.minY ?? 0
         }
     }
@@ -1146,16 +1156,20 @@ enum TimelineLaneMarquee {
     /// The same press read anywhere: `top` is where the view's own space
     /// starts down the tracks', and `leading` how far across it the lanes
     /// start (the tracks' own space starts at the track names).
+    ///
+    /// The ruler is read when the hand moves, not when the view is built: a
+    /// body that read it to build the gesture would be drawn again on every
+    /// frame of a scroll along time.
     @MainActor
-    static func gesture(_ editorState: EditorState, ruler: MotionStripRuler, laneWidth: CGFloat,
-                        in space: CoordinateSpace, leading: CGFloat = 0,
+    static func gesture(_ editorState: EditorState, ruler: @autoclosure @escaping @MainActor () -> MotionStripRuler,
+                        laneWidth: CGFloat, in space: CoordinateSpace, leading: CGFloat = 0,
                         top: @escaping @MainActor () -> CGFloat) -> some Gesture {
         DragGesture(minimumDistance: 0, coordinateSpace: space)
             .onChanged { value in
-                changed(editorState, value, top: top(), leading: leading, ruler: ruler, laneWidth: laneWidth)
+                changed(editorState, value, top: top(), leading: leading, ruler: ruler(), laneWidth: laneWidth)
             }
             .onEnded { value in
-                ended(editorState, value, leading: leading, ruler: ruler, laneWidth: laneWidth)
+                ended(editorState, value, leading: leading, ruler: ruler(), laneWidth: laneWidth)
             }
     }
 

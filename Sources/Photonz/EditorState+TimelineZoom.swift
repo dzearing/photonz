@@ -37,6 +37,50 @@ extension EditorState {
         return timelineZoom.clamped(documentMS: timelineLengthForZoomMS)
     }
 
+    /// How far in the window is, and nothing about where: what a view drawn
+    /// from a moment of its own reads, so a scroll along time does not draw it
+    /// again (`motionStripRuler(measuredFromMS:)`).
+    var timelineScaleOnly: TimelineZoom {
+        guard canOpenOutTheTimeline else { return .fit }
+        return TimelineZoom(scale: timelineZoomScale).clamped(documentMS: timelineLengthForZoomMS)
+    }
+
+    /// The strip's ruler with its left hand edge on `ms`: the timeline's own
+    /// scale, measured from somewhere that does not move. A clip's bar is
+    /// drawn against one measured from its own start and slid along by where
+    /// that start is in the window (`SlidAlongTheTimeline`), so every frame of
+    /// a scroll moves the bar without drawing it again.
+    func motionStripRuler(measuredFromMS ms: Double) -> MotionStripRuler {
+        let cycle = motionStripCycleMS
+        let ruler = motionStripMeasuresADocument
+            ? MotionStripRuler(documentMS: cycle, zoom: timelineScaleOnly)
+            : MotionStripRuler(cycleMS: cycle)
+        return ruler.measured(fromMS: ms)
+    }
+
+    /// What a clip's bar is drawn across, in the document's milliseconds: the
+    /// window and at least half a window either side, moving only once the
+    /// window has gone half its width (`TimelineDrawnStretch`).
+    var timelineDrawnMS: ClosedRange<Double> {
+        guard motionStripMeasuresADocument else {
+            let lap = MotionStripRuler(cycleMS: motionStripCycleMS)
+            return lap.startMS...(lap.startMS + lap.spanMS)
+        }
+        let length = timelineLengthForZoomMS
+        return timelineDrawnStretch.stretchMS(visibleMS: timelineScaleOnly.visibleMS(documentMS: length),
+                                              documentMS: length)
+    }
+
+    /// Where the window's left hand edge is, to within half a window, read
+    /// without reading the edge: a bar starting past the end of this has
+    /// nothing hanging off the left of the lane to keep in sight.
+    var timelineLeftEdgeRangeMS: ClosedRange<Double> {
+        guard motionStripMeasuresADocument else { return 0...0 }
+        let length = timelineLengthForZoomMS
+        return timelineDrawnStretch.leftEdgeMS(visibleMS: timelineScaleOnly.visibleMS(documentMS: length),
+                                               documentMS: length)
+    }
+
     /// The moment a zoom happens ABOUT: the playhead where it is on screen,
     /// and the middle of the window where it is not.
     ///

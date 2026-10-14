@@ -423,6 +423,21 @@ public struct MotionStripRuler: Hashable, Sendable {
         self.repeats = false
     }
 
+    /// The same ruler, its left hand edge on another moment: the same scale,
+    /// measured from somewhere else. A clip's bar is drawn against one
+    /// measured from its own start, which a scroll along time does not
+    /// change, and slid into place (`TimelineDrawnStretch`).
+    public func measured(fromMS ms: Double) -> MotionStripRuler {
+        MotionStripRuler(cycleMS: cycleMS, spanMS: spanMS, startMS: ms, repeats: repeats)
+    }
+
+    private init(cycleMS: Double, spanMS: Double, startMS: Double, repeats: Bool) {
+        self.cycleMS = cycleMS
+        self.spanMS = spanMS
+        self.startMS = startMS
+        self.repeats = repeats
+    }
+
     /// Where a millisecond falls across the strip's width, nought at the left
     /// edge and one at the right.
     ///

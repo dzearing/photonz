@@ -46,6 +46,12 @@ final class ViewBuildMeter {
         case wordsLane
         /// One track of the timeline, header and lane.
         case trackRow
+        /// The lane of one track on its own, which a scroll along time redraws
+        /// while the track's header stands still.
+        case trackLane
+        /// The timeline dock's grid of tracks, the ruler over them and the
+        /// scroller under: a scroll along time must not build it again.
+        case timelineGrid
         /// The bodies of the panel's sections, for the claim that a key on
         /// where a layer is builds only the section that shows keys
         /// (`keying-a-value-redraws-only-what-the-key-changes`): Properties

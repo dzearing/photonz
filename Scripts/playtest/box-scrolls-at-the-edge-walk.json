@@ -34,7 +34,7 @@
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample", "Text"] },
     { "do": "describe", "stage": "1-picked-off-screen", "note": "held at the right edge the timeline scrolled on to the end, and letting go picked the recording the box started on and the title that scrolled into view" },
     { "do": "snapshot", "name": "1-picked-off-screen" },
-    { "do": "boxToEdge", "fromTrack": "Audio 2", "from": 13.0, "toTrack": "V1", "edge": "left", "holdSeconds": 3.0, "hold": "2-held-at-the-left-edge" },
+    { "do": "boxToEdge", "fromTrack": "Audio", "from": 13.0, "toTrack": "V1", "edge": "left", "holdSeconds": 3.0, "hold": "2-held-at-the-left-edge" },
     { "do": "wait", "seconds": 0.3 },
     { "do": "expectTimelinePick", "clips": ["Tutorial Sample", "Sample Music"] },
     { "do": "snapshot", "name": "2-picked-back-to-the-start" },

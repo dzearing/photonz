@@ -222,13 +222,19 @@ struct TimelineDock: View {
                     .foregroundStyle(VideoKit.Palette.ink)
                     .lineLimit(1)
                     .playtestField("Transition drop")
-            } else if editorState.isTimelineOpenedOut {
-                Text(editorState.timelineWindowReading)
-                    .font(.system(size: 10, design: .monospaced))
-                    .monospacedDigit()
-                    .foregroundStyle(VideoKit.Palette.faint)
-                    .lineLimit(1)
-                    .fixedSize()
+            } else {
+                // On its own, so a scroll along time redraws this label and
+                // not the bar round it.
+                DrawnOnItsOwn {
+                    if editorState.isTimelineOpenedOut {
+                        Text(editorState.timelineWindowReading)
+                            .font(.system(size: 10, design: .monospaced))
+                            .monospacedDigit()
+                            .foregroundStyle(VideoKit.Palette.faint)
+                            .lineLimit(1)
+                            .fixedSize()
+                    }
+                }
             }
             if editorState.timelineFileHover == nil, editorState.timelineTransitionHover == nil { keyBar }
         }
@@ -237,9 +243,14 @@ struct TimelineDock: View {
         .overlay(alignment: .bottom) {
             Rectangle().fill(VideoKit.Palette.edgeLo).frame(height: 1)
         }
-        .panelReadout("timeline \(editorState.timelineWindowReading)"
-                      + ", " + Self.toolReading(editorState.timelineTool)
-                      + (editorState.isTimelineSnapping ? ", snapping" : ", snapping off"))
+        .background {
+            DrawnOnItsOwn {
+                Color.clear
+                    .panelReadout("timeline \(editorState.timelineWindowReading)"
+                                  + ", " + Self.toolReading(editorState.timelineTool)
+                                  + (editorState.isTimelineSnapping ? ", snapping" : ", snapping off"))
+            }
+        }
     }
 
     static func toolReading(_ tool: TimelineTool) -> String {
@@ -371,9 +382,12 @@ struct TimelineDock: View {
     }
 
     private var grid: some View {
+        #if PHOTONZ_PLAYTEST
+        ViewBuildMeter.shared.built(.timelineGrid)
+        #endif
         // Edit mode arriving from View holds this space empty for a pass
         // (`EditModeArrival`); its height is the tracks' own, so nothing moves.
-        Group {
+        return Group {
         if editorState.editArrival.showsTimeline {
         GeometryReader { geo in
             // The rows' scroller lives in the dock's right hand margin, always,

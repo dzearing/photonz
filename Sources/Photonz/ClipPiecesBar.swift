@@ -98,7 +98,17 @@ struct ClipPiecesBar: View {
         #if PHOTONZ_PLAYTEST
         let _ = ViewBuildMeter.shared.built(.clipBar)
         #endif
-        let ruler = editorState.motionStripRuler
+        // Measured from the bar's own start rather than from the window's
+        // left hand edge, and slid to where that start is in the window
+        // (`SlidAlongTheTimeline`): a scroll along time moves the bar sixty
+        // times a second, and none of what is below has to be drawn again for
+        // it. It is cut down to the stretch either side of the window
+        // (`timelineDrawnMS`), which moves once the window has gone half its
+        // width.
+        let ruler = editorState.motionStripRuler(measuredFromMS: Double(bar.inMS))
+        let drawnMS = editorState.timelineDrawnMS
+        let drawn: ClosedRange<CGFloat> = laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.lowerBound))
+            ... laneWidth * CGFloat(ruler.fraction(ofMS: drawnMS.upperBound))
         let pieces = shownPieces
         // While the bar's left end is being dragged the whole bar is drawn
         // where the HAND has it, and the frames being dropped are drawn faint
@@ -126,7 +136,7 @@ struct ClipPiecesBar: View {
                     .offset(x: x0 + laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)))
             }
             ForEach(0..<pieces.count, id: \.self) { index in
-                piece(pieces, index: index, x0: x0, ruler: ruler)
+                piece(pieces, index: index, x0: x0, ruler: ruler, drawn: drawn)
             }
             // The bands over the joins, UNDER the grips: a transition is drawn
             // over the seam because that is what it is, an interval where both
@@ -134,13 +144,6 @@ struct ClipPiecesBar: View {
             // them (`docs/design/video-transitions.md`).
             ForEach(shownCuts(pieces), id: \.index) { cut in
                 band(cut, x0: x0, ruler: ruler)
-            }
-            if !isLinkedSound, let session = editorState.clipTransitionDrag, session.layerID == layerID,
-               case .join(_, let index) = session.place, let cut = pieces.cut(at: index) {
-                TransitionLengthBubble(
-                    pointerX: x0 + laneWidth * ruler.fraction(
-                        spanningMS: Double(cut.atMS + session.pointerFromCutMS)),
-                    laneWidth: laneWidth, height: barHeight)
             }
             // Where this bar runs under a hold that pushed the picture alone,
             // and is therefore no longer in step with it (`HoldPush.swift`).
@@ -156,7 +159,7 @@ struct ClipPiecesBar: View {
             // trim became a nudge to the volume (2026-10-07). Everywhere else
             // along the segment it is still the line that answers.
             if isSound {
-                levelLine(pieces, x0: x0, ruler: ruler)
+                levelLine(pieces, x0: x0, ruler: ruler, drawn: drawn)
             }
             ForEach(0...pieces.count, id: \.self) { edge in
                 grip(pieces, edge: edge, x0: x0, ruler: ruler)
@@ -177,24 +180,20 @@ struct ClipPiecesBar: View {
             if kind != nil, !isLinkedSound {
                 let marks = editorState.clipKeyMarks(onBarOf: layerID)
                 ForEach(Array(marks.enumerated()), id: \.element.documentMS) { index, mark in
-                    // Only the diamonds in the window: the rest are scrolled
-                    // off, and padding cannot place one off the left edge.
+                    // Only the diamonds in the stretch drawn: the rest are
+                    // scrolled well off, and padding cannot place one before
+                    // the bar's start.
                     let x = laneWidth * ruler.fraction(ofMS: Double(mark.documentMS))
-                    if x >= 0, x <= laneWidth + 6 {
+                    if x >= 0, x >= drawn.lowerBound - 6, x <= drawn.upperBound + 6 {
                         keyDiamond(mark, index: index, ruler: ruler)
                     }
-                }
-                if let keyDrag {
-                    capsule(MotionStripRuler.timecode(Double(keyDrag.toMS)),
-                            x: laneWidth * ruler.fraction(ofMS: Double(keyDrag.toMS)) + 10)
-                        .frame(height: barHeight)
                 }
             }
             if isSound {
                 // Always there, as the mock draws them on every lane: a handle
                 // you have to hover to find is a handle nobody finds.
                 if kind != nil, !isLinkedSound {
-                    soundTag(pieces, x0: x0, ruler: ruler)
+                    soundTag(pieces, x0: x0, ruler: ruler, drawn: drawn)
                 }
                 if kind != nil {
                     fadeHandles(pieces, x0: x0, ruler: ruler)
@@ -206,18 +205,10 @@ struct ClipPiecesBar: View {
             if isBeingDragged, let snap = editorState.clipBarSnap {
                 snapLine(atMS: snap.ms, ruler: ruler)
             }
-            if isBeingDragged, let readout = editorState.clipBarReadout {
-                capsule(readout, x: x0)
-                    .frame(height: barHeight)
-            }
-            if editorState.renamingClipID == layerID, !isLinkedSound {
-                ClipNameField(layerID: layerID, name: layerName)
-                    .frame(width: max(90, min(180, laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)) - 8)))
-                    .frame(height: barHeight)
-                    .offset(x: max(0, x0) + 4)
-            }
         }
+        .modifier(SlidAlongTheTimeline(fromMS: bar.inMS, laneWidth: laneWidth))
         .frame(width: laneWidth, alignment: .leading)
+        .overlay(alignment: .topLeading) { inTheLane(pieces) }
         .modifier(BarWatch(on: carriesWalkNames, name: "\(fieldName) bar", readout: readoutText) { inside in
             if kind != nil, isSound || fadesPicture { isHovered = inside }
         })
@@ -230,6 +221,57 @@ struct ClipPiecesBar: View {
     /// probe for 450ms where the app took 70 (`a-long-captioned-recording-walk`).
     /// Walks reach a cue through the editor's own caption actions instead.
     private var carriesWalkNames: Bool { kind != .caption }
+
+    /// What a hand in flight puts beside the bar, kept inside the lane rather
+    /// than sliding off it with the bar: the numbers a drag or a key's drag is
+    /// making, a transition's length, and the field a clip is renamed in. Laid
+    /// out against the window itself, which is read only while one is up.
+    @ViewBuilder private func inTheLane(_ pieces: ClipPieces) -> some View {
+        ZStack(alignment: .topLeading) {
+            if !isLinkedSound, let session = editorState.clipTransitionDrag, session.layerID == layerID,
+               case .join(_, let index) = session.place, let cut = pieces.cut(at: index) {
+                let ruler = editorState.motionStripRuler
+                TransitionLengthBubble(
+                    pointerX: laneX0(ruler) + laneWidth * ruler.fraction(
+                        spanningMS: Double(cut.atMS + session.pointerFromCutMS)),
+                    laneWidth: laneWidth, height: barHeight)
+            }
+            if kind != nil, !isLinkedSound, let keyDrag {
+                capsule(MotionStripRuler.timecode(Double(keyDrag.toMS)),
+                        x: laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(keyDrag.toMS)) + 10)
+                    .frame(height: barHeight)
+            }
+            if isBeingDragged, let readout = editorState.clipBarReadout {
+                capsule(readout, x: laneX0(editorState.motionStripRuler))
+                    .frame(height: barHeight)
+            }
+            if editorState.renamingClipID == layerID, !isLinkedSound {
+                let ruler = editorState.motionStripRuler
+                ClipNameField(layerID: layerID, name: layerName)
+                    .frame(width: max(90, min(180, laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS)) - 8)))
+                    .frame(height: barHeight)
+                    .offset(x: max(0, laneX0(ruler)) + 4)
+            }
+        }
+    }
+
+    /// Where the bar's drawn start is across the lane, against the window's
+    /// own ruler.
+    private func laneX0(_ window: MotionStripRuler) -> CGFloat {
+        laneWidth * window.fraction(ofMS: Double(bar.inMS)) + laneWidth * window.fraction(spanningMS: Double(headShiftMS))
+    }
+
+    /// How much of something drawn from `x`, in the bar's own points, is off
+    /// the lane's left hand edge: what a name on a zoomed timeline is moved
+    /// along by to stay in sight. The edge itself is read only where it can
+    /// matter, since reading it draws the caller again on every frame of a
+    /// scroll, and anything starting past where the edge can be has nothing
+    /// off it.
+    private func offTheLeft(of x: CGFloat, ruler: MotionStripRuler) -> CGFloat {
+        let latestEdge = laneWidth * ruler.fraction(ofMS: editorState.timelineLeftEdgeRangeMS.upperBound)
+        guard x < latestEdge else { return 0 }
+        return max(0, laneWidth * ruler.fraction(ofMS: editorState.motionStripRuler.startMS) - x)
+    }
 
     // MARK: What is on the bar
 
@@ -315,7 +357,7 @@ struct ClipPiecesBar: View {
 
     @ViewBuilder
     private func piece(_ pieces: ClipPieces, index: Int, x0: CGFloat,
-                       ruler: MotionStripRuler) -> some View {
+                       ruler: MotionStripRuler, drawn: ClosedRange<CGFloat>) -> some View {
         let start = pieces.startMS(ofPiece: index)
         let item = pieces.piece(at: index)
         let length = item?.lengthMS ?? 0
@@ -333,8 +375,10 @@ struct ClipPiecesBar: View {
         // points wide, and a waveform sampled across the whole of it is a
         // hundred and eighty thousand columns nobody can see
         // (`TimelineSpan`). What shows is identical; the work is bounded by
-        // the width of the window instead of by the zoom.
-        let shown = TimelineSpan.drawn(x: x, width: width, across: laneWidth)
+        // the width of the window instead of by the zoom. Cut down to the
+        // stretch either side of the window rather than to the window, so a
+        // scroll slides it rather than drawing it again (`timelineDrawnMS`).
+        let shown = TimelineSpan.drawn(x: x, width: width, from: drawn.lowerBound, to: drawn.upperBound)
         let picked = isPiecePicked(index, of: pieces.count)
         let pictures = picturesOpacity
         if shown.width > 0 {
@@ -343,9 +387,17 @@ struct ClipPiecesBar: View {
             .overlay(alignment: .topLeading) {
                 filmstrip(item, index: index, pieceWidth: raw, shown: shown, pictures: pictures)
             }
-            .overlay { kitFace(item, width: shown.width,
-                               hiddenLeading: max(0, -shown.x) + bandCover(pieces, piece: index, ruler: ruler),
-                               pictures: pictures) }
+            .overlay {
+                // On its own: the name moves along with the lane's left edge
+                // while the piece runs off it, and that is all a scroll asks
+                // to be drawn again.
+                DrawnOnItsOwn {
+                    kitFace(item, width: shown.width,
+                            hiddenLeading: offTheLeft(of: shown.x, ruler: ruler)
+                                + bandCover(pieces, piece: index, ruler: ruler),
+                            pictures: pictures)
+                }
+            }
             .frame(width: shown.width, height: barHeight)
             .overlay {
                 // The sound itself, drawn from the stretch of the file this
@@ -538,9 +590,9 @@ struct ClipPiecesBar: View {
     /// joins the way it runs over everything else.
     @ViewBuilder
     private func levelLine(_ pieces: ClipPieces, x0: CGFloat,
-                           ruler: MotionStripRuler) -> some View {
+                           ruler: MotionStripRuler, drawn: ClosedRange<CGFloat>) -> some View {
         let whole = laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS))
-        let shown = TimelineSpan.drawn(x: x0, width: whole, across: laneWidth)
+        let shown = TimelineSpan.drawn(x: x0, width: whole, from: drawn.lowerBound, to: drawn.upperBound)
         if shown.width > 4 {
             SoundLevelLine(layerID: layerID, layerName: layerName,
                            level: editorState.document?.layer(id: layerID)?.soundLevel
@@ -596,24 +648,33 @@ struct ClipPiecesBar: View {
     /// of it sank into them. Once per clip, kept in sight on a zoomed
     /// timeline, and clear of the fade in diamond at the clip's start.
     @ViewBuilder
-    private func soundTag(_ pieces: ClipPieces, x0: CGFloat, ruler: MotionStripRuler) -> some View {
+    private func soundTag(_ pieces: ClipPieces, x0: CGFloat, ruler: MotionStripRuler,
+                          drawn: ClosedRange<CGFloat>) -> some View {
         let whole = laneWidth * ruler.fraction(spanningMS: Double(pieces.totalLengthMS))
-        let shown = TimelineSpan.drawn(x: x0, width: whole, across: laneWidth)
-        if shown.width > 40 {
-            Text(layerName)
-                .font(.system(size: 9, weight: .semibold))
-                .foregroundStyle(.white)
-                .lineLimit(1)
-                .truncationMode(.tail)
-                .padding(.horizontal, 7)
-                .padding(.vertical, 2)
-                .background(RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.4)))
-                .padding(.leading, x0 >= 0 ? SoundFadeDiamond.reach + 4 : 4)
-                .padding(.trailing, 8)
-                .padding(.top, 3)
-                .frame(width: shown.width, height: barHeight, alignment: .topLeading)
-                .offset(x: shown.x)
-                .allowsHitTesting(false)
+        let shown = TimelineSpan.drawn(x: x0, width: whole, from: drawn.lowerBound, to: drawn.upperBound)
+        // On its own, like a piece's name: it follows the lane's left edge
+        // while the clip's start is off it.
+        DrawnOnItsOwn {
+            let off = offTheLeft(of: x0, ruler: ruler)
+            // No further off the edge than a clipped end is drawn past it.
+            let start = max(shown.x, x0 + max(0, off - TimelineSpan.slack))
+            let width = shown.x + shown.width - start
+            if width > 40 {
+                Text(layerName)
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.white)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .padding(.horizontal, 7)
+                    .padding(.vertical, 2)
+                    .background(RoundedRectangle(cornerRadius: 4).fill(Color.black.opacity(0.4)))
+                    .padding(.leading, off == 0 ? SoundFadeDiamond.reach + 4 : 4)
+                    .padding(.trailing, 8)
+                    .padding(.top, 3)
+                    .frame(width: width, height: barHeight, alignment: .topLeading)
+                    .offset(x: start)
+                    .allowsHitTesting(false)
+            }
         }
     }
 
@@ -632,12 +693,13 @@ struct ClipPiecesBar: View {
     /// stand for a short stretch (`ClipFilmstrip.opacity`).
     private var picturesOpacity: Double {
         guard let movie = pictureMovie, laneWidth > 0 else { return 0 }
-        let ruler = editorState.motionStripRuler
+        // How far in, never where: nothing about this changes with a scroll.
+        let ruler = editorState.motionStripRuler(measuredFromMS: 0)
         let strip = max(1, barHeight - ClipFilmstripStrip.band)
         let aspect = movie.pixelSize.height > 0 ? movie.pixelSize.width / movie.pixelSize.height : 16.0 / 9
         let msPerTile = Double(ClipFilmstrip.tileWidth(height: strip, aspect: aspect))
             * ruler.spanMS / Double(laneWidth)
-        return ClipFilmstrip.opacity(zoom: editorState.timelineWindow, msPerTile: msPerTile)
+        return ClipFilmstrip.opacity(zoom: editorState.timelineScaleOnly, msPerTile: msPerTile)
     }
 
     /// The row of pictures inside one piece, faded in and out as the timeline
@@ -1719,5 +1781,18 @@ private struct ProgressRing: View {
                 .stroke(.white, style: StrokeStyle(lineWidth: 1.5, lineCap: .round))
                 .rotationEffect(.degrees(-90))
         }
+    }
+}
+
+/// Slides a clip's bar, drawn from its own start, to where that start is in the
+/// timeline's window. A pass of its own: a scroll along time runs this, and
+/// nothing inside the bar is drawn again for it.
+private struct SlidAlongTheTimeline: ViewModifier {
+    @Environment(EditorState.self) private var editorState
+    let fromMS: Int
+    let laneWidth: CGFloat
+
+    func body(content: Content) -> some View {
+        content.offset(x: laneWidth * editorState.motionStripRuler.fraction(ofMS: Double(fromMS)))
     }
 }

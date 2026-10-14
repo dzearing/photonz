@@ -183,8 +183,16 @@ public struct TimelineSpan: Hashable, Sendable {
 
     public static func drawn(x: CGFloat, width: CGFloat, across visibleWidth: CGFloat,
                              slack: CGFloat = TimelineSpan.slack) -> TimelineSpan {
-        let left = -slack
-        let right = visibleWidth + slack
+        drawn(x: x, width: width, from: 0, to: visibleWidth, slack: slack)
+    }
+
+    /// The same, kept to what lies between two edges rather than to a width
+    /// from nought: a bar drawn in its own points, from its own start, is cut
+    /// down to the stretch it is drawn across (`TimelineDrawnStretch`).
+    public static func drawn(x: CGFloat, width: CGFloat, from leading: CGFloat, to trailing: CGFloat,
+                             slack: CGFloat = TimelineSpan.slack) -> TimelineSpan {
+        let left = leading - slack
+        let right = trailing + slack
         let start = max(x, left)
         let end = min(x + width, right)
         guard width > 0, end > start else {
@@ -193,5 +201,49 @@ public struct TimelineSpan: Hashable, Sendable {
         return TimelineSpan(x: start, width: end - start,
                             startFraction: (start - x) / width,
                             endFraction: (end - x) / width)
+    }
+}
+
+/// **The stretch of the timeline a clip's bar is drawn across**: the window and
+/// at least half a window more either side.
+///
+/// A scroll along time moves the window every frame. A bar cut down to the
+/// window itself had to be drawn again on every one of those frames, every bar
+/// on every track, and a scroll held at an edge ran one frame in twenty late
+/// (`scrolling-the-timeline-along-time-keeps-every-fr`). Cut down to this
+/// instead, a bar only has to be drawn again once the window has gone half its
+/// own width; in between it is slid along as it stands.
+///
+/// It is written down where the window is written and read back against the
+/// document as it is when read, which may have grown or shrunk since: so what
+/// is kept is where the window's left edge stood, rounded down to a step of
+/// half a window, and the step.
+public struct TimelineDrawnStretch: Hashable, Sendable {
+    /// The window's left edge when this was written, rounded down to a whole
+    /// number of steps.
+    public let anchorMS: Double
+    /// Half the window, when this was written.
+    public let stepMS: Double
+
+    public init(windowStartMS: Double, visibleMS: Double) {
+        let step = max(1, visibleMS / 2)
+        stepMS = step
+        anchorMS = (max(0, windowStartMS) / step).rounded(.down) * step
+    }
+
+    /// Where the window's left edge is, somewhere inside: the edge written
+    /// down is no more than a step past the anchor, and a window held back
+    /// against the end of a shorter document is held back no further than
+    /// the anchor is.
+    public func leftEdgeMS(visibleMS: Double, documentMS: Double) -> ClosedRange<Double> {
+        let anchor = min(anchorMS, max(0, documentMS - visibleMS))
+        return anchor...(anchor + stepMS)
+    }
+
+    /// What a bar is drawn across: wherever in its range the window's left
+    /// edge is, the window and a step more either side.
+    public func stretchMS(visibleMS: Double, documentMS: Double) -> ClosedRange<Double> {
+        let edge = leftEdgeMS(visibleMS: visibleMS, documentMS: documentMS)
+        return max(0, edge.lowerBound - stepMS)...(edge.upperBound + stepMS + visibleMS)
     }
 }
