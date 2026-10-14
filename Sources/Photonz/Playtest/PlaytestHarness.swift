@@ -200,6 +200,15 @@ private final class Run {
         let description: String
     }
 
+    /// A failure found after the step's click had already gone in, so the
+    /// app has been changed by it. Never looked for again with the dock built
+    /// out: doing the step a second time acts twice, and the second go starts
+    /// from what the first left (a double click whose tile slid away passed on
+    /// its retry, because the first click had already picked the tile).
+    struct FailedAfterActing: Error, CustomStringConvertible {
+        let description: String
+    }
+
     let scriptURL: URL
     let coordinator: AppCoordinator
     var out: URL
@@ -459,7 +468,7 @@ private final class Run {
                 await putTheMarkersBackUp()
                 do {
                     try await perform(step, number: number)
-                } catch let failure where !(failure is LockedOut)
+                } catch let failure where !(failure is LockedOut) && !(failure is FailedAfterActing)
                             && PanelBuildsEverything.shared.buildWhatWaits() {
                     // What the step looked for may be in a dock section still
                     // waiting below the fold, which a person would have
@@ -7651,6 +7660,31 @@ private final class Run {
             NSApp.sendEvent(NSApp.nextEvent(matching: .leftMouseDown, until: .distantPast,
                                             inMode: .default, dequeue: true) ?? firstDown)
             await sleep(0.06)
+        }
+        // ...and a control that moved under those earlier clicks fails the
+        // step, even when the last click still lands somewhere on it. A
+        // double click on a Library title tile with a layer picked slid the
+        // tile 42pt down between its two clicks (the picked layer's rows
+        // folded and the timeline got shorter), and the walk stayed green
+        // because the tile was taller than the jump. Read at the moment the
+        // last click goes in, which is when a person's lands.
+        if count > 1, let now = try? pressTarget(name, in: row), now.window === window {
+            // A SLIDE, both edges going the same way: a control that only grew
+            // or shrank about the point (a track name given more room) is
+            // still under the hand.
+            func slid(_ low: CGFloat, _ high: CGFloat) -> CGFloat {
+                low * high > 0 ? min(abs(low), abs(high)) * (low > 0 ? 1 : -1) : 0
+            }
+            let dx = slid(now.box.minX - target.box.minX, now.box.maxX - target.box.maxX)
+            let dy = slid(now.box.minY - target.box.minY, now.box.maxY - target.box.maxY)
+            let moved = hypot(dx, dy)
+            if moved > 1 || !now.box.contains(target.point) {
+                throw FailedAfterActing(description: String(
+                    format: "\"%@\" moved %.0fpt between the clicks of a double click (from %@ to %@ "
+                        + "in the window), so a person's second click lands beside where it was: "
+                        + "whatever the first click changed must not move the control it was on",
+                    target.name, moved, NSStringFromRect(target.box), NSStringFromRect(now.box)))
+            }
         }
         let stamp = ProcessInfo.processInfo.systemUptime
         guard let down = NSEvent.mouseEvent(

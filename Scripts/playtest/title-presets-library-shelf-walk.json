@@ -269,17 +269,9 @@
       "stage": "6-undo",
       "note": "One Command Z takes the last drop back whole"
     },
+    { "do": "expectPicked", "layers": ["Title"] },
     {
-      "comment": "Escape twice lets go of what the last drop left picked (its headline, then the whole title), so the dock is the crowded one this test was written for with nothing picked. A tile double clicked with a layer picked is its own bug: the first click drops the layer's sections and the tile jumps out from under the second.",
-      "do": "key",
-      "key": "escape"
-    },
-    { "do": "wait", "seconds": 0.3 },
-    { "do": "key", "key": "escape" },
-    { "do": "wait", "seconds": 0.4 },
-    { "do": "expectPicked", "layers": [] },
-    {
-      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding): a double click on Keynote Clean by the pointer. The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
+      "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding), with the last drop's headline still picked: a double click on Keynote Clean by the pointer. The first click lets go of the headline and its rows fold out of the timeline, and the timeline keeps its height while the tile is picked, so the tile stays under the second click (the press fails if it slides). The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
       "do": "press",
       "control": "Keynote Clean",
       "count": 2

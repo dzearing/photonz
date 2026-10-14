@@ -43,6 +43,9 @@ struct TimelineDock: View {
     /// How tall the tracks' scroller is, so the empty space under the last
     /// track reaches its foot and a box can start anywhere in it.
     @State private var tracksViewportHeight: CGFloat = 0
+    /// What the tracks needed the last time no Library tile was picked. A
+    /// reference, so noting it as the body is drawn redraws nothing.
+    @State private var heightHold = TimelineHeightHoldBox()
 
     /// The track name column and the gap after it. The mock's
     /// `#tlDock{--gutter:84px}` left no room for a header's switches, so the
@@ -686,9 +689,18 @@ struct TimelineDock: View {
     /// chosen, as tall as the tracks it holds and no taller. Inside one track
     /// and about 70% of the window either way (`TimelineDockHeight`).
     private var bodyHeight: CGFloat {
-        guard windowHeight > 0 else { return naturalBodyHeight }
+        guard windowHeight > 0 else { return heldNaturalBodyHeight }
         return sizing.body(chosen: draggedBody ?? TimelineDockHeight.chosen(stored: storedHeight),
-                           natural: naturalBodyHeight)
+                           natural: heldNaturalBodyHeight)
+    }
+
+    /// The tracks' height, held while a Library tile is the pick so the shelf
+    /// in the pane above never slides out from under a double click
+    /// (`TimelineHeightHold`). It is the pane's promise, so it rides the
+    /// pane's switch.
+    private var heldNaturalBodyHeight: CGFloat {
+        let holding = Experiments.shared.listsPaneEnabled && editorState.selectedLibraryItemID != nil
+        return heightHold.hold.natural(naturalBodyHeight, holding: holding)
     }
 
     private var sizing: TimelineDockHeight {
@@ -1593,4 +1605,10 @@ private struct TimelinePlayheadLine: View {
                 .panelReadout("playhead \(editorState.documentTimecode)")
         }
     }
+}
+
+/// Holds the timeline's `TimelineHeightHold` across passes without making it
+/// state SwiftUI watches.
+@MainActor private final class TimelineHeightHoldBox {
+    var hold = TimelineHeightHold()
 }
