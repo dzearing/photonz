@@ -1,7 +1,7 @@
 {
   "out": "/tmp/photonz-playtest/motion-pivot-in-a-corner",
   "seed": "A pivot parked on a corner of the layer's box used to be a handle nobody could pick up again: the corner's resize square was read first, however near the crosshair was drawn, so the only ways back to it were the Around menu and the two number fields. This walk parks the pivot ON the top left corner, checks the pointer says grab there rather than resize, drags it off the corner and reads back where it went, and then checks the other three corners still resize and the layer never changed size while any of it happened. The rule it is pinning down is docs/design/canvas-hit-order.md: the nearest drawn mark takes the press.",
-  "setup": { "forget": ["tools", "panel"] },
+  "setup": { "forget": ["tools", "panel", "grid"] },
   "steps": [
     { "do": "blank", "canvasWidth": 1100, "canvasHeight": 720, "width": 1420, "height": 980 },
     { "do": "wait", "seconds": 1 },

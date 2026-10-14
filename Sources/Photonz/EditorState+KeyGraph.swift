@@ -104,7 +104,7 @@ extension EditorState {
     /// points picked with it. The segment is picked, unless it already is.
     func segmentMenuRows(layerID: UUID, motionID: UUID, _ ref: KeyRef, atMS ms: Int) -> [MenuRow] {
         guard let document, !isClipLocked(layerID) else { return [] }
-        if !pickedSegments(layerID: layerID).contains(ref) {
+        if servesThisRightPress(), !pickedSegments(layerID: layerID).contains(ref) {
             DispatchQueue.main.async { [weak self] in
                 self?.pickSegment(layerID: layerID, ref, atMS: ms, extending: false, movingPlayhead: false)
             }

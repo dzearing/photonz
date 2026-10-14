@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "queue",
   "created": "2026-10-13T15:25:02.884Z",
-  "updated": "2026-10-14T12:18:03.043Z",
+  "updated": "2026-10-14T16:07:59.200Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-14T08:00:30Z: 901 of 915 walks passed in 247 minutes.\n\nFailing walks (14): a-recording-stays-and-opens-right-after-stop-walk, box-scrolls-at-the-edge-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, keys-copy-between-layers-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  box-scrolls-at-the-edge-walk -> scrolling-the-timeline-along-time-keeps-every-fr (that task says it owns this walk)\n  keys-copy-between-layers-walk -> the-keyframe-anything-and-keys-copy-between-laye (that task says it owns this walk)\n\nThis task owns the other 12: a-recording-stays-and-opens-right-after-stop-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nFull output: queue/sweep/2026-10-13-205353.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-small-overlay-shows-transform-values-to-type-i: transform bar now appears under any layer after a move, resize, turn or nudge; walks that click just below a moved layer may hit it\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -62,7 +62,65 @@
     {
       "t": "2026-10-14T12:18:03.042Z",
       "note": "seq 4010 -> 20"
+    },
+    {
+      "t": "2026-10-14T12:59:08.622Z",
+      "note": "rotating check 2026-10-14T12:59:08Z, 30 walks run from 444 onward in the rotation: motion-pivot-in-a-corner-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-14T14:29:10.385Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T16:07:58.654Z",
+      "note": "owns these walks: every-command-in-the-menu-bar-walk, a-recording-stays-and-opens-right-after-stop-walk, clicking-a-timeline-item-moves-the-playhead-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, value-graph-points-and-segments-walk"
+    },
+    {
+      "t": "2026-10-14T16:07:58.722Z",
+      "note": "WALK WAS WRONG (stale): every-command-in-the-menu-bar-walk expected tracks V1, Audio, Audio 2; a clip's sound is now its own 'V1 sound' row (8ad7323b). Updated to V1, V1 sound, Audio, and V1, V1 sound after Delete Empty Tracks."
+    },
+    {
+      "t": "2026-10-14T16:07:58.789Z",
+      "note": "WALK WAS WRONG (order-dependent): motion-pivot-in-a-corner, new-layer-takes-your-layer, room-means-one-thing read 2pt off because the probe had been left with the canvas grid visible at 4pt cells (defaults canvas.grid isVisible true, minimumCell 4), so drawn edges snapped 230->232, 470->472. The walks never declared the grid. Added 'grid' to their forget lists; cleared the probe's leftover canvas.grid. Settings are restored only when a walk ends normally (PlaytestSetupRunner.restoreSettings), so a walk cut short (killed, crash, deferred) can leak them; could not find which one did."
+    },
+    {
+      "t": "2026-10-14T16:07:58.856Z",
+      "note": "APP WAS BROKEN: layer-pick-latency and layer-pick-at-scale. Every pick rebuilt the whole editor since 1cd96c89 (bisected: passes at 1cd96c89~1, fails at 1cd96c89). The Info button comes and goes with the pick, the bar changes width, and the editor stored that width in its own @State. Fix in EditorView: Info is its own view (ToolBarInfoSection) reading the pick itself; the measured bar widths live in an unwatched box and the editor is rebuilt only when the new width changes which tools fit (toolbarFitPass). Tool bar walks (tool-bar-fills-its-room, one-glass, transform-values-info, transform-bar, 3d-grippers, design-mode strip and more) all pass. Tried first: always reserving Info's room; it cost one tool at every narrow width, so dropped."
+    },
+    {
+      "t": "2026-10-14T16:07:58.923Z",
+      "note": "APP WAS BROKEN: value-graph-points-and-segments step 69. After a right click on a segment, a later click on a point picked it, then the segment's menu, rebuilt on the redraw, picked the segment again (segmentMenuRows picked on every build; traced with a call-stack log). Now a line's menu picks only for the right click it was opened by (servesThisRightPress, shared with the key menu and now the sound line's point and segment menus). Key, sound line and right-click walks pass."
+    },
+    {
+      "t": "2026-10-14T16:07:58.992Z",
+      "note": "WALK WAS WRONG (layout moved): layer-row-lifts-by-pointer dragged rows at fixed window points from when Layers sat at the top; Layers is in the pane at the bottom now (885afc78). Points moved +584pt. section-fold-motion clicked the Layers header five times fast at its old top spot; the header now drops ~93pt when it folds, so the burst moved to a rectangle's Appearance header (which stays put), checking Blending, at the end of the walk."
+    },
+    {
+      "t": "2026-10-14T16:07:59.065Z",
+      "note": "PASSED ON A RE-RUN with no change: a-recording-stays-and-opens-right-after-stop-walk, clicking-a-timeline-item-moves-the-playhead-walk (both passed twice)."
+    },
+    {
+      "t": "2026-10-14T16:07:59.132Z",
+      "note": "HANDED ON: segmented-chip-refraction-film-walk is right and the app is wrong: switching the Library from Media to Comps grows the bottom pane and lifts the control 65pt from under the pointer. Filed the-layers-and-library-pane-holds-still-under-th (owns that walk)."
+    },
+    {
+      "t": "2026-10-14T16:07:59.199Z",
+      "note": "left rough: section-fold-motion-walk's 16ms frame gates trip now and then under load (load avg 3-5 today): a different step each time, 17.6 to 20.4ms, and once the filmed re-open click on Time did not register. It passed 4 of 8 runs today, two in a row on the final build. Not filed; if the sweep shows it again it earns a task."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-14T14:29:10.384Z",
+  "walks": [
+    "every-command-in-the-menu-bar-walk",
+    "a-recording-stays-and-opens-right-after-stop-walk",
+    "clicking-a-timeline-item-moves-the-playhead-walk",
+    "layer-pick-at-scale-walk",
+    "layer-pick-latency-walk",
+    "layer-row-lifts-by-pointer-walk",
+    "motion-pivot-in-a-corner-walk",
+    "new-layer-takes-your-layer-walk",
+    "room-means-one-thing-walk",
+    "section-fold-motion-walk",
+    "value-graph-points-and-segments-walk"
+  ]
 }

@@ -187,9 +187,8 @@ extension EditorState {
     /// keys it stands for are picked unless they already are, the playhead
     /// staying where it was parked (the Finder way, `EditorState+TimelinePointing`).
     func keyMenuOpened(layerID: UUID, _ refs: Set<KeyRef>, atMS ms: Int, lane motionID: UUID?) {
-        guard keyMenuPressServed != timelineRightPresses, !refs.isEmpty,
-              rightPressLanded(onKeyAtMS: ms, layerID: layerID, lane: motionID) else { return }
-        keyMenuPressServed = timelineRightPresses
+        guard !refs.isEmpty, rightPressLanded(onKeyAtMS: ms, layerID: layerID, lane: motionID),
+              servesThisRightPress() else { return }
         guard !refs.isSubset(of: pickedKeys(layerID: layerID)) else { return }
         DispatchQueue.main.async { [weak self] in
             self?.pickClipKeys(layerID: layerID, refs, atMS: ms, extending: false, movingPlayhead: false)

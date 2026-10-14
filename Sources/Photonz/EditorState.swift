@@ -1977,9 +1977,10 @@ final class EditorState {
     /// for working out which a box crosses.
     @ObservationIgnored var zoomLaneRows: [UUID: ClosedRange<CGFloat>] = [:]
     @ObservationIgnored var keyLaneRows: [KeyLaneRowID: ClosedRange<CGFloat>] = [:]
-    /// The right click a key's menu last picked for, by its count
-    /// (`timelineRightPresses`), so one right click picks once however often
-    /// SwiftUI rebuilds the menu afterwards (`EditorState+KeyLanes`).
+    /// The right click a line's menu (a key, a segment, a sound's level) last
+    /// picked for, by its count (`timelineRightPresses`), so one right click
+    /// picks once however often SwiftUI rebuilds the menu afterwards
+    /// (`servesThisRightPress`).
     @ObservationIgnored var keyMenuPressServed = -1
     /// A bar or a key taken hold of that carries a box's whole pick, through
     /// the clip bar's own drag (`EditorState+TrackRange`).

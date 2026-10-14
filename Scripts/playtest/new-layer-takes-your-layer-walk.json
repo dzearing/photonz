@@ -2,7 +2,7 @@
   "out": "/tmp/photonz-playtest/new-layer-takes-your-layer",
   "seed": "New Layer via Copy used to make its new layer out of every layer flattened together the moment a marquee was up, even with a layer picked, so the photo underneath came along baked in. The walk builds a two layer picture, picks the top layer, drags a marquee across its edge, and presses Command J: the new layer should hold that layer's pixels alone and be named after it. Then it checks the other two ways in: nothing picked still promotes everything inside the marquee, and no marquee still duplicates the picked layer.",
   "setup": {
-    "forget": ["shapes", "color"]
+    "forget": ["shapes", "color", "grid"]
   },
   "steps": [
     { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1280, "height": 900 },

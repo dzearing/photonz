@@ -90,6 +90,19 @@ extension EditorState {
         DispatchQueue.main.async { [weak self] in self?.pickForRightPress(target) }
     }
 
+    /// Whether the menu being built is the first built for the latest right
+    /// click on a line (a key, a segment, a sound's level), and so the one
+    /// that picks what it landed on. A menu is built again whenever the view
+    /// carrying it redraws, long after its right click, and a menu that
+    /// picked on every build took back the segment it was opened on the
+    /// moment a click picked a point instead (value-graph-points-and-segments
+    /// -walk, 2026-10-14).
+    func servesThisRightPress() -> Bool {
+        guard keyMenuPressServed != timelineRightPresses else { return false }
+        keyMenuPressServed = timelineRightPresses
+        return true
+    }
+
     /// A left press with Control held: the Mac's right click.
     static func isControlClick(_ event: NSEvent?) -> Bool {
         guard let event else { return false }

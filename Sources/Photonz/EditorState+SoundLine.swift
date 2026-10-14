@@ -192,7 +192,7 @@ extension EditorState {
     /// picked unless it already is; the playhead stays where it was parked.
     func soundSegmentMenuRows(layerID: UUID, startMS: Int, atLayerMS ms: Int) -> [MenuRow] {
         guard let level = document?.layer(id: layerID)?.soundLevel, !isClipLocked(layerID) else { return [] }
-        if !soundLinePick(layerID: layerID).segments.contains(startMS) {
+        if servesThisRightPress(), !soundLinePick(layerID: layerID).segments.contains(startMS) {
             afterTheMenuIsBuilt { [weak self] in
                 self?.pickSoundSegment(layerID: layerID, startMS: startMS, atLayerMS: ms,
                                        extending: false, movingPlayhead: false)
@@ -227,7 +227,7 @@ extension EditorState {
         guard document?.layer(id: layerID)?.soundLevel != nil, !isClipLocked(layerID) else { return [] }
         let picked = soundLinePick(layerID: layerID).dots
         let inHand = picked.contains(ms) ? picked : [ms]
-        if !picked.contains(ms) {
+        if servesThisRightPress(), !picked.contains(ms) {
             afterTheMenuIsBuilt { [weak self] in
                 self?.pickSoundPoint(layerID: layerID, atLayerMS: ms, extending: false, movingPlayhead: false)
             }

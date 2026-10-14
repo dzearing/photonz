@@ -61,7 +61,14 @@ struct EditorView: View {
     /// two inputs to the overflow loop. Real measurements, so no width estimate
     /// can be wrong (an earlier hand-computed version under-counted and clipped;
     /// a `ViewThatFits` version recursed to death inside `GlassEffectContainer`).
-    @State private var toolbarWidths = ToolbarWidths()
+    ///
+    /// Kept in a box SwiftUI does not watch, because the bar changes width on
+    /// every pick (Info comes and goes) and a watched width rebuilt the whole
+    /// editor on each one (layer-pick-latency-walk). `toolbarFitPass` is what
+    /// the editor watches instead: it moves only when the new width changes
+    /// which tools fit.
+    @State private var measuredBar = ToolbarWidthsBox()
+    @State private var toolbarFitPass = 0
     /// How wide each slot on the folded bar was last drawn, by slot, so the
     /// fold can tell what fits before it draws it (`ToolBarFold.Metrics`).
     @State private var toolSlotWidths: [String: CGFloat] = [:]
@@ -184,11 +191,14 @@ struct EditorView: View {
                         editorState.toolSettingsSize = size
                     }
                     .onPreferenceChange(ToolbarContentWidthKey.self) { widths in
-                        toolbarWidths = widths
-                        let width = widths.bar
+                        let foldBefore = groupedFold
+                        measuredBar.widths = widths
+                        if groupedFold != foldBefore { toolbarFitPass += 1 }
                         // The legend parks clear of the bar, so it needs the
                         // bar's real width, not a guess.
-                        editorState.toolBarWidth = width
+                        if editorState.toolBarWidth != widths.bar {
+                            editorState.toolBarWidth = widths.bar
+                        }
                         reconcileToolbarCount()
                     }
                 // The docked inspector. The 1px resize handle is the panel's own
@@ -923,6 +933,7 @@ struct EditorView: View {
     /// changes. The policy (and the reason it steps by many tools at once) lives
     /// in `EditorChromeLayout.fittedToolCount`, where it is unit-tested.
     private func reconcileToolbarCount() {
+        let toolbarWidths = measuredBar.widths
         guard toolbarBudget > 0, toolbarWidths.bar > 0 else { return }
         let fitted = EditorChromeLayout.fittedToolCount(
             current: toolbarVisibleCount,
@@ -1062,9 +1073,12 @@ struct EditorView: View {
     /// resize rides the same spring as the tools, on a TOOL change only: the
     /// 10.7 note on `toolsBar` is why nothing here animates on a selection.
     private var oneGlassBar: some View {
+        // Info is left out of this list and drawn by `ToolBarInfoSection`,
+        // which asks for itself whether anything is picked: asked here, every
+        // pick rebuilt the whole editor (layer-pick-latency-walk).
         let sections = EditorChromeLayout.toolBarSections(
             showsColor: editorState.activeTool.colorControl != .hidden,
-            showsInfo: editorState.canShowTransformValues)
+            showsInfo: false)
         return HStack(spacing: barSpacing.sectionGap) {
             ForEach(Array(sections.enumerated()), id: \.element) { index, section in
                 if EditorChromeLayout.toolBarHasHairline(before: index) {
@@ -1073,6 +1087,7 @@ struct EditorView: View {
                 }
                 toolBarSection(section)
             }
+            ToolBarInfoSection(hairlineHeight: barSpacing.hairlineHeight, isSection: true)
         }
         .padding(.horizontal, barSpacing.endPadding)
         .frame(height: barSpacing.height)
@@ -1086,32 +1101,8 @@ struct EditorView: View {
         switch section {
         case .tools: toolsSection
         case .color: colorBar
-        case .info: infoButton
+        case .info: ToolBarInfoSection(hairlineHeight: nil, isSection: true)
         }
-    }
-
-    /// Info, at the bar's right end while something is picked: opens the
-    /// picked layer's transform values in a popover rising out of it, never
-    /// over the picture (the user, 2026-10-12: "Maybe it just becomes an 'i'
-    /// icon that gets added to the existing toolbar, and you can click to
-    /// expand a popup with the transform values"; `TransformValuesPopover`).
-    /// Lit while the popover is open. It comes and goes with the pick without
-    /// a spring, for the 10.7 reason on `toolsBar`.
-    private var infoButton: some View {
-        let open = editorState.showsTransformBar
-        return Button { editorState.toggleTransformValues() } label: {
-            Image(systemName: "info.circle")
-                .font(.system(size: 15, weight: .medium))
-        }
-        .buttonStyle(.tool(isActive: open))
-        .help(TransformValuesPopover.infoHelp)
-        .playtestControl(TransformValuesPopover.infoControl,
-                         detail: "Tool bar, transform values \(open ? "open" : "closed")")
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
-            if editorState.transformInfoAnchor != frame { editorState.transformInfoAnchor = frame }
-        }
-        .onDisappear { editorState.transformInfoAnchor = nil }
-        .toolBarGroup("Info", padding: 12, isSection: isOneGlassBar)
     }
 
     /// The tools as the bar has room for them: the families bar folded to
@@ -1143,7 +1134,7 @@ struct EditorView: View {
             // picture gets narrow.
             gridChip
             zoomBar
-            if editorState.canShowTransformValues { infoButton }
+            ToolBarInfoSection(hairlineHeight: nil, isSection: isOneGlassBar)
         }
     }
 
@@ -1346,6 +1337,10 @@ struct EditorView: View {
     /// pair, the grid). Unbounded until the bar has been measured once, so the
     /// first pass draws every tool and the fold works from real widths.
     private var toolRowRoom: CGFloat {
+        // Read so a width that changes what fits rebuilds the bar; the width
+        // itself is read from the box (`measuredBar`).
+        _ = toolbarFitPass
+        let toolbarWidths = measuredBar.widths
         guard toolbarBudget > 0, toolbarWidths.bar > 0, toolbarWidths.toolRow > 0 else {
             return .greatestFiniteMagnitude
         }
@@ -3308,6 +3303,12 @@ private struct ToolbarWidths: Equatable {
     var toolRow: CGFloat = 0
 }
 
+/// The bar's last measured widths, in a box SwiftUI does not watch
+/// (`EditorView.measuredBar`).
+private final class ToolbarWidthsBox {
+    var widths = ToolbarWidths()
+}
+
 /// Every slot on the folded tool row, by name, as wide as it was drawn.
 private struct ToolSlotWidthsKey: PreferenceKey {
     static let defaultValue: [String: CGFloat] = [:]
@@ -3459,6 +3460,53 @@ private struct ToolBarGroupChrome: ViewModifier {
                 .contentShape(.capsule)
                 .toolBarGroupProbe(name)
         }
+    }
+}
+
+/// Info, at the bar's right end while something is picked: opens the
+/// picked layer's transform values in a popover rising out of it, never
+/// over the picture (the user, 2026-10-12: "Maybe it just becomes an 'i'
+/// icon that gets added to the existing toolbar, and you can click to
+/// expand a popup with the transform values"; `TransformValuesPopover`).
+/// Lit while the popover is open. It comes and goes with the pick without
+/// a spring, for the 10.7 reason on `toolsBar`.
+///
+/// A view of its own on purpose, like `MeasureLegendSlot`: whether anything
+/// is picked changes on every click, and read in the editor's own body it
+/// rebuilt the whole editor (panel, timeline and all) on each pick. Here a
+/// pick costs this button (and the bar's new width, `measuredBar`). With
+/// `hairlineHeight` it brings the hairline that parts it from the section
+/// before it.
+private struct ToolBarInfoSection: View {
+    @Environment(EditorState.self) private var editorState
+    let hairlineHeight: CGFloat?
+    let isSection: Bool
+
+    var body: some View {
+        if editorState.canShowTransformValues {
+            if let hairlineHeight {
+                Divider().frame(height: hairlineHeight)
+                    .background { Color.clear.toolBarMarkProbe(tool: nil) }
+            }
+            button
+        }
+    }
+
+    private var button: some View {
+        let open = editorState.showsTransformBar
+        return Button { editorState.toggleTransformValues() } label: {
+            Image(systemName: "info.circle")
+                .font(.system(size: 15, weight: .medium))
+        }
+        .buttonStyle(.tool(isActive: open))
+        .help(TransformValuesPopover.infoHelp)
+        .playtestControl(TransformValuesPopover.infoControl,
+                         detail: "Tool bar, transform values \(open ? "open" : "closed")")
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { frame in
+            if editorState.transformInfoAnchor != frame { editorState.transformInfoAnchor = frame }
+        }
+        .onDisappear { editorState.transformInfoAnchor = nil }
+        .toolBarGroup("Info", padding: 12, isSection: isSection)
     }
 }
 

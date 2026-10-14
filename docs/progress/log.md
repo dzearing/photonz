@@ -21413,3 +21413,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Frame gates time a renderer on its own Core Image context and read each frame beside a frame-shaped yardstick (`MachineSpeed.checkFrames`, `.frame`, `timedRenderer()`); see docs/progress/perf.md. Seven suites moved.
 - The grain banding check reads every frame of both files and takes the middle one, with its line at three quarters of plain (measured: default grain 0.50 quiet, 0.68 beside other encoders; amount 16 0.83).
 - Four full `Scripts/test.sh` runs in a row passed. The cut export's 30 second reader give-up (seen once on 2026-10-13) did not reproduce in twelve runs, loaded or not; exporter unchanged.
+
+## 2026-10-14 — Eleven of the twelve sweep walks pass again
+
+- A pick no longer rebuilds the whole editor (regressed by the tool bar's Info button, 1cd96c89, bisected): Info is its own view, and the bar's measured widths sit in an unwatched box, so the editor is rebuilt only when a width changes which tools fit (`EditorView.measuredBar`, `toolbarFitPass`).
+- A line's right-click menu picks what it landed on once per right click (`servesThisRightPress`): rebuilt on a later redraw, the segment menu took the segment back from a point just clicked. Key, segment and sound line menus share it.
+- Walks updated: tracks named for the clip's sound row, `grid` declared where shapes are drawn (the probe had been left with the grid on), row drags and the five-click burst moved for the lists pane at the bottom.
+- Open: `segmented-chip-refraction-film-walk` belongs to the new `the-layers-and-library-pane-holds-still-under-th` (the pane resizes and moves the control from under the pointer). `section-fold-motion-walk` trips its 16ms gates now and then under load.
