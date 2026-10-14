@@ -46,6 +46,10 @@
       "absent": [
         "Measure Tool",
         "Canvas"
+      ],
+      "lists": [
+        "Layers",
+        "Library"
       ]
     },
     {
@@ -95,6 +99,10 @@
       "do": "expectSections",
       "absent": [
         "Measure Tool"
+      ],
+      "lists": [
+        "Layers",
+        "Library"
       ]
     },
     {
@@ -105,6 +113,37 @@
     {
       "do": "snapshot",
       "name": "02-rectangle-select"
+    },
+    {
+      "do": "dragHandle",
+      "area": "Lists",
+      "by": 120,
+      "expect": "moves"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectSections",
+      "lists": [
+        "Layers",
+        "Library"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "02b-lists-pane-taller"
+    },
+    {
+      "do": "dragHandle",
+      "area": "Lists",
+      "by": -120,
+      "expect": "moves"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
     },
     {
       "do": "key",
@@ -255,6 +294,11 @@
       "do": "expectSections",
       "absent": [
         "Measure Tool"
+      ],
+      "lists": [
+        "Layers",
+        "Measurements",
+        "Library"
       ]
     },
     {
@@ -385,6 +429,11 @@
       "do": "expectSections",
       "absent": [
         "Measure Tool"
+      ],
+      "lists": [
+        "Layers",
+        "Measurements",
+        "Library"
       ]
     },
     {

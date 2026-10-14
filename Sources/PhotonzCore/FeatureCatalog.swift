@@ -84,6 +84,11 @@ public enum FeatureCatalog {
 
     public static let toolSettingsFlag = "next-tool-settings"
 
+    /// The right hand panel split like Photoshop's Properties over Layers: the
+    /// pick's sections on top, the document's lists in a pane at the bottom
+    /// with a grip between them (`PanelListsPane`).
+    public static let listsPaneFlag = "next-lists-pane"
+
     public static let toolGroupsFlag = "next-tool-groups"
 
     public static let videoToolBarFlag = "next-video-tool-bar"
@@ -602,6 +607,16 @@ public enum FeatureCatalog {
                     title: "Tool settings ride above the tool bar",
                     description: "The tool in your hand shows its settings in a small capsule above the tool bar, kept in step with the panel. Off means these settings live only in the panel.",
                     area: .tools,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: listsPaneFlag,
+                    title: "Lists in a pane under the pick",
+                    description: "The right hand panel shows what you picked on top, and Layers, Measurements and the Library in a pane at the bottom that keeps its height. Off means one scrolling column with Layers at the top.",
+                    area: .panel,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

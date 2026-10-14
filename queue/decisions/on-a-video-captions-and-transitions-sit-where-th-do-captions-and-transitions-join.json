@@ -1,0 +1,50 @@
+{
+  "id": "on-a-video-captions-and-transitions-sit-where-th-do-captions-and-transitions-join",
+  "taskId": "on-a-video-captions-and-transitions-sit-where-th",
+  "question": "Do Captions and Transitions join the lists pane on a video?",
+  "context": "Built 2026-10-13: on a picture the right panel shows what you picked on top and Layers, Measurements and Library in a pane at the bottom, as you chose. On a video the brief said Captions and Transitions would join that pane. Built that way, a picked sound on a laptop window lost its Fades below the fold (the audio mock shows them on screen), because both are forms the pane cannot shorten. So for now they stay at the foot of the pick's column.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep them under the clip, no pane on a video",
+      "summary": "On a video the panel is one column: the picked clip or sound first, then Captions and Transitions at its foot. The pane at the bottom appears only when Layers is showing (the timeline folded away).",
+      "pros": [
+        "A picked sound shows Channel and Fades without scrolling on a laptop window, as the audio mock does",
+        "Nothing new to learn on a video"
+      ],
+      "cons": [
+        "Captions and Transitions still scroll with the pick, so they move down when a pick brings more sections"
+      ],
+      "mitigation": "They sit at the very foot, under everything about the pick, so they never push the pick down."
+    },
+    {
+      "id": "b",
+      "label": "Move them into the pane, which takes 40 per cent",
+      "summary": "Captions and Transitions sit in the pane at the bottom, like Layers and Library on a picture, and keep their place whatever you pick. The grip between the two parts sets the split.",
+      "pros": [
+        "Same layout on a picture and a video",
+        "Picking never moves them"
+      ],
+      "cons": [
+        "On a laptop window a picked sound shows only Properties and Channel; Fades is below the fold until you scroll or drag the grip down"
+      ],
+      "mitigation": "The grip remembers where you leave it, so dragging it down once gives the pick its room for good."
+    },
+    {
+      "id": "c",
+      "label": "Move them into the pane, folded to their headers",
+      "summary": "Captions and Transitions sit in the pane at the bottom, each folded to its header the first time, so the pane is two header rows tall and the pick keeps nearly all the height. Open one and the pane grows to show it.",
+      "pros": [
+        "The pick keeps its room on a laptop",
+        "The two are always one click away and never move"
+      ],
+      "cons": [
+        "Transitions and Captions need a click before you can use them the first time"
+      ],
+      "mitigation": "Opening one is remembered, so it is a one time click."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-14T03:27:02.896Z"
+}

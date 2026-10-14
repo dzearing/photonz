@@ -7,6 +7,10 @@ import SwiftUI
 /// The dock's scrolling area as a coordinate space, so a section can say where
 /// it sits relative to what is on screen rather than to the window.
 let inspectorDockSpace = "inspector.dock"
+/// The whole panel as a coordinate space, its top where the pick's scroller
+/// starts, so a walk can read a list in the pane at the bottom against the
+/// same origin as everything above it (`PanelListsPane`).
+let inspectorPanelSpace = "inspector.panel"
 
 /// The sections of the inspector, in their default order. `rawValue` persists.
 enum InspectorSectionID: String, CaseIterable {

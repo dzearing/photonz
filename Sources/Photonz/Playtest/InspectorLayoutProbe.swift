@@ -31,6 +31,13 @@ import SwiftUI
     var frames: [InspectorSectionID: Section] = [:]
     /// How tall the scrolling area is.
     var viewportHeight: CGFloat = 0
+    /// The sections in the pane at the bottom of the panel, under the pick's
+    /// own, in order (`PanelListsPane`). Empty when there is no pane.
+    var lists: [InspectorSectionID] = []
+    /// Where that pane is seen, in the same coordinates as `frames` (measured
+    /// down from the top of the pick's scrolling area), so a list section is
+    /// in view when it is inside the PANE rather than inside the part above.
+    var listsBand: ClosedRange<CGFloat>?
     /// Where the scrolling area sits in the WINDOW, so a step that has to put
     /// a pointer on a section can turn a section's frame into a point the
     /// window understands.
@@ -118,17 +125,26 @@ import SwiftUI
         visible.compactMap { frames[$0] }
     }
 
+    /// The band a section can be seen in: the pane at the bottom for one of
+    /// its lists, the scrolling area above it for everything else.
+    func band(of section: Section) -> ClosedRange<CGFloat>? {
+        if lists.contains(section.id) { return listsBand }
+        return viewportHeight > 0 ? 0...viewportHeight : nil
+    }
+
     /// A section counts as reachable when all of it is inside the viewport.
     func isFullyVisible(_ section: Section) -> Bool {
-        guard viewportHeight > 0 else { return false }
-        return section.frame.minY >= -0.5 && section.frame.maxY <= viewportHeight + 0.5
+        guard let band = band(of: section) else { return false }
+        return section.frame.minY >= band.lowerBound - 0.5
+            && section.frame.maxY <= band.upperBound + 0.5
     }
 
     /// ...and as started when its header is inside it, which is the weaker
     /// claim a collapsed section can make.
     func isHeaderVisible(_ section: Section) -> Bool {
-        guard viewportHeight > 0 else { return false }
-        return section.frame.minY >= -0.5 && section.frame.minY <= viewportHeight - 24
+        guard let band = band(of: section) else { return false }
+        return section.frame.minY >= band.lowerBound - 0.5
+            && section.frame.minY <= band.upperBound - 24
     }
 }
 
@@ -143,6 +159,11 @@ import SwiftUI
 
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {
     InspectorLayoutProbe.shared.dockFrame = frame
+}
+
+@MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {
+    InspectorLayoutProbe.shared.lists = lists
+    InspectorLayoutProbe.shared.listsBand = band
 }
 
 @MainActor func recordInspectorCarrying(_ title: String?) {
@@ -187,6 +208,7 @@ extension View {
 @MainActor func recordInspectorSection(_ id: InspectorSectionID, title: String, frame: CGRect) {}
 @MainActor func recordInspectorViewportHeight(_ height: CGFloat) {}
 @MainActor func recordInspectorDockFrame(_ frame: CGRect) {}
+@MainActor func recordInspectorListsPane(_ lists: [InspectorSectionID], band: ClosedRange<CGFloat>?) {}
 @MainActor func recordInspectorCarrying(_ title: String?) {}
 @MainActor func recordEffectReveal(_ id: String, frame: CGRect,
                                    room: CGFloat, action: DockReveal.Action) {}

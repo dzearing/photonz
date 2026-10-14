@@ -3976,7 +3976,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// ...and, with `absent`, sections that must NOT be in the dock. Every
     /// claim also fails when a tool's settings section is showing with
     /// another tool in hand (`PanelToolSettings.strays`).
-    case expectSections(leading: [String], layers: Bool?, absent: [String])
+    /// ...and, with `lists`, exactly which sections sit in the pane at the
+    /// bottom of the panel, in order, under the pick's own (`PanelListsPane`);
+    /// an empty list says there is no pane at all.
+    case expectSections(leading: [String], layers: Bool?, absent: [String], lists: [String]?)
     /// The named thing in the right hand panel must be ALL on screen: inside
     /// the window, and inside whatever is scrolling it.
     ///
@@ -5776,11 +5779,13 @@ public enum PlaytestStep: Sendable, Equatable {
             let leading = try f.optionalStrings("leading")
             let layers = try f.optionalFlag("layers")
             let absent = try f.optionalStrings("absent")
-            guard !leading.isEmpty || layers != nil || !absent.isEmpty else {
+            let lists: [String]? = f.has("lists") ? try f.optionalStrings("lists") : nil
+            guard !leading.isEmpty || layers != nil || !absent.isEmpty || lists != nil else {
                 throw f.invalid("leading", "expectSections has to name the sections the panel must start with, "
-                    + "in order, say whether the Layers list is there, or name sections that must be absent")
+                    + "in order, say whether the Layers list is there, name sections that must be absent, "
+                    + "or name the lists in the pane under the pick")
             }
-            self = .expectSections(leading: leading, layers: layers, absent: absent)
+            self = .expectSections(leading: leading, layers: layers, absent: absent, lists: lists)
         case "expectInView":
             self = .expectInView(field: try f.string("field"),
                                  whole: try f.optionalFlag("whole") ?? false)

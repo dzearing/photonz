@@ -388,6 +388,24 @@ struct DockBudgetScratch: Equatable {
         return panes[focus].isOpen
     }
 
+    /// What `sections` take drawn at their least: every header, and each open
+    /// LIST at the floor the budget may squeeze it to (or its own height, when
+    /// that is less). A form counts only its header: it is never squeezed, so
+    /// a pane holding one scrolls whatever height it has. Nil until every one
+    /// of them has been measured. The pane of lists under the pick asks this
+    /// so a shelf is not cut across its foot (`PanelListsPane`).
+    func leastHeight(of sections: [InspectorSectionID]) -> CGFloat? {
+        var total = 2 * DockMetrics.listTopPadding
+        for id in sections {
+            guard let header = budget.headers[id] else { return nil }
+            total += header + DockMetrics.sectionDividerHeight
+            guard !collapsed(id), DockMetrics.scrollingSections.contains(id) else { continue }
+            guard let body = budget.bodies[id] else { return nil }
+            total += (budget.listExtras[id] ?? 0) + min(body, squeezeFloor(for: id, room: room))
+        }
+        return total
+    }
+
     /// How short a list section may be squeezed.
     ///
     /// Three rows for a list of rows, which is the ordinary case: layers,
@@ -445,6 +463,14 @@ struct DockBudgetScratch: Equatable {
     /// ...and the height each of them was handed, so a fold redraws the dock
     /// only when an OPEN section would be handed a different one.
     var drawnCeilings: [InspectorSectionID: CGFloat] = [:]
+    /// For the pane of lists under the pick (`PanelListsPane`): how tall it
+    /// was drawn, so a fold redraws the panel only when the pane would change,
+    /// and where it sits in the panel, for a walk.
+    var drawnPaneHeight: CGFloat?
+    var paneBand: ClosedRange<CGFloat>?
+    /// A reveal in this scroller only brings a section's header into view
+    /// rather than all of it: true for the pane of lists.
+    var revealsHeaderOnly = false
     /// How many picks the dock has seen. Only the release that still scrolls to
     /// a pick reads it: a reveal waits a beat for the section it is about to
     /// scroll to to finish being laid out, and this is how the wait knows it is
@@ -544,6 +570,20 @@ struct DockBudgetScratch: Equatable {
 
     func applyLibrary() {
         guard scratch.isPending, let frame = scratch.libraryFrame else { return }
+        // In the pane of lists under the pick (`PanelListsPane`) the shelf
+        // shares a short pane with Layers, and scrolling to its foot would
+        // carry the Layers header off the top. Its header in view is enough:
+        // the pane only moves when the shelf's header is out of sight.
+        if scratch.revealsHeaderOnly {
+            scratch.isPending = false
+            editorState.libraryRevealHandled()
+            let header = DockMetrics.headerRowHeight
+            guard frame.minY < 0 || frame.minY + header > scratch.viewportHeight else { return }
+            withAnimation(.easeInOut(duration: 0.28)) {
+                proxy.scrollTo(InspectorSectionID.library, anchor: .top)
+            }
+            return
+        }
         // What the fetch PRODUCED: the section named after the thing that has
         // just landed on the canvas, which the command that placed it named
         // (`EditorState.sectionTheFetchProduced`). The shelf may not be brought

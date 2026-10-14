@@ -282,6 +282,12 @@ extension Experiments {
     /// settings live in the panel alone.
     var toolSettingsEnabled: Bool { isEnabled(FeatureCatalog.toolSettingsFlag) }
 
+    /// `next-lists-pane`: whether the panel keeps the pick's sections on top
+    /// and its lists (Layers, Measurements, Library) in a pane at the bottom
+    /// with a grip between them. Exists only in the Next
+    /// release's catalog, so Current keeps its one scrolling column.
+    var listsPaneEnabled: Bool { isEnabled(FeatureCatalog.listsPaneFlag) }
+
     /// Which of the capsule's settings this release has switched on, so the
     /// pure policy in `ToolSettingsBar` can decide what the capsule carries
     /// without reaching for the flag store itself.

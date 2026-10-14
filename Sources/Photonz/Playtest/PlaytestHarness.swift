@@ -3121,9 +3121,11 @@ private final class Run {
         case .expectSectionFits(let section):
             note(number, step.name, try checkSectionFits(section), state: describe())
 
-        case .expectSections(let leading, let layers, let absent):
+        case .expectSections(let leading, let layers, let absent, let lists):
             note(number, step.name,
-                 try await patiently { try self.checkSections(leading: leading, layers: layers, absent: absent) },
+                 try await patiently {
+                     try self.checkSections(leading: leading, layers: layers, absent: absent, lists: lists)
+                 },
                  state: describe())
 
         case .expectInView(let field, let whole):
@@ -8132,6 +8134,9 @@ private final class Run {
                 + "there is \(probe.names.isEmpty ? "none at all, so is the panel on screen?" : probe.names.joined(separator: ", "))")
         }
         let start = handle.reading
+        // Every grab bar grows its area pulled down, except the line over the
+        // pane of lists, which grows it pulled up (`PanelListsPane`).
+        let direction = (by < 0) == (area != "Lists") ? "up" : "down"
         func pt(_ value: CGFloat) -> String { "\(Int(value.rounded()))pt" }
         func measurements(_ reading: PanelAreaHandleReading) -> String {
             "\(pt(reading.height)) tall, content \(pt(reading.contentHeight)), "
@@ -8187,14 +8192,14 @@ private final class Run {
         let allowed = by < 0 ? max(wanted, wantedNow) : min(wanted, wantedNow)
         guard abs(after.height - allowed) <= 1 else {
             throw Failure(description: "\(area) was \(pt(start.height)) tall, "
-                + "the bar was dragged \(pt(abs(by))) \(by < 0 ? "up" : "down"), "
+                + "the bar was dragged \(pt(abs(by))) \(direction), "
                 + "and it is \(pt(after.height)) now, where it should be \(pt(allowed)) "
                 + "(content \(pt(start.contentHeight)) -> \(pt(after.contentHeight)), "
                 + "floor \(pt(start.minHeight)), "
                 + "ceiling \(pt(start.maxAllowedHeight)) -> \(pt(after.maxAllowedHeight)))")
         }
         note(number, "dragHandle",
-             "\(area) dragged \(pt(abs(by))) \(by < 0 ? "up" : "down")\(held); "
+             "\(area) dragged \(pt(abs(by))) \(direction)\(held); "
                 + "\(pt(start.height)) -> \(pt(after.height)) "
                 + "(content \(pt(after.contentHeight)), remembered ceiling "
                 + "\(pt(rememberedCeiling(for: area))))",
@@ -8205,7 +8210,8 @@ private final class Run {
     /// can prove a dragged height is remembered and not only drawn.
     private func rememberedCeiling(for area: String) -> CGFloat {
         let key = area.caseInsensitiveCompare("Library") == .orderedSame
-            ? LibraryPanel.heightKey : LayersListView.heightKey
+            ? LibraryPanel.heightKey
+            : area == "Lists" ? InspectorPanel.listsPaneHeightKey : LayersListView.heightKey
         return CGFloat(UserDefaults.standard.double(forKey: key))
     }
 
@@ -11473,9 +11479,23 @@ private final class Run {
     /// capture with a ruler.
     /// Whether the dock's sections, top to bottom and with Layers aside,
     /// start with `leading`.
-    private func checkSections(leading: [String], layers: Bool? = nil, absent: [String] = []) throws -> String {
+    private func checkSections(leading: [String], layers: Bool? = nil, absent: [String] = [],
+                               lists: [String]? = nil) throws -> String {
         let probe = InspectorLayoutProbe.shared
         let all = probe.visible.map(\.title)
+        // The pane at the bottom: exactly these lists, in this order, and
+        // nothing of the pick's in it (`PanelListsPane`).
+        var paneSays: String?
+        if let lists {
+            let pane = probe.lists.map(\.title)
+            guard pane == lists else {
+                throw Failure(description: lists.isEmpty
+                    ? "the panel has a pane of lists at the bottom (\(pane.joined(separator: ", "))), and the walk said it would not"
+                    : "the pane at the bottom of the panel holds \(pane.isEmpty ? "nothing" : pane.joined(separator: ", ")), "
+                        + "not \(lists.joined(separator: ", ")); all of the panel: \(all.joined(separator: ", "))")
+            }
+            paneSays = lists.isEmpty ? "no pane of lists" : "the pane at the bottom holds \(lists.joined(separator: ", "))"
+        }
         // Always: no tool's settings with another tool in hand (the user,
         // 2026-10-13, Measure Tool showing while a rectangle was picked with
         // Select).
@@ -11500,12 +11520,14 @@ private final class Run {
                 : "the panel still has its Layers list, and the walk said the timeline stands in for it; "
                     + "it shows: \(all.joined(separator: ", "))")
         }
-        let listSays = [layers.map { $0 ? "the Layers list is there" : "there is no Layers list" }, absentSays]
+        let listSays = [layers.map { $0 ? "the Layers list is there" : "there is no Layers list" }, absentSays, paneSays]
             .compactMap { $0 }.joined(separator: "; ")
         guard !leading.isEmpty else {
             return (listSays.isEmpty ? "" : listSays + "; ") + "it shows: \(all.joined(separator: ", "))"
         }
-        let shown = all.filter { $0 != InspectorSectionID.layers.title }
+        // The pick's part: everything but Layers and the pane of lists under it.
+        let pane = Set(probe.lists.map(\.title))
+        let shown = all.filter { $0 != InspectorSectionID.layers.title && !pane.contains($0) }
         guard Array(shown.prefix(leading.count)) == leading else {
             throw Failure(description: "the panel starts \(shown.prefix(leading.count + 2).joined(separator: ", ")), "
                 + "not \(leading.joined(separator: ", ")); all of it: \(shown.joined(separator: ", "))")

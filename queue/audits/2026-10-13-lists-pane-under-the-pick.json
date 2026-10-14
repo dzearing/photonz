@@ -1,0 +1,52 @@
+{
+  "feature": "The pick on top, the lists in a pane at the bottom",
+  "epic": "ui-building",
+  "summary": "The right panel now splits like Photoshop's Properties over Layers: what you picked scrolls on top, and Layers, Measurements and Library share a pane at the bottom that keeps its height whatever you pick. A line between them drags to share the height.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default (next-lists-pane is on at Next). Walks: panel-shows-what-is-picked-walk, panel-shows-what-is-picked-video-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "New blank canvas with the Library shown, nothing picked. The top part is empty and the pane at the bottom holds Layers and Library.",
+      "shot": "2026-10-13-lists-pane-01-nothing-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a rectangle (U), press V. Appearance, Effects and Motion lead the panel; Layers sits in the pane below.",
+      "shot": "2026-10-13-lists-pane-02-rectangle-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the line above Layers up. The pane grows until its lists fit, and stays that tall after you pick something else.",
+      "shot": "2026-10-13-lists-pane-02b-lists-pane-taller-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press I for Measure with nothing picked. Measure Tool sits alone on top, the pane is unchanged.",
+      "shot": "2026-10-13-lists-pane-05-nothing-measure-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a distance, press V and click its row in Layers. The caliper's own sections fill the top; the Layers row you clicked does not move.",
+      "shot": "2026-10-13-lists-pane-06-measurement-select-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a recording and pick the clip. On a video the panel stays one column: the clip's sections, then Captions and Transitions.",
+      "shot": "2026-10-13-lists-pane-video-clip-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does picking a row in Layers now feel steady, with the list staying where your pointer is?",
+    "Is the pane's starting height (40 per cent, or enough for Layers and the Library's first row) right on your usual window?",
+    "With nothing picked, is an empty top part fine, or would you rather see something there?",
+    "Is the line between the two parts easy enough to find and grab?"
+  ],
+  "rough": [
+    "On a video, Captions and Transitions stay at the foot of the pick's column rather than in the pane: in the pane they pushed a picked sound's Fades below the fold on a laptop window. That is the card on-a-video-captions-and-transitions-sit-where-th-do-captions-and-transitions-join, task on-a-video-captions-and-transitions-sit-where-th.",
+    "The shared mock shell stacks Layers above Properties in one dock (UX-PATTERNS shell item 6); the panel now puts the pick on top with the lists in a pane, as you chose on the card the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit (your call on 2026-10-13).",
+    "Section counts in the pick's part, before (one column, Layers included) to after (top part only, pane apart): nothing picked 2 to 0, rectangle 5 to 3, rectangle with Measure 6 to 4, nothing with Measure 3 to 1, caliper 7 to 4, text 7 to 4, screenshot 2 to 0. The video states are unchanged (clip 10, title 8).",
+    "The line between the parts is a plain hairline with a resize cursor, like a Mac split view; there is no visible grabber.",
+    "On a short window the pane can be shorter than Layers and the Library at their least, and then it scrolls on its own."
+  ]
+}
