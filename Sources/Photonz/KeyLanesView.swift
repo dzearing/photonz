@@ -207,6 +207,9 @@ private struct KeyLaneView: View {
         var point: CGPoint
         var low: Double
         var high: Double
+        /// Where the handle was drawn when the hand took it, in the lane's
+        /// own space: the hand is read as that plus how far it has moved.
+        var from: CGPoint
     }
 
     struct PointDrag {
@@ -524,7 +527,7 @@ private struct KeyLaneView: View {
                         .frame(width: 8, height: 8)
                         .frame(width: 14, height: 14)
                         .contentShape(Rectangle())
-                        .gesture(handleGesture(key.ref, side, graph: graph, ruler: ruler))
+                        .gesture(handleGesture(key.ref, side, at: spot, graph: graph, ruler: ruler))
                         .offset(x: spot.x - 7, y: spot.y - 7)
                         .help(side == .arriving ? "How it arrives at this key" : "How it leaves this key")
                 }
@@ -532,14 +535,20 @@ private struct KeyLaneView: View {
         }
     }
 
-    private func handleGesture(_ ref: KeyRef, _ side: KeyHandleSide, graph: KeyGraph,
+    /// The handle is laid out in its own few points and moves with the hand,
+    /// so its own space would put the drag in that box and count only how far
+    /// the hand has got ahead of it: the hand is read as where the handle
+    /// started plus how far it has moved across the lanes, which stay still.
+    private func handleGesture(_ ref: KeyRef, _ side: KeyHandleSide, at spot: CGPoint, graph: KeyGraph,
                                ruler: MotionStripRuler) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        DragGesture(minimumDistance: 1, coordinateSpace: .named(space))
             .onChanged { value in
                 let (low, high) = handleDrag.map { ($0.low, $0.high) } ?? range(graph)
-                let ms = ruler.ms(atFraction: Double(value.location.x / laneWidth))
-                let point = CGPoint(x: ms, y: self.value(atY: value.location.y, low: low, high: high))
-                handleDrag = HandleDrag(ref: ref, side: side, point: point, low: low, high: high)
+                let from = handleDrag?.from ?? spot
+                let hand = CGPoint(x: from.x + value.translation.width, y: from.y + value.translation.height)
+                let ms = ruler.ms(atFraction: Double(hand.x / laneWidth))
+                let point = CGPoint(x: ms, y: self.value(atY: hand.y, low: low, high: high))
+                handleDrag = HandleDrag(ref: ref, side: side, point: point, low: low, high: high, from: from)
             }
             .onEnded { _ in
                 if let drag = handleDrag {

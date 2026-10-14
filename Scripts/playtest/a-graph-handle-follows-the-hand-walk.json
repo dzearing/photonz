@@ -1,0 +1,224 @@
+{
+  "out": "/tmp/photonz-playtest/a-graph-handle-follows-the-hand-walk",
+  "seed": "A key's handle on the value graph follows the hand. At Next defaults with no flag changed, this walk keys a title's Scale at one and three seconds, opens its graph, picks the segment so its handles show, drags the first key's leaving handle up and to the right with the pointer, and reads Scale half way: the handle lands under the pointer, not back on its key or half way to the pointer.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "front": true
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "rightClick",
+      "on": "Key Scale 1",
+      "choose": "Show Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "1-graph",
+      "note": "Scale keyed 100% at 0:01 and 200% at 0:03 on a title, its lane opened into its graph. Two points and one segment between them"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-graph"
+    },
+    {
+      "comment": "A plain click on the line between the two points picks that segment and adds nothing.",
+      "do": "windowClick",
+      "on": "Segment Scale 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "2-segment-picked",
+      "note": "THE FIRST TEST: a single click on the line picked the segment (drawn white, its two handles out) and no point was added"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-segment-picked"
+    },
+    {
+      "comment": "The first key's leaving handle, drawn at (510, 932) once the segment is picked. A real pointer's drag up and to the right.",
+      "do": "windowDrag",
+      "from": [
+        509.8,
+        932.3
+      ],
+      "to": [
+        560,
+        905
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-handle-dragged",
+      "note": "THE TEST: the leaving handle dragged fifty points right and twenty seven up lands under the pointer, and the curve leaves the first key steeper"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-handle-dragged"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Scale",
+      "reads": "128.4"
+    }
+  ]
+}

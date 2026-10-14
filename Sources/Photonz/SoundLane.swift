@@ -146,6 +146,10 @@ struct SoundLevelLine: View {
     /// was when the dot was nine points, so the line sits at the height it
     /// always has for every level.
     private static let inset: CGFloat = 5.5
+    /// The line's own space, which a dot's and a bend handle's drag read the
+    /// hand in: each is laid out in its own few points before it is placed,
+    /// so a drag read in `.local` lands near the bar's start.
+    private static let lineSpace = "sound level line"
 
     var body: some View {
         let animated = animatedLine
@@ -161,6 +165,7 @@ struct SoundLevelLine: View {
             if let movingPoint { readout(movingPoint.to) }
         }
         .frame(width: width, height: height, alignment: .topLeading)
+        .coordinateSpace(.named(Self.lineSpace))
         .onContinuousHover(coordinateSpace: .local) { phase in
             switch phase {
             case .active(let at): hovered = animated.hit(at)
@@ -442,7 +447,7 @@ struct SoundLevelLine: View {
     /// loud, along is when. One gesture, because a point IS those two numbers.
     /// Shift keeps it to whichever way it set off.
     private func drag(_ point: AudioLevelPoint) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        DragGesture(minimumDistance: 1, coordinateSpace: .named(Self.lineSpace))
             .onChanged { value in
                 movingPoint = (point.atMS, landing(value, from: point))
                 onLevelInHand(shownLevel)
@@ -497,7 +502,7 @@ struct SoundLevelLine: View {
     }
 
     private func bend(from a: AudioLevelPoint, to b: AudioLevelPoint) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        DragGesture(minimumDistance: 1, coordinateSpace: .named(Self.lineSpace))
             .onChanged { value in
                 let heard = gain(atY: value.location.y)
                 let fader = max(level.gain, 0.0001)

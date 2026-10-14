@@ -1,0 +1,240 @@
+{
+  "out": "/tmp/photonz-playtest/a-sound-s-bend-handle-follows-the-hand-walk",
+  "seed": "A picked segment's bend handle on a sound's volume line follows the hand. At Next defaults with no flag changed, this walk puts points on the music's volume line, right-clicks the fade's segment and sets Ease out, then drags that segment's white bend handle down with the pointer and reads the level half way along it: the segment bends through where the handle was let go, not toward the top of the bar.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 0.0
+    },
+    {
+      "do": "action",
+      "action": "soundAddSample"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "focus",
+      "field": "Fade in"
+    },
+    {
+      "do": "type",
+      "text": "3"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 2
+    },
+    {
+      "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
+      "do": "windowClick",
+      "at": [
+        721,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1057,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        1393,
+        924
+      ],
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5,
+      "fullAt": [
+        4,
+        6,
+        9,
+        12
+      ]
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "pickedPoints": [
+        5
+      ],
+      "curves": [
+        "Linear",
+        "Linear",
+        "Linear",
+        "Linear"
+      ]
+    },
+    {
+      "comment": "Command-click on a point adds it to the pick and never lands a second point on it.",
+      "do": "windowClick",
+      "on": "Sample Music level point 3",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "pickedPoints": [
+        3,
+        5
+      ],
+      "pickedSegments": []
+    },
+    {
+      "do": "describe",
+      "stage": "1-points-picked",
+      "note": "Five points on the music's volume line: silence at the start, the top of the three second fade, and three Command-clicked on. Two of them picked, drawn white on an accent ring"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-points-picked"
+    },
+    {
+      "comment": "THE SECOND TEST: a right-click on the fade's segment picks it and offers the shared curve list; Ease out bends it.",
+      "do": "rightClick",
+      "on": "Segment Sample Music level 1",
+      "shot": "2-segment-menu",
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectSoundLine",
+      "clip": "Sample Music",
+      "curves": [
+        "Ease out",
+        "Linear",
+        "Linear",
+        "Linear"
+      ],
+      "pickedSegments": [
+        1
+      ],
+      "pickedPoints": [],
+      "followsLineAt": [
+        0.75,
+        1.5,
+        2.25
+      ]
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "points": 5
+    },
+    {
+      "comment": "The panel's Fades section speaks for the picked segment too.",
+      "do": "expect",
+      "menu": "Sound segment curve",
+      "reads": "Ease out"
+    },
+    {
+      "do": "describe",
+      "stage": "3-eased",
+      "note": "The fade's segment picked, white on an accent edge, bent to Ease out: it rises fast and lands soft, with a white bend handle at its middle"
+    },
+    {
+      "comment": "The bend handle sits at the middle of the picked fade segment, at 0:01.5. A real pointer's drag down toward the bottom of the bar.",
+      "do": "windowDrag",
+      "from": [
+        325.7,
+        927
+      ],
+      "to": [
+        325.7,
+        938
+      ],
+      "steps": 8
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "4-bent",
+      "note": "THE TEST: the bend handle dragged down eleven points: the fade's segment now bends low through where it was let go, and the level half way along reads about -22 dB rather than the near-full level of Ease out"
+    },
+    {
+      "do": "expect",
+      "field": "Volume",
+      "reads": "-22.3"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-bent"
+    }
+  ]
+}
