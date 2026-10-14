@@ -10,8 +10,9 @@ import SwiftUI
 // so this is not a track: it has no clip, no switches and no place in the
 // track order. It comes in once a camera value is keyed and goes with the last
 // key. Its diamonds are moments (`CameraRow.swift`): a click picks the frame
-// and goes to the key, a drag retimes every camera key there, and a right
-// click or ⌫ deletes them, each one undo step.
+// and goes to the key, a drag retimes every camera key there, a right click
+// eases them as a layer's key is eased, and ⌫ deletes them, each one undo
+// step.
 
 struct TimelineCameraRow: View {
     @Environment(EditorState.self) private var editorState
@@ -106,7 +107,8 @@ struct TimelineCameraRow: View {
         let at = x(shownMS(moment), ruler)
         let grab: CGFloat = 14
         let time = MotionStripRuler.timecode(Double(moment.ms))
-        return KeyGlyph(ease: .linear, isPicked: isPicked)
+        // Its shape says how it eases, as a key on a layer's lane does.
+        return KeyGlyph(ease: moment.ease ?? .linear, isPicked: isPicked)
             .scaleEffect(dragging ? 1.25 : 1)
             .frame(width: grab, height: grab)
             .contentShape(Rectangle())
@@ -115,7 +117,8 @@ struct TimelineCameraRow: View {
             .contextMenu { MenuRowsView(rows: editorState.cameraKeyMenuRows(atMS: moment.ms)) }
             .help("\(moment.reading) at \(time)")
             .playtestControl("Camera key \(index + 1)", detail: "Timeline")
-            .panelReadout("camera key \(index + 1): \(moment.reading) at \(time)" + (isPicked ? ", picked" : ""))
+            .panelReadout("camera key \(index + 1): \(moment.reading) at \(time), \(moment.ease?.title ?? "Mixed")"
+                          + (isPicked ? ", picked" : ""))
             // Placed by padding, so the diamond's frame is where it is drawn
             // and a right click lands on it.
             .padding(.leading, max(0, at - grab / 2))

@@ -273,17 +273,19 @@ struct TimelineDock: View {
     /// turned it down on 2026-09-25: the time is in the transport, the value
     /// in the panel, and a bar of controls carries no sentence about state.
     @ViewBuilder private var keyBar: some View {
-        if let picked = editorState.keySelection, !picked.refs.isEmpty || !picked.segments.isEmpty {
+        let picked = editorState.keySelection.flatMap { !$0.refs.isEmpty || !$0.segments.isEmpty ? $0 : nil }
+        // A diamond picked on the Camera row eases from here too, as a key does.
+        if picked != nil || editorState.easesPickedCameraKey {
             HStack(spacing: 4) {
                 Text("EASING")
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(0.9)
                     .foregroundStyle(VideoKit.Palette.faint)
                     .fixedSize()
-                if picked.segments.isEmpty {
-                    easingMenu
-                } else {
+                if let picked, !picked.segments.isEmpty {
                     segmentEasingMenu(picked)
+                } else {
+                    easingMenu
                 }
             }
             .playtestField("Easing")

@@ -117,6 +117,16 @@ struct CameraInspector: View {
             ForEach(MotionProperty.cameraProperties, id: \.self) { property in
                 CameraValueRow(property: property)
             }
+            // How it travels between two keys: the one Curve row a layer's
+            // Between the keys has (`CurveRow`), for every camera value moving
+            // at the playhead (`camera-keys-ease-in-and-out-like-every-other-key`).
+            if editorState.cameraHasStretch {
+                CurveRow(current: editorState.cameraStretchCurve,
+                         help: "How fast the camera travels between these two keys") {
+                    editorState.curveCameraStretch($0)
+                }
+                .padding(.top, 4)
+            }
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 6)

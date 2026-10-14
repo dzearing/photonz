@@ -206,6 +206,8 @@ extension EditorState {
     /// The ease every picked key shares, for the timeline bar's Easing;
     /// nil when nothing is picked or the picked keys differ.
     var pickedKeysEase: KeyEase? {
+        // A diamond picked on the Camera row is keys in hand too.
+        if keySelection == nil, easesPickedCameraKey { return pickedCameraKeysEase }
         guard let keySelection, let document else { return nil }
         return document.keysEase(layerID: keySelection.layerID, keySelection.refs)
     }
@@ -214,6 +216,10 @@ extension EditorState {
     /// the keys made after, the way a tool keeps the last setting you gave it.
     func easePickedKeys(_ ease: KeyEase) {
         newKeyEase = ease
+        if keySelection == nil, easesPickedCameraKey, let ms = pickedCameraKeyMS {
+            easeCameraKeys(atMS: ms, ease)
+            return
+        }
         guard let keySelection else { return }
         easeKeys(layerID: keySelection.layerID, keySelection.refs, ease)
     }

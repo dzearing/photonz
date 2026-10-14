@@ -1,0 +1,45 @@
+{
+  "feature": "Camera keys ease in and out",
+  "epic": "video-transitions-motion",
+  "summary": "A camera move eases the way any other key does: right-click a diamond on the Camera row for the key eases, pick a diamond and use the timeline bar's Easing, or shape the stretch with the Curve row in the Camera section.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/camera-keys-ease-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a recording, click empty canvas, and key Camera depth at 1s (0) and 3s (400)."
+    },
+    {
+      "do": "Right-click the first diamond on the Camera row.",
+      "shot": "2026-10-14-camera-keys-ease-1-camera-key-menu-sc.png"
+    },
+    {
+      "do": "Choose Linear, then do the same on the second diamond, and play the push in."
+    },
+    {
+      "do": "Put the playhead at 2s and read the Curve row under Camera Y.",
+      "shot": "2026-10-14-camera-keys-ease-2-camera-linear-sc.png"
+    },
+    {
+      "do": "Click the first diamond and choose Ease In and Out from Easing at the right of the timeline bar.",
+      "shot": "2026-10-14-camera-keys-ease-3-camera-bar-easing-sc.png"
+    },
+    {
+      "do": "Choose Ease out back on the Camera section's Curve row and play it."
+    },
+    {
+      "do": "Press Command Z."
+    }
+  ],
+  "evaluate": [
+    "Does the right-click on a camera diamond feel like the same menu as a key on a layer's lane?",
+    "Is the Curve row under the camera values where you would look for how the camera travels?",
+    "Is it right that one diamond eases every camera value keyed at that moment, rather than one value at a time?",
+    "Does a fresh camera push in already easing in and out (ticked Ease In and Out) match what you expect?"
+  ],
+  "rough": [
+    "No mock covers easing camera keys: video-depth.html only says keyed camera moves show on a thin row, so the menu and the Curve row follow a layer key's.",
+    "The camera diamond offers the key list (Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier) as a layer key does today; if keys move onto the ten curves, the camera row moves with them (decision on wherever-you-ease-a-key-a-segment-a-row-or-the-b).",
+    "The Camera row has no graph, so Bezier can be ticked but has no handles to drag there; it keeps the shape the key had until handles exist on the camera row.",
+    "The Curve row has no Between the keys header with its question mark as a layer's does; it sits under the camera values with only a hover tip."
+  ]
+}

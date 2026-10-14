@@ -87,13 +87,60 @@ extension EditorState {
         perform { $0.removeCameraKeys(atMS: ms) }
     }
 
-    /// A right click on a diamond.
+    // MARK: Easing (`camera-keys-ease-in-and-out-like-every-other-key`)
+
+    /// Every camera key at a diamond moves through it the way `ease` says, as
+    /// one undo step. The frame stays picked, with the diamond.
+    func easeCameraKeys(atMS ms: Int, _ ease: KeyEase) {
+        perform { $0.easeCameraKeys(atMS: ms, ease) }
+    }
+
+    /// The ease the picked Camera row diamond's keys share, for the timeline
+    /// bar's Easing; nil where they differ.
+    var pickedCameraKeysEase: KeyEase? {
+        guard let ms = pickedCameraKeyMS, isCameraKeyPicked(ms) else { return nil }
+        return document?.cameraKeysEase(atMS: ms)
+    }
+
+    /// Whether the timeline bar's Easing speaks for a Camera row diamond.
+    var easesPickedCameraKey: Bool { canDeletePickedCameraKey }
+
+    /// The Camera section's Curve row: whether the camera has a stretch at
+    /// the playhead to shape.
+    var cameraHasStretch: Bool {
+        guard documentHasTime, let document else { return false }
+        return document.cameraHasStretch(atDocumentTimeMS: documentTimeMS)
+    }
+
+    /// The curve the camera's stretch at the playhead runs on; nil where the
+    /// values moving there differ (Mixed).
+    var cameraStretchCurve: EasingCurve? {
+        document?.cameraStretchCurve(atDocumentTimeMS: documentTimeMS)
+    }
+
+    /// The Curve row chosen: the camera's stretch at the playhead runs on
+    /// `curve`, one undo step.
+    func curveCameraStretch(_ curve: EasingCurve) {
+        guard cameraHasStretch, cameraStretchCurve != curve else { return }
+        let time = documentTimeMS
+        perform { $0.curveCameraStretch(atDocumentTimeMS: time, curve) }
+    }
+
+    /// A right click on a diamond: the eases a key on a layer's track
+    /// offers, ticked where every camera key there agrees, then Go to Key,
+    /// the Camera section and Delete.
     func cameraKeyMenuRows(atMS ms: Int) -> [MenuRow] {
-        [
+        let current = document?.cameraKeysEase(atMS: ms)
+        var rows: [MenuRow] = KeyEase.allCases.map { ease in
+            .toggle(ease.title, isOn: current == ease) { self.easeCameraKeys(atMS: ms, ease) }
+        }
+        rows += [
+            .separator,
             .command("Go to Key") { self.pickCameraKey(atMS: ms) },
             .command("Show Camera Settings") { self.pickCameraRow() },
             .separator,
             .command("Delete Key", destructive: true) { self.deleteCameraKeys(atMS: ms) },
         ]
+        return rows
     }
 }

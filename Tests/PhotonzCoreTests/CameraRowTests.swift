@@ -133,4 +133,125 @@ struct CameraRowTests {
         #expect(doc.camera?.motions == nil)
         #expect(doc.camera?.depth == 250)
     }
+    // MARK: Easing (`camera-keys-ease-in-and-out-like-every-other-key`)
+
+    /// How far the camera has pushed in at a moment, as the renderer is
+    /// handed it.
+    static func depth(_ doc: PhotonzDocument, _ ms: Int) -> Double {
+        doc.drawn(atTimeMS: ms).camera?.depth ?? .nan
+    }
+
+    /// How far it travels in the 100 ms after `ms`, as the renderer sees it.
+    static func speed(_ doc: PhotonzDocument, _ ms: Int) -> Double {
+        abs(depth(doc, ms + 100) - depth(doc, ms))
+    }
+
+    @Test("A diamond says how its keys ease, and a fresh push in eases in and out as any key does")
+    func diamondReadsItsEase() {
+        let doc = Self.pushIn()
+        #expect(doc.cameraKeyMoments.map(\.ease) == [.easeInAndOut, .easeInAndOut])
+        #expect(doc.cameraKeysEase(atMS: 1000) == .easeInAndOut)
+        #expect(doc.cameraKeysEase(atMS: 7000) == nil)
+    }
+
+    @Test("Easing a diamond eases every camera key at that moment, and only those")
+    func easeEveryKeyAtTheMoment() {
+        var doc = Self.pushIn()
+        doc.toggleCameraKey(.cameraX, atDocumentTimeMS: 3000)
+        let eased = doc.easeCameraKeys(atMS: 3000, .hold)
+        #expect(eased)
+        #expect(doc.cameraKeysEase(atMS: 3000) == .hold)
+        #expect(doc.cameraKeysEase(atMS: 1000) == .easeInAndOut)
+        let keys = doc.camera?.motions?.flatMap { $0.keyframes.filter { $0.atMS == 3000 } } ?? []
+        #expect(keys.count == 2)
+        #expect(keys.allSatisfy { $0.ease == .hold })
+    }
+
+    @Test("Keys at one diamond that ease differently read as mixed")
+    func mixedEase() {
+        var doc = Self.pushIn()
+        doc.toggleCameraKey(.cameraX, atDocumentTimeMS: 3000)
+        guard var camera = doc.camera, var motions = camera.motions,
+              let x = motions.firstIndex(where: { $0.property == .cameraX }) else {
+            Issue.record("no Camera X key")
+            return
+        }
+        motions[x] = motions[x].easing(key: 0, .linear)
+        camera.motions = motions
+        doc.camera = camera
+        #expect(doc.cameraKeysEase(atMS: 3000) == nil)
+        #expect(doc.cameraKeyMoments[1].ease == nil)
+    }
+
+    @Test("Easing where nothing is keyed changes nothing")
+    func easeNothing() {
+        var doc = Self.pushIn()
+        let before = doc
+        let eased = doc.easeCameraKeys(atMS: 7000, .linear)
+        #expect(!eased)
+        #expect(doc == before)
+    }
+
+    @Test("Linear pushes in at one rate; Ease In and Out is slower at its ends than its middle, on the renderer")
+    func easeInOutPlaysSlowerAtTheEnds() {
+        var doc = Self.pushIn()
+        doc.easeCameraKeys(atMS: 1000, .linear)
+        doc.easeCameraKeys(atMS: 3000, .linear)
+        let flat = [Self.speed(doc, 1100), Self.speed(doc, 2000), Self.speed(doc, 2800)]
+        #expect(flat.allSatisfy { abs($0 - 20) < 1 }, "linear: \(flat)")
+
+        doc.easeCameraKeys(atMS: 1000, .easeInAndOut)
+        doc.easeCameraKeys(atMS: 3000, .easeInAndOut)
+        let start = Self.speed(doc, 1100), middle = Self.speed(doc, 1950), end = Self.speed(doc, 2800)
+        #expect(start < middle * 0.6, "start \(start) middle \(middle)")
+        #expect(end < middle * 0.6, "end \(end) middle \(middle)")
+        // It still lands where it was keyed.
+        #expect(abs(Self.depth(doc, 1000)) < 0.001)
+        #expect(abs(Self.depth(doc, 3000) - 400) < 0.001)
+    }
+
+    @Test("The Curve row reads and sets the stretch the playhead is in, across every camera value moving there")
+    func curveBetweenCameraKeys() {
+        var doc = Self.pushIn()
+        doc.toggleCameraKey(.cameraX, atDocumentTimeMS: 1000)
+        doc.setCameraValue(.cameraX, 300, atDocumentTimeMS: 3000)
+        #expect(doc.cameraHasStretch(atDocumentTimeMS: 2000))
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 2000) == .easeInOut)
+        doc.curveCameraStretch(atDocumentTimeMS: 2000, .linear)
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 2000) == .linear)
+        #expect(doc.cameraKeysEase(atMS: 1000) == .linear)
+        // A shaped curve rides the stretch itself.
+        doc.curveCameraStretch(atDocumentTimeMS: 2000, .easeOutBack)
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 2000) == .easeOutBack)
+        // ...which overshoots, a shape no pair of keys makes, and still lands.
+        #expect(Self.depth(doc, 2000) > 400)
+        #expect(abs(Self.depth(doc, 3000) - 400) < 0.001)
+    }
+
+    @Test("Only values moving at the playhead are on the Curve row, and they read Mixed where they differ")
+    func curveOnlyWhereMoving() {
+        var doc = Self.pushIn()
+        // Camera X moves later, from 5s to 7s, on a straight line.
+        doc.toggleCameraKey(.cameraX, atDocumentTimeMS: 5000)
+        doc.setCameraValue(.cameraX, 300, atDocumentTimeMS: 7000)
+        doc.curveCameraStretch(atDocumentTimeMS: 6000, .linear)
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 6000) == .linear)
+        // The push in, untouched, is still on its own curve.
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 2000) == .easeInOut)
+        // Between the two moves nothing is moving: both are on the row, and
+        // they differ.
+        #expect(doc.cameraHasStretch(atDocumentTimeMS: 4000))
+        #expect(doc.cameraStretchCurve(atDocumentTimeMS: 4000) == nil)
+    }
+
+    @Test("A camera with one key or none has no stretch to shape")
+    func noStretch() {
+        var doc = Self.video()
+        #expect(!doc.cameraHasStretch(atDocumentTimeMS: 0))
+        doc.toggleCameraKey(.cameraDepth, atDocumentTimeMS: 1000)
+        #expect(!doc.cameraHasStretch(atDocumentTimeMS: 1000))
+        let before = doc
+        doc.curveCameraStretch(atDocumentTimeMS: 1000, .linear)
+        #expect(doc == before)
+    }
 }
