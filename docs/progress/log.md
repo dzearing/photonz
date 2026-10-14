@@ -21371,3 +21371,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Between shadowed cards Gap now reads edge to edge (settings capture: 20 pt, was 16 pt from where the shadow fades); `measurements-named-for-their-mode-walk` updated.
 - Specimen set: `Scripts/make-gap-specimens.swift` -> `Tests/PhotonzRenderTests/Fixtures/gap-*`; `GapSpecimenTests` holds every probe to 1 px at 1x, 2 px at 2x. New walk `gap-reads-line-to-line-walk`. Optimized cost: under 5 ms worst on a 3456x2234 capture.
 - Audit `queue/audits/2026-10-13-gap-line-to-line.json`.
+
+## 2026-10-13 — The pick on top, the lists in a pane at the bottom
+
+- Built the user's answer B to "Where do Layers and Library sit when something is picked?": `PanelListsPane` (PhotonzCore, tested) and `InspectorPanel.listsPane` / `ListsPaneGrip`, behind `next-lists-pane` (on at Next). The pane keeps its height across picks; the grip's height lives in `inspector.listsPaneHeight`.
+- Each part shares out its own height with the existing `InspectorDockLayout` budget (`listsLayout`); `leastHeight(of:)` gives the pane enough for its lists at their floors, up to half the panel.
+- On a video, Captions and Transitions stay with the pick (they cost a sound's Fades on a laptop window in the pane): open card on task `on-a-video-captions-and-transitions-sit-where-th`.
+- Walk harness: `expectSections` takes `lists`; the probe judges a list section in view against the pane's band; the grip is `dragHandle` area `Lists` (positive pulls up).
+- Next: the video card above.
