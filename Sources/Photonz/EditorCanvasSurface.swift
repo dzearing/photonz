@@ -163,7 +163,7 @@ struct EditorCanvasSurface: View {
                            editorState.endTransformBarGesture()
                        }
                    },
-                   onTransformBarEscape: { editorState.escapeTransformBar() },
+                   onTransformBarEscape: { editorState.escapeTransformBar() || editorState.escapeKeyValues() },
                    isTransformValuesOpen: { editorState.showsTransformBar },
                    onCaptionPlacePreview: { editorState.previewCaptionPlacement(id: $0, center: $1) },
                    onCaptionPlaceCommit: { editorState.commitCaptionPlacement(id: $0, center: $1) },

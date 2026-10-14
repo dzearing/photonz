@@ -254,6 +254,7 @@ extension EditorState {
         saveTextStyles()
         // Typing is another operation: the transform bar goes.
         dropTransformBar()
+        dropKeyValues()
         editingTextLayerID = layerID
         if let document { submit(document) }
     }

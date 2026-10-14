@@ -1,0 +1,57 @@
+{
+  "feature": "Type a key's value beside the key",
+  "epic": "video-transitions-motion",
+  "summary": "Clicking any key on a property's row, or a point on its graph, opens a small popover just above it showing that value at the key, ready to type, with Reset. The canvas shows the new value at once.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A title on a recording with Opacity keyed at two moments (Animate a property, Opacity, then Key at a second moment).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the title's track and click the Opacity key at the later moment.",
+      "shot": "2026-10-14-key-values-1-key-clicked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Opacity number in the popover, type 40 and press Return.",
+      "shot": "2026-10-14-key-values-2-typed-40-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command-Z, then Shift-Command-Z."
+    },
+    {
+      "do": "Shift-click the other Opacity key, type 70 in the popover and press Return.",
+      "shot": "2026-10-14-key-values-3-mixed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Reset."
+    },
+    {
+      "do": "Press Escape, click Graph in the panel's Animating header, then click the point at the later moment.",
+      "shot": "2026-10-14-key-values-5-graph-point-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Animate the title's Color, click its key, then click the swatch in the popover.",
+      "shot": "2026-10-14-key-values-7-colour-key-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick another tool, or click anywhere off the popover."
+    }
+  ],
+  "evaluate": [
+    "Does the popover open where your eye already is, just above the key, without hiding the key?",
+    "Is typing a key's value here quicker than finding the same number in the panel?",
+    "With two keys picked, is 'Mixed %' clear, and does one typed number setting both feel right?",
+    "Does the popover read as the same family as the transform values popover from the tool bar's Info button?",
+    "When it sits over the clip bar of the row above, is that acceptable, or should it prefer another side?"
+  ],
+  "rough": [
+    "The mock draws a one-line bar; this is the vertical popover with name left and value right, as the placement rule says (UX-PATTERNS 'Named exception: the transform values', your call on 2026-10-13).",
+    "A diamond on the clip's own bar only picks its keys and opens no popover: the mock sent that click to the canvas bar you replaced with the Info popover (your call on 2026-10-13).",
+    "Reset puts Position in the middle of the canvas, as the mock does; a colour or a text size has no default, so Reset is dimmed for those keys. No mock covers the colour case beyond the swatch and hex.",
+    "Above a key on the first row the popover sits over the timeline ruler and the clip bar above; it never covers the key itself.",
+    "The playhead's line shows softly through the popover's glass where it passes behind it; the text stays readable."
+  ]
+}

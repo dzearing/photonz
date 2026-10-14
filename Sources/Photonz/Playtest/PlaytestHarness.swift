@@ -2289,6 +2289,58 @@ private final class Run {
             note(number, step.name, "keys picked: \(said(pickedKeys)); segments picked: \(said(pickedSegments))",
                  state: describe())
 
+        case .expectKeyValues(let present, let rows, let reads):
+            let editor = try requireEditor()
+            let shows = editor.showsKeyValues
+            let lines = shows ? KeyValuesPopover.lines(editor.keyValueRows) : []
+            let said = lines.map { "\($0.name) \($0.showing.text)" }.joined(separator: ", ")
+            var wrong: [String] = []
+            if shows != present {
+                wrong.append(shows ? "the key popover is up (\(said)), and the walk expected it closed"
+                                   : "the key popover is not up, and the walk expected it open")
+            }
+            if present, shows {
+                if let rows, rows.map({ $0.lowercased() }) != lines.map({ $0.name.lowercased() }) {
+                    wrong.append("its rows are \(lines.map(\.name)), and the walk expected \(rows)")
+                }
+                if let reads, reads != lines.map(\.showing.text) {
+                    wrong.append("its rows read \(lines.map(\.showing.text)), and the walk expected \(reads)")
+                }
+                // Drawn by now: never over the key it hangs from, and inside
+                // the window.
+                await sleep(0.2)
+                if let popover = editor.keyValuesPopoverFrame, let key = editor.keyValuesAnchorFrame {
+                    if popover.intersects(key) {
+                        wrong.append("the popover \(popover.integral) covers the key it hangs from \(key.integral)")
+                    }
+                    if let window = self.window?.contentView?.bounds,
+                       !window.insetBy(dx: -1, dy: -1).contains(popover) {
+                        wrong.append("the popover \(popover.integral) leaves the window \(window.integral)")
+                    }
+                } else {
+                    wrong.append("the popover never said where it is drawn")
+                }
+            }
+            guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ")) }
+            note(number, step.name, shows ? "the key popover is up above its key: \(said)" : "the key popover is closed",
+                 state: describe())
+
+        case .expectDrawn(let query, let opacity):
+            let editor = try requireEditor()
+            guard let drawn = editor.shownDrawnDocument ?? editor.document else {
+                throw Failure(description: "there is no document on the canvas")
+            }
+            guard let layer = drawn.allLayers.first(where: { $0.name == query || $0.text?.string == query }) else {
+                throw Failure(description: "no layer on the canvas is called or says \"\(query)\"")
+            }
+            let at = String(format: "%.2fs", Double(editor.shownMomentMS ?? editor.documentTimeMS) / 1000)
+            let reading = String(format: "%.1f%%", layer.style.opacity * 100)
+            guard abs(layer.style.opacity - opacity) <= 0.005 else {
+                throw Failure(description: "the canvas draws \"\(query)\" at \(reading) opacity at \(at), and the "
+                              + "walk expected \(String(format: "%.1f%%", opacity * 100))")
+            }
+            note(number, step.name, "the canvas draws \"\(query)\" at \(reading) opacity at \(at)", state: describe())
+
         case .expectRowSpan(let row, let sameAs, let startsAt, let endsAt, let within):
             let editor = try requireEditor()
             // Every row the timeline is drawing, the parts opened under a

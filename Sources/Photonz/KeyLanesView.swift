@@ -552,6 +552,8 @@ private struct KeyLaneView: View {
                                                                     shift: flags.contains(.shift))
         else { return }
         editorState.pickKey(layerID: layerID, key.ref, atMS: key.documentMS, extending: extending)
+        // The popover to type its value opens above it (`KeyValuesPopover`).
+        editorState.openKeyValues(layerID: layerID, at: key.ref)
     }
 
     /// A point on the open graph: a click picks it (the line rule,
@@ -578,6 +580,10 @@ private struct KeyLaneView: View {
     private func placed(_ glyph: some View, _ key: LaneKey, index: Int, isPicked: Bool,
                         x at: CGFloat, y keyY: CGFloat) -> some View {
         glyph
+            // The key the value popover hangs from says where it is drawn,
+            // so the popover follows it (`KeyValuesPopover`).
+            .modifier(KeyValuesAnchorReport(isAnchor: editorState.keyValuesAnchor
+                                                == KeyValuesAnchor(layerID: layerID, ref: key.ref)))
             .contextMenu {
                 TimelineKeyMenu(layerID: layerID, refs: [key.ref], atMS: key.documentMS, lane: lane.motionID) {
                     editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.documentMS)
@@ -723,6 +729,7 @@ private struct KeyLaneView: View {
                 case let .pickDot(index, extending):
                     let key = keys[index]
                     editorState.pickKey(layerID: layerID, key.ref, atMS: key.ms, extending: extending)
+                    editorState.openKeyValues(layerID: layerID, at: key.ref)
                 case let .pickSegment(index, extending):
                     editorState.pickSegment(layerID: layerID, keys[index].ref, atMS: ms, extending: extending)
                 case .addDot:
@@ -821,6 +828,23 @@ private struct KeyLaneView: View {
 }
 
 // MARK: - A key
+
+/// Reports where the key the value popover hangs from is drawn, in window
+/// points; nothing at all on every other key.
+private struct KeyValuesAnchorReport: ViewModifier {
+    @Environment(EditorState.self) private var editorState
+    let isAnchor: Bool
+
+    func body(content: Content) -> some View {
+        if isAnchor {
+            content.onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: {
+                editorState.keyValuesAnchorFrame = $0
+            }
+        } else {
+            content
+        }
+    }
+}
 
 /// One key, drawn so how the value moves through it shows on the key itself,
 /// the way Premiere draws it. Always the mock's diamond (`.kfd`): a corner is

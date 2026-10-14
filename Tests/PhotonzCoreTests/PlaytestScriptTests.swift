@@ -3284,6 +3284,41 @@ struct PlaytestScriptTests {
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectTimelinePick"))
     }
 
+    @Test("An expectKeyValues step claims the key popover and its rows; expectDrawn claims a layer's opacity")
+    func expectKeyValuesAndDrawnParse() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectKeyValues", "present": true, "rows": ["Opacity"], "reads": ["40"] },
+                     { "do": "expectKeyValues", "present": false },
+                     { "do": "expectDrawn", "layer": "Ship it", "opacity": 0.4 } ] }
+        """)
+        guard case .expectKeyValues(let present, let rows, let reads) = script.steps[0] else {
+            Issue.record("expectKeyValues"); return
+        }
+        #expect(present)
+        #expect(rows == ["Opacity"])
+        #expect(reads == ["40"])
+        guard case .expectKeyValues(let gone, let noRows, _) = script.steps[1] else { Issue.record("gone"); return }
+        #expect(!gone)
+        #expect(noRows == nil)
+        guard case .expectDrawn(let layer, let opacity) = script.steps[2] else { Issue.record("expectDrawn"); return }
+        #expect(layer == "Ship it")
+        #expect(opacity == 0.4)
+        #expect(PlaytestStep.names.contains("expectKeyValues"))
+        #expect(PlaytestStep.names.contains("expectDrawn"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectKeyValues"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectDrawn"))
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectDrawn", "layer": "Ship it" } ] }
+            """)
+        }
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectKeyValues" } ] }
+            """)
+        }
+    }
+
     @Test("An expectKeyPick step names the keys and segments picked, by lane and place")
     func expectKeyPickParses() throws {
         let script = try decode("""

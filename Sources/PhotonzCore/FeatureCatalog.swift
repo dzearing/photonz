@@ -68,6 +68,9 @@ public enum FeatureCatalog {
     /// button opens, with a Reset; the panel's 3D section gives its rows to it
     /// (`TransformBar.swift`, `TransformValuesPopover`).
     public static let transformBarFlag = "next-transform-bar"
+    /// A click on a key opens a popover beside it to type that key's value
+    /// (`KeyValues.swift`).
+    public static let keyValuesFlag = "next-key-values"
 
     public static let grabCueFlag = "next-grab-cue"
     /// Edit's panel built behind View with the rest of Edit, so its sections
@@ -466,6 +469,16 @@ public enum FeatureCatalog {
                     title: "Type transform values from the tool bar",
                     description: "An Info button on the tool bar, while something is picked, opens its position, size, rotation and 3D values to type into, and a Reset, without covering the picture. Off means the panel's 3D section holds them.",
                     area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: keyValuesFlag,
+                    title: "Type a key's value beside it",
+                    description: "A click on a key on the timeline opens a small popover above it with that value at the key, ready to type, and a Reset. Off means a click only picks the key.",
+                    area: .motion,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

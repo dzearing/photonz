@@ -1,0 +1,562 @@
+{
+  "out": "/tmp/photonz-playtest/key-value-popover-walk",
+  "seed": "Clicking a key opens a popover above it to type that key's value, at Next defaults with no flag changed. A title on the sample recording has Opacity keyed at one second and three. A click on the key at three seconds picks it and opens the popover above it, in the tool bar's glass, reading Opacity 100. 40 typed and Return keys 40 percent there and the canvas draws the title at 40 percent; Undo puts 100 back in one step and Redo brings 40 back. Adding the first key to the pick reads Mixed; 70 typed sets both; Reset puts both at 100. Escape closes it and keeps the keys picked. A point on the open graph opens the same popover, and picking another tool closes it.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Opacity",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Opacity"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 1",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Key Opacity 2",
+      "present": true
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "comment": "THE FIRST TEST: a click on the Opacity key at three seconds, where the playhead is. A click lands only with Command while the probe is behind another app; with nothing picked, Command-click picks the dot alone, as a plain click does.",
+      "do": "windowClick",
+      "on": "Key Opacity 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Opacity 2"
+      ]
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Opacity"
+      ],
+      "reads": [
+        "100"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-key-clicked",
+      "note": "THE FIRST TEST: a click on the Opacity key at three seconds picked it and opened the key popover above it, never over it, in the tool bar's glass: Opacity 100 %, Reset at the foot"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-key-clicked"
+    },
+    {
+      "do": "press",
+      "control": "Key value Opacity"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "40"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Opacity"
+      ],
+      "reads": [
+        "40"
+      ]
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Ship it",
+      "opacity": 0.4
+    },
+    {
+      "do": "describe",
+      "stage": "2-typed-40",
+      "note": "THE SECOND TEST: 40 typed and Return: the key holds 40 percent and the canvas, with the playhead on the key, draws the title at 40 percent opacity"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-typed-40"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Ship it",
+      "opacity": 1.0
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command",
+        "shift"
+      ],
+      "menuItem": "Redo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Ship it",
+      "opacity": 0.4
+    },
+    {
+      "comment": "THE THIRD TEST: a second key added to the pick; the popover moves over it and says Mixed.",
+      "do": "windowClick",
+      "on": "Key Opacity 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Opacity 1",
+        "Opacity 2"
+      ]
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Opacity"
+      ],
+      "reads": [
+        "Mixed"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-mixed",
+      "note": "THE THIRD TEST: both Opacity keys picked: the popover hangs from the one clicked last and reads Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-mixed"
+    },
+    {
+      "do": "press",
+      "control": "Key value Opacity"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "70"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "reads": [
+        "70"
+      ]
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Ship it",
+      "opacity": 0.7
+    },
+    {
+      "do": "press",
+      "control": "Reset",
+      "in": "Key values"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "reads": [
+        "100"
+      ]
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Ship it",
+      "opacity": 1.0
+    },
+    {
+      "do": "describe",
+      "stage": "4-reset",
+      "note": "THE FOURTH TEST: 70 typed set both keys; Reset put both back to 100 percent, the default"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-reset"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Opacity 1",
+        "Opacity 2"
+      ]
+    },
+    {
+      "comment": "THE FIFTH TEST: a point on the open graph opens the same popover.",
+      "do": "press",
+      "control": "Graph",
+      "in": "Animating"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Opacity 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Opacity 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Opacity 1",
+        "Opacity 2"
+      ]
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Opacity"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "5-graph-point",
+      "note": "THE FIFTH TEST: the Opacity lane open as its graph; a click on its point at three seconds opens the same popover above the point"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-graph-point"
+    },
+    {
+      "comment": "A click elsewhere, on a bare spot of the panel, closes it.",
+      "do": "click",
+      "at": [
+        1520,
+        640
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Opacity 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true
+    },
+    {
+      "do": "tool",
+      "tool": "rectangle"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "do": "describe",
+      "stage": "6-other-tool",
+      "note": "Picking another tool closed the popover"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-other-tool"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "click",
+      "at": [
+        660,
+        350
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Ship it"
+      ]
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Color",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "comment": "A colour key shows a swatch and its hex.",
+      "do": "windowClick",
+      "on": "Key Color 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Color"
+      ]
+    },
+    {
+      "do": "expect",
+      "control": "Swatch",
+      "in": "Key values",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-colour-key",
+      "note": "A colour key: its popover shows the colour's name, a swatch and its hex; Reset is dimmed because a colour has no default"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-colour-key"
+    }
+  ]
+}

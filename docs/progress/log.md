@@ -21379,3 +21379,17 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - On a video, Captions and Transitions stay with the pick (they cost a sound's Fades on a laptop window in the pane): open card on task `on-a-video-captions-and-transitions-sit-where-th`.
 - Walk harness: `expectSections` takes `lists`; the probe judges a list section in view against the pane's band; the grip is `dragHandle` area `Lists` (positive pulls up).
 - Next: the video card above.
+
+## 2026-10-14 · A click on a key opens a popover to type its value
+
+- Next (`next-key-values`, on by default): a click on a key dot on a lane or a
+  point on its graph opens a popover above it in the tool bar's glass: one row
+  per value in its units, Mixed across differing keys, a swatch and hex for a
+  colour (the swatch opens the colour picker), Reset to the default (Position
+  goes to the canvas middle). Escape, a click elsewhere, another tool, typing,
+  a menu or Play close it. Core: `PhotonzCore/KeyValues.swift` (tested);
+  app: `KeyValuesPopover.swift`, `EditorState+KeyValues.swift`.
+- New walk steps `expectKeyValues` and `expectDrawn`; walk
+  `key-value-popover-walk` at Next defaults.
+- Next: the clip bar's own diamond still only picks (the mock sent it to the
+  canvas bar the user replaced).

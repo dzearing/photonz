@@ -244,6 +244,7 @@ extension Experiments {
     var turnInDepthEnabled: Bool { isEnabled(FeatureCatalog.turnInDepthFlag) }
     /// The transform bar beside a layer in hand (`TransformBar`).
     var transformBarEnabled: Bool { isEnabled(FeatureCatalog.transformBarFlag) }
+    var keyValuesEnabled: Bool { isEnabled(FeatureCatalog.keyValuesFlag) }
 
     /// `next-edge-grab`: whether the whole run of a picked object's edge
     /// resizes it, rather than only the small square in the middle of that

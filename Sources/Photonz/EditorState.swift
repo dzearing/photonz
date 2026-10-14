@@ -264,6 +264,17 @@ final class EditorState {
     /// it opens rises out of it (`TransformValuesPopover`). Nil while the
     /// button is not on the bar.
     var transformInfoAnchor: CGRect?
+    /// The key the key values popover hangs from, while it is open (Next,
+    /// `next-key-values`, `EditorState+KeyValues.swift`).
+    var keyValuesAnchor: KeyValuesAnchor? {
+        didSet { if keyValuesAnchor == nil { keyValuesAnchorFrame = nil } }
+    }
+    /// Where that key is drawn, in window points, reported by the key itself
+    /// so the popover follows it as the timeline scrolls or the graph moves.
+    var keyValuesAnchorFrame: CGRect?
+    /// Where the popover itself sits, in window points: a click outside it
+    /// closes it, and a walk holds it off the key.
+    var keyValuesPopoverFrame: CGRect?
     /// The layer Save as Preset… is naming, while its sheet is up
     /// (`EditorState+TitlePresets`).
     var titlePresetSaving: UUID?
@@ -1618,7 +1629,10 @@ final class EditorState {
     var timelineHasKeyboard = false
     /// The timeline's own tool: Select, Track Select Forward (A) or the Blade
     /// (B). Per window, and Select in every new one.
-    var timelineTool: TimelineTool = .select
+    var timelineTool: TimelineTool = .select {
+        // Another tool is another operation: the key values popover closes.
+        didSet { if timelineTool != oldValue { dropKeyValues() } }
+    }
     /// The Blade in hand, or put down for Select.
     var isTimelineBlade: Bool {
         get { timelineTool == .blade }
@@ -4045,6 +4059,7 @@ final class EditorState {
         if tool != .select, motionPivotPlacement != nil { endPlacingMotionPivot() }
         // Another tool is another operation: the transform values close.
         dropTransformBar()
+        dropKeyValues()
         if tool == .crop {
             // A selected image layer makes this a per-layer crop; otherwise
             // the marquee selection seeds the rect (a common flow: marquee

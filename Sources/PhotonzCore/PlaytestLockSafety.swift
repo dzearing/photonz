@@ -220,6 +220,10 @@ public enum PlaytestLockSafety {
         // Added 2026-10-13 by reading: it reads which keys the editor has
         // picked, never a name off the screen.
         "expectKeyPick",
+        // Added 2026-10-14 by reading: the key popover's rows and where it
+        // sits, and the opacity of the document the canvas drew, both read
+        // out of the editor, never a name off the screen.
+        "expectKeyValues", "expectDrawn",
         // Added 2026-10-13 by reading: it reads a sound's level, its pick and
         // the mix out of the editor, never a name off the screen.
         "expectSoundLine",

@@ -2906,6 +2906,16 @@ public enum PlaytestStep: Sendable, Equatable {
     /// list for none. `segments` names the picked segments the same way, by
     /// the key each starts at; left out, the segments are not claimed.
     case expectKeyPick(keys: [String], segments: [String]?)
+    /// CLAIMS the popover a click on a key opens, and FAILS when it is not
+    /// so: `present` whether it is on screen; `rows` the values it lists by
+    /// their lane names ("Opacity", "Position X"); `reads` what each row's
+    /// box shows, in the same order ("40", "Mixed"). Where it is up it also
+    /// fails if it covers the key it hangs from, or leaves the window.
+    case expectKeyValues(present: Bool, rows: [String]?, reads: [String]?)
+    /// CLAIMS how the layer named `layer` (by name or its words) is drawn on
+    /// the canvas right now, in the document the canvas was handed at the
+    /// playhead: `opacity` nought to one, within half a percent.
+    case expectDrawn(layer: String, opacity: Double)
     /// CLAIMS how the volume line of the clip named `clip` stands, and FAILS
     /// when it does not: `curves` is each segment's curve in order, as its
     /// right-click names it ("Linear", "Ease out", "Hold"); `pickedPoints`
@@ -4224,7 +4234,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4274,6 +4284,8 @@ public enum PlaytestStep: Sendable, Equatable {
         case .boxToEdge: "boxToEdge"
         case .expectTimelinePick: "expectTimelinePick"
         case .expectKeyPick: "expectKeyPick"
+        case .expectKeyValues: "expectKeyValues"
+        case .expectDrawn: "expectDrawn"
         case .expectSoundLine: "expectSoundLine"
         case .expectRowSpan: "expectRowSpan"
         case .expectClip: "expectClip"
@@ -4736,6 +4748,18 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectKeyPick(keys: try f.optionalStrings("keys"),
                                   segments: f.has("segments") ? try f.optionalStrings("segments") : nil)
+        case "expectKeyValues":
+            guard let present = try f.optionalFlag("present") else {
+                throw f.invalid("present", "expectKeyValues says whether the key popover is up, true or false")
+            }
+            self = .expectKeyValues(present: present,
+                                    rows: f.has("rows") ? try f.optionalStrings("rows") : nil,
+                                    reads: f.has("reads") ? try f.optionalStrings("reads") : nil)
+        case "expectDrawn":
+            guard let opacity = try f.optionalNumber("opacity"), (0...1).contains(opacity) else {
+                throw f.invalid("opacity", "expectDrawn claims the opacity the canvas draws the layer at, 0 to 1")
+            }
+            self = .expectDrawn(layer: try f.string("layer"), opacity: opacity)
         case "expectSoundLine":
             let curves = f.has("curves") ? try f.optionalStrings("curves") : nil
             func places(_ field: String) throws -> [Int]? {

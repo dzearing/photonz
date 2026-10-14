@@ -245,6 +245,7 @@ extension EditorState {
         // Play is another operation: the transform bar goes (scrubbing keeps
         // it, and its numbers follow the playhead).
         dropTransformBar()
+        dropKeyValues()
         // The file is not there yet: play the moment it is.
         if recordingStillLanding {
             playWhenLanded = rate > 0

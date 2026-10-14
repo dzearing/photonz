@@ -262,6 +262,10 @@ struct EditorView: View {
                 .allowsHitTesting(false)
             }
             .animation(.easeOut(duration: 0.12), value: editorState.colorDropNote)
+            // A key's value, typed in a popover above the key a click picked
+            // (`KeyValuesPopover`): over the whole window, so a key near the
+            // top of the timeline can open it over the canvas's foot.
+            .overlay(alignment: .topLeading) { KeyValuesPopover() }
             // The panel's toggle, in the window's own title bar rather than in
             // the panel or on the canvas, so the way back never moves and
             // never goes away with the thing it collapses. Only with a
