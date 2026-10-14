@@ -754,12 +754,32 @@ public struct ZoomCalloutContent: Hashable, Codable, Sendable {
     public var sourceRect: CGRect
     public var magnification: CGFloat
     public var shape: ZoomCalloutShape
+    /// How strongly the band between the two leader lines is tinted with the
+    /// line colour, nought to one. Nought draws no band at all.
+    public var fillOpacity: CGFloat {
+        didSet { fillOpacity = Self.clampedFillOpacity(fillOpacity) }
+    }
+
+    /// What a new callout's band is tinted at (the user, 2026-10-13).
+    public static let defaultFillOpacity: CGFloat = 0.1
+
+    /// What a callout saved before the band existed opens with: none, so a
+    /// saved document opens looking exactly as it was saved, and the Current
+    /// release, which has no control for the band, keeps drawing what it drew.
+    public static let savedBeforeBandFillOpacity: CGFloat = 0
+
+    public static func clampedFillOpacity(_ value: CGFloat) -> CGFloat {
+        guard value.isFinite else { return defaultFillOpacity }
+        return min(max(value, 0), 1)
+    }
 
     public init(sourceRect: CGRect, magnification: CGFloat = 2,
-                shape: ZoomCalloutShape = .rectangle) {
+                shape: ZoomCalloutShape = .rectangle,
+                fillOpacity: CGFloat = ZoomCalloutContent.defaultFillOpacity) {
         self.sourceRect = sourceRect
         self.magnification = magnification
         self.shape = shape
+        self.fillOpacity = Self.clampedFillOpacity(fillOpacity)
     }
 
     public init(from decoder: Decoder) throws {
@@ -768,6 +788,10 @@ public struct ZoomCalloutContent: Hashable, Codable, Sendable {
         magnification = try container.decode(CGFloat.self, forKey: .magnification)
         // `shape` postdates ZoomCalloutContent; old payloads omit it.
         shape = try container.decodeIfPresent(ZoomCalloutShape.self, forKey: .shape) ?? .rectangle
+        // So does the band's tint.
+        fillOpacity = Self.clampedFillOpacity(
+            try container.decodeIfPresent(CGFloat.self, forKey: .fillOpacity)
+                ?? Self.savedBeforeBandFillOpacity)
     }
 
     /// The corner radius a box of `boxSize` actually renders with: circles max

@@ -324,6 +324,7 @@ extension EditorState {
                                                    canvas: document.canvasSize,
                                                    magnification: calloutToolMagnification,
                                                    shape: calloutToolShape,
+                                                   fillOpacity: calloutToolFillOpacity,
                                                    avoiding: document.placedZoomCalloutRects) else { return }
         var named = layer
         // The row in the layers list says what the panel says. In a release
@@ -957,6 +958,51 @@ extension EditorState {
         // tool that draws it: the next callout comes out the shape you just
         // chose rather than back to a rectangle.
         rememberCalloutShape(shape)
+    }
+
+    /// The picked callout's band tint, preview-aware so the slider does not
+    /// snap back mid-pull.
+    var selectedCalloutFillOpacity: CGFloat? {
+        guard let layer = selectedZoomCalloutLayer, let callout = layer.zoomCallout else { return nil }
+        if let preview = calloutFillPreview, preview.id == layer.id { return preview.opacity }
+        return callout.fillOpacity
+    }
+
+    /// Slider movement: the band re-renders straight away and stays out of
+    /// history, so one pull is one step to undo rather than forty.
+    func previewCalloutFill(_ opacity: CGFloat) {
+        guard let layer = selectedZoomCalloutLayer, var doc = document else { return }
+        let clamped = ZoomCalloutContent.clampedFillOpacity(opacity)
+        calloutFillPreview = (layer.id, clamped)
+        doc.updateLayer(id: layer.id) { edited in
+            guard var callout = edited.zoomCallout else { return }
+            callout.fillOpacity = clamped
+            edited.content = .zoomCallout(callout)
+        }
+        submit(doc)
+    }
+
+    /// Slider release: one undo step to where the pull ended. The tool takes
+    /// the number too, so the next callout you draw is tinted the same.
+    func commitCalloutFill() {
+        guard let preview = calloutFillPreview else { return }
+        calloutFillPreview = nil
+        setCalloutFill(preview.opacity, layerID: preview.id)
+    }
+
+    /// Sets a callout's band tint as one undo step, and arms the tool with it
+    /// the way rounding one arms it with a circle.
+    func setCalloutFill(_ opacity: CGFloat, layerID: UUID? = nil) {
+        guard let id = layerID ?? selectedZoomCalloutLayer?.id else { return }
+        let clamped = ZoomCalloutContent.clampedFillOpacity(opacity)
+        perform { document in
+            document.updateLayer(id: id) { layer in
+                guard var callout = layer.zoomCallout else { return }
+                callout.fillOpacity = clamped
+                layer.content = .zoomCallout(callout)
+            }
+        }
+        rememberCalloutFill(clamped)
     }
 
     // A callout's ring has no setter of its own. It IS the layer's border, so

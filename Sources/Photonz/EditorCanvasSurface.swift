@@ -52,6 +52,7 @@ struct EditorCanvasSurface: View {
                    annotationContent: editorState.activeAnnotationContent,
                    calloutShape: editorState.calloutToolShape,
                    calloutMagnification: editorState.calloutToolMagnification,
+                   calloutFillOpacity: editorState.calloutToolFillOpacity,
                    lensMagnifies: editorState.lensToolMagnifies,
                    annotationStyle: editorState.activeAnnotationStyle,
                    textContent: editorState.activeTextContent,

@@ -406,12 +406,14 @@ public enum LensConversion {
     /// than as a callout nobody can see.
     ///
     /// `lensSettings` is the Lens tool's own numbers, so a lens made this way
-    /// is the lens the tool would have drawn. `magnification`, `shape` and
-    /// `avoiding` are the same three the callout tool hands `ZoomCalloutBuilder`.
+    /// is the lens the tool would have drawn. `magnification`, `shape`,
+    /// `fillOpacity` and `avoiding` are what the callout tool hands
+    /// `ZoomCalloutBuilder`.
     public static func layer(_ layer: Layer, becoming kind: LensKind, canvas: CGSize,
                              lensSettings: LensContent = LensContent(),
                              magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification,
                              shape: ZoomCalloutShape = .rectangle,
+                             fillOpacity: CGFloat = ZoomCalloutContent.defaultFillOpacity,
                              avoiding occupied: [CGRect] = []) -> Layer {
         guard let was = layer.lensKind, was != kind else { return layer }
         var out = layer
@@ -426,7 +428,8 @@ public enum LensConversion {
                   source.height >= ZoomCalloutBuilder.minimumSourceSide else { return layer }
             out.content = .zoomCallout(ZoomCalloutContent(sourceRect: source,
                                                           magnification: magnification,
-                                                          shape: shape))
+                                                          shape: shape,
+                                                          fillOpacity: fillOpacity))
             out.frame = Geometry.zoomCalloutPlacement(source: source,
                                                       magnification: magnification,
                                                       canvas: canvas, avoiding: occupied)

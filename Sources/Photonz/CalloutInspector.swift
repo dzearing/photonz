@@ -94,7 +94,47 @@ struct MagnifierSettingsRows: View {
                 .fixedSize()
                 .panelHelp("Whether the magnified region is drawn in a box or in a circle.")
             }
+            if Experiments.shared.calloutBandEnabled {
+                fillOpacityRow
+            }
         }
+    }
+
+    /// How strongly the band between the two leader lines is tinted with the
+    /// line colour. Its own row here rather than beside the ring's colour,
+    /// because the ring is the layer's Border, which every layer has, and the
+    /// band belongs to the magnifier alone.
+    private var fillOpacity: CGFloat {
+        editorState.selectedCalloutFillOpacity ?? ZoomCalloutContent.defaultFillOpacity
+    }
+
+    private var fillOpacityRow: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack {
+                Text("Fill opacity").font(.caption).foregroundStyle(.secondary)
+                Spacer()
+                Text(Self.percent(fillOpacity))
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(.secondary)
+            }
+            // A pull previews live and commits one undo step on release, the
+            // same as Magnification above it.
+            Slider(value: Binding(
+                get: { Double(fillOpacity) },
+                set: { editorState.previewCalloutFill(CGFloat($0)) }),
+                   in: 0...1) { editing in
+                if !editing { editorState.commitCalloutFill() }
+            }
+            .controlSize(.small)
+            .playtestControl("Slider", detail: "Fill opacity")
+            .panelHelp("How strongly the space between the two lines is tinted with "
+                  + "their colour. All the way left draws no tint.")
+        }
+        .playtestField("Fill opacity")
+    }
+
+    static func percent(_ value: CGFloat) -> String {
+        "\(Int((value * 100).rounded()))%"
     }
 }
 

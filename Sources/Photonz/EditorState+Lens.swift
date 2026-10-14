@@ -180,6 +180,7 @@ extension EditorState {
         let settings = lensToolContent
         let magnification = calloutToolMagnification
         let shape = calloutToolShape
+        let fill = calloutToolFillOpacity
         // Only the lens-to-Magnify direction reads this, and a lens is never in
         // the list, so there is nothing of this layer's own to leave out.
         let occupied = document.placedZoomCalloutRects
@@ -188,7 +189,7 @@ extension EditorState {
                 layer = LensConversion.layer(layer, becoming: kind, canvas: canvas,
                                              lensSettings: settings,
                                              magnification: magnification, shape: shape,
-                                             avoiding: occupied)
+                                             fillOpacity: fill, avoiding: occupied)
             }
         }
     }

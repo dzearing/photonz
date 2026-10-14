@@ -1406,6 +1406,7 @@ extension CanvasNSView {
                                                         canvas: viewport.documentSize,
                                                         magnification: calloutMagnification,
                                                         shape: calloutShape,
+                                                        fillOpacity: calloutFillOpacity,
                                                         avoiding: document?.placedZoomCalloutRects ?? []) {
                     beginCalloutFlight(for: layer)
                     onZoomCalloutCommit(drag.anchor, end)

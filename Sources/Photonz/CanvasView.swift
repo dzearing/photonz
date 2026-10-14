@@ -70,6 +70,9 @@ struct CanvasView: NSViewRepresentable {
     /// box you drag out previews and flies in the shape that lands.
     let calloutShape: ZoomCalloutShape
     let calloutMagnification: CGFloat
+    /// How strongly the next magnifier tints the band between its leader
+    /// lines, so the band fades in with the lines as it flies.
+    let calloutFillOpacity: CGFloat
     /// Whether the Lens tool in hand is set to Magnify (Next, `LensKind`).
     let lensMagnifies: Bool
     /// The non-destructive style a freshly drawn shape inherits (border, corner
@@ -421,6 +424,7 @@ struct CanvasView: NSViewRepresentable {
                    annotationContent: annotationContent,
                    calloutShape: calloutShape,
                    calloutMagnification: calloutMagnification,
+                   calloutFillOpacity: calloutFillOpacity,
                    lensMagnifies: lensMagnifies,
                    annotationStyle: annotationStyle, textContent: textContent,
                    measureContent: measureContent,
@@ -1110,6 +1114,11 @@ final class CanvasNSView: NSView {
     let calloutFlightLayer = CALayer()
     let calloutFlightOutlineLayer = CAShapeLayer()
     let calloutFlightLeaderLayer = CAShapeLayer()
+    /// The tinted band between the leader lines, inside the leader layer so it
+    /// fades in with them, and masked so it stops at both shapes the way the
+    /// renderer's band does.
+    let calloutFlightBandLayer = CAShapeLayer()
+    let calloutFlightBandMask = CAShapeLayer()
     /// The pre-commit composite, held on screen for the flight's duration so
     /// the baked-in callout doesn't show at its destination mid-flight.
     var calloutHoldImage: CGImage?
@@ -1354,6 +1363,8 @@ final class CanvasNSView: NSView {
     /// How much the next magnifier magnifies, echoed from EditorState so the
     /// box that flies out of the drag is the size the one that lands will be.
     var calloutMagnification: CGFloat = ZoomCalloutBuilder.defaultMagnification
+    /// The band tint the next magnifier lands with, echoed from EditorState.
+    var calloutFillOpacity: CGFloat = ZoomCalloutContent.defaultFillOpacity
     /// Whether the Lens tool in hand is set to Magnify (Next, `LensKind`). It
     /// is the one lens kind whose drag marks a region somewhere ELSE on the
     /// picture, so the draft, the flight and the commit are the callout's.
@@ -2166,6 +2177,10 @@ final class CanvasNSView: NSView {
 
         calloutFlightLeaderLayer.fillColor = nil
         calloutFlightLeaderLayer.lineCap = .round
+        calloutFlightBandLayer.strokeColor = nil
+        calloutFlightBandMask.fillRule = .evenOdd
+        calloutFlightBandLayer.mask = calloutFlightBandMask
+        calloutFlightLeaderLayer.addSublayer(calloutFlightBandLayer)
         calloutFlightOutlineLayer.fillColor = nil
         calloutFlightLayer.contentsGravity = .resize
         calloutFlightLayer.masksToBounds = true

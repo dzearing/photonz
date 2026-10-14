@@ -349,6 +349,20 @@ extension EditorState {
         saveCalloutStyles()
     }
 
+    /// How strongly the NEXT callout tints the band between its lines. With
+    /// the flag off it is nought, which is what Current has always drawn.
+    var calloutToolFillOpacity: CGFloat {
+        Experiments.shared.calloutBandEnabled ? calloutStyles.fillOpacity : 0
+    }
+
+    /// Absorbs a band tint into the tool's memory and persists it.
+    func rememberCalloutFill(_ opacity: CGFloat) {
+        let clamped = ZoomCalloutContent.clampedFillOpacity(opacity)
+        guard calloutStyles.fillOpacity != clamped else { return }
+        calloutStyles.fillOpacity = clamped
+        saveCalloutStyles()
+    }
+
     /// One writer for the callout tool's memory, so "it stays how I left it"
     /// needs no bookkeeping at the call sites.
     private func saveCalloutStyles() {

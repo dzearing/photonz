@@ -1133,6 +1133,9 @@ final class EditorState {
     var lensAmountPreview: (id: UUID, amount: CGFloat)?
     /// Where that pull started, so the undo step spans the whole of it.
     var lensAmountBeforeDrag: CGFloat?
+    /// The band tint a picked callout's Fill opacity slider is being pulled to
+    /// right now, committed to history only when the slider is let go.
+    var calloutFillPreview: (id: UUID, opacity: CGFloat)?
 
     /// The pivot under the hand while the crosshair on the canvas is being
     /// dragged (`next-motion`). Kept out of the document so the whole drag is
@@ -5111,6 +5114,14 @@ final class EditorState {
                 guard var lens = layer.lens else { return }
                 lens.amount = preview.amount
                 layer.content = .lens(lens)
+            }
+        }
+        // A callout's Fill opacity under a finger, for the same reason.
+        if let preview = calloutFillPreview {
+            document.updateLayer(id: preview.id) { layer in
+                guard var callout = layer.zoomCallout else { return }
+                callout.fillOpacity = preview.opacity
+                layer.content = .zoomCallout(callout)
             }
         }
         // A caption edit suppresses just the pill; the arrow stays visible.

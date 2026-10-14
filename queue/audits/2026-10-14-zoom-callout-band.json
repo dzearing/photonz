@@ -1,0 +1,50 @@
+{
+  "feature": "A zoom callout's beam: the space between its two lines is tinted",
+  "epic": "measure-redline",
+  "summary": "A magnifier now fills the space between its two leader lines with the line colour at 10%, so it reads as one beam from the region to the magnified box. Fill opacity in the Lens section sets it, and 0 turns it off. On a Circle callout the two lines now just touch both circles instead of dangling off the corners of their boxes.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screenshot.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Z and drag a box over something small on the screenshot.",
+      "shot": "2026-10-14-zoom-callout-band-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press V and drag the magnified box somewhere else. Watch the tint follow it.",
+      "shot": "2026-10-14-zoom-callout-band-moved.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "In the Lens section, click Circle next to Shape.",
+      "shot": "2026-10-14-zoom-callout-band-circle.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the Fill opacity slider all the way left.",
+      "shot": "2026-10-14-zoom-callout-band-off.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With Fill opacity at 0, press Z and draw a second callout. It comes out with no band too: the tool remembers the number."
+    },
+    {
+      "do": "Press Command-Z once. The Fill opacity goes back to where it was before your last pull."
+    },
+    {
+      "do": "Export or copy the image (Command-Shift-C) and paste it somewhere. The band is in it."
+    }
+  ],
+  "evaluate": [
+    "At 10%, does the beam tie the two boxes together without drawing your eye away from the magnified picture?",
+    "Is Fill opacity the right name, and is the Lens section, under Shape, where you would look for it?",
+    "Do the Circle callout's lines, which now touch both circles, look right to you?",
+    "When the box sits off to one side diagonally, both lines meet at one corner of the box and the band is a thin wedge. Is that fine, or should the lines spread to the box's outer edges instead?"
+  ],
+  "rough": [
+    "No mock covers this surface; the placement follows the task, with one change: Fill opacity sits in the Lens section under Shape rather than beside the line colour, because the line colour is the layer's Border effect, which every layer has, and the band belongs to the magnifier alone.",
+    "Callouts saved before today open with no band (0%), so a saved document looks exactly as it was saved and the Current release, which has no Fill opacity control, keeps drawing what it drew. New callouts in Next start at 10%. Raise it on an old callout with the slider.",
+    "The Circle callout's new touching lines are drawn by the renderer both releases share, so a Circle callout in Current gets them too. The old lines ended in empty space off the circle, so this is a fix rather than a new feature.",
+    "On a rectangle callout placed diagonally from its source, both lines run to the same corner of the box, so the band is a thin triangle rather than a wide beam. That is the nearest-corner rule the lines have always followed; the last evaluate question asks whether to change it."
+  ]
+}

@@ -305,6 +305,12 @@ extension Experiments {
     /// false and every callout is drawn as a rectangle.
     var calloutShapeEnabled: Bool { isEnabled(FeatureCatalog.calloutShapeFlag) }
 
+    /// `next-callout-band`: whether a new zoom callout tints the band between
+    /// its two leader lines, and whether a picked one shows the Fill opacity
+    /// row that sets it. Exists only in the Next release's catalog, so Current
+    /// draws new callouts with no band, exactly as it always has.
+    var calloutBandEnabled: Bool { isEnabled(FeatureCatalog.calloutBandFlag) }
+
     /// `next-callout-magnification`: whether the Zoom Callout tool also carries
     /// how much the NEXT callout magnifies, remembered between callouts, so a
     /// 4× callout is a choice made before the drag rather than a 2× one

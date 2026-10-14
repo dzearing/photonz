@@ -700,9 +700,9 @@ public final class DocumentRenderer: @unchecked Sendable {
                                                             projection: projection,
                                                             inherited: inherited),
                                            projection: projection) else { continue }
-            // Zoom callouts carry canvas-space chrome (source outline + leader
-            // lines) that lives outside the layer frame; composite it beneath
-            // the magnified box.
+            // Zoom callouts carry canvas-space chrome (source outline, leader
+            // lines and the tinted band between them) that lives outside the
+            // layer frame; composite it beneath the magnified box.
             if case .zoomCallout(let callout) = layer.content {
                 // Drawn in document points and magnified afterwards, so the
                 // leader lines and the source outline keep exactly the weight
@@ -722,7 +722,8 @@ public final class DocumentRenderer: @unchecked Sendable {
                     calloutCorners: drawnCorners,
                     style: layer.style.magnified(by: shrink),
                     magnification: callout.magnification,
-                    shape: callout.shape) {
+                    shape: callout.shape,
+                    fillOpacity: callout.fillOpacity) {
                     let height = CGFloat(overlay.image.height) * contentScale
                     var positioned = CIImage(cgImage: overlay.image)
                     if contentScale != 1 {

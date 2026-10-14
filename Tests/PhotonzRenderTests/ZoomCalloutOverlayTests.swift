@@ -136,4 +136,93 @@ struct ZoomCalloutOverlayTests {
             style: greenBorder, magnification: 2)
         #expect(overlay == nil)
     }
+
+    // MARK: The band between the leader lines
+
+    /// Source (10…30, 40…60) left of a box (100…180, 0…100): the leader lines
+    /// run from the source's right corners to the box's left corners, so the
+    /// band is the trapezoid between them.
+    private func banded(_ fill: CGFloat, shape: ZoomCalloutShape = .rectangle,
+                        style: LayerStyle? = nil) -> (image: CGImage, origin: CGPoint)? {
+        ZoomCalloutOverlayRasterizer.rasterize(
+            source: CGRect(x: 10, y: 40, width: 20, height: 20),
+            callout: CGRect(x: 100, y: 0, width: 80, height: 100),
+            style: style ?? greenBorder, magnification: 4, shape: shape, fillOpacity: fill)
+    }
+
+    @Test func theBandIsTheLineColourAtItsFillOpacity() throws {
+        let overlay = try #require(banded(0.1))
+        let inside = sample(overlay, canvasX: 65, canvasY: 50)
+        // Premultiplied: green at a tenth is 0.1 alpha with 0.1 green.
+        #expect(abs(Int(inside.a) - 26) <= 2, "band alpha is a tenth — got \(inside)")
+        #expect(abs(Int(inside.g) - 26) <= 2 && inside.r < 3 && inside.b < 3,
+                "band is the line colour — got \(inside)")
+        // Outside the two lines: nothing.
+        let above = sample(overlay, canvasX: 65, canvasY: 15)
+        #expect(above.a == 0, "nothing outside the lines — got \(above)")
+    }
+
+    @Test func theBandFollowsLayerOpacityToo() throws {
+        var style = greenBorder
+        style.opacity = 0.5
+        let overlay = try #require(banded(0.4, style: style))
+        let inside = sample(overlay, canvasX: 65, canvasY: 50)
+        #expect(abs(Int(inside.a) - 51) <= 2, "a fifth: 0.4 fill on a half-faded layer — got \(inside)")
+    }
+
+    @Test func noneDrawsNoBand() throws {
+        let overlay = try #require(banded(0))
+        #expect(sample(overlay, canvasX: 65, canvasY: 50).a == 0)
+    }
+
+    /// The band never tints either picture: the source region and the box are
+    /// cut out of it.
+    @Test func theBandStopsAtBothShapes() throws {
+        let overlay = try #require(banded(0.5))
+        #expect(sample(overlay, canvasX: 20, canvasY: 50).a == 0, "source interior untinted")
+        #expect(sample(overlay, canvasX: 104, canvasY: 50).a == 0, "box interior untinted")
+        // A circle callout's band stops at the round edges too.
+        let round = try #require(banded(0.5, shape: .circle))
+        #expect(sample(round, canvasX: 20, canvasY: 50).a == 0, "round source untinted")
+        #expect(sample(round, canvasX: 104, canvasY: 50).a == 0, "round box untinted")
+        #expect(sample(round, canvasX: 65, canvasY: 50).a > 100, "round band drawn between them")
+    }
+
+    /// MEASURED: walking out from the middle of the band, square to a leader
+    /// line, the tint stops within a pixel of where that line is.
+    @Test func theBandsEdgeSitsOnTheLeaderLine() throws {
+        var style = greenBorder
+        style.borderWidth = 0.001   // a hairline, so the line itself barely paints
+        for shape in [ZoomCalloutShape.rectangle, .circle] {
+            let overlay = try #require(ZoomCalloutOverlayRasterizer.rasterize(
+                source: CGRect(x: 10, y: 40, width: 20, height: 20),
+                callout: CGRect(x: 100, y: 0, width: 100, height: 100),
+                style: style, magnification: 5, shape: shape, fillOpacity: 0.5))
+            let lines = Geometry.leaderLines(source: CGRect(x: 10, y: 40, width: 20, height: 20),
+                                             calloutCorners: Geometry.corners(of: CGRect(x: 100, y: 0, width: 100, height: 100)),
+                                             shape: shape)
+            try #require(lines.count == 2)
+            for line in lines {
+                let mid = CGPoint(x: (line.from.x + line.to.x) / 2, y: (line.from.y + line.to.y) / 2)
+                let dx = line.to.x - line.from.x, dy = line.to.y - line.from.y
+                let length = hypot(dx, dy)
+                // Normal pointing into the band (toward y = 50).
+                var n = CGVector(dx: -dy / length, dy: dx / length)
+                if (50 - mid.y) * n.dy < 0 { n = CGVector(dx: -n.dx, dy: -n.dy) }
+                // Ten points in: band. Then walk out until the band stops,
+                // ignoring the line's own ink, which is more opaque.
+                let deep = sample(overlay, canvasX: mid.x + n.dx * 10, canvasY: mid.y + n.dy * 10)
+                #expect(abs(Int(deep.a) - 128) <= 3, "\(shape) band at half — got \(deep)")
+                var last: CGFloat = 10
+                var t: CGFloat = 10
+                while t > -6 {
+                    let p = sample(overlay, canvasX: mid.x + n.dx * t, canvasY: mid.y + n.dy * t)
+                    if p.a < 64 { break }
+                    last = t
+                    t -= 0.25
+                }
+                #expect(abs(last) <= 1.0, "\(shape) band's edge within a pixel of its line — stopped at \(last)")
+            }
+        }
+    }
 }

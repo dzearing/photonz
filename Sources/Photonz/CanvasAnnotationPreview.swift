@@ -389,10 +389,31 @@ extension CanvasNSView {
                                  cornerWidth: sourceRadius, cornerHeight: sourceRadius,
                                  transform: nil)
         let leaderPath = CGMutablePath()
+        let drawnCorners = calloutLayer.transformedCorners
         for line in Geometry.leaderLines(source: callout.sourceRect,
-                                         calloutCorners: calloutLayer.transformedCorners) {
+                                         calloutCorners: drawnCorners, shape: callout.shape) {
             leaderPath.move(to: viewport.viewPoint(fromDocument: line.from))
             leaderPath.addLine(to: viewport.viewPoint(fromDocument: line.to))
+        }
+        // The band between the lines, cut back to both shapes as they land.
+        let bandPath = CGMutablePath()
+        let band = Geometry.zoomCalloutBand(source: callout.sourceRect,
+                                            calloutCorners: drawnCorners, shape: callout.shape)
+        if band.count >= 3 {
+            bandPath.addLines(between: band.map { viewport.viewPoint(fromDocument: $0) })
+            bandPath.closeSubpath()
+        }
+        let bandMask = CGMutablePath()
+        bandMask.addRect(bounds)
+        bandMask.addPath(outlinePath)
+        let viewCorners = drawnCorners.map { viewport.viewPoint(fromDocument: $0) }
+        if let placed = Geometry.boxPlacement(corners: viewCorners) {
+            let radius = min(callout.effectiveCornerRadius(boxSize: placed.size,
+                                                           styleRadius: style.cornerRadius * zoom),
+                             min(placed.size.width, placed.size.height) / 2)
+            bandMask.addRoundedRect(in: CGRect(origin: .zero, size: placed.size),
+                                    cornerWidth: radius, cornerHeight: radius,
+                                    transform: placed.transform)
         }
 
         CATransaction.begin()
@@ -413,6 +434,10 @@ extension CanvasNSView {
         calloutFlightLeaderLayer.lineWidth = style.borderWidth * zoom
         calloutFlightLeaderLayer.opacity = 0
         calloutFlightLeaderLayer.isHidden = false
+        calloutFlightBandLayer.path = bandPath
+        calloutFlightBandLayer.fillColor = borderColor.copy(
+            alpha: borderColor.alpha * callout.fillOpacity * max(0, min(1, style.opacity)))
+        calloutFlightBandMask.path = bandMask
         CATransaction.commit()
 
         // The sprite springs into place (slight overshoot reads as the box

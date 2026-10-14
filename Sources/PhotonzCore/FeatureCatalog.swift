@@ -162,6 +162,8 @@ public enum FeatureCatalog {
 
     public static let calloutMagnificationFlag = "next-callout-magnification"
 
+    public static let calloutBandFlag = "next-callout-band"
+
     public static let canvasGridFlag = "next-canvas-grid"
 
     public static let copyPicksYourLayerFlag = "next-copy-picks-your-layer"
@@ -1456,6 +1458,16 @@ public enum FeatureCatalog {
                     name: calloutMagnificationFlag,
                     title: "Choose how much a callout magnifies before you draw it",
                     description: "Set how much the next Zoom Callout magnifies before you draw it, and the tool remembers it. Off means every new callout starts at 2×.",
+                    area: .measuring,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: calloutBandFlag,
+                    title: "A faint beam joins a callout to what it magnifies",
+                    description: "The space between a zoom callout\u{2019}s two lines is tinted with the line colour, 10% by default, set by Fill opacity beside its other settings. Off means new callouts draw only the two lines.",
                     area: .measuring,
                     isEnabled: false,
                     parameters: []),

@@ -89,6 +89,7 @@ public enum ZoomCalloutBuilder {
                              magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification,
                              style: LayerStyle = ZoomCalloutBuilder.defaultStyle,
                              shape: ZoomCalloutShape = .rectangle,
+                             fillOpacity: CGFloat = ZoomCalloutContent.defaultFillOpacity,
                              avoiding occupied: [CGRect] = []) -> Layer? {
         let box = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
                          width: abs(end.x - start.x), height: abs(end.y - start.y))
@@ -99,7 +100,8 @@ public enum ZoomCalloutBuilder {
         return Layer(name: "Zoom",
                      content: .zoomCallout(ZoomCalloutContent(sourceRect: source,
                                                               magnification: magnification,
-                                                              shape: shape)),
+                                                              shape: shape,
+                                                              fillOpacity: fillOpacity)),
                      frame: frame, style: style)
     }
 

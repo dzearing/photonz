@@ -1,0 +1,58 @@
+{
+  "out": "/tmp/photonz-playtest/a-zoom-callout-band",
+  "seed": "The space between a zoom callout's two leader lines is tinted with the line colour at 10% by default, so the callout reads as one beam from the source to the magnifier; Fill opacity in the Lens section sets it and 0 turns it off. The user, 2026-10-13: I'd like the area in between to be filled the line color but be 10% opacity (configurable). Next defaults, no switch: Z is the Lens set to Magnify. Points are document points (1440 x 960); the callout made here lands at (444, 260, 240 x 160) from a 120 x 80 source.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "z" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "drag", "from": [300, 300], "to": [420, 380], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-made", "note": "THE TEST: a new callout's band, between its two lines, is the line red at 10% over the picture" },
+    { "do": "expectCallout", "band": 0.1 },
+    { "do": "snapshot", "name": "1-band" },
+    { "do": "render", "name": "1-band-render" },
+
+    { "do": "drag", "from": [600, 400], "to": [700, 560], "steps": 12, "hold": "2-moving-held" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "2-moved", "note": "the magnified box dragged down and right: the band follows it, with its edges on the two lines" },
+    { "do": "expectCallout", "band": 0.1 },
+    { "do": "snapshot", "name": "2-moved" },
+
+    { "do": "press", "control": "Circle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "3-circle", "note": "Shape Circle: the two lines just touch both circles and the band fills between them, stopping at both round edges" },
+    { "do": "expectCallout", "band": 0.1 },
+    { "do": "snapshot", "name": "3-circle" },
+    { "do": "render", "name": "3-circle-render" },
+
+    { "do": "press", "control": "Slider", "in": "Fill opacity", "across": 0 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "4-none", "note": "THE TEST for off: Fill opacity pulled all the way left by its face; the band is gone and the picture under it is untouched" },
+    { "do": "expectCallout", "band": 0 },
+    { "do": "snapshot", "name": "4-no-band" },
+    { "do": "render", "name": "4-no-band-render" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "5-undone", "note": "one undo puts the band back at 10%" },
+    { "do": "expectCallout", "band": 0.1 },
+    { "do": "snapshot", "name": "5-undone" },
+
+    { "do": "press", "control": "Slider", "in": "Fill opacity", "across": 0 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectCallout", "band": 0 },
+    { "do": "key", "key": "z" },
+    { "do": "waitFor", "condition": "tool", "value": "lens" },
+    { "do": "drag", "from": [900, 700], "to": [980, 760], "steps": 12 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "v" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "6-remembered", "note": "the next callout drawn after Fill opacity went to 0 comes out with no band: the tool took the number" },
+    { "do": "expectCallout", "band": 0 },
+    { "do": "snapshot", "name": "6-remembered" }
+  ]
+}

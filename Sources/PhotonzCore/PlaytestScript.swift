@@ -3487,8 +3487,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// by drawing the source that way and comparing pixels. `layer` names
     /// it; left off it is the picked layer. A snapshot shows a stretched
     /// picture to a person who knows the source, and to nobody else.
+    /// `band` claims the tint between the two leader lines: the callout's
+    /// Fill opacity is that number, and a pixel in the middle of the band, as
+    /// rendered, is the picture under it blended with the line colour by that
+    /// much (nought: the picture under it, untouched).
     case expectCallout(layer: String?, keepsShape: Bool, magnification: Double?,
-                       unstretched: Bool, within: Double)
+                       unstretched: Bool, within: Double, band: Double? = nil)
     /// CLAIMS what the newest Size measurement is, asked of the document: ONE
     /// group holding a Box, a Width and a Height, and nothing else. `count`
     /// claims how many Size groups the document holds; `name` the group's
@@ -5242,15 +5246,19 @@ public enum PlaytestStep: Sendable, Equatable {
             let keepsShape = try f.optionalFlag("keepsShape") ?? false
             let unstretched = try f.optionalFlag("unstretched") ?? false
             let magnification = try f.optionalNumber("magnification")
-            guard keepsShape || unstretched || magnification != nil else {
+            let band = try f.optionalNumber("band")
+            if let band, !(0...1).contains(band) {
+                throw f.invalid("band", "a fill opacity is 0 to 1, not \(band)")
+            }
+            guard keepsShape || unstretched || magnification != nil || band != nil else {
                 throw f.invalid("keepsShape", "expectCallout has to claim something: \"keepsShape\", "
-                    + "\"unstretched\" or \"magnification\"")
+                    + "\"unstretched\", \"magnification\" or \"band\"")
             }
             let within = try f.optionalNumber("within") ?? 0.5
             if within < 0 { throw f.invalid("within", "a slack is zero or more percent, not \(within)") }
             self = .expectCallout(layer: try f.optionalString("layer"), keepsShape: keepsShape,
                                   magnification: magnification, unstretched: unstretched,
-                                  within: within)
+                                  within: within, band: band)
         case "expectSizeMeasure":
             let count = try f.optionalNumber("count")
             if let count, count < 0 || count != count.rounded() {

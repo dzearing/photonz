@@ -26,10 +26,19 @@ public struct CalloutStyles: Equatable, Codable, Sendable {
         didSet { magnification = ZoomCalloutBuilder.clampedMagnification(magnification) }
     }
 
+    /// How strongly the next callout tints the band between its leader lines.
+    /// Written when somebody sets a picked callout's Fill opacity, the way
+    /// rounding one arms the tool with a circle.
+    public var fillOpacity: CGFloat {
+        didSet { fillOpacity = ZoomCalloutContent.clampedFillOpacity(fillOpacity) }
+    }
+
     public init(shape: ZoomCalloutShape = .rectangle,
-                magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification) {
+                magnification: CGFloat = ZoomCalloutBuilder.defaultMagnification,
+                fillOpacity: CGFloat = ZoomCalloutContent.defaultFillOpacity) {
         self.shape = shape
         self.magnification = ZoomCalloutBuilder.clampedMagnification(magnification)
+        self.fillOpacity = ZoomCalloutContent.clampedFillOpacity(fillOpacity)
     }
 
     /// Tolerant, like the other style memories: a blob written before the tool
@@ -41,5 +50,8 @@ public struct CalloutStyles: Equatable, Codable, Sendable {
         magnification = ZoomCalloutBuilder.clampedMagnification(
             try container.decodeIfPresent(CGFloat.self, forKey: .magnification)
                 ?? ZoomCalloutBuilder.defaultMagnification)
+        fillOpacity = ZoomCalloutContent.clampedFillOpacity(
+            try container.decodeIfPresent(CGFloat.self, forKey: .fillOpacity)
+                ?? ZoomCalloutContent.defaultFillOpacity)
     }
 }

@@ -2679,10 +2679,11 @@ private final class Run {
             note(number, step.name, try checkTilt(layerName, atLeast: atLeast, flat: flat),
                  state: describe())
 
-        case .expectCallout(let layerName, let keepsShape, let magnification, let unstretched, let within):
+        case .expectCallout(let layerName, let keepsShape, let magnification, let unstretched, let within,
+                            let band):
             note(number, step.name,
                  try checkCallout(layerName, keepsShape: keepsShape, magnification: magnification,
-                                  unstretched: unstretched, within: within),
+                                  unstretched: unstretched, within: within, band: band),
                  state: describe())
 
         case .expectSizeMeasure(let count, let name, let boxOpacity, let boxInSizeInk, let at, let within):
@@ -11067,7 +11068,7 @@ private final class Run {
     }
 
     private func checkCallout(_ layerName: String?, keepsShape: Bool, magnification: Double?,
-                              unstretched: Bool, within: Double) throws -> String {
+                              unstretched: Bool, within: Double, band: Double? = nil) throws -> String {
         let editor = try requireEditor()
         guard let document = editor.document else { throw Failure(description: "no document open") }
         let found = layerName.map { name in document.allLayers.last { $0.name == name } }
@@ -11102,7 +11103,81 @@ private final class Run {
                 throw Failure(description: "\(reads): the picture in the box is stretched")
             }
         }
+        if let band {
+            reads += ", " + (try checkCalloutBand(layer, claimed: band, in: document, store: editor.store))
+        }
         return reads + ", as claimed"
+    }
+
+    /// Reads the band between a callout's leader lines off the RENDERED
+    /// picture: a pixel in the middle of the band, against the same pixel with
+    /// the band turned off, must be that picture blended with the line colour
+    /// by the claimed Fill opacity. Within four out of 255 on every channel.
+    private func checkCalloutBand(_ layer: Layer, claimed: Double, in document: PhotonzDocument,
+                                  store: ImageStore) throws -> String {
+        guard let callout = layer.zoomCallout else { return "" }
+        let said = "Fill opacity \(Int((callout.fillOpacity * 100).rounded()))%"
+        guard abs(Double(callout.fillOpacity) - claimed) <= 0.01 else {
+            throw Failure(description: "\(said), not the \(Int((claimed * 100).rounded()))% claimed")
+        }
+        let corners = layer.transformedCorners
+        let lines = Geometry.leaderLines(source: callout.sourceRect, calloutCorners: corners,
+                                         shape: callout.shape)
+        guard lines.count == 2 else {
+            throw Failure(description: "\(said), but the callout has no two lines to tint between")
+        }
+        let middles = lines.map { CGPoint(x: ($0.from.x + $0.to.x) / 2, y: ($0.from.y + $0.to.y) / 2) }
+        let pad = max(layer.style.borderWidth, 1) + 3
+        let source = callout.sourceRect.standardized.insetBy(dx: -pad, dy: -pad)
+        let box = layer.frame.standardized.insetBy(dx: -pad, dy: -pad)
+        guard let at = [0.5, 0.4, 0.6, 0.3, 0.7].lazy.map({ t in
+            CGPoint(x: (middles[0].x + (middles[1].x - middles[0].x) * t).rounded(.down),
+                    y: (middles[0].y + (middles[1].y - middles[0].y) * t).rounded(.down))
+        }).first(where: { !source.contains($0) && !box.contains($0) }) else {
+            throw Failure(description: "\(said), but the band is too narrow to read a pixel in")
+        }
+        var plain = document
+        plain.updateLayer(id: layer.id) { edited in
+            guard var bare = edited.zoomCallout else { return }
+            bare.fillOpacity = 0
+            edited.content = .zoomCallout(bare)
+        }
+        guard let drawn = DocumentRenderer().render(document, store: store),
+              let under = DocumentRenderer().render(plain, store: store) else {
+            throw Failure(description: "the document did not render")
+        }
+        func pixel(_ image: CGImage) throws -> [Int] {
+            var bytes = [UInt8](repeating: 0, count: 4)
+            guard let space = CGColorSpace(name: CGColorSpace.sRGB) else { return [0, 0, 0] }
+            let made = bytes.withUnsafeMutableBytes { raw -> Bool in
+                guard let context = CGContext(data: raw.baseAddress, width: 1, height: 1,
+                                              bitsPerComponent: 8, bytesPerRow: 4, space: space,
+                                              bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+                else { return false }
+                let scale = CGFloat(image.width) / document.canvasSize.width
+                context.draw(image, in: CGRect(x: -at.x * scale,
+                                               y: -(CGFloat(image.height) - 1 - at.y * scale),
+                                               width: CGFloat(image.width), height: CGFloat(image.height)))
+                return true
+            }
+            guard made else { throw Failure(description: "could not read the band's pixel") }
+            return bytes.prefix(3).map(Int.init)
+        }
+        let got = try pixel(drawn), below = try pixel(under)
+        let line = RGBA(hex: layer.style.borderColorHex) ?? RGBA(r: 0, g: 0, b: 0)
+        let strength = claimed * Double(line.a) * Double(max(0, min(1, layer.style.opacity)))
+        let ink = [line.r, line.g, line.b].map { Double($0) * 255 }
+        let expected = zip(below, ink).map { Int((Double($0) * (1 - strength) + $1 * strength).rounded()) }
+        let off = zip(got, expected).map { abs($0 - $1) }.max() ?? 0
+        let reading = "\(said), band at (\(Int(at.x)), \(Int(at.y))) reads rgb \(got), "
+            + "the picture under it \(below), \(Int((claimed * 100).rounded()))% of the line colour over it is \(expected)"
+        if off > 4 {
+            throw Failure(description: "\(reading): \(off)/255 off")
+        }
+        if claimed > 0, got == below {
+            throw Failure(description: "\(reading): the band left the picture untouched")
+        }
+        return reading
     }
 
     /// How far, on average per channel out of 255, the picture inside a
