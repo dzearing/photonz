@@ -1,0 +1,316 @@
+{
+  "out": "/tmp/photonz-playtest/value-graph-second-segment-menu-walk",
+  "seed": "Each segment of a value graph keeps the curve chosen from its own right-click. At Next defaults with no flag changed, this walk keys a title's Scale at one and three seconds, opens its graph, Command-clicks the line to add a middle point, right-clicks the first segment and chooses Ease out, then right-clicks the second and chooses Hold, and goes back and forth checking that each segment's menu ticks its own curve, that a right-click picks the segment it landed on, and that the panel's Curve row reads each segment's curve with the playhead in it. On 2026-10-14 the line carried one menu for every segment, and SwiftUI showed the menu built before the click, so Linear chosen on the second segment bent the first. Command-click and right-click are the clicks that reach a probe behind another app.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "rightClick",
+      "on": "Key Scale 1",
+      "choose": "Show Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "comment": "Command-click on the line adds a middle point, so the graph has two segments.",
+      "do": "windowClick",
+      "on": "Segment Scale 1",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 3",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Segment Scale 2",
+      "present": true
+    },
+    {
+      "comment": "THE FIRST TEST: Ease out from the first segment's own right-click.",
+      "do": "rightClick",
+      "on": "Segment Scale 1",
+      "ticked": [
+        "Custom"
+      ],
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [],
+      "segments": [
+        "Scale 1"
+      ]
+    },
+    {
+      "comment": "THE SECOND TEST: Hold from the second segment's right-click, whose menu ticks its own curve. It once ran the first menu's row and bent the first segment instead.",
+      "do": "rightClick",
+      "on": "Segment Scale 2",
+      "ticked": [
+        "Custom"
+      ],
+      "unticked": [
+        "Ease out"
+      ],
+      "choose": "Hold"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [],
+      "segments": [
+        "Scale 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-two-curves",
+      "note": "The first segment bent to Ease out and the second set to Hold, each from its own right-click; the second is picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-two-curves"
+    },
+    {
+      "comment": "THE THIRD TEST: back on the first segment, its menu ticks its own curve and the right-click picks it.",
+      "do": "rightClick",
+      "on": "Segment Scale 1",
+      "ticked": [
+        "Ease out"
+      ],
+      "unticked": [
+        "Hold"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [],
+      "segments": [
+        "Scale 1"
+      ]
+    },
+    {
+      "comment": "And the other way round: Linear on the second segment leaves the first as it was.",
+      "do": "rightClick",
+      "on": "Segment Scale 2",
+      "ticked": [
+        "Hold"
+      ],
+      "unticked": [
+        "Ease out"
+      ],
+      "choose": "Linear"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [],
+      "segments": [
+        "Scale 2"
+      ]
+    },
+    {
+      "do": "rightClick",
+      "on": "Segment Scale 1",
+      "ticked": [
+        "Ease out"
+      ],
+      "unticked": [
+        "Linear"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "comment": "THE FOURTH TEST: the panel's Curve row, read with the playhead in each segment.",
+      "do": "clickRuler",
+      "seconds": 1.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Curve",
+      "reads": "Ease out"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Curve",
+      "reads": "Linear"
+    },
+    {
+      "do": "describe",
+      "stage": "2-done",
+      "note": "The first segment still Ease out, the second Linear; the playhead in the second"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-done"
+    }
+  ]
+}

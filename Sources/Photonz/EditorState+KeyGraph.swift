@@ -101,10 +101,13 @@ extension EditorState {
     /// A right click on a segment: the shared curve list, ticked where every
     /// segment in hand agrees, then Hold and Draw a Curve, Copy and Paste
     /// Ease, Add Point Here at the moment it landed, and Delete for the
-    /// points picked with it. The segment is picked, unless it already is.
-    func segmentMenuRows(layerID: UUID, motionID: UUID, _ ref: KeyRef, atMS ms: Int) -> [MenuRow] {
+    /// points picked with it. The segment is picked, unless it already is,
+    /// when `landed` says the latest right click is on it: every segment
+    /// carries a menu of its own, and each is built again after a right click
+    /// anywhere on the line.
+    func segmentMenuRows(layerID: UUID, motionID: UUID, _ ref: KeyRef, atMS ms: Int, landed: Bool = true) -> [MenuRow] {
         guard let document, !isClipLocked(layerID) else { return [] }
-        if servesThisRightPress(), !pickedSegments(layerID: layerID).contains(ref) {
+        if landed, servesThisRightPress(), !pickedSegments(layerID: layerID).contains(ref) {
             DispatchQueue.main.async { [weak self] in
                 self?.pickSegment(layerID: layerID, ref, atMS: ms, extending: false, movingPlayhead: false)
             }
@@ -117,10 +120,15 @@ extension EditorState {
             self.drawingStretchCurve = KeySelection(layerID: layerID, refs: [], segments: refs)
         }
         rows.append(.separator)
+        // The moment of the right click that opened the menu, read as the row
+        // runs: SwiftUI shows the menu it built before that click
+        // (`CanvasContextMenuHook`), when `ms` was an earlier click's.
         rows.append(.command("Add Point Here") {
-            self.addKeyOnGraph(layerID: layerID, motionID: motionID, atMS: ms)
+            self.addKeyOnGraph(layerID: layerID, motionID: motionID, atMS: self.timelineLastRightPressMS ?? ms)
         })
-        let points = pickedKeys(layerID: layerID)
+        // The points picked WITH this segment: none, when the right click is
+        // about to pick it alone.
+        let points = pickedSegments(layerID: layerID).contains(ref) ? pickedKeys(layerID: layerID) : []
         rows.append(.separator)
         rows.append(.command(points.count > 1 ? "Delete \(points.count) Points" : "Delete Point",
                              enabled: !points.isEmpty, destructive: true) {

@@ -752,25 +752,31 @@ private struct KeyLaneView: View {
     /// a press, so the lane around it still scrubs and draws boxes. A click
     /// picks a segment, ⌘-click adds a point there, and a right click opens
     /// the segment's own menu.
+    ///
+    /// Each segment is its own strip carrying its own menu. SwiftUI hands a
+    /// right click the menu it built when the view last updated, BEFORE the
+    /// click (`CanvasContextMenuHook`), so one menu for the whole line, aimed
+    /// at where the click landed, was always the previous click's: Linear
+    /// chosen on a second segment bent the first
+    /// (value-graph-second-segment-menu-walk, 2026-10-14). A segment's own
+    /// menu is about that segment whenever it was built.
     private func lineSurface(_ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) -> some View {
-        let strokes = line.segments + [line.before, line.after]
         let pickedSegments = editorState.pickedSegments(layerID: layerID)
         return ZStack(alignment: .topLeading) {
-            Color.clear
-                .frame(width: laneWidth, height: height)
-                .contentShape(LineStrip(lines: strokes, width: AnimatedLine.lineReach * 2))
-                .onTapGesture(coordinateSpace: .local) { at in lineClick(at, keys, line: line, ruler: ruler) }
-                // A press that travels draws a box round keys, as it does
-                // from the bare lane either side.
-                .gesture(DragGesture(minimumDistance: Self.boxThreshold, coordinateSpace: .named(space))
-                    .onChanged { onBox(rect($0), false) }
-                    .onEnded { onBox(rect($0), true) })
+            // Either side of the keys: the lane's own menu.
+            lineStrip([line.before, line.after], keys, line: line, ruler: ruler)
                 .contextMenu {
-                    // Read so every right click builds the menu afresh, from
-                    // where it landed (`EditorState+TimelinePointing`).
-                    let _ = editorState.timelineRightPresses
-                    BuiltAsItOpens { lineMenuRows(keys, line: line, ruler: ruler) }
+                    MenuRowsView(rows: editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID))
                 }
+            ForEach(Array(line.segments.enumerated()), id: \.offset) { index, segment in
+                lineStrip([segment], keys, line: line, ruler: ruler)
+                    .contextMenu {
+                        // Read so a right click builds the menu again, and the
+                        // build after it picks the segment it landed on.
+                        let _ = editorState.timelineRightPresses
+                        BuiltAsItOpens { segmentMenuRows(index, keys, line: line, ruler: ruler) }
+                    }
+            }
             // A name for each segment, at its middle, for a walk to aim at.
             ForEach(Array(line.segments.enumerated()), id: \.offset) { index, segment in
                 let middle = Self.middle(of: segment)
@@ -786,6 +792,21 @@ private struct KeyLaneView: View {
                     .allowsHitTesting(false)
             }
         }
+    }
+
+    /// A strip along some of the line that takes a click, a ⌘-click and a
+    /// box, each read against the whole line.
+    private func lineStrip(_ lines: [[CGPoint]], _ keys: [LineKey], line: AnimatedLine,
+                           ruler: MotionStripRuler) -> some View {
+        Color.clear
+            .frame(width: laneWidth, height: height)
+            .contentShape(LineStrip(lines: lines, width: AnimatedLine.lineReach * 2))
+            .onTapGesture(coordinateSpace: .local) { at in lineClick(at, keys, line: line, ruler: ruler) }
+            // A press that travels draws a box round keys, as it does
+            // from the bare lane either side.
+            .gesture(DragGesture(minimumDistance: Self.boxThreshold, coordinateSpace: .named(space))
+                .onChanged { onBox(rect($0), false) }
+                .onEnded { onBox(rect($0), true) })
     }
 
     private func lineClick(_ at: CGPoint, _ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) {
@@ -817,26 +838,22 @@ private struct KeyLaneView: View {
         Int(ruler.ms(atFraction: Double(min(max(0, laneX / laneWidth), 1))).rounded())
     }
 
-    /// The right click on the line: built as the menu opens, from where the
-    /// press landed (`TimelineRightPress`), so it is the menu of the segment
-    /// or the point under the pointer.
-    private func lineMenuRows(_ keys: [LineKey], line: AnimatedLine, ruler: MotionStripRuler) -> [MenuRow] {
-        guard let ms = editorState.timelineLastRightPressMS,
-              let row = editorState.keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: lane.motionID)] else {
-            return editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID)
+    /// A segment's right click. Its rows are about this segment whichever
+    /// right click it was built after; it picks the segment only when the
+    /// latest right click landed on it (`TimelineRightPress`).
+    private func segmentMenuRows(_ index: Int, _ keys: [LineKey], line: AnimatedLine,
+                                 ruler: MotionStripRuler) -> [MenuRow] {
+        let ref = keys[index].ref
+        let row = editorState.keyLaneRows[KeyLaneRowID(layerID: layerID, motionID: lane.motionID)]
+        let pressMS = editorState.timelineLastRightPressMS
+        var landed = false
+        if let pressMS, let row {
+            let at = CGPoint(x: x(pressMS, ruler), y: editorState.timelineRightPressY - row.lowerBound)
+            landed = line.hit(at) == .segment(index)
         }
-        let at = CGPoint(x: x(ms, ruler), y: editorState.timelineRightPressY - row.lowerBound)
-        switch line.hit(at) {
-        case let .segment(index):
-            return editorState.segmentMenuRows(layerID: layerID, motionID: lane.motionID,
-                                               keys[index].ref, atMS: ms)
-        case let .dot(index):
-            let key = keys[index]
-            editorState.keyMenuOpened(layerID: layerID, [key.ref], atMS: key.ms, lane: lane.motionID)
-            return editorState.keyMenuRows(layerID: layerID, key.ref, atMS: key.ms)
-        case .beyond, nil:
-            return editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID)
-        }
+        let middle = keys.indices.contains(index + 1) ? (keys[index].ms + keys[index + 1].ms) / 2 : keys[index].ms
+        return editorState.segmentMenuRows(layerID: layerID, motionID: lane.motionID, ref,
+                                           atMS: landed ? pressMS ?? middle : middle, landed: landed)
     }
 
     private func keyDrag(_ key: LaneKey, ruler: MotionStripRuler) -> some Gesture {
