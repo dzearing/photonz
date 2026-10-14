@@ -2289,6 +2289,56 @@ private final class Run {
             note(number, step.name, "keys picked: \(said(pickedKeys)); segments picked: \(said(pickedSegments))",
                  state: describe())
 
+        case .expectKeyRows(let clip, let rows, let moments, let hollow, let picked):
+            let editor = try requireEditor()
+            let layers = editor.document?.allLayers ?? []
+            let layer: Layer
+            if let clip {
+                // By its name, or its words: a title is named for its text,
+                // which can be trimmed or cut short.
+                let query = clip.lowercased().trimmingCharacters(in: .punctuationCharacters)
+                let named = layers.first { $0.name.lowercased() == clip.lowercased() }
+                    ?? layers.first { layer in
+                        let name = layer.name.lowercased().trimmingCharacters(in: .punctuationCharacters)
+                        return layer.time != nil && !name.isEmpty && (name.contains(query) || query.contains(name))
+                    }
+                guard let found = named else {
+                    throw Failure(description: "no layer is called \"\(clip)\"; the layers are "
+                                  + layers.map { "\"\($0.name)\"" }.joined(separator: ", "))
+                }
+                layer = found
+            } else {
+                guard let id = editor.selectedLayerID, let found = editor.document?.layer(id: id) else {
+                    throw Failure(description: "expectKeyRows names no clip, and nothing is picked")
+                }
+                layer = found
+            }
+            let lanes = editor.keyLanes(layerID: layer.id)
+            let names = lanes.map(\.title)
+            let marks = editor.clipKeyMarks(layerID: layer.id)
+            let pickedRow = editor.keyRowInHand.flatMap { row in
+                row.layerID == layer.id ? lanes.first { $0.motionID == row.motionID }?.title : nil
+            } ?? ""
+            func said(_ list: [String]) -> String { list.isEmpty ? "none" : list.joined(separator: ", ") }
+            var wrong: [String] = []
+            if names.map({ $0.lowercased() }) != rows.map({ $0.lowercased() }) {
+                wrong.append("its rows are \(said(names)), and the walk expected \(said(rows))")
+            }
+            if let moments, marks.count != moments {
+                wrong.append("its key line has \(marks.count) moment(s), and the walk expected \(moments)")
+            }
+            let hollowCount = marks.filter(\.isHollow).count
+            if let hollow, hollowCount != hollow {
+                wrong.append("\(hollowCount) of its moments are hollow, and the walk expected \(hollow)")
+            }
+            if let picked, (pickedRow.isEmpty ? "none" : pickedRow.lowercased()) != picked.lowercased() {
+                wrong.append("the row picked is \(pickedRow.isEmpty ? "none" : pickedRow), and the walk expected \(picked)")
+            }
+            let reading = "\(layer.name): rows \(said(names)); \(marks.count) moment(s), \(hollowCount) hollow; "
+                + "row picked \(pickedRow.isEmpty ? "none" : pickedRow)"
+            guard wrong.isEmpty else { throw Failure(description: reading + ". " + wrong.joined(separator: "; ")) }
+            note(number, step.name, reading, state: describe())
+
         case .expectKeyValues(let present, let rows, let reads):
             let editor = try requireEditor()
             let shows = editor.showsKeyValues

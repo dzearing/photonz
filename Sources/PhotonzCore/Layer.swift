@@ -1798,6 +1798,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// the layer stored here is always the one you can still drag.
     public var motions: [LayerMotion]?
 
+    /// Moments on the layer's own clock where Add Key put a key with nothing
+    /// keyed in it yet: a hollow diamond on the clip's key line, which the
+    /// first value changed there turns into a real key (`KeyMoments.swift`).
+    /// Nil on every layer nobody has done that to.
+    public var hollowKeyMoments: [Int]?
+
     /// The stretch of the document's timeline this layer occupies: a point
     /// where it starts and a point where it ends (`DocumentTime.swift`). Nil
     /// is a layer that is simply there the whole time, which is every layer in

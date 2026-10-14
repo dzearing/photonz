@@ -48,6 +48,11 @@ struct PropertyKeysTests {
         return nil
     }
 
+    static func point(_ value: MotionValue?) -> CGPoint? {
+        if case let .point(point) = value { return point }
+        return nil
+    }
+
     // MARK: - The diamond starts keying
 
     @Test func aValueNobodyHasKeyedIsDormant() {
@@ -290,10 +295,14 @@ struct PropertyKeysTests {
             $0.frame = CGRect(x: 100, y: 100, width: 600, height: 120)
         }
         doc.foldEditIntoKeys(layerID: id, before: before, atDocumentTimeMS: 6000)
-        // Its size goes back to the stored one; with its place NOT keyed, the
-        // stored layer moves by as far as the middle travelled, so the corner
-        // the hand held stays where it was.
-        #expect(doc.layer(id: id)?.frame == before.frame.offsetBy(dx: 100, dy: 20))
+        // Its size goes back to the stored one, and on a layer with keys its
+        // place joins the animation (`KeyMoments.swift`): the middle's travel
+        // is a Position key, so the corner the hand held stays where it was.
+        #expect(doc.layer(id: id)?.frame == before.frame)
+        #expect(Self.point(doc.keyedValue(layerID: id, .motion(.position), atDocumentTimeMS: 6000))
+                == before.frame.offsetBy(dx: 100, dy: 20).origin)
+        #expect(Self.point(doc.keyedValue(layerID: id, .motion(.position), atDocumentTimeMS: 3000))
+                == before.frame.origin)
         #expect(doc.layer(id: id)?.transform.rotation == before.transform.rotation)
         let turned = Self.number(doc.keyedValue(layerID: id, .motion(.rotation), atDocumentTimeMS: 6000)) ?? 0
         #expect(abs(turned - 90) < 0.001)
@@ -354,7 +363,7 @@ struct PropertyKeysTests {
         #expect(doc.posedForCanvas(atTimeMS: 5000).layer(id: id) == doc.layer(id: id))
     }
 
-    @Test func aMoveOnALayerWhoseSizeAloneIsKeyedMovesItAndKeepsItsSize() {
+    @Test func aMoveOnALayerWhoseSizeAloneIsKeyedKeysItsPlaceAndKeepsItsSize() {
         var (doc, id) = Self.withTitle()
         doc.startKeying(layerID: id, .motion(.scale), atDocumentTimeMS: 3000)
         doc.setKeyedValue(.number(200), layerID: id, .motion(.scale), atDocumentTimeMS: 6000)
@@ -365,8 +374,14 @@ struct PropertyKeysTests {
         // Dragged 40 to the right, as posed: twice the size it is stored at.
         doc.updateLayer(id: id) { $0.frame = posed.frame.offsetBy(dx: 40, dy: 0) }
         let made = doc.foldEditIntoKeys(layerID: id, before: posed, restoring: stored, atDocumentTimeMS: 7000)
-        #expect(!made)
-        #expect(doc.layer(id: id)?.frame == stored.frame.offsetBy(dx: 40, dy: 0))
+        // On a layer with keys any change keys itself: the move is a Position
+        // key at seven seconds, holding where it was at the Scale key before.
+        #expect(made)
+        #expect(doc.layer(id: id)?.frame == stored.frame)
+        #expect(Self.point(doc.keyedValue(layerID: id, .motion(.position), atDocumentTimeMS: 7000))
+                == stored.frame.offsetBy(dx: 40, dy: 0).origin)
+        #expect(Self.point(doc.keyedValue(layerID: id, .motion(.position), atDocumentTimeMS: 6000))
+                == stored.frame.origin)
         #expect(doc.keyCount(layerID: id, .motion(.scale)) == 2)
     }
 

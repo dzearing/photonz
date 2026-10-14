@@ -42,8 +42,23 @@ extension EditorState {
     /// moves, ticked where every key there agrees, and Delete.
     func clipKeyMenuRows(layerID: UUID, atMS ms: Int) -> [MenuRow] {
         guard let document, !isClipLocked(layerID) else { return [] }
+        // Animate ▸ first, as on the clip (`video-animate.html`).
+        let animate = animateMenuRow(layerID: layerID).map { [$0, MenuRow.separator] } ?? []
+        // A hollow moment has nothing to ease or copy yet.
+        let mark = clipKeyMarks(layerID: layerID).first { $0.documentMS == ms }
+        if mark?.isHollow == true {
+            return animate + [
+                .command("Go to Key") { self.pickClipKey(layerID: layerID, atMS: ms) },
+                .separator,
+                .command("Delete Key", destructive: true) {
+                    self.selectLayer(layerID)
+                    self.clearKeySelection()
+                    self.perform { $0.removeKeyMoment(layerID: layerID, atDocumentTimeMS: ms) }
+                },
+            ]
+        }
         let current = document.clipKeyEase(layerID: layerID, atMS: ms)
-        var rows: [MenuRow] = KeyEase.allCases.map { ease in
+        var rows: [MenuRow] = animate + KeyEase.allCases.map { ease in
             .toggle(ease.title, isOn: current == ease) {
                 self.selectLayer(layerID)
                 self.perform { $0.easeClipKeys(layerID: layerID, atMS: ms, ease) }
@@ -62,7 +77,7 @@ extension EditorState {
         rows.append(.command("Delete Key", destructive: true) {
             self.selectLayer(layerID)
             self.clearKeySelection()
-            self.perform { $0.removeClipKeys(layerID: layerID, atMS: ms) }
+            self.perform { $0.removeKeyMoment(layerID: layerID, atDocumentTimeMS: ms) }
         })
         return rows
     }

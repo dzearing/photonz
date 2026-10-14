@@ -68,18 +68,21 @@ extension EditorState {
 
     // MARK: Key at Playhead
 
-    /// What Key at Playhead keys: every value already animating, or where
-    /// nothing is yet, the layer's Position, the first key of a move.
+    /// What Key at Playhead keys: every value already animating. Where
+    /// nothing is yet it is the clip's Add Key, one hollow moment and no rows
+    /// (`KeyMoments.swift`).
     private var keyAtPlayheadProperties: [KeyedProperty] {
         guard keyLayer != nil else { return [] }
-        if !animatingRows.isEmpty { return animatingRows }
-        return keyRows.contains(.motion(.position)) ? [.motion(.position)] : []
+        return animatingRows
     }
 
     /// Whether Key at Playhead has anything to write: a value that is not
-    /// already on a key right here.
+    /// already on a key right here, or on a layer with nothing animating, no
+    /// key moment here yet.
     var canKeyAtPlayhead: Bool {
-        keyAtPlayheadProperties.contains { keyDiamond($0) != .onKey }
+        guard let layer = keyLayer else { return false }
+        if animatingRows.isEmpty { return headerKeyDiamond(layer.id) != .onKey }
+        return keyAtPlayheadProperties.contains { keyDiamond($0) != .onKey }
     }
 
     /// The Animate menu's Key at Playhead: a key here on each of them, holding
@@ -87,6 +90,11 @@ extension EditorState {
     /// gives the next change somewhere to travel from.
     func keyAtPlayhead() {
         guard let layer = keyLayer else { return }
+        if animatingRows.isEmpty {
+            guard headerKeyDiamond(layer.id) != .onKey else { return }
+            toggleHeaderKey(layer.id)
+            return
+        }
         let time = documentTimeMS
         let ease = newKeyEaseToWrite
         let wanted = keyAtPlayheadProperties.filter { keyDiamond($0) != .onKey }

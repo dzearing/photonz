@@ -261,11 +261,18 @@ struct SpaceEditingTests {
     @Test("A layer with nothing keyed takes a tilt as its own value, as a move with no keys does")
     func tiltWithNothingKeyedIsItsOwn() {
         var (doc, id) = Self.withTitle()
-        _ = doc.startKeying(layerID: id, .motion(.opacity), atDocumentTimeMS: 3000)
         doc.setSpaceTurn(LayerTurn3D(rotationY: 30), layerID: id, atDocumentTimeMS: 3000)
-        // Opacity is a look, not where it is: its keys do not make a tilt a key.
         #expect(doc.keyCount(layerID: id, .motion(.rotationY)) == 0)
         #expect(doc.layer(id: id)?.turn3D?.rotationY == 30)
+    }
+
+    @Test("On a layer with any key, even a fade, a tilt keys itself (the user's answer, 2026-10-13)")
+    func tiltOnAFadingLayerKeys() {
+        var (doc, id) = Self.withTitle()
+        _ = doc.startKeying(layerID: id, .motion(.opacity), atDocumentTimeMS: 3000)
+        doc.setSpaceTurn(LayerTurn3D(rotationY: 30), layerID: id, atDocumentTimeMS: 3000)
+        #expect(doc.keyCount(layerID: id, .motion(.rotationY)) == 1)
+        #expect(doc.spaceValue(.rotationY, layerID: id, atDocumentTimeMS: 3000) == 30)
     }
 
     @Test("How tilted a layer is drawn: its near edge over its far edge, 1 for a flat layer")

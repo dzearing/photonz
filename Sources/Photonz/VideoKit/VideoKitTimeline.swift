@@ -345,17 +345,28 @@ extension VideoKit {
         /// The pointer resting on it: a little larger, so the hand sees what
         /// a click will take.
         var isHovered = false
+        /// A moment Add Key made with nothing keyed in it yet: a white ring
+        /// with the clip showing through (`video-animate.html`, `.va-mk.empty`).
+        var isHollow = false
 
         var body: some View {
             let shape = RoundedRectangle(cornerRadius: isEased ? 2.5 : 0)
             let side: CGFloat = isPicked ? 9 : isHovered ? 8 : 7
-            shape
-                .fill(Color.white)
-                .overlay(shape.strokeBorder(isPicked ? Color.accentColor : Color.black.opacity(isHovered ? 0.45 : 0.25),
-                                            lineWidth: isPicked ? 2 : 1))
-                .frame(width: side, height: side)
-                .rotationEffect(.degrees(45))
-                .shadow(color: isPicked ? Color.black.opacity(0.5) : .clear, radius: 1.5)
+            if isHollow {
+                shape
+                    .strokeBorder(Color.white, lineWidth: 1.5)
+                    .overlay(shape.stroke(Color.black.opacity(isHovered ? 0.45 : 0.25), lineWidth: 1))
+                    .frame(width: side, height: side)
+                    .rotationEffect(.degrees(45))
+            } else {
+                shape
+                    .fill(Color.white)
+                    .overlay(shape.strokeBorder(isPicked ? Color.accentColor : Color.black.opacity(isHovered ? 0.45 : 0.25),
+                                                lineWidth: isPicked ? 2 : 1))
+                    .frame(width: side, height: side)
+                    .rotationEffect(.degrees(45))
+                    .shadow(color: isPicked ? Color.black.opacity(0.5) : .clear, radius: 1.5)
+            }
         }
     }
 

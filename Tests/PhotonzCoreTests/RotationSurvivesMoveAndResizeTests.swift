@@ -147,7 +147,7 @@ struct RotationSurvivesMoveAndResizeTests {
         #expect(doc.keyCount(layerID: id, .motion(.rotation)) == 2)
     }
 
-    @Test("A move with ONLY the turn keyed moves the layer and keeps the keyed turn")
+    @Test("A move with ONLY the turn keyed keys the place and keeps the keyed turn")
     func onlyTurnKeyedMove() {
         var (doc, id) = Self.onAVideo(turned: false)
         doc.startKeying(layerID: id, .motion(.rotation), atDocumentTimeMS: 1000)
@@ -156,8 +156,12 @@ struct RotationSurvivesMoveAndResizeTests {
 
         Self.canvasEdit(&doc, id, atMS: 5000) { $0.offsetBy(dx: 120, dy: 40) }
 
-        #expect(doc.layer(id: id)?.frame.origin == before.frame.origin.applying(
+        // On a layer with keys the move keys itself (the user's answer on
+        // 2026-10-13), holding where it was at the turn's last key.
+        #expect(doc.layer(id: id)?.frame.origin == before.frame.origin)
+        #expect(doc.drawn(atTimeMS: 5000).layer(id: id)?.frame.origin == before.frame.origin.applying(
             CGAffineTransform(translationX: 120, y: 40)))
+        #expect(doc.drawn(atTimeMS: 3000).layer(id: id)?.frame.origin == before.frame.origin)
         #expect(abs(Self.angle(doc, id, atMS: 5000) - 30) < 0.001)
         #expect(abs(Self.angle(doc, id, atMS: 1000) - 0) < 0.001)
     }

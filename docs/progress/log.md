@@ -21393,3 +21393,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   `key-value-popover-walk` at Next defaults.
 - Next: the clip bar's own diamond still only picks (the mock sent it to the
   canvas bar the user replaced).
+
+## 2026-10-14 — A track lists only what is animated
+
+- Add Key on a clip with nothing keyed is one hollow moment and no rows (`Layer.hollowKeyMoments`, `PhotonzCore/KeyMoments.swift`); with keys it keys every animated value there.
+- Any change on a layer with keys keys itself (the user's card answer, 2026-10-13): panel rows, Appearance sliders, canvas moves/resizes/turns, transform values and 3D all join through one rule (anchors at the layer's key moments either side).
+- Click a row's name to pick it; Delete or the row's Stop Animating removes it. Animate ▸ (Transform, 3D, Look, Effects) on the clip, its key diamonds and Clip ▸ Animate adds one back.
+- Walk: `only-what-is-animated-walk` (new `expectKeyRows` step). Follow-up: `dragging-on-the-canvas-with-a-row-picked-moves-t`.

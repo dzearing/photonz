@@ -71,6 +71,9 @@ struct MenuRow: Identifiable {
         case toggle(isOn: Bool)
         /// A row that opens a list of its own.
         case submenu([MenuRow])
+        /// Rows under a small grey heading, in the same menu: the Animate
+        /// list's Transform, 3D, Look and Effects.
+        case section([MenuRow])
         case separator
     }
 
@@ -104,6 +107,10 @@ struct MenuRow: Identifiable {
     static func submenu(_ title: String, _ rows: [MenuRow]) -> MenuRow {
         MenuRow(title: title, kind: .submenu(rows))
     }
+
+    static func section(_ title: String, _ rows: [MenuRow]) -> MenuRow {
+        MenuRow(title: title, kind: .section(rows))
+    }
 }
 
 // MARK: - Drawn by SwiftUI
@@ -126,6 +133,8 @@ struct MenuRowsView: View {
                 }
             case .submenu(let inner):
                 Menu(row.title) { MenuRowsView(rows: inner) }
+            case .section(let inner):
+                Section(row.title) { MenuRowsView(rows: inner) }
             case .command:
                 command(row)
             }
@@ -195,6 +204,12 @@ extension NSMenu {
                 let item = NSMenuItem(title: row.title, action: nil, keyEquivalent: "")
                 item.submenu = NSMenu.rows(inner)
                 menu.addItem(item)
+            case .section(let inner):
+                menu.addItem(.sectionHeader(title: row.title))
+                for item in NSMenu.rows(inner).items {
+                    item.menu?.removeItem(item)
+                    menu.addItem(item)
+                }
             case .command, .toggle:
                 menu.addItem(MenuRowItem(row: row))
             }

@@ -99,15 +99,18 @@ struct ZoomedClipDragKeysCentreTests {
         #expect(Self.drawnFrame(document, id, atMS: 8000) == tightBefore?.offsetBy(dx: -100, dy: 0))
     }
 
-    @Test("A Scale with only one key is not a move yet, so a drag still just moves the clip")
+    @Test("A Scale with only one key: a drag keys Centre there alone, so the whole clip moves")
     func oneScaleKeyStillMoves() {
+        // On a layer with any key a change keys itself (the user's answer on
+        // 2026-10-13). With no other key moment, one Centre key holds the
+        // move at every moment, which is the move a person meant.
         var (document, id) = Self.zoomed(keys: [(3000, 100)])
-        let stored = document.layer(id: id)
+        let before = Self.drawnFrame(document, id, atMS: 6000)
 
         Self.drag(&document, id, atMS: 3000, by: CGPoint(x: 50, y: 20))
 
-        #expect(document.keyCount(layerID: id, .motion(.position)) == 0)
-        #expect(document.layer(id: id)?.frame == stored?.frame.offsetBy(dx: 50, dy: 20))
+        #expect(document.keyCount(layerID: id, .motion(.position)) == 1)
+        #expect(Self.drawnFrame(document, id, atMS: 6000) == before?.offsetBy(dx: 50, dy: 20))
     }
 
     @Test("A clip with Centre already keyed gets one more Centre key, as before")

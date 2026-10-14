@@ -1417,6 +1417,17 @@ struct EditorCommands: Commands {
             .disabled(property == nil)
     }
 
+    // The clip's Animate ▸ list, the same one its right click offers: every
+    // value of the picked layer not animating yet, under Transform, 3D, Look
+    // and Effects (`video-animate.html`).
+    @ViewBuilder private var animatePropertyRows: some View {
+        if let layer = editor?.keyLayer, let row = editor?.animateMenuRow(layerID: layer.id),
+           case .submenu(let inner) = row.kind {
+            MenuRowsView(rows: inner)
+            Divider()
+        }
+    }
+
     @ViewBuilder private var straightenRow: some View {
         Button("Straighten This Stretch") { editor?.straightenStretchInHand() }
             .disabled(editor?.curvedStretchInHand == nil)
@@ -1607,6 +1618,7 @@ struct EditorCommands: Commands {
             // screen, and a menu that scrolls hides its own rows. The keys it
             // prints still answer from inside it.
             Menu("Animate") {
+                animatePropertyRows
                 placedLayerRows
                 Divider()
                 keyNavigationRows

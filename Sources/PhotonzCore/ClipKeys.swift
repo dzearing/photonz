@@ -26,6 +26,10 @@ public struct ClipKeyMark: Hashable, Sendable {
     /// Every key it stands for, which a click on it picks and Backspace then
     /// deletes.
     public var refs: Set<KeyRef> = []
+
+    /// A moment Add Key made with nothing keyed in it yet, drawn hollow
+    /// (`KeyMoments.swift`).
+    public var isHollow: Bool { refs.isEmpty }
 }
 
 // MARK: - The marks
@@ -90,7 +94,13 @@ extension PhotonzDocument {
             group.append(item)
         }
         close()
-        return marks
+        // The hollow moments Add Key left, where no key already stands.
+        let hollow = hollowMomentsMS(of: layer).filter { ms in
+            !marks.contains { abs($0.documentMS - ms) <= PropertyKeys.nearMS }
+        }
+        guard !hollow.isEmpty else { return marks }
+        marks += hollow.map { ClipKeyMark(documentMS: $0, properties: []) }
+        return marks.sorted { $0.documentMS < $1.documentMS }
     }
 
     /// Which key of `motion` sits at a moment of the document, if one does.
@@ -127,10 +137,17 @@ extension PhotonzDocument {
                 high = min(high, after - gap)
             }
         }
-        guard !carried.isEmpty, low <= high else { return false }
+        // A hollow moment there travels with them, or alone where it is all
+        // there is (`KeyMoments.swift`).
+        let hollow = (layer.hollowKeyMoments ?? []).firstIndex { clock in
+            clipKeyDocumentMS(layer, clock: clock).map { abs($0 - from) <= PropertyKeys.nearMS } ?? false
+        }
+        guard !carried.isEmpty || hollow != nil, low <= high else { return false }
         let landing = min(max(to, low), high)
         let clock = clipKeyClock(layer, atDocumentMS: landing)
         updateLayer(id: layerID) { edited in
+            if let hollow { edited.hollowKeyMoments?[hollow] = clock }
+            guard !carried.isEmpty else { return }
             edited.motions = (edited.motions ?? []).map { motion in
                 guard let hit = carried.first(where: { $0.0 == motion.id }) else { return motion }
                 var list = motion.keyframes

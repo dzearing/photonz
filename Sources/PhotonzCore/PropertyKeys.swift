@@ -450,6 +450,7 @@ extension PhotonzDocument {
                 motions.append(.keyed(motion, effect: effect, atMS: clock, value: value, ease: ease))
                 edited.motions = motions
             }
+            settleHollowMoments(layerID: layerID)
         case .volume:
             updateLayer(id: layerID) { edited in
                 var level = edited.soundLevel ?? AudioLevel()
@@ -514,6 +515,11 @@ extension PhotonzDocument {
                 updateLayer(id: layerID) { edited in
                     edited.motions = (edited.motions ?? []).map { $0.id == keyed.id ? next : $0 }
                 }
+            } else if hasTime, isAnimating(layer) {
+                // On a layer with keys any change keys itself, and a value
+                // that was not animating joins (`KeyMoments.swift`).
+                guard joinKeying(value, layerID: layerID, motion, effect: effect, clock: clock,
+                                 atDocumentTimeMS: ms, ease: ease) else { return false }
             } else if motion == .scale || motion.isCrop {
                 updateLayer(id: layerID) { edited in
                     var motions = edited.motions ?? []
@@ -540,6 +546,7 @@ extension PhotonzDocument {
                 edited.setSoundLevel(level)
             }
         }
+        settleHollowMoments(layerID: layerID)
         return true
     }
 
@@ -611,23 +618,26 @@ extension PhotonzDocument {
     public mutating func foldEditIntoKeys(layerID: UUID, before: Layer, restoring stored: Layer? = nil,
                                           atDocumentTimeMS ms: Int, ease: KeyEase? = nil) -> Bool {
         let stored = stored ?? before
-        guard let after = layer(id: layerID), after.hasMotion else { return false }
+        guard let after = layer(id: layerID), hasTime ? isAnimating(after) : after.hasMotion else { return false }
         let keyed = Set((after.motions ?? []).map(\.property))
+        // On a layer with keys any change keys itself (the user's answer on
+        // 2026-10-13): a place, size or angle nobody keyed JOINS the
+        // animation, holding its old value at the layer's key moments either
+        // side (`KeyMoments.swift`). Outside time only what is keyed folds.
+        let joins = hasTime
         var restored = after
         var keys: [(MotionProperty, MotionValue)] = []
 
         let was = before.frame.standardized
         let now = after.frame.standardized
         var shift = CGPoint(x: now.minX - was.minX, y: now.minY - was.minY)
-        // The moments a recording's Centre starts keying at, holding where it
-        // is stored (`reframeAnchors`). Empty for an ordinary move.
-        var anchors: [Int] = []
+        let resized = was.width > 0 && now.size != was.size
         // A keyed place, size or angle is ALWAYS put back to what is stored,
         // changed or not: the hand worked on the layer as posed at the
         // playhead, so even an edit that changed nothing (an Escape, a click
         // that never travelled) has written the pose over the stored value.
-        if keyed.contains(.scale) {
-            if was.width > 0, now.size != was.size,
+        if keyed.contains(.scale) || (joins && resized) {
+            if resized,
                case let .number(percent)? = keyedValue(layerID: layerID, .motion(.scale), atDocumentTimeMS: ms) {
                 // A resize is a growth about the middle, so how far the middle
                 // travelled is what a place is told.
@@ -636,33 +646,30 @@ extension PhotonzDocument {
             }
             restored.frame = stored.frame
             restored.content = stored.content
-            // With the place NOT keyed, a move is still the ordinary move it
-            // always was: the stored layer goes where the hand took it. A
-            // zoomed recording is the exception (`reframeAnchors`): there the
-            // move is where the zoom is pointed, so Centre keys itself.
-            if !keyed.contains(.position) {
-                if shift != .zero, after.takesAReframe {
-                    anchors = reframeAnchors(layerID: layerID, atDocumentTimeMS: ms)
-                }
-                if anchors.isEmpty {
-                    restored.frame.origin.x += shift.x
-                    restored.frame.origin.y += shift.y
-                } else {
-                    let origin = stored.frame.origin
-                    keys.append((.position, .point(CGPoint(x: origin.x + shift.x, y: origin.y + shift.y))))
-                }
+            if !keyed.contains(.position), !joins {
+                restored.frame.origin.x += shift.x
+                restored.frame.origin.y += shift.y
             }
         }
-        if keyed.contains(.position) {
-            if shift != .zero,
-               case let .point(point)? = keyedValue(layerID: layerID, .motion(.position), atDocumentTimeMS: ms) {
-                keys.append((.position, .point(CGPoint(x: point.x + shift.x, y: point.y + shift.y))))
+        if keyed.contains(.position) || (joins && shift != .zero) {
+            // Joining, it starts from where the layer is stored.
+            let from: CGPoint? = keyed.contains(.position)
+                ? {
+                    if case let .point(point)? = keyedValue(layerID: layerID, .motion(.position), atDocumentTimeMS: ms) {
+                        return point
+                    }
+                    return nil
+                }()
+                : stored.frame.origin
+            if shift != .zero, let from {
+                keys.append((.position, .point(CGPoint(x: from.x + shift.x, y: from.y + shift.y))))
             }
             restored.frame.origin = stored.frame.origin
             if now.size == was.size { restored.content = stored.content }
         }
-        if keyed.contains(.rotation) {
-            if after.transform.rotation != before.transform.rotation {
+        let turned = after.transform.rotation != before.transform.rotation
+        if keyed.contains(.rotation) || (joins && turned) {
+            if turned {
                 keys.append((.rotation, .number(Double(after.transform.rotation) * 180 / .pi)))
             }
             restored.transform.rotation = stored.transform.rotation
@@ -677,36 +684,10 @@ extension PhotonzDocument {
         }
         if restored != after { updateLayer(id: layerID) { $0 = restored } }
         guard !lookKeys.isEmpty else { return false }
-        // Centre starts keying holding the stored place at each anchor, so
-        // the key at the playhead below is the only moment the hand changed.
-        for (index, anchor) in anchors.enumerated() {
-            if index == 0 {
-                startKeying(layerID: layerID, .motion(.position), atDocumentTimeMS: anchor, ease: ease)
-            } else {
-                setKeyedValue(.point(stored.frame.origin), layerID: layerID, .motion(.position),
-                              atDocumentTimeMS: anchor, ease: ease)
-            }
-        }
         for (property, value) in lookKeys {
             setKeyedValue(value, layerID: layerID, property, atDocumentTimeMS: ms, ease: ease)
         }
         return true
-    }
-
-    /// Where a zoomed recording's Centre is pinned when a drag starts keying
-    /// it: the Scale keys either side of the playhead, so the picture stays
-    /// where it was at every moment the drag did not touch. The zoom
-    /// walkthrough's step 6 (`video-zoom-wt.html`): framing the button at
-    /// 0:05 writes Centre at 0:03 and 0:05, and the wide shot does not move.
-    ///
-    /// Empty where Scale has no key but the one under the playhead: nothing
-    /// is zooming yet, and the drag is the ordinary move. A title or a shape
-    /// with a keyed size never gets here, so it moves the way it does in
-    /// Premiere.
-    func reframeAnchors(layerID: UUID, atDocumentTimeMS ms: Int) -> [Int] {
-        [false, true].compactMap {
-            neighbourKeyTime(layerID: layerID, .motion(.scale), from: ms, forward: $0)
-        }
     }
 
     /// A hand's edit on the canvas, start to finish, for a layer whose keys

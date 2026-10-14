@@ -1722,8 +1722,14 @@ final class EditorState {
     var selectedClipPieceIndex: Int? {
         didSet { noteSelectionForHistory() }
     }
-    /// The keys picked on a layer's lanes (`EditorState+KeyLanes`).
-    var keySelection: KeySelection?
+    /// The keys picked on a layer's lanes (`EditorState+KeyLanes`). Picking
+    /// keys, or nothing, puts down a row picked by its name.
+    var keySelection: KeySelection? {
+        didSet { if pickedKeyRow != nil { pickedKeyRow = nil } }
+    }
+    /// The row under a track picked by a click on its name, which ⌫ stops
+    /// animating (`EditorState+OnlyAnimated`).
+    var pickedKeyRow: KeyLaneRowID?
     /// The points and segments picked on a sound's volume line
     /// (`EditorState+SoundLine`).
     var soundLinePick: SoundLinePick?

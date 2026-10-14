@@ -1026,7 +1026,8 @@ struct ClipPiecesBar: View {
         let eased = ease.map { $0 != .linear } ?? true
         let names = mark.properties.map(\.title).joined(separator: ", ")
         let isPicked = !mark.refs.isEmpty && mark.refs.isSubset(of: editorState.pickedKeys(layerID: layerID))
-        return VideoKit.KeyMark(isEased: eased, isPicked: isPicked, isHovered: hoveredKeyMS == mark.documentMS)
+        return VideoKit.KeyMark(isEased: eased, isPicked: isPicked, isHovered: hoveredKeyMS == mark.documentMS,
+                                isHollow: mark.isHollow)
             .scaleEffect(dragging ? 1.35 : 1)
             // A small square to hold, not the bar's full height: a key at the
             // very start or end of a clip sits on its trim grip, and the grip
@@ -1053,6 +1054,13 @@ struct ClipPiecesBar: View {
             .onTapGesture {
                 let flags = KeyClick.flags
                 guard !flags.contains(.control) else { return }
+                // A hollow moment has no keys to pick: the playhead goes to it,
+                // ready for the change that keys there.
+                guard !mark.isHollow else {
+                    editorState.clearKeySelection()
+                    editorState.pickClipKey(layerID: layerID, atMS: mark.documentMS)
+                    return
+                }
                 editorState.pickClipKeys(layerID: layerID, mark.refs, atMS: mark.documentMS,
                                          extending: flags.contains(.shift) || flags.contains(.command))
             }
@@ -1067,7 +1075,7 @@ struct ClipPiecesBar: View {
             .playtestControl("Key \(index + 1)", detail: layerName)
             .panelReadout("clip key \(index + 1) at \(MotionStripRuler.timecode(Double(mark.documentMS)))"
                           + (isPicked ? ", picked" : ""))
-            .panelHelp("\(MotionStripRuler.timecode(Double(mark.documentMS))): \(names)")
+            .panelHelp("\(MotionStripRuler.timecode(Double(mark.documentMS))): \(mark.isHollow ? "Key" : names)")
             // Placed by padding rather than an offset, so the diamond's frame
             // is where it is drawn and a walk's right click lands on it.
             .padding(.leading, max(0, x - 6))

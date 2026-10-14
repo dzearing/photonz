@@ -1,0 +1,49 @@
+{
+  "feature": "A track lists only what is animated",
+  "epic": "video-transitions-motion",
+  "summary": "Add Key no longer fills a clip's track with a row for Position, Scale, Rotation and Opacity. It puts one hollow diamond on the clip, and a value gets a row only once it has keys: change it on a layer with keys and it joins by itself; click a row's name and press Delete and it leaves; Animate on the clip's right-click brings one back.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording and type a title over it with the Text tool.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Park the playhead at one second, right-click the title's clip and choose Add Key: one hollow diamond appears on the clip and no rows open under it.",
+      "shot": "2026-10-14-only-what-is-animated-2-title-add-key-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the clip again and choose Animate > Scale: a Scale row appears and the hollow diamond fills."
+    },
+    {
+      "do": "Click the word Scale in the row's gutter: the row is picked.",
+      "shot": "2026-10-14-only-what-is-animated-3-scale-row-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Delete: the Scale row leaves and the title keeps its size. Press Command-Z to bring it back."
+    },
+    {
+      "do": "Right-click the diamond on the clip and choose Animate > Scale: the same list, from the key itself."
+    },
+    {
+      "do": "Move the playhead to three seconds and drag the title across the canvas: a Position row appears with a key at one second holding where it was and one at three where you left it.",
+      "shot": "2026-10-14-only-what-is-animated-4-dragged-position-joins-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Change the opacity in the panel at a new time: Opacity joins the same way, and Clip > Animate in the menu bar lists what is not animating yet."
+    }
+  ],
+  "evaluate": [
+    "Does a hollow diamond read as a key with nothing in it yet, or does it look like a broken one?",
+    "Is clicking a row's name and pressing Delete the way you expected to stop animating something?",
+    "Does a change on a layer with keys keying itself feel right in practice, or do you find yourself making keys you did not mean?",
+    "Is Animate > Transform, 3D, Look, Effects the right shape for the list, or is it too long on a title?"
+  ],
+  "rough": [
+    "No mock covers a key on a clip's very first frame: there the hollow diamond sits on the trim grip like every other key does, and is harder to see than one mid clip.",
+    "Dragging on the canvas with a row picked does not yet move every key of that row, as the mock's interaction table and the card's mitigation say it should: dragging-on-the-canvas-with-a-row-picked-moves-t.",
+    "The row's right-click Easing lists the same ways a key eases as a key's own menu, not the mock's ten curves and Draw a Curve: dragging-on-the-canvas-with-a-row-picked-moves-t carries it.",
+    "The clip's menu says Add Key at 0:01.00 rather than the mock's Add Key, because a right-click leaves the playhead parked and the row says where the key goes (your call on 2026-10-13, a right click never moves the playhead).",
+    "The Key at Playhead row in Clip > Animate now does what Add Key does on a layer with nothing animating (a hollow moment) rather than keying Position; the mock does not show that row, so it matches its Add Key."
+  ]
+}

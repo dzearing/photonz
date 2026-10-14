@@ -47,15 +47,17 @@ extension EditorState {
     }
 
     func headerKeyDiamond(_ layerID: UUID) -> KeyDiamond {
-        document?.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) ?? .dormant
+        document?.keyMomentDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) ?? .dormant
     }
 
-    /// The header diamond, pressed: where it is, its size, its angle and its
-    /// opacity keyed at the playhead, or the keys here taken away.
+    /// The header diamond, pressed, and the clip's Add Key / Remove Key: a key
+    /// at the playhead for every value already animating, or on a layer with
+    /// nothing keyed one hollow moment and no rows; on a key, every key there
+    /// taken away (`KeyMoments.swift`).
     func toggleHeaderKey(_ layerID: UUID) {
         let time = documentTimeMS
         let ease = newKeyEaseToWrite
         if isDocumentPlaying { pauseDocument() }
-        perform { $0.toggleTransformKey(layerID: layerID, atDocumentTimeMS: time, ease: ease) }
+        perform { $0.toggleKeyMoment(layerID: layerID, atDocumentTimeMS: time, ease: ease) }
     }
 }

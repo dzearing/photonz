@@ -83,8 +83,20 @@ extension PhotonzDocument {
                                    _ mutate: (inout PhotonzDocument) -> Void) {
         guard hasTime else { return mutate(&self) }
         var stored: [UUID: Layer] = [:]
+        // On a layer with keys every look the edit changes keys itself, the
+        // ones not animating yet joining (`KeyMoments.swift`).
+        var joining: [UUID: [(MotionProperty, Int)]] = [:]
         for id in layerIDs {
-            if let layer = layer(id: id), !layer.keyedLooks.isEmpty { stored[id] = layer }
+            guard let layer = layer(id: id) else { continue }
+            if !layer.keyedLooks.isEmpty || isAnimating(layer) { stored[id] = layer }
+            if isAnimating(layer) {
+                let keyed = Set(layer.keyedLooks.map { KeyedProperty.motion($0.0, effect: $0.1) })
+                joining[id] = layer.keyableProperties.compactMap { property in
+                    guard case let .motion(motion, effect) = property, MotionProperty.looks.contains(motion),
+                          !keyed.contains(property) else { return nil }
+                    return (motion, effect)
+                }
+            }
         }
         guard !stored.isEmpty else { return mutate(&self) }
         let posedDocument = lookPosed(layerIDs: Array(stored.keys), atDocumentTimeMS: ms)
@@ -99,7 +111,7 @@ extension PhotonzDocument {
             guard let kept = stored[id], let was = posed[id], let after = layer(id: id) else { continue }
             var restored = after
             var keys: [(KeyedProperty, MotionValue)] = []
-            for (property, effect) in kept.keyedLooks {
+            for (property, effect) in kept.keyedLooks + (joining[id] ?? []) {
                 if let now = property.current(of: after, effect: effect),
                    now != property.current(of: was, effect: effect) {
                     keys.append((.motion(property, effect: effect), now))

@@ -289,31 +289,9 @@ extension PhotonzDocument {
     public static let placeProperties: [MotionProperty] =
         [.position, .scale, .rotation] + MotionProperty.spaceProperties
 
-    /// Whether where a layer is, is animating: any of `placeProperties` keyed.
-    /// On such a layer a 3D value changed by hand is a key at the playhead,
-    /// the way a move is once the track's diamond has keyed its place.
-    func animatesItsPlace(_ layer: Layer) -> Bool {
-        (layer.motions ?? []).contains { Self.placeProperties.contains($0.property) }
-    }
-
-    /// The moments either side of `ms` where anything about a layer's place
-    /// has a key: where a 3D value starting to key holds the value it had, so
-    /// the layer stays as it was at every moment the hand did not touch (the
-    /// same rule a reframe's Centre follows, `reframeAnchors`).
-    func placeAnchors(layerID: UUID, atDocumentTimeMS ms: Int) -> [Int] {
-        guard let layer = layer(id: layerID) else { return [] }
-        let keyed = Set((layer.motions ?? []).map(\.property)).filter { Self.placeProperties.contains($0) }
-        return [false, true].compactMap { forward in
-            let moments = keyed.compactMap {
-                neighbourKeyTime(layerID: layerID, .motion($0), from: ms, forward: forward)
-            }
-            return forward ? moments.min() : moments.max()
-        }
-    }
-
     /// Writes one 3D value on each of `ids` at `ms`. In a document with time
-    /// it is a key there where the value is keyed, and also where the layer's
-    /// place is animating (`animatesItsPlace`): a tilt keys like a move. The
+    /// it is a key there where the value is keyed, and also wherever the layer
+    /// is animating at all (`KeyMoments.swift`): a tilt keys like a move. The
     /// layer's own value otherwise. A layer left with nothing turned goes back
     /// to having no turn at all, so it saves byte for byte as it did before it
     /// was ever touched.
@@ -322,27 +300,10 @@ extension PhotonzDocument {
         guard property.isSpace, value.isFinite else { return }
         for id in ids {
             guard let layer = layer(id: id), !layer.isSoundOnly else { continue }
-            if hasTime, layer.keyedMotion(property) != nil {
+            if hasTime, layer.keyedMotion(property) != nil || isAnimating(layer) {
+                // Keyed, or joining the animation with the value it had held
+                // at the layer's key moments either side (`KeyMoments.swift`).
                 setKeyedValue(.number(value), layerID: id, .motion(property), atDocumentTimeMS: ms, ease: ease)
-            } else if hasTime, animatesItsPlace(layer) {
-                // Starts keying holding the value it has at the place's keys
-                // either side, then the hand's value at the playhead.
-                let keyed = KeyedProperty.motion(property)
-                let held = layer.keyStill(property).flatMap { value -> Double? in
-                    if case let .number(number) = value { return number }
-                    return nil
-                } ?? 0
-                for (index, anchor) in placeAnchors(layerID: id, atDocumentTimeMS: ms).enumerated() {
-                    if index == 0 {
-                        startKeying(layerID: id, keyed, atDocumentTimeMS: anchor, ease: ease)
-                    } else {
-                        setKeyedValue(.number(held), layerID: id, keyed, atDocumentTimeMS: anchor, ease: ease)
-                    }
-                }
-                if keyCount(layerID: id, keyed) == 0 {
-                    startKeying(layerID: id, keyed, atDocumentTimeMS: ms, ease: ease)
-                }
-                setKeyedValue(.number(value), layerID: id, keyed, atDocumentTimeMS: ms, ease: ease)
             } else {
                 updateLayer(id: id) { edited in
                     var turn = edited.turn3D ?? LayerTurn3D()

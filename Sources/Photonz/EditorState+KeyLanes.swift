@@ -219,6 +219,7 @@ extension EditorState {
 
     func clearKeySelection() {
         if keySelection != nil { keySelection = nil }
+        if pickedKeyRow != nil { pickedKeyRow = nil }
         // A sound's volume line is an animated line too (`EditorState+SoundLine`).
         clearSoundLinePick()
     }
@@ -284,6 +285,8 @@ extension EditorState {
 
     /// Whether ⌫ means these keys: some are picked on the layer in hand.
     var canDeletePickedKeys: Bool {
+        // A row picked by its name: ⌫ stops it animating.
+        if keyRowInHand != nil { return true }
         // A diamond picked on the Camera row is keys in hand too.
         if canDeletePickedCameraKey { return true }
         // ...and points or a segment picked on a sound's volume line.
@@ -299,6 +302,7 @@ extension EditorState {
     /// ⌫ with keys picked: those keys go, and the layer stays.
     @discardableResult
     func deletePickedKeys() -> Bool {
+        if stopAnimatingRowInHand() { return true }
         if canDeletePickedCameraKey, let ms = pickedCameraKeyMS {
             deleteCameraKeys(atMS: ms)
             return true
@@ -360,6 +364,20 @@ extension EditorState {
             self.pickKeys(layerID: layerID, Set(lane?.keys.map(\.ref) ?? []), extending: false)
         })
         rows.append(pasteKeysRow(layerID: layerID))
+        // Every key on the row eased one way, as a key's own menu eases it.
+        let refs = Set(lane?.keys.map(\.ref) ?? [])
+        if !refs.isEmpty {
+            let current = document?.keysEase(layerID: layerID, refs)
+            rows.append(.submenu("Easing", KeyEase.allCases.map { ease in
+                .toggle(ease.title, isOn: current == ease) { self.easeKeys(layerID: layerID, refs, ease) }
+            }))
+        }
+        // The row leaves, keeping the value it has at the playhead
+        // (`video-animate.html`: Show Graph, Easing, Stop Animating).
+        rows.append(.separator)
+        rows.append(.command("Stop Animating", destructive: true) {
+            self.stopAnimatingRow(layerID: layerID, motionID: motionID)
+        })
         return rows
     }
 

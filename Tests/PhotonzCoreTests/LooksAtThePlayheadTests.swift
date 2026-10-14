@@ -77,14 +77,19 @@ struct LooksAtThePlayheadTests {
         #expect(doc.layer(id: shape.id)?.motions == nil)
     }
 
-    @Test func aValueNotKeyedOnALayerWithOtherKeysStillChangesTheWholeLayer() {
+    /// On a layer with other keys a look changes by a key too, joining the
+    /// animation with its old value held at the key before (the user's
+    /// answer on 2026-10-13, "any change keys itself").
+    @Test func aValueNotKeyedOnALayerWithOtherKeysJoinsTheAnimation() {
         var (doc, id) = Self.rectangleOnAFilm()
         doc.startKeying(layerID: id, .motion(.position), atDocumentTimeMS: 1000)
         doc.editLooks(layerIDs: [id], atDocumentTimeMS: 3000) {
             $0.updateLayerStyles(layerIDs: [id]) { $0.opacity = 0.4 }
         }
-        #expect(doc.layer(id: id)?.style.opacity == 0.4)
-        #expect(doc.keyCount(layerID: id, .motion(.opacity)) == 0)
+        #expect(doc.layer(id: id)?.style.opacity == 1)
+        #expect(doc.keyCount(layerID: id, .motion(.opacity)) == 2)
+        #expect(Self.number(doc.keyedValue(layerID: id, .motion(.opacity), atDocumentTimeMS: 1000)) == 100)
+        #expect(abs((Self.number(doc.keyedValue(layerID: id, .motion(.opacity), atDocumentTimeMS: 3000)) ?? 0) - 40) < 0.001)
         #expect(doc.keyCount(layerID: id, .motion(.position)) == 1)
     }
 
@@ -138,7 +143,9 @@ struct LooksAtThePlayheadTests {
         // The half faded opacity the edit was made against is not written
         // back as the layer's own.
         #expect(doc.layer(id: id)?.style.opacity == 1)
-        #expect(doc.layer(id: id)?.style.blurRadius == 6)
+        // The blur, not animating before, joins with a key here.
+        #expect(doc.layer(id: id)?.style.blurRadius == 0)
+        #expect(Self.number(doc.keyedValue(layerID: id, .motion(.blur), atDocumentTimeMS: 2000)) == 6)
     }
 
     @Test func aKeyedBlurChangedInThePanelAddsAKey() {

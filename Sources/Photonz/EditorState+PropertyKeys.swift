@@ -224,8 +224,9 @@ extension EditorState {
     /// change to the layer: a document with time, and something on the layer
     /// keyed.
     func dragMakesKeys(_ id: UUID) -> Bool {
-        guard documentHasTime, let layer = document?.layer(id: id) else { return false }
-        return layer.hasMotion
+        guard documentHasTime, let document else { return false }
+        // A hollow moment Add Key left counts: the next change keys there.
+        return document.isAnimating(layerID: id)
     }
 
     /// The document the canvas hit-tests and draws handles on: every layer

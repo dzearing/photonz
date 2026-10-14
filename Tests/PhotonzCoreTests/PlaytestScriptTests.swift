@@ -3340,6 +3340,32 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectKeyRows step claims the rows under a clip, its key moments and the row picked")
+    func expectKeyRowsParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectKeyRows", "clip": "Title Page", "rows": ["Position", "Opacity"],
+                       "moments": 2, "hollow": 0, "picked": "Opacity" },
+                     { "do": "expectKeyRows", "rows": [] } ] }
+        """)
+        guard case .expectKeyRows(let clip, let rows, let moments, let hollow, let picked) = script.steps[0] else {
+            Issue.record("expectKeyRows"); return
+        }
+        #expect(clip == "Title Page")
+        #expect(rows == ["Position", "Opacity"])
+        #expect(moments == 2)
+        #expect(hollow == 0)
+        #expect(picked == "Opacity")
+        guard case .expectKeyRows(nil, let none, nil, nil, nil) = script.steps[1] else { Issue.record("none"); return }
+        #expect(none == [])
+        #expect(PlaytestStep.names.contains("expectKeyRows"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectKeyRows"))
+        #expect(throws: (any Error).self) {
+            _ = try decode("""
+            { "steps": [ { "do": "expectKeyRows" } ] }
+            """)
+        }
+    }
+
     @Test("An expectSoundLine step claims a volume line's segment curves, its pick, and that the mix follows it")
     func expectSoundLineParses() throws {
         let script = try decode("""

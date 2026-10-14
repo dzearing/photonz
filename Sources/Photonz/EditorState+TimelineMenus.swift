@@ -212,7 +212,10 @@ extension EditorState {
             // A right click leaves the playhead parked, so the row says where
             // the key goes (`TimelinePointing.atPlayhead`).
             if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
-                let onKey = document.transformKeyDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
+                // Animate ▸ first: what is not animating yet, grouped as the
+                // panel is (`video-animate.html`, the key line's menu).
+                if let animate = animateMenuRow(layerID: layerID) { rows.append(animate) }
+                let onKey = document.keyMomentDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
                 rows.append(.command(TimelinePointing.atPlayhead(onKey ? "Remove Key" : "Add Key", ms: documentTimeMS),
                                      enabled: underPlayhead) {
                     self.selectLayer(layerID)

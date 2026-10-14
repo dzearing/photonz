@@ -122,10 +122,11 @@ private struct KeyLaneLabel: View {
     var body: some View {
         let graphed = editorState.isKeyLaneGraphed(lane.motionID)
         let canGraph = lane.property != .color
+        let picked = editorState.isKeyRowPicked(layerID: layerID, motionID: lane.motionID)
         HStack(spacing: 2) {
             Text(lane.title)
                 .font(.system(size: 9.5, weight: .medium))
-                .foregroundStyle(VideoKit.Palette.dim)
+                .foregroundStyle(picked || isHovered ? VideoKit.Palette.ink : VideoKit.Palette.dim)
                 .lineLimit(1)
                 .truncationMode(.tail)
             Spacer(minLength: 0)
@@ -151,11 +152,21 @@ private struct KeyLaneLabel: View {
         .frame(width: TimelineDock.gutter, alignment: .leading)
         .frame(height: graphed ? KeyLanesView.graphHeight : KeyLanesView.laneHeight,
                alignment: graphed ? .top : .center)
+        // Picked by a click on its name, the mock's `.va-pr.pick .tl`.
+        .background(alignment: .leading) {
+            if picked {
+                RoundedRectangle(cornerRadius: 5)
+                    .fill(VideoKit.Palette.accent.opacity(0.18))
+                    .padding(.leading, 8 + indent)
+            }
+        }
         .contentShape(Rectangle())
+        .onTapGesture { editorState.pickKeyRow(layerID: layerID, motionID: lane.motionID) }
         .playtestHover("Key lane \(lane.title)") { isHovered = $0 }
         .contextMenu { MenuRowsView(rows: editorState.keyLaneMenuRows(layerID: layerID, motionID: lane.motionID)) }
+        .playtestControl("Row \(lane.title)", detail: "Timeline")
         .panelReadout("lane \(lane.title): \(lane.keys.count) key\(lane.keys.count == 1 ? "" : "s")"
-                      + (graphed ? ", curve open" : ""))
+                      + (graphed ? ", curve open" : "") + (picked ? ", picked" : ""))
     }
 }
 
