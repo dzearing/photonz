@@ -1,0 +1,43 @@
+{
+  "feature": "The timeline bar's Easing sets points and segments picked together",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a segment on an open value graph, Shift-click a point, and the timeline bar's Easing names the curve they share or Mixed. A curve chosen there sets all of them in one undo step.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Add a title, animate its Scale and key it at three moments."
+    },
+    {
+      "do": "Click Graph in the Properties panel to open the Scale graph."
+    },
+    {
+      "do": "Click the second segment and choose Ease out in the timeline bar's Easing."
+    },
+    {
+      "do": "Click the first segment, then Shift-click the middle point. Easing reads Mixed.",
+      "shot": "2026-10-14-bar-easing-points-and-segments-2-mixed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Choose Ease out back in Easing. Both segments take it.",
+      "shot": "2026-10-14-bar-easing-points-and-segments-3-both-eased-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command-Z once. Both segments go back.",
+      "shot": "2026-10-14-bar-easing-points-and-segments-4-undone-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does a picked point taking the curve of the segment that leaves it match what you expect?",
+    "Is Mixed clear enough when the picked segments run on different curves?",
+    "With points picked alone, the bar still shows the key list (Ease In, Ease Out, Bezier). Is that switch noticeable, and does it bother you?"
+  ],
+  "rough": [
+    "The app goes further than the mock here: a picked last point, which starts no segment, sets the segment arriving at it, so a choice never skips a point.",
+    "Points alone still show Premiere's six eases in the bar and on their right-click, where the mock draws the ten curves everywhere: decision card on wherever-you-ease-a-key-a-segment-a-row-or-the-b.",
+    "Shift-clicking a point opens its value bar right over the line it is about to shape: filed as a-point-picked-on-an-open-graph-keeps-its-value."
+  ]
+}
