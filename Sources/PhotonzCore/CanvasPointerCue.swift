@@ -52,7 +52,8 @@ public enum CanvasPointer {
                            captionsEnabled: Bool, offersRotation: Bool,
                            captionPillSize: CGSize? = nil,
                            cornerHandlesEnabled: Bool = false,
-                           edgeGrabEnabled: Bool = false) -> CanvasPointerCue? {
+                           edgeGrabEnabled: Bool = false,
+                           handleSpace: CGPoint? = nil) -> CanvasPointerCue? {
         // A locked layer has no handles to cue: the chrome draws none and the
         // press starts nothing, so the pointer stays a plain arrow over all of
         // it. See `Layer.offersHandles`.
@@ -61,11 +62,13 @@ public enum CanvasPointer {
                                   captionsEnabled: captionsEnabled,
                                   captionPillSize: captionPillSize) { return grab }
         // The rotate knob, which floats clear of the top edge and so is never
-        // in a frame handle's way.
-        if offersRotation, let knob = layer.rotateKnobPoint(zoom: zoom),
+        // in a frame handle's way. A layer seen in space (`handleSpace` given,
+        // the pointer already carried back off its plane) wears its knob off
+        // the edge the camera sees, which the caller reads where it is drawn.
+        if offersRotation, handleSpace == nil, let knob = layer.rotateKnobPoint(zoom: zoom),
            hypot(p.x - knob.x, p.y - knob.y) * zoom <= rotateTolerance { return .rotate }
         guard let frame else { return nil }
-        let local = handleSpacePoint(p, layer: layer)
+        let local = handleSpace ?? handleSpacePoint(p, layer: layer)
         // The four dots inside a shape's corners, ahead of the frame handles
         // exactly as the press reads them.
         if cornerHandlesEnabled, layer.offersCornerRadiusHandles,

@@ -1,0 +1,46 @@
+{
+  "feature": "Resize squares on a card turned in 3D",
+  "epic": "video-transitions-motion",
+  "summary": "On a layer swung or tipped in 3D, the eight resize squares and four corner dots drawn on the turned card now answer the pointer where they are drawn: each lights under a resting pointer, and a drag from one resizes the card along its own plane while the opposite edge stays put.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. On a blank picture, draw a rectangle and pick it with Select (V).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag the green arc above the rectangle to the right until the card swings about 40 degrees."
+    },
+    {
+      "do": "Rest the pointer on the top left square of the turned card: it lights and the pointer shows the resize arrows.",
+      "shot": "2026-10-14-turned-card-0-corner-lit-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Rest it on the bottom right square, where the swung card draws it, not where the flat card was.",
+      "shot": "2026-10-14-turned-card-1-square-lit-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag that square down and to the right and let go: the card grows, the square stays under the pointer and the top left corner does not move.",
+      "shot": "2026-10-14-turned-card-2-resized-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the right edge square left to make the card narrower."
+    },
+    {
+      "do": "Drag one of the four corner dots inward to round the corners of the turned card."
+    },
+    {
+      "do": "Press ⌘Z: the last resize goes back."
+    }
+  ],
+  "evaluate": [
+    "Does the square you drag stay under your pointer the whole way, on a card swung both a little and a lot?",
+    "Does the edge you are not holding stay still enough that resizing a turned card feels like resizing a flat one?",
+    "On a turned card the drag no longer catches the picture's edges, the grid or other layers, because those lines are upright and the card's edges are not. Do you miss the pull there?"
+  ],
+  "rough": [
+    "No mock covers resize squares on a turned card; this follows how the flat card's squares already behave.",
+    "The resize arrows on the pointer follow the card's flat turn only, so on a steeply swung card they point along the flat edges rather than the drawn ones. Small, left in the task log.",
+    "Walked: every square and dot lights and takes the press on the turned card, and a corner drag resizes it. Not walked: a rounding drag from a dot and the undo; both read the pointer the same way the squares do."
+  ]
+}

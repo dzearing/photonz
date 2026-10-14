@@ -1896,9 +1896,24 @@ final class CanvasNSView: NSView {
     /// cards above it have been turned by (`uprightPoint`), then the layer's
     /// own turn. A label inside a card on a slant is then exactly as easy to
     /// grab by a corner as one lying flat on the canvas.
+    ///
+    /// A layer seen in space has its squares drawn on the card the camera
+    /// sees, so the pointer comes back off that card's plane instead
+    /// (`spaceHandlePoint`), and every square drawn there is a square a press
+    /// takes.
     func handleSpacePoint(_ p: CGPoint, layer: Layer?) -> CGPoint {
         guard let layer else { return p }
+        if let back = spaceHandlePoint(p, layer: layer) { return back }
         return CanvasPointer.handleSpacePoint(uprightPoint(p, of: layer.id), layer: layer)
+    }
+
+    /// The pointer carried back off the plane a layer seen in space is drawn
+    /// on, onto its own upright box, or nil for a layer drawn flat. The same
+    /// map the chrome draws its outline and squares through
+    /// (`PhotonzDocument.drawnMap`), so the two cannot disagree.
+    func spaceHandlePoint(_ p: CGPoint, layer: Layer) -> CGPoint? {
+        guard let document, document.isSeenInSpace else { return nil }
+        return document.handleSpacePoint(fromDrawn: p, of: layer.id)
     }
 
     /// The resized frame for a handle drag: the standard opposite-anchor resize,
@@ -1919,6 +1934,24 @@ final class CanvasNSView: NSView {
                               guides: [CanvasGuide] = [],
                               holding held: SnapHold = .none)
         -> Snapping.FrameResult {
+        // A layer seen in space resizes along its own plane: the pointer is
+        // read off the card it is drawn on, and the edge you are not holding
+        // stays where it is drawn. The magnets are all upright lines, which a
+        // turned card's edges cannot lie along, so none of them pull.
+        if let layer, let document, document.isSeenInSpace,
+           let spaced = document.spaceResizedFrame(
+               of: layer.id, start: start, handle: handle, pointer: p,
+               resize: { local in
+                   var frame = ZoomCalloutBuilder.draggedFrame(layer, from: start, handle: handle, to: local,
+                                                               keepingShape: preserveAspect)
+                   if layer.resizeWidthOnly, layer.text != nil {
+                       frame = layer.textResized(from: start, to: frame, handle: handle,
+                                                 givingRoom: Experiments.shared.placementEnabled)
+                   }
+                   return frame
+               }) {
+            return Snapping.FrameResult(frame: spaced)
+        }
         let local = handleSpacePoint(p, layer: layer)
         var frame = layer.map {
             ZoomCalloutBuilder.draggedFrame($0, from: start, handle: handle, to: local,

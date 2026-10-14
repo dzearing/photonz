@@ -100,7 +100,9 @@ extension CanvasNSView {
         let offersHandles = offersOwnHandles(layer)
         let frame = offersHandles && editablePath == nil && layer.allowsFrameResize
             ? selectedLayerFrame : nil
-        let knob = offersRotation(layer)
+        // A layer seen in space wears its knob off the edge the camera sees,
+        // read where it is drawn (`spaceKnobHit`), never at the flat spot.
+        let knob = offersRotation(layer) && spaceHandlePoint(p, layer: layer) == nil
             ? layer.rotateKnobPoint(zoom: viewport.zoom)
                 .map { CanvasPointer.handleSpacePoint($0, layer: layer) }
             : nil

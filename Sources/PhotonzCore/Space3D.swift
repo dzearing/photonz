@@ -821,6 +821,102 @@ extension PhotonzDocument {
               let origin = parentOrigin(of: id) else { return nil }
         return Homography(box: layer.turnBox.offsetBy(dx: origin.x, dy: origin.y), to: quad)
     }
+
+    /// A point where a layer seen in space is DRAWN, carried back onto its own
+    /// upright box (canvas space, before its 2D turn): the space its resize
+    /// squares and corner dots are laid out in, so a press is read on the
+    /// square it is drawn on. Nil for a layer drawn flat, or a point the
+    /// card's plane does not reach.
+    public func handleSpacePoint(fromDrawn point: CGPoint, of id: UUID) -> CGPoint? {
+        drawnMap(of: id)?.inverted?.apply(point)
+    }
+
+    /// The box a resize drag on a layer seen in space settles on, or nil for a
+    /// layer drawn flat. `start` is its box in canvas space when the drag
+    /// began, and `resize` the plain resize, handed a point in `start`'s own
+    /// space and keeping the opposite handle where `start` has it.
+    ///
+    /// A card turns about a point its box carries with it, so a bigger box is
+    /// a card swung about a different point, and a plain resize would slide
+    /// the edge you are not holding across the screen. This settles on the box
+    /// whose drawn card keeps the opposite handle exactly where it was drawn
+    /// and puts the handle in the hand under the pointer.
+    ///
+    /// Four numbers decide it: the point the plain resize is handed and how
+    /// far the result is slid. They are right when the candidate's own plane
+    /// carries the drawn anchor back onto the slid anchor and the pointer back
+    /// onto the slid point, and Newton's method finds them in a few steps. A
+    /// plain repeat of "read it off the last plane" gets there too, but on a
+    /// card swung past about 50 degrees it closes only a tenth of the gap a
+    /// step.
+    public func spaceResizedFrame(of id: UUID, start: CGRect, handle: ResizeHandle,
+                                  pointer: CGPoint, resize: (CGPoint) -> CGRect) -> CGRect? {
+        guard let startMap = drawnMap(of: id), let origin = parentOrigin(of: id),
+              let startInverse = startMap.inverted else { return nil }
+        let anchorAtStart = Handles.point(for: handle.opposite, in: start)
+        guard let target = startMap.apply(anchorAtStart),
+              let firstRead = startInverse.apply(pointer) else { return nil }
+        func frame(_ u: [Double]) -> CGRect {
+            resize(CGPoint(x: u[0], y: u[1])).offsetBy(dx: u[2], dy: u[3])
+        }
+        // How far the drawn anchor and the pointer land from where `u` says
+        // they should, read back through the candidate's own plane.
+        func residual(_ u: [Double]) -> [Double]? {
+            let box = frame(u)
+            var moved = self
+            moved.updateLayer(id: id) { $0.frame = box.offsetBy(dx: -origin.x, dy: -origin.y) }
+            guard let inverse = moved.drawnMap(of: id)?.inverted,
+                  let anchor = inverse.apply(target), let hand = inverse.apply(pointer) else { return nil }
+            return [Double(anchor.x - anchorAtStart.x) - u[2], Double(anchor.y - anchorAtStart.y) - u[3],
+                    Double(hand.x) - u[0] - u[2], Double(hand.y) - u[1] - u[3]]
+        }
+        var u = [Double(firstRead.x), Double(firstRead.y), 0, 0]
+        guard var r = residual(u) else { return nil }
+        var best = (u: u, size: r.map(abs).max() ?? 0)
+        let step = 1e-3
+        for _ in 0..<8 where best.size > 1e-6 {
+            var jacobian = [[Double]](repeating: [Double](repeating: 0, count: 4), count: 4)
+            for column in 0..<4 {
+                var nudged = u
+                nudged[column] += step
+                guard let moved = residual(nudged) else { return frame(best.u) }
+                for row in 0..<4 { jacobian[row][column] = (moved[row] - r[row]) / step }
+            }
+            guard let delta = Self.solve(jacobian, r.map { -$0 }) else { break }
+            u = zip(u, delta).map { $0 + $1 }
+            guard let next = residual(u) else { break }
+            r = next
+            let size = r.map(abs).max() ?? 0
+            if size < best.size { best = (u, size) }
+        }
+        return frame(best.u)
+    }
+
+    /// `a x = b` for a small square system, by elimination with the largest
+    /// pivot; nil where it has no single answer.
+    static func solve(_ a: [[Double]], _ b: [Double]) -> [Double]? {
+        var m = a
+        var v = b
+        let n = v.count
+        for column in 0..<n {
+            guard let pivot = (column..<n).max(by: { abs(m[$0][column]) < abs(m[$1][column]) }),
+                  abs(m[pivot][column]) > 1e-12 else { return nil }
+            m.swapAt(column, pivot)
+            v.swapAt(column, pivot)
+            for row in (column + 1)..<n {
+                let factor = m[row][column] / m[column][column]
+                for k in column..<n { m[row][k] -= factor * m[column][k] }
+                v[row] -= factor * v[column]
+            }
+        }
+        var x = [Double](repeating: 0, count: n)
+        for row in stride(from: n - 1, through: 0, by: -1) {
+            var sum = v[row]
+            for k in (row + 1)..<n { sum -= m[row][k] * x[k] }
+            x[row] = sum / m[row][row]
+        }
+        return x
+    }
 }
 
 extension SelectionOutlineShape {

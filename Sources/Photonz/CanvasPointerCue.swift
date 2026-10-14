@@ -181,7 +181,8 @@ extension CanvasNSView {
                                     offersRotation: offersRotation(layer),
                                     captionPillSize: layer.measuredCaptionPillSize,
                                     cornerHandlesEnabled: Experiments.shared.cornerHandlesEnabled,
-                                    edgeGrabEnabled: Experiments.shared.edgeGrabEnabled)
+                                    edgeGrabEnabled: Experiments.shared.edgeGrabEnabled,
+                                    handleSpace: spaceHandlePoint(p, layer: layer))
         // The turn the pointer reads is the one a person SEES: the layer's own
         // plus the swing of the cards above it, so the arrows over a piece
         // inside a card on a slant point along its edges.

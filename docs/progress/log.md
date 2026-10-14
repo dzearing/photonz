@@ -21420,3 +21420,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A line's right-click menu picks what it landed on once per right click (`servesThisRightPress`): rebuilt on a later redraw, the segment menu took the segment back from a point just clicked. Key, segment and sound line menus share it.
 - Walks updated: tracks named for the clip's sound row, `grid` declared where shapes are drawn (the probe had been left with the grid on), row drags and the five-click burst moved for the lists pane at the bottom.
 - Open: `segmented-chip-refraction-film-walk` belongs to the new `the-layers-and-library-pane-holds-still-under-th` (the pane resizes and moves the control from under the pointer). `section-fold-motion-walk` trips its 16ms gates now and then under load.
+
+## 2026-10-14 — Resize squares on a card turned in 3D take the press where they are drawn
+
+- A layer seen in space reads the pointer back off the plane it is drawn on (`PhotonzDocument.handleSpacePoint(fromDrawn:of:)`, the inverse of `drawnMap`), so its eight squares and four corner dots light, cue and take the press where they are drawn (`CanvasView.handleSpacePoint`, `CanvasPointer.cue(handleSpace:)`).
+- A drag from one resizes along the card's plane (`PhotonzDocument.spaceResizedFrame`): Newton on four numbers so the opposite handle stays where it is drawn and the held one stays under the pointer (a plain repeat closed a tenth of the gap a step at 55 degrees). No magnets pull a turned card.
+- The flat knob is no longer cued or weighed by the pivot on a card in space; its knob is the one drawn off the edge the camera sees.
+- Walk: `every-handle-lights-on-hover-walk` checks all 16 handles on the turned card and drags a corner. Tests: `TurnedCardHandlesTests`.
