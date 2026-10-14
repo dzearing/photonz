@@ -43,7 +43,7 @@
     {
       "do": "expectClip",
       "clip": "Sample Music",
-      "track": "Audio 2",
+      "track": "Audio",
       "startsAt": 0.0,
       "endsAt": 14.0
     },
@@ -228,7 +228,7 @@
     },
     {
       "do": "dragTracks",
-      "fromTrack": "Audio 2",
+      "fromTrack": "Audio",
       "from": 8.0,
       "to": 10.0,
       "option": true
@@ -237,7 +237,7 @@
       "do": "expectTimelinePick",
       "clips": [],
       "rangeOn": [
-        "Audio 2"
+        "Audio"
       ],
       "from": 8.0,
       "to": 10.0
@@ -259,7 +259,7 @@
         "Sample Music"
       ],
       "rangeOn": [
-        "Audio 2"
+        "Audio"
       ],
       "from": 8.0,
       "to": 10.0
@@ -267,7 +267,7 @@
     {
       "do": "describe",
       "stage": "7-music-picked-under-a-track-range",
-      "note": "an Option-drag on Audio 2 from 0:08 to 0:10, then a click on the music inside it: the band stays over Audio 2 and the music is picked as well"
+      "note": "an Option-drag on Audio from 0:08 to 0:10, then a click on the music inside it: the band stays over Audio and the music is picked as well"
     },
     {
       "do": "snapshot",

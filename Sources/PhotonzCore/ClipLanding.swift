@@ -139,7 +139,7 @@ extension PhotonzDocument {
                 return newTrack(at: defaultPlace)
             }
             let chosen: DocumentTrack
-            if tracks[index].kind.accepts(kind) {
+            if tracks[index].accepts(kind) {
                 chosen = tracks[index]
             } else {
                 // The nearest track that takes it, that is not locked, and
@@ -147,7 +147,7 @@ extension PhotonzDocument {
                 // sound let go over the picture is new sound, not a
                 // replacement for the recording's.
                 let fits = tracks.indices.filter {
-                    tracks[$0].kind.accepts(kind) && !tracks[$0].isLocked
+                    tracks[$0].accepts(kind) && !tracks[$0].isLocked
                         && !linkedSound(onTrack: tracks[$0].id, overlapsMS: ms..<(ms + max(1, lengthMS)))
                 }
                 guard let nearest = fits.min(by: { abs($0 - index) < abs($1 - index) }) else {
@@ -238,7 +238,7 @@ extension PhotonzDocument {
         switch landing.target {
         case .onto(let id):
             guard let track = track(id: id), !track.isLocked,
-                  track.kind.accepts(layer.clipTrackKind) else { return nil }
+                  track.accepts(layer.clipTrackKind) else { return nil }
             trackID = id
         case .newTrack(let index):
             trackID = addTrack(layer.clipTrackKind, at: index)

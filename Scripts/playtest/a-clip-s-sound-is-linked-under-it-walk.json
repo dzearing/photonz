@@ -34,7 +34,7 @@
     {
       "do": "describe",
       "stage": "1-opened",
-      "note": "At defaults: the recording on V1, its own sound as a green segment with a waveform on the Audio track under it, both ringed as one pick"
+      "note": "At defaults: the recording on V1, its own sound as a green segment with a waveform on the row hanging right under V1, joined to it by a staple and a link mark, both ringed as one pick"
     },
     {
       "do": "panel",
@@ -124,7 +124,7 @@
     {
       "do": "expect",
       "field": "Volume reading",
-      "reads": "-9.3 dB ±0.5"
+      "reads": "-9.3 dB \u00b10.5"
     },
     {
       "do": "describe",
@@ -194,7 +194,7 @@
     {
       "do": "describe",
       "stage": "5-detached",
-      "note": "Right-click, Detach Audio: the same sound on the same track, now its own clip"
+      "note": "Right-click, Detach Audio: the sound leaves the row under V1 for an Audio track of its own, named, no longer joined"
     },
     {
       "do": "panel",

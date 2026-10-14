@@ -21351,3 +21351,14 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Fixed: a chip ring switched off came back on after a relaunch.
 - Walk step `expectMeasures` takes `chips`; new walk `every-measurement-shares-one-look-walk`.
 - Open: `the-measuring-legend-says-something-useful-now-t` (the legend's two rows now share one swatch).
+
+## 2026-10-13 — A clip's own sound sits right under its video (go loop)
+
+- `DocumentTrack.attachedTo`: a picture track's sound row. `trackLayout` puts every linked sound on its clip's track's row, laid out directly under that track wherever it goes; clips on one track share one row, only overlapping ones (old documents) stack into a second. The row is named "<track> sound" and follows a rename and the track's group.
+- Old documents: a written audio track that held nothing but pinned linked sounds (`Layer.soundTrackID`) is retired, its mute/solo/lock carried to the new row; `materializeTracks` clears the pins.
+- The empty waiting Audio track shows only when nothing on the timeline makes sound (as before), so a recording still opens with two rows. Detach Audio lands on the first free Audio track or makes one at the bottom; Re-attach drops an Audio track it leaves empty.
+- A sound row takes no clips (`DocumentTrack.accepts`, refusal "V1 sound takes no clips"), cannot be carried alone, and is carried with its track (the lift draws both). `TrackDropRow.joiningSoundRows`: a clip let go over a sound row lands on its track.
+- UI: `SoundRowMark` (elbow + link, no name) in the header, `SoundJoin` (cyan staple + link mark) on the lane; the row's right-click says Mute/Solo/Lock/Delete Sound.
+- Fixed on the way: track row positions were not re-measured after a carry, so a second carry could aim at stale rows.
+- New walk `a-clip-s-sound-stays-under-its-video-walk`; 20 walks updated for the new names (the recording's sound row is "V1 sound", music moved from "Audio 2" to "Audio").
+- Open: `a-clip-s-picture-and-sound-bars-wear-one-tint-fa` (decision card on tinting the attached sound like its picture).

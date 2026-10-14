@@ -27,7 +27,7 @@ extension PhotonzDocument {
         let span = start..<(start + max(LayerTime.shortestMS, length))
         let tracks = timelineTracks
         guard let source, let index = tracks.firstIndex(where: { $0.id == source }),
-              tracks[index].kind.accepts(kind) else {
+              tracks[index].accepts(kind) else {
             return kind == .audio
                 ? clipLanding(kind: .audio, lengthMS: length, atMS: start, over: nil, edit: .overwrite)
                 : pictureLandingAtPlayhead(lengthMS: length, atMS: start)

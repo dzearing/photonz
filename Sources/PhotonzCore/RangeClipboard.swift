@@ -128,7 +128,7 @@ extension PhotonzDocument {
     private mutating func pasteTrack(for clip: Layer, standIns: inout [UUID: UUID]) -> UUID {
         let kind = clip.clipTrackKind
         if let wanted = clip.trackID {
-            if let track = track(id: wanted), !track.isLocked, track.kind.accepts(kind) { return wanted }
+            if let track = track(id: wanted), !track.isLocked, track.accepts(kind) { return wanted }
             if let standIn = standIns[wanted] { return standIn }
         }
         let made = addTrack(kind)

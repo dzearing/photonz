@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-sound-s-volume-line-picks-and-shapes-walk",
-  "seed": "The sample recording at Next defaults, nothing switched, with the sample music added on Audio 2 and faded in over three seconds. Command-click puts three level points on its volume line, each holding the level so nothing you hear changes; Command-click on a point picks it and adds nothing. A right-click on the fade's segment offers the shared curve list and Ease out bends it, and the mix plays the bent segment within half a decibel of the line. Hold steps the next one. Backspace takes a picked point away in one undo step, a right-click on a point offers Delete Point, and a right-click anywhere on the clip (its waveform, its line, its middle, and the recording's own sound) opens the clip's menu. Command-click and right-click are the clicks that reach a probe behind another app; the plain clicks are a-sound-s-volume-line-plain-clicks-walk.",
+  "seed": "The sample recording at Next defaults, nothing switched, with the sample music added on Audio and faded in over three seconds. Command-click puts three level points on its volume line, each holding the level so nothing you hear changes; Command-click on a point picks it and adds nothing. A right-click on the fade's segment offers the shared curve list and Ease out bends it, and the mix plays the bent segment within half a decibel of the line. Hold steps the next one. Backspace takes a picked point away in one undo step, a right-click on a point offers Delete Point, and a right-click anywhere on the clip (its waveform, its line, its middle, and the recording's own sound) opens the clip's menu. Command-click and right-click are the clicks that reach a probe behind another app; the plain clicks are a-sound-s-volume-line-plain-clicks-walk.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -285,7 +285,7 @@
     {
       "do": "expectClip",
       "clip": "Sample Music",
-      "track": "Audio 2",
+      "track": "Audio",
       "startsAt": 0,
       "endsAt": 14
     },

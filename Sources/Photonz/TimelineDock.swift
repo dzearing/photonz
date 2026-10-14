@@ -411,9 +411,10 @@ struct TimelineDock: View {
                                 .onGeometryChange(for: CGRect.self) { proxy in
                                     proxy.frame(in: .named(Self.tracksSpace))
                                 } action: { frame in
-                                    if !carry.isCarrying { carry.rowFrames[row.id] = frame }
+                                    carry.rowFrames[row.id] = frame
                                 }
-                                .modifier(TrackRowDragPlacement(id: row.id, session: carry))
+                                // A sound row stands and moves with its track.
+                                .modifier(TrackRowDragPlacement(id: row.soundRowOwner ?? row.id, session: carry))
                             }
                             if listening, listeningBefore == nil {
                                 TimelineCaptionsListeningRow(laneWidth: laneWidth)
@@ -739,14 +740,21 @@ struct TimelineDock: View {
         let carry = editorState.trackRowDrag
         if let id = carry.grabbedID,
            let track = editorState.timelineTrackRows.first(where: { $0.id == id }) {
-            let order = editorState.timelineTrackRows.map(\.id)
+            let all = editorState.timelineTrackRows
+            let order = all.map(\.id)
+            // Its sound row rides with it.
+            let carried = [track] + all.filter { $0.track.attachedTo == id }
             LiftedTrackRow(session: carry,
-                           row: TimelineTrackRow(row: track, inGroup: carry.grabbedInGroup,
-                                                 index: order.firstIndex(of: id) ?? 0,
-                                                 trackCount: order.count, laneWidth: laneWidth,
-                                                 isBlade: isBlade, rows: editorState.timelineRowZoom,
-                                                 isLifted: true)
-                               .equatable())
+                           row: VStack(alignment: .leading, spacing: Self.rowSpacing) {
+                               ForEach(carried) { row in
+                                   TimelineTrackRow(row: row, inGroup: carry.grabbedInGroup,
+                                                    index: order.firstIndex(of: row.id) ?? 0,
+                                                    trackCount: order.count, laneWidth: laneWidth,
+                                                    isBlade: isBlade, rows: editorState.timelineRowZoom,
+                                                    isLifted: true)
+                                       .equatable()
+                               }
+                           })
         }
     }
 

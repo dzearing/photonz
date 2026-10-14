@@ -85,13 +85,13 @@ struct ReattachSoundTests {
         #expect(joined.document.layer(id: clip)?.hasLinkedSound == true)
     }
 
-    @Test("The sound goes back onto the audio track it was sitting on")
-    func landsOnTheTrackItWasOn() throws {
-        let (doc, clip, sound) = try Self.detached()
-        let track = try #require(doc.trackID(ofClip: sound))
+    @Test("The sound goes back under its picture, on the picture track's sound row")
+    func landsUnderItsPicture() throws {
+        let (doc, clip, _) = try Self.detached()
         let after = try #require(doc.reattachingSound(ofLayer: clip)).document
-        #expect(after.linkedSoundTrackID(ofClip: clip) == track)
-        #expect(after.timelineTracks.map(\.name) == ["V1", "Audio"])
+        let row = try #require(after.linkedSoundTrackID(ofClip: clip))
+        #expect(after.track(id: row)?.attachedTo == after.trackID(ofClip: clip))
+        #expect(after.timelineTracks.map(\.name) == ["V1", "V1 sound"])
     }
 
     @Test("Detach then re-attach leaves the timeline as it opened")

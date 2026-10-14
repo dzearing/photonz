@@ -42,9 +42,10 @@ struct SoundChannelTests {
     func detachedSoundUsesItsTrack() throws {
         let opened = PhotonzDocument.recording(Self.movie(), name: "take")
         let clip = opened.layers[0].id
-        let linked = try #require(opened.linkedSoundTrackID(ofClip: clip))
         let split = try #require(opened.detachingSound(ofLayer: clip))
-        #expect(split.document.soundTrackID(ofLayer: split.soundLayerID) == linked)
+        let landed = try #require(split.document.trackID(ofClip: split.soundLayerID))
+        #expect(split.document.track(id: landed)?.name == "Audio")
+        #expect(split.document.soundTrackID(ofLayer: split.soundLayerID) == landed)
         // The picture makes no sound any more, so it has no channel.
         #expect(split.document.soundTrackID(ofLayer: clip) == nil)
     }

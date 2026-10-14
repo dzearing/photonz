@@ -108,7 +108,14 @@ final class TrackRowDragSession {
             let kind: TrackRowDrag.Row.Kind
             switch row {
             case .group(_, let isCollapsed, _): kind = .heading(isOpen: !isCollapsed)
-            case .track(let track, let inGroup): kind = .track(group: inGroup ? track.track.groupID : nil)
+            case .track(let track, let inGroup):
+                // A picture track's sound row is part of that track's row:
+                // they lift, make room and land as one.
+                if let owner = track.track.attachedTo, let last = rows.last, last.id == owner {
+                    rows[rows.count - 1].height = last.height + TimelineDock.rowSpacing + frame.height
+                    continue
+                }
+                kind = .track(group: inGroup ? track.track.groupID : nil)
             }
             rows.append(TrackRowDrag.Row(id: row.id, top: frame.minY, height: frame.height, kind: kind))
         }

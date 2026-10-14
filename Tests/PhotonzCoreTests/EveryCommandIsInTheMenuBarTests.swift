@@ -98,6 +98,14 @@ struct EveryCommandIsInTheMenuBarTests {
         "Show Track": "Hide Track",
         "Stop Soloing": "Solo Track",
         "Unlock Track": "Lock Track",
+        // A picture track's own sound row says Sound for Track: picked on its
+        // header it is the track in hand, which the Track menu acts on.
+        "Mute Sound": "Mute Track",
+        "Unmute Sound": "Mute Track",
+        "Solo Sound": "Solo Track",
+        "Lock Sound": "Lock Track",
+        "Unlock Sound": "Lock Track",
+        "Delete Sound": "Delete Track",
         "Safe Areas": "Caption Safe Areas",
         // An empty track's rows: a tool picked, or the clipboard, at the
         // playhead.

@@ -164,7 +164,9 @@ extension ClipDragCopyTests {
         #expect(track != v1)
         let tracks = doc.timelineTracks
         let index = try #require(tracks.firstIndex { $0.id == track })
-        #expect(tracks[index + 1].id == v1)
+        // Straight over V1, with the copy's own sound row between them.
+        #expect(tracks[index + 1].attachedTo == track)
+        #expect(tracks[index + 2].id == v1)
         #expect(doc.layer(id: copy.id)?.time?.inMS == 2000)
         #expect(doc.trackID(ofClip: take) == v1)
     }

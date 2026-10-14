@@ -14061,6 +14061,13 @@ private final class Run {
         await sleep(0.35)
         let carrying = MainThreadMeter.shared.report + ", " + ViewBuildMeter.shared.report
         let landing = session.drag?.landing
+        // The rows the carry read, as it read them, for a drop that does not
+        // land: a row measured in the wrong place is the usual reason.
+        let read = (session.drag?.rows ?? []).map { row in
+            let named = document.track(id: row.id)?.name
+                ?? document.trackGroups.first { $0.id == row.id }?.name ?? "a row"
+            return "\(named) \(Int(row.top.rounded()))+\(Int(row.height.rounded()))"
+        }.joined(separator: ", ")
         var held = ""
         if let hold {
             try snapshot(content, name: hold)
@@ -14104,7 +14111,8 @@ private final class Run {
         } ?? "back where it came from"
         note(number, "dragTrack",
              "\"\(name)\" lifted and carried \(zone.rawValue) \"\(onto)\": the gap opened \(promised), "
-                + "drop \(moved ? "landed" : "did not land")\(held); while carried \(carrying)",
+                + "drop \(moved ? "landed" : "did not land (rows read: \(read), aimed at \(Int(goal.rounded())))")\(held); "
+                + "while carried \(carrying)",
              state: describe())
     }
 

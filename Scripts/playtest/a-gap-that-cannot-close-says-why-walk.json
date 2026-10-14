@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/a-gap-that-cannot-close-says-why-walk",
-  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it: a four second gap on V1, with the talk's own sound under it on Audio. Lock Audio from its header, pick the gap on V1 and press Delete: nothing moves, and the pill under the canvas says Not closed, Audio is locked. Shift Delete says the same. Unlock Audio and Delete closes the gap as a-gap-between-clips-closes-walk expects.",
+  "seed": "The talk sample with captions, nothing switched from its default. Cut at 0:04 and 0:08 with Command K, X on the middle piece and the semicolon lift it: a four second gap on V1, with the talk's own sound under it on Audio. Lock Audio from its header, pick the gap on V1 and press Delete: nothing moves, and the pill under the canvas says Not closed, V1 sound is locked. Shift Delete says the same. Unlock Audio and Delete closes the gap as a-gap-between-clips-closes-walk expects.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -96,7 +96,7 @@
     },
     {
       "do": "move",
-      "control": "Track Audio"
+      "control": "Track V1 sound"
     },
     {
       "do": "wait",
@@ -104,7 +104,7 @@
     },
     {
       "do": "press",
-      "control": "Track Audio Lock"
+      "control": "Track V1 sound Lock"
     },
     {
       "do": "wait",
@@ -135,7 +135,7 @@
     },
     {
       "do": "expectNotice",
-      "says": "Audio is locked"
+      "says": "V1 sound is locked"
     },
     {
       "do": "expectClip",
@@ -152,7 +152,7 @@
     {
       "do": "describe",
       "stage": "1-delete-refused",
-      "note": "Audio locked from its header: Delete on the gap on V1 changes nothing, and the pill under the canvas says Not closed, Audio is locked"
+      "note": "The sound row under V1 locked from its header: Delete on the gap on V1 changes nothing, and the pill under the canvas says Not closed, V1 sound is locked"
     },
     {
       "do": "snapshot",
@@ -190,7 +190,7 @@
     },
     {
       "do": "expectNotice",
-      "says": "Audio is locked"
+      "says": "V1 sound is locked"
     },
     {
       "do": "expectClip",
@@ -206,7 +206,7 @@
     },
     {
       "do": "move",
-      "control": "Track Audio"
+      "control": "Track V1 sound"
     },
     {
       "do": "wait",
@@ -214,7 +214,7 @@
     },
     {
       "do": "press",
-      "control": "Track Audio Lock"
+      "control": "Track V1 sound Lock"
     },
     {
       "do": "wait",
@@ -262,7 +262,7 @@
     {
       "do": "describe",
       "stage": "3-unlocked-closes",
-      "note": "Audio unlocked: Delete on the gap closes it, the last piece slides back to 0:04 with its sound and captions"
+      "note": "The sound row unlocked: Delete on the gap closes it, the last piece slides back to 0:04 with its sound and captions"
     },
     {
       "do": "snapshot",

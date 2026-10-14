@@ -35,8 +35,9 @@ struct DocumentTracksTests {
     func implicitTracks() {
         let (doc, recording, title, music) = Self.cut()
         let tracks = doc.timelineTracks
-        // The recording's own sound on Audio, and the music on its own track.
-        #expect(tracks.map(\.name) == ["Title", "V1", "Audio", "Audio 2"])
+        // The recording's own sound on V1's sound row, right under it, and
+        // the music on an Audio track of its own.
+        #expect(tracks.map(\.name) == ["Title", "V1", "V1 sound", "Audio"])
         #expect(tracks.map(\.kind) == [.video, .video, .audio, .audio])
         #expect(doc.clipIDs(onTrack: tracks[0].id) == [title])
         #expect(doc.clipIDs(onTrack: tracks[1].id) == [recording])
@@ -83,10 +84,10 @@ struct DocumentTracksTests {
         var (doc, _, _, _) = Self.cut()
         let audio = doc.addTrack(.audio)
         #expect(doc.timelineTracks.last?.id == audio)
-        #expect(doc.timelineTracks.last?.name == "Audio 3")
+        #expect(doc.timelineTracks.last?.name == "Audio 2")
         let captions = doc.addTrack(.captions)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "Captions", "Audio", "Audio 2", "Audio 3"])
-        #expect(doc.timelineTracks[2].id == captions)
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions", "Audio", "Audio 2"])
+        #expect(doc.timelineTracks[3].id == captions)
     }
 
     @Test("A track can be added at a place")
@@ -115,7 +116,7 @@ struct DocumentTracksTests {
         doc.deleteTrack(id)
         #expect(doc.layer(id: title) == nil)
         #expect(!doc.timelineTracks.contains { $0.id == id })
-        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio", "Audio 2"])
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "V1 sound", "Audio"])
     }
 
     @Test("Deleting several tracks takes every one and the clips on them, whatever order they come in")
@@ -123,7 +124,7 @@ struct DocumentTracksTests {
         var (doc, recording, title, music) = Self.cut()
         let tracks = doc.timelineTracks
         doc.deleteTracks([tracks[3].id, tracks[0].id])
-        #expect(doc.timelineTracks.map(\.name) == ["V1", "Audio"])
+        #expect(doc.timelineTracks.map(\.name) == ["V1", "V1 sound"])
         #expect(doc.layer(id: title) == nil)
         #expect(doc.layer(id: music) == nil)
         #expect(doc.layer(id: recording) != nil)
@@ -136,7 +137,7 @@ struct DocumentTracksTests {
         doc.deleteTracks([tracks[1].id, tracks[2].id])
         #expect(doc.layer(id: recording) == nil)
         #expect(doc.layer(id: music) != nil)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "Audio 2"])
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "Audio"])
     }
 
     @Test("A track nobody has heard of is passed over")
@@ -280,13 +281,15 @@ struct DocumentTracksTests {
     @Test("A clip dropped between two tracks makes a new track there, and the stack follows the tracks")
     func dropBetweenMakesATrack() throws {
         var (doc, recording, title, _) = Self.cut()
-        // The title is carried to a new track UNDER the recording's.
+        // The title is carried to a new track UNDER the recording's. Asked
+        // for between V1 and its sound row, it lands under the sound row:
+        // nothing comes between a picture and its own sound.
         let made = doc.moveClipToNewTrack(title, at: 2)
         let new = try #require(made)
         let tracks = doc.timelineTracks
-        #expect(tracks.map(\.id).firstIndex(of: new) == 2)
+        #expect(tracks.map(\.id).firstIndex(of: new) == 3)
         #expect(doc.clipIDs(onTrack: new) == [title])
-        #expect(tracks[2].kind == .video)
+        #expect(tracks[3].kind == .video)
         // Lower on the timeline is further back in the picture.
         let order = doc.layers.map(\.id)
         let t = try #require(order.firstIndex(of: title))
@@ -308,11 +311,12 @@ struct DocumentTracksTests {
     func groupAndUngroup() throws {
         var (doc, _, _, _) = Self.cut()
         let ids = doc.timelineTracks.map(\.id)
-        let grouped = doc.groupTracks([ids[0], ids[2]])
+        // Title and the music's Audio track.
+        let grouped = doc.groupTracks([ids[0], ids[3]])
         let group = try #require(grouped)
         let tracks = doc.timelineTracks
         // Gathered next to the top one, in their order.
-        #expect(tracks.map(\.id) == [ids[0], ids[2], ids[1], ids[3]])
+        #expect(tracks.map(\.id) == [ids[0], ids[3], ids[1], ids[2]])
         #expect(tracks[0].groupID == group && tracks[1].groupID == group)
         #expect(tracks[2].groupID == nil)
         #expect(doc.trackGroups.first?.name == "Group 1")

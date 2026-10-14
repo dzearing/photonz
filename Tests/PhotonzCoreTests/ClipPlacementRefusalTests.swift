@@ -121,12 +121,26 @@ struct ClipPlacementRefusalTests {
 
     @Test("Several picture clips carried down onto sound are refused for the kind, naming the sound track")
     func severalOntoSound() throws {
-        let (doc, first, second, _) = try Self.twoOnV1()
-        let audio = try Self.track(doc, .audio)
+        var (doc, first, second, _) = try Self.twoOnV1()
+        doc.addTrack(.audio)
+        let audio = try #require(doc.timelineTracks.first { $0.kind == .audio && $0.attachedTo == nil })
         let refusal = try #require(doc.clipsMoveRefusal([first, second], carrying: first, to: .onto(audio.id)))
         #expect(refusal.reason == .wrongKind)
         #expect(refusal.track.id == audio.id)
         #expect(!doc.canMoveClips([first, second], carrying: first, to: .onto(audio.id)))
+    }
+
+    @Test("Clips carried onto a picture track's sound row are refused: it takes no clips")
+    func severalOntoASoundRow() throws {
+        let (doc, first, second, v1) = try Self.twoOnV1()
+        let row = try #require(doc.timelineTracks.first { $0.attachedTo == v1 })
+        let refusal = try #require(doc.clipsMoveRefusal([first, second], carrying: first, to: .onto(row.id)))
+        #expect(refusal.reason == .wrongKind)
+        #expect(refusal.reading == "V1 sound takes no clips")
+        let title = Layer(name: "Hi", content: .text(TextContent(string: "Hi")), frame: .zero)
+        var titled = doc
+        titled.addLayer(title)
+        #expect(titled.placementRefusal(title.id, onTrack: row.id)?.reading == "V1 sound takes no clips")
     }
 
     @Test("Several clips carried onto a locked track say it is locked")
@@ -157,6 +171,7 @@ struct ClipPlacementRefusalTests {
     @Test("Where another picked clip is the one turned away, that clip's track is named")
     func anotherClipRefused() throws {
         var (doc, first, _, v1) = try Self.twoOnV1()
+        doc.addTrack(.audio)
         var title = Layer(name: "Hello", content: .text(TextContent(string: "Hello")),
                           frame: CGRect(x: 0, y: 0, width: 40, height: 20))
         title.time = LayerTime(inMS: 0, outMS: 2000)

@@ -141,12 +141,20 @@ extension PhotonzDocument {
         let soundLayerID = layer.id
 
         var after = self
-        // It lands on the very audio track its linked segment was drawn on,
-        // so the only thing that changes on the timeline is the link. That
-        // track is written down first, or it would go with the link.
-        if let track = linkedSoundTrackID(ofClip: id) {
+        // It leaves its picture's sound row for the Audio tracks at the
+        // bottom, where sound of its own lives: the first one with room for
+        // it, else a new one under them. That is what tells a person it is
+        // no longer the clip's own.
+        if linkedSoundTrackID(ofClip: id) != nil {
             after.materializeTracks()
-            layer.trackID = track
+            let span = after.clipSpan(layer, movedTo: nil)
+            let room = after.tracks.first { track in
+                track.accepts(.audio) && !track.isLocked && !after.clipIDs(onTrack: track.id).contains { other in
+                    guard let theirs = after.layer(id: other) else { return false }
+                    return after.clipSpan(theirs, movedTo: nil).overlaps(span)
+                }
+            }
+            layer.trackID = room?.id ?? after.addTrack(.audio)
         }
         // The silent picture lets go of the level, so the mix lives in one
         // place, on the layer that plays it.
@@ -177,7 +185,7 @@ extension PhotonzDocument {
 
     /// The document with a detached sound put back into its picture: the
     /// loose sound layer goes, and the picture speaks for its recording again,
-    /// linked to it on the audio track the loose sound was sitting on.
+    /// linked to it on its track's sound row, right under it.
     ///
     /// **It comes back in step.** A linked sound is the picture's own time and
     /// cuts drawn a second time, so however far the loose sound was slid,
@@ -192,20 +200,24 @@ extension PhotonzDocument {
               let picture = layer(id: pictureID) else { return nil }
         let loose = soundID.flatMap { layer(id: $0) }
         var after = self
-        var track: UUID?
-        if let soundID {
-            after.materializeTracks()
-            track = after.layer(id: soundID)?.trackID
-        }
         let inStep = loose.map { $0.time == picture.time && $0.cuts == picture.cuts } ?? false
         var level = loose?.soundLevel
         if !inStep { level?.clearPoints() }
         after.updateLayer(id: pictureID) {
             $0.soundDetached = nil
             $0.setSoundLevel(level ?? AudioLevel())
-            if let track { $0.soundTrackID = track }
         }
-        if let soundID { after.removeLayers(ids: [soundID]) }
+        if let soundID {
+            let home = after.trackID(ofClip: soundID)
+            after.removeLayers(ids: [soundID])
+            // The Audio track the loose sound sat on goes too when nothing
+            // else is on it, so detaching and putting it back leaves the
+            // timeline as it was.
+            if let home, after.tracks.contains(where: { $0.id == home && $0.kind == .audio }),
+               after.clipIDs(onTrack: home).isEmpty {
+                after.tracks.removeAll { $0.id == home }
+            }
+        }
         return SoundReattachment(document: after, pictureID: pictureID, soundLayerID: soundID)
     }
 

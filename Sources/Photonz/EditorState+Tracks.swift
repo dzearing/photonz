@@ -111,6 +111,12 @@ enum TimelineRowModel: Identifiable {
         case .track(let row, _): row.id
         }
     }
+
+    /// For a picture track's sound row, the track it belongs to.
+    var soundRowOwner: UUID? {
+        if case .track(let row, _) = self { return row.track.attachedTo }
+        return nil
+    }
 }
 
 /// **Tracks on the timeline** (`DocumentTracks.swift`): the thin layer between
@@ -344,6 +350,9 @@ extension EditorState {
     }
 
     func beginRenamingTrack(_ id: UUID) {
+        // A picture track's sound row is named for its track: renaming it
+        // renames the track.
+        let id = document?.track(id: id)?.attachedTo ?? id
         selectedTrackIDs = [id]
         renamingTrackID = id
     }
@@ -431,7 +440,8 @@ extension EditorState {
             if clipTrackDrop != nil { clipTrackDrop = nil }
             return
         }
-        let rows = trackDropRows.values.sorted { $0.minY < $1.minY }
+        let rows = TrackDropRow.joiningSoundRows(trackDropRows.values.sorted { $0.minY < $1.minY },
+                                                 of: document?.timelineTracks ?? [])
         let drop = TrackDrop.resolve(y: pointerY, rows: rows).map { resolved -> TrackDrop in
             // A place between two rows ON SCREEN, said as a place in the whole
             // list of tracks, which also holds any a folded group hides.

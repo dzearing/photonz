@@ -68,24 +68,24 @@ struct ClipLandingTests {
     func soundOverPictureGoesToSound() throws {
         let (doc, _, _, music) = Self.edit()
         let v1 = try #require(Self.track(named: "V1", in: doc))
-        // Audio carries the recording's own sound there, so the music's track
-        // is the nearest one free to take it.
+        // The recording's own sound is on V1's sound row, which takes no
+        // clips, so the music's Audio track is the nearest one to take it.
         let musicTrack = try #require(doc.trackID(ofClip: music))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 2500,
                                       over: .onto(v1), edit: .overwrite)
         #expect(landing.target == .onto(musicTrack))
         #expect(landing.startMS == 2500)
-        #expect(landing.trackName == "Audio 2")
+        #expect(landing.trackName == "Audio")
     }
 
-    @Test("A sound over a recording whose own sound fills the Audio track makes a track under it")
-    func soundMakesATrack() throws {
+    @Test("A sound over a recording passes its sound row and makes an Audio track under it")
+    func soundPassesTheSoundRow() throws {
         let doc = PhotonzDocument.recording(Self.take, name: "take")
         let v1 = try #require(Self.track(named: "V1", in: doc))
         let landing = doc.clipLanding(kind: .audio, lengthMS: 3000, atMS: 1000,
                                       over: .onto(v1), edit: .overwrite)
         #expect(landing.target == .newTrack(at: 2))
-        #expect(landing.trackName == "Audio 2")
+        #expect(landing.trackName == "Audio")
         #expect(landing.allowed)
     }
 

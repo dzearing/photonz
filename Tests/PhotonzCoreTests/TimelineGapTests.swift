@@ -277,7 +277,7 @@ struct TimelineGapTests {
         doc.updateTrack(audio) { $0.isLocked = true }
         let gap = try #require(doc.gap(onTrack: track, atMS: 5000))
         #expect(!doc.canCloseGap(gap))
-        #expect(doc.gapCloseRefusal(gap)?.reading == "Audio is locked")
+        #expect(doc.gapCloseRefusal(gap)?.reading == "V1 sound is locked")
         let before = doc
         let closed = doc.closeGap(gap)
         #expect(!closed)
@@ -285,7 +285,7 @@ struct TimelineGapTests {
         #expect(doc.layer(id: tail)?.time?.inMS == 8000)
         // The same gap picked on the sound's own row says the same.
         let soundGap = try #require(doc.gap(onTrack: audio, atMS: 5000))
-        #expect(doc.gapCloseRefusal(soundGap)?.reading == "Audio is locked")
+        #expect(doc.gapCloseRefusal(soundGap)?.reading == "V1 sound is locked")
     }
 
     @Test("Captions on a locked Captions track name that track")

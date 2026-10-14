@@ -8,7 +8,7 @@ import Testing
 /// `docs/design/mocks/pages/video.html` TIMELINE MODEL).
 ///
 /// The mock stacks the tracks Title, V1, V2, Captions, Audio: captions under
-/// the picture, just over the sound. A Captions track is not a picture track,
+/// the picture (and the picture's own sound row), just over the sound. A Captions track is not a picture track,
 /// though, and captions are read over everything wherever their row is listed,
 /// the way Premiere's caption tracks and Resolve's subtitle tracks draw over
 /// every video track. So moving the row changes where it is listed and nothing
@@ -47,8 +47,8 @@ struct CaptionsTrackPlaceTests {
     @Test("Captions written on a titled recording list under the picture and over the sound")
     func listedUnderThePicture() {
         let (doc, _, _, captions) = Self.captioned()
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "Captions", "Audio"])
-        let row = doc.timelineTracks[2]
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
+        let row = doc.timelineTracks[3]
         #expect(row.kind == .captions)
         #expect(doc.clipIDs(onTrack: row.id) == [captions])
     }
@@ -61,7 +61,7 @@ struct CaptionsTrackPlaceTests {
                           frame: CGRect(x: 0, y: 0, width: 100, height: 40))
         title.time = LayerTime(inMS: 0, outMS: 3000)
         doc.addLayer(title)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "Captions", "Audio"])
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
     }
 
     @Test("Captions written after the tracks were written down land under the last picture track")
@@ -69,7 +69,7 @@ struct CaptionsTrackPlaceTests {
         var (doc, _, _) = Self.titled()
         doc.addTrack(.video)
         doc.landCaptions(CaptionCues.cues(from: Self.heard))
-        #expect(doc.timelineTracks.map(\.name) == ["V2", "Title", "V1", "Captions", "Audio"])
+        #expect(doc.timelineTracks.map(\.name) == ["V2", "Title", "V1", "V1 sound", "Captions"])
     }
 
     @Test("Writing the tracks down keeps the Captions row where it is listed")
@@ -84,17 +84,17 @@ struct CaptionsTrackPlaceTests {
     func emptyCaptionsTrack() {
         var (doc, _, _) = Self.titled()
         let id = doc.addTrack(.captions)
-        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "Captions", "Audio"])
-        #expect(doc.timelineTracks[2].id == id)
+        #expect(doc.timelineTracks.map(\.name) == ["Title", "V1", "V1 sound", "Captions"])
+        #expect(doc.timelineTracks[3].id == id)
     }
 
     @Test("A Captions track somebody carried to the top stays at the top")
     func movedStaysPut() {
         var (doc, _, title, captions) = Self.captioned()
-        let row = doc.timelineTracks[2].id
+        let row = doc.timelineTracks[3].id
         let topRow = doc.timelineTracks[0].id
         do { let moved = doc.moveTrack(row, .above(topRow)); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.name) == ["Captions", "Title", "V1", "Audio"])
+        #expect(doc.timelineTracks.map(\.name) == ["Captions", "Title", "V1", "V1 sound"])
         // Another edit later leaves it where it was put.
         doc.updateLayer(id: title) { $0.time = LayerTime(inMS: 500, outMS: 2500) }
         doc.addTrack(.video)
@@ -126,7 +126,7 @@ struct CaptionsTrackPlaceTests {
     func movingTheRowChangesNothingDrawn() {
         var (doc, _, _, _) = Self.captioned()
         let before = doc.drawingOrder.map(\.id)
-        let row = doc.timelineTracks[2].id
+        let row = doc.timelineTracks[3].id
         do { let moved = doc.moveTrack(row, .above(doc.timelineTracks[0].id)); #expect(moved) }
         #expect(doc.drawingOrder.map(\.id) == before)
         do { let moved = doc.moveTrack(row, .below(doc.timelineTracks[3].id)); #expect(moved) }
@@ -136,8 +136,8 @@ struct CaptionsTrackPlaceTests {
     @Test("Moving the row keeps the Captions layer at the top of the stack")
     func stackFollows() {
         var (doc, _, _, captions) = Self.captioned()
-        let row = doc.timelineTracks[2].id
-        do { let moved = doc.moveTrack(row, .below(doc.timelineTracks[3].id)); #expect(moved) }
+        let row = doc.timelineTracks[3].id
+        do { let moved = doc.moveTrack(row, .above(doc.timelineTracks[1].id)); #expect(moved) }
         #expect(doc.layers.last?.id == captions)
     }
 

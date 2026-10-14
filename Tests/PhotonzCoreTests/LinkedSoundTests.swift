@@ -7,7 +7,7 @@ import Testing
 /// `docs/design/mocks/pages/video.html`).
 ///
 /// A recording carries its sound. On the timeline that sound is a segment of
-/// its own on an audio track under the picture, LINKED to its clip the way
+/// its own on the picture track's sound row, right under it, LINKED to its clip the way
 /// Premiere links a clip's audio: it is the clip's own time, cuts and level
 /// drawn a second time, so moving, trimming or cutting the clip moves, trims
 /// and cuts its sound with no second thing to keep in step. Detach Audio is
@@ -30,12 +30,12 @@ struct LinkedSoundTests {
 
     // MARK: - From the moment it opens
 
-    @Test("A recording with sound opens with its sound on an Audio track under the picture")
+    @Test("A recording with sound opens with its sound on V1's sound row, right under the picture")
     func recordingOpensWithALinkedSegment() throws {
         let doc = PhotonzDocument.recording(Self.movie(), name: "take")
         let clip = try #require(doc.layers.first?.id)
         let tracks = doc.timelineTracks
-        #expect(tracks.map(\.name) == ["V1", "Audio"])
+        #expect(tracks.map(\.name) == ["V1", "V1 sound"])
         #expect(tracks.map(\.kind) == [.video, .audio])
         #expect(doc.clipIDs(onTrack: tracks[0].id) == [clip])
         // The audio track holds no layer of its own: it holds the clip's sound.
@@ -95,16 +95,15 @@ struct LinkedSoundTests {
         #expect(doc.track(id: musicTrack)?.kind == .audio)
     }
 
-    @Test("A clip over another clip in time puts its sound on a second audio track")
+    @Test("A clip over another clip in time has its sound under its own track")
     func overlappingClipsGetTheirOwnAudioTracks() throws {
         var doc = PhotonzDocument.recording(Self.movie(), name: "screen")
         let screen = doc.layers[0].id
         let pip = Self.clip(Self.movie(3000), name: "face", atMS: 1000)
         doc.addLayer(pip)
-        #expect(doc.timelineTracks.map(\.name) == ["V2", "V1", "Audio", "Audio 2"])
-        // The bottom picture's sound takes the first audio track.
-        #expect(doc.linkedSoundTrackID(ofClip: screen) == doc.timelineTracks[2].id)
-        #expect(doc.linkedSoundTrackID(ofClip: pip.id) == doc.timelineTracks[3].id)
+        #expect(doc.timelineTracks.map(\.name) == ["V2", "V2 sound", "V1", "V1 sound"])
+        #expect(doc.linkedSoundTrackID(ofClip: pip.id) == doc.timelineTracks[1].id)
+        #expect(doc.linkedSoundTrackID(ofClip: screen) == doc.timelineTracks[3].id)
     }
 
     @Test("Both halves of a clip an insert splits keep their own linked sound")
@@ -133,17 +132,16 @@ struct LinkedSoundTests {
 
     // MARK: - Detach Audio
 
-    @Test("Detach Audio puts the sound on the very track its linked segment was on")
-    func detachLandsOnTheLinkedTrack() throws {
+    @Test("Detach Audio puts the sound on an Audio track, and V1's sound row goes")
+    func detachLandsOnTheAudioTrack() throws {
         let doc = PhotonzDocument.recording(Self.movie(), name: "take")
         let clip = doc.layers[0].id
-        let linked = try #require(doc.linkedSoundTrackID(ofClip: clip))
         let split = try #require(doc.detachingSound(ofLayer: clip))
         let after = split.document
         #expect(after.linkedSoundTrackID(ofClip: clip) == nil)
-        #expect(after.trackID(ofClip: split.soundLayerID) == linked)
+        let landed = try #require(after.trackID(ofClip: split.soundLayerID))
+        #expect(after.track(id: landed)?.attachedTo == nil)
         #expect(after.timelineTracks.map(\.name) == ["V1", "Audio"])
-        #expect(after.linkedSoundClipIDs(onTrack: linked).isEmpty)
     }
 
     @Test("After Detach Audio, moving the picture leaves the sound where it was")
@@ -194,17 +192,17 @@ struct LinkedSoundTests {
         #expect(!doc.audioMix().contains { $0.layerID == clip })
     }
 
-    @Test("Music dropped over a linked segment takes the lane; the clip's sound moves down a track")
-    func soundLayerWinsTheLane() throws {
+    @Test("Music can never be put on a clip's sound row; it keeps to the Audio tracks")
+    func soundRowTakesNoMusic() throws {
         var doc = PhotonzDocument.recording(Self.movie(), name: "take")
         let clip = doc.layers[0].id
         doc.materializeTracks()
-        let audio = try #require(doc.linkedSoundTrackID(ofClip: clip))
+        let row = try #require(doc.linkedSoundTrackID(ofClip: clip))
         let music = doc.addSound(SoundRef(durationMS: 3000), name: "music", atMS: 0)
-        doc.updateLayer(id: music) { $0.trackID = audio }
-        #expect(doc.trackID(ofClip: music) == audio)
-        let moved = try #require(doc.linkedSoundTrackID(ofClip: clip))
-        #expect(moved != audio)
+        #expect(!doc.canPlace(music, onTrack: row))
+        doc.updateLayer(id: music) { $0.trackID = row }
+        #expect(doc.trackID(ofClip: music) != row)
+        #expect(doc.linkedSoundTrackID(ofClip: clip) == row)
         #expect(Set(doc.timelineTracks.map(\.id)).count == doc.timelineTracks.count)
     }
 }

@@ -36,9 +36,10 @@ struct TrackReorderTests {
     func moveAbove() throws {
         var (doc, recording, title, _) = Self.cut()
         let ids = doc.timelineTracks.map(\.id)
-        // Title, V1, Audio, Audio 2: V1 carried above Title.
+        // Title, V1, V1's sound, Audio: V1 carried above Title, its sound
+        // row coming with it.
         do { let moved = doc.moveTrack(ids[1], .above(ids[0])); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[1], ids[0], ids[2], ids[3]])
+        #expect(doc.timelineTracks.map(\.id) == [ids[1], ids[2], ids[0], ids[3]])
         // The layers list tells the same story: the recording is now in front.
         let order = doc.layers.map(\.id)
         let r = try #require(order.firstIndex(of: recording))
@@ -51,7 +52,8 @@ struct TrackReorderTests {
         var (doc, _, _, _) = Self.cut()
         let ids = doc.timelineTracks.map(\.id)
         do { let moved = doc.moveTrack(ids[0], .below(ids[1])); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[1], ids[0], ids[2], ids[3]])
+        // Under V1 is under V1's sound row: nothing comes between the two.
+        #expect(doc.timelineTracks.map(\.id) == [ids[1], ids[2], ids[0], ids[3]])
     }
 
     @Test("Letting go where it came from changes nothing")
@@ -75,22 +77,21 @@ struct TrackReorderTests {
         #expect(doc == before)
     }
 
-    @Test("Reordering the sound tracks carries each clip's own sound with its track")
+    @Test("Reordering the picture tracks carries each clip's own sound row with its track")
     func linkedSoundRidesItsTrack() throws {
         var (doc, recording, _, music) = Self.cut()
         let ids = doc.timelineTracks.map(\.id)
-        let audio = ids[2], audio2 = ids[3]
-        #expect(doc.linkedSoundClipIDs(onTrack: audio) == [recording])
-        #expect(doc.clipIDs(onTrack: audio2) == [music])
-        // The music's track carried above the recording's sound.
-        do { let moved = doc.moveTrack(audio2, .above(audio)); #expect(moved) }
-        let tracks = doc.timelineTracks
-        #expect(tracks.map(\.id) == [ids[0], ids[1], audio2, audio])
-        // Each track kept what was on it: the headers did not just swap names
-        // over sound that stayed put.
-        #expect(doc.clipIDs(onTrack: audio2) == [music])
-        #expect(doc.linkedSoundClipIDs(onTrack: audio) == [recording])
-        #expect(doc.linkedSoundTrackID(ofClip: recording) == audio)
+        let v1 = ids[1], sound = ids[2], audio = ids[3]
+        #expect(doc.linkedSoundClipIDs(onTrack: sound) == [recording])
+        #expect(doc.clipIDs(onTrack: audio) == [music])
+        // The music's track carried above the recording: it goes over V1,
+        // never between V1 and its sound.
+        do { let moved = doc.moveTrack(audio, .above(sound)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [ids[0], v1, sound, audio])
+        do { let moved = doc.moveTrack(audio, .above(v1)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [ids[0], audio, v1, sound])
+        #expect(doc.clipIDs(onTrack: audio) == [music])
+        #expect(doc.linkedSoundTrackID(ofClip: recording) == sound)
     }
 
     @Test("Two clips' own sounds on two tracks swap places with their tracks")
@@ -99,48 +100,53 @@ struct TrackReorderTests {
         let first = doc.layers[0].id
         let second = doc.addClip(Self.movie, name: "take 2", atMS: 0,
                                  frame: CGRect(x: 0, y: 0, width: 50, height: 50))
-        // Both recordings speak, and at the same moments, so their sounds sit
-        // on two tracks.
+        // Both recordings speak, and at the same moments, so each picture
+        // track has a sound row of its own.
         #expect(doc.layer(id: first)?.hasLinkedSound == true)
         #expect(doc.layer(id: second)?.hasLinkedSound == true)
-        let tracks = doc.timelineTracks
-        let audio = tracks.filter { $0.kind == .audio }.map(\.id)
-        #expect(audio.count == 2)
-        let onFirst = doc.linkedSoundClipIDs(onTrack: audio[0])
-        let onSecond = doc.linkedSoundClipIDs(onTrack: audio[1])
-        do { let moved = doc.moveTrack(audio[1], .above(audio[0])); #expect(moved) }
-        #expect(doc.timelineTracks.filter { $0.kind == .audio }.map(\.id) == [audio[1], audio[0]])
-        #expect(doc.linkedSoundClipIDs(onTrack: audio[0]) == onFirst)
-        #expect(doc.linkedSoundClipIDs(onTrack: audio[1]) == onSecond)
+        let rows = doc.timelineTracks.filter { $0.attachedTo != nil }.map(\.id)
+        #expect(rows.count == 2)
+        let top = try #require(doc.trackID(ofClip: second))
+        let bottom = try #require(doc.trackID(ofClip: first))
+        do { let moved = doc.moveTrack(bottom, .above(top)); #expect(moved) }
+        #expect(doc.timelineTracks.filter { $0.attachedTo != nil }.map(\.id) == [rows[1], rows[0]])
+        #expect(doc.linkedSoundTrackID(ofClip: first) == rows[1])
+        #expect(doc.linkedSoundTrackID(ofClip: second) == rows[0])
     }
 
     @Test("A track carried in among a group's tracks joins it; carried out, it leaves; an emptied group goes")
     func groups() throws {
         var (doc, _, _, _) = Self.cut()
         let ids = doc.timelineTracks.map(\.id)
-        let grouped = doc.groupTracks([ids[0], ids[1]])
+        // Title, V1, V1's sound, Audio.
+        let title = ids[0], v1 = ids[1], sound = ids[2], audio = ids[3]
+        let grouped = doc.groupTracks([title, v1])
         let group = try #require(grouped)
+        #expect(doc.track(id: sound)?.groupID == group)
         // Above a grouped track: in the group.
-        do { let moved = doc.moveTrack(ids[2], .above(ids[1])); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[0], ids[2], ids[1], ids[3]])
-        #expect(doc.track(id: ids[2])?.groupID == group)
+        do { let moved = doc.moveTrack(audio, .above(v1)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [title, audio, v1, sound])
+        #expect(doc.track(id: audio)?.groupID == group)
         // Below the group, by its heading: out of it, under its last track.
-        do { let moved = doc.moveTrack(ids[0], .below(group)); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[2], ids[1], ids[0], ids[3]])
-        #expect(doc.track(id: ids[0])?.groupID == nil)
+        do { let moved = doc.moveTrack(title, .below(group)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [audio, v1, sound, title])
+        #expect(doc.track(id: title)?.groupID == nil)
         // Above the heading: out of it, over its first track.
-        do { let moved = doc.moveTrack(ids[3], .above(group)); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[3], ids[2], ids[1], ids[0]])
-        #expect(doc.track(id: ids[3])?.groupID == nil)
+        do { let moved = doc.moveTrack(title, .above(group)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [title, audio, v1, sound])
+        #expect(doc.track(id: title)?.groupID == nil)
         // Inside the heading: its first slot.
-        do { let moved = doc.moveTrack(ids[0], .inside(group)); #expect(moved) }
-        #expect(doc.timelineTracks.map(\.id) == [ids[3], ids[0], ids[2], ids[1]])
-        #expect(doc.track(id: ids[0])?.groupID == group)
-        // Every track carried out of it: the group goes with the last one.
-        do { let moved = doc.moveTrack(ids[0], .above(ids[3])); #expect(moved) }
-        do { let moved = doc.moveTrack(ids[2], .above(ids[3])); #expect(moved) }
-        do { let moved = doc.moveTrack(ids[1], .above(ids[3])); #expect(moved) }
+        do { let moved = doc.moveTrack(title, .inside(group)); #expect(moved) }
+        #expect(doc.timelineTracks.map(\.id) == [title, audio, v1, sound])
+        #expect(doc.track(id: title)?.groupID == group)
+        // Every track carried out of it: the group goes with the last one,
+        // though V1's sound row was in it too.
+        do { let moved = doc.moveTrack(title, .below(group)); #expect(moved) }
+        do { let moved = doc.moveTrack(audio, .above(title)); #expect(moved) }
+        #expect(!doc.trackGroups.isEmpty)
+        do { let moved = doc.moveTrack(v1, .above(title)); #expect(moved) }
         #expect(doc.trackGroups.isEmpty)
+        #expect(doc.track(id: sound)?.groupID == nil)
     }
 
     // MARK: - The drag

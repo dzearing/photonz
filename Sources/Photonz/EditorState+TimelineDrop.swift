@@ -130,7 +130,8 @@ extension EditorState {
     /// The track, or the place between two, at a height in the tracks' own
     /// space: the same reading a clip carried up or down the timeline gets.
     func trackDrop(atY y: CGFloat) -> TrackDrop? {
-        let rows = trackDropRows.values.sorted { $0.minY < $1.minY }
+        let rows = TrackDropRow.joiningSoundRows(trackDropRows.values.sorted { $0.minY < $1.minY },
+                                                 of: document?.timelineTracks ?? [])
         return TrackDrop.resolve(y: y, rows: rows).map { resolved -> TrackDrop in
             // A place between two rows ON SCREEN, said as a place in the whole
             // list of tracks, which also holds any a folded group hides.

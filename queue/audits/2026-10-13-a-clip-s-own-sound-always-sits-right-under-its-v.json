@@ -1,0 +1,55 @@
+{
+  "feature": "A clip's own sound sits right under its video",
+  "epic": "video-cutting",
+  "summary": "The sound a recording came with now hangs on a row of its video track, directly under it, with an elbow and a link mark in the header and a staple joining the two bars. Adding, deleting or carrying tracks and moving the clip never separates them. Detach Audio sends the sound to an Audio track at the bottom.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/a-clip-s-sound-stays-under-its-video-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open a screen recording and look at the timeline: V1, and its sound on the row right under it.",
+      "shot": "2026-10-13-sound-under-its-video-0-opened.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click V1's header and choose Add Track Below twice: the recording on top, two empty tracks under it.",
+      "shot": "2026-10-13-sound-under-its-video-1-users-shape.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Add Track Above on V1, then Delete Track on V2: the sound stays under its video."
+    },
+    {
+      "do": "Drag the clip down onto the bottom track: its sound row goes with it.",
+      "shot": "2026-10-13-sound-under-its-video-3-clip-moved.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag that track's header to the top: the track and its sound lift together and land together.",
+      "shot": "2026-10-13-sound-under-its-video-carried.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the sound and choose Detach Audio: it moves to an Audio track at the bottom, with its own name.",
+      "shot": "2026-10-13-sound-under-its-video-5-detached.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z: the sound is back under its video, joined.",
+      "shot": "2026-10-13-sound-under-its-video-6-undone.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the sound row read as part of the video track above it, with only the elbow and link mark and no name of its own?",
+    "Is the staple between the two bars enough to say they are one clip, or do you want the bars tinted alike as well?",
+    "A recording now opens with just V1 and its sound row, and an Audio track appears the first time music or a detached sound needs one. Is that right, or should an empty Audio track always wait at the bottom?",
+    "Letting go of a clip over a sound row puts it on that row's video track. Is that what you expect?",
+    "The sound row's right-click offers Mute, Solo and Lock Sound, and Delete Sound (which drops the recording's sound and keeps the picture). Are those the right words?"
+  ],
+  "rough": [
+    "No mock draws a sound row under its video: video.html and video-audio.html list sound on Audio tracks at the bottom, Premiere style. The row under the video is the user's own call on 2026-10-13, in this task's request.",
+    "The sound bar keeps the mock's dark green and the picture bar its blue, so the bars are not one tint family; the join is the cyan staple and the link mark. Whether to tint it is decision card a-clip-s-picture-and-sound-bars-wear-one-tint-fa-should-a-recording-s-own-sound-b, on task a-clip-s-picture-and-sound-bars-wear-one-tint-fa.",
+    "The elbow and link mark in the sound row's header are small and drawn in the faint header ink; with the window behind another app they read quietly.",
+    "Dragging one clip down from its track first passes over its own sound row, which counts as its own track, so it takes two rows of travel to reach the next track down."
+  ]
+}

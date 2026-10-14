@@ -276,7 +276,12 @@
     },
     {
       "do": "expectTracks",
-      "tracks": ["Title", "V1", "Captions", "Audio"]
+      "tracks": [
+        "Title",
+        "V1",
+        "V1 sound",
+        "Captions"
+      ]
     },
     {
       "do": "reveal",

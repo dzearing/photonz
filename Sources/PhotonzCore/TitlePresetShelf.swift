@@ -327,7 +327,7 @@ extension PhotonzDocument {
                     ?? 0..<Int.max
                 return span.overlaps(range)
             }
-            guard track.kind.accepts(.video), !track.isLocked, !busy else { return newTrack(at: index) }
+            guard track.accepts(.video), !track.isLocked, !busy else { return newTrack(at: index) }
             return ClipLanding(target: .onto(id), startMS: start, lengthMS: length, edit: .overwrite,
                                trackName: track.name, allowed: true)
         }

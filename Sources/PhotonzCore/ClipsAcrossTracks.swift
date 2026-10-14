@@ -123,18 +123,23 @@ extension PhotonzDocument {
         // is what the timeline draws a new track's line at.
         var madeAt: [UUID: Int] = [:]
         // Where the hand's track goes, as a row in the list, making the new
-        // track a drop between two asks for.
-        var order = document.tracks.map(\.id)
+        // track a drop between two asks for. A picture track's sound row is
+        // not a row a clip can land on, so it is not counted.
+        var order = document.tracks.filter { $0.attachedTo == nil }.map(\.id)
         let handRow: Int
         switch drop {
         case .onto(let target):
+            // A sound row takes no clips, and says so.
+            if let row = document.tracks.first(where: { $0.id == target && $0.attachedTo != nil }) {
+                return .stopped(ClipPlacementRefusal(reason: .wrongKind, track: row))
+            }
             guard target != handTrack, let row = order.firstIndex(of: target) else { return .stopped(nil) }
             handRow = row
         case .newTrack(let at):
             guard let kind = layer(id: hand)?.clipTrackKind else { return .stopped(nil) }
             let made = document.addTrack(kind, at: at)
             madeAt[made] = min(max(0, at), trackCount)
-            order = document.tracks.map(\.id)
+            order = document.tracks.filter { $0.attachedTo == nil }.map(\.id)
             guard let row = order.firstIndex(of: made) else { return .stopped(nil) }
             handRow = row
         }
@@ -180,7 +185,7 @@ extension PhotonzDocument {
             targets.append((id, target))
             let place: ClipCarryLanding.Place = madeAt[target].map { .newTrack(at: $0) } ?? .track(target)
             let refusal: ClipPlacementRefusal?
-            if !track.kind.accepts(clip.clipTrackKind) {
+            if !track.accepts(clip.clipTrackKind) {
                 refusal = ClipPlacementRefusal(reason: .wrongKind, track: track)
             } else if track.isLocked {
                 refusal = ClipPlacementRefusal(reason: .locked, track: track)

@@ -91,7 +91,9 @@ struct ClipsAcrossTracksTests {
         #expect(doc.trackID(ofClip: first) == v2)
         let made = try #require(doc.trackID(ofClip: second))
         #expect(made != v1 && made != v2)
-        #expect(tracks.map(\.id).prefix(3) == [made, v2, v1])
+        // Counting the tracks a clip can land on: each clip's own sound row
+        // rides under its track.
+        #expect(tracks.filter { $0.attachedTo == nil }.map(\.id).prefix(3) == [made, v2, v1])
         // Higher up is further forward in the picture.
         let order = doc.layers.map(\.id)
         #expect(try #require(order.firstIndex(of: second)) > #require(order.firstIndex(of: first)))
@@ -124,7 +126,7 @@ struct ClipsAcrossTracksTests {
         // A drop between V2 and V1 is one track up from V1.
         let moved7 = doc.moveClips([first, second], carrying: first, to: .newTrack(at: 1))
         #expect(moved7)
-        let after = doc.timelineTracks.map(\.id)
+        let after = doc.timelineTracks.filter { $0.attachedTo == nil }.map(\.id)
         let made = try #require(doc.trackID(ofClip: first))
         #expect(after.prefix(3) == [v2, made, v1])
         #expect(doc.trackID(ofClip: second) == made)
@@ -183,11 +185,13 @@ struct ClipsAcrossTracksTests {
     @Test("A clip of the wrong kind for its track stops the whole move: picture never lands on sound")
     func wrongKindStopsAll() throws {
         var (doc, first, _, v1) = try Self.twoOnV1()
+        let audio = doc.addTrack(.audio)
         let title = Self.title("Hello", 0, 2000)
         doc.addLayer(title)
         // The title in the hand down onto V1, so the first clip would go down
-        // onto Audio.
-        #expect(doc.timelineTracks.map(\.id).firstIndex(of: v1).map { doc.timelineTracks[$0 + 1].kind } == .audio)
+        // onto Audio, past V1's own sound row.
+        let plain = doc.timelineTracks.filter { $0.attachedTo == nil }.map(\.id)
+        #expect(plain.firstIndex(of: v1).map { plain[$0 + 1] } == audio)
         #expect(!doc.canMoveClips([title.id, first], carrying: title.id, to: .onto(v1)))
     }
 

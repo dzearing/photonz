@@ -8,7 +8,8 @@ public struct ClipPlacementRefusal: Hashable, Sendable {
 
     public enum Reason: Hashable, Sendable {
         /// Picture onto sound, sound onto picture, anything but words onto
-        /// captions (`DocumentTrack.Kind.accepts`).
+        /// captions, anything onto a picture track's sound row
+        /// (`DocumentTrack.accepts`).
         case wrongKind
         /// The track is locked: nothing lands on it and nothing leaves it.
         case locked
@@ -30,7 +31,8 @@ public struct ClipPlacementRefusal: Hashable, Sendable {
     /// capsule under the hand adds while the clip is held there.
     public var reading: String {
         switch reason {
-        case .wrongKind: "\(track.name) takes \(Self.what(track.kind)) only"
+        case .wrongKind: track.attachedTo == nil ? "\(track.name) takes \(Self.what(track.kind)) only"
+            : "\(track.name) takes no clips"
         case .locked: "\(track.name) is locked"
         case .noRoom: "no room on \(track.name)"
         }
@@ -54,7 +56,7 @@ extension PhotonzDocument {
                                  atInMS: Int? = nil) -> ClipPlacementRefusal? {
         guard let clip = layers.first(where: { $0.id == clipID }),
               let target = track(id: trackID) else { return nil }
-        guard target.kind.accepts(clip.clipTrackKind) else {
+        guard target.accepts(clip.clipTrackKind) else {
             return ClipPlacementRefusal(reason: .wrongKind, track: target)
         }
         if target.isLocked { return ClipPlacementRefusal(reason: .locked, track: target) }

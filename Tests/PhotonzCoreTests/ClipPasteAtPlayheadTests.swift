@@ -50,8 +50,9 @@ struct ClipPasteAtPlayheadTests {
         #expect(track != v1)
         let tracks = doc.timelineTracks
         let landedIndex = try #require(tracks.firstIndex { $0.id == track })
-        // Straight over V1.
-        #expect(tracks[landedIndex + 1].id == v1)
+        // Straight over V1, with the copy's own sound row between them.
+        #expect(tracks[landedIndex + 1].attachedTo == track)
+        #expect(tracks[landedIndex + 2].id == v1)
         #expect(doc.layer(id: landed)?.time?.inMS == 5000)
         // Nothing already cut moved or was covered.
         #expect(doc.layer(id: take)?.time?.inMS == 0)

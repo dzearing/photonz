@@ -143,7 +143,7 @@ extension PhotonzDocument {
         }
         if let trackID {
             guard let target = track(id: trackID), !target.isLocked,
-                  target.kind.accepts(layer.clipTrackKind), !isClipOnLockedTrack(id) else { return false }
+                  target.accepts(layer.clipTrackKind), !isClipOnLockedTrack(id) else { return false }
             let lands = span.inMS..<max(span.inMS + 1, span.outMS)
             let taken = clipIDs(onTrack: trackID).contains { other in
                 guard other != id, let theirs = self.layer(id: other) else { return false }

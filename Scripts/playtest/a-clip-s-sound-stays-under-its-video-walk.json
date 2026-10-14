@@ -1,0 +1,294 @@
+{
+  "out": "/tmp/photonz-playtest/a-clip-s-sound-stays-under-its-video-walk",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "V1 sound"
+      ]
+    },
+    {
+      "do": "expect",
+      "control": "Track V1 sound",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "0-opened",
+      "note": "At defaults: the recording on V1 and its own sound on a row hanging right under it, an elbow and a link mark in the header, a staple joining the two bars"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-opened"
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Below"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "V1 sound",
+        "V2"
+      ]
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Track Below"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V1",
+        "V1 sound",
+        "V2",
+        "V3"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-users-shape",
+      "note": "The user's shape: the recording on the top track with two empty tracks under it. Its sound is under the recording, never under the empty tracks"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-users-shape"
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V4",
+        "V1",
+        "V1 sound",
+        "V2",
+        "V3"
+      ]
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Delete Track"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V4",
+        "V1",
+        "V1 sound",
+        "V3"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-added-and-deleted",
+      "note": "A track added above and one deleted below: the sound did not move off its video"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-added-and-deleted"
+    },
+    {
+      "do": "dragClip",
+      "clip": "Tutorial Sample",
+      "tracksUp": -2,
+      "byMS": 500
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V3",
+      "startsAt": 0.5,
+      "endsAt": 8.5
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V4",
+        "V1",
+        "V3",
+        "V3 sound"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-clip-moved",
+      "note": "The clip carried down to V3 and half a second later: its sound row went with it and V1 has none now"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-clip-moved"
+    },
+    {
+      "do": "dragTrack",
+      "track": "V3",
+      "onto": "V4",
+      "zone": "above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V3",
+        "V3 sound",
+        "V4",
+        "V1"
+      ]
+    },
+    {
+      "do": "dragTrack",
+      "track": "V1",
+      "onto": "V3",
+      "zone": "below"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V3",
+        "V3 sound",
+        "V1",
+        "V4"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-tracks-carried",
+      "note": "V3 carried to the top took its sound row with it; V1 dropped right under V3 landed under the sound row, never between the two"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-tracks-carried"
+    },
+    {
+      "do": "dragClip",
+      "clip": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "action",
+      "action": "soundDetach"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V3",
+        "V1",
+        "V4",
+        "Audio"
+      ]
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample sound",
+      "track": "Audio",
+      "startsAt": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "5-detached",
+      "note": "Detach Audio: the sound leaves the row under its video for an Audio track at the bottom, named, with no link mark"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-detached"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expectTracks",
+      "tracks": [
+        "V3",
+        "V3 sound",
+        "V1",
+        "V4"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-undone",
+      "note": "One undo: the sound is back under its video, joined"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-undone"
+    }
+  ]
+}
