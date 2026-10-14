@@ -1,0 +1,48 @@
+{
+  "feature": "Drag with a row picked moves the whole animation",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a row under a clip by its name, then drag the layer on the canvas: every key of that row moves by the same amount (for Position, the whole path) instead of a new key landing at the playhead. The row's right-click Easing now offers the same curve list a segment does.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open the sample recording, type a title over it, right-click the title's clip and choose Animate > Position, then at three seconds drag the title to the right so the path has two keys.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Put the playhead at two seconds, between the two Position keys.",
+      "shot": "2026-10-14-picked-row-drag-1-position-row-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the word Position on the row under the title's clip to pick the row."
+    },
+    {
+      "do": "Drag the title down on the canvas and let go.",
+      "shot": "2026-10-14-picked-row-drag-2-whole-path-moved-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Scrub from one second to three: the whole move now runs lower, and the row still has two keys."
+    },
+    {
+      "do": "Press ⌘Z once: both keys go back."
+    },
+    {
+      "do": "Compare with the setup's drag at three seconds, made with no row picked: that one wrote a new key at the playhead."
+    },
+    {
+      "do": "Right-click the Position row's name and open Easing: pick Ease out quint.",
+      "shot": "2026-10-14-picked-row-drag-3-row-eased-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Is picking the row by its name an obvious enough way to say move the whole thing, or would you reach for something else first?",
+    "With Scale picked, a resize adds the same number of percent to every key. Is adding the right feel, or should it multiply every key instead?",
+    "With a row picked, typing a new X or Y in the tool bar still keys the playhead. Should typed values move the whole row too?",
+    "Does the row's Easing list, the same one a segment offers, read right when it changes every segment of the row at once?"
+  ],
+  "rough": [
+    "No mock covers this drag as a picture; it matches the row for it in the mock's interaction table.",
+    "Only a drag on the canvas moves the whole row. The tool bar's typed X, Y, W, H and A still key the playhead with a row picked.",
+    "A picked row whose value the drag does not change (Opacity, then a move) leaves that row alone and keys Position at the playhead as usual.",
+    "Scale shifts by adding percent, and no key goes below 1 percent."
+  ]
+}

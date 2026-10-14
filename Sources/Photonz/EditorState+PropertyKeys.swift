@@ -254,10 +254,20 @@ extension EditorState {
     /// POSED, so the edit is made to the pose and read against it
     /// (`PhotonzDocument.editPosedForCanvas`). Used for the live preview and
     /// the commit alike, so what the hand sees is what lands.
-    func foldingIntoKeys(_ id: UUID, in document: inout PhotonzDocument,
+    ///
+    /// `onTheCanvas` is a hand on the picture itself. With a row of the layer
+    /// picked by its name, what it does to that row moves every key of the
+    /// row instead of keying the playhead (`PhotonzDocument.editShiftingRow`,
+    /// `video-animate.html`: "Drag on the canvas, a row picked").
+    func foldingIntoKeys(_ id: UUID, in document: inout PhotonzDocument, onTheCanvas: Bool = false,
                          _ mutate: (inout PhotonzDocument) -> Void) {
         guard dragMakesKeys(id), document.layer(id: id) != nil else {
             mutate(&document)
+            return
+        }
+        if onTheCanvas, let row = keyRowInHand, row.layerID == id {
+            document.editShiftingRow(layerID: id, motionID: row.motionID, atDocumentTimeMS: documentTimeMS,
+                                     ease: newKeyEaseToWrite, mutate)
             return
         }
         document.editPosedForCanvas(layerID: id, atDocumentTimeMS: documentTimeMS,

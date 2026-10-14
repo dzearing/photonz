@@ -366,12 +366,17 @@ extension EditorState {
             self.pickKeys(layerID: layerID, Set(lane?.keys.map(\.ref) ?? []), extending: false)
         })
         rows.append(pasteKeysRow(layerID: layerID))
-        // Every key on the row eased one way, as a key's own menu eases it.
-        let refs = Set(lane?.keys.map(\.ref) ?? [])
+        // Every segment of the row on one curve, from the same list a
+        // segment's right click offers (`video-animate.html`: "Easing ▸
+        // (every segment of the row)"). A segment is named by the key it
+        // starts at, so the last key names none.
+        let refs = Set(lane?.keys.dropLast().map(\.ref) ?? [])
         if !refs.isEmpty {
-            let current = document?.keysEase(layerID: layerID, refs)
-            rows.append(.submenu("Easing", KeyEase.allCases.map { ease in
-                .toggle(ease.title, isOn: current == ease) { self.easeKeys(layerID: layerID, refs, ease) }
+            let current = document?.stretchesCurve(layerID: layerID, refs)
+            rows.append(.submenu("Easing", segmentCurveRows(current: current) { curve in
+                self.curveSegments(layerID: layerID, refs, curve)
+            } draw: {
+                self.drawingStretchCurve = KeySelection(layerID: layerID, refs: [], segments: refs)
             }))
         }
         // The row leaves, keeping the value it has at the playhead

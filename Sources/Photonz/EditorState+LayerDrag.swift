@@ -102,7 +102,7 @@ extension EditorState {
         // rest of the card would shuffle under the pointer for the whole drag
         // and snap back on mouse-up (`holdingTurnedPivots`).
         let byHand = Experiments.shared.placementEnabled
-        foldingIntoKeys(id, in: &doc) { doc in
+        foldingIntoKeys(id, in: &doc, onTheCanvas: true) { doc in
             doc.holdingTurnedPivots(above: id) { doc in
                 doc.updateLayer(id: id) { $0 = $0.resized(to: frame, chosenByHand: byHand) }
             }
@@ -131,7 +131,7 @@ extension EditorState {
             // A keyed layer's move, resize or turn lands as keys at the
             // playhead rather than as a change to the layer
             // (`EditorState+PropertyKeys`), in this same step.
-            foldingIntoKeys(id, in: &document) { document in
+            foldingIntoKeys(id, in: &document, onTheCanvas: true) { document in
                 // Every turned card above this layer keeps the pivot it had, so
                 // resizing or moving one piece leaves the rest of the card
                 // exactly where it is drawn (`holdingTurnedPivots`).
@@ -179,7 +179,7 @@ extension EditorState {
         // pictures a second on a recording, the same as the sprite managed.
         if dragPreview?.layerID == id { discardDragPreview() }
         guard var doc = document, doc.layer(id: id) != nil else { return }
-        foldingIntoKeys(id, in: &doc) { $0.updateLayer(id: id) { $0.transform = transform } }
+        foldingIntoKeys(id, in: &doc, onTheCanvas: true) { $0.updateLayer(id: id) { $0.transform = transform } }
         submit(doc)
     }
 
@@ -193,7 +193,7 @@ extension EditorState {
         dragPreviewGeneration += 1
         clearPreviewAfterNextFrame = dragPreview != nil
         perform { document in
-            foldingIntoKeys(id, in: &document) { $0.updateLayer(id: id) { $0.transform = transform } }
+            foldingIntoKeys(id, in: &document, onTheCanvas: true) { $0.updateLayer(id: id) { $0.transform = transform } }
         }
     }
 

@@ -3378,6 +3378,32 @@ struct PlaytestScriptTests {
         }
     }
 
+    @Test("An expectRowKeys step remembers a row's keys, then claims every one moved by the same amount")
+    func expectRowKeysParses() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectRowKeys", "clip": "Text", "row": "Position", "remember": "before" },
+                     { "do": "expectRowKeys", "row": "Position", "movedSince": "before" } ] }
+        """)
+        guard case .expectRowKeys(let clip, let row, let remember, let since) = script.steps[0] else {
+            Issue.record("expectRowKeys"); return
+        }
+        #expect(clip == "Text")
+        #expect(row == "Position")
+        #expect(remember == "before")
+        #expect(since == nil)
+        guard case .expectRowKeys(nil, "Position", nil, "before") = script.steps[1] else {
+            Issue.record("movedSince"); return
+        }
+        #expect(PlaytestStep.names.contains("expectRowKeys"))
+        #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("expectRowKeys"))
+        // A row, and exactly one of remembering and comparing.
+        for bad in [#"{ "do": "expectRowKeys", "remember": "a" }"#,
+                    #"{ "do": "expectRowKeys", "row": "Position" }"#,
+                    #"{ "do": "expectRowKeys", "row": "Position", "remember": "a", "movedSince": "a" }"#] {
+            #expect(throws: (any Error).self) { _ = try decode(#"{ "steps": [ "# + bad + " ] }") }
+        }
+    }
+
     @Test("An expectSoundLine step claims a volume line's segment curves, its pick, and that the mix follows it")
     func expectSoundLineParses() throws {
         let script = try decode("""

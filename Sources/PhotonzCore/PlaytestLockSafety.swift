@@ -223,6 +223,9 @@ public enum PlaytestLockSafety {
         // Added 2026-10-14 by reading: the rows under a clip and its key
         // line, read out of the editor, never a name off the screen.
         "expectKeyRows",
+        // Added 2026-10-14 by reading: a row's keys, read out of the
+        // document, never a name off the screen.
+        "expectRowKeys",
         // Added 2026-10-14 by reading: the key popover's rows and where it
         // sits, and the opacity of the document the canvas drew, both read
         // out of the editor, never a name off the screen.

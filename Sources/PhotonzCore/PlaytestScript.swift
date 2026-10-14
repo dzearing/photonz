@@ -2912,6 +2912,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// carries and `hollow` how many of them are hollow; `picked` the row
     /// picked by its name, "" for none. Left out, each is not claimed.
     case expectKeyRows(clip: String?, rows: [String], moments: Int?, hollow: Int?, picked: String?)
+    /// The keys of one row under the clip named `clip` (the picked one where
+    /// it is left out), by the row's name. With `remember` it notes their
+    /// moments and values under that word; with `movedSince` it FAILS unless
+    /// the row has the same keys at the same moments as when that word was
+    /// noted, and every one of them moved by the same amount, which is not
+    /// nothing. How a walk proves a drag moved a whole animation.
+    case expectRowKeys(clip: String?, row: String, remember: String?, movedSince: String?)
     /// CLAIMS the popover a click on a key opens, and FAILS when it is not
     /// so: `present` whether it is on screen; `rows` the values it lists by
     /// their lane names ("Opacity", "Position X"); `reads` what each row's
@@ -4243,7 +4250,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
         "dropComponent",
-        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
+        "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
@@ -4294,6 +4301,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .expectTimelinePick: "expectTimelinePick"
         case .expectKeyPick: "expectKeyPick"
         case .expectKeyRows: "expectKeyRows"
+        case .expectRowKeys: "expectRowKeys"
         case .expectKeyValues: "expectKeyValues"
         case .expectDrawn: "expectDrawn"
         case .expectSoundLine: "expectSoundLine"
@@ -4766,6 +4774,17 @@ public enum PlaytestStep: Sendable, Equatable {
                                   moments: try f.optionalNumber("moments").map { Int($0) },
                                   hollow: try f.optionalNumber("hollow").map { Int($0) },
                                   picked: try f.optionalString("picked"))
+        case "expectRowKeys":
+            guard let row = try f.optionalString("row") else {
+                throw f.invalid("row", "expectRowKeys names the row, as \"Position\"")
+            }
+            let remember = try f.optionalString("remember")
+            let since = try f.optionalString("movedSince")
+            guard (remember == nil) != (since == nil) else {
+                throw f.invalid("remember", "expectRowKeys either remembers the keys under a word or "
+                                + "compares them with the ones remembered under movedSince, one of the two")
+            }
+            self = .expectRowKeys(clip: try f.optionalString("clip"), row: row, remember: remember, movedSince: since)
         case "expectKeyValues":
             guard let present = try f.optionalFlag("present") else {
                 throw f.invalid("present", "expectKeyValues says whether the key popover is up, true or false")

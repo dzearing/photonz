@@ -246,6 +246,9 @@ private final class Run {
     /// The caption drawn at the playhead when a walk last noted it
     /// (`captionsNoteDrawn`).
     private var notedCaption: [Layer]?
+    /// A row's keys, moment and value, noted under a word by
+    /// `expectRowKeys` with `remember`.
+    private var notedRowKeys: [String: [(atMS: Int, value: MotionValue)]] = [:]
     /// A colour drag left down by `holdColorDrag`, waiting for the release that
     /// turns its live frames into one recorded step.
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
@@ -2338,6 +2341,70 @@ private final class Run {
                 + "row picked \(pickedRow.isEmpty ? "none" : pickedRow)"
             guard wrong.isEmpty else { throw Failure(description: reading + ". " + wrong.joined(separator: "; ")) }
             note(number, step.name, reading, state: describe())
+
+        case .expectRowKeys(let clip, let rowName, let remember, let since):
+            let editor = try requireEditor()
+            let layers = editor.document?.allLayers ?? []
+            let layer: Layer
+            if let clip {
+                guard let found = layers.first(where: { $0.name.lowercased() == clip.lowercased() })
+                        ?? layers.first(where: { $0.time != nil && $0.name.lowercased().contains(clip.lowercased()) })
+                else { throw Failure(description: "no layer is called \"\(clip)\"") }
+                layer = found
+            } else {
+                guard let id = editor.selectedLayerID, let found = editor.document?.layer(id: id) else {
+                    throw Failure(description: "expectRowKeys names no clip, and nothing is picked")
+                }
+                layer = found
+            }
+            let lanes = editor.keyLanes(layerID: layer.id)
+            guard let lane = lanes.first(where: { $0.title.lowercased() == rowName.lowercased() }),
+                  let motion = layer.motions?.first(where: { $0.id == lane.motionID }) else {
+                throw Failure(description: "\(layer.name) has no row \"\(rowName)\"; its rows are "
+                    + (lanes.isEmpty ? "none" : lanes.map(\.title).joined(separator: ", ")))
+            }
+            let keys = motion.keyframes.map { (atMS: $0.atMS, value: $0.value) }
+            func said(_ value: MotionValue) -> String {
+                switch value {
+                case .number(let number): String(format: "%.1f", number)
+                case .point(let point): String(format: "(%.1f, %.1f)", point.x, point.y)
+                case .color(let hex): hex
+                }
+            }
+            let reading = "\(layer.name) \(lane.title): " + keys.map(\.value).map(said).joined(separator: ", ")
+            if let remember {
+                notedRowKeys[remember] = keys
+                note(number, step.name, reading + " (remembered as \"\(remember)\")", state: describe())
+            } else if let since {
+                guard let was = notedRowKeys[since] else {
+                    throw Failure(description: "nothing was remembered as \"\(since)\"")
+                }
+                guard was.map(\.atMS) == keys.map(\.atMS) else {
+                    throw Failure(description: reading + ". It had \(was.count) key(s) at \(was.map(\.atMS)) ms "
+                        + "and now has \(keys.count) at \(keys.map(\.atMS)) ms")
+                }
+                // How far each key went, as the difference of two values.
+                func moved(_ from: MotionValue, _ to: MotionValue) -> [Double]? {
+                    switch (from, to) {
+                    case let (.number(a), .number(b)): [b - a]
+                    case let (.point(a), .point(b)): [Double(b.x - a.x), Double(b.y - a.y)]
+                    default: nil
+                    }
+                }
+                let amounts = zip(was, keys).map { moved($0.value, $1.value) }
+                guard let first = amounts.first ?? nil, amounts.allSatisfy({ amount in
+                    guard let amount else { return false }
+                    return zip(amount, first).allSatisfy { abs($0 - $1) < 0.01 }
+                }) else {
+                    throw Failure(description: reading + ". Its keys did not all move by the same amount: was "
+                        + was.map(\.value).map(said).joined(separator: ", "))
+                }
+                guard first.contains(where: { abs($0) >= 0.5 }) else {
+                    throw Failure(description: reading + ". Its keys did not move at all")
+                }
+                note(number, step.name, reading + ", every key moved by "
+                     + first.map { String(format: "%.1f", $0) }.joined(separator: ", "), state: describe())
+            }
 
         case .expectKeyValues(let present, let rows, let reads):
             let editor = try requireEditor()

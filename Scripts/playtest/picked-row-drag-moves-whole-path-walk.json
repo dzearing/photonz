@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/picked-row-drag-moves-whole-path-walk",
+  "seed": "Dragging on the canvas with a row picked moves that whole animation (video-animate.html, the interaction table: 'Drag on the canvas, a row picked'), at Next defaults with no switch touched. A title typed over the sample recording is given a Position row by Animate > Position at one second, then dragged at three seconds, so its path has two keys. At two seconds, between them, a click on the Position row's name picks the row, and a drag on the title moves BOTH keys by the same amount instead of keying the playhead: the path keeps its two keys, one undo puts it back. Then the row's right-click Easing offers the shared curve list a segment offers, and Ease out quint lands on the row.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.8 },
+
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [520, 300] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Ship it faster." },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+
+    { "comment": "A Position row with a key at one second, and a second key where a drag at three seconds leaves it.", "do": "rightClick", "on": "Ship it faster. clip", "across": 0.4, "choose": "Animate > Position" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "moments": 1, "hollow": 0 },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "drag", "from": [560, 310], "to": [700, 310], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "moments": 2, "hollow": 0 },
+
+    { "comment": "Back to two seconds, between the keys, where a plain drag would write a third.", "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectRowKeys", "clip": "Text", "row": "Position", "remember": "path" },
+
+    { "comment": "THE TEST: pick the row by its name, drag the title down: both keys move, none is added.", "do": "windowClick", "on": "Row Position" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "picked": "Position" },
+    { "do": "describe", "stage": "1-position-row-picked", "note": "at two seconds, between the path's two keys, the Position row's name clicked: the row is picked" },
+    { "do": "snapshot", "name": "1-position-row-picked" },
+    { "do": "drag", "from": [760, 345], "to": [760, 435], "steps": 10 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expectRowKeys", "clip": "Text", "row": "Position", "movedSince": "path" },
+    { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "moments": 2, "hollow": 0 },
+    { "do": "describe", "stage": "2-whole-path-moved", "note": "the title dragged 90 down with the Position row picked: both keys moved by the same amount and no key was written at the playhead" },
+    { "do": "snapshot", "name": "2-whole-path-moved" },
+
+    { "comment": "One undo puts the whole path back.", "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectRowKeys", "clip": "Text", "row": "Position", "remember": "undone" },
+    { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "moments": 2, "hollow": 0 },
+
+    { "comment": "The row's right-click Easing is the shared curve list, every segment of the row.", "do": "rightClick", "on": "Row Position", "choose": "Easing > Ease out quint" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "rightClick", "on": "Row Position", "ticked": ["Easing > Ease out quint"] },
+    { "do": "describe", "stage": "3-row-eased", "note": "Easing > Ease out quint from the Position row's right click: the row's one segment runs on it" },
+    { "do": "snapshot", "name": "3-row-eased" }
+  ]
+}
