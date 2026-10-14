@@ -96,6 +96,8 @@ extension EditorState {
     func toggleKeyGraph(_ motionID: UUID) {
         if graphedKeyLanes.contains(motionID) {
             graphedKeyLanes.remove(motionID)
+            // Shut, it forgets its zoom: it opens fitted again.
+            keyGraphZoom[motionID] = nil
         } else {
             graphedKeyLanes.insert(motionID)
         }

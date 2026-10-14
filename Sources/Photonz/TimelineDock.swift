@@ -248,23 +248,28 @@ struct TimelineDock: View {
         }
     }
 
-    /// The right end of the bar: Easing (`#easeSel`), only while keys are
-    /// picked, because it is the curve THEY move through. The same six eases
-    /// a key's right-click offers, so the question has one list of answers.
+    /// The right end of the bar: Easing (`#easeSel`), only while keys or
+    /// segments are picked, because it is the curve THEY move through. For
+    /// keys, the same six eases a key's right-click offers; for segments
+    /// alone, the shared curve list a segment's right click offers (task
+    /// `the-value-graph-zooms-its-value-range-and-the-ti`), so each question
+    /// has one list of answers.
     /// The mock's playhead readout (`.kfread`) stood before it until the user
     /// turned it down on 2026-09-25: the time is in the transport, the value
     /// in the panel, and a bar of controls carries no sentence about state.
     @ViewBuilder private var keyBar: some View {
-        // Keys, not segments alone: a picked segment's curve is named in the
-        // panel's Curve row and on its own right click.
-        if let picked = editorState.keySelection, !picked.refs.isEmpty {
+        if let picked = editorState.keySelection, !picked.refs.isEmpty || !picked.segments.isEmpty {
             HStack(spacing: 4) {
                 Text("EASING")
                     .font(.system(size: 10, weight: .semibold))
                     .tracking(0.9)
                     .foregroundStyle(VideoKit.Palette.faint)
                     .fixedSize()
-                easingMenu
+                if picked.refs.isEmpty {
+                    segmentEasingMenu(picked)
+                } else {
+                    easingMenu
+                }
             }
             .playtestField("Easing")
         }
@@ -276,7 +281,7 @@ struct TimelineDock: View {
     /// 2026-09-27, a few points short of "Ease In and Out" ("Ease In and...").
     static let widestEase: String = {
         let font = NSFont.systemFont(ofSize: 11, weight: .medium)
-        return (KeyEase.allCases.map(\.title) + ["Mixed"])
+        return (KeyEase.allCases.map(\.title) + EasingCurve.named.map(\.title) + ["Mixed"])
             .max { ($0 as NSString).size(withAttributes: [.font: font]).width
                 < ($1 as NSString).size(withAttributes: [.font: font]).width } ?? "Mixed"
     }()
@@ -295,6 +300,23 @@ struct TimelineDock: View {
             })
             .frame(width: Self.easingWidth)
             .panelHelp("The curve the picked keys move through")
+            .playtestControl("Easing", detail: "Timeline")
+    }
+
+    /// Segments picked and no keys: the curve they share, Mixed where they
+    /// differ, and every one of them takes the curve chosen, as one undo step.
+    private func segmentEasingMenu(_ picked: KeySelection) -> some View {
+        let current = editorState.pickedSegmentsCurve(layerID: picked.layerID)
+        let saved = SavedCurveStore.shared.curves
+        return VideoKit.Dropdown(
+            label: "Easing", value: CurveRow.value(current, saved: saved),
+            choices: CurveRow.menu(current: current, saved: saved, offersHold: true, pick: { curve in
+                editorState.curvePickedSegments(curve)
+            }, draw: {
+                editorState.drawCurveForPickedSegments()
+            }))
+            .frame(width: Self.easingWidth)
+            .panelHelp("The curve the picked segments run on")
             .playtestControl("Easing", detail: "Timeline")
     }
 
@@ -498,6 +520,7 @@ struct TimelineDock: View {
                 // transport above.
                 .tutorialAnchor(.timelineTracks)
                 .simultaneousGesture(pinch(laneWidth: laneWidth))
+                .coordinateSpace(.named(Self.wheelSpace))
                 .background {
                     TimelineWheel(handle: { event, point in wheel(event, at: point, laneWidth: laneWidth) },
                                   touched: { editorState.timelinePinchTouched($0) })
@@ -632,13 +655,19 @@ struct TimelineDock: View {
 
     /// Two fingers sideways (or a mouse wheel with ⇧) slide an opened out
     /// timeline along; ⌥ and the wheel zoom time about the pointer, as in
-    /// Premiere, and ⌘ and the wheel grow the rows about it. Anything else is
-    /// left to the tracks, which scroll up and down.
+    /// Premiere, and ⌘ and the wheel grow the rows about it. Over an open
+    /// value graph ⌥ and the wheel zoom its values instead
+    /// (`EditorState+KeyGraphZoom`). Anything else is left to the tracks,
+    /// which scroll up and down.
     private func wheel(_ event: NSEvent, at point: CGPoint, laneWidth: CGFloat) -> Bool {
         let scale: CGFloat = event.hasPreciseScrollingDeltas ? 1 : 10
         let dx = event.scrollingDeltaX * scale
         let dy = event.scrollingDeltaY * scale
         let flags = event.modifierFlags
+        if flags.contains(.option), !flags.contains(.command), dy != 0,
+           editorState.wheelOverKeyGraph(at: point, deltaY: Double(dy)) {
+            return true
+        }
         if flags.contains(.option) || flags.contains(.command) {
             let factor = exp(Double(dy) / 200)
             editorState.pinchTimeline(by: factor, laneX: point.x - Self.lanesLeading, laneWidth: laneWidth,
@@ -761,6 +790,9 @@ struct TimelineDock: View {
     /// The space the tracks are laid out in, which is what a clip carried up
     /// or down measures its pointer against.
     nonisolated static let tracksSpace = "timelineTracks"
+    /// The ruler and tracks, as the wheel sees them: where an open graph
+    /// says it is, so ⌥ and the wheel over it zoom its values.
+    nonisolated static let wheelSpace = "timelineWheel"
 
     // MARK: - The scrollers
 
@@ -804,6 +836,13 @@ struct TimelineDock: View {
 
 // MARK: - The wheel
 
+/// A view that takes the window's wheel through a monitor rather than its own
+/// `scrollWheel`, so a walk's wheel, which names no window, can be handed to
+/// it at a point instead (`PlaytestHarness.turnWheel`).
+@MainActor protocol PlaytestWheelTaker: NSView {
+    func takeWheel(_ event: NSEvent, atWindowPoint windowPoint: CGPoint) -> Bool
+}
+
 /// Hands the timeline the scroll wheel while the pointer is over it, and the
 /// fingers on the trackpad.
 ///
@@ -837,7 +876,7 @@ private struct TimelineWheel: NSViewRepresentable {
 
     static func dismantleNSView(_ view: WheelView, coordinator: ()) { view.stop() }
 
-    final class WheelView: NSView {
+    final class WheelView: NSView, PlaytestWheelTaker {
         var handle: ((NSEvent, CGPoint) -> Bool)?
         var touched: (([CGPoint]) -> Void)?
         private var monitor: Any?
@@ -869,6 +908,15 @@ private struct TimelineWheel: NSViewRepresentable {
                 let fromTop = CGPoint(x: point.x, y: self.isFlipped ? point.y : self.bounds.height - point.y)
                 return self.handle?(event, fromTop) == true ? nil : event
             }
+        }
+
+        /// A wheel a walk turns (`PlaytestWheelTaker`): the same handling the
+        /// window's monitor gives a person's, at a point in the window.
+        func takeWheel(_ event: NSEvent, atWindowPoint windowPoint: CGPoint) -> Bool {
+            let point = convert(windowPoint, from: nil)
+            guard bounds.contains(point) else { return false }
+            let fromTop = CGPoint(x: point.x, y: isFlipped ? point.y : bounds.height - point.y)
+            return handle?(event, fromTop) == true
         }
 
         func stop() {

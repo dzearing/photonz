@@ -2268,9 +2268,10 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "wheel", "control": "Volume Level", "by": 40 } ] }
         """)
-        guard case .wheel(let control, let by) = script.steps[0] else { Issue.record("wheel"); return }
+        guard case .wheel(let control, let by, let modifiers) = script.steps[0] else { Issue.record("wheel"); return }
         #expect(control == "Volume Level")
         #expect(by == 40)
+        #expect(modifiers.isEmpty)
         #expect(script.steps[0].name == "wheel")
         #expect(PlaytestStep.names.contains("wheel"))
         #expect(PlaytestLockSafety.stepsThatSurviveALock.contains("wheel"))
@@ -2279,6 +2280,17 @@ struct PlaytestScriptTests {
             { "steps": [ { "do": "wheel", "by": 40 } ] }
             """)
         }
+    }
+
+    /// ⌥ and the wheel over an open value graph zoom its values (task
+    /// `the-value-graph-zooms-its-value-range-and-the-ti`), so a wheel step
+    /// can hold keys down while it turns.
+    @Test func aWheelStepCanHoldKeysDown() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "wheel", "control": "Value graph Scale", "by": 120, "modifiers": ["option"] } ] }
+        """)
+        guard case .wheel(_, _, let modifiers) = script.steps[0] else { Issue.record("wheel"); return }
+        #expect(modifiers == [.option])
     }
 
     @Test func aScrollPanelStepNamesARowAndHowFarToGo() throws {

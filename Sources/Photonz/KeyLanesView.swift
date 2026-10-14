@@ -34,6 +34,8 @@ struct KeyLanesView: View {
     static let laneHeight: CGFloat = 18
     /// A lane opened into its curve.
     static let graphHeight: CGFloat = 88
+    /// Room above and below the range on an open graph.
+    static let graphPad: CGFloat = 8
     static let spacing: CGFloat = 3
 
     private var space: String { "key-lanes-\(layerID.uuidString)" }
@@ -46,7 +48,7 @@ struct KeyLanesView: View {
                     KeyLaneLabel(layerID: layerID, lane: lane, indent: indent)
                     KeyLaneView(layerID: layerID, layerName: layerName, lane: lane,
                                 laneWidth: laneWidth, space: space,
-                                isLocked: isLocked) { rect, done in
+                                isLocked: isLocked, isLifted: isLifted) { rect, done in
                         drawBox(rect, done: done, lanes: lanes)
                     }
                 }
@@ -183,6 +185,7 @@ private struct KeyLaneView: View {
     let laneWidth: CGFloat
     let space: String
     let isLocked: Bool
+    let isLifted: Bool
     /// A box being drawn from this lane, in the lanes' own space; nil when
     /// it is called off, and `done` when the hand lets go.
     let onBox: (CGRect?, _ done: Bool) -> Void
@@ -219,9 +222,10 @@ private struct KeyLaneView: View {
     private static let boxThreshold: CGFloat = 3
     /// How near the playhead a dragged key lands on it.
     private static let keySnap: CGFloat = 6
-    private static let graphPad: CGFloat = 8
+    private static var graphPad: CGFloat { KeyLanesView.graphPad }
 
     private var graphed: Bool { editorState.isKeyLaneGraphed(lane.motionID) }
+    private var rowID: KeyLaneRowID { KeyLaneRowID(layerID: layerID, motionID: lane.motionID) }
     private var height: CGFloat { graphed ? KeyLanesView.graphHeight : KeyLanesView.laneHeight }
 
     var body: some View {
@@ -246,6 +250,9 @@ private struct KeyLaneView: View {
                 }
             if let graph {
                 curve(graph, line: line, ruler: ruler)
+                    .frame(width: laneWidth, height: height)
+                    // The whole graph, for a walk to turn the wheel over.
+                    .playtestControl("Value graph \(lane.title)", detail: layerName)
                 lineSurface(keys, line: line, ruler: ruler)
                 handles(graph, ruler: ruler)
             } else {
@@ -255,7 +262,22 @@ private struct KeyLaneView: View {
             self.keys(graph: graph, ruler: ruler)
         }
         .frame(width: laneWidth, height: height, alignment: .topLeading)
-        .clipShape(TimelineEdgeClip())
+        // Zoomed, the curve runs past the graph's top and bottom: it stops
+        // at them rather than over the rows either side.
+        .clipShape(TimelineEdgeClip(slack: graphed ? 0 : 400))
+        // Where it is, for ⌥ and the wheel over it.
+        .onGeometryChange(for: CGRect.self) { proxy in
+            proxy.frame(in: .named(TimelineDock.wheelSpace))
+        } action: { frame in
+            guard !isLifted else { return }
+            editorState.keyGraphFrames[rowID] = graphed ? frame : nil
+        }
+        .onChange(of: graphed) { _, open in
+            if !open, !isLifted { editorState.keyGraphFrames[rowID] = nil }
+        }
+        .onDisappear {
+            if !isLifted { editorState.keyGraphFrames[rowID] = nil }
+        }
         .onContinuousHover(coordinateSpace: .local) { phase in
             switch phase {
             case .active(let at): hovered = line.hit(at)
@@ -327,9 +349,13 @@ private struct KeyLaneView: View {
         return low + Double(unit) * (high - low)
     }
 
+    /// The values drawn top to bottom: held still while a handle is in the
+    /// hand, else the graph's zoom or its fit
+    /// (`EditorState+KeyGraphZoom`).
     private func range(_ graph: KeyGraph) -> (Double, Double) {
         if let handleDrag { return (handleDrag.low, handleDrag.high) }
-        return (graph.low, graph.high)
+        let shown = editorState.keyGraphRange(motionID: lane.motionID, fit: graph)
+        return (shown.low, shown.high)
     }
 
     // MARK: The lane closed: diamonds joined by a line
@@ -426,21 +452,37 @@ private struct KeyLaneView: View {
                 }
             }
             .allowsHitTesting(false)
-            // The range, where the mock's axis puts it (`.kfaxis`).
+            // The range, where the mock's axis puts it (`.kfaxis`). ⌥ and the
+            // wheel over the graph zoom it; a double click on a reading goes
+            // back to the fit (`EditorState+KeyGraphZoom`).
             VStack(alignment: .leading, spacing: 0) {
-                Text(reading(high))
+                rangeReading(high, edge: "top")
                 Spacer(minLength: 0)
-                Text(reading(low))
+                rangeReading(low, edge: "bottom")
             }
             .font(.system(size: 8, design: .monospaced))
-            .foregroundStyle(VideoKit.Palette.faint)
+            .foregroundStyle(zoomed ? VideoKit.Palette.dim : VideoKit.Palette.faint)
             .padding(.leading, 4)
             .padding(.vertical, 1)
             .frame(height: height)
-            .allowsHitTesting(false)
         }
         .panelReadout("curve \(lane.title): \(reading(low)) to \(reading(high)), "
-                      + "\(graph.keys.filter { $0.ease == .bezier }.count) Bezier key(s)")
+                      + "\(graph.keys.filter { $0.ease == .bezier }.count) Bezier key(s)"
+                      + (zoomed ? ", zoomed" : ", fitted"))
+    }
+
+    private var zoomed: Bool { editorState.isKeyGraphZoomed(lane.motionID) }
+
+    /// One end of the range: only the words take a press, so the line beside
+    /// them still picks and scrubs.
+    private func rangeReading(_ value: Double, edge: String) -> some View {
+        Text(reading(value))
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { editorState.fitKeyGraph(lane.motionID) }
+            .help("Double-click to fit")
+            .panelReadout(reading(value))
+            .playtestField("Graph \(edge) \(lane.title)")
+            .playtestControl("Graph \(edge) \(lane.title)", detail: layerName)
     }
 
     private func reading(_ value: Double) -> String {
@@ -494,7 +536,7 @@ private struct KeyLaneView: View {
                                ruler: MotionStripRuler) -> some Gesture {
         DragGesture(minimumDistance: 1)
             .onChanged { value in
-                let (low, high) = handleDrag.map { ($0.low, $0.high) } ?? (graph.low, graph.high)
+                let (low, high) = handleDrag.map { ($0.low, $0.high) } ?? range(graph)
                 let ms = ruler.ms(atFraction: Double(value.location.x / laneWidth))
                 let point = CGPoint(x: ms, y: self.value(atY: value.location.y, low: low, high: high))
                 handleDrag = HandleDrag(ref: ref, side: side, point: point, low: low, high: high)
@@ -575,13 +617,19 @@ private struct KeyLaneView: View {
         var at = x(shownMS(key), ruler)
         if let pointDrag, pointDrag.ref == key.ref { at = x(key.documentMS + pointDrag.byMS, ruler) }
         let start = graph.keys.first { $0.ref == key.ref }?.value ?? 0
+        // Zoomed past it, a point is off the graph: not pinned to its edge.
+        let onGraph = keyY >= 0 && keyY <= height
         return placed(KeyGlyph(ease: key.ease, isPicked: isPicked, isHovered: hovered == .dot(index))
             .scaleEffect(isPicked && (drag != nil || pointDrag != nil) ? 1.25 : 1)
             .frame(width: Self.grab, height: Self.grab)
             .contentShape(Rectangle())
             .gesture(graphKeyDrag(key, index: index, startValue: start, ruler: ruler, low: low, high: high))
-            .onTapGesture { dotClick(key, index: index) },
-            key, index: index, isPicked: isPicked, x: at, y: keyY)
+            .onTapGesture { dotClick(key, index: index) }
+            .opacity(onGraph ? 1 : 0)
+            .allowsHitTesting(onGraph),
+            // Held at the edge it went past, so it never stretches the lane.
+            key, index: index, isPicked: isPicked, x: at,
+            y: onGraph ? keyY : min(max(keyY, Self.grab / 2), height - Self.grab / 2))
     }
 
     private static let grab: CGFloat = 14

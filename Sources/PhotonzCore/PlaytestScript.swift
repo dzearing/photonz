@@ -4074,8 +4074,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// Turn the wheel over a named control that takes it itself, by `by`
     /// points: positive is up, the way a person turns a volume up. The
     /// transport's volume slider is the first (2026-09-28); a list that
-    /// scrolls is `scrollPanel`.
-    case wheel(control: String, by: Double)
+    /// scrolls is `scrollPanel`. With `modifiers` the keys are held while it
+    /// turns, and the turn goes through the app the way a person's does, so
+    /// whatever watches the window's wheel sees it (⌥ over an open value
+    /// graph zooms its values).
+    case wheel(control: String, by: Double, modifiers: [PlaytestModifier] = [])
     /// Scroll the dock until a named control is where a person could press it,
     /// however far that turns out to be.
     ///
@@ -5886,7 +5889,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                        absent: absent,
                                        dark: try f.optionalNumber("dark").map { Int($0) })
         case "wheel":
-            self = .wheel(control: try f.string("control"), by: try f.number("by"))
+            self = .wheel(control: try f.string("control"), by: try f.number("by"),
+                          modifiers: try f.optionalModifiers("modifiers") ?? [])
         case "scrollPanel":
             self = .scrollPanel(row: fields["row"] as? String, by: try f.number("by"))
         case "reveal":

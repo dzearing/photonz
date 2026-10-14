@@ -3245,8 +3245,8 @@ private final class Run {
         case .expectOneNumberPerName:
             note(number, step.name, try checkOneNumberPerName(), state: describe())
 
-        case .wheel(let control, let by):
-            note(number, step.name, try await turnWheel(over: control, by: by), state: describe())
+        case .wheel(let control, let by, let modifiers):
+            note(number, step.name, try await turnWheel(over: control, by: by, holding: modifiers), state: describe())
 
         case .scrollPanel(let row, let by):
             let rows = try panelTargets().filter { $0.kind == .row }
@@ -17542,7 +17542,12 @@ private final class Run {
     /// whatever view the window finds under the control's middle, the way
     /// `scrollPanel` hands one to its scroll view: a wheel event made up in
     /// Quartz names no window, so AppKit would route it nowhere.
-    private func turnWheel(over control: String, by points: Double) async throws -> String {
+    ///
+    /// With keys held, the turn goes through the app's own `sendEvent`, as a
+    /// person's does, so what watches the window's wheel (the timeline's ⌥
+    /// zoom, `TimelineWheel`) sees it, keys and all.
+    private func turnWheel(over control: String, by points: Double,
+                           holding modifiers: [PlaytestModifier] = []) async throws -> String {
         let (target, _) = try await reachableTarget(control, in: nil)
         guard let window = target.window, let content = window.contentView,
               let frame = content.superview ?? Optional(content) else {
@@ -17558,6 +17563,24 @@ private final class Run {
             throw Failure(description: "could not make a wheel event for \"\(control)\"")
         }
         wheel.setIntegerValueField(.scrollWheelEventIsContinuous, value: 1)
+        if !modifiers.isEmpty {
+            // A made-up wheel names no window, so the monitor a person's wheel
+            // goes through never sees it. Handed to whatever takes the wheel
+            // that way under the control, it gets the same handling.
+            wheel.flags = CGEventFlags(rawValue: UInt64(eventFlags(modifiers).rawValue))
+            guard let event = NSEvent(cgEvent: wheel) else {
+                throw Failure(description: "could not make a wheel event for \"\(control)\"")
+            }
+            let takers = Self.findAll(NSView.self, in: content).compactMap { $0 as? PlaytestWheelTaker }
+            guard let taker = takers.first(where: { $0.takeWheel(event, atWindowPoint: target.point) }) else {
+                throw Failure(description: "nothing that takes the wheel with keys held is under \"\(control)\", "
+                    + "or it let the wheel go by")
+            }
+            await sleep(0.3)
+            let held = modifiers.map(\.rawValue).joined(separator: "+")
+            return "turned the wheel \(Int(points.rounded()))pt with \(held) held over \"\(target.name)\" at window "
+                + short(target.point) + ", taken by \(type(of: taker))"
+        }
         guard let event = NSEvent(cgEvent: wheel) else {
             throw Failure(description: "could not make a wheel event for \"\(control)\"")
         }

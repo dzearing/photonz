@@ -1,0 +1,326 @@
+{
+  "out": "/tmp/photonz-playtest/value-graph-zoom-and-segment-easing-walk",
+  "seed": "An open value graph zooms its values and the timeline bar names a picked segment's curve. At Next defaults with no flag changed, this walk keys a title's Scale at one and three seconds, opens its graph from the panel's Graph link, turns the wheel with Option held over the graph and checks the range readings closed in, turns it back out, double-clicks a reading to fit again, then clicks the segment between the two points and checks the timeline bar's Easing names its curve, chooses Ease out there, and undoes it in one step.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "field": "Graph top Scale",
+      "reads": "200%"
+    },
+    {
+      "do": "expect",
+      "field": "Graph bottom Scale",
+      "reads": "100%"
+    },
+    {
+      "do": "describe",
+      "stage": "1-fitted",
+      "note": "Scale keyed 100% at 0:01 and 200% at 0:03, its graph open and fitted: 200% at the top, 100% at the bottom"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-fitted"
+    },
+    {
+      "comment": "Option and the wheel over the graph zoom its values in about the middle.",
+      "do": "wheel",
+      "control": "Value graph Scale",
+      "by": 140,
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Graph top Scale",
+      "reads": "174.8%"
+    },
+    {
+      "do": "expect",
+      "field": "Graph bottom Scale",
+      "reads": "125.2%"
+    },
+    {
+      "do": "describe",
+      "stage": "2-zoomed-in",
+      "note": "THE FIRST TEST: Option and the wheel over the graph zoomed its values in about the pointer; the readings closed in and the line runs off the top and bottom, clipped to the graph"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-zoomed-in"
+    },
+    {
+      "comment": "The other way zooms out past the fit.",
+      "do": "wheel",
+      "control": "Value graph Scale",
+      "by": -280,
+      "modifiers": [
+        "option"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Graph top Scale",
+      "reads": "250.7%"
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed-out",
+      "note": "turned the other way it zoomed out past the fit"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed-out"
+    },
+    {
+      "comment": "A double click on a reading goes back to the fit.",
+      "do": "windowClick",
+      "on": "Graph top Scale",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "field": "Graph top Scale",
+      "reads": "200%"
+    },
+    {
+      "do": "expect",
+      "field": "Graph bottom Scale",
+      "reads": "100%"
+    },
+    {
+      "do": "describe",
+      "stage": "4-fitted-again",
+      "note": "THE SECOND TEST: a double click on the top reading put the graph back to its fit"
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "present": false
+    },
+    {
+      "comment": "Pick the segment between the two points: the bar's Easing names its curve.",
+      "do": "windowClick",
+      "on": "Segment Scale 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease in out"
+    },
+    {
+      "do": "describe",
+      "stage": "5-segment-picked",
+      "note": "THE THIRD TEST: with only the segment picked the timeline bar shows Easing, naming the segment's curve"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-segment-picked"
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Easing",
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out"
+    },
+    {
+      "do": "describe",
+      "stage": "6-eased",
+      "note": "THE FOURTH TEST: Ease out chosen in the bar's Easing set the picked segment's curve"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-eased"
+    },
+    {
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease in out"
+    },
+    {
+      "do": "describe",
+      "stage": "7-undone",
+      "note": "one Command-Z put the segment's curve back: the bar's choice was one undo step"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-undone"
+    }
+  ]
+}

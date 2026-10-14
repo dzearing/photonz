@@ -1742,6 +1742,12 @@ final class EditorState {
     var closedKeyTracks: Set<UUID> = []
     /// The lanes opened into their curve, by the motion each one draws.
     var graphedKeyLanes: Set<UUID> = []
+    /// An open graph zoomed taller or shorter than its fit, by the motion it
+    /// draws (`EditorState+KeyGraphZoom`). None is fitted.
+    var keyGraphZoom: [UUID: GraphValueRange] = [:]
+    /// Where each open graph is, in the timeline wheel's own space, for ⌥ and
+    /// the wheel over it (`EditorState+KeyGraphZoom`).
+    @ObservationIgnored var keyGraphFrames: [KeyLaneRowID: CGRect] = [:]
     /// Picked keys on their way somewhere else in time, drawn where the hand
     /// has them until it lets go.
     var keyLaneDrag: KeyLaneDrag?

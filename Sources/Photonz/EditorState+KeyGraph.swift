@@ -178,6 +178,13 @@ extension EditorState {
         if let curve = pickedSegmentsCurveInHand { copiedStretchCurve = curve }
     }
 
+    /// The timeline bar's Easing with only segments picked: every one takes
+    /// `curve`, as one undo step.
+    func curvePickedSegments(_ curve: EasingCurve) {
+        guard let keySelection, hasPickedSegments else { return }
+        curveSegments(layerID: keySelection.layerID, keySelection.segments, curve)
+    }
+
     func pastePickedSegmentsEase() {
         guard let keySelection, hasPickedSegments, let copied = copiedStretchCurve else { return }
         curveSegments(layerID: keySelection.layerID, keySelection.segments, copied)

@@ -56,11 +56,26 @@ struct CurveRow: View {
     }
 
     private func choices(_ saved: SavedCurves) -> [VideoKit.Choice] {
+        Self.menu(current: current, ownDefault: ownDefault, kept: kept, saved: saved,
+                  pick: pick, draw: { isDrawing = true }) + extra
+    }
+
+    /// The list itself, for any face that offers the shared curves: the
+    /// timeline bar's Easing reads it too, for picked segments, with Hold
+    /// after the shaped ones as a segment's right click has it.
+    static func menu(current: EasingCurve?, ownDefault: EasingCurve? = nil, kept: EasingCurve? = nil,
+                     saved: SavedCurves, offersHold: Bool = false,
+                     pick: @escaping @MainActor (EasingCurve) -> Void,
+                     draw: @escaping @MainActor () -> Void) -> [VideoKit.Choice] {
+        func item(_ curve: EasingCurve, _ title: String? = nil) -> VideoKit.Choice {
+            .item(title ?? curve.title, isOn: current == curve, image: CurveMenuImage.image(for: curve)) { pick(curve) }
+        }
         var rows: [VideoKit.Choice] = [.heading("Standard")]
-        rows += EasingCurve.named.prefix(EasingCurve.standardCount).map(item)
+        rows += EasingCurve.named.prefix(EasingCurve.standardCount).map { item($0) }
         rows.append(.heading("Shaped"))
-        rows += EasingCurve.named.dropFirst(EasingCurve.standardCount).map(item)
+        rows += EasingCurve.named.dropFirst(EasingCurve.standardCount).map { item($0) }
         if let ownDefault, !EasingCurve.named.contains(ownDefault) { rows.append(item(ownDefault)) }
+        if offersHold { rows.append(item(.steps(1), "Hold")) }
         if !saved.items.isEmpty {
             rows.append(.heading("Saved"))
             rows += saved.items.map { kept in
@@ -78,16 +93,12 @@ struct CurveRow: View {
             rows.append(.item(StretchCurve.title(own), isOn: current == own,
                               image: CurveMenuImage.image(for: own)) { pick(own) })
         }
-        rows.append(.item("Draw a Curve\u{2026}") { isDrawing = true })
+        rows.append(.item("Draw a Curve\u{2026}") { draw() })
         // A saved curve showing can be let go of from the list it is in. What
         // runs on it keeps it, and reads Custom from then on.
         if let current, let name = saved.name(of: current) {
             rows.append(.item("Forget \u{201C}\(name)\u{201D}") { SavedCurveStore.shared.remove(named: name) })
         }
-        return rows + extra
-    }
-
-    private func item(_ curve: EasingCurve) -> VideoKit.Choice {
-        .item(curve.title, isOn: current == curve, image: CurveMenuImage.image(for: curve)) { pick(curve) }
+        return rows
     }
 }

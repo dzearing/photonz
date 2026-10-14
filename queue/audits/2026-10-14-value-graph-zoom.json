@@ -1,0 +1,51 @@
+{
+  "feature": "Value graph zoom and segment Easing in the timeline bar",
+  "epic": "video-transitions-motion",
+  "summary": "An open value graph now zooms taller or shorter with Option and the wheel over it, and a double click on its range readings fits it again. With only segments of the line picked, the timeline bar shows Easing naming their curve and sets it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/value-graph-zoom-and-segment-easing-walk.json",
+  "switched": {},
+  "try": [
+    {
+      "do": "Add a title, animate its Scale from 100% at 0:01 to 200% at 0:03, and click Graph in the panel's Animating row.",
+      "shot": "2026-10-14-value-graph-zoom-1-fitted-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hold Option and scroll up over the graph.",
+      "shot": "2026-10-14-value-graph-zoom-2-zoomed-in-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hold Option and scroll down over the graph to zoom back out past the fit."
+    },
+    {
+      "do": "Double-click the 200% reading at the graph's top left."
+    },
+    {
+      "do": "Click the line between the two points.",
+      "shot": "2026-10-14-value-graph-zoom-5-segment-picked-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Easing at the right of the timeline bar and choose Ease out.",
+      "shot": "2026-10-14-value-graph-zoom-6-eased-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command-Z."
+    }
+  ],
+  "evaluate": [
+    "Does Option and the wheel over a graph zooming its values, and not time, feel right, given that the same gesture zooms time everywhere else on the timeline?",
+    "Is a double click on the readings an easy enough way back to the fit, or do you want a visible Fit control?",
+    "With a segment picked, does the bar's Easing read as the curve of that segment at a glance?",
+    "Does the zoomed curve stopping at the graph's top and bottom read clearly, or do you want a hint that it continues?"
+  ],
+  "rough": [
+    "No mock covers zooming the graph: the mock's graph always fits itself, so the gesture and the double-click reset are this task's own answer.",
+    "Over an open graph Option and the wheel zoom its values instead of time; move the pointer off the graph (or pinch) to zoom time. Pinching over the graph still zooms time and rows as before.",
+    "With keys and segments picked together, the bar still offers the key list and sets only the keys, where the mock says it sets everything picked: the-timeline-bar-easing-sets-picked-segments-too.",
+    "A point zoomed past the top or bottom of the graph is hidden rather than pinned to the edge, so there is no mark saying a point is out of view.",
+    "Shutting the graph forgets its zoom; it opens fitted next time."
+  ]
+}

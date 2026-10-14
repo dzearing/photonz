@@ -21400,3 +21400,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Any change on a layer with keys keys itself (the user's card answer, 2026-10-13): panel rows, Appearance sliders, canvas moves/resizes/turns, transform values and 3D all join through one rule (anchors at the layer's key moments either side).
 - Click a row's name to pick it; Delete or the row's Stop Animating removes it. Animate ▸ (Transform, 3D, Look, Effects) on the clip, its key diamonds and Clip ▸ Animate adds one back.
 - Walk: `only-what-is-animated-walk` (new `expectKeyRows` step). Follow-up: `dragging-on-the-canvas-with-a-row-picked-moves-t`.
+
+## 2026-10-14 — The value graph zooms; the bar names a picked segment's curve
+
+- Option and the wheel over an open value graph zoom its values about the pointer (`PhotonzCore/GraphValueRange.swift`, `EditorState+KeyGraphZoom.swift`); the range readings follow, a double click on one fits it again, shutting the graph forgets the zoom. A zoomed curve is clipped to the graph; points past it are hidden.
+- With only segments picked, the timeline bar's Easing shows the shared curve list (`CurveRow.menu`, now static) naming their curve or Mixed, and sets every picked segment in one undo step.
+- Walk step `wheel` takes `modifiers` (handed to `PlaytestWheelTaker`, the timeline's wheel view). Walk: `value-graph-zoom-and-segment-easing-walk`.
+- Follow-up: `the-timeline-bar-easing-sets-picked-segments-too` (keys and segments picked together). `value-graph-points-and-segments-walk` fails at its last step on main as in last night's sweep (owned by the standing walk task).

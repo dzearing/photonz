@@ -1,0 +1,27 @@
+{
+  "id": "the-timeline-bar-easing-sets-picked-segments-too",
+  "title": "The timeline bar Easing sets picked segments too when keys are picked with them",
+  "goal": "When a person Shift-picks some keys and some segments of the line together and chooses an ease in the timeline bar, only the keys change today; the mock says the bar sets the curve for everything picked, so the segments should take it as well, in one undo step.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 4060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T12:02:31.311Z",
+  "updated": "2026-10-14T12:02:31.314Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left from the-value-graph-zooms-its-value-range-and-the-ti. Today TimelineDock.keyBar shows the per-key KeyEase list whenever keySelection.refs is non-empty, and the shared EasingCurve list (CurveRow.menu) only for segments alone. Mixing needs a decision on how a key ease and a segment curve combine: a segment curve rewrites the leaving half of its first key and the arriving half of its last (LayerMotion.curvingStretch), so applying both in one perform can fight. Mock: docs/design/mocks/pages/video-animate.html, Pick caption: The timeline bar Easing then names the curve and sets it for everything picked.",
+  "acceptance": [
+    "With keys and segments picked together, the bar names one shared answer or Mixed",
+    "Choosing an ease there changes the picked keys and the picked segments, one undo step",
+    "A walk picks a key and a segment together and sets both from the bar at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T12:02:31.313Z",
+      "note": "created (manual)"
+    }
+  ]
+}
