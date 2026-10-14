@@ -518,4 +518,59 @@ struct LayerGeometrySelectionTests {
         // Where it sits is a real number, so it is not marked blank.
         #expect(sel.reading(.x).readoutText == "0")
     }
+
+    // MARK: Width and height in proportion
+
+    @Test("With the link on, a width typed brings the height along in proportion, and the reverse")
+    func aLinkedSizeKeepsItsProportion() {
+        let frame = CGRect(x: 10, y: 20, width: 1280, height: 800)
+        let sel = selection([frame])
+        let id = sel.members[0].id
+        #expect(sel.applying(640, to: .width, inProportion: true)[id]
+                == CGRect(x: 10, y: 20, width: 640, height: 400))
+        #expect(sel.applying(200, to: .height, inProportion: true)[id]
+                == CGRect(x: 10, y: 20, width: 320, height: 200))
+        // Off, the other side stays where it was.
+        #expect(sel.applying(640, to: .width, inProportion: false)[id]
+                == CGRect(x: 10, y: 20, width: 640, height: 800))
+    }
+
+    @Test("Each linked layer keeps its own proportion, so a mixed selection stays mixed in shape")
+    func eachLayerKeepsItsOwnProportion() {
+        let sel = selection([CGRect(x: 0, y: 0, width: 100, height: 50),
+                             CGRect(x: 0, y: 0, width: 200, height: 200)])
+        let moves = sel.applying(400, to: .width, inProportion: true)
+        #expect(moves[sel.members[0].id]?.size == CGSize(width: 400, height: 200))
+        #expect(moves[sel.members[1].id]?.size == CGSize(width: 400, height: 400))
+    }
+
+    @Test("A linked side that cannot take a number stays put, and the side typed still lands")
+    func aLinkedSideThatIsNotTypedStays() {
+        // A text box that hugs its words takes no height of its own.
+        let (label, member) = textMember(CGRect(x: 0, y: 0, width: 200, height: 30))
+        let sel = LayerGeometrySelection([member])
+        #expect(!sel.allows(.height))
+        let landed = sel.applying(400, to: .width, inProportion: true)[label.id]
+        #expect(landed?.width == 400 + TextMeasurement.slack)
+        #expect(landed?.height == 30 + TextMeasurement.slack)
+    }
+
+    @Test("An arrow key in a linked width steps the height along with it")
+    func aLinkedStepKeepsTheProportion() {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let sel = selection([frame])
+        let id = sel.members[0].id
+        #expect(sel.stepping(.width, direction: 1, coarse: true, inProportion: true)[id]?.size
+                == CGSize(width: 110, height: 55))
+        #expect(sel.stepping(.width, direction: 1, coarse: true, inProportion: false)[id]?.size
+                == CGSize(width: 110, height: 50))
+    }
+
+    @Test("The link means nothing to where a layer sits: X typed linked moves it and nothing else")
+    func theLinkLeavesPositionAlone() {
+        let frame = CGRect(x: 0, y: 0, width: 100, height: 50)
+        let sel = selection([frame])
+        #expect(sel.applying(30, to: .x, inProportion: true)[sel.members[0].id]
+                == CGRect(x: 30, y: 0, width: 100, height: 50))
+    }
 }

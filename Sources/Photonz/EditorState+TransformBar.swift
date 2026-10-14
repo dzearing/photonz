@@ -196,7 +196,8 @@ extension EditorState {
         if let geometry = field.geometryField {
             let selection = transformBarSelection
             if geometry.isFrameNumber {
-                commitTransformBarFrames(selection.applying(value, to: geometry))
+                commitTransformBarFrames(selection.applying(value, to: geometry,
+                                                            inProportion: transformSizeLinked))
             } else {
                 commitTransformBarTurns(selection.turning(to: value))
             }
@@ -213,13 +214,25 @@ extension EditorState {
         if let geometry = field.geometryField {
             let selection = transformBarSelection
             if geometry.isFrameNumber {
-                commitTransformBarFrames(selection.stepping(geometry, direction: direction, coarse: coarse))
+                commitTransformBarFrames(selection.stepping(geometry, direction: direction, coarse: coarse,
+                                                            inProportion: transformSizeLinked))
             } else {
                 commitTransformBarTurns(selection.steppingRotation(direction: direction, coarse: coarse))
             }
         } else {
             nudgeSpaceValue(field.property, by: Double(direction) * (coarse ? 10 : 1))
         }
+    }
+
+    /// Whether the popover draws the link between W and H: only where both
+    /// take a number, since a link to a side you cannot type means nothing.
+    var showsTransformSizeLink: Bool {
+        transformBarTakesTyping(.width) && transformBarTakesTyping(.height)
+    }
+
+    /// The link between W and H, clicked.
+    func toggleTransformSizeLink() {
+        transformSizeLinked.toggle()
     }
 
     private func commitTransformBarFrames(_ moves: [UUID: CGRect]) {

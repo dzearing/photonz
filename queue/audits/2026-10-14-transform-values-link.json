@@ -1,0 +1,27 @@
+{
+  "feature": "Width and height keep their proportion in the transform values",
+  "epic": "video-transitions-motion",
+  "summary": "In the Info popover, W and H are joined by a link that is on by default: type a new width and the height follows in proportion, and the reverse. One click on the link turns it off.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording and pick it with Select.",
+  "switched": {},
+  "try": [
+    { "do": "Click Info at the right end of the tool bar (or press F8).", "shot": "2026-10-14-transform-values-link-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click W, type 640 and press Return: H becomes 400.", "shot": "2026-10-14-transform-values-link-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: both W and H go back together." },
+    { "do": "Click the chain between W and H: the bracket goes and the chain dims.", "shot": "2026-10-14-transform-values-link-3.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type 500 into W: H stays where it was.", "shot": "2026-10-14-transform-values-link-4.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the chain again, then press the up arrow with Shift in W: H steps along with it." }
+  ],
+  "evaluate": [
+    "Does the bracket and chain between the names and the numbers read as a link without the tooltip?",
+    "Is the dimmed chain when unlinked visible enough to find again?",
+    "Should the link remember its state between windows and launches, rather than starting on in every new window?",
+    "Should a Shift drag on a corner handle follow the link too, or stay as it is?"
+  ],
+  "rough": [
+    "The mock (pages/video-animate.html, the transform bar) draws the link sideways between two fields in a single row; the popover lists its values one per row, so the link is a bracket joining the W row to the H row. The popover's row-per-value layout is the user's call on 2026-10-12, when the bar became the Info popover.",
+    "How long the link remembers being off is something no mock covers: it holds per window while the window is open and starts on in a new one. Asked in the questions above.",
+    "The link only drives numbers typed or stepped in the popover. Canvas handles keep their own rules (Shift keeps the shape), as in Photoshop.",
+    "Where a picked layer takes no typed height (a text box that fits its words), the link is not drawn at all."
+  ]
+}

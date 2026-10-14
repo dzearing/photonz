@@ -419,15 +419,44 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// Every layer's new frame after `value` is typed into `field`. Layers the
     /// field does not act on, and layers already at that number, are left out,
     /// so an edit that changes nothing produces no moves at all.
-    public func applying(_ value: CGFloat, to field: LayerGeometryField) -> [UUID: CGRect] {
+    ///
+    /// `inProportion` is the link between W and H: a width typed brings each
+    /// layer's height along by the same factor, and the reverse, so every
+    /// layer keeps its OWN shape. A layer that takes no number on the other
+    /// side changes only the side typed. X and Y are not touched by it.
+    public func applying(_ value: CGFloat, to field: LayerGeometryField,
+                         inProportion: Bool = false) -> [UUID: CGRect] {
         // A is not a number about the box, so it moves nothing here: it goes
         // through `turning(to:)` instead, and the panel routes it there.
         guard field.isFrameNumber else { return [:] }
         return moves(for: field) { frame, member in
-            LayerGeometry.applying(value, to: field, of: frame,
-                                   notBelow: member.editing.minimum(for: field),
-                                   notAbove: member.editing.maximum(for: field))
+            let sized = LayerGeometry.applying(value, to: field, of: frame,
+                                               notBelow: member.editing.minimum(for: field),
+                                               notAbove: member.editing.maximum(for: field))
+            return inProportion ? Self.inProportion(sized, from: frame, typed: field, member) : sized
         }
+    }
+
+    /// `sized` with its other side brought along by the factor the typed side
+    /// changed by, held to that side's own floor and ceiling.
+    private static func inProportion(_ sized: CGRect, from frame: CGRect,
+                                     typed field: LayerGeometryField, _ member: Member) -> CGRect {
+        let other: LayerGeometryField
+        let typed: CGFloat
+        let was: CGFloat
+        switch field {
+        case .width: (other, typed, was) = (.height, sized.width, frame.width)
+        case .height: (other, typed, was) = (.width, sized.height, frame.height)
+        case .x, .y, .rotation: return sized
+        }
+        guard was > 0, typed != was, member.editing.allows(other) else { return sized }
+        // Multiplied before dividing, so 50 stepped along a 100 to 110 lands
+        // on 55 and not a hair over it.
+        let brought = LayerGeometry.value(other, of: frame) * typed / was
+        guard brought.isFinite else { return sized }
+        return LayerGeometry.applying(brought, to: other, of: sized,
+                                      notBelow: member.editing.minimum(for: other),
+                                      notAbove: member.editing.maximum(for: other))
     }
 
     // There is deliberately no "what will this land on" here. The field shows
@@ -440,15 +469,18 @@ public struct LayerGeometrySelection: Hashable, Sendable {
     /// Every layer's new frame after one arrow-key press. Each layer steps
     /// from its OWN number, so a selection that is spread out stays spread out
     /// and only moves together — which is what a nudge means.
+    /// `inProportion` brings the other side along, as it does for a number
+    /// typed.
     public func stepping(_ field: LayerGeometryField, direction: Int,
-                         coarse: Bool) -> [UUID: CGRect] {
+                         coarse: Bool, inProportion: Bool = false) -> [UUID: CGRect] {
         guard field.isFrameNumber else { return [:] }
         return moves(for: field) { frame, member in
             let stepped = LayerGeometry.stepped(LayerGeometry.value(field, of: frame),
                                                 direction: direction, coarse: coarse)
-            return LayerGeometry.applying(stepped, to: field, of: frame,
-                                          notBelow: member.editing.minimum(for: field),
-                                          notAbove: member.editing.maximum(for: field))
+            let sized = LayerGeometry.applying(stepped, to: field, of: frame,
+                                               notBelow: member.editing.minimum(for: field),
+                                               notAbove: member.editing.maximum(for: field))
+            return inProportion ? Self.inProportion(sized, from: frame, typed: field, member) : sized
         }
     }
 

@@ -260,6 +260,10 @@ final class EditorState {
             #endif
         }
     }
+    /// Whether W and H in the transform values popover keep their
+    /// proportion: on until the link between them is clicked, and it stays
+    /// as left for as long as the window is open.
+    var transformSizeLinked = true
     /// Where the tool bar's Info button is, in window points, so the popover
     /// it opens rises out of it (`TransformValuesPopover`). Nil while the
     /// button is not on the bar.

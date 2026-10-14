@@ -1,0 +1,292 @@
+{
+ "out": "/tmp/photonz-playtest/transform-values-link-walk",
+ "seed": "Width and height in the transform values keep their proportion, at Next defaults with no flag changed. The recording is picked and Info opened from the tool bar: W 1280 and H 800 are joined by a link, on by default. 640 typed into W brings H to 400 in one undo step, which Command Z takes back whole; 400 typed into H brings W to 640. One click on the link turns it off, and 500 typed into W then leaves H at 400. A second click turns it back on.",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "timelineOpen": true
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "click",
+   "at": [
+    520,
+    300
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Tutorial Sample"
+   ]
+  },
+  {
+   "do": "expectTransformBar",
+   "present": false
+  },
+  {
+   "do": "expectSpaceHandles",
+   "arcs": true,
+   "depth": true
+  },
+  {
+   "do": "expect",
+   "control": "Info",
+   "present": true
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectTransformBar",
+   "present": true,
+   "fields": [
+    "X",
+    "Y",
+    "W",
+    "H",
+    "Rotation"
+   ]
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "1280"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "800"
+  },
+  {
+   "do": "expect",
+   "field": "Transform Link State",
+   "reads": "linked"
+  },
+  {
+   "do": "describe",
+   "stage": "1-linked",
+   "note": "Info opened on the picked recording: W 1280 over H 800, joined by a bracket with a chain at its middle in the gap between the names and the numbers. The link is on by default"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-linked"
+  },
+  {
+   "do": "press",
+   "control": "Transform W"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "640"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "640"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "400"
+  },
+  {
+   "do": "describe",
+   "stage": "2-width-typed",
+   "note": "640 typed into W with the link on: the height came along to 400, keeping 1280 by 800's shape, in one step"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-width-typed"
+  },
+  {
+   "do": "shortcut",
+   "key": "z",
+   "modifiers": [
+    "command"
+   ],
+   "menuItem": "Undo"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "1280"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "800"
+  },
+  {
+   "do": "press",
+   "control": "Transform H"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "400"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "640"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "400"
+  },
+  {
+   "do": "press",
+   "control": "Transform Link"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Link State",
+   "reads": "unlinked"
+  },
+  {
+   "do": "describe",
+   "stage": "3-unlinked",
+   "note": "One click on the link turned it off: the bracket is gone and the chain is faint"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-unlinked"
+  },
+  {
+   "do": "press",
+   "control": "Transform W"
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "500"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "field": "Transform W",
+   "reads": "500"
+  },
+  {
+   "do": "expect",
+   "field": "Transform H",
+   "reads": "400"
+  },
+  {
+   "do": "describe",
+   "stage": "4-unlinked-typed",
+   "note": "500 typed into W with the link off: the height stayed at 400"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-unlinked-typed"
+  },
+  {
+   "do": "press",
+   "control": "Transform Link"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Link State",
+   "reads": "linked"
+  }
+ ]
+}

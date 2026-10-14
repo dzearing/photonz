@@ -99,7 +99,14 @@ struct TransformValuesPopover: View {
         return VStack(alignment: .leading, spacing: 2) {
             ForEach(Array(fields.enumerated()), id: \.element) { index, field in
                 if index > 0, Self.startsGroup(field) { separator }
-                TransformBarField(field: field, isLive: hold.live.contains(field))
+                if field == .width, fields.contains(.height) {
+                    sizeRows(hold)
+                } else if field == .height, fields.contains(.width) {
+                    // Drawn with W, so the link can join the two.
+                    EmptyView()
+                } else {
+                    TransformBarField(field: field, isLive: hold.live.contains(field))
+                }
             }
             separator
             Button("Reset") { editorState.resetTransformBar() }
@@ -117,6 +124,31 @@ struct TransformValuesPopover: View {
         .accessibilityElement(children: .contain)
         .accessibilityLabel("Transform values")
         .playtestField("Transform values")
+    }
+
+    /// W over H, with the link between them that keeps them in proportion
+    /// (`.va-link`, drawn between W and H in pages/video-animate.html). It
+    /// sits in the empty run between the names and the numbers, a bracket
+    /// from W to H with the chain at its middle, the way Photoshop joins a
+    /// width and a height stacked one over the other.
+    private func sizeRows(_ hold: TransformBarHold) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            TransformBarField(field: .width, isLive: hold.live.contains(.width))
+            TransformBarField(field: .height, isLive: hold.live.contains(.height))
+        }
+        .overlay(alignment: .leading) {
+            if editorState.showsTransformSizeLink {
+                // Past the name, and past the key diamond in front of it when
+                // either row wears one.
+                let keyed = editorState.transformBarKey(.width) != .dormant
+                    || editorState.transformBarKey(.height) != .dormant
+                TransformSizeLink(linked: editorState.transformSizeLinked,
+                                  rowHeight: VideoKit.Metrics.controlSmall) {
+                    editorState.toggleTransformSizeLink()
+                }
+                .padding(.leading, keyed ? 33 : 19)
+            }
+        }
     }
 
     /// Where a hairline goes: before the angle, the space values and Reset.
@@ -202,6 +234,77 @@ private struct TransformBarField: View {
         case .betweenKeys: "between keys"
         case .onKey: "on a key"
         }
+    }
+}
+
+/// The link between W and H: a bracket from one row to the other with the
+/// chain at its middle while they keep their proportion, the chain alone and
+/// faint once they do not. One click turns it over.
+private struct TransformSizeLink: View {
+    let linked: Bool
+    let rowHeight: CGFloat
+    let toggle: () -> Void
+    @State private var isHovering = false
+
+    /// What the link reads back to a walk.
+    static func word(_ linked: Bool) -> String { linked ? "linked" : "unlinked" }
+
+    var body: some View {
+        Button(action: toggle) {
+            ZStack {
+                if linked {
+                    bracket
+                        .stroke(.tertiary, style: StrokeStyle(lineWidth: 1, lineCap: .round))
+                }
+                Image(systemName: "link")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(linked || isHovering ? AnyShapeStyle(.secondary)
+                                                          : AnyShapeStyle(.quaternary))
+                    .frame(width: 14, height: 12)
+            }
+            .frame(width: 14)
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .kitHover("Transform Link") { isHovering = $0 }
+        .help(linked ? "Width and height stay in proportion" : "Keep width and height in proportion")
+        .accessibilityLabel("Link width and height")
+        .accessibilityValue(Self.word(linked))
+        .playtestControl("Transform Link", detail: "Transform values")
+        .overlay(alignment: .leading) {
+            Color.clear.frame(width: 2, height: 2)
+                .panelReadout(Self.word(linked))
+                .playtestField("Transform Link State")
+        }
+    }
+
+    private var bracket: some Shape {
+        LinkBracket(rowHeight: rowHeight, gap: 14)
+    }
+}
+
+/// From the middle of the W row to the middle of the H row, a short tick back
+/// toward each name, broken round the chain rather than running through it.
+private struct LinkBracket: Shape {
+    let rowHeight: CGFloat
+    let gap: CGFloat
+
+    func path(in rect: CGRect) -> Path {
+        let top = rect.minY + rowHeight / 2
+        let bottom = rect.maxY - rowHeight / 2
+        let x = rect.midX
+        let tick = rect.minX + 2
+        let gapTop = rect.midY - gap / 2
+        let gapBottom = rect.midY + gap / 2
+        var path = Path()
+        path.move(to: CGPoint(x: tick, y: top))
+        path.addLine(to: CGPoint(x: x, y: top))
+        if gapTop > top { path.addLine(to: CGPoint(x: x, y: gapTop)) }
+        path.move(to: CGPoint(x: x, y: max(gapBottom, top)))
+        path.addLine(to: CGPoint(x: x, y: bottom))
+        path.addLine(to: CGPoint(x: tick, y: bottom))
+        return path
     }
 }
 
