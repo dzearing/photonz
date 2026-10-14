@@ -1,0 +1,351 @@
+{
+  "out": "/tmp/photonz-playtest/bar-easing-sets-points-and-segments-walk",
+  "seed": "The timeline bar's Easing sets everything picked. At Next defaults with no flag changed, this walk keys a title's Scale at one, three and five seconds, opens its graph, gives the second segment Ease out, then picks the first segment and Shift-clicks the middle point, checks the bar reads Mixed, chooses Ease out back there, checks both segments took it, and undoes it in one step.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "300"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Segment Scale 2",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-graph",
+      "note": "Scale keyed 100% at 0:01, 200% at 0:03 and 300% at 0:05 on a title, its graph open: three points and two segments"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-graph"
+    },
+    {
+      "comment": "Give the second segment a curve of its own, from the bar, with it picked alone.",
+      "do": "windowClick",
+      "on": "Segment Scale 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Easing",
+      "choose": "Ease out"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out"
+    },
+    {
+      "comment": "Pick the first segment, then Shift-click the middle point: a segment and a point picked together.",
+      "do": "windowClick",
+      "on": "Segment Scale 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease in out"
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Scale 2",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Mixed"
+    },
+    {
+      "do": "describe",
+      "stage": "2-mixed",
+      "note": "THE FIRST TEST: the first segment and the middle point picked together; the middle point starts the second segment, which runs on Ease out while the first runs on Ease in out, so the bar's Easing reads Mixed"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-mixed"
+    },
+    {
+      "comment": "Choose one curve in the bar: everything picked takes it.",
+      "do": "panelMenu",
+      "menu": "Easing",
+      "choose": "Ease out back"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out back"
+    },
+    {
+      "do": "describe",
+      "stage": "3-both-eased",
+      "note": "THE SECOND TEST: Ease out back chosen in the bar set the picked segment and the segment the picked point starts, so the bar names one curve"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-both-eased"
+    },
+    {
+      "do": "windowClick",
+      "on": "Segment Scale 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out back"
+    },
+    {
+      "do": "windowClick",
+      "on": "Segment Scale 1"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out back"
+    },
+    {
+      "comment": "One Command-Z puts both back.",
+      "do": "shortcut",
+      "key": "z",
+      "modifiers": [
+        "command"
+      ],
+      "menuItem": "Undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease in out"
+    },
+    {
+      "do": "windowClick",
+      "on": "Segment Scale 2"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expect",
+      "menu": "Easing",
+      "reads": "Ease out"
+    },
+    {
+      "do": "describe",
+      "stage": "4-undone",
+      "note": "THE THIRD TEST: one Command-Z put the first segment back on Ease in out and the second back on Ease out: the bar's choice for a mixed pick was one undo step"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-undone"
+    }
+  ]
+}

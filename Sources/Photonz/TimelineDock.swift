@@ -253,10 +253,11 @@ struct TimelineDock: View {
 
     /// The right end of the bar: Easing (`#easeSel`), only while keys or
     /// segments are picked, because it is the curve THEY move through. For
-    /// keys, the same six eases a key's right-click offers; for segments
-    /// alone, the shared curve list a segment's right click offers (task
-    /// `the-value-graph-zooms-its-value-range-and-the-ti`), so each question
-    /// has one list of answers.
+    /// keys alone, the same six eases a key's right-click offers; once any
+    /// segment is picked, the shared curve list a segment's right click
+    /// offers (task `the-value-graph-zooms-its-value-range-and-the-ti`), set
+    /// for everything picked, points included (task
+    /// `the-timeline-bar-easing-sets-picked-segments-too`).
     /// The mock's playhead readout (`.kfread`) stood before it until the user
     /// turned it down on 2026-09-25: the time is in the transport, the value
     /// in the panel, and a bar of controls carries no sentence about state.
@@ -268,10 +269,10 @@ struct TimelineDock: View {
                     .tracking(0.9)
                     .foregroundStyle(VideoKit.Palette.faint)
                     .fixedSize()
-                if picked.refs.isEmpty {
-                    segmentEasingMenu(picked)
-                } else {
+                if picked.segments.isEmpty {
                     easingMenu
+                } else {
+                    segmentEasingMenu(picked)
                 }
             }
             .playtestField("Easing")
@@ -306,8 +307,9 @@ struct TimelineDock: View {
             .playtestControl("Easing", detail: "Timeline")
     }
 
-    /// Segments picked and no keys: the curve they share, Mixed where they
-    /// differ, and every one of them takes the curve chosen, as one undo step.
+    /// Segments picked, with or without points: the curve they share, Mixed
+    /// where they differ, and every one of them takes the curve chosen, each
+    /// picked point as the segment it starts, as one undo step.
     private func segmentEasingMenu(_ picked: KeySelection) -> some View {
         let current = editorState.pickedSegmentsCurve(layerID: picked.layerID)
         let saved = SavedCurveStore.shared.curves

@@ -78,6 +78,27 @@ extension PhotonzDocument {
         return true
     }
 
+    /// What a curve chosen for points and segments picked together acts on:
+    /// every picked segment, and for every picked point the segment it
+    /// starts, the way the mock's key carries the curve leaving it
+    /// (`video-animate.html`, Pick: the timeline bar's Easing "sets it for
+    /// everything picked"). The last key starts none, so it counts as the
+    /// segment arriving at it, and a choice never passes a point by; a value
+    /// keyed only once has no segment at all.
+    public func segmentsInHand(layerID: UUID, points: Set<KeyRef>, segments: Set<KeyRef>) -> Set<KeyRef> {
+        guard let layer = layer(id: layerID) else { return segments }
+        var inHand = segments
+        for (motion, indices) in picked(points, on: layer) {
+            let list = motion.keyframes
+            guard list.count > 1 else { continue }
+            for index in indices {
+                let start = index + 1 < list.count ? index : index - 1
+                inHand.insert(KeyRef(motionID: motion.id, clockMS: list[start].atMS))
+            }
+        }
+        return inHand
+    }
+
     /// The curve every picked segment runs on, where they agree; nil where
     /// they differ or none is a segment, so a menu ticks only what is true of
     /// every one.

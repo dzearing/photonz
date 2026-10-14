@@ -91,11 +91,23 @@ extension EditorState {
         perform { $0.curveStretches(layerID: layerID, refs, curve) }
     }
 
-    /// The curve every picked segment of a layer runs on, where they agree.
+    /// The curve every picked segment of a layer runs on, where they agree,
+    /// counting the points picked with them (`segmentsInPick`).
     func pickedSegmentsCurve(layerID: UUID) -> EasingCurve? {
-        let refs = pickedSegments(layerID: layerID)
+        let refs = segmentsInPick(layerID: layerID)
         guard !refs.isEmpty else { return nil }
         return document?.stretchesCurve(layerID: layerID, refs)
+    }
+
+    /// What the timeline bar's Easing and the Animate menu act on while
+    /// segments are picked: those segments, and each point picked with them
+    /// as the segment it starts, so a curve chosen there sets everything
+    /// picked (`video-animate.html`, Pick). Empty with no segment picked:
+    /// points alone keep a key's own list.
+    func segmentsInPick(layerID: UUID) -> Set<KeyRef> {
+        let segments = pickedSegments(layerID: layerID)
+        guard !segments.isEmpty, let document else { return segments }
+        return document.segmentsInHand(layerID: layerID, points: pickedKeys(layerID: layerID), segments: segments)
     }
 
     /// A right click on a segment: the shared curve list, ticked where every
@@ -179,23 +191,24 @@ extension EditorState {
 
     func drawCurveForPickedSegments() {
         guard let keySelection, hasPickedSegments else { return }
-        drawingStretchCurve = KeySelection(layerID: keySelection.layerID, refs: [], segments: keySelection.segments)
+        drawingStretchCurve = KeySelection(layerID: keySelection.layerID, refs: [],
+                                           segments: segmentsInPick(layerID: keySelection.layerID))
     }
 
     func copyPickedSegmentsEase() {
         if let curve = pickedSegmentsCurveInHand { copiedStretchCurve = curve }
     }
 
-    /// The timeline bar's Easing with only segments picked: every one takes
-    /// `curve`, as one undo step.
+    /// The timeline bar's Easing with segments picked: every one takes
+    /// `curve`, and so does each point picked with them, as one undo step.
     func curvePickedSegments(_ curve: EasingCurve) {
         guard let keySelection, hasPickedSegments else { return }
-        curveSegments(layerID: keySelection.layerID, keySelection.segments, curve)
+        curveSegments(layerID: keySelection.layerID, segmentsInPick(layerID: keySelection.layerID), curve)
     }
 
     func pastePickedSegmentsEase() {
         guard let keySelection, hasPickedSegments, let copied = copiedStretchCurve else { return }
-        curveSegments(layerID: keySelection.layerID, keySelection.segments, copied)
+        curveSegments(layerID: keySelection.layerID, segmentsInPick(layerID: keySelection.layerID), copied)
     }
 
     /// A curve drawn for the segments Draw a Curve was chosen for.

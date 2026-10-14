@@ -148,6 +148,57 @@ struct KeyGraphEditTests {
         #expect(doc.stretchesCurve(layerID: id, [keys[1].ref]) == nil)
     }
 
+    // MARK: - Points and segments picked together
+
+    // The timeline bar's Easing "names the curve and sets it for everything
+    // picked" (`video-animate.html`, Pick): a picked point counts as the
+    // segment it starts, the way the mock's key carries the curve leaving it.
+
+    @Test func aPickedPointCountsAsTheSegmentItStarts() throws {
+        var (doc, id) = Lanes.keyed()
+        let lane = try Self.scaleLane(doc, id)
+        let added = doc.addKeyOnCurve(layerID: id, motionID: lane.motionID, atDocumentMS: 4500)
+        _ = try #require(added)
+        let keys = try Self.scaleLane(doc, id).keys
+        #expect(doc.segmentsInHand(layerID: id, points: [keys[1].ref], segments: []) == [keys[1].ref])
+        #expect(doc.segmentsInHand(layerID: id, points: [keys[0].ref], segments: [keys[1].ref])
+            == [keys[0].ref, keys[1].ref])
+    }
+
+    @Test func aPickedLastPointCountsAsTheSegmentArrivingAtIt() throws {
+        let (doc, id) = Lanes.keyed()
+        let keys = try Self.scaleLane(doc, id).keys
+        #expect(doc.segmentsInHand(layerID: id, points: [keys[1].ref], segments: []) == [keys[0].ref])
+    }
+
+    @Test func aPointOnALoneKeyCountsAsNoSegment() throws {
+        var (doc, id) = KeyLanesTests.withTitle()
+        doc.startKeying(layerID: id, .motion(.scale), atDocumentTimeMS: 3000)
+        let only = try #require(Lanes.lane(doc, id, .scale)?.keys.first?.ref)
+        #expect(doc.segmentsInHand(layerID: id, points: [only], segments: []).isEmpty)
+    }
+
+    @Test func pointsAndSegmentsPickedTogetherTakeOneCurveInOneChange() throws {
+        var (doc, id) = Lanes.keyed()
+        let scaleLane = try Self.scaleLane(doc, id)
+        let added = doc.addKeyOnCurve(layerID: id, motionID: scaleLane.motionID, atDocumentMS: 4500)
+        _ = try #require(added)
+        let scale = try Self.scaleLane(doc, id).keys
+        let opacity = try #require(Lanes.lane(doc, id, .opacity)).keys
+        // A segment of Scale and the first point of Opacity, picked together.
+        let inHand = doc.segmentsInHand(layerID: id, points: [opacity[0].ref], segments: [scale[1].ref])
+        #expect(inHand == [scale[1].ref, opacity[0].ref])
+        let curvedRight = doc.curveStretches(layerID: id, [scale[1].ref], .easeIn)
+        #expect(curvedRight)
+        #expect(doc.stretchesCurve(layerID: id, inHand) == nil)
+        let curvedBoth = doc.curveStretches(layerID: id, inHand, .easeOutBack)
+        #expect(curvedBoth)
+        #expect(doc.stretchesCurve(layerID: id, inHand) == .easeOutBack)
+        #expect(doc.stretchesCurve(layerID: id, [opacity[0].ref]) == .easeOutBack)
+        // The segment nobody picked keeps the curve it had.
+        #expect(doc.stretchesCurve(layerID: id, [scale[0].ref]) != .easeOutBack)
+    }
+
     // MARK: - The graph names its segments
 
     @Test func theGraphDrawsEachSegmentOnItsOwn() throws {
