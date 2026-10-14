@@ -21362,3 +21362,12 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Fixed on the way: track row positions were not re-measured after a carry, so a second carry could aim at stale rows.
 - New walk `a-clip-s-sound-stays-under-its-video-walk`; 20 walks updated for the new names (the recording's sound row is "V1 sound", music moved from "Audio 2" to "Audio").
 - Open: `a-clip-s-picture-and-sound-bars-wear-one-tint-fa` (decision card on tinting the attached sound like its picture).
+
+## 2026-10-13 — Gap mode measures the space the pointer is in (go loop)
+
+- Reproduced on the user's capture: in the band between two heading lines, Gap read a few px sideways between letter edges of the next line (edges came from a +/-32 px window around the pointer).
+- `ElementBounds.gap` now lives in `PhotonzCore/GapReading.swift` and reads the luma field: four walks along the pointer's own row and column, text read as whole lines (`TextLineBounds`), a line counting only when it runs across the pointer; element pairs beat stroke pairs, then the shorter span wins. Signature is now `gap(at:luma:drawn:textGap:maxRadius:)`; the edge map is no longer used.
+- `TextLineBounds.detect` takes `tallestInGaps` and a known `background`, and only treats a solid row as an underline once the band spans more than one glyph.
+- Between shadowed cards Gap now reads edge to edge (settings capture: 20 pt, was 16 pt from where the shadow fades); `measurements-named-for-their-mode-walk` updated.
+- Specimen set: `Scripts/make-gap-specimens.swift` -> `Tests/PhotonzRenderTests/Fixtures/gap-*`; `GapSpecimenTests` holds every probe to 1 px at 1x, 2 px at 2x. New walk `gap-reads-line-to-line-walk`. Optimized cost: under 5 ms worst on a 3456x2234 capture.
+- Audit `queue/audits/2026-10-13-gap-line-to-line.json`.

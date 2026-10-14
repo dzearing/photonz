@@ -58,11 +58,18 @@ public enum TextLineBounds {
     /// `gap` is the clean stretch that ends a line, `minElement` the smallest
     /// width worth offering (the line may be half as tall as that: a caption
     /// is short), and `maxRadius` how far along the line the reading walks
-    /// from the pointer before giving up on each side.
+    /// from the pointer before giving up on each side. `tallestInGaps` is the
+    /// tallest line it will call text: Gap mode reads display headings bigger
+    /// than any label Size mode has to tell apart from a panel. `background`
+    /// skips the vote when the caller already knows what the page is: Gap
+    /// mode is standing on it, and inside a bold display heading the letters
+    /// can outvote the page.
     public static func detect(at point: CGPoint, in luma: LumaField,
                               gap: Double = defaultGap,
                               minElement: Double = ElementBounds.defaultMinElement,
-                              maxRadius: Double = ElementBounds.defaultMaxRadius) -> CGRect? {
+                              maxRadius: Double = ElementBounds.defaultMaxRadius,
+                              tallestInGaps: Double = maxHeightInGaps,
+                              background known: UInt8? = nil) -> CGRect? {
         guard !luma.isEmpty, gap >= 1, maxRadius > 0 else { return nil }
         let w = luma.width, h = luma.height
         let px = Int(point.x.rounded()), py = Int(point.y.rounded())
@@ -73,7 +80,7 @@ public enum TextLineBounds {
         // its letter.
         let slack = max(1, gapPx / 4)
         let verticalGap = max(2, gapPx / 8)
-        let maxHeight = max(gapPx, Int((maxHeightInGaps * gap).rounded()))
+        let maxHeight = max(gapPx, Int((tallestInGaps * gap).rounded()))
         let reach = max(1, Int(maxRadius.rounded()))
         let threshold = Int((inkFloor * 255).rounded())
 
@@ -81,26 +88,30 @@ public enum TextLineBounds {
             // 1. Background: the commonest brightness in a window wide enough
             // to hold more page than letters even under a display heading.
             // Every other pixel each way is plenty for a vote.
-            var histogram = [Int](repeating: 0, count: 256)
-            let bx0 = max(0, px - 6 * gapPx), bx1 = min(w - 1, px + 6 * gapPx)
-            let by0 = max(0, py - 3 * gapPx / 2), by1 = min(h - 1, py + 3 * gapPx / 2)
-            for y in stride(from: by0, through: by1, by: 2) {
-                let base = y * w
-                for x in stride(from: bx0, through: bx1, by: 2) { histogram[Int(s[base + x])] += 1 }
-            }
-            // Votes are pooled over a few levels either way: on a gradient
-            // (a button's fill, top to bottom) no single level is common, and
-            // the white of the letters on it would win outright.
-            var prefix = [Int](repeating: 0, count: 257)
-            for value in 0..<256 { prefix[value + 1] = prefix[value] + histogram[value] }
-            var background = 0, votes = -1
-            for value in 0..<256 {
-                let pooled = prefix[min(255, value + 3) + 1] - prefix[max(0, value - 3)]
-                if pooled > votes || (pooled == votes && histogram[value] > histogram[background]) {
-                    background = value
-                    votes = pooled
+            let background: Int = {
+                if let known { return Int(known) }
+                var histogram = [Int](repeating: 0, count: 256)
+                let bx0 = max(0, px - 6 * gapPx), bx1 = min(w - 1, px + 6 * gapPx)
+                let by0 = max(0, py - 3 * gapPx / 2), by1 = min(h - 1, py + 3 * gapPx / 2)
+                for y in stride(from: by0, through: by1, by: 2) {
+                    let base = y * w
+                    for x in stride(from: bx0, through: bx1, by: 2) { histogram[Int(s[base + x])] += 1 }
                 }
-            }
+                // Votes are pooled over a few levels either way: on a gradient
+                // (a button's fill, top to bottom) no single level is common, and
+                // the white of the letters on it would win outright.
+                var prefix = [Int](repeating: 0, count: 257)
+                for value in 0..<256 { prefix[value + 1] = prefix[value] + histogram[value] }
+                var background = 0, votes = -1
+                for value in 0..<256 {
+                    let pooled = prefix[min(255, value + 3) + 1] - prefix[max(0, value - 3)]
+                    if pooled > votes || (pooled == votes && histogram[value] > histogram[background]) {
+                        background = value
+                        votes = pooled
+                    }
+                }
+                return background
+            }()
             @inline(__always) func ink(_ x: Int, _ y: Int) -> Bool {
                 abs(Int(s[y * w + x]) - background) >= threshold
             }
@@ -136,9 +147,14 @@ public enum TextLineBounds {
                 }
                 return (any, longest)
             }
+            /// Whether the band holds more than one glyph: a clean column
+            /// somewhere across it. Until it does, a row solid from side to
+            /// side is the stroke of the one letter the band started on (a
+            /// bold heading's crossbar), not a rule under a line of them.
+            var spaced = false
             func isRule(_ row: (any: Bool, longest: Int)) -> Bool {
                 let width = right - left + 1
-                return width >= 2 * gapPx && Double(row.longest) >= ruleFraction * Double(width)
+                return spaced && width >= 2 * gapPx && Double(row.longest) >= ruleFraction * Double(width)
             }
 
             // Along the line, then up and down, until nothing changes: the
@@ -171,6 +187,7 @@ public enum TextLineBounds {
                         if clean >= gapPx { break }
                     }
                 }
+                spaced = spaced || (left...right).contains { !columnInked($0) }
                 clean = 0
                 var y = top
                 while y > 0 {

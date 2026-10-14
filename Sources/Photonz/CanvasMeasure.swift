@@ -625,8 +625,12 @@ extension CanvasNSView {
             // space between two rectangles you drew reads on a blank canvas and
             // the space between a drawn box and a button in the screenshot reads
             // across both. Whichever boundary is nearer wins on each side.
-            guard let gap = ElementBounds.gap(at: probe, in: edgeMap,
-                                              drawn: LayerElements.boxes(in: document)) else {
+            // A line of text ends at the same visible gap the alignment scan
+            // splits items on, so a heading reads as one line, not letters.
+            guard let gap = ElementBounds.gap(at: probe, luma: lumaField,
+                                              drawn: LayerElements.boxes(in: document),
+                                              textGap: AlignmentScan.visibleGap
+                                                  * max(1, document.pixelScale)) else {
                 hideMeasureHoverReadout()
                 return
             }

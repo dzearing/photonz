@@ -1,6 +1,6 @@
 {
  "out": "/tmp/photonz-playtest/measurements-named-for-their-mode-walk",
- "seed": "The user, 2026-10-13: when I measure with size the layer should be size, when I measure with gap it should be gap, and every caliper, whichever mode made it, should have exactly the same appearance options; it makes no sense that clicking a size caliper does not let me change its colour. At Next defaults, with no switch touched, one Gap, one Size and one Distance measurement are made on a real Retina settings screenshot. Each must land named for its mode with its reading (Gap 16, Size 124 x 30, Distance 124) and be listed in Measurements as Gap, Size and Distance. Then each is picked from the Layers list, the Size one as its whole group, and its Caliper colour is changed from the Appearance section's own colour well: every one of them must show that row on screen, and the caliper on the canvas must come out in the new colour. Last, all three are picked together and one colour sets them all.",
+ "seed": "The user, 2026-10-13: when I measure with size the layer should be size, when I measure with gap it should be gap, and every caliper, whichever mode made it, should have exactly the same appearance options; it makes no sense that clicking a size caliper does not let me change its colour. At Next defaults, with no switch touched, one Gap, one Size and one Distance measurement are made on a real Retina settings screenshot. Each must land named for its mode with its reading (Gap 20, Size 124 x 30, Distance 124) and be listed in Measurements as Gap, Size and Distance. Then each is picked from the Layers list, the Size one as its whole group, and its Caliper colour is changed from the Appearance section's own colour well: every one of them must show that row on screen, and the caliper on the canvas must come out in the new colour. Last, all three are picked together and one colour sets them all.",
  "setup": {
   "forget": [
    "all"
@@ -186,7 +186,7 @@
     "  Height",
     "  Width",
     "  Box",
-    "Gap 16",
+    "Gap 20",
     "Background"
    ]
   },
@@ -218,7 +218,7 @@
   {
    "do": "describe",
    "stage": "1-named",
-   "note": "THE FIRST CLAIM: each measurement is a layer named for the mode that made it, with its reading: Gap 16, Size 124 x 30, Distance 124. Measurements lists them as Gap, Size and Distance. The Distance used to be a layer called Measure and a row called Width"
+   "note": "THE FIRST CLAIM: each measurement is a layer named for the mode that made it, with its reading: Gap 20, Size 124 x 30, Distance 124. Measurements lists them as Gap, Size and Distance. The Distance used to be a layer called Measure and a row called Width"
   },
   {
    "do": "snapshot",
@@ -320,7 +320,7 @@
   },
   {
    "do": "selectRow",
-   "row": "Gap 16"
+   "row": "Gap 20"
   },
   {
    "do": "wait",
@@ -433,7 +433,7 @@
   },
   {
    "do": "selectRow",
-   "row": "Gap 16"
+   "row": "Gap 20"
   },
   {
    "do": "selectRow",

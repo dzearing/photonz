@@ -1,0 +1,27 @@
+{
+  "feature": "Gap mode measures the space the pointer is in",
+  "epic": "measure-redline",
+  "summary": "Pointing into the band between two lines of text in Gap mode now measures line to line, straight through the pointer, wherever along the band you point. Gap only pairs edges that stand level with the pointer, so a letter off to the side can no longer win.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open any screenshot with stacked text, such as a capture of the Photonz website hero.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot with two lines of large text, press I and set Mode to Gap in the panel." },
+    { "do": "Point into the dark band between the two lines, near the upper one and between two of its letters.", "shot": "2026-10-13-gap-line-to-line-gap-between-heading-lines.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Slide the pointer along the band, and down close to the lower line. The number should not change.", "shot": "2026-10-13-gap-line-to-line-gap-near-the-lower-line.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Point between two lines of body copy and click to drop the gap.", "shot": "2026-10-13-gap-line-to-line-gap-between-body-lines.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Point between two buttons side by side, then between two stacked cards." },
+    { "do": "Point between an icon and its label, and between two chips in a row." }
+  ],
+  "evaluate": [
+    "Between two lines, does the gap run from the lowest ink of the upper line (descenders included) to the highest ink of the lower one, the number you would quote in a spec?",
+    "Between two cards with a soft shadow, is edge to edge (the shadow counted as space) the number you want? It now reads 20 where it used to read 16 on the settings capture.",
+    "Is it right that nothing reads when the pointer is beyond the end of a short line, with nothing below it level with the pointer?",
+    "Anywhere you used to get a small sideways reading in empty space, do you now get the gap you meant?"
+  ],
+  "rough": [
+    "No mock covers how Gap picks its edges: the caliper and its number look exactly as before, only what they measure changed.",
+    "Between two rounded pills, pointing near their top or bottom measures the curve at that height, which is wider than the box to box gap a spec quotes. Pointing at their middle row gives the spec number.",
+    "A line of text only counts when it runs across the pointer, so pointing past the end of a short last line skips it and measures to whatever lies beyond, or shows nothing.",
+    "A heading split by a word space wider than the text gap (8 pt) reads as two lines. Pointing into that space under the heading misses it."
+  ]
+}

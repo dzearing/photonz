@@ -458,7 +458,7 @@ struct MeasureCalloutClearanceTests {
         var gaps: [GapMeasurement] = []
         for x in stride(from: CGFloat(20), through: 1420, by: 40) {
             for y in stride(from: CGFloat(20), through: 940, by: 40) {
-                guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: y), in: analysis.edges),
+                guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: y), luma: analysis.luma),
                       gap.length >= 4 else { continue }
                 let key = "\(gap.axis)|\(gap.start)|\(gap.end)"
                 if seen.insert(key).inserted { gaps.append(gap) }
@@ -471,7 +471,7 @@ struct MeasureCalloutClearanceTests {
     /// Gap mode reads it.
     private var buttonGap: GapMeasurement? {
         // Reset ends at x 208 and Save Changes starts at 232.
-        ElementBounds.gap(at: CGPoint(x: 220, y: 786), in: Self.analysis.edges)
+        ElementBounds.gap(at: CGPoint(x: 220, y: 786), luma: Self.analysis.luma)
     }
 
     @Test func aCaliperAcrossTheGapBetweenTwoButtonsKnowsBothButtons() {
@@ -510,7 +510,7 @@ struct MeasureCalloutClearanceTests {
     /// reads it at `x`: the bottom of the Play sound row to the top of the row
     /// beneath it.
     private func cardGap(atX x: CGFloat) -> GapMeasurement? {
-        guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: 432), in: Self.analysis.edges),
+        guard let gap = ElementBounds.gap(at: CGPoint(x: x, y: 432), luma: Self.analysis.luma),
               gap.axis == .vertical, gap.length > 20, gap.length < 60 else { return nil }
         return gap
     }

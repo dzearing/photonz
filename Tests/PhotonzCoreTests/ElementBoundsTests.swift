@@ -359,51 +359,17 @@ struct ElementBoundsTests {
     }
 }
 
-/// Gap mode measures WHITESPACE, so it reads to the clean background hugging
-/// each element and needs only the one axis it measures. Its scenes are built
-/// straight from gradient responses: what is under test is the edge map's
-/// landings, not how far a boundary runs.
-private struct GapScene {
-    var w: Int, h: Int
-    var gx: [Double]
-    var gy: [Double]
-
-    init(w: Int, h: Int) {
-        self.w = w
-        self.h = h
-        gx = [Double](repeating: 0, count: w * h)
-        gy = [Double](repeating: 0, count: w * h)
-    }
-
-    mutating func addHorizontalEdge(row: Int, x0: Int, x1: Int, magnitude: Double = 2.0) {
-        for x in max(0, x0)...min(w - 1, x1) { gy[row * w + x] = magnitude }
-    }
-
-    mutating func addVerticalEdge(col: Int, y0: Int, y1: Int, magnitude: Double = 2.0) {
-        for y in max(0, y0)...min(h - 1, y1) { gx[y * w + col] = magnitude }
-    }
-
-    mutating func addBox(_ r: CGRect, magnitude: Double = 2.0) {
-        addHorizontalEdge(row: Int(r.minY), x0: Int(r.minX), x1: Int(r.maxX), magnitude: magnitude)
-        addHorizontalEdge(row: Int(r.maxY), x0: Int(r.minX), x1: Int(r.maxX), magnitude: magnitude)
-        addVerticalEdge(col: Int(r.minX), y0: Int(r.minY), y1: Int(r.maxY), magnitude: magnitude)
-        addVerticalEdge(col: Int(r.maxX), y0: Int(r.minY), y1: Int(r.maxY), magnitude: magnitude)
-    }
-
-    var map: EdgeMap { EdgeMap(width: w, height: h, gxMagnitude: gx, gyMagnitude: gy) }
-}
-
 @Suite("ElementBounds gap mode")
 struct ElementGapTests {
 
     @Test func gapReadsTheShorterSpanThroughTheClick() {
         // Two buttons side by side inside a tall card: clicking between them
         // must measure the 40 px horizontal gap, not the card's height.
-        var s = GapScene(w: 600, h: 500)
-        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
-        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
-        s.addBox(CGRect(x: 260, y: 150, width: 120, height: 60))
-        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map)
+        var s = PaintedCapture(w: 600, h: 500)
+        s.box(CGRect(x: 20, y: 20, width: 560, height: 440), border: 120)
+        s.box(CGRect(x: 100, y: 150, width: 120, height: 60), border: 120)
+        s.box(CGRect(x: 260, y: 150, width: 120, height: 60), border: 120)
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), luma: s.luma)
         #expect(gap?.axis == .horizontal)
         #expect(gap?.length == 40)
         #expect(gap?.start == CGPoint(x: 220, y: 180))
@@ -411,11 +377,11 @@ struct ElementGapTests {
     }
 
     @Test func gapReadsAVerticalStackToo() {
-        var s = GapScene(w: 600, h: 500)
-        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
-        s.addBox(CGRect(x: 100, y: 100, width: 400, height: 60))
-        s.addBox(CGRect(x: 100, y: 184, width: 400, height: 60))
-        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), in: s.map)
+        var s = PaintedCapture(w: 600, h: 500)
+        s.box(CGRect(x: 20, y: 20, width: 560, height: 440), border: 120)
+        s.box(CGRect(x: 100, y: 100, width: 400, height: 60), border: 120)
+        s.box(CGRect(x: 100, y: 184, width: 400, height: 60), border: 120)
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), luma: s.luma)
         #expect(gap?.axis == .vertical)
         #expect(gap?.length == 24)
         #expect(gap?.start == CGPoint(x: 300, y: 160))
@@ -423,8 +389,8 @@ struct ElementGapTests {
     }
 
     @Test func gapOnFlatBackgroundIsAQuietMiss() {
-        let s = GapScene(w: 400, h: 300)
-        #expect(ElementBounds.gap(at: CGPoint(x: 200, y: 150), in: s.map) == nil)
+        let s = PaintedCapture(w: 400, h: 300)
+        #expect(ElementBounds.gap(at: CGPoint(x: 200, y: 150), luma: s.luma) == nil)
     }
 
     /// A box the app DREW is not in the picture at all, so a gap that only ever
@@ -434,7 +400,7 @@ struct ElementGapTests {
     @Test func gapBetweenTwoDrawnBoxesNeedsNoPictureAtAll() {
         let left = CGRect(x: 200, y: 240, width: 180, height: 180)
         let right = CGRect(x: 460, y: 240, width: 180, height: 180)
-        let gap = ElementBounds.gap(at: CGPoint(x: 420, y: 330), in: .empty,
+        let gap = ElementBounds.gap(at: CGPoint(x: 420, y: 330), luma: .empty,
                                     drawn: [left, right])
         #expect(gap?.axis == .horizontal)
         #expect(gap?.length == 80)
@@ -445,7 +411,7 @@ struct ElementGapTests {
     @Test func gapReadsADrawnStackTheSameWay() {
         let top = CGRect(x: 100, y: 100, width: 400, height: 60)
         let bottom = CGRect(x: 100, y: 184, width: 400, height: 60)
-        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), in: .empty,
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 172), luma: .empty,
                                     drawn: [top, bottom])
         #expect(gap?.axis == .vertical)
         #expect(gap?.length == 24)
@@ -458,17 +424,17 @@ struct ElementGapTests {
         // between them, so neither box has an edge running through it.
         let left = CGRect(x: 200, y: 40, width: 180, height: 100)
         let right = CGRect(x: 460, y: 40, width: 180, height: 100)
-        #expect(ElementBounds.gap(at: CGPoint(x: 420, y: 500), in: .empty,
+        #expect(ElementBounds.gap(at: CGPoint(x: 420, y: 500), luma: .empty,
                                   drawn: [left, right]) == nil)
     }
 
     @Test func aDrawnBoxStandsInForAnElementTheresNoPictureOf() {
         // The same two-buttons-in-a-card scene as above, except the right-hand
         // button was drawn rather than photographed: the reading is identical.
-        var s = GapScene(w: 600, h: 500)
-        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
-        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
-        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map,
+        var s = PaintedCapture(w: 600, h: 500)
+        s.box(CGRect(x: 20, y: 20, width: 560, height: 440), border: 120)
+        s.box(CGRect(x: 100, y: 150, width: 120, height: 60), border: 120)
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), luma: s.luma,
                                     drawn: [CGRect(x: 260, y: 150, width: 120, height: 60)])
         #expect(gap?.axis == .horizontal)
         #expect(gap?.length == 40)
@@ -479,11 +445,11 @@ struct ElementGapTests {
     @Test func aHighlightBoxDrawnAroundThingsDoesNotSwallowTheGapInsideIt() {
         // Whichever boundary is NEARER wins, so a box drawn around a whole row
         // never takes the place of the two buttons inside it.
-        var s = GapScene(w: 600, h: 500)
-        s.addBox(CGRect(x: 20, y: 20, width: 560, height: 440))
-        s.addBox(CGRect(x: 100, y: 150, width: 120, height: 60))
-        s.addBox(CGRect(x: 260, y: 150, width: 120, height: 60))
-        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), in: s.map,
+        var s = PaintedCapture(w: 600, h: 500)
+        s.box(CGRect(x: 20, y: 20, width: 560, height: 440), border: 120)
+        s.box(CGRect(x: 100, y: 150, width: 120, height: 60), border: 120)
+        s.box(CGRect(x: 260, y: 150, width: 120, height: 60), border: 120)
+        let gap = ElementBounds.gap(at: CGPoint(x: 240, y: 180), luma: s.luma,
                                     drawn: [CGRect(x: 60, y: 100, width: 460, height: 200)])
         #expect(gap?.axis == .horizontal)
         #expect(gap?.length == 40)
@@ -491,14 +457,56 @@ struct ElementGapTests {
         #expect(gap?.end == CGPoint(x: 260, y: 180))
     }
 
+    /// The budget is 30 ms per mouse move on the biggest capture this is
+    /// pointed at, a 3456 x 2234 retina screen, in the shipping (optimized)
+    /// build: measured on 2026-10-13 at 4.7 ms worst and 1.8 ms typical over
+    /// eighty pointer spots on this very scene, and under 1 ms on the user's own
+    /// capture of a display heading. Tests build unoptimized, so what is pinned
+    /// here is the cost against `CPUYardstick`, the way the pick's budget is.
+    /// The scene is the worst case for the walks: twelve lines of heavy
+    /// letters, every reading inside a band between two of them.
+    @Test func aGapReadingStaysInsideTheMouseMoveBudget() {
+        let w = 3456, h = 2234
+        var pixels = [UInt8](repeating: 18, count: w * h)
+        for line in 0..<12 {
+            let top = 40 + line * 180
+            for glyph in 0..<120 {
+                let left = 30 + glyph * 28
+                for row in top..<min(h, top + 110) {
+                    for col in left..<min(w, left + 18) { pixels[row * w + col] = 240 }
+                }
+            }
+        }
+        let luma = LumaField(width: w, height: h, samples: pixels)
+        var i = 0
+        let ratio = costRatio(of: "gap", rounds: 12, called: "ruler's") {
+            let point = CGPoint(x: 200 + (i * 283) % 3000, y: 160 + (i * 7) % 50 + (i % 11) * 180)
+            let gap = ElementBounds.gap(at: point, luma: luma, textGap: 16)
+            #expect(gap?.axis == .vertical && gap?.length == 70, "\(point): \(String(describing: gap))")
+            i += 1
+        } to: {
+            CPUYardstick.round()
+        }
+        let perCallMS = ratio * CPUYardstick.baselineMS
+        // Reads about 225 ms unoptimized alone (fifty times the ruler) and
+        // 365 ms inside a full suite (eighty times: these walks are memory
+        // bound and the ruler is not, so load moves them apart). The optimized
+        // build is some fifty times quicker again. A reading that costs well
+        // over twice what it does under load has regressed.
+        if PerfGate.isOn {
+            #expect(perCallMS < 900,
+                    "a gap reading cost \(perCallMS) ms of the calibration machine's time, \(ratio) times the ruler")
+        }
+    }
+
     @Test func gapNeedsOnlyTheAxisItMeasures() {
         // Two stacked cards with nothing to their left or right: the space
         // between them has a top and a bottom and no sides at all. Refusing to
         // measure it would fail the most ordinary gap there is.
-        var s = GapScene(w: 600, h: 500)
-        s.addHorizontalEdge(row: 200, x0: 0, x1: 599)
-        s.addHorizontalEdge(row: 240, x0: 0, x1: 599)
-        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 220), in: s.map)
+        var s = PaintedCapture(w: 600, h: 500)
+        s.fill(CGRect(x: 0, y: 100, width: 600, height: 100), 200)
+        s.fill(CGRect(x: 0, y: 240, width: 600, height: 100), 200)
+        let gap = ElementBounds.gap(at: CGPoint(x: 300, y: 220), luma: s.luma)
         #expect(gap?.axis == .vertical)
         #expect(gap?.length == 40)
     }
