@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-13T09:49:41.455Z",
-  "updated": "2026-10-13T12:55:23.765Z",
+  "updated": "2026-10-14T12:18:02.983Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-13 by the runner on size-mode-measures-real-buttons-and-objects-not, four full runs of `Scripts/test.sh` on a quiet machine (no process over 50% CPU), code unrelated to these tests: run 1 failed 3 issues; run 2 failed `TitleSetFramesTests.swift:214` (median 17.72 ms vs < 16) and `GrainBandingExportTests.swift:106` ((grainy * 3 → 93) <= (plain * 2 → 88)); run 3 failed `VideoCutExportTests.swift:69` (.readerGaveUp(\"no picture came out of the recording for 30 seconds\")); run 4 passed all 12871. `Scripts/test.sh --filter \"VideoCutExportTests|TitleSetFramesTests|GrainBandingExportTests\"` passed 10/10 alone each time. The title-frame one is a wall-clock budget, not a ratio against a ruler like the PerfClock/CPUYardstick checks.",
@@ -38,6 +38,14 @@
     {
       "t": "2026-10-13T12:55:23.764Z",
       "note": "seq 4040 -> 10"
+    },
+    {
+      "t": "2026-10-13T15:06:23.897Z",
+      "note": "Seen again 2026-10-13 by the runner on measurements-are-named-for-their-mode-and-every (load average 16-20 from other sessions): full run 1 failed Space3DPerfTests:118 (median 25.9 ms), TitleSetFramesTests:214 (17.6 ms), TextDepthPerspectiveTests:170 (24.4 ms), DepthTransitionRenderTests:138 (49.6 ms), TextRevealRenderTests:220 (21-43 ms); full run 2 failed only GrainBandingExportTests:106 (93 <= 88). Each passed alone: Space3DPerf+TextDepthPerspective 11.6 ms with the change and 11.4 ms without it; GrainBandingExport 1/1. So the wall-clock budgets also trip under load from OTHER sessions, not just the suite's own parallelism."
+    },
+    {
+      "t": "2026-10-14T12:18:02.982Z",
+      "note": "seq 10 -> 10"
     }
   ]
 }

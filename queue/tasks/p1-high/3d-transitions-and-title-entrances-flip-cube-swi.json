@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:51:59.504Z",
-  "updated": "2026-10-12T00:33:54.033Z",
+  "updated": "2026-10-13T14:02:10.764Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"I'm curious how difficult it would be to add 3d manipulation for text, objects, etc. Allowing us to create 3d animations and transitions which feel very native, rather than only focusing on 2d orientation of transitions\" then, after the 2.5D vs true 3D answer: \"let's try 2.5d then and maybe do that before title updates, so we can use it for the title updates\". Scope is 2.5D: flat layers (text, pictures, shapes, groups, video clips) rotating about X and Y and moving in depth under a perspective camera, like Keynote and Apple Motion. NOT extruded 3D text, lighting, materials or 3D models. Four tasks in order: 2.5D design (mocks + card), 2.5D model and renderer, 2.5D controls on the canvas and in the panel, 3D transitions and title entrances. The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) are sequenced after these and should use the 3D moves. This is step 4 of 4.",
@@ -59,6 +59,10 @@
     {
       "t": "2026-10-12T00:33:54.031Z",
       "note": "Six 3D transitions (Flip, Cube, Swing, Doorway, Revolve, Push in depth) with Direction and Motion blur, and four depth title entrances (Swing In, Flip Up, Fly In From Depth, Tilt Settle) with outs, whole or by line/word/letter; commit 699f1ef4. Verified: core and render tests (midpoint >= 20 degrees, 100 ms frames differ, canvas = export), 1080p perf 5-6 ms median, three new walks green at Next defaults, reel + contact sheet + numbers in queue/audits with a decision card; split test run green (full run hit the known HEIF/Vision hang)."
+    },
+    {
+      "t": "2026-10-13T14:02:10.763Z",
+      "note": "decision \"Do the 3D transitions and title entrances in the reel look right?\" resolved: Keep all six transitions and four entrances as filmed"
     }
   ],
   "started": "2026-10-11T23:06:19.603Z",

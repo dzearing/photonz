@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-12T00:17:02.520Z",
-  "updated": "2026-10-12T01:30:05.480Z",
+  "updated": "2026-10-13T14:02:08.532Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11), looking at the 2.5D mock: \"that has no perspective, those are just 2d animations\".\n\nChecked in intake: the app's clip transitions DO render true perspective (queue/audits/2026-10-11-depth-reel-contact.png: Flip, Cube, Doorway, Revolve, Push in Depth are trapezoids; numbers in 2026-10-11-depth-reel-numbers.json). The text depth entrances in the same reel look like italic slants: PhotonzRender/TextRevealRasterizer.swift:328 places each piece with pose.turn3D(em:).affine(pivot:), a 2D affine approximation that cannot foreshorten. The mock (docs/design/mocks/pages/video-depth.html) uses real CSS 3D (perspective 900 to 1100 px on .dp-stage, direct children with matrix3d), verified structurally in Chrome; its cube reads 3D but the card flip only keystones slightly because the camera is far relative to the small card. The user likely viewed it in the Ghoztty viewer pane (WebKit). The title rework tasks (title-backgrounds-that-are-alive-auroras-energy, title-text-visibly-comes-in-and-every-built-in-t) depend on these entrances looking 3D, so this runs before them.",
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-12T01:30:05.478Z",
       "note": "Each turning word or letter is seen through its own close lens (TextRevealCompositor.lens), can draw past its text box, and the depth entrances are half turned at half time (Flip Up from 90, Tilt Settle from 60). Midpoint near:far 1.32 to 1.57 by word and letter (was 1.04, with italic lean). Mock video-depth.html fixed for WebKit (rounded clip-path, per-word perspective, 400 px card camera), checked in a real WebKit window and Chrome. Reel + numbers + decision card; 1080p letter flip with blur 7.9 ms median; tests green split by target, title-words-turn-in-depth-walk green at defaults. Commit f874fc50."
+    },
+    {
+      "t": "2026-10-13T14:02:08.531Z",
+      "note": "decision \"Do words that swing, flip or fly in now look like they turn in space?\" resolved: Keep this strength"
     }
   ],
   "started": "2026-10-12T00:46:07.726Z",

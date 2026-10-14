@@ -1,0 +1,30 @@
+{
+  "id": "find-out-whether-a-key-segment-s-right-click-cur",
+  "title": "Find out whether a key segment's right-click curve lands on the segment right-clicked before",
+  "goal": "On a sound's volume line, choosing a curve from a second segment's right-click menu once bent the first segment instead, because the menu kept the earlier menu's actions. The value graph and key lanes build their segment menus the same way, so check whether picking Ease out on one segment and then Hold on another bends the wrong one there too.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T20:55:27.757Z",
+  "updated": "2026-10-14T12:18:03.290Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen and fixed on the volume line 2026-10-13 (task an-audio-clip-answers-right-click-and-its-volume). Debug log from a-sound-s-volume-line-picks-and-shapes-walk before the fix: the second right-click built rows for segment(1) twice (lineMenuRows ms=4022 hit=segment(1), pick {0} then {3000}), then the chosen Hold ran `curve [0] steps(1)`, i.e. a closure from the first right-click's build (starts {0}). The walk failed: curves [Hold, Linear, ...] not [Ease out, Hold, ...]. Fix there: EditorState+SoundLine soundSegmentsForMenu reads soundLinePick at run time. Suspect the same in EditorState+KeyGraph.segmentMenuRows (captures refs) and keyMenuRows; NOT reproduced on keys (value-graph walk needs the front, which this Mac would not give the probe).",
+  "acceptance": [
+    "A walk right-clicks one segment of a value graph and chooses a curve, then right-clicks a different segment and chooses another, and each segment carries its own choice",
+    "If it reproduces, the segment and key menus read what they act on from the pick when a row runs, as the volume line now does"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T20:55:27.759Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-14T12:18:03.289Z",
+      "note": "seq 4030 -> 60"
+    }
+  ]
+}

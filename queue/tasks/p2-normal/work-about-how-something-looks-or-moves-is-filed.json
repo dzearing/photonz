@@ -4,12 +4,12 @@
   "goal": "Yesterday seven title tasks closed done on rule checks while their own audit pictures showed flat backgrounds and headlines already fully on screen at the start, and the user called the result boring this morning. The rule that would have caught it (a measured visual bar plus a reel for the user) lives only in the review window's memory; write it where the manager, the runners and the intake window read it before filing or closing visual work. This serves the video focus: titles, transitions and motion are all looks.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 110,
+  "seq": 140,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:50:19.078Z",
-  "updated": "2026-10-13T12:55:24.383Z",
+  "updated": "2026-10-14T12:18:03.854Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in', show Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass with the whole headline already visible, nearly identical to 'hold'. The done tasks a-set-of-titles-that-look-designed, title-backgrounds-move-gradients-grain-and-the-r and title-text-comes-in-by-line-word-or-letter had checklists of rules and photographs 'for the user to judge' but no measured bar. The user's rework is title-backgrounds-that-are-alive-auroras-energy and title-text-visibly-comes-in-and-every-built-in-t, which already carry the kind of bar this task asks to make standard. grep for 'visual bar' or 'weak version' in queue/bin/runner-prompt.md, queue/bin/manager-prompt.md and .claude/skills/intake/SKILL.md finds nothing today. Companion scrub: the-rule-for-picking-a-key-is-written-where-runn (same shape: a user rule that lives only in answers). Filed by the 2026-10-11 digest design review.",
@@ -43,6 +43,10 @@
     {
       "t": "2026-10-13T12:55:24.382Z",
       "note": "seq 90 -> 110"
+    },
+    {
+      "t": "2026-10-14T12:18:03.853Z",
+      "note": "seq 110 -> 140"
     }
   ]
 }

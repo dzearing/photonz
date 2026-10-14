@@ -4,12 +4,12 @@
   "goal": "With any layer picked, double clicking a title tile in the Library inserts nothing: the first click lets go of the layer, the panel drops that layer's sections, the shelf jumps up out from under the pointer, and the second click lands on something else. A double click on a tile should insert the title whatever was picked before.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 30,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T16:36:13.855Z",
-  "updated": "2026-10-13T12:55:23.889Z",
+  "updated": "2026-10-14T12:18:03.229Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-12 by the runner of editing-a-title-never-starts-playback-and-every. Since that task, Escape on a title's words keeps the words picked inside the title, so title-presets-library-shelf-walk reached its fifth test (press \"Keynote Clean\" count 2, step 55) with a headline picked and failed at step 59: '2 clips are called \"Title Page\", and the walk expected 3'. Debug copy of the walk with describe before/after the press: before, selected = the headline, dockSections Text, Arrange, Appearance, Effects, Properties, Title, Part, Reveal, Layout, 3D, Time, Captions, Transitions, Library 2737-3023; the press 'scrolled 2373pt to reach it'; after, selected nil and dockSections Time -492..-327, Captions, Transitions, Library 343-629, Title Page 629-739, and no third Title Page. So selectLibraryItem on the first click clears the layer pick, the layer sections above the Library vanish, the Library moves ~2400pt, and the second click misses the tile. The walk now presses Escape twice before the double click to restore the nothing-picked dock it was written for (comment in the walk names this task's bug). Likely fix: keep the dock's scroll anchored on the tile when picking a library item collapses the sections above it, or insert on the tile's own double-click recognition regardless of re-layout (LibraryTitleTile.insert).",
@@ -26,6 +26,10 @@
     {
       "t": "2026-10-13T12:55:23.888Z",
       "note": "seq 3990 -> 30"
+    },
+    {
+      "t": "2026-10-14T12:18:03.228Z",
+      "note": "seq 30 -> 50"
     }
   ],
   "walks": [

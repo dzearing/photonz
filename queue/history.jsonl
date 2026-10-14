@@ -11443,3 +11443,241 @@
 {"t":"2026-10-13T12:56:25.423Z","ev":"task_note","id":"the-3d-rotation-handles-are-on-a-picked-layer-ag"}
 {"t":"2026-10-13T12:56:25.453Z","ev":"triage","summary":"open 57 -> 56 (p1 15 -> 14: 8 pending/7 blocked -> 7/7; p2 40 -> 40: 19/21; p3 2). Merged 1: sound level-line right-click folded into the user audio-clip task. Moved 1: transform W/H link p1 -> p2 (loop follow-up, retargeted from the removed bar to the Info popover). Retagged 2 off design-system (next) onto now epics. Groomed 6: the user click-picks rule into the three dot and line tasks plus design-rule and video-audio doc rewrites; key overlay checklist no longer points at the rejected bar. Resequenced p1 10-140, p2 10-400 with the flaky full test run first. Guard reset 0, leftovers 0, spot-check: no new loop-filed p1 bug."}
 {"t":"2026-10-13T12:58:13.734Z","ev":"digest","file":"2026-10-13.md"}
+{"t":"2026-10-13T12:58:34.423Z","ev":"task_started","id":"a-size-measurement-is-one-group-a-faint-red-box","title":"A Size measurement is one group: a faint red box over the area plus its width and height","priority":"p1-high"}
+{"t":"2026-10-13T13:40:18.891Z","ev":"task_walks","id":"a-size-measurement-is-one-group-a-faint-red-box","walks":["a-size-measurement-is-one-group-walk"]}
+{"t":"2026-10-13T13:40:54.184Z","ev":"task_note","id":"a-size-measurement-is-one-group-a-faint-red-box"}
+{"t":"2026-10-13T13:40:54.246Z","ev":"task_note","id":"a-size-measurement-is-one-group-a-faint-red-box"}
+{"t":"2026-10-13T13:40:54.304Z","ev":"task_note","id":"a-size-measurement-is-one-group-a-faint-red-box"}
+{"t":"2026-10-13T13:40:54.363Z","ev":"task_note","id":"a-size-measurement-is-one-group-a-faint-red-box"}
+{"t":"2026-10-13T13:41:12.486Z","ev":"task_done","id":"a-size-measurement-is-one-group-a-faint-red-box","from":"in_progress","note":"Size mode commits one group 'Size 274 × 62' (Box at 10% in Size ink over the measured area + Width + Height): moves/hides/undoes/deletes as one, opens in Layers as Box/Width/Height, one Size row in Measurements, spec list unchanged, box colour/opacity remembered for the next measurement. Core MeasureSizeGroup + tests (12914 pass); walk a-size-measurement-is-one-group-walk green at Next defaults; audit queue/audits/2026-10-13-size-measurement-group.json."}
+{"t":"2026-10-13T13:50:14.845Z","ev":"slice_pass","walks":28,"passed":28,"failed":0,"seconds":506,"of":906,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T13:50:15.003Z","ev":"task_started","id":"measurements-are-named-for-their-mode-and-every","title":"Measurements are named for their mode, and every caliper has the same appearance controls","priority":"p1-high"}
+{"t":"2026-10-13T13:54:53.910Z","ev":"task_note","id":"measurements-are-named-for-their-mode-and-every"}
+{"t":"2026-10-13T13:54:53.980Z","ev":"task_note","id":"measurements-are-named-for-their-mode-and-every"}
+{"t":"2026-10-13T13:55:47.705Z","ev":"task_created","id":"every-measurement-shares-one-remembered-look-blu","priority":"p1-high","title":"Every measurement shares one remembered look, blue by default, and any change to a caliper becomes the new default"}
+{"t":"2026-10-13T13:55:47.796Z","ev":"task_resequenced","id":"every-measurement-shares-one-remembered-look-blu","from":3960,"to":2}
+{"t":"2026-10-13T13:58:24.872Z","ev":"task_created","id":"gap-mode-measures-the-space-the-pointer-is-actua","priority":"p1-high","title":"Gap mode measures the space the pointer is actually in, between the nearest distinct things around it"}
+{"t":"2026-10-13T13:58:24.978Z","ev":"task_resequenced","id":"gap-mode-measures-the-space-the-pointer-is-actua","from":3960,"to":3}
+{"t":"2026-10-13T14:00:28.279Z","ev":"decision_resolved","id":"the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit","taskId":"the-right-panel-shows-only-what-the-picked-thing","choice":"b"}
+{"t":"2026-10-13T14:00:28.314Z","ev":"task_unblocked","id":"the-right-panel-shows-only-what-the-picked-thing","decision":"the-right-panel-shows-only-what-the-picked-thing-where-do-layers-and-library-sit"}
+{"t":"2026-10-13T14:00:55.319Z","ev":"decision_resolved","id":"a-layer-s-track-shows-only-what-is-animated-and-when-you-change-something-on-a-l","taskId":"a-layer-s-track-shows-only-what-is-animated-and","choice":"a"}
+{"t":"2026-10-13T14:00:55.355Z","ev":"task_unblocked","id":"a-layer-s-track-shows-only-what-is-animated-and","decision":"a-layer-s-track-shows-only-what-is-animated-and-when-you-change-something-on-a-l"}
+{"t":"2026-10-13T14:01:37.732Z","ev":"decision_resolved","id":"decide-whether-a-picked-recording-at-its-own-siz-when-you-pick-a-recording-that-f","taskId":"decide-whether-a-picked-recording-at-its-own-siz","choice":"a"}
+{"t":"2026-10-13T14:01:37.765Z","ev":"task_unblocked","id":"decide-whether-a-picked-recording-at-its-own-siz","decision":"decide-whether-a-picked-recording-at-its-own-siz-when-you-pick-a-recording-that-f"}
+{"t":"2026-10-13T14:01:54.048Z","ev":"decision_resolved","id":"title-text-visibly-comes-in-and-every-built-in-t-the-twelve-built-in-titles-now-v","taskId":"title-text-visibly-comes-in-and-every-built-in-t","choice":"a"}
+{"t":"2026-10-13T14:01:54.083Z","ev":"task_unblocked","id":"title-text-visibly-comes-in-and-every-built-in-t","decision":"title-text-visibly-comes-in-and-every-built-in-t-the-twelve-built-in-titles-now-v"}
+{"t":"2026-10-13T14:02:02.491Z","ev":"decision_resolved","id":"title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are","taskId":"title-text-visibly-comes-in-and-every-built-in-t","choice":"a"}
+{"t":"2026-10-13T14:02:02.526Z","ev":"task_unblocked","id":"title-text-visibly-comes-in-and-every-built-in-t","decision":"title-text-visibly-comes-in-and-every-built-in-t-ten-moving-title-backgrounds-are"}
+{"t":"2026-10-13T14:02:08.498Z","ev":"decision_resolved","id":"text-that-swings-flips-or-flies-in-from-depth-is-do-words-that-swing-flip-or-fly","taskId":"text-that-swings-flips-or-flies-in-from-depth-is","choice":"a"}
+{"t":"2026-10-13T14:02:08.533Z","ev":"task_unblocked","id":"text-that-swings-flips-or-flies-in-from-depth-is","decision":"text-that-swings-flips-or-flies-in-from-depth-is-do-words-that-swing-flip-or-fly"}
+{"t":"2026-10-13T14:02:10.731Z","ev":"decision_resolved","id":"3d-transitions-and-title-entrances-flip-cube-swi-do-the-3d-transitions-and-title","taskId":"3d-transitions-and-title-entrances-flip-cube-swi","choice":"a"}
+{"t":"2026-10-13T14:02:10.765Z","ev":"task_unblocked","id":"3d-transitions-and-title-entrances-flip-cube-swi","decision":"3d-transitions-and-title-entrances-flip-cube-swi-do-the-3d-transitions-and-title"}
+{"t":"2026-10-13T14:02:32.515Z","ev":"decision_resolved","id":"a-column-lists-its-rows-in-the-order-the-user-ch-in-a-column-or-row-which-row-sho","taskId":"a-column-lists-its-rows-in-the-order-the-user-ch","choice":"a"}
+{"t":"2026-10-13T14:02:32.549Z","ev":"task_unblocked","id":"a-column-lists-its-rows-in-the-order-the-user-ch","decision":"a-column-lists-its-rows-in-the-order-the-user-ch-in-a-column-or-row-which-row-sho"}
+{"t":"2026-10-13T14:03:08.194Z","ev":"decision_resolved","id":"an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c","taskId":"an-icon-svg-pastes-into-a-code-editor","choice":"b"}
+{"t":"2026-10-13T14:03:08.224Z","ev":"task_unblocked","id":"an-icon-svg-pastes-into-a-code-editor","decision":"an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c"}
+{"t":"2026-10-13T14:04:58.266Z","ev":"task_created","id":"a-right-click-on-the-timeline-never-moves-the-pl","priority":"p1-high","title":"A right-click on the timeline never moves the playhead"}
+{"t":"2026-10-13T14:04:58.360Z","ev":"task_resequenced","id":"a-right-click-on-the-timeline-never-moves-the-pl","from":3960,"to":1}
+{"t":"2026-10-13T14:09:47.414Z","ev":"task_note","id":"the-value-graph-lets-you-add-points-pick-the-seg"}
+{"t":"2026-10-13T14:09:47.480Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T14:09:47.548Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T14:09:47.618Z","ev":"task_resequenced","id":"the-value-graph-lets-you-add-points-pick-the-seg","from":60,"to":1.5}
+{"t":"2026-10-13T14:09:47.696Z","ev":"task_resequenced","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","from":70,"to":1.6}
+{"t":"2026-10-13T14:09:47.765Z","ev":"task_resequenced","id":"an-audio-clip-answers-right-click-and-its-volume","from":80,"to":1.7}
+{"t":"2026-10-13T14:15:46.178Z","ev":"task_created","id":"a-clip-s-own-sound-always-sits-right-under-its-v","priority":"p1-high","title":"A clip's own sound always sits right under its video, visibly attached"}
+{"t":"2026-10-13T14:15:46.282Z","ev":"task_resequenced","id":"a-clip-s-own-sound-always-sits-right-under-its-v","from":3960,"to":2}
+{"t":"2026-10-13T15:06:23.900Z","ev":"task_note","id":"the-full-test-run-passes-every-time-not-one-run"}
+{"t":"2026-10-13T15:06:52.623Z","ev":"task_walks","id":"measurements-are-named-for-their-mode-and-every","walks":["measurements-named-for-their-mode-walk","panel-shows-what-is-picked-walk"]}
+{"t":"2026-10-13T15:07:17.262Z","ev":"task_note","id":"measurements-are-named-for-their-mode-and-every"}
+{"t":"2026-10-13T15:07:17.327Z","ev":"task_note","id":"measurements-are-named-for-their-mode-and-every"}
+{"t":"2026-10-13T15:07:17.392Z","ev":"task_note","id":"measurements-are-named-for-their-mode-and-every"}
+{"t":"2026-10-13T15:07:40.103Z","ev":"task_done","id":"measurements-are-named-for-their-mode-and-every","from":"in_progress","note":"Gap and Distance land named 'Gap 16' / 'Distance 124' (Measurements: Gap / Distance), kept in step with the reading; a picked Size measurement shows the same Role, Caliper, Thickness and Chip rows as any caliper, a Size part gets no Arrange section, several calipers read Mixed and are set together, and a caliper colour is remembered for the next measurement of its role. Commit 8146de6f. Verified: MeasureModeNamesTests + full suite (only known load-sensitive timing tests failed, each passing alone); walk measurements-named-for-their-mode-walk green at Next defaults and 29 measurement walks green; audit queue/audits/2026-10-13-measure-mode-names.json."}
+{"t":"2026-10-13T15:12:58.299Z","ev":"loop_reloaded","from":"5cd2cfaa6728","to":"21fa3feaf90f"}
+{"t":"2026-10-13T15:12:58.429Z","ev":"loop_started","pid":50834}
+{"t":"2026-10-13T15:12:58.481Z","ev":"loop_awake","held":true,"pid":50844,"screenLocked":false}
+{"t":"2026-10-13T15:25:02.856Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T15:25:02.888Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-21","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-10-13T15:27:18.526Z","ev":"slice_pass","walks":33,"passed":30,"failed":3,"seconds":723,"of":907,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T15:27:18.709Z","ev":"task_started","id":"a-right-click-on-the-timeline-never-moves-the-pl","title":"A right-click on the timeline never moves the playhead","priority":"p1-high"}
+{"t":"2026-10-13T15:29:36.998Z","ev":"task_note","id":"a-right-click-on-the-timeline-never-moves-the-pl"}
+{"t":"2026-10-13T15:37:19.341Z","ev":"task_walks","id":"a-right-click-on-the-timeline-never-moves-the-pl","walks":["clicking-a-timeline-item-moves-the-playhead-walk","title-bar-right-click-menu-walk"]}
+{"t":"2026-10-13T15:50:38.390Z","ev":"task_walks","id":"a-right-click-on-the-timeline-never-moves-the-pl","walks":["right-click-keeps-the-playhead-walk","clicking-a-timeline-item-moves-the-playhead-walk","title-bar-right-click-menu-walk"]}
+{"t":"2026-10-13T15:50:38.456Z","ev":"task_note","id":"clicking-or-right-clicking-an-item-on-the-timeli"}
+{"t":"2026-10-13T15:50:38.527Z","ev":"task_note","id":"a-right-click-on-the-timeline-never-moves-the-pl"}
+{"t":"2026-10-13T15:50:38.594Z","ev":"task_note","id":"a-right-click-on-the-timeline-never-moves-the-pl"}
+{"t":"2026-10-13T15:51:28.877Z","ev":"task_done","id":"a-right-click-on-the-timeline-never-moves-the-pl","from":"in_progress","note":"A right click (or Control-click) on the timeline now only picks what it lands on and leaves the playhead parked; at-playhead rows act at the parked moment, and Add Key reads 'Add Key at 0:02.00'. Reproduced first (playhead 2000 -> 4800 ms on right-click). Commit 23f51b53. Verified: Scripts/test.sh 12933 tests green; new right-click-keeps-the-playhead-walk passes at Next defaults (Add Key and Split at the parked 2s, sound/zoom/scrub/title right-clicks keep the playhead, title picked); title-bar, ripple-trim, a-zoom-follows-the-cursor, drawn-shape and title-flies walks pass. clicking-a-timeline-item-moves-the-playhead-walk (rewritten), timeline-right-click-walk and a-zoom-is-shaped-by-hand-walk need the Mac to itself and could not take the front while the person worked; they come round in the whole set. Audit: queue/audits/2026-10-13-right-click-keeps-the-playhead.json"}
+{"t":"2026-10-13T16:06:06.108Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T16:06:06.138Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-13T16:08:18.084Z","ev":"slice_pass","walks":33,"passed":29,"failed":4,"seconds":599,"of":908,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T16:08:18.271Z","ev":"task_started","id":"the-value-graph-lets-you-add-points-pick-the-seg","title":"The value graph lets you add points, pick the segments between them and change their easing","priority":"p1-high"}
+{"t":"2026-10-13T16:12:44.101Z","ev":"task_note","id":"the-value-graph-lets-you-add-points-pick-the-seg"}
+{"t":"2026-10-13T17:40:36.817Z","ev":"task_created","id":"the-value-graph-zooms-its-value-range-and-the-ti","priority":"p1-high","title":"The value graph zooms its value range and the timeline bar names a picked segment's curve"}
+{"t":"2026-10-13T17:41:09.298Z","ev":"task_walks","id":"the-value-graph-lets-you-add-points-pick-the-seg","walks":["value-graph-points-and-segments-walk"]}
+{"t":"2026-10-13T17:41:34.158Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T17:41:34.230Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T17:41:34.298Z","ev":"task_note","id":"the-value-graph-lets-you-add-points-pick-the-seg"}
+{"t":"2026-10-13T17:41:52.025Z","ev":"task_done","id":"the-value-graph-lets-you-add-points-pick-the-seg","from":"in_progress","note":"Shipped in 366ba759: on an open value graph a click picks a point or the segment between two (drawn white with its handles), Command-click on the line adds a point that keeps the curve's shape, plain and double clicks never add, a segment's right-click sets its curve from the shared list (plus Hold, Draw a Curve, Copy/Paste Ease, Add Point Here, Delete) without moving the playhead, points drag in time and value with snapping and Shift lock. One shared rule in PhotonzCore (AnimatedLine), written down as UX-PATTERNS D21. Verified: Scripts/test.sh 12958 tests green (new AnimatedLine and KeyGraphEdit suites); value-graph-points-and-segments-walk run at Next defaults up to the delete step, ok, values at 2.25/2.5/2.75 s match Ease out exactly; its plain-click, double-click and Backspace steps need the probe in front, which macOS refused this session, so they come round in the whole set. key-lanes walks pass. Audit: queue/audits/2026-10-13-value-graph-points-and-segments.json. Follow-up: the-value-graph-zooms-its-value-range-and-the-ti (zoom the range, bar Easing for a picked segment)."}
+{"t":"2026-10-13T17:59:44.186Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T17:59:44.215Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-13T18:01:58.863Z","ev":"slice_pass","walks":33,"passed":31,"failed":2,"seconds":767,"of":909,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T18:01:59.036Z","ev":"task_started","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","title":"Every key dot can be clicked to pick it and Backspace deletes it","priority":"p1-high"}
+{"t":"2026-10-13T19:27:44.361Z","ev":"task_created","id":"the-keyframe-anything-and-keys-copy-between-laye","priority":"p2-normal","title":"The keyframe-anything and keys-copy-between-layers walks pass again"}
+{"t":"2026-10-13T19:28:13.129Z","ev":"task_walks","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","walks":["every-key-dot-picks-walk"]}
+{"t":"2026-10-13T19:29:09.585Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T19:29:09.652Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T19:29:09.732Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T19:29:09.800Z","ev":"task_note","id":"every-key-dot-can-be-clicked-to-pick-it-and-back"}
+{"t":"2026-10-13T19:29:33.578Z","ev":"task_done","id":"every-key-dot-can-be-clicked-to-pick-it-and-back","from":"in_progress","note":"Shipped in db8a1c31: every key dot picks on a click and Backspace deletes it. Shut lanes follow the same line rule as the graph (dots and segments pick, Command-click adds, picked white); a clip-bar diamond picks every key at its moment (before, it only moved the playhead); a canvas motion-path ring picks its Position key and drags it in space; right-click picks a dot once without moving the playhead. Verified: Scripts/test.sh 12963 green; every-key-dot-picks-walk ok at Next defaults with 7 real captures (clicks driven with Command since the probe could not take the front); neighbouring key walks ok. Audit queue/audits/2026-10-13-every-key-dot-picks.json. Follow-up: the-keyframe-anything-and-keys-copy-between-laye (two key walks failing at HEAD before this change)."}
+{"t":"2026-10-13T19:46:11.196Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T19:46:11.225Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-13T19:48:25.388Z","ev":"slice_pass","walks":32,"passed":27,"failed":5,"seconds":620,"of":910,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T19:48:25.572Z","ev":"task_started","id":"an-audio-clip-answers-right-click-and-its-volume","title":"An audio clip answers right-click, and its volume line's segments can be picked and shaped","priority":"p1-high"}
+{"t":"2026-10-13T20:55:06.174Z","ev":"task_walks","id":"an-audio-clip-answers-right-click-and-its-volume","walks":["a-sound-s-volume-line-picks-and-shapes-walk","a-sound-s-volume-line-plain-clicks-walk"]}
+{"t":"2026-10-13T20:55:27.761Z","ev":"task_created","id":"find-out-whether-a-key-segment-s-right-click-cur","priority":"p2-normal","title":"Find out whether a key segment's right-click curve lands on the segment right-clicked before"}
+{"t":"2026-10-13T20:55:59.575Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T20:55:59.640Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T20:55:59.706Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T20:55:59.770Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T20:55:59.832Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T20:55:59.895Z","ev":"task_note","id":"an-audio-clip-answers-right-click-and-its-volume"}
+{"t":"2026-10-13T21:02:24.428Z","ev":"task_done","id":"an-audio-clip-answers-right-click-and-its-volume","from":"in_progress","note":"Right-click anywhere on a sound clip opens its menu (the volume line had no menu and swallowed the press, reproduced at (935,924), the clip middle and the recording's own sound line). The volume line follows D21 on AnimatedLine: click picks a dot or segment, only Command-click adds, Shift extends, Backspace deletes in one undo, picked white, hover brightens; segments carry their own curve (shared curve list + Hold from right-click, bend handle, Fades Segment row) and the mix follows within 0.5 dB. Commit 44d69b6e. Verified: Scripts/test.sh 12975 passed; a-sound-s-volume-line-picks-and-shapes-walk passes at Next defaults; plain-click walk needs the front (refused on this Mac, comes round in the whole set). Audit queue/audits/2026-10-13-sound-volume-line-picks-and-shapes.json."}
+{"t":"2026-10-13T21:12:24.042Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T21:12:24.071Z","ev":"task_note","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa"}
+{"t":"2026-10-13T21:12:24.101Z","ev":"task_note","id":"the-keyframe-anything-and-keys-copy-between-laye"}
+{"t":"2026-10-13T21:12:24.142Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-13T21:14:41.067Z","ev":"slice_pass","walks":31,"passed":24,"failed":7,"seconds":569,"of":912,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T21:14:41.252Z","ev":"task_started","id":"every-measurement-shares-one-remembered-look-blu","title":"Every measurement shares one remembered look, blue by default, and any change to a caliper becomes the new default","priority":"p1-high"}
+{"t":"2026-10-13T21:51:15.341Z","ev":"task_created","id":"the-measuring-legend-says-something-useful-now-t","priority":"p2-normal","title":"The measuring legend says something useful now that Size and Gap share one colour"}
+{"t":"2026-10-13T21:51:34.687Z","ev":"task_walks","id":"every-measurement-shares-one-remembered-look-blu","walks":["every-measurement-shares-one-look-walk","measurements-named-for-their-mode-walk","a-size-measurement-is-one-group-walk"]}
+{"t":"2026-10-13T21:51:46.206Z","ev":"task_note","id":"every-measurement-shares-one-remembered-look-blu"}
+{"t":"2026-10-13T21:51:46.269Z","ev":"task_note","id":"every-measurement-shares-one-remembered-look-blu"}
+{"t":"2026-10-13T21:51:46.335Z","ev":"task_note","id":"every-measurement-shares-one-remembered-look-blu"}
+{"t":"2026-10-13T21:52:18.027Z","ev":"task_done","id":"every-measurement-shares-one-remembered-look-blu","from":"in_progress","note":"Size, Gap and Distance now share one remembered look, blue by default (#3774D5 line/ring, #233963 chip, white text, box same blue 10%), sampled from the user's screenshot; recolouring any caliper including a Size group's Width/Height sets it for every mode and every window (MeasureMemory). Old per-role memories migrate; documents keep their colours. Verified: Scripts/test.sh 12981 tests green; walks every-measurement-shares-one-look-walk (Next defaults, green Width then Gap/Distance/Size start green, fresh install blue set with chips), measurements-named-for-their-mode-walk, a-size-measurement-is-one-group-walk (dark picture) and all measure walks pass. Audit queue/audits/2026-10-13-every-measurement-shares-one-look.json. Commit 9266af1f."}
+{"t":"2026-10-13T22:11:51.446Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-13T22:11:51.475Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-13T22:14:16.013Z","ev":"slice_pass","walks":31,"passed":26,"failed":5,"seconds":1148,"of":913,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-13T22:14:16.189Z","ev":"task_started","id":"a-clip-s-own-sound-always-sits-right-under-its-v","title":"A clip's own sound always sits right under its video, visibly attached","priority":"p1-high"}
+{"t":"2026-10-14T00:20:44.175Z","ev":"task_walks","id":"a-clip-s-own-sound-always-sits-right-under-its-v","walks":["a-clip-s-sound-stays-under-its-video-walk","a-clip-s-sound-is-linked-under-it-walk","track-header-lifts-walk"]}
+{"t":"2026-10-14T00:20:57.154Z","ev":"task_created","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","priority":"p2-normal","title":"A clip's picture and sound bars wear one tint family, or keep the mock's sound colours"}
+{"t":"2026-10-14T00:21:06.120Z","ev":"decision_opened","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa-should-a-recording-s-own-sound-b","taskId":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","question":"Should a recording's own sound bar take its picture's colours, so the two read as one clip?"}
+{"t":"2026-10-14T00:21:16.751Z","ev":"task_blocked","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":"pending","note":"Waiting on the tint decision card"}
+{"t":"2026-10-14T00:28:39.671Z","ev":"task_note","id":"a-clip-s-own-sound-always-sits-right-under-its-v"}
+{"t":"2026-10-14T00:28:39.731Z","ev":"task_note","id":"a-clip-s-own-sound-always-sits-right-under-its-v"}
+{"t":"2026-10-14T00:28:39.794Z","ev":"task_note","id":"a-clip-s-own-sound-always-sits-right-under-its-v"}
+{"t":"2026-10-14T00:28:39.857Z","ev":"task_note","id":"a-clip-s-own-sound-always-sits-right-under-its-v"}
+{"t":"2026-10-14T00:28:39.919Z","ev":"task_walks","id":"a-clip-s-own-sound-always-sits-right-under-its-v","walks":["a-clip-s-sound-stays-under-its-video-walk","a-clip-s-sound-is-linked-under-it-walk","track-header-lifts-walk"]}
+{"t":"2026-10-14T00:28:45.586Z","ev":"task_done","id":"a-clip-s-own-sound-always-sits-right-under-its-v","from":"in_progress","note":"A clip's own sound is drawn on a row of its video track, directly under it, with an elbow and link mark in the header and a staple joining the bars; it stays there through adding, deleting and carrying tracks and moving the clip (DocumentTrack.attachedTo, trackLayout). Detach Audio goes to an Audio track at the bottom; Re-attach and Undo bring it back. Old documents migrate. Verified: AttachedSoundRowTests (19) and the full suite green; new walk a-clip-s-sound-stays-under-its-video-walk measures the row after each edit (7 real pictures); 20 walks updated and rerun green, plus all 32 caption walks. Commit 8ad7323b. Audit queue/audits/2026-10-13-a-clip-s-own-sound-always-sits-right-under-its-v.json; tint question on a-clip-s-picture-and-sound-bars-wear-one-tint-fa."}
+{"t":"2026-10-14T00:41:18.598Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":582,"of":914,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T00:41:18.770Z","ev":"task_started","id":"gap-mode-measures-the-space-the-pointer-is-actua","title":"Gap mode measures the space the pointer is actually in, between the nearest distinct things around it","priority":"p1-high"}
+{"t":"2026-10-14T01:51:47.403Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.465Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.525Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.587Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.647Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.707Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.770Z","ev":"task_note","id":"gap-mode-measures-the-space-the-pointer-is-actua"}
+{"t":"2026-10-14T01:51:47.839Z","ev":"task_walks","id":"gap-mode-measures-the-space-the-pointer-is-actua","walks":["gap-reads-line-to-line-walk","measurements-named-for-their-mode-walk"]}
+{"t":"2026-10-14T01:52:23.994Z","ev":"task_done","id":"gap-mode-measures-the-space-the-pointer-is-actua","from":"in_progress","note":"Gap now walks out along the pointer's own row and column and reads text as whole lines, so the band between two lines measures line to line through the pointer (user's capture: every spot in the band reads 442->501, matching a hand scan of the ink; before, 23 to 65 px sideways). Specimen set of 7 pictures at 1x/2x passes within 1 px/2 px (GapSpecimenTests); new walk gap-reads-line-to-line-walk passes at Next defaults; 12 existing Gap walks green (naming walk updated: shadowed cards now read edge to edge, 20 not 16). Optimized cost under 5 ms worst on a 3456x2234 capture. Full suite green (13,010 tests). Commit 3db1a940; audit queue/audits/2026-10-13-gap-line-to-line.json."}
+{"t":"2026-10-14T02:03:39.616Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":518,"of":915,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T02:03:39.779Z","ev":"task_started","id":"the-right-panel-shows-only-what-the-picked-thing","title":"The right panel shows only what the picked thing and the tool in hand need","priority":"p1-high"}
+{"t":"2026-10-14T03:26:52.673Z","ev":"task_created","id":"on-a-video-captions-and-transitions-sit-where-th","priority":"p1-high","title":"On a video, Captions and Transitions sit where the user decides"}
+{"t":"2026-10-14T03:27:02.898Z","ev":"decision_opened","id":"on-a-video-captions-and-transitions-sit-where-th-do-captions-and-transitions-join","taskId":"on-a-video-captions-and-transitions-sit-where-th","question":"Do Captions and Transitions join the lists pane on a video?"}
+{"t":"2026-10-14T03:27:15.053Z","ev":"task_blocked","id":"on-a-video-captions-and-transitions-sit-where-th","from":"pending","note":"waiting on the card: do Captions and Transitions join the lists pane on a video"}
+{"t":"2026-10-14T03:53:01.644Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-14T03:53:01.708Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-14T03:53:01.770Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-14T03:53:01.831Z","ev":"task_note","id":"the-right-panel-shows-only-what-the-picked-thing"}
+{"t":"2026-10-14T03:53:14.974Z","ev":"task_done","id":"the-right-panel-shows-only-what-the-picked-thing","from":"in_progress","note":"Built answer B (885afc78): the pick's sections scroll on top and Layers, Measurements and Library sit in a pane at the bottom that keeps its height, with a grip between (next-lists-pane, on at Next; PanelListsPane in core, tested). Walks panel-shows-what-is-picked(-video) check the pane with expectSections lists and drag the grip; all 77 panel walks and Scripts/test.sh pass. On a video Captions and Transitions stay with the pick for now: card on task on-a-video-captions-and-transitions-sit-where-th. Audit queue/audits/2026-10-13-lists-pane-under-the-pick.json."}
+{"t":"2026-10-14T08:00:30.910Z","ev":"sweep_pass","walks":915,"passed":901,"failed":14,"seconds":14797,"complete":true,"total":915}
+{"t":"2026-10-14T08:00:31.062Z","ev":"task_started","id":"a-zoom-callout-fills-the-space-between-its-two-l","title":"A zoom callout fills the space between its two lines with a faint tint of the line colour","priority":"p1-high"}
+{"t":"2026-10-14T08:32:12.416Z","ev":"task_walks","id":"a-zoom-callout-fills-the-space-between-its-two-l","walks":["a-zoom-callout-band"]}
+{"t":"2026-10-14T08:32:12.479Z","ev":"task_note","id":"a-zoom-callout-fills-the-space-between-its-two-l"}
+{"t":"2026-10-14T08:32:12.539Z","ev":"task_note","id":"a-zoom-callout-fills-the-space-between-its-two-l"}
+{"t":"2026-10-14T08:32:12.599Z","ev":"task_note","id":"a-zoom-callout-fills-the-space-between-its-two-l"}
+{"t":"2026-10-14T08:32:12.662Z","ev":"task_note","id":"a-zoom-callout-fills-the-space-between-its-two-l"}
+{"t":"2026-10-14T08:32:19.940Z","ev":"task_walks","id":"a-zoom-callout-fills-the-space-between-its-two-l","walks":["a-zoom-callout-band-walk"]}
+{"t":"2026-10-14T08:32:38.126Z","ev":"task_done","id":"a-zoom-callout-fills-the-space-between-its-two-l","from":"in_progress","note":"Zoom callouts tint the band between their two lines with the line colour, 10% by default for new callouts in Next (files saved before open at 0); Fill opacity slider in the Lens section under Shape, one undo step per pull, remembered by the tool; Circle callouts now draw the two touching lines and the band stops at both round edges. Commit f141273a. Verified: Scripts/test.sh 13042 green including the band edge measured within 1px of each line; walk a-zoom-callout-band at Next defaults reads the 10% blend off the render when made, moved and made round, 0 after pressing the slider by its face, undo, and the remembered 0 on the next callout; 11 related callout and dock walks green. Audit queue/audits/2026-10-14-zoom-callout-band.json."}
+{"t":"2026-10-14T08:43:15.369Z","ev":"slice_pass","walks":31,"passed":31,"failed":0,"seconds":479,"of":916,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T08:43:15.533Z","ev":"task_started","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","title":"Clicking a key opens the same overlay to set that key's value","priority":"p1-high"}
+{"t":"2026-10-14T08:51:29.060Z","ev":"task_note","id":"clicking-a-key-opens-the-same-overlay-to-set-tha"}
+{"t":"2026-10-14T09:22:09.017Z","ev":"task_walks","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","walks":["key-value-popover-walk"]}
+{"t":"2026-10-14T09:34:18.237Z","ev":"task_note","id":"clicking-a-key-opens-the-same-overlay-to-set-tha"}
+{"t":"2026-10-14T09:34:18.309Z","ev":"task_done","id":"clicking-a-key-opens-the-same-overlay-to-set-tha","from":"in_progress","note":"A click on a key dot or graph point opens a popover above it (tool bar glass, name left value right, Reset at the foot) to type that key's value in its units; Mixed across picked keys, a typed value sets all; colour swatch+hex (swatch opens the picker); Position resets to canvas middle. Closes on Escape, a press elsewhere, another tool, typing, a menu, Play. One code path (PhotonzCore/KeyValues.swift, 17 tests; KeyValuesPopover.swift). Verified by key-value-popover-walk at Next defaults: types 40 into an opacity key, the canvas draws 40%; undo/redo, Mixed, Reset, graph point, colour key, close on tool change. Full suite 13060 green. Audit queue/audits/2026-10-14-key-value-popover.json. Commit bcbbbfb3."}
+{"t":"2026-10-14T09:44:56.505Z","ev":"task_note","id":"the-keyframe-anything-and-keys-copy-between-laye"}
+{"t":"2026-10-14T09:47:05.374Z","ev":"slice_pass","walks":31,"passed":30,"failed":1,"seconds":615,"of":917,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T09:47:05.566Z","ev":"task_started","id":"a-layer-s-track-shows-only-what-is-animated-and","title":"A layer's track shows only what is animated, and you add or remove animated properties directly","priority":"p1-high"}
+{"t":"2026-10-14T10:46:02.909Z","ev":"task_created","id":"dragging-on-the-canvas-with-a-row-picked-moves-t","priority":"p1-high","title":"Dragging on the canvas with a row picked moves that whole animation"}
+{"t":"2026-10-14T10:50:07.085Z","ev":"task_walks","id":"a-layer-s-track-shows-only-what-is-animated-and","walks":["only-what-is-animated-walk"]}
+{"t":"2026-10-14T11:02:05.895Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-14T11:02:05.958Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-14T11:02:06.017Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-14T11:02:06.077Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-14T11:02:06.137Z","ev":"task_note","id":"a-layer-s-track-shows-only-what-is-animated-and"}
+{"t":"2026-10-14T11:02:28.750Z","ev":"task_done","id":"a-layer-s-track-shows-only-what-is-animated-and","from":"in_progress","note":"A clip's track lists only keyed values. Add Key on a layer with nothing keyed is one hollow moment and no rows; any change on a layer with keys keys itself and joins (panel, Appearance sliders, canvas, transform values, 3D, one rule in KeyMoments.swift); a row picked by its name leaves with Delete or Stop Animating; Animate > (Transform/3D/Look/Effects) on the clip, its key diamonds and Clip > Animate adds one back. Verified: Scripts/test.sh 13081 tests green, only-what-is-animated-walk ok at Next defaults with real captures, 25 key/look walks ok (keys-copy-between-layers fails before and after, owned elsewhere). Commit a1fc869d. Audit queue/audits/2026-10-14-only-what-is-animated.json; follow-up dragging-on-the-canvas-with-a-row-picked-moves-t."}
+{"t":"2026-10-14T11:13:11.255Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-14T11:15:22.425Z","ev":"slice_pass","walks":30,"passed":27,"failed":3,"seconds":612,"of":918,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T11:15:22.594Z","ev":"task_started","id":"the-value-graph-zooms-its-value-range-and-the-ti","title":"The value graph zooms its value range and the timeline bar names a picked segment's curve","priority":"p1-high"}
+{"t":"2026-10-14T12:02:31.315Z","ev":"task_created","id":"the-timeline-bar-easing-sets-picked-segments-too","priority":"p2-normal","title":"The timeline bar Easing sets picked segments too when keys are picked with them"}
+{"t":"2026-10-14T12:02:50.134Z","ev":"task_walks","id":"the-value-graph-zooms-its-value-range-and-the-ti","walks":["value-graph-zoom-and-segment-easing-walk"]}
+{"t":"2026-10-14T12:03:19.012Z","ev":"task_note","id":"the-value-graph-zooms-its-value-range-and-the-ti"}
+{"t":"2026-10-14T12:03:19.085Z","ev":"task_done","id":"the-value-graph-zooms-its-value-range-and-the-ti","from":"in_progress","note":"Shipped in e5452b9f. Option and the wheel over an open value graph zoom its values about the pointer (GraphValueRange in PhotonzCore, tested; EditorState+KeyGraphZoom), the readings follow, and a double click on a reading fits it again. With only segments picked, the timeline bar's Easing shows the shared curve list naming their curve or Mixed and sets every picked segment in one undo step. Verified: Scripts/test.sh green (13091 tests), new walk value-graph-zoom-and-segment-easing-walk passes at Next defaults with no flags, and 11 related walks pass. Audit: queue/audits/2026-10-14-value-graph-zoom.json"}
+{"t":"2026-10-14T12:14:45.717Z","ev":"slice_pass","walks":30,"passed":30,"failed":0,"seconds":530,"of":919,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-14T12:17:34.448Z","ev":"task_dropped","id":"a-column-lists-its-rows-in-the-order-the-user-ch","from":"pending","note":"answered 2026-10-13: top of the stack first, as today. Nothing to build; design-ui-start-walk already checks that order with expectRows"}
+{"t":"2026-10-14T12:17:34.511Z","ev":"task_dropped","id":"decide-whether-a-picked-recording-at-its-own-siz","from":"pending","note":"answered 2026-10-13: handles at its own size, ring when zoomed, which is what the app does today. Nothing to build; framing-a-zoom-keys-its-centre-walk already photographs the recording at 100% (4-wide)"}
+{"t":"2026-10-14T12:17:34.573Z","ev":"task_dropped","id":"the-design-shape-slot-tip-reads-the-way-you-choo","from":"pending","note":"answered 2026-10-11: the tip names the shape (Rectangle R), which is what the app does today. Nothing to build; design-mode-tool-strip-walk already reads the tip"}
+{"t":"2026-10-14T12:17:44.741Z","ev":"task_note","id":"the-timeline-bar-easing-sets-picked-segments-too"}
+{"t":"2026-10-14T12:17:44.801Z","ev":"task_note","id":"camera-keys-ease-in-and-out-like-every-other-key"}
+{"t":"2026-10-14T12:17:44.865Z","ev":"task_note","id":"on-a-video-captions-and-transitions-sit-where-th"}
+{"t":"2026-10-14T12:17:44.926Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-21"}
+{"t":"2026-10-14T12:18:02.554Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":50,"to":10}
+{"t":"2026-10-14T12:18:02.617Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":110,"to":20}
+{"t":"2026-10-14T12:18:02.678Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":120,"to":30}
+{"t":"2026-10-14T12:18:02.738Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":130,"to":40}
+{"t":"2026-10-14T12:18:02.800Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":140,"to":50}
+{"t":"2026-10-14T12:18:02.860Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":3970,"to":60}
+{"t":"2026-10-14T12:18:02.922Z","ev":"task_resequenced","id":"dragging-on-the-canvas-with-a-row-picked-moves-t","from":3980,"to":70}
+{"t":"2026-10-14T12:18:02.984Z","ev":"task_resequenced","id":"the-full-test-run-passes-every-time-not-one-run","from":10,"to":10}
+{"t":"2026-10-14T12:18:03.044Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-21","from":4010,"to":20}
+{"t":"2026-10-14T12:18:03.107Z","ev":"task_resequenced","id":"the-keyframe-anything-and-keys-copy-between-laye","from":4020,"to":30}
+{"t":"2026-10-14T12:18:03.168Z","ev":"task_resequenced","id":"resize-squares-on-a-layer-turned-in-3d-take-the","from":20,"to":40}
+{"t":"2026-10-14T12:18:03.230Z","ev":"task_resequenced","id":"double-clicking-a-library-title-tile-inserts-it","from":30,"to":50}
+{"t":"2026-10-14T12:18:03.291Z","ev":"task_resequenced","id":"find-out-whether-a-key-segment-s-right-click-cur","from":4030,"to":60}
+{"t":"2026-10-14T12:18:03.350Z","ev":"task_resequenced","id":"the-timeline-bar-easing-sets-picked-segments-too","from":4060,"to":70}
+{"t":"2026-10-14T12:18:03.411Z","ev":"task_resequenced","id":"the-transform-bar-keeps-width-and-height-in-prop","from":40,"to":80}
+{"t":"2026-10-14T12:18:03.479Z","ev":"task_resequenced","id":"scrolling-the-timeline-along-time-keeps-every-fr","from":50,"to":90}
+{"t":"2026-10-14T12:18:03.599Z","ev":"task_resequenced","id":"camera-keys-ease-in-and-out-like-every-other-key","from":60,"to":100}
+{"t":"2026-10-14T12:18:03.664Z","ev":"task_resequenced","id":"find-out-whether-moving-a-layer-that-sits-under","from":70,"to":110}
+{"t":"2026-10-14T12:18:03.726Z","ev":"task_resequenced","id":"clean-noise-and-hide-picture-work-on-one-stretch","from":80,"to":120}
+{"t":"2026-10-14T12:18:03.792Z","ev":"task_resequenced","id":"a-picked-layer-wears-the-solid-accent-ring-the-m","from":100,"to":130}
+{"t":"2026-10-14T12:18:03.855Z","ev":"task_resequenced","id":"work-about-how-something-looks-or-moves-is-filed","from":110,"to":140}
+{"t":"2026-10-14T12:18:03.917Z","ev":"task_resequenced","id":"the-focus-check-stops-crying-theft-about-one-wal","from":120,"to":150}
+{"t":"2026-10-14T12:18:03.977Z","ev":"task_resequenced","id":"the-rule-for-picking-a-key-is-written-where-runn","from":130,"to":160}
+{"t":"2026-10-14T12:18:04.036Z","ev":"task_resequenced","id":"capture-to-a-pasted-redline-takes-no-more-steps","from":90,"to":170}
+{"t":"2026-10-14T12:18:04.100Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":4040,"to":180}
+{"t":"2026-10-14T12:18:04.162Z","ev":"task_resequenced","id":"an-icon-svg-pastes-into-a-code-editor","from":380,"to":190}
+{"t":"2026-10-14T12:18:04.224Z","ev":"task_resequenced","id":"find-out-whether-a-forever-motion-shorter-than-t","from":140,"to":200}
+{"t":"2026-10-14T12:18:04.284Z","ev":"task_resequenced","id":"a-curve-drawn-on-whole-units-exports-on-whole-un","from":150,"to":210}
+{"t":"2026-10-14T12:18:04.346Z","ev":"task_resequenced","id":"a-ring-or-arc-gets-a-full-turn-forever-when-rota","from":160,"to":220}
+{"t":"2026-10-14T12:18:04.409Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":170,"to":230}
+{"t":"2026-10-14T12:18:04.470Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":180,"to":240}
+{"t":"2026-10-14T12:18:04.534Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":200,"to":250}
+{"t":"2026-10-14T12:18:04.596Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":210,"to":260}
+{"t":"2026-10-14T12:18:04.659Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":220,"to":270}
+{"t":"2026-10-14T12:18:04.723Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":230,"to":280}
+{"t":"2026-10-14T12:18:04.783Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":240,"to":290}
+{"t":"2026-10-14T12:18:04.843Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":250,"to":300}
+{"t":"2026-10-14T12:18:04.908Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":260,"to":310}
+{"t":"2026-10-14T12:18:04.969Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":270,"to":320}
+{"t":"2026-10-14T12:18:05.030Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":280,"to":330}
+{"t":"2026-10-14T12:18:05.092Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":290,"to":340}
+{"t":"2026-10-14T12:18:05.153Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":300,"to":350}
+{"t":"2026-10-14T12:18:05.217Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":310,"to":360}
+{"t":"2026-10-14T12:18:05.285Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":320,"to":370}
+{"t":"2026-10-14T12:18:05.348Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":330,"to":380}
+{"t":"2026-10-14T12:18:05.409Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":340,"to":390}
+{"t":"2026-10-14T12:18:05.473Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":350,"to":400}
+{"t":"2026-10-14T12:18:05.534Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":360,"to":410}
+{"t":"2026-10-14T12:18:05.598Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":370,"to":420}
+{"t":"2026-10-14T12:18:05.662Z","ev":"task_resequenced","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":4050,"to":430}
+{"t":"2026-10-14T12:18:14.407Z","ev":"triage","summary":"merged 0, dropped 3 (cards answered with today's behaviour, nothing to build), moved 0 priorities, resequenced p1 10-70 and p2 10-430 with focus work and broken walks first, reset 0, groomed 2 checklists and 4 logs (one easing list, UX-PATTERNS dock item, likely causes of 12 failing walks). Open: p1 7, p2 46 to 43, p3 2"}
+{"t":"2026-10-14T12:19:41.804Z","ev":"digest","file":"2026-10-14.md"}

@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 190,
-  "status": "pending",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T00:58:26.229Z",
-  "updated": "2026-10-13T12:55:24.860Z",
+  "updated": "2026-10-14T12:17:34.572Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Raised finishing the-design-tool-bar-s-shape-slot-shows-a-rectang (2026-10-09). Tip comes from ToolGroupButton .toolTip(remembered.barTitle, key:). Mock ui-entry-wt.html tShape data-tip \"Shape (R)\". Picture: queue/audits/2026-10-09-design-shape-slot-1.png.",
@@ -49,6 +49,10 @@
     {
       "t": "2026-10-13T12:55:24.859Z",
       "note": "seq 170 -> 190"
+    },
+    {
+      "t": "2026-10-14T12:17:34.571Z",
+      "note": "answered 2026-10-11: the tip names the shape (Rectangle R), which is what the app does today. Nothing to build; design-mode-tool-strip-walk already reads the tip"
     }
   ],
   "walks": [

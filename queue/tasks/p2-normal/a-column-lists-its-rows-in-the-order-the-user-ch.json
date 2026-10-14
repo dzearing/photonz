@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 390,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-09T05:49:21.682Z",
-  "updated": "2026-10-13T12:55:26.101Z",
+  "updated": "2026-10-14T12:17:34.447Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the-empty-window-can-start-a-ui-design (2026-10-08). Mock: docs/design/mocks/pages/ui-entry-wt.html, Layers group (#lrLogin then Headline, Subhead, Email field, Password field, Button · Primary). App today: Login, Password field, Email field, Subhead, Headline (top of the stack first), checked by design-ui-start-walk expectRows. Figma lists auto-layout children last-first as the app does; the mock does not. Layer list building: PhotonzCore/LayerPanelTree.swift. If the answer is reading order, design-ui-start-walk and a-screen-hugs-what-it-holds-walk expectRows change in the same commit.",
@@ -50,6 +50,14 @@
     {
       "t": "2026-10-13T12:55:26.100Z",
       "note": "seq 370 -> 390"
+    },
+    {
+      "t": "2026-10-13T14:02:32.547Z",
+      "note": "decision \"In a column or row, which row should the Layers list show first?\" resolved: Top of the stack first, as today"
+    },
+    {
+      "t": "2026-10-14T12:17:34.446Z",
+      "note": "answered 2026-10-13: top of the stack first, as today. Nothing to build; design-ui-start-walk already checks that order with expectRows"
     }
   ],
   "walks": [

@@ -4,12 +4,12 @@
   "goal": "When the timeline scrolls along time quickly (held at an edge while dragging, or dragged by its scroller), about one frame in twenty is late, because every step redraws the whole editor window rather than just the timeline. Scrolling should hold sixty frames a second without a hitch.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 50,
+  "seq": 90,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T17:52:57.357Z",
-  "updated": "2026-10-13T12:55:24.013Z",
+  "updated": "2026-10-14T12:18:03.478Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-11 by the runner on a-selection-box-on-the-timeline-scrolls-the-time. Command: Scripts/playtest.sh Scripts/playtest/box-scrolls-at-the-edge-walk.json. Its boxToEdge log line, after the edge ticker was capped at 60 Hz: right edge at full speed across the 14 s sample opened to 3.5 s across: 100 frames, ms between them p50 16.7 p95 33.3 max 39.2; left edge: p50 16.7 p95 33.9 max 39.3; the 5 s hold opened right in: p50/p95/max 16.7. At 120 Hz before the cap it was p50 17-20 ms, p95 about 26 ms. A sample of the probe during a 12 s hold: of 1407 main-thread samples about 1150 are NSHostingView.layout > ViewGraphRootValueUpdater.render under CA::Transaction commit (the whole window re-laid out per timelineZoom change); TimelineTrackRow.body about 46, ClipPiecesBar.body about 12, EditorState.motionStripCycleMS about 31; the display-link ticker itself about 3. The walk harness timer watchForWindowsOverThePerson took 111 samples (8 percent), so walk numbers overstate the app cost somewhat. Likely lever: views outside the timeline that read timelineWindow or motionStripRuler (or documentMomentChanged side effects), so a pan invalidates the whole window; panTimeline from the overview scroller shares the path.",
@@ -30,6 +30,10 @@
     {
       "t": "2026-10-13T12:55:24.012Z",
       "note": "seq 50 -> 50"
+    },
+    {
+      "t": "2026-10-14T12:18:03.477Z",
+      "note": "seq 50 -> 90"
     }
   ],
   "walks": [

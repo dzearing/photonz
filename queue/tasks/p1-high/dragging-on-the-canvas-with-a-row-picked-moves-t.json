@@ -1,0 +1,33 @@
+{
+  "id": "dragging-on-the-canvas-with-a-row-picked-moves-t",
+  "title": "Dragging on the canvas with a row picked moves that whole animation",
+  "goal": "Now that every change on an animated layer becomes a key, there has to be a way to move a whole animation somewhere else. Picking a row by its name and then dragging the layer on the canvas should shift every key of that row by the same amount (for Position, the whole path), as the user accepted when they chose \"any change keys itself\".",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T10:46:02.904Z",
+  "updated": "2026-10-14T12:18:02.921Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From a-layer-s-track-shows-only-what-is-animated-and (2026-10-14). The mock video-animate.html interaction table row: \"Drag on the canvas, a row picked | Canvas | Moves every key of that row by the same amount (for Position, the whole path), instead of keying the playhead.\" The decision card a-layer-s-track-shows-only-what-is-animated-and-when-you-change-something-on-a-l (answered a) names this as its mitigation. Picked row state: EditorState.pickedKeyRow / keyRowInHand (EditorState+OnlyAnimated.swift); canvas edits go through foldingIntoKeys -> PhotonzDocument.editPosedForCanvas -> foldEditIntoKeys (PropertyKeys.swift). The row menu Easing today lists KeyEase (keyLaneMenuRows in EditorState+KeyLanes.swift).",
+  "acceptance": [
+    "With a row picked by its name, a drag on the canvas moves every key of that row by the same amount instead of keying the playhead, in one undo step",
+    "For Position the whole path moves; for Scale and Rotation every key changes by the same amount",
+    "With no row picked, a drag keys at the playhead as it does now",
+    "The row right-click Easing lists the same curves a key and a segment offer (video-animate.html, the interaction table)",
+    "A walk picks the Position row, drags the title on the canvas, and checks every Position key moved"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T10:46:02.907Z",
+      "note": "created (runner)"
+    },
+    {
+      "t": "2026-10-14T12:18:02.920Z",
+      "note": "seq 3980 -> 70"
+    }
+  ]
+}

@@ -4,19 +4,20 @@
   "goal": "On a video the right panel still stacks Captions and Transitions at the foot of the picked clip's own settings. The user chose a split panel with the lists in a pane at the bottom; this asks whether those two join that pane on a video, given that on a laptop window doing so pushes a picked sound's Fades below the fold.",
   "epic": "ui-building",
   "priority": "p1-high",
-  "seq": 3970,
+  "seq": 60,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T03:26:52.669Z",
-  "updated": "2026-10-14T03:27:15.052Z",
+  "updated": "2026-10-14T12:18:02.859Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of the-right-panel-shows-only-what-the-picked-thing (2026-10-13). Measured on the laptop window (windowLaptop, sound picked): with Captions and Transitions in the pane at 40 per cent of a ~395pt column, the pick part was 235pt and Fades (244-352) fell under it; sound-fades-in-the-panel-walk step 12 and video-panel-order-walk step 45 failed. Both are forms the pane cannot shorten (not in DockMetrics.scrollingSections). Code: PanelListsPane.listSections (PhotonzCore), InspectorPanel.paneSplit.",
   "acceptance": [
     "The card \"Do Captions and Transitions join the lists pane on a video?\" is answered",
     "The panel on a video places Captions and Transitions as answered, and panel-shows-what-is-picked-video-walk checks it with expectSections lists",
-    "sound-fades-in-the-panel-walk and video-panel-order-walk still pass at Next defaults on the laptop window"
+    "sound-fades-in-the-panel-walk and video-panel-order-walk still pass at Next defaults on the laptop window",
+    "UX-PATTERNS shell item 6 (Right dock) describes the panel as it now is: the pick on top, the lists pane under it with a grip between"
   ],
   "log": [
     {
@@ -26,6 +27,14 @@
     {
       "t": "2026-10-14T03:27:15.049Z",
       "note": "waiting on the card: do Captions and Transitions join the lists pane on a video"
+    },
+    {
+      "t": "2026-10-14T12:17:44.862Z",
+      "note": "2026-10-14 digest: UX-PATTERNS shell item 6 (Right dock) still describes one dock of stacked groups (Layers, Properties, Effects, Library) and says nothing of the pick on top with the lists pane under it, which the Inspector row (line 26) now describes. Whoever builds the answer to this card rewrites item 6 to match; checklist item added."
+    },
+    {
+      "t": "2026-10-14T12:18:02.858Z",
+      "note": "seq 3970 -> 60"
     }
   ],
   "walks": [

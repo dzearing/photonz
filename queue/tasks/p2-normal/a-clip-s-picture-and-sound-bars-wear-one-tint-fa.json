@@ -1,0 +1,38 @@
+{
+  "id": "a-clip-s-picture-and-sound-bars-wear-one-tint-fa",
+  "title": "A clip's picture and sound bars wear one tint family, or keep the mock's sound colours",
+  "goal": "Decide whether a recording's own sound bar, now drawn right under its picture, should be tinted to match its picture bar so the two read as one clip, or keep the dark green the sound mock uses. Today they are joined by a staple and a link mark only.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 430,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T00:20:57.150Z",
+  "updated": "2026-10-14T12:18:05.661Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Split out of a-clip-s-own-sound-always-sits-right-under-its-v (2026-10-13), whose acceptance listed the same tint family among the join affordances. Picture fill: VideoKit.ClipKind.video gradient 0x12C2E9 to 0x7C4DFF; sound: ClipKind.audio dark green 0x26463A, waveform/level tint VideoKit.Palette.soundTrack (cyan, purple). The join drawn today: SoundJoin and SoundRowMark in Sources/Photonz/TimelineTrackRows.swift. Mock: docs/design/mocks/pages/video-audio.html colours sound lanes cyan and purple on dark green.",
+  "acceptance": [
+    "The user has picked on the decision card whether attached sound bars take their picture's tint",
+    "If yes: an attached sound bar is tinted in its picture bar's colour family, a detached sound keeps the sound colours, and a walk photographs both",
+    "Text on the tinted bar stays legible in light and dark"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T00:20:57.152Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-14T00:21:16.747Z",
+      "note": "Waiting on the tint decision card"
+    },
+    {
+      "t": "2026-10-14T12:18:05.660Z",
+      "note": "seq 4050 -> 430"
+    }
+  ],
+  "walks": [
+    "a-clip-s-sound-stays-under-its-video-walk"
+  ]
+}

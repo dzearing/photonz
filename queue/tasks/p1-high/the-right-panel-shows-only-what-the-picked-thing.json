@@ -5,11 +5,11 @@
   "epic": "ui-building",
   "priority": "p1-high",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:39:53.964Z",
-  "updated": "2026-10-14T03:53:01.830Z",
+  "updated": "2026-10-14T03:53:14.973Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"I wanted you to add a floating toolbar that would show the values when moving things, and remove the stupid right side pane. You're clogging up the right pane with useless non contextual crap that has no purpose being there in the context of the moment.\" Screenshot: a green rectangle picked with the Select tool while the right panel shows MEASURE TOOL (Mode Size, '[ and ] pick a smaller or larger', Snap Edges, Show All), then LAYERS 2, then LIBRARY (Media / Comps).\n\nCode: section choice and content in Sources/Photonz/InspectorPanel.swift (sectionContent ~:1403, MeasureToolInspector at :1426, Space3DInspector at :1526). Related: the-panel-shows-what-the-picked-thing-is-and-its (blocked on the card 'How many buttons may the right hand panel keep?'): the user's answer here points the same way; resolve or fold that card with these words. Memory: one purpose per area (inspector = properties of the picked thing).",
@@ -94,11 +94,16 @@
     {
       "t": "2026-10-14T03:53:01.829Z",
       "note": "left rough: the line between the parts is a bare hairline with a resize cursor (no grabber), and on a short window the pane can be shorter than Layers plus the Library at their floors, so it scrolls; both are in the audit's rough for the user to react to, neither is broken."
+    },
+    {
+      "t": "2026-10-14T03:53:14.971Z",
+      "note": "Built answer B (885afc78): the pick's sections scroll on top and Layers, Measurements and Library sit in a pane at the bottom that keeps its height, with a grip between (next-lists-pane, on at Next; PanelListsPane in core, tested). Walks panel-shows-what-is-picked(-video) check the pane with expectSections lists and drag the grip; all 77 panel walks and Scripts/test.sh pass. On a video Captions and Transitions stay with the pick for now: card on task on-a-video-captions-and-transitions-sit-where-th. Audit queue/audits/2026-10-13-lists-pane-under-the-pick.json."
     }
   ],
   "started": "2026-10-14T02:03:39.771Z",
   "walks": [
     "panel-shows-what-is-picked-walk",
     "panel-shows-what-is-picked-video-walk"
-  ]
+  ],
+  "completed": "2026-10-14T03:53:14.972Z"
 }

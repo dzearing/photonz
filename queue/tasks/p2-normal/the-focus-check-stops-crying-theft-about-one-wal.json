@@ -4,12 +4,12 @@
   "goal": "After most tasks the loop checks that walks leave the person's keyboard and focus alone. About one check in three it prints a red alarm, A WALK TOOK THE PERSON'S FOCUS, about the same walk, which drags clips and is allowed to take the front for those drags. The other checks call the identical run fine. Either the alarm is wrong and should stop, or the walk really grabs the front a step early and that should stop; someone reading the loop must be able to trust the alarm.",
   "epic": "unmanned-loop",
   "priority": "p2-normal",
-  "seq": 120,
+  "seq": 150,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:50:32.894Z",
-  "updated": "2026-10-13T12:55:24.443Z",
+  "updated": "2026-10-14T12:18:03.916Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, queue/loop.log and queue/loop.log.1: across the last 16 rotating checks this walk read 'as declared' 11 times and 'TOOK FOCUS' 5 times (2026-10-10 01:14, 07:37, 10:04 local; 2026-10-10 23:41; 2026-10-11 05:37), always with the same 20 ticks lost. The alarm lines blame step 9 (snapshot) or step 10 (expectClip), and step 25 (snapshot), each 'activated com.dzearing.photonz.probe'; the declared drag steps are 11, 20, 26 and 38 (windowDrag). A non-drag step activating is what turns 'as declared' into 'TOOK FOCUS' (queue/bin/focus-drill.sh around line 180, the 'declared' set and stepAt, which places a moment by the walk's log time plus a zero worked out from done.json's mtime). Theory, not checked: the activation that belongs to the drag at step 11 or 26 lands a moment early on the clock and is put on the step before. The alarm says 'this is a bug in the walk harness or the app, not in the walk'. Filed by the 2026-10-11 digest.",
@@ -47,6 +47,10 @@
     {
       "t": "2026-10-13T12:55:24.442Z",
       "note": "seq 100 -> 120"
+    },
+    {
+      "t": "2026-10-14T12:18:03.915Z",
+      "note": "seq 120 -> 150"
     }
   ]
 }

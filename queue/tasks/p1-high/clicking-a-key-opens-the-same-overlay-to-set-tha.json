@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:46:58.550Z",
-  "updated": "2026-10-13T12:56:14.636Z",
+  "updated": "2026-10-14T09:34:18.308Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"I don't really see the point of adding a 3d pane just to show the rotation values. I think when we move or change transitions, we can show a small toolbar like overlay which shows the transform values for typing things in. But doing some other operation or changing the tool makes the transform overlay disappear. On the overlay there should be a reset button to reset to defaults. Also similarly, for when I have a keyframe and click the opacity dot, I want the same overlay to appear to tweak the opacity. Also editing the graph of a particular item like scale is really hard. I can right click on the scale, say show graph, but then when the graph is there, how do I add points on it? I click on the line, doesn't add a point, i can select a point but then if I have 2 points, I can't select the line in between. I want to be able to easily create nice transitions by adding points, selecting the segments between them, right clicking and changing their easing, etc. I need the ia to be consistent across the properties. When I add a 'key' to a video, it adds all of the animatable properties below it. I really wish there was a more scalable solution to the ux here, because we really should only show the properties being animated. And, if we want to clear one of them, i should be able to select one of the rows and hit delete to remove the whole property from being animated. but there should be a way to add it back. like maybe the keyframe line should be selectable and right clicked to animate a variety of things. or I can click it, tweak something (like transform) and the options are automatically added to that keyframe.\"\n\nFive tasks, in order: the design (mocks), then the transform overlay, the key value overlay, the graph editor, and only-animated-properties with auto-key. Code pointers (read, not run): the 3D section is Space3DInspector (Sources/Photonz/Space3DInspector.swift, shown at InspectorPanel.swift:1526) with EditorState+Space3D.swift; key lanes and the graph toggle are KeyLanesView.swift (segments at :270, lane menus :156, :213, :423) and EditorState+KeyLanes.swift (:283 'Show Graph'); Add Key on a clip is EditorState+TimelineMenus.swift:199 and per property EditorState+PropertyKeys.swift:177 addKeyHere; the property strip is MotionStripView.swift. The shared curve list is EasingCurve (PhotonzCore/LayerMotion.swift) with Draw a Curve, and CurveRow from every-transition-can-be-picked-from-presets-and. Memory rules: one purpose per area (the IA contract in docs/design/mocks/shared/UX-PATTERNS.md decides placement), mocks are the floor, legible text, no em dashes in UI copy. This is step 3 of 5.",
@@ -53,6 +53,31 @@
     {
       "t": "2026-10-13T12:56:14.635Z",
       "note": "triage 2026-10-13: the first checklist line said built to the approved mock, but the mock still draws the bar the user rejected; the line now says which one wins"
+    },
+    {
+      "t": "2026-10-14T08:43:15.527Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T08:51:29.058Z",
+      "note": "Pre-build review: a Premiere user double-clicks nothing, they click a keyframe and type in Effect Controls; here the value is typed beside the key itself, which is quicker. Mock assumptions the app can deliver: lane dots and graph points already pick on a click (db8a1c31). Gaps decided: the clip bar's own diamond (all keys at a moment) is left as a pick only, because the mock sends that click to the canvas bar the user has since replaced with the Info popover; Position and colour keys have no single default, so Reset is dimmed for them (mock draws Reset on Position too, its def is the canvas middle, which reads wrong for a recording whose place is its middle). Command-click (how a walk clicks behind another app) extends the pick and does not move the playhead, so the walk steps the playhead to the key itself. Core model in PhotonzCore/KeyValues.swift with 13 tests."
+    },
+    {
+      "t": "2026-10-14T09:22:09.015Z",
+      "note": "owns these walks: key-value-popover-walk"
+    },
+    {
+      "t": "2026-10-14T09:34:18.235Z",
+      "note": "Left rough (not filed, below the bar): above a key on the first lane the popover sits over the ruler and the clip bar above; the playhead line shows softly through its glass. value-graph-points-and-segments-walk fails at its Backspace step with this feature switched off too, so it predates this work; it is already on walks-that-fail-in-the-full-sweep-21."
+    },
+    {
+      "t": "2026-10-14T09:34:18.306Z",
+      "note": "A click on a key dot or graph point opens a popover above it (tool bar glass, name left value right, Reset at the foot) to type that key's value in its units; Mixed across picked keys, a typed value sets all; colour swatch+hex (swatch opens the picker); Position resets to canvas middle. Closes on Escape, a press elsewhere, another tool, typing, a menu, Play. One code path (PhotonzCore/KeyValues.swift, 17 tests; KeyValuesPopover.swift). Verified by key-value-popover-walk at Next defaults: types 40 into an opacity key, the canvas draws 40%; undo/redo, Mixed, Reset, graph point, colour key, close on tool change. Full suite 13060 green. Audit queue/audits/2026-10-14-key-value-popover.json. Commit bcbbbfb3."
     }
-  ]
+  ],
+  "started": "2026-10-14T08:43:15.525Z",
+  "walks": [
+    "key-value-popover-walk"
+  ],
+  "completed": "2026-10-14T09:34:18.307Z"
 }

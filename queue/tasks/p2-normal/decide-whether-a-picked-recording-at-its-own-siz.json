@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 400,
-  "status": "blocked",
+  "status": "dropped",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T12:28:01.971Z",
-  "updated": "2026-10-13T12:55:26.160Z",
+  "updated": "2026-10-14T12:17:34.510Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-zoomed-recording-shows-its-ring-on-the-frame-n (2026-10-12). Rule today: PhotonzDocument.frameRing returns a ring only when the posed box has grown past the clip own box AND spills past the canvas; EditorState.frameRings feeds the canvas, and CanvasNSView.offersOwnHandles is false for a ringed clip. Ringing every timed picture would be: drop the grown-past check for a clip that fills the frame. Picture at 100%: queue/audits/2026-10-12-zoom-frame-ring-4-wide-sc.png.",
@@ -37,6 +37,14 @@
     {
       "t": "2026-10-13T12:55:26.159Z",
       "note": "seq 380 -> 400"
+    },
+    {
+      "t": "2026-10-13T14:01:37.763Z",
+      "note": "decision \"When you pick a recording that fills the frame and is not zoomed, should it show resize handles?\" resolved: Handles at its own size, ring when zoomed"
+    },
+    {
+      "t": "2026-10-14T12:17:34.509Z",
+      "note": "answered 2026-10-13: handles at its own size, ring when zoomed, which is what the app does today. Nothing to build; framing-a-zoom-keys-its-centre-walk already photographs the recording at 100% (4-wide)"
     }
   ],
   "walks": [

@@ -33,6 +33,11 @@
     }
   ],
   "recommended": "a",
-  "status": "pending",
-  "created": "2026-10-12T12:28:09.182Z"
+  "status": "resolved",
+  "created": "2026-10-12T12:28:09.182Z",
+  "answer": {
+    "choice": "a",
+    "note": "",
+    "resolved": "2026-10-13T14:01:37.731Z"
+  }
 }

@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p1-high",
   "seq": 1.7,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:36:54.404Z",
-  "updated": "2026-10-13T14:09:47.764Z",
+  "updated": "2026-10-13T21:02:24.427Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"right clicking anywhere on the audio clip does nothing. clicking on the segments in between the dots does nothing. I cant figure out how to tweak the line's shape\".\n\nFrom code reading (not run): Sources/Photonz/SoundLane.swift level line (:125-155): contentShape is the fattened line (LevelBand), a tap adds a level point (setSoundLevelPoint) once the clip is picked, .gesture(fader) drags the whole line; no .contextMenu, no segment hit test, no bend handles; dots at :249-261 (drag, double tap). The clip bar's own .contextMenu (ClipPiecesBar.swift ~450) shows TimelineClipMenu only 'if kind != nil', which a linked or detached sound may not satisfy, so right-click shows nothing (SUSPECT). Today's f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu' touched SoundLane.swift, ClipPiecesBar.swift, TimelineDock.swift and EditorState+TimelinePointing.swift (+161) and may intercept right-clicks; check it. Level model: AudioLevel / AudioLevelPoint (fade curves exist: 'curve bends the line along a fade', SoundLane.swift:12).\n\nFolded in 2026-10-13 from a-right-click-on-a-sound-s-level-line-opens-the (dropped as a duplicate). Reproduced 2026-10-12 by the runner on a-range-stays-on-top-when-you-pick-a-clip-and-it. Walk /tmp/rangerepro/line.json: sample recording, soundAddSample (Sample Music on Audio 2, 0-14s, probe window 1728x990), then {\"do\":\"rightClick\",\"at\":[935,924],\"space\":\"window\"} gave: right clicking \"the picture at (935, 924)\" raises no menu: nothing under that point offers one. y=924 is the level line; {\"rightClick\",\"at\":[1000,938]} on the same clip opens the 16-row clip menu. {\"rightClick\",\"on\":\"Sample Music clip\"} (the clip middle) also raises no menu. Likely the level-line overlay in ClipPiecesBar takes the hit without a .contextMenu.",
@@ -57,6 +57,52 @@
     {
       "t": "2026-10-13T14:09:47.763Z",
       "note": "seq 80 -> 1.7"
+    },
+    {
+      "t": "2026-10-13T17:41:34.228Z",
+      "note": "The shared click rule now exists (from the-value-graph task): PhotonzCore AnimatedLine + AnimatedLinePick, documented as UX-PATTERNS D21; build the volume line on it. Same gotchas as noted on every-key-dot-can-be-clicked-to-pick-it-and-back: onTapGesture(coordinateSpace:) for clicks, NSApp.currentEvent modifiers, menus built in a View body reading timelineRightPresses (timelineLastRightPressMS keeps the press moment for menus SwiftUI builds a turn late)."
+    },
+    {
+      "t": "2026-10-13T19:48:25.570Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T20:55:06.172Z",
+      "note": "owns these walks: a-sound-s-volume-line-picks-and-shapes-walk, a-sound-s-volume-line-plain-clicks-walk"
+    },
+    {
+      "t": "2026-10-13T20:55:59.573Z",
+      "note": "Reproduced at Next defaults (probe, 1728x990): right-click on the Sample Music level line at (935,924) and on 'Sample Music clip' by name (its middle lies inside the line's 12pt band) raised no menu; same on the recording's own sound line at (935,886); a right-click below the line at (1000,938) gave the 17-row clip menu. Cause: SoundLevelLine's hit band had no .contextMenu, so it swallowed the right press. Not the f197e266 playhead change."
+    },
+    {
+      "t": "2026-10-13T20:55:59.638Z",
+      "note": "Adversarial pre-build: a Premiere user expects rubber-band keyframes that pick on click and Ctrl/Cmd-click to add; a single bend handle replaces Bezier key handles (a level line has no keys and two handles beside a dot would fight it for the click). The mock (video-audio.html .anode.act) draws an active dot orange; the user's 2026-10-13 rule says white, which wins."
+    },
+    {
+      "t": "2026-10-13T20:55:59.704Z",
+      "note": "Built: AudioLevelPoint.curve + AudioLevelSegments.swift (segment curves, Hold as steps(1) with a 1ms step corner in moments(), addPointOnLine splits the curve, movePoint keeps it, bentCurve), so player and export follow the drawn line. SoundLevelLine rebuilt on AnimatedLine: click picks dot/segment, Cmd-click adds, Shift extends, hover brightens, picked white on accent, bend handle on a picked segment, drag on the line is still the fader, right-click leads with point/segment rows then TimelineClipMenu. EditorState+SoundLine: pick, Backspace via deletePickedKeys, menus. Shared segmentCurveRows extracted from the key graph. Fades section gains a Segment curve row for a picked segment. Walk step expectSoundLine."
+    },
+    {
+      "t": "2026-10-13T20:55:59.768Z",
+      "note": "Gotchas found: (1) SwiftUI keeps a context menu's row ACTIONS from an earlier build while showing new titles: Hold on segment 2 bent segment 1, so rows read the pick at run time (filed find-out-whether-a-key-segment-s-right-click-cur for the key graph, which captures the same way). (2) SwiftUI builds every nearby menu in one pass, so a line only answers a press on its own row (frame in tracksSpace vs timelineRightPressY). (3) walk names must go before .position or they cover the whole line."
+    },
+    {
+      "t": "2026-10-13T20:55:59.830Z",
+      "note": "Walks: a-sound-s-volume-line-picks-and-shapes-walk (Next defaults, no front) passes: Cmd-click adds 3, Cmd-click a dot picks without adding, right-click segment > Ease out with the mix within 0.5 dB at 25/50/75%, Hold, Backspace + one undo, Delete Point from a dot's menu, right-click on waveform / line / clip middle / recording sound all open the clip menu. a-sound-s-volume-line-plain-clicks-walk (front: true) could not run its plain clicks here (probe could not take the front, HIDIdle 5.8h; same as the value-graph task); comes round in the whole set. Updated keys-copy-between-layers-walk and fade-diamonds walk to Command-click (their sound part verified on a trimmed copy; the full walks fail earlier on drags this Mac drops, owned by the-keyframe-anything-and-keys-copy-between-laye). Scripts/test.sh: 12975 tests passed."
+    },
+    {
+      "t": "2026-10-13T20:55:59.892Z",
+      "note": "left rough (no task, under the bar): the closed fade-out stretch shows Fades curve title in the segment menu while playing it backwards; dot and bend drags not walk-driven on this Mac (front refused)."
+    },
+    {
+      "t": "2026-10-13T21:02:24.425Z",
+      "note": "Right-click anywhere on a sound clip opens its menu (the volume line had no menu and swallowed the press, reproduced at (935,924), the clip middle and the recording's own sound line). The volume line follows D21 on AnimatedLine: click picks a dot or segment, only Command-click adds, Shift extends, Backspace deletes in one undo, picked white, hover brightens; segments carry their own curve (shared curve list + Hold from right-click, bend handle, Fades Segment row) and the mix follows within 0.5 dB. Commit 44d69b6e. Verified: Scripts/test.sh 12975 passed; a-sound-s-volume-line-picks-and-shapes-walk passes at Next defaults; plain-click walk needs the front (refused on this Mac, comes round in the whole set). Audit queue/audits/2026-10-13-sound-volume-line-picks-and-shapes.json."
     }
-  ]
+  ],
+  "started": "2026-10-13T19:48:25.569Z",
+  "walks": [
+    "a-sound-s-volume-line-picks-and-shapes-walk",
+    "a-sound-s-volume-line-plain-clicks-walk"
+  ],
+  "completed": "2026-10-13T21:02:24.426Z"
 }

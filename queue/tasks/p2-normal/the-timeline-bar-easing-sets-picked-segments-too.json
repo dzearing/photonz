@@ -4,24 +4,33 @@
   "goal": "When a person Shift-picks some keys and some segments of the line together and chooses an ease in the timeline bar, only the keys change today; the mock says the bar sets the curve for everything picked, so the segments should take it as well, in one undo step.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 4060,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T12:02:31.311Z",
-  "updated": "2026-10-14T12:02:31.314Z",
+  "updated": "2026-10-14T12:18:03.349Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from the-value-graph-zooms-its-value-range-and-the-ti. Today TimelineDock.keyBar shows the per-key KeyEase list whenever keySelection.refs is non-empty, and the shared EasingCurve list (CurveRow.menu) only for segments alone. Mixing needs a decision on how a key ease and a segment curve combine: a segment curve rewrites the leaving half of its first key and the arriving half of its last (LayerMotion.curvingStretch), so applying both in one perform can fight. Mock: docs/design/mocks/pages/video-animate.html, Pick caption: The timeline bar Easing then names the curve and sets it for everything picked.",
   "acceptance": [
     "With keys and segments picked together, the bar names one shared answer or Mixed",
     "Choosing an ease there changes the picked keys and the picked segments, one undo step",
-    "A walk picks a key and a segment together and sets both from the bar at Next defaults"
+    "A walk picks a key and a segment together and sets both from the bar at Next defaults",
+    "Wherever a person eases a key, a segment, a row or the bar, they see the same list of curves, or a decision card says why a key keeps its own shorter list"
   ],
   "log": [
     {
       "t": "2026-10-14T12:02:31.313Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-14T12:17:44.739Z",
+      "note": "2026-10-14 digest design review: the app eases from two different lists, a key's own (KeyEase) and a segment's (EasingCurve, the mock's ten curves and Draw a Curve). Today a key menu, a row's right-click Easing and the bar with keys picked show the first; a segment menu and the bar with only segments picked show the second; the Camera row shows none (camera-keys-ease-in-and-out-like-every-other-key). A person sees a different list depending on what they right-clicked. This task is where the two meet, so it settles which list a person sees; checklist item added."
+    },
+    {
+      "t": "2026-10-14T12:18:03.348Z",
+      "note": "seq 4060 -> 70"
     }
   ]
 }

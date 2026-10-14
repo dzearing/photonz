@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 3,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T13:58:24.868Z",
-  "updated": "2026-10-13T13:58:24.977Z",
+  "updated": "2026-10-14T01:52:23.993Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"The gap tool often gets confused about what we're measuring. for example, I hover in between the text lines here and it is picking up some vertical measure seemingly related to the text below, even though I'm not hovering over the text. I'm hovering over the black area, and the closest 'distinct' edge is above and below, not to the sides. that's how gap should prioritize.\"\n\nFrom code reading (not run): CanvasMeasure.swift :623-635 calls ElementBounds.gap(at:in:drawn:) (PhotonzCore/ElementBounds.swift ~:691-709): 'the two facing edges of whatever sits on either side of it, across the tighter of the two axes ... When both axes read, the shorter span wins'. A short pair formed by glyph edges near the pointer beats the real line gap. Text lines are already recognised as elements in Size mode (done task a-line-of-text-counts-as-an-element-size-mode-re); reuse that line reading for Gap. Memory: the user's main use is UX redlining.",
@@ -31,6 +31,52 @@
     {
       "t": "2026-10-13T13:58:24.976Z",
       "note": "seq 3960 -> 3"
+    },
+    {
+      "t": "2026-10-14T00:41:18.764Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T01:51:47.401Z",
+      "note": "Reproduced on the user's own capture (Screenshot 2026-10-13 at 06.55.59, overlay painted out): in the empty band between 'Screenshots' and 'recordings', the old Gap read horizontal 379->402 (23 px) at (400,255), 221->286 at (276,230), and 426->491 at (450,230), all between glyph edges that are not level with the pointer. Cause: ElementBounds.gap took vertical edges from a +/-32 px window around the pointer's y (edge-map block query), so the sides of letters in the next line qualified as left and right sides, and the shorter span won."
+    },
+    {
+      "t": "2026-10-14T01:51:47.463Z",
+      "note": "Specimen set, 7 pictures at 1x and 2x (Scripts/make-gap-specimens.swift -> Tests/PhotonzRenderTests/Fixtures/gap-*.png and gap-specimens.json; ground truth is each shape's drawn box and each text line's ink box from a pixel scan). BEFORE at 2x: display heading 6 px horizontal / 21 / 39 / vertical 97 (true 74); body lines 18-24 glyph to glyph (true 19); title to body in a card 33-36; icon to label vertical 5 px (true horizontal 22); divider one probe horizontal 5. Buttons, cards and chips were already within 1 px. AFTER: every probe of every specimen within 1 px at 1x and 2 px at 2x (GapSpecimenTests: 47 probes at each scale). On the user's full 3456x2234 capture every probe in the band reads 442->501, matching a hand scan of the two lines' ink (rows 300-441 and 501-678)."
+    },
+    {
+      "t": "2026-10-14T01:51:47.523Z",
+      "note": "How it reads now (Sources/PhotonzCore/GapReading.swift): four walks out from the pointer along its own row and column over the luma field. A step of 12 levels over 2 px is a boundary (a hairline divider is caught; a gradient fill or soft shadow is not). Ink within one text gap beside the walk, or a direct hit, asks TextLineBounds for the line; the line counts only if it runs across the pointer, lies wholly on the walk's side, and its facing edge is no further out than where the walk met it (so a button's label never stands in for the button). Sides are graded: a line, or anything wider than a text gap a step inside, is an element; a pair of element sides beats any other pair, then the shorter span wins. TextLineBounds got two changes: an optional known background (Gap stands on it; inside a bold heading the letters out-voted the page), and a row only counts as an underline once the band spans more than one glyph (a bold crossbar ended the band when seeded at a letter's bottom). Gap no longer uses the edge map; the drawn-box merge is unchanged."
+    },
+    {
+      "t": "2026-10-14T01:51:47.585Z",
+      "note": "Decisions: a line's edge is its ink box (descenders and ascenders included), matching Size mode's line box and a caliper laid across the letters. Between two cards with soft shadows Gap now measures card edge to card edge, the shadow counted as space: settings-pane-2x at (720,432) reads 40 px / 20 pt (white ends row 411, next white starts row 452); it used to read 33 px / 16 pt from where the shadow fades. measurements-named-for-their-mode-walk updated from 'Gap 16' to 'Gap 20' for that reason; the choice is put to the user in the audit's evaluate list."
+    },
+    {
+      "t": "2026-10-14T01:51:47.645Z",
+      "note": "Perf: optimized build of PhotonzCore (swiftc -O): worst 4.7 ms, mean 1.8 ms over 80 spots on a dense 3456x2234 synthetic heading capture; worst 16 ms, mean 1.6 ms over 200 spots on the user's real 3456x2234 capture; under 1 ms in the heading band. Budget 30 ms. The unit test pins cost against CPUYardstick (about 50x the ruler alone, 81x inside a full suite; gate 900 ms calibration time). The first full suite run had 1 failure that did not repeat in 2 reruns, most likely this gate at its first setting of 450 under suite load, which is why it was raised."
+    },
+    {
+      "t": "2026-10-14T01:51:47.705Z",
+      "note": "Adversarial review: a first-time user hovering in a band means the band, never letters beside it. Risks checked on the real app: a button's label must not stand in for the button (facing-edge rule); gradients and shadows must not read as edges (step test); a pointer past a short line's end skips the line rather than guessing. After: walked it in the probe; the caliper runs vertically through the pointer between heading lines at two spots and between body lines."
+    },
+    {
+      "t": "2026-10-14T01:51:47.768Z",
+      "note": "Left rough (none clears the follow-up bar alone; recorded here and in the audit's rough list): (1) between rounded pills, a pointer near their top or bottom measures the curve at that row, wider than the box gap; (2) a pointer past the end of a short line skips that line; (3) a word space wider than 8 pt splits a heading into two lines, so pointing under that space misses it."
+    },
+    {
+      "t": "2026-10-14T01:51:47.837Z",
+      "note": "owns these walks: gap-reads-line-to-line-walk, measurements-named-for-their-mode-walk"
+    },
+    {
+      "t": "2026-10-14T01:52:23.991Z",
+      "note": "Gap now walks out along the pointer's own row and column and reads text as whole lines, so the band between two lines measures line to line through the pointer (user's capture: every spot in the band reads 442->501, matching a hand scan of the ink; before, 23 to 65 px sideways). Specimen set of 7 pictures at 1x/2x passes within 1 px/2 px (GapSpecimenTests); new walk gap-reads-line-to-line-walk passes at Next defaults; 12 existing Gap walks green (naming walk updated: shadowed cards now read edge to edge, 20 not 16). Optimized cost under 5 ms worst on a 3456x2234 capture. Full suite green (13,010 tests). Commit 3db1a940; audit queue/audits/2026-10-13-gap-line-to-line.json."
     }
-  ]
+  ],
+  "started": "2026-10-14T00:41:18.762Z",
+  "walks": [
+    "gap-reads-line-to-line-walk",
+    "measurements-named-for-their-mode-walk"
+  ],
+  "completed": "2026-10-14T01:52:23.992Z"
 }

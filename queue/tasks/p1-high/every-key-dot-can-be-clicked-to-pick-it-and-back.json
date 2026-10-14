@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 1.6,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:35:44.573Z",
-  "updated": "2026-10-13T14:09:47.695Z",
+  "updated": "2026-10-13T19:29:33.577Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"i click on any of these dots and cant select them. want to be able to select, hit backspace and have the point disappear\". No screenshot came through; from the conversation (3D keying, graphs, key overlays) 'these dots' are key dots, so the task covers every surface that draws them.\n\nSuspect from code reading, not confirmed: KeyLanesView.swift key glyph (:410-430) has .gesture(keyDrag(...)) BEFORE .onTapGesture; a DragGesture with minimumDistance 0 in the same file (:466) would take every press and the tap never fires. Check which drag keyDrag is and make tap and drag coexist (minimumDistance > 0 for the drag, or a single gesture that decides on release). Delete of keys: EditorCommands.swift:720-737 only when onTimeline && canDeletePickedKeys; EditorCanvasSurface.swift:179 deletes picked keys from the canvas when keySelection.layerID matches; canDeletePickedKeys at EditorState+KeyLanes.swift:207. Related queued: the graph editor task (the-value-graph-lets-you-add-points-pick-the-seg) and the key overlay task (clicking-a-key-opens-the-same-overlay-to-set-tha) build on picking working.",
@@ -51,6 +51,43 @@
     {
       "t": "2026-10-13T14:09:47.694Z",
       "note": "seq 70 -> 1.6"
+    },
+    {
+      "t": "2026-10-13T17:41:34.156Z",
+      "note": "The shared click rule now exists (from the-value-graph task): PhotonzCore AnimatedLine (hit test: dot first within 7pt, then segment within 6pt, before/after lines are .beyond; action(for:command:shift:)) and AnimatedLinePick<KeyRef>; KeySelection now carries segments. The open graph uses it in KeyLanesView (lineSurface, graphKeyView). Gotchas found: a DragGesture never starts in a walk when the probe cannot take the front, and a plain click on a background window is swallowed while a Command-click lands; use onTapGesture(coordinateSpace:) for clicks and read modifiers from NSApp.currentEvent (KeyLaneView.clickFlags), not NSEvent.modifierFlags. Right-click menus must be built in a View body (BuiltAsItOpens) and read editorState.timelineRightPresses, or SwiftUI serves a menu built at the last redraw."
+    },
+    {
+      "t": "2026-10-13T18:01:59.034Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T19:28:13.127Z",
+      "note": "owns these walks: every-key-dot-picks-walk"
+    },
+    {
+      "t": "2026-10-13T19:29:09.583Z",
+      "note": "Pre-build review: a closed lane drew one bar from first to last key with no segment hit area; a clip-bar diamond's tap only moved the playhead (no pick, so Backspace would take the clip); canvas motion-path rings took no press at all. Premiere/AE: a click on a keyframe picks it, Delete removes it, a marquee picks several; AE drags a motion-path keyframe in space. Plan: closed lanes become the same AnimatedLine as the graph (flat), clip diamonds pick every key at their moment, rings pick their Position key and drag it in space."
+    },
+    {
+      "t": "2026-10-13T19:29:09.649Z",
+      "note": "Reproduction at Next defaults (probe could NOT take the front this session, so only Command-clicks land; with nothing picked Command-click = plain pick): /tmp walk keyed Scale at 1s and 3s, windowClick on 'Key Scale 1' holding command -> expectKeyPick 'Scale 1' OK (lane tap works); windowClick on clip-bar 'Key 2' holding command -> 'the keys picked are none, and the walk expected Scale 2' (clip diamond does not pick). Canvas rings: code has no ring hit at all (CanvasMotionPath.motionPathMouseDown only reads the middle squares). Plain click with the app in front: not drivable by a walk here."
+    },
+    {
+      "t": "2026-10-13T19:29:09.730Z",
+      "note": "Built: AnimatedLine(flatThrough:atY:) for shut lanes (dots + segments pick, Cmd-click adds, hover brightens, picked segment white on accent, box still drawn from the line strip); ClipKeyMark.refs + pickClipKeys (diamond picks every key at its moment, Shift/Cmd toggles, picked diamond larger with accent edge, Copy/Paste rows); MotionPathOnCanvas.keyRefs/pickedKeys + moveMotionPathKey (ring click picks without moving the playhead, drag moves the key in space, picked ring larger white; rings yield to 3D handles drawn over them); right-click on any dot picks it once per right-click (keyMenuPressServed: without it SwiftUI's menu rebuild re-picked a dot the person had just Command-clicked out, found by the walk); clip menu refuses a right press on a diamond; walk step expectKeyPick; UX-PATTERNS D21 extended. Verified: Scripts/test.sh 12963 tests green; every-key-dot-picks-walk ok at Next defaults, no flags (7 real captures); key-lanes, key-lanes-menu, between-the-keys, delete-layer-key, tilt-keys-like-a-move, motion-path, timeline-keys-on-open, a-faded-title-shows-while-playing, title-flies-in-grows-and-fades-out walks ok."
+    },
+    {
+      "t": "2026-10-13T19:29:09.798Z",
+      "note": "Walks failing that are not this change: keys-copy-between-layers-walk, value-graph-points-and-segments-walk and keyframe-anything-walk fail identically at HEAD with this task's changes stashed (run 2026-10-13); value-graph, premiere-keys-on-the-timeline and camera-keys-row are setup-front walks failing on typing/playback/plain clicks while macOS refuses the probe the front. Filed the-keyframe-anything-and-keys-copy-between-laye for the two non-front ones. Left rough (log only): the same stale-right-press re-pick may affect a graph SEGMENT right-clicked then Shift-clicked out (segmentMenuRows picks without a served guard) - not reproduced; a key whose ring sits under the layer's 3D handles (playhead on that key) cannot be clicked on the canvas; the picked ring reads blue while the pointer rests on it (hover look). Audit: queue/audits/2026-10-13-every-key-dot-picks.json."
+    },
+    {
+      "t": "2026-10-13T19:29:33.575Z",
+      "note": "Shipped in db8a1c31: every key dot picks on a click and Backspace deletes it. Shut lanes follow the same line rule as the graph (dots and segments pick, Command-click adds, picked white); a clip-bar diamond picks every key at its moment (before, it only moved the playhead); a canvas motion-path ring picks its Position key and drags it in space; right-click picks a dot once without moving the playhead. Verified: Scripts/test.sh 12963 green; every-key-dot-picks-walk ok at Next defaults with 7 real captures (clicks driven with Command since the probe could not take the front); neighbouring key walks ok. Audit queue/audits/2026-10-13-every-key-dot-picks.json. Follow-up: the-keyframe-anything-and-keys-copy-between-laye (two key walks failing at HEAD before this change)."
     }
-  ]
+  ],
+  "started": "2026-10-13T18:01:59.031Z",
+  "walks": [
+    "every-key-dot-picks-walk"
+  ],
+  "completed": "2026-10-13T19:29:33.576Z"
 }

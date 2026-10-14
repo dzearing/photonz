@@ -4,12 +4,12 @@
   "goal": "The transform mock draws a link between width and height, so typing a new width brings the height along. Today the two are independent. The floating bar this was filed against has since been replaced by the Info popover on the tool bar, so the link belongs there: on by default, one click to unlink.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 40,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T02:46:23.991Z",
-  "updated": "2026-10-13T12:55:23.953Z",
+  "updated": "2026-10-14T12:18:03.410Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-small-overlay-shows-transform-values-to-type-i (2026-10-13). Bar view: Sources/Photonz/TransformValueBar.swift; values land through EditorState+TransformBar.swift setTransformBarValue via LayerGeometrySelection.applying. Mock: .va-link in video-animate.html buildBar (between W and H). The mock models size as one scale percentage, which is why its W and H move together.\n\nTriage 2026-10-13: the canvas bar (TransformValueBar.swift) this was filed against was replaced the same night by TransformValuesPopover.swift (task transform-values-live-behind-an-info-button-on-t, commit 1cd96c89). Build the link there.",
@@ -39,6 +39,10 @@
     {
       "t": "2026-10-13T12:55:23.952Z",
       "note": "seq 3960 -> 40"
+    },
+    {
+      "t": "2026-10-14T12:18:03.409Z",
+      "note": "seq 40 -> 80"
     }
   ],
   "walks": [

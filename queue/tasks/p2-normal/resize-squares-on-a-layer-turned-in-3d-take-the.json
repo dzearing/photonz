@@ -4,12 +4,12 @@
   "goal": "When a layer is swung or tipped in 3D, its eight resize squares and corner dots are drawn on the turned card, but pressing on them does nothing (the press still looks for them where the flat layer would be). A person sees handles that do not respond. Either make them resize the turned card from where they are drawn, or stop drawing handles that cannot be taken.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 20,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T20:29:19.474Z",
-  "updated": "2026-10-13T12:55:23.826Z",
+  "updated": "2026-10-14T12:18:03.167Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-handle-lights-on-hover-walk while building hover feedback (2026-10-12). Reproduction: a rectangle drawn on a blank 1120x760 picture, picked, swung with the green arc by 67pt (Rotation Y 40), then the walk step {\"do\":\"hoverHandles\",\"name\":\"2-turned\",\"space\":true} on all handles. Command: Scripts/playtest.sh Scripts/playtest/every-handle-lights-on-hover-walk.json (with the 2-turned step not filtered). Output: FAILED: the pointer rested on the resize-topLeft handle at view (317, 309) and nothing lit up; the canvas says a press there would be \"none\". Cause (from code): CanvasDisplay draws frame handles through the layer drawnMap homography (chromePoint with spaceMap), while CanvasPointer.cue and the mouseDown resize branch hit test in CanvasPointer.handleSpacePoint, which only undoes the flat LayerTransform, not the 3D turn. The resize drag itself would also have to follow the plane, so this is more than a hit-test fix.",
@@ -26,6 +26,10 @@
     {
       "t": "2026-10-13T12:55:23.825Z",
       "note": "seq 4030 -> 20"
+    },
+    {
+      "t": "2026-10-14T12:18:03.166Z",
+      "note": "seq 20 -> 40"
     }
   ],
   "walks": [

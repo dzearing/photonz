@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T13:55:47.700Z",
-  "updated": "2026-10-13T13:55:47.795Z",
+  "updated": "2026-10-13T21:52:18.026Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i make a size measurement and change the colors used for the calipers, it doesn't seem to remember the next time I use it. I'd like the defaults for all measurements to be shades of bluish to bluish grey and all match. like this [screenshot]. But if i change either caliper in the size group, it remembers for all new calipers used in measurement tools. gap vs size shouldn't be different for example.\" Screenshot 2026-10-13 06.54.34: calipers with dark navy pill chips, blue ring, white '19 px', '48 px', '174 px', thin blue lines, and a faint blue box over 'edited'.\n\nThis REVERSES two earlier choices: the per-role colours (Size red, Spacing blue: PhotonzCore/MeasureStyles.swift ~:90-110 role, sizeColors, spacingColors; content(for role:) :297) and the red 10% Size box from a-size-measurement-is-one-group-a-faint-red-box (now blue, matching). Remembering: EditorState+MeasurePanel.swift rememberMeasureColors(of:) (:283) and updateMeasureStyles (:295), persisted in UserDefaults measureStylesKey; addElementSize (EditorState+Measure.swift:97) reads measureStyles.content(for: .size). Related done: measurements-are-named-for-their-mode-and-every (same appearance controls for all calipers).",
@@ -30,6 +30,37 @@
     {
       "t": "2026-10-13T13:55:47.794Z",
       "note": "seq 3960 -> 2"
+    },
+    {
+      "t": "2026-10-13T21:14:41.250Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T21:51:34.685Z",
+      "note": "owns these walks: every-measurement-shares-one-look-walk, measurements-named-for-their-mode-walk, a-size-measurement-is-one-group-walk"
+    },
+    {
+      "t": "2026-10-13T21:51:46.204Z",
+      "note": "Reproduced at Next defaults (repro walks in /tmp): recolouring a Size (group picked whole, or its Width picked alone) WAS remembered for the next Size, but the next Gap still came out #0A84FF because Size and Spacing kept separate colour sets, and a Distance took whichever role was used last. Second cause found in code: each editor window loaded its own copy of the remembered look and wrote the whole of it back on any measure edit, so an older open window started measurements in the old colours and overwrote the change. Not reproduced live (one window per walk); fixed anyway with one app-wide memory."
+    },
+    {
+      "t": "2026-10-13T21:51:46.266Z",
+      "note": "Built: MeasureStyles keeps ONE MeasureColors set (renamed from MeasureRoleColors); default #3774D5 line+ring, #233963 chip, white text, sampled from the user's screenshot (chip exact #233963, ring peak #3774D5). Migration: last-used role's set if tuned, else the other if tuned, else the new blue; a box pick of the old red follows the ink. Role control only retags. MeasureMemory.shared (app-wide, follows UserDefaults changes) replaces the per-window copy. Fixed a pre-existing bug: a ring switched off came back after relaunch. Walk expectMeasures gained a chips claim. New walk every-measurement-shares-one-look-walk; measurements-named-for-their-mode-walk now recolours with distinct shades."
+    },
+    {
+      "t": "2026-10-13T21:51:46.333Z",
+      "note": "Rough items: legend showing two identical swatches filed as the-measuring-legend-says-something-useful-now-t (p2). Box opacity 10% vs screenshot ~25% left as an evaluate question in the audit (task said 10%), not filed. Dark-picture lines read quieter than light: in the audit evaluate, not filed."
+    },
+    {
+      "t": "2026-10-13T21:52:18.024Z",
+      "note": "Size, Gap and Distance now share one remembered look, blue by default (#3774D5 line/ring, #233963 chip, white text, box same blue 10%), sampled from the user's screenshot; recolouring any caliper including a Size group's Width/Height sets it for every mode and every window (MeasureMemory). Old per-role memories migrate; documents keep their colours. Verified: Scripts/test.sh 12981 tests green; walks every-measurement-shares-one-look-walk (Next defaults, green Width then Gap/Distance/Size start green, fresh install blue set with chips), measurements-named-for-their-mode-walk, a-size-measurement-is-one-group-walk (dark picture) and all measure walks pass. Audit queue/audits/2026-10-13-every-measurement-shares-one-look.json. Commit 9266af1f."
     }
-  ]
+  ],
+  "started": "2026-10-13T21:14:41.247Z",
+  "walks": [
+    "every-measurement-shares-one-look-walk",
+    "measurements-named-for-their-mode-walk",
+    "a-size-measurement-is-one-group-walk"
+  ],
+  "completed": "2026-10-13T21:52:18.025Z"
 }

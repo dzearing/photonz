@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:25:07.551Z",
-  "updated": "2026-10-12T08:49:28.732Z",
+  "updated": "2026-10-13T14:02:02.525Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-11): \"The text itself doesn't even move in. It's just boring ... I asked you to research good titles and this was really not an improvement\" (full quote on the companion task 'Title backgrounds that are alive: auroras, energy streams, light, bubbles, sketching').\n\nEvidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in': Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass all show the complete headline at their 'in' frame, nearly identical to 'hold'. The previous tasks shipped TextReveal (PhotonzCore/TextReveal.swift, PhotonzRender/TextRevealRasterizer.swift), TitleDesign parts (TitleDesign.swift), MotionBlur, TitleSet.swift (12 built-ins); the log of title-text-comes-in-by-line-word-or-letter says 'the headline's own part keys still run under a hand-added reveal' and 'reveals have no out yet' and a-set-of-titles-that-look-designed folded that in. Find out why it does not show. Depends on the backgrounds task for the backgrounds; the entrance fix can land first.",
@@ -62,6 +62,14 @@
     {
       "t": "2026-10-12T08:49:28.730Z",
       "note": "Every built-in headline now visibly arrives and leaves: 12 distinct entrances measured by TitleEntranceInkTests on the real renderer (<10% on frame 0, 20-80% half way, never full before 400 ms, same going off), each on its own moving look except the bare Minimal Underline. Cause reproduced (ins over in 300-400 ms on Ease out expo; old sheet sampled late). TitleSetTests, title suites and 19 title walks green at Next defaults; split full suite green apart from frame budgets under parallel load that pass alone. Reel + contact sheet under queue/audits/2026-10-12-title-set-*, audit 2026-10-12-title-text-visibly-comes-in-and-every-built-in-t.json, decision card for the user. Commit 88195447."
+    },
+    {
+      "t": "2026-10-13T14:01:54.081Z",
+      "note": "decision \"The twelve built-in titles now visibly come in, each its own way, on moving backgrounds. Do they look produced?\" resolved: Keep all twelve as they are"
+    },
+    {
+      "t": "2026-10-13T14:02:02.524Z",
+      "note": "decision \"Ten moving title backgrounds are built. Which do you keep, and which do new titles start on?\" resolved: Keep all ten, titles start on Aurora"
     }
   ],
   "started": "2026-10-12T07:33:08.285Z",

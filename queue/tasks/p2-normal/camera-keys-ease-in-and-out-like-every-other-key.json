@@ -4,12 +4,12 @@
   "goal": "A camera push in or pan keyed at two moments has no way to ease: the Camera row at the top of the timeline offers no easing or curve on right-click, where every other key in the app does. A camera move should start and settle as smoothly as a title or a zoom can, chosen the same way.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 60,
+  "seq": 100,
   "status": "pending",
   "release": "next",
   "area": "video",
   "created": "2026-10-12T12:45:05.882Z",
-  "updated": "2026-10-13T12:55:24.074Z",
+  "updated": "2026-10-14T12:18:03.598Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-10-12 digest design review. Epic success item: any animatable value takes easing and bezier curves from right-click (objectives.json, video-transitions-motion). Audit 2026-10-12-camera-keys-row.json rough: the row has no curve view and no easing menu; right-click offers Go to Key, Show Camera Settings and Delete Key. Core: Sources/PhotonzCore/CameraRow.swift, SceneCamera.motions; app TimelineCameraRow.swift, EditorState+CameraRow.swift. One diamond stands for every camera value keyed at that moment, so an ease picked there applies to all of them; that is fine to start. If camera keys already carry easing somewhere else (the Camera section), reach that from the row rather than adding a second way.",
@@ -35,6 +35,14 @@
     {
       "t": "2026-10-13T12:55:24.072Z",
       "note": "seq 60 -> 60"
+    },
+    {
+      "t": "2026-10-14T12:17:44.799Z",
+      "note": "2026-10-14 digest: offer whichever easing list the-timeline-bar-easing-sets-picked-segments-too settles as the one a person sees, not a third list of the camera's own."
+    },
+    {
+      "t": "2026-10-14T12:18:03.597Z",
+      "note": "seq 60 -> 100"
     }
   ]
 }

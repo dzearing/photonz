@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:52:01.142Z",
-  "updated": "2026-10-13T12:55:23.033Z",
+  "updated": "2026-10-13T15:07:40.102Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when I measure with size, the layer should be size. when i measure with gap, the layer should be gap. the calipers you use with size, gap, or distance, they all should have the exact same configurable appearance options... makes no sense why i click on a size caliper and can't change the color\".\n\nFrom code reading (not run): MeasureInspector.swift shows its own look controls only when !shapePartsEnabled (:52, :100); in Next (shape parts on) colours live in the Appearance section's parts; the Role control (Size vs Spacing, :84-97) picks remembered colours. Size measurements come from EditorState+Measure.swift addElementSize (:97-135) with role .size and measureStyles.content(for: .size). Unknown which of these hides or blocks the colour for Size; reproduce. Companion: a-size-measurement-is-one-group-a-faint-red-box (seq 7) changes what Size commits; keep the two consistent.",
@@ -34,6 +34,44 @@
     {
       "t": "2026-10-13T12:55:23.032Z",
       "note": "seq 7 -> 30"
+    },
+    {
+      "t": "2026-10-13T13:50:14.997Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T13:54:53.908Z",
+      "note": "Reproduced at Next defaults (probe, settings-pane-2x at 1280x840, walk /tmp/pz-repro/repro2.json). Names: Gap -> Layers 'Measure', Measurements 'Gap'; Distance -> Layers 'Measure', Measurements 'Width' (it takes the last-used role, Size, and the row name is derived from role not mode); Size -> group 'Size 124 × 30' with Height/Width/Box. Appearance: loose Distance caliper shows Opacity, Blending, Role, Caliper colour + Thickness, then Chip/Chip Fill/Edge/Text below the fold of Appearance's own scroller. Size GROUP picked: Opacity, Blending, Masked by, Corner Radius only, NO caliper/chip colour at all (parts list reads the group, which has no colour slots). Size PART (Height) picked: an Arrange section ('in Size 124 × 30') appears above Appearance, so Appearance shows Opacity, Blending, Role and the Caliper colour row is clipped 18pt below its scroller's visible edge (panel dump: inWindow false); on screen there is no colour to click. Also in Next a colour changed on any caliper's part row is not remembered for the next measurement (only the Current-release swatches write MeasureStyles role colours)."
+    },
+    {
+      "t": "2026-10-13T13:54:53.978Z",
+      "note": "Adversarial review before building: a Figma/Photoshop user picking a grouped measurement expects its stroke colour right there (Figma's Selection colors over a group), so the Size group must show its calipers' rows itself, not require opening the group. Risk: the dock clips Appearance on small windows, so the rows must land in the SAME place as a loose caliper's: no Arrange for parts of a Size group (aligning a caliper to its own group means nothing), no Masked by / Corner Radius over a Size group. Risk: renaming every measurement layer could disturb Current, so mode-naming is set only where Size is already a group (next-layer-groups). Plan: MeasureContent.kind (size/gap/distance, optional, old docs unchanged) drives names 'Gap 16' / 'Distance 240' kept in step like Size groups; parts rows/Role/Chip/Unit read every caliper picked or inside a picked Size group, Mixed when they disagree; part-row colour edits remembered under the caliper's role."
+    },
+    {
+      "t": "2026-10-13T15:06:52.621Z",
+      "note": "owns these walks: measurements-named-for-their-mode-walk, panel-shows-what-is-picked-walk"
+    },
+    {
+      "t": "2026-10-13T15:07:17.260Z",
+      "note": "Built: PhotonzCore MeasureContent.madeBy (MeasureToolMode?, written only when known; old docs unchanged), MeasureNaming (automatic 'Gap 16' / 'Distance 124' in the caliper's own unit, isAutomaticName, keepMeasureNamesInStep run on every perform alongside the Size group naming, measureLookIDs expanding a Size group to its calipers), derivedName follows the mode before the role, displayName shows the word for automatic names; arrangeContainer nil inside a Size group (no Arrange section for its parts); canBeMasked false for a Size group. App: madeBy recorded in addMeasure/addGapMeasure/addElementSize only where next-layer-groups is on (Current keeps 'Measure'); colorSlotTargetIDs (Size group -> calipers) feeds the parts rows, colour switches, row targets and selection paint, while Opacity/Blending/Effects still read the group; Role row, Chip size and Unit read every caliper Appearance speaks for with Mixed (no segment lit / mixed readout) and set them all in one undo; Thickness shows Mixed instead of 1 px; a colour picked on any caliper's part row is remembered under its role (armToolsFromSelection -> rememberMeasureColors). Harness: expectMeasures takes inks. Tests: MeasureModeNamesTests (17) + expectMeasures inks parse test."
+    },
+    {
+      "t": "2026-10-13T15:07:17.325Z",
+      "note": "Verified: new walk measurements-named-for-their-mode-walk green at Next defaults (no flags): rows Distance 124 / Size 124 × 30 (Height, Width, Box) / Gap 16; Measurements Distance/Size/Gap; Size group picked shows Role+Caliper+Chip (walk pressed the Caliper well and a swatch, both size calipers -> #FFBBB8); Height picked: no Arrange section; Gap and Distance recoloured the same way; all three picked: Caliper Mixed, one colour sets all four calipers (#4DA4FF); the next Size measurement comes out #4DA4FF. 29 measurement walks green (measure*, caliper*, dock-picked, distance*, gap*, inspector-reach, panel-shows-what-is-picked, a-size-measurement); panel-shows-what-is-picked-walk updated ('Measure' -> 'Distance 200'). Unrelated walk failures seen in the wider batch and checked: tutorial-export-a-spec-list (probe's menu bar frozen in the background, ⌃⌘C item dimmed), timeline-dock-resizes and track-column-resizes (dock drags need the app in front). Scripts/test.sh: 12932 tests, only the known load-sensitive frame-time/grain tests failed (load avg 16-20 from other sessions), each passing alone and identically without this change; folded into the-full-test-run-passes-every-time-not-one-run."
+    },
+    {
+      "t": "2026-10-13T15:07:17.390Z",
+      "note": "Left rough (not filed): selecting an alignment guide shows no Role at all while the redline mock's Role offers Size, Spacing and Align with Align lit for a guide; predates this task, next-measure.md §9 says the role model 'can treat alignment != nil as the Align role when it lands'. Not filed: nobody has asked and it changes nothing about this task. Colour memory follows the role, so recolouring a Distance in the Size role also sets the next Size's colour; asked in the audit's evaluate."
+    },
+    {
+      "t": "2026-10-13T15:07:40.100Z",
+      "note": "Gap and Distance land named 'Gap 16' / 'Distance 124' (Measurements: Gap / Distance), kept in step with the reading; a picked Size measurement shows the same Role, Caliper, Thickness and Chip rows as any caliper, a Size part gets no Arrange section, several calipers read Mixed and are set together, and a caliper colour is remembered for the next measurement of its role. Commit 8146de6f. Verified: MeasureModeNamesTests + full suite (only known load-sensitive timing tests failed, each passing alone); walk measurements-named-for-their-mode-walk green at Next defaults and 29 measurement walks green; audit queue/audits/2026-10-13-measure-mode-names.json."
     }
-  ]
+  ],
+  "started": "2026-10-13T13:50:14.996Z",
+  "walks": [
+    "measurements-named-for-their-mode-walk",
+    "panel-shows-what-is-picked-walk"
+  ],
+  "completed": "2026-10-13T15:07:40.101Z"
 }

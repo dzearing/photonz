@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p1-high",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T01:54:49.849Z",
-  "updated": "2026-10-13T12:55:23.092Z",
+  "updated": "2026-10-14T08:32:38.125Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"the zoom lens has lines connecting the closest edge of the target to the closest edge of the zoom. I'd like the area in between to be filled the line color but be 10% opacity (configurable).\" ('zoom lens' here is the zoom callout: source box, magnified box, two leader lines.)\n\nFrom code reading (not run): leader lines come from PhotonzCore Geometry.leaderLines(source:callout:) and the turned variant (Geometry.swift:334-360, nearest corners); drawn by PhotonzRender/ZoomCalloutOverlayRasterizer.swift (:66) and previewed in Sources/Photonz/CanvasAnnotationPreview.swift (:392). ZoomCalloutContent (PhotonzCore/Layer.swift:752) has sourceRect, magnification, shape; add a fill opacity (Codable default). The band polygon is the two leader segments' endpoints in order; for circles use the external tangents.",
@@ -34,6 +34,43 @@
     {
       "t": "2026-10-13T12:55:23.091Z",
       "note": "seq 8 -> 40"
+    },
+    {
+      "t": "2026-10-14T08:00:31.055Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T08:32:12.414Z",
+      "note": "owns these walks: a-zoom-callout-band"
+    },
+    {
+      "t": "2026-10-14T08:32:12.477Z",
+      "note": "Adversarial review before building: no mock page covers the callout band. App gap found: on a Circle callout the leader lines ran between the bounding-box CORNERS and dangled in space off both circles (reproduced in a walk capture), so a band between them could never sit on the circles. Fixed by making circle lines the two external tangents (convex hull bridges of the two capsule outlines, 48 steps per quarter arc; turned callouts via Geometry.boxPlacement(corners:))."
+    },
+    {
+      "t": "2026-10-14T08:32:12.537Z",
+      "note": "Built: ZoomCalloutContent.fillOpacity (0.1 for new, 0 when decoded from a file saved before it; audit argues old docs should not change), CalloutStyles.fillOpacity (tool memory), Geometry.leaderLines(shape:)/zoomCalloutBand/zoomCalloutOutline/boxPlacement in PhotonzCore/ZoomCalloutBand.swift, band drawn first in ZoomCalloutOverlayRasterizer with both shapes cut out by even-odd clips, creation-flight band (CanvasAnnotationPreview, masked CAShapeLayer inside the leader layer), Fill opacity slider in MagnifierSettingsRows behind new flag next-callout-band (Next default on; Current has no control and makes callouts with 0). Walk step expectCallout gained band: reads the rendered pixel against the same render with the band off."
+    },
+    {
+      "t": "2026-10-14T08:32:12.597Z",
+      "note": "Verified: Scripts/test.sh 13042 tests green; band edge MEASURED within 1px of each leader line, rectangle and circle (ZoomCalloutOverlayTests.theBandsEdgeSitsOnTheLeaderLine); walk a-zoom-callout-band (Next defaults, no flags) green: 10% blend read when made, moved and made round, 0 after pressing the slider at its left end by its face, undo restores 10%, next callout drawn at the remembered 0. Related walks green: a-dragged-lens-leaves-no-trail, a-zoom-callout-keeps-its-shape, callout-crowding, callout-ring-color, callout-shape, callout-magnification, magnify-lens, dock-picked-first, every-panel-keeps-its-margins, dock-fits-the-window, tool-settings-capsule. Export and copy: by code path only (both render callouts through DocumentRenderer, which passes fillOpacity); not walked. Library: there is no Callout style tile in the Library; the callout tool's own memory (CalloutStyles) is what carries the fill for new callouts."
+    },
+    {
+      "t": "2026-10-14T08:32:12.660Z",
+      "note": "Left rough (in the audit, not filed: each is a judgement question already put to the user in the audit's evaluate list, so their reaction files it): Fill opacity placed in the Lens section rather than beside the line colour; old documents open at 0; the circle tangent-line fix reaches Current through the shared renderer; a diagonally placed rectangle callout gives a thin triangular band because both nearest-corner lines meet at one box corner."
+    },
+    {
+      "t": "2026-10-14T08:32:19.938Z",
+      "note": "walks a-zoom-callout-band -> a-zoom-callout-band-walk"
+    },
+    {
+      "t": "2026-10-14T08:32:38.123Z",
+      "note": "Zoom callouts tint the band between their two lines with the line colour, 10% by default for new callouts in Next (files saved before open at 0); Fill opacity slider in the Lens section under Shape, one undo step per pull, remembered by the tool; Circle callouts now draw the two touching lines and the band stops at both round edges. Commit f141273a. Verified: Scripts/test.sh 13042 green including the band edge measured within 1px of each line; walk a-zoom-callout-band at Next defaults reads the 10% blend off the render when made, moved and made round, 0 after pressing the slider by its face, undo, and the remembered 0 on the next callout; 11 related callout and dock walks green. Audit queue/audits/2026-10-14-zoom-callout-band.json."
     }
-  ]
+  ],
+  "started": "2026-10-14T08:00:31.054Z",
+  "walks": [
+    "a-zoom-callout-band-walk"
+  ],
+  "completed": "2026-10-14T08:32:38.124Z"
 }

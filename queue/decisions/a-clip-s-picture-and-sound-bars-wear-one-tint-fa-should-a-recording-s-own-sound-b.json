@@ -1,0 +1,51 @@
+{
+  "id": "a-clip-s-picture-and-sound-bars-wear-one-tint-fa-should-a-recording-s-own-sound-b",
+  "taskId": "a-clip-s-picture-and-sound-bars-wear-one-tint-fa",
+  "question": "Should a recording's own sound bar take its picture's colours, so the two read as one clip?",
+  "context": "The sound a recording came with now sits on a row right under its picture (asked for on 2026-10-13). Its bar is joined to the picture by a staple and a link mark, but keeps the green all sound wears.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep sound green, joined by a staple",
+      "summary": "The sound under a recording stays the dark green every sound wears, joined to its picture bar by a short cyan staple and a link mark. This is what ships today.",
+      "pros": [
+        "Sound always looks like sound, wherever it is",
+        "Matches the sound mock"
+      ],
+      "cons": [
+        "The picture bar is blue and its sound green, so they look like two things side by side"
+      ],
+      "mitigation": "The staple and link mark sit right where the two bars start."
+    },
+    {
+      "id": "b",
+      "label": "Tint the attached sound like its picture",
+      "summary": "A recording's own sound bar under its picture takes a darker shade of the picture's blue to violet, so picture and sound read as one clip in two parts. A detached sound goes back to green.",
+      "pros": [
+        "One clip reads as one thing at a glance",
+        "Detaching visibly changes the colour, which says the link broke"
+      ],
+      "cons": [
+        "Departs from the sound mock's colours",
+        "The waveform and volume line must stay readable on the new shade"
+      ],
+      "mitigation": "Only attached sound changes; music and detached sound keep the mock's colours."
+    },
+    {
+      "id": "c",
+      "label": "Leave it as it is, no more work",
+      "summary": "Nothing changes and this question is closed.",
+      "pros": [
+        "No work"
+      ],
+      "cons": [
+        "The look is never revisited"
+      ],
+      "mitigation": "You can ask again any time.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-14T00:21:06.119Z"
+}

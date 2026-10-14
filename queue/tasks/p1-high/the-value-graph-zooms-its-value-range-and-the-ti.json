@@ -1,0 +1,48 @@
+{
+  "id": "the-value-graph-zooms-its-value-range-and-the-ti",
+  "title": "The value graph zooms its value range and the timeline bar names a picked segment's curve",
+  "goal": "An opened value graph fits itself to its values today; a person should also be able to zoom it taller or shorter to work on a small change, and with a segment of the line picked the timeline bar's Easing should name that segment's curve and set it, as it does for picked keys.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 3960,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T17:40:36.813Z",
+  "updated": "2026-10-14T12:03:19.084Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Left over from the-value-graph-lets-you-add-points-pick-the-seg (acceptance: auto-fits with a way to zoom it; mock video-animate.html: The timeline bar's Easing then names the curve and sets it for everything picked). Today the bar hides when only segments are picked (TimelineDock.keyBar), because its list is the per-key KeyEase list; the segment needs the shared EasingCurve list (CurveRow) there. Range: KeyLaneView.range(_:) / KeyGraph.low/high.",
+  "acceptance": [
+    "A gesture on an open graph (Option-scroll or a pinch over it) zooms its value range in and out around the pointer, and the range readings on the left follow; double-clicking the range resets to fit",
+    "With only segments picked the timeline bar shows Easing naming their shared curve (Mixed where they differ), and choosing a curve there sets every picked segment, one undo step",
+    "A walk zooms a graph and sets a picked segment's curve from the bar at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T17:40:36.815Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-14T11:15:22.588Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T12:02:50.132Z",
+      "note": "walks none -> value-graph-zoom-and-segment-easing-walk"
+    },
+    {
+      "t": "2026-10-14T12:03:19.010Z",
+      "note": "Adversarial pass: Option-scroll over the timeline already zooms time (Premiere), so over an open graph it now zooms values instead; pinch left to time and rows. A zoomed curve had to be clipped vertically (TimelineEdgeClip slack 0 when graphed) or it ran over the rows either side. Mixed keys+segments pick left on the key list, filed as the-timeline-bar-easing-sets-picked-segments-too. value-graph-points-and-segments-walk fails at step 69 on main exactly as in the 2026-10-13 sweep, owned by walks-that-fail-in-the-full-sweep-21. Left rough: off-graph points are hidden, with no edge marker."
+    },
+    {
+      "t": "2026-10-14T12:03:19.082Z",
+      "note": "Shipped in e5452b9f. Option and the wheel over an open value graph zoom its values about the pointer (GraphValueRange in PhotonzCore, tested; EditorState+KeyGraphZoom), the readings follow, and a double click on a reading fits it again. With only segments picked, the timeline bar's Easing shows the shared curve list naming their curve or Mixed and sets every picked segment in one undo step. Verified: Scripts/test.sh green (13091 tests), new walk value-graph-zoom-and-segment-easing-walk passes at Next defaults with no flags, and 11 related walks pass. Audit: queue/audits/2026-10-14-value-graph-zoom.json"
+    }
+  ],
+  "walks": [
+    "value-graph-zoom-and-segment-easing-walk"
+  ],
+  "started": "2026-10-14T11:15:22.587Z",
+  "completed": "2026-10-14T12:03:19.083Z"
+}

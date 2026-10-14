@@ -1,0 +1,68 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-21",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-13T15:25:02.884Z",
+  "updated": "2026-10-14T12:18:03.043Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-14T08:00:30Z: 901 of 915 walks passed in 247 minutes.\n\nFailing walks (14): a-recording-stays-and-opens-right-after-stop-walk, box-scrolls-at-the-edge-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, keys-copy-between-layers-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  box-scrolls-at-the-edge-walk -> scrolling-the-timeline-along-time-keeps-every-fr (that task says it owns this walk)\n  keys-copy-between-layers-walk -> the-keyframe-anything-and-keys-copy-between-laye (that task says it owns this walk)\n\nThis task owns the other 12: a-recording-stays-and-opens-right-after-stop-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nFull output: queue/sweep/2026-10-13-205353.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-small-overlay-shows-transform-values-to-type-i: transform bar now appears under any layer after a move, resize, turn or nudge; walks that click just below a moved layer may hit it\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T15:25:02.886Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-13T15:25:02.889Z",
+      "note": "rotating check 2026-10-13T15:25:02Z, 33 walks run from 132 onward in the rotation: clicking-a-timeline-item-moves-the-playhead-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-13T16:06:06.136Z",
+      "note": "rotating check 2026-10-13T16:06:06Z, 33 walks run from 161 onward in the rotation: clicking-a-timeline-item-moves-the-playhead-walk (its script changed since the last check), command-arrows-nudge-a-clip-walk, command-r-opens-the-speed-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-13T17:59:44.213Z",
+      "note": "rotating check 2026-10-13T17:59:44Z, 33 walks run from 189 onward in the rotation: value-graph-points-and-segments-walk (its script changed since the last check) failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-13T19:46:11.223Z",
+      "note": "rotating check 2026-10-13T19:46:11Z, 32 walks run from 219 onward in the rotation: cut-panel-names-the-clip-walk, delete-track-menu-shows-its-key-walk, dock-headers-walk, double-click-clears-a-range-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-13T21:12:24.140Z",
+      "note": "rotating check 2026-10-13T21:12:23Z, 31 walks run from 248 onward in the rotation: a-sound-s-volume-line-plain-clicks-walk (its script changed since the last check), double-click-clears-a-range-walk, drag-a-marker-by-hand-walk, draw-a-range-by-hand-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-13T22:11:51.473Z",
+      "note": "rotating check 2026-10-13T22:11:51Z, 31 walks run from 273 onward in the rotation: every-caption-control-changes-the-captions-walk, every-command-in-the-menu-bar-walk, every-section-header-opens-walk, every-title-dropdown-opens-on-a-click-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-14T08:00:30.821Z",
+      "note": "sweep 2026-10-14T08:00:30Z: 14 failing (a-recording-stays-and-opens-right-after-stop-walk, box-scrolls-at-the-edge-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, keys-copy-between-layers-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk)"
+    },
+    {
+      "t": "2026-10-14T11:13:11.253Z",
+      "note": "rotating check 2026-10-14T11:13:11Z, 30 walks run from 390 onward in the rotation: layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-14T12:17:44.924Z",
+      "note": "2026-10-14 digest, likely causes from the sweep log (theories, not yet reproduced): every-command-in-the-menu-bar-walk expects tracks V1, Audio, Audio 2 and now reads V1, V1 sound, Audio, which is the new sound row under its video (8ad7323b), so the walk is probably stale. clicking-a-timeline-item-moves-the-playhead-walk misses 'Remove Key at 0:02.00' in a right-click menu (rows: Show Graph, Select All Keys, Paste Keys); the right-click-never-moves-the-playhead task (23f51b53) could not run this walk because it needs the Mac to itself, so this may be that change. layer-pick-at-scale-walk and layer-pick-latency-walk see editorBody rebuilt once on a pick, possibly the lists pane (885afc78). new-layer-takes-your-layer-walk (H 152 not 150), room-means-one-thing-walk (W 272 not 270) and motion-pivot-in-a-corner-walk (2 points out) all read 2 points off, worth checking together. value-graph-points-and-segments-walk step 69 and section-fold-motion-walk step 107 find a row still showing that should be gone, possibly the only-what-is-animated change (a1fc869d)."
+    },
+    {
+      "t": "2026-10-14T12:18:03.042Z",
+      "note": "seq 4010 -> 20"
+    }
+  ],
+  "standing": "walk-sweep"
+}

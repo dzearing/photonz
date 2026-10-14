@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:38:29.266Z",
-  "updated": "2026-10-12T23:39:33.182Z",
+  "updated": "2026-10-13T15:50:38.455Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"if I click somewhere on an item in the timeline, I not only expect it to select, but I expect the playhead (the red line) to move to that location. or, if I right click on a position within an item, I expect the playhead to move there before showing options. If i have a selection and right click on it, we can move the playhead but options apply to the range of the item or items selected.\"\n\nFrom code reading (not run): ClipPiecesBar.swift:427-449 .onTapGesture picks the clip (selectClipPiece / extendSelection) with no time and no playhead move; :450 .contextMenu is a plain SwiftUI context menu that never learns where the press was. Needs a location-aware tap (onTapGesture(coordinateSpace:) or SpatialTapGesture) mapped through the lane's ms scale, and a right-mouse-down hook (NSView rightMouseDown or a secondary-click recognizer) that scrubs before the menu is built. Same for title bars, zoom bars (ZoomLane.swift), key lanes (ClipPiecesBar.swift:1035 pickClipKey already takes atMS), caption cues. Coordinate with a-range-stays-on-top-when-you-pick-a-clip-and-it (range plus pick menus) so the two land on one right-click path.",
@@ -63,6 +63,10 @@
     {
       "t": "2026-10-12T23:39:33.180Z",
       "note": "Shipped in f197e266 (Next, shared timeline code): a click on a clip, sound, title, caption or zoom bar picks it and moves the playhead to the moment clicked; a right click moves it before the menu is built and picks the item unless already picked; inside a multi-pick, Split/Delete/Ripple Delete act on the whole pick and the pick is kept; cuts and edit points leave the playhead alone (Roll Edit to Playhead). Verified: clicking-a-timeline-item-moves-the-playhead-walk at Next defaults (no flags), 176 recording walks rerun (7 updated to right-click at the moment they mean), Scripts/test.sh 12,800 green, audit queue/audits/2026-10-12-timeline-click-playhead.json."
+    },
+    {
+      "t": "2026-10-13T15:50:38.454Z",
+      "note": "Its acceptance that a right click moves the playhead is reversed by the user's word of 2026-10-13 (task a-right-click-on-the-timeline-never-moves-the-pl): a right click now only picks. clicking-a-timeline-item-moves-the-playhead-walk was rewritten to park the playhead and check it stays put."
     }
   ],
   "started": "2026-10-12T20:51:45.056Z",

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 2,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T14:15:46.174Z",
-  "updated": "2026-10-13T14:15:46.281Z",
+  "updated": "2026-10-14T00:28:45.585Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i delete tracks, or insert, the audio of a track can move around. Audio that is attached to a track should always appear below it, and have some sort of ui affordance that it is attached.\" Screenshot: tracks V3 (Recording 2026-10-10 at 19.3x), V2 (empty), V1 (empty), Audio (the recording's sound with a volume line), +.\n\nFrom code reading (not run): PhotonzCore/DocumentTracks.swift trackLayout (~:280-315): a clip's sound ('speakers') goes to its pinned soundTrackID if that audio track is free, else to the first free audio track or a new linked audio track; audio tracks sit in their own section below the video tracks, so the sound is never under its own video. linkedSoundsByTrack (:364), linkedSoundClipIDs (:367), linkedSoundTrackID (:349); track edits addTrack (:520) and deleteTrack (:557). This is a Final Cut style 'audio under its video' model rather than Premiere's A tracks; the user's word decides it. Coordinate with the volume line work (an-audio-clip-answers-right-click-and-its-volume) which draws on this row.",
@@ -31,6 +31,45 @@
     {
       "t": "2026-10-13T14:15:46.280Z",
       "note": "seq 3960 -> 2"
+    },
+    {
+      "t": "2026-10-13T22:14:16.183Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T00:20:44.173Z",
+      "note": "owns these walks: a-clip-s-sound-stays-under-its-video-walk, a-clip-s-sound-is-linked-under-it-walk, track-header-lifts-walk"
+    },
+    {
+      "t": "2026-10-14T00:28:39.669Z",
+      "note": "Reproduced first (core scratch test at Next defaults): recording moved to V3 with V2, V1 empty showed V3 | V2 | V1 | Audio(sound), exactly the user's screenshot; carrying the Audio track put the sound above all the video. After the change every step keeps '<track> sound' directly under the clip's track."
+    },
+    {
+      "t": "2026-10-14T00:28:39.729Z",
+      "note": "Before building: a Premiere editor expects A tracks at the bottom, a Final Cut editor expects audio inside the clip; the user's request (2026-10-13) decides for under-the-video. Risks found and handled: a picture carried down passes over its own sound row (handled: the row counts as its track for a drop), the track header carry left the sound row behind (handled: lifts together), an always-present empty Audio row would have shifted every recording walk by a row (dropped: Audio appears only when nothing makes sound, as before)."
+    },
+    {
+      "t": "2026-10-14T00:28:39.792Z",
+      "note": "After building: walked it on the probe (a-clip-s-sound-stays-under-its-video-walk, 7 real pictures). Found and fixed a stale-row bug: the track carry did not re-measure rows after a previous carry, so a second carry aimed at old positions."
+    },
+    {
+      "t": "2026-10-14T00:28:39.855Z",
+      "note": "Rough items: tint family of the two bars -> filed a-clip-s-picture-and-sound-bars-wear-one-tint-fa with a decision card. Left rough (below the bar): the header elbow and link mark are small and faint; a single clip dragged down travels two rows to pass its own sound row. Walk dragTrack failures now print the rows the carry read."
+    },
+    {
+      "t": "2026-10-14T00:28:39.915Z",
+      "note": "walks a-clip-s-sound-stays-under-its-video-walk, a-clip-s-sound-is-linked-under-it-walk, track-header-lifts-walk -> a-clip-s-sound-stays-under-its-video-walk, a-clip-s-sound-is-linked-under-it-walk, track-header-lifts-walk"
+    },
+    {
+      "t": "2026-10-14T00:28:45.583Z",
+      "note": "A clip's own sound is drawn on a row of its video track, directly under it, with an elbow and link mark in the header and a staple joining the bars; it stays there through adding, deleting and carrying tracks and moving the clip (DocumentTrack.attachedTo, trackLayout). Detach Audio goes to an Audio track at the bottom; Re-attach and Undo bring it back. Old documents migrate. Verified: AttachedSoundRowTests (19) and the full suite green; new walk a-clip-s-sound-stays-under-its-video-walk measures the row after each edit (7 real pictures); 20 walks updated and rerun green, plus all 32 caption walks. Commit 8ad7323b. Audit queue/audits/2026-10-13-a-clip-s-own-sound-always-sits-right-under-its-v.json; tint question on a-clip-s-picture-and-sound-bars-wear-one-tint-fa."
     }
-  ]
+  ],
+  "started": "2026-10-13T22:14:16.178Z",
+  "walks": [
+    "a-clip-s-sound-stays-under-its-video-walk",
+    "a-clip-s-sound-is-linked-under-it-walk",
+    "track-header-lifts-walk"
+  ],
+  "completed": "2026-10-14T00:28:45.584Z"
 }

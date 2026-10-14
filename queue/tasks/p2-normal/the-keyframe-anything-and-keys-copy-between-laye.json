@@ -1,0 +1,43 @@
+{
+  "id": "the-keyframe-anything-and-keys-copy-between-laye",
+  "title": "The keyframe-anything and keys-copy-between-layers walks pass again",
+  "goal": "Two walks that check keys fail on the current code, so the loop's checks report keys as broken and nobody can tell a real key regression from these. They need updating to what the app does now, or the app needs fixing where it is the one that is wrong.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-13T19:27:44.357Z",
+  "updated": "2026-10-14T12:18:03.106Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-13 on HEAD 506bc8b9 with the every-key-dot task's changes stashed (git stash, Scripts/playtest.sh Scripts/playtest/<walk>.json, probe in the background, screen unlocked):\n- keyframe-anything-walk: \"step 64 (expect): no menu called \\\"Easing\\\" is in the panel to read; the ones that are: Properties Menu, Curve, Fade In, Fade Out, Style, ...\" (the panel row is now Curve under Between the keys).\n- keys-copy-between-layers-walk: \"step 63 (expect): the control called \\\"Key\\\" in \\\"Scale\\\" reads \\\"Scale, on a key\\\", not \\\"between keys\\\"\". No setup front, so this is not the probe-cannot-take-the-front problem.\nSame errors with the every-key-dot changes in place. The 2026-10-13 value-graph task's log also saw keys-copy-between-layers-walk fail that day.",
+  "acceptance": [
+    "keyframe-anything-walk passes at Next defaults, with its step that read the panel's Easing menu changed to whatever now holds the ease (or the menu restored, if its removal was a mistake)",
+    "keys-copy-between-layers-walk passes: either the pasted keys land where the walk expects (Scale reads between keys at its step 63), or the walk is corrected with a note on why the landing moment changed",
+    "Both walks named on this task with queue.mjs walks"
+  ],
+  "log": [
+    {
+      "t": "2026-10-13T19:27:44.359Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-13T21:12:24.099Z",
+      "note": "rotating check 2026-10-13T21:12:23Z, 31 walks run from 248 onward in the rotation: keys-copy-between-layers-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-10-14T09:44:56.503Z",
+      "note": "rotating check 2026-10-14T09:44:56Z, 31 walks run from 361 onward in the rotation: keys-copy-between-layers-walk failing."
+    },
+    {
+      "t": "2026-10-14T12:18:03.105Z",
+      "note": "seq 4020 -> 30"
+    }
+  ],
+  "walks": [
+    "keyframe-anything-walk",
+    "keys-copy-between-layers-walk"
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 1.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T14:46:58.720Z",
-  "updated": "2026-10-13T14:09:47.617Z",
+  "updated": "2026-10-13T17:41:52.024Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-12): \"I don't really see the point of adding a 3d pane just to show the rotation values. I think when we move or change transitions, we can show a small toolbar like overlay which shows the transform values for typing things in. But doing some other operation or changing the tool makes the transform overlay disappear. On the overlay there should be a reset button to reset to defaults. Also similarly, for when I have a keyframe and click the opacity dot, I want the same overlay to appear to tweak the opacity. Also editing the graph of a particular item like scale is really hard. I can right click on the scale, say show graph, but then when the graph is there, how do I add points on it? I click on the line, doesn't add a point, i can select a point but then if I have 2 points, I can't select the line in between. I want to be able to easily create nice transitions by adding points, selecting the segments between them, right clicking and changing their easing, etc. I need the ia to be consistent across the properties. When I add a 'key' to a video, it adds all of the animatable properties below it. I really wish there was a more scalable solution to the ux here, because we really should only show the properties being animated. And, if we want to clear one of them, i should be able to select one of the rows and hit delete to remove the whole property from being animated. but there should be a way to add it back. like maybe the keyframe line should be selectable and right clicked to animate a variety of things. or I can click it, tweak something (like transform) and the options are automatically added to that keyframe.\"\n\nFive tasks, in order: the design (mocks), then the transform overlay, the key value overlay, the graph editor, and only-animated-properties with auto-key. Code pointers (read, not run): the 3D section is Space3DInspector (Sources/Photonz/Space3DInspector.swift, shown at InspectorPanel.swift:1526) with EditorState+Space3D.swift; key lanes and the graph toggle are KeyLanesView.swift (segments at :270, lane menus :156, :213, :423) and EditorState+KeyLanes.swift (:283 'Show Graph'); Add Key on a clip is EditorState+TimelineMenus.swift:199 and per property EditorState+PropertyKeys.swift:177 addKeyHere; the property strip is MotionStripView.swift. The shared curve list is EasingCurve (PhotonzCore/LayerMotion.swift) with Draw a Curve, and CurveRow from every-transition-can-be-picked-from-presets-and. Memory rules: one purpose per area (the IA contract in docs/design/mocks/shared/UX-PATTERNS.md decides placement), mocks are the floor, legible text, no em dashes in UI copy. This is step 4 of 5.",
@@ -64,6 +64,31 @@
     {
       "t": "2026-10-13T14:09:47.615Z",
       "note": "seq 60 -> 1.5"
+    },
+    {
+      "t": "2026-10-13T16:08:18.269Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T16:12:44.099Z",
+      "note": "Pre-build review. Code read: the open graph (KeyLanesView graph mode) has no segment hit area at all; the bare lane under the curve takes every click (scrubs + drops the pick), so a click on the line can never pick a segment or add a point, matching the user's report. Keys on the graph drag in time only. Rule followed: the user's 2026-10-13 14:09 words supersede the mock's double-click/Option-click: plain click picks a dot or a segment, Command-click on the line adds, double-click adds nothing, hover brightens, picked is white. Premiere/AE check: AE's graph editor picks segments by clicking and adds with Cmd-click on the pen; Premiere adds with Cmd-click on the line too, so Cmd-click meets their habit. Mock assumptions the app lacks: a segment pick (new, KeySelection.segments), splitting a stretch's curve exactly when a point is added (new, de Casteljau split of the stretch's cubic), value drag of a point (new). Plan: one shared rule in PhotonzCore (AnimatedLine: hit test + click action + pick), used by the graph now and by the key-lane and volume-line tasks next. The key menu keeps Premiere's per-key eases (walks rely on it); the segment menu carries the shared curve list."
+    },
+    {
+      "t": "2026-10-13T17:41:09.296Z",
+      "note": "owns these walks: value-graph-points-and-segments-walk"
+    },
+    {
+      "t": "2026-10-13T17:41:34.296Z",
+      "note": "Reproduction (code read + first walk run before the fixes): on the open graph every click went to the bare lane under the curve (scrub, drop the pick); no segment could be picked and no point added, matching the report. Built: AnimatedLine/AnimatedLinePick (core, tested), EasingCurve.split (exact de Casteljau split for every Bezier curve), addKeyOnCurve/curveStretches/stretchesCurve/moveKeyOnGraph (core, tested), segment pick + menu + Copy/Paste Ease + Draw a Curve + point drag in time and value with frame/key/playhead snap and Shift axis lock (app), Animate menu rows for picked segments, UX-PATTERNS D21. Walk value-graph-points-and-segments-walk: run here without the front up to the delete step, ok (Command-click adds, right-click Ease out, values 190.5/196.4/199.2 at 2.25/2.5/2.75 s match the curve). Its plain clicks, double click and Backspace step need the probe in front (setup front), which macOS refused this session (same as keys-copy-between-layers-walk and a-retimed-clip-shows-its-source-walk today); it comes round in the whole set. Left rough (in the log, not filed): Backspace with only a segment picked does nothing (deliberately keeps the clip); menu bar Delete still reads Delete Keys then. Follow-up filed: the-value-graph-zooms-its-value-range-and-the-ti (zoom the range, bar Easing for segments)."
+    },
+    {
+      "t": "2026-10-13T17:41:52.022Z",
+      "note": "Shipped in 366ba759: on an open value graph a click picks a point or the segment between two (drawn white with its handles), Command-click on the line adds a point that keeps the curve's shape, plain and double clicks never add, a segment's right-click sets its curve from the shared list (plus Hold, Draw a Curve, Copy/Paste Ease, Add Point Here, Delete) without moving the playhead, points drag in time and value with snapping and Shift lock. One shared rule in PhotonzCore (AnimatedLine), written down as UX-PATTERNS D21. Verified: Scripts/test.sh 12958 tests green (new AnimatedLine and KeyGraphEdit suites); value-graph-points-and-segments-walk run at Next defaults up to the delete step, ok, values at 2.25/2.5/2.75 s match Ease out exactly; its plain-click, double-click and Backspace steps need the probe in front, which macOS refused this session, so they come round in the whole set. key-lanes walks pass. Audit: queue/audits/2026-10-13-value-graph-points-and-segments.json. Follow-up: the-value-graph-zooms-its-value-range-and-the-ti (zoom the range, bar Easing for a picked segment)."
     }
-  ]
+  ],
+  "started": "2026-10-13T16:08:18.268Z",
+  "walks": [
+    "value-graph-points-and-segments-walk"
+  ],
+  "completed": "2026-10-13T17:41:52.023Z"
 }

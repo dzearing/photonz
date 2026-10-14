@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 1,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T14:04:58.262Z",
-  "updated": "2026-10-13T14:04:58.359Z",
+  "updated": "2026-10-13T15:51:28.876Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-13): \"when i right click on a clip and the playhead is elsewhere, don't change the playhead position. I can't move to a particular place now and right click to add a keyframe without moving the playhead\". This reverses the user's 2026-10-12 ask ('if I right click on a position within an item, I expect the playhead to move there before showing options'), shipped in f197e266 'A click on the timeline moves the playhead; a right click moves it before its menu'. Latest word wins.\n\nFrom code reading: TimelineDock.swift ~:1126-1135 a local event monitor on .rightMouseDown calls TimelineRightPress.offer(at:in:) 'A right click on the tracks moves the playhead first, so the menu it opens acts where the pointer is'; the playhead logic lives in EditorState+TimelinePointing.swift (from f197e266). SoundLane and ClipPiecesBar menus may also scrub; audit every right-click path.",
@@ -31,6 +31,41 @@
     {
       "t": "2026-10-13T14:04:58.358Z",
       "note": "seq 3960 -> 1"
+    },
+    {
+      "t": "2026-10-13T15:27:18.707Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-13T15:29:36.996Z",
+      "note": "Reproduced at Next defaults (scratch walk /tmp/rc-walk/repro.json): ruler click parks the playhead at 2000 ms, right click on 'Tutorial Sample clip' at 0.6 across, choose Add Key: playhead reads 4800 ms afterwards. Cause: EditorState+TimelinePointing.timelineMenuBuilt scrubs to the press moment before the menu rows are built."
+    },
+    {
+      "t": "2026-10-13T15:37:19.339Z",
+      "note": "owns these walks: clicking-a-timeline-item-moves-the-playhead-walk, title-bar-right-click-menu-walk"
+    },
+    {
+      "t": "2026-10-13T15:50:38.388Z",
+      "note": "walks clicking-a-timeline-item-moves-the-playhead-walk, title-bar-right-click-menu-walk -> right-click-keeps-the-playhead-walk, clicking-a-timeline-item-moves-the-playhead-walk, title-bar-right-click-menu-walk"
+    },
+    {
+      "t": "2026-10-13T15:50:38.524Z",
+      "note": "Fix: EditorState+TimelinePointing.timelineMenuBuilt no longer scrubs; it only picks. The dock's mouse monitor offers a Control-click the same way as a right click, and playheadToTimelineClick ignores a Control-click so a left-tap handler can never scrub on one. The clip menu's Add Key row reads 'Add Key at 0:02.00' / 'Remove Key at 0:02.00' (TimelinePointing.atPlayhead, unit tested). Walks: new right-click-keeps-the-playhead-walk (needs no front, passes); clicking-a-timeline-item-moves-the-playhead-walk rewritten; title-bar-right-click-menu-walk put back to its pre-10-12 shape (passes). ripple-trim, a-zoom-follows-the-cursor, drawn-shape, title-flies walks pass. timeline-right-click-walk, a-zoom-is-shaped-by-hand-walk and the clicking walk need the Mac to itself: the person was at the Mac, the probe could not take the front, so their drags and clicks did nothing (the same cause turned the clicking walk red in the 08:12 rotating check before this change)."
+    },
+    {
+      "t": "2026-10-13T15:50:38.592Z",
+      "note": "left rough (no task, under the bar): only Add Key names the time; Split/Ripple Trim/Add Click say 'at Playhead' without the time, Freeze Frame and Add Zoom say neither. Ruler/scrub bar menu rows act at the pointer and move the playhead when chosen (unchanged since 2026-09-23); asked about in the audit's evaluate. A real Control-click cannot be made by a walk, so it is untried by hand. The sound bar cannot be right-clicked by name in a walk ('Tutorial Sample sound clip' raises no menu through the harness), so the walk right-clicks it by window point."
+    },
+    {
+      "t": "2026-10-13T15:51:28.874Z",
+      "note": "A right click (or Control-click) on the timeline now only picks what it lands on and leaves the playhead parked; at-playhead rows act at the parked moment, and Add Key reads 'Add Key at 0:02.00'. Reproduced first (playhead 2000 -> 4800 ms on right-click). Commit 23f51b53. Verified: Scripts/test.sh 12933 tests green; new right-click-keeps-the-playhead-walk passes at Next defaults (Add Key and Split at the parked 2s, sound/zoom/scrub/title right-clicks keep the playhead, title picked); title-bar, ripple-trim, a-zoom-follows-the-cursor, drawn-shape and title-flies walks pass. clicking-a-timeline-item-moves-the-playhead-walk (rewritten), timeline-right-click-walk and a-zoom-is-shaped-by-hand-walk need the Mac to itself and could not take the front while the person worked; they come round in the whole set. Audit: queue/audits/2026-10-13-right-click-keeps-the-playhead.json"
     }
-  ]
+  ],
+  "started": "2026-10-13T15:27:18.706Z",
+  "walks": [
+    "right-click-keeps-the-playhead-walk",
+    "clicking-a-timeline-item-moves-the-playhead-walk",
+    "title-bar-right-click-menu-walk"
+  ],
+  "completed": "2026-10-13T15:51:28.875Z"
 }
