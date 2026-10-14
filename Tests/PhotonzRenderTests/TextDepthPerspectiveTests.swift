@@ -152,25 +152,21 @@ struct TextDepthPerspectiveTests {
         if let index = doc.layers.firstIndex(where: { $0.id == id }) {
             doc.layers[index].style.effects.append(.motionBlur(MotionBlurEffect(shutterAngle: 180, isOn: true)))
         }
-        let renderer = DocumentRenderer()
+        let renderer = MachineSpeed.timedRenderer()
         let store = ImageStore()
         _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_100), store: store)
-        var samples: [Double] = []
-        for step in 0..<30 {
-            let drawn = doc.drawn(atTimeMS: 1_100 + step * 33)
-            let began = ContinuousClock.now
-            _ = renderer.renderInteractive(drawn, store: store)
-            let spent = ContinuousClock.now - began
-            samples.append(Double(spent.components.seconds) * 1000 + Double(spent.components.attoseconds) / 1e15)
-        }
-        samples.sort()
-        let median = samples[samples.count / 2], slowest = samples[samples.count - 1]
-        print(String(format: "[perf] headline flipping up by letter, 1920x1080: median %.1fms, slowest %.1fms",
-                     median, slowest))
-        // The frame budget is the shared one, scaled by how fast this machine
-        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
+        // The frame budget is the shared frame gate, each frame read beside a
+        // fixed 1080p frame of Core Image work. A flat 16ms sat beside it until
         // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
-        // times slower than the calibration Mac, on unchanged code.
-        MachineSpeed.check("text flipping up by letter at 1080p", medianMS: median, baselineMS: 8)
+        // times slower than the calibration Mac, on unchanged code; a budget
+        // scaled once at process start then failed at 149.5ms against 77ms
+        // with another process drawing beside it (2026-10-14).
+        // Laid out ahead, so only the render is timed, as it always was.
+        let drawn = (0...30).map { doc.drawn(atTimeMS: 1_100 + $0 * 33) }
+        let median = MachineSpeed.checkFrames("text flipping up by letter at 1080p", baselineMS: 8,
+                                              frames: 30) { step in
+            _ = renderer.renderInteractive(drawn[step], store: store)
+        }
+        print(String(format: "[perf] headline flipping up by letter, 1920x1080: median %.1fms", median))
     }
 }

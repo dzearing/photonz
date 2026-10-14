@@ -111,35 +111,46 @@ struct DepthTransitionRenderTests {
     func perf() throws {
         let store = ImageStore()
         let shots = (try Self.shot(store, seed: 3), try Self.shot(store, seed: 120))
-        let renderer = DocumentRenderer()
+        let renderer = MachineSpeed.timedRenderer()
         var lines: [String] = []
-        var worstMedian = 0.0
         for kind in ClipTransitionKind.inDepth {
             for blurred in [false, true] {
                 _ = renderer.renderInteractive(try Self.scene(kind, progress: 0.1, store: store, shots: shots,
                                                               motionBlur: blurred), store: store)
-                var samples: [Double] = []
-                for step in 1..<21 {
-                    let document = try Self.scene(kind, progress: Double(step) / 21, store: store, shots: shots,
-                                                  motionBlur: blurred)
-                    let began = ContinuousClock.now
-                    _ = renderer.renderInteractive(document, store: store)
-                    samples.append(Self.milliseconds(ContinuousClock.now - began))
+                // Built ahead, so only the render is timed, as it always was.
+                let scenes = try (0...20).map {
+                    try Self.scene(kind, progress: Double($0) / 21, store: store, shots: shots,
+                                   motionBlur: blurred)
                 }
-                samples.sort()
-                let median = samples[samples.count / 2], slowest = samples[samples.count - 1]
-                lines.append(String(format: "%@%@: median %.1fms, slowest %.1fms", kind.title,
-                                    blurred ? " with motion blur" : "", median, slowest))
-                if !blurred { worstMedian = max(worstMedian, median) }
+                guard !blurred else {
+                    // With motion blur the frame is reported, not gated.
+                    var samples: [Double] = []
+                    for step in 1...20 {
+                        let began = ContinuousClock.now
+                        _ = renderer.renderInteractive(scenes[step], store: store)
+                        samples.append(Self.milliseconds(ContinuousClock.now - began))
+                    }
+                    samples.sort()
+                    lines.append(String(format: "%@ with motion blur: median %.1fms, slowest %.1fms", kind.title,
+                                        samples[samples.count / 2], samples[samples.count - 1]))
+                    continue
+                }
+                // The frame budget is the shared frame gate, each frame read
+                // beside a fixed 1080p frame of Core Image work. A flat 16ms
+                // sat beside it until 2026-10-13 and failed on the GitHub VM,
+                // which draws these 2.4 to 4.5 times slower than the
+                // calibration Mac, on unchanged code; a budget scaled once at
+                // process start then failed with other sessions drawing
+                // beside it (49.6ms against 28ms, 2026-10-13).
+                let median = MachineSpeed.checkFrames("\(kind.title) transition in depth at 1080p",
+                                                      baselineMS: 8, frames: 20) { step in
+                    _ = renderer.renderInteractive(scenes[step], store: store)
+                }
+                lines.append(String(format: "%@: median %.1fms", kind.title, median))
             }
         }
         print("[perf] transitions in depth, 1920x1080, 10 layers, 20 frames each:\n  "
               + lines.joined(separator: "\n  "))
-        // The frame budget is the shared one, scaled by how fast this machine
-        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
-        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
-        // times slower than the calibration Mac, on unchanged code.
-        MachineSpeed.check("transition in depth at 1080p", medianMS: worstMedian, baselineMS: 8)
     }
 
     // MARK: - Words

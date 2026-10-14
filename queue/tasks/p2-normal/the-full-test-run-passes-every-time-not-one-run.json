@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T09:49:41.455Z",
-  "updated": "2026-10-14T12:18:02.983Z",
+  "updated": "2026-10-14T14:28:32.378Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-13 by the runner on size-mode-measures-real-buttons-and-objects-not, four full runs of `Scripts/test.sh` on a quiet machine (no process over 50% CPU), code unrelated to these tests: run 1 failed 3 issues; run 2 failed `TitleSetFramesTests.swift:214` (median 17.72 ms vs < 16) and `GrainBandingExportTests.swift:106` ((grainy * 3 → 93) <= (plain * 2 → 88)); run 3 failed `VideoCutExportTests.swift:69` (.readerGaveUp(\"no picture came out of the recording for 30 seconds\")); run 4 passed all 12871. `Scripts/test.sh --filter \"VideoCutExportTests|TitleSetFramesTests|GrainBandingExportTests\"` passed 10/10 alone each time. The title-frame one is a wall-clock budget, not a ratio against a ruler like the PerfClock/CPUYardstick checks.",
@@ -46,6 +46,40 @@
     {
       "t": "2026-10-14T12:18:02.982Z",
       "note": "seq 10 -> 10"
+    },
+    {
+      "t": "2026-10-14T13:01:20.240Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T14:28:31.998Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-14T14:28:32.062Z",
+      "note": "Reproduced, frame gates: with a second process keeping the GPU busy (/tmp/flaky/gpuburn, 4 threads of Core Image blur, self-ending), Scripts/test.sh --filter of the seven frame suites failed 5 issues (text flip 149.5ms vs 77, 2.5D 153.7 vs 64, scrub 80.1 vs 74...). AND on a quiet machine the same seven suites run together failed 2 (2.5D 42.5ms vs 24, flip 41.8 vs 29) though each alone reads 5.4 and 7.6ms. Cause 1: every DocumentRenderer() shares one process-wide CIContext, so a timed frame queues behind the other render suites (the ruler on its own context read normal 3.4ms beside a 36ms subject). Cause 2: the filter-graph yardstick does not track a busy GPU's effect on a frame (2.77x vs up to 12x). 12 CPU-only burners changed nothing (frames are GPU-bound)."
+    },
+    {
+      "t": "2026-10-14T14:28:32.123Z",
+      "note": "Fix, frame gates: MachineSpeed.timedRenderer() (DocumentRenderer(privateContext:), the icon strip's existing fix) + MachineSpeed.checkFrames (interleaved, new .frame yardstick: ten small layers on a 1080p ground rendered to a bitmap, 3.3ms calibrated). Ruler chosen by measurement (temp scratch test, deleted): flip/frame ratio 1.68 idle, 1.54-1.70 loaded; flip/filterGraph 1.29 -> 2.06. Moved: TitleSetPerfTests, TextDepthPerspective perf, MotionBlur insideAFrame, DepthTransition perf (now per kind), Space3DPerf, TextReveal twelveWords, ScrubCompositePerf. Budgets unchanged (baseline x2.5 + 8ms). Under 4-thread GPU load the flip read 58ms raw, 10.3 normalized vs 28: pass."
+    },
+    {
+      "t": "2026-10-14T14:28:32.187Z",
+      "note": "Regressions still caught: temp mutant in DocumentRenderer.renderLocked rendering every frame 10x -> 17 issues across 6 of 7 suites quiet (flip read 27.7 vs 28, just under), 19 issues under 2-thread GPU load, none excused as untrusted. A 4x render mutant (2-3x frame cost) passes, as it would have under the 2026-10-13 budgets on a quiet machine: those budgets only catch >3x by design (MachineSpeed.jitterSlackMS). Mutant reverted."
+    },
+    {
+      "t": "2026-10-14T14:28:32.253Z",
+      "note": "Grain banding: alone 6/6 identical (plain 48, grain 24). Beside other encoders (Scripts/test.sh --filter PhotonzMediaTests) the encoder writes different files: plain 4 KB -> 86 KB, 48 -> 44 rows; and one grainy frame reads 11 to 32 rows, so the single read at 0.3s gave 14/24/26/31; reproduced the exact failure (plain 44, grain 31, 93 <= 88). Fix: median over all 18 frames, and the line at 3/4 of plain instead of 2/3, measured: default grain 0.50 quiet, 0.68 under CPU+GPU stress beside other encoders (30 vs 44); amount 20 0.56, 16 0.83, 12 1.0, 8 1.0 (mutant amount 8 fails: 144 <= 96). Faster blue-channel extraction keeps it at 7.6s."
+    },
+    {
+      "t": "2026-10-14T14:28:32.316Z",
+      "note": "VideoCutExport readerGaveUp (30s with no frame, seen once 2026-10-13): NOT reproduced in 12 runs that include it (6 full suites, one with 12 CPU burners; 4 PhotonzMediaTests runs, one with 12 CPU burners + 4-thread GPU burner; 2 more media runs). Exporter and its 30s limit left as they are; nothing loosened. Not filed separately: this task's notes carry the one sighting, and the 2026-10-02 hang task (done) covers the guard. If it shows again, sample the helper during the stall."
+    },
+    {
+      "t": "2026-10-14T14:28:32.377Z",
+      "note": "Acceptance: four full Scripts/test.sh runs in a row passed, 13101 tests each (352s, 326s, 327s, 325s); closest frame gate used 40% of its budget; grain read 24-26 against plain 44-48."
     }
-  ]
+  ],
+  "started": "2026-10-14T13:01:20.239Z",
+  "walks": []
 }

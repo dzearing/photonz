@@ -19,6 +19,14 @@ import Testing
 /// Measured on 2026-10-10, 1080p at the app's own bitrate: plain 48 rows. One
 /// pixel grain at 12% made no difference (41 to 48 rows: the encoder wipes it
 /// out); two pixel grain at 25% halved it (24 rows), at 30% 21 rows.
+///
+/// Every frame of the file is read and the middle one counts. Grain is new
+/// noise each frame, so one frame of the grainy file reads anywhere from 11 to
+/// 32 rows (2026-10-14), and reading only the frame at 0.3s failed about one
+/// full test run in three: with other suites encoding at the same moment the
+/// plain file comes out of the encoder differently (4 KB alone, 86 KB beside
+/// them, 44 rows instead of 48) and the 0.3s read landed on a 31 row frame.
+/// The middle frame read 24 rows grainy in every run, alone or not.
 @Suite("Grain stops banding in the exported movie", .serialized)
 struct GrainBandingExportTests {
 
@@ -62,7 +70,15 @@ struct GrainBandingExportTests {
             return true
         }
         guard drawn else { throw TestTone.Failure.noBuffer }
-        return (data.enumerated().compactMap { $0.offset % 4 == 2 ? $0.element : nil }, width, height)
+        // Every fourth byte from the third: a plain loop, since a debug build
+        // takes most of a second per frame to filter eight megabytes lazily.
+        var blue = [UInt8](repeating: 0, count: width * height)
+        data.withUnsafeBufferPointer { rgba in
+            blue.withUnsafeMutableBufferPointer { out in
+                for pixel in 0..<out.count { out[pixel] = rgba[pixel * 4 + 2] }
+            }
+        }
+        return (blue, width, height)
     }
 
     /// The tallest run of one exact value down each of `columns` columns, the
@@ -84,6 +100,18 @@ struct GrainBandingExportTests {
         return runs.sorted()[runs.count / 2]
     }
 
+    /// The middle band height over every frame of the file.
+    static func typicalBandHeight(of url: URL, durationMS: Int, fps: Double) async throws -> (median: Int, frames: [Int]) {
+        var heights: [Int] = []
+        let frames = Int((Double(durationMS) / 1000 * fps).rounded(.down))
+        for frame in 0..<frames {
+            // The middle of each frame's time on screen, never its edge.
+            let seconds = (Double(frame) + 0.5) / fps
+            heights.append(bandHeight(try await blue(of: url, atSeconds: seconds)))
+        }
+        return (heights.sorted()[heights.count / 2], heights)
+    }
+
     @Test("A dark gradient written plain bands in tall steps; with Grain the steps break up")
     func grainBreaksUpBands() async throws {
         var heights: [Bool: Int] = [:]
@@ -97,12 +125,21 @@ struct GrainBandingExportTests {
             try await DocumentMovieWriter.write(plan: plan, mix: [], soundURLs: [:], to: out) { ms in
                 DocumentRenderer().render(drawing.drawn(atTimeMS: ms), store: ImageStore())
             }
-            heights[grain] = Self.bandHeight(try await Self.blue(of: out, atSeconds: 0.3))
+            let read = try await Self.typicalBandHeight(of: out, durationMS: 600, fps: plan.fps)
+            heights[grain] = read.median
+            print("[banding] \(grain ? "with grain" : "plain"), frame by frame: \(read.frames)")
         }
         let plain = heights[false] ?? 0, grainy = heights[true] ?? 0
-        print("[banding] 1920x1080 MP4, Midnight's ramp, tallest run of one blue value (median of 40 columns): "
-              + "plain \(plain) rows, with grain \(grainy) rows")
+        print("[banding] 1920x1080 MP4, Midnight's ramp, tallest run of one blue value (median of 40 columns, "
+              + "middle frame): plain \(plain) rows, with grain \(grainy) rows")
         #expect(plain >= 30, "plain ramp band height \(plain)")
-        #expect(grainy * 3 <= plain * 2, "grain left bands \(grainy) rows tall against \(plain)")
+        // Grain has to take a quarter off the bands. Measured 2026-10-14, the
+        // middle frame against plain: the default amount 0.50 on a quiet
+        // encoder and 0.68 with other suites encoding beside it (the encoder
+        // writes a different file then, its first frames 30 to 32 rows);
+        // amount 20 0.56; amount 16 0.83 and amount 12 1.0, grain the encoder
+        // has all but wiped out. The line used to be two thirds, which the
+        // busy encoder crossed about one full test run in three.
+        #expect(grainy * 4 <= plain * 3, "grain left bands \(grainy) rows tall against \(plain)")
     }
 }

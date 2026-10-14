@@ -172,7 +172,7 @@ struct TitleSetFramesTests {
 /// How long each title of the set takes to draw a frame at 1080p, through
 /// its in and into its hold, as the canvas draws one (`drawn` + the
 /// interactive render). Debug build; the target is a frame inside 16 ms,
-/// and the best of three passes is held to it.
+/// held to through the shared frame gate (`MachineSpeed.checkFrames`).
 @Suite("Every title of the set draws inside a frame at 1080p")
 struct TitleSetPerfTests {
 
@@ -192,30 +192,20 @@ struct TitleSetPerfTests {
             doc.durationMS = 10_000
             let placed = doc.insertTitle(preset, atTimeMS: 1000, motionBlur: true)
             _ = try #require(placed, "\(preset.name)")
-            let renderer = DocumentRenderer()
+            let renderer = MachineSpeed.timedRenderer()
             _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_000), store: store)
-            // Three passes, the best kept: other suites draw beside this one
-            // in a test run, and a moment of their load spoils a pass, not
-            // the title.
-            var best: (median: Double, worst: Double) = (.infinity, .infinity)
-            for _ in 0..<3 {
-                var samples: [Double] = []
-                for ms in stride(from: 1_016, to: 3_000, by: 66) {
-                    let began = ContinuousClock.now
-                    _ = renderer.renderInteractive(doc.drawn(atTimeMS: ms), store: store)
-                    let took = ContinuousClock.now - began
-                    samples.append(Double(took.components.attoseconds) / 1e15 + Double(took.components.seconds) * 1000)
-                }
-                let median = samples.sorted()[samples.count / 2]
-                if median < best.median { best = (median, samples.max() ?? 0) }
-            }
-            let median = best.median
-            report.append(String(format: "%@: median %.1fms, worst %.1fms", preset.name, median, best.worst))
             // Measured alone at 2.3 to 12.8ms a frame on the calibration
             // machine on 2026-10-13 (Gradient Glow the slowest). The gate is
-            // the shared one, scaled by how fast this machine is: a flat 16ms
-            // failed eight of the twelve on the GitHub VM on unchanged code.
-            MachineSpeed.check("\(preset.name) title frame at 1080p", medianMS: median, baselineMS: 13)
+            // the shared frame gate, each frame read beside a fixed 1080p
+            // frame of Core Image work, so a busy GPU slows both and divides
+            // out: a flat 16ms failed eight of the twelve on the GitHub VM,
+            // and the machine-scaled budget still failed with another process
+            // drawing beside this one (2026-10-14).
+            let median = MachineSpeed.checkFrames("\(preset.name) title frame at 1080p", baselineMS: 13,
+                                                  frames: 30) { frame in
+                _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_000 + frame * 66), store: store)
+            }
+            report.append(String(format: "%@: median %.1fms", preset.name, median))
         }
         print("[perf] the title set at 1920x1080 (drawn + renderInteractive):\n  " + report.joined(separator: "\n  "))
     }

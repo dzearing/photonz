@@ -208,3 +208,26 @@ shape between two pixels, the row its edge runs through now reads as covered as
 it geometrically is (188 of green under a black border on green, dead on half)
 where laying the ring over the whole picture read 225, a border covering a
 quarter of a row it covers half of.
+
+## 2026-10-14 — Frame budgets read on their own context, beside a frame-shaped ruler
+
+The 1080p frame gates (title set, text flip, text reveal, motion blur, depth
+transitions, 2.5D, scrub refresh) failed about one full test run in two, and
+never alone. Two causes, both measured:
+
+- Every `DocumentRenderer()` draws through one Core Image context shared by the
+  whole process, so a timed frame queued behind every other render suite. Run
+  together on a quiet machine, the seven suites read a 2.5D frame at 42.5ms and
+  a headline flip at 41.8ms that cost 5.4ms and 7.6ms alone. The gates now time
+  `MachineSpeed.timedRenderer()`, the same renderer on a context of its own
+  (the icon strip and title backgrounds checks already did this).
+- A second process keeping the GPU busy slows a frame far more than the filter
+  graph yardstick: 2.77x on the yardstick, up to 12x on the frames. The gates
+  now go through `MachineSpeed.checkFrames`, each frame read back to back with
+  a new `.frame` yardstick (ten small layers on a 1080p ground, rendered into a
+  bitmap). Beside it a headline flip read 1.68 idle and 1.54 to 1.70 loaded;
+  beside the filter graph, 1.29 idle and 2.06 loaded.
+
+Calibration machine, 2026-10-14: the `.frame` yardstick reads 3.1 to 3.3ms
+beside a frame, recorded as 3.3ms. Budgets unchanged. A renderer drawing every
+frame ten times over still fails six of the seven suites, quiet or loaded.

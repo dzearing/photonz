@@ -32,7 +32,9 @@ struct ScrubCompositePerfTests {
     }
 
     /// Median milliseconds per refresh over 29 moves of a scrub at `scale`.
-    static func scrub(scale: CGFloat) throws -> Double {
+    /// The median scrub refresh at `scale`, through the frame gate when a
+    /// `gate` label is given (the subject's own median comes back either way).
+    static func scrub(scale: CGFloat, gate: (label: String, baselineMS: Double)? = nil) throws -> Double {
         let movie = MovieRef(pixelSize: canvas, durationMS: 8000)
         var document = PhotonzDocument.recording(movie, name: "Take")
         for i in 0..<5 {
@@ -51,7 +53,7 @@ struct ScrubCompositePerfTests {
             store.register(image, as: movie.frameRef(atSourceMS: frame * MovieRef.frameStepMS))
             inHand.insert(movie: movie.id, frameIndex: frame)
         }
-        let renderer = DocumentRenderer()
+        let renderer = MachineSpeed.timedRenderer()
         func shown(_ frame: Int) -> PhotonzDocument {
             var drawn = document.drawn(atTimeMS: frame * MovieRef.frameStepMS, framesInHand: inHand)
             // The first box travels with the playhead, the way a keyed one does.
@@ -63,6 +65,13 @@ struct ScrubCompositePerfTests {
             return drawn
         }
         _ = renderer.renderInteractive(shown(0), store: store)
+        if let gate {
+            // Built ahead, so only the render is timed, as it always was.
+            let frames = (0..<30).map(shown)
+            return MachineSpeed.checkFrames(gate.label, baselineMS: gate.baselineMS, frames: 29) { frame in
+                _ = renderer.renderInteractive(frames[frame], store: store)
+            }
+        }
         var samples: [Double] = []
         for frame in 1..<30 {
             let document = shown(frame)
@@ -78,11 +87,15 @@ struct ScrubCompositePerfTests {
     func shownSizeIsInsideAFrame() throws {
         let full = try Self.scrub(scale: 1)
         let shownScale = CompositeScale.forShown(0.47)
-        let shown = try Self.scrub(scale: shownScale)
+        // Calibration machine, 2026-09-26: 17ms full size, 7.5ms shown. The
+        // gate is the shared frame gate, each frame read beside a fixed 1080p
+        // frame of Core Image work: a budget scaled once at process start
+        // failed at 80.1ms against 74ms with another process drawing beside
+        // this one (2026-10-14).
+        let shown = try Self.scrub(scale: shownScale,
+                                   gate: ("scrub refresh at the shown size", baselineMS: 7.5))
         print(String(format: "[perf] scrub refresh, 3456x2234 + 5 graphics: full size %.1fms, "
                      + "at the shown size (%.3f) %.1fms", full, shownScale, shown))
-        // Calibration machine, 2026-09-26: 17ms full size, 7.5ms shown.
-        MachineSpeed.check("scrub refresh at the shown size", medianMS: shown, baselineMS: 7.5)
         #expect(shown < full)
     }
 }

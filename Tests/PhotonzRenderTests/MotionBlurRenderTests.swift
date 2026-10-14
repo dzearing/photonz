@@ -195,24 +195,19 @@ struct MotionBlurRenderTests {
             ("full-frame slide, 360", fullFrame(MotionBlurEffect(shutterAngle: 360))),
         ]
         for (name, doc) in cases {
-            let renderer = DocumentRenderer()
+            let renderer = MachineSpeed.timedRenderer()
             _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_000), store: store)
-            var samples: [Double] = []
-            for ms in stride(from: 1_016, to: 1_900, by: 16) {
-                let began = ContinuousClock.now
-                let shown = doc.drawn(atTimeMS: ms)
-                _ = renderer.renderInteractive(shown, store: store)
-                let took = ContinuousClock.now - began
-                samples.append(Double(took.components.attoseconds) / 1e15 + Double(took.components.seconds) * 1000)
-            }
-            let median = samples.sorted()[samples.count / 2]
-            let worst = samples.max() ?? 0
-            report.append(String(format: "%@: median %.1fms, worst %.1fms over %d frames",
-                                 name, median, worst, samples.count))
             // At most 5.8ms on the calibration machine (2026-10-13). The gate
-            // is the shared one, scaled by how fast this machine is: a flat
-            // 16ms failed on the GitHub VM on unchanged code.
-            MachineSpeed.check("\(name) at 1080p", medianMS: median, baselineMS: 6)
+            // is the shared frame gate, each frame read beside a fixed 1080p
+            // frame of Core Image work: a flat 16ms failed on the GitHub VM on
+            // unchanged code, and a budget scaled once at process start failed
+            // with another process drawing beside this one (2026-10-14).
+            let median = MachineSpeed.checkFrames("\(name) at 1080p", baselineMS: 6,
+                                                  frames: 55) { frame in
+                let shown = doc.drawn(atTimeMS: 1_000 + frame * 16)
+                _ = renderer.renderInteractive(shown, store: store)
+            }
+            report.append(String(format: "%@: median %.1fms over 55 frames", name, median))
         }
         print("[perf] motion blur at 1920x1080 (drawn + renderInteractive):\n  " + report.joined(separator: "\n  "))
     }

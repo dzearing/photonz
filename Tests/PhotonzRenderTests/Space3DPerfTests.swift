@@ -81,21 +81,23 @@ struct Space3DPerfTests {
             }
             return document
         }
-        let renderer = DocumentRenderer()
+        let renderer = MachineSpeed.timedRenderer()
         // Warm the pipelines and the rasterizer caches.
         _ = renderer.renderInteractive(at(0), store: store)
         _ = renderer.renderInteractive(at(1), store: store)
-        var samples: [Double] = []
-        for step in 2..<32 {
-            let document = at(step)
-            let began = ContinuousClock.now
-            _ = renderer.renderInteractive(document, store: store)
-            let took = ContinuousClock.now - began
-            samples.append(Double(took.components.seconds) * 1000 + Double(took.components.attoseconds) / 1e15)
+        // Built ahead, so only the render is timed, as it always was. The
+        // warm-up draws frame 1 again; the rounds draw frames 2 to 31.
+        let frames = (1...31).map(at)
+        // Calibration machine, 2026-10-11: 5.6ms median, 8.4ms slowest.
+        // The frame budget is the shared frame gate, each frame read beside a
+        // fixed 1080p frame of Core Image work. A flat 16ms sat beside it until
+        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
+        // times slower than the calibration Mac, on unchanged code; a budget
+        // scaled once at process start then failed at 153.7ms against 64ms
+        // with another process drawing beside it (2026-10-14).
+        let median = MachineSpeed.checkFrames("2.5D frame at 1080p", baselineMS: 6, frames: 30) { step in
+            _ = renderer.renderInteractive(frames[step], store: store)
         }
-        samples.sort()
-        let median = samples[samples.count / 2]
-        let slowest = samples[samples.count - 1]
         // The same ten layers flat, every frame drawn whole, for comparison.
         var flat = base
         flat.camera = nil
@@ -112,13 +114,7 @@ struct Space3DPerfTests {
         }
         flatSamples.sort()
         print(String(format: "[perf] 2.5D frame, 1920x1080, 10 layers (4 tilted, 1 out of focus): "
-                     + "median %.1fms, slowest %.1fms over %d frames; the same layers flat, drawn whole: "
-                     + "median %.1fms", median, slowest, samples.count, flatSamples[flatSamples.count / 2]))
-        // Calibration machine, 2026-10-11: 5.6ms median, 8.4ms slowest.
-        // The frame budget is the shared one, scaled by how fast this machine
-        // is, as every MachineSpeed budget is. A flat 16ms sat beside it until
-        // 2026-10-13 and failed on the GitHub VM, which draws these 2.4 to 4.5
-        // times slower than the calibration Mac, on unchanged code.
-        MachineSpeed.check("2.5D frame at 1080p", medianMS: median, baselineMS: 6)
+                     + "median %.1fms over 30 frames; the same layers flat, drawn whole: "
+                     + "median %.1fms", median, flatSamples[flatSamples.count / 2]))
     }
 }

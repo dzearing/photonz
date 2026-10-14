@@ -21407,3 +21407,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - With only segments picked, the timeline bar's Easing shows the shared curve list (`CurveRow.menu`, now static) naming their curve or Mixed, and sets every picked segment in one undo step.
 - Walk step `wheel` takes `modifiers` (handed to `PlaytestWheelTaker`, the timeline's wheel view). Walk: `value-graph-zoom-and-segment-easing-walk`.
 - Follow-up: `the-timeline-bar-easing-sets-picked-segments-too` (keys and segments picked together). `value-graph-points-and-segments-walk` fails at its last step on main as in last night's sweep (owned by the standing walk task).
+
+## 2026-10-14 — The full test run passes every time
+
+- Frame gates time a renderer on its own Core Image context and read each frame beside a frame-shaped yardstick (`MachineSpeed.checkFrames`, `.frame`, `timedRenderer()`); see docs/progress/perf.md. Seven suites moved.
+- The grain banding check reads every frame of both files and takes the middle one, with its line at three quarters of plain (measured: default grain 0.50 quiet, 0.68 beside other encoders; amount 16 0.83).
+- Four full `Scripts/test.sh` runs in a row passed. The cut export's 30 second reader give-up (seen once on 2026-10-13) did not reproduce in twelve runs, loaded or not; exporter unchanged.

@@ -197,30 +197,27 @@ struct TextRevealRenderTests {
             var reveal = TextReveal(style: style, unit: .letter)
             reveal.startMS = 0
             let (doc, _) = Self.document(reveal)
-            let renderer = DocumentRenderer()
+            let renderer = MachineSpeed.timedRenderer()
             let count = try #require(TextReveal.spans(in: Self.headline, unit: .letter)).count
             // The first frame lays the words out and draws every piece once.
             let laidOut = ContinuousClock.now
             _ = renderer.renderInteractive(doc.drawn(atTimeMS: 1_000), store: store)
             let layout = ContinuousClock.now - laidOut
-            var samples: [Double] = []
             let length = reveal.lengthMS(count: count)
-            for ms in stride(from: 1_016, to: 1_000 + length, by: 16) {
-                let shown = doc.drawn(atTimeMS: ms)
-                let began = ContinuousClock.now
-                _ = renderer.renderInteractive(shown, store: store)
-                let took = ContinuousClock.now - began
-                samples.append(Double(took.components.attoseconds) / 1e15 + Double(took.components.seconds) * 1000)
-            }
-            let median = samples.sorted()[samples.count / 2]
-            let worst = samples.max() ?? 0
             let first = Double(layout.components.attoseconds) / 1e15 + Double(layout.components.seconds) * 1000
-            report.append(String(format: "%@: %d letters, first frame %.1fms, median %.1fms, worst %.1fms over %d frames",
-                                 style.title, count, first, median, worst, samples.count))
+            // Laid out ahead, so only the render is timed, as it always was.
+            let shown = stride(from: 1_000, to: 1_000 + length, by: 16).map { doc.drawn(atTimeMS: $0) }
             // At most 5.1ms on the calibration machine (2026-10-13). The gate
-            // is the shared one, scaled by how fast this machine is: a flat
-            // 16ms failed on the GitHub VM on unchanged code.
-            MachineSpeed.check("\(style.title) by letter at 1080p", medianMS: median, baselineMS: 5.5)
+            // is the shared frame gate, each frame read beside a fixed 1080p
+            // frame of Core Image work: a flat 16ms failed on the GitHub VM on
+            // unchanged code, and a budget scaled once at process start failed
+            // with other sessions drawing beside this one (2026-10-13).
+            let median = MachineSpeed.checkFrames("\(style.title) by letter at 1080p", baselineMS: 5.5,
+                                                  frames: shown.count - 1) { frame in
+                _ = renderer.renderInteractive(shown[frame], store: store)
+            }
+            report.append(String(format: "%@: %d letters, first frame %.1fms, median %.1fms over %d frames",
+                                 style.title, count, first, median, shown.count - 1))
         }
         print("[perf] 12 word headline by letter, 1920x1080:\n  " + report.joined(separator: "\n  "))
     }

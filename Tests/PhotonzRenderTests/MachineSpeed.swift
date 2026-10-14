@@ -1,6 +1,7 @@
 import CoreGraphics
 import CoreImage
 import Foundation
+@testable import PhotonzRender
 import Testing
 
 // MARK: A performance budget that knows what machine it is on
@@ -146,12 +147,17 @@ enum MachineSpeed {
         /// back to bytes: 48 megapixels out, the way an export at 2x is 48
         /// megapixels out. Tracks the cost of writing a file.
         case pixelPush = "pixel push"
+        /// Ten small layers, one turned and one blurred, laid on a 1080p
+        /// ground and rendered into a bitmap the way the canvas renders a
+        /// frame. Tracks the cost of drawing one frame of a playing edit.
+        case frame = "1080p frame"
 
         /// What this workload measured on the calibration machine, below.
         var baselineMS: Double {
             switch self {
             case .filterGraph: return 8.0
             case .pixelPush: return 146.0
+            case .frame: return 3.3
             }
         }
     }
@@ -159,7 +165,9 @@ enum MachineSpeed {
     // Calibration machine: the arm64 Mac this repo is developed on, measured
     // 2026-09-12 with the suite serialized and nothing else running. The pixel
     // push number was re-recorded on 2026-10-13 on the same machine, when its
-    // workload changed shape (see `pixelPushRound`), not because a runner moved. Re-record
+    // workload changed shape (see `pixelPushRound`), not because a runner moved. The
+    // 1080p frame number was recorded on 2026-10-14 on the same machine, read
+    // beside a frame inside `checkFrames` (alone it reads 3.1 to 3.3ms). Re-record
     // both numbers (they are printed on every run) only when the calibration
     // machine itself changes, and say so in docs/progress/perf.md — moving them
     // to match a slow runner would undo the whole point of this file.
@@ -170,11 +178,13 @@ enum MachineSpeed {
         switch yardstick {
         case .filterGraph: return filterGraphFactor
         case .pixelPush: return pixelPushFactor
+        case .frame: return frameFactor
         }
     }
 
     private static let filterGraphFactor: Double = measure(.filterGraph)
     private static let pixelPushFactor: Double = measure(.pixelPush)
+    private static let frameFactor: Double = measure(.frame)
 
     /// One round of the yardstick's fixed workload, for a caller that wants to
     /// take it back to back with its own subject rather than at process start.
@@ -182,6 +192,7 @@ enum MachineSpeed {
         switch yardstick {
         case .filterGraph: return filterGraphRound()
         case .pixelPush: return pixelPushRound()
+        case .frame: return frameRound()
         }
     }
 
@@ -190,6 +201,7 @@ enum MachineSpeed {
         switch yardstick {
         case .filterGraph: measured = medianMS(rounds: 7, work: filterGraphRound())
         case .pixelPush: measured = medianMS(rounds: 5, work: pixelPushRound())
+        case .frame: measured = medianMS(rounds: 15, work: frameRound())
         }
         let factor = measured / yardstick.baselineMS
         print(String(format: "[perf] machine yardstick %@ — %.1fms here against %.1fms on the "
@@ -290,6 +302,52 @@ enum MachineSpeed {
         }
     }
 
+    private static let frameGround = CIImage(cgImage: texture(width: 1920, height: 1080))
+    private static let frameLayer = CIImage(cgImage: texture(width: 480, height: 200))
+
+    /// Shaped like one frame of a playing edit, because the frame budgets are
+    /// what it is divided into, and on 2026-10-14 the filter graph proved the
+    /// wrong shape for them. With another process keeping the GPU busy, a
+    /// headline flipping up by letter read 2.06 times the filter graph in the
+    /// same round against 1.29 idle, so a budget divided by it still failed on
+    /// unchanged code. Beside this ruler the same frame read 1.68 idle and 1.54
+    /// to 1.70 loaded, and a 2.5D frame 1.27 idle and 0.89 to 1.00 loaded.
+    /// What a busy GPU takes from a frame is the turnaround of a modest render
+    /// into a bitmap, not throughput on one big blur, so the ruler is a modest
+    /// render into a bitmap.
+    private static func frameRound() -> () -> Void {
+        let ground = frameGround
+        let layer = frameLayer
+        let size = ground.extent
+        let rowBytes = Int(size.width) * 4
+        let space = CGColorSpace(name: CGColorSpace.sRGB)
+        // One buffer for every round, as the canvas keeps one frame buffer.
+        let buffer = FrameBuffer(byteCount: rowBytes * Int(size.height))
+        return {
+            var stacked = ground
+            for i in 0..<10 {
+                var placed = layer
+                if i.isMultiple(of: 2) {
+                    placed = placed.transformed(by: CGAffineTransform(rotationAngle: 0.2))
+                }
+                if i == 3 {
+                    placed = placed.applyingFilter("CIGaussianBlur", parameters: [kCIInputRadiusKey: 6])
+                }
+                placed = placed.transformed(by: CGAffineTransform(translationX: CGFloat(80 + i * 170),
+                                                                  y: CGFloat(60 + (i % 4) * 230)))
+                stacked = placed.composited(over: stacked)
+            }
+            probeContext.render(stacked.cropped(to: size), toBitmap: buffer.bytes, rowBytes: rowBytes,
+                                bounds: size, format: .RGBA8, colorSpace: space)
+        }
+    }
+
+    private final class FrameBuffer {
+        let bytes: UnsafeMutableRawPointer
+        init(byteCount: Int) { bytes = .allocate(byteCount: byteCount, alignment: 16) }
+        deinit { bytes.deallocate() }
+    }
+
     private static func medianMS(rounds: Int, work: () -> Void) -> Double {
         work()  // warm up: the first Core Image call of a process compiles pipelines.
         var samples: [Double] = []
@@ -334,12 +392,16 @@ enum MachineSpeed {
     /// everything measured in single-digit milliseconds. `check` remains right
     /// for the big renderer budgets, where the subject already takes long
     /// enough to average the machine's mood out by itself.
+    ///
+    /// Returns the subject's own median, as read on this machine's clock, for
+    /// a caller that prints a report of its own.
+    @discardableResult
     static func checkInterleaved(_ label: String, baselineMS: Double,
                                  yardstick: Yardstick = .filterGraph,
                                  rounds: Int = 15,
                                  fileID: String = #fileID, filePath: String = #filePath,
                                  line: Int = #line, column: Int = #column,
-                                 subject: () -> Void) {
+                                 subject: () -> Void) -> Double {
         let reference = round(for: yardstick)
         // Warm both, so neither pays for a pipeline the other gets for free.
         reference()
@@ -366,13 +428,13 @@ enum MachineSpeed {
                              rawMedian, yardstick.rawValue, referenceMedian,
                              yardstick.baselineMS, rounds)
         print("[perf] budget: \(message)")
-        guard isGating else { return }
+        guard isGating else { return rawMedian }
         let location = SourceLocation(fileID: fileID, filePath: filePath,
                                       line: line, column: column)
         switch reading(normalizedMS: normalized, boundMS: bound,
                        yardstickMS: referenceMedian, yardstickBaselineMS: yardstick.baselineMS) {
         case .withinBudget:
-            return
+            return rawMedian
         case .overBudget:
             Issue.record(Comment(rawValue: "\(label) regressed: \(message)"),
                          sourceLocation: location)
@@ -389,6 +451,45 @@ enum MachineSpeed {
                              sourceLocation: location)
             }
         }
+        return rawMedian
+    }
+
+    /// The interleaved gate over a run of frames, beside the 1080p frame
+    /// yardstick. The warm-up draws frame 0 and round `n` draws frame `n`, 1
+    /// through `frames`, so the subject plays forward through the moments a
+    /// stopwatch loop would, and no round redraws the frame before it (which
+    /// the renderer would hand back without drawing).
+    ///
+    /// Every frame budget goes through here rather than through `check`. A
+    /// frame is a few milliseconds of GPU turnaround, and inside the full
+    /// suite, or beside another session's test run, that turnaround is what
+    /// gets taken away: on 2026-10-14 a second process keeping the GPU busy
+    /// read a headline flipping up by letter at 149.5ms against a budget of
+    /// 77ms, scaled by a machine factor taken at process start, on unchanged
+    /// code. Five frame gates failed that way in one run.
+    @discardableResult
+    static func checkFrames(_ label: String, baselineMS: Double, frames: Int,
+                            fileID: String = #fileID, filePath: String = #filePath,
+                            line: Int = #line, column: Int = #column,
+                            draw: (Int) -> Void) -> Double {
+        var next = 0
+        return checkInterleaved(label, baselineMS: baselineMS, yardstick: .frame,
+                                rounds: frames, fileID: fileID, filePath: filePath,
+                                line: line, column: column) {
+            draw(next)
+            next += 1
+        }
+    }
+
+    /// A renderer for a frame gate to time: the app's renderer, on a Core
+    /// Image context of its own. Every `DocumentRenderer()` draws through one
+    /// context shared by the whole process, so inside the full suite a timed
+    /// frame queues behind every other render suite drawing at that moment,
+    /// which no ruler beside it can see. Run on their own at once, on a quiet
+    /// machine, the frame gates read a 2.5D frame at 42.5ms and a headline
+    /// flip at 41.8ms that cost 5.4ms and 7.6ms alone (2026-10-14).
+    static func timedRenderer() -> DocumentRenderer {
+        DocumentRenderer(privateContext: CIContext(options: [.cacheIntermediates: true]))
     }
 
     private static func ms(_ duration: Duration) -> Double {
