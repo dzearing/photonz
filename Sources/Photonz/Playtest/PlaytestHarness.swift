@@ -1409,7 +1409,7 @@ private final class Run {
             note(number, step.name, "at \(short(at.point)) \(at.space.rawValue) = view \(short(p)) \(timing)", state: describe())
 
         case .drag(let from, let to, let steps, let modifiers, let halfway, let hold,
-                   let readout, let wobble, let cancel, let showsBox, let expectFresh):
+                   let readout, let wobble, let cancel, let showsBox, let expectFresh, let landsAsHeld):
             let canvas = try requireCanvas()
             let a = try viewPoint(from), b = try viewPoint(to)
             let flags = eventFlags(modifiers)
@@ -1482,8 +1482,41 @@ private final class Run {
             // The pointer's shape WHILE the button is down: the only moment a
             // closed-hand grab cue exists, and a walk cannot photograph it.
             let heldCursor = Self.cursorName()
+            // The canvas's PICTURE with the button still down (the composite,
+            // the crisp tile and any floated sprite), kept to hold the release
+            // against. A moment first, so the last move's render is in it.
+            var heldPicture: CGImage?
+            if landsAsHeld {
+                await sleep(0.3)
+                heldPicture = canvas.playtestPicture()
+            }
             if let event = mouseEvent(.leftMouseUp, at: b, on: canvas, flags: laterFlags) { canvas.mouseUp(with: event) }
             await sleep(0.05)
+            var landedAsHeld = ""
+            if landsAsHeld {
+                await sleep(0.8)
+                guard let heldPicture else {
+                    throw Failure(description: "the canvas had no picture to read with the button down")
+                }
+                guard let landed = canvas.playtestPicture() else {
+                    throw Failure(description: "the canvas had no picture to read after the release")
+                }
+                let differs = CanvasNSView.playtestPictureDifference(heldPicture, landed)
+                let base = hold ?? "\(step.name)-\(number)"
+                if let data = ImageCodec.encode(heldPicture, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(base)-held-picture.png"))
+                }
+                if let data = ImageCodec.encode(landed, format: .png) {
+                    try? data.write(to: out.appendingPathComponent("\(base)-landed-picture.png"))
+                }
+                if differs >= 0.01 {
+                    throw Failure(description: String(format: "the picture jumped on the release: %.1f%% of the "
+                        + "canvas differs between the last picture with the button down and the one rendered "
+                        + "after it came up (the walk allows under 1%%)", differs * 100))
+                }
+                landedAsHeld = String(format: ", %.2f%% of the canvas differs between the held picture and "
+                    + "the landed one", differs * 100)
+            }
             var fresh = ""
             if let expectFresh {
                 // Landed: the committed render, once it has come in.
@@ -1510,7 +1543,7 @@ private final class Run {
                 keys = ", keys " + spell(modifiers) + " then " + spell(later)
             }
             note(number, step.name,
-                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)"
+                 "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue)\(held)\(keys)\(said)\(boxed)\(fresh)\(landedAsHeld)"
                      + "\(cancel ? ", called off with Escape half way and carried on to the end" : ""), "
                      + "cursor while down \(heldCursor), \(guides.reading), \(gridLines.reading)",
                  state: describe())

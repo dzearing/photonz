@@ -24,12 +24,13 @@ extension CanvasNSView {
             return "\(id)@\(layer.position.x),\(layer.position.y) \(layer.bounds.size.width)x"
                 + "\(layer.bounds.size.height) [\(t.a),\(t.b),\(t.c),\(t.d)]"
         }
-        return [contentLayer, crispLayer, previewSpriteLayer].map(describe).joined(separator: " | ")
+        return [contentLayer, crispLayer, previewSpriteLayer, previewOverlayLayer].map(describe).joined(separator: " | ")
     }
 
     /// The picture alone drawn into a bitmap the size of the canvas view, one
     /// pixel to the point: the composite, then the crisp tile, then the sprite,
-    /// each where and how Core Animation places it. Read just before a drag's
+    /// then what is drawn over the sprite, each where and how Core Animation
+    /// places it. Read just before a drag's
     /// release and again once the committed render has landed, the two must
     /// agree, or the picture jumped as the hand let go.
     func playtestPicture() -> CGImage? {
@@ -44,7 +45,7 @@ extension CanvasNSView {
         // its layers are laid out.
         context.translateBy(x: 0, y: size.height)
         context.scaleBy(x: 1, y: -1)
-        for layer in [contentLayer, crispLayer, previewSpriteLayer] where !layer.isHidden {
+        for layer in [contentLayer, crispLayer, previewSpriteLayer, previewOverlayLayer] where !layer.isHidden {
             guard let contents = layer.contents else { continue }
             let image: CGImage?
             if CFGetTypeID(contents as CFTypeRef) == CGImage.typeID {

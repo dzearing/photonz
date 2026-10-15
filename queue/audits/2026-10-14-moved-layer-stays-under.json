@@ -1,0 +1,24 @@
+{
+  "feature": "A moved layer stays under what covers it",
+  "epic": "video-editing",
+  "summary": "Dragging a layer that sits under another now keeps it under for the whole drag. Before, it was drawn on top until you let go, then dropped back under.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Make a new blank picture and draw a rectangle with the Rectangle tool." },
+    { "do": "Draw an ellipse that overlaps part of the rectangle, and give it a different fill colour." },
+    { "do": "Press V, click the part of the rectangle the ellipse does not cover." },
+    { "do": "Drag the rectangle slowly under the ellipse and keep the button down.", "shot": "2026-10-14-moved-layer-stays-under-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go and watch whether anything changes as it lands.", "shot": "2026-10-14-moved-layer-stays-under-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "While you drag, does the ellipse stay drawn over the rectangle?",
+    "Does the picture stay still when you let go, with no flash of the rectangle jumping under?",
+    "Does dragging still feel as quick as before on a big screenshot with a few marks over it?"
+  ],
+  "rough": [
+    "When something over the dragged layer mixes with what is under it (a blend mode such as Multiply, a lens, glass), or the layer is a piece inside a group with something drawn over it, the canvas draws the whole picture again on every move instead. That is correct but can be slower on a large picture.",
+    "Pixels lifted out of a picture with a selection and moved get the same fix, but no walk covers that case yet.",
+    "No mock covers this; it is how the canvas behaves while dragging."
+  ]
+}

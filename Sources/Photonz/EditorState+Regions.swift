@@ -466,16 +466,24 @@ extension EditorState {
             tempRef = holedRef
             underlayDoc.updateLayer(id: targetID) { $0.content = .image(holedRef) }
         }
+        // The lifted pixels land back in their own layer, so whatever is drawn
+        // over that layer is floated over them too (`DragStackSplit`). A stack
+        // that cannot be cut that way keeps the lifted pixels on top.
+        let split = displayFiltered(document).dragStackSplit(at: targetID)
+        let above = split?.above
+        for id in split?.over ?? [] { underlayDoc.updateLayer(id: id) { $0.isVisible = false } }
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer
         let store = store
         Task.detached(priority: .userInitiated) { [weak self] in
             let underlay = renderer.render(underlayDoc, store: store)
+            let overlay = above.flatMap { renderer.render($0, store: store) }
             if let tempRef { store.remove(tempRef) }
             await MainActor.run {
-                guard let self, self.dragPreviewGeneration == generation, let underlay else { return }
+                guard let self, self.dragPreviewGeneration == generation, let underlay,
+                      (above == nil) == (overlay == nil) else { return }
                 self.dragPreview = DragPreview(layerID: targetID, underlay: underlay,
-                                               sprite: content, padding: 0, blendMode: blend)
+                                               sprite: content, overlay: overlay, padding: 0, blendMode: blend)
             }
         }
         return contentFrame

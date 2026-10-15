@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T19:25:51.427Z",
-  "updated": "2026-10-14T12:18:03.662Z",
+  "updated": "2026-10-15T00:39:44.683Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (2026-10-12, rotating-a-layer-that-already-has-a-transform-up): before turns were moved off the sprite, turning the recording (Tutorial Sample) with rectangles above it showed the turned recording sprite covering every rectangle in the held picture (/tmp held/landed picture pair, 9.1% of canvas differed). The sprite is DragPreview: underlay = render(hiding: id), sprite = renderSprite(for: id), previewSpriteLayer sits above contentLayer (EditorState.beginLayerDrag, CanvasDisplay.refreshPreviewSprite), so moves use the same arrangement. Reproduction attempt for a MOVE: blank 1200x800, rectangle then ellipse overlapping, drag the rectangle with hold; inconclusive because both shapes drew in the same red. Retry with a second fill colour.",
@@ -29,6 +29,30 @@
     {
       "t": "2026-10-14T12:18:03.661Z",
       "note": "seq 70 -> 110"
+    },
+    {
+      "t": "2026-10-15T00:06:29.237Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T00:39:36.189Z",
+      "note": "owns these walks: a-moved-layer-stays-under-what-covers-it-walk"
+    },
+    {
+      "t": "2026-10-15T00:39:44.558Z",
+      "note": "Reproduced: new walk a-moved-layer-stays-under-what-covers-it-walk (drag gained landsAsHeld) moved a red rectangle under a crimson ellipse; held vs landed differed 5.6%, and measuring the two pictures showed identical positions with only the stacking different (rectangle drawn over the ellipse mid-drag)."
+    },
+    {
+      "t": "2026-10-15T00:39:44.621Z",
+      "note": "Fixed: PhotonzCore DragStackSplit cuts the stack at the dragged layer; DragPreview carries an overlay of what is drawn over it, floated over the sprite in previewOverlayLayer (CanvasDisplay.showPreviewOverlay). Stacks it cannot cut faithfully (normal-blend-only, no backdrop readers, not in space, nested pieces with something over them) re-render per move. Region content moves get the same overlay. Perf: one extra async render at drag start when something is over the layer; per-move cost unchanged (pure CA). After: 0.23% (control top-layer drag 0.22%, edge antialiasing)."
+    },
+    {
+      "t": "2026-10-15T00:39:44.682Z",
+      "note": "left rough: the lifted-pixels (region move) overlay is not covered by a walk; my attempt on the 2x fixture missed the region because the canvas is larger than the view. Not filed: nothing seen broken. Ten neighbouring drag walks green; Scripts/test.sh 13153 tests green."
     }
+  ],
+  "started": "2026-10-15T00:06:29.235Z",
+  "walks": [
+    "a-moved-layer-stays-under-what-covers-it-walk"
   ]
 }

@@ -1,0 +1,39 @@
+{
+  "out": "/tmp/photonz-playtest/a-moved-layer-stays-under-what-covers-it-walk",
+  "seed": "Moving a layer that sits under another keeps it under the whole way. At Next defaults with no flag changed: a red rectangle is drawn, then an ellipse over part of it painted crimson. The rectangle is dragged slowly with the button held, photographed mid-move, and the picture with the button down must be the picture it lands on, under 1% apart. The canvas floats a dragged layer as a picture of its own over a picture of everything else, so a layer that sits under another was drawn over it for the whole of a move and dropped back under on the release; a turn did the same until 2026-10-12. The ellipse on top is then moved the same way as the control. Canvas coordinates are document units.",
+  "setup": { "forget": ["tools", "panel"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1400, "height": 1000 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [200, 200], "to": [600, 500], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [450, 300], "to": [850, 650], "steps": 8 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "click", "at": [800, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "action", "action": "paintSelectionColor" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectPicked", "layers": ["Ellipse"] },
+    { "do": "snapshot", "name": "1-ellipse-over-rectangle" },
+
+    { "do": "click", "at": [260, 260] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPicked", "layers": ["Rectangle"] },
+    { "do": "drag", "from": [260, 260], "to": [380, 320], "steps": 40, "hold": "2-lower-mid-move", "landsAsHeld": true },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "2-lower-moved", "note": "THE TEST: the rectangle under the ellipse moved by hand; with the button down the ellipse still covered it, exactly as it does once it lands" },
+    { "do": "snapshot", "name": "3-lower-landed" },
+
+    { "do": "click", "at": [800, 480] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectPicked", "layers": ["Ellipse"] },
+    { "do": "drag", "from": [800, 480], "to": [740, 420], "steps": 40, "hold": "4-upper-mid-move", "landsAsHeld": true },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "describe", "stage": "4-upper-moved", "note": "the control: the ellipse on top moved the same way, drawn over the rectangle throughout" },
+    { "do": "snapshot", "name": "5-upper-landed" }
+  ]
+}

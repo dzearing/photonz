@@ -2749,10 +2749,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// it was; a fresh render has nothing to remember. It is how a walk proves
     /// a dragged lens leaves no trail (the user found a Magnify lens smearing
     /// grey across a screenshot on 2026-10-12).
+    ///
+    /// `landsAsHeld` claims the canvas's picture with the button still down is
+    /// the picture it settles on after the release, under 1% apart, the same
+    /// claim `spaceHandle` makes for a turn. A moved layer is floated over a
+    /// picture of everything else, so one that sits under another can be drawn
+    /// over it for the whole move and drop back under on the release; only the
+    /// held picture against the landed one shows it.
     case drag(from: PlaytestPoint, to: PlaytestPoint, steps: Int,
               modifiers: [PlaytestModifier], halfway: [PlaytestModifier]?,
               hold: String?, readout: String?, wobble: CGFloat, cancel: Bool,
-              showsBox: Bool?, expectFresh: Double? = nil)
+              showsBox: Bool?, expectFresh: Double? = nil, landsAsHeld: Bool = false)
     /// Insert text into whatever field has the keyboard.
     case type(String)
     /// Give the keyboard to a named text field in the inspector (its label, as
@@ -4550,7 +4557,8 @@ public enum PlaytestStep: Sendable, Equatable {
                          wobble: CGFloat(try f.optionalNumber("wobble") ?? 0),
                          cancel: try f.optionalFlag("cancel") ?? false,
                          showsBox: try f.optionalFlag("showsBox"),
-                         expectFresh: try f.optionalNumber("expectFresh"))
+                         expectFresh: try f.optionalNumber("expectFresh"),
+                         landsAsHeld: try f.optionalFlag("landsAsHeld") ?? false)
         case "expectFresh":
             self = .expectFresh(percent: try f.optionalNumber("percent") ?? 0.5)
         case "expectReadout":

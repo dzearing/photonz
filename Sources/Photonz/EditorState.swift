@@ -4598,15 +4598,21 @@ final class EditorState {
         let blend = layer.effectiveBlendMode
         let renderer = previewRenderer
         let store = store
-        let displayDoc = displayFiltered(doc)
+        // What is drawn under the layer and what is drawn over it, as two
+        // pictures with the sprite floated between them, so a layer that sits
+        // under another stays under it for the whole move. A stack that cannot
+        // be cut that way (something over it mixes with what is under it)
+        // re-renders per move instead, like text (`DragStackSplit`).
+        guard let split = displayFiltered(doc).dragStackSplit(at: id) else { return }
         Task.detached(priority: .userInitiated) {
-            let underlay = renderer.render(displayDoc, store: store, hiding: id)
+            let underlay = renderer.render(split.below, store: store)
+            let overlay = split.above.flatMap { renderer.render($0, store: store) }
             let sprite = renderer.renderSprite(for: id, in: doc, store: store, padding: padding)
             await MainActor.run { [weak self] in
                 guard let self, self.dragPreviewGeneration == generation,
-                      let underlay, let sprite else { return }
+                      let underlay, let sprite, (split.above == nil) == (overlay == nil) else { return }
                 self.dragPreview = DragPreview(layerID: id, underlay: underlay, sprite: sprite,
-                                               padding: padding, blendMode: blend)
+                                               overlay: overlay, padding: padding, blendMode: blend)
             }
         }
     }

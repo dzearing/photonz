@@ -261,6 +261,7 @@ extension CanvasNSView {
             contentLayer.isHidden = true
             crispLayer.isHidden = true
             previewSpriteLayer.isHidden = true
+            previewOverlayLayer.isHidden = true
             selectionBaseLayer.isHidden = true
             selectionAntsLayer.isHidden = true
             layerOutlineLayer.isHidden = true
@@ -585,10 +586,14 @@ extension CanvasNSView {
            holdID == dragPreview.layerID {
             contentLayer.contents = dragPreview.underlay
             previewSpriteLayer.isHidden = true
+            // The vector preview draws over the underlay alone, so what sits
+            // over the layer has to stay in the picture under it.
+            showPreviewOverlay(dragPreview.overlay)
             return
         }
         guard let viewport, let dragPreview, let frame = previewedFrame else {
             previewSpriteLayer.isHidden = true
+            showPreviewOverlay(nil)
             if let image, !contentLayer.isHidden { contentLayer.contents = image }
             return
         }
@@ -604,6 +609,23 @@ extension CanvasNSView {
         previewSpriteLayer.setAffineTransform(spriteDeltaTransform(for: dragPreview.layerID))
         previewSpriteLayer.compositingFilter = dragPreview.blendMode.compositingFilterName
         previewSpriteLayer.isHidden = false
+        showPreviewOverlay(dragPreview.overlay)
+    }
+
+    /// Lays what is drawn over the dragged layer over its sprite, exactly where
+    /// the composite sits, or takes it away (`DragStackSplit`).
+    private func showPreviewOverlay(_ overlay: CGImage?) {
+        guard let overlay else {
+            if !previewOverlayLayer.isHidden {
+                previewOverlayLayer.isHidden = true
+                previewOverlayLayer.contents = nil
+            }
+            return
+        }
+        previewOverlayLayer.contents = overlay
+        previewOverlayLayer.frame = contentLayer.frame
+        previewOverlayLayer.magnificationFilter = contentLayer.magnificationFilter
+        previewOverlayLayer.isHidden = false
     }
 
     /// What a rotate/skew drag adds on top of the sprite bitmap (which was

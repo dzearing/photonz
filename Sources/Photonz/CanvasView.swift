@@ -12,6 +12,11 @@ struct DragPreview {
     let underlay: CGImage
     /// The dragged layer rendered alone, padded by `padding` on every side.
     let sprite: CGImage
+    /// What is drawn OVER the dragged layer, alone on a clear canvas the size
+    /// of `underlay`, floated over the sprite so a layer that sits under
+    /// another stays under it for the whole drag (`DragStackSplit`). Nil when
+    /// nothing is drawn over it.
+    var overlay: CGImage? = nil
     /// Document points of shadow/blur padding baked into the sprite.
     let padding: CGFloat
     let blendMode: PhotonzCore.BlendMode
@@ -837,6 +842,9 @@ final class CanvasNSView: NSView {
     /// Floats the dragged layer's pre-rendered sprite over the underlay during
     /// drags — positioned in pure Core Animation, no per-move rendering.
     let previewSpriteLayer = CALayer()
+    /// What is drawn over the dragged layer (`DragPreview.overlay`), laid over
+    /// the sprite exactly where the composite sits.
+    let previewOverlayLayer = CALayer()
     /// The grid you build against (Next, `next-canvas-grid`): one shape layer
     /// per rung of the level-of-detail ladder, coarsest last, each carrying its
     /// own strength. Chrome, so it is out of every export, and on whichever
@@ -1872,7 +1880,7 @@ final class CanvasNSView: NSView {
     /// drawn something on top of it. Switched off, when only the surround
     /// carries it, it goes UNDER, so the canvas's own drop shadow falls across
     /// the graph paper and the paper reads as the surface the picture is lying
-    /// on. Above `previewSpriteLayer` is exactly where it used to sit, so the
+    /// on. Above the drag preview is exactly where it used to sit, so the
     /// switched-on case is unchanged, and re-ordering only happens when the
     /// side actually changes.
     func placeCanvasGrid(overPicture: Bool) {
@@ -1882,7 +1890,7 @@ final class CanvasNSView: NSView {
         canvasGridOverPicture = overPicture
         canvasGridContainer.removeFromSuperlayer()
         if overPicture {
-            host.insertSublayer(canvasGridContainer, above: previewSpriteLayer)
+            host.insertSublayer(canvasGridContainer, above: previewOverlayLayer)
         } else {
             host.insertSublayer(canvasGridContainer, below: contentLayer)
         }
@@ -2161,6 +2169,11 @@ final class CanvasNSView: NSView {
         previewSpriteLayer.contentsGravity = .resize
         previewSpriteLayer.isHidden = true
         layer?.addSublayer(previewSpriteLayer)
+
+        previewOverlayLayer.contentsGravity = .resize
+        previewOverlayLayer.minificationFilter = .linear
+        previewOverlayLayer.isHidden = true
+        layer?.addSublayer(previewOverlayLayer)
 
         // The column bands (Next, `next-frames`) sit right on the picture: over
         // everything a person has drawn, because a wash you build against has
