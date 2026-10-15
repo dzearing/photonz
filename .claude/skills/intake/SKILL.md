@@ -69,6 +69,16 @@ and pass `"$(cat /tmp/x.json)"`, or the shell will mangle it.
   (`queue/bin/follow-up-bar.md`), and written into this task's log if it does
   not". Where a number is claimed (a size, a frame time, an
   alignment), demand it be MEASURED and put in the audit rather than eyeballed.
+  When the task is about how something LOOKS or MOVES (titles, backgrounds,
+  transitions, entrances, polish, "it's boring"), the acceptance carries a
+  measured bar that today's weak version would FAIL (for example the mean pixel
+  difference between frames half a second apart, or how much of the headline is
+  visible at the first frame against the hold), plus a reel (a short MP4 or GIF
+  and a contact sheet under `queue/audits/`) and a decision card linking it so
+  the user judges the look. Rule checks alone let seven title tasks close done
+  on 2026-10-11 with flat, already-visible titles in their own pictures. When the
+  user complains about a shipped look, open that task's audit frames first and
+  check them against the complaint.
 - **notes** — everything technical: file paths with line numbers, what you found,
   what you did NOT confirm, and the traps a naive fix would hit. Quote the user's
   own words for the report. If you have a suspect rather than a cause, say it is

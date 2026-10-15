@@ -119,6 +119,20 @@ to go back to our custom one") for our drawn control with the picked choice a
 tinted glass chip (`a42eacb8`, "The one segmented control" below). One card
 with two films would have asked that question on the first day.
 
+**A look or a motion is done when a measured bar says so, and the user has seen
+the reel.** Work whose value is how something looks or moves (a title, a
+background, a transition, an entrance) is held to a number the weak version
+fails, set by measuring today's version: frames half a second apart differ
+visibly for a background that should move; a headline shows under a tenth of
+its ink at its first frame for an entrance. It ships with a reel (a short video
+and a contact sheet) on a decision card, and whoever closes it opens those
+pictures and checks them against the goal: a picture that still shows the weak
+version means it is not done. Why: on 2026-10-11 seven title tasks closed done
+on rule checks while their own frames showed flat backgrounds and headlines
+already on screen at the "in", and the user called the titles boring; the
+rework (`title-backgrounds-that-are-alive-auroras-energy`,
+`title-text-visibly-comes-in-and-every-built-in-t`) carried bars like these.
+
 **The first audit against it** (2026-09-29, every surface of the Next editor,
 picture and video, View and Edit, with photographs) is
 `docs/design/ia-audit-2026-09-29.md`: each control, where it is, where this
