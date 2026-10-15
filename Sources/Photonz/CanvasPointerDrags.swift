@@ -1316,6 +1316,7 @@ extension CanvasNSView {
             measurePressDownView = nil
             hoverPoint = up
             finishSizeBox(at: viewport.documentPoint(fromView: up))
+            measurePreviewRestsAt = up
             return
         }
         if tool == .measure, measureToolMode.commitsOnClick {
@@ -1331,9 +1332,11 @@ extension CanvasNSView {
                 let around = measureElementNeighbors
                 hideMeasureHoverReadout()
                 onElementSizeCommit(rect, around)
+                measurePreviewRestsAt = up
             } else if let gap = measureGapPreview {
                 hideMeasureHoverReadout()
                 onGapCommit(gap)
+                measurePreviewRestsAt = up
             }
             return
         }

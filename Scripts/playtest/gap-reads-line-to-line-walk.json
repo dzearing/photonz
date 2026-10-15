@@ -20,8 +20,8 @@
     { "do": "expectFeet", "start": [400, 142], "end": [400, 216], "reads": "37 px", "within": 2 },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
     { "do": "wait", "seconds": 0.4 },
-    { "do": "key", "key": "i" },
     { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "measureMode", "value": "gap" },
 
     { "do": "move", "at": [300, 205] },
     { "do": "wait", "seconds": 0.5 },

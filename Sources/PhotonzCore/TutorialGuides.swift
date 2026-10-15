@@ -361,7 +361,7 @@ public enum TutorialGuides {
                 id: "both-are-yours",
                 anchor: .canvas,
                 title: "Both numbers are yours now",
-                body: "Drag either number somewhere clearer, or press \u{2318}Z once to take the pair of them back off."),
+                body: "Press V to get your pointer back and drag either number somewhere clearer, or press \u{2318}Z once to take the pair of them back off."),
         ])
 
     /// The guide that stops people mistrusting their numbers. A caliper you

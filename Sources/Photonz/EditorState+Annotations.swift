@@ -303,6 +303,11 @@ extension EditorState {
     /// to Measure in the mode you left it in, never a hunt through the modes.
     /// `Scripts/playtest/measure-handback.json` walks all four Measure modes
     /// and is the guard on this, so do not change it without a new decision.
+    ///
+    /// That new decision came on 2026-10-11 for Size and Gap alone: their one
+    /// click measures and the ruler stays in hand, so measuring a second thing
+    /// costs no press of I (`finishMeasuring`). Distance and Alignment still
+    /// end here.
     func finishCreating(_ layerID: UUID, tool: Tool = .select) {
         setTool(tool)
         // A layer drawn onto a frame is selected INSIDE that frame, so Escape

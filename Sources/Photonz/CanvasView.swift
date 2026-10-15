@@ -1400,10 +1400,16 @@ final class CanvasNSView: NSView {
     var measurePlacementHold: MeasureLineHold?
     /// What the Measure tool does when you click (Next). Distance is the only
     /// mode that draws nothing under an idle pointer.
-    var measureToolMode: MeasureToolMode = .distance
+    /// A new mode, or a `[` / `]`, is the person asking for a different
+    /// preview, so either one wakes a preview resting after a landed click.
+    var measureToolMode: MeasureToolMode = .distance {
+        didSet { if oldValue != measureToolMode { measurePreviewRestsAt = nil } }
+    }
     /// Which rung of the element ladder Size mode shows (`[` / `]`), counted
     /// from the rung the ladder starts on.
-    var measureCandidateLevel = 0
+    var measureCandidateLevel = 0 {
+        didSet { if oldValue != measureCandidateLevel { measurePreviewRestsAt = nil } }
+    }
     /// How many rungs the ladder under the pointer has below the one it starts
     /// on (a button's own label is one below the button), so `[` stops there.
     var measureLadderBelowStart = 0
@@ -1420,6 +1426,11 @@ final class CanvasNSView: NSView {
     var measureGapSubjectCache: (gap: GapMeasurement, subjects: [CGRect])?
     /// The gap Gap mode is previewing right now, same contract.
     var measureGapPreview: GapMeasurement?
+    /// Where (view space) a Size or Gap click just landed. The Measure tool
+    /// stays in hand after one (2026-10-11), and the preview under a pointer
+    /// that has not moved would draw the very numbers that just landed a
+    /// second time beside them, so it rests until the pointer moves away.
+    var measurePreviewRestsAt: CGPoint?
     /// Alignment mode (Next `next-measure-align`): whether Measure drags draw a
     /// checking guide, and the in-flight guide drag (document coordinates).
     var measureChecksAlignment: Bool { measureToolMode == .alignment }

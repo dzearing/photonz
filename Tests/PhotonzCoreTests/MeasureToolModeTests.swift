@@ -22,6 +22,17 @@ struct MeasureToolModeTests {
         #expect(!MeasureToolMode.alignment.commitsOnClick)
     }
 
+    /// The user's answer on 2026-10-11: after a Size or Gap click the ruler
+    /// stays in hand, so the next click measures the next thing, as in Shottr.
+    /// Distance and Alignment are placed by hand and hand back to Select with
+    /// what they drew picked, ready to adjust.
+    @Test func sizeAndGapKeepTheToolInHandAfterTheyLand() {
+        #expect(MeasureToolMode.size.staysInHandAfterLanding)
+        #expect(MeasureToolMode.gap.staysInHandAfterLanding)
+        #expect(!MeasureToolMode.distance.staysInHandAfterLanding)
+        #expect(!MeasureToolMode.alignment.staysInHandAfterLanding)
+    }
+
     @Test func onlySizePicksAmongCandidates() {
         #expect(MeasureToolMode.size.picksAmongCandidates)
         #expect(!MeasureToolMode.gap.picksAmongCandidates)

@@ -139,7 +139,7 @@ extension EditorState {
             }
             recordRecentColor(hex: width.strokeColorHex)
             noteMeasurementLanded()
-            finishCreating(widthLayer.id)
+            finishMeasuring(widthLayer.id, in: .size)
             return
         }
         let group = placedInTimeIfDrawnOnVideo(
@@ -150,7 +150,7 @@ extension EditorState {
         perform { $0.addLayer(group) }
         recordRecentColor(hex: width.strokeColorHex)
         noteMeasurementLanded()
-        finishCreating(group.id)
+        finishMeasuring(group.id, in: .size)
     }
 
     /// The mode a new measurement records, which names it ("Gap 16",
@@ -193,7 +193,22 @@ extension EditorState {
         perform { [layer = placedInTimeIfDrawnOnVideo(layer)] in $0.addLayer(layer) }
         recordRecentColor(hex: content.strokeColorHex)
         noteMeasurementLanded()
-        finishCreating(layer.id)
+        finishMeasuring(layer.id, in: .gap)
+    }
+
+    /// How a landed Size or Gap ends: the Measure tool stays in hand in the
+    /// same mode with nothing picked, so the next click measures the next
+    /// thing and the panel keeps showing the tool (the user's answer on
+    /// 2026-10-11, which took capture to a pasted redline from ten steps to
+    /// Shottr's nine; `docs/design/next-measure.md` section 13). V or Escape
+    /// puts it down. Every other mode, like every other tool, hands back to
+    /// Select with what it drew picked (`finishCreating`).
+    private func finishMeasuring(_ layerID: UUID, in mode: MeasureToolMode) {
+        guard mode.staysInHandAfterLanding, activeTool == .measure else {
+            finishCreating(layerID)
+            return
+        }
+        if selectedLayerID != nil { selectedLayerID = nil }
     }
 
     /// What the Measure tool does when you click (Next): the two-point caliper,

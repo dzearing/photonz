@@ -850,9 +850,10 @@ final class EditorState {
         canvasGrid.majorEvery = CanvasGridSettings.clamped(majorEvery: every)
         setCanvasGridVisible(true)
     }
-    /// The active editor tool. Drawing tools are STICKY (Photoshop-style, 17.12):
-    /// after a shape is drawn the tool stays active so you can draw more of them.
-    /// Switch to `.select` (V) to adjust a placed shape.
+    /// The active editor tool. A tool that makes something hands back to
+    /// `.select` with what it made picked (`finishCreating`, user request
+    /// 2026-08-21), except Measure in Size and Gap, which stays in hand so the
+    /// next click measures the next thing (`finishMeasuring`, 2026-10-11).
     private(set) var activeTool: Tool = .select
     /// The pending crop rect (document coords) while the crop tool is active.
     var cropRect: CGRect?

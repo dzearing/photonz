@@ -109,6 +109,14 @@ public enum MeasureToolMode: String, CaseIterable, Hashable, Codable, Sendable {
     /// placement, no drag).
     public var commitsOnClick: Bool { self == .size || self == .gap }
 
+    /// Whether the Measure tool stays in hand once a measurement in this mode
+    /// lands, with nothing picked, so the next click measures the next thing
+    /// (the user's answer on 2026-10-11, level with Shottr). Only the click to
+    /// commit modes: a Distance or Alignment is placed by hand and often wants
+    /// adjusting, so it hands back to Select with the new layer picked, like
+    /// every other tool that makes something.
+    public var staysInHandAfterLanding: Bool { commitsOnClick }
+
     /// Whether the `[` / `]` keys grow and shrink the detected pick.
     public var picksAmongCandidates: Bool { self == .size }
 

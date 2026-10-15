@@ -851,7 +851,7 @@ wobble is half a point, not a misalignment):
 - All of it: flags appear only in the Next release's Experiments list; Current
   behavior is byte-identical with flags absent/off; `Scripts/test.sh` green.
 
-## 13. Capture to a pasted redline: the step count (2026-10-09)
+## 13. Capture to a pasted redline: the step count (2026-10-09, recounted 2026-10-14)
 
 The success list for `measure-redline` promises that someone used to CleanShot X
 or Shottr gets from a capture to a redline on the clipboard in no more steps
@@ -872,19 +872,20 @@ step, not the same action.
 | 4 | I: Measure, in Distance | click: the width is imprinted | |
 | 5 | I: Size | ↓ (ruler, vertical) | |
 | 6 | click the element: width and height in one step | click: the height is imprinted | |
-| 7 | **I: Measure again, because a landed measurement hands back to Select** | an arrow key with the pointer between two objects | |
-| 8 | I: Gap | click: the gap is imprinted | |
-| 9 | click the space between: the gap | ⌘C | |
-| 10 | ⇧⌘C, Copy Merged | | |
-| **Total** | **10** | **9** | **cannot do it alone; with PixelSnap 2, at least 5 (below)** |
+| 7 | I: Gap (Measure is still in hand after the Size click) | an arrow key with the pointer between two objects | |
+| 8 | click the space between: the gap | click: the gap is imprinted | |
+| 9 | ⇧⌘C, Copy Merged | ⌘C | |
+| **Total** | **9** (10 until 2026-10-14) | **9** | **cannot do it alone; with PixelSnap 2, at least 5 (below)** |
 
 **Photonz** is counted by `Scripts/playtest/capture-to-redline-steps-walk.json`,
 green at Next defaults with no flag set. A walk cannot cover the person's screen
 with the capture overlay, so step 1 goes through the dispatcher the global
 hotkey calls and step 2 is a lent capture with its toast (what the drag ends
 in); every step after that is the real key or click. The walk waits for the
-tool to read Select after the Size click before it presses I, so if the
-hand-back ever changes the walk fails and this table needs recounting.
+tool to still read Measure, in Size, with nothing picked after the Size click
+before it presses I, so if the tool ever hands back again the walk fails and
+this table needs recounting. `Scripts/playtest/measure-handback.json` guards
+the rule mode by mode.
 
 **Shottr**, from [shottr.cc](https://shottr.cc/) (Tips and Tricks, release
 notes): "Press ↑ or ↓ key and move your mouse to measure vertical size, ← or →
@@ -912,13 +913,19 @@ gap both land in one screenshot. So with PixelSnap it is at least 5 steps
 two measurements can share one picture at all; that is not countable from
 either app's own documentation, and nothing was installed to find out.
 
-**Where Photonz loses its step to Shottr.** Photonz spends one step Shottr does
-not (opening the editor, step 3), and gets one back with Size measuring width
-and height in a single click. Then step 7: after the Size click lands,
-the Measure tool hands back to Select (`finishCreating`, the 2026-08-22 and
-2026-09-15 rule that every tool that makes something hands you the thing it
-made), so measuring a second thing starts by picking the tool up again. Shottr's
-release notes say it made the opposite choice on purpose. Keeping Measure in
-hand after a Size or Gap click would make Photonz 9, level with Shottr; it
-reverses a rule the user asked for, so it is the user's decision, not a quiet
-change (task `capture-to-a-pasted-redline-takes-no-more-steps`, decision card).
+**Where Photonz lost its step to Shottr, and got it back.** Photonz spends one
+step Shottr does not (opening the editor, step 3), and gets one back with Size
+measuring width and height in a single click. Counted on 2026-10-09 it then lost
+a step: after the Size click landed, the Measure tool handed back to Select
+(`finishCreating`, the 2026-08-22 and 2026-09-15 rule that every tool that makes
+something hands you the thing it made), so measuring a second thing started by
+pressing I to pick the tool up again. Shottr's release notes say it made the
+opposite choice on purpose. The user answered the decision card on 2026-10-11:
+**after a Size or Gap click, Measure stays in hand in the same mode with nothing
+picked**, so the next click measures the next thing; V or Escape puts it down.
+Distance and Alignment, placed by hand and often adjusted, still hand back with
+what they drew picked (`MeasureToolMode.staysInHandAfterLanding`,
+`EditorState.finishMeasuring`). With the tool still in hand and the pointer
+where it clicked, the preview under it would draw the numbers that just landed a
+second time beside them, so it rests until the pointer moves, `[` or `]` is
+pressed, or the mode changes. Recounted 2026-10-14: 9, level with Shottr.

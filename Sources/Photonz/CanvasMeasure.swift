@@ -578,6 +578,14 @@ extension CanvasNSView {
         measureElementPreview = nil
         measureElementNeighbors = []
         measureGapPreview = nil
+        if let rest = measurePreviewRestsAt {
+            if let hoverPoint, tool == .measure,
+               hypot(hoverPoint.x - rest.x, hoverPoint.y - rest.y) < 4 {
+                hideMeasureHoverReadout()
+                return
+            }
+            measurePreviewRestsAt = nil
+        }
         guard tool == .measure, measurePlacement == nil,
               measureToolMode.previewsUnderPointer,
               let viewport, let document, let hoverPoint else {

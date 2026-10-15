@@ -1,0 +1,48 @@
+{
+  "feature": "Measure stays in hand after Size and Gap",
+  "epic": "measure-redline",
+  "summary": "After a Size or Gap click the Measure tool stays picked in the same mode, so the next click measures the next thing. A capture to a redline on the clipboard now takes 9 steps, level with Shottr (it was 10).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any screenshot of an app window.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press I, then I again until the Mode reads Size."
+    },
+    {
+      "do": "Click a button in the screenshot.",
+      "shot": "2026-10-14-measure-stays-6-size-landed-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Without pressing anything, click a second button.",
+      "shot": "2026-10-14-measure-stays-second-size-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press I once for Gap and click the space between two cards.",
+      "shot": "2026-10-14-measure-stays-8-size-and-gap-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press V (or Escape), then click a number to pick it and drag it."
+    },
+    {
+      "do": "Press I, switch to Distance and place a caliper with three clicks: the tool goes back to the arrow with the caliper picked."
+    },
+    {
+      "do": "Press Shift Command C and paste into a chat."
+    }
+  ],
+  "evaluate": [
+    "Does keeping the ruler after Size and Gap feel faster when you redline a whole screen?",
+    "Do you miss having the measurement you just placed picked, so arrow keys nudge it, or is V then a click fine?",
+    "Is it clear the tool is still Measure after a click (cursor, tool bar, the panel reading Measure tool)?",
+    "Is it right that Distance still hands back to the arrow while Size and Gap do not?"
+  ],
+  "rough": [
+    "The preview under the pointer rests after a click until the pointer moves, [ or ] is pressed, or the mode changes; a second click on the very same spot measures nothing rather than placing the same numbers twice.",
+    "Arrow keys no longer nudge a Size or Gap you just placed; press V and click it first (the con named on the decision card capture-to-a-pasted-redline-takes-no-more-steps-after-a-size-or-gap-click-should).",
+    "No mock covers whether a tool stays picked after use; this follows the user's answer on 2026-10-11.",
+    "The Measure a size guide's last step now says to press V before dragging a number."
+  ]
+}
