@@ -23,11 +23,12 @@
     { "do": "panel", "stage": "long-list" },
     { "do": "snapshot", "name": "2-long-list" },
 
-    { "do": "dragHandle", "area": "Layers", "by": 90, "hold": "3-grip-held" },
+    { "comment": "In the pane of lists the Layers list has no grab bar of its own: it fills the room the pane holds, and the pane's grip sets that room.", "do": "dragHandle", "area": "Layers", "expect": "absent" },
+    { "do": "dragHandle", "area": "Lists", "by": 90, "hold": "3-grip-held" },
     { "do": "snapshot", "name": "4-taller" },
-    { "do": "dragHandle", "area": "Layers", "by": -140 },
+    { "do": "dragHandle", "area": "Lists", "by": -140 },
     { "do": "snapshot", "name": "5-shorter" },
-    { "do": "dragHandle", "area": "Layers", "by": 400 },
+    { "do": "dragHandle", "area": "Lists", "by": 400 },
     { "do": "snapshot", "name": "6-all-the-way-open" },
 
     { "comment": "The Library holds this document's own pictures (since 2026-09-23), not the capture folder, so four are dropped in to give it more than one row.", "do": "dropImage", "file": "fixtures/photonz-grip-tile-1.png", "at": [200, 200] },
@@ -43,6 +44,6 @@
     { "do": "dragHandle", "area": "Library", "by": 400 },
     { "do": "snapshot", "name": "8-library-open" },
 
-    { "do": "describe", "stage": "end", "note": "the grab bar is absent under a one row list and moves the area under a long one" }
+    { "do": "describe", "stage": "end", "note": "the Layers list has no grab bar of its own in the pane and fills whatever room the pane grip gives it" }
   ]
 }

@@ -1,0 +1,46 @@
+{
+  "feature": "The Layers list fills the lists pane",
+  "epic": "video-editing",
+  "summary": "In the pane of lists at the foot of the panel, the Layers list now grows into all the room the pane has before it scrolls. Six layers in a 1280 by 900 window show every row, and a longer list runs to the pane's foot. The pane's line is now the one control for how much room the list gets.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A picture open in a 1280 by 900 window.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw four rectangles, group the top two and open the group: six rows in Layers.",
+      "shot": "2026-10-15-layers-list-fills-pane-1-six-rows-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick a layer and press Command-J until there are eight layers.",
+      "shot": "2026-10-15-layers-list-fills-pane-2-long-list-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the line above the pane up: the list grows with it until every row shows.",
+      "shot": "2026-10-15-layers-list-fills-pane-4-taller-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the same line down: the list shrinks with the pane and scrolls, still reaching its foot.",
+      "shot": "2026-10-15-layers-list-fills-pane-5-shorter-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Place a few pictures so the Library opens under Layers: the two lists share the pane.",
+      "shot": "2026-10-15-layers-list-fills-pane-7-library-shorter-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "With six layers, is seeing every row with no scrolling what you expected from the pane?",
+    "Is the line above the pane enough as the only way to give Layers more room, now that the small bar under the rows is gone?",
+    "With the Library open too, does the split between Layers and the shelf feel right, or do you want to set it yourself?"
+  ],
+  "rough": [
+    "The small grab bar under the Layers rows is gone while Layers sits in the pane: the pane's line sets the room and the list takes as much of it as its rows need. Outside the pane (Current) the bar is unchanged.",
+    "With Layers and the Library both open in the pane, the room is shared out automatically (the taller list gives first) and there is no control to move the split between them; a height you once dragged the old Layers bar to is not used in the pane.",
+    "The Library shelf still stops at its own grab bar's height in the pane, with blank glass under it when the bar is pulled up; that is the-library-shelf-uses-the-room-its-pane-holds.",
+    "With the old bar gone, a one-row Layers list ends about 12pt higher, so the Library header and its scope control sit 12pt higher in the pane than before.",
+    "No mock draws the lists pane: it comes from your answer B to 'Where do Layers and Library sit when something is picked?' on 2026-10-13, so there is no mock frame to set beside it."
+  ]
+}

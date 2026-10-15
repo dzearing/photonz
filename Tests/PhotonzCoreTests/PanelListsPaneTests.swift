@@ -172,4 +172,25 @@ struct PanelListsPaneTests {
         #expect(PanelListsPane.maxAllowedHeight(column: 700, floor: 45) == 700 - PanelListsPane.pickFloor)
         #expect(PanelListsPane.maxAllowedHeight(column: 100, floor: 45) == 45)
     }
+
+    @Test("In the pane a list grows into the room the pane holds before it scrolls")
+    func aListInThePaneFillsIt() {
+        // Six layers want 270pt; the list's own grab bar was left at 200 and
+        // the pane has room for all of it, so nothing caps it at 200.
+        #expect(PanelListsPane.listAsks(content: 270, grabBar: 200, inPane: true) == 270)
+        #expect(PanelListsPane.listCeiling(grabBar: 200, dock: nil, inPane: true) == .greatestFiniteMagnitude)
+        // A list longer than the pane is drawn to the share the pane hands
+        // it, which is the whole of the room under its header, then scrolls.
+        #expect(PanelListsPane.listCeiling(grabBar: 200, dock: 310, inPane: true) == 310)
+        #expect(PanelListsPane.listCeiling(grabBar: 600, dock: 310, inPane: true) == 310)
+    }
+
+    @Test("Outside the pane the list's own grab bar still caps it")
+    func outsideThePaneTheGrabBarCaps() {
+        #expect(PanelListsPane.listAsks(content: 270, grabBar: 200, inPane: false) == 200)
+        #expect(PanelListsPane.listAsks(content: 120, grabBar: 200, inPane: false) == 120)
+        #expect(PanelListsPane.listCeiling(grabBar: 200, dock: nil, inPane: false) == 200)
+        #expect(PanelListsPane.listCeiling(grabBar: 200, dock: 150, inPane: false) == 150)
+        #expect(PanelListsPane.listCeiling(grabBar: 200, dock: 310, inPane: false) == 200)
+    }
 }

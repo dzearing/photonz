@@ -54,6 +54,25 @@ public enum PanelListsPane {
         (order.filter { !listSections.contains($0) }, order.filter(listSections.contains))
     }
 
+    /// What a list asks the dock for: all of its rows in the pane, where the
+    /// pane's grip already sets how much room there is, or its rows capped by
+    /// its own grab bar in a dock with no pane.
+    ///
+    /// A list in the pane used to keep its grab bar's ceiling too, 200pt (five
+    /// rows) unless dragged, so once the pane began holding its height six
+    /// layers stopped at five and scrolled with blank glass under them in the
+    /// same pane (2026-10-15).
+    public static func listAsks(content: CGFloat, grabBar: CGFloat, inPane: Bool) -> CGFloat {
+        inPane ? content : min(content, grabBar)
+    }
+
+    /// The most a list may be drawn: the dock's share for it, and outside the
+    /// pane also what its grab bar was dragged to, whichever is lower.
+    public static func listCeiling(grabBar: CGFloat, dock: CGFloat?, inPane: Bool) -> CGFloat {
+        let dock = dock ?? .greatestFiniteMagnitude
+        return inPane ? dock : min(grabBar, dock)
+    }
+
     /// The highest the grip may set the pane in a column this tall: all of it
     /// but the pick's floor, and never less than the pane's own floor.
     public static func maxAllowedHeight(column: CGFloat?, floor: CGFloat) -> CGFloat {

@@ -724,7 +724,7 @@ struct InspectorPanel: View {
                     // and the scroller's length stay put.
                     Color.clear.frame(height: budget.bodies[id] ?? Self.unmeasuredBody)
                 } else {
-                    sectionContent(id, ceiling: ceilings[id])
+                    sectionContent(id, ceiling: ceilings[id], inListsPane: inListsPane)
                 }
             }
             // The hairline belongs to the section above it, so
@@ -1588,13 +1588,15 @@ struct InspectorPanel: View {
     }
 
     @ViewBuilder
-    private func sectionContent(_ id: InspectorSectionID, ceiling: CGFloat?) -> some View {
+    private func sectionContent(_ id: InspectorSectionID, ceiling: CGFloat?,
+                                inListsPane: Bool = false) -> some View {
         switch id {
         case .layers:
             // The one section that bounds itself: it is handed the dock's
             // ceiling and applies it to its rows, so its count line and grab
             // bar stay put instead of scrolling away with them.
             LayersListView(dockCeiling: ceiling,
+                           inListsPane: inListsPane,
                            onMetrics: { natural, extras in
                                budget.bodies[.layers] = natural
                                budget.listExtras[.layers] = extras

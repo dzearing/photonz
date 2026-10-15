@@ -8439,6 +8439,15 @@ private final class Run {
             throw Failure(description: "the window has no content view")
         }
         let probe = PanelAreaHandleProbe.shared
+        // An area with no bar built at all offers none either: the Layers
+        // list in the pane of lists, whose grip does that job.
+        if expect != .moves, probe.handle(named: area) == nil {
+            note(number, "dragHandle",
+                 "\(area) offers no grab bar, as expected: none is drawn; "
+                    + "there is \(probe.names.isEmpty ? "none at all" : probe.names.joined(separator: ", "))",
+                 state: describe())
+            return
+        }
         guard let handle = probe.handle(named: area) else {
             throw Failure(description: "there is no resizable area called \"\(area)\" in the panel; "
                 + "there is \(probe.names.isEmpty ? "none at all, so is the panel on screen?" : probe.names.joined(separator: ", "))")

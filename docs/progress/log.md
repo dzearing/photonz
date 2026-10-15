@@ -21449,3 +21449,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Why it only grows and counts floors: holding the first measured height cut a freshly saved style's tile across the shelf's foot (`tile-comes-away-walk`, `library-tile-click-latency-picture-walk`), and growing on content moved the scope control on Media to Comps again.
 - Walks: new `lists-pane-holds-still-walk` (pointer clicks at fixed points: Comps then Media, Layers header twice, Library header twice; fails on the old code at step 15). `section-fold-motion-walk`'s five-click check is back on the Layers header. `segmented-chip-refraction-film-walk` passes.
 - Left: an old grip setting dragged all the way up is now read uncapped, so it opens tall once.
+
+## 2026-10-15 — The Layers list fills the lists pane
+
+- In the pane of lists (Next), the Layers list asks for all of its rows and is capped only by the pane's share (`PanelListsPane.listAsks` / `listCeiling`, tested), so six layers no longer stop at five rows with blank glass under them. Its own grab bar is not built in the pane; the pane grip sets the room. Current is unchanged.
+- Walks: panel-grip-walk drives the Lists grip; `dragHandle` "absent" accepts a bar that is not built; lists-pane-holds-still-walk clicks moved 12pt up.
+- Next: the-library-shelf-uses-the-room-its-pane-holds (same cap on the Library shelf).

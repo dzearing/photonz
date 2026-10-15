@@ -332,6 +332,10 @@ struct LayersListView: View {
     /// ceiling is what this list ASKED for; this is what the panel HAS, and the
     /// list is drawn at the smaller of the two. See `DockHeightBudget`.
     var dockCeiling: CGFloat?
+    /// Drawn in the pane of lists under the pick (Next, `next-lists-pane`),
+    /// whose grip sets the room: the list takes as much of it as its rows need
+    /// and has no grab bar of its own.
+    var inListsPane = false
     /// Told what this list would be at full length, and what the count line and
     /// the grab bar under it cost, so the dock can budget for both separately:
     /// the list scrolls and they do not.
@@ -378,7 +382,11 @@ struct LayersListView: View {
         // the window of rows worth drawing pictures for. Two ceilings, and the
         // lower one wins: what the reader dragged the grab bar to, and what the
         // dock has room for after the form sections are paid.
-        let ceiling = min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude)
+        // In the pane of lists the pane's grip already sets the room, so the
+        // grab bar's ceiling is not one of them there and the list fills the
+        // pane before it scrolls (`PanelListsPane.listCeiling`).
+        let ceiling = PanelListsPane.listCeiling(grabBar: maxHeight, dock: dockCeiling,
+                                                 inPane: inListsPane)
         let viewport = PanelAreaResize.height(contentHeight: reserved, ceiling: ceiling)
         // What the grab bar may reach. Never past what the dock can spare, so
         // the bar is never a control that cannot act: every point of it still
@@ -391,7 +399,8 @@ struct LayersListView: View {
         // its rows, capped by the ceiling the reader set with that bar. This is
         // what the dock budgets from, so it reserves room for the list the
         // reader asked for rather than for rows the grab bar already ruled out.
-        let unpressed = PanelAreaResize.height(contentHeight: reserved, ceiling: maxHeight)
+        let unpressed = PanelListsPane.listAsks(content: reserved, grabBar: maxHeight,
+                                                inPane: inListsPane)
         return VStack(spacing: 0) {
             findField
             ScrollView(.vertical) {
@@ -460,7 +469,10 @@ struct LayersListView: View {
                 searchCount(showing: displays.count)
                 separationOffer
                 multiSelectionCount
-                resizeHandle(reserved: grabRange)
+                // Not in the pane: its grip is the one control for how much
+                // room the lists get, and a second bar under the rows would
+                // only cap them short of room the pane already holds.
+                if !inListsPane { resizeHandle(reserved: grabRange) }
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { extras in
                 listExtrasHeight = extras
