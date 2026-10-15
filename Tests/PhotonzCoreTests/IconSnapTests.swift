@@ -391,4 +391,21 @@ struct IconSnapTests {
         #expect(snap.readout(for: CGPoint(x: 103.25, y: 105.6)) == "3.25, 5.6")
         #expect(snap.readout(for: CGPoint(x: 99.5, y: 100)) == "-0.5, 0")
     }
+
+    // A shape drawn out from its centre (⌥) is named by its centre and its
+    // size, the way the icon mock's step 5 names its crown: "center 12, 8 · d 8".
+    @Test func aCircleDrawnFromItsCentreIsNamedByCentreAndDiameter() {
+        let snap = IconSnap(frame: Self.frame)
+        #expect(snap.readout(centre: CGPoint(x: 112, y: 108), corner: CGPoint(x: 116, y: 112),
+                             shape: .ellipse) == "center 12, 8 · d 8")
+    }
+
+    @Test func aBoxDrawnFromItsCentreIsNamedByCentreAndSize() {
+        let snap = IconSnap(frame: Self.frame)
+        #expect(snap.readout(centre: CGPoint(x: 112, y: 108), corner: CGPoint(x: 108, y: 111),
+                             shape: .ellipse) == "center 12, 8 · 8 × 6")
+        // A square has no diameter: it says its two sides.
+        #expect(snap.readout(centre: CGPoint(x: 105, y: 118), corner: CGPoint(x: 108, y: 121),
+                             shape: .rectangle) == "center 5, 18 · 6 × 6")
+    }
 }

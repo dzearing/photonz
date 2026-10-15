@@ -353,6 +353,24 @@ public struct AnnotationDrag: Equatable, Sendable {
         }
     }
 
+    /// The two corners the shape is drawn between. Centred (⌥) grows a box
+    /// shape out from the press on every side, the way Photoshop's shape tools
+    /// do: the press is the middle and the far corner is mirrored through it,
+    /// so a press on a whole unit and a pointer on a whole unit make a box
+    /// whose edges and diameter are whole too. A line or arrow has two ends
+    /// you place rather than a middle, so it ignores ⌥.
+    public func endpoints(constrained: Bool, centred: Bool,
+                          shape: AnnotationShape) -> (start: CGPoint, end: CGPoint) {
+        let end = end(constrained: constrained, shape: shape)
+        switch shape {
+        case .line, .arrow:
+            return (anchor, end)
+        case .rectangle, .ellipse, .highlight:
+            guard centred else { return (anchor, end) }
+            return (CGPoint(x: anchor.x * 2 - end.x, y: anchor.y * 2 - end.y), end)
+        }
+    }
+
     /// Whether the pointer moved so little this is a click, not a drag.
     /// Tolerance is in view points so it feels the same at any zoom.
     public func isClick(atZoom zoom: CGFloat, tolerance: CGFloat = 4) -> Bool {

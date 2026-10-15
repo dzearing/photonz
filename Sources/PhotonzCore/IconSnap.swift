@@ -147,14 +147,26 @@ public struct IconSnap: Equatable, Sendable {
     /// corner, the way the readout beside the pointer says it: "15, 13".
     /// Whole units print whole; a point nothing rounded prints to two places.
     public func readout(for point: CGPoint) -> String {
-        func unit(_ value: CGFloat) -> String {
-            let hundredths = (value * 100).rounded() / 100
-            if hundredths == hundredths.rounded() { return String(Int(hundredths)) }
-            var text = String(format: "%.2f", Double(hundredths))
-            while text.hasSuffix("0") { text.removeLast() }
-            return text
-        }
-        return "\(unit(point.x - frame.minX)), \(unit(point.y - frame.minY))"
+        "\(Self.units(point.x - frame.minX)), \(Self.units(point.y - frame.minY))"
+    }
+
+    /// A shape being drawn out from its centre (⌥), named the way the icon
+    /// mock names its crown: by the centre and the size, "center 12, 8 · d 8"
+    /// for a circle and "center 12, 8 · 8 × 6" for anything else.
+    public func readout(centre: CGPoint, corner: CGPoint, shape: AnnotationShape) -> String {
+        let width = Self.units(abs(corner.x - centre.x) * 2)
+        let height = Self.units(abs(corner.y - centre.y) * 2)
+        let size = shape == .ellipse && width == height ? "d \(width)" : "\(width) × \(height)"
+        return "center \(readout(for: centre)) · \(size)"
+    }
+
+    /// A length in units: whole units print whole, anything else to two places.
+    private static func units(_ value: CGFloat) -> String {
+        let hundredths = (value * 100).rounded() / 100
+        if hundredths == hundredths.rounded() { return String(Int(hundredths)) }
+        var text = String(format: "%.2f", Double(hundredths))
+        while text.hasSuffix("0") { text.removeLast() }
+        return text
     }
 
     /// A handle pulled out of a point, as an offset from it, ending on a whole

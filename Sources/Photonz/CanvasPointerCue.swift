@@ -473,6 +473,13 @@ extension CanvasNSView {
             refreshPenSnapping(at: penSession.pointer)
             if penSession.isDrawing { refreshPenChrome() }
         }
+        // ⌥ or ⇧ pressed or let go with a shape half drawn redraws it there and
+        // then: ⌥ grows the box out from the press, ⇧ squares it, and a hand
+        // checking which it wants holds the pointer still to see.
+        if annotationDrag != nil, tool.annotationShape != nil {
+            refreshAnnotationPreview(constrained: event.modifierFlags.contains(.shift))
+            refreshOverlays()
+        }
         // ...and the mark saying where the next press lands moves with them,
         // for exactly the same reason: ⌘ takes the point off the grid under a
         // hand that is already still.

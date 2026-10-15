@@ -109,7 +109,9 @@ extension CanvasNSView {
             clearAnnotationPreview()
             return
         }
-        let end = drag.end(constrained: constrained, shape: content.shape)
+        let (start, end) = drag.endpoints(constrained: constrained,
+                                          centred: pointerModifiers.contains(.option),
+                                          shape: content.shape)
         // The draft wears the weight the shape will LAND at, which on an icon
         // frame is thinner than what the tool is armed with
         // (`IconStrokeWeight`). Drawn from the same rule as the commit, and
@@ -117,10 +119,10 @@ extension CanvasNSView {
         // what decides the frame the shape joins — so nothing jumps on release.
         let started = startingOutline(content, style: annotationStyle,
                                       chosen: armedStrokeWidthIsChosen,
-                                      drawnAt: CGPoint(x: (drag.anchor.x + end.x) / 2,
-                                                       y: (drag.anchor.y + end.y) / 2),
+                                      drawnAt: CGPoint(x: (start.x + end.x) / 2,
+                                                       y: (start.y + end.y) / 2),
                                       in: document)
-        displayAnnotationPreview(content: started.content, docStart: drag.anchor,
+        displayAnnotationPreview(content: started.content, docStart: start,
                                  docEnd: end, style: started.style)
     }
 

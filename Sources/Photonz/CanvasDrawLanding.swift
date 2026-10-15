@@ -231,6 +231,13 @@ extension CanvasNSView {
            drag.waitingForSecondClick || drag.current != drag.anchor,
            let icon = iconSnap(at: drag.anchor) {
             let end = drag.end(constrained: pointerModifiers.contains(.shift), shape: shape)
+            // A box drawn out from its centre (⌥) is named by that centre and
+            // its size, as the icon mock names its crown. The pill stays by the
+            // corner under the hand, off the shape being drawn. A line or
+            // arrow ignores ⌥ (`AnnotationDrag.endpoints`).
+            if pointerModifiers.contains(.option), shape != .line, shape != .arrow {
+                return (end, icon.readout(centre: drag.anchor, corner: end, shape: shape))
+            }
             return (end, icon.readout(for: end))
         }
         return nil

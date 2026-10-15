@@ -265,6 +265,7 @@ extension CanvasNSView {
             // whichever lines are near it — the same thing a caliper's first
             // foot does.
             resetDrawSnapMemory()
+            pointerModifiers = event.modifierFlags
             let anchor = snappedAnnotationPoint(p, shape: tool.annotationShape,
                                                 opposite: nil, event: event)
             annotationDrag = AnnotationDrag(anchor: anchor)
@@ -891,6 +892,10 @@ extension CanvasNSView {
             cropDrag = drag
             refreshOverlays()
         } else if var drag = annotationDrag {
+            // ⌥ (drawn out from the centre) is read off the preview's own
+            // record of the keys, so a press or release of it mid-drag
+            // (`flagsChanged`) and a move agree on what is held.
+            pointerModifiers = event.modifierFlags
             drag.update(to: snappedAnnotationPoint(p, shape: tool.annotationShape,
                                                    opposite: drag.anchor, event: event))
             annotationDrag = drag
@@ -1419,9 +1424,10 @@ extension CanvasNSView {
                 // (which includes the new layer) lands — no flash.
                 annotationCommitImage = image
                 let shape = tool.annotationShape ?? .line
-                let created = onAnnotationCommit(drag.anchor,
-                                                 drag.end(constrained: event.modifierFlags.contains(.shift),
-                                                          shape: shape))
+                let ends = drag.endpoints(constrained: event.modifierFlags.contains(.shift),
+                                          centred: event.modifierFlags.contains(.option),
+                                          shape: shape)
+                let created = onAnnotationCommit(ends.start, ends.end)
                 // A fresh arrow immediately offers its caption (Next flag):
                 // type to label it, Esc or an empty commit leaves it plain.
                 if let created { beginCaptionSession(layer: created) }

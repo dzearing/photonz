@@ -163,6 +163,60 @@ struct AnnotationDragTests {
         #expect(end == CGPoint(x: 40, y: 40))
     }
 
+    // MARK: Drawn out from the centre (⌥)
+
+    // ⌥ grows a box out from the press on every side, the way Photoshop's
+    // shape tools do: the press is the middle and the far corner is mirrored.
+    @Test func centredBoxShapesGrowOutFromThePress() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 12, y: 8))
+        drag.update(to: CGPoint(x: 16, y: 11))
+        for shape in [AnnotationShape.rectangle, .ellipse, .highlight] {
+            let ends = drag.endpoints(constrained: false, centred: true, shape: shape)
+            #expect(ends.start == CGPoint(x: 8, y: 5), "\(shape) mirrors the far corner")
+            #expect(ends.end == CGPoint(x: 16, y: 11))
+            #expect((ends.start.x + ends.end.x) / 2 == 12 && (ends.start.y + ends.end.y) / 2 == 8)
+        }
+    }
+
+    // ⇧⌥ is a square or circle around the press.
+    @Test func centredAndConstrainedIsASquareAroundThePress() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 12, y: 8))
+        drag.update(to: CGPoint(x: 15, y: 13))
+        let ends = drag.endpoints(constrained: true, centred: true, shape: .ellipse)
+        #expect(ends.start == CGPoint(x: 7, y: 3))
+        #expect(ends.end == CGPoint(x: 17, y: 13))
+    }
+
+    // Without ⌥ the ends are the press and the pointer, exactly as `end` says.
+    @Test func uncentredEndpointsAreThePressAndTheEnd() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.update(to: CGPoint(x: 30, y: 15))
+        let ends = drag.endpoints(constrained: true, centred: false, shape: .rectangle)
+        #expect(ends.start == CGPoint(x: 10, y: 10))
+        #expect(ends.end == drag.end(constrained: true, shape: .rectangle))
+    }
+
+    // A line or arrow has two ends you place, not a middle: ⌥ leaves it alone.
+    @Test func centredLeavesLinesAndArrowsAlone() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 10, y: 10))
+        drag.update(to: CGPoint(x: 30, y: 15))
+        for shape in [AnnotationShape.line, .arrow] {
+            let ends = drag.endpoints(constrained: false, centred: true, shape: shape)
+            #expect(ends.start == CGPoint(x: 10, y: 10))
+            #expect(ends.end == CGPoint(x: 30, y: 15))
+        }
+    }
+
+    // Whole units in, whole units out: a centre on a unit and a corner on a
+    // unit give a box whose every edge and whose diameter are whole too.
+    @Test func centredFromWholeUnitsStaysOnWholeUnits() {
+        var drag = AnnotationDrag(anchor: CGPoint(x: 9, y: 10))
+        drag.update(to: CGPoint(x: 12, y: 13))
+        let ends = drag.endpoints(constrained: false, centred: true, shape: .ellipse)
+        #expect(ends.start == CGPoint(x: 6, y: 7))
+        #expect(abs(ends.end.x - ends.start.x) == 6)
+    }
+
     // MARK: Click, let go, click again
 
     @Test func onlyTheTwoEndedToolsDrawByTwoClicks() {

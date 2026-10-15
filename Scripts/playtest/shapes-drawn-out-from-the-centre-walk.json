@@ -1,0 +1,59 @@
+{
+  "out": "/tmp/photonz-playtest/shapes-drawn-out-from-the-centre-walk",
+  "seed": "Holding Option while dragging a rectangle or ellipse grows it out from the press, the way Photoshop's shape tools do. On a 24 unit icon frame at Next defaults the walk draws the mock's base box, then Option drags the crown out from 12, 8 and the shoulder out from the box's top left corner, and a Shift Option square out from 5, 18; the exported SVG has to hold each one centred on its press, on whole units.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "pinch", "to": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-frame", "note": "a 24 unit icon frame at 800%, Next defaults, nothing switched on: units run 788 to 812 across and 538 to 562 down" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [797.3, 548.4], "to": [803.2, 551.1], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "move", "at": [800.4, 546.2] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [800, 546], "within": 0.01, "says": "12, 8" },
+    { "do": "drag", "from": [800.4, 546.2], "to": [804.3, 550.2], "steps": 10, "modifiers": ["option"], "hold": "centre-1-crown-dragging" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "move", "at": [797.2, 548.2] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [797, 548], "within": 0.01, "says": "9, 10" },
+    { "do": "drag", "from": [797.2, 548.2], "to": [800.2, 551.2], "steps": 10, "modifiers": ["option"], "hold": "centre-2-shoulder-dragging" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "drag", "from": [793.2, 556.2], "to": [796.2, 558.2], "steps": 10, "modifiers": ["option", "shift"], "hold": "centre-3-square-dragging" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "centre-4-drawn" },
+    { "do": "writeSVG", "name": "drawn-from-the-centre" },
+    { "do": "expectSVG", "contains": "<rect transform=\"translate(9 10)\" x=\"0\" y=\"0\" width=\"6\" height=\"3\"" },
+    { "do": "expectSVG", "contains": "<ellipse transform=\"translate(8 4)\" cx=\"4\" cy=\"4\" rx=\"4\" ry=\"4\"" },
+    { "do": "expectSVG", "contains": "<ellipse transform=\"translate(6 7)\" cx=\"3\" cy=\"3\" rx=\"3\" ry=\"3\"" },
+    { "do": "expectSVG", "contains": "<rect transform=\"translate(2 15)\" x=\"0\" y=\"0\" width=\"6\" height=\"6\"" }
+  ]
+}

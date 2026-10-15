@@ -1,0 +1,27 @@
+{
+  "feature": "A box or circle drawn out from its centre",
+  "epic": "icon-grid",
+  "summary": "Hold Option while dragging the Rectangle or Ellipse and the shape grows out from where you pressed, on every side, the way Photoshop does. In an icon frame the centre and the size land on whole units, and the pill names them: center 12, 8 · d 8.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/shapes-drawn-out-from-the-centre-walk.json",
+  "switched": {},
+  "try": [
+    { "do": "Make a 24 unit icon frame (New Frame, Icons, 24) and zoom to 800%." },
+    { "do": "Draw a rectangle from 9, 10 to 15, 13." },
+    { "do": "Pick Ellipse, hold Option and drag from 12, 8 out to 16, 12. Watch the circle grow on every side and the pill read center 12, 8 · d 8.", "shot": "2026-10-15-drawn-from-the-centre-1-crown-dragging-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Option and drag a second ellipse out from the rectangle's top left corner to 12, 13.", "shot": "2026-10-15-drawn-from-the-centre-2-shoulder-dragging-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick Rectangle, hold Shift and Option and drag from 5, 18. It stays square around the press.", "shot": "2026-10-15-drawn-from-the-centre-3-square-dragging-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Mid-drag, press and let go of Option without moving the pointer. The shape switches between corner and centre there and then." },
+    { "do": "Export the icon as SVG: the crown is at 8, 4 with radius 4, the shoulder at 6, 7 with radius 3.", "shot": "2026-10-15-drawn-from-the-centre-4-drawn-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does Option-drag feel the same as Photoshop's shape tools?",
+    "Is the pill's center 12, 8 · d 8 the thing you want to read while drawing a circle, or would you rather see the corner?",
+    "Does the pill sitting by the corner under your hand, rather than on the centre as the mock draws it, read well?",
+    "Should Option also draw a line or arrow out from its middle? Today it leaves them alone."
+  ],
+  "rough": [
+    "The mock puts its snap label on the centre point; ours stays by the dragged corner so it never covers the shape being drawn (UX-PATTERNS §10, placement law 1, 'Never cover the subject').",
+    "A centred shape on whole units always has an even width and height, so an odd diameter needs a corner-to-corner drag. The mock only draws even ones (8 and 6), so it matches.",
+    "Option leaves the Frame, Lens and Zoom Callout box drags alone; only Rectangle, Ellipse and Highlight draw from the centre. No mock covers those."
+  ]
+}
