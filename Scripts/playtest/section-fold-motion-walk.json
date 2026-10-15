@@ -485,6 +485,61 @@
    "present": true
   },
   {
+   "do": "panel",
+   "stage": "4-layers-header"
+  },
+  {
+   "do": "describe",
+   "stage": "5-rapid",
+   "note": "FIVE clicks on the Layers header in well under a second, each landing while the last one is still moving: it ends shut, laid out, with nothing half open. Five more and it ends open. The pane of lists keeps its height when Layers folds, so its header stays under the pointer for every one of the ten"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1308,
+    559
+   ],
+   "space": "window",
+   "count": 5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8,
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "5-rapid-shut"
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1308,
+    559
+   ],
+   "space": "window",
+   "count": 5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8,
+   "longestUnderMS": 16
+  },
+  {
+   "do": "expect",
+   "control": "Visibility",
+   "present": true
+  },
+  {
+   "do": "snapshot",
+   "name": "5-rapid-open"
+  },
+  {
    "do": "tool",
    "tool": "rectangle"
   },
@@ -592,57 +647,6 @@
   {
    "do": "snapshot",
    "name": "6-shape-open"
-  },
-  {
-   "do": "describe",
-   "stage": "5-rapid",
-   "note": "FIVE clicks on the Appearance header in well under a second, each landing while the last one is still moving: it ends shut, laid out, with nothing half open. Five more and it ends open. On a rectangle's Appearance, because its header stays put while it folds; the Layers header, in the pane at the foot of the panel, drops to the bottom when it shuts, so a second click on the same spot finds nothing there"
-  },
-  {
-   "do": "windowClick",
-   "at": [
-    1308,
-    54
-   ],
-   "space": "window",
-   "count": 5
-  },
-  {
-   "do": "wait",
-   "seconds": 0.8,
-   "longestUnderMS": 16
-  },
-  {
-   "do": "expect",
-   "control": "Blending",
-   "present": false
-  },
-  {
-   "do": "snapshot",
-   "name": "5-rapid-shut"
-  },
-  {
-   "do": "windowClick",
-   "at": [
-    1308,
-    54
-   ],
-   "space": "window",
-   "count": 5
-  },
-  {
-   "do": "wait",
-   "seconds": 0.8,
-   "longestUnderMS": 16
-  },
-  {
-   "do": "expect",
-   "control": "Blending",
-   "present": true
-  },
-  {
-   "do": "snapshot",
-   "name": "5-rapid-open"
   }
  ]
 }

@@ -394,14 +394,25 @@ struct DockBudgetScratch: Equatable {
     /// a pane holding one scrolls whatever height it has. Nil until every one
     /// of them has been measured. The pane of lists under the pick asks this
     /// so a shelf is not cut across its foot (`PanelListsPane`).
-    func leastHeight(of sections: [InspectorSectionID]) -> CGFloat? {
+    ///
+    /// `asIfFull` counts every list open and at its whole floor, however
+    /// little it holds: the pane's held height asks it that way, so folding a
+    /// list or switching the Library from Media to Comps never changes what
+    /// the pane holds (`PanelListsPane.Hold`).
+    func leastHeight(of sections: [InspectorSectionID], asIfFull: Bool = false) -> CGFloat? {
         var total = 2 * DockMetrics.listTopPadding
         for id in sections {
             guard let header = budget.headers[id] else { return nil }
             total += header + DockMetrics.sectionDividerHeight
-            guard !collapsed(id), DockMetrics.scrollingSections.contains(id) else { continue }
+            guard asIfFull || !collapsed(id),
+                  DockMetrics.scrollingSections.contains(id) else { continue }
+            let floor = squeezeFloor(for: id, room: room)
+            if asIfFull {
+                total += (budget.listExtras[id] ?? 0) + floor
+                continue
+            }
             guard let body = budget.bodies[id] else { return nil }
-            total += (budget.listExtras[id] ?? 0) + min(body, squeezeFloor(for: id, room: room))
+            total += (budget.listExtras[id] ?? 0) + min(body, floor)
         }
         return total
     }

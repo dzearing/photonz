@@ -21442,3 +21442,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A hidden piece is off screen for drawing and clicks (`Layer.isOnScreen`), keeps its sound, reads dimmed with a "hidden" badge on the bar, and comes back with Show Picture (piece right click, Clip menu). A cleaned piece plays `Layer.sectionCleanedSounds`; Remove Noise Cleaning clears it with the whole sound's.
 - Walk: `hide-picture-and-clean-noise-for-a-section-walk`; `picked-in-range-menu-bar-walk` extended. New claims: `expectDrawn.shown`, `expectLevel.cleanedAt/rawAt`.
 - Open: strength choice for a section's cleaning; crossfade at the cut.
+
+## 2026-10-15 — The lists pane holds still under the pointer
+
+- The pane of lists at the foot of the panel no longer shrinks to its content. Before the grip is moved it holds a height worked out once (`PanelListsPane.Hold`): its share of the column, or every list in it open at its whole floor up to half (`InspectorDockLayout.leastHeight(of:asIfFull:)`). A fold or a Library scope switch never changes it; it is worked out again only for a new column height or a list joining or leaving, and only grows otherwise. The grip runs from the pane's floor to the most the pick can spare, whatever the lists hold.
+- Why it only grows and counts floors: holding the first measured height cut a freshly saved style's tile across the shelf's foot (`tile-comes-away-walk`, `library-tile-click-latency-picture-walk`), and growing on content moved the scope control on Media to Comps again.
+- Walks: new `lists-pane-holds-still-walk` (pointer clicks at fixed points: Comps then Media, Layers header twice, Library header twice; fails on the old code at step 15). `section-fold-motion-walk`'s five-click check is back on the Layers header. `segmented-chip-refraction-film-walk` passes.
+- Left: an old grip setting dragged all the way up is now read uncapped, so it opens tall once.

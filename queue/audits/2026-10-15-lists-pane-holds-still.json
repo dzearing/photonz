@@ -1,0 +1,45 @@
+{
+  "feature": "The lists pane holds still under the pointer",
+  "epic": "video-editing",
+  "summary": "The pane at the foot of the panel holding Layers and the Library now keeps its height while you work in it. Folding a list or switching the Library from Media to Comps no longer moves the header or control you just clicked, so a second click on the same spot lands.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A picture open (File > New, 1440 by 900 window works well), nothing picked.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Look at the foot of the right panel: Layers, and under it the Library on Media.",
+      "shot": "2026-10-15-lists-pane-holds-still-1-rest-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click Comps in the Library's Media, Comps, Styles, Systems control, then click Media without moving the mouse sideways more than the gap between them.",
+      "shot": "2026-10-15-lists-pane-holds-still-2-comps-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Layers header to fold Layers, then click it again on the same spot to open it.",
+      "shot": "2026-10-15-lists-pane-holds-still-3-layers-shut-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Library header twice on the same spot: it folds and opens again.",
+      "shot": "2026-10-15-lists-pane-holds-still-4-library-shut-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the line above the pane up and down: it goes as tall as you like, short of the pick's last 160 points, whatever its lists hold."
+    }
+  ],
+  "evaluate": [
+    "With Layers folded, does the empty glass at the foot of the pane read as room the pane keeps, or as something missing?",
+    "Is it right that the pane only changes height when you drag its line or resize the window, never when a list folds?",
+    "Does the pane start at a height you would leave it at, before you ever drag its line?"
+  ],
+  "rough": [
+    "No mock draws the lists pane: it comes from your answer B to 'Where do Layers and Library sit when something is picked?' on 2026-10-13 ('keeps its height'), so there is no mock frame to set beside it.",
+    "Short or folded lists now leave plain glass at the foot of the pane instead of giving that room to the pick, the way a Photoshop panel keeps its size. Dragging the line down gives the room back.",
+    "Before you touch the line, the pane now starts tall enough for every list in it at its least (Layers three rows, a whole row of Library tiles), up to half the panel, whatever those lists hold right now. On a 1440 by 900 window with Layers and the Library that is about half the panel, which is what the old pane gave any document whose lists were full.",
+    "The pane still works its height out again when the window changes height or a list joins it (Measurements, after the first measurement), since the pointer is not in the pane for either.",
+    "A height you set by dragging the line before this change was capped by what the lists held; it is now taken as it was stored, so if you had dragged it all the way up the pane opens tall once. Drag it down once and it stays.",
+    "One run of section-fold-motion-walk failed once at its video step (Speed not found after Time was filmed opening) and passed on three runs after; the pane holds nothing on a video, so I logged it as a flake rather than filing it."
+  ]
+}

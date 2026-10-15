@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/lists-pane-holds-still",
+  "seed": "The pane of lists at the foot of the panel used to shrink to what it held, pinned to the bottom, so the control a person had just clicked moved out from under the pointer: Media to Comps lifted the Library's scope control 65pt, folding Layers dropped its header about 93pt, and a second click on the same spot missed (2026-10-14). At Next defaults with no flag set, every click here is a POINTER click at a fixed window point, taken before anything was clicked, so each one landing is the measurement that nothing moved: Comps then Media at the same two points, the Layers header twice at one point, the Library header twice at one point.",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1200, "canvasHeight": 800, "width": 1440, "height": 900 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "action", "action": "showMediaShelf" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Media", "reads": "already on Media, tooltip none" },
+    { "do": "describe", "stage": "1-rest", "note": "Nothing picked: Layers and the Library on Media in the pane at the foot of the panel. The points every click below lands on are read off this layout" },
+    { "do": "snapshot", "name": "1-rest" },
+    { "do": "windowClick", "at": [1279, 638], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Comps", "reads": "already on Comps, tooltip none" },
+    { "do": "describe", "stage": "2-comps", "note": "Comps clicked by the pointer: the shelf holds less, and the scope control has not moved, so Media is still where it was" },
+    { "do": "snapshot", "name": "2-comps" },
+    { "do": "windowClick", "at": [1220, 638], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Media", "reads": "already on Media, tooltip none" },
+    { "do": "describe", "stage": "3-layers-shut", "note": "The Layers header clicked by the pointer: Layers folds, the pane keeps its height and the header stays where it was clicked, with the Library rising under it" },
+    { "do": "windowClick", "at": [1308, 475], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Visibility", "present": false },
+    { "do": "snapshot", "name": "3-layers-shut" },
+    { "do": "windowClick", "at": [1308, 475], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Visibility", "present": true },
+    { "do": "describe", "stage": "4-library-shut", "note": "The Library header clicked twice at one point: it folds and opens again, the shelf's control back where it was" },
+    { "do": "windowClick", "at": [1308, 606], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Media", "present": false },
+    { "do": "snapshot", "name": "4-library-shut" },
+    { "do": "windowClick", "at": [1308, 606], "space": "window" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Media", "reads": "already on Media, tooltip none" },
+    { "do": "snapshot", "name": "5-all-open" }
+  ]
+}

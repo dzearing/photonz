@@ -198,6 +198,9 @@ struct InspectorPanel: View {
     static let listsPaneHeightKey = "inspector.listsPaneHeight"
     /// The height the pick and that pane share, nil until laid out.
     @State private var listsColumnHeight: CGFloat?
+    /// The height the pane holds until the grip is moved, so a fold or a
+    /// Library scope switch never moves it (`PanelListsPane.Hold`).
+    @State private var listsPaneHold: PanelListsPane.Hold?
     /// The pane's own measurements, for its Library reveal and its reorder,
     /// by reference for the reason `reveal` is.
     @State private var listsReveal: DockRevealScratch = {
@@ -519,11 +522,15 @@ struct InspectorPanel: View {
                 .onChange(of: editorState.multiSelectedLayerIDs) { revealer(proxy).requestPick() }
             }
             if !split.lists.isEmpty {
+                let paneMax = PanelListsPane.maxAllowedHeight(
+                    column: listsColumnHeight, floor: listsPaneFloor(split.lists))
+                // The pane keeps whatever height it is given, so the grip
+                // runs from the pane's floor to the most the pick can spare,
+                // whatever its lists hold.
                 ListsPaneGrip(height: paneHeight,
-                              contentHeight: listsContent(split.lists) ?? paneHeight,
+                              contentHeight: paneMax,
                               floor: listsPaneFloor(split.lists),
-                              maxAllowedHeight: PanelListsPane.maxAllowedHeight(
-                                column: listsColumnHeight, floor: listsPaneFloor(split.lists)),
+                              maxAllowedHeight: paneMax,
                               stored: $listsPaneStored)
                 listsPane(split.lists, lingering: lingerSplit.lists, ceilings: ceilings)
                     .frame(height: paneHeight)
@@ -538,6 +545,14 @@ struct InspectorPanel: View {
           .coordinateSpace(.named(inspectorPanelSpace))
           .onChange(of: split.lists, initial: true) { _, lists in
               if lists.isEmpty { recordInspectorListsPane([], band: nil) }
+          }
+          // The pane's starting height, held once its lists are measured.
+          .onChange(of: PanelListsPane.hold(listsPaneHold, column: listsColumnHeight,
+                                            lists: split.lists.map(\.rawValue),
+                                            fit: layout.leastHeight(of: split.lists,
+                                                                    asIfFull: true)),
+                    initial: true) { _, hold in
+              if hold != listsPaneHold { listsPaneHold = hold }
           }
             if Experiments.shared.panelSectionsEnabled, editorState.document != nil {
                 PanelSectionsFooter(offered: offeredOptionalSections,
@@ -600,22 +615,6 @@ struct InspectorPanel: View {
                 split.lists.compactMap(InspectorSectionID.init(rawValue:)))
     }
 
-    /// What the pane's lists would take with nothing capping them: every
-    /// header, and the body of every open one. Nil until all of it has been
-    /// measured, and then the pane takes the height it was left at.
-    private func listsContent(_ lists: [InspectorSectionID]) -> CGFloat? {
-        guard !lists.isEmpty else { return nil }
-        var total = 2 * DockMetrics.listTopPadding
-        for id in lists {
-            guard let header = budget.headers[id] else { return nil }
-            total += header + DockMetrics.sectionDividerHeight
-            guard !isCollapsed(id) else { continue }
-            guard let body = budget.bodies[id] else { return nil }
-            total += body + (budget.listExtras[id] ?? 0)
-        }
-        return total
-    }
-
     /// The least the pane is drawn: its first header, so the lists are never
     /// out of reach however short the window.
     private func listsPaneFloor(_ lists: [InspectorSectionID]) -> CGFloat {
@@ -626,8 +625,9 @@ struct InspectorPanel: View {
     private func listsPaneHeight(for lists: [InspectorSectionID]) -> CGFloat {
         guard !lists.isEmpty else { return 0 }
         return PanelListsPane.height(stored: listsPaneStored > 0 ? CGFloat(listsPaneStored) : nil,
-                                     content: listsContent(lists),
+                                     held: listsPaneHold,
                                      column: listsColumnHeight,
+                                     lists: lists.map(\.rawValue),
                                      floor: listsPaneFloor(lists),
                                      fit: layout.leastHeight(of: lists))
     }
@@ -2010,8 +2010,9 @@ struct InspectorPanel: View {
             foldBudgetPass += 1
             return
         }
-        // A list folded in the pane at the bottom: the pane gives its room
-        // back to the pick when its lists no longer fill it.
+        // A list folded in the pane at the bottom: the pane keeps its height
+        // (`PanelListsPane.Hold`), but the lists still open in it may be
+        // handed a different share of it.
         let lists = listsReveal.drawnSections
         guard !lists.isEmpty else { return }
         let height = listsPaneHeight(for: lists)
