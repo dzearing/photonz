@@ -1,0 +1,43 @@
+{
+  "out": "/tmp/photonz-playtest/a-lone-spinner-strip-reads-one-turn",
+  "seed": "The spinner page (icon-loop-wt.html, step 5 'Put it back, and look at the join'): with only a Forever spinner moving, the timing dock is called One turn, reads 800 ms per turn and, beside it, ends where it starts. There is no lap to type, because a spinner's lap is its turn. This walk draws one ring, gives it 0 to 360, Linear, Forever, over 800 ms, and reads the strip's header the way the mock prints it. Next defaults, no switch changed.",
+  "setup": { "forget": ["tools", "panel", "motion"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 900, "canvasHeight": 560, "width": 1420, "height": 1000 },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [340, 200], "to": [500, 360], "steps": 8 },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "click", "at": [420, 280] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "panelMenu", "menu": "Add Motion", "choose": "Rotation" },
+    { "do": "wait", "seconds": 1 },
+    { "do": "expect", "field": "Strip Title", "reads": "One cycle" },
+
+    { "do": "focus", "field": "Rotation From" },
+    { "do": "type", "text": "0" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "Rotation To" },
+    { "do": "type", "text": "360" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panelMenu", "menu": "Curve", "in": "Rotation", "choose": "Linear" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "panelMenu", "menu": "Repeat", "in": "Rotation", "choose": "Forever" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "focus", "field": "Rotation Over" },
+    { "do": "type", "text": "800" },
+    { "do": "key", "key": "return" },
+    { "do": "wait", "seconds": 1 },
+
+    { "do": "expect", "field": "Rotation Summary", "reads": "0° → 360° over 0.8s" },
+    { "do": "expect", "field": "Strip Title", "reads": "One turn" },
+    { "do": "expect", "field": "Turn Length", "reads": "800 ms per turn" },
+    { "do": "expect", "field": "Turn Join", "reads": "ends where it starts" },
+    { "do": "describe", "stage": "1-one-turn", "note": "THE PICTURE TO LOOK AT, beside icon-loop-wt.html step 5. The strip's header reads ONE TURN, then 800 ms per turn and, in green, ends where it starts. No lap field: the ring's lap is its turn." },
+    { "do": "snapshot", "name": "1-one-turn" }
+  ]
+}

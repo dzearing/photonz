@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T09:56:16.082Z",
-  "updated": "2026-10-15T12:24:07.064Z",
+  "updated": "2026-10-15T19:40:35.683Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html, data-set #tlLen=800 ms per turn and the wt-res text after step 5 (\"Beside the turn length the dock says ends where it starts\"). Since find-out-whether-a-forever-motion-shorter-than-t (2026-10-15) a one way Forever repeats every timing.durationMS (MotionRepeat.keepsItsOwnPace), and the strip draws its later turns as dashed copies (MotionStripLane.laterTurns, MotionStripLaterTurns in MotionStripView.swift). Header lives in MotionStripView (ONE CYCLE field). Chrome copy budget 30 chars.",
@@ -30,9 +30,31 @@
     {
       "t": "2026-10-15T12:24:07.063Z",
       "note": "seq 60 -> 70"
+    },
+    {
+      "t": "2026-10-15T19:13:49.895Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T19:40:17.587Z",
+      "note": "walks forever-spinner-keeps-its-own-pace-walk -> forever-spinner-keeps-its-own-pace-walk, a-lone-spinner-strip-reads-one-turn-walk"
+    },
+    {
+      "t": "2026-10-15T19:40:35.557Z",
+      "note": "Before building: the mock's dock reads ONE TURN / 800 ms per turn / ends where it starts on a spinner-only icon. The app's header had the lap field (900, follows the longest), which is the wrong speed beside a bell. A Premiere/AE user reads a loop's period off the comp; here it is now said beside the lap. Picked = selected layer's first on, one way Forever motion (there and back keeps the lap, so it has no turn of its own). Joins = angles (rotation, rotation X/Y, shadow direction) differ by whole turns; anything else From == To."
+    },
+    {
+      "t": "2026-10-15T19:40:35.621Z",
+      "note": "Built: MotionTurnReading (PhotonzCore, 13 tests), the header shows it after the lap field; with a lone spinner and an automatic lap the strip is titled One turn and drops the lap field, as on the mock. Walks: forever-spinner-keeps-its-own-pace-walk reads 800 ms per turn + ends where it starts, then To 300 reads does not end where it starts; new a-lone-spinner-strip-reads-one-turn-walk reads One turn. Both ok. Full suite 13,259 tests green. Looked at all three audit captures: header text legible, green and orange on the dark strip."
+    },
+    {
+      "t": "2026-10-15T19:40:35.682Z",
+      "note": "Filed the-repeats-label-on-the-timing-strip-s-ruler-ne (the repeats label draws over the 800 tick, seen in the audit picture). Left rough, not filed: only the picked layer's first Forever is read; audit says so."
     }
   ],
   "walks": [
-    "forever-spinner-keeps-its-own-pace-walk"
-  ]
+    "forever-spinner-keeps-its-own-pace-walk",
+    "a-lone-spinner-strip-reads-one-turn-walk"
+  ],
+  "started": "2026-10-15T19:13:49.894Z"
 }

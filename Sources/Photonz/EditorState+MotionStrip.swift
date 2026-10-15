@@ -156,6 +156,27 @@ extension EditorState {
                                 cycleMS: motionStripCycleMS)
     }
 
+    /// How long one turn of the picked layer's Forever motion takes and
+    /// whether it ends where it starts (`MotionTurnReading`). A Forever goes
+    /// round at its own pace, not the lap's, so the lap beside it is not the
+    /// speed of the thing you are tuning. Nil without a Forever on the pick.
+    var motionStripTurnReading: MotionTurnReading? {
+        guard !motionStripMeasuresADocument, let id = selectedLayerID,
+              let layer = document?.layer(id: id), let motions = layer.motions
+        else { return nil }
+        return MotionTurnReading.reading(of: motions)
+    }
+
+    /// Whether the picked Forever's turn stands in for the lap, so the strip
+    /// reads "One turn" with no lap to type, the way the mock's lone spinner
+    /// does (`MotionTurnReading.replacesTheLap`).
+    var motionStripTurnReplacesTheLap: Bool {
+        guard motionStripTurnReading != nil, let document else { return false }
+        let motions = document.allLayers.flatMap { $0.motions ?? [] } + (document.camera?.motions ?? [])
+        return MotionTurnReading.replacesTheLap(motions: motions,
+                                                lapIsAutomatic: motionCycleIsAutomatic)
+    }
+
     // MARK: Putting it away and bringing it back
 
     /// The × on the strip and the row it leaves behind are the same one

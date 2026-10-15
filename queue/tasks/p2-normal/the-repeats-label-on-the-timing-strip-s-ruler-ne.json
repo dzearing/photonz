@@ -1,0 +1,30 @@
+{
+  "id": "the-repeats-label-on-the-timing-strip-s-ruler-ne",
+  "title": "The repeats label on the timing strip's ruler never sits on top of a tick number",
+  "goal": "When the loop starts over exactly on a ruler tick (a lone 800 ms spinner, for one), the strip's \"repeats\" label is drawn over the tick's number and reads as \"800eats\". Each should be readable on its own, the way the spinner mock keeps its \"and again\" label clear of the ruler.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 4030,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T19:40:02.917Z",
+  "updated": "2026-10-15T19:40:02.920Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-15: `Scripts/playtest.sh Scripts/playtest/a-lone-spinner-strip-reads-one-turn-walk.json` then look at /tmp/photonz-playtest/a-lone-spinner-strip-reads-one-turn/1-one-turn-sc.png: the ruler reads \"|800\" with \"repeats\" printed over it at the same x (garbled \"800eats\"). Same picture saved as queue/audits/2026-10-15-forever-turn-reading-2.png. The label is MotionStripMarksView in Sources/Photonz/MotionStripView.swift (~line 1102), offset to laneWidth * ruler.repeatsFraction at the top of the marks overlay, which is the ruler's row. The mock (icon-loop-wt.html #wrapMark) labels the restart \"and again\" and draws it down in the lanes. Whether to also take the mock's word is part of the fix.",
+  "acceptance": [
+    "With a lone 800 ms Forever spinner, the ruler's 800 and the repeats label are both readable in a real capture, neither drawn over the other",
+    "A lap that ends between ticks still shows its repeats label where it does today",
+    "The fix is checked in a walk picture (a-lone-spinner-strip-reads-one-turn-walk shows the case)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T19:40:02.919Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "a-lone-spinner-strip-reads-one-turn-walk"
+  ]
+}

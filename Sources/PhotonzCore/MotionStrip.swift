@@ -315,6 +315,9 @@ extension PhotonzDocument {
 public enum MotionStripCopy {
     public static let topOfTheLap = "the start"
     public static let title = "One cycle"
+    /// What the strip is called when the one thing it times goes round at its
+    /// own pace, so its turn is the lap (`MotionTurnReading.replacesTheLap`).
+    public static let turnTitle = "One turn"
     /// What the same strip is called when what it measures FINISHES rather
     /// than starting over: a recording, not an icon.
     public static let documentTitle = "Timeline"

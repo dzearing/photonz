@@ -168,8 +168,8 @@ struct MotionStripView: View {
     /// What the strip is measuring: one lap of something that repeats, or a
     /// document that finishes.
     private var stripTitle: String {
-        editorState.motionStripMeasuresADocument
-            ? MotionStripCopy.documentTitle : MotionStripCopy.title
+        if editorState.motionStripMeasuresADocument { return MotionStripCopy.documentTitle }
+        return editorState.motionStripTurnReplacesTheLap ? MotionStripCopy.turnTitle : MotionStripCopy.title
     }
 
     /// A pinch on the lanes: the scale follows the fingers, about the moment
@@ -217,10 +217,15 @@ struct MotionStripView: View {
                 .font(.system(size: 10, weight: .semibold))
                 .kerning(0.7)
                 .foregroundStyle(.tertiary)
+                .playtestField("Strip Title")
+                .panelReadout(stripTitle)
             // How long a LAP is, which is a number only a thing that repeats
             // has. A document's length is what it is made of, so there is
-            // nothing here to type.
-            if !editorState.motionStripMeasuresADocument { cycleField }
+            // nothing here to type, and a lone spinner's lap is its turn,
+            // which the turn reading beside it already says.
+            if !editorState.motionStripMeasuresADocument
+                && !editorState.motionStripTurnReplacesTheLap { cycleField }
+            if let turn = editorState.motionStripTurnReading { turnReading(turn) }
             Spacer(minLength: 0)
             // The zoom, in the timeline's OWN bar rather than in the transport
             // above it: what it scopes is this strip, which is where
@@ -251,6 +256,38 @@ struct MotionStripView: View {
         .padding(.horizontal, Self.inset)
         .padding(.top, 8)
         .padding(.bottom, 6)
+    }
+
+    /// The picked Forever motion's own pace and whether its ends agree, the
+    /// way the mock's dock prints them beside its length (`icon-loop-wt.html`):
+    /// a rate is set by watching it go round, and a jump at the join is the
+    /// one thing the eye will not catch.
+    private func turnReading(_ turn: MotionTurnReading) -> some View {
+        HStack(spacing: 10) {
+            HStack(spacing: 4) {
+                Image(systemName: "repeat")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.secondary)
+                Text(turn.lengthText)
+                    .font(.caption2.monospacedDigit())
+                    .foregroundStyle(.secondary)
+                    .lineLimit(1)
+            }
+            .fixedSize()
+            .playtestField("Turn Length")
+            .panelReadout(turn.lengthText)
+            HStack(spacing: 4) {
+                Image(systemName: turn.joins ? "checkmark" : "exclamationmark.triangle.fill")
+                    .font(.system(size: 9, weight: .semibold))
+                Text(turn.joinText)
+                    .font(.caption2.weight(.semibold))
+                    .lineLimit(1)
+            }
+            .foregroundStyle(turn.joins ? Color.green : Color.orange)
+            .fixedSize()
+            .playtestField("Turn Join")
+            .panelReadout(turn.joinText)
+        }
     }
 
     /// How long one lap is. Typed, or left alone to follow the longest motion,

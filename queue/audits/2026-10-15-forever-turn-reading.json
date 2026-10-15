@@ -1,0 +1,46 @@
+{
+  "feature": "The timing strip reads a Forever spinner's turn",
+  "epic": "icon-animate",
+  "summary": "Pick a layer with a Forever motion and the strip's header says how long one turn takes (\"800 ms per turn\") and whether the turn ends where it starts. With only a spinner moving, the strip is called One turn and has no lap to type, as on the spinner mock.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walks: a-lone-spinner-strip-reads-one-turn-walk and forever-spinner-keeps-its-own-pace-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw an ellipse, pick it, and choose Add Motion > Rotation in the panel."
+    },
+    {
+      "do": "Set From to 0, To to 360, Curve to Linear, Repeat to Forever and Over to 800."
+    },
+    {
+      "do": "Read the strip's header: ONE TURN, 800 ms per turn, and a green ends where it starts.",
+      "shot": "2026-10-15-forever-turn-reading-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Draw a rectangle and give it the Rotation Add Motion offers (a 900 ms swing), then pick the ellipse again.",
+      "shot": "2026-10-15-forever-turn-reading-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 300 into To and read the header: an orange does not end where it starts.",
+      "shot": "2026-10-15-forever-turn-reading-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Type 360 back into To and watch the header go green again."
+    }
+  ],
+  "evaluate": [
+    "Does \"800 ms per turn\" beside the lap make it clear which number is the spinner's speed?",
+    "Is the orange \"does not end where it starts\" the warning you want for a turn that jumps, or too loud?",
+    "With a swing beside the spinner, the header still says ONE CYCLE and shows the 900 ms lap. Is that the right title there, or should it name the turn too?",
+    "With the spinner alone, does losing the lap field feel right, or do you miss being able to type a lap?"
+  ],
+  "rough": [
+    "Side by side with icon-loop-wt.html step 5 (\"Put it back, and look at the join\"): the header matches the mock's dock bar, ONE TURN, a loop mark with 800 ms per turn, then a green check with ends where it starts.",
+    "No mock covers a turn that does not join, which this task's checklist asked to be said: the app reads \"does not end where it starts\" in orange with a warning mark, the mock's own words turned round.",
+    "No mock covers a spinner beside a swing: there the app keeps the ONE CYCLE title and its lap field, since the swing still shares the lap, and adds the turn reading after it.",
+    "The ruler's 800 tick and the repeats label are drawn on top of each other when the lap ends on a tick (picture 2); filed as the-repeats-label-on-the-timing-strip-s-ruler-ne.",
+    "The turn reading shows only for the picked layer, and for its first Forever motion when it has several; another layer's spinner is not read until it is picked."
+  ]
+}
