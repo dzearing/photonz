@@ -1,0 +1,62 @@
+{
+  "out": "/tmp/photonz-playtest/copy-svg-into-a-code-editor-walk",
+  "seed": "A code editor, a plain text box and Safari read only plain text, so an icon's SVG reaches them through Copy SVG, which puts the code on as text. The walk makes a 24 unit icon frame at Next defaults and draws a circle in it, right clicks the frame and chooses Copy SVG, and holds the plain text to the file Export writes for that frame, byte for byte. Then the bare canvas's own Copy SVG with nothing picked, held to the whole drawing's file (Edit > Copy SVG needs a live menu bar, so copy-svg-from-the-edit-menu-walk takes the front for it). Copy Merged keeps the text slot free of code, and last a redline on a screenshot still pastes its spec list as text.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [792, 542], "to": [806, 556] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "writeSVG", "name": "icon-frame", "frame": "Frame" },
+    { "do": "writeSVG", "name": "whole-drawing" },
+
+    { "do": "clearClipboard" },
+    { "do": "rightClick", "at": [810, 560], "shot": "copy-svg-1-frame-menu", "choose": "Copy SVG" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "1-the-frame-as-code", "svgAsText": true, "svgSameAs": "icon-frame" },
+    { "do": "snapshot", "name": "copy-svg-1-copied" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "menus", "stage": "2-edit-menu", "menu": "Edit" },
+
+    { "do": "clearClipboard" },
+    { "do": "rightClick", "at": [785.5, 550], "shot": "copy-svg-3-canvas-menu", "choose": "Copy SVG" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "3-the-canvas-as-code", "svgAsText": true, "svgSameAs": "whole-drawing" },
+
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "4-copy-merged-keeps-the-text-slot", "svgSameAs": "whole-drawing", "svg": true },
+    { "do": "readClipboard", "stage": "4-no-code-in-the-text", "svg": false, "svgAsText": true },
+
+    { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/settings-pane-2x.png", "width": 1280, "height": 840 },
+    { "do": "wait", "seconds": 1 },
+    { "do": "key", "key": "i" },
+    { "do": "waitFor", "condition": "tool", "value": "measure" },
+    { "do": "waitFor", "condition": "edgeMap", "timeout": 15 },
+    { "do": "measureMode", "mode": "size" },
+    { "do": "move", "at": [356, 786] },
+    { "do": "click", "at": [356, 786] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "menus", "stage": "5-edit-menu-on-a-screenshot", "menu": "Edit" },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command", "shift"], "menuItem": "Copy Merged" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "5-a-redline-pastes-its-list", "behind": "painted", "svg": false, "textHas": "px" },
+    { "do": "readClipboard", "stage": "5-no-code-in-the-text", "svg": false, "svgAsText": true }
+  ]
+}

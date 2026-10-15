@@ -478,6 +478,13 @@ struct EditorCommands: Commands {
                     .keyboardShortcut("c", modifiers: [.command, .shift])
                     .disabled(editor?.document == nil)
             }
+            // A drawing's code as text, for a code editor: Photoshop's Copy
+            // SVG, under the copies it sits beside. No key; dimmed on a
+            // screenshot, which is pixels however it is written.
+            if Experiments.shared.svgExportEnabled {
+                Button("Copy SVG") { editor?.copySVG(around: editor?.pickedLayerID) }
+                    .disabled(!(editor?.canCopySVG(around: editor?.pickedLayerID) ?? false))
+            }
             // The edit onto the clipboard as a file, to paste into a chat
             // without exporting one first: Current's recording window had
             // these on its own bar. Every Copy key with ⌘ and one or two of

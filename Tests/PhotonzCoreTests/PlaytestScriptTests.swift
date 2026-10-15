@@ -51,6 +51,47 @@ struct PlaytestScriptTests {
         #expect(claims[3] == .some(ClipboardSVGClaim(carries: false)))
     }
 
+    @Test("A readClipboard step can hold the SVG claim to the plain text slot")
+    func readClipboardCanClaimTheSVGAsText() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "readClipboard", "stage": "a", "svgSameAs": "icon", "svgAsText": true },
+                     { "do": "readClipboard", "stage": "b", "svg": false, "svgAsText": true },
+                     { "do": "readClipboard", "stage": "c", "textHas": "Width" } ] }
+        """)
+        let claims = script.steps.map { step -> ClipboardSVGClaim?? in
+            guard case .readClipboard(_, _, _, let svg) = step else { return .none }
+            return .some(svg)
+        }
+        #expect(claims[0] == .some(ClipboardSVGClaim(carries: true, sameAs: "icon", asText: true)))
+        #expect(claims[1] == .some(ClipboardSVGClaim(carries: false, asText: true)))
+        #expect(claims[2] == .some(ClipboardSVGClaim(textHas: "Width")))
+    }
+
+    @Test("A readClipboard step cannot put an SVG claim in the text slot without making one")
+    func readClipboardRefusesSVGAsTextAlone() {
+        #expect(throws: (any Error).self) {
+            try decode("""
+            { "steps": [ { "do": "readClipboard", "stage": "a", "svgAsText": true } ] }
+            """)
+        }
+    }
+
+    @Test("A writeSVG step can write one frame the way Export does")
+    func writeSVGCanNameAFrame() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "writeSVG", "name": "whole" },
+                     { "do": "writeSVG", "name": "icon", "frame": "Icon 24" } ] }
+        """)
+        guard case .writeSVG(_, _, let none) = script.steps[0],
+              case .writeSVG(let name, let background, let frame) = script.steps[1] else {
+            Issue.record("writeSVG"); return
+        }
+        #expect(none == nil)
+        #expect(name == "icon")
+        #expect(background == .drop)
+        #expect(frame == "Icon 24")
+    }
+
     @Test("A readClipboard step cannot claim no SVG and name one to match")
     func readClipboardRefusesAContradictorySVGClaim() {
         #expect(throws: (any Error).self) {

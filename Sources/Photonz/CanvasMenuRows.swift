@@ -48,6 +48,10 @@ extension EditorState {
     /// Actual Size row also printed Cmd 1, which on a video is View.
     private var bareCanvasMenuRows: [MenuRow] {
         var rows: [MenuRow] = []
+        // The whole drawing's code, the way the layer menu copies a frame's.
+        if canCopySVG(around: nil) {
+            rows.append(.command("Copy SVG") { self.copySVG(around: nil) })
+        }
         if clipboardHasALayer {
             rows.append(.command("Paste", .command("v")) { self.paste() })
         }

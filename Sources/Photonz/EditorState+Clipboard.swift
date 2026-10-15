@@ -81,12 +81,63 @@ extension EditorState {
     /// photograph, a screenshot or time (`CompositeCopy.carriesSVG`).
     func clipboardSVG(of target: PhotonzDocument, background: SVGExport.Background) -> String? {
         guard Experiments.shared.svgExportEnabled,
-              CompositeCopy.carriesSVG(target, flatImages: FlatBitmap.colors(in: target, store: store))
+              CompositeCopy.carriesSVG(target, flatImages: flatColorsRemembered(in: target))
         else { return nil }
         let animation = CompositeCopy.svgAnimation(
             for: target, motionOn: Experiments.shared.animatedSVGExportEnabled)
         return SVGExporter.export(target, store: store, renderer: previewRenderer,
                                   animation: animation, background: background).text
+    }
+
+    /// `FlatBitmap.colors`, remembering each answer against the bitmap it was
+    /// read off, so asking again about the same pictures reads no pixels. A
+    /// bitmap put back under the same id is a different bitmap, and is read.
+    func flatColorsRemembered(in target: PhotonzDocument) -> [UUID: RGBA] {
+        var found: [UUID: RGBA] = [:]
+        var asked: Set<UUID> = []
+        for layer in target.allLayers where layer.isVisible {
+            guard case .image(let ref) = layer.content, layer.crop == nil,
+                  asked.insert(ref.id).inserted, let bitmap = store.image(for: ref) else { continue }
+            let identity = ObjectIdentifier(bitmap)
+            let color: RGBA?
+            if let memo = flatPictureMemo[ref.id], memo.bitmap == identity {
+                color = memo.color
+            } else {
+                color = FlatBitmap.color(of: bitmap)
+                flatPictureMemo[ref.id] = (identity, color)
+            }
+            if let color { found[ref.id] = color }
+        }
+        return found
+    }
+
+    /// Whether Copy SVG has a drawing to copy around `layerID` (nil: the whole
+    /// picture). A screenshot, a photograph or a video is pixels however it
+    /// is written, so it offers no code (`CompositeCopy.carriesSVG`).
+    func canCopySVG(around layerID: UUID?) -> Bool {
+        guard Experiments.shared.svgExportEnabled, let document else { return false }
+        let target = CompositeCopy.svgCopyTarget(in: document, around: layerID)
+        return CompositeCopy.carriesSVG(target, flatImages: flatColorsRemembered(in: target))
+    }
+
+    /// **Copy SVG**: the drawing's SVG code on the clipboard as plain text, so
+    /// a code editor, a plain text box or Safari pastes the code. The frame
+    /// `layerID` is or lives in, else the whole drawing: the file the Export
+    /// sheet writes for a web page from the same pick, byte for byte.
+    ///
+    /// Its own command, the way Photoshop's layer menu and Figma's Copy as
+    /// offer it, because the text slot of Copy and Copy Merged already carries
+    /// a redline's spec list and a chat box should keep getting that.
+    func copySVG(around layerID: UUID?) {
+        guard let document, canCopySVG(around: layerID) else { return }
+        let target = CompositeCopy.svgCopyTarget(in: document, around: layerID)
+        guard let svg = clipboardSVG(of: target, background: copyBackground) else { return }
+        let pasteboard = NSPasteboard.general
+        pasteboard.clearContents()
+        for case .text(let code) in CompositeCopy.svgCodeRepresentations(svg) {
+            pasteboard.setString(code, forType: .string)
+        }
+        raiseCanvasNotice(.svgCopied(of: CompositeCopy.svgCopyName(in: document, around: layerID)))
     }
 
     /// The whole picked layer, as a layer.

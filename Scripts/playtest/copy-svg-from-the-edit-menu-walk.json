@@ -1,0 +1,40 @@
+{
+  "out": "/tmp/photonz-playtest/copy-svg-from-the-edit-menu-walk",
+  "seed": "Edit > Copy SVG sits under Copy Merged and puts the drawing's SVG code on as plain text, for a code editor. The walk makes a 24 unit icon frame at Next defaults and draws a circle in it; with the frame picked Edit > Copy SVG copies that frame's file, and with nothing picked the whole drawing's, each byte for byte what Export writes. The menu bar is only live with the app in front, so this walk takes the front.",
+  "setup": { "forget": ["all"], "front": true },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [792, 542], "to": [806, 556] },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "writeSVG", "name": "icon-frame", "frame": "Frame" },
+    { "do": "writeSVG", "name": "whole-drawing" },
+
+    { "do": "click", "at": [810, 560] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "clearClipboard" },
+    { "do": "menus", "stage": "1-frame-picked", "menu": "Edit", "choose": "Edit > Copy SVG" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "1-the-frame-as-code", "svgAsText": true, "svgSameAs": "icon-frame" },
+    { "do": "snapshot", "name": "copy-svg-edit-1-copied" },
+
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "clearClipboard" },
+    { "do": "menus", "stage": "2-nothing-picked", "menu": "Edit", "choose": "Edit > Copy SVG" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "2-everything-as-code", "svgAsText": true, "svgSameAs": "whole-drawing" }
+  ]
+}

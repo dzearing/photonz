@@ -877,17 +877,22 @@ private final class Run {
     /// Holds the clipboard to a `readClipboard` step's SVG claim: there or
     /// not, whole units throughout, and byte for byte the file a `writeSVG`
     /// step of that name wrote when the walk names one.
-    private func claimClipboardSVG(_ svg: String?, _ claim: ClipboardSVGClaim) throws {
-        guard claim.carries else {
+    private func claimClipboardSVG(_ found: String?, _ claim: ClipboardSVGClaim) throws {
+        guard let carries = claim.carries else { return }
+        // In the text slot, text that is not an SVG (a spec list) is no SVG.
+        let svg = claim.asText ? found.flatMap { $0.hasPrefix("<svg") || $0.hasPrefix("<?xml") ? $0 : nil }
+                               : found
+        let slot = claim.asText ? "plain text" : EditorState.svgPasteboardType.rawValue
+        guard carries else {
             guard svg == nil else {
-                throw Failure(description: "readClipboard claimed no SVG on the clipboard, "
+                throw Failure(description: "readClipboard claimed no SVG in the clipboard's \(slot), "
                               + "and the copy carried one")
             }
             return
         }
         guard let svg else {
             throw Failure(description: "readClipboard claimed the copy carries the drawing as SVG, "
-                          + "and there is no \(EditorState.svgPasteboardType.rawValue) on the clipboard")
+                          + "and there is no SVG in the clipboard's \(slot)")
         }
         let offGrid = SVGWholeUnits.fractionalCoordinates(in: svg)
         guard offGrid.isEmpty else {
@@ -2605,15 +2610,29 @@ private final class Run {
             try writePNG(image, name: name)
             note(number, step.name, "\(name).png \(image.width)x\(image.height) px at \(scale)x")
 
-        case .writeSVG(let name, let background):
+        case .writeSVG(let name, let background, let frameName):
             let editor = try requireEditor()
+            guard let whole = editor.document else {
+                throw Failure(description: "the document did not write as SVG")
+            }
+            // One frame on its own, the way the Export sheet writes the frame
+            // picked in its Export menu.
+            var frameID: UUID?
+            if let frameName {
+                guard let frame = whole.frames.first(where: { $0.name == frameName }) else {
+                    throw Failure(description: "writeSVG was to write the frame \"\(frameName)\", and "
+                                  + "there is none; the frames are: "
+                                  + whole.frames.map(\.name).joined(separator: ", "))
+                }
+                frameID = frame.id
+            }
+            let document = whole.exportTarget(frameID: frameID)
             // A drawing that moves writes the file that moves: one lap of the
             // loop, in the file (`SVGMotionExport.swift`). A still one writes
             // exactly what it always did.
-            let animation: SVGExport.Animation = editor.document?.hasMotion == true
-                ? .moving(cycleMS: editor.document?.motionCycleLengthMS ?? 1) : .still
-            guard let document = editor.document,
-                  let written = SVGExporter.data(document, store: editor.store,
+            let animation: SVGExport.Animation = document.hasMotion
+                ? .moving(cycleMS: document.motionCycleLengthMS) : .still
+            guard let written = SVGExporter.data(document, store: editor.store,
                                                  animation: animation,
                                                  background: background) else {
                 throw Failure(description: "the document did not write as SVG")
@@ -3560,8 +3579,14 @@ private final class Run {
             let types = NSPasteboard.general.types?.map(\.rawValue) ?? []
             if movie { try await claimClipboardMovieIsTheEdit(number: number, stage: stage) }
             let svg = NSPasteboard.general.string(forType: EditorState.svgPasteboardType)
-            if let svgClaim { try claimClipboardSVG(svg, svgClaim) }
             let text = NSPasteboard.general.string(forType: .string)
+            if let svgClaim {
+                try claimClipboardSVG(svgClaim.asText ? text : svg, svgClaim)
+                if let wanted = svgClaim.textHas, text?.contains(wanted) != true {
+                    throw Failure(description: "readClipboard claimed the plain text holds \"\(wanted)\", "
+                                  + "and it reads: \(text.map { String($0.prefix(200)) } ?? "nothing")")
+                }
+            }
             // The picture's corners, read off the PNG that went on the
             // clipboard: what an app that pastes it would get.
             var corners: String?

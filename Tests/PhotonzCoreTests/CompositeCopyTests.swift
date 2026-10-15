@@ -170,4 +170,65 @@ struct CompositeCopyTests {
                 == "Image and spec list with 3 measurements")
         #expect(CopyConfirmation(subject: .image(measurements: 3), shownAt: t0).title == "Copied")
     }
+
+    // MARK: - Copy SVG: the code as text
+
+    /// A 24 unit icon frame with one shape on it, and one loose shape beside it.
+    private static func framedIcon() -> (PhotonzDocument, frame: UUID, dot: UUID, loose: UUID) {
+        var document = PhotonzDocument(canvasSize: CGSize(width: 1600, height: 1100))
+        let frame = document.addFrame(name: "Icon 24", origin: CGPoint(x: 100, y: 100),
+                                      size: CGSize(width: 24, height: 24))
+        let dot = Layer(name: "Dot", content: .text(TextContent(string: "Dot")),
+                        frame: CGRect(x: 106, y: 106, width: 12, height: 12))
+        document.addLayerDrawnOnFrame(dot)
+        let loose = Layer(name: "Loose", content: .text(TextContent(string: "Loose")),
+                          frame: CGRect(x: 600, y: 600, width: 40, height: 20))
+        document.addLayer(loose)
+        return (document, frame.id, dot.id, loose.id)
+    }
+
+    @Test func copySVGOnAFrameCopiesWhatExportWritesForThatFrame() {
+        let (document, frame, _, _) = Self.framedIcon()
+        let target = CompositeCopy.svgCopyTarget(in: document, around: frame)
+        #expect(target == document.exportTarget(frameID: frame))
+        #expect(target.canvasSize == CGSize(width: 24, height: 24))
+        #expect(CompositeCopy.svgCopyName(in: document, around: frame) == "Icon 24")
+    }
+
+    @Test func copySVGOnAShapeInsideAFrameCopiesTheFrameItIsOn() {
+        // The scope Export offers for the same pick: the frame the shape lives in.
+        let (document, frame, dot, _) = Self.framedIcon()
+        #expect(CompositeCopy.svgCopyTarget(in: document, around: dot)
+                == document.exportTarget(frameID: frame))
+        #expect(CompositeCopy.svgCopyName(in: document, around: dot) == "Icon 24")
+    }
+
+    @Test func copySVGWithNoFrameAroundCopiesTheWholeDrawing() {
+        let (document, _, _, loose) = Self.framedIcon()
+        #expect(CompositeCopy.svgCopyTarget(in: document, around: loose) == document)
+        #expect(CompositeCopy.svgCopyTarget(in: document, around: nil) == document)
+        #expect(CompositeCopy.svgCopyName(in: document, around: nil) == "")
+    }
+
+    @Test func copySVGPutsTheCodeOnAsPlainTextAndNothingElse() {
+        // A code editor, a plain text box and Safari read only plain text, so
+        // the code goes there; no picture, so a rich box pastes the code too.
+        #expect(CompositeCopy.svgCodeRepresentations(Self.svg) == [.text(Self.svg)])
+    }
+
+    @Test func copySVGLeavesCopyMergedsTextSlotAlone() {
+        // Copy Merged keeps the text slot for the spec list: the code never
+        // rides there, whatever is drawn.
+        let reps = CompositeCopy.representations(specList: "list", svg: Self.svg)
+        #expect(reps == [.png, .tiff, .svg(Self.svg), .text("list")])
+        #expect(!reps.contains(.text(Self.svg)))
+    }
+
+    @Test func theCopySVGNoticeNamesWhatWasCopied() {
+        let t0 = Date(timeIntervalSinceReferenceDate: 1_000)
+        let framed = CopyConfirmation(subject: .svgCopied(of: "Icon 24"), shownAt: t0)
+        #expect(framed.title == "Copied")
+        #expect(framed.detail == "SVG of Icon 24")
+        #expect(CopyConfirmation(subject: .svgCopied(of: ""), shownAt: t0).detail == "SVG")
+    }
 }

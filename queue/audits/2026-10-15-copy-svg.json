@@ -1,0 +1,29 @@
+{
+  "feature": "Copy SVG: an icon's code pastes into a code editor",
+  "epic": "icon-export",
+  "summary": "A new Copy SVG row puts a drawing's SVG code on the clipboard as plain text, so pasting into VS Code, a plain text box or Safari gives the code. Copy and Copy Merged are unchanged, so a redline still pastes its measurement list.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walks: copy-svg-into-a-code-editor-walk (right-click rows, runs while you work) and copy-svg-from-the-edit-menu-walk (Edit menu, takes the front).",
+  "switched": {},
+  "try": [
+    { "do": "File > New Frame, pick 24 under Icons, Add Frame, and draw a circle in it with the Ellipse tool." },
+    { "do": "Right-click the frame and choose Copy SVG.", "shot": "2026-10-15-copy-svg-frame-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read the notice at the bottom of the canvas: Copied, SVG of Frame.", "shot": "2026-10-15-copy-svg-copied-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Switch to VS Code or TextEdit in plain text mode and press Command V: the 24 by 24 SVG lands as code." },
+    { "do": "Press Escape, then Edit > Copy SVG (under Copy Merged): the whole drawing's SVG is copied.", "shot": "2026-10-15-copy-svg-edit-menu-sc.png" },
+    { "do": "Right-click empty canvas: Copy SVG is the first row and copies the whole drawing.", "shot": "2026-10-15-copy-svg-canvas-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open a screenshot, add a measurement, press Shift Command C and paste into a plain text box: you get the measurement list, as before." }
+  ],
+  "evaluate": [
+    "When you right-click a shape inside an icon frame, is copying the whole frame's SVG what you expect, or would you want just that shape?",
+    "With nothing picked, Copy SVG copies the whole canvas (1600 by 1100 with the icon placed in it). Is that useful, or should it copy the only frame when there is one?",
+    "Is Copy SVG easy to find right after Mirror Across Center and before Copy Look in the layer menu?",
+    "Is it fine that Copy SVG has no key?"
+  ],
+  "rough": [
+    "The mock (icon-export-anim-wt, command menu and layer menu) calls the row Copy as SVG; the app says Copy SVG, the name the card you answered used (an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c, your call on 2026-10-13).",
+    "The mock prints Option Command C for it; that key is Canvas Size, a Photoshop key, so Copy SVG has none (UX-PATTERNS §7), as the same card said.",
+    "The mock's Hand-off panel section with Export and Copy as SVG buttons is not in the app; a verb button in the panel is against the placement contract (UX-PATTERNS placement contract), and the card an-icon-svg-pastes-into-a-code-editor-how-should-a-copied-icon-s-svg-c put the row in Edit and right-click.",
+    "A screenshot or photo offers no Copy SVG: the row is absent from its right-click menus and dimmed in Edit, since a picture has no code to give.",
+    "The walks choose the right-click and Edit rows through the menu's own action, the way every menu walk does; no walk can click a row in an open menu by pointer."
+  ]
+}

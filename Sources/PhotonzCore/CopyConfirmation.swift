@@ -146,6 +146,9 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// there is no way to tell the key was taken, which is the same reason
         /// Copy as Spec List has a pill.
         case lookCopied(layer: String)
+        /// Copy SVG put a drawing's code on the clipboard as text: a frame's,
+        /// by name, or the whole drawing's when `of` is empty.
+        case svgCopied(of: String)
         /// A look was put on some layers. It says how far it reached and what
         /// did not fit, because a look is best effort by design: a result that
         /// is not quite a match has to be explained rather than mysterious.
@@ -459,7 +462,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .readingTheWords: return TextReading.Batch.workingTitle
         case .cutToOwnLayer:
             return "Cut to its own layer"
-        case .lookCopied: return "Copied"
+        case .lookCopied, .svgCopied: return "Copied"
         case .lookPasted(let report): return report.title
         case .shapesCombined(let plan): return plan.title
         }
@@ -656,6 +659,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             }
         case .lookCopied(let layer):
             return layer.isEmpty ? "The look of that layer" : "The look of \(layer)"
+        case .svgCopied(let name):
+            return name.isEmpty ? "SVG" : "SVG of \(name)"
         case .lookPasted(let report):
             return resultsOnly ? report.result : report.detail
         case .shapesCombined(let plan):

@@ -83,6 +83,31 @@ public enum CompositeCopy {
         return !holdsAPicture(document.layers)
     }
 
+    // MARK: - Copy SVG
+
+    /// What Copy SVG copies when asked about `layerID`: the frame it is, or
+    /// the frame it lives in, on its own, else the whole drawing. The same
+    /// scope the Export sheet opens on for the same pick, so the code you
+    /// paste and the file you export are one file.
+    public static func svgCopyTarget(in document: PhotonzDocument,
+                                     around layerID: UUID?) -> PhotonzDocument {
+        document.exportTarget(frameID: layerID.flatMap { document.frameID(containing: $0) })
+    }
+
+    /// The name the "Copied" notice gives what Copy SVG copied: the frame's,
+    /// or nothing for the whole drawing.
+    public static func svgCopyName(in document: PhotonzDocument, around layerID: UUID?) -> String {
+        guard let frame = layerID.flatMap({ document.frameID(containing: $0) }) else { return "" }
+        return document.layer(id: frame)?.name ?? ""
+    }
+
+    /// Copy SVG's clipboard: the code as plain text and nothing else, so a
+    /// code editor, a plain text box and Safari all paste the code. Copy and
+    /// Copy Merged keep the text slot for the spec list (`representations`).
+    public static func svgCodeRepresentations(_ svg: String) -> [Representation] {
+        [.text(svg)]
+    }
+
     /// Whether the copied SVG plays: exactly what the Export sheet writes for
     /// a web page, which is the one destination that keeps the motion.
     /// `motionOn` is whether this release exports motion at all.

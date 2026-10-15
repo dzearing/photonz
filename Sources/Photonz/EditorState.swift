@@ -37,6 +37,11 @@ final class EditorState {
     private(set) var lookRowsRevision = 0
     /// The document `lookRowsRevision` last answered for.
     @ObservationIgnored private var lookRowsSaw: PhotonzDocument?
+    /// Which pictures in the document are one flat colour, by bitmap id, with
+    /// the bitmap each answer was read off (`flatColorsRemembered`). Copy
+    /// SVG's menu rows ask on every redraw, and a blank canvas is only known
+    /// to be blank by reading every pixel of it.
+    @ObservationIgnored var flatPictureMemo: [UUID: (bitmap: ObjectIdentifier, color: RGBA?)] = [:]
     /// True while a look section is building its body, so that every read of
     /// `document` in it watches `lookRowsRevision` rather than `history`
     /// (`readingForTheLookRows`).

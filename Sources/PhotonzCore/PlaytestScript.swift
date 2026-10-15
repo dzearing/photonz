@@ -2356,12 +2356,21 @@ public enum PlaytestDropZone: String, CaseIterable, Hashable, Codable, Sendable 
 /// What a `readClipboard` step claims about the drawing as SVG on the
 /// clipboard: whether it is there, and which `writeSVG` file it must match.
 public struct ClipboardSVGClaim: Sendable, Equatable {
-    public var carries: Bool
+    /// Whether the copy carries the drawing as SVG; nil makes no claim.
+    public var carries: Bool?
     public var sameAs: String?
+    /// The SVG claim is about the plain text slot (Copy SVG) rather than the
+    /// SVG file type (Copy and Copy Merged).
+    public var asText: Bool
+    /// Words the plain text must hold: a redline's spec list, say.
+    public var textHas: String?
 
-    public init(carries: Bool, sameAs: String? = nil) {
+    public init(carries: Bool? = nil, sameAs: String? = nil, asText: Bool = false,
+                textHas: String? = nil) {
         self.carries = carries
         self.sameAs = sameAs
+        self.asText = asText
+        self.textHas = textHas
     }
 }
 
@@ -2991,7 +3000,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// canvas the drawing was made on out of the file, "keep" paints it in.
     /// With a photograph behind the drawing rather than a canvas there is
     /// nothing to leave out and both write the same file.
-    case writeSVG(name: String, background: SVGExport.Background)
+    ///
+    /// `frame` names a frame to write on its own, the way the Export sheet
+    /// writes a frame picked in its Export menu (`exportTarget(frameID:)`).
+    case writeSVG(name: String, background: SVGExport.Background, frame: String? = nil)
     /// Write the document out as a picture to `<out>/<name>.<ext>`, at the
     /// format, quality and scale Export would use (Next,
     /// `next-export-quality`), and log how many bytes it came to.
@@ -4124,6 +4136,9 @@ public enum PlaytestStep: Sendable, Equatable {
     /// (`CompositeCopy.carriesSVG`); a carried one must also say every place
     /// in whole units (`SVGWholeUnits`), and with `svgSameAs` it must be byte
     /// for byte the file an earlier `writeSVG` step of that name wrote.
+    /// `svgAsText` holds those claims to the plain text slot instead, which
+    /// is where Copy SVG puts the code; `textHas` claims words the plain text
+    /// must hold.
     case readClipboard(stage: String, behind: PictureCorners?, movie: Bool = false,
                        svg: ClipboardSVGClaim? = nil)
     /// Write the app's own menu bar to the log and to `menus-<stage>.json`:
@@ -4864,7 +4879,8 @@ public enum PlaytestStep: Sendable, Equatable {
             let background = f.has("background")
                 ? try f.enumValue("background", SVGExport.Background.self)
                 : SVGExport.Background.drop
-            self = .writeSVG(name: try f.string("name"), background: background)
+            self = .writeSVG(name: try f.string("name"), background: background,
+                             frame: try f.optionalString("frame"))
         case "writePicture":
             let canvas = f.has("background")
                 ? try f.enumValue("background", SVGExport.Background.self)
@@ -5947,8 +5963,17 @@ public enum PlaytestStep: Sendable, Equatable {
                                                        field: "svgSameAs",
                                                        reason: "names a file to match while svg claims there is none")
             }
-            let svgClaim = carriesSVG != nil || svgSameAs != nil
-                ? ClipboardSVGClaim(carries: carriesSVG ?? true, sameAs: svgSameAs) : nil
+            let asText = try f.optionalFlag("svgAsText") ?? false
+            let textHas = try f.optionalString("textHas")
+            let claimsSVG = carriesSVG != nil || svgSameAs != nil
+            if asText, !claimsSVG {
+                throw PlaytestScriptError.invalidField(index: index, step: "readClipboard",
+                                                       field: "svgAsText",
+                                                       reason: "says where the SVG claim is read, and the step makes none: add svg or svgSameAs")
+            }
+            let svgClaim = claimsSVG || textHas != nil
+                ? ClipboardSVGClaim(carries: claimsSVG ? (carriesSVG ?? true) : nil,
+                                    sameAs: svgSameAs, asText: asText, textHas: textHas) : nil
             self = .readClipboard(stage: try f.string("stage"),
                                   behind: f.has("behind")
                                       ? try f.enumValue("behind", PictureCorners.self) : nil,

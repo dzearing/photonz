@@ -97,6 +97,12 @@ enum LayerCommandList {
         if editorState.canCenterRowOnArtboard(id: id) {
             rows.append(.command(CenterOnArtboard.title) { editorState.centerRowOnArtboard(id: id) })
         }
+        // Photoshop's Copy SVG, on the layer menu where it keeps it: the code
+        // of the frame this is or lives in, else the whole drawing. Absent on
+        // a picture, which has no code to give.
+        if editorState.canCopySVG(around: id) {
+            rows.append(.command("Copy SVG") { editorState.copySVG(around: id) })
+        }
         // Where Photoshop keeps them, under the names it uses for the same
         // pair, so the two moves that make one shape match another are one
         // right click away (`EditorState+Look.swift`).
