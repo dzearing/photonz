@@ -318,10 +318,14 @@ export function draftTask({ title, goal = '', epic = '', priority = 'p2-normal',
   while (existing.has(id)) id = `${slug(title)}-${n++}`;
   // seq is the sort order within a priority: decimal, stepped by 10 so a task
   // can be slotted between two others (15 goes between 10 and 20) without
-  // touching every file. Triage renumbers back to clean steps.
+  // touching every file. Triage renumbers back to clean steps. A task for the
+  // focus joins the line ahead of other epics' work (see focusSeq); anything
+  // else goes to the end.
   if (typeof seq !== 'number' || !isFinite(seq)) {
-    const peers = all.filter((t) => t.priority === priority && typeof t.seq === 'number');
-    seq = peers.length ? Math.max(...peers.map((t) => t.seq)) + 10 : 10;
+    const peers = all.filter((t) => t.priority === priority);
+    seq = servesFocus(epic)
+      ? focusSeq(peers, (t) => servesFocus(t.epic) || userAskedFor(t))
+      : endSeq(peers);
   }
   const task = {
     // `epic` is the objective this serves. A task that cannot name one is work
@@ -337,6 +341,36 @@ export function draftTask({ title, goal = '', epic = '', priority = 'p2-normal',
   // "I mention walks and own none of them", so an empty array is NOT dropped.
   if (Array.isArray(walks)) task.walks = normalizeWalks(walks);
   return task;
+}
+
+// Whether an epic is the focus or sits anywhere under it in objectives.json.
+export function servesFocus(epic, doc = readObjectives()) {
+  if (!epic || !doc.focus) return false;
+  const focus = flatEpics(doc.epics).find(({ epic: e }) => e.id === doc.focus)?.epic;
+  return !!focus && flatEpics([focus]).some(({ epic: e }) => e.id === epic);
+}
+
+// Where a new task joins its priority's line. The head of the line is the open
+// tasks `head` says belong there (focus work and the user's own asks) up to the
+// first open task that does not; the new task goes halfway between the last of
+// that head and that first other task, so focus work is claimed ahead of other
+// epics' work in the order it was filed. With nothing open outside the head it
+// goes to the end, which is where every other task goes (endSeq). Until
+// 2026-10-15 every task went to the end, and overnight the loop built five icon
+// and redline tasks while four video follow-ups filed the day before waited.
+const numbered = (peers) => peers.filter((t) => typeof t.seq === 'number' && isFinite(t.seq));
+export function endSeq(peers) {
+  const seqs = numbered(peers).map((t) => t.seq);
+  return seqs.length ? Math.max(...seqs) + 10 : 10;
+}
+export function focusSeq(peers, head) {
+  const open = numbered(peers).filter((t) => OPEN_STATUSES.has(t.status));
+  const others = open.filter((t) => !head(t));
+  if (!others.length) return endSeq(peers);
+  const first = Math.min(...others.map((t) => t.seq));
+  const before = open.filter((t) => t.seq < first).map((t) => t.seq);
+  const lower = before.length ? Math.max(...before) : first - 10;
+  return (lower + first) / 2;
 }
 
 // Words that carry no signal about what a task is about. A near-twin check that
