@@ -19,6 +19,10 @@ extension EditorState {
     /// caller opens it the ordinary way.
     func openClosingRecording(at url: URL, from store: CaptureStore) -> Bool {
         guard let reserved = store.heldRecordingURL(matching: url) else { return false }
+        if let picture = store.readClosingPicture(for: reserved) {
+            installClosingRecording(picture, url: reserved, store: store)
+            return true
+        }
         Task { @MainActor [weak self] in
             guard let picture = await store.closingPicture(for: reserved) else {
                 // The frame could not be read: wait for the file instead, the
@@ -37,6 +41,9 @@ extension EditorState {
 
     private func installClosingRecording(_ picture: CaptureStore.ClosingPicture, url: URL,
                                          store: CaptureStore) {
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("install")
+        #endif
         let standIn = picture.recording.standIn(id: picture.movieID)
         let name = url.deletingPathExtension().lastPathComponent
         var opened = PhotonzDocument.recording(standIn, name: name)
@@ -60,6 +67,7 @@ extension EditorState {
         openInItsMode(opened)
         #if PHOTONZ_PLAYTEST
         PlaytestHarness.register(self)
+        PlaytestOpenTrace.mark("installed")
         #endif
         store.whenLanded(url) { [weak self] landed in
             Task { @MainActor [weak self] in

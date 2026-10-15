@@ -2459,6 +2459,9 @@ final class EditorState {
     /// this never reloads a window that already holds a document.
     func seed(from windowID: EditorWindowID, capture: CaptureCenter) {
         guard document == nil else { return }
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("seed")
+        #endif
         captureCenter = capture
         Self.seeded.add(self)
         switch windowID {

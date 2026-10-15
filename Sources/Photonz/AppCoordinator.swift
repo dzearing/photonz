@@ -799,9 +799,21 @@ final class AppCoordinator {
     /// multi-document app. `syncActivationPolicy` drops back to the menu-bar-only
     /// `.accessory` when the last one closes.
     func openWindow(_ id: EditorWindowID) {
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("openWindow")
+        #endif
         NSApp.setActivationPolicy(.regular)
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("policy")
+        #endif
         AppFront.activate()
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("activate")
+        #endif
         openWindowAction?(id)
+        #if PHOTONZ_PLAYTEST
+        PlaytestOpenTrace.mark("asked SwiftUI")
+        #endif
     }
 
     /// Editor windows are real titled app windows; the history/tooltip surfaces

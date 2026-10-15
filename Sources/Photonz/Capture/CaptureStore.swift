@@ -414,12 +414,20 @@ final class CaptureStore {
     /// has been, nil when the recording is not closing or has no frame held.
     /// The newest recording keeps its frame for a while after it lands.
     func closingPicture(for url: URL) async -> ClosingPicture? {
-        if closing[url] == nil, let landed = justLanded, landed.url == url { return picture(of: landed.frame) }
-        guard let held = closing[url] else { return nil }
-        if held.read { return picture(of: held) }
+        if let read = readClosingPicture(for: url) { return read }
+        guard closing[url] != nil else { return nil }
         return await withCheckedContinuation { continuation in
             closingWaiters[url, default: []].append { continuation.resume(returning: $0) }
         }
+    }
+
+    /// The same frame when it has already been read, without waiting: an
+    /// editor opening on it installs it in the same turn the window is made,
+    /// rather than a turn later, behind the window's first layout.
+    func readClosingPicture(for url: URL) -> ClosingPicture? {
+        if closing[url] == nil, let landed = justLanded, landed.url == url { return picture(of: landed.frame) }
+        guard let held = closing[url], held.read else { return nil }
+        return picture(of: held)
     }
 
     /// The reserved URL of the closing recording this URL names, however it

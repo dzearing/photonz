@@ -38,6 +38,11 @@ enum PlaytestStopThenOpen {
     /// 210 ms, about 50 ms of it the app becoming a Dock app for its first
     /// window (beside an open window the worst was 165 ms). Reading the file
     /// first, the way it opened before, took about 450 ms.
+    /// 2026-10-15, load about 4: the held frame used to go in a turn after
+    /// the window was made, behind its first layout, and rounds landed at 250
+    /// to 271 ms. Installed while the window is seeded, three runs were worst
+    /// 221, 234 and 246 ms; what is left is SwiftUI making the window (70 to
+    /// 110 ms to `seed`) and its first layout with the picture (about 100 ms).
     static let openBudgetMS = 250.0
 
     @MainActor private final class Landed { var at: Date? }
@@ -93,6 +98,7 @@ enum PlaytestStopThenOpen {
                 var pictureAt: Date?
                 var windowAt: Date?
                 var openedBeforeLanding = false
+                var trace = ""
                 while trouble == nil {
                     let now = Date()
                     let landedAt = landedBox.at
@@ -110,15 +116,21 @@ enum PlaytestStopThenOpen {
                     if asked == nil, now.timeIntervalSince(stop) >= delay {
                         asked = now
                         openedBeforeLanding = landedAt == nil
+                        PlaytestOpenTrace.begin()
                         app.openRecording(store.entries.first?.url ?? entry.url)
                     }
                     if asked != nil, editor == nil {
                         editor = PlaytestHarness.readyEditors.last { $0.recordingURL?.lastPathComponent == name }
                     }
-                    if asked != nil, windowAt == nil, editor?.hostWindow?.isVisible == true { windowAt = Date() }
+                    if asked != nil, windowAt == nil, editor?.hostWindow?.isVisible == true {
+                        windowAt = Date()
+                        PlaytestOpenTrace.mark("visible")
+                    }
                     if asked != nil, pictureAt == nil, let editor,
                        editor.movieFrameReadWidths().contains(where: { $0.read != nil }) {
                         pictureAt = Date()
+                        PlaytestOpenTrace.mark("picture")
+                        trace = PlaytestOpenTrace.said
                     }
                     if let asked, pictureAt == nil, now.timeIntervalSince(asked) > 10 {
                         trouble = "no window showed the recording ten seconds after it was asked for"
@@ -153,7 +165,9 @@ enum PlaytestStopThenOpen {
                                       openedBeforeLanding: openedBeforeLanding)
                 readings.append(reading)
                 if delay >= 0.5, reading.openMS > openBudgetMS {
-                    slow.append(String(format: "%@ took %.0f ms", label, reading.openMS))
+                    // Where the time went, ms after the open was asked for
+                    // (`PlaytestOpenTrace`).
+                    slow.append(String(format: "%@ took %.0f ms (%@)", label, reading.openMS, trace))
                 }
                 try? await Task.sleep(for: .milliseconds(300))
             }
