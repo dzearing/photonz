@@ -189,10 +189,13 @@ extension EditorState {
 
     /// A right click on a segment: the shared curve list (D21), then Add
     /// Point Here and Delete for the points picked with it. The segment is
-    /// picked unless it already is; the playhead stays where it was parked.
-    func soundSegmentMenuRows(layerID: UUID, startMS: Int, atLayerMS ms: Int) -> [MenuRow] {
+    /// picked unless it already is, when `landed` says the latest right click
+    /// is on it: every segment carries a menu of its own, and each is built
+    /// again after a right click anywhere on the line (`AnimatedLineSurface`).
+    /// The playhead stays where it was parked.
+    func soundSegmentMenuRows(layerID: UUID, startMS: Int, atLayerMS ms: Int, landed: Bool) -> [MenuRow] {
         guard let level = document?.layer(id: layerID)?.soundLevel, !isClipLocked(layerID) else { return [] }
-        if servesThisRightPress(), !soundLinePick(layerID: layerID).segments.contains(startMS) {
+        if landed, servesThisRightPress(), !soundLinePick(layerID: layerID).segments.contains(startMS) {
             afterTheMenuIsBuilt { [weak self] in
                 self?.pickSoundSegment(layerID: layerID, startMS: startMS, atLayerMS: ms,
                                        extending: false, movingPlayhead: false)
@@ -222,12 +225,13 @@ extension EditorState {
     }
 
     /// A right click on a level point: Delete, for it or every point picked
-    /// with it. It is picked unless it already is.
-    func soundPointMenuRows(layerID: UUID, atLayerMS ms: Int) -> [MenuRow] {
+    /// with it. It is picked unless it already is, when `landed` says the
+    /// latest right click is on it.
+    func soundPointMenuRows(layerID: UUID, atLayerMS ms: Int, landed: Bool) -> [MenuRow] {
         guard document?.layer(id: layerID)?.soundLevel != nil, !isClipLocked(layerID) else { return [] }
         let picked = soundLinePick(layerID: layerID).dots
         let inHand = picked.contains(ms) ? picked : [ms]
-        if servesThisRightPress(), !picked.contains(ms) {
+        if landed, servesThisRightPress(), !picked.contains(ms) {
             afterTheMenuIsBuilt { [weak self] in
                 self?.pickSoundPoint(layerID: layerID, atLayerMS: ms, extending: false, movingPlayhead: false)
             }

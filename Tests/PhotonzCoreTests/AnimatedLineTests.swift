@@ -20,6 +20,28 @@ struct AnimatedLineTests {
                      after: [CGPoint(x: 300, y: 50), CGPoint(x: 400, y: 50)])
     }
 
+    // MARK: - Which part a right click is about
+
+    /// Every part of a line carries a menu of its own, and every one of them
+    /// is built again after a right click anywhere on it: only the part the
+    /// click landed on may pick itself (2026-10-15, a sound's segment right
+    /// clicked after a point opened the point's menu).
+    @Test func aRightClickIsAboutOnlyThePartItLandedOn() {
+        let line = Self.line()
+        let onFirstSegment = CGPoint(x: 150, y: 35)
+        #expect(line.landed(onFirstSegment, on: .segment(0)))
+        #expect(!line.landed(onFirstSegment, on: .segment(1)))
+        #expect(!line.landed(onFirstSegment, on: .dot(0)))
+        #expect(line.landed(CGPoint(x: 300, y: 49), on: .dot(2)))
+        #expect(!line.landed(CGPoint(x: 300, y: 49), on: .segment(1)))
+    }
+
+    @Test func noRightClickOnTheLineIsAboutNothing() {
+        let line = Self.line()
+        #expect(!line.landed(nil, on: .segment(0)))
+        #expect(!line.landed(CGPoint(x: 150, y: 90), on: .segment(0)))
+    }
+
     // MARK: - What is under the pointer
 
     @Test func aDotWinsOverTheLineItSitsOn() {

@@ -84,6 +84,15 @@ public struct AnimatedLine: Hashable, Sendable {
         return best?.hit
     }
 
+    /// Whether a right click at `press` (nil when it was not on this line)
+    /// landed on `part`. Each part of a line carries its own menu and every
+    /// one is built again after any right click, so only the part it landed
+    /// on picks itself (`AnimatedLineSurface`).
+    public func landed(_ press: CGPoint?, on part: AnimatedLineHit) -> Bool {
+        guard let press else { return false }
+        return hit(press) == part
+    }
+
     /// The point on the line nearest `point`: where a dot added there sits.
     public func nearestPoint(to point: CGPoint) -> CGPoint {
         let lines = segments + [before, after]

@@ -1,0 +1,23 @@
+{
+  "feature": "Each part of a sound's volume line opens its own right-click menu",
+  "epic": "video-editing",
+  "summary": "Right-clicking a level point and then a segment on a sound's volume line now opens the segment's curve list, every time. Before, the segment showed the menu of whatever you had right-clicked last.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording, add the sample music, set Fade in to 3.",
+  "switched": {},
+  "try": [
+    { "do": "Command-click the music's volume line three times to add three level points." },
+    { "do": "Right-click the third point: the menu offers Delete Point." },
+    { "do": "Right-click the segment just before it: the menu is the curve list with Linear ticked." },
+    { "do": "Right-click the fourth point, then right-click the first segment and choose Hold.", "shot": "2026-10-15-sound-line-part-menus.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the third segment and choose Ease out, then right-click the first again: Hold is ticked there, not Ease out." }
+  ],
+  "evaluate": [
+    "Does every right-click on the line open the menu for the dot or segment under the pointer?",
+    "Does a curve you pick from a segment's menu always land on that segment?",
+    "Does the right-click pick the dot or segment it landed on, so you can see what the menu acts on?"
+  ],
+  "rough": [
+    "The level point where a fade ends sits under the clip's fade handle, so right-clicking it opens no menu at all; that was the same before this change and is logged on this task.",
+    "No mock covers the volume line's right-click menus; the rows are the shared curve list the value graph uses."
+  ]
+}

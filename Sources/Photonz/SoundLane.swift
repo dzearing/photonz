@@ -187,24 +187,38 @@ struct SoundLevelLine: View {
     // MARK: The line as something to click
 
     /// Only the strip along the line takes a press, the way Premiere's volume
-    /// line does: the rest of the segment picks the clip up and moves it.
+    /// line does: the rest of the segment picks the clip up and moves it. A
+    /// right click opens the menu of the segment it landed on, over the
+    /// clip's; either side of the dots, only the clip's
+    /// (`AnimatedLineSurface`).
     private func surface(_ animated: AnimatedLine) -> some View {
-        Color.clear
-            .frame(width: width, height: height)
-            .contentShape(LevelBand(lines: animated.segments + [animated.before, animated.after],
-                                    width: AnimatedLine.lineReach * 2))
-            .onTapGesture(coordinateSpace: .local) { at in lineClick(at, animated) }
-            .gesture(fader)
-            .contextMenu {
-                // Read so every right click builds the menu afresh, from
-                // where it landed (`EditorState+TimelinePointing`).
-                let _ = editorState.timelineRightPresses
-                LineMenu(rows: { lineMenuRows(animated) })
+        let points = shownLevel.points
+        return AnimatedLineSurface(
+            line: animated, width: width, height: height,
+            rightPress: { rightPressPoint },
+            click: { lineClick($0, animated) },
+            drag: fader,
+            beyondMenu: {
                 if let clipMenu {
                     TimelineClipMenu(layerID: layerID, piece: clipMenu.piece(rightPressLayerMS ?? 0),
                                      onTheSound: clipMenu.onTheSound)
                 }
-            }
+            },
+            segmentMenu: { index, landed in
+                if points.indices.contains(index + 1) {
+                    let start = points[index].atMS
+                    let at = landed ? rightPressLayerMS ?? start : (start + points[index + 1].atMS) / 2
+                    BuiltAsItOpens(rows: {
+                        var rows = editorState.soundSegmentMenuRows(layerID: layerID, startMS: start,
+                                                                    atLayerMS: at, landed: landed)
+                        if clipMenu != nil, !rows.isEmpty { rows.append(.separator) }
+                        return rows
+                    })
+                    if let clipMenu {
+                        TimelineClipMenu(layerID: layerID, piece: clipMenu.piece(at), onTheSound: clipMenu.onTheSound)
+                    }
+                }
+            })
             .panelHelp("The volume. Drag the line up or down. Click a dot or a segment to pick it; "
                        + "Command-click the line to add a dot.")
     }
@@ -242,33 +256,19 @@ struct SoundLevelLine: View {
         return ms - inMS
     }
 
-    /// The right click on the line: the menu of the point or segment under
-    /// the pointer, built as it opens (`TimelineRightPress`). Off them, only
-    /// the clip's menu.
-    private func lineMenuRows(_ animated: AnimatedLine) -> [MenuRow] {
-        // SwiftUI builds every menu near the press in the same pass, so a
-        // line only answers a press that landed on its own row and inside
-        // its own time (`EditorState+TimelinePointing`).
+    /// Where the latest right click landed, in the line's own points, or nil
+    /// when it was not on this line. SwiftUI builds every menu near the press
+    /// in the same pass, so a line only answers a press that landed on its
+    /// own row and inside its own time (`EditorState+TimelinePointing`). A
+    /// press that reached the line landed inside its strip, so it is read at
+    /// the line's own height there: only WHEN it landed decides which point or
+    /// segment it was.
+    private var rightPressPoint: CGPoint? {
         guard let ms = rightPressLayerMS, (0...lengthMS).contains(ms),
               frameInTracks.insetBy(dx: 0, dy: -2).contains(CGPoint(x: frameInTracks.midX,
                                                                     y: editorState.timelineRightPressY))
-        else { return [] }
-        // A press that reached the line's own menu landed inside its strip,
-        // so it is read at the line's own height there: only WHEN it landed
-        // decides which point or segment it was.
-        let at = CGPoint(x: x(atMS: ms), y: y(forGain: shownLevel.gain(atLayerMS: ms)))
-        let points = shownLevel.points
-        var rows: [MenuRow]
-        switch animated.hit(at) {
-        case let .segment(index) where points.indices.contains(index):
-            rows = editorState.soundSegmentMenuRows(layerID: layerID, startMS: points[index].atMS, atLayerMS: ms)
-        case let .dot(index) where points.indices.contains(index):
-            rows = editorState.soundPointMenuRows(layerID: layerID, atLayerMS: points[index].atMS)
-        default:
-            rows = []
-        }
-        if !rows.isEmpty, clipMenu != nil { rows.append(.separator) }
-        return rows
+        else { return nil }
+        return CGPoint(x: x(atMS: ms), y: y(forGain: shownLevel.gain(atLayerMS: ms)))
     }
 
     /// The line as the rule sees it, in this view's own points: a dot at
@@ -409,8 +409,12 @@ struct SoundLevelLine: View {
             .onTapGesture { dotClick(stored) }
             .contextMenu {
                 let _ = editorState.timelineRightPresses
-                LineMenu(rows: {
-                    var rows = editorState.soundPointMenuRows(layerID: layerID, atLayerMS: stored.atMS)
+                BuiltAsItOpens(rows: {
+                    // Every dot's menu is built again after a right click
+                    // anywhere; only the one it landed on picks its dot.
+                    let landed = animatedLine.landed(rightPressPoint, on: .dot(index))
+                    var rows = editorState.soundPointMenuRows(layerID: layerID, atLayerMS: stored.atMS,
+                                                              landed: landed)
                     if clipMenu != nil, !rows.isEmpty { rows.append(.separator) }
                     return rows
                 })
@@ -645,32 +649,5 @@ private struct LevelPointDot: View {
             .shadow(color: isPicked ? Color.accentColor.opacity(0.6) : .black.opacity(0.4), radius: 2, y: 1)
             .scaleEffect(isPicked ? 1.15 : 1)
             .playtestHover { isUnderPointer = $0 }
-    }
-}
-
-/// The rows a right click on the line opens with, worked out as the menu
-/// opens rather than when the line is drawn: SwiftUI runs a menu's own body
-/// inside `menu(for:)`, so the rows read the right click that opened it.
-private struct LineMenu: View {
-    let rows: @MainActor () -> [MenuRow]
-
-    var body: some View { MenuRowsView(rows: rows()) }
-}
-
-/// The strip either side of the level line that a click or a drag takes hold
-/// of: the line, fattened, so the rest of the segment is left to the clip.
-private struct LevelBand: Shape {
-    let lines: [[CGPoint]]
-    let width: CGFloat
-
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        for line in lines where line.count > 1 {
-            var stroke = Path()
-            stroke.move(to: line[0])
-            for point in line.dropFirst() { stroke.addLine(to: point) }
-            path.addPath(stroke)
-        }
-        return path.strokedPath(StrokeStyle(lineWidth: width, lineCap: .round, lineJoin: .round))
     }
 }

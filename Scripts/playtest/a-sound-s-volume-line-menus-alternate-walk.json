@@ -1,0 +1,278 @@
+{
+ "out": "/tmp/photonz-playtest/a-sound-s-volume-line-menus-alternate-walk",
+ "seed": "A right-click on any part of a sound's volume line opens that part's own menu, every time. At Next defaults with no flag changed, this walk puts the sample music on the recording, fades it in, Command-clicks three level points onto its line, then right-clicks a point, a segment, another point, a segment, back and forth: each point's right-click offers Delete Point and picks that point, each segment's offers the curve list ticked at its own curve and picks that segment, and a curve chosen there lands on it. On 2026-10-14 the line carried one menu for everything on it and the app showed the menu built before the click, so a segment right-clicked after a point opened the point's menu. Command-click and right-click are the clicks that reach a probe behind another app.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 0.0
+  },
+  {
+   "do": "action",
+   "action": "soundAddSample"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "focus",
+   "field": "Fade in"
+  },
+  {
+   "do": "type",
+   "text": "3"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectLevel",
+   "clip": "Sample Music",
+   "points": 2
+  },
+  {
+   "comment": "THE FIRST TEST: Command-click on the line adds a point there, holding the line's level.",
+   "do": "windowClick",
+   "at": [
+    721,
+    924
+   ],
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1057,
+    924
+   ],
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "windowClick",
+   "at": [
+    1393,
+    924
+   ],
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectLevel",
+   "clip": "Sample Music",
+   "points": 5,
+   "fullAt": [
+    4,
+    6,
+    9,
+    12
+   ]
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedPoints": [
+    5
+   ],
+   "curves": [
+    "Linear",
+    "Linear",
+    "Linear",
+    "Linear"
+   ]
+  },
+  {
+   "comment": "THE FIRST TEST: a point, then a segment. On 2026-10-14 the segment's right-click opened the point's menu, because the line carried one menu for everything on it and the app showed the menu built before the click.",
+   "do": "rightClick",
+   "on": "Sample Music level point 3",
+   "unticked": [
+    "Delete Point"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedPoints": [
+    3
+   ]
+  },
+  {
+   "do": "rightClick",
+   "on": "Segment Sample Music level 2",
+   "ticked": [
+    "Linear"
+   ],
+   "unticked": [
+    "Hold"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedSegments": [
+    2
+   ],
+   "pickedPoints": []
+  },
+  {
+   "do": "rightClick",
+   "on": "Sample Music level point 4",
+   "unticked": [
+    "Delete Point"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedPoints": [
+    4
+   ],
+   "pickedSegments": []
+  },
+  {
+   "comment": "THE SECOND TEST: Hold from the first segment's own right-click lands on the first segment.",
+   "do": "rightClick",
+   "on": "Segment Sample Music level 1",
+   "ticked": [
+    "Linear"
+   ],
+   "choose": "Hold"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedSegments": [
+    1
+   ],
+   "curves": [
+    "Hold",
+    "Linear",
+    "Linear",
+    "Linear"
+   ]
+  },
+  {
+   "do": "rightClick",
+   "on": "Sample Music level point 3",
+   "unticked": [
+    "Delete Point"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "comment": "THE THIRD TEST: after a point, point 3 then the third segment, which starts at it: the segment's menu ticks its own curve, not the first's, and Ease out lands on it.",
+   "do": "rightClick",
+   "on": "Segment Sample Music level 3",
+   "ticked": [
+    "Linear"
+   ],
+   "unticked": [
+    "Hold"
+   ],
+   "choose": "Ease out"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedSegments": [
+    3
+   ],
+   "curves": [
+    "Hold",
+    "Linear",
+    "Ease out",
+    "Linear"
+   ]
+  },
+  {
+   "comment": "Back on the first segment straight from the third: its own Hold is ticked.",
+   "do": "rightClick",
+   "on": "Segment Sample Music level 1",
+   "ticked": [
+    "Hold"
+   ],
+   "unticked": [
+    "Ease out"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSoundLine",
+   "clip": "Sample Music",
+   "pickedSegments": [
+    1
+   ],
+   "curves": [
+    "Hold",
+    "Linear",
+    "Ease out",
+    "Linear"
+   ]
+  },
+  {
+   "do": "snapshot",
+   "name": "line-after-menus"
+  }
+ ]
+}
