@@ -800,6 +800,7 @@ extension CanvasNSView {
     /// does NOT hang off the rubber band: a ⇧-click selection has no band, and
     /// before this it drew nothing at all.
     private func refreshMultiSelectOutlines(caught: [UUID], sweeping: Bool) {
+        applyPickedRingStyle()
         // The region tools select pixels rather than layers, so their in-flight
         // shape never outlines anything.
         guard let viewport, let document, regionDrag == nil else {
@@ -955,6 +956,7 @@ extension CanvasNSView {
     }
 
     private func refreshLayerSelectionDisplay() {
+        applyPickedRingStyle()
         // Only the canvas-boundary drag below ever paints the space it is about
         // to add, so every other path through this method leaves it off.
         canvasGrowthLayer.isHidden = true

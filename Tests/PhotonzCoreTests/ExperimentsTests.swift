@@ -453,6 +453,16 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.panelWithTheSlideFlag })
     }
 
+    @Test func theSolidPickedRingFlagIsNextOnlyAndOnByDefault() {
+        // A picked layer wears the mocks' solid accent ring. Next only;
+        // Current keeps the dotted blue line.
+        #expect(FeatureCatalog.solidPickedRingFlag == "next-solid-picked-ring")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.solidPickedRingFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.solidPickedRingFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.solidPickedRingFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.solidPickedRingFlag))
+    }
+
     @Test func theGrabCueFlagIsNextOnlyAndOnByDefault() {
         // The pointer becomes a hand over a pill that drags on its own (an
         // arrow's caption, a measurement's number). Next only; Current keeps

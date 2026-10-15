@@ -269,6 +269,11 @@ extension Experiments {
     /// catalog, so Current always reads false and both boxes keep the ants.
     var marqueeIntentEnabled: Bool { isEnabled(FeatureCatalog.marqueeIntentFlag) }
 
+    /// `next-solid-picked-ring`: whether a picked layer wears the mocks' solid
+    /// accent ring rather than the dotted blue line (`PickedRing`). Exists
+    /// only in the Next release's catalog, so Current always reads false.
+    var solidPickedRingEnabled: Bool { isEnabled(FeatureCatalog.solidPickedRingFlag) }
+
     /// `next-tool-options`: whether the Crop tool and the Magic Wand keep their
     /// options off the floating tool bar (D15) — crop aspect in the crop
     /// button's flyout, crop actions on the canvas, wand tolerance in the

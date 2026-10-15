@@ -912,8 +912,10 @@ final class CanvasNSView: NSView {
     let selectionBaseLayer = CAShapeLayer()
     /// …and animated black dashes on top, giving the classic alternating crawl.
     let selectionAntsLayer = CAShapeLayer()
-    /// Accent outline around the selected layer.
-    let layerOutlineLayer = CAShapeLayer()
+    /// Accent outline around the selected layer (`PickedRing`).
+    let layerOutlineLayer = CasedRingLayer()
+    /// Which look the rings were last dressed in; nil until the first time.
+    var pickedRingIsSolid: Bool?
     /// The space a canvas-boundary drag is about to ADD, painted in the colour
     /// it will be painted in. Solid, not a wash: the point is to show the
     /// actual colour, since with Select in hand the tool bar carries no
@@ -925,7 +927,7 @@ final class CanvasNSView: NSView {
     /// Outlines around every layer the marquee fully contains (rubber-band
     /// multi-selection) — live during the drag, standing once committed, so
     /// it's obvious what ⌫ will delete.
-    let multiSelectOutlineLayer = CAShapeLayer()
+    let multiSelectOutlineLayer = CasedRingLayer()
     /// The eight resize handles on the selected layer's outline.
     let handlesLayer = CAShapeLayer()
     /// The four dots just inside a picked shape's corners, each rounding the
@@ -2299,11 +2301,9 @@ final class CanvasNSView: NSView {
         // dashed boundary on top is the outline; this is the paint.
         canvasGrowthLayer.strokeColor = nil
         canvasGrowthLayer.lineWidth = 0
-        // Selection outline: bright blue, dotted, 2px, 60% opaque.
-        layerOutlineLayer.strokeColor = NSColor.systemBlue.withAlphaComponent(0.6).cgColor
-        layerOutlineLayer.lineWidth = 2
-        layerOutlineLayer.lineCap = .round
-        layerOutlineLayer.lineDashPattern = [2, 4]
+        // Selection outline and the multi-selection's: the mocks' solid
+        // accent ring in Next, the dotted blue line otherwise (`PickedRing`).
+        applyPickedRingStyle()
         // The group you are inside: the same blue, quieter and finer, so it
         // reads as the room you are standing in rather than as a selection.
         // Stroke and dash come from `applyGroupContextStyle`, which also owns
@@ -2312,11 +2312,6 @@ final class CanvasNSView: NSView {
         groupContextLayer.lineWidth = 1
         applyGroupContextStyle(lit: false)
         groupContextLayer.isHidden = true
-        // Marquee-captured layers share the selection-outline styling.
-        multiSelectOutlineLayer.strokeColor = layerOutlineLayer.strokeColor
-        multiSelectOutlineLayer.lineWidth = 2
-        multiSelectOutlineLayer.lineCap = .round
-        multiSelectOutlineLayer.lineDashPattern = [2, 4]
         snapGuideLayer.strokeColor = NSColor.systemYellow.cgColor
         // The lit grid line: the grid's own accent, brought up to full strength
         // from the wash it is drawn at. One point wide and unbroken, like the

@@ -1,0 +1,251 @@
+{
+  "out": "/tmp/photonz-playtest/a-picked-layer-wears-the-solid-ring-walk",
+  "seed": "A picked layer wears the mocks' solid accent ring (selection.css .sel-ring), and it stays legible over any picture. At Next defaults with no flag changed: a screenshot of three bands, white, the accent's own blue and near black, gets a plain tile of the SAME colour dropped on each band, so the ring on each tile has its own colour on both sides of it: the hardest backdrop there is. Each tile is picked and photographed, in the dark appearance and then the light one. Then two tiles are picked at once and photographed, for the finer ring each member of a multi-selection wears. Canvas coordinates are document units.",
+  "setup": {
+    "forget": [
+      "tools",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "open",
+      "file": "fixtures/White blue and dark bands 1200x400.png",
+      "width": 1400,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Plain white tile 200x140.png",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Plain blue tile 200x140.png",
+      "at": [
+        600,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "dropImage",
+      "file": "fixtures/Plain dark tile 200x140.png",
+      "at": [
+        1000,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "0-dropped"
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain white tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-white-on-white-dark"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain blue tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-blue-on-blue-dark"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain dark tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-dark-on-dark-dark"
+    },
+    {
+      "do": "appearance",
+      "value": "light"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "click",
+      "at": [
+        200,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain white tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-white-on-white-light"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain blue tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-blue-on-blue-light"
+    },
+    {
+      "do": "click",
+      "at": [
+        1000,
+        200
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain dark tile 200x140"
+      ],
+      "outline": "drawn"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-dark-on-dark-light"
+    },
+    {
+      "do": "click",
+      "at": [
+        600,
+        200
+      ],
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Plain blue tile 200x140",
+        "Plain dark tile 200x140"
+      ]
+    },
+    {
+      "do": "snapshot",
+      "name": "7-two-picked-light"
+    },
+    {
+      "do": "appearance",
+      "value": "dark"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "snapshot",
+      "name": "8-two-picked-dark"
+    }
+  ]
+}

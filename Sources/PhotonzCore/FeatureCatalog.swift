@@ -187,6 +187,10 @@ public enum FeatureCatalog {
 
     public static let marqueeIntentFlag = "next-a-box-says-what-it-picks"
 
+    /// A picked layer wears the mocks' solid accent ring rather than the
+    /// dotted blue line (`PickedRing`).
+    public static let solidPickedRingFlag = "next-solid-picked-ring"
+
     public static let layerBoxIsItsPixelsFlag = "next-a-layer-is-its-pixels"
 
     public static let lensFlag = "next-lens"
@@ -498,6 +502,16 @@ public enum FeatureCatalog {
                     name: grabCueFlag,
                     title: "Every handle says what it does",
                     description: "Resting the pointer on a handle shows what a press will do: an open hand on parts that drag, resize arrows on edges, a curved arrow on the knob that turns.",
+                    area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: solidPickedRingFlag,
+                    title: "A picked layer wears a solid ring",
+                    description: "What is picked on the canvas is outlined with one solid line in the accent colour, edged in a faint light halo so it reads on any picture. Off means the dotted blue line.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),
