@@ -21,7 +21,7 @@
   "rough": [
     "This builds option b on the open card about keying a property (clicking-a-cut-keying-a-value-and-undoing-it-ans-when-you-key-a-property-on-a-vid). If you answer a there, this task's behaviour follows your answer instead.",
     "The cost of option b is visible: picking a title's headline on the sample opens three rows, and V1 slides to the timeline's foot with its sound below it, until you scroll or drag the divider up.",
-    "No mock covers how the timeline's height reacts to a pick; the mock only caps the dock's height.",
+    "No mock covers the surface: how the timeline's height answers a pick is not drawn anywhere, the video mock only caps the dock's height.",
     "Folding a track group and opening a captions track's words still change the timeline's height, because those are commands on the tracks themselves, not picks.",
     "The Library-only height hold from double-clicking-a-library-title-tile-inserts-it is gone: the general rule covers it, and title-presets-library-shelf-walk still double-clicks Keynote Clean by the pointer and lands it."
   ]
