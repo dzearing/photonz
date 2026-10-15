@@ -1884,6 +1884,38 @@ bar row and heading, every right-click row, and the title of every button, menu
 and panel dropdown row in the app's source, and fails on one that is not in
 Title Case, naming how to write it.
 
+### How a key is chosen: the grown-up tool's key wins
+
+**A key goes to the command that owns it in the grown-up tool: Photoshop's on a
+picture, Premiere's on a video** (its timeline, transport and clips). When that
+key already does something else here, the command that is NOT theirs moves to a
+free key and the grown-up tool's command takes it. A key a mock prints is held
+to the same rule: a mock that prints a key Photoshop or Premiere gives to
+another command loses that key, and its command moves.
+
+- **Where the moved command goes:** the other grown-up tool's key for it if
+  that is free, else a free letter near its family in the grown-up tool
+  (Measure went to I, Photoshop's Ruler group), else no key at all, with its
+  menu row and right-click row (Freeze Frame). Its tooltip, its Edit ▸ Tools or
+  menu row and any walk that pressed the old key change with it, and "no two
+  rows print one key" (the placement contract) still holds.
+- **Applying it is building, not asking.** The runner builds it and names the
+  move in the audit's `rough` list, in one line that cites this section: "The
+  mock prints H for Highlight; H is Photoshop's Hand, so Highlight moved
+  to U (UX-PATTERNS §7)".
+- **Ask only when this rule does not decide it:** the key lands where both
+  tools apply and they give it to different commands (Option Delete is
+  Photoshop's Fill and Premiere's Ripple Delete, and a video carries titles and
+  shapes too); or the key belongs to neither tool and two asks want it (a mock
+  prints Shift Z for Punch In, the user named Shift Z for fitting the timeline);
+  or the move would take a key the user named themselves.
+- **The user settled this, more than once.** 2026-07-05: M is Photoshop's
+  marquee, so Measure moved to I; ⌘N is New Layer, so New from Clipboard moved
+  to ⌥⌘N. 2026-10-11: H picks the Hand and Highlight moved to U; C stays Crop
+  and the Component tool took N. Parity is for keys, not behaviour: where
+  Photoshop's interaction is clumsy the user overrides it (a marquee drag moves
+  the pixels here, ⌘-drag moves the outline).
+
 ---
 
 ## 8. Iconography: ONE library, one style (no exceptions)
