@@ -9,9 +9,10 @@ import SwiftUI
 ///
 /// The transform values popover's kind (`TransformValuesPopover`): the tool
 /// bar's own glass and corner, no stroke, the same row look. It hangs from the
-/// key and never covers it (`KeyValuesPlacement`), following it as the
-/// timeline scrolls. Drawn over the whole window, so a key near the top of the
-/// timeline can put it over the canvas's foot.
+/// key and never covers it, nor the curve and handles around it on an open
+/// graph (`KeyValuesPlacement`), following it as the timeline scrolls. Drawn
+/// over the whole window, so a key near the top of the timeline can put it
+/// over the canvas's foot.
 struct KeyValuesPopover: View {
     @Environment(EditorState.self) private var editorState
 
@@ -25,10 +26,14 @@ struct KeyValuesPopover: View {
             if editorState.showsKeyValues, let anchor = editorState.keyValuesAnchorFrame {
                 let local = anchor.offsetBy(dx: -window.minX, dy: -window.minY)
                 let bounds = CGRect(origin: .zero, size: proxy.size)
+                // On an open graph it keeps off the curve and its handles.
+                let clear = editorState.keyValuesClearLines.map {
+                    $0.map { CGPoint(x: $0.x - window.minX, y: $0.y - window.minY) }
+                }
                 let place = { (popover: ViewDimensions) in
                     KeyValuesPlacement.frame(anchor: local,
                                              size: CGSize(width: popover.width, height: popover.height),
-                                             in: bounds)
+                                             in: bounds, clearOf: clear)
                 }
                 popover
                     .fixedSize()

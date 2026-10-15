@@ -265,6 +265,10 @@ private struct KeyLaneView: View {
             self.keys(graph: graph, ruler: ruler)
         }
         .frame(width: laneWidth, height: height, alignment: .topLeading)
+        // The value popover hanging from a point here keeps off the curve.
+        .onChange(of: keyValuesClear(graph, line: line, ruler: ruler), initial: true) { _, clear in
+            if let clear, editorState.keyValuesClear != clear { editorState.keyValuesClear = clear }
+        }
         // Zoomed, the curve runs past the graph's top and bottom: it stops
         // at them rather than over the rows either side.
         .clipShape(TimelineEdgeClip(slack: graphed ? 0 : 400))
@@ -501,13 +505,7 @@ private struct KeyLaneView: View {
     @ViewBuilder
     private func handles(_ graph: KeyGraph, ruler: MotionStripRuler) -> some View {
         let (low, high) = range(graph)
-        let segments = editorState.pickedSegments(layerID: layerID)
-        let sides: [KeyRef: Set<KeyHandleSide>] = graph.keys.indices.reduce(into: [:]) { sides, index in
-            let key = graph.keys[index]
-            if picked.contains(key.ref) { sides[key.ref, default: []].formUnion([.arriving, .leaving]) }
-            if segments.contains(key.ref) { sides[key.ref, default: []].insert(.leaving) }
-            if index > 0, segments.contains(graph.keys[index - 1].ref) { sides[key.ref, default: []].insert(.arriving) }
-        }
+        let sides = handleSides(graph)
         let shown = graph.keys.filter { sides[$0.ref] != nil }
         ForEach(shown, id: \.ref) { key in
             let at = CGPoint(x: x(key.documentMS, ruler), y: y(key.value, low: low, high: high))
@@ -533,6 +531,54 @@ private struct KeyLaneView: View {
                 }
             }
         }
+    }
+
+    /// Which handles each key shows.
+    private func handleSides(_ graph: KeyGraph) -> [KeyRef: Set<KeyHandleSide>] {
+        let segments = editorState.pickedSegments(layerID: layerID)
+        return graph.keys.indices.reduce(into: [:]) { sides, index in
+            let key = graph.keys[index]
+            if picked.contains(key.ref) { sides[key.ref, default: []].formUnion([.arriving, .leaving]) }
+            if segments.contains(key.ref) { sides[key.ref, default: []].insert(.leaving) }
+            if index > 0, segments.contains(graph.keys[index - 1].ref) { sides[key.ref, default: []].insert(.arriving) }
+        }
+    }
+
+    // MARK: What the value popover keeps off
+
+    /// When the value popover hangs from a key on this lane: the curve and
+    /// the handles drawn on it, measured from that key's middle, so the
+    /// popover can sit clear of the segment about to be shaped
+    /// (`KeyValuesPlacement`). A shut lane has nothing to keep off; nil when
+    /// the popover hangs from no key here.
+    private func keyValuesClear(_ graph: KeyGraph?, line: AnimatedLine, ruler: MotionStripRuler) -> KeyValuesClear? {
+        guard let anchor = editorState.keyValuesAnchor, anchor.layerID == layerID,
+              let key = lane.keys.first(where: { $0.ref == anchor.ref }) else { return nil }
+        guard let graph else { return KeyValuesClear(anchor: anchor, lines: []) }
+        let (low, high) = range(graph)
+        let heights = Dictionary(graph.keys.map { ($0.ref, $0.value) }, uniquingKeysWith: { a, _ in a })
+        var at = x(shownMS(key), ruler)
+        if let pointDrag, pointDrag.ref == key.ref { at = x(key.documentMS + pointDrag.byMS, ruler) }
+        let keyY = keyY(key, heights, low, high)
+        let middle = CGPoint(x: at, y: min(max(keyY, Self.grab / 2), height - Self.grab / 2))
+        var lines = line.segments + [line.before, line.after]
+        let sides = handleSides(graph)
+        for graphKey in graph.keys {
+            let from = CGPoint(x: x(graphKey.documentMS, ruler), y: y(graphKey.value, low: low, high: high))
+            for side in sides[graphKey.ref] ?? [] {
+                guard let point = side == .arriving ? graphKey.arriving : graphKey.leaving else { continue }
+                let spot = CGPoint(x: x(Int(Double(point.x).rounded()), ruler),
+                                   y: y(Double(point.y), low: low, high: high))
+                // The handle's line and its dot.
+                lines.append([from, spot])
+                lines.append([CGPoint(x: spot.x - 4, y: spot.y - 4), CGPoint(x: spot.x + 4, y: spot.y + 4)])
+            }
+        }
+        // Only what is drawn: the lane clips the curve at its top and bottom.
+        let shown = lines.map { $0.map { CGPoint(x: $0.x, y: min(max($0.y, 0), height)) } }
+        return KeyValuesClear(anchor: anchor,
+                              lines: shown.filter { $0.count > 1 }
+                                  .map { $0.map { CGPoint(x: $0.x - middle.x, y: $0.y - middle.y) } })
     }
 
     /// The handle is laid out in its own few points and moves with the hand,

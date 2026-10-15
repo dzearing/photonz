@@ -249,6 +249,17 @@
       "reads": "Mixed"
     },
     {
+      "comment": "The middle point's value bar opens clear of the curve and the handles on it, so the segment it starts stays in sight.",
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Scale"
+      ],
+      "reads": [
+        "200"
+      ]
+    },
+    {
       "do": "describe",
       "stage": "2-mixed",
       "note": "THE FIRST TEST: the first segment and the middle point picked together; the middle point starts the second segment, which runs on Ease out while the first runs on Ease in out, so the bar's Easing reads Mixed"

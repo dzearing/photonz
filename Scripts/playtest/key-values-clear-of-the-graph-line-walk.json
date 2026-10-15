@@ -1,0 +1,343 @@
+{
+  "out": "/tmp/photonz-playtest/key-values-clear-of-the-graph-line-walk",
+  "seed": "A point picked on an open graph keeps its value bar off the line being shaped. At Next defaults with no flag changed, this walk keys a title's Scale at one, three and five seconds rising 100, 200, 300 percent, opens its graph and clicks the middle point: its value bar opens above the point, clear of the segment rising out of it and the handles. Typing 50 makes the point a valley and the bar moves clear of both segments. With the graph shut, the bar opens above the key, centred, as before.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Ship it faster"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "200"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "press",
+      "control": "Scale Value"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "300"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Graph"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key Scale 2",
+      "present": true
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "comment": "THE FIRST TEST: a click on the middle point of a rising curve. A click lands only with Command while the probe is behind another app; with nothing picked, Command-click picks the point alone, as a plain click does.",
+      "do": "windowClick",
+      "on": "Key Scale 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyPick",
+      "keys": [
+        "Scale 2"
+      ]
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Scale"
+      ],
+      "reads": [
+        "200"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-rising",
+      "note": "THE FIRST TEST: Scale keyed 100, 200 and 300 percent at one, three and five seconds, its graph open; a click on the middle point opens its value bar above the point and clear of the segment rising out of it and of the point's handles"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-rising"
+    },
+    {
+      "comment": "THE SECOND TEST: 50 typed into the bar makes the middle point a valley; the bar moves off the two segments now rising either side of it.",
+      "do": "press",
+      "control": "Key value Scale"
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "50"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Scale"
+      ],
+      "reads": [
+        "50"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "2-valley",
+      "note": "THE SECOND TEST: 50 typed: the middle point is now the bottom of a valley, and its value bar has moved where it covers neither segment nor a handle"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-valley"
+    },
+    {
+      "comment": "THE THIRD TEST: the graph shut, a click on the same key opens the bar above it, centred, as on any closed row.",
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectKeyValues",
+      "present": false
+    },
+    {
+      "comment": "The lane's own curve button shuts the graph.",
+      "do": "press",
+      "control": "Graph Scale",
+      "in": "Timeline"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Value graph Scale",
+      "present": false
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Scale 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "windowClick",
+      "on": "Key Scale 2",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectKeyValues",
+      "present": true,
+      "rows": [
+        "Scale"
+      ],
+      "reads": [
+        "50"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-closed-row",
+      "note": "THE THIRD TEST: on the shut row the value bar opens above the key, centred on it, as it always has"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-closed-row"
+    }
+  ]
+}

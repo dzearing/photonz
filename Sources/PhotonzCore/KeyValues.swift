@@ -244,11 +244,20 @@ extension PhotonzDocument {
 /// Where the key popover sits: above the key it hangs from, centred on it,
 /// below it where there is no room above, slid in to stay inside the window,
 /// and never over the key (the mock's "Near the top of the timeline").
+///
+/// On an open graph the key is a point on a curve, and the popover keeps off
+/// the curve and the handles shaping it as well, so the segment a person is
+/// about to shape stays in sight: it slides along above the point, then tries
+/// below it, then beside it, and where no spot is clear it takes the one that
+/// covers least.
 public enum KeyValuesPlacement {
     /// Between the key and the popover.
     public static let gap: CGFloat = 8
     /// Between the popover and the window's edge.
     public static let margin: CGFloat = 8
+    /// How far off a line the popover keeps: a picked segment's stroke is
+    /// five points wide, and air past that so the line reads as its own.
+    public static let clearance: CGFloat = 8
 
     public static func frame(anchor: CGRect, size: CGSize, in bounds: CGRect) -> CGRect {
         let lowestX = bounds.minX + margin
@@ -257,5 +266,82 @@ public enum KeyValuesPlacement {
         let above = anchor.minY - gap - size.height
         let y = above >= bounds.minY + margin ? above : anchor.maxY + gap
         return CGRect(x: x, y: y, width: size.width, height: size.height)
+    }
+
+    /// The same, kept off `lines`: polylines in the anchor's own space (the
+    /// curve's segments and the handles drawn on it). With nothing to keep
+    /// off, or nothing under the plain spot, it is the plain spot.
+    public static func frame(anchor: CGRect, size: CGSize, in bounds: CGRect, clearOf lines: [[CGPoint]]) -> CGRect {
+        let plain = frame(anchor: anchor, size: size, in: bounds)
+        var best = plain
+        var least = covered(plain, by: lines)
+        guard least > 0 else { return plain }
+        for spot in spots(anchor: anchor, size: size, in: bounds) where !spot.intersects(anchor) {
+            let under = covered(spot, by: lines)
+            if under == 0 { return spot }
+            // Only a spot that covers clearly less moves it off the plain one.
+            if under < least - 0.5 {
+                best = spot
+                least = under
+            }
+        }
+        return best
+    }
+
+    /// How much of `lines` lies under `frame`, grown by the clearance, in
+    /// points of line.
+    public static func covered(_ frame: CGRect, by lines: [[CGPoint]]) -> CGFloat {
+        let box = frame.insetBy(dx: -clearance, dy: -clearance)
+        var length: CGFloat = 0
+        for line in lines {
+            if line.count == 1, let only = line.first, box.contains(only) { length += 1 }
+            for (a, b) in zip(line, line.dropFirst()) {
+                length += clippedLength(from: a, to: b, in: box)
+            }
+        }
+        return length
+    }
+
+    /// The spots worth trying, nearest the plain one first: along above the
+    /// key, then along below it, then beside it. Each is slid inside the
+    /// window; above and below are only tried where they fit.
+    private static func spots(anchor: CGRect, size: CGSize, in bounds: CGRect) -> [CGRect] {
+        let lowestX = bounds.minX + margin
+        let highestX = max(lowestX, bounds.maxX - margin - size.width)
+        let lowestY = bounds.minY + margin
+        let highestY = max(lowestY, bounds.maxY - margin - size.height)
+        func slid(x: CGFloat, y: CGFloat) -> CGRect {
+            CGRect(x: min(max(x, lowestX), highestX), y: min(max(y, lowestY), highestY),
+                   width: size.width, height: size.height)
+        }
+        let centred = anchor.midX - size.width / 2
+        let beside = size.width / 2 + anchor.width / 2 + gap
+        let along: [CGFloat] = [0, -size.width / 4, size.width / 4, -size.width / 2, size.width / 2, -beside, beside]
+        var spots: [CGRect] = []
+        let above = anchor.minY - gap - size.height
+        if above >= lowestY { spots += along.map { slid(x: centred + $0, y: above) } }
+        let below = anchor.maxY + gap
+        if below <= highestY { spots += along.map { slid(x: centred + $0, y: below) } }
+        let middle = anchor.midY - size.height / 2
+        spots.append(slid(x: anchor.minX - gap - size.width, y: middle))
+        spots.append(slid(x: anchor.maxX + gap, y: middle))
+        return spots
+    }
+
+    /// The length of the stretch from `a` to `b` inside `box` (Liang and
+    /// Barsky's clip).
+    private static func clippedLength(from a: CGPoint, to b: CGPoint, in box: CGRect) -> CGFloat {
+        let dx = b.x - a.x, dy = b.y - a.y
+        var enter: CGFloat = 0, leave: CGFloat = 1
+        for (p, q) in [(-dx, a.x - box.minX), (dx, box.maxX - a.x), (-dy, a.y - box.minY), (dy, box.maxY - a.y)] {
+            if p == 0 {
+                if q < 0 { return 0 }
+            } else {
+                let t = q / p
+                if p < 0 { enter = max(enter, t) } else { leave = min(leave, t) }
+            }
+        }
+        guard enter < leave else { return 0 }
+        return (leave - enter) * (dx * dx + dy * dy).squareRoot()
     }
 }

@@ -281,6 +281,9 @@ final class EditorState {
     /// Where that key is drawn, in window points, reported by the key itself
     /// so the popover follows it as the timeline scrolls or the graph moves.
     var keyValuesAnchorFrame: CGRect?
+    /// The curve and handles that key sits on, which the popover keeps off,
+    /// reported by its lane (an empty list on a shut lane).
+    var keyValuesClear: KeyValuesClear?
     /// Where the popover itself sits, in window points: a click outside it
     /// closes it, and a walk holds it off the key.
     var keyValuesPopoverFrame: CGRect?

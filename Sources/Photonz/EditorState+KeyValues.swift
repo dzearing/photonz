@@ -9,6 +9,18 @@ struct KeyValuesAnchor: Equatable {
     var ref: KeyRef
 }
 
+/// What the popover hanging from `anchor` keeps off: the lines drawn on its
+/// open graph, in points measured from the key's middle.
+struct KeyValuesClear: Equatable {
+    var anchor: KeyValuesAnchor
+    var lines: [[CGPoint]]
+
+    /// The lines in the same space as `keyFrame`, the key's drawn frame.
+    func lines(around keyFrame: CGRect) -> [[CGPoint]] {
+        lines.map { $0.map { CGPoint(x: $0.x + keyFrame.midX, y: $0.y + keyFrame.midY) } }
+    }
+}
+
 /// A click on a key opens a popover above it with that value at the key, to
 /// type (Next, `next-key-values`; `KeyValuesPopover`; the placement
 /// contract's "Named exception: the transform values", the key overlay).
@@ -50,6 +62,7 @@ extension EditorState {
 
     func dropKeyValues() {
         if keyValuesAnchor != nil { keyValuesAnchor = nil }
+        if keyValuesClear != nil { keyValuesClear = nil }
         if keyValuesPopoverFrame != nil { keyValuesPopoverFrame = nil }
     }
 
@@ -59,6 +72,14 @@ extension EditorState {
         guard showsKeyValues else { return false }
         dropKeyValues()
         return true
+    }
+
+    /// What the open popover keeps off, in window points: the curve and
+    /// handles of the graph its key sits on; nothing on a shut lane.
+    var keyValuesClearLines: [[CGPoint]] {
+        guard let anchor = keyValuesAnchor, let frame = keyValuesAnchorFrame,
+              let clear = keyValuesClear, clear.anchor == anchor else { return [] }
+        return clear.lines(around: frame)
     }
 
     // MARK: What it shows

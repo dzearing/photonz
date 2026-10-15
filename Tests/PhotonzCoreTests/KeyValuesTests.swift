@@ -226,4 +226,85 @@ struct KeyValuesPlacementTests {
                                              in: window)
         #expect(right.maxX == window.maxX - KeyValuesPlacement.margin)
     }
+
+    // On an open graph the key is a point on a curve: the popover keeps off
+    // the line as well as the point, so the segment about to be shaped stays
+    // in sight.
+
+    let point = CGRect(x: 600, y: 600, width: 14, height: 14)
+    var centre: CGPoint { CGPoint(x: point.midX, y: point.midY) }
+
+    /// A line through the point, sampled the way the graph draws it.
+    func line(_ from: CGPoint, _ to: CGPoint) -> [CGPoint] {
+        (0...20).map { step in
+            let t = CGFloat(step) / 20
+            return CGPoint(x: from.x + (to.x - from.x) * t, y: from.y + (to.y - from.y) * t)
+        }
+    }
+
+    func expectClear(_ frame: CGRect, of lines: [[CGPoint]]) {
+        #expect(KeyValuesPlacement.covered(frame, by: lines) == 0)
+        #expect(!frame.intersects(point))
+        #expect(window.insetBy(dx: KeyValuesPlacement.margin, dy: KeyValuesPlacement.margin).contains(frame))
+    }
+
+    @Test func coveredMeasuresHowMuchLineIsUnderTheFrame() {
+        let frame = CGRect(x: 100, y: 100, width: 100, height: 50)
+        #expect(KeyValuesPlacement.covered(frame, by: [line(CGPoint(x: 0, y: 300), CGPoint(x: 400, y: 300))]) == 0)
+        let across = KeyValuesPlacement.covered(frame, by: [line(CGPoint(x: 0, y: 125), CGPoint(x: 400, y: 125))])
+        #expect(abs(across - (100 + 2 * KeyValuesPlacement.clearance)) < 0.001)
+        #expect(KeyValuesPlacement.covered(frame, by: []) == 0)
+    }
+
+    @Test func aLineThatMissesTheSpotAboveChangesNothing() {
+        // A closed row: the line runs flat through the keys.
+        let flat = [line(CGPoint(x: 0, y: centre.y), CGPoint(x: 1200, y: centre.y))]
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: flat)
+        #expect(frame == KeyValuesPlacement.frame(anchor: point, size: size, in: window))
+        #expect(frame.midX == point.midX)
+        #expect(frame.maxY == point.minY - KeyValuesPlacement.gap)
+    }
+
+    @Test func onARisingCurveItStaysAboveAndOffTheSegmentLeavingThePoint() {
+        let lines = [line(CGPoint(x: 300, y: 680), centre), line(centre, CGPoint(x: 900, y: 520))]
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: lines)
+        expectClear(frame, of: lines)
+        #expect(frame.maxY <= point.minY)
+        // The plain spot above would have covered the line leaving the point.
+        #expect(KeyValuesPlacement.covered(KeyValuesPlacement.frame(anchor: point, size: size, in: window),
+                                           by: lines) > 0)
+    }
+
+    @Test func onAFallingCurveItStaysAboveAndOffTheSegmentArrivingAtThePoint() {
+        let lines = [line(CGPoint(x: 300, y: 520), centre), line(centre, CGPoint(x: 900, y: 680))]
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: lines)
+        expectClear(frame, of: lines)
+        #expect(frame.maxY <= point.minY)
+    }
+
+    @Test func inAValleyItGoesBelowThePoint() {
+        let lines = [line(CGPoint(x: 300, y: 450), centre), line(centre, CGPoint(x: 900, y: 450))]
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: lines)
+        expectClear(frame, of: lines)
+        #expect(frame.minY >= point.maxY)
+    }
+
+    @Test func aHandleLineIsKeptClearToo() {
+        // A flat curve, and the point's leaving handle pulled up and right.
+        let lines = [line(CGPoint(x: 0, y: centre.y), CGPoint(x: 1200, y: centre.y)),
+                     line(centre, CGPoint(x: centre.x + 60, y: centre.y - 60))]
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: lines)
+        expectClear(frame, of: lines)
+    }
+
+    @Test func whereNothingIsClearItTakesTheLeastCoveredSpotAndNeverTheKey() {
+        // Lines every way out of the point.
+        let lines = stride(from: 0.0, to: 360.0, by: 15.0).map { degrees -> [CGPoint] in
+            let radians = degrees * .pi / 180
+            return line(centre, CGPoint(x: centre.x + 500 * cos(radians), y: centre.y + 500 * sin(radians)))
+        }
+        let frame = KeyValuesPlacement.frame(anchor: point, size: size, in: window, clearOf: lines)
+        #expect(!frame.intersects(point))
+        #expect(window.contains(frame))
+    }
 }

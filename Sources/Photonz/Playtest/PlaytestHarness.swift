@@ -2492,6 +2492,12 @@ private final class Run {
                     if popover.intersects(key) {
                         wrong.append("the popover \(popover.integral) covers the key it hangs from \(key.integral)")
                     }
+                    // On an open graph: nor the curve or a handle on it.
+                    let under = KeyValuesPlacement.covered(popover, by: editor.keyValuesClearLines)
+                    if under > 0 {
+                        wrong.append("the popover \(popover.integral) covers \(Int(under.rounded(.up))) pt of "
+                                     + "the graph's line or handles")
+                    }
                     if let window = self.window?.contentView?.bounds,
                        !window.insetBy(dx: -1, dy: -1).contains(popover) {
                         wrong.append("the popover \(popover.integral) leaves the window \(window.integral)")
@@ -2501,7 +2507,9 @@ private final class Run {
                 }
             }
             guard wrong.isEmpty else { throw Failure(description: wrong.joined(separator: "; ")) }
-            note(number, step.name, shows ? "the key popover is up above its key: \(said)" : "the key popover is closed",
+            let clearOf = editor.keyValuesClearLines.isEmpty ? "" : ", clear of the graph's line and handles"
+            note(number, step.name, shows ? "the key popover is up beside its key\(clearOf): \(said)"
+                                          : "the key popover is closed",
                  state: describe())
 
         case .expectDrawn(let query, let opacity, let shown):

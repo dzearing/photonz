@@ -1,0 +1,23 @@
+{
+  "feature": "A point's value bar keeps off the curve on an open graph",
+  "epic": "video-transitions-motion",
+  "summary": "Clicking a point on an open value graph still opens its value bar beside the point, but the bar now slides to a spot that covers neither the curve nor the handles on it, so the segment you are about to shape stays in sight. On a shut row it opens above the key, centred, as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/key-values-clear-of-the-graph-line-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording, add a title, and key its Scale at 1s, 3s and 5s at 100, 200 and 300 percent." },
+    { "do": "Click Graph in the Animating row to open the Scale curve on the timeline." },
+    { "do": "Click the middle point. The bar opens above and to the left, clear of the segment rising to the right.", "shot": "2026-10-15-key-values-clear-of-the-graph-line-1-rising-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type 50 in the bar and press Return. The point becomes a valley and the bar moves clear of both segments.", "shot": "2026-10-15-key-values-clear-of-the-graph-line-2-valley-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape, shut the graph with the curve button on the Scale row, and click the same key. The bar opens centred above it.", "shot": "2026-10-15-key-values-clear-of-the-graph-line-3-closed-row-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "With the graph open, can you still see the whole segment leaving the point you clicked?",
+    "Does the bar still read as belonging to the point when it sits off to one side instead of centred above it?",
+    "Is it fine that the bar sits over the clip bar in the row above the graph, as it does on a shut row?"
+  ],
+  "rough": [
+    "The timeline's graph is short and near the window's foot, so below the point rarely fits: the bar mostly slides left or right above the point rather than dropping under it. Matches the mock's rule that it opens above the key and never over it (video-animate.html, THE KEY OVERLAY).",
+    "Where every spot near the point would cover some line (a point with handles pulled out every way), the bar takes the spot that covers the least rather than none."
+  ]
+}
