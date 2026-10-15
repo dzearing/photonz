@@ -1,0 +1,24 @@
+{
+  "feature": "A ring or arc arrives spinning",
+  "epic": "icon-animate",
+  "summary": "In an icon frame, adding Rotation to a ring or an arc now arrives as a spinner: 0 to 360, Linear, Forever, one turn every 1.2 seconds. Every other shape still arrives as the small swing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Make a 24 unit icon frame (New Frame, Icons, 24) and zoom to 800%." },
+    { "do": "Draw an arc with the pen: click, drag a bend, click, press Return." },
+    { "do": "In Motion, press the plus and choose Rotation.", "shot": "2026-10-15-ring-arc-spins-1-arc-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw a ring with the ellipse tool, select it and add Rotation the same way." },
+    { "do": "Draw a box, select it and add Rotation: it swings back and forth as before.", "shot": "2026-10-15-ring-arc-spins-2-box-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the arc start spinning the moment you add Rotation, with nothing to retype?",
+    "Is 1.2 seconds a turn the right pace to start from for a spinner?",
+    "Is it right that an ellipse on an ordinary picture (not in an icon frame) still arrives as the swing?"
+  ],
+  "rough": [
+    "The arc turns about its own middle when it arrives, as the mock's step 3 draws it, so it orbits until Around is set to Artboard (step 4). That matches the mock.",
+    "A closed curve drawn whole (a ball, a bell) still swings; only a ring, an open bent line, or a curve with part of its line trimmed away counts as a spinner.",
+    "A ring on a layer that sits on a video's timeline keeps the swing that plays once, since a video finishes rather than repeats."
+  ]
+}

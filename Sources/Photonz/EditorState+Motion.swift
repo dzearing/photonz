@@ -137,7 +137,8 @@ extension EditorState {
     func addMotion(_ property: MotionProperty) {
         guard let layer = motionLayer,
               !(layer.motions ?? []).contains(where: { $0.property == property }) else { return }
-        let motion = LayerMotion.starting(property, on: layer)
+        let motion = LayerMotion.starting(property, on: layer,
+                                          inIcon: document?.iconFrameID(containing: layer.id) != nil)
         perform { document in
             document.updateLayer(id: layer.id) { $0.motions = ($0.motions ?? []) + [motion] }
         }

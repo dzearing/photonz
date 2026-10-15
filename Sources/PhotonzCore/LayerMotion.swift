@@ -1324,7 +1324,11 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// now, so its own row reads "0° → 0°": add a motion and nothing whatsoever
     /// happens, which is a feature that looks broken on the first press. These
     /// start at something worth watching and get tuned from there.
-    public static func starting(_ property: MotionProperty, on layer: Layer) -> LayerMotion {
+    ///
+    /// `inIcon` says the layer is drawn inside an icon frame. There a ring or
+    /// an arc given Rotation is a spinner, so it arrives as one.
+    public static func starting(_ property: MotionProperty, on layer: Layer,
+                                inIcon: Bool = false) -> LayerMotion {
         let current = property.current(of: layer)
         // **A document finishes; an icon repeats.** A motion added to something
         // that occupies a stretch of a timeline plays ONCE and stays where it
@@ -1340,6 +1344,17 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             // somebody turned on purpose does not jerk upright the moment it
             // is told to move.
             let angle = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
+            // **A ring in an icon is a spinner.** The mock (icon-loop-wt.html
+            // step 3) has it arrive at a full turn, Linear, Forever, over the
+            // 1.2 s it draws, "because that is what you would have typed". A
+            // swing on a ring is a shape rocking that nobody asked for. A
+            // stretch of a timeline still finishes, so that keeps its swing.
+            if inIcon, layer.isRingOrArc, !layer.occupiesTime {
+                return LayerMotion(property: .rotation,
+                                   from: .number(angle), to: .number(angle + 360),
+                                   timing: MotionTiming(startMS: 0, durationMS: 1200),
+                                   curve: .linear, repeats: .forever, pivot: .centre)
+            }
             // The pivot arrives WITH it, on the middle of the layer, and the
             // handle for it is on the picture the same instant. That is
             // deliberately the wrong answer for a bell — it rocks like a
@@ -1495,6 +1510,24 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
                                timing: MotionTiming(startMS: 0, durationMS: 4000),
                                curve: .easeInOut, repeats: plays)
         }
+    }
+}
+
+extension Layer {
+
+    /// Whether this is a ring or an arc: the shape a spinner is made of.
+    ///
+    /// An ellipse, an open line with a bend in it, or any curved outline with
+    /// only part of its line drawn (a trimmed circle). A closed curve drawn
+    /// whole is a blob, a bell or a ball, and a straight line is a stroke:
+    /// those swing.
+    public var isRingOrArc: Bool {
+        if annotation?.shape == .ellipse { return true }
+        guard let path else { return false }
+        let bends = path.anchors.contains { $0.handleIn != nil || $0.handleOut != nil }
+        guard bends else { return false }
+        if !path.isClosed { return true }
+        return path.trim.map { !$0.isWhole } ?? false
     }
 }
 
