@@ -125,6 +125,53 @@ public enum FrontDoor {
         }
         return ordered.prefix(recentCount).map(\.element)
     }
+
+    /// The row a card under Recent shows under the pointer, in order: the
+    /// mock's Copy and Edit first, then Show in Finder, then what takes it
+    /// away. A capture is the history strip's (a recording has no Copy
+    /// there). A document you opened is yours wherever it lives, so its row
+    /// takes it off the list and never deletes the file.
+    public static func actions(for item: FrontDoorRecent) -> [FrontDoorCardAction] {
+        switch item {
+        case .capture(let entry, _):
+            (entry.kind == .image ? [.copy] : []) + [.edit, .showInFinder, .delete]
+        case .document:
+            [.copy, .edit, .showInFinder, .removeFromRecent]
+        }
+    }
+}
+
+/// One verb on a card under the front door's Recent.
+public enum FrontDoorCardAction: Hashable, Sendable, CaseIterable {
+    case copy, edit, showInFinder, delete, removeFromRecent
+
+    public var title: String {
+        switch self {
+        case .copy: "Copy"
+        case .edit: "Edit"
+        case .showInFinder: "Show in Finder"
+        case .delete: "Delete"
+        case .removeFromRecent: FrontDoor.removeFromRecentTitle
+        }
+    }
+}
+
+/// What Copy on a document's card puts on the clipboard: the picture a
+/// person pastes, the way a capture's Copy does.
+public enum FrontDoorCopy: Hashable, Sendable {
+    /// A saved project, drawn whole at full size.
+    case project
+    /// A picture file: the file and its picture, as a capture copies.
+    case picture
+    /// Anything else (a recording): the file itself, as a recording copies.
+    case file
+
+    public static func kind(for url: URL) -> FrontDoorCopy {
+        let ext = url.pathExtension.lowercased()
+        if ext == "photonz" { return .project }
+        if CaptureLibrary.imageExtensions.contains(ext) { return .picture }
+        return .file
+    }
 }
 
 /// One card under the front door's Recent: a capture from history, or a

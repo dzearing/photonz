@@ -577,7 +577,7 @@ struct PlaytestScriptTests {
           ]
         }
         """)
-        guard case .startFromFrontDoor(let tile, let press, let answer, let window, let card) = script.steps[0] else {
+        guard case .startFromFrontDoor(let tile, let press, let answer, let window, let card, _, _, _) = script.steps[0] else {
             Issue.record("startFromFrontDoor"); return
         }
         #expect(tile == "Design UI")
@@ -586,12 +586,36 @@ struct PlaytestScriptTests {
         #expect(window == CGSize(width: 1300, height: 900))
         #expect(card == "front-door")
         #expect(script.steps[0].name == "startFromFrontDoor")
-        guard case .startFromFrontDoor(nil, "New canvas", "Create", nil, nil) = script.steps[1] else {
+        guard case .startFromFrontDoor(nil, "New canvas", "Create", nil, nil, nil, [], nil) = script.steps[1] else {
             Issue.record("bare startFromFrontDoor"); return
         }
         #expect(PlaytestLockSafety.canRunLocked([script.steps[1]]))
         #expect(throws: (any Error).self) {
             try decode(#"{ "out": "/tmp/walk/out", "steps": [ { "do": "startFromFrontDoor", "tile": "Design UI" } ] }"#)
+        }
+    }
+
+    @Test("A startFromFrontDoor step can rest on a Recent card and click its row before the press")
+    func startFromFrontDoorRestsOnACard() throws {
+        let script = try decode("""
+        {
+          "out": "/tmp/walk/out",
+          "steps": [
+            { "do": "startFromFrontDoor", "rest": "project.photonz", "first": ["Copy project.photonz"],
+              "press": "Edit project.photonz", "gone": "old.photonz" }
+          ]
+        }
+        """)
+        guard case .startFromFrontDoor(nil, "Edit project.photonz", nil, nil, nil, let rest, let first, let gone)
+                = script.steps[0] else {
+            Issue.record("startFromFrontDoor with rest"); return
+        }
+        #expect(rest == "project.photonz")
+        #expect(first == ["Copy project.photonz"])
+        #expect(gone == "old.photonz")
+        #expect(PlaytestLockSafety.canRunLocked(script.steps))
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "out": "/x", "steps": [ { "do": "startFromFrontDoor", "press": "A", "first": ["B"] } ] }"#)
         }
     }
 

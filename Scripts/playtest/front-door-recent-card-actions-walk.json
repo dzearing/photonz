@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/front-door-recent-card-actions",
+  "setup": {
+    "forget": [
+      "recent"
+    ]
+  },
+  "seed": "A document's card under the front door's Recent offers the mock's Copy and Edit (ui-entry-wt.html, the Recent filmstrip), at Next defaults with no switch changed. A picture is saved as a project and its window closed. On New Window's front door the walk rests the pointer on the project's card, which brings up its row (Copy, Edit, Show in Finder, Remove from Recent) in place of its time, and photographs it. Copy, clicked by pointer, puts the project's picture on the clipboard drawn whole (PNG and TIFF, never the package); Edit, clicked by pointer, opens it in a window of its own and the front door closes. The window is closed, and on a second front door Remove from Recent, clicked by pointer, takes the card off Recent without touching the file, and New canvas opens a blank canvas. Show in Finder is not clicked: it brings Finder to the front over whoever is at the Mac.",
+  "steps": [
+    { "do": "appearance", "value": "light" },
+    { "do": "open", "file": "fixtures/Hero banner.png" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "saveProjectAs" },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "clearClipboard" },
+    {
+      "do": "startFromFrontDoor",
+      "rest": "project.photonz",
+      "first": ["Copy project.photonz"],
+      "press": "Edit project.photonz",
+      "width": 1100,
+      "height": 760,
+      "card": "card-actions-1-row"
+    },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "readClipboard", "stage": "2-copied", "behind": "painted" },
+    { "do": "expectWindows", "titled": "project.photonz", "count": 1 },
+    {
+      "do": "describe",
+      "stage": "3-edited",
+      "note": "Edit on the project's card opened project.photonz in a window of its own, and the front door closed."
+    },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "startFromFrontDoor",
+      "rest": "project.photonz",
+      "first": ["Remove from Recent project.photonz"],
+      "gone": "project.photonz",
+      "press": "New canvas",
+      "answer": "Create",
+      "card": "card-actions-4-removed"
+    },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 }
+  ]
+}

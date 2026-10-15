@@ -118,6 +118,31 @@ struct FrontDoorTests {
         #expect(recent.first?.date == now)
     }
 
+    @Test("A recent card's row: the mock's Copy and Edit first, and a document is never deleted from it")
+    func cardActions() {
+        let now = Date()
+        let shot = FrontDoorRecent.capture(CaptureEntry(url: URL(fileURLWithPath: "/caps/shot.png"),
+                                                        createdAt: now, kind: .image), usedAt: now)
+        let clip = FrontDoorRecent.capture(CaptureEntry(url: URL(fileURLWithPath: "/caps/clip.mov"),
+                                                        createdAt: now, kind: .video), usedAt: now)
+        let project = FrontDoorRecent.document(RecentDocument(url: URL(fileURLWithPath: "/w/hero.photonz"),
+                                                              usedAt: now))
+        #expect(FrontDoor.actions(for: shot) == [.copy, .edit, .showInFinder, .delete])
+        #expect(FrontDoor.actions(for: clip) == [.edit, .showInFinder, .delete])
+        #expect(FrontDoor.actions(for: project) == [.copy, .edit, .showInFinder, .removeFromRecent])
+        #expect(FrontDoorCardAction.removeFromRecent.title == FrontDoor.removeFromRecentTitle)
+        #expect(FrontDoorCardAction.copy.title == "Copy")
+    }
+
+    @Test("Copying a document puts its picture on the clipboard: a project drawn whole, a picture as itself")
+    func documentCopy() {
+        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/hero.photonz")) == .project)
+        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/Hero banner.PNG")) == .picture)
+        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/photo.heic")) == .picture)
+        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/talk.mov")) == .file)
+        #expect(FrontDoorCopy.kind(for: URL(fileURLWithPath: "/w/notes.pdf")) == .file)
+    }
+
     @Test("The front door is on by default in Next and absent from Current")
     func flag() {
         #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.frontDoorFlag))

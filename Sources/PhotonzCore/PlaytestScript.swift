@@ -2633,7 +2633,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// their size sheet), is the sheet's button pressed by pointer next:
     /// "Create". `window` and `card` are `blank`'s; `card` photographs the
     /// front door with the tile picked.
-    case startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?, card: String?)
+    case startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?, card: String?,
+                            rest: String?, first: [String], gone: String?)
     /// Let the editor finish what the step before started. It ends the moment
     /// the app goes quiet, which is why a walk's waits cost seconds rather than
     /// minutes.
@@ -4479,9 +4480,17 @@ public enum PlaytestStep: Sendable, Equatable {
         case "startFromFrontDoor":
             let width = try f.optionalNumber("width"), height = try f.optionalNumber("height")
             let window: CGSize? = if let width, let height { CGSize(width: width, height: height) } else { nil }
+            let rest = try f.optionalString("rest")
+            let first = try f.optionalStrings("first")
+            // A card's row is only there under the pointer, so clicking it
+            // first needs the pointer resting on the card.
+            if !first.isEmpty && rest == nil {
+                throw f.invalid("first", "clicks a Recent card's row, which is only up with \"rest\" naming the card")
+            }
             self = .startFromFrontDoor(tile: try f.optionalString("tile"), press: try f.string("press"),
                                        answer: try f.optionalString("answer"),
-                                       window: window, card: try f.optionalString("card"))
+                                       window: window, card: try f.optionalString("card"),
+                                       rest: rest, first: first, gone: try f.optionalString("gone"))
         case "wait":
             let bound = try f.optionalNumber("longestUnderMS")
             if let bound, !(bound > 0 && bound.isFinite) {

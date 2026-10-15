@@ -530,7 +530,7 @@ public enum PlaytestLockSafety {
         case .blank(_, _, let card, _): card != nil
         case .blankVideo(_, let card): card != nil
         case .startFromEmpty(_, _, let card): card != nil
-        case .startFromFrontDoor(_, _, _, _, let card): card != nil
+        case .startFromFrontDoor(_, _, _, _, let card, _, _, _): card != nil
         default: false
         }
     }

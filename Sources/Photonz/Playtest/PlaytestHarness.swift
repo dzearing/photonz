@@ -969,9 +969,9 @@ private final class Run {
 
         case .startFromEmpty(let row, let size, let card):
             try await startFromEmpty(row: row, window: size, card: card, number: number)
-        case .startFromFrontDoor(let tile, let press, let answer, let size, let card):
+        case .startFromFrontDoor(let tile, let press, let answer, let size, let card, let rest, let first, let gone):
             try await startFromFrontDoor(tile: tile, press: press, answer: answer, window: size, card: card,
-                                         number: number)
+                                         rest: rest, first: first, gone: gone, number: number)
 
         case .open(let file, let size):
             let url = try fileURL(file)
@@ -14902,7 +14902,8 @@ private final class Run {
     /// here. The walk then takes over the editor window that opened, and
     /// fails unless the front door closed on its own.
     private func startFromFrontDoor(tile: String?, press: String, answer: String?, window: CGSize?,
-                                    card: String?, number: Int) async throws {
+                                    card: String?, rest: String?, first: [String], gone: String?,
+                                    number: Int) async throws {
         guard Experiments.shared.frontDoorEnabled else {
             throw Failure(description: "New Window opens no front door in this release: next-front-door is off")
         }
@@ -14918,6 +14919,29 @@ private final class Run {
         try await adoptEmpty(door, step: "startFromFrontDoor", subject: "the front door", number: number)
         if let tile {
             try await pressControl(tile, in: nil, count: 1, modifiers: [], across: nil, number: number)
+        }
+        if let rest {
+            // The pointer on a Recent card, the way a hand rests there: its
+            // row of actions comes up in place of its time.
+            let (found, _) = try await reachableTarget(rest, in: nil)
+            let target = await settled(found, named: rest, in: nil).target
+            guard let doorWindow = door.hostWindow, target.window === doorWindow else {
+                throw Failure(description: "\"\(rest)\" is not on the front door")
+            }
+            let pointer = PlaytestPointer.rest(at: target.point, in: doorWindow)
+            await sleep(0.3)
+            note(number, "startFromFrontDoor", "rested on \"\(rest)\" at window \(short(target.point)); \(pointer)")
+        }
+        for name in first {
+            try await pressControl(name, in: nil, count: 1, modifiers: [], across: nil, number: number)
+            await sleep(0.3)
+        }
+        if let gone {
+            // A card taken off Recent is no longer on the front door at all.
+            try await poll("\"\(gone)\" to leave the front door", within: 3) {
+                (try? self.pressTarget(gone, in: nil)) == nil
+            }
+            note(number, "startFromFrontDoor", "\"\(gone)\" is no longer on the front door")
         }
         if let card {
             try await photographEmptyWindow(door, window: nil, name: card, number: number)

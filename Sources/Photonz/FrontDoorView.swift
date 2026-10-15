@@ -1,5 +1,6 @@
 import AppKit
 import PhotonzCore
+import PhotonzRender
 import SwiftUI
 
 extension EnvironmentValues {
@@ -364,46 +365,88 @@ private struct FrontDoorRecentCard: View {
 }
 
 extension FrontDoorRecentCard {
-    /// The history strip's actions for one capture: Copy, Edit, Show in
-    /// Finder and Delete (`HistoryOverlay`). A recording copies as its file.
-    /// A document you opened is yours wherever it lives, so its row never
-    /// deletes it: it opens, shows in Finder, or comes off the list.
+    /// The row under the pointer (`FrontDoor.actions`): the history strip's
+    /// for a capture, and for a document Copy, Edit, Show in Finder and
+    /// Remove from Recent, never Delete.
     fileprivate var actions: some View {
-        let store = coordinator.capture.store
-        return HStack(spacing: 2) {
-            switch item {
-            case .capture(let entry, _):
-                if entry.kind == .image {
-                    iconButton("Copy", "doc.on.doc") { store.copyToPasteboard(entry) }
-                }
-                iconButton("Edit", "square.and.pencil") { open() }
-                iconButton("Show in Finder", "folder") { coordinator.revealInFinder(entry.url) }
-                iconButton("Delete", "trash", role: .destructive) { store.remove(entry) }
-            case .document(let document):
-                iconButton("Edit", "square.and.pencil") { open() }
-                iconButton("Show in Finder", "folder") { coordinator.revealInFinder(document.url) }
-                iconButton(FrontDoor.removeFromRecentTitle, "xmark") {
-                    RecentDocumentsStore.shared.remove(document.url)
-                }
+        HStack(spacing: 2) {
+            ForEach(FrontDoor.actions(for: item), id: \.self) { action in
+                iconButton(action.title, Self.symbol(action),
+                           role: action == .delete ? .destructive : nil) { perform(action) }
             }
         }
         .buttonStyle(IconActionButtonStyle(diameter: 24))
     }
 
-    /// The same verbs on a right click, where a Mac hand looks for them.
+    /// The same verbs on a right click, where a Mac hand looks for them:
+    /// Open first, what takes the card away last, past a divider.
     @ViewBuilder fileprivate var menu: some View {
+        let actions = FrontDoor.actions(for: item)
         Button("Open") { open() }
-        Button("Show in Finder") { coordinator.revealInFinder(item.url) }
-        switch item {
-        case .capture(let entry, _):
-            if entry.kind == .image {
-                Button("Copy") { coordinator.capture.store.copyToPasteboard(entry) }
+        ForEach(actions.filter { $0 != .edit && !Self.takesItAway($0) }, id: \.self) { action in
+            Button(action.title) { perform(action) }
+        }
+        Divider()
+        ForEach(actions.filter(Self.takesItAway), id: \.self) { action in
+            Button(action.title, role: action == .delete ? .destructive : nil) { perform(action) }
+        }
+    }
+
+    private static func takesItAway(_ action: FrontDoorCardAction) -> Bool {
+        action == .delete || action == .removeFromRecent
+    }
+
+    private static func symbol(_ action: FrontDoorCardAction) -> String {
+        switch action {
+        case .copy: "doc.on.doc"
+        case .edit: "square.and.pencil"
+        case .showInFinder: "folder"
+        case .delete: "trash"
+        case .removeFromRecent: "xmark"
+        }
+    }
+
+    private func perform(_ action: FrontDoorCardAction) {
+        let store = coordinator.capture.store
+        switch (action, item) {
+        case (.copy, .capture(let entry, _)): store.copyToPasteboard(entry)
+        case (.copy, .document(let document)): Self.copy(document, store: store)
+        case (.edit, _): open()
+        case (.showInFinder, _): coordinator.revealInFinder(item.url)
+        case (.delete, .capture(let entry, _)): store.remove(entry)
+        case (.removeFromRecent, .document(let document)): RecentDocumentsStore.shared.remove(document.url)
+        case (.delete, .document), (.removeFromRecent, .capture): break
+        }
+    }
+
+    /// A document's picture on the clipboard (`FrontDoorCopy`): a picture
+    /// file the way a capture copies, a project drawn whole at full size,
+    /// and a recording as its file.
+    private static func copy(_ document: RecentDocument, store: CaptureStore) {
+        let url = document.url
+        switch FrontDoorCopy.kind(for: url) {
+        case .picture:
+            store.copyToPasteboard(CaptureEntry(url: url, createdAt: document.usedAt, kind: .image))
+        case .file:
+            ClipboardWriter.writeFile(url)
+        case .project:
+            Task {
+                let png = await Task.detached(priority: .userInitiated) { () -> Data? in
+                    let images = ImageStore()
+                    guard let project = try? PackageIO.read(from: url, into: images),
+                          let picture = DocumentRenderer().render(project, store: images) else { return nil }
+                    return ImageCodec.encode(picture, format: .png)
+                }.value
+                // A project that will not draw (moved, or saved by a newer
+                // build) copies as its file, so Copy never does nothing.
+                guard let png else { ClipboardWriter.writeFile(url); return }
+                let pasteboard = NSPasteboard.general
+                pasteboard.clearContents()
+                pasteboard.setData(png, forType: .png)
+                if let tiff = NSImage(data: png)?.tiffRepresentation {
+                    pasteboard.setData(tiff, forType: .tiff)
+                }
             }
-            Divider()
-            Button("Delete", role: .destructive) { coordinator.capture.store.remove(entry) }
-        case .document(let document):
-            Divider()
-            Button(FrontDoor.removeFromRecentTitle) { RecentDocumentsStore.shared.remove(document.url) }
         }
     }
 
