@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 150,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:50:32.894Z",
-  "updated": "2026-10-14T12:18:03.916Z",
+  "updated": "2026-10-15T03:28:17.258Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence, queue/loop.log and queue/loop.log.1: across the last 16 rotating checks this walk read 'as declared' 11 times and 'TOOK FOCUS' 5 times (2026-10-10 01:14, 07:37, 10:04 local; 2026-10-10 23:41; 2026-10-11 05:37), always with the same 20 ticks lost. The alarm lines blame step 9 (snapshot) or step 10 (expectClip), and step 25 (snapshot), each 'activated com.dzearing.photonz.probe'; the declared drag steps are 11, 20, 26 and 38 (windowDrag). A non-drag step activating is what turns 'as declared' into 'TOOK FOCUS' (queue/bin/focus-drill.sh around line 180, the 'declared' set and stepAt, which places a moment by the walk's log time plus a zero worked out from done.json's mtime). Theory, not checked: the activation that belongs to the drag at step 11 or 26 lands a moment early on the clock and is put on the step before. The alarm says 'this is a bug in the walk harness or the app, not in the walk'. Filed by the 2026-10-11 digest.",
@@ -51,6 +51,27 @@
     {
       "t": "2026-10-14T12:18:03.915Z",
       "note": "seq 120 -> 150"
+    },
+    {
+      "t": "2026-10-15T03:04:52.222Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T03:28:17.067Z",
+      "note": "Reproduced 2026-10-14 with nobody at the Mac: 10 drill runs, 7 'as declared', 3 'TOOK FOCUS' (run 1 blamed step 37 snapshot; run 2 step 10 expectClip + step 25 snapshot; run 6 step 9 snapshot + step 25 snapshot). Every run lost the same 20 ticks, all inside the four drags."
+    },
+    {
+      "t": "2026-10-15T03:28:17.131Z",
+      "note": "Which it is: the check, not the walk. Measured each probe activation against the step boundaries: in all 40 drags of the 10 runs the activation came 0 to 27 ms after the step before the drag logged, i.e. at the drag's start (takeTheFrontForADrag). The drill rebuilt the walk's start as done.json mtime minus 'seconds', and 'seconds' is rounded to 10 ms, so a few ms of error put the drag's own activation before the boundary, on the previous step (or two back when an instant expectClip sat between). On the exact clock (new startedAtMS) the same activations land 8 to 22 ms after the boundary."
+    },
+    {
+      "t": "2026-10-15T03:28:17.192Z",
+      "note": "Fix: the harness writes startedAtMS into done.json (PlaytestHarness.finish); the drill's reader moved out of focus-drill.sh into queue/bin/focus-drill-read.mjs, uses the exact start (mtime fallback for older probes) and gives an event up to 50 ms ahead of a DECLARED drag's start to that drag, nothing else. queue/bin/focus-drill-read-drill.mjs replays the failing run 2 (fixture queue/bin/fixtures/focus-trace-linked-sound.json) and made-up cases: all 13 ok."
+    },
+    {
+      "t": "2026-10-15T03:28:17.256Z",
+      "note": "After the fix: the 10 saved runs replayed through the new reader all read 'as declared'; 10 fresh drill runs on a probe built with the exact clock all read 'as declared'; a real theft (open -b on the probe while the walk sat in step 2's wait) read TOOK FOCUS blaming step 2 (wait), 3 and 4, with the drags still on their own steps. --check: all 8 standing walks clean or as declared. Scripts/test.sh green (13181 tests). Acceptance 4 (a day of the loop's checks with no red alarm for this walk) can only be counted after a day: grep -A1 'a-clip-s-sound-is-linked-under-it-walk  ' queue/loop.log | grep -c 'TOOK FOCUS' on entries after this commit."
     }
-  ]
+  ],
+  "started": "2026-10-15T03:04:52.221Z"
 }

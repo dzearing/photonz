@@ -35,6 +35,10 @@
 # screen's corner; and the Welcome window floated over their work while it was
 # open (AppFront.present).
 #
+# Placing the canary's moments on the walk's steps is queue/bin/focus-drill-read.mjs
+# (drilled by focus-drill-read-drill.mjs): the walk's clock has to be exact,
+# since a drag takes the front a few milliseconds after the step before it ends.
+#
 # Exits 0 when every walk that ran was clean or only showed a menu it
 # photographs, 1 when one took focus, and 6 (DEFERRED) when somebody was using
 # the Mac: the canary takes the front, so it never runs under a person's hands.
@@ -127,69 +131,7 @@ for w in "${WALKS[@]}"; do
   fi
   EXPECTED="$(queue/bin/walk-needs-the-mac.mjs "$FILE" 2>/dev/null || true)"
   OUT="$(sed -n 's/^==> Waiting up to [0-9]*s for \(.*\)\/done.json$/\1/p' "$RUN/$NAME.out" | head -1)"
-  node - "$TRACE" "$OUT" "$BEGAN" "$ENDED" "$NAME" "$CODE" "$FILE" "$EXPECTED" <<'NODE' || WORST=1
-const fs = require("fs");
-const [trace, out, began, ended, name, code, walk, expected] = process.argv.slice(2);
-const lines = fs.readFileSync(trace, "utf8").split("\n").filter(Boolean).map(l => JSON.parse(l));
-const canaryPid = lines.find(l => l.kind === "start")?.pid;
-// Where the walk was, on the wall clock, from its own log. A log line is
-// written as a step FINISHES, so whatever happened after step N's line and
-// before step N+1's belongs to step N+1, named from the walk's own script.
-let done = [];
-let script = [];
-try { script = JSON.parse(fs.readFileSync(walk, "utf8")).steps || []; } catch {}
-try {
-  const log = JSON.parse(fs.readFileSync(out + "/log.json", "utf8"));
-  const result = JSON.parse(fs.readFileSync(out + "/done.json", "utf8"));
-  const zero = fs.statSync(out + "/done.json").mtimeMs - result.seconds * 1000;
-  for (const e of log) if (e.step > 0) done.push({ step: e.step, ms: zero + e.t * 1000 });
-} catch {}
-const stepAt = ms => {
-  let last = 0;
-  for (const d of done) if (d.ms <= ms && d.step > last) last = d.step;
-  const running = last + 1;
-  const what = script[running - 1]?.do;
-  return what ? `step ${running} (${what})` : last ? `after step ${last}` : "launch and setup";
-};
-const inWalk = l => l.ms >= +began && l.ms <= +ended;
-const took = new Map();
-const note = (ms, why) => {
-  const at = stepAt(ms);
-  if (!took.has(at)) took.set(at, new Set());
-  took.get(at).add(why);
-};
-let lost = 0, ticks = 0, covered = 0;
-for (const l of lines.filter(inWalk)) {
-  if (l.kind === "activate" && l.pid !== canaryPid) note(l.ms, `activated ${l.app}`);
-  if (l.kind !== "tick") continue;
-  ticks++;
-  if (!l.landed) {
-    lost++;
-    const menu = (l.probe || []).some(p => p.layer >= 101);
-    note(l.ms, menu ? "a probe menu held the keys" : !l.active ? `front was ${l.front}` : "canary window not key");
-  }
-  if ((l.probe || []).some(p => p.above && p.layer < 101 && (p.alpha ?? 1) > 0)) { covered++; note(l.ms, "probe window above the canary"); }
-}
-// A walk that photographs an open menu takes the keys for that picture and
-// nothing else; anything more than the menu (another app active, the walk's
-// window over the canary) is still a theft.
-const onlyMenus = [...took.values()].every(why => [...why].every(w =>
-  w === "a probe menu held the keys" || w === "canary window not key"));
-// A real drag takes the front on purpose for as long as the button is down
-// (walk-needs-the-mac.mjs names those steps); a theft anywhere else in the
-// walk, or at a drag step the walk did not declare, is still a theft.
-const declared = new Set((expected.match(/step \d+ \((?:windowDrag|dragGrip)/g) || []).map(s => s.match(/\d+/)[0]));
-const menuOnly = why => [...why].every(w => w === "a probe menu held the keys" || w === "canary window not key");
-const wholeWalk = /setup front/.test(expected);
-const asDeclared = wholeWalk || [...took.entries()].every(([at, why]) =>
-  menuOnly(why) || declared.has((at.match(/^step (\d+)/) || [])[1]));
-const verdict = !took.size ? "clean" : expected && onlyMenus ? "menu shown"
-  : expected && asDeclared ? "as declared" : "TOOK FOCUS";
-console.log(`${name.padEnd(48)} ${verdict.padEnd(10)} ${lost}/${ticks} ticks lost, ${covered} covered, walk exit ${code}`);
-if (verdict === "menu shown" || verdict === "as declared") console.log(`    expected: it ${expected}`);
-for (const [at, why] of took) console.log(`    ${at}: ${[...why].join("; ")}`);
-process.exit(verdict === "TOOK FOCUS" ? 1 : 0);
-NODE
+  node queue/bin/focus-drill-read.mjs "$TRACE" "$OUT" "$BEGAN" "$ENDED" "$NAME" "$CODE" "$FILE" "$EXPECTED" || WORST=1
 done
 
 pgrep -f "$CANARY" >/dev/null && pkill -f "$CANARY"

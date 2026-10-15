@@ -725,6 +725,12 @@ private final class Run {
         var done: [String: Any] = [
             "status": status, "steps": steps, "script": scriptURL.path, "out": out.path,
             "seconds": (Date().timeIntervalSince(startedAt) * 100).rounded() / 100,
+            // The zero every log line's `t` counts from, on the wall clock.
+            // queue/bin/focus-drill-read.mjs places the canary's moments on
+            // steps with it; worked out from this file's time less the rounded
+            // `seconds`, it was 5 ms off often enough to put a drag's own
+            // activation on the step before and cry theft (2026-10-14).
+            "startedAtMS": (startedAt.timeIntervalSince1970 * 1_000_000).rounded() / 1000,
             // Sleeping the walk asked for and did not need, because the editor
             // had already finished. Worth having on the record: it is the
             // difference between this walk and the same walk under
