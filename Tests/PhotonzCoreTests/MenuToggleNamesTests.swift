@@ -17,6 +17,15 @@ import Testing
         #expect(MenuToggleNames.snapInTimeline == "Snap in Timeline")
     }
 
+    /// The icon mock's Snap to row, word for word, under one View menu
+    /// submenu the way Photoshop keeps its own Snap To choices.
+    @Test func theIconSnapChoicesWearTheMocksWords() {
+        #expect(MenuToggleNames.snapInIcons == "Snap in Icons")
+        #expect(MenuToggleNames.iconSnapGrid == "Grid")
+        #expect(MenuToggleNames.iconSnapKeylines == "Keylines")
+        #expect(MenuToggleNames.iconSnapGeometry == "Geometry")
+    }
+
     /// A row in a list is already the thing, so its menu says what the row IS
     /// rather than what a click would do to it.
     @Test func aRowSaysWhatItIsRatherThanWhatAClickWouldDo() {
@@ -42,8 +51,8 @@ import Testing
     /// a name in this file shows up as a missing entry rather than silently
     /// growing its own flip.
     @Test func everyOnOffItemInTheAppIsAccountedFor() {
-        #expect(MenuToggleNames.all.count == 10)
-        #expect(Set(MenuToggleNames.all).count == 10)
+        #expect(MenuToggleNames.all.count == 13)
+        #expect(Set(MenuToggleNames.all).count == 13)
     }
 
     // MARK: The capture menus agree with it

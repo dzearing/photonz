@@ -4931,6 +4931,22 @@ struct PlaytestScriptTests {
         #expect(script.steps[0].name == "expectPath")
     }
 
+    // MARK: - The readout beside the landing mark in an icon
+
+    @Test("An expectLanding step can claim the words on the icon's readout")
+    func expectLandingReadsThePill() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectLanding", "near": [115, 113], "says": "15, 13" },
+                     { "do": "expectLanding", "near": [115, 113] } ] }
+        """)
+        guard case .expectLanding(_, _, _, let says) = script.steps[0],
+              case .expectLanding(_, _, _, let unasked) = script.steps[1] else {
+            Issue.record("expectLanding"); return
+        }
+        #expect(says == "15, 13")
+        #expect(unasked == nil)
+    }
+
     // MARK: - What the Pen's points say they are
 
     @Test("An expectPenMarks step lists the mark each placed point wears, in order")

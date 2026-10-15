@@ -285,9 +285,17 @@ extension CanvasNSView {
     }
 
     func penIconSnap(at p: CGPoint?) -> IconSnap? {
-        guard framesEnabled, let document, document.hasIconFrames,
-              let aim = penSession.anchors.first?.point ?? p else { return nil }
-        return document.iconSnap(at: aim, keylines: iconKeylines)
+        iconSnap(at: penSession.anchors.first?.point ?? p)
+    }
+
+    /// What a point drawn inside the icon frame under `aim` is pulled onto,
+    /// with the pulls View ▸ Snap in Icons has on, or nil when `aim` is not on
+    /// an icon. The Pen and the shape tools both ask here, so a box and a path
+    /// drawn on one icon land on the same units and find each other.
+    func iconSnap(at aim: CGPoint?) -> IconSnap? {
+        guard framesEnabled, let document, document.hasIconFrames, let aim else { return nil }
+        return document.iconSnap(at: aim, keylines: iconKeylines,
+                                 choices: IconSnapStore.shared.choices)
     }
 
     /// Return and Escape with the Pen in hand. True when the pen answered the

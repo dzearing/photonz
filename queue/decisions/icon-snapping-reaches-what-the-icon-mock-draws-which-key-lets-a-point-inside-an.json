@@ -1,0 +1,50 @@
+{
+  "id": "icon-snapping-reaches-what-the-icon-mock-draws-which-key-lets-a-point-inside-an",
+  "taskId": "icon-snapping-reaches-what-the-icon-mock-draws",
+  "question": "Which key lets a point inside an icon land exactly where you put it?",
+  "context": "Inside an icon frame points now land on whole units, the keylines and the shapes already drawn, and View > Snap in Icons turns each pull on or off. The icon mock says holding Control suspends snapping for one drag; across the rest of the canvas Command has always meant exactly where I put it.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Command, as everywhere on the canvas",
+      "summary": "Holding Command while you click or drag puts the point exactly under the pointer, inside an icon frame and everywhere else alike. The mock line that says Control is not built.",
+      "pros": [
+        "One key for no magnets across the whole canvas, already learned from screenshots, measuring and the grid",
+        "Control-click stays what it is on every Mac: a right-click"
+      ],
+      "cons": [
+        "Differs from the icon mock, which says Control"
+      ],
+      "mitigation": "The View menu rows Snap in Icons > Grid, Keylines and Geometry turn each pull off for as long as you like, for the cases one held key does not cover."
+    },
+    {
+      "id": "b",
+      "label": "Control inside icons, Command elsewhere",
+      "summary": "Inside an icon frame, holding Control during a drag lets the point land exactly where you put it, as the mock says. Command keeps doing it everywhere else.",
+      "pros": [
+        "Matches the icon mock word for word"
+      ],
+      "cons": [
+        "Two keys for one idea, depending on where you are drawing",
+        "Control held as you press is a right-click on the Mac, so it opens the menu instead of starting the drag: it only works if you press first and then hold Control"
+      ],
+      "mitigation": "Control would be read only once the drag is under way, and the tooltip would say so."
+    },
+    {
+      "id": "c",
+      "label": "Both keys inside icons",
+      "summary": "Inside an icon frame either Command or Control frees the point; outside, Command only.",
+      "pros": [
+        "Someone following the mock and someone used to the rest of the canvas both get what they expect"
+      ],
+      "cons": [
+        "Two answers to one question",
+        "Same right-click catch as Control alone"
+      ],
+      "mitigation": "Command stays the one the menus and tooltips name; Control works quietly as a second door mid-drag."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-15T12:06:56.718Z"
+}

@@ -2593,6 +2593,25 @@ struct EditorCommands: Commands {
                 get: { editor?.iconKeylinesShowing ?? false },
                 set: { _ in editor?.toggleIconKeylines() }))
             .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
+            // What a point inside an icon is pulled onto, each pull on its
+            // own: the icon mock's Snap to row (`icon-draw-wt.html`), here
+            // because snapping is how you look at the work, like the grid's
+            // own Snap above (UX-PATTERNS placement contract). Keylines is
+            // dimmed while they are hidden, for the reason Snap to Grid is:
+            // a pull towards lines nobody can see feels like a bug.
+            Menu(MenuToggleNames.snapInIcons) {
+                Toggle(MenuToggleNames.iconSnapGrid, isOn: Binding(
+                    get: { editor?.iconSnapChoices.grid ?? true },
+                    set: { _ in editor?.toggleIconSnap(\.grid) }))
+                Toggle(MenuToggleNames.iconSnapKeylines, isOn: Binding(
+                    get: { editor?.iconSnapChoices.keylines ?? true },
+                    set: { _ in editor?.toggleIconSnap(\.keylines) }))
+                .disabled(!(editor?.iconKeylinesShowing ?? false))
+                Toggle(MenuToggleNames.iconSnapGeometry, isOn: Binding(
+                    get: { editor?.iconSnapChoices.geometry ?? true },
+                    set: { _ in editor?.toggleIconSnap(\.geometry) }))
+            }
+            .disabled(!hasDocument || !(editor?.hasIconFrames ?? false))
         }
         // Last, where every Mac app has it, on the Mac's own ⌃⌘F, for a
         // picture or a video, the player or the editor (`PlayerFullScreen`).

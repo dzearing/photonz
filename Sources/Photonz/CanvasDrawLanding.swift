@@ -104,13 +104,24 @@ extension CanvasNSView {
             // its own anchors, and nothing about the picture underneath. So it
             // has something to aim at exactly when the grid is pulling, or
             // when the pointer is on an icon, whose units always pull.
-            guard canvasSnapSpacing != nil || penIconSnap(at: pointer) != nil else { return nil }
+            let icon = penIconSnap(at: pointer)
+            guard canvasSnapSpacing != nil || icon != nil else { return nil }
             let aim = penSession.landing(at: pointer,
                                          constrained: pointerModifiers.contains(.shift),
                                          breaking: pointerModifiers.contains(.option),
                                          zoom: viewport.zoom)
             guard !aim.isOnAnExistingAnchor else { return nil }
+            // With the icon's units switched off, a point nothing caught lands
+            // under the pointer, and a ring there would carry no news.
+            if let icon, !icon.grid, aim.point == pointer { return nil }
             return aim.point
+        }
+        // A shape started inside an icon lands where `snappedAnnotationPoint`
+        // will put it, on the icon's units and what is drawn there, so the mark
+        // asks the icon the same question.
+        if tool.createsAnnotationByDrag, let icon = iconSnap(at: pointer) {
+            let landing = icon.landing(nearest: pointer, zoom: viewport.zoom)
+            return landing.placed ? landing.point : nil
         }
         // The same question the press asks, with the same memory the press
         // starts with: `mouseDown` calls `resetDrawSnapMemory()` before it
@@ -145,6 +156,7 @@ extension CanvasNSView {
     /// Puts the ring where a press would land, or takes it away. Cheap enough
     /// to call on every mouse move: one snap query and two ellipse paths.
     func refreshDrawLanding() {
+        defer { refreshIconSnapReadout() }
         guard let viewport, let landed = drawLanding else {
             hideDrawLanding()
             return
@@ -165,11 +177,114 @@ extension CanvasNSView {
     }
 
     func hideDrawLanding() {
+        hideIconSnapReadout()
         guard drawLandingShown != nil || !drawLandingLayer.isHidden else { return }
         drawLandingLayer.isHidden = true
         drawLandingLayer.path = nil
         drawLandingEdgeLayer.isHidden = true
         drawLandingEdgeLayer.path = nil
         drawLandingShown = nil
+    }
+
+    // MARK: The readout inside an icon
+
+    /// How the pill beside the ring is drawn: the icon mock's snap readout,
+    /// the place in small monospaced figures, white on the system accent, up
+    /// and to the right of the point so the pointer never sits on it.
+    enum IconSnapReadout {
+        /// From the point to the pill's near corner, in screen points.
+        static let offset = CGSize(width: 14, height: 12)
+        /// Room round the figures inside the pill.
+        static let inset = CGSize(width: 7, height: 2)
+        static let radius: CGFloat = 6
+    }
+
+    /// The type on the pill. On the view rather than in the enum because a
+    /// font is not `Sendable`.
+    static let iconSnapReadoutFont = NSFont.monospacedDigitSystemFont(ofSize: 10, weight: .semibold)
+
+    func setUpIconSnapReadoutChrome() {
+        iconSnapReadoutLayer.fillColor = NSColor.controlAccentColor.cgColor
+        iconSnapReadoutLayer.strokeColor = nil
+        iconSnapReadoutLayer.isHidden = true
+        iconSnapReadoutLayer.zPosition = 100.5
+        iconSnapReadoutTextLayer.alignmentMode = .center
+        iconSnapReadoutTextLayer.foregroundColor = NSColor.white.cgColor
+        iconSnapReadoutLayer.addSublayer(iconSnapReadoutTextLayer)
+        layer?.addSublayer(iconSnapReadoutLayer)
+    }
+
+    /// Where the pill goes and what it says, in DOCUMENT space, or nil when
+    /// there is nothing to name.
+    ///
+    /// Two moments have a place to name inside an icon: hovering with a
+    /// drawing tool, where it names the place the ring is on, and dragging a
+    /// shape out, where it names the place the dragged corner is on. Both are
+    /// the very point the press or the release will use.
+    var iconSnapReadout: (point: CGPoint, words: String)? {
+        if let landed = drawLandingShown {
+            let aim = tool == .pen ? penSession.anchors.first?.point ?? landed : landed
+            guard let icon = iconSnap(at: aim) else { return nil }
+            return (landed, icon.readout(for: landed))
+        }
+        if let drag = annotationDrag, let shape = tool.annotationShape,
+           drag.waitingForSecondClick || drag.current != drag.anchor,
+           let icon = iconSnap(at: drag.anchor) {
+            let end = drag.end(constrained: pointerModifiers.contains(.shift), shape: shape)
+            return (end, icon.readout(for: end))
+        }
+        return nil
+    }
+
+    /// What the pill says right now, for a scripted walk to read back.
+    var liveIconSnapReadout: String? { iconSnapReadoutShown }
+
+    func refreshIconSnapReadout() {
+        guard let viewport, let readout = iconSnapReadout else {
+            hideIconSnapReadout()
+            return
+        }
+        let font = Self.iconSnapReadoutFont
+        let inset = IconSnapReadout.inset
+        let words = readout.words
+        let text = CGSize(width: (words as NSString)
+                            .size(withAttributes: [.font: font]).width.rounded(.up),
+                          height: (font.ascender - font.descender).rounded(.up))
+        let v = viewport.viewPoint(fromDocument: readout.point)
+        let size = CGSize(width: text.width + inset.width * 2,
+                          height: text.height + inset.height * 2)
+        // Up and to the right, in a flipped or unflipped view alike, and back
+        // inside the canvas when the point is near its far edge.
+        let up: CGFloat = isFlipped ? -1 : 1
+        var plate = CGRect(x: v.x + IconSnapReadout.offset.width,
+                           y: up > 0 ? v.y + IconSnapReadout.offset.height
+                                     : v.y - IconSnapReadout.offset.height - size.height,
+                           width: size.width, height: size.height)
+        if plate.maxX > bounds.maxX { plate.origin.x = v.x - IconSnapReadout.offset.width - size.width }
+        plate.origin.y = min(max(plate.origin.y, bounds.minY), bounds.maxY - size.height)
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        iconSnapReadoutLayer.frame = bounds
+        iconSnapReadoutLayer.fillColor = NSColor.controlAccentColor.cgColor
+        iconSnapReadoutLayer.path = CGPath(roundedRect: plate,
+                                           cornerWidth: IconSnapReadout.radius,
+                                           cornerHeight: IconSnapReadout.radius, transform: nil)
+        iconSnapReadoutTextLayer.string = words
+        iconSnapReadoutTextLayer.font = font
+        iconSnapReadoutTextLayer.fontSize = font.pointSize
+        iconSnapReadoutTextLayer.contentsScale = window?.backingScaleFactor ?? 2
+        iconSnapReadoutTextLayer.frame = CGRect(x: plate.minX + inset.width,
+                                                y: plate.minY + inset.height,
+                                                width: text.width, height: text.height)
+        iconSnapReadoutLayer.isHidden = false
+        CATransaction.commit()
+        iconSnapReadoutShown = words
+    }
+
+    func hideIconSnapReadout() {
+        guard iconSnapReadoutShown != nil || !iconSnapReadoutLayer.isHidden else { return }
+        iconSnapReadoutLayer.isHidden = true
+        iconSnapReadoutLayer.path = nil
+        iconSnapReadoutShown = nil
     }
 }

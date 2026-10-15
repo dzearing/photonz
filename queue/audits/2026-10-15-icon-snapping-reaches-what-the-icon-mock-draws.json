@@ -1,0 +1,52 @@
+{
+  "feature": "Icon snapping reaches what the icon mock draws",
+  "epic": "icon-grid",
+  "summary": "Inside an icon frame, boxes, ovals and lines now land on whole units like Pen points do, every drawn shape's corners, edges and centre pull the next one, a blue pill beside the landing ring names the spot in the icon's units, and View > Snap in Icons turns Grid, Keylines and Geometry on or off.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/shapes-snap-in-an-icon-walk.json",
+  "switched": {},
+  "try": [
+    {
+      "do": "Choose File > New Frame, pick 24 under Icons, click Add Frame, then zoom to 800%."
+    },
+    {
+      "do": "Pick Rectangle and hover over the icon: a ring marks where the corner will land and a pill beside it reads 9, 10.",
+      "shot": "2026-10-15-icon-snap-1-aim-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the box out: the pill follows the far corner and reads the whole-unit spot it will stop on.",
+      "shot": "2026-10-15-icon-snap-2-dragging-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick Ellipse and drag a circle; then hover near the box's top left corner: the ring jumps onto the corner even where plain rounding would not."
+    },
+    {
+      "do": "Hover just right of the circle's edge: the ring sits on that edge and the pill names it.",
+      "shot": "2026-10-15-icon-snap-3-on-an-edge-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open View > Snap in Icons and untick Geometry: the same hover now rounds to the nearest unit instead."
+    },
+    {
+      "do": "Edit > Copy the icon and paste the SVG somewhere: every box and oval is in whole numbers."
+    }
+  ],
+  "evaluate": [
+    "Does the pill beside the ring tell you where the point will land before you press, without getting in the way of what you are aiming at?",
+    "Do shapes pull the next shape firmly enough at 800%, or does an edge catch a point you meant to put one unit away?",
+    "Is View > Snap in Icons where you would look for these switches?",
+    "Should a new icon frame start with all three pulls on, as now, or with snapping off as the mock's status line shows?"
+  ],
+  "rough": [
+    "The mock's Grid & snap group sits in the right panel; the Snap to choices are View > Snap in Icons > Grid, Keylines, Geometry instead, because snapping is a View menu row (UX-PATTERNS placement contract). Where the grid's own controls live is the open card on the-grid-s-controls-come-back-to-the-tool-bar-as.",
+    "The mock says Control suspends snapping; the app still uses Command, as everywhere on the canvas. That is decision card icon-snapping-reaches-what-the-icon-mock-draws-which-key-lets-a-point-inside-an.",
+    "The mock marks the landing spot with an accent cross; the app keeps its own landing ring (the-grid-line-under-a-pen-point-lights-up-while) and adds the mock's pill beside it.",
+    "The mock drags its circles out from their centres; the app draws corner to corner, so the mock's step 6 circle is drawn from 6, 7 to 12, 13 to centre it on the corner. Filed as a-box-or-circle-can-be-drawn-out-from-its-centre.",
+    "The mock starts with snapping off and turns all three on together; here all three are on from the start, as pen-points-in-an-icon-frame-land-on-whole-units settled (whole units with nothing to switch on).",
+    "At 800% a pull reaches three quarters of a unit, so the centre keyline caught a box corner the walk aimed at 12.6 and landed it on 12, not 13. That is the rule, but it is strong.",
+    "A line or arrow held at 45 degrees with Shift inside an icon does not land on whole units, because the angle decides its far end.",
+    "Window pictures were taken with the probe behind another app; colours of picked controls show their background look."
+  ]
+}

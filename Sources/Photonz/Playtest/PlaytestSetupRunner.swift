@@ -85,7 +85,8 @@ extension PlaytestMemory {
         case .grid:
             [EditorState.canvasGridKey]
         case .frames:
-            [EditorState.lastFrameSizeKey, IconKeylinesStore.defaultsKey]
+            [EditorState.lastFrameSizeKey, IconKeylinesStore.defaultsKey,
+             IconSnapStore.defaultsKey]
         case .tutorials:
             [TutorialController.progressKey]
         case .motion:
@@ -168,7 +169,10 @@ struct PlaytestSetupRunner {
             // Anything the app holds in memory rather than reading fresh has to
             // be told, or it goes on drawing what was just thrown away.
             if setup.forget.contains(.grid) { CanvasGridStore.shared.reload() }
-            if setup.forget.contains(.frames) { IconKeylinesStore.shared.reload() }
+            if setup.forget.contains(.frames) {
+                IconKeylinesStore.shared.reload()
+                IconSnapStore.shared.reload()
+            }
             if setup.forget.contains(.panel) {
                 PanelSectionVisibilityStore.shared.reload()
                 WindowModeStore.shared.reload()

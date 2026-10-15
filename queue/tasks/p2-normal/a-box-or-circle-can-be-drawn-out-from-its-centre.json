@@ -1,0 +1,28 @@
+{
+  "id": "a-box-or-circle-can-be-drawn-out-from-its-centre",
+  "title": "A box or circle can be drawn out from its centre",
+  "goal": "Holding Option while dragging a rectangle or ellipse grows it out from where the drag started, the way Photoshop does, so a circle can be centred on a point (the icon mock draws its crown out from 12, 8 and its shoulder out from a corner). Inside an icon frame the centre and the size both land on whole units.",
+  "epic": "icon-grid",
+  "priority": "p2-normal",
+  "seq": 4080,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T12:06:39.426Z",
+  "updated": "2026-10-15T12:06:39.430Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by icon-snapping-reaches-what-the-icon-mock-draws (2026-10-15). AnnotationDrag.end(constrained:shape:) in Sources/PhotonzCore/Tools.swift only does corner-to-corner; nothing reads Option for shapes. Mock: docs/design/mocks/pages/icon-draw-wt.html steps 5 and 6 (\"An ellipse snaps by its center and its diameter\"). Snapping is already in place: CanvasNSView.snappedAnnotationPoint routes icon-frame drags through IconSnap, so a centred drag needs the anchor kept as the centre and the far corner mirrored. Check Option is free for shape drags (UX-PATTERNS §7).",
+  "acceptance": [
+    "Option-dragging a rectangle or ellipse grows it out from the press point on every side, live while dragging",
+    "Shift with Option keeps it square or circular around that centre",
+    "Inside an icon frame the centre and the diameter land on whole units, as in steps 5 and 6 of the Draw an icon on the grid mock",
+    "A walk at Next defaults draws a circle out from a box corner and claims its centre in the exported SVG"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T12:06:39.429Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -5,14 +5,14 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 230,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T07:41:10.756Z",
-  "updated": "2026-10-14T12:18:04.408Z",
+  "updated": "2026-10-15T12:07:52.215Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape.",
+  "notes": "Mock: docs/design/mocks/pages/icon-draw-wt.html (Grid & snap group, steps 3 to 6 and 10). Built so far: Sources/PhotonzCore/IconSnap.swift (whole units from the frame corner, keylines while shown, other paths' anchors; reach 6 view points capped at 1 unit) handed to PenSession.iconSnap by CanvasPen.refreshPenSnapping. Only the Pen uses it; rectangle/ellipse drags in icon frames still use their own magnets. Also seen: right after a shape closes it stays picked, so a Pen press on its corner grabs that corner (path edit owns the press) instead of starting a new shape there, which is exactly how the mock starts its second circle (step 6); the walk works round it with Escape. 2026-10-15: IconSnapChoices + shape edges/centres + readout in Sources/PhotonzCore/IconSnap.swift; IconSnapStore (Sources/Photonz/IconSnapStore.swift); View > Snap in Icons in EditorCommands; shape drags in icons via CanvasNSView.snappedAnnotationPoint; pill in CanvasDrawLanding.swift. Walk shapes-snap-in-an-icon-walk. Only Command vs Control (the card) is left.",
   "acceptance": [
     "The mock's Snap to choices exist and each one turns its pull on or off, placed where the placement contract puts them (or a decision card says where, before building)",
     "While a point is being placed in an icon frame, a readout beside the pointer names the whole-unit place it will land, as in the mock's step 4",
@@ -47,7 +47,35 @@
     {
       "t": "2026-10-14T12:18:04.407Z",
       "note": "seq 170 -> 230"
+    },
+    {
+      "t": "2026-10-15T11:19:19.060Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T12:07:23.925Z",
+      "note": "walks none -> shapes-snap-in-an-icon-walk, pen-lands-on-whole-units-in-an-icon-walk"
+    },
+    {
+      "t": "2026-10-15T12:07:52.011Z",
+      "note": "Review before building: the mock draws Grid & snap as a right-panel group, but the placement contract puts snapping in the View menu (the inspector is what the pick IS), and the grid's own controls are under an open card, so the three Snap to choices became View > Snap in Icons > Grid, Keylines, Geometry, Photoshop's View > Snap To shape. The mock's steps 4 to 6 use Rectangle and Ellipse, which still had their screenshot magnets in icon frames, so shape drags now use IconSnap too. A Mac catch for the mock's Control key: Control held at the press is a right-click, so it cannot start a drag; that goes on the card. Whole-unit edges only, so the promise that every place is whole survives."
+    },
+    {
+      "t": "2026-10-15T12:07:52.078Z",
+      "note": "Built: IconSnap (PhotonzCore) gains IconSnapChoices (grid, keylines, geometry), shapes' box edges and middles as axis lines, whole-unit centres as point targets, landing(nearest:zoom:) saying whether anything placed the point, and readout(for:) ('15, 13'). PhotonzDocument.iconSnap gathers path anchors, box corners, oval quarter points and line ends from unturned shapes. App: IconSnapStore preference, View > Snap in Icons submenu (Keylines dimmed while hidden), CanvasNSView.iconSnap(at:) shared by the Pen and snappedAnnotationPoint (shape drags in icons; endpoint reshapes keep their old magnets), landing ring for shape tools in icons, and an accent pill beside the ring and at a dragged shape's corner (CanvasDrawLanding). Walk: expectLanding takes says; actions snapToGeometryOff/On (the menu bar is frozen in a background walk)."
+    },
+    {
+      "t": "2026-10-15T12:07:52.146Z",
+      "note": "Verified: IconSnapTests 39 green, MenuToggleNamesTests, PlaytestScriptTests; full suite 13232 green. New walk shapes-snap-in-an-icon-walk green at Next defaults: pill reads 9, 10 / 12, 8 / 16, 17, geometry off rounds to 17, 17, SVG has the box at translate(9 10) 6x3 and circles at (8 4) d8 and (6 7) d6 (centred on the box corner, the mock's step 6). pen-lands-on-whole-units-in-an-icon-walk updated: its last point at 18.4 units now lands on the triangle's bottom edge at 19 (the new edge pull), so the expected path ends 8 13. 16 icon walks and 33 shape/pen/landing walks green. Looked at icon-snap-1-aim, 2-dragging and 3-on-an-edge captures: the pill reads white on the accent beside the ring, clear of the ring."
+    },
+    {
+      "t": "2026-10-15T12:07:52.214Z",
+      "note": "Acceptance: items 1 to 3 done (Snap to choices in the View menu per the placement contract, readout beside the pointer, edges and centres as targets). Item 4 is the open card on Command vs Control. Filed a-box-or-circle-can-be-drawn-out-from-its-centre (mock steps 5 and 6 draw circles out from their centres). Left rough, not filed: a line held at 45 degrees with Shift in an icon lands off whole units; at 800% a keyline can catch a point most of a unit away (the existing reach rule); the picked-shape-corner press clash noted when this task was filed was not looked at."
     }
   ],
-  "walks": []
+  "walks": [
+    "shapes-snap-in-an-icon-walk",
+    "pen-lands-on-whole-units-in-an-icon-walk"
+  ],
+  "started": "2026-10-15T11:19:19.058Z"
 }

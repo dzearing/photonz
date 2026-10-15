@@ -36,6 +36,15 @@ public enum MenuToggleNames {
     /// carries: one switch covers every icon frame in every window. Named for
     /// the thing icon designers already call it.
     public static let iconKeylines = "Show Icon Keylines"
+    /// What pulls a point inside an icon frame, each on its own: whole units,
+    /// the keylines, and the shapes already drawn. The submenu is named the
+    /// way the timeline's own snapping is, and its rows wear the three words
+    /// the icon mock's Snap to row does (`icon-draw-wt.html`), the way
+    /// Photoshop keeps View > Snap To > Grid, Guides, Layers.
+    public static let snapInIcons = "Snap in Icons"
+    public static let iconSnapGrid = "Grid"
+    public static let iconSnapKeylines = "Keylines"
+    public static let iconSnapGeometry = "Geometry"
     /// The timing strip across the bottom (`next-motion-strip`). On the View
     /// menu with the panel and the keylines, because like them it is chrome
     /// rather than anything a document carries. Dimmed with nothing moving:
@@ -78,5 +87,6 @@ public enum MenuToggleNames {
     public static let all: [String] = [
         grid, snapToGrid, panel, library, iconKeylines, showColumns, history,
         layerVisible, layerLocked, snapInTimeline,
+        iconSnapGrid, iconSnapKeylines, iconSnapGeometry,
     ]
 }

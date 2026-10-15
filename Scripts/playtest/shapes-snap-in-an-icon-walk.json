@@ -1,0 +1,76 @@
+{
+  "out": "/tmp/photonz-playtest/shapes-snap-in-an-icon-walk",
+  "setup": {
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "blank", "canvasWidth": 1600, "canvasHeight": 1100, "width": 1240, "height": 900 },
+    { "do": "action", "action": "newFrameDialog" },
+    { "do": "wait", "seconds": 0.9 },
+    { "do": "press", "control": "24", "in": "Icons" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "press", "control": "Add Frame" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "pinch", "to": 8 },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "describe", "stage": "1-frame", "note": "a 24 unit icon frame at 800%, Next defaults, nothing switched on: units run 788 to 812 across and 538 to 562 down" },
+
+    { "do": "tool", "tool": "rectangle" },
+    { "do": "move", "at": [797.3, 548.4] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [797, 548], "within": 0.01, "says": "9, 10" },
+    { "do": "snapshot", "name": "icon-snap-1-aim" },
+    { "do": "drag", "from": [797.3, 548.4], "to": [803.2, 551.1], "steps": 10, "hold": "icon-snap-2-dragging" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "drag", "from": [796.1, 542.1], "to": [804.2, 549.9], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "move", "at": [797.55, 548.4] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [797, 548], "within": 0.01, "says": "9, 10" },
+    { "do": "move", "at": [800.6, 546.3] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [800, 546], "within": 0.01, "says": "12, 8" },
+    { "do": "move", "at": [804.7, 555.2] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [804, 555], "within": 0.01, "says": "16, 17" },
+    { "do": "snapshot", "name": "icon-snap-3-on-an-edge" },
+    { "do": "drag", "from": [794.15, 545.1], "to": [800.1, 551.1], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "menus", "stage": "5-view-menu", "menu": "View" },
+    { "do": "action", "action": "snapToGeometryOff" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "key", "key": "escape" },
+    { "do": "tool", "tool": "ellipse" },
+    { "do": "move", "at": [804.7, 555.2] },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectLanding", "near": [805, 555], "within": 0.01, "says": "17, 17" },
+    { "do": "action", "action": "snapToGeometryOn" },
+
+    { "do": "tool", "tool": "select" },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "snapshot", "name": "icon-snap-4-drawn" },
+    { "do": "writeSVG", "name": "icon-snap" },
+    { "do": "expectSVG", "contains": "<rect transform=\"translate(9 10)\" x=\"0\" y=\"0\" width=\"6\" height=\"3\"" },
+    { "do": "expectSVG", "contains": "<ellipse transform=\"translate(8 4)\" cx=\"4\" cy=\"4\" rx=\"4\" ry=\"4\"" },
+    { "do": "expectSVG", "contains": "<ellipse transform=\"translate(6 7)\" cx=\"3\" cy=\"3\" rx=\"3\" ry=\"3\"" },
+    { "do": "click", "at": [789, 561] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "clearClipboard" },
+    { "do": "shortcut", "key": "c", "modifiers": ["command"], "menuItem": "Copy" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "readClipboard", "stage": "7-the-icon-copied", "svg": true }
+  ]
+}

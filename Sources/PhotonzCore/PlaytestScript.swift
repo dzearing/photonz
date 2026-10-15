@@ -1875,6 +1875,11 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// whichever they already are, so a walk starts from something it can rely
     /// on rather than from what the last walk left behind.
     case showIconKeylines, hideIconKeylines
+    /// View ▸ Snap in Icons ▸ Geometry: put the pull of the shapes already
+    /// drawn OFF, or back ON, whichever it already is. The menu row itself is
+    /// frozen while a walk keeps the probe behind other apps, so a walk throws
+    /// the same switch the row does.
+    case snapToGeometryOff, snapToGeometryOn
     /// Put the grid ON, or OFF, whichever it already is. `toggleGrid` flips,
     /// which leaves a walk's outcome depending on what the last walk left
     /// behind; these two make a starting point a walk can rely on.
@@ -3857,8 +3862,10 @@ public enum PlaytestStep: Sendable, Equatable {
     /// document points of slack (half a point unless said otherwise, because
     /// the claim worth making is that it is EXACTLY on the crossing).
     /// `absent: true` claims no mark at all, which is what ⌘ and a canvas with
-    /// nothing pulling must both give.
-    case expectLanding(near: PlaytestPoint?, within: CGFloat, absent: Bool)
+    /// nothing pulling must both give. `says` claims the words on the pill
+    /// beside the mark inside an icon frame ("15, 13", the place in the
+    /// icon's own units); left out, the pill is not asked about.
+    case expectLanding(near: PlaytestPoint?, within: CGFloat, absent: Bool, says: String? = nil)
     /// How many layers the document must hold right now, counting the ones
     /// inside groups.
     ///
@@ -5226,7 +5233,8 @@ public enum PlaytestStep: Sendable, Equatable {
             guard within >= 0 else {
                 throw f.invalid("within", "a distance is zero or more, not \(within)")
             }
-            self = .expectLanding(near: near, within: CGFloat(within), absent: absent)
+            let says = try f.optionalString("says")
+            self = .expectLanding(near: near, within: CGFloat(within), absent: absent, says: says)
         case "expectChrome":
             let within = try f.optionalNumber("within") ?? 1
             guard within >= 0 else {

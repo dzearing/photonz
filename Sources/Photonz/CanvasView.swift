@@ -1282,6 +1282,14 @@ final class CanvasNSView: NSView {
     /// a photograph.
     let drawLandingLayer = CAShapeLayer()
     let drawLandingEdgeLayer = CAShapeLayer()
+    /// The pill beside that ring inside an icon frame, naming the place in
+    /// the icon's own units ("15, 13"), and the words on it
+    /// (`CanvasDrawLanding`, the icon mock's snap readout).
+    let iconSnapReadoutLayer = CAShapeLayer()
+    let iconSnapReadoutTextLayer = CATextLayer()
+    /// What that pill says right now, nil when none is showing. A scripted
+    /// walk reads it through `liveIconSnapReadout`.
+    var iconSnapReadoutShown: String?
     /// The document point that ring is on right now, nil when none is showing.
     /// A scripted walk reads it through `liveDrawLanding`.
     var drawLandingShown: CGPoint?
@@ -1538,6 +1546,18 @@ final class CanvasNSView: NSView {
         let held = snapHold(freeing: event.modifierFlags.contains(.command))
         let refused = held.isFree || event.modifierFlags.contains(.shift)
         if held.isFree { drawGridHold.free() }
+        // Inside an icon frame a shape drawn there lands on the icon's own
+        // units, keylines and the shapes already on it, exactly as the Pen's
+        // points do (`IconSnap`), and the picture's borders and the canvas grid
+        // have no say. ⌘ still frees it. ⇧ does not: a square from a whole
+        // corner to a whole corner is still whole. The icon is the one under
+        // the end that stays put, so a box dragged past the edge keeps its
+        // units. Reshaping a line already drawn keeps the magnets it had.
+        if !held.isFree, endpointDrag == nil, let icon = iconSnap(at: opposite ?? p) {
+            snapGuide = nil
+            annotationGridSnap = (nil, nil)
+            return icon.point(nearest: p, zoom: viewport.zoom)
+        }
         let snap = AnnotationSnapping.snap(p, shape: shape, opposite: opposite,
                                            edges: edgeMap, zoom: viewport.zoom,
                                            free: refused, holding: held,
@@ -2435,6 +2455,7 @@ final class CanvasNSView: NSView {
         // are aiming at is never buried under the thing you are drawing.
         setUpPenChrome()
         setUpDrawLandingChrome()
+        setUpIconSnapReadoutChrome()
         setUpMotionPivotChrome()
         setUpSpaceHandleChrome()
         setUpMotionPathChrome()

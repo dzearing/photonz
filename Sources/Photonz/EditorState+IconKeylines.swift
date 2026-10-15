@@ -36,4 +36,14 @@ extension EditorState {
             TutorialController.shared.note(.keylinesShown, from: self)
         }
     }
+
+    /// Which pulls snapping has inside an icon frame right now: whole units,
+    /// the keylines (which pull only while they are showing, whatever this
+    /// says) and the shapes already drawn. View ▸ Snap in Icons.
+    var iconSnapChoices: IconSnapChoices { IconSnapStore.shared.choices }
+
+    func toggleIconSnap(_ choice: WritableKeyPath<IconSnapChoices, Bool>) {
+        guard iconKeylinesEnabled else { return }
+        IconSnapStore.shared.choices[keyPath: choice].toggle()
+    }
 }

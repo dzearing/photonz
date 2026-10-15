@@ -268,4 +268,127 @@ struct IconSnapTests {
         let svg = SVGExport.write(document).text
         #expect(SVGWholeUnits.fractionalCoordinates(in: svg).isEmpty)
     }
+
+    // MARK: Snap to: grid, keylines, geometry, each on its own
+
+    @Test func everyPullIsOnUntilSomebodyTurnsItOff() {
+        let choices = IconSnapChoices()
+        #expect(choices.grid && choices.keylines && choices.geometry)
+        #expect(choices == .all)
+    }
+
+    @Test func gridOffLeavesAPointNothingIsPullingWhereItWasPut() {
+        let snap = IconSnap(frame: Self.frame, keylines: false, grid: false)
+        #expect(snap.point(nearest: CGPoint(x: 103.3, y: 105.6), zoom: 32)
+                == CGPoint(x: 103.3, y: 105.6))
+        #expect(snap.offset(CGPoint(x: 2.4, y: -1.2)) == CGPoint(x: 2.4, y: -1.2))
+    }
+
+    @Test func gridOffStillLetsAKeylineCatchItsAxis() {
+        let snap = IconSnap(frame: Self.frame, grid: false)
+        // The centre line catches x; nothing is near y, so it stays put.
+        #expect(snap.point(nearest: CGPoint(x: 112.8, y: 106.4), zoom: 4)
+                == CGPoint(x: 112, y: 106.4))
+    }
+
+    @Test func aLandingSaysWhetherAnythingPlacedIt() {
+        let free = IconSnap(frame: Self.frame, keylines: false, grid: false)
+        #expect(!free.landing(nearest: CGPoint(x: 103.3, y: 105.6), zoom: 32).placed)
+        #expect(IconSnap(frame: Self.frame)
+            .landing(nearest: CGPoint(x: 103.3, y: 105.6), zoom: 32).placed)
+        #expect(IconSnap(frame: Self.frame, grid: false)
+            .landing(nearest: CGPoint(x: 112.8, y: 106.4), zoom: 4).placed)
+    }
+
+    @Test func documentChoicesReachTheSnap() {
+        var (document, _) = Self.iconDocument()
+        let drawn = PathContent(anchors: [PathAnchor(point: CGPoint(x: 104, y: 104)),
+                                          PathAnchor(point: CGPoint(x: 116, y: 104))],
+                                isClosed: false)
+        document.addLayerDrawnOnFrame(PenSession.layer(from: drawn))
+        let at = CGPoint(x: 110, y: 110)
+        let noKeys = document.iconSnap(at: at, keylines: true,
+                                       choices: IconSnapChoices(keylines: false))
+        #expect(noKeys?.xLines.contains(112) == false)
+        let noGeometry = document.iconSnap(at: at, keylines: true,
+                                           choices: IconSnapChoices(geometry: false))
+        #expect(noGeometry?.anchors.isEmpty == true)
+        #expect(noGeometry?.centers.isEmpty == true)
+        #expect(noGeometry?.xLines.contains(104) == false)
+        let noGrid = document.iconSnap(at: at, keylines: true,
+                                       choices: IconSnapChoices(grid: false))
+        #expect(noGrid?.grid == false)
+        // Keylines that are not showing pull nothing whatever the choice says.
+        #expect(document.iconSnap(at: at, keylines: false)?.xLines.contains(112) == false)
+    }
+
+    // MARK: Edges and centres of what is already drawn
+
+    @Test func aShapesCentreIsATarget() {
+        let snap = IconSnap(frame: Self.frame, keylines: false,
+                            shapes: [CGRect(x: 104, y: 106, width: 8, height: 6)])
+        #expect(snap.centers == [CGPoint(x: 108, y: 109)])
+        #expect(snap.point(nearest: CGPoint(x: 108.6, y: 109.7), zoom: 4)
+                == CGPoint(x: 108, y: 109))
+    }
+
+    @Test func aCentreOffTheUnitsIsNotATarget() {
+        let snap = IconSnap(frame: Self.frame, keylines: false,
+                            shapes: [CGRect(x: 104, y: 106, width: 7, height: 6)])
+        #expect(snap.centers.isEmpty)
+    }
+
+    @Test func aShapesEdgesCatchEachAxis() {
+        let snap = IconSnap(frame: Self.frame, keylines: false,
+                            shapes: [CGRect(x: 105, y: 106, width: 6, height: 3)])
+        #expect(snap.xLines == [105, 108, 111])
+        #expect(snap.yLines == [106, 109])
+        // Zoomed out, an edge most of a unit away catches its axis.
+        #expect(snap.point(nearest: CGPoint(x: 111.8, y: 117.3), zoom: 4)
+                == CGPoint(x: 111, y: 117))
+    }
+
+    @Test func aRectanglesCornersAndCentreAreTargets() {
+        var (document, _) = Self.iconDocument()
+        // A box drawn from 9, 10 to 15, 13 in the icon's units.
+        let box = AnnotationBuilder.layer(content: AnnotationContent(shape: .rectangle),
+                                          from: CGPoint(x: 109, y: 110),
+                                          to: CGPoint(x: 115, y: 113))
+        document.addLayerDrawnOnFrame(box)
+        let snap = document.iconSnap(at: CGPoint(x: 110, y: 110), keylines: false)
+        let anchors = Set(snap?.anchors.map { "\($0.x),\($0.y)" } ?? [])
+        #expect(anchors.isSuperset(of: ["109.0,110.0", "115.0,110.0", "109.0,113.0", "115.0,113.0"]))
+        #expect(snap?.xLines.contains(109) == true)
+        #expect(snap?.xLines.contains(115) == true)
+        #expect(snap?.yLines.contains(113) == true)
+        // The second circle of the mock starts on that box's top left corner.
+        #expect(snap?.point(nearest: CGPoint(x: 109.6, y: 110.7), zoom: 4)
+                == CGPoint(x: 109, y: 110))
+    }
+
+    @Test func anEllipseOffersItsQuarterPointsAndCentre() {
+        var (document, _) = Self.iconDocument()
+        let oval = AnnotationBuilder.layer(content: AnnotationContent(shape: .ellipse),
+                                           from: CGPoint(x: 108, y: 104),
+                                           to: CGPoint(x: 116, y: 112))
+        document.addLayerDrawnOnFrame(oval)
+        let snap = document.iconSnap(at: CGPoint(x: 110, y: 110), keylines: false)
+        let anchors = Set(snap?.anchors.map { "\($0.x),\($0.y)" } ?? [])
+        #expect(anchors == ["112.0,104.0", "116.0,108.0", "112.0,112.0", "108.0,108.0"])
+        #expect(snap?.centers == [CGPoint(x: 112, y: 108)])
+    }
+
+    // MARK: The readout beside the pointer
+
+    @Test func theReadoutNamesThePlaceInTheIconsOwnUnits() {
+        let snap = IconSnap(frame: Self.frame)
+        #expect(snap.readout(for: CGPoint(x: 115, y: 113)) == "15, 13")
+        #expect(snap.readout(for: CGPoint(x: 100, y: 124)) == "0, 24")
+    }
+
+    @Test func theReadoutSaysAFractionWhenNothingRoundedIt() {
+        let snap = IconSnap(frame: Self.frame, keylines: false, grid: false)
+        #expect(snap.readout(for: CGPoint(x: 103.25, y: 105.6)) == "3.25, 5.6")
+        #expect(snap.readout(for: CGPoint(x: 99.5, y: 100)) == "-0.5, 0")
+    }
 }

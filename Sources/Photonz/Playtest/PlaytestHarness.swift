@@ -3297,9 +3297,19 @@ private final class Run {
             note(number, step.name, try await checkClipPictures(clip: clip, absent: absent, within: within),
                  state: describe())
 
-        case .expectLanding(let near, let within, let absent):
-            note(number, step.name, try checkLanding(near: near, within: within, absent: absent),
-                 state: describe())
+        case .expectLanding(let near, let within, let absent, let says):
+            var said = try checkLanding(near: near, within: within, absent: absent)
+            if let says {
+                let showing = try requireCanvas().liveIconSnapReadout
+                guard showing == says else {
+                    throw Failure(description: "the pill beside the mark says "
+                        + (showing.map { "\"\($0)\"" } ?? "nothing")
+                        + ", and the walk expects \"\(says)\". It shows only inside an icon "
+                        + "frame, naming the place in the icon's own units.")
+                }
+                said += ", and the pill beside it says \"\(says)\""
+            }
+            note(number, step.name, said, state: describe())
 
         case .expectHint(let contains):
             note(number, step.name, try checkHint(contains: contains), state: describe())
@@ -7394,6 +7404,10 @@ private final class Run {
                 if !editor.iconKeylinesShowing { editor.toggleIconKeylines() }
             case .hideIconKeylines:
                 if editor.iconKeylinesShowing { editor.toggleIconKeylines() }
+            case .snapToGeometryOff:
+                if editor.iconSnapChoices.geometry { editor.toggleIconSnap(\.geometry) }
+            case .snapToGeometryOn:
+                if !editor.iconSnapChoices.geometry { editor.toggleIconSnap(\.geometry) }
             case .adjustGrid: editor.beginGridAdjustment()
             case .showGridSettings: editor.showGridSettings()
             case .selectCanvas: editor.selectCanvas()

@@ -26,6 +26,13 @@ import Foundation
 /// on a whole unit (the centre of an odd sized frame, a point somebody dragged
 /// with ⌘ held) is never offered, which is what keeps the promise whole.
 ///
+/// Since `icon-snapping-reaches-what-the-icon-mock-draws` the shapes already
+/// drawn offer more than their points: their CENTRES pull like a point, and
+/// their EDGES pull each axis like a keyline, so a second shape lines up with
+/// the first or starts dead in its middle (the icon mock's step 6). And each of
+/// the three pulls, whole units, keylines and geometry, can be turned off on
+/// its own (`IconSnapChoices`, View ▸ Snap in Icons).
+///
 /// ⌘ still means "exactly where I put it", here as everywhere on the canvas;
 /// that is the Pen's to honour (`PenSession.free`).
 public struct IconSnap: Equatable, Sendable {
@@ -46,30 +53,54 @@ public struct IconSnap: Equatable, Sendable {
     public let yLines: [CGFloat]
     /// The points of the shapes already on the frame, on whole units only.
     public let anchors: [CGPoint]
+    /// The middles of the shapes already on the frame, on whole units only.
+    /// They pull exactly as a point does.
+    public let centers: [CGPoint]
+    /// Whether a point nothing else caught rounds to a whole unit. Off, it
+    /// stays exactly where it was put.
+    public let grid: Bool
 
-    public init(frame: CGRect, keylines: Bool = true, anchors: [CGPoint] = []) {
+    /// - Parameters:
+    ///   - keylines: whether the frame's keylines pull (only while shown).
+    ///   - anchors: the points of the shapes already drawn.
+    ///   - shapes: the boxes of the shapes already drawn: their edges and
+    ///     middle lines pull each axis, their centres pull both.
+    ///   - grid: whether everything else lands on a whole unit.
+    public init(frame: CGRect, keylines: Bool = true, anchors: [CGPoint] = [],
+                shapes: [CGRect] = [], grid: Bool = true) {
         self.frame = frame
+        self.grid = grid
         let origin = frame.origin
         func whole(_ value: CGFloat, from start: CGFloat) -> Bool {
             let offset = value - start
             return offset.isFinite && abs(offset - offset.rounded()) < 1e-6
         }
+        var xs: [CGFloat] = []
+        var ys: [CGFloat] = []
         if keylines, let guides = IconKeylines.guides(in: frame) {
-            var xs = [frame.minX, frame.maxX, guides.liveArea.minX, guides.liveArea.maxX,
+            xs += [frame.minX, frame.maxX, guides.liveArea.minX, guides.liveArea.maxX,
                       guides.centerX]
-            var ys = [frame.minY, frame.maxY, guides.liveArea.minY, guides.liveArea.maxY,
+            ys += [frame.minY, frame.maxY, guides.liveArea.minY, guides.liveArea.maxY,
                       guides.centerY]
             if let square = guides.squareKeyline {
                 xs += [square.minX, square.maxX]
                 ys += [square.minY, square.maxY]
             }
-            xLines = Array(Set(xs.filter { whole($0, from: origin.x) })).sorted()
-            yLines = Array(Set(ys.filter { whole($0, from: origin.y) })).sorted()
-        } else {
-            xLines = []
-            yLines = []
         }
-        self.anchors = anchors.filter { whole($0.x, from: origin.x) && whole($0.y, from: origin.y) }
+        var middles: [CGPoint] = []
+        for box in shapes where !box.isNull && box.minX.isFinite && box.minY.isFinite {
+            xs += [box.minX, box.midX, box.maxX]
+            ys += [box.minY, box.midY, box.maxY]
+            middles.append(CGPoint(x: box.midX, y: box.midY))
+        }
+        xLines = Array(Set(xs.filter { whole($0, from: origin.x) })).sorted()
+        yLines = Array(Set(ys.filter { whole($0, from: origin.y) })).sorted()
+        func onUnits(_ point: CGPoint) -> Bool {
+            whole(point.x, from: origin.x) && whole(point.y, from: origin.y)
+        }
+        self.anchors = anchors.filter(onUnits)
+        var seen = Set<String>()
+        self.centers = middles.filter(onUnits).filter { seen.insert("\($0.x),\($0.y)").inserted }
     }
 
     /// How far a magnet reaches at this zoom, in document points.
@@ -78,36 +109,60 @@ public struct IconSnap: Equatable, Sendable {
         return min(Self.pullRadius / scale, Self.largestPull)
     }
 
-    /// Where a point put down at `point` lands: on another shape's point when
-    /// it is within reach of one, otherwise each axis on the nearest keyline
-    /// within reach, otherwise on the nearest whole unit.
+    /// Where a point put down at `point` lands: on another shape's point or
+    /// centre when it is within reach of one, otherwise each axis on the
+    /// nearest keyline or edge within reach, otherwise on the nearest whole
+    /// unit (with the grid on) or exactly where it was put (with it off).
     public func point(nearest point: CGPoint, zoom: CGFloat) -> CGPoint {
-        guard point.x.isFinite, point.y.isFinite else { return point }
+        landing(nearest: point, zoom: zoom).point
+    }
+
+    /// Where a point lands, and whether anything put it there: a target, a
+    /// line, or the units. A point nothing placed lands under the pointer, and
+    /// a mark saying "here" would be news about nothing.
+    public func landing(nearest point: CGPoint, zoom: CGFloat) -> (point: CGPoint, placed: Bool) {
+        guard point.x.isFinite, point.y.isFinite else { return (point, false) }
         let reach = reach(zoom: zoom)
         var best: (point: CGPoint, distance: CGFloat)?
-        for anchor in anchors {
-            let distance = hypot(anchor.x - point.x, anchor.y - point.y)
+        for target in anchors + centers {
+            let distance = hypot(target.x - point.x, target.y - point.y)
             if distance <= reach, distance < (best?.distance ?? .infinity) {
-                best = (anchor, distance)
+                best = (target, distance)
             }
         }
-        if let best { return best.point }
-        return CGPoint(x: axis(point.x, lines: xLines, from: frame.minX, reach: reach),
-                       y: axis(point.y, lines: yLines, from: frame.minY, reach: reach))
+        if let best { return (best.point, true) }
+        let x = axis(point.x, lines: xLines, from: frame.minX, reach: reach)
+        let y = axis(point.y, lines: yLines, from: frame.minY, reach: reach)
+        return (CGPoint(x: x.value, y: y.value), grid || x.caught || y.caught)
     }
 
     private func axis(_ value: CGFloat, lines: [CGFloat], from start: CGFloat,
-                      reach: CGFloat) -> CGFloat {
+                      reach: CGFloat) -> (value: CGFloat, caught: Bool) {
         let nearest = lines.min { abs($0 - value) < abs($1 - value) }
-        if let nearest, abs(nearest - value) <= reach { return nearest }
-        return start + (value - start).rounded()
+        if let nearest, abs(nearest - value) <= reach { return (nearest, true) }
+        return (grid ? start + (value - start).rounded() : value, false)
+    }
+
+    /// The place a point is at, in the icon's own units counted from its
+    /// corner, the way the readout beside the pointer says it: "15, 13".
+    /// Whole units print whole; a point nothing rounded prints to two places.
+    public func readout(for point: CGPoint) -> String {
+        func unit(_ value: CGFloat) -> String {
+            let hundredths = (value * 100).rounded() / 100
+            if hundredths == hundredths.rounded() { return String(Int(hundredths)) }
+            var text = String(format: "%.2f", Double(hundredths))
+            while text.hasSuffix("0") { text.removeLast() }
+            return text
+        }
+        return "\(unit(point.x - frame.minX)), \(unit(point.y - frame.minY))"
     }
 
     /// A handle pulled out of a point, as an offset from it, ending on a whole
     /// unit. One held at 45 degrees stays at 45: both sides round to the same
-    /// length, so the angle ⇧ is holding survives.
+    /// length, so the angle ⇧ is holding survives. With the grid off a handle
+    /// ends where it was pulled.
     public func offset(_ offset: CGPoint) -> CGPoint {
-        guard offset.x.isFinite, offset.y.isFinite else { return offset }
+        guard grid, offset.x.isFinite, offset.y.isFinite else { return offset }
         if offset.x != 0, offset.y != 0, abs(abs(offset.x) - abs(offset.y)) < 1e-6 {
             let side = abs(offset.x).rounded()
             return CGPoint(x: offset.x < 0 ? -side : side, y: offset.y < 0 ? -side : side)
@@ -123,27 +178,86 @@ extension PhotonzDocument {
     /// screenshots), where the Pen behaves exactly as it always has.
     ///
     /// `keylines` is whether the canvas is drawing the frame's guides right
-    /// now. The points offered are those of every unturned path on the frame;
-    /// a shape that has been rotated, skewed or flipped draws its points
-    /// somewhere its numbers do not say, so it offers none.
-    public func iconSnap(at point: CGPoint, keylines: Bool) -> IconSnap? {
+    /// now; `choices` is which of the three pulls are on. The targets offered
+    /// are those of every unturned path and shape on the frame: a path's
+    /// points, a box's corners, an oval's four quarter points, a line's ends,
+    /// and the box round each for its edges and centre. A shape that has been
+    /// rotated, skewed or flipped draws itself somewhere its numbers do not
+    /// say, so it offers none. `excluding` is the layer being reshaped, which
+    /// should not pull towards where it already is.
+    public func iconSnap(at point: CGPoint, keylines: Bool,
+                         choices: IconSnapChoices = .all,
+                         excluding: UUID? = nil) -> IconSnap? {
         guard let id = iconFrameID(under: point), let box = canvasFrame(of: id),
               let frame = layer(id: id) else { return nil }
         var anchors: [CGPoint] = []
+        var shapes: [CGRect] = []
         func gather(_ children: [Layer], at origin: CGPoint) {
-            for child in children where child.isVisible {
+            for child in children where child.isVisible && child.id != excluding {
                 let placed = CGPoint(x: origin.x + child.frame.origin.x,
                                      y: origin.y + child.frame.origin.y)
+                func at(_ local: CGPoint) -> CGPoint {
+                    CGPoint(x: placed.x + local.x, y: placed.y + local.y)
+                }
                 if child.isGroup {
                     gather(child.children, at: placed)
-                } else if let path = child.path, child.transform.isIdentity {
-                    anchors += path.anchors.map {
-                        CGPoint(x: placed.x + $0.point.x, y: placed.y + $0.point.y)
+                } else if !child.transform.isIdentity {
+                    continue
+                } else if let path = child.path {
+                    let points = path.anchors.map { at($0.point) }
+                    anchors += points
+                    if let bounds = Self.bounds(of: points) { shapes.append(bounds) }
+                } else if let annotation = child.annotation {
+                    let start = at(annotation.start)
+                    let end = at(annotation.end)
+                    let bounds = CGRect(x: min(start.x, end.x), y: min(start.y, end.y),
+                                        width: abs(end.x - start.x),
+                                        height: abs(end.y - start.y))
+                    switch annotation.shape {
+                    case .rectangle, .highlight:
+                        anchors += [CGPoint(x: bounds.minX, y: bounds.minY),
+                                    CGPoint(x: bounds.maxX, y: bounds.minY),
+                                    CGPoint(x: bounds.minX, y: bounds.maxY),
+                                    CGPoint(x: bounds.maxX, y: bounds.maxY)]
+                    case .ellipse:
+                        anchors += [CGPoint(x: bounds.midX, y: bounds.minY),
+                                    CGPoint(x: bounds.maxX, y: bounds.midY),
+                                    CGPoint(x: bounds.midX, y: bounds.maxY),
+                                    CGPoint(x: bounds.minX, y: bounds.midY)]
+                    default:
+                        anchors += [start, end]
                     }
+                    shapes.append(bounds)
                 }
             }
         }
-        gather(frame.children, at: box.origin)
-        return IconSnap(frame: box, keylines: keylines, anchors: anchors)
+        if choices.geometry { gather(frame.children, at: box.origin) }
+        return IconSnap(frame: box, keylines: keylines && choices.keylines,
+                        anchors: anchors, shapes: shapes, grid: choices.grid)
     }
+
+    private static func bounds(of points: [CGPoint]) -> CGRect? {
+        guard let first = points.first else { return nil }
+        var box = CGRect(origin: first, size: .zero)
+        for point in points.dropFirst() { box = box.union(CGRect(origin: point, size: .zero)) }
+        return box
+    }
+}
+
+/// Which pulls snapping has inside an icon frame: whole units ("Grid"), the
+/// frame's keylines, and the shapes already drawn ("Geometry"), the three
+/// choices under Snap to in the icon mock. All on until somebody turns one off;
+/// the app keeps the choice as a preference, true of every icon at once.
+public struct IconSnapChoices: Equatable, Hashable, Sendable, Codable {
+    public var grid: Bool
+    public var keylines: Bool
+    public var geometry: Bool
+
+    public init(grid: Bool = true, keylines: Bool = true, geometry: Bool = true) {
+        self.grid = grid
+        self.keylines = keylines
+        self.geometry = geometry
+    }
+
+    public static let all = IconSnapChoices()
 }
