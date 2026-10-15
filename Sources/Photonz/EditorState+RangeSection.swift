@@ -158,6 +158,25 @@ extension EditorState {
         }
     }
 
+    /// Clean Noise in Section: each picked sound's stretch inside the range
+    /// plays a copy with its noise taken out, and the copy starts being made
+    /// at once, the way Clean Noise on a whole sound starts it.
+    func cleanNoiseRangeSection() {
+        guard let ids = rangeSection?.ids,
+              editSection(sound: true, { $0.cleanNoiseSection($1, within: $2) }) else { return }
+        for id in ids {
+            for ref in document?.layer(id: id)?.sectionCleanedSoundRefs ?? [] {
+                SoundLibrary.shared.clean(ref, waitingFirst: false)
+            }
+        }
+    }
+
+    /// Hide Picture for Section: each picked recording drawn as nothing inside
+    /// the range, its sound playing on.
+    func hidePictureRangeSection() {
+        editSection { $0.hidePictureSection($1, within: $2) }
+    }
+
     func splitRangeSection() {
         editSection { $0.splitSection($1, within: $2) > 0 }
     }
@@ -221,8 +240,10 @@ extension EditorState {
             })
         case .normalizeSection:
             return .command(operation.title, enabled: enabled) { Task { await self.normalizeRangeSection() } }
-        case .cleanNoiseInSection, .hidePictureForSection:
-            return .command(operation.title, enabled: false) {}
+        case .cleanNoiseInSection:
+            return .command(operation.title, enabled: enabled) { self.cleanNoiseRangeSection() }
+        case .hidePictureForSection:
+            return .command(operation.title, enabled: enabled) { self.hidePictureRangeSection() }
         case .splitAtRangeEdges:
             return .command(operation.title, enabled: enabled) { self.splitRangeSection() }
         case .deleteSection:
@@ -253,7 +274,8 @@ extension EditorState {
         switch operation {
         case .muteSection: canEditSection { $0.changeSoundSection($1, within: $2, .set(0)) }
         case .lowerVolume, .normalizeSection: rangeSection?.kinds.contains(.sound) == true
-        case .cleanNoiseInSection, .hidePictureForSection: false
+        case .cleanNoiseInSection: canEditSection { $0.cleanNoiseSection($1, within: $2) }
+        case .hidePictureForSection: canEditSection { $0.hidePictureSection($1, within: $2) }
         case .splitAtRangeEdges: canEditSection { $0.splitSection($1, within: $2) > 0 }
         case .deleteSection, .rippleDeleteSection: sectionTakesTheDelete
         case .speedForSection: rangeSection?.kinds.contains(.picture) == true

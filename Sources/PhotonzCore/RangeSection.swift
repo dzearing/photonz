@@ -90,15 +90,10 @@ public enum SectionOperation: String, CaseIterable, Hashable, Sendable {
     }
 
     /// Whether the app can do it yet. A row it cannot do is left out of every
-    /// menu rather than shown dead. Cleaning the noise of one stretch needs a
-    /// cleaned copy of part of a sound, and hiding the picture for a stretch
-    /// needs a picture that can be off for part of a clip; neither exists yet.
-    public var isAvailable: Bool {
-        switch self {
-        case .cleanNoiseInSection, .hidePictureForSection: false
-        default: true
-        }
-    }
+    /// menu rather than shown dead. Every row can be done today; the gate
+    /// stays so a row added to the table before its edit exists is never
+    /// offered.
+    public var isAvailable: Bool { true }
 
     /// The operations offered for a pick of these kinds, in menu order, only
     /// those the app can do.
@@ -280,12 +275,57 @@ extension PhotonzDocument {
         return changed
     }
 
+    /// Clean Noise in Section: each picked sound cut at both ends of its part
+    /// of `range`, and the piece between played from a copy with its noise
+    /// taken out (`NoiseCleaning.swift`). A sound already cleaned whole, or
+    /// already cleaned over all of it, is left alone. Answers whether any was
+    /// cleaned.
+    @discardableResult
+    public mutating func cleanNoiseSection(_ ids: [UUID], within range: Range<Int>,
+                                           _ reduction: NoiseReduction = .standard) -> Bool {
+        var changed = false
+        for id in ids where sectionKinds(of: id, within: range).contains(.sound) {
+            guard layer(id: id)?.soundLevel?.activeNoiseReduction == nil,
+                  !sectionAlready(id, within: range, { $0.noiseReduction == reduction }),
+                  let index = sectionPiece(id, within: range, kind: .sound) else { continue }
+            if editClip(id, { pieces, _ in pieces.setNoiseReduction(ofPiece: index, reduction) }) { changed = true }
+        }
+        return changed
+    }
+
+    /// Every stretch of a layer's sound cleaned on its own put back to the
+    /// file: what Remove Noise Cleaning does alongside the whole sound's.
+    @discardableResult
+    public mutating func clearSectionNoiseCleaning(_ id: UUID) -> Bool {
+        guard layer(id: id)?.hasSectionNoiseCleaning == true else { return false }
+        return editClip(id) { pieces, _ in
+            var changed = false
+            for index in 0..<pieces.count where pieces.setNoiseReduction(ofPiece: index, nil) { changed = true }
+            return changed
+        }
+    }
+
     // MARK: Picture
+
+    /// Whether every piece a layer plays inside its part of `range` already
+    /// says `marked`, so a row would change nothing and cut nothing.
+    private func sectionAlready(_ id: UUID, within range: Range<Int>,
+                                _ marked: (ClipPiece) -> Bool) -> Bool {
+        guard let time = layer(id: id)?.time, let pieces = layer(id: id)?.clipPieces,
+              let span = section(of: id, within: range) else { return false }
+        for index in 0..<pieces.count {
+            guard let piece = pieces.piece(at: index), let at = pieces.rangeMS(ofPiece: index) else { continue }
+            let lower = time.inMS + at.start, upper = time.inMS + at.end
+            if lower < span.upperBound, upper > span.lowerBound, !marked(piece) { return false }
+        }
+        return true
+    }
 
     /// The piece of a clip that starts where its part of `range` starts,
     /// once the clip has been cut at both ends of it.
-    private mutating func sectionPiece(_ id: UUID, within range: Range<Int>) -> Int? {
-        guard sectionKinds(of: id, within: range).contains(.picture),
+    private mutating func sectionPiece(_ id: UUID, within range: Range<Int>,
+                                       kind: SectionKind = .picture) -> Int? {
+        guard sectionKinds(of: id, within: range).contains(kind),
               let span = section(of: id, within: range) else { return nil }
         splitClip(id, atMS: span.lowerBound)
         splitClip(id, atMS: span.upperBound)
@@ -320,6 +360,27 @@ extension PhotonzDocument {
             if editClip(id, { pieces, _ in pieces.freeze(ofPiece: index) }) { changed = true }
         }
         return changed
+    }
+
+    /// Hide Picture for Section: each picked recording cut at both ends of its
+    /// part of `range`, and the piece between drawn as nothing while its sound
+    /// plays on. Nothing moves. Answers whether any picture was hidden.
+    @discardableResult
+    public mutating func hidePictureSection(_ ids: [UUID], within range: Range<Int>) -> Bool {
+        var changed = false
+        for id in ids where sectionKinds(of: id, within: range).contains(.picture) {
+            guard !sectionAlready(id, within: range, \.pictureHidden),
+                  let index = sectionPiece(id, within: range) else { continue }
+            if setPictureHidden(id, ofPiece: index, true) { changed = true }
+        }
+        return changed
+    }
+
+    /// One piece of a clip with its picture taken off, or put back: Show
+    /// Picture on a hidden piece's right click.
+    @discardableResult
+    public mutating func setPictureHidden(_ id: UUID, ofPiece index: Int, _ hidden: Bool) -> Bool {
+        editClip(id) { pieces, _ in pieces.setPictureHidden(ofPiece: index, hidden) }
     }
 
     /// A zoom on each of `ids` from where the range starts to where it ends,

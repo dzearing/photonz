@@ -388,6 +388,14 @@ struct ClipPiecesBar: View {
                 filmstrip(item, index: index, pieceWidth: raw, shown: shown, pictures: pictures)
             }
             .overlay {
+                // A stretch whose picture is off reads dimmed, the way
+                // Premiere draws a disabled clip; its name stays white on
+                // the darker ground.
+                if item?.pictureHidden == true, !isSound {
+                    Color.black.opacity(0.45).allowsHitTesting(false)
+                }
+            }
+            .overlay {
                 // On its own: the name moves along with the lane's left edge
                 // while the piece runs off it, and that is all a scroll asks
                 // to be drawn again.
@@ -407,7 +415,7 @@ struct ClipPiecesBar: View {
                 // across the part of the file the WINDOW is showing, which is
                 // what makes a zoomed waveform real detail rather than the
                 // same drawing stretched.
-                if isSound, let item, item.playsSound, let wave = waveform,
+                if isSound, let item, item.playsSound, let wave = waveform(ofPiece: index),
                    shown.width >= 2 {
                     let file = Double(item.sourceOutMS - item.sourceInMS)
                     let span = Double(length)
@@ -433,10 +441,12 @@ struct ClipPiecesBar: View {
                 // cleaned sound is being made, how far along that is (an EQ
                 // or a compressor is made the same way, so it shows too).
                 let progress = editorState.soundCleaningProgress(of: layerID)
+                // A stretch cleaned on its own (Clean Noise in Section) wears
+                // the sparkle on that piece alone.
+                let cleaned = soundLevel?.activeNoiseReduction != nil || item?.noiseReduction != nil
                 if isSound, !(item.map(isQuiet) ?? false), shown.width > 48, soundLevel?.clipGainLabel != nil
-                    || soundLevel?.activeNoiseReduction != nil || progress != nil {
-                    soundBadge(gain: soundLevel?.clipGainLabel, cleaned: soundLevel?.activeNoiseReduction != nil,
-                               progress: progress)
+                    || cleaned || progress != nil {
+                    soundBadge(gain: soundLevel?.clipGainLabel, cleaned: cleaned, progress: progress)
                 }
             }
             .overlay {
@@ -573,9 +583,10 @@ struct ClipPiecesBar: View {
     /// Asked for every time the bar draws, and asked for in the background the
     /// first time, so a bar with no waveform in it yet is a bar rather than a
     /// wait (`SoundFiles.swift`).
-    private var waveform: Waveform? {
-        // What plays, so a cleaned segment draws its cleaned sound.
-        guard let sound = editorState.document?.layer(id: layerID)?.playedSound else { return nil }
+    private func waveform(ofPiece index: Int) -> Waveform? {
+        // What plays, so a cleaned segment draws its cleaned sound, and a
+        // stretch cleaned on its own draws the copy cleaned for it.
+        guard let sound = editorState.document?.layer(id: layerID)?.playedSound(ofPiece: index) else { return nil }
         let already = SoundLibrary.shared.waveform(for: sound)
         #if PHOTONZ_PLAYTEST
         DrawnWaveforms.shared.bar(of: layerID, drew: already != nil)
@@ -708,7 +719,9 @@ struct ClipPiecesBar: View {
     private func filmstrip(_ item: ClipPiece?, index: Int, pieceWidth: CGFloat,
                            shown: TimelineSpan, pictures: Double) -> some View {
         ZStack(alignment: .topLeading) {
-            if pictures > 0, let item, let movie = pictureMovie, !isStill(item) {
+            // A stretch whose picture is off shows no pictures: the bar says
+            // "hidden" instead, the way Premiere draws a disabled clip.
+            if pictures > 0, let item, let movie = pictureMovie, !isStill(item), !item.pictureHidden || isSound {
                 ClipFilmstripStrip(layerID: layerID, pieceIndex: index, movie: movie, piece: item,
                                    pieceWidth: pieceWidth,
                                    visibleFrom: shown.startFraction * pieceWidth,
@@ -919,6 +932,9 @@ struct ClipPiecesBar: View {
         // quiet a hold on the picture pushed into it. Same piece, and the word
         // for it is different because what you get is different.
         if piece.isHeld { return isSound ? "silence" : "hold" }
+        // A stretch whose picture a range took off: its sound still plays,
+        // so the sound's bar says nothing.
+        if piece.pictureHidden, !isSound { return "hidden" }
         return ClipSpeed.badge(piece.speedPercent)
     }
 

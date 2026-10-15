@@ -349,9 +349,12 @@ extension Layer {
                   let last = ap.pieces.last, let next = bp.pieces.first,
                   last.speedPercent == ClipPiece.asRecordedPercent,
                   next.speedPercent == ClipPiece.asRecordedPercent,
-                  next.transitionIn == nil, last.sourceOutMS == next.sourceInMS else { return nil }
+                  next.transitionIn == nil, last.sourceOutMS == next.sourceInMS,
+                  last.pictureHidden == next.pictureHidden,
+                  last.noiseReduction == next.noiseReduction else { return nil }
             let bridge = ClipPiece(sourceInMS: last.sourceInMS, lengthMS: last.lengthMS + next.lengthMS,
-                                   transitionIn: last.transitionIn)
+                                   transitionIn: last.transitionIn, pictureHidden: last.pictureHidden,
+                                   noiseReduction: last.noiseReduction)
             let pieces = ClipPieces(pieces: Array(ap.pieces.dropLast()) + [bridge] + Array(bp.pieces.dropFirst()),
                                     sourceLengthMS: ap.sourceLengthMS)
             joined.time = a

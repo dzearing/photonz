@@ -1,0 +1,122 @@
+{
+  "out": "/tmp/photonz-playtest/hide-picture-and-clean-noise-for-a-section-walk",
+  "seed": "At Next defaults, no flag set: the sample recording, which has its own sound. A range drawn on the ruler from 0:03 to 0:06, then a click on the recording inside it, keeps the range and picks the recording. Its right click inside the range offers Hide Picture for Section: the picture is off between 0:03 and 0:06 and on either side, its sound plays on through the hidden stretch, the bar is cut at both edges and its middle piece says hidden, and one Undo takes it all back. Show Picture on the hidden piece's right click brings it back too. The same range over the recording's sound offers Clean Noise in Section: the mix plays a cleaned copy between 0:03 and 0:06 and the file as recorded outside it.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "clickRuler", "seconds": 0.0 },
+    { "do": "dragRuler", "from": 3.0, "to": 6.0 },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "windowClick", "at": [1000, 893] },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "expectTimelinePick",
+      "clips": ["Tutorial Sample"],
+      "rangeOn": ["every track"],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "describe",
+      "stage": "1-recording-picked-under-the-range",
+      "note": "a range from 0:03 to 0:06 on the ruler, then a click on the recording inside it: the recording is picked and the range is still in hand"
+    },
+    { "do": "snapshot", "name": "1-recording-picked-under-the-range" },
+    {
+      "do": "rightClick",
+      "at": [1000, 893],
+      "space": "window",
+      "choose": "Hide Picture for Section"
+    },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 3, "startsAt": 0.0 },
+    { "do": "clickRuler", "seconds": 4.5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": false },
+    { "do": "expectLevel", "clip": "Tutorial Sample", "fullAt": [3.2, 4.5, 5.8] },
+    {
+      "do": "describe",
+      "stage": "2-picture-hidden-in-the-range",
+      "note": "Hide Picture for Section from the right click: at 0:04.5 the canvas shows nothing of the recording, its sound is still heard at full level at 0:03.2, 0:04.5 and 0:05.8, and the bar is cut at 0:03 and 0:06 with the middle piece reading hidden and no pictures in it"
+    },
+    { "do": "snapshot", "name": "2-picture-hidden-in-the-range" },
+    { "do": "clickRuler", "seconds": 2.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": true },
+    { "do": "clickRuler", "seconds": 7.0 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": true },
+    {
+      "do": "describe",
+      "stage": "3-picture-on-outside-the-range",
+      "note": "outside the range the recording is drawn as it was: shown at 0:02 and at 0:07"
+    },
+    { "do": "snapshot", "name": "3-picture-on-outside-the-range" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 1 },
+    { "do": "clickRuler", "seconds": 4.5 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": true },
+    {
+      "do": "describe",
+      "stage": "4-one-undo",
+      "note": "one Undo takes the whole edit back: one piece again, the picture shown at 0:04.5"
+    },
+    { "do": "action", "action": "redo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": false },
+    {
+      "do": "rightClick",
+      "at": [1000, 893],
+      "space": "window",
+      "choose": "Show Picture"
+    },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectDrawn", "layer": "Tutorial Sample", "shown": true },
+    {
+      "do": "describe",
+      "stage": "5-show-picture-brings-it-back",
+      "note": "Show Picture on the hidden piece's right click: the recording is drawn at 0:04.5 again"
+    },
+    { "do": "action", "action": "undo" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 1 },
+    { "do": "windowClick", "at": [1000, 930] },
+    { "do": "wait", "seconds": 0.4 },
+    {
+      "do": "expectTimelinePick",
+      "clips": ["Tutorial Sample"],
+      "rangeOn": ["every track"],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "rightClick",
+      "at": [1000, 930],
+      "space": "window",
+      "choose": "Clean Noise in Section"
+    },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLevel", "clip": "Tutorial Sample", "cleanedAt": [3.2, 4.5, 5.8], "rawAt": [1.0, 2.5, 7.0] },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 3 },
+    {
+      "do": "describe",
+      "stage": "6-noise-cleaned-in-the-range",
+      "note": "Clean Noise in Section from the right click on the recording's sound inside the range: the mix plays a cleaned copy at 0:03.2, 0:04.5 and 0:05.8 and the file as recorded at 0:01, 0:02.5 and 0:07; the sound's bar is cut at 0:03 and 0:06 and its middle piece wears the sparkle"
+    },
+    { "do": "snapshot", "name": "6-noise-cleaned-in-the-range" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectLevel", "clip": "Tutorial Sample", "rawAt": [4.5] }
+  ]
+}

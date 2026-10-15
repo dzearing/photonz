@@ -2493,7 +2493,7 @@ private final class Run {
             note(number, step.name, shows ? "the key popover is up above its key: \(said)" : "the key popover is closed",
                  state: describe())
 
-        case .expectDrawn(let query, let opacity):
+        case .expectDrawn(let query, let opacity, let shown):
             let editor = try requireEditor()
             guard let drawn = editor.shownDrawnDocument ?? editor.document else {
                 throw Failure(description: "there is no document on the canvas")
@@ -2502,7 +2502,16 @@ private final class Run {
                 throw Failure(description: "no layer on the canvas is called or says \"\(query)\"")
             }
             let at = String(format: "%.2fs", Double(editor.shownMomentMS ?? editor.documentTimeMS) / 1000)
+            if let shown, layer.isVisible != shown {
+                throw Failure(description: "the canvas \(layer.isVisible ? "shows" : "does not show") \"\(query)\" "
+                              + "at \(at), and the walk expected it \(shown ? "shown" : "off")")
+            }
             let reading = String(format: "%.1f%%", layer.style.opacity * 100)
+            guard let opacity else {
+                note(number, step.name, "the canvas \(layer.isVisible ? "shows" : "does not show") \"\(query)\" at \(at)",
+                     state: describe())
+                break
+            }
             guard abs(layer.style.opacity - opacity) <= 0.005 else {
                 throw Failure(description: "the canvas draws \"\(query)\" at \(reading) opacity at \(at), and the "
                               + "walk expected \(String(format: "%.1f%%", opacity * 100))")
@@ -3252,9 +3261,11 @@ private final class Run {
             note(number, step.name, try await checkWaveform(clip: clip, within: within),
                  state: describe())
 
-        case .expectLevel(let clip, let points, let dipsBelowDB, let flat, let silentAt, let fullAt):
+        case .expectLevel(let clip, let points, let dipsBelowDB, let flat, let silentAt, let fullAt,
+                          let cleanedAt, let rawAt):
             note(number, step.name, try checkLevel(clip: clip, points: points, dipsBelowDB: dipsBelowDB, flat: flat,
-                                                   silentAt: silentAt, fullAt: fullAt),
+                                                   silentAt: silentAt, fullAt: fullAt,
+                                                   cleanedAt: cleanedAt, rawAt: rawAt),
                  state: describe())
 
         case .expectClipPictures(let clip, let absent, let within):
@@ -9238,7 +9249,8 @@ private final class Run {
     /// points it carries and how loud each is, in decibels of its own shape
     /// (the fader is the Volume row's business, not the line's).
     private func checkLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?,
-                            silentAt: [Double] = [], fullAt: [Double] = []) throws -> String {
+                            silentAt: [Double] = [], fullAt: [Double] = [],
+                            cleanedAt: [Double] = [], rawAt: [Double] = []) throws -> String {
         let editor = try requireEditor()
         guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
             throw Failure(description: "there is no clip called \(clip) in the document")
@@ -9290,6 +9302,27 @@ private final class Run {
                 if abs(gain - fader) > 0.001 {
                     wrong.append(String(format: "at %.2fs it is heard at %@, not its full %@", seconds,
                                         said(gain), said(fader)))
+                }
+            }
+        }
+        // Whether what plays there is a copy with its noise taken out, out of
+        // the same mix (Clean Noise in Section).
+        if !cleanedAt.isEmpty || !rawAt.isEmpty, let document = editor.document {
+            let ids = Set(document.flattenedLayers.filter { $0.name == clip }.map(\.id))
+            func cleaned(_ seconds: Double) -> Bool? {
+                let ms = Int((seconds * 1000).rounded())
+                let playing = document.audioMix(atMS: ms).filter { ids.contains($0.layerID) }
+                guard !playing.isEmpty else { return nil }
+                return playing.contains { $0.sound.cleaning?.reduction != nil }
+            }
+            for (seconds, wanted) in cleanedAt.map({ ($0, true) }) + rawAt.map({ ($0, false) }) {
+                let found = cleaned(seconds)
+                heard.append(String(format: "%.2fs ", seconds)
+                    + (found.map { $0 ? "cleaned" : "as recorded" } ?? "nothing"))
+                if found != wanted {
+                    wrong.append(String(format: "at %.2fs it plays %@, not %@", seconds,
+                                        found.map { $0 ? "a cleaned copy" : "the file as recorded" } ?? "nothing",
+                                        wanted ? "a cleaned copy" : "the file as recorded"))
                 }
             }
         }

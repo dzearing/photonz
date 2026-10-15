@@ -1,0 +1,28 @@
+{
+  "feature": "Clean Noise and Hide Picture over a range",
+  "epic": "video-cutting",
+  "summary": "With a range drawn and a clip picked inside it, the right click now offers Clean Noise in Section for its sound and Hide Picture for Section for a recording. Each acts on the stretch inside the range only, as one step to undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (it has its own sound).",
+  "switched": {},
+  "try": [
+    { "do": "Drag on the ruler from 0:03 to 0:06 to draw a range." },
+    { "do": "Click the recording's bar on V1 inside the range, then right-click it there and choose Hide Picture for Section.", "shot": "2026-10-15-section-hide-picture-1.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Play from 0:02 to 0:07: the picture goes black between 0:03 and 0:06 while the voice carries on." },
+    { "do": "Right-click the dimmed piece marked hidden and choose Show Picture, then press Command-Z." },
+    { "do": "Click the recording's sound under V1 inside the range, right-click it and choose Clean Noise in Section.", "shot": "2026-10-15-section-clean-noise-2.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Play across 0:03 and 0:06 and listen for the hiss dropping out inside the range only." },
+    { "do": "Try both again from Sequence > Picked in Range in the menu bar." }
+  ],
+  "evaluate": [
+    "Does the dimmed piece with its 'hidden' badge tell you at a glance which stretch has no picture?",
+    "Is Show Picture on that piece's right click where you would look to bring it back?",
+    "Is the change in hiss at the range edges acceptable, or do you want it to ease in over a few frames?",
+    "Should Remove Noise Cleaning on a sound also clear stretches cleaned this way, as it does now?"
+  ],
+  "rough": [
+    "No mock covers these two rows; they follow the table of range rows the user asked for on 2026-10-12.",
+    "Both cut the clip at the range edges, as Speed for Section and Freeze Frame for Section already do, so the bar gains two cuts.",
+    "A cleaned stretch is cleaned at Medium; there is no strength choice for a section yet, and its waveform shows the file as recorded until the cleaned copy has been made.",
+    "The cleaning switches on hard at the cut, with no crossfade into the cleaned copy."
+  ]
+}

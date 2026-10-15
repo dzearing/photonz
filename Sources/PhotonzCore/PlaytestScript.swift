@@ -2934,8 +2934,10 @@ public enum PlaytestStep: Sendable, Equatable {
     case expectKeyValues(present: Bool, rows: [String]?, reads: [String]?)
     /// CLAIMS how the layer named `layer` (by name or its words) is drawn on
     /// the canvas right now, in the document the canvas was handed at the
-    /// playhead: `opacity` nought to one, within half a percent.
-    case expectDrawn(layer: String, opacity: Double)
+    /// playhead: `opacity` nought to one, within half a percent; `shown`
+    /// whether it is on the canvas at all there, which a stretch whose
+    /// picture is hidden (Hide Picture for Section) is not. At least one.
+    case expectDrawn(layer: String, opacity: Double?, shown: Bool? = nil)
     /// CLAIMS how the volume line of the clip named `clip` stands, and FAILS
     /// when it does not: `curves` is each segment's curve in order, as its
     /// right-click names it ("Linear", "Ease out", "Hold"); `pickedPoints`
@@ -3788,7 +3790,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// gives: read out of the mix the player and the export both play
     /// (`audioMix`), so it is what is heard, not what the line looks like.
     case expectLevel(clip: String, points: Int?, dipsBelowDB: Double?, flat: Bool?,
-                     silentAt: [Double] = [], fullAt: [Double] = [])
+                     silentAt: [Double] = [], fullAt: [Double] = [],
+                     cleanedAt: [Double] = [], rawAt: [Double] = [])
     /// CLAIMS that the clip named `clip` shows pictures of what is in it along
     /// its bar on the timeline, every picture on screen read and the strip in
     /// full, waiting up to `within` seconds (three unless said otherwise) for
@@ -4801,10 +4804,13 @@ public enum PlaytestStep: Sendable, Equatable {
                                     rows: f.has("rows") ? try f.optionalStrings("rows") : nil,
                                     reads: f.has("reads") ? try f.optionalStrings("reads") : nil)
         case "expectDrawn":
-            guard let opacity = try f.optionalNumber("opacity"), (0...1).contains(opacity) else {
-                throw f.invalid("opacity", "expectDrawn claims the opacity the canvas draws the layer at, 0 to 1")
+            let opacity = try f.optionalNumber("opacity")
+            let shown = try f.optionalFlag("shown")
+            guard opacity != nil || shown != nil, opacity.map({ (0...1).contains($0) }) ?? true else {
+                throw f.invalid("opacity", "expectDrawn claims the opacity the canvas draws the layer at, 0 to 1, "
+                    + "or whether it is \"shown\" at all")
             }
-            self = .expectDrawn(layer: try f.string("layer"), opacity: opacity)
+            self = .expectDrawn(layer: try f.string("layer"), opacity: opacity, shown: shown)
         case "expectSoundLine":
             let curves = f.has("curves") ? try f.optionalStrings("curves") : nil
             func places(_ field: String) throws -> [Int]? {
@@ -5251,9 +5257,15 @@ public enum PlaytestStep: Sendable, Equatable {
             let flat = try f.optionalFlag("flat")
             let silentAt = try f.optionalNumbers("silentAt")
             let fullAt = try f.optionalNumbers("fullAt")
-            guard points != nil || dipsBelowDB != nil || flat != nil || !silentAt.isEmpty || !fullAt.isEmpty else {
+            // Where the mix plays a copy with its noise taken out, and where
+            // the file as it is (Clean Noise in Section).
+            let cleanedAt = try f.optionalNumbers("cleanedAt")
+            let rawAt = try f.optionalNumbers("rawAt")
+            guard points != nil || dipsBelowDB != nil || flat != nil || !silentAt.isEmpty || !fullAt.isEmpty
+                    || !cleanedAt.isEmpty || !rawAt.isEmpty else {
                 throw f.invalid("points", "expectLevel has to claim something: "
-                    + "a number of \"points\", a \"dipsBelowDB\", \"flat\", \"silentAt\" or \"fullAt\"")
+                    + "a number of \"points\", a \"dipsBelowDB\", \"flat\", \"silentAt\", \"fullAt\", "
+                    + "\"cleanedAt\" or \"rawAt\"")
             }
             if let both = silentAt.first(where: { fullAt.contains($0) }) {
                 throw f.invalid("silentAt", "a clip cannot be heard both in silence and at its full level "
@@ -5266,7 +5278,8 @@ public enum PlaytestStep: Sendable, Equatable {
                 throw f.invalid("flat", "a flat line cannot also dip, so no level could ever pass")
             }
             self = .expectLevel(clip: try f.string("clip"), points: points.map { Int($0) },
-                                dipsBelowDB: dipsBelowDB, flat: flat, silentAt: silentAt, fullAt: fullAt)
+                                dipsBelowDB: dipsBelowDB, flat: flat, silentAt: silentAt, fullAt: fullAt,
+                                cleanedAt: cleanedAt, rawAt: rawAt)
         case "expectClipPictures":
             let within = try f.optionalNumber("within") ?? 3
             guard within >= 0 else {

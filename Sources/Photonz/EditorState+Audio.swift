@@ -434,6 +434,29 @@ extension EditorState {
         }
     }
 
+    /// Remove Noise Cleaning: the whole sound's cleaning and every stretch
+    /// cleaned on its own (Clean Noise in Section) back to the file, as one
+    /// step to undo.
+    func removeNoiseCleaning(layers ids: [UUID]) {
+        guard var trial = document else { return }
+        let changed = Self.removingNoiseCleaning(&trial, ids)
+        guard changed else { return }
+        perform { _ = Self.removingNoiseCleaning(&$0, ids) }
+        followAudio()
+    }
+
+    private static func removingNoiseCleaning(_ doc: inout PhotonzDocument, _ ids: [UUID]) -> Bool {
+        var changed = false
+        for id in ids {
+            if doc.clearSectionNoiseCleaning(id) { changed = true }
+            guard var level = doc.layer(id: id)?.soundLevel, level.noiseReduction != nil else { continue }
+            level.noiseReduction = nil
+            doc.updateLayer(id: id) { $0.setSoundLevel(level) }
+            changed = true
+        }
+        return changed
+    }
+
     /// The picked sound's Audio Effects list: put one on, or take one off, the
     /// picked sound and whatever is picked with it, as one step to undo.
     func addSoundEffectInHand(_ kind: SoundEffectKind) {

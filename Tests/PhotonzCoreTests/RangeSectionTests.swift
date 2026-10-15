@@ -44,7 +44,7 @@ struct RangeSectionTests {
     @Test("A sound is offered the sound rows and the cutting rows, nothing for pictures")
     func soundRows() {
         #expect(SectionOperation.offered(for: [.sound]) == [
-            .muteSection, .lowerVolume, .normalizeSection,
+            .muteSection, .lowerVolume, .normalizeSection, .cleanNoiseInSection,
             .splitAtRangeEdges, .deleteSection, .rippleDeleteSection,
         ])
     }
@@ -56,6 +56,8 @@ struct RangeSectionTests {
         #expect(rows.contains(.speedForSection))
         #expect(rows.contains(.freezeFrameForSection))
         #expect(rows.contains(.addZoomOverRange))
+        #expect(rows.contains(.hidePictureForSection))
+        #expect(rows.contains(.cleanNoiseInSection))
         #expect(!rows.contains(.trimToRange))
     }
 
@@ -66,12 +68,12 @@ struct RangeSectionTests {
         #expect(SectionOperation.offered(for: []).isEmpty)
     }
 
-    @Test("What the app cannot do yet is never offered")
-    func unavailableRowsAreLeftOut() {
+    @Test("Every row the table has is one the app can do, Clean Noise and Hide Picture included")
+    func everyRowIsAvailable() {
         let every = SectionOperation.offered(for: Set(SectionKind.allCases))
-        #expect(!every.contains(.cleanNoiseInSection))
-        #expect(!every.contains(.hidePictureForSection))
-        #expect(every.count == SectionOperation.allCases.filter(\.isAvailable).count)
+        #expect(every.contains(.cleanNoiseInSection))
+        #expect(every.contains(.hidePictureForSection))
+        #expect(every == SectionOperation.allCases)
     }
 
     @Test("Every row has a short name and at least one kind")
@@ -342,5 +344,227 @@ struct LevelFollowsATakenStretchTests {
         #expect(RangeSectionTests.heardAnything(doc, atMS: 4500) == 0)
         #expect(RangeSectionTests.heardAnything(doc, atMS: 6500) == 1)
         #expect(RangeSectionTests.heardAnything(doc, atMS: 3500) == 1)
+    }
+}
+
+/// **Clean Noise in Section and Hide Picture for Section** (`RangeSection.swift`).
+///
+/// The whole-clip versions already existed: Clean Noise on a sound, a layer's
+/// eye. Over a range they act on the stretch inside it only, the way Premiere
+/// puts an effect on a cut segment or disables one: the clip is cut at the
+/// range's edges, as Speed for Section and Freeze Frame for Section cut it, and
+/// the piece in the middle is marked. A split adds a piece, never a second
+/// clip, so the mark lives on the piece.
+@Suite("A stretch of a clip cleaned or hidden")
+struct SectionCleanAndHideTests {
+
+    /// A twelve second recording WITH its own sound, and music from 1s.
+    static func talking() -> (doc: PhotonzDocument, clip: UUID, music: UUID) {
+        var doc = PhotonzDocument.recording(
+            MovieRef(pixelSize: CGSize(width: 1920, height: 1080), durationMS: 12_000, hasSound: true),
+            name: "Talk")
+        let clip = doc.layers[0].id
+        let music = doc.addSound(SoundRef(durationMS: 10_000), name: "music", atMS: 1000)
+        doc.materializeTracks()
+        return (doc, clip, music)
+    }
+
+    static func segment(_ doc: PhotonzDocument, _ id: UUID, atMS ms: Int) -> AudioMixSegment? {
+        doc.audioMix(atMS: ms).first { $0.layerID == id }
+    }
+
+    static func shows(_ doc: PhotonzDocument, _ id: UUID, atMS ms: Int) -> Bool {
+        doc.drawn(atTimeMS: ms).layers.first { $0.id == id }?.isVisible ?? false
+    }
+
+    // MARK: Hide Picture
+
+    @Test("Hide Picture for Section takes the picture off inside the range and nowhere else")
+    func hideThePicture() {
+        var (doc, clip, _) = Self.talking()
+        #expect(doc.sectionKinds(of: clip, within: 4000..<6000) == [.sound, .picture])
+        let did = doc.hidePictureSection([clip], within: 4000..<6000)
+        #expect(did)
+        #expect(Self.shows(doc, clip, atMS: 3000))
+        #expect(!Self.shows(doc, clip, atMS: 4000))
+        #expect(!Self.shows(doc, clip, atMS: 5500))
+        #expect(Self.shows(doc, clip, atMS: 6000))
+        // Cut at both edges, one clip, the middle piece marked.
+        let pieces = doc.layer(id: clip)?.clipPieces
+        #expect(pieces?.count == 3)
+        #expect(pieces?.pieces.map(\.pictureHidden) == [false, true, false])
+        #expect(doc.layers.count == 2)
+        // Nothing moved: the clip is as long as it was.
+        #expect(doc.layer(id: clip)?.time?.outMS == 12_000)
+    }
+
+    @Test("Its sound plays on under the hidden stretch")
+    func hiddenKeepsItsSound() {
+        var (doc, clip, _) = Self.talking()
+        doc.hidePictureSection([clip], within: 4000..<6000)
+        #expect(RangeSectionTests.heard(doc, clip, atMS: 5000) == 1)
+    }
+
+    @Test("Hiding a stretch already hidden changes nothing")
+    func hideTwice() {
+        var (doc, clip, _) = Self.talking()
+        doc.hidePictureSection([clip], within: 4000..<6000)
+        let again = doc.hidePictureSection([clip], within: 4000..<6000)
+        #expect(!again)
+    }
+
+    @Test("A range over the whole clip hides it all and keeps it one piece")
+    func hideTheWholeClip() {
+        var (doc, clip, _) = Self.talking()
+        let did = doc.hidePictureSection([clip], within: 0..<12_000)
+        #expect(did)
+        #expect(doc.layer(id: clip)?.clipPieces?.count == 1)
+        #expect(doc.layer(id: clip)?.clipPieces?.piece(at: 0)?.pictureHidden == true)
+        #expect(!Self.shows(doc, clip, atMS: 100))
+    }
+
+    @Test("Hide Picture does nothing to a sound")
+    func hideSkipsSounds() {
+        var (doc, _, music) = Self.talking()
+        let did1 = doc.hidePictureSection([music], within: 3000..<6000)
+        #expect(!did1)
+    }
+
+    @Test("Show Picture brings a hidden piece back")
+    func showAgain() {
+        var (doc, clip, _) = Self.talking()
+        doc.hidePictureSection([clip], within: 4000..<6000)
+        let did = doc.setPictureHidden(clip, ofPiece: 1, false)
+        #expect(did)
+        #expect(Self.shows(doc, clip, atMS: 5000))
+        let did2 = doc.setPictureHidden(clip, ofPiece: 1, false)
+        #expect(!did2)
+    }
+
+    @Test("A hidden stretch cannot be clicked on the canvas")
+    func hiddenIsOffScreenForClicks() {
+        var (doc, clip, _) = Self.talking()
+        doc.hidePictureSection([clip], within: 4000..<6000)
+        #expect(doc.hidingWhatIsOffScreen(atTimeMS: 5000).layer(id: clip)?.isVisible == false)
+        #expect(doc.hidingWhatIsOffScreen(atTimeMS: 3000).layer(id: clip)?.isVisible == true)
+    }
+
+    // MARK: Clean Noise
+
+    @Test("Clean Noise in Section plays a cleaned copy inside the range and the file outside it")
+    func cleanTheSection() {
+        var (doc, clip, music) = Self.talking()
+        let did = doc.cleanNoiseSection([music], within: 4000..<6000)
+        #expect(did)
+        let inside = Self.segment(doc, music, atMS: 5000)
+        #expect(inside?.sound.cleaning?.reduction == .standard)
+        // Learned from the stretch it cleans: 3s to 5s of the music's file.
+        #expect(inside?.sound.cleaning?.learnFromMS == [3000..<5000])
+        #expect(inside?.sound.sourceID == doc.layer(id: music)?.sound?.id)
+        #expect(Self.segment(doc, music, atMS: 3000)?.sound.cleaning == nil)
+        #expect(Self.segment(doc, music, atMS: 7000)?.sound.cleaning == nil)
+        // The recording on its own track is not touched.
+        #expect(Self.segment(doc, clip, atMS: 5000)?.sound.cleaning == nil)
+        // Cut at both edges, still one clip, nothing moved.
+        #expect(doc.layer(id: music)?.clipPieces?.count == 3)
+        #expect(doc.layer(id: music)?.time?.outMS == 11_000)
+    }
+
+    @Test("A recording's own sound can be cleaned over a stretch")
+    func cleanARecording() {
+        var (doc, clip, _) = Self.talking()
+        let did = doc.cleanNoiseSection([clip], within: 4000..<6000)
+        #expect(did)
+        #expect(Self.segment(doc, clip, atMS: 5000)?.sound.cleaning?.reduction == .standard)
+        #expect(Self.shows(doc, clip, atMS: 5000))
+    }
+
+    @Test("Cleaning a stretch already clean, or a sound cleaned whole, changes nothing")
+    func cleanTwice() {
+        var (doc, _, music) = Self.talking()
+        doc.cleanNoiseSection([music], within: 4000..<6000)
+        let did3 = doc.cleanNoiseSection([music], within: 4000..<6000)
+        #expect(!did3)
+        var (whole, _, wholeMusic) = Self.talking()
+        whole.updateLayer(id: wholeMusic) { layer in
+            var level = AudioLevel()
+            level.noiseReduction = .medium
+            layer.setSoundLevel(level)
+        }
+        let did4 = whole.cleanNoiseSection([wholeMusic], within: 4000..<6000)
+        #expect(!did4)
+    }
+
+    @Test("Two cleaned stretches of one sound play one cleaned copy, learned from both")
+    func twoStretchesOneCopy() {
+        var (doc, _, music) = Self.talking()
+        doc.cleanNoiseSection([music], within: 2000..<3000)
+        doc.cleanNoiseSection([music], within: 6000..<8000)
+        let first = Self.segment(doc, music, atMS: 2500)?.sound
+        let second = Self.segment(doc, music, atMS: 7000)?.sound
+        #expect(first != nil && first == second)
+        #expect(first?.cleaning?.learnFromMS == [1000..<2000, 5000..<7000])
+    }
+
+    @Test("Removing noise cleaning takes the stretches back to the file too")
+    func removeCleaning() {
+        var (doc, _, music) = Self.talking()
+        doc.cleanNoiseSection([music], within: 4000..<6000)
+        let did = doc.clearSectionNoiseCleaning(music)
+        #expect(did)
+        #expect(Self.segment(doc, music, atMS: 5000)?.sound.cleaning == nil)
+        let did5 = doc.clearSectionNoiseCleaning(music)
+        #expect(!did5)
+    }
+
+    @Test("A cleaned section keeps the EQ the whole sound has")
+    func cleanedSectionKeepsTheEQ() {
+        var (doc, _, music) = Self.talking()
+        doc.updateLayer(id: music) { layer in
+            var level = AudioLevel()
+            level.addEffect(.eq)
+            layer.setSoundLevel(level)
+        }
+        doc.cleanNoiseSection([music], within: 4000..<6000)
+        let inside = Self.segment(doc, music, atMS: 5000)?.sound.cleaning
+        #expect(inside?.reduction == .standard)
+        #expect(inside?.eq != nil)
+    }
+
+    @Test("Clean Noise does nothing to a silent recording")
+    func cleanSkipsPictures() {
+        var (doc, clip, _) = RangeSectionTests.edit()
+        let did6 = doc.cleanNoiseSection([clip], within: 3000..<6000)
+        #expect(!did6)
+    }
+
+    // MARK: The marks on a piece
+
+    @Test("Both marks survive a cut, and a piece with a mark never joins one without")
+    func marksSurviveACut() {
+        let piece = ClipPiece(sourceInMS: 0, lengthMS: 4000).hidingPicture(true).cleaning(.strong)
+        let halves = piece.split(atOffsetMS: 1000)
+        #expect(halves?.0.pictureHidden == true && halves?.1.pictureHidden == true)
+        #expect(halves?.0.noiseReduction == .strong && halves?.1.noiseReduction == .strong)
+        #expect(piece.trimmedEnd(byMS: -500).pictureHidden)
+        #expect(piece.trimmedStart(byMS: 500).noiseReduction == .strong)
+        #expect(piece.atSpeed(percent: 200).pictureHidden)
+        var pieces = ClipPieces(pieces: [ClipPiece(sourceInMS: 0, lengthMS: 1000),
+                                         ClipPiece(sourceInMS: 1000, lengthMS: 1000).hidingPicture(true)])
+        #expect(!pieces.isOnePlainPiece)
+        let did7 = pieces.setPictureHidden(ofPiece: 1, false)
+        #expect(did7)
+        #expect(!ClipPieces(pieces: [ClipPiece(sourceInMS: 0, lengthMS: 1000).cleaning(.light)]).isOnePlainPiece)
+    }
+
+    @Test("A piece with no mark writes nothing about either, and one with marks reads back")
+    func marksAreWrittenOnlyWhenSet() throws {
+        let plain = ClipPiece(sourceInMS: 0, lengthMS: 1000)
+        let written = String(decoding: try JSONEncoder().encode(plain), as: UTF8.self)
+        #expect(!written.contains("picture") && !written.contains("noise"))
+        let marked = plain.hidingPicture(true).cleaning(.medium)
+        let back = try JSONDecoder().decode(ClipPiece.self, from: try JSONEncoder().encode(marked))
+        #expect(back == marked)
+        #expect(back.pictureHidden && back.noiseReduction == .medium)
     }
 }

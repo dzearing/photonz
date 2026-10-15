@@ -21435,3 +21435,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Drag-time readouts, the transition length bubble and the clip name field sit in a lane overlay laid out against the window.
 - Measured on `box-scrolls-at-the-edge-walk`, three runs: right edge p95 33.3 to 16.7 ms, left edge p95 16.7, five second hold 16.7 across; clip bar bodies per 3 s hold 428 to 24; track row and dock grid bodies 0. Its log line now carries the hold's main thread and body counts.
 - Left: walk-only cost, the harness's window watcher takes 7 to 10 percent of the main thread in any walk. Spikes of 40 to 60 ms show at the moment a box picks a new clip.
+
+## 2026-10-15 — Clean Noise and Hide Picture over a range
+
+- With a range in hand and a clip picked, Clean Noise in Section and Hide Picture for Section now work (right click and Sequence > Picked in Range). Both cut the clip at the range edges and mark the middle piece (`ClipPiece.pictureHidden`, `ClipPiece.noiseReduction`).
+- A hidden piece is off screen for drawing and clicks (`Layer.isOnScreen`), keeps its sound, reads dimmed with a "hidden" badge on the bar, and comes back with Show Picture (piece right click, Clip menu). A cleaned piece plays `Layer.sectionCleanedSounds`; Remove Noise Cleaning clears it with the whole sound's.
+- Walk: `hide-picture-and-clean-noise-for-a-section-walk`; `picked-in-range-menu-bar-walk` extended. New claims: `expectDrawn.shown`, `expectLevel.cleanedAt/rawAt`.
+- Open: strength choice for a section's cleaning; crossfade at the cut.

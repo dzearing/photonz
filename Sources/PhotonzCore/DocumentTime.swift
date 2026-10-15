@@ -152,7 +152,16 @@ extension Layer {
     /// the layers list impossible (`video-surface.md` §3).
     public func isOnScreen(atTimeMS ms: Int) -> Bool {
         guard let time else { return true }
-        return time.contains(ms: ms)
+        return time.contains(ms: ms) && !isPictureHidden(atTimeMS: ms)
+    }
+
+    /// Whether the piece playing at this moment has had its picture taken off
+    /// (Hide Picture for Section, `RangeSection.swift`). Its sound plays on;
+    /// only the drawing, and a click on it, go.
+    public func isPictureHidden(atTimeMS ms: Int) -> Bool {
+        guard let cuts, cuts.hidesAnyPicture, let time,
+              let index = cuts.pieceIndex(atMS: ms - time.inMS) else { return false }
+        return cuts.piece(at: index)?.pictureHidden == true
     }
 }
 

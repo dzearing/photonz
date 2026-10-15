@@ -3329,7 +3329,7 @@ struct PlaytestScriptTests {
         guard case .expectKeyValues(let gone, let noRows, _) = script.steps[1] else { Issue.record("gone"); return }
         #expect(!gone)
         #expect(noRows == nil)
-        guard case .expectDrawn(let layer, let opacity) = script.steps[2] else { Issue.record("expectDrawn"); return }
+        guard case .expectDrawn(let layer, let opacity, _) = script.steps[2] else { Issue.record("expectDrawn"); return }
         #expect(layer == "Ship it")
         #expect(opacity == 0.4)
         #expect(PlaytestStep.names.contains("expectKeyValues"))
@@ -5125,7 +5125,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectLevel", "clip": "b-roll", "points": 3, "dipsBelowDB": -20 } ] }
         """)
-        guard case .expectLevel(let clip, let points, let dipsBelowDB, let flat, _, _) = script.steps[0] else {
+        guard case .expectLevel(let clip, let points, let dipsBelowDB, let flat, _, _, _, _) = script.steps[0] else {
             Issue.record("expectLevel"); return
         }
         #expect(clip == "b-roll")
@@ -5140,7 +5140,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectLevel", "clip": "b-roll", "flat": true } ] }
         """)
-        guard case .expectLevel(_, let points, _, let flat, _, _) = script.steps[0] else {
+        guard case .expectLevel(_, let points, _, let flat, _, _, _, _) = script.steps[0] else {
             Issue.record("expectLevel"); return
         }
         #expect(points == nil)
@@ -5155,13 +5155,31 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectLevel", "clip": "Sample Music", "silentAt": [4.5], "fullAt": [2, 8] } ] }
         """)
-        guard case .expectLevel(let clip, let points, _, _, let silentAt, let fullAt) = script.steps[0] else {
+        guard case .expectLevel(let clip, let points, _, _, let silentAt, let fullAt, _, _) = script.steps[0] else {
             Issue.record("expectLevel"); return
         }
         #expect(clip == "Sample Music")
         #expect(points == nil)
         #expect(silentAt == [4.5])
         #expect(fullAt == [2, 8])
+    }
+
+    @Test func expectLevelAndExpectDrawnClaimCleaningAndHiding() throws {
+        let script = try PlaytestScript.decode(Data("""
+        { "steps": [ { "do": "expectLevel", "clip": "Talk", "cleanedAt": [4.5], "rawAt": [2] },
+                     { "do": "expectDrawn", "layer": "Talk", "shown": false } ] }
+        """.utf8))
+        guard case .expectLevel(_, _, _, _, _, _, let cleanedAt, let rawAt) = script.steps[0] else {
+            Issue.record("expectLevel"); return
+        }
+        #expect(cleanedAt == [4.5])
+        #expect(rawAt == [2])
+        guard case .expectDrawn(let layer, let opacity, let shown) = script.steps[1] else {
+            Issue.record("expectDrawn"); return
+        }
+        #expect(layer == "Talk")
+        #expect(opacity == nil)
+        #expect(shown == false)
     }
 
     @Test("A moment heard both silent and full can never pass")

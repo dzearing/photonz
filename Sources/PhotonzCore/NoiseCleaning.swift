@@ -187,6 +187,53 @@ extension Layer {
     }
 }
 
+extension Layer {
+
+    /// The cleaned copies this layer's stretches play where they were cleaned
+    /// on their own (Clean Noise in Section, `RangeSection.swift`), one per
+    /// strength. Each learns its noise from every stretch cleaned at that
+    /// strength, so two cleaned stretches of one sound play ONE copy rather
+    /// than two that call each other off while they are being made. They keep
+    /// whatever EQ and compressor the whole sound has on.
+    public func sectionCleanedSounds(_ pieces: ClipPieces) -> [NoiseReduction: SoundRef] {
+        guard let sound, pieces.pieces.contains(where: { $0.noiseReduction != nil }) else { return [:] }
+        var learn: [NoiseReduction: [Range<Int>]] = [:]
+        for piece in pieces.pieces where piece.playsSound && piece.sourceLengthMS > 0 {
+            guard let reduction = piece.noiseReduction else { continue }
+            learn[reduction, default: []].append(piece.sourceInMS..<piece.sourceOutMS)
+        }
+        let level = soundLevel
+        var made: [NoiseReduction: SoundRef] = [:]
+        for (reduction, ranges) in learn {
+            made[reduction] = sound.shaped(reduction: reduction,
+                                           learningFrom: ranges.sorted { $0.lowerBound < $1.lowerBound },
+                                           eq: level?.activeEQ, compressor: level?.activeCompressor)
+        }
+        return made
+    }
+
+    /// What one piece of this layer's sound plays as: the copy cleaned for
+    /// it where it was cleaned on its own, else what the whole sound plays.
+    public func playedSound(ofPiece index: Int) -> SoundRef? {
+        guard soundLevel?.activeNoiseReduction == nil, let pieces = clipPieces,
+              let reduction = pieces.piece(at: index)?.noiseReduction,
+              let cleaned = sectionCleanedSounds(pieces)[reduction] else { return playedSound }
+        return cleaned
+    }
+
+    /// Every copy this layer's cleaned stretches play: what the app has to
+    /// make once a stretch is cleaned.
+    public var sectionCleanedSoundRefs: [SoundRef] {
+        guard soundLevel?.activeNoiseReduction == nil, let pieces = clipPieces else { return [] }
+        return Array(sectionCleanedSounds(pieces).values)
+    }
+
+    /// Whether any stretch of this layer's sound is cleaned on its own.
+    public var hasSectionNoiseCleaning: Bool {
+        cuts?.pieces.contains { $0.noiseReduction != nil } ?? false
+    }
+}
+
 extension NoiseReduction {
 
     /// Below this a bucket is digital silence, which says nothing about the

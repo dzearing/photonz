@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/picked-in-range-menu-bar-walk",
-  "seed": "At Next defaults, no flag set: what a range does to a clip picked under it is in the menu bar too, under Sequence > Picked in Range, every row from the same table as the right click, lit only when a range and a pick it fits are in hand. The Clip menu's Delete reads Delete Section then, on its own key. The window is in front for the whole walk, since a menu bar belongs to the app in front.",
+  "seed": "At Next defaults, no flag set: what a range does to a clip picked under it is in the menu bar too, under Sequence > Picked in Range, every row from the same table as the right click, lit only when a range and a pick it fits are in hand. The Clip menu's Delete reads Delete Section then, on its own key. The window is in front for the whole walk, since a menu bar belongs to the app in front. Clean Noise in Section and Hide Picture for Section are there too: the first cleans the music between 0:03 and 0:06 only, and with the recording picked instead the second takes its picture off over the same stretch.",
   "setup": {
     "front": true,
     "timelineOpen": true,
@@ -103,6 +103,82 @@
       "do": "describe",
       "stage": "4-muted-from-the-menu-bar",
       "note": "Sequence > Picked in Range > Mute Section silences the music between 0:03 and 0:06, the same edit as the right click"
+    },
+    {
+      "do": "menus",
+      "stage": "5-clean-noise-from-the-menu-bar",
+      "menu": "Sequence",
+      "choose": "Sequence > Picked in Range > Clean Noise in Section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectLevel",
+      "clip": "Sample Music",
+      "cleanedAt": [
+        4.5
+      ],
+      "rawAt": [
+        2.0,
+        8.0
+      ]
+    },
+    {
+      "do": "windowClick",
+      "at": [
+        660,
+        893
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample"
+      ],
+      "rangeOn": [
+        "every track"
+      ],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "menus",
+      "stage": "6-hide-picture-from-the-menu-bar",
+      "menu": "Sequence",
+      "choose": "Sequence > Picked in Range > Hide Picture for Section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "pieces": 3
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectDrawn",
+      "layer": "Tutorial Sample",
+      "shown": false
+    },
+    {
+      "do": "describe",
+      "stage": "7-hidden-from-the-menu-bar",
+      "note": "Sequence > Picked in Range > Hide Picture for Section with the recording picked under the range: the recording is cut at 0:03 and 0:06 and not drawn at 0:04.5"
     }
   ]
 }

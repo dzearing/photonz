@@ -882,6 +882,13 @@ struct EditorCommands: Commands {
     @ViewBuilder private var freezeAndSpeedRows: some View {
         Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
             .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
+        // A stretch whose picture a range took off (Hide Picture for Section).
+        Button("Show Picture") {
+            if let hidden = editor?.hiddenPictureInHand {
+                editor?.showPicture(layerID: hidden.layerID, piece: hidden.piece)
+            }
+        }
+        .disabled(editor?.hiddenPictureInHand == nil)
         Button("Change Speed\u{2026}") { editor?.openClipSpeed() }
             .keyboardShortcut("r", modifiers: .command)
             .disabled(!(editor?.canOpenClipSpeed ?? false))
@@ -1332,9 +1339,13 @@ struct EditorCommands: Commands {
                 set: { _ in editor?.normalizeCleansNoise.toggle() }))
         }
         .disabled(ids.isEmpty)
-        let cleaned = ids.contains { editor?.document?.layer(id: $0)?.soundLevel?.noiseReduction != nil }
+        let cleaned = ids.contains {
+            editor?.document?.layer(id: $0)?.soundLevel?.noiseReduction != nil
+                || editor?.document?.layer(id: $0)?.hasSectionNoiseCleaning == true
+        }
         Button(cleaned ? "Remove Noise Cleaning" : "Clean Noise") {
-            editor?.setSoundNoiseReduction(cleaned ? nil : .standard, layers: ids)
+            if cleaned { editor?.removeNoiseCleaning(layers: ids) }
+            else { editor?.setSoundNoiseReduction(.standard, layers: ids) }
         }
         .disabled(ids.isEmpty)
         let gained = ids.contains { (editor?.document?.layer(id: $0)?.soundLevel?.clipGainDB ?? 0) != 0 }

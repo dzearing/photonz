@@ -143,6 +143,11 @@ extension EditorState {
             }
         }
         if plan.offersPictureRows {
+            // A stretch whose picture a range took off (Hide Picture for
+            // Section) gets it back where the hand is.
+            if piece?.pictureHidden == true {
+                rows.append(.command("Show Picture") { self.showPicture(layerID: layerID, piece: index) })
+            }
             rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
             rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
             // A click the recording missed, or one made before clicks were
@@ -280,10 +285,13 @@ extension EditorState {
             },
         ]
         var rows: [MenuRow] = [.submenu("Normalize", normalize)]
-        let cleaned = ids.contains { document?.layer(id: $0)?.soundLevel?.noiseReduction != nil }
+        let cleaned = ids.contains {
+            document?.layer(id: $0)?.soundLevel?.noiseReduction != nil
+                || document?.layer(id: $0)?.hasSectionNoiseCleaning == true
+        }
         if cleaned {
             rows.append(.command("Remove Noise Cleaning") {
-                self.setSoundNoiseReduction(nil, layers: ids)
+                self.removeNoiseCleaning(layers: ids)
             })
         } else {
             rows.append(.command("Clean Noise") {
@@ -329,6 +337,24 @@ extension EditorState {
             }
         })
         return .submenu("Freeze Frame", rows)
+    }
+
+    /// Show Picture: a piece whose picture a range took off drawn again, as
+    /// one step to undo.
+    func showPicture(layerID: UUID, piece index: Int) {
+        guard document?.layer(id: layerID)?.clipPieces?.piece(at: index)?.pictureHidden == true else { return }
+        perform { _ = $0.setPictureHidden(layerID, ofPiece: index, false) }
+        documentMomentChanged()
+    }
+
+    /// The hidden piece Clip ▸ Show Picture would bring back: the picked
+    /// piece of the clip in hand, else the one under the playhead.
+    var hiddenPictureInHand: (layerID: UUID, piece: Int)? {
+        guard let id = clipInHandID, let layer = document?.layer(id: id), let time = layer.time,
+              let pieces = layer.clipPieces,
+              let index = selectedClipPieceIndex ?? pieces.pieceIndex(atMS: documentTimeMS - time.inMS),
+              pieces.piece(at: index)?.pictureHidden == true else { return nil }
+        return (id, index)
     }
 
     /// Whether the playhead runs through this clip somewhere a cut would

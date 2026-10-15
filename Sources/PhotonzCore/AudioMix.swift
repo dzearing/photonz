@@ -545,12 +545,15 @@ extension PhotonzDocument {
             else { return }
             let level = layer.soundLevel ?? AudioLevel()
             guard !level.isSilent else { return }
+            // A stretch cleaned on its own plays the copy cleaned for it.
+            let cleanedPieces = level.activeNoiseReduction == nil
+                ? layer.sectionCleanedSounds(pieces) : [:]
             for (index, piece) in pieces.playback.enumerated() where piece.playsSound {
                 let start = time.inMS + piece.startMS
                 heard[TransitionSoundPiece(layerID: layer.id, index: index)] =
                     HeardPiece(at: mix.count, level: level, layerInMS: time.inMS)
                 mix.append(AudioMixSegment(
-                    layerID: layer.id, sound: sound,
+                    layerID: layer.id, sound: piece.noiseReduction.flatMap { cleanedPieces[$0] } ?? sound,
                     startMS: start, lengthMS: piece.lengthMS,
                     sourceInMS: piece.sourceInMS, sourceLengthMS: piece.sourceLengthMS,
                     speedPercent: piece.speedPercent,

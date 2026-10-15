@@ -84,8 +84,20 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// at no cut; `ClipPieces` keeps that true.
     public internal(set) var transitionIn: ClipTransition?
 
+    /// Whether this piece's picture is off: nothing of it is drawn, and its
+    /// sound plays on (Hide Picture for Section, `RangeSection.swift`). The
+    /// way Premiere disables a cut segment, on the piece rather than the
+    /// clip, so a split never makes a second clip to carry it.
+    public private(set) var pictureHidden: Bool
+
+    /// How hard the noise is taken out of this piece's sound alone, nil
+    /// where it is not (Clean Noise in Section, `NoiseCleaning.swift`). A
+    /// sound cleaned whole is cleaned everywhere, whatever this says.
+    public private(set) var noiseReduction: NoiseReduction?
+
     public init(sourceInMS: Int, lengthMS: Int, speedPercent: Int = ClipPiece.asRecordedPercent,
-                transitionIn: ClipTransition? = nil, push: HoldPush? = nil) {
+                transitionIn: ClipTransition? = nil, push: HoldPush? = nil,
+                pictureHidden: Bool = false, noiseReduction: NoiseReduction? = nil) {
         self.sourceInMS = max(0, sourceInMS)
         self.lengthMS = max(Self.shortestMS, lengthMS)
         self.speedPercent = speedPercent == 0
@@ -94,6 +106,31 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         self.transitionIn = transitionIn
         // Only a hold pushes anything, so only a hold carries the answer.
         self.push = self.speedPercent == 0 ? push : nil
+        self.pictureHidden = pictureHidden
+        self.noiseReduction = noiseReduction
+    }
+
+    /// The same piece with its picture off, or back on.
+    public func hidingPicture(_ hidden: Bool) -> ClipPiece {
+        var piece = self
+        piece.pictureHidden = hidden
+        return piece
+    }
+
+    /// The same piece with its sound cleaned this hard, or not at all.
+    public func cleaning(_ reduction: NoiseReduction?) -> ClipPiece {
+        var piece = self
+        piece.noiseReduction = reduction
+        return piece
+    }
+
+    /// Whether either mark is on it.
+    var isMarked: Bool { pictureHidden || noiseReduction != nil }
+
+    /// `piece` wearing this piece's marks: what every edit that makes a new
+    /// piece out of this one hands on.
+    private func marking(_ piece: ClipPiece) -> ClipPiece {
+        piece.hidingPicture(pictureHidden).cleaning(noiseReduction)
     }
 
     /// A frame held: a piece whose start and end in the recording are the same
@@ -112,8 +149,8 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// the document is `PhotonzDocument.setHoldPush`; this is only the writing.
     public func pushing(_ push: HoldPush) -> ClipPiece {
         guard isHeld else { return self }
-        return ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS, speedPercent: speedPercent,
-                         transitionIn: transitionIn, push: push)
+        return marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS, speedPercent: speedPercent,
+                                 transitionIn: transitionIn, push: push))
     }
 
     // MARK: - Reading
@@ -179,10 +216,10 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         guard offset >= Self.shortestMS, lengthMS - offset >= Self.shortestMS else { return nil }
         // The head still arrives the way this piece did; the new join between
         // them is a hard cut until somebody puts something on it.
-        return (ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
-                          transitionIn: transitionIn, push: push),
-                ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
-                          lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push))
+        return (marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: offset, speedPercent: speedPercent,
+                                  transitionIn: transitionIn, push: push)),
+                marking(ClipPiece(sourceInMS: sourceMS(atOffsetMS: offset),
+                                  lengthMS: lengthMS - offset, speedPercent: speedPercent, push: push)))
     }
 
     /// The same piece with its start edge moved later into the recording by
@@ -192,16 +229,16 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// the file, they are merely not being played, and moving the edge back
     /// gives back the identical piece.
     public func trimmedStart(byMS delta: Int) -> ClipPiece {
-        ClipPiece(sourceInMS: sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent)),
-                  lengthMS: lengthMS - delta,
-                  speedPercent: speedPercent, transitionIn: transitionIn, push: push)
+        marking(ClipPiece(sourceInMS: sourceInMS + (isHeld ? 0 : Self.scaled(delta, byPercent: speedPercent)),
+                          lengthMS: lengthMS - delta,
+                          speedPercent: speedPercent, transitionIn: transitionIn, push: push))
     }
 
     /// The same piece with its end edge moved later by `delta` (earlier, for a
     /// negative one).
     public func trimmedEnd(byMS delta: Int) -> ClipPiece {
-        ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
-                  transitionIn: transitionIn, push: push)
+        marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + delta, speedPercent: speedPercent,
+                          transitionIn: transitionIn, push: push))
     }
 
     /// This piece and the one after it as ONE, where they are two halves of
@@ -210,9 +247,10 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// somebody put something on.
     func joined(with next: ClipPiece) -> ClipPiece? {
         guard !isHeld, !next.isHeld, speedPercent == next.speedPercent,
-              next.transitionIn == nil, sourceOutMS == next.sourceInMS else { return nil }
-        return ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
-                         speedPercent: speedPercent, transitionIn: transitionIn)
+              next.transitionIn == nil, sourceOutMS == next.sourceInMS,
+              pictureHidden == next.pictureHidden, noiseReduction == next.noiseReduction else { return nil }
+        return marking(ClipPiece(sourceInMS: sourceInMS, lengthMS: lengthMS + next.lengthMS,
+                                 speedPercent: speedPercent, transitionIn: transitionIn))
     }
 
     /// The same stretch of recording, played at another speed.
@@ -229,9 +267,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     public func atSpeed(percent: Int) -> ClipPiece {
         guard !isHeld, percent > 0 else { return self }
         let speed = min(max(Self.slowestPercent, percent), Self.fastestPercent)
-        return ClipPiece(sourceInMS: sourceInMS,
-                         lengthMS: Self.unscaled(sourceLengthMS, byPercent: speed),
-                         speedPercent: speed, transitionIn: transitionIn)
+        return marking(ClipPiece(sourceInMS: sourceInMS,
+                                 lengthMS: Self.unscaled(sourceLengthMS, byPercent: speed),
+                                 speedPercent: speed, transitionIn: transitionIn))
     }
 
     // MARK: - Two clocks, one conversion
@@ -265,7 +303,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     // MARK: - Written down
 
     private enum CodingKeys: String, CodingKey {
-        case sourceInMS, lengthMS, speedPercent, transitionIn, push
+        case sourceInMS, lengthMS, speedPercent, transitionIn, push, pictureHidden, noiseReduction
     }
 
     /// A piece playing at the speed it was recorded writes two numbers. The
@@ -282,6 +320,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
         // so a document written before the choice existed reads back and writes
         // out identical.
         if let push { try c.encode(push, forKey: .push) }
+        // ...and the marks a range leaves on a stretch only where they are on.
+        if pictureHidden { try c.encode(true, forKey: .pictureHidden) }
+        if let noiseReduction { try c.encode(noiseReduction, forKey: .noiseReduction) }
     }
 
     public init(from decoder: Decoder) throws {
@@ -291,7 +332,9 @@ public struct ClipPiece: Hashable, Codable, Sendable {
                   speedPercent: try c.decodeIfPresent(Int.self, forKey: .speedPercent)
                       ?? Self.asRecordedPercent,
                   transitionIn: try c.decodeIfPresent(ClipTransition.self, forKey: .transitionIn),
-                  push: try c.decodeIfPresent(HoldPush.self, forKey: .push))
+                  push: try c.decodeIfPresent(HoldPush.self, forKey: .push),
+                  pictureHidden: try c.decodeIfPresent(Bool.self, forKey: .pictureHidden) ?? false,
+                  noiseReduction: try c.decodeIfPresent(NoiseReduction.self, forKey: .noiseReduction))
     }
 }
 
@@ -309,14 +352,17 @@ public struct ClipPlayback: Hashable, Sendable {
     public let sourceLengthMS: Int
     /// How fast to play it: 100 as recorded, 0 for a frame held.
     public let speedPercent: Int
+    /// How hard the noise is taken out of this piece alone (`ClipPiece`).
+    public let noiseReduction: NoiseReduction?
 
     public init(startMS: Int, lengthMS: Int, sourceInMS: Int,
-                sourceLengthMS: Int, speedPercent: Int) {
+                sourceLengthMS: Int, speedPercent: Int, noiseReduction: NoiseReduction? = nil) {
         self.startMS = startMS
         self.lengthMS = lengthMS
         self.sourceInMS = sourceInMS
         self.sourceLengthMS = sourceLengthMS
         self.speedPercent = speedPercent
+        self.noiseReduction = noiseReduction
     }
 
     public var isHeld: Bool { speedPercent == 0 }
@@ -428,7 +474,7 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     /// was recorded. Such a clip says nothing a layer's stretch does not
     /// already say, which is why it is never written down separately.
     public var isOnePlainPiece: Bool {
-        pieces.count == 1 && pieces[0].speedPercent == ClipPiece.asRecordedPercent
+        pieces.count == 1 && pieces[0].speedPercent == ClipPiece.asRecordedPercent && !pieces[0].isMarked
     }
 
     /// Where a piece starts, measured from the clip's own start.
@@ -488,7 +534,8 @@ public struct ClipPieces: Hashable, Codable, Sendable {
             written.append(ClipPlayback(startMS: cursor, lengthMS: piece.lengthMS,
                                         sourceInMS: piece.sourceInMS,
                                         sourceLengthMS: piece.sourceLengthMS,
-                                        speedPercent: piece.speedPercent))
+                                        speedPercent: piece.speedPercent,
+                                        noiseReduction: piece.noiseReduction))
             cursor += piece.lengthMS
         }
         return written
@@ -749,9 +796,29 @@ public struct ClipPieces: Hashable, Codable, Sendable {
     public mutating func freeze(ofPiece index: Int) -> Bool {
         guard let piece = piece(at: index), !piece.isHeld else { return false }
         pieces[index] = ClipPiece(sourceInMS: piece.sourceInMS, lengthMS: piece.lengthMS, speedPercent: 0,
-                                  transitionIn: piece.transitionIn)
+                                  transitionIn: piece.transitionIn, pictureHidden: piece.pictureHidden)
         return true
     }
+
+    /// A piece's picture taken off, or put back. False where it already was.
+    @discardableResult
+    public mutating func setPictureHidden(ofPiece index: Int, _ hidden: Bool) -> Bool {
+        guard let piece = piece(at: index), piece.pictureHidden != hidden else { return false }
+        pieces[index] = piece.hidingPicture(hidden)
+        return true
+    }
+
+    /// A piece's sound cleaned this hard, or not at all. False where it
+    /// already was.
+    @discardableResult
+    public mutating func setNoiseReduction(ofPiece index: Int, _ reduction: NoiseReduction?) -> Bool {
+        guard let piece = piece(at: index), piece.noiseReduction != reduction else { return false }
+        pieces[index] = piece.cleaning(reduction)
+        return true
+    }
+
+    /// Whether any piece's picture is off.
+    public var hidesAnyPicture: Bool { pieces.contains { $0.pictureHidden } }
 
     /// What is on the cut a piece arrives at, written down
     /// (`ClipTransitions.swift`). Everything that decides WHETHER it may be
