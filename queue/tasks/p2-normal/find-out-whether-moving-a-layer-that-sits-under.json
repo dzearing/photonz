@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 110,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T19:25:51.427Z",
-  "updated": "2026-10-15T00:39:44.683Z",
+  "updated": "2026-10-15T00:39:55.562Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence (2026-10-12, rotating-a-layer-that-already-has-a-transform-up): before turns were moved off the sprite, turning the recording (Tutorial Sample) with rectangles above it showed the turned recording sprite covering every rectangle in the held picture (/tmp held/landed picture pair, 9.1% of canvas differed). The sprite is DragPreview: underlay = render(hiding: id), sprite = renderSprite(for: id), previewSpriteLayer sits above contentLayer (EditorState.beginLayerDrag, CanvasDisplay.refreshPreviewSprite), so moves use the same arrangement. Reproduction attempt for a MOVE: blank 1200x800, rectangle then ellipse overlapping, drag the rectangle with hold; inconclusive because both shapes drew in the same red. Retry with a second fill colour.",
@@ -49,10 +49,15 @@
     {
       "t": "2026-10-15T00:39:44.682Z",
       "note": "left rough: the lifted-pixels (region move) overlay is not covered by a walk; my attempt on the 2x fixture missed the region because the canvas is larger than the view. Not filed: nothing seen broken. Ten neighbouring drag walks green; Scripts/test.sh 13153 tests green."
+    },
+    {
+      "t": "2026-10-15T00:39:55.560Z",
+      "note": "Confirmed for a move (5.6% of the canvas jumped on release: the lower layer drew over the one covering it mid-drag) and fixed: the drag preview now floats what is drawn over the layer above its sprite (DragStackSplit + previewOverlayLayer); held vs landed now 0.23%. Proven by a-moved-layer-stays-under-what-covers-it-walk at Next defaults (drag gained landsAsHeld), ten neighbouring drag walks green, Scripts/test.sh 13153 green. Audit queue/audits/2026-10-14-moved-layer-stays-under.json."
     }
   ],
   "started": "2026-10-15T00:06:29.235Z",
   "walks": [
     "a-moved-layer-stays-under-what-covers-it-walk"
-  ]
+  ],
+  "completed": "2026-10-15T00:39:55.561Z"
 }
