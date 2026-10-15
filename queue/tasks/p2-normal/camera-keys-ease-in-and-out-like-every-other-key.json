@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 100,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "video",
   "created": "2026-10-12T12:45:05.882Z",
-  "updated": "2026-10-14T12:18:03.598Z",
+  "updated": "2026-10-14T23:54:46.383Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From the 2026-10-12 digest design review. Epic success item: any animatable value takes easing and bezier curves from right-click (objectives.json, video-transitions-motion). Audit 2026-10-12-camera-keys-row.json rough: the row has no curve view and no easing menu; right-click offers Go to Key, Show Camera Settings and Delete Key. Core: Sources/PhotonzCore/CameraRow.swift, SceneCamera.motions; app TimelineCameraRow.swift, EditorState+CameraRow.swift. One diamond stands for every camera value keyed at that moment, so an ease picked there applies to all of them; that is fine to start. If camera keys already carry easing somewhere else (the Camera section), reach that from the row rather than adding a second way.",
@@ -43,6 +43,32 @@
     {
       "t": "2026-10-14T12:18:03.597Z",
       "note": "seq 60 -> 100"
+    },
+    {
+      "t": "2026-10-14T23:33:19.573Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T23:34:33.407Z",
+      "note": "Adversarial pass: no mock draws camera easing (video-depth.html only says keyed camera moves show on a thin row). The pending card on wherever-you-ease-a-key-a-segment-a-row-or-the-b decides whether keys show Premiere's six or the ten curves, and the digest said not to make a third list. So the camera diamond offers exactly what a layer key and a clip diamond offer today (KeyEase list, ticked where every camera key there agrees), the timeline bar's Easing works on a picked camera diamond as it does on picked keys, and the Camera section gains the same Curve row a layer's Between the keys has, for the stretch under the playhead. A Premiere user right-clicks a keyframe for Temporal Interpolation; that is where this lands. One diamond eases every camera value keyed there, as the task allows."
+    },
+    {
+      "t": "2026-10-14T23:54:32.786Z",
+      "note": "owns these walks: camera-keys-ease-walk, camera-keys-row-walk"
+    },
+    {
+      "t": "2026-10-14T23:54:32.848Z",
+      "note": "Built: core PhotonzDocument.cameraKeysEase/easeCameraKeys/cameraHasStretch/cameraStretchCurve/curveCameraStretch (CameraRow.swift, 8 new tests in CameraRowTests incl. renderer speed at 1.1s/1.95s/2.8s via drawn(atTimeMS:)), CameraKeyMoment.ease; app: diamond right-click gets the KeyEase list (EditorState+CameraRow), the timeline bar's Easing speaks for a picked camera diamond (pickedKeysEase/easePickedKeys, TimelineDock keyBar), diamond glyph draws its ease, Camera section gets a CurveRow for the stretch at the playhead (Space3DInspector). New walk camera-keys-ease-walk ok at Next defaults, 4 real captures; camera-keys-row-walk, bar-easing-sets-points-and-segments-walk, key-lanes-walk ok. Scripts/test.sh 13143/13143 green. Left rough (no task, under the bar): Bezier on a camera diamond has no handles to drag since the camera row has no graph; the Curve row has no Between the keys header. Audit rough lines all stay in this log; the list question is already owned by wherever-you-ease-a-key-a-segment-a-row-or-the-b."
+    },
+    {
+      "t": "2026-10-14T23:54:46.381Z",
+      "note": "Shipped in df600038. Right-click on a Camera row diamond offers Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier (the layer key list), ticked where the camera keys there agree; a picked diamond eases from the timeline bar's Easing; the Camera section has the shared Curve row for the stretch at the playhead. One undo step each. Core tests (8 new) measure the push in on the renderer: Linear holds one rate, Ease In and Out is under 60% of mid speed at both ends. Walk camera-keys-ease-walk ok at Next defaults with 4 real captures; neighbours ok; Scripts/test.sh 13143/13143. Audit 2026-10-14-camera-keys-ease.json."
     }
-  ]
+  ],
+  "started": "2026-10-14T23:33:19.571Z",
+  "walks": [
+    "camera-keys-ease-walk",
+    "camera-keys-row-walk"
+  ],
+  "completed": "2026-10-14T23:54:46.382Z"
 }

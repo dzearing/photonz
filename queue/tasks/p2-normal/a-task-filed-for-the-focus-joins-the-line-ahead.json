@@ -1,0 +1,32 @@
+{
+  "id": "a-task-filed-for-the-focus-joins-the-line-ahead",
+  "title": "A task filed for the focus joins the line ahead of other epics' work",
+  "goal": "When a runner files a follow-up for the video work in focus, it goes to the very end of its priority, behind everything else, until the next daily triage reorders the line. Overnight on 2026-10-15 the loop built five icon and redline tasks while four video follow-ups filed the afternoon before waited. A new task should take its place by the focus: focus work ahead of other epics' work, in the order it was filed.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 60,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T12:23:59.155Z",
+  "updated": "2026-10-15T12:24:06.998Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Evidence 2026-10-15 from queue/history.jsonl: the-layers-and-library-pane-holds-still-under-th (created 10-14 16:01Z), picking-a-title-no-longer-makes-the-picture-jump (19:07Z), a-right-click-on-a-sound-s-volume-line-opens-the (20:30Z) and a-point-picked-on-an-open-graph-keeps-its-value (21:06Z) all serve video-editing and got seq 4010 to 4050, while the-measuring-legend-says-something-useful-now-t, an-icon-svg-pastes-into-a-code-editor, find-out-whether-a-forever-motion-shorter-than-t, a-curve-drawn-on-whole-units-exports-on-whole-un, a-ring-or-arc-gets-a-full-turn-forever-when-rota and icon-snapping-reaches-what-the-icon-mock-draws (seq 170 to 240 from the 10-14 triage) were claimed between 08:47Z and 11:19Z on 10-15. Cause: draftTask in queue/bin/queue-lib.mjs (~line 324) sets seq = max(peers) + 10 with no regard to epic. The focus is objectives.json 'focus'; an epic serves it when it is the focus or a descendant.",
+  "acceptance": [
+    "A task added for the focus epic (or any of its children) at a priority gets a place after the last open focus task and before the first open task of another epic, at that priority",
+    "A task for any other epic still goes to the end, as today",
+    "A unit check in the queue's own tests files a focus task into a priority holding focus and icon tasks and reads its place",
+    "The digest prompt's resequence step and queue/README say the same rule"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T12:23:59.157Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:24:06.997Z",
+      "note": "seq 4010 -> 60"
+    }
+  ]
+}

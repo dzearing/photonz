@@ -1,0 +1,48 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-22",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-15T00:54:23.262Z",
+  "updated": "2026-10-15T12:23:25.955Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-15T08:47:52Z: 927 of 930 walks passed in 258 minutes.\n\nFailing walks (3): segmented-chip-refraction-film-walk, title-on-the-timeline-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  segmented-chip-refraction-film-walk -> the-layers-and-library-pane-holds-still-under-th (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 1: title-on-the-timeline-walk\n\nFull output: queue/sweep/2026-10-14-212946.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T00:54:23.264Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-15T00:54:23.267Z",
+      "note": "rotating check 2026-10-15T00:54:23Z, 37 walks run from 747 onward in the rotation: title-on-the-timeline-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-15T08:47:52.514Z",
+      "note": "sweep 2026-10-15T08:47:52Z: 3 failing (segmented-chip-refraction-film-walk, title-on-the-timeline-walk, view-to-edit-on-a-long-recording-walk)"
+    },
+    {
+      "t": "2026-10-15T10:45:51.996Z",
+      "note": "rotating check 2026-10-15T10:45:51Z, 36 walks run from 42 onward in the rotation: a-recording-stays-and-opens-right-after-stop-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-15T12:23:05.582Z",
+      "note": "triage 2026-10-15: title-on-the-timeline-walk fails at step 25 expecting a field called 'Shipping today clip'. The panel listing at that step has 'Timing Shipping today' and 'Shipping today clip end' but no '<name> clip' (that name comes from ClipPiecesBar, line ~942). Theory, not checked: the title's bar now draws through the Timing row rather than the pieces bar, so the walk may only need the new name. a-recording-stays-and-opens-right-after-stop-walk failed one rotating check (10:45Z) at 251 to 260 ms against a 250 ms budget, and passed in the overnight full set: a near-miss under load, worth a second run before anybody chases it."
+    },
+    {
+      "t": "2026-10-15T12:23:25.954Z",
+      "note": "seq 4060 -> 10"
+    }
+  ],
+  "standing": "walk-sweep"
+}

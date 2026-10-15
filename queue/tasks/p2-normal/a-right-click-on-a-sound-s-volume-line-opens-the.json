@@ -1,0 +1,39 @@
+{
+  "id": "a-right-click-on-a-sound-s-volume-line-opens-the",
+  "title": "A right-click on a sound's volume line opens the menu of what is under the pointer",
+  "goal": "On a sound clip's volume line, right-clicking a segment just after right-clicking a level point opens the point's menu (Delete Point and the clip's rows) instead of the segment's curve list, because the line carries one menu for everything on it and the app shows the menu built before the click. Each point and segment should open its own menu every time.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 30,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T20:30:30.714Z",
+  "updated": "2026-10-15T12:23:26.089Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-10-14 by find-out-whether-a-key-segment-s-right-click-cur, which fixed the same defect on the value graph. Cause: SwiftUI hands a right click the .contextMenu built at the view's last update, BEFORE the click (documented in Sources/Photonz/CanvasContextMenuHook.swift, 2026-09-16), so SoundLane.surface's single LineMenu aimed at timelineLastRightPressMS is always about the previous right click. The 2026-10-13 fix (soundSegmentsForMenu reads the pick as a row runs) only covers which segments a curve row acts on; the rows shown can still be the wrong kind. Value-graph fix to copy: KeyLanesView.lineSurface now draws one strip per segment, each with its own .contextMenu, and picks only when the latest press hit-tests to that segment (KeyLanesView.segmentMenuRows, EditorState.segmentMenuRows(landed:)). The sound line also has its clip menu in the same .contextMenu, and its points have no menus of their own.\n\nReproduction (walk: steps of a-sound-s-volume-line-picks-and-shapes-walk up to the three Command-clicked points, then right-click point 3, segment 2, point 4, segment 1 choose Hold); copy kept at /tmp/sound-line-stale-menu-repro.json for this session only:\n  Scripts/playtest.sh /tmp/sound-diag.json --no-build\n  step 21 right clicked \"Segment Sample Music level 2\": 37 rows: Linear | Ease in out | ... (right)\n  step 23 right clicked \"Sample Music level point 4\": 18 rows: Delete Point | — | Split at Playhead ...\n  step 25 FAILED: the menu on \"Segment Sample Music level 1\" opened but there is no row called \"Hold\"; the rows are: Delete Point, —, Split at Playhead, Ripple Trim Start to Playhead, ... (point 4's menu)",
+  "acceptance": [
+    "Right-clicking a level point and then a segment of the same volume line opens the segment's curve list, every time, in a walk that alternates point and segment right-clicks",
+    "A curve chosen from a segment's right-click lands on that segment, and the menu ticks that segment's own curve",
+    "a-sound-s-volume-line-picks-and-shapes-walk and a-sound-s-bend-handle-follows-the-hand-walk still pass",
+    "The value graph and the volume line build their per-part right-click menus from one shared piece, so neither keeps a single menu for the whole line"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T20:30:30.716Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:23:05.719Z",
+      "note": "triage 2026-10-15: this is the second line to ship one right-click menu for every part (the value graph was fixed 2026-10-14 in 81a58e3d, and CanvasContextMenuHook.swift has documented the cause since 2026-09-16). Build the fix as one shared piece that the value graph and the volume line both use (one strip per segment and per point, each with its own menu), so the next line drawn on the timeline cannot repeat it."
+    },
+    {
+      "t": "2026-10-15T12:23:26.088Z",
+      "note": "seq 4030 -> 30"
+    }
+  ],
+  "walks": [
+    "a-sound-s-volume-line-picks-and-shapes-walk"
+  ]
+}

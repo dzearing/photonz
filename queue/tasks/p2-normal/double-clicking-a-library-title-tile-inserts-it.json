@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T16:36:13.855Z",
-  "updated": "2026-10-14T12:18:03.229Z",
+  "updated": "2026-10-14T19:07:28.295Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-12 by the runner of editing-a-title-never-starts-playback-and-every. Since that task, Escape on a title's words keeps the words picked inside the title, so title-presets-library-shelf-walk reached its fifth test (press \"Keynote Clean\" count 2, step 55) with a headline picked and failed at step 59: '2 clips are called \"Title Page\", and the walk expected 3'. Debug copy of the walk with describe before/after the press: before, selected = the headline, dockSections Text, Arrange, Appearance, Effects, Properties, Title, Part, Reveal, Layout, 3D, Time, Captions, Transitions, Library 2737-3023; the press 'scrolled 2373pt to reach it'; after, selected nil and dockSections Time -492..-327, Captions, Transitions, Library 343-629, Title Page 629-739, and no third Title Page. So selectLibraryItem on the first click clears the layer pick, the layer sections above the Library vanish, the Library moves ~2400pt, and the second click misses the tile. The walk now presses Escape twice before the double click to restore the nothing-picked dock it was written for (comment in the walk names this task's bug). Likely fix: keep the dock's scroll anchored on the tile when picking a library item collapses the sections above it, or insert on the tile's own double-click recognition regardless of re-layout (LibraryTitleTile.insert).",
@@ -30,9 +30,31 @@
     {
       "t": "2026-10-14T12:18:03.228Z",
       "note": "seq 30 -> 50"
+    },
+    {
+      "t": "2026-10-14T17:52:37.101Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T19:07:27.751Z",
+      "note": "Reproduced 2026-10-14 on today's code: with the headline picked, one click on Keynote Clean slid the tile 42pt (window y 477 -> 435; Library header 635 -> 593; canvas zoom 65 -> 70). The double click still landed only because the tile (106pt) is taller than the slide; the Library has lived in the lists pane since 885afc78, so the old 2400pt jump is gone. Cause: the timeline fits its tracks, the headline's rows (Title, Blur, Opacity) fold on the pick, the timeline shrinks and everything above grows."
+    },
+    {
+      "t": "2026-10-14T19:07:27.817Z",
+      "note": "Fix (49949ce5): TimelineHeightHold (PhotonzCore, 5 tests) keeps the timeline's height while a Library tile is the pick, under next-lists-pane (on at Next). Harness: a double-click press now fails when its control slides between the clicks (FailedAfterActing, not retried). Proved both ways: unfixed app fails step 55 'Keynote Clean moved 42pt'; fixed app passes. The two Escapes are gone; the walk asserts the headline is picked first. Green: all 8 double-click walks, plus panel-shows-what-is-picked(-video), title-presets-menu-bar/gallery, library-tile-click-latency, timeline-dock-resizes, library-shelf-height, an-editing-session. Scripts/test.sh 13114 passed."
+    },
+    {
+      "t": "2026-10-14T19:07:27.883Z",
+      "note": "Left rough: while a tile is picked, the timeline shows empty room under its tracks where the headline's rows were (picture x-after-sc in the run). Wider issue filed: picking-a-title-no-longer-makes-the-picture-jump (every pick re-zooms the canvas). Not an audit: a bug fix with no new surface or mock frame. First try counted a track name widening as a move (track-column-resizes-walk); the check now counts only a slide, both edges moving together."
+    },
+    {
+      "t": "2026-10-14T19:07:28.293Z",
+      "note": "A double click on a Library title tile inserts it with a layer picked: the timeline holds its height while a tile is picked, so the shelf no longer slides 42pt between the clicks (TimelineHeightHold, tested; TimelineDock under next-lists-pane). The harness now fails a double click whose control slides; title-presets-library-shelf-walk fails on the old code and passes now with the Escapes removed. 16 walks and 13114 tests green. Commit 49949ce5."
     }
   ],
   "walks": [
     "title-presets-library-shelf-walk"
-  ]
+  ],
+  "started": "2026-10-14T17:52:37.097Z",
+  "completed": "2026-10-14T19:07:28.294Z"
 }

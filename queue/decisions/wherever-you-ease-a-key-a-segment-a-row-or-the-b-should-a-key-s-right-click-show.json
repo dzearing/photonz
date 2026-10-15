@@ -1,0 +1,40 @@
+{
+  "id": "wherever-you-ease-a-key-a-segment-a-row-or-the-b-should-a-key-s-right-click-show",
+  "taskId": "wherever-you-ease-a-key-a-segment-a-row-or-the-b",
+  "question": "Should a key's right-click show the same ten curves as a segment's, or keep Premiere's six?",
+  "context": "Your animate mock (2026-10-12) says a key and a segment both offer the same ten curves. Your keyframe tasks of 2026-09-23 asked for Premiere key menu. Today both exist, and Ease In on a key (slow arriving) is the opposite of Ease in on a segment (slow start).",
+  "options": [
+    {
+      "id": "a",
+      "label": "One list everywhere: keys show the ten curves, Hold and Draw a Curve; Ease In, Ease Out and Bezier leave the key menu",
+      "summary": "Right-click a key, a segment, a row or open the timeline bar and you see the same list. A curve chosen on a key shapes the stretch that leaves it, as your animate mock draws.",
+      "pros": [
+        "One list to learn, as the animate mock says",
+        "No word means two things: Ease in always means a slow start",
+        "Shaped curves (back, elastic, steps) reach keys too"
+      ],
+      "cons": [
+        "Premiere users lose the key menu they know (Ease In, Ease Out, Bezier)",
+        "Ease in on a key now means slow leaving, not slow arriving"
+      ],
+      "mitigation": "Bezier is still reached by dragging a handle on the graph, and Draw a Curve covers any shape Premiere eases make."
+    },
+    {
+      "id": "b",
+      "label": "Keys keep Premiere six, segments keep the ten curves; the bar shows the curves once a segment is picked",
+      "summary": "Exactly as today. A key right-click reads Linear, Ease In, Ease Out, Ease In and Out, Hold, Bezier; a segment right-click and the bar with a segment picked read the ten curves.",
+      "pros": [
+        "Matches your 2026-09-23 ask and Premiere key menu",
+        "Nothing to relearn"
+      ],
+      "cons": [
+        "Two lists, and Ease In means opposite things in them",
+        "Departs from the animate mock line: the same ten curves everywhere"
+      ],
+      "mitigation": "A heading on each list (Key and Curve) so the menus at least say which one they are."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-14T21:03:49.109Z"
+}

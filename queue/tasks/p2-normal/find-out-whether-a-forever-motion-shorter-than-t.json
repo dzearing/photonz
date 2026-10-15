@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.109Z",
-  "updated": "2026-10-15T09:56:53.635Z",
+  "updated": "2026-10-15T09:57:07.743Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced in the app: code reading only, hence p2 look-into. One shared cycle: Sources/PhotonzCore/LayerMotion.swift motionCycleLengthMS / automaticMotionCycleLengthMS ~1525-1550 (deliberately ONE CYCLE, see comment and MotionStrip.swift). A motion that ends early holds its final value (~1006). SVG export writes the same cycle length: Sources/PhotonzCore/SVGMotionExport.swift ~311; in SVG each animate element can carry its own dur with repeatCount=indefinite. Mock icon-loop-wt.html: 'with Forever on it, a length becomes a rate'.",
@@ -71,10 +71,15 @@
     {
       "t": "2026-10-15T09:56:53.634Z",
       "note": "left rough: Forever motions still count toward the automatic lap length, so a 1200 ms spinner beside a 900 ms bell makes the bell rest 300 ms per lap. Did not file: nobody has hit it, and whether a rate should set the lap is a design question for the per-turn readout task. Also: Forever there and back still shares the lap (rest at home, not a stutter). Video clips: a hand-set Forever now repeats every Over (new clip motions arrive as Once). Filed the-timing-strip-says-how-long-one-turn-of-a-for for the mock's '800 ms per turn' and 'ends where it starts' strip readouts. Audit: queue/audits/2026-10-15-forever-spinner-own-pace.json. I looked at 1-spinner-beside-bell-sc.png: the dashed later turn sits after the 800 ms bar and runs past the repeats line; the bell fills the 900 ms lap."
+    },
+    {
+      "t": "2026-10-15T09:57:07.741Z",
+      "note": "Reproduced: an 800 ms Forever spinner beside the 900 ms bell held still about 100 ms every turn, on the canvas (tests at 30 fps: frames 825/858 ms...) and in the exported SVG measured in Chrome (360 deg held 825-891 ms). Fixed in 09a90d87: one way Forever repeats every Over (LayerMotion.value, MotionRepeat.keepsItsOwnPace), SVG writes it as its own turn (dur=Over, begin=Start), strip draws later turns dashed. Verified: ForeverMotionPaceTests, full suite 13203 green, forever-spinner-keeps-its-own-pace-walk at Next defaults plus 5 nearby motion walks green, walk's SVG re-measured in Chrome with no still frames. Audit 2026-10-15-forever-spinner-own-pace."
     }
   ],
   "started": "2026-10-15T09:28:41.265Z",
   "walks": [
     "forever-spinner-keeps-its-own-pace-walk"
-  ]
+  ],
+  "completed": "2026-10-15T09:57:07.742Z"
 }

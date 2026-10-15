@@ -1,0 +1,36 @@
+{
+  "id": "picking-a-title-no-longer-makes-the-picture-jump",
+  "title": "Picking a title no longer makes the picture jump in size",
+  "goal": "In a video, picking a title (or any layer with rows of its own on the timeline) makes the timeline grow to show those rows, and letting go shrinks it again, so the picture above re-zooms and the panel moves on every pick. Picking something should not resize the canvas.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T19:07:16.746Z",
+  "updated": "2026-10-15T12:23:26.232Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-14 by the runner of double-clicking-a-library-title-tile-inserts-it. Command: a copy of title-presets-library-shelf-walk cut at stage 6-undo (headline picked) then press Keynote Clean once, describe before/after. Output: describe displayZoom 65 -> 70, dockViewport 300 -> 342, the Library pane and the Sections footer 42pt lower (panel-before/after.json: Keynote Clean y 477 -> 435). Cause: TimelineDock.naturalBodyHeight fits the tracks (TimelineDockHeight, nothing chosen) and a picked layer's rows (title parts, key lanes) count toward it. That task only holds the height while a Library tile is picked (TimelineHeightHold, next-lists-pane). The general rule (fixed height like Premiere vs fit-to-tracks) may be a decision card: the user asked for 'as tall as its tracks' when the top edge became draggable (2026-09-28).",
+  "acceptance": [
+    "With a video open at Next defaults, picking a title's headline and then pressing Escape leaves the canvas zoom and the panel's height unchanged",
+    "The rows a picked layer opens on the timeline are still reachable (they scroll inside the timeline rather than growing it), or the user has chosen otherwise on a decision card",
+    "A walk proves the canvas zoom holds across a pick and an Escape",
+    "Once the card on clicking-a-cut-keying-a-value-and-undoing-it-ans is answered, UX-PATTERNS says whether a click may resize the timeline or the lists pane, and this task matches it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T19:07:16.748Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:23:05.649Z",
+      "note": "triage 2026-10-15: the open card on clicking-a-cut-keying-a-value-and-undoing-it-ans ('When you key a property on a video, should the picture shrink to make room for the new key lane?', recommends b: timeline keeps its height) asks the same question for a key that this task asks for a pick. Build to its recommendation (the timeline holds its height, new rows scroll inside it), and if the user answers a on that card, this task follows the answer instead. Once the card is answered, write the rule into UX-PATTERNS beside the placement contract: a click never resizes the area it was made in (the lists pane, the timeline). Three tasks hit it this week: this one, the-layers-and-library-pane-holds-still-under-th, and double-clicking-a-library-title-tile-inserts-it (fixed with a one-off height hold)."
+    },
+    {
+      "t": "2026-10-15T12:23:26.231Z",
+      "note": "seq 4020 -> 50"
+    }
+  ]
+}

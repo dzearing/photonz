@@ -4,12 +4,12 @@
   "goal": "Holding Option while dragging a rectangle or ellipse grows it out from where the drag started, the way Photoshop does, so a circle can be centred on a point (the icon mock draws its crown out from 12, 8 and its shoulder out from a corner). Inside an icon frame the centre and the size both land on whole units.",
   "epic": "icon-grid",
   "priority": "p2-normal",
-  "seq": 4080,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T12:06:39.426Z",
-  "updated": "2026-10-15T12:06:39.430Z",
+  "updated": "2026-10-15T12:24:07.130Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by icon-snapping-reaches-what-the-icon-mock-draws (2026-10-15). AnnotationDrag.end(constrained:shape:) in Sources/PhotonzCore/Tools.swift only does corner-to-corner; nothing reads Option for shapes. Mock: docs/design/mocks/pages/icon-draw-wt.html steps 5 and 6 (\"An ellipse snaps by its center and its diameter\"). Snapping is already in place: CanvasNSView.snappedAnnotationPoint routes icon-frame drags through IconSnap, so a centred drag needs the anchor kept as the centre and the far corner mirrored. Check Option is free for shape drags (UX-PATTERNS §7).",
@@ -23,6 +23,14 @@
     {
       "t": "2026-10-15T12:06:39.429Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:23:26.364Z",
+      "note": "seq 4080 -> 70"
+    },
+    {
+      "t": "2026-10-15T12:24:07.129Z",
+      "note": "seq 70 -> 80"
     }
   ]
 }

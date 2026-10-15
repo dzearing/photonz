@@ -4,12 +4,12 @@
   "goal": "In the spinner walkthrough the strip under the canvas reads \"800 ms per turn\" and \"ends where it starts\" for a spinner, so you can set its speed by watching it go round. Today the strip only shows the whole loop length (\"900 ms follows the longest\"), even though a Forever spinner now goes round at its own length, so the speed of the one thing you are tuning is never said.",
   "epic": "icon-animate",
   "priority": "p2-normal",
-  "seq": 4070,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T09:56:16.082Z",
-  "updated": "2026-10-15T09:56:16.085Z",
+  "updated": "2026-10-15T12:24:07.064Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html, data-set #tlLen=800 ms per turn and the wt-res text after step 5 (\"Beside the turn length the dock says ends where it starts\"). Since find-out-whether-a-forever-motion-shorter-than-t (2026-10-15) a one way Forever repeats every timing.durationMS (MotionRepeat.keepsItsOwnPace), and the strip draws its later turns as dashed copies (MotionStripLane.laterTurns, MotionStripLaterTurns in MotionStripView.swift). Header lives in MotionStripView (ONE CYCLE field). Chrome copy budget 30 chars.",
@@ -22,6 +22,14 @@
     {
       "t": "2026-10-15T09:56:16.084Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:23:26.297Z",
+      "note": "seq 4070 -> 60"
+    },
+    {
+      "t": "2026-10-15T12:24:07.063Z",
+      "note": "seq 60 -> 70"
     }
   ],
   "walks": [

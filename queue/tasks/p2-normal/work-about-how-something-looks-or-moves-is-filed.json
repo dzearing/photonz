@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 140,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T12:50:19.078Z",
-  "updated": "2026-10-14T12:18:03.854Z",
+  "updated": "2026-10-15T03:04:32.779Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence: queue/audits/2026-10-11-title-set-pages-1.png and -2.png, column 'in', show Keynote Clean, Soft Gradient Glass, Kinetic Bold, Editorial Serif, Tech Terminal and Behind Glass with the whole headline already visible, nearly identical to 'hold'. The done tasks a-set-of-titles-that-look-designed, title-backgrounds-move-gradients-grain-and-the-r and title-text-comes-in-by-line-word-or-letter had checklists of rules and photographs 'for the user to judge' but no measured bar. The user's rework is title-backgrounds-that-are-alive-auroras-energy and title-text-visibly-comes-in-and-every-built-in-t, which already carry the kind of bar this task asks to make standard. grep for 'visual bar' or 'weak version' in queue/bin/runner-prompt.md, queue/bin/manager-prompt.md and .claude/skills/intake/SKILL.md finds nothing today. Companion scrub: the-rule-for-picking-a-key-is-written-where-runn (same shape: a user rule that lives only in answers). Filed by the 2026-10-11 digest design review.",
@@ -47,6 +47,29 @@
     {
       "t": "2026-10-14T12:18:03.853Z",
       "note": "seq 110 -> 140"
+    },
+    {
+      "t": "2026-10-15T03:03:12.961Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T03:04:32.579Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-15T03:04:32.645Z",
+      "note": "Rule written into queue/bin/runner-prompt.md (What we are for, plus a Definition of done bullet on opening your own audit pictures), queue/bin/manager-prompt.md (section 3), .claude/skills/intake/SKILL.md (How to write it), docs/design/mocks/shared/UX-PATTERNS.md (placement contract, after the system-look card rule). Each cites the 2026-10-11 titles rework. Commit 5f3f3aa3."
+    },
+    {
+      "t": "2026-10-15T03:04:32.707Z",
+      "note": "Acceptance 4 (the next manager-filed visual task carries a bar) cannot be checked yet: no manager pass has run since this landed. Rather than leave it to memory, queue/bin/digest-prompt.md's design review now checks every visual task filed or closed each day for a measured bar, reel and card, adds the bar to open ones and reopens closed ones whose pictures still show the weak version. So the check happens on the first digest after the next manager pass."
+    },
+    {
+      "t": "2026-10-15T03:04:32.777Z",
+      "note": "Visual-bar rule written into runner, manager and digest prompts, the intake skill and UX-PATTERNS (commit 5f3f3aa3), verified by grep. Item 4 is checked daily by the digest's new design-review question since no manager pass has run since it landed."
     }
-  ]
+  ],
+  "started": "2026-10-15T03:03:12.957Z",
+  "walks": [],
+  "completed": "2026-10-15T03:04:32.778Z"
 }

@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T09:49:41.455Z",
-  "updated": "2026-10-14T14:28:32.378Z",
+  "updated": "2026-10-14T14:28:49.232Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-13 by the runner on size-mode-measures-real-buttons-and-objects-not, four full runs of `Scripts/test.sh` on a quiet machine (no process over 50% CPU), code unrelated to these tests: run 1 failed 3 issues; run 2 failed `TitleSetFramesTests.swift:214` (median 17.72 ms vs < 16) and `GrainBandingExportTests.swift:106` ((grainy * 3 → 93) <= (plain * 2 → 88)); run 3 failed `VideoCutExportTests.swift:69` (.readerGaveUp(\"no picture came out of the recording for 30 seconds\")); run 4 passed all 12871. `Scripts/test.sh --filter \"VideoCutExportTests|TitleSetFramesTests|GrainBandingExportTests\"` passed 10/10 alone each time. The title-frame one is a wall-clock budget, not a ratio against a ruler like the PerfClock/CPUYardstick checks.",
@@ -78,8 +78,13 @@
     {
       "t": "2026-10-14T14:28:32.377Z",
       "note": "Acceptance: four full Scripts/test.sh runs in a row passed, 13101 tests each (352s, 326s, 327s, 325s); closest frame gate used 40% of its budget; grain read 24-26 against plain 44-48."
+    },
+    {
+      "t": "2026-10-14T14:28:49.230Z",
+      "note": "Frame gates time a renderer on its own Core Image context and read each frame beside a frame-shaped yardstick (MachineSpeed.checkFrames/timedRenderer, 7 suites); grain banding reads the median of every frame with its line at 3/4 of plain (measured). Reproduced both before fixing (GPU load + suites together; busy encoder 44/31). 10x renderer mutant still fails 6 of 7 frame suites quiet and loaded; weak-grain mutant fails. Four full Scripts/test.sh runs in a row passed (13101 tests). Cut export's 30s give-up not reproduced in 12 runs; exporter untouched. Commit 16e85bd6."
     }
   ],
   "started": "2026-10-14T13:01:20.239Z",
-  "walks": []
+  "walks": [],
+  "completed": "2026-10-14T14:28:49.231Z"
 }

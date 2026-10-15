@@ -1,0 +1,34 @@
+{
+  "id": "a-point-picked-on-an-open-graph-keeps-its-value",
+  "title": "A point picked on an open graph keeps its value bar off the line being shaped",
+  "goal": "Clicking a point on an open value graph opens the small value bar (name, value, Reset) above the point, and on a graph that lands on top of the curve leaving the point, hiding the very segment a person is about to shape. The bar should sit where it covers neither the point nor its line.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 40,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-14T21:06:15.201Z",
+  "updated": "2026-10-15T12:23:26.157Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-14 in Scripts/playtest.sh Scripts/playtest/bar-easing-sets-points-and-segments-walk.json (walk ok): /tmp/photonz-playtest/bar-easing-sets-points-and-segments-walk/2-mixed-sc.png and 3-both-eased-sc.png, real captures. After a Shift-click on Key Scale 2 (middle point, 3 keys 1s/~3s/4s), the key bar (Scale 200% Reset) sits at about x 750-970, y 930-1020 (display pts at 2000 wide) and the second segment rises from the point at (860,1037) up under it. Mock video-animate.html: the bar opens above the key, never over it; UX rule never cover what is being manipulated.",
+  "acceptance": [
+    "With a graph open, picking a middle point shows its value bar with no part of the curve or its handles under it",
+    "The bar still opens above a key on a closed row, as it does today",
+    "A walk picks a point on an open graph at Next defaults and photographs the bar clear of the line"
+  ],
+  "log": [
+    {
+      "t": "2026-10-14T21:06:15.203Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:23:26.156Z",
+      "note": "seq 4050 -> 40"
+    }
+  ],
+  "walks": [
+    "bar-easing-sets-points-and-segments-walk"
+  ]
+}

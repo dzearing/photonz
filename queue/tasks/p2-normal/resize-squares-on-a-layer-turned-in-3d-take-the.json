@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T20:29:19.474Z",
-  "updated": "2026-10-14T12:18:03.167Z",
+  "updated": "2026-10-14T17:41:23.356Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by every-handle-lights-on-hover-walk while building hover feedback (2026-10-12). Reproduction: a rectangle drawn on a blank 1120x760 picture, picked, swung with the green arc by 67pt (Rotation Y 40), then the walk step {\"do\":\"hoverHandles\",\"name\":\"2-turned\",\"space\":true} on all handles. Command: Scripts/playtest.sh Scripts/playtest/every-handle-lights-on-hover-walk.json (with the 2-turned step not filtered). Output: FAILED: the pointer rested on the resize-topLeft handle at view (317, 309) and nothing lit up; the canvas says a press there would be \"none\". Cause (from code): CanvasDisplay draws frame handles through the layer drawnMap homography (chromePoint with spaceMap), while CanvasPointer.cue and the mouseDown resize branch hit test in CanvasPointer.handleSpacePoint, which only undoes the flat LayerTransform, not the 3D turn. The resize drag itself would also have to follow the plane, so this is more than a hit-test fix.",
@@ -30,9 +30,31 @@
     {
       "t": "2026-10-14T12:18:03.166Z",
       "note": "seq 20 -> 40"
+    },
+    {
+      "t": "2026-10-14T17:14:05.949Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T17:41:05.538Z",
+      "note": "Adversarial review before: the drawn squares come from drawnMap, so reading the press through its inverse makes every drawn square a target; the harder part is the drag, since the card turns about its box's own middle and a bigger box swings about a different point, which slides the far edge. Solved by settling the box whose plane keeps the anchor drawn in place and the held handle under the pointer."
+    },
+    {
+      "t": "2026-10-14T17:41:05.605Z",
+      "note": "After: walked on the probe at Next defaults. All 16 handles on the 40-degree card light and take the press; a corner drag (60,40) resizes 340x220 to 420.6x263.5 with the square under the pointer to a point. 7 other 3D walks and 5 pivot walks pass; Scripts/test.sh 13109 tests green."
+    },
+    {
+      "t": "2026-10-14T17:41:05.671Z",
+      "note": "left rough: the resize arrow cursor on a turned card follows only the flat turn (apparentTransform), so on a steep swing it points along the flat edges. Too small for a task. Also left: a turned card's resize takes no magnets (upright lines cannot match a turned edge); asked in the audit."
+    },
+    {
+      "t": "2026-10-14T17:41:23.354Z",
+      "note": "Squares and corner dots on a card turned in 3D now take the press where they are drawn, and a drag from one resizes the card along its own plane with the far edge held (PhotonzDocument.handleSpacePoint(fromDrawn:), spaceResizedFrame; CanvasView.handleSpacePoint; cue handleSpace). Verified: TurnedCardHandlesTests, full Scripts/test.sh green (13109), every-handle-lights-on-hover-walk at Next defaults with all 16 turned-card handles lit and a corner drag resizing 340x220 to 420.6x263.5, plus 7 3D and 5 pivot walks. Audit queue/audits/2026-10-14-resize-a-turned-card.json. Commit 7a1c7161."
     }
   ],
   "walks": [
     "every-handle-lights-on-hover-walk"
-  ]
+  ],
+  "started": "2026-10-14T17:14:05.946Z",
+  "completed": "2026-10-14T17:41:23.355Z"
 }

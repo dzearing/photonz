@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 190,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-08T19:29:41.546Z",
-  "updated": "2026-10-14T12:18:04.161Z",
+  "updated": "2026-10-15T09:16:59.398Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows copying-an-icon-puts-its-svg-on-the-clipboard-to (2026-10-08), which put the SVG on as public.svg-image beside PNG and TIFF on Copy Merged, on Command C with nothing picked and no marquee, and on Command C with a frame picked (EditorState.clipboardSVG, CompositeCopy.carriesSVG). Measured with the real copy (kit in docs/design/references/svg-copy-check): Chrome 153 hands a page image/svg+xml plus image/png (paste event and navigator.clipboard.read), a contenteditable box still takes the PNG; WebKit and NSTextView (TextEdit rich and plain) never see the SVG type; a textarea (what Monaco and VS Code read) gets nothing. Putting the markup on as .string makes every plain text field take it (tried with a stand-in clipboard: TextEdit plain mode and a textarea pasted the markup, the rich boxes still took the picture). The clash: .string already carries the spec list when the document has visible measurements (CompositeCopy.representations). Photoshop answers this with a separate Copy SVG on the layer right-click menu; Figma with Copy as > Copy as SVG.",
@@ -63,7 +63,28 @@
     {
       "t": "2026-10-14T12:18:04.160Z",
       "note": "seq 380 -> 190"
+    },
+    {
+      "t": "2026-10-15T08:49:37.950Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T09:16:31.353Z",
+      "note": "walks none -> copy-svg-into-a-code-editor-walk, copy-svg-from-the-edit-menu-walk"
+    },
+    {
+      "t": "2026-10-15T09:16:59.318Z",
+      "note": "Before building: a Photoshop user right-clicks a layer for Copy SVG and Figma users look under Copy as; both are met. Mock (icon-export-anim-wt) differences are in the audit's rough list, each settled by the card or UX-PATTERNS §7. Scope rule chosen (engineering, visible): Copy SVG copies the frame the pick is or lives in, else the whole drawing, the same scope Export opens on. Left rough, not filed: a loose shape outside any frame copies the whole drawing rather than the shape alone (asked in the audit's evaluate list). Pictures looked at: frame menu, copied notice, canvas menu, Edit-menu copy; each shows the row and the notice as intended."
+    },
+    {
+      "t": "2026-10-15T09:16:59.395Z",
+      "note": "Copy SVG row in Edit (under Copy Merged) and on the layer, frame and bare-canvas right-click menus puts the drawing's SVG on as plain text, byte for byte the Export web-page file (frame-scoped when a frame is picked). Copy and Copy Merged unchanged: a screenshot redline still pastes its spec list. Verified by copy-svg-into-a-code-editor-walk and copy-svg-from-the-edit-menu-walk at Next defaults, 12 neighbouring walks, Scripts/test.sh 13191 passed. Commit 87f07af6; audit queue/audits/2026-10-15-copy-svg.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "copy-svg-into-a-code-editor-walk",
+    "copy-svg-from-the-edit-menu-walk"
+  ],
+  "started": "2026-10-15T08:49:37.949Z",
+  "completed": "2026-10-15T09:16:59.397Z"
 }

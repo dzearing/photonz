@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 120,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T18:05:22.679Z",
-  "updated": "2026-10-14T12:18:03.725Z",
+  "updated": "2026-10-15T01:41:23.158Z",
   "deps": [],
   "blockedBy": [],
   "notes": "The table is SectionOperation in Sources/PhotonzCore/RangeSection.swift; both rows exist with isAvailable == false, so turning them on is: a document edit in RangeSection.swift (tested), the row's action in Sources/Photonz/EditorState+RangeSection.swift sectionRow/canDo, and isAvailable true. Clean Noise today is AudioLevel.noiseReduction for the whole layer (NoiseCleaning.swift); a section version could split the clip at the range edges into its own layer, or carry per-stretch reduction. Hide Picture has no per-stretch model at all.",
@@ -31,6 +31,32 @@
     {
       "t": "2026-10-14T12:18:03.724Z",
       "note": "seq 80 -> 120"
+    },
+    {
+      "t": "2026-10-15T00:56:31.763Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T00:59:07.028Z",
+      "note": "Before building: a first-time user draws a range, clicks the recording, right-clicks: Hide Picture for Section must leave a visible mark on the bar or they cannot tell which stretch is off or why the picture vanished; Premiere's answer is a disabled clip drawn dim after a cut, so the stretch is cut at the range edges (as Speed and Freeze for Section already are), its filmstrip is left out and it carries a 'hidden' badge, and the piece's right-click offers Show Picture to take it back. Clean Noise in Section mirrors Premiere's effect on a cut segment: the clip is cut at the edges, that piece plays a cleaned copy of the file, its waveform is the cleaned one and it wears the sparkle badge; Remove Noise Cleaning on the sound clears it with the whole-sound cleaning. Model: two optional marks on a clip piece (picture off, noise strength), so a split never makes a second clip. Risk found: the fast export that copies a plain recording straight through must refuse a clip with either mark, or the export would skip them."
+    },
+    {
+      "t": "2026-10-15T01:40:51.433Z",
+      "note": "owns these walks: hide-picture-and-clean-noise-for-a-section-walk, picked-in-range-menu-bar-walk"
+    },
+    {
+      "t": "2026-10-15T01:41:01.413Z",
+      "note": "left rough, not filed: a section is cleaned at Medium with no strength choice, and the cleaning switches on hard at the cut with no crossfade; both are refinements the audit asks the user about rather than defects. Built: ClipPiece carries pictureHidden and noiseReduction (encoded only when set); Layer.isOnScreen reads a hidden piece as off screen (drawing, canvas clicks, handles); the mix plays Layer.sectionCleanedSounds for a cleaned piece (one copy per strength, learned from every cleaned stretch); CutCopy's fast export refuses a marked clip; Show Picture on the piece's right click and in Clip; Remove Noise Cleaning clears section cleaning too. Walk claims added: expectDrawn 'shown', expectLevel 'cleanedAt'/'rawAt'."
+    },
+    {
+      "t": "2026-10-15T01:41:23.156Z",
+      "note": "Clean Noise in Section and Hide Picture for Section now act on the stretch inside a range only, from the right click and Sequence > Picked in Range, each one undo step (commit ca23ab09). Hidden stretch: not drawn or clickable, sound plays on, dimmed with a 'hidden' badge, Show Picture brings it back. Cleaned stretch plays a cleaned copy. Verified: core tests (new SectionCleanAndHideTests), full suite 13170 green, hide-picture-and-clean-noise-for-a-section-walk and picked-in-range-menu-bar-walk green at Next defaults with real window captures; audit 2026-10-15-clean-noise-and-hide-picture-in-a-section."
     }
-  ]
+  ],
+  "started": "2026-10-15T00:56:31.761Z",
+  "walks": [
+    "hide-picture-and-clean-noise-for-a-section-walk",
+    "picked-in-range-menu-bar-walk"
+  ],
+  "completed": "2026-10-15T01:41:23.157Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-11T17:52:57.357Z",
-  "updated": "2026-10-14T12:18:03.478Z",
+  "updated": "2026-10-14T23:21:26.364Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Measured 2026-10-11 by the runner on a-selection-box-on-the-timeline-scrolls-the-time. Command: Scripts/playtest.sh Scripts/playtest/box-scrolls-at-the-edge-walk.json. Its boxToEdge log line, after the edge ticker was capped at 60 Hz: right edge at full speed across the 14 s sample opened to 3.5 s across: 100 frames, ms between them p50 16.7 p95 33.3 max 39.2; left edge: p50 16.7 p95 33.9 max 39.3; the 5 s hold opened right in: p50/p95/max 16.7. At 120 Hz before the cap it was p50 17-20 ms, p95 about 26 ms. A sample of the probe during a 12 s hold: of 1407 main-thread samples about 1150 are NSHostingView.layout > ViewGraphRootValueUpdater.render under CA::Transaction commit (the whole window re-laid out per timelineZoom change); TimelineTrackRow.body about 46, ClipPiecesBar.body about 12, EditorState.motionStripCycleMS about 31; the display-link ticker itself about 3. The walk harness timer watchForWindowsOverThePerson took 111 samples (8 percent), so walk numbers overstate the app cost somewhat. Likely lever: views outside the timeline that read timelineWindow or motionStripRuler (or documentMomentChanged side effects), so a pan invalidates the whole window; panTimeline from the overview scroller shares the path.",
@@ -34,9 +34,27 @@
     {
       "t": "2026-10-14T12:18:03.477Z",
       "note": "seq 50 -> 90"
+    },
+    {
+      "t": "2026-10-14T22:03:04.677Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T23:21:26.215Z",
+      "note": "Reproduced: right edge p95 33.3/38.4 ms twice. Profile: the 'whole window layout' was SwiftUI's normal NSHostingView pass; the bodies run were all timeline (track rows incl. headers, dock grid via the lane box gesture reading the ruler in body, every clip bar). Clip bars were ~40% (hiding them: 1542 -> 921 ms busy). Fixed by drawing bars from their own start and sliding them (0c297537)."
+    },
+    {
+      "t": "2026-10-14T23:21:26.285Z",
+      "note": "left rough: the walk harness's window watcher (watchForWindowsOverThePerson, CGWindowListCopyWindowInfo at 50 Hz) takes 7-10% of the main thread in every walk; walk-only, so not filed. A 40-60 ms single frame shows when the box picks a new clip mid-scroll (selection change rebuilds the panel); not in acceptance, logged only. The sound tag at a clip's start sits up to 60 pt off the lane's left edge (shows '...sic'), same as before this change."
+    },
+    {
+      "t": "2026-10-14T23:21:26.362Z",
+      "note": "Clip bars drawn from their own start and slid along (SlidAlongTheTimeline), cut to a stretch that moves every half window (TimelineDrawnStretch); lanes, labels and pinned names redraw on their own (DrawnOnItsOwn); zoom stored as scale + start. box-scrolls-at-the-edge-walk x3 at Next defaults: right edge p95 33.3 -> 16.7 ms, left 16.7, 5 s hold p50/p95/max 16.7; clip bar bodies per hold 428 -> 24, track rows and dock grid 0 (body counts now in the walk's log line; sample shows only timeline bodies per step). 33 related walks green, Scripts/test.sh green (13135 tests). Commit 0c297537."
     }
   ],
   "walks": [
     "box-scrolls-at-the-edge-walk"
-  ]
+  ],
+  "started": "2026-10-14T22:03:04.672Z",
+  "completed": "2026-10-14T23:21:26.363Z"
 }

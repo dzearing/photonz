@@ -5,11 +5,11 @@
   "epic": "icon-export",
   "priority": "p2-normal",
   "seq": 210,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T07:41:02.916Z",
-  "updated": "2026-10-14T12:18:04.283Z",
+  "updated": "2026-10-15T10:32:09.785Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-10 by pen-points-in-an-icon-frame-land-on-whole-units. Earlier version of Scripts/playtest/pen-lands-on-whole-units-in-an-icon-walk.json with the curve drag {\"do\":\"drag\",\"from\":[803.3,552.2],\"to\":[806.6,550.4]} (pinch to 8, pen clicks 807.6,544.2 then that drag then 809.7,556.4, Return). writeSVG wrote: <path transform=\"translate(13.88 6)\" d=\"M5.12 0 C5.12 0 -2.88 10 1.12 8 C5.12 6 8.12 12 8.12 12\" .../>. Every absolute place is whole (13.88+5.12=19) but the layer's frame origin is the curve's BOUNDS origin (PathBuilder.layer normalises to content.bounds, which includes the bulge, VectorPath.swift ~688/610), so both the translate and d are fractional. Fix candidates: in SVGExport (placement + path, ~842/1110/1864) fold a fractional translate into d when that makes every number whole (gradient boxes, inside/outside stroke clips and filters read the box too, so check those), or keep the layer origin on whole units at commit. The walk in that task now drags the handle straight down so its box starts on its points; switch it back to the bulging drag once this lands.",
@@ -46,9 +46,27 @@
     {
       "t": "2026-10-14T12:18:04.282Z",
       "note": "seq 150 -> 210"
+    },
+    {
+      "t": "2026-10-15T10:12:43.700Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T10:32:09.644Z",
+      "note": "Adversarial: the fix must leave every point where the canvas draws it (shift path by origin minus whole origin; turn pivot moved by the same shift), and must not change any file off icon frames, so it only applies inside icon-sized frames and only when the shifted path is wholly whole. Verified: 9 new tests in SVGWholeUnitCurveTests, 200 SVG tests, full suite 13212 passed; walk pen-lands-on-whole-units-in-an-icon-walk back on the bulging drag, writeSVG says translate(14 6) d=M5 0 C5 0 -3 10 1 8 ..., copied SVG passes the whole-unit check. Looked at pen-whole-units-3-drawn-sc.png: the curve swings left past its first point as intended."
+    },
+    {
+      "t": "2026-10-15T10:32:09.709Z",
+      "note": "left rough: a gradient on such a curve still states its ends against the curve's own box, which can be fractional. Nobody has hit it yet and gradients on icon curves are rare, so not filed; it is in the audit's rough list."
+    },
+    {
+      "t": "2026-10-15T10:32:09.783Z",
+      "note": "SVG export places a path inside an icon frame on whole units when its curve bulges past its points (SVGExport.onWholeUnits), shifting the path by the difference; off-frame files unchanged. Tests: SVGWholeUnitCurveTests + full suite green; walk pen-lands-on-whole-units-in-an-icon-walk passes with the bulging drag and a whole-unit copy. Commit e40f51bf."
     }
   ],
   "walks": [
     "pen-lands-on-whole-units-in-an-icon-walk"
-  ]
+  ],
+  "started": "2026-10-15T10:12:43.698Z",
+  "completed": "2026-10-15T10:32:09.784Z"
 }

@@ -5,17 +5,17 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T20:55:27.757Z",
-  "updated": "2026-10-14T12:18:03.290Z",
+  "updated": "2026-10-14T20:31:19.825Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Seen and fixed on the volume line 2026-10-13 (task an-audio-clip-answers-right-click-and-its-volume). Debug log from a-sound-s-volume-line-picks-and-shapes-walk before the fix: the second right-click built rows for segment(1) twice (lineMenuRows ms=4022 hit=segment(1), pick {0} then {3000}), then the chosen Hold ran `curve [0] steps(1)`, i.e. a closure from the first right-click's build (starts {0}). The walk failed: curves [Hold, Linear, ...] not [Ease out, Hold, ...]. Fix there: EditorState+SoundLine soundSegmentsForMenu reads soundLinePick at run time. Suspect the same in EditorState+KeyGraph.segmentMenuRows (captures refs) and keyMenuRows; NOT reproduced on keys (value-graph walk needs the front, which this Mac would not give the probe).",
+  "notes": "Seen and fixed on the volume line 2026-10-13 (task an-audio-clip-answers-right-click-and-its-volume). Debug log from a-sound-s-volume-line-picks-and-shapes-walk before the fix: the second right-click built rows for segment(1) twice (lineMenuRows ms=4022 hit=segment(1), pick {0} then {3000}), then the chosen Hold ran `curve [0] steps(1)`, i.e. a closure from the first right-click's build (starts {0}). The walk failed: curves [Hold, Linear, ...] not [Ease out, Hold, ...]. Fix there: EditorState+SoundLine soundSegmentsForMenu reads soundLinePick at run time. Suspect the same in EditorState+KeyGraph.segmentMenuRows (captures refs) and keyMenuRows; NOT reproduced on keys (value-graph walk needs the front, which this Mac would not give the probe).\n\n2026-10-14 runner: reproduced and fixed on the value graph. Root cause is not stale actions but a stale MENU: SwiftUI hands a right click the .contextMenu built at the view's last update, before the click (CanvasContextMenuHook.swift). Fix: one strip and one menu per segment in KeyLanesView.lineSurface. New walk: value-graph-second-segment-menu-walk. The volume line keeps the defect; filed as a-right-click-on-a-sound-s-volume-line-opens-the.",
   "acceptance": [
     "A walk right-clicks one segment of a value graph and chooses a curve, then right-clicks a different segment and chooses another, and each segment carries its own choice",
-    "If it reproduces, the segment and key menus read what they act on from the pick when a row runs, as the volume line now does"
+    "If it reproduces, a right-click on a value graph segment opens that segment's own menu every time, and what its rows act on is that segment"
   ],
   "log": [
     {
@@ -25,6 +25,44 @@
     {
       "t": "2026-10-14T12:18:03.289Z",
       "note": "seq 4030 -> 60"
+    },
+    {
+      "t": "2026-10-14T19:19:00.158Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T20:30:58.426Z",
+      "note": "Reproduced: value-graph-second-segment-menu-walk on the old code fails at step 39 (right-click Segment Scale 2 gave the lane's menu: Show Graph, Select All Keys, Paste Keys, Easing, Stop Animating). A diagnostic run had Linear chosen from segment 2's menu bend segment 1. Debug logging showed only the first menu built inside menu(for:) (ContextMenuResponder.items); every later build ran in a run-loop transaction AFTER the click, so the line's one point-aimed menu was always the previous right click's, rows and actions both. Same SwiftUI behaviour CanvasContextMenuHook.swift records from 2026-09-16, so a person hits it too, not just walks."
+    },
+    {
+      "t": "2026-10-14T20:30:58.493Z",
+      "note": "Fix: KeyLanesView.lineSurface draws one strip per segment, each with its own .contextMenu (and one strip for the line either side of the keys, carrying the lane menu). A segment's menu is about that segment whenever SwiftUI built it; it picks only when the latest press hit-tests to it (segmentMenuRows(landed:)). Add Point Here reads the press moment as it runs. Delete Point counts only points picked WITH the segment, as the volume line does. Tried first and dropped: reading targets from the pick at run time (the menu still picked the wrong segment) and recomputing the line inside the menu (the menu itself was the stale build)."
+    },
+    {
+      "t": "2026-10-14T20:30:58.560Z",
+      "note": "Verified: the new walk passes on the fix and fails on the old code; 16 walks touching key lanes and graphs pass (value-graph-points-and-segments, value-graph-zoom-and-segment-easing, key-lanes-menu, key-lanes, every-key-dot-picks, a-graph-handle-follows-the-hand, between-the-keys, key-value-popover, keyframe-anything, tilt-keys-like-a-move, picked-row-drag-moves-whole-path, punch-in-and-hold, framing-a-zoom-keys-its-centre, opacity-on-a-video-shape, timeline-bar-labels-only, every-title-dropdown-opens-on-a-click); Scripts/test.sh 13114 tests green. Key dots already carry a menu each (TimelineKeyMenu), so keyMenuRows was left as it is."
+    },
+    {
+      "t": "2026-10-14T20:30:58.626Z",
+      "note": "The volume line has the same defect (right-click a point, then a segment: the point's menu opens). Reproduced and filed as a-right-click-on-a-sound-s-volume-line-opens-the."
+    },
+    {
+      "t": "2026-10-14T20:30:58.693Z",
+      "note": "left rough: once a graph segment is picked, one of its curve handles sits over the segment's middle, so a right-click exactly there lands on the handle and opens no menu. A person aims anywhere along the segment, so it did not earn a task; the walk right-clicks unpicked segments."
+    },
+    {
+      "t": "2026-10-14T20:30:58.759Z",
+      "note": "owns these walks: value-graph-second-segment-menu-walk, value-graph-points-and-segments-walk"
+    },
+    {
+      "t": "2026-10-14T20:31:19.823Z",
+      "note": "Reproduced and fixed (81a58e3d): a value graph's line carried one right-click menu for every segment, and SwiftUI shows the menu built before the click, so Linear chosen on the second segment bent the first and the second segment could open the lane's menu. Each segment now has its own strip and menu (KeyLanesView.lineSurface), picking only when the press lands on it. New walk value-graph-second-segment-menu-walk fails on the old code and passes now, at Next defaults; 16 related walks and Scripts/test.sh (13114) green. Same defect on the volume line filed as a-right-click-on-a-sound-s-volume-line-opens-the."
     }
-  ]
+  ],
+  "started": "2026-10-14T19:19:00.157Z",
+  "walks": [
+    "value-graph-second-segment-menu-walk",
+    "value-graph-points-and-segments-walk"
+  ],
+  "completed": "2026-10-14T20:31:19.824Z"
 }

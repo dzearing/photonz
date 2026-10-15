@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 220,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T11:01:28.844Z",
-  "updated": "2026-10-14T12:18:04.345Z",
+  "updated": "2026-10-15T11:07:10.957Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock docs/design/mocks/pages/icon-loop-wt.html step 3 #motNote: Rotation arrives at 0 to 360 with Repeat on Forever when the shape is a ring. Code: LayerMotion.starting(.rotation, on:) in Sources/PhotonzCore/LayerMotion.swift ~1206, currently -12..12 foreverThereAndBack for every layer. Found by a-spinner-can-turn-about-the-middle-of-the-artbo.",
@@ -46,6 +46,27 @@
     {
       "t": "2026-10-14T12:18:04.344Z",
       "note": "seq 160 -> 220"
+    },
+    {
+      "t": "2026-10-15T10:48:06.041Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T11:06:46.975Z",
+      "note": "owns these walks: a-ring-or-arc-arrives-spinning-walk"
+    },
+    {
+      "t": "2026-10-15T11:06:57.842Z",
+      "note": "Pre-build review: the mock (icon-loop-wt.html step 3) also says Linear and draws a 1.2 s turn, so those arrive too; pivot stays Its centre as step 3 draws it. Scoped to layers inside an icon frame because tutorial-two-parts-out-of-phase, motion-timing-strip and others put a second swing on a loose ellipse and expect -12..12. 'Arc' = ellipse annotation, open path with a bend, or a bent path with a partial trim; a whole closed curve (bell, clapper) still swings. Built: Layer.isRingOrArc + LayerMotion.starting(_:on:inIcon:) in LayerMotion.swift, EditorState.addMotion passes iconFrameID(containing:). Tests: SpinnerRotationTests (6). Walk a-ring-or-arc-arrives-spinning-walk passes; motion-loop-preview, spinner-turns-about-the-artboard, forever-spinner-keeps-its-own-pace re-run green. Full suite 13218 green. Looked at 1-arc-sc.png: row reads 0 to 360 over 1.2s, Linear, strip shows a 1200 ms turn repeating. Left rough: motion-loop-preview-walk's narrative speaks of two swings with a lag, and its ellipse now spins instead; its checks still pass and no person sees that text, so not filed."
+    },
+    {
+      "t": "2026-10-15T11:07:10.955Z",
+      "note": "Rotation on a ring or arc in an icon frame arrives as 0 to 360, Linear, Forever, 1.2 s a turn (LayerMotion.starting inIcon + Layer.isRingOrArc); other shapes keep the swing. Verified by SpinnerRotationTests, the new a-ring-or-arc-arrives-spinning-walk at Next defaults, three neighbouring walks and the full suite (13218 green). Commit e2eedfc4, audit 2026-10-15-a-ring-or-arc-gets-a-full-turn-forever-when-rota.json."
     }
-  ]
+  ],
+  "started": "2026-10-15T10:48:06.038Z",
+  "walks": [
+    "a-ring-or-arc-arrives-spinning-walk"
+  ],
+  "completed": "2026-10-15T11:07:10.956Z"
 }

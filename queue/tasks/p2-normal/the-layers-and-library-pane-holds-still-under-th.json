@@ -4,12 +4,12 @@
   "goal": "The pane of lists at the bottom of the panel changes height to fit what it shows, so the control a person just clicked moves away from the pointer: switching the Library from Media to Comps lifts its whole Media, Comps, Styles, Systems control 65 points, and folding Layers drops its header about 93 points. A second click on the same spot then misses. The pane should stay put while someone is working in it.",
   "epic": "video-editing",
   "priority": "p2-normal",
-  "seq": 4010,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T16:01:13.461Z",
-  "updated": "2026-10-14T16:01:13.464Z",
+  "updated": "2026-10-15T12:23:26.022Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-14 in the probe (walks-that-fail-in-the-full-sweep-21). Scratch walk = segmented-chip-refraction-film-walk steps 1-6, then panel / press Comps / wait 1 / panel: Media and Comps report window y 174 before and 239 after (bottom-left points), so the control rose 65pt. Folding Layers on a blank 1440x900 picture: its header press point went from y 142 (open) to y 50 (shut), about 93pt down. Cause: PanelListsPane sizes the pane to its content ('shrinking to its content when its lists are short or folded', 885afc78), anchored at the bottom. Dragging the Lists grip only sets a ceiling: with the grip at 182pt the Library scrolled and the control still moved 34pt. The chip walk fails at step 11 (filmThumb: no thumb at rest on the rail) because the rail it films is no longer where the control is. A Photoshop panel keeps its size when its content changes; a fix might hold the pane's height while the pointer is in it, or size it to the tallest of its scopes. Decide the visible rule with the user if it is not obvious.",
@@ -23,6 +23,14 @@
     {
       "t": "2026-10-14T16:01:13.463Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-14T21:18:33.762Z",
+      "note": "rotating check 2026-10-14T21:18:33Z, 35 walks run from 618 onward in the rotation: segmented-chip-refraction-film-walk failing."
+    },
+    {
+      "t": "2026-10-15T12:23:26.021Z",
+      "note": "seq 4010 -> 20"
     }
   ],
   "walks": [

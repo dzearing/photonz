@@ -1,0 +1,63 @@
+{
+  "id": "a-picked-rounded-shape-is-ringed-round-its-box-a",
+  "title": "A picked rounded shape is ringed round its box, as the mocks draw it",
+  "goal": "When you pick a rounded rectangle, the mocks draw the selection ring as a near-square frame round its box, so the ring never reads as the shape's own border; the app curves the ring round the shape's corners instead. Settle which the user wants (an earlier fix chose the curve) and build it.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 70,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T02:20:00.934Z",
+  "updated": "2026-10-15T12:23:25.886Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/shared/components/selection.css .sel-ring + the block at its foot (\"hug the bounds, 2px hairline radius, never trace the object's shape\"). App: CanvasDisplay.refreshLayerSelectionDisplay passes chromeLayer.selectionOutlineRadii(box:) into SelectionOutlineShape.path, which rounds the ring by the shape's own corner radius; that was a deliberate fix on 2026-09-08 (SelectionOutlineShape.swift doc comment: straight lines looked like they cut across every corner). The two conflict, so it is a card, not a quiet change. Found while making the ring solid (a-picked-layer-wears-the-solid-accent-ring-the-m, 2026-10-14): with a solid accent ring the curve reads even more like a border of the shape. Reproduce: draw a rectangle, set Corner Radius 40, pick it, snapshot.",
+  "acceptance": [
+    "A decision card, filmed with both looks on a rounded rectangle, says whether the ring curves with the shape or hugs the box with a 2px radius",
+    "The answer is built at Next defaults and a walk picture of a picked rounded rectangle shows it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T02:20:00.936Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T02:33:59.554Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T02:50:57.726Z",
+      "note": "owns these walks: a-picked-rounded-shape-hugs-its-box-walk, selection-outline-rounds-walk"
+    },
+    {
+      "t": "2026-10-15T02:52:12.724Z",
+      "note": "Checked first: the 2026-09-08 curve (the-selection-outline-follows-a-rounded-shape) was the loop's own call, no user source and no reaction on its audit. The mock (selection.css .sel-ring) says hug the bounds, 2px, never trace the shape. Rule: build the mock until the user answers, so the mock is built and the curve is on a card."
+    },
+    {
+      "t": "2026-10-15T02:52:12.785Z",
+      "note": "Built: Layer.pickedRingRadii(box:huggingBox:zoom:) + SelectionOutlineShape.boxSoftening (2 screen points) in PhotonzCore, tests first (5 in SelectionOutlineShapeTests, 1 flag test). Switch next-picked-ring-hugs-the-box, Next only, on by default; CanvasDisplay uses it for the picked ring and the multi-selection rings. Full suite 13181 green. Commit 552fadd6, pushed."
+    },
+    {
+      "t": "2026-10-15T02:52:12.845Z",
+      "note": "Filmed: a-picked-rounded-shape-hugs-its-box-walk (no flags) and selection-outline-rounds-walk (switch off, curve). Screen Recording granted, screen unlocked, both green, real captures (window behind another app). Audit queue/audits/2026-10-14-picked-ring-hugs-the-box.json. Left rough, not filed: the mock's ring sits 1px outside the bounds (inset -1px), ours sits on the ink box; nobody would notice at 1.5pt."
+    },
+    {
+      "t": "2026-10-15T02:52:12.914Z",
+      "note": "Mock's square frame built at Next defaults (next-picked-ring-hugs-the-box, commit 552fadd6), both looks filmed on a picked rounded rectangle; waiting on the card: square frame (recommended, already shipping) or the curve. Answer A closes it as is; answer B means turning the switch off by default."
+    },
+    {
+      "t": "2026-10-15T12:23:05.787Z",
+      "note": "triage 2026-10-15, from the solid ring audit (2026-10-14-solid-picked-ring.json): every picture there was taken with the window behind another app, so none shows the ring in its accent colour, and its rough list says the finer ring on several picked layers reads more grey than blue on a dark picture. Whichever look the user picks here, photograph it once with the window in front (a front walk or a person at the Mac) so the colour can be judged."
+    },
+    {
+      "t": "2026-10-15T12:23:25.885Z",
+      "note": "seq 3970 -> 70"
+    }
+  ],
+  "started": "2026-10-15T02:33:59.551Z",
+  "walks": [
+    "a-picked-rounded-shape-hugs-its-box-walk",
+    "selection-outline-rounds-walk"
+  ]
+}

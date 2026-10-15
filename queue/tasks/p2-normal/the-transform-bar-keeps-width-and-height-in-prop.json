@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T02:46:23.991Z",
-  "updated": "2026-10-14T12:18:03.410Z",
+  "updated": "2026-10-14T21:51:05.704Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from a-small-overlay-shows-transform-values-to-type-i (2026-10-13). Bar view: Sources/Photonz/TransformValueBar.swift; values land through EditorState+TransformBar.swift setTransformBarValue via LayerGeometrySelection.applying. Mock: .va-link in video-animate.html buildBar (between W and H). The mock models size as one scale percentage, which is why its W and H move together.\n\nTriage 2026-10-13: the canvas bar (TransformValueBar.swift) this was filed against was replaced the same night by TransformValuesPopover.swift (task transform-values-live-behind-an-info-button-on-t, commit 1cd96c89). Build the link there.",
@@ -43,9 +43,28 @@
     {
       "t": "2026-10-14T12:18:03.409Z",
       "note": "seq 40 -> 80"
+    },
+    {
+      "t": "2026-10-14T21:20:37.286Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T21:50:48.469Z",
+      "note": "walks transform-values-info-walk -> transform-values-link-walk, transform-values-info-walk"
+    },
+    {
+      "t": "2026-10-14T21:51:05.626Z",
+      "note": "Adversarial pass: a Photoshop user expects the chain between W and H, on by default, typed values only (handles keep Shift); the mock's horizontal link becomes a bracket joining the W and H rows since the popover lists one value per row. Rough items in the audit: layout (settled by the 2026-10-12 popover move), link lifetime per window (asked in evaluate, no task: nobody hits it yet), handles not following the link (Photoshop parity, log only), link hidden where height is not typeable (by design). No follow-ups filed. No menu bar entry: it is a setting on the popover, not a command."
+    },
+    {
+      "t": "2026-10-14T21:51:05.702Z",
+      "note": "Info popover joins W and H with a bracket and chain, on by default; typing or stepping W brings H along in proportion (and the reverse) in one undo step, one click unlinks. Core LayerGeometrySelection inProportion with 5 new tests; full suite 13,123 green; transform-values-link-walk (Next defaults, no flags) ok, transform-values-info-walk and 3d-grippers walk ok. Audit queue/audits/2026-10-14-transform-values-link.json. Commit dffaca28."
     }
   ],
   "walks": [
+    "transform-values-link-walk",
     "transform-values-info-walk"
-  ]
+  ],
+  "started": "2026-10-14T21:20:37.284Z",
+  "completed": "2026-10-14T21:51:05.703Z"
 }

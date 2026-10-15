@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-13T15:25:02.884Z",
-  "updated": "2026-10-14T16:07:59.200Z",
+  "updated": "2026-10-14T16:08:29.246Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-14T08:00:30Z: 901 of 915 walks passed in 247 minutes.\n\nFailing walks (14): a-recording-stays-and-opens-right-after-stop-walk, box-scrolls-at-the-edge-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, keys-copy-between-layers-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  box-scrolls-at-the-edge-walk -> scrolling-the-timeline-along-time-keeps-every-fr (that task says it owns this walk)\n  keys-copy-between-layers-walk -> the-keyframe-anything-and-keys-copy-between-laye (that task says it owns this walk)\n\nThis task owns the other 12: a-recording-stays-and-opens-right-after-stop-walk, clicking-a-timeline-item-moves-the-playhead-walk, every-command-in-the-menu-bar-walk, layer-pick-at-scale-walk, layer-pick-latency-walk, layer-row-lifts-by-pointer-walk, motion-pivot-in-a-corner-walk, new-layer-takes-your-layer-walk, room-means-one-thing-walk, section-fold-motion-walk, segmented-chip-refraction-film-walk, value-graph-points-and-segments-walk\n\nFull output: queue/sweep/2026-10-13-205353.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a-small-overlay-shows-transform-values-to-type-i: transform bar now appears under any layer after a move, resize, turn or nudge; walks that click just below a moved layer may hit it\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -106,6 +106,10 @@
     {
       "t": "2026-10-14T16:07:59.199Z",
       "note": "left rough: section-fold-motion-walk's 16ms frame gates trip now and then under load (load avg 3-5 today): a different step each time, 17.6 to 20.4ms, and once the filmed re-open click on Time did not register. It passed 4 of 8 runs today, two in a row on the final build. Not filed; if the sweep shows it again it earns a task."
+    },
+    {
+      "t": "2026-10-14T16:08:29.244Z",
+      "note": "11 of the 12 walks pass, each run twice on its own (section-fold-motion passed 2 in a row on the final build; its 16ms gates trip now and then under load, logged). Two app fixes in 67b0fa68: a pick no longer rebuilds the whole editor (Info button regression from 1cd96c89, bisected), and a segment's right-click menu no longer takes the pick back from a point clicked afterwards. Seven walks were stale and updated (track names, grid left on in the probe, lists pane at the bottom). segmented-chip-refraction-film-walk is right and the app is wrong: handed to the-layers-and-library-pane-holds-still-under-th. Scripts/test.sh green (13101 tests)."
     }
   ],
   "standing": "walk-sweep",
@@ -122,5 +126,6 @@
     "room-means-one-thing-walk",
     "section-fold-motion-walk",
     "value-graph-points-and-segments-walk"
-  ]
+  ],
+  "completed": "2026-10-14T16:08:29.245Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 130,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-12T12:27:10.700Z",
-  "updated": "2026-10-14T12:18:03.791Z",
+  "updated": "2026-10-15T02:20:45.614Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-12 while building a-zoomed-recording-shows-its-ring-on-the-frame-n: the frame ring now lands on the frame (picture /tmp/photonz-playtest/framing-a-zoom-keys-its-centre-walk/3-framed-at-5-sc.png, copied to queue/audits/2026-10-12-zoom-frame-ring-3-framed-sc.png) but wears the app-wide layerOutlineLayer style: systemBlue at 0.6 alpha, lineWidth 2, lineDashPattern [2,4] (CanvasView.swift around line 2163). Mock: docs/design/mocks/shared/components/selection.css .sel-ring, and video-zoom-wt.html #frameRing. Changing it touches every picked layer, so check legibility over screenshots (the dashes were likely chosen for that) and open a decision card with both filmed if a solid ring does not hold up.",
@@ -38,9 +38,44 @@
     {
       "t": "2026-10-14T12:18:03.790Z",
       "note": "seq 100 -> 130"
+    },
+    {
+      "t": "2026-10-15T01:57:14.989Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T02:20:25.709Z",
+      "note": "walks framing-a-zoom-keys-its-centre-walk -> framing-a-zoom-keys-its-centre-walk, a-picked-layer-wears-the-solid-ring-walk"
+    },
+    {
+      "t": "2026-10-15T02:20:37.249Z",
+      "note": "Reproduced: framing-a-zoom-keys-its-centre-walk 3-framed-at-5-sc.png showed the faint dotted blue ring (systemBlue 0.6, 2pt, dash [2,4]) on the pushed-in recording."
+    },
+    {
+      "t": "2026-10-15T02:20:37.310Z",
+      "note": "Review before building: a bare 1.5pt accent line is invisible on a blue screenshot (prototyped over white/accent blue/pale/dark/grey in /tmp/ringproto). Casing it in a 3pt white halo at 0.6 keeps it legible everywhere and still reads as one line, so no decision card: the halo goes further than the mock rather than away from it, and it is named in the audit's rough for the user to react to."
+    },
+    {
+      "t": "2026-10-15T02:20:37.370Z",
+      "note": "Built: PhotonzCore/PickedRing.swift (tested in PickedRingTests), flag next-solid-picked-ring (Next only, on by default), CanvasPickedRing.swift (CasedRingLayer: own stroke is the casing, ink sublayer shares its path, so every existing path/isHidden call site is untouched). Multi-selection members get the mock's .mem-ring (1pt at 70%) with a 2.5pt halo, so shift-clicking a second layer does not switch from solid to dotted."
+    },
+    {
+      "t": "2026-10-15T02:20:37.430Z",
+      "note": "Verified: Scripts/test.sh green (13175 tests); new walk a-picked-layer-wears-the-solid-ring-walk (same-colour tile on white, blue, dark bands; dark and light; two picked) ok at Next defaults with expectPicked claims; framing-a-zoom-keys-its-centre-walk, a-moved-layer-stays-under-what-covers-it, every-handle-lights-on-hover, undo-hands-back-the-pick, multi-drag, marquee-and-track-range all ok."
+    },
+    {
+      "t": "2026-10-15T02:20:37.494Z",
+      "note": "Rough items: rounded-shape ring curve vs mock's box ring filed as a-picked-rounded-shape-is-ringed-round-its-box-a (p1, conflicts with a 2026-09-08 fix so it starts with a card). Left rough here: the member ring reads grey-ish on dark because the halo outweighs a 70% line; small, and the user can react to it on the audit."
+    },
+    {
+      "t": "2026-10-15T02:20:45.612Z",
+      "note": "Picked layers and a pushed-in recording's frame now wear the mocks' solid 1.5pt accent ring (multi-selection members the 1pt 70% ring), cased in a faint white halo so it reads on white, blue and dark pictures; Next only via next-solid-picked-ring (on by default), Current keeps the dotted line. Commit 146cb772. Verified with Scripts/test.sh (13175 green), the new a-picked-layer-wears-the-solid-ring-walk at Next defaults in dark and light, and framing-a-zoom-keys-its-centre-walk. Audit queue/audits/2026-10-14-solid-picked-ring.json."
     }
   ],
   "walks": [
-    "framing-a-zoom-keys-its-centre-walk"
-  ]
+    "framing-a-zoom-keys-its-centre-walk",
+    "a-picked-layer-wears-the-solid-ring-walk"
+  ],
+  "started": "2026-10-15T01:57:14.988Z",
+  "completed": "2026-10-15T02:20:45.613Z"
 }

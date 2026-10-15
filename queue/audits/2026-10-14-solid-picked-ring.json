@@ -1,0 +1,50 @@
+{
+  "feature": "A picked layer wears the solid accent ring",
+  "epic": "video-transitions-motion",
+  "task": "a-picked-layer-wears-the-solid-accent-ring-the-m",
+  "summary": "What you pick on the canvas is now outlined with one solid line in the accent colour, as every mock draws it, instead of a faint dotted blue line. It stays readable on white, on blue and on dark pictures.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open any screenshot and click a layer on it with the Select tool (V).",
+      "shot": "2026-10-14-solid-ring-white-on-white-light-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick a layer that sits on a blue part of the picture.",
+      "shot": "2026-10-14-solid-ring-blue-on-blue-dark-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick a layer on a dark part, then switch the Mac to Light appearance and look again.",
+      "shot": "2026-10-14-solid-ring-dark-on-dark-light-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Shift-click a second layer so two are picked.",
+      "shot": "2026-10-14-solid-ring-two-picked-dark-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open a screen recording, push it in past the frame with Scale, and click the recording.",
+      "shot": "2026-10-14-solid-ring-zoom-frame-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag a picked layer around and watch the ring follow it."
+    }
+  ],
+  "evaluate": [
+    "Does the solid ring read as the mocks' ring at a glance?",
+    "On a blue screenshot, can you still see exactly where the ring is?",
+    "Is the faint light edge round the ring invisible enough on white and quiet enough on dark?",
+    "With two layers picked, does the finer ring still say both are picked?"
+  ],
+  "rough": [
+    "Goes further than the mock: each ring has a faint white halo just wider than the line, because a bare accent line vanishes on a blue screenshot. On white it cannot be seen; on dark it shows as a grey hairline either side.",
+    "The finer ring on each of several picked layers reads more grey than blue on a dark picture, where the halo outweighs the 70% line.",
+    "A rounded shape's ring still curves with the shape's corners, where the mock hugs the box with a 2px radius: a-picked-rounded-shape-is-ringed-round-its-box-a.",
+    "The resize squares and the turn knob are unchanged."
+  ]
+}

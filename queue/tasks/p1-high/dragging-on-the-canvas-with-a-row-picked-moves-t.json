@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T10:46:02.904Z",
-  "updated": "2026-10-14T12:18:02.921Z",
+  "updated": "2026-10-14T12:50:09.700Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From a-layer-s-track-shows-only-what-is-animated-and (2026-10-14). The mock video-animate.html interaction table row: \"Drag on the canvas, a row picked | Canvas | Moves every key of that row by the same amount (for Position, the whole path), instead of keying the playhead.\" The decision card a-layer-s-track-shows-only-what-is-animated-and-when-you-change-something-on-a-l (answered a) names this as its mitigation. Picked row state: EditorState.pickedKeyRow / keyRowInHand (EditorState+OnlyAnimated.swift); canvas edits go through foldingIntoKeys -> PhotonzDocument.editPosedForCanvas -> foldEditIntoKeys (PropertyKeys.swift). The row menu Easing today lists KeyEase (keyLaneMenuRows in EditorState+KeyLanes.swift).",
@@ -28,6 +28,39 @@
     {
       "t": "2026-10-14T12:18:02.920Z",
       "note": "seq 3980 -> 70"
+    },
+    {
+      "t": "2026-10-14T12:20:03.102Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T12:49:28.908Z",
+      "note": "owns these walks: picked-row-drag-moves-whole-path-walk"
+    },
+    {
+      "t": "2026-10-14T12:49:46.000Z",
+      "note": "Adversarial review before building: a Premiere/AE user moves a whole path by selecting every Position key and dragging the layer; here picking the row by its name stands for that, per the mock table. Mock assumes nothing the app lacks: picked-row state already existed. Collision checked: a canvas drag with a row picked previously keyed the playhead; now shifts. Tool bar typed values and arrow nudges are NOT canvas drags and still key the playhead (left as-is; asked in the audit's evaluate)."
+    },
+    {
+      "t": "2026-10-14T12:49:46.000Z",
+      "note": "Built: PhotonzCore/PickedRowShift.swift (PhotonzDocument.editShiftingRow runs the normal posed fold on a scratch copy, reads how far the picked row's value at the playhead moved, and puts the row back with every key shifted by that amount; LayerMotion.shiftingEveryKey; scale floored at 1%). EditorState.foldingIntoKeys gained onTheCanvas, passed true from the four canvas paths in EditorState+LayerDrag. Row right-click Easing now uses segmentCurveRows over every segment of the row (shared list + Hold + Draw a Curve + Copy/Paste Ease). New walk step expectRowKeys (remember / movedSince), lock-safe."
+    },
+    {
+      "t": "2026-10-14T12:49:46.000Z",
+      "note": "Verified: 9 new core tests (ShiftingAPickedRowTests) + parse test; Scripts/test.sh 13101 tests green; picked-row-drag-moves-whole-path-walk ok (both Position keys moved by exactly 0, 90; still 2 moments; undo restores; Easing > Ease out quint lands and is ticked); only-what-is-animated-walk, key-lanes-walk, key-lanes-menu-walk ok."
+    },
+    {
+      "t": "2026-10-14T12:49:46.000Z",
+      "note": "Left rough (not filed, below the bar): during the drag the floated sprite shows the layer moving but the timeline diamonds/panel only update on release; with Scale picked the shift is additive percent (audit asks the user)."
+    },
+    {
+      "t": "2026-10-14T12:50:09.698Z",
+      "note": "Shipped in d4e15ffd. With a row picked by its name, a canvas drag moves every key of that row by the same amount (Position: whole path; Scale/Rotation: same amount on every key) in one undo step; with no row picked it keys the playhead as before. Row right-click Easing now lists the shared curve list a segment offers. Core: PhotonzCore/PickedRowShift.swift (9 tests). Verified: Scripts/test.sh 13101 green; picked-row-drag-moves-whole-path-walk ok at Next defaults (both keys moved by 0,90, still 2 keys, undo restores, Easing > Ease out quint ticked); only-what-is-animated, key-lanes, key-lanes-menu walks ok. Audit: queue/audits/2026-10-14-picked-row-drag-moves-whole-path.json."
     }
-  ]
+  ],
+  "started": "2026-10-14T12:20:03.101Z",
+  "walks": [
+    "picked-row-drag-moves-whole-path-walk"
+  ],
+  "completed": "2026-10-14T12:50:09.699Z"
 }

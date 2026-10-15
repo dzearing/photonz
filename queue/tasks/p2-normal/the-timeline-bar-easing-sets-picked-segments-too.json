@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T12:02:31.311Z",
-  "updated": "2026-10-14T12:18:03.349Z",
+  "updated": "2026-10-14T21:06:45.638Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Left from the-value-graph-zooms-its-value-range-and-the-ti. Today TimelineDock.keyBar shows the per-key KeyEase list whenever keySelection.refs is non-empty, and the shared EasingCurve list (CurveRow.menu) only for segments alone. Mixing needs a decision on how a key ease and a segment curve combine: a segment curve rewrites the leaving half of its first key and the arriving half of its last (LayerMotion.curvingStretch), so applying both in one perform can fight. Mock: docs/design/mocks/pages/video-animate.html, Pick caption: The timeline bar Easing then names the curve and sets it for everything picked.",
@@ -17,7 +17,7 @@
     "With keys and segments picked together, the bar names one shared answer or Mixed",
     "Choosing an ease there changes the picked keys and the picked segments, one undo step",
     "A walk picks a key and a segment together and sets both from the bar at Next defaults",
-    "Wherever a person eases a key, a segment, a row or the bar, they see the same list of curves, or a decision card says why a key keeps its own shorter list"
+    "Wherever a person eases a key, a segment, a row or the bar, they see the same list of curves, or a decision card says why a key keeps its own shorter list (card filed on wherever-you-ease-a-key-a-segment-a-row-or-the-b, which owns the answer)"
   ],
   "log": [
     {
@@ -31,6 +31,32 @@
     {
       "t": "2026-10-14T12:18:03.348Z",
       "note": "seq 4060 -> 70"
+    },
+    {
+      "t": "2026-10-14T20:43:55.605Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-14T20:49:25.418Z",
+      "note": "owns these walks: bar-easing-sets-points-and-segments-walk, value-graph-zoom-and-segment-easing-walk"
+    },
+    {
+      "t": "2026-10-14T21:04:07.323Z",
+      "note": "Adversarial pass: the mock (video-animate.html) has ONE list on a key and a segment, a key carrying the curve leaving it, and its graph applies a curve to picked segments. The app's key list (Premiere's six) came from the user's 2026-09-23 tasks, and its Ease In means slow ARRIVAL where the curve list's Ease in means slow START. So which list a key shows is the user's call, not a runner's. Built the mock's answer for the mixed pick: once any segment is picked, the bar shows the curve list and a picked point counts as the segment it starts (the last key as the one arriving at it), all set in one perform. Keys alone keep the key list until the card is answered."
+    },
+    {
+      "t": "2026-10-14T21:04:07.323Z",
+      "note": "Checklist item 4 moved onto its own task wherever-you-ease-a-key-a-segment-a-row-or-the-b, blocked on a decision card (recommends one list, the mock's) with a brief, so this task can close on what shipped."
+    },
+    {
+      "t": "2026-10-14T21:06:45.636Z",
+      "note": "Shipped in 4553070e (+ audit 6997e156). With a segment and points picked together, the timeline bar's Easing shows the shared curve list, names their shared curve or Mixed, and a choice sets every picked segment plus the segment each picked point starts (last key: the one arriving), one undo step. Core PhotonzDocument.segmentsInHand, 4 new tests; Scripts/test.sh 13118/13118 green. New walk bar-easing-sets-points-and-segments-walk ok at Next defaults (4 real captures); neighbours value-graph-zoom-and-segment-easing, keyframe-anything, timeline-bar-labels-only, value-graph-second-segment-menu ok. Item 4 (one list of curves vs the key list) is on wherever-you-ease-a-key-a-segment-a-row-or-the-b with a decision card and brief. Follow-up filed: a-point-picked-on-an-open-graph-keeps-its-value (value bar covers the graph line)."
     }
-  ]
+  ],
+  "started": "2026-10-14T20:43:55.602Z",
+  "walks": [
+    "bar-easing-sets-points-and-segments-walk",
+    "value-graph-zoom-and-segment-easing-walk"
+  ],
+  "completed": "2026-10-14T21:06:45.637Z"
 }
