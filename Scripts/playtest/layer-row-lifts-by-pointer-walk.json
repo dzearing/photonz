@@ -149,13 +149,14 @@
       "do": "windowDrag",
       "from": [
         1150,
-        833
+        754
       ],
       "to": [
         1150,
-        764
+        685
       ],
-      "steps": 20
+      "steps": 20,
+      "comment": "Fixed points in the Layers list, read off the window at 1280x900. Moved up 79 on 2026-10-15 when the lists pane began holding its height (6c73bd86): the Layers header went from 590 to 511 in the panel."
     },
     {
       "do": "wait",
@@ -180,11 +181,11 @@
       "do": "windowDrag",
       "from": [
         1150,
-        673
+        594
       ],
       "to": [
         1150,
-        744
+        665
       ],
       "steps": 20
     },

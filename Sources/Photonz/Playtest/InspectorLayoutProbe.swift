@@ -82,6 +82,10 @@ import SwiftUI
         /// How much dock there is to share out, so a check knows when a single
         /// pane is simply too tall to promise whole.
         let room: CGFloat?
+        /// What the section costs that is not the list (its header, divider
+        /// and the rows under the list): the pane you just opened is promised
+        /// the room less this, so its whole section fits in the dock.
+        var chrome: CGFloat = 0
 
         /// The height that draws the pane the dock promised whole: the one you
         /// just opened, measured from a peek at the entry above it, or every
@@ -93,7 +97,7 @@ import SwiftUI
                 let wanted = above + panes[focus].height
                     + (focus == panes.count - 1 ? bottomInset : spacing + peek)
                 guard let room else { return wanted }
-                return min(wanted, room)
+                return min(wanted, room - chrome)
             }
             guard let open = panes.firstIndex(where: \.isOpen) else { return nil }
             let through = panes.prefix(through: open)
@@ -187,11 +191,13 @@ import SwiftUI
                                         panes: [DockHeightBudget.Block],
                                         focus: Int?,
                                         spacing: CGFloat, topInset: CGFloat,
-                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {
+                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?,
+                                        chrome: CGFloat = 0) {
     InspectorLayoutProbe.shared.listRoom[id] =
         InspectorLayoutProbe.ListRoom(natural: natural, drawn: drawn, panes: panes, focus: focus,
                                       spacing: spacing, topInset: topInset,
-                                      bottomInset: bottomInset, peek: peek, room: room)
+                                      bottomInset: bottomInset, peek: peek, room: room,
+                                      chrome: chrome)
 }
 
 extension View {
@@ -217,7 +223,8 @@ extension View {
                                         panes: [DockHeightBudget.Block],
                                         focus: Int?,
                                         spacing: CGFloat, topInset: CGFloat,
-                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?) {}
+                                        bottomInset: CGFloat, peek: CGFloat, room: CGFloat?,
+                                        chrome: CGFloat = 0) {}
 
 extension View {
     func inspectorLayoutProbe(sections: [InspectorSectionID]) -> some View { self }

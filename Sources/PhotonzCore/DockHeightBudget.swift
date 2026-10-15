@@ -144,6 +144,10 @@ public enum DockHeightBudget {
     /// the list draws above and below its stack. A list with nothing open in it
     /// is a list of headings, which cuts as cleanly as any row list, so it
     /// keeps `base`.
+    ///
+    /// `chrome` is what the list's section costs that is not the list: its
+    /// header, divider and any row under the list. The pane you just opened
+    /// may take the whole dock less that, so the section it is in fits too.
     /// - Parameter focus: the pane the user just opened, by its place in the
     ///   list. Ignored when it names a pane that is not there or is folded
     ///   shut, so a stale request quietly falls back to the first open pane.
@@ -154,7 +158,8 @@ public enum DockHeightBudget {
                                      bottomInset: CGFloat,
                                      peek: CGFloat,
                                      base: CGFloat,
-                                     viewport: CGFloat?) -> CGFloat {
+                                     viewport: CGFloat?,
+                                     chrome: CGFloat = 0) -> CGFloat {
         // What follows the pane: either there is more under it, and the cut
         // shows the top of it, or there is not, and the list ends on its own
         // padding.
@@ -168,7 +173,10 @@ public enum DockHeightBudget {
             let above: CGFloat = focus == 0 ? topInset : peek + spacing
             let wanted = above + blocks[focus].height + below(focus)
             guard let viewport else { return max(base, wanted) }
-            return max(base, min(wanted, viewport))
+            // The whole dock less the section's own header and the rows that
+            // do not scroll with the list: capped at the dock alone, the
+            // section ran past its foot and the pane's foot went with it.
+            return max(base, min(wanted, viewport - chrome))
         }
 
         guard let openIndex = blocks.firstIndex(where: \.isOpen) else { return base }

@@ -258,6 +258,33 @@ struct DockHeightBudgetTests {
         #expect(floor == 400)
     }
 
+    @Test("...and the dock it stops at is the dock less the section's own header")
+    func focusedPaneLeavesRoomForItsHeader() {
+        // 2026-10-15: a 245 shadow under a border, in a 318 dock whose Effects
+        // header and plus row cost 33. Capped at the dock alone the list was
+        // 297 and the section 330, six points past the dock, and the shadow's
+        // foot sat under the panel's edge. Capped at 318 - 33 the whole
+        // section is on screen, and 285 is still room for the shadow whole.
+        let blocks = [pane(149, open: true), pane(245, open: true)]
+        let floor = DockHeightBudget.paneListFloor(blocks, focus: 1,
+                                                   spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 318, chrome: 33)
+        #expect(floor == 285)
+        #expect(floor + 33 <= 318)
+        #expect(floor >= 245 + 14)
+    }
+
+    @Test("The header is not taken off the share a list may claim at rest")
+    func chromeLeavesTheRestingShareAlone() {
+        let blocks = [pane(24), pane(900, open: true)]
+        let plain = DockHeightBudget.paneListFloor(blocks, spacing: 16, topInset: 8, bottomInset: 14, peek: 22,
+                                                   base: 112, viewport: 400)
+        let withChrome = DockHeightBudget.paneListFloor(blocks, spacing: 16, topInset: 8, bottomInset: 14,
+                                                        peek: 22, base: 112, viewport: 400, chrome: 33)
+        #expect(withChrome == plain)
+        #expect(plain == 400 * DockHeightBudget.floorShareOfDock)
+    }
+
     @Test("A pane you folded again stops being the one paid for")
     func focusOnAFoldedPaneFallsBack() {
         // The shadow was opened and then folded shut. There is nothing to keep

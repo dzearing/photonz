@@ -342,7 +342,8 @@ struct DockBudgetScratch: Equatable {
                                             bottomInset: EffectsListInspector.listInset
                                                 + DockMetrics.bodyBottomPadding,
                                             peek: DockMetrics.bodyPeek,
-                                            room: room)
+                                            room: room,
+                                            chrome: chrome(of: id))
                 }
             }
             guard let height = heights[id.rawValue],
@@ -447,6 +448,13 @@ struct DockBudgetScratch: Equatable {
         guard let panes = budget.listPanes[id], !panes.isEmpty else {
             return DockMetrics.listFloor
         }
+        // The pane you just opened may take the whole dock less this
+        // section's own header and the chrome under its list: capped at the
+        // dock alone, a 245pt Shadow in a 324pt dock was handed a 297pt list
+        // in a 330pt section, the dock could only scroll the section's top
+        // into view, and the Shadow's foot sat 5pt under the panel's edge
+        // (2026-10-15, once the lists pane under the pick began holding its
+        // height and the pick got shorter).
         return DockHeightBudget.paneListFloor(
             panes,
             focus: budget.listFocus[id],
@@ -455,7 +463,15 @@ struct DockBudgetScratch: Equatable {
             bottomInset: EffectsListInspector.listInset + DockMetrics.bodyBottomPadding,
             peek: DockMetrics.bodyPeek,
             base: DockMetrics.listFloor,
-            viewport: room)
+            viewport: room,
+            chrome: chrome(of: id))
+    }
+
+    /// What a list section costs that is not its list: its header, the divider
+    /// under it, and the rows under the list that do not scroll with it.
+    private func chrome(of id: InspectorSectionID) -> CGFloat {
+        (budget.headers[id] ?? DockMetrics.headerRowHeight)
+            + DockMetrics.sectionDividerHeight + (budget.listExtras[id] ?? 0)
     }
 }
 
