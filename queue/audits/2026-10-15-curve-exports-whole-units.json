@@ -1,0 +1,35 @@
+{
+  "feature": "A curve drawn on whole units exports on whole units",
+  "epic": "icon-export",
+  "summary": "A curve drawn in an icon frame with its points on whole units now copies and exports as SVG with whole numbers throughout, even where it bulges past its own points. Before, the file said translate(13.88 6) and M5.12 0; now it says translate(14 6) and M5 0.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Make a 24 icon frame (New Frame, Icons, 24) and zoom to 800%."
+    },
+    {
+      "do": "Pick the pen (P), click a point near the frame's top right, then drag the next point so the curve swings left past the first point."
+    },
+    {
+      "do": "Click a third point lower right and press Return.",
+      "shot": "2026-10-15-curve-exports-whole-units-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the frame and press Command C."
+    },
+    {
+      "do": "Paste into a text editor and read the curve's path."
+    }
+  ],
+  "evaluate": [
+    "Does every number in the pasted curve read as a whole number?",
+    "Does the curve land in the same place when you paste the SVG into a browser or Figma?",
+    "Is a curve drawn off the grid, or outside an icon frame, still written as it was before?"
+  ],
+  "rough": [
+    "Only shapes inside an icon-sized frame get this. A curve drawn on whole units on the open canvas still exports with fractions in its place, by design, so other files stay byte for byte the same.",
+    "A gradient on such a curve still puts its ends against the curve's own box, which can sit at a fraction, so a curve with a ramp can still carry fractional gradient ends. Flat colours and lines are whole. No mock covers this surface."
+  ]
+}

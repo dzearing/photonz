@@ -598,6 +598,31 @@ public enum SVGExport {
 
     // MARK: - Numbers and strings
 
+    /// A path layer placed on whole units where that makes its whole drawing
+    /// whole, or nil where it is whole already or cannot be.
+    ///
+    /// A path layer's box is the box of where its curve GOES, so a curve that
+    /// bulges past its first point starts its box at a fraction even when every
+    /// point and handle sits on a whole unit, and the file said both halves of
+    /// that sum (`translate(13.88 6)` and `M5.12 0`) instead of the 19 it adds
+    /// up to. Here the layer moves to the whole unit nearest its box and the
+    /// path moves the other way by the same amount, which leaves every point
+    /// exactly where it was. `shift` is that amount, as added to the path.
+    static func onWholeUnits(_ layer: Layer) -> (layer: Layer, shift: CGPoint)? {
+        guard case .path(let content) = layer.content else { return nil }
+        let origin = layer.frame.origin
+        let placed = CGPoint(x: origin.x.rounded(), y: origin.y.rounded())
+        guard num(origin.x) != num(placed.x) || num(origin.y) != num(placed.y) else { return nil }
+        let shift = CGPoint(x: origin.x - placed.x, y: origin.y - placed.y)
+        let shifted = content.offsetBy(dx: shift.x, dy: shift.y)
+        guard SVGWholeUnits.fractionalCoordinates(in: "d=\"\(pathData(shifted))\"").isEmpty
+        else { return nil }
+        var moved = layer
+        moved.content = .path(shifted)
+        moved.frame.origin = placed
+        return (moved, shift)
+    }
+
     /// A number the way a file should carry one: three decimals at most, no
     /// trailing zeros, and never "-0".
     static func num(_ value: CGFloat) -> String {
@@ -672,6 +697,10 @@ private struct Writer {
     /// Whether a group round whatever is being written moves it, which costs
     /// a shadow its filter (`SVGExport.effects(of:carried:)`).
     var carried = false
+    /// Whether what is being written sits inside a frame the size of an icon,
+    /// where a shape drawn on whole units is written on whole units
+    /// (`SVGExport.onWholeUnits`).
+    var onIconGrid = false
 
     mutating func run(_ document: PhotonzDocument) -> SVGExport.Result {
         pixelScale = document.pixelScale
@@ -807,6 +836,13 @@ private struct Writer {
         // union of everything inside.
         let reach = layer.renderBounds
         let viewport = reach.width > 0 && reach.height > 0 && SVGExport.placesByViewport(layer)
+        // Inside an icon frame, a curve whose box starts at a fraction is
+        // placed on the whole unit beside it instead, with its path shifted by
+        // the difference, so the file says the whole numbers it was drawn on.
+        // Everything below reads the shape from `drawn`; the motion and the
+        // reach were already read from the layer as the canvas has it.
+        let whole = onIconGrid ? SVGExport.onWholeUnits(layer) : nil
+        let drawn = whole?.layer ?? layer
 
         if case .group(let group) = layer.content {
             // A frame is a window: what hangs off its edge is not in the file.
@@ -820,11 +856,14 @@ private struct Writer {
             var body = surface(of: layer, group: group, level: held)
             let outside = carried
             carried = outside || (SVGExport.carries(layer) && !viewport)
+            let outsideGrid = onIconGrid
+            onIconGrid = outsideGrid || (layer.isFrame && IconPreviews.isIconSize(layer.frame.size))
             body.append(contentsOf: write(group.children,
                                           groupOffset: CGPoint(x: canvasOrigin.x,
                                                                y: canvasOrigin.y),
                                           level: held))
             carried = outside
+            onIconGrid = outsideGrid
             if let cut, !body.isEmpty {
                 let name = defineCut(cut, radii: layer.style.cornerRadii)
                 inside.append(indent(inner) + "<g clip-path=\"url(#\(name))\">")
@@ -839,17 +878,18 @@ private struct Writer {
             // reaches a shape SMIL is not attached to.
             omitPaint = wrap.omitPaint
             omitsStrokeWidth = wrap.omitsStrokeWidth
-            inside.append(contentsOf: content(of: layer, canvasOrigin: canvasOrigin,
+            inside.append(contentsOf: content(of: drawn, canvasOrigin: canvasOrigin,
                                               level: inner))
             omitPaint = []
             omitsStrokeWidth = false
         }
-        inside.append(contentsOf: rings(of: layer, level: inner))
+        inside.append(contentsOf: rings(of: drawn, level: inner))
         // A group with nothing left in it is nothing at all, rather than an
         // empty pair of tags for somebody to wonder about.
         guard !inside.isEmpty else { return [] }
 
-        let place = placement(of: layer, withoutTurn: wrap.ownsTheTurn)
+        let place = placement(of: drawn, withoutTurn: wrap.ownsTheTurn,
+                              middleShift: whole?.shift ?? .zero)
         let fade = attribute("opacity", wrap.omitsOpacity ? nil : opacity(layer.style.opacity))
         // Its softness and its shadows, as the filter that says them. The fade
         // stays outside the filter, because the canvas fades the layer and its
@@ -862,7 +902,7 @@ private struct Writer {
             // drawing's whole reach in BOTH: a bigger rectangle than either
             // needs, and right whichever is meant.
             let inPlace = reach
-            let itsOwn = inPlace.offsetBy(dx: -layer.frame.minX, dy: -layer.frame.minY)
+            let itsOwn = inPlace.offsetBy(dx: -drawn.frame.minX, dy: -drawn.frame.minY)
             let mark = " filter=\"url(#\(defineFilter(effects, reach: inPlace.union(itsOwn))))\""
             // The filter rides the drawing itself, never a plain group round
             // it: Apple's SVG reader ignores a filter on a `<g>` outright.
@@ -1871,7 +1911,12 @@ private struct Writer {
 
     /// Where the layer sits and how it is turned, as one transform — or
     /// nothing at all, which is what a layer at the origin deserves.
-    func placement(of layer: Layer, withoutTurn: Bool = false) -> String {
+    ///
+    /// `middleShift` is how far the drawing inside was moved from the layer's
+    /// own coordinates (`SVGExport.onWholeUnits`), so a turn still swings
+    /// about the middle of the layer the canvas turns it about.
+    func placement(of layer: Layer, withoutTurn: Bool = false,
+                   middleShift: CGPoint = .zero) -> String {
         var parts: [String] = []
         let origin = layer.frame.origin
         if origin.x != 0 || origin.y != 0 {
@@ -1881,7 +1926,8 @@ private struct Writer {
         // which starts from the angle the motion starts at. Saying it here as
         // well would turn the drawing twice.
         if !layer.transform.isIdentity, !withoutTurn {
-            let middle = CGPoint(x: layer.frame.width / 2, y: layer.frame.height / 2)
+            let middle = CGPoint(x: layer.frame.width / 2 + middleShift.x,
+                                 y: layer.frame.height / 2 + middleShift.y)
             if layer.transform.rotation != 0, layer.transform.skewX == 0,
                layer.transform.skewY == 0, !layer.transform.flipHorizontal,
                !layer.transform.flipVertical {
