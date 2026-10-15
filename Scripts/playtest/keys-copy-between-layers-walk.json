@@ -287,11 +287,11 @@
    "do": "windowDrag",
    "from": [
     743.9,
-    750
+    791
    ],
    "to": [
     725.6,
-    750
+    791
    ],
    "steps": 8
   },
@@ -309,11 +309,11 @@
    "do": "windowDrag",
    "from": [
     725.6,
-    750
+    791
    ],
    "to": [
     737.2,
-    750
+    791
    ],
    "steps": 8
   },
@@ -414,7 +414,7 @@
    "do": "windowClick",
    "at": [
     644.5,
-    884
+    923
    ],
    "modifiers": [
     "command"
@@ -428,7 +428,7 @@
    "do": "windowClick",
    "at": [
     837.6,
-    884
+    923
    ],
    "modifiers": [
     "command"
@@ -442,7 +442,7 @@
    "do": "windowClick",
    "at": [
     1030.6,
-    884
+    923
    ],
    "modifiers": [
     "command"
@@ -471,11 +471,11 @@
    "do": "windowDrag",
    "from": [
     837.6,
-    884
+    923
    ],
    "to": [
     837.6,
-    900
+    939
    ],
    "steps": 8
   },

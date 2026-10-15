@@ -43,9 +43,6 @@ struct TimelineDock: View {
     /// How tall the tracks' scroller is, so the empty space under the last
     /// track reaches its foot and a box can start anywhere in it.
     @State private var tracksViewportHeight: CGFloat = 0
-    /// What the tracks needed the last time no Library tile was picked. A
-    /// reference, so noting it as the body is drawn redraws nothing.
-    @State private var heightHold = TimelineHeightHoldBox()
 
     /// The track name column and the gap after it. The mock's
     /// `#tlDock{--gutter:84px}` left no room for a header's switches, so the
@@ -455,6 +452,7 @@ struct TimelineDock: View {
                                     proxy.frame(in: .named(Self.tracksSpace))
                                 } action: { frame in
                                     carry.rowFrames[row.id] = frame
+                                    editorState.revealOpenedTimelineRow(row.id, at: frame)
                                 }
                                 // A sound row stands and moves with its track.
                                 .modifier(TrackRowDragPlacement(id: row.soundRowOwner ?? row.id, session: carry))
@@ -506,6 +504,12 @@ struct TimelineDock: View {
                     // space nothing else is using can never move a row.
                     .scrollIndicators(.never)
                     .scrollPosition(tracksScroll)
+                    // The rows a pick or a key opens scroll inside the
+                    // timeline rather than growing it, so the timeline
+                    // scrolls them on screen (`TimelineRowReveal`).
+                    .onChange(of: editorState.pickedTimelineRow) { before, now in
+                        editorState.notePickedTimelineRow(now, after: before)
+                    }
                     .onScrollGeometryChange(for: TimelineTracksScrollGeometry.self) { geometry in
                         TimelineTracksScrollGeometry(offsetY: geometry.contentOffset.y + geometry.contentInsets.top,
                                                      contentHeight: geometry.contentSize.height,
@@ -707,18 +711,9 @@ struct TimelineDock: View {
     /// chosen, as tall as the tracks it holds and no taller. Inside one track
     /// and about 70% of the window either way (`TimelineDockHeight`).
     private var bodyHeight: CGFloat {
-        guard windowHeight > 0 else { return heldNaturalBodyHeight }
+        guard windowHeight > 0 else { return naturalBodyHeight }
         return sizing.body(chosen: draggedBody ?? TimelineDockHeight.chosen(stored: storedHeight),
-                           natural: heldNaturalBodyHeight)
-    }
-
-    /// The tracks' height, held while a Library tile is the pick so the shelf
-    /// in the pane above never slides out from under a double click
-    /// (`TimelineHeightHold`). It is the pane's promise, so it rides the
-    /// pane's switch.
-    private var heldNaturalBodyHeight: CGFloat {
-        let holding = Experiments.shared.listsPaneEnabled && editorState.selectedLibraryItemID != nil
-        return heightHold.hold.natural(naturalBodyHeight, holding: holding)
+                           natural: naturalBodyHeight)
     }
 
     private var sizing: TimelineDockHeight {
@@ -752,7 +747,19 @@ struct TimelineDock: View {
     }
 
     /// As tall as the tracks it holds, and no taller.
+    ///
+    /// **A pick or a key never resizes the timeline.** What counts is each
+    /// track's own lane: the rows that open INSIDE a track (a picked title's
+    /// parts, the key lanes of what moves, a clip's zooms) scroll inside the
+    /// timeline rather than growing it, so picking a title or keying a value
+    /// never re-zooms the picture above and never moves the panel beside it,
+    /// the way Premiere's program monitor holds still (2026-10-15, the card on
+    /// keying a property recommends the same). Folding a group and opening a
+    /// track's words are commands on the tracks themselves, so they still
+    /// count. It rides the timeline's own zoom, which is what lets taller rows
+    /// scroll inside it.
     private var naturalBodyHeight: CGFloat {
+        let ownLanesOnly = Experiments.shared.timelineZoomEnabled
         var rows: CGFloat = 0
         for row in editorState.timelineRows {
             switch row {
@@ -763,7 +770,9 @@ struct TimelineDock: View {
                 // Compact whatever the rows are zoomed to: the dock keeps its
                 // height through a pinch and the taller rows scroll inside
                 // it, so nothing above it ever moves.
-                rows += Self.height(of: track, wordsOpen: editorState.isKeyTrackOpen(track.id))
+                let wordsOpen = editorState.isKeyTrackOpen(track.id)
+                rows += (ownLanesOnly ? Self.ownHeight(of: track, wordsOpen: wordsOpen)
+                                      : Self.height(of: track, wordsOpen: wordsOpen))
                     + Self.rowSpacing
             }
         }
@@ -791,6 +800,14 @@ struct TimelineDock: View {
         let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
         let zooms = CGFloat(track.zoomedClips.count) * (ZoomLane.height + 3)
         return lane + CGFloat(motionLanes) * (MotionStripView.laneHeight + 3) + inner + words + zooms
+    }
+
+    /// One track's lane and its words, without the rows that open inside its
+    /// clips: what the timeline fits itself to (`naturalBodyHeight`).
+    static func ownHeight(of track: TimelineTrackRowModel, wordsOpen: Bool = true) -> CGFloat {
+        let lane = track.carriesSound ? soundLaneHeight : laneHeight
+        let words = track.isCaptions && !track.clips.isEmpty && wordsOpen ? CaptionWordsLane.height + 3 : 0
+        return lane + words
     }
 
     /// The track lifted by its header, drawn over the others: the real row,
@@ -1625,8 +1642,3 @@ private struct TimelinePlayheadLine: View {
     }
 }
 
-/// Holds the timeline's `TimelineHeightHold` across passes without making it
-/// state SwiftUI watches.
-@MainActor private final class TimelineHeightHoldBox {
-    var hold = TimelineHeightHold()
-}

@@ -1,0 +1,28 @@
+{
+  "feature": "Picking a title never resizes the picture",
+  "epic": "video-editing",
+  "summary": "Picking a title, a part of it, or keying a value no longer grows the timeline, so the picture above keeps its size and the panel stays put. The rows a pick opens scroll inside the timeline, and a lane that opens below its foot is scrolled into view.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline open.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click the V1 track header and choose Add Track Above, then right-click V2 and choose Add Title Page > Stacked Stagger." },
+    { "do": "Press Command-Return to finish the headline. Its rows (Title, Opacity, Position) open on the timeline and the picture does not move.", "shot": "2026-10-15-pick-holds-picture-1-headline-picked.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape. The headline's rows fold and the picture stays the same size.", "shot": "2026-10-15-pick-holds-picture-2-title-picked.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Escape again, then click the headline on the canvas to pick it again." },
+    { "do": "Scroll with the wheel over the timeline to bring V1 and its sound back into view.", "shot": "2026-10-15-pick-holds-picture-4-scrolled-down.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With the headline picked, use Animate a property > Color. The Color lane opens under the clip and the timeline scrolls just enough to show it." }
+  ],
+  "evaluate": [
+    "Does the picture now hold still when you pick a title, a part of it, or press Escape?",
+    "With a title's headline picked, is losing sight of V1 below the timeline's foot acceptable, given a scroll or a drag of the divider brings it back?",
+    "When you key a new value and its lane opens below the visible tracks, does the small scroll that brings it in feel right, or would you rather it stayed put?",
+    "Would you want the timeline a little taller by default now that it no longer grows on its own?"
+  ],
+  "rough": [
+    "This builds option b on the open card about keying a property (clicking-a-cut-keying-a-value-and-undoing-it-ans-when-you-key-a-property-on-a-vid). If you answer a there, this task's behaviour follows your answer instead.",
+    "The cost of option b is visible: picking a title's headline on the sample opens three rows, and V1 slides to the timeline's foot with its sound below it, until you scroll or drag the divider up.",
+    "No mock covers how the timeline's height reacts to a pick; the mock only caps the dock's height.",
+    "Folding a track group and opening a captions track's words still change the timeline's height, because those are commands on the tracks themselves, not picks.",
+    "The Library-only height hold from double-clicking-a-library-title-tile-inserts-it is gone: the general rule covers it, and title-presets-library-shelf-walk still double-clicks Keynote Clean by the pointer and lands it."
+  ]
+}

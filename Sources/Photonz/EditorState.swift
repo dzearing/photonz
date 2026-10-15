@@ -1546,6 +1546,10 @@ final class EditorState {
     /// Where the tracks are scrolled to, which a row zoom moves so the row
     /// under the pointer stays under it, and the tracks' scroller drags.
     var timelineTracksScroll = ScrollPosition(edge: .top)
+    /// A track a pick or a key just opened rows in, to be scrolled on screen
+    /// once it is laid out (`revealOpenedTimelineRow`). Nothing is drawn from
+    /// it, so it is not watched.
+    @ObservationIgnored var timelineRowToReveal: TimelineRowToReveal?
     /// How far down the tracks are scrolled, how tall they are and how tall
     /// their view is: what the tracks' scroller draws, and what a row zoom
     /// measures the pointer against.

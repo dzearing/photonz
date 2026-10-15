@@ -153,6 +153,16 @@
       "name": "2-double-clicked"
     },
     {
+      "comment": "The title's headline is picked and its rows open inside the timeline, under the title's track, so the recording on V1 is below the timeline's foot. A turn of the wheel over the timeline brings it up, the way a person reaches it.",
+      "do": "wheel",
+      "control": "Track Title Page",
+      "by": -120
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
       "do": "dropOnTimeline",
       "tile": "Soft Gradient Glass",
       "track": "V1",
@@ -269,7 +279,12 @@
       "stage": "6-undo",
       "note": "One Command Z takes the last drop back whole"
     },
-    { "do": "expectPicked", "layers": ["Title"] },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Title"
+      ]
+    },
     {
       "comment": "THE FIFTH TEST, in the dock the drops crowded (Time, Captions and Transitions open over the Library, the shelf's floor binding), with the last drop's headline still picked: a double click on Keynote Clean by the pointer. The first click lets go of the headline and its rows fold out of the timeline, and the timeline keeps its height while the tile is picked, so the tile stays under the second click (the press fails if it slides). The press scrolls the dock itself until the tile is whole, the way a person would; with the shelf showing a 3 point sliver above the dock's edge it used to turn the shelf instead, back and forth, and give up.",
       "do": "press",

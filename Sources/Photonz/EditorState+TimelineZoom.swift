@@ -291,6 +291,59 @@ extension EditorState {
         rememberTimelineView()
     }
 
+    /// The track the picked layer is on: where its row stands among the
+    /// timeline's rows, how tall it is drawn, and how tall it is with nothing
+    /// open inside it. Nil with nothing picked on the timeline.
+    var pickedTimelineRow: PickedTimelineRow? {
+        guard let picked = selectedLayerID else { return nil }
+        for (index, row) in timelineRows.enumerated() {
+            guard case .track(let track, _) = row,
+                  track.clips.contains(where: { $0.layerID == picked })
+                    || track.inner.contains(where: { $0.layerID == picked }) else { continue }
+            let open = isKeyTrackOpen(track.track.id)
+            return PickedTimelineRow(trackID: track.track.id, index: index,
+                                     height: TimelineDock.height(of: track, wordsOpen: open, rows: timelineRowZoom),
+                                     ownHeight: TimelineDock.ownHeight(of: track, wordsOpen: open))
+        }
+        return nil
+    }
+
+    /// A pick or a key has just opened rows inside the picked layer's track:
+    /// note it, so the timeline scrolls them on screen once they are laid out
+    /// (`revealOpenedTimelineRow`). A pick that opens nothing, or a row that
+    /// only shrank, leaves the scroll where the person put it.
+    func notePickedTimelineRow(_ row: PickedTimelineRow?, after before: PickedTimelineRow?) {
+        timelineRowToReveal = nil
+        guard let row else { return }
+        let sameTrack = before?.trackID == row.trackID
+        let opened = sameTrack ? row.height > (before?.height ?? 0) + 0.5 : row.height > row.ownHeight + 0.5
+        guard opened else { return }
+        timelineRowToReveal = TimelineRowToReveal(trackID: row.trackID,
+                                                  heightBefore: sameTrack ? trackRowDrag.rowFrames[row.trackID]?.height : nil)
+    }
+
+    /// A track's row laid out at `frame`, in the tracks' own space: if it is
+    /// the one a pick or a key just opened rows in, the timeline scrolls the
+    /// least that shows what opened (`TimelineRowReveal`). Measured rather
+    /// than worked out, because an open graph is taller than its lane.
+    func revealOpenedTimelineRow(_ id: UUID, at frame: CGRect) {
+        guard let pending = timelineRowToReveal, pending.trackID == id else { return }
+        if let before = pending.heightBefore, frame.height <= before + 0.5 { return }
+        timelineRowToReveal = nil
+        // The same track grown: what it grew by, which a new lane opens at its
+        // foot. A track newly picked: the whole of it.
+        var target = TimelineRowExtent(top: frame.minY, height: frame.height)
+        if let before = pending.heightBefore {
+            target = TimelineRowExtent(top: frame.maxY - (frame.height - before), height: frame.height - before)
+        }
+        let geometry = timelineTracksScrollGeometry
+        let contentHeight = max(geometry.contentHeight, target.bottom + TimelineDock.rowSpacing)
+        guard let landing = TimelineRowReveal.offset(revealing: target, offset: geometry.offsetY,
+                                                     viewportHeight: geometry.viewportHeight,
+                                                     contentHeight: contentHeight) else { return }
+        timelineTracksScroll.scrollTo(y: landing)
+    }
+
     /// The tracks scrolled by hand, from their scroller.
     func scrollTimelineTracks(toY y: CGFloat) {
         let geometry = timelineTracksScrollGeometry
@@ -359,4 +412,20 @@ struct TimelineTracksScrollGeometry: Equatable {
 
     /// There is more than fits, so the scroller has something to say.
     var overflows: Bool { contentHeight > viewportHeight + 0.5 }
+}
+
+/// The picked layer's track on the timeline (`EditorState.pickedTimelineRow`).
+struct PickedTimelineRow: Equatable {
+    let trackID: UUID
+    let index: Int
+    let height: CGFloat
+    let ownHeight: CGFloat
+}
+
+/// A track a pick or a key just opened rows in, waiting to be laid out so the
+/// timeline can scroll them on screen. `heightBefore` is its row's height
+/// before they opened, nil when it is newly picked.
+struct TimelineRowToReveal: Equatable {
+    let trackID: UUID
+    let heightBefore: CGFloat?
 }

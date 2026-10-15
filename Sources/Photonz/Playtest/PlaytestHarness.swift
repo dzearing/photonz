@@ -8857,7 +8857,14 @@ private final class Run {
     /// is nowhere near the control, from narrowing the answer down to nothing.
     private static func scrollReaches(for target: PlaytestPressTarget,
                                       in content: NSView) -> [(clip: NSClipView, reach: CGRect)] {
+        // Below the title bar. The panel scrolls under it, and a control
+        // parked there is covered by the title bar's own controls: a reveal
+        // that brought a dropdown in from above used to stop with it under
+        // the panel toggle, where a person's click opened nothing
+        // (title-knobs-restyle-walk, 2026-10-15). Only where a scroll AIMS;
+        // whether a control is in reach is judged as before.
         var region = content.convert(content.bounds, to: nil)
+        region.size.height = max(0, region.height - content.safeAreaInsets.top)
         var pairs: [(clip: NSClipView, reach: CGRect)] = []
         for clip in scrollableClips(for: target, in: content) {
             region = region.intersection(clip.convert(clip.bounds, to: nil))
@@ -8963,10 +8970,25 @@ private final class Run {
     /// and by what AppKit says is left of it, exactly as it was before.
     private static func scrollStrip(for target: PlaytestPressTarget, in content: NSView) -> CGRect {
         var strip = content.convert(content.bounds, to: nil)
-        for clip in target.clips where !clip.isHidden {
+        // The title bar covers the top of the panel, which scrolls under it: a
+        // control parked there is under the title bar's own controls, out of a
+        // person's reach while a scroller could still bring it down. With
+        // every scroller already at its top there is nowhere further to bring
+        // it, and it is judged as it always was.
+        let clips = target.clips.filter { !$0.isHidden }
+        if clips.contains(where: canScrollTowardTop) {
+            strip.size.height = max(0, strip.height - content.safeAreaInsets.top)
+        }
+        for clip in clips {
             strip = strip.intersection(clip.convert(clip.bounds, to: nil))
         }
         return strip
+    }
+
+    /// Whether a clip view has part of its document hidden above what it shows.
+    private static func canScrollTowardTop(_ clip: NSClipView) -> Bool {
+        guard let document = clip.documentView else { return false }
+        return clip.isFlipped ? clip.bounds.minY > 0.5 : document.frame.height - clip.bounds.maxY > 0.5
     }
 
     /// What the panel is showing, in the names a walk has to use.

@@ -182,15 +182,15 @@
       "name": "2-segment-picked"
     },
     {
-      "comment": "The first key's leaving handle, drawn at (510, 932) once the segment is picked. A real pointer's drag up and to the right.",
+      "comment": "The first key's leaving handle, drawn at (510, 957) once the segment is picked. A real pointer's drag up and to the right.",
       "do": "windowDrag",
       "from": [
         509.8,
-        932.3
+        957
       ],
       "to": [
         560,
-        905
+        929.7
       ],
       "steps": 8
     },

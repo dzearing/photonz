@@ -1,0 +1,188 @@
+{
+  "out": "/tmp/photonz-playtest/picking-a-title-holds-the-picture-walk",
+  "seed": "Picking a title never resizes the picture. At Next defaults with no flag set, a title page is put on its own track and its headline picked: the rows the headline opens on the timeline (its part, its Opacity and Position lanes) open inside the timeline and push the tracks under them down, and the canvas keeps its zoom. Escape lets go of the headline, Escape again lets go of the title, and a click on the headline by the pointer picks it again: the zoom reads the same at every one of those. Last, a turn of the wheel over the timeline scrolls the tracks the headline's rows pushed down back into view.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V1",
+      "choose": "Add Track Above"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "rightClick",
+      "on": "Track V2",
+      "choose": "Add Title Page > Stacked Stagger"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Title"
+      ]
+    },
+    {
+      "comment": "The headline's part row and its Opacity and Position lanes are open, inside the timeline: the picture reads what it read with nothing picked.",
+      "do": "waitFor",
+      "condition": "displayZoom",
+      "value": 74,
+      "timeout": 1
+    },
+    {
+      "do": "describe",
+      "stage": "1-headline-picked",
+      "note": "The headline picked: its rows open inside the timeline and the picture is not re-zoomed"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-headline-picked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Title Page"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "displayZoom",
+      "value": 74,
+      "timeout": 1
+    },
+    {
+      "do": "describe",
+      "stage": "2-title-picked",
+      "note": "Escape let go of the headline: its rows folded and the picture held its zoom"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-title-picked"
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": []
+    },
+    {
+      "do": "waitFor",
+      "condition": "displayZoom",
+      "value": 74,
+      "timeout": 1
+    },
+    {
+      "comment": "The pointer on the headline's face picks it again, the way a person does.",
+      "do": "click",
+      "at": [
+        250,
+        270
+      ],
+      "space": "document"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Title"
+      ]
+    },
+    {
+      "do": "waitFor",
+      "condition": "displayZoom",
+      "value": 74,
+      "timeout": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-headline-clicked",
+      "note": "A click on the headline picked it again and the picture still held its zoom"
+    },
+    {
+      "comment": "The wheel over the timeline brings the tracks the headline's rows pushed down back into view.",
+      "do": "wheel",
+      "control": "Track V1",
+      "by": -80
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "waitFor",
+      "condition": "displayZoom",
+      "value": 74,
+      "timeout": 1
+    },
+    {
+      "do": "snapshot",
+      "name": "4-scrolled-down"
+    }
+  ]
+}

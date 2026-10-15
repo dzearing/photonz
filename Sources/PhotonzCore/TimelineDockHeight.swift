@@ -16,6 +16,9 @@ import CoreGraphics
 ///   the floor wins: a dock with no track in it is worse than a small picture.
 /// - Nothing chosen (nothing on file, or a double-click on the edge) is the
 ///   height the dock always had: as tall as its tracks, up to its own cap.
+///   A track's own lane, that is: rows that open inside a track when a layer
+///   is picked or a value keyed scroll inside the dock, so a pick never
+///   resizes the picture above it.
 public struct TimelineDockHeight: Sendable, Hashable {
     /// The share of the window the whole dock may take.
     public static let windowShare: CGFloat = 0.7
