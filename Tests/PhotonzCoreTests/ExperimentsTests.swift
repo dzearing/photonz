@@ -463,6 +463,16 @@ struct FeatureCatalogTests {
         #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.solidPickedRingFlag))
     }
 
+    @Test func theBoxPickedRingFlagIsNextOnlyAndOnByDefault() {
+        // A picked rounded shape is ringed round its box, as the mocks draw it,
+        // not round its curve. Next only; Current keeps the curve.
+        #expect(FeatureCatalog.boxPickedRingFlag == "next-picked-ring-hugs-the-box")
+        #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(FeatureCatalog.boxPickedRingFlag))
+        #expect(FeatureCatalog.flags(for: .next).contains { $0.name == FeatureCatalog.boxPickedRingFlag })
+        #expect(!FeatureCatalog.flags(for: .current).contains { $0.name == FeatureCatalog.boxPickedRingFlag })
+        #expect(!FeatureCatalog.defaultSettings(for: .current).isEnabled(FeatureCatalog.boxPickedRingFlag))
+    }
+
     @Test func theGrabCueFlagIsNextOnlyAndOnByDefault() {
         // The pointer becomes a hand over a pill that drags on its own (an
         // arrow's caption, a measurement's number). Next only; Current keeps

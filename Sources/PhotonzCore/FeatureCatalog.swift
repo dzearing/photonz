@@ -191,6 +191,11 @@ public enum FeatureCatalog {
     /// dotted blue line (`PickedRing`).
     public static let solidPickedRingFlag = "next-solid-picked-ring"
 
+    /// A picked layer's ring hugs its box with the mocks' 2 point softening
+    /// rather than curving round a rounded shape's corners
+    /// (`Layer.pickedRingRadii(box:huggingBox:zoom:)`).
+    public static let boxPickedRingFlag = "next-picked-ring-hugs-the-box"
+
     public static let layerBoxIsItsPixelsFlag = "next-a-layer-is-its-pixels"
 
     public static let lensFlag = "next-lens"
@@ -512,6 +517,16 @@ public enum FeatureCatalog {
                     name: solidPickedRingFlag,
                     title: "A picked layer wears a solid ring",
                     description: "What is picked on the canvas is outlined with one solid line in the accent colour, edged in a faint light halo so it reads on any picture. Off means the dotted blue line.",
+                    area: .selecting,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: boxPickedRingFlag,
+                    title: "The ring round a pick hugs its box",
+                    description: "A picked rounded shape is ringed by a near-square frame round its box, so the ring never reads as the shape's own border. Off means the ring curves round the shape's corners.",
                     area: .selecting,
                     isEnabled: false,
                     parameters: []),

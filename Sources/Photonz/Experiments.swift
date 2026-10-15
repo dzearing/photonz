@@ -274,6 +274,12 @@ extension Experiments {
     /// only in the Next release's catalog, so Current always reads false.
     var solidPickedRingEnabled: Bool { isEnabled(FeatureCatalog.solidPickedRingFlag) }
 
+    /// `next-picked-ring-hugs-the-box`: whether the ring round a picked layer
+    /// hugs its box with the mocks' 2 point softening rather than curving round
+    /// a rounded shape's corners. Exists only in the Next release's catalog, so
+    /// Current always reads false and keeps the curve.
+    var boxPickedRingEnabled: Bool { isEnabled(FeatureCatalog.boxPickedRingFlag) }
+
     /// `next-tool-options`: whether the Crop tool and the Magic Wand keep their
     /// options off the floating tool bar (D15) — crop aspect in the crop
     /// button's flyout, crop actions on the canvas, wand tolerance in the

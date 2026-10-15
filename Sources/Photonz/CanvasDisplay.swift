@@ -822,6 +822,7 @@ extension CanvasNSView {
             captured = multiSelectedLayerIDs
         }
         let outlines = CGMutablePath()
+        let hugsBox = Experiments.shared.boxPickedRingEnabled
         // A drag in flight moves the picture per mouse move, but the document
         // still holds the pre-drag positions, so the outlines carry the same
         // offset or they would come away from the layers they belong to. Only
@@ -841,17 +842,18 @@ extension CanvasNSView {
                 continue
             }
             let box = inkBox(of: layer)
+            let radii = layer.pickedRingRadii(box: box, huggingBox: hugsBox, zoom: viewport.zoom)
             // Seen in space, each member is outlined where the camera puts it.
             if document.isSeenInSpace, let map = document.drawnMap(of: id) {
                 outlines.addPath(SelectionOutlineShape.path(
-                    box: box, cornerRadii: layer.selectionOutlineRadii(box: box), through: map,
+                    box: box, cornerRadii: radii, through: map,
                     transform: CGAffineTransform(translationX: shift.x, y: shift.y)
                         .concatenating(viewport.documentToView)))
                 continue
             }
             outlines.addPath(SelectionOutlineShape.path(
                 box: box,
-                cornerRadii: layer.selectionOutlineRadii(box: box),
+                cornerRadii: radii,
                 transform: inkTransform(of: layer)
                     .concatenating(CGAffineTransform(translationX: shift.x, y: shift.y))
                     .concatenating(viewport.documentToView)))
@@ -1202,18 +1204,23 @@ extension CanvasNSView {
                 box = box.offsetBy(dx: frame.minX - selectedLayer.frame.minX,
                                    dy: frame.minY - selectedLayer.frame.minY)
             }
-            // Round a rounded shape: the outline hugs what the layer draws,
-            // and on a rounded box four straight lines cut every corner off
+            // In Next the ring hugs the box with the mocks' 2 point softening,
+            // so it never reads as a rounded shape's own border
+            // (`next-picked-ring-hugs-the-box`). Otherwise it rounds with a
+            // rounded shape, since four straight lines cut every corner off
             // (seen on the probe, 2026-09-08). The handles below stay on the
             // square frame corners, which is where a drag grabs.
+            let radii = chromeLayer.pickedRingRadii(
+                box: box, huggingBox: Experiments.shared.boxPickedRingEnabled,
+                zoom: viewport.zoom)
             if let spaceMap {
                 layerOutlineLayer.path = SelectionOutlineShape.path(
-                    box: box, cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
+                    box: box, cornerRadii: radii,
                     through: spaceMap, transform: viewport.documentToView)
             } else {
                 layerOutlineLayer.path = SelectionOutlineShape.path(
                     box: box,
-                    cornerRadii: chromeLayer.selectionOutlineRadii(box: box),
+                    cornerRadii: radii,
                     transform: docToHandle.concatenating(viewport.documentToView))
             }
             layerOutlineLayer.isHidden = false

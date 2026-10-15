@@ -1,0 +1,38 @@
+{
+  "id": "a-picked-rounded-shape-is-ringed-round-its-box-a-when-you-pick-a-rounded-rectangl",
+  "taskId": "a-picked-rounded-shape-is-ringed-round-its-box-a",
+  "question": "When you pick a rounded rectangle, should the ring round it be a near-square frame round its box, or curve with the shape's corners?",
+  "context": "The mocks (shared selection frame) ring every pick with a near-square frame round its box, with a 2px softening that reads as square, and say never to trace the object's shape. On 2026-09-08 the loop curved the ring round rounded shapes on its own call, with no card. Now that the ring is a solid accent line, the curve reads as the shape's own border. Both looks filmed on a picked rounded rectangle, corner radius 72; the brief has the pictures.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Square frame round the box, handles on its corners",
+      "summary": "Every picked thing, rounded or not, wears the same near-square accent frame round its box, softened by a hairline at the corners. The eight handles sit on that frame. This is what the mocks draw, and it is what Next shows now.",
+      "pros": [
+        "The ring never reads as a border of the shape itself",
+        "The corner handles sit on the ring instead of floating out past a curve",
+        "One frame for every kind of layer, as Photoshop and Figma do"
+      ],
+      "cons": [
+        "On a very rounded shape the frame stands off the curve at each corner"
+      ],
+      "mitigation": "The gap is where the box you resize by really is, and the handles sit right in it."
+    },
+    {
+      "id": "b",
+      "label": "Ring curves with the shape, handles stay square",
+      "summary": "The ring traces a rounded rectangle's own curve, as the app did before. The eight handles stay on the square box, so on a very rounded shape the four corner handles sit out in empty space off the ring.",
+      "pros": [
+        "The ring follows exactly what the shape draws"
+      ],
+      "cons": [
+        "A solid accent ring that follows the curve looks like the shape has a blue border",
+        "The corner handles float loose, away from the ring"
+      ],
+      "mitigation": "None that keeps the ring tight to the curve and the handles on the ring at once."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-15T02:51:19.432Z"
+}

@@ -62,6 +62,48 @@ struct SelectionOutlineShapeTests {
         #expect(picture.selectionOutlineRadius(box: box) == 18)
     }
 
+    // MARK: Hugging the box, as the mocks draw it
+
+    // The mocks ring every picked thing with the same near-square frame
+    // (selection.css `.sel-ring`: "hug the bounds", a 2px radius that "reads as
+    // square at every size"), so the ring never reads as a rounded shape's own
+    // border. That softening is measured on the screen, not on the document.
+
+    @Test("Hugging the box, a rounded rectangle's ring is softened by 2 screen points, not curved")
+    func huggingIgnoresTheShapesCurve() {
+        let radii = rectangle(radius: 49).pickedRingRadii(box: box, huggingBox: true, zoom: 1)
+        #expect(radii == CornerRadii(2))
+    }
+
+    @Test("The 2 point softening stays 2 points on screen at any zoom")
+    func huggingIsMeasuredOnScreen() {
+        #expect(rectangle(radius: 49).pickedRingRadii(box: box, huggingBox: true, zoom: 2)
+                == CornerRadii(1))
+        #expect(rectangle(radius: 49).pickedRingRadii(box: box, huggingBox: true, zoom: 0.5)
+                == CornerRadii(4))
+    }
+
+    @Test("Hugging the box, every kind of layer wears the same frame")
+    func huggingIsTheSameForEveryKind() {
+        for kind in [AnnotationShape.ellipse, .line, .arrow, .rectangle] {
+            #expect(shape(kind).pickedRingRadii(box: box, huggingBox: true, zoom: 1)
+                    == CornerRadii(2), "\(kind)")
+        }
+    }
+
+    @Test("Not hugging the box, the ring follows the shape's curve as it did")
+    func notHuggingFollowsTheCurve() {
+        let layer = rectangle(radius: 49)
+        #expect(layer.pickedRingRadii(box: box, huggingBox: false, zoom: 3)
+                == layer.selectionOutlineRadii(box: box))
+    }
+
+    @Test("A zoom of nothing never makes an endless curve")
+    func huggingAtNoZoom() {
+        #expect(rectangle(radius: 49).pickedRingRadii(box: box, huggingBox: true, zoom: 0)
+                == CornerRadii(2))
+    }
+
     // MARK: The path it draws
 
     @Test("No curve draws the same rectangle it always drew")

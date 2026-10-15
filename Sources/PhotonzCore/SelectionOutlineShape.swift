@@ -17,6 +17,10 @@ import Foundation
 /// square.
 public enum SelectionOutlineShape {
 
+    /// The mocks' softening of a ring that hugs the box, in screen points:
+    /// a hairline that reads as square at every size and never clamps.
+    public static let boxSoftening: CGFloat = 2
+
     /// `box` in document points, `cornerRadii` the curve at each of its four
     /// corners, and `transform` everything between there and the screen — the
     /// layer's own rotate/skew and the camera, in one go, so a turned shape's
@@ -47,6 +51,21 @@ extension Layer {
     public func selectionOutlineRadii(box: CGRect) -> CornerRadii {
         guard hasCorners else { return .none }
         return boxCornerRadii(boxSize: box.size)
+    }
+
+    /// How round the ring round a picked layer is, in document points, when
+    /// the canvas shows the document at `zoom` view points per point.
+    ///
+    /// `huggingBox` is the mocks' frame (selection.css `.sel-ring`: "hug the
+    /// bounds", "never trace the object's shape"): every layer, rounded or not,
+    /// is ringed by its box softened by `SelectionOutlineShape.boxSoftening`
+    /// screen points, which reads as square at every size, so the ring never
+    /// passes for a rounded shape's own border. Otherwise the ring curves with
+    /// the shape (`selectionOutlineRadii(box:)`).
+    public func pickedRingRadii(box: CGRect, huggingBox: Bool, zoom: CGFloat) -> CornerRadii {
+        guard huggingBox else { return selectionOutlineRadii(box: box) }
+        let scale = zoom.isFinite && zoom > 0 ? zoom : 1
+        return CornerRadii(SelectionOutlineShape.boxSoftening / scale)
     }
 
     /// The same, as one number.

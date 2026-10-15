@@ -5,7 +5,10 @@
       "shapes",
       "color",
       "panel"
-    ]
+    ],
+    "flags": {
+      "next-picked-ring-hugs-the-box": false
+    }
   },
   "steps": [
     {

@@ -1,0 +1,39 @@
+{
+  "feature": "A picked rounded shape is ringed round its box",
+  "epic": "video-transitions-motion",
+  "summary": "Pick a rounded rectangle and the accent ring is now the same near-square frame round its box that every other layer wears, as the mocks draw it, so it no longer reads as a blue border on the shape. The decision card shows both looks side by side.",
+  "setup": "Photonz Probe, release Next, no switch changed from its default.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press R and drag out a rectangle on a blank canvas."
+    },
+    {
+      "do": "Pull Corner Radius in the panel to about 70.",
+      "shot": "2026-10-14-ring-hugs-box-rounded-sc.png",
+      "shotNote": "Taken with the window behind another app: the accent can read a little paler than in front."
+    },
+    {
+      "do": "Press Command-plus twice to zoom in.",
+      "shot": "2026-10-14-ring-hugs-box-zoomed-sc.png",
+      "shotNote": "Taken with the window behind another app: the accent can read a little paler than in front."
+    },
+    {
+      "do": "Look at the four corner handles: each sits on the ring, at the corner of the box a resize grabs."
+    },
+    {
+      "do": "For the old look, open Experiments and switch off The ring round a pick hugs its box.",
+      "shot": "2026-10-14-ring-curves-rounded-sc.png"
+    }
+  ],
+  "evaluate": [
+    "With the shape rounded right up, does the square frame still read as the selection rather than as standing off the shape?",
+    "Does the curved ring in the last picture look like a border drawn on the shape?",
+    "Do the corner handles feel attached to the frame in the first look and loose in the second?"
+  ],
+  "rough": [
+    "Which look stays is your call on the open card a-picked-rounded-shape-is-ringed-round-its-box-a-when-you-pick-a-rounded-rectangl; Next shows the mock's square frame until you answer.",
+    "Matches the mock's .sel-ring in shape: the frame hugs the box with a 2 point softening on screen at every zoom, for every kind of layer, ovals and arrows included.",
+    "Every picture is a real window capture, taken with the window behind another app."
+  ]
+}

@@ -1,0 +1,95 @@
+{
+  "out": "/tmp/photonz-playtest/a-picked-rounded-shape-hugs-its-box",
+  "setup": {
+    "forget": [
+      "shapes",
+      "color",
+      "panel"
+    ]
+  },
+  "steps": [
+    {
+      "do": "blank",
+      "canvasWidth": 900,
+      "canvasHeight": 600,
+      "width": 1280,
+      "height": 900
+    },
+    {
+      "do": "wait",
+      "seconds": 1
+    },
+    {
+      "do": "key",
+      "key": "r"
+    },
+    {
+      "do": "drag",
+      "from": [
+        340,
+        300
+      ],
+      "to": [
+        700,
+        520
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-square",
+      "note": "a rectangle just drawn and still picked: one solid accent ring hugs its box"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-square"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Corner Radius",
+      "across": 0.6
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "2-rounded",
+      "note": "corner radius pulled right up: the ring stays a near-square frame round the box, so it never reads as the shape's own border"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-rounded"
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "action",
+      "action": "zoomIn"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "3-zoomed",
+      "note": "zoomed in twice: the ring is still square round the box with the same hairline softening, and the handles sit on its corners"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-zoomed"
+    }
+  ]
+}
