@@ -1,0 +1,30 @@
+{
+  "id": "the-timing-strip-says-how-long-one-turn-of-a-for",
+  "title": "The timing strip says how long one turn of a Forever spinner takes",
+  "goal": "In the spinner walkthrough the strip under the canvas reads \"800 ms per turn\" and \"ends where it starts\" for a spinner, so you can set its speed by watching it go round. Today the strip only shows the whole loop length (\"900 ms follows the longest\"), even though a Forever spinner now goes round at its own length, so the speed of the one thing you are tuning is never said.",
+  "epic": "icon-animate",
+  "priority": "p2-normal",
+  "seq": 4070,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T09:56:16.082Z",
+  "updated": "2026-10-15T09:56:16.085Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html, data-set #tlLen=800 ms per turn and the wt-res text after step 5 (\"Beside the turn length the dock says ends where it starts\"). Since find-out-whether-a-forever-motion-shorter-than-t (2026-10-15) a one way Forever repeats every timing.durationMS (MotionRepeat.keepsItsOwnPace), and the strip draws its later turns as dashed copies (MotionStripLane.laterTurns, MotionStripLaterTurns in MotionStripView.swift). Header lives in MotionStripView (ONE CYCLE field). Chrome copy budget 30 chars.",
+  "acceptance": [
+    "With a Forever rotation picked, the strip header names its turn length the way the mock does (\"800 ms per turn\"), at Next defaults",
+    "A Forever turn whose From and To are the same picture (0 to 360) shows the mock's \"ends where it starts\" reading; one that does not join says so",
+    "A walk picks a Forever spinner and reads both lines; picture side by side with icon-loop-wt.html step 5"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T09:56:16.084Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "forever-spinner-keeps-its-own-pace-walk"
+  ]
+}

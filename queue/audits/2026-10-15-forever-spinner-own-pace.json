@@ -1,0 +1,26 @@
+{
+  "feature": "A Forever spinner goes round at its own pace",
+  "epic": "icon-animate",
+  "summary": "A spinner set to Forever now turns every Over milliseconds whatever the loop's length, so an 800 ms spinner beside a 900 ms bell no longer stops for a tenth of a second each turn, on the canvas or in the exported SVG. The strip draws its next turn as a dashed bar after the real one.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Draw a rectangle, pick it, and choose Rotation from the plus on Motion (the 900 ms bell swing)." },
+    { "do": "Draw an ellipse, pick it, and add Rotation to it too." },
+    { "do": "On the ellipse's Rotation set From 0, To 360, Curve Linear, Repeat Forever, Over 800." },
+    { "do": "Look at the strip: the ellipse's bar ends at 800 ms and a dashed copy carries on past the repeats line.", "shot": "2026-10-15-forever-spinner-own-pace-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press play and watch the ellipse: it turns steadily, with no catch where the bell's loop starts over." },
+    { "do": "Copy or export the SVG and open it in a browser: the spinner turns without a hitch while the bell swings." }
+  ],
+  "evaluate": [
+    "Does the spinner now turn without any catch while the bell swings beside it?",
+    "Does the dashed bar after the spinner read as \"it goes round again\" rather than as a second motion?",
+    "Is Forever meaning \"every Over milliseconds\" what you expect, now that a Forever motion longer than the loop also keeps going rather than being cut off?"
+  ],
+  "rough": [
+    "The mock's strip says \"800 ms per turn\" and \"ends where it starts\" for a spinner; the app's strip still says only the whole loop length (\"900 ms follows the longest\"). Filed as the-timing-strip-says-how-long-one-turn-of-a-for.",
+    "Only one way Forever keeps its own pace. Forever, there and back still shares the loop, so a 600 ms there-and-back beside a 900 ms bell rests at home for 300 ms each loop. That is a rest at home rather than a stutter, and it is what keeps two swings in step.",
+    "A Forever motion on a video clip now repeats every Over too, where before it played once per clip. New motions on a clip arrive as Once, so this only changes a motion someone set to Forever by hand.",
+    "The Forever motion still counts toward the loop's length, so a 1200 ms spinner beside a 900 ms bell stretches the loop to 1200 and the bell rests 300 ms each loop. Left in the task log."
+  ]
+}

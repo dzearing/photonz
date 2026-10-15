@@ -627,6 +627,7 @@ struct MotionStripLaneView: View {
                 RoundedRectangle(cornerRadius: 5)
                     .fill(.quaternary.opacity(0.5))
                     .frame(height: MotionStripView.barHeight)
+                MotionStripLaterTurns(lane: lane, laneWidth: laneWidth)
                 MotionStripBar(lane: lane, layerName: layerName, laneWidth: laneWidth)
             }
             .frame(width: laneWidth, alignment: .leading)
@@ -634,6 +635,39 @@ struct MotionStripLaneView: View {
         }
         .frame(height: MotionStripView.laneHeight)
         .playtestField("Timing \(layerName) \(lane.title)")
+    }
+}
+
+/// A Forever motion's turns after its bar, drawn quietly behind it.
+///
+/// A one way Forever goes round at its own length, not once a lap, so a
+/// spinner shorter than the lap is already on its second turn when the bar
+/// ends. Without these the empty stretch after the bar reads as a rest that
+/// does not happen. Not a thing to take hold of: the bar is the one to drag.
+private struct MotionStripLaterTurns: View {
+    @Environment(EditorState.self) private var editorState
+    let lane: MotionStripLane
+    let laneWidth: CGFloat
+
+    var body: some View {
+        let ruler = editorState.motionStripRuler
+        let turns = lane.laterTurns(throughMS: Int((ruler.startMS + ruler.spanMS).rounded(.up)))
+        ForEach(Array(turns.enumerated()), id: \.offset) { _, turn in
+            RoundedRectangle(cornerRadius: 5)
+                .fill(lane.isOn ? AnyShapeStyle(Color.accentColor.opacity(0.22))
+                                : AnyShapeStyle(.quaternary.opacity(0.5)))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 5)
+                        .strokeBorder(style: StrokeStyle(lineWidth: 1, dash: [3, 2]))
+                        .foregroundStyle(lane.isOn ? AnyShapeStyle(Color.accentColor.opacity(0.6))
+                                                   : AnyShapeStyle(.separator))
+                }
+                .frame(width: max(1, laneWidth * ruler.fraction(spanningMS: Double(turn.durationMS)) - 1),
+                       height: MotionStripView.barHeight)
+                .offset(x: laneWidth * ruler.fraction(ofMS: Double(turn.startMS)) + 1)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

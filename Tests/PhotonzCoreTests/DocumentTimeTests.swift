@@ -228,13 +228,14 @@ struct DocumentTimeTests {
         // as long as the fade, so three seconds in would be the top of the
         // fourth lap and the layer would be invisible again — which is what a
         // video sampled on a looping ruler looks like, and why the two clocks
-        // are kept apart.
+        // are kept apart. (Four times rather than Forever: a one way Forever
+        // goes round at its own length on either clock.)
         var doc = PhotonzDocument(canvasSize: CGSize(width: 100, height: 100))
         var title = Self.shape("Title")
         title.time = LayerTime(inMS: 0, outMS: 4000)
         title.motions = [LayerMotion(property: .opacity, from: .number(0), to: .number(100),
                                      timing: MotionTiming(startMS: 0, durationMS: 1000),
-                                     repeats: .forever)]
+                                     repeats: .times(4))]
         doc.layers = [title]
         doc.durationMS = 4000
         #expect(doc.automaticMotionCycleLengthMS == 1000)

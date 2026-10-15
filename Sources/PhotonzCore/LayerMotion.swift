@@ -855,6 +855,13 @@ public enum MotionRepeat: Hashable, Codable, Sendable {
     /// True where the motion goes out and comes home inside one cycle.
     public var reverses: Bool { self == .foreverThereAndBack }
 
+    /// True where the motion repeats every one of its own lengths rather than
+    /// once a lap. The mock: "with Forever on it, a length becomes a rate", so
+    /// Over says how long one turn takes. Only one way Forever: there and back
+    /// lands home every lap, so a lap longer than it is a rest at home, and the
+    /// lag between two swings is what the shared lap keeps.
+    public var keepsItsOwnPace: Bool { self == .forever }
+
     /// How many cycles it plays, or nil for ever.
     public var cycles: Int? {
         switch self {
@@ -1157,8 +1164,18 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
     /// explicit that the two cannot share a ruler.
     public func value(atMS ms: Int, cycleMS: Int) -> MotionValue {
         guard isOn else { return from }
-        let cycle = max(1, cycleMS)
         let elapsed = max(0, ms)
+        if repeats.keepsItsOwnPace {
+            // Waits for its start once, then goes round every `durationMS`
+            // whatever the lap is: tied to the lap, a spinner shorter than it
+            // would sit at 360 degrees until the lap came round, a stutter
+            // every turn, and one longer would be cut off and jump.
+            guard elapsed > timing.startMS else { return from }
+            let turn = max(1, timing.durationMS)
+            let local = (elapsed - timing.startMS) % turn
+            return value(atProgress: Double(local) / Double(turn))
+        }
+        let cycle = max(1, cycleMS)
         let iteration = elapsed / cycle
         if let cycles = repeats.cycles, iteration >= cycles {
             // It has played the number of times it was asked to and stays

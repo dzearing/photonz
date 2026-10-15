@@ -266,14 +266,22 @@ enum MotionSVG {
 
     static func track(for motion: LayerMotion, layer: Layer, pivot: CGPoint,
                       cycleMS: Int) -> Track? {
-        let stops = stops(for: motion, cycleMS: cycleMS)
+        // A one way Forever goes round at its own length rather than once a
+        // lap (`MotionRepeat.keepsItsOwnPace`), so it is written as one turn
+        // of its own, begun once at its start: held to the lap, a spinner
+        // shorter than it would sit still at the end of every turn.
+        let ownPace = motion.repeats.keepsItsOwnPace
+        let lapMS = ownPace ? max(1, motion.timing.durationMS) : max(1, cycleMS)
+        let played = ownPace
+            ? motion.retimed(to: MotionTiming(startMS: 0, durationMS: lapMS)) : motion
+        let stops = stops(for: played, cycleMS: lapMS)
         guard stops.count >= 2 else { return nil }
         let texts = stops.compactMap {
             text(of: $0.value, property: motion.property, layer: layer, pivot: pivot)
         }
         guard texts.count == stops.count else { return nil }
 
-        let cycle = Double(max(1, cycleMS))
+        let cycle = Double(lapMS)
         let keyTimes = stops.map { SVGExport.num(CGFloat(min(max($0.ms / cycle, 0), 1))) }
         let splines = stops.dropLast().map(\.spline)
         let stepping: Bool = if case .steps = motion.curve { true } else { false }
@@ -314,7 +322,10 @@ enum MotionSVG {
         }
 
         var parts = ["<\(element) \(attributes)"]
-        parts.append("dur=\"\(max(1, cycleMS))ms\"")
+        if ownPace, motion.timing.startMS > 0 {
+            parts.append("begin=\"\(motion.timing.startMS)ms\"")
+        }
+        parts.append("dur=\"\(lapMS)ms\"")
         parts.append("repeatCount=\"\(repeatCount(motion.repeats))\"")
         if motion.repeats.cycles != nil { parts.append("fill=\"freeze\"") }
         if stepping {

@@ -64,17 +64,41 @@ public struct MotionStripLane: Identifiable, Hashable, Sendable {
     /// The switch on the entry in the side column. A lane that is off keeps its
     /// bar and is drawn quiet, exactly the way the eye on an effect works.
     public var isOn: Bool
+    /// How often it goes round on its own, where it does: a one way Forever
+    /// repeats at its own length rather than once a lap
+    /// (`MotionRepeat.keepsItsOwnPace`), so its later turns are drawn after
+    /// the bar rather than left to look like a rest. Nil on everything else.
+    public var turnMS: Int?
 
     public var id: UUID { motionID }
 
     public init(layerID: UUID, motionID: UUID, title: String,
-                timing: MotionTiming, isOn: Bool, keys: [MotionStripKey] = []) {
+                timing: MotionTiming, isOn: Bool, keys: [MotionStripKey] = [],
+                turnMS: Int? = nil) {
         self.layerID = layerID
         self.motionID = motionID
         self.title = title
         self.timing = timing
         self.keys = keys
         self.isOn = isOn
+        self.turnMS = turnMS
+    }
+
+    /// The turns after the bar itself, end to end, as far as `endMS`: what the
+    /// strip draws quietly behind the bar so a spinner shorter than the lap
+    /// reads as going round again rather than stopping. Empty for a lane that
+    /// does not keep its own pace.
+    public func laterTurns(throughMS endMS: Int) -> [MotionTiming] {
+        guard let turnMS, turnMS > 0 else { return [] }
+        var turns: [MotionTiming] = []
+        var start = timing.startMS + turnMS
+        // A strip is a lap and a third wide, so a handful at most; the cap is
+        // for a turn of a millisecond, never reached by hand.
+        while start < endMS, turns.count < 64 {
+            turns.append(MotionTiming(startMS: start, durationMS: turnMS))
+            start += turnMS
+        }
+        return turns
     }
 
     /// This lane re-timed, with its keys carried along in proportion.
@@ -86,6 +110,7 @@ public struct MotionStripLane: Identifiable, Hashable, Sendable {
     public func retimed(to timing: MotionTiming) -> MotionStripLane {
         var moved = self
         moved.timing = timing
+        if turnMS != nil { moved.turnMS = timing.durationMS }
         guard !keys.isEmpty, self.timing.durationMS > 0 else { return moved }
         let stretch = Double(timing.durationMS) / Double(self.timing.durationMS)
         moved.keys = keys.map {
@@ -253,7 +278,9 @@ extension PhotonzDocument {
                                 keys: motion.keys.dropFirst().dropLast().map {
                                     MotionStripKey(ms: $0.atMS + shiftMS,
                                                    reading: motion.property.format($0.value))
-                                })
+                                },
+                                turnMS: motion.repeats.keepsItsOwnPace
+                                    ? motion.timing.durationMS : nil)
             },
             bar: layer.time,
             isSound: layer.sound != nil,

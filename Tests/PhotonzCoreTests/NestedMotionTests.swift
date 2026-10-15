@@ -37,7 +37,7 @@ struct NestedMotionTests {
     static func slide(to point: CGPoint) -> LayerMotion {
         LayerMotion(property: .position, from: .point(.zero), to: .point(point),
                     timing: MotionTiming(startMS: 0, durationMS: lapMS / 2),
-                    curve: .linear, repeats: .forever)
+                    curve: .linear, repeats: .once)
     }
 
     /// A growth pinned at one size for the whole lap.

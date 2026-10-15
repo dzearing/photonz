@@ -196,7 +196,8 @@ struct SVGMotionExportTests {
 
     @Test("A lag is written as a fraction of the lap, not as milliseconds")
     func aLateStartIsAFractionOfTheLap() {
-        let late = Self.turn(-17, 17, startMS: 90, durationMS: 900)
+        let late = Self.turn(-17, 17, startMS: 90, durationMS: 900,
+                             repeats: .foreverThereAndBack)
         let document = Self.document([Self.layer([late])], cycleMS: 1000)
         let svg = Self.moving(document)
         #expect(Self.attribute("dur", in: svg) == "1000ms")
@@ -211,9 +212,11 @@ struct SVGMotionExportTests {
 
     @Test("Everything in one drawing shares one lap, so nothing drifts apart")
     func everyMotionSharesTheLap() {
-        let bell = Self.layer([Self.turn(-12, 12, durationMS: 900)],
+        let bell = Self.layer([Self.turn(-12, 12, durationMS: 900,
+                                         repeats: .foreverThereAndBack)],
                               at: CGPoint(x: 0, y: 0))
-        let knob = Self.layer([Self.turn(-17, 17, startMS: 90, durationMS: 900)],
+        let knob = Self.layer([Self.turn(-17, 17, startMS: 90, durationMS: 900,
+                                         repeats: .foreverThereAndBack)],
                               at: CGPoint(x: 24, y: 0))
         let document = Self.document([bell, knob])
         let svg = Self.moving(document)

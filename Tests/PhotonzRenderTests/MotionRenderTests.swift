@@ -458,7 +458,7 @@ struct NestedMotionRenderTests {
                                    from: .point(CGPoint(x: 10, y: 10)),
                                    to: .point(CGPoint(x: 30, y: 10)),
                                    timing: MotionTiming(startMS: 0, durationMS: 500),
-                                   curve: .linear, repeats: .forever)]
+                                   curve: .linear, repeats: .once)]
         var icon = Layer(name: "Icon", content: .group(GroupContent(children: [dot])),
                          frame: CGRect(x: 20, y: 20, width: 50, height: 50))
         icon.motions = [LayerMotion(property: .scale,

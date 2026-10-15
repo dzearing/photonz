@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 200,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T02:37:41.109Z",
-  "updated": "2026-10-14T12:18:04.223Z",
+  "updated": "2026-10-15T09:56:53.635Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Not reproduced in the app: code reading only, hence p2 look-into. One shared cycle: Sources/PhotonzCore/LayerMotion.swift motionCycleLengthMS / automaticMotionCycleLengthMS ~1525-1550 (deliberately ONE CYCLE, see comment and MotionStrip.swift). A motion that ends early holds its final value (~1006). SVG export writes the same cycle length: Sources/PhotonzCore/SVGMotionExport.swift ~311; in SVG each animate element can carry its own dur with repeatCount=indefinite. Mock icon-loop-wt.html: 'with Forever on it, a length becomes a rate'.",
@@ -51,6 +51,30 @@
     {
       "t": "2026-10-14T12:18:04.222Z",
       "note": "seq 140 -> 200"
+    },
+    {
+      "t": "2026-10-15T09:28:41.269Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T09:56:53.451Z",
+      "note": "owns these walks: forever-spinner-keeps-its-own-pace-walk"
+    },
+    {
+      "t": "2026-10-15T09:56:53.512Z",
+      "note": "REPRODUCED. Canvas: ForeverMotionPaceTests sampled value(atMS:) every 33 ms (preview rate) for bell = Add Rotation default (900 ms, there and back) + spinner 0->360 Linear Forever 800 ms: spinner stood still on frames 825, 858, 1716, 1749, 2607, 2640 ms (about 100 ms per turn). SVG: exported spinner was dur=900ms keyTimes=0;0.889;1 values=0;360;360. Browser: opened the exported file in Chrome, svg.pauseAnimations + setCurrentTime every 33 ms reading g.transform.animVal angle: 792->356.35, 825->360, 858->360, 891->360, 924->10.8, the same still frames [825,858,1716,1749,2607,2640]."
+    },
+    {
+      "t": "2026-10-15T09:56:53.572Z",
+      "note": "FIX: MotionRepeat.keepsItsOwnPace (one way Forever only). LayerMotion.value(atMS:) waits for startMS once, then repeats every durationMS regardless of the lap. SVGMotionExport writes such a motion as its own turn: dur=durationMS, begin=startMS when late, keyTimes over its own span. Strip: MotionStripLane.turnMS + laterTurns(throughMS:), drawn as dashed quiet bars after the real one (MotionStripLaterTurns). After: the walk's exported SVG measured in Chrome the same way has no still frames (792->356.4, 825->11.25, 858->26.1). Tests that used .forever only to get a slide-then-hold now say .once (NestedMotionTests, MotionRenderTests), the lap-sharing SVG tests use there and back, DocumentTimeTests uses .times(4) to keep telling the two clocks apart."
+    },
+    {
+      "t": "2026-10-15T09:56:53.634Z",
+      "note": "left rough: Forever motions still count toward the automatic lap length, so a 1200 ms spinner beside a 900 ms bell makes the bell rest 300 ms per lap. Did not file: nobody has hit it, and whether a rate should set the lap is a design question for the per-turn readout task. Also: Forever there and back still shares the lap (rest at home, not a stutter). Video clips: a hand-set Forever now repeats every Over (new clip motions arrive as Once). Filed the-timing-strip-says-how-long-one-turn-of-a-for for the mock's '800 ms per turn' and 'ends where it starts' strip readouts. Audit: queue/audits/2026-10-15-forever-spinner-own-pace.json. I looked at 1-spinner-beside-bell-sc.png: the dashed later turn sits after the 800 ms bar and runs past the repeats line; the bell fills the 900 ms lap."
     }
+  ],
+  "started": "2026-10-15T09:28:41.265Z",
+  "walks": [
+    "forever-spinner-keeps-its-own-pace-walk"
   ]
 }
