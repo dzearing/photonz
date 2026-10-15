@@ -1,0 +1,52 @@
+{
+  "id": "the-measuring-legend-says-something-useful-now-t-with-size-and-spacing-now-the-sa",
+  "taskId": "the-measuring-legend-says-something-useful-now-t",
+  "question": "With Size and Spacing now the same blue, what should the little key in the picture's corner do while you measure?",
+  "context": "Since 2026-10-13 every measurement starts in the same blue (your call: gap vs size should not be different). The key in the picture's corner still lists Size and Spacing, each with a blue line, so it no longer tells them apart. Picture: queue/audits/2026-10-15-measure-legend-same-swatch-crop-sc.png. The redline mock draws the key with Size red and Spacing blue.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Take the key away",
+      "summary": "While you measure, nothing sits in the corner of the picture. Each measurement still shows its value chip, and the bar under the canvas still says which kind you are drawing.",
+      "pros": [
+        "Frees a corner of the picture you are measuring",
+        "Nothing on screen that tells you nothing",
+        "Photoshop and Figma show no key for their measurements either"
+      ],
+      "cons": [
+        "A dashed Alignment check loses the one line that names it"
+      ],
+      "mitigation": "Alignment checks already read as different on the picture (dashed), and their chip names the edge they checked."
+    },
+    {
+      "id": "b",
+      "label": "Draw Size and Gap differently, key shows how",
+      "summary": "Keep one blue, but draw the two kinds with different ends on the picture: a Size with short bars across each end, a Gap with a bracket. The key shows each row in its own shape so the rows read apart.",
+      "pros": [
+        "The key earns its corner again",
+        "You can tell a Size from a Gap at a glance on the picture itself"
+      ],
+      "cons": [
+        "Changes how every measurement looks on the picture, which you just settled as one look",
+        "More ink on a busy screenshot"
+      ],
+      "mitigation": "The ends are small and in the same blue, so the redline still reads as one style."
+    },
+    {
+      "id": "c",
+      "label": "Keep the key as it is",
+      "summary": "Leave the key showing Size and Spacing, both with the same blue line. Nothing changes.",
+      "pros": [
+        "No work"
+      ],
+      "cons": [
+        "Two rows with identical swatches tell you nothing"
+      ],
+      "mitigation": "None; this only makes sense if you like having the kinds listed.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-15T08:49:00.453Z"
+}

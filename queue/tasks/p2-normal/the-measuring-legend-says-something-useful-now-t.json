@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 180,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-13T21:51:15.337Z",
-  "updated": "2026-10-14T12:18:04.099Z",
+  "updated": "2026-10-15T08:49:12.017Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follows every-measurement-shares-one-remembered-look-blu (2026-10-13): MeasureStyles keeps ONE colour set for every role, so measureLegendEntries (EditorState+Measure.swift, near the end) lists Size and Spacing each swatched in its top-most measurement ink, which is now the same #3774D5 by default. The legend is behind next-measure-roles (on at Next defaults); legend-corner-slots walk covers its placement. The redline mock (docs/design/mocks/pages/redline.html) draws Size red and Spacing blue with this legend; the user overrode the colour split on 2026-10-13 (\"gap vs size shouldn't be different\").",
@@ -26,9 +26,22 @@
     {
       "t": "2026-10-14T12:18:04.097Z",
       "note": "seq 4040 -> 180"
+    },
+    {
+      "t": "2026-10-15T08:47:52.788Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T08:49:11.938Z",
+      "note": "Reproduced with Scripts/playtest.sh Scripts/playtest/legend-corner-slots.json (probe, Next defaults): picture 2 shows the key with Size and Spacing, both swatched the same blue (crop: queue/audits/2026-10-15-measure-legend-same-swatch-crop-sc.png). Opened a decision card (drop / different ends / keep), recommending drop. Side note: the walk's first picture is labelled 'Size and Spacing present' but its Size click at (356,786) made no measurement there (state lists only the Gap), so picture 1 shows a one-row key; the walk passes because it never counts rows. Whoever builds the answer should fix that step while touching this walk."
+    },
+    {
+      "t": "2026-10-15T08:49:12.014Z",
+      "note": "Waiting on the user: drop the key, draw Size and Gap differently, or keep it (card filed, recommends drop)."
     }
   ],
   "walks": [
     "legend-corner-slots"
-  ]
+  ],
+  "started": "2026-10-15T08:47:52.787Z"
 }
