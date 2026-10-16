@@ -21455,3 +21455,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - In the pane of lists (Next), the Layers list asks for all of its rows and is capped only by the pane's share (`PanelListsPane.listAsks` / `listCeiling`, tested), so six layers no longer stop at five rows with blank glass under them. Its own grab bar is not built in the pane; the pane grip sets the room. Current is unchanged.
 - Walks: panel-grip-walk drives the Lists grip; `dragHandle` "absent" accepts a bar that is not built; lists-pane-holds-still-walk clicks moved 12pt up.
 - Next: the-library-shelf-uses-the-room-its-pane-holds (same cap on the Library shelf).
+
+## 2026-10-15 — The Library shelf fills the lists pane
+
+- In the pane of lists the Library shelf asks the dock for all its tiles and is capped only by the pane's share (`PanelListsPane.listAsks/listCeiling`, the same pair Layers uses); its own grab bar is not built there. `LibraryPanel.inListsPane`, threaded from `InspectorPanel.sectionContent`.
+- library-shelf-height-walk step 4 read Library 549-780 in a pane running to 847 (67pt blank under a scrolling shelf); it now reads 599-847, and every state ends at the pane's foot.
+- library-shelf-height-walk and panel-grip-walk drive the Lists grip and expect no Library bar. 15 library, shelf and lists-pane walks green; 13,274 tests green.

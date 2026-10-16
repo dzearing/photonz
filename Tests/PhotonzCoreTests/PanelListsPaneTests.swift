@@ -193,4 +193,14 @@ struct PanelListsPaneTests {
         #expect(PanelListsPane.listCeiling(grabBar: 200, dock: 150, inPane: false) == 150)
         #expect(PanelListsPane.listCeiling(grabBar: 200, dock: 310, inPane: false) == 200)
     }
+
+    @Test("In the pane the Library shelf fills the room under it before it scrolls")
+    func theShelfFillsThePane() {
+        // library-shelf-height-walk, 2026-10-15: five starter cards want 344pt,
+        // the shelf's grab bar was pulled up to 105 and the pane had 172 for
+        // the shelf. It stopped at 105 over 67pt of blank glass.
+        #expect(PanelListsPane.listAsks(content: 344, grabBar: 105, inPane: true) == 344)
+        #expect(PanelListsPane.listCeiling(grabBar: 105, dock: 172, inPane: true) == 172)
+        #expect(PanelListsPane.listCeiling(grabBar: 105, dock: 172, inPane: false) == 105)
+    }
 }

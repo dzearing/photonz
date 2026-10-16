@@ -39,11 +39,12 @@
     { "do": "action", "action": "showLibrary" },
     { "do": "wait", "seconds": 1.2 },
     { "do": "panel", "stage": "library" },
-    { "do": "dragHandle", "area": "Library", "by": -40 },
+    { "comment": "The shelf has no grab bar of its own in the pane either: it fills what the pane's grip gives it.", "do": "dragHandle", "area": "Library", "expect": "absent" },
+    { "do": "dragHandle", "area": "Lists", "by": -40 },
     { "do": "snapshot", "name": "7-library-shorter" },
-    { "do": "dragHandle", "area": "Library", "by": 400 },
+    { "do": "dragHandle", "area": "Lists", "by": 400 },
     { "do": "snapshot", "name": "8-library-open" },
 
-    { "do": "describe", "stage": "end", "note": "the Layers list has no grab bar of its own in the pane and fills whatever room the pane grip gives it" }
+    { "do": "describe", "stage": "end", "note": "neither the Layers list nor the Library shelf has a grab bar of its own in the pane; each fills whatever room the pane grip gives it" }
   ]
 }

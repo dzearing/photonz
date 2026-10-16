@@ -55,14 +55,19 @@ struct LibraryPanel: View {
     /// still behind the fade, and what the cut took was the CAPTION under a
     /// tile picture, which is the tile's name.
     var dockCeiling: CGFloat?
+    /// Drawn in the pane of lists under the pick (Next, `next-lists-pane`),
+    /// whose grip sets the room: the shelf takes as much of it as its tiles
+    /// need and has no grab bar of its own, the way the Layers list does.
+    var inListsPane = false
     /// Told how tall the shelf would be with only the grab bar pressing on it,
     /// and what the picker, search box and grab bar around it cost, so the dock
     /// can budget for both separately: the shelf scrolls and they do not.
     var onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat, _ floor: CGFloat) -> Void)?
 
-    init(dockCeiling: CGFloat? = nil,
+    init(dockCeiling: CGFloat? = nil, inListsPane: Bool = false,
          onMetrics: ((_ shelfNatural: CGFloat, _ extras: CGFloat, _ floor: CGFloat) -> Void)? = nil) {
         self.dockCeiling = dockCeiling
+        self.inListsPane = inListsPane
         self.onMetrics = onMetrics
         let firstCap = LibraryShelfLayout.defaultCap(sizing: Experiments.shared.libraryTileSizing)
         _maxHeight = StoredSetting(wrappedValue: Double(firstCap), Self.heightKey)
@@ -120,7 +125,10 @@ struct LibraryPanel: View {
                 LibraryColorNamingField(paint: dropped.paint)
             }
             tiles
-            resizeHandle
+            // Not in the pane: its grip is the one control for how much room
+            // the lists get, and a second bar under the tiles would only cap
+            // the shelf short of room the pane already holds.
+            if !inListsPane { resizeHandle }
         }
         // The panel's one margin, like every other section: the shelf kept a
         // 12 of its own, so its scope bar and search box stood 2pt proud of
@@ -364,26 +372,33 @@ struct LibraryPanel: View {
     /// The height the shelf takes: its tiles, capped at the LOWER of the two
     /// ceilings pressing on it — what the grab bar was dragged to, and what the
     /// dock has room for. A shelf holding one thing is one tile tall, so the
-    /// dock under it is not a patch of empty glass.
+    /// dock under it is not a patch of empty glass. In the pane of lists the
+    /// grab bar is not one of them: the pane's grip already set the room, and
+    /// keeping the bar's ceiling there left a shelf scrolling over a band of
+    /// blank glass in its own pane (2026-10-15, `PanelListsPane.listCeiling`).
     private var shelfHeight: CGFloat {
         // An empty shelf is a sentence, not a list: there is no grid to cap and
         // nothing for the dock to take away.
         guard !isEmpty else { return 0 }
-        let cap = min(maxHeight, dockCeiling ?? .greatestFiniteMagnitude)
-        if shelfGroups != nil { return shelfWidth > 0 ? min(shelfContentHeight, cap) : cap }
-        return LibraryShelfLayout.shelfHeight(
-            tileCount: tileCount, width: shelfWidth, cap: cap, sizing: sizing)
+        let cap = PanelListsPane.listCeiling(grabBar: maxHeight, dock: dockCeiling,
+                                             inPane: inListsPane)
+        // Before the shelf knows its width it has no honest height, so for
+        // that one frame it stands at the grab bar's ceiling, never at an
+        // unbounded pane's.
+        guard shelfWidth > 0 else { return min(maxHeight, cap) }
+        return min(shelfContentHeight, cap)
     }
 
-    /// ...and what it would be if the dock were NOT pressing on it: its tiles,
-    /// capped by the ceiling the reader set with the grab bar. This is what the
-    /// dock budgets from, so it reserves room for the shelf that was asked for
-    /// rather than for the one it has already shortened.
+    /// ...and what it would be if the dock were NOT pressing on it: all of its
+    /// tiles in the pane of lists, or its tiles capped by the ceiling the
+    /// reader set with the grab bar outside it. This is what the dock budgets
+    /// from, so it reserves room for the shelf that was asked for rather than
+    /// for the one it has already shortened.
     private var unpressedShelfHeight: CGFloat {
         guard !isEmpty else { return 0 }
-        if shelfGroups != nil { return shelfWidth > 0 ? min(shelfContentHeight, maxHeight) : maxHeight }
-        return LibraryShelfLayout.shelfHeight(tileCount: tileCount, width: shelfWidth,
-                                              cap: maxHeight, sizing: sizing)
+        guard shelfWidth > 0 else { return maxHeight }
+        return PanelListsPane.listAsks(content: shelfContentHeight, grabBar: maxHeight,
+                                       inPane: inListsPane)
     }
 
     @ViewBuilder

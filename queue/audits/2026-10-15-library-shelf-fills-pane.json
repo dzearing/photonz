@@ -1,0 +1,24 @@
+{
+  "feature": "The Library shelf fills the lists pane",
+  "epic": "video-editing",
+  "summary": "In the pane of lists at the foot of the panel, the Library shelf now grows into all the room the pane has before it scrolls. There is no blank band under a shelf that scrolls any more, and the line above the pane is the one control for how much room the shelf gets, the same as for Layers.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. A blank picture in a 1240 by 900 window, Library on Components.",
+  "switched": {},
+  "try": [
+    { "do": "Open the Library on Components: five starter cards, the shelf runs to the foot of the pane with the next row fading out.", "shot": "2026-10-15-library-shelf-fills-pane-3-back-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type badge in the search box: the shelf shrinks to the one card it finds.", "shot": "2026-10-15-library-shelf-fills-pane-2-one-tile-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Clear the search, then drag the line above the pane down a little: the shelf shrinks with the pane and still reaches its foot.", "shot": "2026-10-15-library-shelf-fills-pane-4-capped-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the same line up: the shelf grows with it and shows more of its cards.", "shot": "2026-10-15-library-shelf-fills-pane-5-restored-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look under the cards for a grab bar: there is none in the pane." }
+  ],
+  "evaluate": [
+    "Does the shelf now feel like it owns the bottom of the pane, with nothing empty under it?",
+    "Is one line above the pane enough control over the shelf's height, now that the shelf's own grab bar is gone?",
+    "When the shelf is cut, does the fade over the last row say clearly that there are more cards below?"
+  ],
+  "rough": [
+    "Answer to the grab bar question: gone in the pane, the same as Layers. The pane's line sets the room and the shelf fills it.",
+    "Dragging the pane's line below what Layers and the shelf need at their least still lets the whole pane scroll, with the shelf held at one row and a sliver; that is the pane's own floor, unchanged here.",
+    "No mock draws the shelf's height inside the pane, so there is nothing to put side by side for this slice."
+  ]
+}

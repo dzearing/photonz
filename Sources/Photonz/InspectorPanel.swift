@@ -1756,6 +1756,7 @@ struct InspectorPanel: View {
             // box and grab bar around it, which it may not — and takes the
             // ceiling back the same way the layers list does.
             LibraryPanel(dockCeiling: ceiling,
+                         inListsPane: inListsPane,
                          onMetrics: { natural, extras, floor in
                              record(bodyHeight: natural, for: .library)
                              if budget.listExtras[.library] != extras {
