@@ -54,6 +54,11 @@ public struct SpaceHandles: Hashable, Sendable {
     /// Generous on purpose: the arcs are small targets (the design audit,
     /// 2026-10-11).
     public static let grabReach: CGFloat = 9
+    /// How far a press on the picked layer's own body may land from a handle
+    /// and still catch it: the drawn stroke and a hair. The body is how the
+    /// layer is moved, and on a layer 40 points across the arrow's full reach
+    /// covered most of its upper right quarter (audit, 2026-10-13).
+    public static let drawnReach: CGFloat = 4
     /// Half the flat arc's span, and how far it bows out from the knob.
     public static let swingHalfSpan: CGFloat = 26
     public static let swingBow: CGFloat = 10
@@ -183,16 +188,29 @@ public struct SpaceHandles: Hashable, Sendable {
     /// it nowhere. The box keeps a press it is at least as near to: on a small
     /// layer the arrow and the tall arc pass right over a corner square, and a
     /// resize has no other way in on the canvas.
-    public func hit(at p: CGPoint, arcs: Bool, depth: Bool, boxReach: CGFloat? = nil) -> SpaceHandle? {
+    ///
+    /// `onBody` says the press landed on the picked layer itself, where a
+    /// press moves it: there a handle catches only on its drawing
+    /// (`drawnReach`), so the slack never grows over what it manipulates.
+    ///
+    /// `markReach` is how near the press is to a mark drawn on the picture
+    /// under the handles (a key's ring on the motion path, which sits on the
+    /// layer's middle with the playhead on its key), nil for none in reach.
+    /// The mark keeps a press it is at least as near to, the nearest-mark
+    /// rule of `docs/design/canvas-hit-order.md`.
+    public func hit(at p: CGPoint, arcs: Bool, depth: Bool, boxReach: CGFloat? = nil,
+                    onBody: Bool = false, markReach: CGFloat? = nil) -> SpaceHandle? {
         if arcs, onKnob(p) { return nil }
         var shown: [SpaceHandle] = []
         if arcs { shown += [.swing, .tip] }
         if depth { shown.append(.depth) }
+        let slack = onBody ? Self.drawnReach : Self.grabReach
         let best = shown.map { ($0, reach(of: $0, at: p)) }
-            .filter { $0.1 <= Self.grabReach }
+            .filter { $0.1 <= slack }
             .min { $0.1 < $1.1 }
         guard let best else { return nil }
         if let boxReach, boxReach <= best.1 { return nil }
+        if let markReach, markReach <= best.1 { return nil }
         return best.0
     }
 

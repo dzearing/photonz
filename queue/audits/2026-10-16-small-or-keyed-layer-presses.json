@@ -1,0 +1,27 @@
+{
+  "feature": "A press on a small or keyed layer lands on what it aims at",
+  "epic": "video-transitions-motion",
+  "summary": "On a small picked layer, a press on the layer itself now moves it; the depth arrow only takes a press on its own drawing. With the playhead on a key, that key's ring is drawn over the pivot crosshair and a click anywhere on it picks the key.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/small-or-keyed-layer-presses-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, type a title, key its Position at one second and again at three, and leave the playhead on the second key.", "shot": "2026-10-16-press-lands-1-ring-on-the-pivot-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the small ring on the title's middle, a little up and right of its centre.", "shot": "2026-10-16-press-lands-2-ring-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the green flat arc sideways, then drag the blue depth arrow up and right.", "shot": "2026-10-16-press-lands-3-title-turned-and-pushed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw a rectangle about 40 points across and pick it with V.", "shot": "2026-10-16-press-lands-4-small-layer-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag it from its upper right quarter, just beside the blue arrow: it moves.", "shot": "2026-10-16-press-lands-5-small-layer-moved-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the blue arrow itself up and right: it pushes the rectangle away.", "shot": "2026-10-16-press-lands-6-small-layer-pushed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "On a small layer, is the depth arrow still easy to catch when you aim at it?",
+    "With the playhead on a key, can you see the ring on the layer's middle at a glance?",
+    "Does clicking that ring pick the key every time you try it?",
+    "On a big layer, does needing to land on the arrow itself feel too fussy?"
+  ],
+  "rough": [
+    "No mock draws where a press lands: the hit areas follow the nearest-mark rule in docs/design/canvas-hit-order.md, and the ring drawn over the crosshair matches video-move-wt.html, where the rings sit on top of the route.",
+    "On the layer itself the arrow now catches only within about 4 points of its line, on every layer, not just small ones. Off the layer it keeps its generous 9 points.",
+    "A drag that starts within 6 points of a small layer's edge still resizes it from that edge. That is the edge's own resize band, not the arrow.",
+    "A picked ring under the resting pointer still shows the blue hover look instead of white until the pointer moves (right half of 2026-10-16-press-lands-ring-closeup.png), as the 2026-10-13 key dot audit already said."
+  ]
+}

@@ -108,6 +108,46 @@ struct SpaceEditingTests {
                               boxReach: Self.chip.reach(of: .depth, at: onShaft)) == nil)
     }
 
+    /// A small square, 40 across, flat: top edge at y 100, middle at y 120.
+    static let square = SpaceHandles(topMid: CGPoint(x: 300, y: 100), middle: CGPoint(x: 300, y: 120),
+                                     pivot: CGPoint(x: 300, y: 120))
+
+    @Test("On a small layer's body the depth arrow takes only a press on its drawing")
+    func bodyKeepsPressesOffTheArrow() {
+        let h = Self.square
+        // Fourteen right and six up from the middle: inside the box, about
+        // six points off the drawn shaft. The press that moves the layer.
+        let besideShaft = CGPoint(x: 314, y: 114)
+        #expect(h.reach(of: .depth, at: besideShaft) > SpaceHandles.drawnReach)
+        #expect(h.reach(of: .depth, at: besideShaft) <= SpaceHandles.grabReach)
+        // Off the body the generous slack still catches it...
+        #expect(h.hit(at: besideShaft, arcs: true, depth: true) == .depth)
+        // ...on the body it is the layer's.
+        #expect(h.hit(at: besideShaft, arcs: true, depth: true, onBody: true) == nil)
+        // A press on the drawn shaft still pushes in depth, body or not.
+        let onShaft = CGPoint(x: 312, y: 108)
+        #expect(h.hit(at: onShaft, arcs: true, depth: true, onBody: true) == .depth)
+        // So does one past the box on the arrow's slack, where the body ends.
+        let pastHead = CGPoint(x: 332, y: 88)
+        #expect(h.hit(at: pastHead, arcs: true, depth: true, onBody: false) == .depth)
+    }
+
+    @Test("A key ring under the 3D handles keeps the press nearer to it than to them")
+    func markKeepsWhatItIsNearer() {
+        let h = Self.square
+        // The ring sits on the middle, where the pivot is, with the playhead
+        // on its key. Its upper right edge is in the arrow's slack...
+        let ringEdge = CGPoint(x: 302.5, y: 117.5)
+        #expect(h.hit(at: ringEdge, arcs: true, depth: true) == .depth)
+        // ...but nearer the ring, so the ring keeps it.
+        let toRing = hypot(ringEdge.x - 300, ringEdge.y - 120)
+        #expect(h.hit(at: ringEdge, arcs: true, depth: true, markReach: toRing) == nil)
+        // Up the shaft, nearer the arrow than the ring, the arrow still pushes.
+        let shaft = CGPoint(x: 309, y: 111)
+        #expect(h.hit(at: shaft, arcs: true, depth: true,
+                      markReach: hypot(shaft.x - 300, shaft.y - 120)) == .depth)
+    }
+
     @Test("On a layer about 76 wide the tall arc passes its top right corner, and the corner keeps it")
     func tallArcYieldsToCorner() {
         let h = SpaceHandles(topMid: CGPoint(x: 300, y: 100), middle: CGPoint(x: 300, y: 130),

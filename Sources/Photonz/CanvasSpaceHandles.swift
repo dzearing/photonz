@@ -193,12 +193,27 @@ extension CanvasNSView {
         }
     }
 
-    /// The 3D handle a press at `viewPoint` would take, or nil.
-    func spaceHandleHit(atView viewPoint: CGPoint) -> SpaceHandle? {
+    /// The 3D handle a press at `viewPoint` would take, or nil. `markReach`
+    /// is how near, in view points, the press is to a mark drawn on the
+    /// picture under the handles (a key's ring), which keeps a press it is
+    /// at least as near to.
+    func spaceHandleHit(atView viewPoint: CGPoint, markReach: CGFloat? = nil) -> SpaceHandle? {
         guard spaceHandlesOffered, let shown = drawnSpaceHandles, shown.layerID == selectedLayerID,
               let layer = document?.canvasLayer(id: shown.layerID), !layer.isLocked else { return nil }
         return shown.handles.hit(at: viewPoint, arcs: shown.arcs, depth: shown.depth,
-                                 boxReach: boxReach(atView: viewPoint, of: layer, inSpace: shown.inSpace))
+                                 boxReach: boxReach(atView: viewPoint, of: layer, inSpace: shown.inSpace),
+                                 onBody: pressIsOnBody(atView: viewPoint, of: layer),
+                                 markReach: markReach)
+    }
+
+    /// Whether `viewPoint` lands on the picked layer's own box, as seen,
+    /// where a press picks it up and moves it. There the 3D handles catch
+    /// only on their drawing, so on a small layer the depth arrow's slack does
+    /// not grow over the body (`SpaceHandles.drawnReach`).
+    private func pressIsOnBody(atView viewPoint: CGPoint, of layer: Layer) -> Bool {
+        guard let viewport else { return false }
+        let box = selectedLayerFrame ?? layer.withoutSlack(layer.frame)
+        return box.contains(handleSpacePoint(viewport.documentPoint(fromView: viewPoint), layer: layer))
     }
 
     /// How near, in view points, a press at `viewPoint` is to a mark the

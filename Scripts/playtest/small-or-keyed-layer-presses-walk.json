@@ -1,0 +1,500 @@
+{
+ "out": "/tmp/photonz-playtest/small-or-keyed-layer-presses-walk",
+ "seed": "A press on the canvas lands on what it aims at, on a small layer and on a key ring under the 3D handles, at Next defaults with no flag changed. A title is typed on the sample recording and its Position keyed at one second and at three; with the playhead on the second key, that key's ring sits on the title's middle under the pivot crosshair. A click on the ring's upper right edge, inside the depth arrow's old reach, picks the key, and the flat arc and the depth arrow still swing and push the title. Then a rectangle 40 view points across is drawn and picked: a drag that starts in its upper right quarter, beside the drawn arrow, moves it and leaves its depth at 0, and the arrow taken on its own drawing still pushes it away.",
+ "setup": {
+  "forget": [
+   "all"
+  ],
+  "timelineOpen": true
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "text"
+  },
+  {
+   "do": "click",
+   "at": [
+    620,
+    330
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "type",
+   "text": "Ship it"
+  },
+  {
+   "do": "key",
+   "key": "return",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Properties section"
+  },
+  {
+   "do": "press",
+   "control": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position",
+   "in": "Animate a property"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "120"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Path",
+   "present": false
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Position X Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "820"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "press",
+   "control": "Position Y Value"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.7
+  },
+  {
+   "do": "key",
+   "key": "a",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "type",
+   "text": "380"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expect",
+   "control": "Key Position 2",
+   "present": true
+  },
+  {
+   "do": "expectKeyPick",
+   "keys": []
+  },
+  {
+   "do": "describe",
+   "stage": "1-ring-on-the-pivot",
+   "note": "The playhead sits on the title's second Position key at three seconds, so that key's ring sits on the title's middle, where the pivot crosshair and the depth arrow start. The ring is drawn over the crosshair, so it reads as a ring."
+  },
+  {
+   "do": "snapshot",
+   "name": "1-ring-on-the-pivot"
+  },
+  {
+   "comment": "THE RING: a click on its upper right edge, about three view points up and right of its middle and well inside the depth arrow's old reach. It used to push the title in depth.",
+   "do": "click",
+   "at": [
+    958,
+    421
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectKeyPick",
+   "keys": [
+    "Position 2"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "2-ring-picked",
+   "note": "The click on the ring's edge picked the Position key at three seconds: the ring is white and larger, over the crosshair, and its dot on the Position lane is white too."
+  },
+  {
+   "do": "snapshot",
+   "name": "2-ring-picked"
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Depth",
+   "present": false
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "The 3D handles still answer on their own drawings.",
+   "do": "spaceHandle",
+   "handle": "swing",
+   "by": [
+    67,
+    0
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectTilt",
+   "atLeast": 1.05
+  },
+  {
+   "do": "spaceHandle",
+   "handle": "depth",
+   "by": [
+    20,
+    -20
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Tilt Y",
+   "reads": "40"
+  },
+  {
+   "do": "describe",
+   "stage": "3-title-turned-and-pushed",
+   "note": "The flat arc swung the title 40 degrees and the depth arrow, taken on its own drawing, pushed it away: both 3D handles still work with the ring on the pivot."
+  },
+  {
+   "do": "snapshot",
+   "name": "3-title-turned-and-pushed"
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "THE SMALL LAYER: a rectangle 54 document points across, 40 view points at this zoom, away from the title's route.",
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    480,
+    560
+   ],
+   "to": [
+    534,
+    614
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectSpaceHandles",
+   "arcs": true,
+   "depth": true
+  },
+  {
+   "do": "expectBox",
+   "layer": "Rectangle",
+   "at": [
+    480,
+    560
+   ],
+   "size": [
+    54,
+    54
+   ],
+   "within": 1
+  },
+  {
+   "do": "describe",
+   "stage": "4-small-layer-picked",
+   "note": "The small rectangle picked: the depth arrow leaves its middle and runs out past its top right corner."
+  },
+  {
+   "do": "snapshot",
+   "name": "4-small-layer-picked"
+  },
+  {
+   "comment": "A press in its upper right quarter, about five view points beside the drawn arrow and clear of the edges' resize bands: before this fix it pushed the rectangle in depth and left it where it was.",
+   "do": "drag",
+   "from": [
+    522,
+    582
+   ],
+   "to": [
+    582,
+    582
+   ],
+   "steps": 10
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectBox",
+   "layer": "Rectangle",
+   "at": [
+    540,
+    560
+   ],
+   "size": [
+    54,
+    54
+   ],
+   "within": 2
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Depth",
+   "present": false
+  },
+  {
+   "do": "describe",
+   "stage": "5-small-layer-moved",
+   "note": "The press beside the arrow picked the rectangle up and moved it 60 points right; it was never pushed in depth, so the values list no Depth at all."
+  },
+  {
+   "do": "snapshot",
+   "name": "5-small-layer-moved"
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "The arrow pressed on its own drawing still pushes in depth.",
+   "do": "spaceHandle",
+   "handle": "depth",
+   "by": [
+    20,
+    -20
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "press",
+   "control": "Info"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "field": "Transform Depth",
+   "reads": "-143"
+  },
+  {
+   "do": "describe",
+   "stage": "6-small-layer-pushed",
+   "note": "The depth arrow, taken on its own drawing, pushed the rectangle away."
+  },
+  {
+   "do": "snapshot",
+   "name": "6-small-layer-pushed"
+  }
+ ]
+}

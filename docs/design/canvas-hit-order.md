@@ -76,6 +76,18 @@ with, and hands it to whichever is nearer. So:
   mount, which is the case the feature exists for — does not swallow the turn
   knob floating eighteen points out from that same edge.
 
+The 3D handles (the arcs on the knob and the depth arrow off the pivot) follow
+the same two rules (2026-10-16, `SpaceHandles.hit`):
+
+- **On the picked layer's own body a handle catches only on its drawing**
+  (`SpaceHandles.drawnReach`, 4 points), not its full slack. The body is how
+  the layer is moved, and on a layer 40 points across the arrow's full reach
+  covered most of its upper right quarter. Off the body the slack stays.
+- **A key's ring on the motion path is a mark on the picture**, and with the
+  playhead on its key it sits dead on the pivot the arrow leaves from. The
+  nearer of the ring and the handle takes the press, and the ring draws above
+  the crosshair so it can be seen.
+
 ## Where it lives
 
 - `Sources/PhotonzCore/CanvasHitOrder.swift` — the rule, pure and tested

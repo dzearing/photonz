@@ -72,10 +72,12 @@ extension CanvasNSView {
         }
         guard let index = nearest, path.keyRefs.indices.contains(index) else { return nil }
         let there = viewport.viewPoint(fromDocument: points[index])
-        guard hypot(there.x - here.x, there.y - here.y) <= CanvasNSView.motionPathGrabRadius else { return nil }
+        let distance = hypot(there.x - here.x, there.y - here.y)
+        guard distance <= CanvasNSView.motionPathGrabRadius else { return nil }
         // With the playhead on a key, its ring sits in the layer's middle,
-        // under the 3D handles drawn over it: those keep their press.
-        if spaceHandleHit(atView: here) != nil || spaceKnobHit(atView: here) { return nil }
+        // where the depth arrow leaves the pivot: the nearer of the two takes
+        // the press (`docs/design/canvas-hit-order.md`). The knob keeps its own.
+        if spaceHandleHit(atView: here, markReach: distance) != nil || spaceKnobHit(atView: here) { return nil }
         return (path.layerID, index, path.keyRefs[index], points[index])
     }
 
@@ -91,12 +93,15 @@ extension CanvasNSView {
         motionPathHaloLayer.lineWidth = 3
         motionPathHaloLayer.isHidden = true
         motionPathHaloLayer.zPosition = 96
+        // The rings ride above the 3D handles and the pivot crosshair: with
+        // the playhead on a key, its ring sits dead on the pivot, and drawn
+        // under the crosshair it could not be seen, let alone aimed at.
         motionPathKeysLayer.lineWidth = 1.25
         motionPathKeysLayer.isHidden = true
-        motionPathKeysLayer.zPosition = 98
+        motionPathKeysLayer.zPosition = 100
         motionPathPickedKeysLayer.lineWidth = 2
         motionPathPickedKeysLayer.isHidden = true
-        motionPathPickedKeysLayer.zPosition = 98
+        motionPathPickedKeysLayer.zPosition = 100
         motionPathHandlesLayer.lineWidth = 1
         motionPathHandlesLayer.isHidden = true
         motionPathHandlesLayer.zPosition = 98
