@@ -304,3 +304,37 @@ struct TransitionInspector: View {
         return inHand.cut.drawnTransition?.kind.title ?? "None"
     }
 }
+
+/// The three dots on the Transition header (`video-transitions.html`,
+/// `#propMenu`): Copy the transition on the cut in hand, Paste one copied
+/// from another cut onto it, and put its length back to the usual one.
+struct TransitionPanelMenu: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        let place = editorState.cutInHand?.place
+        let hasTransition = editorState.cutInHand?.cut.transition != nil
+        let choices: [VideoKit.Choice] = [
+            .item("Copy Transition", isEnabled: hasTransition, image: Self.copyImage) { [editorState] in
+                if let place { editorState.copyTransition(at: place) }
+            },
+            .item("Paste Transition", isEnabled: place != nil && editorState.transitionOnClipboard != nil,
+                  image: Self.pasteImage) { [editorState] in
+                if let place { editorState.pasteTransitionOnClipboard(at: place) }
+            },
+            .item("Reset to Default Length", isEnabled: editorState.canResetClipTransitionLength,
+                  image: Self.resetImage) { [editorState] in
+                editorState.resetClipTransitionLength()
+            },
+        ]
+        return VideoKit.HeaderMenu(label: "Transition Menu", symbol: "ellipsis",
+                                   help: "Copy, paste or reset the transition", choices: choices)
+            .fixedSize()
+            .panelHelp("Copy, paste or reset the transition")
+            .playtestControl("Transition Menu", detail: "the three dots on the Transition header")
+    }
+
+    private static let copyImage = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)
+    private static let pasteImage = NSImage(systemSymbolName: "doc.on.clipboard", accessibilityDescription: nil)
+    private static let resetImage = NSImage(systemSymbolName: "arrow.uturn.backward", accessibilityDescription: nil)
+}

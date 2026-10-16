@@ -21474,3 +21474,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Shift Delete (and a picked clip's right-click Delete / Ripple Delete) on a box's pick of whole clips takes the zooms and keys beside them too; before, it rippled one clip and left them (`rippleDeleteBoxPick`, `EditorState.extractBoxPick`).
 - Walk `box-pick-copied-and-rippled-whole-walk` (new `Keys <layer>` row name for dragTracks); core tests in `TimelineBoxPickTests`/`TimelineBoxCopyTests`. 13,308 tests green.
 - Filed: `a-box-over-zooms-and-keys-with-no-clip-in-it-kee` (a box pick of only zooms and keys drops the keys).
+
+## 2026-10-16 — A transition copies from one cut and pastes onto others
+
+- With a cut picked, Edit ▸ Copy copies its transition (the canvas says "Copied · Cross dissolve, 0.2s"), Edit ▸ Paste puts the same kind, length, curve, direction and blur on the picked cut, or on every cut where ⌘T would spread (ruler range, track range, two or more clips picked), else the cut at the playhead, in one undo. ⌘X cuts it. Fitted per cut like the picker; a cut with no spare is refused with the picker's words and a dip offered. A dip's hold is never copied (`PhotonzCore/TransitionClipboard.swift`, `TransitionClipboardTests`; app `EditorState+TransitionClipboard.swift`).
+- The cut's and edit point's right-click carry Copy Transition / Paste Transition (⌘C / ⌘V printed); the Transition header gets the mock's three dots menu with Copy, Paste and Reset to Default Length (also Clip ▸ Transition at Cut).
+- Walk `transition-copy-paste-walk` (ok twice, Next defaults); 13,322 tests green; audit `queue/audits/2026-10-16-transition-copy-paste.json`.
+- Filed: `with-a-cut-picked-the-panel-opens-under-the-prop` (the mock's Properties header is missing while a cut is picked, so the menu sits on the Transition header for now).

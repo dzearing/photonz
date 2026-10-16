@@ -201,6 +201,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// changes when it is, so without a word it reads as a menu row that
         /// did nothing.
         case defaultTransitionSet(ClipTransitionKind)
+        /// A cut's transition went onto the clipboard
+        /// (`TransitionClipboard.swift`). Nothing on screen changes when it
+        /// does, so without a word Copy reads as a key that did nothing.
+        case transitionCopied(CopiedTransition)
         /// One transition went on every cut, or every cut among the clips
         /// picked (`EveryCutOutcome`). Most of those cuts are off screen, so
         /// the count says what happened, and how many had no spare to pay.
@@ -462,7 +466,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .readingTheWords: return TextReading.Batch.workingTitle
         case .cutToOwnLayer:
             return "Cut to its own layer"
-        case .lookCopied, .svgCopied: return "Copied"
+        case .lookCopied, .svgCopied, .transitionCopied: return "Copied"
         case .lookPasted(let report): return report.title
         case .shapesCombined(let plan): return plan.title
         }
@@ -483,6 +487,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return refusal.detail
         case .defaultTransitionSet(let kind):
             return "\u{2318}T now puts \(kind.title) on a cut"
+        case .transitionCopied(let copied):
+            return copied.title
         case .transitionOnEveryCut(_, let outcome):
             return outcome.countLine
         case .transitionCutSkipped(let ms):

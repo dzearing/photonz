@@ -1,0 +1,52 @@
+{
+  "feature": "Copy a transition from one cut and paste it onto others",
+  "epic": "video-transitions-motion",
+  "task": "a-transition-can-be-copied-from-one-cut-and-past",
+  "summary": "Tune a transition at one cut, copy it, and paste it onto another cut, or onto every cut among several picked clips or inside a range: each gets the same kind, length, curve, direction and blur in one undo step. The Transition header's three dots also put a transition back to its usual length.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording, cut it twice (or open one with two cuts).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Put a Cross dissolve on the first cut (stand on it, Command T), then set Length to 0.2s and Curve to Ease in in the panel.",
+      "shot": "2026-10-16-transition-copy-paste-1-tuned.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With that cut still picked, press Command C. The canvas says Copied, Cross dissolve, 0.2s.",
+      "shot": "2026-10-16-transition-copy-paste-2-copied.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right click the second cut and choose Paste Transition (Copy Transition is greyed there, since that cut is hard).",
+      "shot": "2026-10-16-transition-copy-paste-3-cut-menu.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z, then Command V with the second cut still picked: the same dissolve lands again.",
+      "shot": "2026-10-16-transition-copy-paste-4-pasted.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick two or more clips (or draw a range on the ruler) and press Command V: every cut among them takes it, and the canvas counts how many."
+    },
+    {
+      "do": "Click the three dots on the Transition header and choose Reset to Default Length: the dissolve goes back to 0.4s and keeps its curve.",
+      "shot": "2026-10-16-transition-copy-paste-5-reset.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does Command C with a cut picked copying the transition, rather than the clip, match what your hands expect from Premiere?",
+    "Is it right that Command V with no cut picked lands on the cut the playhead is standing on, the way Command T does?",
+    "When a pasted transition is longer than a cut can pay for, it comes in shorter without a word. Do you want the canvas to say so?",
+    "Are Copy Transition and Paste Transition easy to find in the cut's right click, between Add Transition and Roll Edit?"
+  ],
+  "rough": [
+    "The mock's panel menu sits on a Properties header above the cut's sections; the app shows no Properties header while a cut is picked, so for now the three dots sit on the Transition header. Moving them onto the mock's header is task with-a-cut-picked-the-panel-opens-under-the-prop.",
+    "Menu rows read Copy Transition and Reset to Default Length in the Mac's Title Case rather than the mock's sentence case (UX-PATTERNS §7).",
+    "The app goes further than the mock: Paste Transition sits beside Copy in the panel menu and both are in the cut's right click, and Command X with a cut picked cuts the transition (copies it and takes it off), as Premiere does.",
+    "A dip's hold on black is not copied: pasting never puts time into the edit. The cut it lands on keeps the hold it had.",
+    "Down arrow moves the playhead to the next cut but leaves the earlier cut picked, so Command V after it pastes on the picked cut, not the one under the playhead. Click or right click the cut you mean.",
+    "A cut that cannot pay for the kind at all is refused with the picker's own words and an offer of a dip; a walk could not build such a cut from the sample recording, so that refusal is pinned by a unit test rather than walked."
+  ]
+}

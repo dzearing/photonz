@@ -1487,13 +1487,22 @@ struct InspectorPanel: View {
             default: SoundInspector.headerNote(editorState)
             }
             guard let note else { return nil }
-            return AnyView(Text(note)
+            let noteText = Text(note)
                 .font(.system(size: 10.5, weight: .medium))
                 .foregroundStyle(VideoKit.Palette.faint)
                 .lineLimit(1)
                 .truncationMode(.middle)
                 .panelReadout(note)
-                .playtestField("\(id.title) header"))
+                .playtestField("\(id.title) header")
+            // The mock's panel menu on the cut (`video-transitions.html`,
+            // `#propMenu`): Copy transition, and Paste beside it.
+            if id == .transition {
+                return AnyView(HStack(spacing: 6) {
+                    noteText
+                    TransitionPanelMenu()
+                })
+            }
+            return AnyView(noteText)
         // The mock's `.sec-h .mut` note ("drag the diamonds on the lane") is
         // the Fades question mark now: the user asked on 2026-09-25 for no
         // sentences in the panel, the explanation behind a mark in the header.

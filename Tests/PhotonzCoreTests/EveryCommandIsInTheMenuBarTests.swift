@@ -62,6 +62,10 @@ struct EveryCommandIsInTheMenuBarTests {
         // layer, the way Premiere's keyframe clipboard does.
         "Copy Key": "Copy",
         "Paste Keys": "Paste",
+        // ...and the transition on a picked cut before the clip, the way
+        // Premiere copies a transition picked on the timeline.
+        "Copy Transition": "Copy",
+        "Paste Transition": "Paste",
         "Duplicate": "Duplicate Layer",
         "Rename": "Rename Layer…",
         "Edit Words": "Rename…",

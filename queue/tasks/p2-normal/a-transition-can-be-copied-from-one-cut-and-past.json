@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.038Z",
-  "updated": "2026-10-16T12:22:36.217Z",
+  "updated": "2026-10-16T15:10:56.130Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transitions.html panel overflow menu 'Copy transition'. Code: the cut's right-click is EditorState+TimelineMenus.swift ~553-578 (Apply Default Transition, Add, Remove, Roll Edit); no transition handling in EditorState+Clipboard.swift or PhotonzCore/Clipboard.swift. Apply to Every Cut and Set as Default exist (one-step-puts-a-transition-on-every-cut, one-key-puts-the-usual-transition-on-the-cut-at). Searches 'copy transition', 'paste transition': nothing.",
@@ -31,6 +31,42 @@
     {
       "t": "2026-10-16T12:22:36.215Z",
       "note": "seq 23 -> 40"
+    },
+    {
+      "t": "2026-10-16T14:37:52.652Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T15:10:03.779Z",
+      "note": "owns these walks: transition-copy-paste-walk"
+    },
+    {
+      "t": "2026-10-16T15:10:55.820Z",
+      "note": "Review before building: Premiere/FCP users pick the transition or edit point, Cmd C, pick other edit points, Cmd V; the app has one picked cut at a time, so 'several' follows Cmd T's spread (ruler range, track range, two or more clips picked) and a lone Cmd V with nothing picked lands on the cut at the playhead. Mock (#propMenu) puts Copy transition in the panel menu; the app had no panel menu on a cut, so one was added to the Transition header (follow-up filed to move it onto the mock's Properties header). A dip's hold is real time, so a paste never copies it."
+    },
+    {
+      "t": "2026-10-16T15:10:55.882Z",
+      "note": "Built: PhotonzCore/TransitionClipboard.swift (CopiedTransition, ClipCut.fitted(pasting:), PhotonzDocument.copyTransition/transitionPastePlan/pasteTransition) + 9 tests; CopyConfirmation .transitionCopied; app EditorState+TransitionClipboard.swift (Edit Copy/Cut/Paste routing via copyWhatIsInHand etc., cut and edit point right-click rows), TransitionPanelMenu on the Transition header with Copy, Paste and the mock's Reset to Default Length (also in Clip > Transition at Cut)."
+    },
+    {
+      "t": "2026-10-16T15:10:55.943Z",
+      "note": "Verified: Scripts/test.sh 13322 tests green; transition-copy-paste-walk ok twice at Next defaults (no flags); default-transition-key, roll-the-cut-between-two-clips, timeline-right-click, transition-on-every-cut walks re-run ok since the cut menu gained rows. Looked at pictures 1-tuned, 2-copied (pill 'Copied Cross dissolve, 0.2s'), 3-cut-menu (Copy greyed on hard cut, Paste live, Cmd C/Cmd V printed), 4-pasted (second cut at 0:04 wears Cross dissolve 0.2s Ease in), 5-reset (0.4s, curve kept)."
+    },
+    {
+      "t": "2026-10-16T15:10:56.006Z",
+      "note": "left rough: Down arrow moves the playhead to the next cut but keeps the earlier cut picked, so Cmd V then pastes on the picked cut (same rule Cmd T follows); not filed, an existing pick rule, asked in the audit's evaluate."
+    },
+    {
+      "t": "2026-10-16T15:10:56.067Z",
+      "note": "left rough: a paste longer than a cut can pay for comes in shorter without a word (same as the picker's fitting); asked in evaluate rather than filed. The single-cut refusal (no spare at all) is unit tested, not walked: the sample recording cannot make a cut with no spare."
+    },
+    {
+      "t": "2026-10-16T15:10:56.129Z",
+      "note": "Mock difference filed: with-a-cut-picked-the-panel-opens-under-the-prop (p1) for the missing Properties header on a picked cut; Title Case rows settled by UX-PATTERNS §7."
     }
+  ],
+  "started": "2026-10-16T14:37:52.649Z",
+  "walks": [
+    "transition-copy-paste-walk"
   ]
 }

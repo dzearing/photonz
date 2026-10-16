@@ -1,0 +1,30 @@
+{
+  "id": "with-a-cut-picked-the-panel-opens-under-the-prop",
+  "title": "With a cut picked the panel opens under the Properties header the transitions mock draws",
+  "goal": "When you pick a cut on the timeline, the right hand panel jumps straight into Edit point and Transition with no Properties header above them, while the transitions mock shows a Properties header saying Transition, with its three dots menu on that header. The panel should match the mock so the cut reads like anything else you pick.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T15:10:29.403Z",
+  "updated": "2026-10-16T15:10:29.406Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found while building a-transition-can-be-copied-from-one-cut-and-past (2026-10-16). InspectorPanel.swift ~1238: a picked cut intersects the sections with [.layers, .editPoint, .transition, .transitions, .library], which drops .keys, and the .keys section header is what draws the Properties group header and PropertiesPanelMenu (PropertyKeysInspector.swift) under next-dock-headers. So the cut gets no Properties header. TransitionPanelMenu (TransitionInspector.swift) currently rides the Transition section header via sectionFurniture; move it to the group header when that exists. Mock: docs/design/mocks/pages/video-transitions.html lines 211-217 and #propMenu at 295. Picture of today: queue/audits/2026-10-16-transition-copy-paste-5-reset.png.",
+  "acceptance": [
+    "At Next defaults, picking a cut shows a Properties header above Edit point and Transition, with Transition as its chip, as video-transitions.html #gProps draws it",
+    "The header carries the three dots menu with Copy Transition, Paste Transition and Reset to Default Length, and the Transition section header no longer carries its own copy of that menu",
+    "A walk at Next defaults reaches the header menu and passes twice, and transition-copy-paste-walk is updated to the new place"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T15:10:29.405Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "transition-copy-paste-walk"
+  ]
+}

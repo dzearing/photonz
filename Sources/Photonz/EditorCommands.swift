@@ -1032,6 +1032,9 @@ struct EditorCommands: Commands {
         Menu("Transition at Cut") {
             Button("Hard Cut") { editor?.setClipTransitionInHand(nil) }
                 .disabled(editor?.cutInHand?.cut.transition == nil)
+            // The panel menu's third row (`#propMenu`).
+            Button("Reset to Default Length") { editor?.resetClipTransitionLength() }
+                .disabled(!(editor?.canResetClipTransitionLength ?? false))
             Divider()
             ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
                 Button(kind.title) { editor?.setClipTransitionInHand(kind) }

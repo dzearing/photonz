@@ -20,10 +20,12 @@ extension EditorState {
     // MARK: The Edit menu's three
 
     /// Edit ▸ Copy: keys picked on a lane, else a range in hand, else the
-    /// layer (`copySelectedLayer`).
+    /// transition on a cut picked (`EditorState+TransitionClipboard`), else
+    /// the layer (`copySelectedLayer`).
     func copyWhatIsInHand() {
         if copyPickedKeys() { return }
         if rulerRangeHeld != nil, copyMarkedRange() { return }
+        if copyPickedTransition() { return }
         copySelectedLayer()
     }
 
@@ -31,14 +33,17 @@ extension EditorState {
     func cutWhatIsInHand() {
         if cutPickedKeys() { return }
         if rulerRangeHeld != nil, cutMarkedRange() { return }
+        if cutPickedTransition() { return }
         cutSelectedLayer()
     }
 
     /// Edit ▸ Paste: keys onto the picked layer, else a copied range at the
-    /// playhead, else a layer or a picture (`paste`).
+    /// playhead, else a copied transition on the cut or cuts in hand, else a
+    /// layer or a picture (`paste`).
     func pasteWhatIsOnTheClipboard() {
         if pasteKeysAtPlayhead() { return }
         if pasteRange() { return }
+        if pasteTransitionOnClipboard() { return }
         paste()
     }
 

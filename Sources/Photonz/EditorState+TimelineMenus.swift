@@ -547,6 +547,8 @@ extension EditorState {
                 })
             }
             rows.append(.separator)
+            rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
+            rows.append(.separator)
         }
         rows.append(rollEditMenuRow(at: .join(clip: layerID, index: index)))
         return rows
@@ -569,6 +571,8 @@ extension EditorState {
                     self.setTransition(nil, at: place)
                 })
             }
+            rows.append(.separator)
+            rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
             rows.append(.separator)
         }
         // The cut between two clips looks just like a join on the timeline,

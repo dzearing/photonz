@@ -211,6 +211,27 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// The usual length for the kind on the cut in hand, as far as this cut
+    /// can pay for it (`video-transitions.html`, `#propMenu`, "Reset to
+    /// default length").
+    var defaultLengthInHand: Int? {
+        guard let inHand = cutInHand, let existing = inHand.cut.transition else { return nil }
+        return min(existing.kind.defaultLengthMS, inHand.cut.longestMS(for: existing))
+    }
+
+    /// Whether Reset to Default Length would change anything.
+    var canResetClipTransitionLength: Bool {
+        guard canWorkWithClipTransitions, let length = defaultLengthInHand,
+              length >= ClipTransition.shortestMS else { return false }
+        return cutInHand?.cut.transition?.lengthMS != length
+    }
+
+    /// The transition on the cut in hand back to its kind's usual length.
+    func resetClipTransitionLength() {
+        guard canResetClipTransitionLength, let length = defaultLengthInHand else { return }
+        setClipTransitionLength(length)
+    }
+
     /// Where the overlap on the cut in hand sits (`#rowAlign`). The length
     /// stays where the new side can pay for it, else it comes down to the
     /// most that side has; a side with nothing to spend is refused, and its
@@ -330,7 +351,7 @@ extension EditorState {
     }
 
     /// The cut that is picked, when a cut is what is picked.
-    private var pickedCutPlace: TimelineCutPlace? {
+    var pickedCutPlace: TimelineCutPlace? {
         if let point = selectedEditPoint {
             return .edit(outgoing: point.outgoing, incoming: point.incoming)
         }
