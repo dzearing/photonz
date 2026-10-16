@@ -1235,9 +1235,16 @@ struct InspectorPanel: View {
         // in Premiere fills Effect Controls: the panel speaks for the cut and
         // nothing else, so its two sections are at the top rather than under
         // everything the clip either side has (`video-transition-wt.html`).
+        // With the mock's headings the two are one group, Properties, as
+        // both transitions mocks draw `#gProps` (`cutFillsProperties`).
         if editorState.selectedEditPoint != nil || editorState.selectedClipCutIndex != nil,
            set.contains(.editPoint) {
-            set.formIntersection([.layers, .editPoint, .transition, .transitions, .library])
+            if Experiments.shared.dockHeadersEnabled {
+                set.formIntersection([.layers, .transitions, .library])
+                set.insert(.keys)
+            } else {
+                set.formIntersection([.layers, .editPoint, .transition, .transitions, .library])
+            }
         }
         // ...and so is a zoom: the panel speaks for the zoom in hand.
         if set.contains(.zoom) {
@@ -1256,6 +1263,18 @@ struct InspectorPanel: View {
 
     /// What a piece inside a copy does not answer for. Everything here is a
     /// fact the original decides.
+    /// A cut is the thing picked and the dock draws the mock's headings: then
+    /// Properties speaks for the cut (`video-transitions.html`, `#gProps`),
+    /// its chip saying Transition or Edit point, its three dots the cut's own
+    /// menu, and Edit point and Transition the two sections inside it
+    /// (`CutPropertiesInspector`) rather than two groups of their own.
+    private var cutFillsProperties: Bool {
+        guard Experiments.shared.dockHeadersEnabled,
+              editorState.selectedEditPoint != nil || editorState.selectedClipCutIndex != nil
+        else { return false }
+        return (watchedTimeFacts ?? PanelTimeFacts(editorState)).showsCut
+    }
+
     private static let sectionsAPieceDoesNotOwn: Set<InspectorSectionID> = [
         .arrange, .geometry, .frame, .columns, .placement, .color, .effects, .shadow,
         .annotation, .callout, .lens, .text, .reveal, .measure, .collage, .motion,
@@ -1317,7 +1336,7 @@ struct InspectorPanel: View {
     private func timeOrdered(_ order: [InspectorSectionID]) -> [InspectorSectionID] {
         // Several things picked on the timeline: what they are leads, the
         // way the clip line leads for one (`EditorState+TrackRange`).
-        if editorState.documentHasTime, editorState.timelinePickSummary != nil {
+        if editorState.documentHasTime, editorState.timelinePickSummary != nil || cutFillsProperties {
             return [.keys] + order.filter { $0 != .keys }
         }
         guard let role = timeRole else { return order }
@@ -1368,6 +1387,9 @@ struct InspectorPanel: View {
     /// itself lives behind that mark, not under its rows.
     private func sectionAccessory(_ id: InspectorSectionID) -> AnyView? {
         let furniture = sectionFurniture(id)
+        // The cut's two sections carry their own marks inside Properties; the
+        // keying one on its header would be about something not picked.
+        if id == .keys, cutFillsProperties { return furniture }
         guard let help = Self.sectionHelp(id) else { return furniture }
         // With the mock's headings the group's own buttons end the row (the
         // Properties menu is the last thing on it), so the mark goes first.
@@ -1410,6 +1432,9 @@ struct InspectorPanel: View {
             // counts against (`component-configure-wt.html`, `#layerCount`).
             text = LayersPanelHeader.countChip(layerCount: editorState.searchableLayerCount)
             return text.map { .init(text: $0, field: "Layers Count") }
+        case .keys where cutFillsProperties:
+            text = DockGroupHeader.cutChip(carriesTransition: editorState.cutInHand?.cut.transition != nil)
+            return text.map { .init(text: $0, field: "Properties Kind") }
         case .keys:
             text = editorState.timelinePickSummary != nil ? nil : DockGroupHeader.chip(editorState.keyLayerKind)
             return text.map { .init(text: $0, field: "Properties Kind") }
@@ -1494,18 +1519,14 @@ struct InspectorPanel: View {
                 .truncationMode(.middle)
                 .panelReadout(note)
                 .playtestField("\(id.title) header")
-            // The mock's panel menu on the cut (`video-transitions.html`,
-            // `#propMenu`): Copy transition, and Paste beside it.
-            if id == .transition {
-                return AnyView(HStack(spacing: 6) {
-                    noteText
-                    TransitionPanelMenu()
-                })
-            }
             return AnyView(noteText)
         // The mock's `.sec-h .mut` note ("drag the diamonds on the lane") is
         // the Fades question mark now: the user asked on 2026-09-25 for no
         // sentences in the panel, the explanation behind a mark in the header.
+        case .keys where cutFillsProperties:
+            // The mock's panel menu on the cut (`video-transitions.html`,
+            // `#propMenu`): Copy, Paste and Reset to Default Length.
+            return AnyView(TransitionPanelMenu())
         case .keys:
             // With the mock's headings the kind is the chip and the header
             // ends in the pane's menu, as `video.html` draws `#gProps`.
@@ -1719,7 +1740,11 @@ struct InspectorPanel: View {
         case .motion:
             MotionListInspector()
         case .keys:
-            PropertyKeysInspector()
+            if cutFillsProperties {
+                CutPropertiesInspector()
+            } else {
+                PropertyKeysInspector()
+            }
         case .space3D:
             Space3DInspector()
         case .camera:

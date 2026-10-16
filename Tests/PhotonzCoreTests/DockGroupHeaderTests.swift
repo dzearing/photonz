@@ -34,6 +34,15 @@ import Testing
         #expect(DockGroupHeader.chip(nil) == nil)
     }
 
+    /// A cut picked fills Properties the way the transitions mocks draw it:
+    /// the chip names the transition once the cut carries one
+    /// (`video-transitions.html`, `#gProps`) and the edit point while it does
+    /// not (`video-transition-wt.html`, `#propKind`).
+    @Test func aPickedCutsChipNamesTheTransitionOnceItHasOne() {
+        #expect(DockGroupHeader.cutChip(carriesTransition: true) == "Transition")
+        #expect(DockGroupHeader.cutChip(carriesTransition: false) == "Edit point")
+    }
+
     @Test func theHeadersAreNextsAndOnByDefaultThere() {
         let name = FeatureCatalog.dockHeadersFlag
         #expect(FeatureCatalog.defaultSettings(for: .next).isEnabled(name))

@@ -305,9 +305,82 @@ struct TransitionInspector: View {
     }
 }
 
-/// The three dots on the Transition header (`video-transitions.html`,
-/// `#propMenu`): Copy the transition on the cut in hand, Paste one copied
-/// from another cut onto it, and put its length back to the usual one.
+/// A cut picked fills Properties the way both transitions mocks draw it
+/// (`video-transitions.html` and `video-transition-wt.html`, `#gProps`): one
+/// group headed Properties, its chip and three dots on that header, and inside
+/// it the two `.sec-h` sections, Edit point and Transition, each saying on its
+/// right where the cut is or what is on it, with its question mark beside.
+struct CutPropertiesInspector: View {
+    @Environment(EditorState.self) private var editorState
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            CutPropertiesSection(id: "editPoint", title: "Edit point",
+                                 note: EditPointInspector.headerNote(editorState),
+                                 help: EditPointInspector.sectionHelp, isFirst: true) {
+                EditPointInspector()
+            }
+            CutPropertiesSection(id: "transition", title: "Transition",
+                                 note: TransitionInspector.headerNote(editorState),
+                                 help: TransitionInspector.sectionHelp, isFirst: false) {
+                TransitionInspector()
+            }
+        }
+        .padding(.bottom, 4)
+    }
+}
+
+/// One `.section` inside the cut's Properties: the mock's `.sec-h` (11pt in
+/// the ink, the note in the faint ink on the far side) over its rows, with the
+/// soft line between it and the one above.
+private struct CutPropertiesSection<Content: View>: View {
+    let id: String
+    let title: String
+    let note: String?
+    let help: String
+    let isFirst: Bool
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            if !isFirst {
+                Rectangle()
+                    .fill(VideoKit.Palette.line)
+                    .frame(height: 1)
+                    .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+                    .padding(.vertical, 6)
+            }
+            HStack(alignment: .firstTextBaseline, spacing: 6) {
+                Text(title)
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundStyle(.primary)
+                    .lineLimit(1)
+                Spacer(minLength: 4)
+                if let note {
+                    Text(note)
+                        .font(.system(size: 10.5, weight: .medium))
+                        .foregroundStyle(VideoKit.Palette.faint)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .panelReadout(note)
+                        .playtestField("\(title) header")
+                }
+                SectionHelpMark(section: title, text: help)
+            }
+            .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
+            .padding(.top, isFirst ? 6 : 0)
+            content
+        }
+        // A guide points at the section by its id, wherever it is drawn: its
+        // own group, or here inside the cut's Properties.
+        .tutorialAnchor(.panelSection(id))
+    }
+}
+
+/// The three dots on the Properties header while a cut is picked
+/// (`video-transitions.html`, `#propMenu`): Copy the transition on the cut in
+/// hand, Paste one copied from another cut onto it, and put its length back to
+/// the usual one.
 struct TransitionPanelMenu: View {
     @Environment(EditorState.self) private var editorState
 
@@ -331,7 +404,7 @@ struct TransitionPanelMenu: View {
                                    help: "Copy, paste or reset the transition", choices: choices)
             .fixedSize()
             .panelHelp("Copy, paste or reset the transition")
-            .playtestControl("Transition Menu", detail: "the three dots on the Transition header")
+            .playtestControl("Transition Menu", detail: "the three dots on the Properties header with a cut picked")
     }
 
     private static let copyImage = NSImage(systemSymbolName: "doc.on.doc", accessibilityDescription: nil)

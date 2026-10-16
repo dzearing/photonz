@@ -1,0 +1,26 @@
+{
+  "feature": "A picked cut opens under the Properties header",
+  "epic": "video-transitions-motion",
+  "summary": "Click a cut on the timeline and the panel now reads like anything else you pick: one Properties header with a Transition chip (Edit point on a hard cut) and the three dots, and Edit point and Transition as the two sections inside it, as the transitions mocks draw it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording and cut it twice with Command K.",
+  "switched": {},
+  "try": [
+    { "do": "Click the second cut on V1 with the select tool (V)." },
+    { "do": "Look at the top of the panel: PROPERTIES with an Edit point chip, then Edit point and Transition sections inside it." },
+    { "do": "Pick Cross dissolve in the Transitions grid and watch the chip change to Transition.", "shot": "2026-10-16-cut-properties-header-1-transition.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the three dots on the Properties header and choose Copy Transition." },
+    { "do": "Click the first cut, open the same three dots and choose Paste Transition." },
+    { "do": "From the same menu choose Reset to Default Length and see Length read 0.4s.", "shot": "2026-10-16-cut-properties-header-2-reset.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the cut now feel like one picked thing rather than two loose groups?",
+    "Is the Edit point / Transition chip the right word to read at a glance?",
+    "Are the Edit point and Transition sub-headings easy to tell apart from the rows under them?",
+    "Is the three dots menu where you would look for Copy and Paste Transition?"
+  ],
+  "rough": [
+    "The question marks beside Edit point and Transition are not in the mock: they hold the mock's longer lines, your call on 2026-09-25 (no sentences in the panel).",
+    "The three dots also carry Paste Transition, which the mock's menu does not print: the app goes further than the mock there.",
+    "With the clip picked and the playhead standing on one of its cuts, Edit point and Transition still show as their own groups under the clip's Properties, because there the clip is the pick, not the cut."
+  ]
+}

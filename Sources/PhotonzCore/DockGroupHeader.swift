@@ -29,6 +29,13 @@ public enum DockGroupHeader {
         count > 0 ? "\(count)" : nil
     }
 
+    /// The Properties chip while a cut is the thing picked: what the
+    /// transitions mocks print in `#propKind`, Transition once the cut carries
+    /// one and Edit point while it is a plain join.
+    public static func cutChip(carriesTransition: Bool) -> String {
+        carriesTransition ? "Transition" : "Edit point"
+    }
+
     /// A chip that names something: the word, or no chip when there is none.
     public static func chip(_ text: String?) -> String? {
         guard let trimmed = text?.trimmingCharacters(in: .whitespacesAndNewlines),

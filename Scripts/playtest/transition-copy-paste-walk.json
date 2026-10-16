@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transition-copy-paste-walk",
-  "seed": "A transition tuned at one cut is copied and pasted onto another, the way Premiere and Final Cut do it: Command C with the cut picked, pick another cut, Command V. The same kind, length and curve land in one undo step. The cut's right click carries Copy Transition and Paste Transition with the Edit menu's keys printed beside them, and the Transition header's three dots carry them too, with Reset to Default Length, as the transitions mock draws its panel menu. At Next defaults, no flag set.",
+  "seed": "A transition tuned at one cut is copied and pasted onto another, the way Premiere and Final Cut do it: Command C with the cut picked, pick another cut, Command V. The same kind, length and curve land in one undo step. The cut's right click carries Copy Transition and Paste Transition with the Edit menu's keys printed beside them, and with a cut picked the panel opens under one Properties header saying Transition (Edit point on a hard cut), its three dots carrying them too with Reset to Default Length, and Edit point and Transition as the two sections inside it, as the transitions mock draws #gProps and its panel menu. At Next defaults, no flag set.",
   "setup": {
     "forget": [
       "all"
@@ -209,6 +209,26 @@
       "reads": "None"
     },
     {
+      "do": "expect",
+      "field": "Properties Kind",
+      "reads": "Edit point"
+    },
+    {
+      "do": "expect",
+      "control": "Properties section",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Transition section",
+      "present": false
+    },
+    {
+      "do": "expect",
+      "control": "Edit point section",
+      "present": false
+    },
+    {
       "do": "describe",
       "stage": "4-one-undo",
       "note": "one Command Z and the second cut is hard again, still picked: the paste was one step to undo"
@@ -282,9 +302,14 @@
       "reads": "Ease in"
     },
     {
+      "do": "expect",
+      "field": "Properties Kind",
+      "reads": "Transition"
+    },
+    {
       "do": "describe",
       "stage": "6-panel-menu",
-      "note": "THE FOURTH TEST: the three dots on the Transition header carry Copy Transition and Paste Transition, the mock's panel menu, and Paste works from there too"
+      "note": "THE FOURTH TEST: the three dots on the Properties header, with the cut picked and its chip reading Transition, carry Copy Transition and Paste Transition, the mock's panel menu, and Paste works from there too"
     },
     {
       "do": "snapshot",
