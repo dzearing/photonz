@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- The hardened runtime (required for notarization) denies the
+	     microphone outright to an app without this: no prompt, and the app is
+	     never listed under Privacy & Security > Microphone. v0.17.0 shipped
+	     without it. Scripts/check-entitlements.sh fails the build if it goes. -->
+	<key>com.apple.security.device.audio-input</key>
+	<true/>
+</dict>
+</plist>

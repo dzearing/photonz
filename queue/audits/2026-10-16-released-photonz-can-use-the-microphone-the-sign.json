@@ -1,0 +1,26 @@
+{
+  "feature": "Released Photonz can use the microphone",
+  "epic": "capture-clickthrough",
+  "summary": "The downloaded app is now signed with the microphone entitlement, so the first recording with sound shows macOS's microphone prompt and Photonz appears under Privacy & Security > Microphone. Every release build and every CI build now fails if the entitlement goes missing.",
+  "setup": "The next released Photonz (needs a patch release; this fix is not in v0.17.0), on a Mac where Photonz has never asked for the microphone. No flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Install the new release from its DMG and launch it." },
+    { "do": "Start a screen recording with a microphone picked in the audio menu." },
+    { "do": "Confirm macOS asks whether Photonz may use the microphone, and click Allow." },
+    { "do": "Stop the recording and play it back: your voice is in it." },
+    { "do": "Open System Settings > Privacy & Security > Microphone and find Photonz listed and on." },
+    { "do": "Turn Photonz off there, record again, and click Open System Settings in the sheet: it lands on the Microphone list with Photonz in it." }
+  ],
+  "evaluate": [
+    "Does the microphone prompt appear on the first recording with sound, in front of everything else?",
+    "Is Photonz in the Microphone list afterwards, on your other machine as well?",
+    "When the microphone is off, does the sheet's Open System Settings land on the Microphone list rather than somewhere else?"
+  ],
+  "rough": [
+    "Not checked on a notarized build yet: there is no Developer ID certificate on this Mac, so it can only be checked once a release is cut. The local proof is a small test app signed with the same hardened runtime: without the entitlement macOS answered 'denied' at once, with no prompt and no entry in the Microphone list; with it, macOS held the request on a 260 by 218 prompt window until it was dismissed.",
+    "No screenshots: this Mac's terminal has no Screen Recording grant, and the fix changes signing only, not anything on screen.",
+    "Notarization accepting the entitlement is expected (it is a standard one) but is only proven when the next release's notarize step goes green.",
+    "Hardened runtime audit: the app loads no third-party libraries, uses no Apple Events, no JIT and no camera, and on-device speech transcription and screen capture need no entitlement, so the microphone is the only one added."
+  ]
+}

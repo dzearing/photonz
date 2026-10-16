@@ -320,12 +320,23 @@ DEV_IDENTITY="Photonz Dev"
 DEV_SIGNING_WANTED=1
 [[ "$VARIANT" == "release" ]] && DEV_SIGNING_WANTED=0
 [[ -n "${CI:-}" ]] && DEV_SIGNING_WANTED=0
+# The entitlements go on every release bundle, signed or not. Under the hardened
+# runtime the microphone is refused outright without
+# com.apple.security.device.audio-input (no prompt, and the app never appears in
+# Privacy & Security > Microphone): v0.17.0 shipped that way. Dev and probe
+# builds are not hardened, so they never needed it and are left as they are.
+ENTITLEMENTS="Resources/Photonz.entitlements"
 if [[ -n "${CODESIGN_IDENTITY:-}" ]]; then
   echo "==> Codesigning (Developer ID)"
-  codesign --force --options runtime --timestamp --sign "$CODESIGN_IDENTITY" "$APP"
+  codesign --force --options runtime --timestamp --entitlements "$ENTITLEMENTS" \
+    --sign "$CODESIGN_IDENTITY" "$APP"
 elif [[ "$DEV_SIGNING_WANTED" == "0" ]]; then
   echo "==> Codesigning (ad-hoc — unsigned $VARIANT build, no identity to keep stable)"
-  codesign --force --deep --sign - "$APP"
+  if [[ "$VARIANT" == "release" ]]; then
+    codesign --force --deep --entitlements "$ENTITLEMENTS" --sign - "$APP"
+  else
+    codesign --force --deep --sign - "$APP"
+  fi
 else
   # Self-heal: a fresh machine/worktree won't have the stable dev cert yet.
   # Create it once rather than ad-hoc signing (which changes the code identity
@@ -342,6 +353,10 @@ else
     echo "==> Codesigning (ad-hoc — stable identity unavailable; Screen Recording resets each build)"
     codesign --force --deep --sign - "$APP"
   fi
+fi
+
+if [[ "$VARIANT" == "release" ]]; then
+  "$(dirname "$0")/check-entitlements.sh" "$APP"
 fi
 
 # A pasteboard type the bundle does not declare carries no data, and the only

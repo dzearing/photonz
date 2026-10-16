@@ -5,11 +5,11 @@
   "epic": "capture-clickthrough",
   "priority": "p1-high",
   "seq": 0.5,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T17:20:30.867Z",
-  "updated": "2026-10-16T17:20:30.971Z",
+  "updated": "2026-10-16T18:05:46.249Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-16): \"in photonz on my other machine, i try to record a video. It says i don't have permissions for mic. I say go to accessibility settings. it goes to microphone settings but Photonz is totally missing from the list. This makes it IMPOSSIBLE for users to record video with audio!!!!\"\n\nVerified in intake on the published release (gh release download v0.17.0, mounted): codesign -dv: flags=0x10000(runtime), Authority=Developer ID Application: DAVID BENJAMIN ZEARING (VMGW2V57S7); codesign -d --entitlements: none; NSMicrophoneUsageDescription present. Release run 38419745140 imported the Developer ID cert and notarized. Scripts/build-app.sh:325 signs with 'codesign --force --options runtime --timestamp --sign \"$CODESIGN_IDENTITY\" \"$APP\"' and passes no --entitlements. A hardened runtime app without com.apple.security.device.audio-input is denied microphone access by TCC without a prompt and is never added to the Microphone list. Dev builds (stable self-signed 'Photonz Dev', no --options runtime, :340) and ad-hoc builds are not hardened, which is why this never showed on the dev machine. App side: CaptureCenter.swift resolveMicrophoneAccessThenStart / MicrophonePermissionGate / presentMicrophoneBlocked (Open System Settings). Memory: no permission prompt loops (bounded once per launch).",
@@ -31,6 +31,32 @@
     {
       "t": "2026-10-16T17:20:30.970Z",
       "note": "seq 3970 -> 0.5"
+    },
+    {
+      "t": "2026-10-16T17:51:35.289Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T18:05:33.269Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-16T18:05:46.048Z",
+      "note": "Reproduced: a tiny app signed ad-hoc with --options runtime and NSMicrophoneUsageDescription, opened via open(1): authorizationStatus 0 -> requestAccess returned false instantly -> status 2, no prompt, tccutil reset finds no entry (so it never appears in the Microphone list). Same app signed with com.apple.security.device.audio-input: requestAccess did not return within 4s and a 260x218 UserNotificationCenter window (the TCC prompt) was on screen; dismissed it by killing UserNotificationCenter. Published v0.17.0 fails the new Scripts/check-entitlements.sh."
+    },
+    {
+      "t": "2026-10-16T18:05:46.112Z",
+      "note": "Shipped: Resources/Photonz.entitlements (audio-input only); build-app.sh passes it on Developer ID (hardened) signing and on ad-hoc release signing (dev/probe untouched: not hardened, and their TCC grants stay put); build-app.sh runs Scripts/check-entitlements.sh on every release-variant bundle (so ci.yml's --release build guards every push); release.yml checks dist/Photonz.app before notarizing. ReleaseMicrophoneEntitlementTests pins all three. App side needed no change: MicrophonePermissionGate asks first while notDetermined, the blocked sheet opens Privacy_Microphone. Hardened runtime audit: no third-party dylibs, no Apple Events, no JIT, no camera; SpeechTranscriber and ScreenCaptureKit need no entitlement."
+    },
+    {
+      "t": "2026-10-16T18:05:46.181Z",
+      "note": "A PATCH RELEASE IS NEEDED: the fix only reaches users once a new version ships. Ask for /release. That release's notarize step is also the proof that notarization accepts the entitlement (expected: it is a standard one)."
+    },
+    {
+      "t": "2026-10-16T18:05:46.248Z",
+      "note": "Left rough, not filed: notarized end-to-end check (prompt, Allow, listed in Settings) can only happen on the released build on a machine that never saw Photonz; the audit's try list is that check for the user."
     }
-  ]
+  ],
+  "started": "2026-10-16T17:51:35.286Z",
+  "walks": []
 }

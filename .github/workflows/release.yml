@@ -81,6 +81,14 @@ jobs:
         # every step after this one asks for dist/Photonz.app and finds nothing.
         run: Scripts/build-app.sh --release
 
+      # build-app.sh already refuses a release bundle without the microphone
+      # entitlement; this checks the exact bundle that is about to be
+      # notarized and published, so a later change to the build cannot ship
+      # another v0.17.0 (hardened runtime, no entitlement: macOS refused the
+      # microphone without a prompt and never listed the app in Settings).
+      - name: Verify the app may use the microphone
+        run: Scripts/check-entitlements.sh dist/Photonz.app
+
       # Two-submission flow so BOTH artifacts carry tickets: notarize + staple
       # the app first (a stapled bundle in /Applications launches clean even
       # fully offline), then build the DMG from the stapled app and notarize +
