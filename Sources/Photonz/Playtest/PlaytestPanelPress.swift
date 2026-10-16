@@ -294,10 +294,20 @@ enum PlaytestPanelPress {
         // points at x 1218 and its own marker is 20 at x 1223, so nothing
         // contains it and the nearest name it could find was the section header
         // it sits on.
+        //
+        // And the marker's own scrolling area has to hold this too, the rule
+        // `fieldViews` keeps for rows. A marker scrolled out of its little
+        // window still has a frame, lying across whatever the dock shows
+        // there: on 2026-10-16 the outline's Align dropdown, scrolled below
+        // the Appearance list, lay under the Motion header, so the plus there
+        // answered to "Align" as well as "Add Motion" and `panelMenu "Align"`
+        // refused as ambiguous.
+        let scrollers = Set(scrollAreas(of: view))
         var holding: [(name: String, area: CGFloat)] = []
         for marked in here where marked.kind == .control {
             let frame: CGRect = marked.convert(marked.bounds, to: nil)
             if frame.isEmpty { continue }
+            if let nearest = scrollAreas(of: marked).first, !scrollers.contains(nearest) { continue }
             let slack: CGRect = frame.insetBy(dx: -1, dy: -1)
             guard slack.contains(box) || slack.contains(middle) else { continue }
             holding.append((marked.name, frame.width * frame.height))
