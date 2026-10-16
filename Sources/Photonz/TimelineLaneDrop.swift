@@ -32,14 +32,16 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// the way the canvas judges one: a drag from the Finder says it carries
     /// a file and not always what kind.
     func validateDrop(info: DropInfo) -> Bool {
-        carriesTransition(info) || carriesTitle(info) || info.hasItemsConforming(to: [.fileURL])
+        carriesTransition(info) || carriesTitle(info) || carriesComponent(info)
+            || info.hasItemsConforming(to: [.fileURL])
             || FileDrop.carriesUsableFile(info, into: editorState)
     }
 
     /// The types the timeline listens for: every file the window takes, a
-    /// transition tile out of the panel's Transitions group, and a title page
-    /// or name card off the Library shelf.
-    static let types: [UTType] = FileDrop.types + [TransitionDrag.type, TitlePresetDrag.type]
+    /// transition tile out of the panel's Transitions group, a title page or
+    /// name card off the Library shelf, and a component off it.
+    static let types: [UTType] = FileDrop.types
+        + [TransitionDrag.type, TitlePresetDrag.type, UTType(ComponentDrag.typeIdentifier) ?? .data]
 
     /// A transition tile rather than a file (`TransitionDrag.swift`).
     private func carriesTransition(_ info: DropInfo) -> Bool {
@@ -51,7 +53,22 @@ struct TimelineFileDropDelegate: DropDelegate {
         info.hasItemsConforming(to: [TitlePresetDrag.type])
     }
 
+    /// A component tile off the Library shelf (`LibraryComponentTile`), in a
+    /// document whose timeline takes one.
+    private func carriesComponent(_ info: DropInfo) -> Bool {
+        editorState.timelineTakesComponents
+            && info.hasItemsConforming(to: [UTType(ComponentDrag.typeIdentifier) ?? .data])
+    }
+
     func dropEntered(info: DropInfo) {
+        if carriesComponent(info) {
+            let point = info.location
+            // The drag pasteboard answers at once; the drag's own bytes, read
+            // in the background, have the last word.
+            if let lifted = ComponentDrag.payloadInFlight() { editorState.moveComponentHover(lifted, to: point) }
+            ComponentDrag.load(info) { [editorState] payload in editorState.moveComponentHover(payload, to: point) }
+            return
+        }
         if carriesTitle(info) {
             let point = info.location
             // The tile the shelf just handed over answers at once; the drag's
@@ -78,6 +95,12 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if carriesComponent(info) {
+            if let payload = editorState.timelineComponentInAir ?? ComponentDrag.payloadInFlight() {
+                editorState.moveComponentHover(payload, to: info.location)
+            }
+            return DropProposal(operation: .copy)
+        }
         if carriesTitle(info) {
             if let preset = editorState.timelineTitleInAir ?? editorState.titleTileLifted {
                 editorState.moveTitleHover(preset, to: info.location)
@@ -103,9 +126,20 @@ struct TimelineFileDropDelegate: DropDelegate {
     func dropExited(info: DropInfo) {
         editorState.endTitleHover()
         editorState.endTransitionHover()
+        editorState.endComponentHover()
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if carriesComponent(info) {
+            let point = info.location
+            if let payload = editorState.timelineComponentInAir ?? ComponentDrag.payloadInFlight() {
+                return editorState.dropComponentOnTimeline(payload, at: point)
+            }
+            ComponentDrag.load(info) { [editorState] payload in
+                editorState.dropComponentOnTimeline(payload, at: point)
+            }
+            return true
+        }
         if carriesTitle(info) {
             let point = info.location
             if let preset = editorState.timelineTitleInAir ?? editorState.titleTileLifted {

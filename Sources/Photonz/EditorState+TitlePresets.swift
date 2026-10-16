@@ -219,16 +219,26 @@ extension EditorState {
     /// the playhead, on the track under it when that track is free, else on a
     /// new track of its own (`PhotonzDocument.titleLanding`).
     func titleLanding(_ preset: TitlePreset, at point: CGPoint) -> ClipLanding? {
-        guard canInsertTitle, let document, timelineLaneWidth > 0 else { return nil }
+        guard canInsertTitle else { return nil }
+        return timelineOverlayLanding(lengthMS: preset.lengthMS, at: point)
+    }
+
+    /// Where something laid OVER the picture (a title, a component) and
+    /// `lengthMS` long would land if let go at `point` in the tracks' own
+    /// space: the moment under the pointer, pulled onto a nearby clip edge or
+    /// the playhead, on the track under it when that track is free, else on a
+    /// new track of its own (`PhotonzDocument.titleLanding`).
+    func timelineOverlayLanding(lengthMS: Int, at point: CGPoint) -> ClipLanding? {
+        guard let document, timelineLaneWidth > 0 else { return nil }
         let ruler = motionStripRuler
         let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
         let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
         let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
             .rounded())
-        let start = ClipLanding.snapped(startMS: raw, lengthMS: preset.lengthMS,
+        let start = ClipLanding.snapped(startMS: raw, lengthMS: lengthMS,
                                         to: document.timelineEdgesMS + [documentTimeMS],
                                         withinMS: isTimelineSnapping ? max(0, reach) : 0)
-        return document.titleLanding(lengthMS: preset.lengthMS, atMS: start, over: trackDrop(atY: point.y))
+        return document.titleLanding(lengthMS: lengthMS, atMS: start, over: trackDrop(atY: point.y))
     }
 
     /// A title tile has arrived over the timeline, or moved across it: the

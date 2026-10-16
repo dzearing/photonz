@@ -118,16 +118,18 @@ extension EditorState {
     /// point. One undo step: the component, every version of it and the colors
     /// it paints from all arrive or none of them do.
     @discardableResult
-    func insertSharedComponent(_ shared: SharedComponent, at point: CGPoint) -> UUID? {
+    func insertSharedComponent(_ shared: SharedComponent, at point: CGPoint,
+                               onTimeline timelineLanding: ClipLanding? = nil) -> UUID? {
         guard sharedLibraryEnabled, document != nil else { return nil }
         guard let landing = landingContext(of: shared.id, at: point,
                                            arriving: shared.drawings.first) else { return nil }
         discardDragPreview()
         var placed: UUID?
-        let context = landing.group
-        let moment = placementMomentMS
+        let context = timelineLanding == nil ? landing.group : nil
+        let moment = timelineLanding == nil ? placementMomentMS : nil
         perform {
             placed = $0.adoptSharedComponent(shared, at: point, inside: context, atTimeMS: moment)
+            $0.landPlacedComponent(placed, on: timelineLanding)
         }
         guard let placed else { return nil }
         selectedLibraryItemID = nil

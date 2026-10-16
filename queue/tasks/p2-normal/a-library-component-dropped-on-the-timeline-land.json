@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.143Z",
-  "updated": "2026-10-16T12:22:36.339Z",
+  "updated": "2026-10-16T17:40:30.338Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html step 10. Code: Sources/Photonz/TimelineLaneDrop.swift ~35-42 accepts files, transition tiles and title presets only (attached at TimelineDock.swift ~490); components arrive via canvas drop at the playhead (PhotonzCore/ComponentsInTime.swift ~30-38). Done task components-on-the-timeline built canvas drops only. Searches 'component timeline drop', 'lower third timeline': nothing open.",
@@ -31,6 +31,26 @@
     {
       "t": "2026-10-16T12:22:36.338Z",
       "note": "seq 25 -> 60"
+    },
+    {
+      "t": "2026-10-16T17:08:57.955Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T17:11:20.809Z",
+      "note": "Adversarial review before building: the app has no Lower third component (the mock's is one the person built in a design file); the starters are Button, Text Field, Card, Nav Bar, Badge, so the walk drags the Badge starter, which is the same component drag any Lower third of yours makes. A Premiere editor expects a graphic dragged onto V2 to land at the pointer on V2, and onto a busy track to make a new one rather than cut the footage: the title-tile drop already does exactly that (titleLanding), so a component follows the same landing rules, same ghost label shape, 3 s long like every component placed in time. Placed at the middle of the frame, as a double click on the tile places it."
+    },
+    {
+      "t": "2026-10-16T17:40:22.521Z",
+      "note": "owns these walks: component-tile-onto-the-timeline-walk"
+    },
+    {
+      "t": "2026-10-16T17:40:30.337Z",
+      "note": "Reproduced first: the new walk's drop step was refused by every drop area under V1 at 5s (the timeline delegate did not take com.photonz.component-id). Built: PhotonzDocument.landPlacedLayer (ComponentsInTime.swift, 6 tests in ComponentTimelineDropTests), the title tile's landing shared as timelineOverlayLanding, EditorState+ComponentTimelineDrop.swift (ghost, drop), the three component insert paths take an onTimeline landing so the copy and its track are one undo step, the timeline delegate takes component tiles, harness dropOnTimeline carries component tiles. Walk component-tile-onto-the-timeline-walk passed twice at Next defaults; title, clip, transition and component walks still green; Scripts/test.sh 13343 tests green. Left rough, not filed: a starter Badge is a small UI badge and lands small on a recording (its intended size; a person resizes it); a component dropped near the recording's end runs past it, same as a title tile does today. Lower third absence is the open question on title-pages-and-name-cards-follow-the-mock-or-th."
     }
+  ],
+  "started": "2026-10-16T17:08:57.954Z",
+  "walks": [
+    "component-tile-onto-the-timeline-walk"
   ]
 }

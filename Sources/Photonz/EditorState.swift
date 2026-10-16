@@ -320,6 +320,9 @@ final class EditorState {
     /// The title tile the Library last handed to a drag, so the timeline can
     /// answer the moment it arrives, before the drag's own bytes are read.
     @ObservationIgnored var titleTileLifted: TitlePreset?
+    /// A component tile held over the timeline, read off its drag
+    /// (`EditorState+ComponentTimelineDrop`).
+    @ObservationIgnored var timelineComponentInAir: ComponentDrag.Payload?
 
     /// The user's persisted show/hide preference for the docked inspector.
     /// Distinct from `isLayersPanelVisible`: auto-collapse never touches this,

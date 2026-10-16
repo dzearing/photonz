@@ -1,6 +1,7 @@
 import AppKit
 import PhotonzCore
 import SwiftUI
+import UniformTypeIdentifiers
 
 // MARK: - The mark a component wears (Next, `next-components`)
 
@@ -120,8 +121,12 @@ enum ComponentDrag {
     /// drag. An id on its own is read as the component's first version, so a
     /// drag written before versions existed still lands a copy.
     static func payload(on pasteboard: NSPasteboard) -> Payload? {
-        guard let data = pasteboard.data(forType: pasteboardType),
-              let text = String(data: data, encoding: .utf8) else { return nil }
+        payload(from: pasteboard.data(forType: pasteboardType))
+    }
+
+    /// The bytes a component drag carries, read back.
+    static func payload(from data: Data?) -> Payload? {
+        guard let data, let text = String(data: data, encoding: .utf8) else { return nil }
         let parts = text.split(separator: "/", maxSplits: 1)
         guard let first = parts.first, let componentID = UUID(uuidString: String(first))
         else { return nil }
@@ -141,6 +146,19 @@ enum ComponentDrag {
     /// bytes too late for that.
     @MainActor static func payloadInFlight() -> Payload? {
         payload(on: NSPasteboard(name: .drag))
+    }
+
+    /// The component a SwiftUI drop is carrying, read off its first provider
+    /// of this type, for a surface whose drag did not come through the drag
+    /// pasteboard (a walk's carries its own).
+    @MainActor static func load(_ info: DropInfo, then use: @escaping @MainActor (Payload) -> Void) {
+        guard let provider = info.itemProviders(for: [UTType(typeIdentifier) ?? .data]).first else { return }
+        _ = provider.loadDataRepresentation(forTypeIdentifier: typeIdentifier) { data, _ in
+            Task { @MainActor in
+                guard let payload = payload(from: data) else { return }
+                use(payload)
+            }
+        }
     }
 }
 

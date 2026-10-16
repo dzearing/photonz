@@ -19545,6 +19545,12 @@ extension Run {
                 return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
                                                      hold: hold, release: release, says: says)
             }
+            // ...and so does a component off the Library's Components shelf,
+            // through the very same landing a title takes.
+            if board.data(forType: ComponentDrag.pasteboardType) != nil {
+                return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
+                                                     hold: hold, release: release, says: says)
+            }
             guard let carriedURL = DragCargo.fileURL(on: board) else {
                 throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
                     + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
@@ -19667,9 +19673,9 @@ extension Run {
             + (markersDownCost.isEmpty ? "" : "; " + markersDownCost)
     }
 
-    /// Carries a title tile off the Library shelf onto a track at a moment,
-    /// through the timeline's own drop target, and lets go unless told not
-    /// to. The ghost it draws is the one a file draws, saying the preset's
+    /// Carries a title or component tile off the Library shelf onto a track
+    /// at a moment, through the timeline's own drop target, and lets go unless
+    /// told not to. The ghost it draws is the one a file draws, saying the preset's
     /// kind, the track and the time; the log line says which track the title
     /// landed on and when.
     private func dropTitleOnTimeline(_ tile: String, board: NSPasteboard, track: String, seconds: Double,
@@ -19735,8 +19741,9 @@ extension Run {
         guard let hover = editor.timelineFileHover else {
             taker.draggingExited(info)
             throw Failure(description: "the tile \"\(tile)\" held over \(track) at \(seconds)s drew no ghost "
-                + "on the timeline after 3s; the preset in the air: "
-                + (editor.timelineTitleInAir?.name ?? "never arrived"))
+                + "on the timeline after 3s; the tile in the air: "
+                + (editor.timelineTitleInAir?.name
+                   ?? editor.timelineComponentInAir.map { "component \($0.componentID)" } ?? "never arrived"))
         }
         let sentence = hover.note
         if let says, !sentence.localizedCaseInsensitiveContains(says) {

@@ -1,0 +1,47 @@
+{
+  "feature": "A Library component dropped on the timeline lands where it is dropped",
+  "epic": "video-titles-graphics",
+  "summary": "You can drag a component from the Library straight onto a track at a moment. It lands there for three seconds, or on a new track of its own when that track is busy, instead of always arriving at the playhead.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/component-tile-onto-the-timeline-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample recording, show the Library (View > Library) and press Comps."
+    },
+    {
+      "do": "Type Badge in the Library search, then drag the Badge tile over the recording on V1 at about 0:05 without letting go.",
+      "shot": "2026-10-16-component-on-timeline-1-held-over-the-recording-sc.png",
+      "shotNote": "Taken with the window behind another app, so picked controls and blue buttons read in their background look."
+    },
+    {
+      "do": "Let go. The badge lands on a new track V2 from 0:05 to 0:08, picked, with the playhead on its in point.",
+      "shot": "2026-10-16-component-on-timeline-2-landed-on-its-own-track-sc.png",
+      "shotNote": "Taken with the window behind another app, so picked controls and blue buttons read in their background look."
+    },
+    {
+      "do": "Press Cmd-Z once. The badge and the track it made both go. Press Cmd-Shift-Z to bring them back."
+    },
+    {
+      "do": "Drag the Badge tile over V2 at about 0:01 and hold: the dashed ghost sits on V2 itself. Let go.",
+      "shot": "2026-10-16-component-on-timeline-3b-held-over-its-own-track-sc.png",
+      "shotNote": "Taken with the window behind another app, so picked controls and blue buttons read in their background look."
+    },
+    {
+      "do": "Drag the Badge tile onto the picture instead. It still arrives at the playhead, as before.",
+      "shot": "2026-10-16-component-on-timeline-5-on-the-picture-still-at-the-playhead-sc.png",
+      "shotNote": "Taken with the window behind another app, so picked controls and blue buttons read in their background look."
+    }
+  ],
+  "evaluate": [
+    "Does a component land on the track and at the moment you let it go, the way a graphic does in Premiere?",
+    "Over the recording, is making a new track for it (rather than cutting into the recording) what you expected?",
+    "Is \"Component · New V2 · 0:05\" in the bar over the tracks enough to tell where it will go before you let go?",
+    "Should the playhead jump to the component's in point when it lands, as it does now?"
+  ],
+  "rough": [
+    "The mock drags a Lower third component with three variants. The app has no such component on the shelf: its starters are Button, Text Field, Card, Nav Bar and Badge, so this audit uses Badge. Whether name cards should become linked components like the mock's Lower third is the open question on title-pages-and-name-cards-follow-the-mock-or-th.",
+    "Over a busy track the timeline shows only the label and the blue line where the new track will open, with no dashed bar. That is exactly what a title tile shows today; the dashed bar appears over a free track.",
+    "The copy lands in the middle of the picture at the component's own size. A starter Badge is a small UI badge, so on a 1280 by 800 recording it is small until you resize it.",
+    "It is always three seconds long, like anything newly placed in time. Dropped near the end of the recording, it runs past the end, the same as a title tile."
+  ]
+}

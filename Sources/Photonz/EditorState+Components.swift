@@ -146,18 +146,20 @@ extension EditorState {
     /// the document's component library, off the canvas
     /// (`ComponentLibraryTests`).
     @discardableResult
-    func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil) -> UUID? {
+    func placeComponent(componentID: UUID, at point: CGPoint, version: UUID? = nil,
+                        onTimeline timelineLanding: ClipLanding? = nil) -> UUID? {
         // A component off the shared shelf this document has not taken yet
         // brings its original in too, following the shelf; every drop of the
         // same tile after that just places another copy.
         if let shared = sharedComponent(entryID: componentID.uuidString) {
-            return insertSharedComponent(shared, at: point)
+            return insertSharedComponent(shared, at: point, onTimeline: timelineLanding)
         }
         if let starter = StarterComponent(componentID: componentID),
            document?.mainComponent(componentID: componentID) == nil {
-            return insertStarterComponent(starter, at: point)
+            return insertStarterComponent(starter, at: point, onTimeline: timelineLanding)
         }
-        return insertComponentInstance(componentID: componentID, at: point, version: version)
+        return insertComponentInstance(componentID: componentID, at: point, version: version,
+                                       onTimeline: timelineLanding)
     }
 
     /// Brings a starter into the open document, centred on a canvas point, and
@@ -165,17 +167,19 @@ extension EditorState {
     /// it, the colors it paints from and the properties it offers all arrive
     /// or none of them do.
     @discardableResult
-    func insertStarterComponent(_ kind: StarterComponent, at point: CGPoint) -> UUID? {
+    func insertStarterComponent(_ kind: StarterComponent, at point: CGPoint,
+                                onTimeline timelineLanding: ClipLanding? = nil) -> UUID? {
         guard starterComponentsEnabled, document != nil else { return nil }
         guard let landing = landingContext(of: kind.componentID, at: point) else { return nil }
         discardDragPreview()
         var placed: UUID?
-        let context = landing.group
-        let moment = placementMomentMS
+        let context = timelineLanding == nil ? landing.group : nil
+        let moment = timelineLanding == nil ? placementMomentMS : nil
         perform {
             placed = $0.insertStarterComponent(kind, at: point, inside: context,
                                                measure: { TextRasterizer.naturalSize($0) },
                                                atTimeMS: moment)
+            $0.landPlacedComponent(placed, on: timelineLanding)
         }
         guard let placed else { return nil }
         selectedLibraryItemID = nil
@@ -311,26 +315,29 @@ extension EditorState {
     /// dock talks about the copy rather than the component you took it from.
     @discardableResult
     func insertComponentInstance(componentID: UUID, at point: CGPoint,
-                                 version: UUID? = nil) -> UUID? {
+                                 version: UUID? = nil,
+                                 onTimeline timelineLanding: ClipLanding? = nil) -> UUID? {
         guard Experiments.shared.componentsEnabled, let document else { return nil }
         guard document.mainComponent(componentID: componentID) != nil else { return nil }
         guard let landing = landingContext(of: componentID, at: point) else { return nil }
+        // Let go over the timeline, it goes on a track, never into a group.
+        let context = timelineLanding == nil ? landing.group : nil
         // Dropping a component onto its own original would make a thing that
         // draws forever, so it is refused out loud rather than quietly ignored.
         // The same answer is what the canvas draws mid-drag, so a drag that is
         // going to be refused says so before the button comes up.
         if document.componentDropTarget(of: componentID, at: point,
-                                        inside: landing.group) == .refused {
+                                        inside: context) == .refused {
             raiseComponentCycleNotice()
             return nil
         }
         discardDragPreview()
         var placed: UUID?
-        let context = landing.group
-        let moment = placementMomentMS
+        let moment = timelineLanding == nil ? placementMomentMS : nil
         perform {
             placed = $0.insertComponentInstance(of: componentID, at: point, inside: context,
                                                 version: version, atTimeMS: moment)
+            $0.landPlacedComponent(placed, on: timelineLanding)
         }
         guard let placed else { return nil }
         selectedLibraryItemID = nil

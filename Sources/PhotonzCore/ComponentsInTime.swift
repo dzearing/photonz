@@ -38,6 +38,33 @@ extension PhotonzDocument {
         return true
     }
 
+    /// Land something that has just arrived on the timeline where a drop said:
+    /// the track under the pointer, or the new track made for it, from the
+    /// drop's moment for the drop's length (`titleLanding`, which keeps a drop
+    /// off anything already on a track).
+    ///
+    /// The other half of `placeInTime`, for a component let go over the
+    /// timeline rather than over the picture. Refused, leaving the document as
+    /// it was, for a landing that says no, for anything with media behind it
+    /// (a clip carries its own stretch and source), and for anything that is
+    /// not at the top of the document: a part arrives when its parent does.
+    @discardableResult
+    public mutating func landPlacedLayer(_ id: UUID, at landing: ClipLanding) -> Bool {
+        guard hasTime, landing.allowed, layers.contains(where: { $0.id == id }),
+              let found = layer(id: id), !found.hasMediaBehindIt, !found.isLocked
+        else { return false }
+        let was = self
+        guard var layer = removeLayer(id: id) else { return false }
+        layer.time = LayerTime(inMS: landing.startMS, outMS: landing.endMS)
+        layer.trackID = nil
+        guard land(layer, at: landing) != nil else {
+            self = was
+            return false
+        }
+        refreshDuration()
+        return true
+    }
+
     /// Whether anything this layer sits inside already says when it is on
     /// screen.
     func isInsideSomethingPlacedInTime(_ id: UUID) -> Bool {
