@@ -292,8 +292,11 @@ extension EditorState {
     }
 
     /// The track the picked layer is on: where its row stands among the
-    /// timeline's rows, how tall it is drawn, and how tall it is with nothing
-    /// open inside it. Nil with nothing picked on the timeline.
+    /// timeline's rows, how tall it is with what is open inside it, and how
+    /// tall with nothing open. Both at compact rows, so a pinch growing the
+    /// rows never reads as a pick opening one and scrolls the timeline out
+    /// from under the pointer (timeline-pinch-both-ways-walk, 2026-10-16).
+    /// Nil with nothing picked on the timeline.
     var pickedTimelineRow: PickedTimelineRow? {
         guard let picked = selectedLayerID else { return nil }
         for (index, row) in timelineRows.enumerated() {
@@ -302,7 +305,7 @@ extension EditorState {
                     || track.inner.contains(where: { $0.layerID == picked }) else { continue }
             let open = isKeyTrackOpen(track.track.id)
             return PickedTimelineRow(trackID: track.track.id, index: index,
-                                     height: TimelineDock.height(of: track, wordsOpen: open, rows: timelineRowZoom),
+                                     height: TimelineDock.height(of: track, wordsOpen: open),
                                      ownHeight: TimelineDock.ownHeight(of: track, wordsOpen: open))
         }
         return nil

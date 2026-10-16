@@ -1900,10 +1900,12 @@ private final class Run {
                 return "; the timeline scrolled \(Int(run.pannedMS.rounded())) ms along and "
                     + "\(Int(run.scrolledY.rounded())) pt down at the edge, now \(editor?.timelineWindowReading ?? "")"
             } ?? ""
-            note(number, "windowDrag", "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
+            let aimed = from.space == .lane ? "\(saying(from)) to \(saying(to)), "
+                : "\(short(from.point)) to \(short(to.point)) \(from.space.rawValue), "
+            note(number, "windowDrag", aimed
                  + "posted to the window in \(steps) moves\(held)\(scrolled)\(front.note)")
         case .windowClick(let at, let count, let modifiers):
-            try await windowClick(at: try windowPoint(at), saying: "\(short(at.point)) \(at.space.rawValue)",
+            try await windowClick(at: try windowPoint(at), saying: saying(at),
                                   count: count, modifiers: modifiers, number: number)
         case .windowClickOn(let control, let count, let modifiers):
             // The middle of something the app names for a walk, measured as
@@ -3403,8 +3405,9 @@ private final class Run {
                  },
                  state: describe())
 
-        case .expectInView(let field, let whole):
-            note(number, step.name, try checkInView(field, whole: whole), state: describe())
+        case .expectInView(let field, let whole, let out):
+            note(number, step.name, try out ? checkOutOfView(field) : checkInView(field, whole: whole),
+                 state: describe())
 
         case .expectApart(let controls, let gap, let whole):
             note(number, step.name,
@@ -12062,7 +12065,28 @@ private final class Run {
         return "every pair at least \(n(gap))pt apart: " + line + words
     }
 
-    private func checkInView(_ name: String, whole: Bool = false) throws -> String {
+    /// The other way round from `checkInView`: the thing is in the panel and
+    /// none of it is where a person can see it.
+    private func checkOutOfView(_ name: String) throws -> String {
+        let match = try inViewMatch(name)
+        guard let content = match.window?.contentView else {
+            return "\"\(name)\" is in the panel and not in a window, so none of it is on screen"
+        }
+        // Its own box, cut by what its scrollers show and by the window. A
+        // SwiftUI row's visibleRect can come back larger than the row itself.
+        let box = match.convert(match.bounds, to: nil)
+        var shown = box.intersection(content.convert(content.bounds, to: nil))
+        for clip in PlaytestPanelPress.scrollClips(of: match) {
+            shown = shown.intersection(clip.convert(clip.bounds, to: nil))
+        }
+        guard shown.isNull || shown.width < 0.5 || shown.height < 0.5 else {
+            throw Failure(description: "\"\(name)\" is on screen, \(Int(shown.height.rounded())) pt of its "
+                + "\(Int(box.height.rounded())), and this step says it should be scrolled out of sight")
+        }
+        return "\"\(name)\" is in the panel and scrolled out of sight"
+    }
+
+    private func inViewMatch(_ name: String) throws -> PanelTargetView {
         let all = try panelTargets()
         guard let match = all.first(where: { PlaytestSteadyName.matches(name, steady: $0.steady) })
                 ?? all.first(where: { $0.name == name })
@@ -12072,6 +12096,11 @@ private final class Run {
             throw Failure(description: "nothing called \"\(name)\" is in the panel at all; what is: "
                 + (seen.isEmpty ? "none" : seen) + ". A `panel` step lists everything.")
         }
+        return match
+    }
+
+    private func checkInView(_ name: String, whole: Bool = false) throws -> String {
+        let match = try inViewMatch(name)
         guard let content = match.window?.contentView else {
             throw Failure(description: "\"\(name)\" is not in a window right now")
         }
@@ -17355,7 +17384,7 @@ private final class Run {
         case .document:
             guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
             return viewport.viewPoint(fromDocument: at.point)
-        case .window:
+        case .window, .lane:
             return try requireCanvas().convert(windowPoint(at), from: nil)
         }
     }
@@ -17408,6 +17437,9 @@ private final class Run {
     }
 
     private func windowPoint(_ at: PlaytestPoint) throws -> CGPoint {
+        if case .lane = at.space, let spot = at.lane {
+            return try windowPoint(PlaytestPoint(lanePoint(spot), space: .window))
+        }
         guard case .window = at.space else {
             return try requireCanvas().convert(viewPoint(at), to: nil)
         }
@@ -17418,13 +17450,52 @@ private final class Run {
         return content.convert(CGPoint(x: at.point.x, y: y), to: nil)
     }
 
+    /// A lane named by a walk, at a moment, in window points down from the
+    /// top-left corner: the middle of the lane where it is drawn right now,
+    /// scroll and zoom included, so the walk follows it through any layout
+    /// change. An end of the lanes is a few points inside it, in the band a
+    /// held drag scrolls the timeline from (`TimelineEdgeScroll`).
+    private func lanePoint(_ spot: PlaytestLaneSpot) throws -> CGPoint {
+        let editor = try requireEditor()
+        let tracks = editor.timelineTracksFrame
+        let laneWidth = editor.timelineLaneWidth
+        guard tracks.width > 0, laneWidth > 0 else {
+            throw Failure(description: "the timeline's lanes are not on screen, so there is no \"\(spot.lane)\" to aim at")
+        }
+        let y = tracks.minY + (try trackRowMiddle(spot.lane, on: editor))
+        let lanesX = tracks.minX + TimelineDock.lanesLeading
+        let x: CGFloat
+        switch spot.moment {
+        case .seconds(let seconds):
+            let ms = try rulerMoment(seconds, on: editor, doing: "aim at")
+            x = lanesX + CGFloat(editor.motionStripRuler.fraction(ofMS: Double(ms))) * laneWidth
+        case .leftEdge: x = lanesX + 6
+        case .rightEdge: x = lanesX + laneWidth - 6
+        }
+        let viewport = editor.timelineTracksViewport
+        if viewport.height > 0, y < viewport.minY || y > viewport.maxY {
+            throw Failure(description: "\"\(spot.lane)\" is scrolled out of the timeline's view, so a hand could not reach it")
+        }
+        return CGPoint(x: x, y: y)
+    }
+
+    /// How a log line names a point a walk aimed at.
+    private func saying(_ at: PlaytestPoint) -> String {
+        guard case .lane = at.space, let spot = at.lane else { return "\(short(at.point)) \(at.space.rawValue)" }
+        switch spot.moment {
+        case .seconds(let seconds): return String(format: "%@ at %.2fs", spot.lane, seconds)
+        case .leftEdge: return "\(spot.lane) at the left edge"
+        case .rightEdge: return "\(spot.lane) at the right edge"
+        }
+    }
+
     /// The same point in DOCUMENT coordinates, which is the space a drop
     /// lands in.
     private func documentPoint(_ at: PlaytestPoint) throws -> CGPoint {
         switch at.space {
         case .document:
             return at.point
-        case .view, .window:
+        case .view, .window, .lane:
             guard let viewport = try requireEditor().viewport else { throw Failure(description: "the editor has no viewport yet") }
             return viewport.documentPoint(fromView: try viewPoint(at))
         }

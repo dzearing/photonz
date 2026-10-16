@@ -17,7 +17,7 @@
     { "do": "clickRuler", "seconds": 3.5 },
     { "do": "wait", "seconds": 0.8 },
     { "do": "action", "action": "expectZoomBoxDown" },
-    { "do": "windowClick", "at": [800, 897] },
+    { "do": "windowClick", "lane": "Zoom Tutorial Sample", "seconds": 2.4 },
     { "do": "wait", "seconds": 0.5 },
     { "do": "action", "action": "expectZoomPicked" },
     { "do": "describe", "stage": "1-bar-click-frames", "note": "A click on the zoom's bar puts its box back up over the whole picture" },

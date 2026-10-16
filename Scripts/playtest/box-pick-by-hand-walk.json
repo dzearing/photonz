@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/box-pick-by-hand-walk",
-  "seed": "The same edit at Next defaults, driven with the real pointer: a box pressed on the empty strip under the last track at 0:01.5 and pulled up to the title at 0:03 picks the title, the recording, the song and the first zoom; the first zoom's lit bar, pulled half a second later by hand, carries all of them; Delete takes them all and one undo brings them back.",
+  "seed": "The same edit at Next defaults, driven with the real pointer: a box pressed on the empty Title track at 0:00.5, ahead of the title, and pulled down to the song at 0:03 picks the title, the recording, the song and the first zoom; the first zoom's lit bar, pulled half a second later by hand, carries all of them; Delete takes them all and one undo brings them back.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -114,14 +114,10 @@
     },
     {
       "do": "windowDrag",
-      "from": [
-        327,
-        964
-      ],
-      "to": [
-        493,
-        795
-      ],
+      "fromLane": "Title",
+      "from": 0.5,
+      "toLane": "Audio",
+      "to": 3.0,
       "steps": 12
     },
     {
@@ -140,7 +136,7 @@
     {
       "do": "describe",
       "stage": "1-boxed-by-hand",
-      "note": "a box pulled by hand from the strip under the tracks picks the title, the recording, the song and the first zoom"
+      "note": "a box pulled by hand from the empty Title track down to the song picks the title, the recording, the song and the first zoom"
     },
     {
       "do": "snapshot",
@@ -148,14 +144,9 @@
     },
     {
       "do": "windowDrag",
-      "from": [
-        549,
-        856
-      ],
-      "to": [
-        605,
-        856
-      ],
+      "fromLane": "Zoom Tutorial Sample",
+      "from": 3.0,
+      "to": 3.5,
       "steps": 12
     },
     {

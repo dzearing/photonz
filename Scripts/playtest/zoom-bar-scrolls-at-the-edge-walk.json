@@ -60,14 +60,9 @@
   },
   {
    "do": "windowDrag",
-   "from": [
-    778,
-    897
-   ],
-   "to": [
-    1716,
-    897
-   ],
+   "fromLane": "Zoom Tutorial Sample",
+   "from": 1.0,
+   "to": "right edge",
    "steps": 12,
    "holdSeconds": 0.5,
    "hold": "1-zoom-held"

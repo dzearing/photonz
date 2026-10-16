@@ -578,16 +578,46 @@ public struct PlaytestTimelinePinch: Hashable, Sendable {
 /// spot that is NOT on the picture, like the right hand panel or the bar above
 /// it.
 public enum PlaytestSpace: String, Hashable, Codable, Sendable {
-    case document, view, window
+    /// `lane` is a spot on the timeline named by its lane and a moment
+    /// (`PlaytestLaneSpot`), worked out where the lane is drawn when the step
+    /// runs, so a walk follows the lane wherever a layout change puts it.
+    case document, view, window, lane
+}
+
+/// A spot on the timeline by name: the middle of a lane (a track's name,
+/// `Zoom <clip>`, `Keys <layer>` or `Under the tracks`, as `dragTracks` reads
+/// them) at a moment on the ruler, or just inside one end of the lanes on
+/// screen, where a drag held still scrolls the timeline.
+public struct PlaytestLaneSpot: Hashable, Sendable {
+    public enum Moment: Hashable, Sendable {
+        case seconds(Double)
+        case leftEdge, rightEdge
+    }
+
+    public var lane: String
+    public var moment: Moment
+
+    public init(lane: String, moment: Moment) {
+        self.lane = lane
+        self.moment = moment
+    }
 }
 
 public struct PlaytestPoint: Hashable, Sendable {
     public var point: CGPoint
     public var space: PlaytestSpace
+    /// Where it is when `space` is `lane`, nil otherwise.
+    public var lane: PlaytestLaneSpot?
 
     public init(_ point: CGPoint, space: PlaytestSpace = .document) {
         self.point = point
         self.space = space
+    }
+
+    public init(lane spot: PlaytestLaneSpot) {
+        self.point = .zero
+        self.space = .lane
+        self.lane = spot
     }
 }
 
@@ -4057,7 +4087,12 @@ public enum PlaytestStep: Sendable, Equatable {
     /// for. Opening the second of two effects in a short window showed 175
     /// points of its 277 and passed the plain step, because 175 was all the
     /// room the panel had kept for it (2026-09-09).
-    case expectInView(field: String, whole: Bool)
+    ///
+    /// `"out": true` turns it round: the thing is in the panel and none of it
+    /// is on screen, scrolled wholly past an edge of whatever holds it. A lazy
+    /// list keeps rows it has scrolled past, so a row being built no longer
+    /// says a person can see it (2026-10-16).
+    case expectInView(field: String, whole: Bool, out: Bool = false)
     /// CLAIMS that the named controls stand at least `gap` points apart, side
     /// to side, measured off their boxes in the window, and fails naming the
     /// pair that comes closer. The log line prints every box and every gap, so
@@ -4699,6 +4734,15 @@ public enum PlaytestStep: Sendable, Equatable {
         case "dropImage":
             self = .dropImage(file: try f.string("file"), at: try f.point("at"),
                               hold: try f.optionalString("hold"))
+        case "windowDrag" where fields["fromLane"] != nil:
+            let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
+            let fromLane = try f.string("fromLane")
+            let toLane = try f.optionalString("toLane") ?? fromLane
+            let held = try f.optionalNumber("holdSeconds") ?? 0
+            guard held >= 0, held <= 20 else { throw f.invalid("holdSeconds", "between 0 and 20 seconds") }
+            self = .windowDrag(from: PlaytestPoint(lane: .init(lane: fromLane, moment: try f.laneMoment("from"))),
+                               to: PlaytestPoint(lane: .init(lane: toLane, moment: try f.laneMoment("to"))),
+                               steps: max(1, steps), hold: try f.optionalString("hold"), holdSeconds: held)
         case "windowDrag":
             let steps = try f.optionalNumber("steps").map { Int($0) } ?? Self.defaultDragSteps
             let windowed = fields["space"] == nil
@@ -4715,6 +4759,11 @@ public enum PlaytestStep: Sendable, Equatable {
             self = .windowClickOn(control: try f.string("on"),
                                   count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
                                   modifiers: try f.modifiers())
+        case "windowClick" where fields["lane"] != nil:
+            let spot = PlaytestLaneSpot(lane: try f.string("lane"), moment: .seconds(try f.number("seconds")))
+            self = .windowClick(at: PlaytestPoint(lane: spot),
+                                count: max(1, try f.optionalNumber("count").map { Int($0) } ?? 1),
+                                modifiers: try f.modifiers())
         case "windowClick":
             var at = try f.point("at")
             if fields["space"] == nil { at.space = .window }
@@ -5911,8 +5960,10 @@ public enum PlaytestStep: Sendable, Equatable {
             }
             self = .expectSections(leading: leading, layers: layers, absent: absent, lists: lists)
         case "expectInView":
-            self = .expectInView(field: try f.string("field"),
-                                 whole: try f.optionalFlag("whole") ?? false)
+            let whole = try f.optionalFlag("whole") ?? false
+            let out = try f.optionalFlag("out") ?? false
+            guard !(whole && out) else { throw f.invalid("out", "cannot claim the whole of it and none of it at once") }
+            self = .expectInView(field: try f.string("field"), whole: whole, out: out)
         case "expectApart":
             let controls = try f.optionalStrings("controls")
             guard controls.count >= 2 else {
@@ -6143,6 +6194,19 @@ public enum PlaytestStep: Sendable, Equatable {
             guard let raw = fields[field] else { return nil }
             guard let value = raw as? NSNumber else { throw invalid(field, "must be true or false") }
             return value.boolValue
+        }
+
+        /// A moment along a lane: seconds on the ruler, or "left edge" or
+        /// "right edge" of the lanes on screen.
+        func laneMoment(_ field: String) throws -> PlaytestLaneSpot.Moment {
+            if let number = fields[field] as? NSNumber {
+                return .seconds(number.doubleValue)
+            }
+            switch fields[field] as? String {
+            case "left edge": return .leftEdge
+            case "right edge": return .rightEdge
+            default: throw invalid(field, "must be seconds on the ruler, \"left edge\" or \"right edge\"")
+            }
         }
 
         func point(_ field: String) throws -> PlaytestPoint {

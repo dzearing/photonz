@@ -721,6 +721,49 @@ struct PlaytestScriptTests {
         #expect(PlaytestStep.names.contains("windowClick"))
     }
 
+    @Test("A windowDrag or windowClick can aim at a lane by name and a moment, so it follows the lane wherever the timeline puts it")
+    func windowStepsOnALane() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "windowDrag", "fromLane": "Under the tracks", "from": 1.5,
+                       "toLane": "Title", "to": 3, "steps": 12 },
+                     { "do": "windowDrag", "fromLane": "Zoom Tutorial Sample", "from": 1.0, "to": "right edge",
+                       "holdSeconds": 0.5 },
+                     { "do": "windowClick", "lane": "Zoom Tutorial Sample", "seconds": 2.4 } ] }
+        """)
+        guard case .windowDrag(let from, let to, let steps, _, _) = script.steps[0],
+              case .windowDrag(let from2, let to2, _, _, let held) = script.steps[1],
+              case .windowClick(let at, let count, _) = script.steps[2] else {
+            Issue.record("lane steps"); return
+        }
+        #expect(from.space == .lane)
+        #expect(from.lane == PlaytestLaneSpot(lane: "Under the tracks", moment: .seconds(1.5)))
+        #expect(to.lane == PlaytestLaneSpot(lane: "Title", moment: .seconds(3)))
+        #expect(steps == 12)
+        // The lane it lets go on is the one it pressed on unless it says.
+        // A whole second reads as seconds, not as true.
+        #expect(from2.lane == PlaytestLaneSpot(lane: "Zoom Tutorial Sample", moment: .seconds(1)))
+        #expect(to2.lane == PlaytestLaneSpot(lane: "Zoom Tutorial Sample", moment: .rightEdge))
+        #expect(held == 0.5)
+        #expect(at.space == .lane)
+        #expect(at.lane == PlaytestLaneSpot(lane: "Zoom Tutorial Sample", moment: .seconds(2.4)))
+        #expect(count == 1)
+        #expect(script.steps[0].name == "windowDrag")
+        #expect(script.steps[2].name == "windowClick")
+    }
+
+    @Test("A lane drag says what is wrong with a moment it cannot read")
+    func windowDragOnALaneRefusesABadMoment() {
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "windowDrag", "fromLane": "V1", "from": [1, 2], "to": 3 } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "windowDrag", "fromLane": "V1", "from": 1, "to": "middle" } ] }"#)
+        }
+        #expect(throws: (any Error).self) {
+            try decode(#"{ "steps": [ { "do": "windowClick", "lane": "V1" } ] }"#)
+        }
+    }
+
     @Test("A windowClick step can aim at a named spot instead of a point")
     func windowClickOnANamedSpot() throws {
         let script = try decode("""
@@ -3858,13 +3901,14 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectInView", "field": "Shadow" } ] }
         """)
-        guard case .expectInView(let field, let whole) = script.steps[0] else {
+        guard case .expectInView(let field, let whole, let out) = script.steps[0] else {
             Issue.record("expectInView"); return
         }
         #expect(field == "Shadow")
         // Left unsaid, a thing too tall for the room it is in may run past the
         // bottom, because starting at its top is all the panel can do.
         #expect(whole == false)
+        #expect(out == false)
         #expect(script.steps[0].name == "expectInView")
         #expect(PlaytestStep.names.contains("expectInView"))
     }
@@ -3880,11 +3924,34 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectInView", "field": "Shadow", "whole": true } ] }
         """)
-        guard case .expectInView(let field, let whole) = script.steps[0] else {
+        guard case .expectInView(let field, let whole, let out) = script.steps[0] else {
             Issue.record("expectInView"); return
         }
         #expect(field == "Shadow")
         #expect(whole)
+        #expect(out == false)
+    }
+
+    // A lazily built list keeps rows it has scrolled past, so "this row is not
+    // in the panel" stopped meaning "a person cannot see it" once the Layers
+    // list filled its pane (find-what-stayed-a-picture-walk, 2026-10-16).
+    // `"out": true` claims the thing is there and none of it is on screen.
+    @Test("An expectInView step can claim the thing is scrolled wholly out of sight")
+    func expectInViewCanClaimItIsOut() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectInView", "field": "Text 3", "out": true } ] }
+        """)
+        guard case .expectInView(let field, let whole, let out) = script.steps[0] else {
+            Issue.record("expectInView"); return
+        }
+        #expect(field == "Text 3")
+        #expect(whole == false)
+        #expect(out)
+        #expect(throws: PlaytestScriptError.self) {
+            try decode("""
+            { "steps": [ { "do": "expectInView", "field": "Text 3", "out": true, "whole": true } ] }
+            """)
+        }
     }
 
     @Test("An expectInView step's whole has to be true or false")

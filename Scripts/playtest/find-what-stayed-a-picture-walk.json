@@ -81,6 +81,10 @@
       ]
     },
     {
+      "do": "expectInView",
+      "field": "Text 3"
+    },
+    {
       "do": "snapshot",
       "name": "stayed-1-the-count-is-underlined"
     },
@@ -93,10 +97,10 @@
       "seconds": 0.4
     },
     {
-      "comment": "Only the LAST of the three can be pushed out of view now. The dock at 1400x900 with the Library hidden has about 360 points of scroll in it, so the list slides far enough to drop Text 3 off the bottom and no further; Text 8 sits near the top of the list and stays. Before 2026-09-22 the dock was long enough that both went.",
-      "do": "expect",
-      "row": "Text 3",
-      "present": false
+      "comment": "Only the LAST of the three can be pushed out of view: the Layers list fills its pane and scrolls on its own, so at its top Text 3 is below the fold and Text 8, near the top of the list, stays. The list keeps building rows it has scrolled past, so the claim is that Text 3 is out of sight, not that it is gone (2026-10-16).",
+      "do": "expectInView",
+      "field": "Text 3",
+      "out": true
     },
     {
       "do": "describe",

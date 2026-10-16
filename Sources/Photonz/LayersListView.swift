@@ -326,6 +326,14 @@ struct LayersListView: View {
     @State private var canvasRowHeight: CGFloat = 38
     /// What the count line and the grab bar under the list come to.
     @State private var listExtrasHeight: CGFloat = 0
+    /// What the find field over the list comes to, nothing when it is not
+    /// shown. It does not scroll either, so the dock pays for it with the
+    /// lines under the list: left out, a list filling the pane of lists ran
+    /// the field's height past the pane's foot, hiding its last rows and the
+    /// count line (find-what-stayed-a-picture-walk, 2026-10-16).
+    @State private var findFieldHeight: CGFloat = 0
+    /// Everything about the list that does not scroll with its rows.
+    private var listChromeHeight: CGFloat { listExtrasHeight + findFieldHeight }
 
     /// A second ceiling, from the dock rather than from the grab bar: what the
     /// panel can spare once every form section has been paid for. The stored
@@ -402,7 +410,11 @@ struct LayersListView: View {
         let unpressed = PanelListsPane.listAsks(content: reserved, grabBar: maxHeight,
                                                 inPane: inListsPane)
         return VStack(spacing: 0) {
-            findField
+            VStack(spacing: 0) { findField }
+                .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { field in
+                    findFieldHeight = field
+                    onMetrics?(unpressed, listExtrasHeight + field)
+                }
             ScrollView(.vertical) {
                 rows(displays, viewport: viewport)
             }
@@ -476,15 +488,15 @@ struct LayersListView: View {
             }
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { extras in
                 listExtrasHeight = extras
-                onMetrics?(unpressed, extras)
+                onMetrics?(unpressed, extras + findFieldHeight)
             }
         }
         .layersListProbe(rows: displays.map(\.name), rowHeight: rowHeight, viewport: viewport)
         .onAppear {
-            onMetrics?(unpressed, listExtrasHeight)
+            onMetrics?(unpressed, listChromeHeight)
             handOverScrolling()
         }
-        .onChange(of: unpressed) { _, latest in onMetrics?(latest, listExtrasHeight) }
+        .onChange(of: unpressed) { _, latest in onMetrics?(latest, listChromeHeight) }
         // The Rename command asks for a row's field. Only rows this list shows
         // answer, so the Measurements list next door does not open a second
         // field on the same layer.
