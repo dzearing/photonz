@@ -1,0 +1,31 @@
+{
+  "id": "a-title-or-a-logo-laid-over-a-video-lands-on-a-t",
+  "title": "A title or a logo laid over a video lands on a track named for what it holds",
+  "goal": "The title walkthrough mock names the tracks a title and a piece of art land on by what they carry (Title, Gfx) beside V1 and Audio 1. Today a title or a logo let go on the timeline makes a new track called V2, V3 and so on, so a busy edit reads as a column of numbers instead of saying where the titles and the graphics are.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T19:15:49.148Z",
+  "updated": "2026-10-16T19:15:49.151Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 2 and 7 (\"A Gfx track appears under the Title track carrying its clip\"); the frame shows tracks Gfx, Title, V1, Audio 1. Code: PhotonzDocument.titleLanding (TitlePresetShelf.swift) names a new track freeTrackName(.video) and land(_:at:) calls addTrack(kind, at:), which names it the same way (DocumentTracks.swift ~451, ~543). Needs a name carried on ClipLanding into addTrack. Pictures land through PhotonzDocument.landPicture (PictureClip.swift), added by a-logo-or-picture-can-be-brought-into-a-video-fo. grep walks for \"track\": \"V2\" before changing.",
+  "acceptance": [
+    "A title tile let go over the timeline on a new track makes a track called Title (Title 2 and on when one exists), as the mock draws it",
+    "A picture tile from the Library let go on a new track makes a track called Gfx (Gfx 2 and on)",
+    "The ghost in the air names the same track the clip lands on",
+    "Every walk that expected V2 for a title or a picture is updated in the same commit and passes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T19:15:49.150Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "library-picture-import-walk"
+  ]
+}

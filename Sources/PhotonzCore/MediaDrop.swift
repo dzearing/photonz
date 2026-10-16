@@ -24,6 +24,30 @@ public enum MediaFiles {
         if soundExtensions.contains(ext) { return .sound }
         return nil
     }
+
+    /// The pictures the Library takes beside its recordings and sounds: a
+    /// logo, a photo, a screenshot (`video-title-wt.html`, steps 6 to 8).
+    public static let pictureExtensions: Set<String> =
+        ["png", "jpg", "jpeg", "heic", "heif", "tif", "tiff", "gif", "bmp", "webp"]
+
+    /// Drawings kept as shapes rather than pixels. The app keeps every picture
+    /// as pixels at one size, so one of these cannot come in yet without going
+    /// soft when it is blown up; it is refused in words instead of in silence.
+    public static let vectorExtensions: Set<String> = ["svg", "svgz"]
+
+    public static func isPicture(_ url: URL) -> Bool {
+        pictureExtensions.contains(url.pathExtension.lowercased())
+    }
+
+    public static func isVector(_ url: URL) -> Bool {
+        vectorExtensions.contains(url.pathExtension.lowercased())
+    }
+
+    /// What the app says about a vector file it was given: the reason, and
+    /// the one move that works.
+    public static func vectorRefusal(named name: String) -> String {
+        "\(name) can't come in yet. Save it as a PNG"
+    }
 }
 
 /// What letting go of a sound or a recording over an open document would do,

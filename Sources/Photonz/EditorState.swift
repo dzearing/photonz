@@ -1889,6 +1889,13 @@ final class EditorState {
     var timelineFileHover: TimelineFileHover?
     /// The file behind that ghost, read off the drag once it arrives.
     @ObservationIgnored var timelineFileInAir: TimelineFileInAir?
+    /// The picture each file brought into the Library was read as, so
+    /// importing the same logo again finds its tile rather than a second
+    /// bitmap (`EditorState+LibraryImport`).
+    @ObservationIgnored var importedPictures: [URL: ImageRef] = [:]
+    /// The Library picture tile over the timeline, by the id its drag carries
+    /// (`EditorState+TimelinePicture`).
+    @ObservationIgnored var timelinePictureInAir: UUID?
     @ObservationIgnored var timelineFilePointer: TimelineFilePointer?
     /// The room the timeline makes past its end while a file of this length
     /// is in the air over it.
@@ -2240,6 +2247,9 @@ final class EditorState {
             openImage(at: url)
             return
         }
+        // An SVG is taken as far as saying why it cannot come in yet, rather
+        // than read as a picture with nothing in it and dropped in silence.
+        if refusesVector(url) { return }
         guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
               let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
         let tool = activeTool
@@ -3690,6 +3700,8 @@ final class EditorState {
                 if let file = found.located[movie.id] { MovieLibrary.shared.adopt(movie, at: file) }
             case .sound(let sound):
                 if let file = found.located[sound.id] { SoundLibrary.shared.link(sound, to: file) }
+            case .picture:
+                break
             }
         }
         return found.missing.map(\.name)

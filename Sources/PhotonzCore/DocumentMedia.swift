@@ -37,6 +37,14 @@ public struct DocumentMediaItem: Identifiable, Hashable, Sendable {
 
     public var id: UUID { image.id }
 
+    /// What a layer putting this down is called: the caption, less the
+    /// extension of a picture file brought into the Library, the way a
+    /// picture dropped from the Finder is named.
+    public var layerName: String {
+        let url = URL(fileURLWithPath: name)
+        return MediaFiles.isPicture(url) ? url.deletingPathExtension().lastPathComponent : name
+    }
+
     public init(image: ImageRef, name: String, uses: Int) {
         self.image = image
         self.name = name
@@ -47,7 +55,11 @@ public struct DocumentMediaItem: Identifiable, Hashable, Sendable {
     /// question only the document's own shelf can answer: how much of this
     /// picture is in here already.
     public var detail: String {
-        uses == 1 ? "used once" : "used \(uses) times"
+        switch uses {
+        case 0: "not used yet"
+        case 1: "used once"
+        default: "used \(uses) times"
+        }
     }
 }
 
@@ -87,10 +99,33 @@ public enum DocumentMedia {
                 names[image.id, default: []].append(name)
             }
         }
-        return order.compactMap { id in
-            guard let image = images[id], let drawn = names[id], let name = caption(of: drawn)
+        // Pictures brought into the Library are captioned with the file they
+        // came from, placed or not, and the ones nothing draws yet lead the
+        // shelf, the newest first: they are what you just brought in.
+        let shelved = document.media.compactMap { source -> (ImageRef, String)? in
+            guard case .picture(let image) = source.media else { return nil }
+            return (image, source.name)
+        }
+        let shelvedNames = Dictionary(shelved.map { ($0.0.id, $0.1) }, uniquingKeysWith: { first, _ in first })
+        var seen: Set<UUID> = []
+        let waiting = shelved.reversed().compactMap { image, name -> DocumentMediaItem? in
+            guard images[image.id] == nil, seen.insert(image.id).inserted else { return nil }
+            return DocumentMediaItem(image: image, name: name, uses: 0)
+        }
+        return waiting + order.compactMap { id in
+            guard let image = images[id], let drawn = names[id],
+                  let name = shelvedNames[id] ?? caption(of: drawn)
             else { return nil }
             return DocumentMediaItem(image: image, name: name, uses: drawn.count)
+        }
+    }
+
+    /// The pictures the Library holds whether or not anything draws them,
+    /// which a saved package has to carry the pixels of.
+    public static func shelvedPictures(in document: PhotonzDocument) -> [ImageRef] {
+        document.media.compactMap { source in
+            if case .picture(let image) = source.media { return image }
+            return nil
         }
     }
 

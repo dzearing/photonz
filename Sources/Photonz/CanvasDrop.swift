@@ -105,7 +105,7 @@ extension CanvasNSView {
         // no-entry pointer and land anyway.
         guard let url = DragCargo.fileURL(on: sender.draggingPasteboard) else { return false }
         let file = CanvasFileDrop.of(url, takingMedia: takesMedia)
-        guard file.isAccepted else { return false }
+        guard file.isAccepted, file != .vector else { return false }
         // A sound or a recording never lands as a picture and never fills a
         // collage slot: what it becomes is the editor's call, out of the very
         // answer this view drew its sentence from (`MediaDrop`).
@@ -292,6 +292,16 @@ extension CanvasNSView {
             showDropNote(answer.note, lands: answer.lands, at: viewPoint(sender))
             refreshOverlays()
             return answer.lands ? .copy : []
+        }
+        // An SVG cannot come in yet, and the no-entry sign alone would read as
+        // the canvas ignoring it, so the reason rides under the pointer.
+        if draggedFile(url, sequence: sender.draggingSequenceNumber) == .vector {
+            dropLanding = nil
+            hoverSlot = nil
+            showDropNote(MediaFiles.vectorRefusal(named: url.lastPathComponent), lands: false,
+                         at: viewPoint(sender))
+            refreshOverlays()
+            return []
         }
         clearTextStyleNote()
         // Highlight the collage slot under the pointer — dropping there fills

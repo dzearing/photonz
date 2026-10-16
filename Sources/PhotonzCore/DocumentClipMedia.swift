@@ -20,6 +20,9 @@ public struct DocumentMediaSource: Hashable, Codable, Sendable, Identifiable {
     public enum Media: Hashable, Codable, Sendable {
         case recording(MovieRef)
         case sound(SoundRef)
+        /// A logo or a photo, held by reference: its pixels are in the image
+        /// store and in the saved package, never in the model.
+        case picture(ImageRef)
     }
 
     public let media: Media
@@ -31,10 +34,17 @@ public struct DocumentMediaSource: Hashable, Codable, Sendable, Identifiable {
         self.name = name
     }
 
+    /// Whether this is a picture rather than something that plays.
+    public var isPicture: Bool {
+        if case .picture = media { return true }
+        return false
+    }
+
     public var id: UUID {
         switch media {
         case .recording(let movie): movie.id
         case .sound(let sound): sound.id
+        case .picture(let image): image.id
         }
     }
 }
@@ -133,7 +143,8 @@ extension DocumentMedia {
         }
         var items: [DocumentClipItem] = []
         var listed: Set<UUID> = []
-        for source in document.media where listed.insert(source.id).inserted {
+        // A picture is a tile of its own kind (`DocumentMedia.items`).
+        for source in document.media where !source.isPicture && listed.insert(source.id).inserted {
             // A remembered recording whose sound alone is on the timeline is
             // still the recording.
             items.append(DocumentClipItem(media: source.media, name: source.name,

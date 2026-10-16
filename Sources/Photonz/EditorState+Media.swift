@@ -32,7 +32,7 @@ extension EditorState {
     /// Reuses the picture itself, so a second placement is a second layer and
     /// never a second bitmap.
     func placeMediaItem(_ item: DocumentMediaItem, at point: CGPoint? = nil) {
-        placeImage(item.image, at: point, named: item.name)
+        placeImage(item.image, at: point, named: item.layerName)
     }
 
     /// The same, for a picture named by the id its shelf tile carries: a tile
@@ -46,7 +46,7 @@ extension EditorState {
     /// place in the stack rather than a place on the picture.
     func placeDocumentImage(id: UUID, landingAt landing: LayerDrop?) {
         guard let item = mediaItem(id: id) else { return }
-        placeImage(item.image, named: item.name, landingAt: landing)
+        placeImage(item.image, named: item.layerName, landingAt: landing)
     }
 
     private func mediaItem(id: UUID) -> DocumentMediaItem? {
@@ -79,6 +79,7 @@ extension EditorState {
         switch item.media {
         case .recording(let movie): MovieLibrary.shared.url(for: movie)
         case .sound(let sound): SoundLibrary.shared.url(for: sound)
+        case .picture: nil
         }
     }
 

@@ -144,6 +144,26 @@ struct CanvasMediaDropTests {
         #expect(CanvasFileDrop.of(url, takingMedia: true) == .picture(CGSize(width: 32, height: 16)))
     }
 
+    /// An SVG cannot come in yet, and a pointer alone cannot say why, so the
+    /// drag is asked about rather than refused in silence: the canvas says the
+    /// reason under the pointer and still does not let it land.
+    @Test func anSVGIsAVectorTheCanvasAnswersInWords() throws {
+        let url = try write("Logo.svg")
+        defer { try? FileManager.default.removeItem(at: url) }
+        let drop = CanvasFileDrop.of(url, takingMedia: true)
+        #expect(drop == .vector)
+        #expect(drop.isAccepted)
+        #expect(drop.pictureSize == nil)
+        #expect(drop.media == nil)
+    }
+
+    /// Where media is not taken at all, an SVG is what it always was.
+    @Test func anSVGIsPlainlyRefusedWhereMediaIsNotTaken() throws {
+        let url = try write("Logo.svg")
+        defer { try? FileManager.default.removeItem(at: url) }
+        #expect(CanvasFileDrop.of(url) == .unsupported)
+    }
+
     @Test func mediaCarriesNoLandingBoxBecauseThereIsNothingToDraw() throws {
         let url = try write("music.m4a")
         defer { try? FileManager.default.removeItem(at: url) }

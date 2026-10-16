@@ -21489,3 +21489,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A right click on a picked clip outside the range offers the clip's own rows (`SectionOperation.leadsTheMenu`).
 - Walk steps: `expectWaveform` gains `cleanedAt`/`rawAt`; `rightClick` gains `first`/`lacks`.
 - Next: strength choice for a section clean (open question in the audit).
+
+## 2026-10-16 — A logo or picture comes into a video
+
+- Import Media and a Library drop take PNG/JPEG/HEIC (and more) as shelf pictures (`DocumentMediaSource.Media.picture`), saved in the package even when unplaced. A picture tile lands on the timeline like a title (free or new track, 5 s, `PictureClip`), or on the picture where dropped.
+- SVG is refused in words everywhere (`MediaFiles.vectorRefusal`). Next: `an-svg-logo-comes-into-a-video-and-stays-sharp-a`, `a-title-or-a-logo-laid-over-a-video-lands-on-a-t`.
+- Gotcha: `DocumentImageDrag`'s type is not declared in Info.plist, so `UTType(...) ?? .data` matches every file.

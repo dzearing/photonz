@@ -428,11 +428,13 @@ struct SectionFileDrop: DropDelegate {
         return FileDrop.accept(info, into: editorState, landingAt: landing)
     }
 
-    /// The Library is a bin: a recording or a sound let go on it goes on the
-    /// shelf and nowhere else, where anywhere else in the panel it lands on
-    /// the timeline (`video.html`, "Fill the Library").
+    /// The Library is a bin: a recording, a sound or a picture let go on it
+    /// goes on the shelf and nowhere else, where anywhere else in the panel it
+    /// lands on the timeline or the picture (`video.html`, "Fill the Library";
+    /// `video-title-wt.html`, a logo beside the footage).
     private func keepsOnShelf(_ info: DropInfo) -> Bool {
-        item == .library && editorState.canImportMedia && FileDrop.carriesMedia(info)
+        item == .library && editorState.canImportMedia
+            && (FileDrop.carriesMedia(info) || FileDrop.carriesPictureFile(info))
     }
 
     /// Tells the panel what it is about to do with the file in the air, and

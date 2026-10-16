@@ -1,6 +1,6 @@
 import Foundation
 
-// Recordings and sounds brought into the Library WITHOUT going onto the
+// Recordings, sounds and pictures brought into the Library WITHOUT going onto the
 // timeline (`video.html`, onboarding step 2, "Fill the Library": Import, a file
 // dropped on the panel, or a capture; step 3 then drags a tile onto an empty
 // track). Premiere calls this importing into a bin, and it is how a video edit
@@ -14,16 +14,20 @@ public struct LibraryImport: Hashable, Sendable {
     public var alreadyThere: [String]
     /// The files that turned out to hold nothing the app can play.
     public var unreadable: [String]
+    /// The files the app cannot take yet (an SVG), said with the move that
+    /// works rather than left to look like a drop that did nothing.
+    public var notYet: [String]
     /// The first new tile, which the shelf scrolls to.
     public var firstNewID: UUID?
     /// The first tile this was about, new or not: the one worth showing.
     public var revealID: UUID?
 
     public init(added: [String] = [], alreadyThere: [String] = [], unreadable: [String] = [],
-                firstNewID: UUID? = nil, revealID: UUID? = nil) {
+                notYet: [String] = [], firstNewID: UUID? = nil, revealID: UUID? = nil) {
         self.added = added
         self.alreadyThere = alreadyThere
         self.unreadable = unreadable
+        self.notYet = notYet
         self.firstNewID = firstNewID
         self.revealID = revealID
     }
@@ -46,6 +50,9 @@ public struct LibraryImport: Hashable, Sendable {
         if !unreadable.isEmpty {
             said.append("There is nothing in \(Self.names(unreadable)) the app can play")
         }
+        if !notYet.isEmpty {
+            said.append(MediaFiles.vectorRefusal(named: Self.names(notYet)))
+        }
         return said.joined(separator: ". ")
     }
 
@@ -65,13 +72,17 @@ extension PhotonzDocument {
     /// already holds keeps its tile and its name.
     @discardableResult
     public mutating func bringIntoLibrary(_ sources: [DocumentMediaSource],
-                                          unreadable: [String] = []) -> LibraryImport {
-        var outcome = LibraryImport(unreadable: unreadable)
+                                          unreadable: [String] = [],
+                                          notYet: [String] = []) -> LibraryImport {
+        var outcome = LibraryImport(unreadable: unreadable, notYet: notYet)
         for source in sources {
-            if let held = DocumentMedia.clips(in: self).first(where: { $0.id == source.id }) {
+            let heldName = source.isPicture
+                ? DocumentMedia.items(in: self).first(where: { $0.id == source.id })?.name
+                : DocumentMedia.clips(in: self).first(where: { $0.id == source.id })?.name
+            if let heldName {
                 // Picked twice in one go counts once, as new.
-                if !outcome.added.contains(held.name) && !outcome.alreadyThere.contains(held.name) {
-                    outcome.alreadyThere.append(held.name)
+                if !outcome.added.contains(heldName) && !outcome.alreadyThere.contains(heldName) {
+                    outcome.alreadyThere.append(heldName)
                 }
             } else {
                 rememberMedia(source.media, named: source.name)

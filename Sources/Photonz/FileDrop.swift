@@ -54,6 +54,14 @@ enum FileDrop {
         Experiments.shared.droppingMedia && info.hasItemsConforming(to: [.audio, .movie])
     }
 
+    /// Whether the drag is a picture FILE arriving from outside: a logo or a
+    /// photo off the Finder, which the Library keeps on its shelf. A tile
+    /// lifted off that very shelf carries a picture too, but no file.
+    static func carriesPictureFile(_ info: DropInfo) -> Bool {
+        Experiments.shared.droppingMedia && info.hasItemsConforming(to: [.image])
+            && info.hasItemsConforming(to: [.fileURL])
+    }
+
     /// Whether this drag is a FILE ARRIVING AT ALL — the only kind of drag the
     /// panel's accept and refuse marks are there to answer for.
     ///
@@ -95,8 +103,8 @@ enum FileDrop {
         return true
     }
 
-    /// Puts every recording and sound the drag carries on the Library shelf,
-    /// and nothing anywhere else (`EditorState.importMedia`).
+    /// Puts every recording, sound and picture the drag carries on the
+    /// Library shelf, and nothing anywhere else (`EditorState.importMedia`).
     static func keepOnShelf(_ info: DropInfo, into editorState: EditorState) -> Bool {
         let providers = info.itemProviders(for: [.fileURL])
         guard !providers.isEmpty else { return false }

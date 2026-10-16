@@ -1,0 +1,52 @@
+{
+  "out": "/tmp/photonz-playtest/library-picture-import-walk",
+  "seed": "A logo or a picture comes into a video like any other media (video-title-wt.html, steps 6 to 8: the Library holds svg, png, a logo beside the footage). File > Import Media takes a PNG onto the Library shelf and nowhere else; its tile dragged onto the timeline lands on a track of its own over the recording for five seconds, and dragged onto the picture lands where it is let go with an in and an out; an SVG, which the app cannot keep sharp yet, is refused in words on the shelf and over the canvas, never in silence. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording"
+    ]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "importPicks", "files": ["fixtures/logo/Acme Logo.png"] },
+    { "comment": "File > Import Media, the mock's Import files row (Shift Command I). The menu bar is frozen under a walk that is not in front, so the command is run directly.", "do": "action", "action": "importMedia" },
+    { "do": "wait", "seconds": 1.5 },
+    { "do": "expectNotice", "says": "Acme Logo.png is in the Library" },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "expect", "control": "Acme Logo.png", "present": true },
+    { "do": "describe", "stage": "1-logo-on-the-shelf", "note": "THE FIRST TEST: Import Media took a PNG. The logo is a tile on the Library's Media shelf beside the recording, and nothing landed on the timeline or the picture" },
+    { "do": "snapshot", "name": "1-logo-on-the-shelf" },
+    { "do": "dropOnTimeline", "tile": "Acme Logo.png", "track": "V1", "seconds": 2.0, "release": false, "hold": "2-logo-over-the-timeline", "says": "Picture" },
+    { "do": "dropOnTimeline", "tile": "Acme Logo.png", "track": "V1", "seconds": 2.0 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Acme Logo", "track": "V2", "startsAt": 2.0, "endsAt": 7.0, "count": 1 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "3-logo-on-a-track", "note": "THE SECOND TEST: the tile let go over the recording two seconds in did not cover it. It landed on a new track over the footage, from 0:02 for five seconds, Premiere's still length, picked and with its own in and out" },
+    { "do": "snapshot", "name": "3-logo-on-a-track" },
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectLayers", "count": 1 },
+    { "do": "dragTile", "tile": "Acme Logo.png", "to": [1000, 160] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectClip", "clip": "Acme Logo", "startsAt": 0.0, "count": 1 },
+    { "do": "describe", "stage": "4-logo-on-the-picture", "note": "THE THIRD TEST: undone, then the same tile dragged onto the picture. It lands where it was let go, picked, and runs on the timeline from the playhead with an in and an out" },
+    { "do": "snapshot", "name": "4-logo-on-the-picture" },
+    { "do": "dropOnLibrary", "file": "fixtures/logo/Acme Logo.svg" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectNotice", "says": "Acme Logo.svg can't come in yet. Save it as a PNG" },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "5-svg-refused-on-the-shelf", "note": "THE FOURTH TEST: an SVG let go on the shelf is refused in words that name the move that works, never a drop that does nothing" },
+    { "do": "snapshot", "name": "5-svg-refused-on-the-shelf" },
+    { "do": "dragFile", "file": "fixtures/logo/Acme Logo.svg", "at": [640, 400], "hold": "6-svg-over-the-canvas", "says": "can't come in yet" },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "describe", "stage": "6-svg-over-the-canvas", "note": "THE FIFTH TEST: the same SVG held over the picture says why it cannot land, under the pointer, before the button comes up" }
+  ]
+}

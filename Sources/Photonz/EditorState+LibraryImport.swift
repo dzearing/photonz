@@ -2,10 +2,12 @@ import AppKit
 import Foundation
 import PhotonzCore
 import PhotonzMedia
+import PhotonzRender
 import UniformTypeIdentifiers
 
-// Recordings and sounds put into the Library and nowhere else (`video.html`,
-// onboarding step 2, "Fill the Library"): File ▸ Import Media… (⇧⌘I), the
+// Recordings, sounds and pictures put into the Library and nowhere else
+// (`video.html`, onboarding step 2, "Fill the Library", and
+// `video-title-wt.html` steps 6 to 8, a logo): File ▸ Import Media… (⇧⌘I), the
 // Library's own + menu, and a file let go on the shelf. The shelf is the
 // document's bin; the timeline takes a tile when you drag it onto a track.
 // What lands and what it says is `PhotonzDocument.bringIntoLibrary`.
@@ -16,9 +18,12 @@ extension EditorState {
         Experiments.shared.libraryEnabled && Experiments.shared.droppingMedia && document != nil
     }
 
-    /// What the Open panel lets you pick: recordings and sounds.
+    /// What the Open panel lets you pick: recordings, sounds and pictures.
+    /// An SVG can be picked too, so it is refused in words rather than shown
+    /// dimmed with no reason given.
     static let importableTypes: [UTType] = [.movie, .mpeg4Movie, .quickTimeMovie, .audio, .mp3, .wav,
-                                            .aiff, .mpeg4Audio]
+                                            .aiff, .mpeg4Audio, .png, .jpeg, .heic, .heif, .tiff, .gif,
+                                            .bmp, .webP, .svg]
 
     /// **Import Media…** Pick files; they go on the Library shelf, which
     /// opens to show them.
@@ -45,21 +50,35 @@ extension EditorState {
         panel.allowsMultipleSelection = true
         panel.canChooseDirectories = false
         panel.prompt = "Import"
-        panel.message = "Choose recordings and sounds to put in the Library"
+        panel.message = "Choose recordings, sounds and pictures to put in the Library"
         guard panel.runModal() == .OK, !panel.urls.isEmpty else { return }
         let urls = panel.urls
         Task { await importMedia(urls) }
     }
 
-    /// Reads each file and puts the ones that play on the shelf, then shows
-    /// the shelf on Media with the first of them in view. Anything that is
-    /// not a recording or a sound is left alone.
+    /// Reads each file and puts the ones that play or show on the shelf,
+    /// then shows the shelf on Media with the first of them in view. An SVG
+    /// is named as one that cannot come in yet; anything else that is not a
+    /// recording, a sound or a picture is left alone.
     @discardableResult
     func importMedia(_ urls: [URL]) async -> LibraryImport? {
         guard canImportMedia else { return nil }
         var sources: [DocumentMediaSource] = []
         var unreadable: [String] = []
+        var notYet: [String] = []
         for url in urls {
+            if MediaFiles.isVector(url) {
+                notYet.append(url.lastPathComponent)
+                continue
+            }
+            if MediaFiles.isPicture(url) {
+                if let picture = importedPicture(at: url) {
+                    sources.append(DocumentMediaSource(media: .picture(picture), name: url.lastPathComponent))
+                } else {
+                    unreadable.append(url.lastPathComponent)
+                }
+                continue
+            }
             switch MediaFiles.kind(of: url) {
             case .recording:
                 if let movie = await MovieLibrary.shared.movie(at: url) {
@@ -78,21 +97,37 @@ extension EditorState {
                 continue
             }
         }
-        guard document != nil, !(sources.isEmpty && unreadable.isEmpty) else { return nil }
-        var outcome = LibraryImport(unreadable: unreadable)
+        guard document != nil, !(sources.isEmpty && unreadable.isEmpty && notYet.isEmpty) else { return nil }
+        var outcome = LibraryImport(unreadable: unreadable, notYet: notYet)
         if !sources.isEmpty {
             // Only a change when something is new, so importing a file the
             // shelf already has leaves nothing to undo.
-            let isNew = sources.contains { source in !documentClipItems.contains { $0.id == source.id } }
+            let isNew = sources.contains { source in
+                !documentClipItems.contains { $0.id == source.id }
+                    && !documentMediaItems.contains { $0.id == source.id }
+            }
             if isNew {
-                perform { outcome = $0.bringIntoLibrary(sources, unreadable: unreadable) }
+                perform { outcome = $0.bringIntoLibrary(sources, unreadable: unreadable, notYet: notYet) }
             } else if var copy = document {
-                outcome = copy.bringIntoLibrary(sources, unreadable: unreadable)
+                outcome = copy.bringIntoLibrary(sources, unreadable: unreadable, notYet: notYet)
             }
         }
         if outcome.revealID != nil { showMediaShelf(revealing: outcome.revealID) }
         raiseCanvasNotice(.broughtIntoLibrary(outcome))
         return outcome
+    }
+
+    /// The picture in a file, read once per window: the same file brought in
+    /// again is the same picture, so its tile is found rather than doubled.
+    /// Nil for a file with no picture in it.
+    private func importedPicture(at url: URL) -> ImageRef? {
+        let key = url.standardizedFileURL
+        if let known = importedPictures[key], store.image(for: known) != nil { return known }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+        let ref = store.register(image)
+        importedPictures[key] = ref
+        return ref
     }
 
     /// Opens the Library on Media, with this tile scrolled into view.

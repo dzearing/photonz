@@ -127,7 +127,8 @@ public enum PackageIO {
     }
 
     /// Unique image refs across all layers (blur-behind layers share one),
-    /// including the photos held inside collage slots.
+    /// including the photos held inside collage slots, and the pictures on the
+    /// Library shelf that nothing draws yet.
     private static func imageRefs(in document: PhotonzDocument) -> [ImageRef] {
         var seen = Set<UUID>()
         var refs: [ImageRef] = []
@@ -148,6 +149,7 @@ public enum PackageIO {
             default: break
             }
         }
+        DocumentMedia.shelvedPictures(in: document).forEach(collect)
         return refs
     }
 }

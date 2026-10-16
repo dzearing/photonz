@@ -1,0 +1,33 @@
+{
+  "id": "an-svg-logo-comes-into-a-video-and-stays-sharp-a",
+  "title": "An SVG logo comes into a video and stays sharp at any size",
+  "goal": "Today an SVG dropped or imported into a video is refused with a note asking for a PNG. The title walkthrough mock puts SVG art (Sparkle, Star, Cursor, Dot) on the Library shelf and promises it stays crisp blown up on a 4K frame, so an SVG should come in like a PNG and be drawn sharp at whatever size it is shown or exported.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 255,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T19:15:07.939Z",
+  "updated": "2026-10-16T19:16:05.089Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Follow-up from a-logo-or-picture-can-be-brought-into-a-video-fo, which shipped the refusal (MediaFiles.vectorRefusal, CanvasFileDrop.vector, LibraryImport.notYet). Finding: macOS reads SVG already: NSImage(contentsOf:) on an .svg returns an _NSSVGImageRep that draws as a vector at any size; CGImageSource cannot (count 0). The gap is the model: pixels live in ImageStore as one CGImage per ImageRef, so sharp-at-any-size needs ImageStore to keep the SVG data and rasterize per render scale (DocumentRenderer asks at the composite scale), plus PackageIO writing the .svg bytes. Fixture: Scripts/playtest/fixtures/logo/Acme Logo.svg. Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8.",
+  "acceptance": [
+    "Import Media, a Finder drop on the Library shelf, the canvas and the timeline all take an SVG; the refusal note is gone",
+    "An SVG logo scaled to fill a 4K export is as sharp as the same art drawn at its own size (measured edge sharpness within a set margin of a native render)",
+    "The SVG travels inside a saved project and opens again sharp",
+    "A walk at Next defaults covers the SVG path and passes",
+    "An art tile on the Media shelf captions like the mock: its name over its kind (Sparkle / svg), or a decision card says why not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T19:15:07.941Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T19:16:05.088Z",
+      "note": "also: the mock's art tiles caption as the name over its kind (Sparkle / svg); a picture tile today says the file name with its extension over its pixel size (Acme Logo.png / 480 x 192), the way recording tiles already say Tutorial Sample.mp4 / 0:08. Settle the art tile's two lines with the SVG tiles."
+    }
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.457Z",
-  "updated": "2026-10-16T12:22:36.401Z",
+  "updated": "2026-10-16T19:16:42.276Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8 (Library holds svg, png, a logo). Code: EditorState+LibraryImport.swift ~20-21 and ~58-78 take movies and audio only; MediaDrop.swift ~21-26 returns nil for pictures; EditorState.swift ~2237-2238 reads a dropped picture with CGImageSourceCreateWithURL, which cannot read SVG. No SVG reader in Sources. Pixels stay in ImageStore, never in the model. Searches 'import svg', 'clip art', 'import media pictures': only SVG export tasks.",
@@ -31,6 +31,34 @@
     {
       "t": "2026-10-16T12:22:36.400Z",
       "note": "seq 26 -> 70"
+    },
+    {
+      "t": "2026-10-16T18:24:20.659Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T18:27:25.171Z",
+      "note": "Reproduced at Next defaults on the sample recording (walk /tmp/photonz-repro/repro.json, Scripts/playtest.sh --no-build): importPicks [Acme Logo.png] + action importMedia -> log 'File > Import Media...', layers 1 -> 1, no notice raised (MediaFiles.kind is nil for a picture, so importMedia returns nil silently; the Open panel itself greys PNG out). dropOnLibrary Acme Logo.svg -> 'let go on the Library shelf, which stayed dark; the shelf holds 1 recordings and sounds, was 1, and the document 1 layers, was 1', no notice. dropImage Acme Logo.svg on the canvas -> 'the canvas refused the file Acme Logo.svg' (draggingEntered returned none), no words."
+    },
+    {
+      "t": "2026-10-16T19:15:55.644Z",
+      "note": "owns these walks: library-picture-import-walk"
+    },
+    {
+      "t": "2026-10-16T19:16:42.150Z",
+      "note": "Adversarial pass before building: a Premiere editor imports a logo then drags it to V2; today that tile drop did nothing (tile carries no file), so the timeline route was built too, landing like a title (free track or new one, never covers a clip) for 5s, Premiere's still length. The mock promises SVG sharp at any size; macOS reads SVG (NSImage gives _NSSVGImageRep) but the ImageStore keeps one bitmap per ref, so vector-sharp is more than this sitting: refusal shipped, reader filed as an-svg-logo-comes-into-a-video-and-stays-sharp-a."
+    },
+    {
+      "t": "2026-10-16T19:16:42.212Z",
+      "note": "Built: DocumentMediaSource.Media.picture(ImageRef) (core); DocumentMedia.items lists shelved pictures (uses 0, 'not used yet', captioned with the file name); MediaFiles.isPicture/isVector/vectorRefusal; LibraryImport.notYet; PictureClip.lengthMS + PhotonzDocument.landPicture; PackageIO saves shelved pictures; ProjectMedia skips them. App: Import Media takes png/jpeg/heic/heif/tiff/gif/bmp/webp (+svg, refused in words), shelf drop keeps picture files, canvas shows the SVG note under the pointer, any window drop of an SVG raises a Not added pill, picture tile onto the timeline (EditorState+TimelinePicture). Gotcha: UTType(DocumentImageDrag.typeIdentifier) is nil (type not declared in Info.plist) so '?? .data' matched every file; tiles are told from Finder files by fileURL and DocumentImageDrag.idInFlight instead. Harness: dropOnTimeline carries picture tiles; dropOnLibrary stops waiting on a new picture or a notice."
+    },
+    {
+      "t": "2026-10-16T19:16:42.275Z",
+      "note": "Verified: Scripts/test.sh 13366 tests passed; library-picture-import-walk passed twice (with and without rebuild), plus library-import, drop-a-sound-or-a-video, add-media-at-playhead, empty-track-slot and 8 timeline file-drop walks. Looked at every audit picture: logo tile on the shelf, 'Picture · New V2 · 0:02' over the timeline, logo on V2 0:02-0:07 over the footage, logo on the picture where dropped with an in and out, SVG note legible under the pointer and in the pill. Filed: an-svg-logo-comes-into-a-video-and-stays-sharp-a (p2), a-title-or-a-logo-laid-over-a-video-lands-on-a-t (p1, mock's Gfx/Title track names). Left rough (no task, under the bar): a Finder PNG let go on the timeline still lands on the picture at the playhead rather than the track under the pointer; a tile on the picture runs playhead-to-end vs 5s on the timeline (existing rules)."
     }
+  ],
+  "started": "2026-10-16T18:24:20.655Z",
+  "walks": [
+    "library-picture-import-walk"
   ]
 }

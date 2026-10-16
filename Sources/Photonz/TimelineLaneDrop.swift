@@ -32,7 +32,7 @@ struct TimelineFileDropDelegate: DropDelegate {
     /// the way the canvas judges one: a drag from the Finder says it carries
     /// a file and not always what kind.
     func validateDrop(info: DropInfo) -> Bool {
-        carriesTransition(info) || carriesTitle(info) || carriesComponent(info)
+        carriesTransition(info) || carriesTitle(info) || carriesComponent(info) || carriesPicture(info)
             || info.hasItemsConforming(to: [.fileURL])
             || FileDrop.carriesUsableFile(info, into: editorState)
     }
@@ -60,7 +60,26 @@ struct TimelineFileDropDelegate: DropDelegate {
             && info.hasItemsConforming(to: [UTType(ComponentDrag.typeIdentifier) ?? .data])
     }
 
+    /// A picture tile off the Library's Media shelf (`DocumentImageDrag`), in
+    /// a document with a timeline. It carries no file, only the picture's id
+    /// on the drag. Asked of the drag itself rather than of a type, because
+    /// the tile's type is the app's own and not declared to the system, which
+    /// would read it as any data at all and take every file for a tile.
+    @MainActor private func carriesPicture(_ info: DropInfo) -> Bool {
+        editorState.timelineTakesPictures && !info.hasItemsConforming(to: [.fileURL])
+            && DocumentImageDrag.idInFlight() != nil
+    }
+
+    /// The picture on the drag, read the moment it is asked for.
+    @MainActor private func pictureID() -> UUID? {
+        editorState.timelinePictureInAir ?? DocumentImageDrag.idInFlight()
+    }
+
     func dropEntered(info: DropInfo) {
+        if carriesPicture(info) {
+            if let id = pictureID() { editorState.movePictureHover(id, to: info.location) }
+            return
+        }
         if carriesComponent(info) {
             let point = info.location
             // The drag pasteboard answers at once; the drag's own bytes, read
@@ -95,6 +114,10 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropUpdated(info: DropInfo) -> DropProposal? {
+        if carriesPicture(info) {
+            if let id = pictureID() { editorState.movePictureHover(id, to: info.location) }
+            return DropProposal(operation: .copy)
+        }
         if carriesComponent(info) {
             if let payload = editorState.timelineComponentInAir ?? ComponentDrag.payloadInFlight() {
                 editorState.moveComponentHover(payload, to: info.location)
@@ -124,12 +147,20 @@ struct TimelineFileDropDelegate: DropDelegate {
     }
 
     func dropExited(info: DropInfo) {
+        editorState.endPictureHover()
         editorState.endTitleHover()
         editorState.endTransitionHover()
         editorState.endComponentHover()
     }
 
     func performDrop(info: DropInfo) -> Bool {
+        if carriesPicture(info) {
+            guard let id = pictureID() else {
+                editorState.endPictureHover()
+                return false
+            }
+            return editorState.dropPictureOnTimeline(id, at: info.location)
+        }
         if carriesComponent(info) {
             let point = info.location
             if let payload = editorState.timelineComponentInAir ?? ComponentDrag.payloadInFlight() {

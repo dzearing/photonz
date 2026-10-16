@@ -52,6 +52,26 @@ struct PackageIOTests {
         #expect(image?.height == 80)
     }
 
+    /// A logo brought into the Library and not placed yet is still the
+    /// document's, so its pixels go in the package and come back with it.
+    @Test func aPictureOnTheLibraryShelfAloneIsSavedWithTheDocument() throws {
+        let store = ImageStore()
+        let logo = store.register(solidImage(width: 48, height: 24, r: 255, g: 106, b: 61))
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 1280, height: 800), layers: [])
+        doc.bringIntoLibrary([DocumentMediaSource(media: .picture(logo), name: "Acme Logo.png")])
+
+        let url = tempPackageURL()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(),
+                                                withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: url.deletingLastPathComponent()) }
+        try PackageIO.write(doc, store: store, to: url)
+
+        let freshStore = ImageStore()
+        let loaded = try PackageIO.read(from: url, into: freshStore)
+        #expect(DocumentMedia.items(in: loaded).map(\.name) == ["Acme Logo.png"])
+        #expect(freshStore.image(for: logo)?.width == 48)
+    }
+
     @Test func saveOverAnExistingPackageReplacesIt() throws {
         let store = ImageStore()
         let base = store.register(solidImage(width: 40, height: 40, r: 0, g: 255, b: 0))

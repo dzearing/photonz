@@ -19551,6 +19551,15 @@ extension Run {
                 return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
                                                      hold: hold, release: release, says: says)
             }
+            // ...and so does a picture off the Media shelf, which carries the
+            // picture's id rather than a file. The timeline reads that id off
+            // the drag in flight, so the walk's board stands in for it.
+            if DocumentImageDrag.imageID(on: board) != nil {
+                DocumentImageDrag.playtestPasteboard = board
+                defer { DocumentImageDrag.playtestPasteboard = nil }
+                return try await dropTitleOnTimeline(tile, board: board, track: track, seconds: seconds,
+                                                     hold: hold, release: release, says: says)
+            }
             guard let carriedURL = DragCargo.fileURL(on: board) else {
                 throw Failure(description: "the tile \"\(tile)\" carries no file to land: it carries "
                     + (board.types ?? []).map(\.rawValue).joined(separator: ", "))
@@ -19937,17 +19946,24 @@ extension Run {
             return "\(url.lastPathComponent) held over the Library shelf, which \(lit ? "lit up" : "stayed dark")\(held)"
         }
         let clipsBefore = editor.documentClipItems.count
+        let picturesBefore = editor.documentMediaItems.count
+        let noticeBefore = editor.copyConfirmation
         let layersBefore = editor.document?.allLayers.count ?? 0
         guard taker.performDragOperation(info) else {
             throw Failure(description: "the Library shelf would not take \(url.lastPathComponent)")
         }
+        // Until the shelf changes or it says something: a file it refuses
+        // adds no tile, and waiting out the whole clock for one lets the pill
+        // that says why fade before the next step can read it.
         var waited = 0.0
-        while editor.documentClipItems.count == clipsBefore, waited < 4 {
+        while editor.documentClipItems.count == clipsBefore, editor.documentMediaItems.count == picturesBefore,
+              editor.copyConfirmation == noticeBefore, waited < 4 {
             await sleep(0.1)
             waited += 0.1
         }
         return "\(url.lastPathComponent) let go on the Library shelf, which \(lit ? "lit up" : "stayed dark")\(held); "
             + "the shelf holds \(editor.documentClipItems.count) recordings and sounds, was \(clipsBefore), "
+            + "\(editor.documentMediaItems.count) pictures, was \(picturesBefore), "
             + "and the document \(editor.document?.allLayers.count ?? 0) layers, was \(layersBefore)"
     }
 

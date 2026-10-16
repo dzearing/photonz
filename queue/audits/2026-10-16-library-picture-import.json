@@ -1,0 +1,50 @@
+{
+  "feature": "A logo or picture brought into a video",
+  "epic": "video-titles-graphics",
+  "summary": "File > Import Media and a drop on the Library now take a PNG, JPEG or HEIC beside your footage. Its tile goes onto the timeline on a track of its own for five seconds, or onto the picture where you let go. An SVG is refused with a short note instead of doing nothing.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open any recording (the tutorial sample works) and have a PNG logo handy. Walk: Scripts/playtest/library-picture-import-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Press Shift Command I and pick a PNG logo.",
+      "shot": "2026-10-16-library-picture-1-logo-on-the-shelf-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the logo's tile from the Library onto the recording at two seconds and hold it there.",
+      "shot": "2026-10-16-library-picture-2-logo-over-the-timeline-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go.",
+      "shot": "2026-10-16-library-picture-3-logo-on-a-track-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z, then drag the same tile onto the top right of the picture.",
+      "shot": "2026-10-16-library-picture-4-logo-on-the-picture-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag an SVG from the Finder onto the Library, then over the picture.",
+      "shot": "2026-10-16-library-picture-6-svg-over-the-canvas-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Save the video, close it and open it again: the logo tile is still on the shelf."
+    }
+  ],
+  "evaluate": [
+    "Does a logo landing on its own track over the footage, never covering it, match what you expect from Premiere?",
+    "Is five seconds the right length for a still that lands on the timeline?",
+    "Is the SVG note enough to tell you what to do, or would you rather the SVG came in soft until it can be kept sharp?",
+    "Should a tile let go on the picture run from the playhead to the end (as it does now), or for five seconds like the timeline drop?"
+  ],
+  "rough": [
+    "An SVG cannot come in yet and the mock's art tiles are SVGs (Sparkle, Star, Cursor, Dot); keeping one sharp at any size is an-svg-logo-comes-into-a-video-and-stays-sharp-a.",
+    "The mock lands art on a track called Gfx under the Title track; here it lands on V2 (timeline drop) or on a track named after the layer (picture drop). Covered by a-title-or-a-logo-laid-over-a-video-lands-on-a-t.",
+    "The mock captions an art tile as its name over its kind (Sparkle / svg); here it is the file name over its pixel size (Acme Logo.png / 480 x 192), as recording tiles already are. Folded into an-svg-logo-comes-into-a-video-and-stays-sharp-a.",
+    "A tile dropped on the picture runs from the playhead to the end of the shot, while one dropped on the timeline runs five seconds; both are the rules those two drops already had.",
+    "A Finder PNG let go on the timeline still lands on the picture at the playhead rather than on the track under the pointer; only a Library tile lands on a track."
+  ]
+}

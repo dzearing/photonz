@@ -57,7 +57,8 @@ public enum ProjectMedia {
             }
             if case .sound = met, case .recording = media { found[id] = media }
         }
-        for source in document.media { meet(source.media) }
+        // A picture's pixels are in the package itself: no file to find again.
+        for source in document.media where !source.isPicture { meet(source.media) }
         document.forEachLayer { layer in
             if let movie = layer.movie { meet(.recording(movie)) }
             if case .sound(let sound) = layer.content { meet(.sound(sound)) }
@@ -83,6 +84,7 @@ public enum ProjectMedia {
             switch media {
             case .recording: kind = .recording
             case .sound: kind = .sound
+            case .picture: return nil
             }
             return ProjectMediaFile(id: id, kind: kind, name: url.lastPathComponent,
                                     path: url.path,
