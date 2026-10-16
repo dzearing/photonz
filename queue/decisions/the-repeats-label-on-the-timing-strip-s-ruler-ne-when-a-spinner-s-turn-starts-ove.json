@@ -1,0 +1,51 @@
+{
+  "id": "the-repeats-label-on-the-timing-strip-s-ruler-ne-when-a-spinner-s-turn-starts-ove",
+  "taskId": "the-repeats-label-on-the-timing-strip-s-ruler-ne",
+  "question": "When a spinner's turn starts over right on a ruler number, where should the restart label go and what should it say?",
+  "context": "The spinner mock (icon-loop-wt, step 5) labels the restart \"and again\" under the lanes; the bell and knob mocks label it \"repeats\" up on the ruler. A lone 800 ms spinner restarts exactly on the ruler's 800, where the two labels used to print over each other.",
+  "options": [
+    {
+      "id": "a",
+      "label": "\"repeats\", just under the 800",
+      "summary": "The blue dashed line keeps the word every loop page uses, and when it would sit on a ruler number it drops one line, so it reads just under the 800 beside the line. The strip stays the same height.",
+      "pros": [
+        "Same word as the bell and knob pages",
+        "Strip never changes height",
+        "Built and shown in the audit picture"
+      ],
+      "cons": [
+        "Not where the spinner mock draws it (below the last lane)"
+      ],
+      "mitigation": "Between ruler numbers it stays up on the ruler, exactly as the bell page draws it."
+    },
+    {
+      "id": "b",
+      "label": "\"and again\", below the last lane",
+      "summary": "Do what the spinner mock shows: the label reads \"and again\" and sits under the last lane, below the bars. The strip grows a short row under the lanes to hold it.",
+      "pros": [
+        "Matches the spinner page word for word"
+      ],
+      "cons": [
+        "The strip gets taller only for some loops",
+        "Two words for one mark across the loop pages"
+      ],
+      "mitigation": "The extra row could be there for every loop, so the height never jumps."
+    },
+    {
+      "id": "c",
+      "label": "\"repeats\", below the last lane",
+      "summary": "Keep the word \"repeats\" but put it under the last lane whenever it would land on a ruler number, the way the spinner mock places its label.",
+      "pros": [
+        "One word everywhere",
+        "Placement as the spinner mock draws it"
+      ],
+      "cons": [
+        "The strip grows a short row under the lanes"
+      ],
+      "mitigation": "Same as b: a row held for every loop."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-16T00:54:36.026Z"
+}

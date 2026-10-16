@@ -37,7 +37,7 @@
     { "do": "expect", "field": "Strip Title", "reads": "One turn" },
     { "do": "expect", "field": "Turn Length", "reads": "800 ms per turn" },
     { "do": "expect", "field": "Turn Join", "reads": "ends where it starts" },
-    { "do": "describe", "stage": "1-one-turn", "note": "THE PICTURE TO LOOK AT, beside icon-loop-wt.html step 5. The strip's header reads ONE TURN, then 800 ms per turn and, in green, ends where it starts. No lap field: the ring's lap is its turn." },
+    { "do": "describe", "stage": "1-one-turn", "note": "THE PICTURE TO LOOK AT, beside icon-loop-wt.html step 5. The strip's header reads ONE TURN, then 800 ms per turn and, in green, ends where it starts. No lap field: the ring's lap is its turn. The turn starts over exactly on the ruler's 800, so the dashed line's repeats label sits just under the ruler, never on top of the 800." },
     { "do": "snapshot", "name": "1-one-turn" }
   ]
 }

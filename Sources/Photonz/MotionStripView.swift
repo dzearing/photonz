@@ -411,15 +411,16 @@ private struct MotionStripRulerView: View {
     let ruler: MotionStripRuler
 
     static let height: CGFloat = 15
+    static let fontSize: CGFloat = 9
 
     var body: some View {
         GeometryReader { geo in
             ForEach(ruler.ticks, id: \.ms) { tick in
                 Text(tick.label)
-                    .font(.system(size: 9, design: .monospaced))
+                    .font(.system(size: Self.fontSize, design: .monospaced))
                     .foregroundStyle(.tertiary)
                     .fixedSize()
-                    .padding(.leading, 3)
+                    .padding(.leading, MotionStripRuler.labelLead)
                     .overlay(alignment: .leading) {
                         Rectangle()
                             .fill(.separator)
@@ -1098,17 +1099,29 @@ private struct MotionStripMarksView: View {
             // finishing while the loop has already begun again, which is what a
             // lag in something that repeats IS.
             if ruler.repeats {
+            // Up on the ruler beside its number when there is room, or in the
+            // band just under it when the restart lands on a tick: a lone
+            // 800 ms spinner otherwise reads "800eats".
+            let under = ruler.repeatsLabelPlace(
+                laneWidth: Double(laneWidth),
+                labelWidth: Self.width(of: Self.label, size: Self.labelSize),
+                tickLabelWidth: { Self.width(of: $0, size: MotionStripRulerView.fontSize) }
+            ) == .underTheRuler
             VStack(alignment: .leading, spacing: 0) {
-                Text("repeats")
-                    .font(.system(size: 8.5, design: .monospaced))
-                    .foregroundStyle(.tertiary)
+                // Dashed and in the accent, as every loop mock draws it, so
+                // it reads as a mark on the lap rather than one more tick.
+                Text(Self.label)
+                    .font(.system(size: Self.labelSize, design: .monospaced))
+                    .foregroundStyle(Color.accentColor)
                     .fixedSize()
-                    .padding(.leading, 3)
-                Rectangle()
-                    .fill(.tertiary)
+                    .padding(.leading, MotionStripRuler.labelLead)
+                MotionStripRestartLine()
+                    .stroke(Color.accentColor.opacity(0.7),
+                            style: StrokeStyle(lineWidth: 1, dash: [3, 3]))
                     .frame(width: 1)
                     .frame(maxHeight: .infinity)
             }
+            .padding(.top, under ? MotionStripRulerView.height : 0)
             .offset(x: laneWidth * ruler.repeatsFraction)
             }
             if editorState.isMotionPlaying {
@@ -1122,8 +1135,27 @@ private struct MotionStripMarksView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
+
+    private static let label = "repeats"
+    private static let labelSize: CGFloat = 8.5
+
+    /// How wide a line of the strip's monospaced text is drawn.
+    private static func width(of text: String, size: CGFloat) -> Double {
+        let font = NSFont.monospacedSystemFont(ofSize: size, weight: .regular)
+        return Double((text as NSString).size(withAttributes: [.font: font]).width)
+    }
 }
 
+
+/// The restart, as a line down the middle of its one point of width.
+private struct MotionStripRestartLine: Shape {
+    func path(in rect: CGRect) -> Path {
+        Path { path in
+            path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+            path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+        }
+    }
+}
 
 // MARK: - A document that finishes
 

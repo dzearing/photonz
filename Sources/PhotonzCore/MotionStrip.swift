@@ -506,6 +506,39 @@ public struct MotionStripRuler: Hashable, Sendable {
     /// repeat.
     public var repeatsFraction: Double { fraction(ofMS: cycleMS) }
 
+    /// Where the word beside the dashed line is written.
+    public enum RepeatsLabelPlace: Sendable, Equatable {
+        /// Up in the ruler's row, beside the line, between two numbers.
+        case onTheRuler
+        /// In the band just under the ruler, because up on it the word would
+        /// land on a tick's number ("800eats" for a lone 800 ms spinner).
+        case underTheRuler
+    }
+
+    /// How far a label sits to the right of its line, ruler numbers and the
+    /// repeats word alike.
+    public static let labelLead = 3.0
+    /// The least room between two labels on one row for each to read alone.
+    static let labelClearance = 3.0
+
+    /// Whether the repeats word fits on the ruler row without touching a tick's
+    /// number. Widths are in points across a strip `laneWidth` wide; the caller
+    /// measures text, because only it knows the font.
+    public func repeatsLabelPlace(laneWidth: Double, labelWidth: Double,
+                                  tickLabelWidth: (String) -> Double) -> RepeatsLabelPlace {
+        guard repeats else { return .onTheRuler }
+        let start = laneWidth * repeatsFraction
+        let end = start + Self.labelLead + labelWidth
+        for tick in ticks {
+            let tickStart = laneWidth * fraction(ofMS: tick.ms)
+            let tickEnd = tickStart + Self.labelLead + tickLabelWidth(tick.label)
+            if tickStart < end + Self.labelClearance && start < tickEnd + Self.labelClearance {
+                return .underTheRuler
+            }
+        }
+        return .onTheRuler
+    }
+
     /// One number written along the top.
     public struct Tick: Hashable, Sendable {
         public let ms: Double

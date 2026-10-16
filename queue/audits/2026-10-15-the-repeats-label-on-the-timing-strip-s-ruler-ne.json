@@ -1,0 +1,35 @@
+{
+  "feature": "The repeats label never sits on a ruler number",
+  "epic": "icon-animate",
+  "summary": "A spinner whose turn ends exactly on a ruler number (800 ms) now reads 800 and repeats separately instead of \"800eats\". The restart mark is also dashed and blue, as the loop mocks draw it.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walks: a-lone-spinner-strip-reads-one-turn-walk and motion-timing-strip-walk.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Draw a circle and pick Add Motion > Rotation in the panel."
+    },
+    {
+      "do": "Set Rotation to 0 to 360, Curve Linear, Repeat Forever, Over 800."
+    },
+    {
+      "do": "Look at the strip's ruler at 800: the number reads alone, and repeats sits just under it beside the dashed line.",
+      "shot": "2026-10-15-repeats-label-on-a-tick.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Make a second shape rotate and type 900 into One cycle: repeats stays up on the ruler, between 800 and 1000.",
+      "shot": "2026-10-15-repeats-label-between-ticks.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "On the 800 ms spinner, do 800 and repeats both read at a glance?",
+    "Does the label dropping one line read as the same mark, or does it look like it moved for no reason?",
+    "Is the blue dashed line easy to tell apart from the ruler's grey ticks and the red playhead?"
+  ],
+  "rough": [
+    "The spinner mock (icon-loop-wt step 5) says \"and again\" and puts it under the last lane; the app says \"repeats\" just under the ruler, the bell and knob mocks' word. Settled by decision the-repeats-label-on-the-timing-strip-s-ruler-ne-when-a-spinner-s-turn-starts-ove.",
+    "The dashed blue line matches the bell, knob and spinner mocks. On the spinner it lands on the bar's own blue edge, so under the ruler it shows mostly in the gaps between lanes.",
+    "A narrow window, where the label would run into the next ruler number, is covered by a unit test but no walk photographs it."
+  ]
+}
