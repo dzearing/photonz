@@ -42,7 +42,6 @@
     "Are Copy Transition and Paste Transition easy to find in the cut's right click, between Add Transition and Roll Edit?"
   ],
   "rough": [
-    "The mock's panel menu sits on a Properties header above the cut's sections; since task with-a-cut-picked-the-panel-opens-under-the-prop (2026-10-16) the app draws it that way too.",
     "Menu rows read Copy Transition and Reset to Default Length in the Mac's Title Case rather than the mock's sentence case (UX-PATTERNS §7).",
     "The app goes further than the mock: Paste Transition sits beside Copy in the panel menu and both are in the cut's right click, and Command X with a cut picked cuts the transition (copies it and takes it off), as Premiere does.",
     "A dip's hold on black is not copied: pasting never puts time into the edit. The cut it lands on keeps the hold it had.",
