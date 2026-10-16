@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.038Z",
-  "updated": "2026-10-16T15:10:56.130Z",
+  "updated": "2026-10-16T15:11:28.781Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transitions.html panel overflow menu 'Copy transition'. Code: the cut's right-click is EditorState+TimelineMenus.swift ~553-578 (Apply Default Transition, Add, Remove, Roll Edit); no transition handling in EditorState+Clipboard.swift or PhotonzCore/Clipboard.swift. Apply to Every Cut and Set as Default exist (one-step-puts-a-transition-on-every-cut, one-key-puts-the-usual-transition-on-the-cut-at). Searches 'copy transition', 'paste transition': nothing.",
@@ -63,10 +63,15 @@
     {
       "t": "2026-10-16T15:10:56.129Z",
       "note": "Mock difference filed: with-a-cut-picked-the-panel-opens-under-the-prop (p1) for the missing Properties header on a picked cut; Title Case rows settled by UX-PATTERNS §7."
+    },
+    {
+      "t": "2026-10-16T15:11:28.779Z",
+      "note": "Copy Transition and Paste Transition at a cut: Edit Copy/Cut/Paste with a cut picked (or Paste onto every cut in a range / among picked clips / at the playhead), the cut and edit point right-click rows with Cmd C/Cmd V printed, and the mock's Transition panel menu with Copy, Paste and Reset to Default Length. Core in PhotonzCore/TransitionClipboard.swift with 9 tests; walk transition-copy-paste-walk ok twice at Next defaults; 13322 tests green; audit queue/audits/2026-10-16-transition-copy-paste.json. Commit c500f8c0."
     }
   ],
   "started": "2026-10-16T14:37:52.649Z",
   "walks": [
     "transition-copy-paste-walk"
-  ]
+  ],
+  "completed": "2026-10-16T15:11:28.780Z"
 }

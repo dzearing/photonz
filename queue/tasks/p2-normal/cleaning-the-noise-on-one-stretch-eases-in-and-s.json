@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.923Z",
-  "updated": "2026-10-16T12:22:36.277Z",
+  "updated": "2026-10-16T16:55:53.386Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-15-clean-noise-and-hide-picture-in-a-section.json rough ('The cleaning switches on hard at the cut, with no crossfade into the cleaned copy', cleaned at Medium only, waveform shows the uncleaned file) and queue/audits/2026-10-12-range-on-a-pick.json rough ('A right-click anywhere on a picked clip leads with the section rows, even on a part of the clip outside the range'). Feature commit ca23ab09. Searches 'crossfade cleaned', 'section rows outside': nothing open.",
@@ -32,6 +32,43 @@
     {
       "t": "2026-10-16T12:22:36.276Z",
       "note": "seq 24 -> 50"
+    },
+    {
+      "t": "2026-10-16T16:05:17.572Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T16:08:59.324Z",
+      "note": "Reproduced (Scripts/test.sh --filter SectionCleaningSeamExportTests, room tone of 60 Hz hum at 0.05 + hiss, cleaned 0:03-0:06 at Medium, samples read off the exporter's own composition): largest sample-to-sample jump across the 0:03 edge 0.0463 and across 0:06 0.0452, against 0.0043 for the room tone as recorded and 0.0004 cleaned, about 10x; the stretch is 20.0 dB quieter. The hard switch is real."
+    },
+    {
+      "t": "2026-10-16T16:08:59.388Z",
+      "note": "Adversarial pass: Premiere/Audition put a short crossfade on an effect applied to a region; a hard switch is what a cheap tool does. Equal-power (what the dissolve uses) would bump +3 dB mid-fade on two readings of the SAME recording (correlated), so the seam fades in straight lines, centred on the cut, both readings voiced at once the way a dissolve inside one clip is. Nothing new on screen, so no mock applies; the range right-click change is a fix to an existing menu."
+    },
+    {
+      "t": "2026-10-16T16:19:40.966Z",
+      "note": "Seam built: the raw and cleaned readings overlap 200 ms centred on each cut (100 ms either side, never more than half a piece), straight-line fades on two voices (TransitionSound.swift SectionCleaningSeam / SoundCrossingShape). Export measure then found a second cause: AVFoundation holds a new composition track at volume 1 before its first ramp and slides into the ramp, so the cleaned reading entered with a ~10 ms blip (0.0050 jump vs hum's own 0.00039). Fixed in AudioMixdown: a track waits for its next segment at that segment's first level. After: 0:03 edge 0.00389 and 0:06 edge 0.00391 vs room tone 0.00438 before / 0.00043 cleaned / 0.00435 after; hum-only 0.000386/0.000385 vs 0.000393. Was 0.0463/0.0452."
+    },
+    {
+      "t": "2026-10-16T16:41:29.951Z",
+      "note": "Right-click reproduced on the probe: with the old menu code a right click on the picked recording at 0:01.5 (range 0:03-0:06) led with Mute Section, Lower Volume, Normalize Section, Clean Noise in Section... (walk step 13 failed on its new first claim). Fixed: SectionOperation.leadsTheMenu(rightClickAtMS:range:) gates the section rows on the latest right click being on the range (edges included; a menu with no pointer keeps them). Waveform: NOT reproduced as broken. New expectWaveform cleanedAt/rawAt claim shows the middle piece drawing the cleaned copy's own shape and the outer pieces the file; a deliberately wrong claim fails, so the check is real. The stand-in while the copy is being made is intended."
+    },
+    {
+      "t": "2026-10-16T16:55:11.780Z",
+      "note": "owns these walks: hide-picture-and-clean-noise-for-a-section-walk"
+    },
+    {
+      "t": "2026-10-16T16:55:53.313Z",
+      "note": "Walks run: hide-picture-and-clean-noise-for-a-section-walk ok twice at Next defaults; a-range-stays-on-top-of-a-pick, a-video-clip-menu-leads-with-the-picture, captions-and-export-for-a-range, copy-a-range-from-its-menu, merge-a-range-into-one-clip, picked-in-range-menu-bar, add-media-at-playhead, roll-the-cut-between-two-clips, an-editing-session all ok. section-fold-motion-walk fails at step 36 (expectInView) but was already in the last sweep's failing list before this change; not mine. Rough items from the audit (ease centred on the edge, waveform switches at the exact edge, Medium only) do not clear the follow-up bar: the first two are by design and invisible at timeline scale, the third is an open question put to the user in the audit."
+    },
+    {
+      "t": "2026-10-16T16:55:53.384Z",
+      "note": "Commit a7c6a726. The cleaned stretch crossfades with the file over 200 ms centred on each edge (straight lines, two voices); export measured: edge jumps 0.0039/0.0039 vs room tone 0.0044 (were 0.046/0.045). Exporter fade-in blip on fresh tracks fixed. Waveform already drew the cleaned copy; now claimed by the walk (expectWaveform cleanedAt/rawAt). Right click outside the range leads with the clip's own rows (reproduced failing with old code). Full suite 13,337 tests green; walk passes twice at Next defaults; audit queue/audits/2026-10-16-section-clean-eases-in-and-out.json."
     }
-  ]
+  ],
+  "started": "2026-10-16T16:05:17.569Z",
+  "walks": [
+    "hide-picture-and-clean-noise-for-a-section-walk"
+  ],
+  "completed": "2026-10-16T16:55:53.385Z"
 }

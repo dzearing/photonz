@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T15:10:29.403Z",
-  "updated": "2026-10-16T15:10:29.406Z",
+  "updated": "2026-10-16T15:49:52.573Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found while building a-transition-can-be-copied-from-one-cut-and-past (2026-10-16). InspectorPanel.swift ~1238: a picked cut intersects the sections with [.layers, .editPoint, .transition, .transitions, .library], which drops .keys, and the .keys section header is what draws the Properties group header and PropertiesPanelMenu (PropertyKeysInspector.swift) under next-dock-headers. So the cut gets no Properties header. TransitionPanelMenu (TransitionInspector.swift) currently rides the Transition section header via sectionFurniture; move it to the group header when that exists. Mock: docs/design/mocks/pages/video-transitions.html lines 211-217 and #propMenu at 295. Picture of today: queue/audits/2026-10-16-transition-copy-paste-5-reset.png.",
@@ -22,9 +22,37 @@
     {
       "t": "2026-10-16T15:10:29.405Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T15:28:00.321Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T15:49:18.252Z",
+      "note": "adversarial before: both transitions mocks draw ONE Properties group with Edit point and Transition as .sec-h sections inside it (chip Transition, or Edit point on a hard cut per video-transition-wt #propKind). A header-only Properties group above two groups would fold nothing, so the cut's sections moved inside Properties instead. Kept: field names 'Edit point header'/'Transition header' and tutorial anchors editPoint/transition on the sub-sections, so walks and guides still find them. Only when the cut is the pick: a clip picked with the playhead on its cut keeps its own Properties."
+    },
+    {
+      "t": "2026-10-16T15:49:18.314Z",
+      "note": "adversarial after (pictures 6 and 7 of transition-copy-paste-walk read): PROPERTIES + Transition chip + three dots, Edit point and Transition inside, rows unchanged. Left rough, no task: the sub-sections do not fold on their own (the mock's ds.js folds every .sec-h); the existing Between the keys sub-section does not either, so this matches the app's own sub-section grammar. The divider between the two is faint in dark (Palette.line)."
+    },
+    {
+      "t": "2026-10-16T15:49:18.378Z",
+      "note": "walks transition-copy-paste-walk -> transition-copy-paste-walk"
+    },
+    {
+      "t": "2026-10-16T15:49:42.371Z",
+      "note": "not done yet: 2026-10-16-transition-copy-paste.json rough line 1 (\"The mock's panel menu sits on a Properties header above the cut's sections; since task wi…\") differs from the mock and names nothing that settles it",
+      "since": "2026-10-16T15:49:40.653Z",
+      "count": 2
+    },
+    {
+      "t": "2026-10-16T15:49:52.571Z",
+      "note": "With a cut picked (Next defaults) the panel opens under one Properties header, chip Transition (Edit point on a hard cut), the three dots with Copy/Paste Transition and Reset to Default Length on it, Edit point and Transition as sections inside; the Transition header no longer has its own menu. InspectorPanel.swift (cutFillsProperties), TransitionInspector.swift (CutPropertiesInspector), DockGroupHeader.cutChip + test. transition-copy-paste-walk updated (checks chip, header, old groups gone) and passed twice at defaults; 18 cut/transition walks pass; Scripts/test.sh green (13323 tests). Audit 2026-10-16-cut-properties-header.json. Commits 89a2a387, cceff208."
     }
   ],
   "walks": [
     "transition-copy-paste-walk"
-  ]
+  ],
+  "started": "2026-10-16T15:28:00.311Z",
+  "completed": "2026-10-16T15:49:52.572Z"
 }

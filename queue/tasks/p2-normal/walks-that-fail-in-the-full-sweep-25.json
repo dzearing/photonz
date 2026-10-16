@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-16T09:43:13.178Z",
-  "updated": "2026-10-16T12:22:36.027Z",
+  "updated": "2026-10-16T13:49:54.979Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-16T09:43:12Z: 936 of 945 walks passed in 283 minutes.\n\nFailing walks (9): a-click-on-the-zoom-bar-frames-it-walk, box-pick-by-hand-walk, find-what-stayed-a-picture-walk, path-outline-align-walk, section-fold-motion-walk, timeline-pinch-both-ways-walk, timeline-pinch-direction-walk, view-to-edit-on-a-long-recording-walk, zoom-bar-scrolls-at-the-edge-walk\n\nAlready named by another open task, so read that one before re-diagnosing (3):\n  path-outline-align-walk -> a-drawn-path-s-outline-settings-read-like-the-ic, a-walk-that-fails-is-never-parked-on-a-task-wait (that task says it owns this walk)\n  timeline-pinch-both-ways-walk -> shift-z-means-the-one-thing-you-choose-on-a-vide (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 6: a-click-on-the-zoom-bar-frames-it-walk, box-pick-by-hand-walk, find-what-stayed-a-picture-walk, section-fold-motion-walk, timeline-pinch-direction-walk, zoom-bar-scrolls-at-the-edge-walk\n\nFull output: queue/sweep/2026-10-15-215953.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: picking-a-title-no-longer-makes-the-picture-jump: walk harness reach rule changed (controls under the title bar) and the timeline no longer grows on a pick: every walk that reveals a panel control or clicks fixed points on the timeline\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -43,6 +43,34 @@
     {
       "t": "2026-10-16T12:22:36.026Z",
       "note": "seq 4060 -> 10"
+    },
+    {
+      "t": "2026-10-16T12:23:42.579Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T13:49:49.082Z",
+      "note": "BROKEN (app fixed): timeline-pinch-both-ways-walk and timeline-pinch-direction-walk. Since d3826b57 a pinch growing the rows with a clip picked changed pickedTimelineRow.height, which read as a pick opening rows and scrolled the timeline to reveal the picked row, so the row under the pointer drifted. pickedTimelineRow now measures at compact rows (EditorState+TimelineZoom.swift)."
+    },
+    {
+      "t": "2026-10-16T13:49:49.149Z",
+      "note": "BROKEN (app fixed) and WRONG: find-what-stayed-a-picture-walk. Wrong: 'expect row Text 3 present false' could no longer mean out of sight once the Layers list filled its pane (398297ad) and kept rows built; now 'expectInView Text 3 out true' (new harness claim), with a positive expectInView before the scroll. Broken: LayersListView never reported the Find a layer field as chrome, so in the pane the list ran 33pt past the pane foot, hiding the selection count line and cutting a picked row by 3pt (seen in the -sc capture). Fixed by measuring the field into the extras the dock budgets."
+    },
+    {
+      "t": "2026-10-16T13:49:49.214Z",
+      "note": "WRONG (walk rewritten): a-click-on-the-zoom-bar-frames-it-walk and zoom-bar-scrolls-at-the-edge-walk clicked window y 897, which since d3826b57 is the V1 clip (1fb74e4d moved two sibling walks by hand and missed these). box-pick-by-hand-walk started its box on the strip under the tracks, now scrolled out of the shorter timeline; it now starts on the empty Title track at 0.5s. All three aim by lane through the new windowDrag fromLane/toLane and windowClick lane forms, never at fixed points."
+    },
+    {
+      "t": "2026-10-16T13:49:49.277Z",
+      "note": "TIMING, nothing changed: section-fold-motion-walk and view-to-edit-on-a-long-recording-walk each pass twice on their own (sweep failures were a 22.7ms pass and a 100.4ms freeze against a 100ms bar). Every owned walk passed twice in a row on its own on 2026-10-16; 37 layers-list and timeline walks rerun green; 13,313 tests green. Commit f7afb552."
+    },
+    {
+      "t": "2026-10-16T13:49:49.340Z",
+      "note": "left rough: many other walks still aim windowDrag/windowClick at fixed timeline points. They pass today, so no task; move each to fromLane/lane when it next breaks."
+    },
+    {
+      "t": "2026-10-16T13:49:54.977Z",
+      "note": "All 8 owned walks pass twice on their own (commit f7afb552). App fixes: a row pinch with a clip picked no longer scrolls the timeline away from the pointer (pinch walks); the Layers list counts its Find field so it no longer runs 33pt under the lists pane (find-what-stayed). Walks rewritten to aim by lane through new windowDrag fromLane/toLane and windowClick lane forms (two zoom-bar walks, box-pick-by-hand), plus expectInView out:true. Two timing failures pass as they are. 37 related walks and 13,313 tests green."
     }
   ],
   "standing": "walk-sweep",
@@ -55,5 +83,7 @@
     "zoom-bar-scrolls-at-the-edge-walk",
     "timeline-pinch-both-ways-walk",
     "view-to-edit-on-a-long-recording-walk"
-  ]
+  ],
+  "started": "2026-10-16T12:23:42.577Z",
+  "completed": "2026-10-16T13:49:54.978Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.143Z",
-  "updated": "2026-10-16T17:40:30.338Z",
+  "updated": "2026-10-16T17:40:52.652Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html step 10. Code: Sources/Photonz/TimelineLaneDrop.swift ~35-42 accepts files, transition tiles and title presets only (attached at TimelineDock.swift ~490); components arrive via canvas drop at the playhead (PhotonzCore/ComponentsInTime.swift ~30-38). Done task components-on-the-timeline built canvas drops only. Searches 'component timeline drop', 'lower third timeline': nothing open.",
@@ -47,10 +47,15 @@
     {
       "t": "2026-10-16T17:40:30.337Z",
       "note": "Reproduced first: the new walk's drop step was refused by every drop area under V1 at 5s (the timeline delegate did not take com.photonz.component-id). Built: PhotonzDocument.landPlacedLayer (ComponentsInTime.swift, 6 tests in ComponentTimelineDropTests), the title tile's landing shared as timelineOverlayLanding, EditorState+ComponentTimelineDrop.swift (ghost, drop), the three component insert paths take an onTimeline landing so the copy and its track are one undo step, the timeline delegate takes component tiles, harness dropOnTimeline carries component tiles. Walk component-tile-onto-the-timeline-walk passed twice at Next defaults; title, clip, transition and component walks still green; Scripts/test.sh 13343 tests green. Left rough, not filed: a starter Badge is a small UI badge and lands small on a recording (its intended size; a person resizes it); a component dropped near the recording's end runs past it, same as a title tile does today. Lower third absence is the open question on title-pages-and-name-cards-follow-the-mock-or-th."
+    },
+    {
+      "t": "2026-10-16T17:40:52.650Z",
+      "note": "A component tile dragged from the Library onto the timeline lands on the track under the pointer at that moment (3s), or on a new track when that one is busy, in one undo step, with the same ghost and bar label a title tile shows. A drop on the picture still lands at the playhead. Verified: walk component-tile-onto-the-timeline-walk at Next defaults passed twice, neighbouring title, clip, transition and component walks green, Scripts/test.sh 13343 tests green. Audit queue/audits/2026-10-16-component-on-timeline.json. Commit 43cad147."
     }
   ],
   "started": "2026-10-16T17:08:57.954Z",
   "walks": [
     "component-tile-onto-the-timeline-walk"
-  ]
+  ],
+  "completed": "2026-10-16T17:40:52.651Z"
 }

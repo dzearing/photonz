@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 25,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T19:15:49.148Z",
-  "updated": "2026-10-16T19:15:49.151Z",
+  "updated": "2026-10-16T20:32:45.218Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 2 and 7 (\"A Gfx track appears under the Title track carrying its clip\"); the frame shows tracks Gfx, Title, V1, Audio 1. Code: PhotonzDocument.titleLanding (TitlePresetShelf.swift) names a new track freeTrackName(.video) and land(_:at:) calls addTrack(kind, at:), which names it the same way (DocumentTracks.swift ~451, ~543). Needs a name carried on ClipLanding into addTrack. Pictures land through PhotonzDocument.landPicture (PictureClip.swift), added by a-logo-or-picture-can-be-brought-into-a-video-fo. grep walks for \"track\": \"V2\" before changing.",
@@ -23,9 +23,32 @@
     {
       "t": "2026-10-16T19:15:49.150Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T19:28:42.808Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T20:32:34.695Z",
+      "note": "walks library-picture-import-walk -> library-picture-import-walk, title-presets-library-shelf-walk"
+    },
+    {
+      "t": "2026-10-16T20:32:34.760Z",
+      "note": "Adversarial pass: a Premiere editor names tracks by hand; auto-naming by content (Title, Gfx) beats V-numbers for reading a busy edit. Risk found: a title double-clicked at the playhead went on a track named after the preset (Title Page) while a dropped one would say Title, two names side by side in one timeline. Fixed in this task: a preset carrying its title recipe counts as a title for track naming (Layer.isTitleText), so both land on Title, Title 2."
+    },
+    {
+      "t": "2026-10-16T20:32:34.824Z",
+      "note": "Built: ClipLanding's trackName now names the new track land() makes (addTrack named:, falling back to the next of its kind if the name was taken meanwhile); titleLanding takes newTrackNamed (default Title), PhotonzDocument.pictureLanding uses Gfx, app components pass nil and stay V-numbered. Tests first in TitlePresetShelfTests + LibraryPictureTests. Walks updated: library-picture-import-walk (V2 -> Gfx, ghost says 'Picture · New Gfx'), title-presets-library-shelf-walk (V2 -> Title 2, Track Title Page -> Track Title). All 44 title walks, saved-name-card, an-editing-session, component-tile, paste, add-media, several-clips, empty-track-slot, new-empty-video walks green. Full suite 13,372 green (an earlier run hit the AnimatedExportWeigh flake, which passed alone and on rerun; filed an-animated-export-weighs-less-at-small-than-at). Audit pictures 1-4 checked: ghost 'Picture · New Gfx · 0:02', logo on Gfx with toast 'Acme Logo is on Gfx at 0:02', title ghost 'New Title', Title / Title 2 / V1 headers. Follow-up filed: a-title-track-and-a-gfx-track-wear-the-icons-the (header icons vs mock). Left rough, not filed: components dropped on a new track stay V-numbered (no mock names them)."
+    },
+    {
+      "t": "2026-10-16T20:32:45.216Z",
+      "note": "Titles let go over the timeline land on a new track called Title (Title 2...), Library pictures on Gfx (Gfx 2...); the ghost says the same name; titles put in at the playhead also sit on Title. Core: ClipLanding.trackName names the new track (DocumentTracks addTrack named:, TitlePresetShelf titleLanding newTrackNamed, PictureClip pictureLanding). Tests first; full suite 13,372 green; library-picture-import and title-presets-library-shelf walks updated and green at Next defaults with all 44 title walks. Audit queue/audits/2026-10-16-title-gfx-tracks.json."
     }
   ],
   "walks": [
-    "library-picture-import-walk"
-  ]
+    "library-picture-import-walk",
+    "title-presets-library-shelf-walk"
+  ],
+  "started": "2026-10-16T19:28:42.805Z",
+  "completed": "2026-10-16T20:32:45.217Z"
 }
