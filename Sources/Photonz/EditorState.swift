@@ -2021,6 +2021,9 @@ final class EditorState {
     /// A bar or a key taken hold of that carries a box's whole pick, through
     /// the clip bar's own drag (`EditorState+TrackRange`).
     @ObservationIgnored var dragCarriesBoxPick = false
+    /// A box's zooms and keys carried by the hand where the pick holds no
+    /// clip to carry them by (`EditorState+TrackRange`).
+    var boxExtrasDrag: BoxExtrasDrag?
     /// The Escape watch armed for exactly as long as a clip's bar is in hand.
     @ObservationIgnored var clipBarEscapeWatch: Any?
     /// The ⌥ watch armed while the pointer rests on a clip's bar, so the copy

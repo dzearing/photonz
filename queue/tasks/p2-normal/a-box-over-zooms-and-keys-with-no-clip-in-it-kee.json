@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T11:07:56.893Z",
-  "updated": "2026-10-16T12:22:36.091Z",
+  "updated": "2026-10-16T14:25:10.467Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-16 while working a-box-pick-on-the-timeline-is-copied-and-ripple, with Scripts/playtest/box-pick-copied-and-rippled-whole-walk.json reordered so the Zoom box came first: step 29 'dragTracks Zoom Tutorial Sample 0:01 to 0:04: picked Tutorial Sample zoom 1', step 30 'dragTracks Keys Tutorial Sample 0:00 to 0:03 (shift): picked Tutorial Sample zoom 1' (the keys at 1000 and 3000 ms were touched but not kept). Cause read in code: EditorState+TrackRange applyBoxPick with no clip picks calls pickBoxedZoomsOrKeys, which picks the zooms the way a click does and returns before the keys; boxExtras is only kept beside clips. Picking the title first keeps all of them (same walk as committed).",
@@ -26,7 +26,35 @@
     {
       "t": "2026-10-16T12:22:36.090Z",
       "note": "seq 28.5 -> 20"
+    },
+    {
+      "t": "2026-10-16T14:02:07.504Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T14:06:12.594Z",
+      "note": "Reproduced on main f7afb552 with the new walk Scripts/playtest/box-over-zooms-and-keys-keeps-both-walk.json (first part): step 21 'dragTracks Keys Tutorial Sample 0:00 to 0:03 (shift): picked Tutorial Sample zoom 1'; step 23 expectTimelinePick FAILED, keys at 1000 and 3000 ms not kept. Pre-build review: Premiere/FCP keep everything a marquee touches; the gap beyond picking is that a pick with no clip has nothing to carry a drag by (beginBoxPickDrag needs a whole clip), and a key lane drag's release re-sends byMS 0 when the box pick carries the drag."
+    },
+    {
+      "t": "2026-10-16T14:06:12.657Z",
+      "note": "walks none -> box-over-zooms-and-keys-keeps-both-walk"
+    },
+    {
+      "t": "2026-10-16T14:25:04.172Z",
+      "note": "Fixed in EditorState+TrackRange: a box with no clip that touches zooms AND keys (or keys on several layers) is held whole as boxExtras with an empty owner (no layer, no pieces); boxExtrasHeld for that owner also needs no tracks, cut, clicked zoom or clicked keys in hand. Such a pick has no clip to carry it by, so beginBoxPickDrag now starts a BoxExtrasDrag of its own (clamped by boxExtrasRoom, one perform via shiftBoxExtras, keys renamed via noteBoxExtrasLanded); zoom and key drags route through update/commit/cancelBoxPickDrag; ZoomLane, key lanes and canvas draw it in the air. Also fixed: a key lane drag's release re-sent byMS 0 when a box pick carried the drag (KeyLanesView keyDrag onEnded now uses boxPickDragHandMS), which the new fourth walk test exercises."
+    },
+    {
+      "t": "2026-10-16T14:25:04.238Z",
+      "note": "left rough (log only, no task): Option while dragging a zooms+keys pick with no clip moves it rather than copying (copies only exist through the clip bar's drag); the right-click Delete Zoom on a lit bar still removes only zooms. Neither is broken behaviour a person hits in the asked flow, and no open task covers copying extras alone."
+    },
+    {
+      "t": "2026-10-16T14:25:10.465Z",
+      "note": "A box with no clip over a recording's zoom and keys keeps them all picked (panel: 3 picked, 1 zoom, 2 keys); Delete takes them as one step; dragging the zoom bar or a key carries the rest, one undo. EditorState+TrackRange/Zoom/KeyLanes, KeyLanesView. Verified: new walk box-over-zooms-and-keys-keeps-both-walk failed at step 23 before the fix and passes all 63 steps after, at Next defaults with real hand drags; 13 neighbouring box/zoom/key walks green; Scripts/test.sh 13313 tests green. Audit queue/audits/2026-10-16-box-over-zooms-and-keys-keeps-both.json."
     }
   ],
-  "walks": []
+  "walks": [
+    "box-over-zooms-and-keys-keeps-both-walk"
+  ],
+  "started": "2026-10-16T14:02:07.500Z",
+  "completed": "2026-10-16T14:25:10.466Z"
 }

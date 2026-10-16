@@ -1,0 +1,356 @@
+{
+  "out": "/tmp/photonz-playtest/box-over-zooms-and-keys-keeps-both-walk",
+  "seed": "At Next defaults, no flag set: A box on a recording's Zoom lane and then a Shift box on its Scale lane, with no clip touched, keeps the zoom AND both keys picked: the panel says 3 picked, Delete takes all three as one step, and the zoom bar pulled by hand carries the keys with it.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "dragClip",
+      "clip": "Tutorial Sample",
+      "byMS": 0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.0
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "action",
+      "action": "keyAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 7.9
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "endsAt": 5.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 2
+    },
+    {
+      "do": "describe",
+      "stage": "0-the-edit",
+      "note": "the sample recording on V1 with its Scale keyed at 0:01 and 0:03 and a zoom from 0:02 to 0:05"
+    },
+    {
+      "comment": "THE FIRST TEST. A box on the Zoom lane, then a Shift box on the Scale lane: no clip is touched.",
+      "do": "dragTracks",
+      "fromTrack": "Zoom Tutorial Sample",
+      "from": 1.5,
+      "to": 4.0
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Keys Tutorial Sample",
+      "from": 0.5,
+      "to": 3.5,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample key at 1000 ms",
+        "Tutorial Sample key at 3000 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "expect",
+      "field": "Pick summary",
+      "reads": "3 picked: 1 zoom, 2 keys"
+    },
+    {
+      "do": "describe",
+      "stage": "1-picked",
+      "note": "THE FIRST TEST: the zoom and both Scale keys are lit, the recording itself is not picked, and the panel says 3 picked, 1 zoom and 2 keys"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-picked"
+    },
+    {
+      "comment": "THE SECOND TEST. Delete takes the zoom and both keys, as one step.",
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "count": 0
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": []
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "describe",
+      "stage": "2-deleted",
+      "note": "THE SECOND TEST: Delete took the zoom and both keys; the recording stays on V1"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-deleted"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "endsAt": 5.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 2
+    },
+    {
+      "do": "describe",
+      "stage": "3-back",
+      "note": "one undo brings the zoom and both keys back"
+    },
+    {
+      "comment": "THE THIRD TEST. Pick them again and pull the zoom bar half a second later by hand: the keys go with it, as one step.",
+      "do": "dragTracks",
+      "fromTrack": "Zoom Tutorial Sample",
+      "from": 1.5,
+      "to": 4.0
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Keys Tutorial Sample",
+      "from": 0.5,
+      "to": 3.5,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample key at 1000 ms",
+        "Tutorial Sample key at 3000 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "windowDrag",
+      "fromLane": "Zoom Tutorial Sample",
+      "from": 3.0,
+      "to": 3.5,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.5,
+      "endsAt": 5.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample key at 1500 ms",
+        "Tutorial Sample key at 3500 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "4-carried",
+      "note": "THE THIRD TEST: the zoom bar pulled half a second later by hand carried both keys with it, they are still picked, and the recording did not move"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-carried"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "endsAt": 5.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 2
+    },
+    {
+      "do": "describe",
+      "stage": "5-back",
+      "note": "one undo puts the zoom and both keys back where they were"
+    },
+    {
+      "comment": "THE FOURTH TEST. The same pick carried by one of its keys rather than the zoom bar.",
+      "do": "dragTracks",
+      "fromTrack": "Zoom Tutorial Sample",
+      "from": 1.5,
+      "to": 4.0
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Keys Tutorial Sample",
+      "from": 0.5,
+      "to": 3.5,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "windowDrag",
+      "fromLane": "Keys Tutorial Sample",
+      "from": 3.0,
+      "to": 3.5,
+      "steps": 12
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.5,
+      "endsAt": 5.5,
+      "within": 0.06
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Tutorial Sample key at 1500 ms",
+        "Tutorial Sample key at 3500 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "6-carried-by-a-key",
+      "note": "THE FOURTH TEST: the key at 0:03 pulled half a second later by hand carried the other key and the zoom with it, all still picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-carried-by-a-key"
+    }
+  ]
+}

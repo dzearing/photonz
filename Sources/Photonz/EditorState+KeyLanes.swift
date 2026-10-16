@@ -249,7 +249,7 @@ extension EditorState {
 
     func updateKeyDrag(byMS ms: Int, copying: Bool) {
         if dragCarriesBoxPick {
-            updateClipBarDrag(byMS: ms)
+            updateBoxPickDrag(byMS: ms)
             return
         }
         guard var drag = keyLaneDrag else { return }
@@ -262,8 +262,7 @@ extension EditorState {
     /// and what landed is what is picked.
     func commitKeyDrag() {
         if dragCarriesBoxPick {
-            dragCarriesBoxPick = false
-            commitClipBarDrag()
+            commitBoxPickDrag()
             return
         }
         guard let drag = keyLaneDrag else { return }
@@ -274,10 +273,7 @@ extension EditorState {
     }
 
     func cancelKeyDrag() {
-        if dragCarriesBoxPick {
-            dragCarriesBoxPick = false
-            cancelClipBarDrag()
-        }
+        if dragCarriesBoxPick { cancelBoxPickDrag() }
         keyLaneDrag = nil
     }
 

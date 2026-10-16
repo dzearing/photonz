@@ -82,6 +82,10 @@ extension EditorState {
            session.extras.zooms[id] != nil || session.copyExtras.zooms[id] != nil {
             return withDraggedClipBar(document).layer(id: id)?.zooms ?? []
         }
+        // ...and so does a box's pick of zooms and keys carried on its own.
+        if let drag = boxExtrasDrag, drag.group.zooms[id] != nil, let document {
+            return withDraggedBoxExtras(document).layer(id: id)?.zooms ?? []
+        }
         let zooms = document?.layer(id: id)?.zooms ?? []
         guard let drag = zoomDrag, drag.ref.layerID == id else { return zooms }
         return zooms.map { $0.id == drag.ref.zoomID ? drag.landed : $0 }
@@ -414,7 +418,7 @@ extension EditorState {
     /// retimed clip still puts the edge under the hand.
     func updateZoomDrag(byMS delta: Int) {
         if dragCarriesBoxPick {
-            updateClipBarDrag(byMS: delta)
+            updateBoxPickDrag(byMS: delta)
             return
         }
         if var session = zoomDrag, !session.group.isEmpty {
@@ -487,10 +491,9 @@ extension EditorState {
     /// the timeline's left and right edges (`TimelineEdgeScroll`). `handMS`
     /// is what the hand itself has moved.
     func zoomDragHand(laneX: CGFloat, handMS: Int) {
-        guard zoomDrag != nil || (dragCarriesBoxPick && clipBarDrag != nil) else { return }
+        guard zoomDrag != nil || carriesBoxPickNow else { return }
         timelineEdgeScroll.follow(.init(laneX: laneX, contentY: nil), editor: self) { [weak self] scroll in
-            guard let self, self.zoomDrag != nil || (self.dragCarriesBoxPick && self.clipBarDrag != nil)
-            else { return false }
+            guard let self, self.zoomDrag != nil || self.carriesBoxPickNow else { return false }
             self.updateZoomDrag(byMS: handMS + Int(scroll.pannedMS.rounded()))
             return true
         }
@@ -500,8 +503,7 @@ extension EditorState {
     func commitZoomDrag() {
         timelineEdgeScroll.end()
         if dragCarriesBoxPick {
-            dragCarriesBoxPick = false
-            commitClipBarDrag()
+            commitBoxPickDrag()
             return
         }
         guard let session = zoomDrag else { return }
@@ -526,8 +528,7 @@ extension EditorState {
     func cancelZoomDrag() {
         timelineEdgeScroll.end()
         if dragCarriesBoxPick {
-            dragCarriesBoxPick = false
-            cancelClipBarDrag()
+            cancelBoxPickDrag()
             return
         }
         guard zoomDrag != nil else { return }
@@ -554,7 +555,7 @@ extension EditorState {
 
     /// The document with the zoom under a hand where the hand has it.
     func withDraggedZoom(_ document: PhotonzDocument) -> PhotonzDocument {
-        guard let session = zoomDrag else { return document }
+        guard let session = zoomDrag else { return withDraggedBoxExtras(document) }
         var document = document
         if !session.group.isEmpty {
             document.shiftBoxExtras(session.group, byMS: session.groupMS)

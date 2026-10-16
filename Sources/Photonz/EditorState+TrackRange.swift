@@ -179,8 +179,9 @@ extension EditorState {
     /// What a box over `range` on `tracks`, `span` points down the tracks'
     /// own space, touched becomes what is picked: whole clips as picked
     /// layers, one piece as the piece in hand, several pieces as the pieces
-    /// picked, and the zoom bars and keys it touched beside them. Only zooms
-    /// or only keys are picked the way a click picks them. Nothing touched
+    /// picked, and the zoom bars and keys it touched beside them. Only zooms,
+    /// or only keys on one layer, are picked the way a click picks them;
+    /// zooms and keys together stay picked together. Nothing touched
     /// lets everything go. ⇧ and ⌘ (`mode`) add to what is picked or flip.
     func pickWithBox(within range: Range<Int>, onTracks tracks: Set<UUID>,
                      span: ClosedRange<CGFloat>? = nil, mode: BoxPickMode = .replace) {
@@ -293,9 +294,18 @@ extension EditorState {
         }
     }
 
-    /// A box that touched no clip: the zooms it touched are picked as a
-    /// click picks them, else the keys on the layer it touched most of.
+    /// A box that touched no clip: zooms alone are picked as a click picks
+    /// them, and keys on one layer alone the same. Anything more, zooms
+    /// with keys or keys on several layers, is held whole as the box's pick
+    /// with no clip beside it, so the next move or delete takes all of it.
     private func pickBoxedZoomsOrKeys(_ extras: TimelineBoxExtras) {
+        if extras.keyCount > 0, extras.zoomCount > 0 || extras.keys.count > 1 {
+            selectLayer(nil)
+            boxExtras = extras
+            boxExtrasOwner = boxPickOwnerNow
+            documentMomentChanged()
+            return
+        }
         let refs = extras.zooms.flatMap { clip, ids in ids.map { ClipZoomRef(layerID: clip, zoomID: $0) } }
             .sorted { (zoom($0)?.startMS ?? 0, $0.zoomID.uuidString) < (zoom($1)?.startMS ?? 0, $1.zoomID.uuidString) }
         if let first = refs.first {
@@ -316,6 +326,16 @@ extension EditorState {
         selectLayer(nil)
     }
 
+    /// A box's zooms and keys in the hand with no clip to carry them by.
+    struct BoxExtrasDrag: Equatable {
+        let group: TimelineBoxExtras
+        /// How far they can go together (`boxExtrasRoom`).
+        let room: ClosedRange<Int>
+        /// Where the hand is, and where that puts them, in ms of the timeline.
+        var handMS = 0
+        var byMS = 0
+    }
+
     /// The pick of clips a box's zooms and keys were made beside.
     struct BoxPickOwner: Equatable {
         let layer: UUID?
@@ -328,9 +348,16 @@ extension EditorState {
     }
 
     /// The zoom bars and keys a box picked, while the clips it picked beside
-    /// them are still what is picked.
+    /// them are still what is picked. Picked with no clip beside them, they
+    /// count while nothing else has been picked since: no tracks on their
+    /// headers, no cut, no zoom or keys picked by a click.
     var boxExtrasHeld: TimelineBoxExtras? {
-        guard documentHasTime, !boxExtras.isEmpty, boxExtrasOwner == boxPickOwnerNow else { return nil }
+        guard documentHasTime, !boxExtras.isEmpty, let owner = boxExtrasOwner, owner == boxPickOwnerNow
+        else { return nil }
+        if owner.layer == nil, owner.layers.isEmpty, owner.picks.isEmpty {
+            guard selectedTrackIDs.isEmpty, selectedEditPoint == nil, selectedZoom == nil,
+                  keySelection == nil else { return nil }
+        }
         return boxExtras
     }
 
@@ -383,16 +410,84 @@ extension EditorState {
     /// A zoom bar or a key in a box's pick taken hold of: the whole pick is
     /// carried, through the clip bar's own drag on a clip of the pick (the
     /// zoom's own clip where that is picked), so it snaps as a clip does.
-    /// False where the pick has no whole clip to carry it by.
+    /// A pick of zooms and keys alone is carried on its own, as far as the
+    /// one with least room can go. False where there is no box's pick.
     func beginBoxPickDrag(from clip: UUID) -> Bool {
-        guard boxExtrasHeld != nil, timelinePicksHeld == nil else { return false }
+        guard let held = boxExtrasHeld, timelinePicksHeld == nil else { return false }
         let layers = actionableLayerIDs
+        if layers.isEmpty {
+            let group = held.besides(Set(held.zooms.keys).union(held.keys.keys).filter { isClipLocked($0) })
+            guard !group.isEmpty, let document else { return false }
+            pauseDocument()
+            boxExtrasDrag = BoxExtrasDrag(group: group, room: document.boxExtrasRoom(group))
+            dragCarriesBoxPick = true
+            return true
+        }
         guard let anchor = layers.contains(clip) ? clip
                 : selectedLayerID ?? layers.min(by: { $0.uuidString < $1.uuidString }) else { return false }
         beginClipBarDrag(layerID: anchor, grab: .body)
         guard clipBarDrag != nil else { return false }
         dragCarriesBoxPick = true
         return true
+    }
+
+    /// The hand carrying a box's pick moved `delta` ms of the timeline.
+    func updateBoxPickDrag(byMS delta: Int) {
+        guard var drag = boxExtrasDrag else {
+            updateClipBarDrag(byMS: delta)
+            return
+        }
+        drag.handMS = delta
+        drag.byMS = min(max(delta, drag.room.lowerBound), drag.room.upperBound)
+        guard drag != boxExtrasDrag else { return }
+        boxExtrasDrag = drag
+        documentMomentChanged()
+    }
+
+    /// Whether a hand is carrying a box's pick right now.
+    var carriesBoxPickNow: Bool {
+        dragCarriesBoxPick && (clipBarDrag != nil || boxExtrasDrag != nil)
+    }
+
+    /// How far the hand has carried a box's pick, for a release that says
+    /// where the hand was last.
+    var boxPickDragHandMS: Int {
+        boxExtrasDrag?.handMS ?? clipBarDrag?.handMS ?? 0
+    }
+
+    /// Let go of a box's pick being carried: one undo step, and what landed
+    /// is still what is picked.
+    func commitBoxPickDrag() {
+        dragCarriesBoxPick = false
+        guard let drag = boxExtrasDrag else {
+            commitClipBarDrag()
+            return
+        }
+        boxExtrasDrag = nil
+        if drag.byMS != 0 {
+            var landed = drag.group
+            perform { landed = $0.shiftBoxExtras(drag.group, byMS: drag.byMS) }
+            noteBoxExtrasLanded(landed)
+        }
+        documentMomentChanged()
+    }
+
+    func cancelBoxPickDrag() {
+        dragCarriesBoxPick = false
+        guard boxExtrasDrag != nil else {
+            cancelClipBarDrag()
+            return
+        }
+        boxExtrasDrag = nil
+        documentMomentChanged()
+    }
+
+    /// The document with a box's zooms and keys where the hand has them.
+    func withDraggedBoxExtras(_ document: PhotonzDocument) -> PhotonzDocument {
+        guard let drag = boxExtrasDrag, drag.byMS != 0 else { return document }
+        var document = document
+        document.shiftBoxExtras(drag.group, byMS: drag.byMS)
+        return document
     }
 
     /// The keys a carried pick left where they landed: a key is named by

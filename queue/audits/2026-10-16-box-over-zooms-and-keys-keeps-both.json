@@ -1,0 +1,25 @@
+{
+  "feature": "A box over zooms and keys keeps them all picked",
+  "epic": "video-cutting",
+  "summary": "A box that touches a recording's zoom and its keys, with no clip in it, now keeps all of them picked: the panel says how many, Delete takes them all as one step, and pulling the zoom bar or any of the keys carries the rest with it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording, key its Scale at 0:01 and 0:03, and add a zoom at 0:02.",
+  "switched": {},
+  "try": [
+    { "do": "Drag a box along the recording's Zoom lane across the zoom bar.", "shot": "2026-10-16-box-zooms-keys-1-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Hold Shift and drag a second box along the Scale lane across both keys: the panel reads 3 picked, 1 zoom, 2 keys." },
+    { "do": "Press Delete: the zoom and both keys go. Press Cmd Z once: all three come back.", "shot": "2026-10-16-box-zooms-keys-2-deleted-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick them again and drag the zoom bar half a second later: both keys go with it and stay picked.", "shot": "2026-10-16-box-zooms-keys-4-carried-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Cmd Z, pick them again and drag one of the keys instead: the zoom and the other key follow.", "shot": "2026-10-16-box-zooms-keys-6-carried-by-a-key-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Does the pick look like one thing when the zoom bar and the keys light together with no clip lit?",
+    "Does dragging by a key feel the same as dragging by the zoom bar?",
+    "When one of them meets the end of the recording, does the whole group stopping there feel right, rather than leaving that one behind?",
+    "Is 3 picked, 1 zoom, 2 keys enough in the panel, or do you want the zoom's own settings there as well?"
+  ],
+  "rough": [
+    "No mock covers a box pick of zooms and keys alone; this follows the box pick already shipped beside clips.",
+    "Holding Option while dragging such a pick moves it rather than copying it. A copy is made only when a clip is in the pick.",
+    "A box that touches only keys on several layers now keeps them all as well, where it used to keep only the layer with the most keys."
+  ]
+}

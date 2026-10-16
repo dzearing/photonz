@@ -337,6 +337,11 @@ private struct KeyLaneView: View {
 
     /// Where a key is drawn: carried by the drag in the air when it is picked.
     private func shownMS(_ key: LaneKey) -> Int {
+        // A box's pick of zooms and keys carried on its own
+        // (`EditorState+TrackRange`).
+        if let carried = editorState.boxExtrasDrag, carried.group.keys[layerID]?.contains(key.ref) == true {
+            return key.documentMS + carried.byMS
+        }
         guard let drag, picked.contains(key.ref) else { return key.documentMS }
         return key.documentMS + drag.byMS
     }
@@ -898,7 +903,9 @@ private struct KeyLaneView: View {
                 editorState.updateKeyDrag(byMS: moved, copying: NSEvent.modifierFlags.contains(.option))
             }
             .onEnded { _ in
-                editorState.updateKeyDrag(byMS: editorState.keyLaneDrag?.byMS ?? 0,
+                // Where the hand was last: a box's pick it carries keeps
+                // its own reckoning rather than the lane's.
+                editorState.updateKeyDrag(byMS: editorState.keyLaneDrag?.byMS ?? editorState.boxPickDragHandMS,
                                           copying: NSEvent.modifierFlags.contains(.option))
                 editorState.commitKeyDrag()
             }
