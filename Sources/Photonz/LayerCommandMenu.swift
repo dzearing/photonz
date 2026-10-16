@@ -114,7 +114,8 @@ enum LayerCommandList {
             })
         }
         rows.append(.command("Select Pixels") { editorState.selectLayerPixels(id: id) })
-        rows.append(.command("Merge Down", .command("e")) { editorState.mergeDown(id: id) })
+        rows.append(.command("Merge Down", .command("e"),
+                             enabled: editorState.canMergeDown(id: id)) { editorState.mergeDown(id: id) })
         // Before "Turn Into Picture", because it is the gentler of the two: one
         // keeps the shape editable and takes away only its being a rectangle,
         // the other makes it pixels. A row that cannot take it does not show it

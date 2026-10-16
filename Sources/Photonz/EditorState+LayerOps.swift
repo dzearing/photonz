@@ -161,13 +161,28 @@ extension EditorState {
         mergeLayers(ids: [document.layers[idx - 1].id, id])
     }
 
-    /// Whether ⌘E has something to merge (menu enablement).
+    /// Whether ⌘E has something to merge (menu enablement). Never a layer
+    /// with time, on either side: a merge makes a still, and a clip, a sound
+    /// or a title with an in and an out would lose its time (`LayerMerge.swift`).
     var canMergeDown: Bool {
         guard let document else { return false }
-        if multiSelectedLayerIDs.count >= 2 { return true }
-        guard let id = selectedLayerID, let idx = document.index(of: id), idx > 0,
+        if multiSelectedLayerIDs.count >= 2 {
+            return Layer.canMerge(document.layers.filter { multiSelectedLayerIDs.contains($0.id) })
+        }
+        guard let id = selectedLayerID else { return false }
+        return canMergeDown(id: id)
+    }
+
+    /// Whether a layer ROW's Merge Down has something to merge: the whole
+    /// selection when the row is part of it, else the row and the one below.
+    func canMergeDown(id: UUID) -> Bool {
+        guard let document else { return false }
+        if multiSelectedLayerIDs.contains(id), multiSelectedLayerIDs.count >= 2 {
+            return Layer.canMerge(document.layers.filter { multiSelectedLayerIDs.contains($0.id) })
+        }
+        guard let idx = document.index(of: id), idx > 0,
               !document.layers[idx].isLocked else { return false }
-        return true
+        return Layer.canMerge([document.layers[idx - 1], document.layers[idx]])
     }
 
     /// Composites the given layers (bottom-up order) into ONE image layer, in
@@ -180,7 +195,7 @@ extension EditorState {
         guard let document, ids.count >= 2 else { return }
         let idSet = Set(ids)
         let participants = document.layers.filter { idSet.contains($0.id) }
-        guard participants.count >= 2, participants.allSatisfy(\.isVisible),
+        guard Layer.canMerge(participants), participants.allSatisfy(\.isVisible),
               let bottom = participants.first,
               participants.dropFirst().allSatisfy({ !$0.isLocked }) else { return }
 

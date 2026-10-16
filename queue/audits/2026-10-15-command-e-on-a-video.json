@@ -1,0 +1,24 @@
+{
+  "feature": "Command E never flattens a recording",
+  "epic": "video-beats-premiere",
+  "summary": "Merge Down never takes a clip, a sound or anything with an in and an out, so Command E with a title picked over a recording no longer bakes the video into a still. Two still layers on a picture merge exactly as before.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/command-e-on-a-video-keeps-the-clip-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording from the Welcome window." },
+    { "do": "Press T, click on the picture and type Shipping today, then press Command Return.", "shot": "2026-10-15-command-e-video-1-title-picked-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "With the title still picked, press Command E.", "shot": "2026-10-15-command-e-video-2-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open the Layer menu and look at Merge Down: it is dimmed." },
+    { "do": "On a picture, draw two shapes, pick the top one and press Command E: they merge into one picture as before." }
+  ],
+  "evaluate": [
+    "After Command E, are the recording and the title both still on the timeline with all their time?",
+    "Is a dimmed Merge Down with no message enough, or do you want a short note on the canvas saying why nothing happened?",
+    "Is Shift Command E for Export easy enough to find on a video, given Final Cut uses Command E?"
+  ],
+  "rough": [
+    "The mock prints Command E for Export MP4. Photoshop gives Command E to Merge Down and Premiere gives it to Edit Original (Premiere's Export is Command M), so neither tool gives it to Export: Command E stays Merge Down on a video and Export stays on Shift Command E (UX-PATTERNS §7).",
+    "Command E on a clip does nothing and says nothing: the row is dimmed, with no canvas note explaining why.",
+    "Premiere's Export key, Command M, is not added: on a Mac it is Minimize, and the task did not ask for it."
+  ]
+}

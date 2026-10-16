@@ -420,6 +420,10 @@ struct EditorCommands: Commands {
             }
             Divider()
             // ⇧⌘E — plain ⌘E is Merge Down, matching Photoshop's layer shortcuts.
+            // On a video too (UX-PATTERNS §7): Premiere gives ⌘E to Edit
+            // Original and Export to ⌘M, so neither tool gives ⌘E to Export,
+            // and Merge Down there never takes a layer with time
+            // (`LayerMerge.swift`).
             // One Export command for both editors: a picture and a recording
             // leave the app through the same sheet and the same key.
             Button("Export…") {

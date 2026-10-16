@@ -1,0 +1,30 @@
+{
+  "out": "/tmp/photonz-playtest/command-e-on-a-video-keeps-the-clip",
+  "seed": "Command E on a video never flattens the recording into a still (task command-e-on-a-video-never-flattens-the-recordin). Next defaults, no flags: type a title over the sample recording, keep it picked, press Command E. Merge Down is dimmed because the clip under the title has time, so the clip and the title are both still there.",
+  "setup": { "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "action", "action": "videoSeekMiddle" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "tool", "tool": "text" },
+    { "do": "click", "at": [620, 330] },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "type", "text": "Shipping today" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "return", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectPicked", "layers": ["Shipping today"] },
+    { "do": "expectClip", "clip": "Tutorial Sample", "count": 1 },
+    { "do": "snapshot", "name": "1-title-picked" },
+    { "do": "shortcut", "key": "e", "modifiers": ["command"], "menuItem": "Merge Down" },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectLayers", "count": 2 },
+    { "do": "expectPicked", "layers": ["Shipping today"] },
+    { "do": "expectClip", "clip": "Tutorial Sample", "count": 1, "track": "V1", "startsAt": 0, "endsAt": 8 },
+    { "do": "snapshot", "name": "2-after-command-e" },
+    { "do": "describe", "stage": "2-after-command-e", "note": "Command E with a title picked over the recording did nothing: Merge Down is dimmed because the clip has time, and both the title and the clip are still on the timeline." }
+  ]
+}
