@@ -50,6 +50,22 @@ public struct Viewport: Equatable, Sendable {
             .clamped()
     }
 
+    /// The camera a freshly opened document lands on: `plannedZoom` (the zoom
+    /// the window was sized for, usually 100%) centred in the clear part of
+    /// the view, unless the view it actually got cannot hold the picture at
+    /// that zoom, when it is the fit instead. The window plan knows nothing of
+    /// what stacks under the canvas (a timeline, the transport), so this is
+    /// where a recording that opens straight into Edit comes back above them.
+    /// A zoom below `plannedZoom` means it fitted.
+    public static func opening(documentSize: CGSize, in viewSize: CGSize, plannedZoom: CGFloat,
+                               obscuredBottom: CGFloat = 0) -> Viewport {
+        let fit = fit(documentSize: documentSize, in: viewSize, obscuredBottom: obscuredBottom)
+        guard plannedZoom.isFinite, plannedZoom > 0, fit.zoom >= plannedZoom else { return fit }
+        let zoom = min(max(plannedZoom, minZoom), maxZoom)
+        return Viewport(documentSize: documentSize, viewSize: viewSize, zoom: zoom, origin: .zero,
+                        obscuredBottom: obscuredBottom).clamped()
+    }
+
     /// The height of the part of the view nothing covers.
     public var clearHeight: CGFloat {
         viewSize.height - Self.cover(obscuredBottom, view: viewSize.height)

@@ -3935,13 +3935,16 @@ final class EditorState {
         if let scale = pendingOpenScale, let document, size.width > 0, size.height > 0 {
             pendingOpenScale = nil
             let zoom = scale / max(1, document.pixelScale)
-            viewport = Viewport(documentSize: document.canvasSize, viewSize: size,
-                                zoom: zoom, origin: .zero,
-                                obscuredBottom: fitObscuredBottom).clamped()
+            // The plan sized the window for the picture alone; a recording
+            // opening straight into Edit has the timeline and transport under
+            // the canvas too, so a planned zoom the canvas cannot hold fits.
+            let opened = Viewport.opening(documentSize: document.canvasSize, in: size,
+                                          plannedZoom: zoom, obscuredBottom: fitObscuredBottom)
+            viewport = opened
             // 100% is a choice worth keeping through a resize; a zoom brought
             // down only so the picture fits the screen is a fit, and keeps
             // fitting until somebody moves the camera.
-            appPlaced(viewport, fitted: scale < 1)
+            appPlaced(viewport, fitted: scale < 1 || opened.zoom < zoom)
             takePendingFocus()
             revealHostWindowIfHidden()
             return

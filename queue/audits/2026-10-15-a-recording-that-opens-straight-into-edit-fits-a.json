@@ -1,0 +1,24 @@
+{
+  "feature": "A recording that opens straight into Edit fits above the tool bar and the timeline",
+  "epic": "video-editing",
+  "summary": "A guide's sample and a recording you already cut now open with the whole picture above the tool bar, the transport and the timeline, the same fit you get after switching from View to Edit. Before, they sometimes opened at 99% with the bottom of the picture under all three.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Help > Tutorials, start Cut a recording down.", "shot": "2026-10-15-recording-opens-fitted-1-guide-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Close the guide, click the ruler partway in and press Command K to cut the clip." },
+    { "do": "File > Save As to save it as a project, then close the window." },
+    { "do": "Open the saved project from Finder.", "shot": "2026-10-15-recording-opens-fitted-2-reopened-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open a small screenshot (800 by 500).", "shot": "2026-10-15-recording-opens-fitted-3-picture-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "When the guide's recording opens, is the whole picture visible above the tool bar, with nothing under the transport or the timeline?",
+    "Does a project you cut and saved come back at the same size it would have after a View to Edit switch?",
+    "Does a small screenshot still open at 100%?",
+    "Does the opening size look settled, with no jump after the window appears?"
+  ],
+  "rough": [
+    "The window is still sized as if only the picture needed room, so a recording that opens into Edit fills a maxed window and the picture shrinks to fit (79% for the 1280 by 800 sample on this Mac). Sizing the window for the timeline too would only matter on a screen with room to spare.",
+    "No mock covers the zoom a document opens at; the fitted picture above the timeline matches the video editor pages' layout."
+  ]
+}

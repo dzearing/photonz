@@ -1,0 +1,37 @@
+{
+  "out": "/tmp/photonz-playtest/a-recording-that-opens-into-edit-fits-above-the-timeline-walk",
+  "seed": "A recording that opens straight into Edit comes up fitted into the room above the tool bar, the transport and the timeline, the way it does after a switch from View to Edit. Before 2026-10-15 it came up at 99%, with its lower part under the tool bar, the transport and the timeline. At Next defaults with no flag set: the Cut a recording down guide's sample, then that recording cut once, saved as a project, closed and opened again, and every time the whole picture ends above the tool bar. A small picture with no time still opens at 100%.",
+  "setup": {
+    "forget": ["all"]
+  },
+  "steps": [
+    { "do": "startGuide", "guide": "cut-a-recording-down" },
+    { "do": "waitFor", "condition": "tutorialStep", "value": "a-clip-on-v1", "timeout": 40 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "toolBar", "stage": "1-guide-opened", "clearOfPicture": true },
+    { "do": "describe", "stage": "1-guide-opened", "note": "THE TEST: the guide's recording opened straight into Edit with the tracks up, and the whole picture sits above the tool bar, not at 99% running under it and the transport" },
+    { "do": "snapshot", "name": "1-guide-opened" },
+
+    { "do": "action", "action": "videoSeekThreeQuarters" },
+    { "do": "key", "key": "k", "modifiers": ["command"] },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectRecording", "pieces": 2 },
+    { "do": "action", "action": "saveProjectAs" },
+    { "do": "action", "action": "closeDocument" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "open", "file": "/tmp/photonz-playtest/a-recording-that-opens-into-edit-fits-above-the-timeline-walk/project.photonz" },
+    { "do": "wait", "seconds": 1.2 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "toolBar", "stage": "2-edited-reopened", "clearOfPicture": true },
+    { "do": "describe", "stage": "2-edited-reopened", "note": "THE TEST: a recording somebody already cut, opened again: it comes back in Edit, fitted above the tool bar and the timeline" },
+    { "do": "snapshot", "name": "2-edited-reopened" },
+
+    { "do": "open", "file": "fixtures/Busy screenshot 800x500.png" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "waitFor", "condition": "displayZoom", "value": 100, "timeout": 2 },
+    { "do": "toolBar", "stage": "3-picture-at-100", "clearOfPicture": true },
+    { "do": "describe", "stage": "3-picture-at-100", "note": "a picture with no time that the window can hold still opens at 100%" },
+    { "do": "snapshot", "name": "3-picture-at-100" }
+  ]
+}
