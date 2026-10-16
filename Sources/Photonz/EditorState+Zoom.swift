@@ -76,6 +76,12 @@ extension EditorState {
     /// A clip's zooms as the hand has them: the one being dragged where the
     /// hand has it.
     func zoomsShown(onClip id: UUID) -> [ClipZoom] {
+        // A clip's bar carrying a box's zooms, or copying them, shows them
+        // where the hand has them (`withDraggedClipBar`).
+        if let session = clipBarDrag, let document,
+           session.extras.zooms[id] != nil || session.copyExtras.zooms[id] != nil {
+            return withDraggedClipBar(document).layer(id: id)?.zooms ?? []
+        }
         let zooms = document?.layer(id: id)?.zooms ?? []
         guard let drag = zoomDrag, drag.ref.layerID == id else { return zooms }
         return zooms.map { $0.id == drag.ref.zoomID ? drag.landed : $0 }

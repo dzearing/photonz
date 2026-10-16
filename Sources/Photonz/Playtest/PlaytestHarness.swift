@@ -18014,6 +18014,20 @@ private final class Run {
             }
             return (row.lowerBound + row.upperBound) / 2 + (row.upperBound - row.lowerBound) * lean
         }
+        // A layer's key lanes, all of them together, as "Keys <layer>".
+        if name.lowercased().hasPrefix("keys ") {
+            let layerName = String(name.dropFirst(5))
+            guard let id = editor.document?.layers.first(where: {
+                $0.name.compare(layerName, options: .caseInsensitive) == .orderedSame
+            })?.id else {
+                throw Failure(description: "no layer is called \"\(layerName)\"")
+            }
+            let rows = editor.keyLaneRows.filter { $0.key.layerID == id }.map(\.value)
+            guard let top = rows.map(\.lowerBound).min(), let bottom = rows.map(\.upperBound).max() else {
+                throw Failure(description: "no key lanes are on screen for \"\(layerName)\"")
+            }
+            return (top + bottom) / 2 + (bottom - top) * lean
+        }
         let tracks = editor.document?.timelineTracks ?? []
         guard let id = tracks.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })?.id
         else {

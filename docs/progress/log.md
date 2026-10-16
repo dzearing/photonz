@@ -21467,3 +21467,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - A cut with no spare frames either side now offers "Or · Shorten the cut by 0.4s" in the Transition section (mock video-transition-wt.html step 10). It trims exactly what the overlap needs off both clip ends on every unlocked track, closes the gap and puts the dissolve on, as one undo (`PhotonzCore/ShortenTheCut.swift`, `ShortenTheCutTests`, walk `shorten-the-cut-for-a-dissolve-walk`).
 - Command T at such a cut keeps its dip fallback.
 - Open: decision card on `or-sits-beside-shorten-the-cut-the-way-the-trans` (Or stacks above the button at the usual panel width).
+
+## 2026-10-16 — A box's pick is copied and ripple deleted whole
+
+- Option drag on a clip in a box's pick copies the zooms and keys picked beside it on other clips by the same time, in one undo, and the copies become the pick. Zoom copies land only where every one fits clear of its clip's zooms; the hand stops at the nearest such shift (`PhotonzCore/TimelineBoxPick.swift`: `boxExtrasCopyRoom`, `boxExtrasCopyShift`, `copyBoxExtras`; `EditorState+ClipBar` copy session `copyExtras`). The Zoom lane now draws carried or copied zooms where the hand has them (`zoomsShown`).
+- Shift Delete (and a picked clip's right-click Delete / Ripple Delete) on a box's pick of whole clips takes the zooms and keys beside them too; before, it rippled one clip and left them (`rippleDeleteBoxPick`, `EditorState.extractBoxPick`).
+- Walk `box-pick-copied-and-rippled-whole-walk` (new `Keys <layer>` row name for dragTracks); core tests in `TimelineBoxPickTests`/`TimelineBoxCopyTests`. 13,308 tests green.
+- Filed: `a-box-over-zooms-and-keys-with-no-clip-in-it-kee` (a box pick of only zooms and keys drops the keys).

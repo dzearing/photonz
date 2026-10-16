@@ -1,0 +1,28 @@
+{
+  "id": "a-box-over-zooms-and-keys-with-no-clip-in-it-kee",
+  "title": "A box over zooms and keys with no clip in it keeps both picked",
+  "goal": "On the timeline, a Shift box that adds a recording's keys to a zoom already picked (or one box that touches only zooms and keys) quietly drops the keys and keeps only the zooms, so the next move or delete leaves the keys behind. Whatever a box touches should stay picked together.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 28.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T11:07:56.893Z",
+  "updated": "2026-10-16T11:07:56.896Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-16 while working a-box-pick-on-the-timeline-is-copied-and-ripple, with Scripts/playtest/box-pick-copied-and-rippled-whole-walk.json reordered so the Zoom box came first: step 29 'dragTracks Zoom Tutorial Sample 0:01 to 0:04: picked Tutorial Sample zoom 1', step 30 'dragTracks Keys Tutorial Sample 0:00 to 0:03 (shift): picked Tutorial Sample zoom 1' (the keys at 1000 and 3000 ms were touched but not kept). Cause read in code: EditorState+TrackRange applyBoxPick with no clip picks calls pickBoxedZoomsOrKeys, which picks the zooms the way a click does and returns before the keys; boxExtras is only kept beside clips. Picking the title first keeps all of them (same walk as committed).",
+  "acceptance": [
+    "A box on a recording's Zoom lane, then a Shift box on its Scale lane, leaves the zoom and both keys picked, and the panel says 3 picked",
+    "Dragging that pick or pressing Delete acts on the zoom and the keys together, each as one undo step",
+    "A walk at Next defaults reproduces it first and then passes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T11:07:56.895Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": []
+}

@@ -2902,7 +2902,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// stretch of time on the tracks it crosses. The same moment on the same
     /// track is a click. `hold` names a picture taken before letting go.
     /// A track name may also be `Zoom <clip>`, that clip's Zoom lane, or
-    /// `Under the tracks`, the empty strip under the last one. `modifiers`
+    /// `Under the tracks`, the empty strip under the last one, or `Keys <layer>`,
+    /// all of that layer's key lanes together. `modifiers`
     /// are held for the whole drag: Shift adds to what is picked, Command
     /// flips each thing in or out.
     case dragTracks(fromTrack: String, from: Double, toTrack: String, to: Double, option: Bool, hold: String?,

@@ -156,6 +156,115 @@ extension PhotonzDocument {
         }
         return changed
     }
+
+    /// ⇧⌫ on a box's pick: the clips and pieces go and their gaps close on
+    /// their own tracks, and the zooms and keys picked beside them on clips
+    /// left in place go too, as one change for the caller to make one step.
+    /// Answers whether anything went.
+    @discardableResult
+    public mutating func rippleDeleteBoxPick(_ picks: [TimelinePick], extras: TimelineBoxExtras) -> Bool {
+        // The zooms and keys first: a key is named by where it sits, and the
+        // ripple may move the clip it is on.
+        let rest = extras.besides(Set(picks.filter { $0.piece == nil }.map(\.layerID)))
+        let removed = removeBoxExtras(rest)
+        let rippled = rippleDeletePicks(picks)
+        return removed || rippled
+    }
+
+    // MARK: Copying them
+
+    /// Every shift, in ms of the timeline, at which a copy of every zoom and
+    /// key in `extras` lands inside its clip, and every zoom's copy clear of
+    /// every zoom already on its clip (meeting one is fine): earliest first.
+    /// Nothing to copy fits anywhere.
+    public func boxExtrasCopyRoom(_ extras: TimelineBoxExtras) -> [ClosedRange<Int>] {
+        var room = [Int.min...Int.max]
+        func keep(_ allowed: ClosedRange<Int>) {
+            room = room.compactMap { range in
+                let low = max(range.lowerBound, allowed.lowerBound), high = min(range.upperBound, allowed.upperBound)
+                return low <= high ? low...high : nil
+            }
+        }
+        // Takes out every shift strictly between `low` and `high`.
+        func refuse(_ low: Int, _ high: Int) {
+            guard low < high - 1 else { return }
+            room = room.flatMap { range -> [ClosedRange<Int>] in
+                var kept: [ClosedRange<Int>] = []
+                if range.lowerBound <= low { kept.append(range.lowerBound...min(range.upperBound, low)) }
+                if range.upperBound >= high { kept.append(max(range.lowerBound, high)...range.upperBound) }
+                return kept
+            }
+        }
+        for (clip, ids) in extras.zooms where !isBoxLocked(clip) && !ids.isEmpty {
+            guard let layer = layer(id: clip), let time = layer.time else { return [] }
+            let spans = (layer.zooms ?? []).compactMap { layer.timelineSpanMS(of: $0.id) }
+            for id in ids {
+                guard let span = layer.timelineSpanMS(of: id) else { continue }
+                keep((time.inMS - span.start)...(time.outMS - span.end))
+                // Overlapping a zoom is a shift between its start less this
+                // one's end and its end less this one's start.
+                for other in spans { refuse(other.start - span.end, other.end - span.start) }
+            }
+        }
+        for (layerID, refs) in extras.keys where !isBoxLocked(layerID) && !refs.isEmpty {
+            guard let time = layer(id: layerID)?.time else { return [] }
+            for lane in keyLanes(layerID: layerID) {
+                for key in lane.keys where refs.contains(key.ref) {
+                    keep((time.inMS - key.documentMS)...(time.outMS - key.documentMS))
+                }
+            }
+        }
+        return room
+    }
+
+    /// The shift nearest `wanted` at which copies of everything in `extras`
+    /// fit (`boxExtrasCopyRoom`). Nil where they fit nowhere.
+    public func boxExtrasCopyShift(_ extras: TimelineBoxExtras, nearest wanted: Int) -> Int? {
+        boxExtrasCopyRoom(extras)
+            .map { min(max(wanted, $0.lowerBound), $0.upperBound) }
+            .min { abs($0 - wanted) < abs($1 - wanted) }
+    }
+
+    /// A copy of every zoom and key in `extras`, `delta` ms along the
+    /// timeline on the clip it is on, the originals left where they are. A
+    /// zoom that follows the pointer follows it again where its copy lands,
+    /// from `pointerTracks` (by clip). Answers the copies; nil, with nothing
+    /// changed, where any one of them would not fit.
+    @discardableResult
+    public mutating func copyBoxExtras(_ extras: TimelineBoxExtras, byMS delta: Int,
+                                       pointerTracks: [UUID: PointerTrack] = [:]) -> TimelineBoxExtras? {
+        guard delta != 0, boxExtrasCopyRoom(extras).contains(where: { $0.contains(delta) }) else { return nil }
+        var trial = self
+        var made = TimelineBoxExtras()
+        for (clip, ids) in extras.zooms where !trial.isBoxLocked(clip) {
+            guard let layer = trial.layer(id: clip), let range = layer.zoomSourceRange else { return nil }
+            var zooms = layer.zooms ?? []
+            var copies: [ClipZoom] = []
+            for zoom in zooms where ids.contains(zoom.id) {
+                guard let span = layer.timelineSpanMS(of: zoom.id) else { return nil }
+                var copy = zoom
+                copy.id = UUID()
+                copy.startMS = layer.motionClockMS(atDocumentTimeMS: span.start + delta)
+                copy.endMS = copy.startMS + zoom.lengthMS
+                guard copy.startMS >= range.lowerBound, copy.endMS <= range.upperBound,
+                      !zooms.contains(where: { $0.startMS < copy.endMS && $0.endMS > copy.startMS })
+                else { return nil }
+                if copy.followsCursor, let track = pointerTracks[clip] { copy.bakeCursor(from: track) }
+                copies.append(copy)
+            }
+            guard !copies.isEmpty else { continue }
+            zooms += copies
+            trial.updateLayer(id: clip) { $0.zooms = zooms.sorted { $0.startMS < $1.startMS } }
+            made.zooms[clip] = Set(copies.map(\.id))
+        }
+        for (layerID, refs) in extras.keys where !trial.isBoxLocked(layerID) && !refs.isEmpty {
+            let landed = trial.moveKeys(layerID: layerID, refs, byMS: delta, copying: true)
+            if landed != refs { made.keys[layerID] = landed }
+        }
+        guard !made.isEmpty else { return nil }
+        self = trial
+        return made
+    }
 }
 
 /// What the panel says about several things picked on the timeline at once: how

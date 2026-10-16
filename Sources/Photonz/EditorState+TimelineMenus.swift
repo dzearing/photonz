@@ -254,10 +254,13 @@ extension EditorState {
         // the whole clip's rows stay, without a key that does something else.
         let keys = !sectionTakesTheDelete
         rows.append(.command("Delete", keys ? TimelineMenuKeys.delete : nil, destructive: true) {
+            // A box's pick takes the zooms and keys beside its clips too.
+            if self.boxExtrasHeld != nil, targets.contains(layerID), self.deleteBoxPick() { return }
             if targets.count > 1 { return self.deleteLayers(ids: targets) }
             self.deleteFromTimeline(layerID: layerID, piece: onePiece ? nil : index)
         })
         rows.append(.command("Ripple Delete", keys ? TimelineMenuKeys.rippleDelete : nil, destructive: true) {
+            if self.boxExtrasHeld != nil, targets.contains(layerID), self.extractBoxPick() { return }
             if targets.count > 1 { return self.rippleDeleteClips(targets) }
             self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
         })
@@ -405,6 +408,7 @@ extension EditorState {
     /// clip, else the picked clip itself.
     var canRippleDeleteInHand: Bool {
         if rulerRangeHeld != nil { return canTakeOutMarkedStretch }
+        if boxExtrasHeld != nil { return true }
         if trackRangeHeld != nil || timelinePicksHeld != nil { return canTakeOutTrackThing }
         if timelineGapHeld != nil { return canCloseGapInHand }
         if sectionTakesTheDelete { return true }

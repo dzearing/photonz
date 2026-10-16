@@ -1,0 +1,52 @@
+{
+  "feature": "A box's pick is copied and ripple deleted whole",
+  "epic": "video-cutting",
+  "task": "a-box-pick-on-the-timeline-is-copied-and-ripple",
+  "summary": "Option drag on a clip in a box's pick now copies the zooms and keys picked beside it on other clips too, by the same time, in one undo. Shift Delete on such a pick takes the zooms and keys along with the clips and closes the clips' gaps, in one undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the tutorial sample recording, animate its Scale at 0:01 and key it again at 0:03, add a zoom at 0:02, and type a title at 0:01. Walk: Scripts/playtest/box-pick-copied-and-rippled-whole-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag a box over the title, then Shift drag a box on the recording's Zoom lane and another on its Scale lane.",
+      "shot": "2026-10-16-box-pick-whole-1-picked.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Hold Option and drag the title about two and a half seconds right: the zoom's and keys' copies travel with it, and the hand stops at three seconds, where the zoom's copy fits.",
+      "shot": "2026-10-16-box-pick-whole-2-copy-in-hand.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go: a copy of the title, the zoom and both keys lands three seconds later, and the copies are what is picked.",
+      "shot": "2026-10-16-box-pick-whole-3-copied.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: every copy goes."
+    },
+    {
+      "do": "Pick the same three again and press Shift Delete: the title, the zoom and both keys go, and the recording stays.",
+      "shot": "2026-10-16-box-pick-whole-5-rippled.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z once: all of them come back.",
+      "shot": "2026-10-16-box-pick-whole-6-back.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "When the zoom's copy has nowhere to go near the hand, does stopping the whole copy at the nearest spot that fits feel right, rather than dropping the zoom from the copy?",
+    "After the copy lands, do you expect the copies (not the originals) to be what is picked?",
+    "Is Shift Delete taking the zooms and keys with the title what you expected, given they have no gap of their own to close?",
+    "Right click a picked clip and choose Delete or Ripple Delete: does it act on the whole pick the way the keys do?"
+  ],
+  "rough": [
+    "No mock draws a box pick or copying several kinds of thing at once, so this follows Premiere: Option drag copies everything picked and the copies become the pick.",
+    "A pick of zooms and keys with no clip in it keeps only the zooms (filed as a-box-over-zooms-and-keys-with-no-clip-in-it-kee); pick a clip first and all of it stays.",
+    "Copied keys landing on a moment that already has a key replace it, as copied keys already do on their own lane.",
+    "When the copies fit nowhere on their clips, the hand stays put and nothing is copied; the drag does not say why.",
+    "The walk copies with the harness's own drag call, not a real pointer drag; the real Option drag of one clip is proven by option-drag-copies-a-clip-walk.",
+    "Every picture here was taken with the window behind another app, so picked controls show their background look."
+  ]
+}

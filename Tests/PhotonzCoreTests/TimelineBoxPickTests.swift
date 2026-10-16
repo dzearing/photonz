@@ -196,6 +196,157 @@ struct TimelineBoxPickTests {
         let nothing = doc.removeBoxExtras(TimelineBoxExtras())
         #expect(!nothing)
     }
+
+    @Test("Ripple deleting a box's pick takes its clips, closes their gap and takes the zooms and keys beside them")
+    func rippleDeleteTakesTheWholePick() throws {
+        var (doc, clip, early, late, title) = try Self.edit()
+        let lanes = Set(doc.keyLanes(layerID: title).map(\.motionID))
+        var extras = TimelineBoxExtras()
+        // The recording's own zoom rides with it; the title's keys are beside it.
+        extras.zooms[clip] = [early]
+        extras.keys[title] = doc.marqueeKeys(within: 0..<12_000, layerID: title, motionIDs: lanes)
+        let changed = doc.rippleDeleteBoxPick([TimelinePick(layerID: clip, piece: nil)], extras: extras)
+        #expect(changed)
+        #expect(doc.layer(id: clip) == nil)
+        #expect(doc.layer(id: title) != nil)
+        #expect(Self.keyTimes(doc, title).isEmpty)
+        _ = late
+    }
+
+    @Test("Ripple deleting a title picked with a zoom on a recording left in place takes the zoom too")
+    func rippleDeleteTakesZoomsOnClipsLeftBehind() throws {
+        var (doc, clip, early, late, title) = try Self.edit()
+        var extras = TimelineBoxExtras()
+        extras.zooms[clip] = [early]
+        let changed = doc.rippleDeleteBoxPick([TimelinePick(layerID: title, piece: nil)], extras: extras)
+        #expect(changed)
+        #expect(doc.layer(id: title) == nil)
+        #expect(doc.layer(id: clip)?.zooms?.map(\.id) == [late])
+        // Nothing picked at all changes nothing.
+        let nothing = doc.rippleDeleteBoxPick([], extras: TimelineBoxExtras())
+        #expect(!nothing)
+    }
+}
+
+/// **Option drag on a box's pick copies all of it**
+/// (task `a-box-pick-on-the-timeline-is-copied-and-ripple`).
+///
+/// Option drag on a picked clip leaves a copy of every picked clip behind
+/// the hand; the zooms and keys a box picked beside them on clips that stay
+/// put are copied by the same time, onto the clips they are on. Zooms on one
+/// clip never overlap, so the copies land only where every one of them fits,
+/// and the hand stops at the nearest such spot, as a move stops where a zoom
+/// runs out of room.
+@Suite("Option drag copies a box's zooms and keys")
+struct TimelineBoxCopyTests {
+
+    /// A twenty second recording with a zoom from 2s to 5s, and a title from
+    /// 2s to 8s with scale keyed at 3s and 6s.
+    static func edit() throws -> (doc: PhotonzDocument, clip: UUID, zoom: UUID, title: UUID) {
+        var doc = PhotonzDocument.recording(MovieRef(pixelSize: CGSize(width: 1920, height: 1080),
+                                                     durationMS: 20_000), name: "Talk")
+        let clip = doc.layers[0].id
+        let made = doc.addZoom(toClip: clip, atTimeMS: 2000, around: nil)
+        let zoom = try #require(made).id
+        var title = Layer(name: "Title", content: .text(TextContent(string: "Hi", fontSize: 48)),
+                          frame: CGRect(x: 0, y: 0, width: 200, height: 80))
+        title.time = LayerTime(inMS: 2000, outMS: 8000)
+        doc.layers.append(title)
+        doc.startKeying(layerID: title.id, .motion(.scale), atDocumentTimeMS: 3000)
+        doc.setKeyedValue(.number(200), layerID: title.id, .motion(.scale), atDocumentTimeMS: 6000)
+        doc.materializeTracks()
+        return (doc, clip, zoom, title.id)
+    }
+
+    static func zoomSpans(_ doc: PhotonzDocument, _ clip: UUID) -> [Int] {
+        guard let layer = doc.layer(id: clip) else { return [] }
+        return (layer.zooms ?? []).compactMap { layer.timelineSpanMS(of: $0.id) }.flatMap { [$0.start, $0.end] }
+    }
+
+    static func keys(_ doc: PhotonzDocument, _ title: UUID) -> TimelineBoxExtras {
+        let lanes = Set(doc.keyLanes(layerID: title).map(\.motionID))
+        return TimelineBoxExtras(keys: [title: doc.marqueeKeys(within: 0..<20_000, layerID: title,
+                                                               motionIDs: lanes)])
+    }
+
+    @Test("A zoom's copy lands on its clip by the same time, and the zoom stays where it was")
+    func copiesAZoom() throws {
+        var (doc, clip, zoom, _) = try Self.edit()
+        let extras = TimelineBoxExtras(zooms: [clip: [zoom]])
+        let copied = doc.copyBoxExtras(extras, byMS: 6000)
+        let made = try #require(copied)
+        #expect(made.zoomCount == 1)
+        #expect(made.zooms[clip]?.contains(zoom) == false)
+        #expect(Self.zoomSpans(doc, clip) == [2000, 5000, 8000, 11_000])
+        // The copy is the zoom: same scale and spot.
+        let zooms = try #require(doc.layer(id: clip)?.zooms)
+        #expect(zooms[0].scale == zooms[1].scale)
+        #expect(zooms[0].center == zooms[1].center)
+    }
+
+    @Test("Keys' copies land by the same time, and the keys stay")
+    func copiesKeys() throws {
+        var (doc, _, _, title) = try Self.edit()
+        let keys = Self.keys(doc, title)
+        let copied = doc.copyBoxExtras(keys, byMS: 1000)
+        let made = try #require(copied)
+        #expect(made.keyCount == 2)
+        #expect(TimelineBoxPickTests.keyTimes(doc, title) == [3000, 4000, 6000, 7000])
+    }
+
+    @Test("A copy that would overlap a zoom or leave its clip is refused, and nothing changes")
+    func refusesWhatDoesNotFit() throws {
+        var (doc, clip, zoom, title) = try Self.edit()
+        let before = doc
+        // Over the zoom itself.
+        let over = doc.copyBoxExtras(TimelineBoxExtras(zooms: [clip: [zoom]]), byMS: 1000)
+        #expect(over == nil)
+        // Past the clip's start.
+        let early = doc.copyBoxExtras(TimelineBoxExtras(zooms: [clip: [zoom]]), byMS: -3000)
+        #expect(early == nil)
+        // A zoom and keys together, where the keys would leave the title.
+        var both = Self.keys(doc, title)
+        both.zooms[clip] = [zoom]
+        let apart = doc.copyBoxExtras(both, byMS: 6000)
+        #expect(apart == nil)
+        #expect(doc == before)
+    }
+
+    @Test("The copies can land only where every one of them fits")
+    func whereCopiesFit() throws {
+        let (doc, clip, zoom, title) = try Self.edit()
+        // Nothing to copy: anywhere.
+        #expect(doc.boxExtrasCopyRoom(TimelineBoxExtras()) == [Int.min...Int.max])
+        #expect(doc.boxExtrasCopyShift(TimelineBoxExtras(), nearest: 1234) == 1234)
+        // The zoom runs 2s to 5s on a twenty second clip: its copy fits from
+        // touching its end, 3s on, to the clip's end, 15s on.
+        let zoomOnly = TimelineBoxExtras(zooms: [clip: [zoom]])
+        #expect(doc.boxExtrasCopyRoom(zoomOnly) == [3000...15_000])
+        #expect(doc.boxExtrasCopyShift(zoomOnly, nearest: 1000) == 3000)
+        #expect(doc.boxExtrasCopyShift(zoomOnly, nearest: -2000) == 3000)
+        #expect(doc.boxExtrasCopyShift(zoomOnly, nearest: 9000) == 9000)
+        #expect(doc.boxExtrasCopyShift(zoomOnly, nearest: 30_000) == 15_000)
+        // Keys at 3s and 6s inside a title from 2s to 8s.
+        #expect(doc.boxExtrasCopyRoom(Self.keys(doc, title)) == [-1000...2000])
+        // Both: nowhere fits them all.
+        var both = Self.keys(doc, title)
+        both.zooms[clip] = [zoom]
+        #expect(doc.boxExtrasCopyRoom(both).isEmpty)
+        #expect(doc.boxExtrasCopyShift(both, nearest: 1000) == nil)
+    }
+
+    @Test("A second zoom on the clip splits where the copy fits in two")
+    func copiesFitBetweenZooms() throws {
+        var (doc, clip, zoom, _) = try Self.edit()
+        let made = doc.addZoom(toClip: clip, atTimeMS: 10_000, around: nil)
+        #expect(made != nil)
+        let room = doc.boxExtrasCopyRoom(TimelineBoxExtras(zooms: [clip: [zoom]]))
+        // After the zoom up to the second (5s to 10s, so 3s to 5s on), and
+        // after the second to the clip's end (13s to 20s, so 11s to 15s on).
+        #expect(room == [3000...5000, 11_000...15_000])
+        #expect(doc.boxExtrasCopyShift(TimelineBoxExtras(zooms: [clip: [zoom]]), nearest: 7000) == 5000)
+        #expect(doc.boxExtrasCopyShift(TimelineBoxExtras(zooms: [clip: [zoom]]), nearest: 9000) == 11_000)
+    }
 }
 
 /// What the panel says about a pick of several things on the timeline: how

@@ -442,7 +442,12 @@ extension EditorState {
         clipBarDrag = ClipBarDragSession(layerID: copy.id, grab: .body, drag: drag,
                                          landing: drag.landing(byMS: 0),
                                          heldTimelineMS: max(1, document.documentDurationMS),
-                                         along: along, copies: copies)
+                                         along: along, copies: copies,
+                                         // A box's zooms and keys are copied
+                                         // too (`EditorState+TrackRange`).
+                                         copyExtras: piece == nil
+                                            ? boxExtrasCarried(moving: Set(copies.map(\.original)))
+                                            : TimelineBoxExtras())
         watchForClipBarEscape()
         refreshClipBarCopyCursor(optionHeld: true)
         return true
@@ -494,6 +499,17 @@ extension EditorState {
         if !session.extras.isEmpty, !session.extrasRoom.contains(session.landing.movedMS) {
             let held = min(max(session.landing.movedMS, session.extrasRoom.lowerBound), session.extrasRoom.upperBound)
             session.landing = session.drag.snapping(withinMS: 0).landing(byMS: held)
+        }
+        // Copies of a box's zooms and keys land only where every one of them
+        // fits, and the copied clips stop there with them: the nearest spot,
+        // or where they started when there is none.
+        if !session.copyExtras.isEmpty, let document {
+            let wanted = session.landing.movedMS
+            let fit = document.boxExtrasCopyShift(session.copyExtras, nearest: wanted) ?? 0
+            if fit != wanted {
+                session.landing = session.drag.snapping(withinMS: 0).landing(byMS: fit)
+            }
+            if session.landing.movedMS != fit { session.landing = session.drag.landing(byMS: 0) }
         }
         clipBarDrag = session
         rerender()
@@ -630,10 +646,20 @@ extension EditorState {
         let toTrack = drop.flatMap { $0.allowed ? $0.target : nil }
         guard landing.movedMS != 0 || toTrack != nil else { return }
         var landed: [UUID] = []
+        var copiedExtras: TimelineBoxExtras?
+        var pointerTracks: [UUID: PointerTrack] = [:]
+        for clip in session.copyExtras.zooms.keys {
+            pointerTracks[clip] = recordedPointerTrack(ofClip: clip)
+        }
         perform { document in
             for copy in session.copies
             where document.placeClipCopy(copy.layer, over: copy.original, atInMS: session.copyStartMS(copy)) {
                 landed.append(copy.layer.id)
+            }
+            // A box's zooms and keys beside the clips, copied by as much.
+            if !session.copyExtras.isEmpty {
+                copiedExtras = document.copyBoxExtras(session.copyExtras, byMS: landing.movedMS,
+                                                      pointerTracks: pointerTracks)
             }
             switch toTrack {
             case let target? where !session.along.isEmpty:
@@ -652,6 +678,11 @@ extension EditorState {
             selectLayers(Set(landed))
         } else if let copy = landed.first {
             selectLayer(copy)
+        }
+        // The copies are the pick now, the zooms' and keys' with the clips'.
+        if let copiedExtras, !copiedExtras.isEmpty, !landed.isEmpty {
+            boxExtras = copiedExtras
+            boxExtrasOwner = boxPickOwnerNow
         }
         if let track = document?.trackID(ofClip: session.layerID),
            track != document?.trackID(ofClip: session.copies[0].original) {
@@ -794,6 +825,8 @@ extension EditorState {
         }
         // ...and so do the zooms and keys a box picked beside them.
         if !session.extras.isEmpty { document.shiftBoxExtras(session.extras, byMS: landing.movedMS) }
+        // ...or are copied with them.
+        if !session.copyExtras.isEmpty { document.copyBoxExtras(session.copyExtras, byMS: landing.movedMS) }
         // A copy over something on its own track is shown on the new track it
         // will land on (`liftClipsOffOverlaps`), rather than hidden under what
         // it covers. That track goes in ABOVE the one the hand is on, so
@@ -873,6 +906,9 @@ struct ClipBarDragSession {
     var extras = TimelineBoxExtras()
     /// How far those can go, either way, before one meets its clip's end.
     var extrasRoom: ClosedRange<Int> = Int.min...Int.max
+    /// The zooms and keys of a box's pick an ⌥ drag copies beside its clips,
+    /// on clips that are not themselves copied. Empty for every other drag.
+    var copyExtras = TimelineBoxExtras()
 
     /// Where a copy starts with the hand where it is: the one in the hand
     /// where the landing says, the rest by as much as it went.

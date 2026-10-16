@@ -1,0 +1,396 @@
+{
+  "out": "/tmp/photonz-playtest/box-pick-copied-and-rippled-whole-walk",
+  "seed": "A box's whole pick is copied and ripple deleted as one (task a-box-pick-on-the-timeline-is-copied-and-ripple). At Next defaults with no flag changed: the sample recording with its Scale keyed at 0:01 and 0:03 and a zoom from 0:02, and a title at 0:01. A box over the title, a Shift box on the recording's Zoom lane and a Shift box on its Scale lane pick the title, the zoom and both keys but not the recording. Option drag on the title copies all of it by the same time, stopping where the zoom's copy fits, and one undo takes every copy away. Shift Delete on the same pick takes the title, the zoom and both keys, and one undo brings them all back.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "dragClip",
+      "clip": "Tutorial Sample",
+      "byMS": 0
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.0
+    },
+    {
+      "do": "reveal",
+      "control": "Properties section"
+    },
+    {
+      "do": "press",
+      "control": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "press",
+      "control": "Scale",
+      "in": "Animate a property"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "action",
+      "action": "keyAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "zoomAddAtPlayhead"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 1.0
+    },
+    {
+      "do": "tool",
+      "tool": "text"
+    },
+    {
+      "do": "click",
+      "at": [
+        620,
+        330
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "type",
+      "text": "Hello"
+    },
+    {
+      "do": "key",
+      "key": "return",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 7.9
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "startsAt": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "within": 0.02
+    },
+    {
+      "do": "describe",
+      "stage": "0-the-edit",
+      "note": "the sample recording on V1 with its Scale keyed at 0:01 and 0:03 (a Scale lane under V1) and a zoom from 0:02 to 0:05, and the title Hello (a layer called Text) from 0:01 to 0:04"
+    },
+    {
+      "do": "snapshot",
+      "name": "0-the-edit"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Title",
+      "from": 0.5,
+      "to": 2.0
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Zoom Tutorial Sample",
+      "from": 1.5,
+      "to": 4.0,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Keys Tutorial Sample",
+      "from": 0.5,
+      "to": 3.5,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Text",
+        "Tutorial Sample key at 1000 ms",
+        "Tutorial Sample key at 3000 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "1-picked",
+      "note": "a box over the title, then a Shift box on the recording's Zoom lane and a Shift box on its Scale lane: the title, the zoom and both keys are lit, and the recording itself is not picked"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-picked"
+    },
+    {
+      "comment": "THE FIRST TEST. Option drag the title two and a half seconds later. The zoom's copy fits on the recording only from 0:05, where it meets the zoom it came from, so the hand stops at three seconds with every copy fitting.",
+      "do": "dragClip",
+      "clip": "Text",
+      "byMS": 2500,
+      "modifiers": [
+        "option"
+      ],
+      "hold": "2-copy-in-hand"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "count": 2
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "track": "Title",
+      "startsAt": 1.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "endsAt": 5.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 2",
+      "startsAt": 5.0,
+      "endsAt": 8.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 4
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Text",
+        "Tutorial Sample key at 4000 ms",
+        "Tutorial Sample key at 6000 ms",
+        "Tutorial Sample zoom 2"
+      ]
+    },
+    {
+      "do": "describe",
+      "stage": "3-copied",
+      "note": "THE FIRST TEST: a copy of the title at 0:04, a copy of the zoom from 0:05 and copies of both Scale keys at 0:04 and 0:06, three seconds after what they came from, all of them picked; the originals stayed where they were"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-copied"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 2",
+      "count": 0
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 2
+    },
+    {
+      "do": "describe",
+      "stage": "4-copy-undone",
+      "note": "one undo takes every copy away: the title's, the zoom's and the keys'"
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Title",
+      "from": 0.5,
+      "to": 2.0
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Zoom Tutorial Sample",
+      "from": 1.5,
+      "to": 4.0,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "dragTracks",
+      "fromTrack": "Keys Tutorial Sample",
+      "from": 0.5,
+      "to": 3.5,
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": [
+        "Text",
+        "Tutorial Sample key at 1000 ms",
+        "Tutorial Sample key at 3000 ms",
+        "Tutorial Sample zoom 1"
+      ]
+    },
+    {
+      "comment": "THE SECOND TEST. Shift Delete on the same pick.",
+      "do": "key",
+      "key": "delete",
+      "modifiers": [
+        "shift"
+      ]
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "count": 0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "count": 0
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": []
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0
+    },
+    {
+      "do": "describe",
+      "stage": "5-rippled",
+      "note": "THE SECOND TEST: Shift Delete took the title, the zoom and both keys; the recording itself stays on V1"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-rippled"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "expectClip",
+      "clip": "Text",
+      "track": "Title",
+      "startsAt": 1.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample zoom 1",
+      "startsAt": 2.0,
+      "within": 0.02
+    },
+    {
+      "do": "expectKeyRows",
+      "clip": "Tutorial Sample",
+      "rows": [
+        "Scale"
+      ],
+      "moments": 2
+    },
+    {
+      "do": "describe",
+      "stage": "6-back",
+      "note": "one undo brings the title, the zoom and both keys back"
+    },
+    {
+      "do": "snapshot",
+      "name": "6-back"
+    }
+  ]
+}

@@ -439,6 +439,30 @@ extension EditorState {
         return true
     }
 
+    /// ⇧⌫ with a box's whole pick in hand: the clips or pieces go and their
+    /// gaps close on their own tracks, and every zoom and key beside them
+    /// goes too, as one step. False where there is no such pick.
+    @discardableResult
+    func extractBoxPick() -> Bool {
+        guard let extras = boxExtrasHeld, let document else { return false }
+        let pieces = timelinePicksHeld
+        let picks = pieces ?? document.timelineClipLayers.map(\.id)
+            .filter { actionableLayerIDs.contains($0) && !isClipLocked($0) }
+            .map { TimelinePick(layerID: $0, piece: nil) }
+        // Whole clips leave the playhead where the earliest of them began,
+        // as Ripple Delete on one clip does.
+        let landing = pieces == nil ? picks.compactMap { document.layer(id: $0.layerID)?.time?.inMS }.min() : nil
+        takeOut { $0.rippleDeleteBoxPick(picks, extras: extras) }
+        timelinePicks = []
+        boxExtras = TimelineBoxExtras()
+        if pieces == nil { selectLayer(nil) }
+        if let landing {
+            documentTimeMS = min(max(0, landing), lastDocumentTimeMS)
+            documentMomentChanged()
+        }
+        return true
+    }
+
     /// A stretch of time on some tracks becomes the thing in hand: whatever
     /// was picked is let go, the way a Final Cut range replaces the clips.
     func pickTrackRange(_ range: TrackRange) {
@@ -517,16 +541,10 @@ extension EditorState {
     /// ⇧⌫: the same, and the gap closes on those tracks alone.
     @discardableResult
     func extractTrackThing() -> Bool {
+        // A box's whole pick, the zooms and keys beside its clips included.
+        if extractBoxPick() { return true }
         if let picks = timelinePicksHeld {
-            // Zooms and keys a box picked beside the pieces go too; they have
-            // no gap of their own to close.
-            let rest = (boxExtrasHeld ?? TimelineBoxExtras())
-                .besides(Set(picks.filter { $0.piece == nil }.map(\.layerID)))
-            takeOut { doc in
-                let rippled = doc.rippleDeletePicks(picks)
-                let removed = doc.removeBoxExtras(rest)
-                return rippled || removed
-            }
+            takeOut { $0.rippleDeletePicks(picks) }
             timelinePicks = []
             return true
         }
