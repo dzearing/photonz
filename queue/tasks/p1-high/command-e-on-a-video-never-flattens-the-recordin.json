@@ -1,0 +1,34 @@
+{
+  "id": "command-e-on-a-video-never-flattens-the-recordin",
+  "title": "Command E on a video never flattens the recording into a still",
+  "goal": "Someone who knows Final Cut presses Command E on a video expecting Export. Today, with a title picked, it runs Merge Down, which bakes the title and the recording into one still picture: the timeline goes empty and the video is gone until they undo. Merging must never turn a clip into a still, and Command E on a video should do what the key rule says it does there.",
+  "epic": "video-beats-premiere",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.405Z",
+  "updated": "2026-10-16T03:35:12.302Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the manager pass 2026-10-15 20:40 with a scratch walk (/tmp/mgr-walk/cmd-e-on-a-video.json, steps: openSampleRecording, videoSeekMiddle, text tool, click 620,330, type 'Shipping today', Command Return, expectLayers 2 passes, expectPicked [Shipping today] passes, then {do: shortcut, key: e, modifiers: [command], menuItem: Merge Down}). Result: 'step 19 (expectLayers): 1 layer in the document, not at least 2; the first few: Tutorial Sample', and the after picture (queue/manager/shots/2026-10-15-cmd-e-on-a-video-after.png) shows the timeline with no clip and no tracks and the title baked into the picture. A plain {do: key} press said: 'command+e is Layer > Merge Down'. Code: Sources/Photonz/EditorCommands.swift ~1949-1951 (Command E = Merge Down on every document), EditorState+LayerOps.swift canMergeDown ~165-171 (only needs a picked layer that is not the bottom one), mergeLayers ~208-217 (bakes into a still). Export is Shift Command E (EditorCommands.swift ~422-437). Mock: docs/design/mocks/pages/video-entry-wt.html step 8 and video.html command menu print Export MP4 Command E; Final Cut's Command E is Share/Export; check Premiere's own Command E before choosing. Merge on two still layers on a picture must not change.",
+  "acceptance": [
+    "On a video at Next defaults, open the sample recording, type a title over it, keep the title picked and press Command E: the recording is still a clip on the timeline with all its time, and nothing is baked into a still",
+    "Merge Down (menu row, right-click and key) is dimmed or refuses with a short canvas note whenever the layer or the one under it has time (a clip, or a layer with an in and an out), on any document, and still merges two still layers on a picture exactly as before",
+    "What Command E does on a video is settled by the key rule in UX-PATTERNS section 7 (Photoshop's key on a picture, Premiere's on a video) and the choice is named in the audit's rough list in one line citing section 7; the mock prints Command E for Export MP4",
+    "A walk at Next defaults proves the first item (types a title, presses the key, claims the clip and both layers are still there) and passes twice in a row",
+    "A core test pins that merging never takes a layer with time",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.407Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.301Z",
+      "note": "seq 25 -> 5"
+    }
+  ]
+}

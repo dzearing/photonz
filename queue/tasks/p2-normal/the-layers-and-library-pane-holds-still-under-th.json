@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T16:01:13.461Z",
-  "updated": "2026-10-15T12:23:26.022Z",
+  "updated": "2026-10-15T14:32:51.163Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-14 in the probe (walks-that-fail-in-the-full-sweep-21). Scratch walk = segmented-chip-refraction-film-walk steps 1-6, then panel / press Comps / wait 1 / panel: Media and Comps report window y 174 before and 239 after (bottom-left points), so the control rose 65pt. Folding Layers on a blank 1440x900 picture: its header press point went from y 142 (open) to y 50 (shut), about 93pt down. Cause: PanelListsPane sizes the pane to its content ('shrinking to its content when its lists are short or folded', 885afc78), anchored at the bottom. Dragging the Lists grip only sets a ceiling: with the grip at 182pt the Library scrolled and the control still moved 34pt. The chip walk fails at step 11 (filmThumb: no thumb at rest on the rail) because the rail it films is no longer where the control is. A Photoshop panel keeps its size when its content changes; a fix might hold the pane's height while the pointer is in it, or size it to the tallest of its scopes. Decide the visible rule with the user if it is not obvious.",
@@ -31,9 +31,33 @@
     {
       "t": "2026-10-15T12:23:26.021Z",
       "note": "seq 4010 -> 20"
+    },
+    {
+      "t": "2026-10-15T12:46:30.625Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T12:48:28.529Z",
+      "note": "Pre-build review: the user's answer B (2026-10-13) said the pane 'keeps its height when the pick changes'; shrinking to content was the runner's own addition in 885afc78, not the user's. Visible rule chosen (no card needed, it is the user's own wording): the pane keeps its height while you work in it; only the grip, the window's height, or a list joining/leaving the pane changes it. Short or folded lists leave glass at the foot of the pane, the way a Photoshop panel keeps its size. Default height is worked out once everything is measured and then held, so a fold or a Library scope switch cannot move it."
+    },
+    {
+      "t": "2026-10-15T13:21:52.916Z",
+      "note": "walks segmented-chip-refraction-film-walk -> segmented-chip-refraction-film-walk, lists-pane-holds-still-walk, section-fold-motion-walk"
+    },
+    {
+      "t": "2026-10-15T14:32:51.088Z",
+      "note": "Reproduced first: segmented-chip-refraction-film-walk failed at step 11 on the old code (Media pressed at y 239 after Comps, was 174). First fix (hold the first measured height) cut a saved style's tile across the shelf's foot (tile-comes-away-walk, library-tile-click-latency-picture-walk failed, passed on old code); growing on content then moved the scope control again. Final rule: hold counts every list open at its whole floor, only grows, re-worked out on a new column height or a list joining. New lists-pane-holds-still-walk fails on the old code at step 15, passes now. 71 pane-related walks green (29 + 42), section-fold-motion-walk passed 3 of 4 runs: one failure at its VIDEO step 36 (Speed not found) where the pane holds nothing; left rough as a flake, not filed. Looked at audit pictures 2-comps and 3-layers-shut: Layers header at the same height in both. Rough items in the audit stay in this log (none clears the follow-up bar). Commit 6c73bd86."
+    },
+    {
+      "t": "2026-10-15T14:32:51.161Z",
+      "note": "The lists pane at the foot of the panel keeps its height: a fold or a Library scope switch no longer moves what was just clicked (PanelListsPane.Hold, InspectorPanel). Verified by the new lists-pane-holds-still-walk (pointer clicks at fixed points, fails on old code), segmented-chip-refraction-film-walk passing, section-fold-motion-walk's five clicks back on the Layers header, 71 pane walks and 13,236 tests green. Audit 2026-10-15-lists-pane-holds-still. Commit 6c73bd86."
     }
   ],
   "walks": [
-    "segmented-chip-refraction-film-walk"
-  ]
+    "segmented-chip-refraction-film-walk",
+    "lists-pane-holds-still-walk",
+    "section-fold-motion-walk"
+  ],
+  "started": "2026-10-15T12:46:30.623Z",
+  "completed": "2026-10-15T14:32:51.162Z"
 }

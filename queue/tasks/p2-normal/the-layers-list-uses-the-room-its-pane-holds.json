@@ -1,0 +1,56 @@
+{
+  "id": "the-layers-list-uses-the-room-its-pane-holds",
+  "title": "The Layers list uses the room its pane holds",
+  "goal": "Since the pane of lists at the foot of the panel began keeping its height, a Layers list with more rows than its own five-row limit stops at that limit and scrolls, hiding a row, while blank space sits right under it in the same pane. The list should grow into the room the pane already holds before it starts to scroll.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T22:50:12.329Z",
+  "updated": "2026-10-15T23:45:16.820Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-15 by the runner of three-panel-walks-pass-again-after-the-lists-pan. Repro: Scripts/playtest.sh Scripts/playtest/layer-row-lifts-by-pointer-walk.json; step 21 state reads layerList \"6 rows of 38pt, list 200pt, scrolled to 0pt\", layerRowsInView Group..Rectangle (no Background), dockSections Layers 511-762, and 1-pulled-into-the-group-sc.png shows about 60pt of blank glass under the Layers grab bar inside the pane. Cause: LayersListView maxHeight @StoredSetting defaults to 200 (ceiling = min(maxHeight, dockCeiling)), which predates 6c73bd86; before that the pane shrank to its content so the blank band never showed. The lists-pane audit (2026-10-15-lists-pane-holds-still) mentions plain glass under SHORT or FOLDED lists, not under a list that is scrolling.",
+  "acceptance": [
+    "With six layers in a 1280 by 900 window at Next defaults, every row of the Layers list is on screen with no scrolling while the pane has blank room below it",
+    "A list that does need to scroll fills the pane to its foot first",
+    "The grab bar under the Layers list still sets how tall the list may be, or is gone if the pane grip now does that job (say which in the audit)"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T22:50:12.331Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T23:03:58.867Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T23:44:56.165Z",
+      "note": "Reproduced before touching anything: layer-row-lifts-by-pointer-walk step 21 read '6 rows of 38pt, list 200pt', Background not in view, ~70pt blank glass under the grab bar in the pane (capture checked). Cause as the notes said: LayersListView capped by its own 200pt grab-bar ceiling AND reported that capped height to the dock, so the pane's water-line share never offered more."
+    },
+    {
+      "t": "2026-10-15T23:44:56.227Z",
+      "note": "Fix: PanelListsPane.listAsks/listCeiling (PhotonzCore, tests first in PanelListsPaneTests). In the pane the list asks for all its rows and is capped only by the pane's share; its own grab bar is not built there (the pane grip does that job). Outside the pane (Current) unchanged. InspectorPanel threads inListsPane into sectionContent -> LayersListView."
+    },
+    {
+      "t": "2026-10-15T23:44:56.288Z",
+      "note": "After: same walk reads '6 rows, list 280pt', all six rows + Canvas on screen. panel-grip-walk at 8 rows: pane 336pt -> list 291/360 reaching the pane foot (section 511-841), then scrolls; drags of the Lists grip carry the list with them. Walk changes: panel-grip-walk drives the Lists grip instead of the Layers bar; dragHandle expect absent now accepts a bar that is not built at all; lists-pane-holds-still-walk click points moved 12pt up (the hidden bar under a one-row list used to take 12pt). 49 walks run, all green; Scripts/test.sh 13,273 tests green. Pictures looked at: 1-pulled-into-the-group, 2-long-list, 7-library-shorter, lists-pane 1-rest."
+    },
+    {
+      "t": "2026-10-15T23:44:56.351Z",
+      "note": "Follow-up filed: the-library-shelf-uses-the-room-its-pane-holds (same cap on the Library shelf, reproduced in library-shelf-height-walk step 4). Audit rough lines: grab bar gone (decided per acceptance 3), no split control between Layers and Library in the pane (left rough here, the user is asked in the audit), 12pt shift (expected), no mock (settled by the 2026-10-13 answer)."
+    },
+    {
+      "t": "2026-10-15T23:45:16.818Z",
+      "note": "In the lists pane (Next default) the Layers list asks for all its rows and is capped only by the pane's share, so six layers in 1280x900 show every row with no scroll and a longer list runs to the pane's foot before scrolling. Its own grab bar is gone in the pane; the pane grip sets the room (audit says so). Core rule PanelListsPane.listAsks/listCeiling with tests; walks layer-row-lifts-by-pointer (list 200 -> 280pt, Background in view), panel-grip (8 rows fill a 336pt pane to its foot), lists-pane-holds-still and 46 other list/Library walks green; 13,273 tests green. Commit 398297ad. Audit queue/audits/2026-10-15-layers-list-fills-pane.json. Follow-up: the-library-shelf-uses-the-room-its-pane-holds."
+    }
+  ],
+  "walks": [
+    "layer-row-lifts-by-pointer-walk"
+  ],
+  "started": "2026-10-15T23:03:58.866Z",
+  "completed": "2026-10-15T23:45:16.819Z"
+}

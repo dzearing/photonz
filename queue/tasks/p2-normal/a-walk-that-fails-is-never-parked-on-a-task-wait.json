@@ -1,0 +1,39 @@
+{
+  "id": "a-walk-that-fails-is-never-parked-on-a-task-wait",
+  "title": "A walk that fails is never parked on a task waiting for an answer",
+  "goal": "The check between tasks found path-outline-align-walk failing and wrote it onto the task that owns the walk, but that task is waiting on one of the user's cards, so nobody will look at the failure until the card is answered. Fix the walk, and make sure a failing walk whose owner is blocked lands where a runner will pick it up.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 20,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.609Z",
+  "updated": "2026-10-16T03:35:13.053Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-15 20:30 by the manager pass: Scripts/playtest.sh Scripts/playtest/path-outline-align-walk.json --no-build exits 1 with 'step 66 (panelMenu): 2 menus answer to \"Align\", so it does not say which one: Align on Mixed 124.0pt wide at x 1102.0 says \"Inside keeps the outline within the shape. Outside grows it past the edge.\", Align on Add Motion 25.0pt wide at x 1201.0 says \"Animate a property of this layer...\"'. The Add Motion plus is Sources/Photonz/MotionListInspector.swift ~717-720. Routing: queue/bin/sweep-slice-record.mjs ~98-125 writes onto every owner from ownersOfWalks without looking at the owner's status; the owner here is a-drawn-path-s-outline-settings-read-like-the-ic (blocked on a card since 2026-10-08), log line 2026-10-16T03:16:30Z. Check queue/bin/sweep-report.mjs does the same and fix both alike. Commit queue infra edits immediately (the loop stashes uncommitted ones).",
+  "acceptance": [
+    "path-outline-align-walk passes at Next defaults, run on its own twice in a row, with the walk or the app changed according to which one was wrong (the log says which)",
+    "If two menus really answer to Align on the panel (the outline's Align and the Motion header's plus), the misnamed one is fixed so a person using VoiceOver hears the right name",
+    "The rotating check and the full sweep write a failing walk whose owning task is blocked onto the standing walk task as well, saying who owns it and that the owner is waiting on a card",
+    "A drill or test in queue/bin shows the routing: a blocked owner plus a failing walk ends up on a task a runner can claim"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.611Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.431Z",
+      "note": "seq 4060 -> 20"
+    },
+    {
+      "t": "2026-10-16T03:35:13.052Z",
+      "note": "owns these walks: path-outline-align-walk"
+    }
+  ],
+  "walks": [
+    "path-outline-align-walk"
+  ]
+}

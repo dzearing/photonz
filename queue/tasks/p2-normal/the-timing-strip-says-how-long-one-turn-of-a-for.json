@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T09:56:16.082Z",
-  "updated": "2026-10-15T19:40:35.683Z",
+  "updated": "2026-10-15T19:40:53.695Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/icon-loop-wt.html, data-set #tlLen=800 ms per turn and the wt-res text after step 5 (\"Beside the turn length the dock says ends where it starts\"). Since find-out-whether-a-forever-motion-shorter-than-t (2026-10-15) a one way Forever repeats every timing.durationMS (MotionRepeat.keepsItsOwnPace), and the strip draws its later turns as dashed copies (MotionStripLane.laterTurns, MotionStripLaterTurns in MotionStripView.swift). Header lives in MotionStripView (ONE CYCLE field). Chrome copy budget 30 chars.",
@@ -50,11 +50,16 @@
     {
       "t": "2026-10-15T19:40:35.682Z",
       "note": "Filed the-repeats-label-on-the-timing-strip-s-ruler-ne (the repeats label draws over the 800 tick, seen in the audit picture). Left rough, not filed: only the picked layer's first Forever is read; audit says so."
+    },
+    {
+      "t": "2026-10-15T19:40:53.693Z",
+      "note": "The strip's header now reads the picked Forever's turn (800 ms per turn) and ends where it starts / does not end where it starts; a lone spinner's strip is titled One turn with no lap field, matching icon-loop-wt.html step 5. MotionTurnReading in PhotonzCore (13 tests), MotionStripView header. Verified: two walks ok at Next defaults (forever-spinner-keeps-its-own-pace-walk, a-lone-spinner-strip-reads-one-turn-walk), full suite 13,259 green, audit 2026-10-15-forever-turn-reading with real captures. Commit b30bde8c."
     }
   ],
   "walks": [
     "forever-spinner-keeps-its-own-pace-walk",
     "a-lone-spinner-strip-reads-one-turn-walk"
   ],
-  "started": "2026-10-15T19:13:49.894Z"
+  "started": "2026-10-15T19:13:49.894Z",
+  "completed": "2026-10-15T19:40:53.694Z"
 }

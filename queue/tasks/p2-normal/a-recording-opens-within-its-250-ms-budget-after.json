@@ -1,0 +1,60 @@
+{
+  "id": "a-recording-opens-within-its-250-ms-budget-after",
+  "title": "A recording opens within its 250 ms budget after Stop on every round",
+  "goal": "When you stop a full-screen recording with sound, it is supposed to open in a quarter of a second. Most times it does, but a few rounds in every twenty land just over (250 to 271 ms), so the check for it fails about half the time. Either make the slow rounds faster or find out what makes them slow.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4010,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T12:33:49.394Z",
+  "updated": "2026-10-15T21:48:46.926Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-15 ~12:35Z by walks-that-fail-in-the-full-sweep-22, two runs back to back with `Scripts/playtest.sh Scripts/playtest/a-recording-stays-and-opens-right-after-stop-walk.json --no-build`, both FAILED at step 1: run 1 'round 3, opened 0.5 s after Stop took 263 ms; round 5, opened 1.0 s after Stop took 271 ms', means 210-241 ms; run 2 'round 3, opened 2.0 s after Stop took 258 ms', means 216-237 ms. Files landed 65-115 ms after Stop each time, so most of the ~220 ms is after the file exists. Load average was ~6.9 at the time (the loop's own work). queue/sweep/*.log shows the walk alternating ok / FAILED since at least the 2026-10-14 slices (worst 250, 252, 260), and it passed in the 2026-10-15 overnight full set. The budget came from f5b67a7d / 376031ec (2026-10-10/11). Do not just raise the budget without a measured reason.",
+  "acceptance": [
+    "a-recording-stays-and-opens-right-after-stop-walk passes three runs in a row on its own",
+    "The slowest round in each of those runs is named in the task log with its time",
+    "If the time goes somewhere outside the app (system load, capture teardown), the log says where, measured"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T12:33:49.396Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T12:33:59.226Z",
+      "note": "walks a-recording-stays-and-opens-right-after-stop-walk -> a-recording-stays-and-opens-right-after-stop-walk"
+    },
+    {
+      "t": "2026-10-15T21:15:32.676Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T21:48:39.365Z",
+      "note": "Reproduced before any change: FAILED, round 1 @1.0s 257 ms, round 1 @2.0s 256 ms, round 3 @0.5s 261 ms (load ~6). Files landed 73-102 ms after Stop, every open was after landing, so neither the file nor capture teardown is in the open time."
+    },
+    {
+      "t": "2026-10-15T21:48:39.437Z",
+      "note": "Measured with probe-only marks (PlaytestOpenTrace) on a second failing run (262/263/254 ms): openRecording -> setActivationPolicy+activate 1-4 ms; SwiftUI openWindow call -> window .task seed 36-119 ms; openWindow returns at 85-172 ms (first layout of an EMPTY window); then the held frame went in 35-110 ms LATER, because openClosingRecording always installed it from a Task, which ran only after that layout. All the time is in the app's main thread making the window, none outside the app."
+    },
+    {
+      "t": "2026-10-15T21:48:39.499Z",
+      "note": "Fix: CaptureStore.readClosingPicture (sync) and openClosingRecording installs the already-read frame inside seed, the way a picture file opens, so the window's first layout already has the recording in it (one layout instead of two, and no empty first frame). Three runs in a row green: slowest round 1 @1.0s 221 ms; round 2 @1.0s 234 ms; round 4/5 @0.5s 246 ms (load 2.6-4.5). All 12 a-recording walks + close-and-reopen/opening-a-recording/playing-a-recording walks pass; opens-at-stop picture checked (last frame, fitted, View)."
+    },
+    {
+      "t": "2026-10-15T21:48:39.562Z",
+      "note": "left rough: margin is still thin (worst 246 of 250 under load ~4). What remains is SwiftUI making the editor window (~70-110 ms to seed) and its first layout (~100 ms). A slow round's failure line now carries the phase marks, so the next miss says which part grew. Not filed: nothing a person notices at ~200 ms; file if the walk turns red again with the marks in hand."
+    },
+    {
+      "t": "2026-10-15T21:48:46.924Z",
+      "note": "The held last frame now goes in while the window is seeded (CaptureStore.readClosingPicture, EditorState+ClosingRecording), not a Task after the first layout. Measured: all time was in-app window making, none from load or capture teardown. Walk green 3 runs in a row, slowest 221/234/246 ms; 12 recording walks pass; Scripts/test.sh green. Commit 429e33b3."
+    }
+  ],
+  "walks": [
+    "a-recording-stays-and-opens-right-after-stop-walk"
+  ],
+  "started": "2026-10-15T21:15:32.673Z",
+  "completed": "2026-10-15T21:48:46.925Z"
+}

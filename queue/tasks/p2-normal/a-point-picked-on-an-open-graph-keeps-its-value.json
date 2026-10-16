@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 40,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T21:06:15.201Z",
-  "updated": "2026-10-15T16:18:40.423Z",
+  "updated": "2026-10-15T16:18:54.070Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-14 in Scripts/playtest.sh Scripts/playtest/bar-easing-sets-points-and-segments-walk.json (walk ok): /tmp/photonz-playtest/bar-easing-sets-points-and-segments-walk/2-mixed-sc.png and 3-both-eased-sc.png, real captures. After a Shift-click on Key Scale 2 (middle point, 3 keys 1s/~3s/4s), the key bar (Scale 200% Reset) sits at about x 750-970, y 930-1020 (display pts at 2000 wide) and the second segment rises from the point at (860,1037) up under it. Mock video-animate.html: the bar opens above the key, never over it; UX rule never cover what is being manipulated.",
@@ -38,11 +38,16 @@
     {
       "t": "2026-10-15T16:18:40.422Z",
       "note": "Reproduced 2026-10-15 with Scripts/playtest.sh bar-easing-sets-points-and-segments-walk: 2-mixed-sc.png showed the Scale 200% bar over the segment rising from Key Scale 2. Fix: KeyValuesPlacement.frame(...clearOf:) in PhotonzCore tries spots along above, then below, then beside the key and takes the first that covers no curve or handle (least covered otherwise); KeyLaneView reports the open graph's segments, held lines and shown handles measured from the anchored key; the expectKeyValues walk step now fails if the bar covers any of it. Looked at 1-rising, 2-valley, 3-closed-row captures: clear on the graph, centred above on the shut row. First Scripts/test.sh run reported 1 issue with the output not kept; rerun passed (exit 0, 13245 tests), so it was not reproduced."
+    },
+    {
+      "t": "2026-10-15T16:18:54.067Z",
+      "note": "The key value bar on an open graph now sits clear of the curve and its handles (KeyValuesPlacement clearOf, lanes report their drawn lines); shut rows unchanged. Verified by 10 placement unit tests, Scripts/test.sh green, and walks key-values-clear-of-the-graph-line-walk (new), bar-easing-sets-points-and-segments-walk and key-value-popover-walk all ok at Next defaults with real captures. Audit queue/audits/2026-10-15-key-values-clear-of-the-graph-line.json. Commit 059cd49a."
     }
   ],
   "walks": [
     "key-values-clear-of-the-graph-line-walk",
     "bar-easing-sets-points-and-segments-walk"
   ],
-  "started": "2026-10-15T15:43:03.730Z"
+  "started": "2026-10-15T15:43:03.730Z",
+  "completed": "2026-10-15T16:18:54.069Z"
 }

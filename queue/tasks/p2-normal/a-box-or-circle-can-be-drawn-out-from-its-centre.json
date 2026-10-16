@@ -5,11 +5,11 @@
   "epic": "icon-grid",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T12:06:39.426Z",
-  "updated": "2026-10-15T12:24:07.130Z",
+  "updated": "2026-10-15T20:25:39.372Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by icon-snapping-reaches-what-the-icon-mock-draws (2026-10-15). AnnotationDrag.end(constrained:shape:) in Sources/PhotonzCore/Tools.swift only does corner-to-corner; nothing reads Option for shapes. Mock: docs/design/mocks/pages/icon-draw-wt.html steps 5 and 6 (\"An ellipse snaps by its center and its diameter\"). Snapping is already in place: CanvasNSView.snappedAnnotationPoint routes icon-frame drags through IconSnap, so a centred drag needs the anchor kept as the centre and the far corner mirrored. Check Option is free for shape drags (UX-PATTERNS §7).",
@@ -31,6 +31,31 @@
     {
       "t": "2026-10-15T12:24:07.129Z",
       "note": "seq 70 -> 80"
+    },
+    {
+      "t": "2026-10-15T19:53:49.247Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T20:25:14.257Z",
+      "note": "owns these walks: shapes-drawn-out-from-the-centre-walk"
+    },
+    {
+      "t": "2026-10-15T20:25:14.321Z",
+      "note": "Adversarial before: Option was free for shape drags (only Select, marquee, fill and handles read it), Photoshop and Illustrator users expect Option-from-centre; mock steps 5/6 name the shape by centre and diameter in the pill, so the pill now says center 12, 8 · d 8 during a centred drag. After: preview, pill and commit agree; Option toggles live mid-drag via flagsChanged. Looked at all four walk pictures: crown and shoulder grow from their presses, square stays square, pill legible white on accent."
+    },
+    {
+      "t": "2026-10-15T20:25:14.383Z",
+      "note": "left rough (no task, under the bar): Option does not centre the Frame, Lens or Zoom Callout box drags; Option on Line/Arrow ignored by design. Both in the audit rough list."
+    },
+    {
+      "t": "2026-10-15T20:25:39.369Z",
+      "note": "Option-drag grows Rectangle/Ellipse/Highlight out from the press (Shift+Option square/circle), live in preview and mid-drag key changes; in icon frames centre and size land on whole units and the pill reads center 12, 8 · d 8 like mock step 5. Core: AnnotationDrag.endpoints, IconSnap.readout(centre:corner:shape:), TDD. Verified: full suite 13266 green, new walk shapes-drawn-out-from-the-centre-walk at Next defaults (SVG holds crown at 8,4 r4, shoulder centred on the box corner at 6,7 r3, square 2,15 6x6), shapes-snap-in-an-icon and copy-an-icon-as-svg walks green. Commit d72608c4."
     }
-  ]
+  ],
+  "started": "2026-10-15T19:53:49.246Z",
+  "walks": [
+    "shapes-drawn-out-from-the-centre-walk"
+  ],
+  "completed": "2026-10-15T20:25:39.371Z"
 }

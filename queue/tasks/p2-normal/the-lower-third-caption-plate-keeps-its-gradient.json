@@ -1,0 +1,32 @@
+{
+  "id": "the-lower-third-caption-plate-keeps-its-gradient",
+  "title": "The lower third caption plate keeps its gradient when its colour is set",
+  "goal": "The Lower third caption look sits on a gradient plate, but its Background colour well shows only the first colour, and picking a colour makes the plate one flat colour, so the look is lost the moment someone tunes it. The well should show and edit the gradient.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 28,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:59.246Z",
+  "updated": "2026-10-16T03:35:12.928Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From queue/audits/2026-10-09-lower-third-caption-style.json rough: 'The Background colour well shows only the plate's first colour; picking a colour makes the plate one flat colour.' Done task the-lower-third-caption-style-sits-low-left-on-i left it rough. Searches 'lower third plate gradient colour': nothing open. Reuse the existing gradient editing control rather than a new one.",
+  "acceptance": [
+    "Reproduced first at Next defaults: pick the Lower third caption style, read the Background well, pick a colour; the log quotes what the plate became",
+    "The well shows the gradient, and changing it keeps a gradient (both stops editable, or the hue shifted across both, whichever the colour picker already does for gradients elsewhere in the app; the audit says which)",
+    "Undo puts the original plate back in one step",
+    "Audit written under queue/audits/ with before and after pictures; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:59.248Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.927Z",
+      "note": "seq 89.84375 -> 28"
+    }
+  ]
+}

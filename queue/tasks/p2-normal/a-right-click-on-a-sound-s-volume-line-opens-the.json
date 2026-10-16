@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 30,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T20:30:30.714Z",
-  "updated": "2026-10-15T12:23:26.089Z",
+  "updated": "2026-10-15T15:29:40.999Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found 2026-10-14 by find-out-whether-a-key-segment-s-right-click-cur, which fixed the same defect on the value graph. Cause: SwiftUI hands a right click the .contextMenu built at the view's last update, BEFORE the click (documented in Sources/Photonz/CanvasContextMenuHook.swift, 2026-09-16), so SoundLane.surface's single LineMenu aimed at timelineLastRightPressMS is always about the previous right click. The 2026-10-13 fix (soundSegmentsForMenu reads the pick as a row runs) only covers which segments a curve row acts on; the rows shown can still be the wrong kind. Value-graph fix to copy: KeyLanesView.lineSurface now draws one strip per segment, each with its own .contextMenu, and picks only when the latest press hit-tests to that segment (KeyLanesView.segmentMenuRows, EditorState.segmentMenuRows(landed:)). The sound line also has its clip menu in the same .contextMenu, and its points have no menus of their own.\n\nReproduction (walk: steps of a-sound-s-volume-line-picks-and-shapes-walk up to the three Command-clicked points, then right-click point 3, segment 2, point 4, segment 1 choose Hold); copy kept at /tmp/sound-line-stale-menu-repro.json for this session only:\n  Scripts/playtest.sh /tmp/sound-diag.json --no-build\n  step 21 right clicked \"Segment Sample Music level 2\": 37 rows: Linear | Ease in out | ... (right)\n  step 23 right clicked \"Sample Music level point 4\": 18 rows: Delete Point | — | Split at Playhead ...\n  step 25 FAILED: the menu on \"Segment Sample Music level 1\" opened but there is no row called \"Hold\"; the rows are: Delete Point, —, Split at Playhead, Ripple Trim Start to Playhead, ... (point 4's menu)",
@@ -31,9 +31,38 @@
     {
       "t": "2026-10-15T12:23:26.088Z",
       "note": "seq 4030 -> 30"
+    },
+    {
+      "t": "2026-10-15T14:44:17.199Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T15:20:00.000Z",
+      "note": "Reproduced first: /tmp/sound-diag.json failed at step 25 (segment 1 showed point 4's menu). Adversarial pass: a Premiere user expects right-click on a keyframe to offer delete and on the line between to offer interpolation; the stale menu broke both. Every per-part menu is rebuilt after ANY right click, so each must be told whether the press landed on it, else the first rebuilt menu steals the pick (servesThisRightPress); level points' menus had that hole too and now ask landed."
+    },
+    {
+      "t": "2026-10-15T15:21:00.000Z",
+      "note": "Built: AnimatedLineSurface (Sources/Photonz/AnimatedLineSurface.swift), one strip per segment plus one either side, each with its own menu and a landed flag; KeyLanesView.lineSurface and SoundLevelLine.surface both use it. AnimatedLine.landed(_:on:) in core (TDD, AnimatedLineTests). BuiltAsItOpens and LineStrip moved there; LineMenu/LevelBand removed. New walk a-sound-s-volume-line-menus-alternate-walk fails on old code at the first segment after a point, passes now."
+    },
+    {
+      "t": "2026-10-15T15:22:00.000Z",
+      "note": "left rough: the level point where a fade ends (point 2 in the walks) sits under the clip's fade-end diamond, so a right-click there opens no menu (rightClick 'Sample Music level point 2' -> 'raises no menu', reproduced on the code BEFORE this change too, /tmp/sl/diag3.json). A left click still picks it. Not filed: the diamond is the fade handle and makes no menu promise; file it if someone hits it."
+    },
+    {
+      "t": "2026-10-15T15:29:01.062Z",
+      "note": "walks a-sound-s-volume-line-picks-and-shapes-walk -> a-sound-s-volume-line-menus-alternate-walk, a-sound-s-volume-line-picks-and-shapes-walk, a-sound-s-bend-handle-follows-the-hand-walk, value-graph-second-segment-menu-walk"
+    },
+    {
+      "t": "2026-10-15T15:29:40.997Z",
+      "note": "Shipped in 3f1938aa: the value graph and the volume line both lay out through one shared AnimatedLineSurface (a strip per segment with its own menu, told whether the latest right click landed on it); level point menus ask the same. New walk a-sound-s-volume-line-menus-alternate-walk fails on old code, passes now; picks-and-shapes, bend-handle, value-graph-second-segment-menu and nine more line/graph walks pass; Scripts/test.sh green (13238). Audit queue/audits/2026-10-15-sound-line-part-menus.json."
     }
   ],
   "walks": [
-    "a-sound-s-volume-line-picks-and-shapes-walk"
-  ]
+    "a-sound-s-volume-line-menus-alternate-walk",
+    "a-sound-s-volume-line-picks-and-shapes-walk",
+    "a-sound-s-bend-handle-follows-the-hand-walk",
+    "value-graph-second-segment-menu-walk"
+  ],
+  "started": "2026-10-15T14:44:17.198Z",
+  "completed": "2026-10-15T15:29:40.998Z"
 }

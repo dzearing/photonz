@@ -1,0 +1,34 @@
+{
+  "id": "a-transition-onto-a-clip-with-no-spare-frames-of",
+  "title": "A transition onto a clip with no spare frames offers to shorten the cut",
+  "goal": "Add a second clip at full length and try to put a dissolve between it and the first: today every overlapping transition is greyed with only a tooltip, so the most common transition in the focus workflow cannot be had at the cut a person just made. The transition mock answers this with a one-click way to pay for it, Shorten the cut by the transition's length, and the app should offer exactly that.",
+  "epic": "video-transitions-motion",
+  "priority": "p1-high",
+  "seq": 8,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.508Z",
+  "updated": "2026-10-16T03:35:12.370Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html step 10 (greyed overlapping tiles with the reason; Properties offers 'Or · Shorten the cut by 1.0s'). Code today: TransitionPicker.swift ~54-90 greys Dissolve, Push, Wipe, Blur with a tooltip; ClipTransitions.swift ~540-556 refuses rather than shortening; TransitionInspector.swift ~138-145 only warns; EditorState+ClipTransitions.swift ~354-362 Command T falls back to a dip. No 'shorten' code exists. Searches 'shorten the cut', 'not enough spare', 'insufficient media', 'hold the last frame': nothing open or done. This is building the user's mock, not a new unasked control, so no card. Place the row in the transition's own Properties section (the placement contract: the panel says what the picked cut is; a one-shot verb here is the mock's own).",
+  "acceptance": [
+    "At Next defaults: open the sample recording, add a second clip at full length after it, click the cut between them: the picker still greys the overlapping tiles and says why, and offers Shorten the cut by the transition's length, as video-transition-wt.html step 10 draws it",
+    "Choosing it trims the frames the transition needs from the clip ends in one undo step and puts the transition on, with the timeline and the spare-frame strips agreeing to the frame",
+    "Command T at a cut with no spare keeps its dip fallback, or offers the same shortening; the audit says which and why",
+    "A walk at Next defaults covers the add-a-clip-then-dissolve path and passes twice in a row; a core test pins the shortening arithmetic",
+    "The mock's open question (hold the last frame instead) is left as it is, and noted in the audit",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.510Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.369Z",
+      "note": "seq 27.5 -> 8"
+    }
+  ]
+}

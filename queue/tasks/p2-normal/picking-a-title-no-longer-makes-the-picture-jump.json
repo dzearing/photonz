@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 50,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T19:07:16.746Z",
-  "updated": "2026-10-15T12:23:26.232Z",
+  "updated": "2026-10-15T18:52:17.789Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-14 by the runner of double-clicking-a-library-title-tile-inserts-it. Command: a copy of title-presets-library-shelf-walk cut at stage 6-undo (headline picked) then press Keynote Clean once, describe before/after. Output: describe displayZoom 65 -> 70, dockViewport 300 -> 342, the Library pane and the Sections footer 42pt lower (panel-before/after.json: Keynote Clean y 477 -> 435). Cause: TimelineDock.naturalBodyHeight fits the tracks (TimelineDockHeight, nothing chosen) and a picked layer's rows (title parts, key lanes) count toward it. That task only holds the height while a Library tile is picked (TimelineHeightHold, next-lists-pane). The general rule (fixed height like Premiere vs fit-to-tracks) may be a decision card: the user asked for 'as tall as its tracks' when the top edge became draggable (2026-09-28).",
@@ -31,6 +31,45 @@
     {
       "t": "2026-10-15T12:23:26.231Z",
       "note": "seq 4020 -> 50"
+    },
+    {
+      "t": "2026-10-15T16:30:12.787Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T18:51:37.207Z",
+      "note": "owns these walks: picking-a-title-holds-the-picture-walk, title-presets-library-shelf-walk, key-value-popover-walk, keys-copy-between-layers-walk, clicking-a-timeline-item-moves-the-playhead-walk, a-graph-handle-follows-the-hand-walk, title-knobs-restyle-walk"
+    },
+    {
+      "t": "2026-10-15T18:51:37.267Z",
+      "note": "Pre-build review: reproduced first with a walk (sample recording, Add Title Page, Command-Return, Escape): displayZoom 65 with the headline picked, 74 after Escape, timeline 593 -> 669. Premiere/Final Cut never resize the program monitor on a pick or a keyframe; the open card (option b, recommended, triage says build to it) agrees. Cost: rows a pick opens push the tracks under them below the timeline's foot."
+    },
+    {
+      "t": "2026-10-15T18:51:37.329Z",
+      "note": "Built: TimelineDock.naturalBodyHeight counts each track's own lane (ownHeight) behind next-open-out-the-timeline; parts, key lanes, graphs and zoom lanes scroll inside. Group folds and captions words still count (commands on tracks). Removed TimelineHeightHold (Library-only hold, now redundant). New TimelineRowReveal (PhotonzCore, tested): when a pick or key opens rows in the picked track, the timeline scrolls the least that shows what opened, measured from the row's real frame (an open graph is taller than its lane) via EditorState.notePickedTimelineRow / revealOpenedTimelineRow."
+    },
+    {
+      "t": "2026-10-15T18:51:37.391Z",
+      "note": "Walk harness: a control in a scrolling panel parked under the title bar is no longer judged in reach while a scroller could bring it down, and a reveal aims below the title bar (title-knobs-restyle-walk: Part In Direction sat under the panel toggle once the panel got taller). Walks updated for the new layout: clicking-a-timeline-item (+25pt, the zoom lane no longer grows the dock), a-graph-handle (handle at 957), keys-copy-between-layers (ruler at 791, level line +39), title-presets-library-shelf (a wheel turn brings V1 up before the drop). 61 title/key walks + 26 sampled panel walks + lists-pane walks run: all green except three that fail identically on clean HEAD (filed three-panel-walks-pass-again-after-the-lists-pan). section-fold-motion-walk failed once and passed on rerun (front walk). animate-pick-cost-walk: displayZoom 74 through every key and undo (card measured 74/71/74)."
+    },
+    {
+      "t": "2026-10-15T18:51:37.455Z",
+      "note": "Acceptance 4 waits on the user's answer to the keying card; built to its recommendation. Logged on clicking-a-cut-keying-a-value-and-undoing-it-ans so whoever acts on the answer writes the UX-PATTERNS rule. Pictures looked at: 1-headline-picked, 2-title-picked, 4-scrolled-down: canvas frame identical in all three, rows scroll inside the timeline."
+    },
+    {
+      "t": "2026-10-15T18:52:17.787Z",
+      "note": "The timeline no longer grows when a layer is picked or a value keyed: it fits each track's own lane (TimelineDock.naturalBodyHeight, behind next-open-out-the-timeline, on at Next defaults), and the rows a pick opens scroll inside it, with a newly opened lane scrolled into view (TimelineRowReveal, tested). Built to option b of the pending keying card; if the user answers a, this follows. Verified: new picking-a-title-holds-the-picture-walk (no flags, pointer click) holds displayZoom 74 across a headline pick, Escape, Escape and a re-pick (old code read 65 then 74); animate-pick-cost-walk holds 74 through every key and undo. 61 title/key walks, 26 sampled panel walks and the lists-pane walks green; four walks moved to the new layout; walk harness no longer parks panel controls under the title bar. Scripts/test.sh green (13246). Three panel walks that fail identically on clean HEAD filed as three-panel-walks-pass-again-after-the-lists-pan. Audit: queue/audits/2026-10-15-picking-a-title-holds-the-picture.json"
     }
-  ]
+  ],
+  "started": "2026-10-15T16:30:12.785Z",
+  "walks": [
+    "picking-a-title-holds-the-picture-walk",
+    "title-presets-library-shelf-walk",
+    "key-value-popover-walk",
+    "keys-copy-between-layers-walk",
+    "clicking-a-timeline-item-moves-the-playhead-walk",
+    "a-graph-handle-follows-the-hand-walk",
+    "title-knobs-restyle-walk"
+  ],
+  "completed": "2026-10-15T18:52:17.788Z"
 }

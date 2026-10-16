@@ -1,0 +1,33 @@
+{
+  "id": "cleaning-the-noise-on-one-stretch-eases-in-and-s",
+  "title": "Cleaning the noise on one stretch eases in and shows on the waveform",
+  "goal": "Draw a range and choose Clean Noise in Section, and the cleaning switches on hard at the edge of the range, which you can hear as a click in the room tone, while the waveform still shows the uncleaned sound. Ease into and out of the cleaned stretch, draw what you will hear, and only offer the section rows when the right-click is inside the range.",
+  "epic": "video-audio",
+  "priority": "p2-normal",
+  "seq": 24,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.923Z",
+  "updated": "2026-10-16T03:35:12.683Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From queue/audits/2026-10-15-clean-noise-and-hide-picture-in-a-section.json rough ('The cleaning switches on hard at the cut, with no crossfade into the cleaned copy', cleaned at Medium only, waveform shows the uncleaned file) and queue/audits/2026-10-12-range-on-a-pick.json rough ('A right-click anywhere on a picked clip leads with the section rows, even on a part of the clip outside the range'). Feature commit ca23ab09. Searches 'crossfade cleaned', 'section rows outside': nothing open.",
+  "acceptance": [
+    "Reproduced first: the hard switch is measured at both edges of the range (sample step at the boundary) before the change, and the log quotes the number",
+    "The cleaned stretch crossfades in and out over a short fixed time, measured at both edges to be no louder a step than the sound either side of it",
+    "The clip's waveform inside the range draws the cleaned sound",
+    "A right-click on a picked clip outside the range leads with the ordinary clip rows, not the section rows",
+    "A walk at Next defaults covers it and passes twice; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.925Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.682Z",
+      "note": "seq 88.75 -> 24"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+{
+  "id": "the-library-shelf-uses-the-room-its-pane-holds",
+  "title": "The Library shelf uses the room its pane holds",
+  "goal": "In the pane of lists at the foot of the panel, the Library shelf still stops at the height its own grab bar allows and scrolls, with blank space under it in the same pane. Like the Layers list, it should grow into the room the pane already holds before it scrolls.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 87.5,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T23:44:20.246Z",
+  "updated": "2026-10-16T00:23:03.129Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found 2026-10-15 by the runner of the-layers-list-uses-the-room-its-pane-holds, which fixed the same thing for Layers (PanelListsPane.listAsks/listCeiling, LayersListView.inListsPane hides its grab bar in the pane). Repro: Scripts/playtest.sh Scripts/playtest/library-shelf-height-walk.json --no-build; step 4-capped reads dockListRoom [\"Layers 80/80\", \"Library 105/105\"], dockSections [\"Layers 430-549\", \"Library 549-780\"] while the pane runs to about 847 (the earlier 3-back step reads Library 549-847), so about 67pt of blank glass sits under a shelf that scrolls (content 344pt). LibraryPanel caps with min(maxHeight, dockCeiling) at LibraryPanel.swift:372 and reports unpressed capped by maxHeight at :384-386; applying PanelListsPane.listAsks/listCeiling there with an inListsPane flag (threaded through InspectorPanel.sectionContent the way Layers now is) is the likely shape. library-shelf-height-walk drags the Library grab bar and would need rewriting the way panel-grip-walk was.",
+  "acceptance": [
+    "A Library shelf with more tiles than fit is drawn to the foot of the pane before it scrolls, with no blank band under it",
+    "The Library grab bar either still sets how tall the shelf may be in the pane or is gone with the pane grip doing that job, same answer as the Layers list (say which in the audit)",
+    "library-shelf-height-walk and panel-grip-walk pass at Next defaults"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T23:44:20.248Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T00:00:21.554Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T00:22:32.984Z",
+      "note": "walks library-shelf-height-walk -> library-shelf-height-walk, panel-grip-walk"
+    },
+    {
+      "t": "2026-10-16T00:22:49.990Z",
+      "note": "Reproduced first: library-shelf-height-walk step 19 read Library 549-780 with the pane to 847 and the shelf scrolling (105 of 344). Fix: LibraryPanel takes inListsPane; in the pane shelfHeight caps by PanelListsPane.listCeiling (dock only), unpressedShelfHeight asks listAsks (all tiles), grab bar not built. Pre-measure frame stays at the grab bar's ceiling so an unbounded pane never draws an infinite shelf. After: Library 569-847 / 599-847 / 469-847 across states. Walks rewritten to drive the Lists grip. Adversarial: a pane pulled below the lists' least height still scrolls as a whole (pane floor is one header by design); pre-existing, left as the pane's behavior, noted in audit rough, not filed."
+    },
+    {
+      "t": "2026-10-16T00:23:03.127Z",
+      "note": "In the pane of lists the Library shelf fills the pane's room before it scrolls and has no grab bar of its own (pane grip sets the room, same as Layers). LibraryPanel.inListsPane + PanelListsPane.listAsks/listCeiling. library-shelf-height-walk reads Library ending at the pane foot (847) in every state, was 780; it and panel-grip-walk pass at Next defaults, 15 nearby walks and 13,274 tests green. Audit 2026-10-15-library-shelf-fills-pane. Commit c327baf7."
+    }
+  ],
+  "walks": [
+    "library-shelf-height-walk",
+    "panel-grip-walk"
+  ],
+  "started": "2026-10-16T00:00:21.552Z",
+  "completed": "2026-10-16T00:23:03.128Z"
+}

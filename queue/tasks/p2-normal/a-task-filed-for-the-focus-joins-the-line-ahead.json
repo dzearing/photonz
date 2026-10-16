@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 60,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T12:23:59.155Z",
-  "updated": "2026-10-15T12:24:06.998Z",
+  "updated": "2026-10-15T19:13:33.351Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Evidence 2026-10-15 from queue/history.jsonl: the-layers-and-library-pane-holds-still-under-th (created 10-14 16:01Z), picking-a-title-no-longer-makes-the-picture-jump (19:07Z), a-right-click-on-a-sound-s-volume-line-opens-the (20:30Z) and a-point-picked-on-an-open-graph-keeps-its-value (21:06Z) all serve video-editing and got seq 4010 to 4050, while the-measuring-legend-says-something-useful-now-t, an-icon-svg-pastes-into-a-code-editor, find-out-whether-a-forever-motion-shorter-than-t, a-curve-drawn-on-whole-units-exports-on-whole-un, a-ring-or-arc-gets-a-full-turn-forever-when-rota and icon-snapping-reaches-what-the-icon-mock-draws (seq 170 to 240 from the 10-14 triage) were claimed between 08:47Z and 11:19Z on 10-15. Cause: draftTask in queue/bin/queue-lib.mjs (~line 324) sets seq = max(peers) + 10 with no regard to epic. The focus is objectives.json 'focus'; an epic serves it when it is the focus or a descendant.",
@@ -27,6 +27,25 @@
     {
       "t": "2026-10-15T12:24:06.997Z",
       "note": "seq 4010 -> 60"
+    },
+    {
+      "t": "2026-10-15T19:04:39.428Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T19:13:26.178Z",
+      "note": "Reproduced before the fix: a dry-run video-editing task at p2-normal got seq 4030, behind icon-animate 70, icon-grid 80, ui-building 90. Fixed in queue-lib draftTask via servesFocus + focusSeq: a focus task (focus epic or any descendant) goes halfway between the last open head task (focus work or a user ask) and the first open task of another epic; other tasks use endSeq as before. Blocked and in_progress tasks count as part of the line; done/dropped do not. User asks are part of the head so a runner's focus follow-up never jumps them. After: same dry run gives seq 55, an icon-grid dry run still 4030. New drill queue/bin/focus-seq-drill.mjs (19 checks); queue-cli, objectives, decision and churn drills still pass; Scripts/test.sh 13246 tests passed. Digest resequence step and queue/README say the same rule, and triage now keeps user asks, then focus, then the rest when it renumbers. Existing out-of-place task three-panel-walks-pass-again-after-the-lists-pan (video-editing, seq 4020) is left for the next triage to move under that rule."
+    },
+    {
+      "t": "2026-10-15T19:13:33.271Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-15T19:13:33.349Z",
+      "note": "New focus tasks join the head of their priority (after open focus work and user asks, before other epics); others still go to the end. queue-lib draftTask/servesFocus/focusSeq, drilled by queue/bin/focus-seq-drill.mjs (19 checks pass); digest resequence step and README say the same rule. Real-queue dry run: video task 4030 -> 55, icon task still 4030. Scripts/test.sh green. Commit 5e2cef71."
     }
-  ]
+  ],
+  "started": "2026-10-15T19:04:39.426Z",
+  "walks": [],
+  "completed": "2026-10-15T19:13:33.350Z"
 }

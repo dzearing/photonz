@@ -1,0 +1,55 @@
+{
+  "id": "three-panel-walks-pass-again-after-the-lists-pan",
+  "title": "Three panel walks pass again after the lists pane began holding its height",
+  "goal": "Three scripted checks of the right-hand panel started failing today on a clean copy of the app: dragging a layer row into a group by the pointer no longer lands, and an effect just added is left 5 points below the bottom of the panel instead of scrolled fully into view. Find whether the app or the checks are wrong and fix whichever it is.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 4020,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-15T18:51:19.743Z",
+  "updated": "2026-10-15T22:50:51.964Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-15 by the runner of picking-a-title-no-longer-makes-the-picture-jump on a clean worktree of HEAD 059cd49a (git worktree add --detach /tmp/photonz-head HEAD; Scripts/playtest.sh ...). Output on HEAD: layer-row-lifts-by-pointer-walk step 26 (expectRows): the layers list reads Group, Rectangle 4, Rectangle 3, Rectangle 2, Rectangle, Background, not Group, Rectangle 4, Rectangle 3, Rectangle, Rectangle 2, Background (windowDrag from [1150, 833] to [1150, 764] at fixed points in the Layers list). effects-open-into-view-walk step 32 and effects-room-for-the-one-you-opened-walk step 13 (expectInView): Shadow is 245 pt tall, there is 297 pt of room, and 5 pt of it is past the bottom. All three passed in the full sweep of 2026-10-15T08:47Z (927/930). Prime suspect: 6c73bd86 'The Layers and Library pane holds still under the pointer' (PanelListsPane.Hold, InspectorPanel), which landed after that sweep and changes the pane's height and so the Layers list's position and the room left for Effects. All three are still pictures with no timeline, so the timeline change in picking-a-title-no-longer-makes-the-picture-jump does not reach them.",
+  "acceptance": [
+    "layer-row-lifts-by-pointer-walk passes",
+    "effects-room-for-the-one-you-opened-walk passes",
+    "effects-open-into-view-walk passes",
+    "If the app was right and the walk wrong, the walk's points are updated and say why; if the app was wrong, a newly added effect is scrolled fully into view again"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T18:51:19.745Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-15T19:51:37.836Z",
+      "note": "rotating check 2026-10-15T19:51:37Z, 32 walks run from 273 onward in the rotation: effects-open-into-view-walk, effects-room-for-the-one-you-opened-walk failing."
+    },
+    {
+      "t": "2026-10-15T22:02:32.399Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T22:10:07.165Z",
+      "note": "Reproduced on HEAD 429e33b3: all three fail as described. With 6c73bd86's Sources diff reverted locally, layer-row-lifts-by-pointer and effects-room-for-the-one-you-opened both pass, so that commit is the cause. Effects case: pick viewport went 363 -> 324; the focused Shadow's list floor (297) is capped at the dock's room but not less the section's own header, so the Effects section is 330 in a 324 viewport, the reveal anchors the dock at Effects' top and the list's bottom anchor leaves the Shadow 5pt under the panel's edge. App bug, exposed by the shorter pick. Layers case: fixed pointer points in a pane that now sits at a different height."
+    },
+    {
+      "t": "2026-10-15T22:50:23.179Z",
+      "note": "Fixed. App was wrong for the two Effects walks: a just-opened/added effect's list floor is now capped at the dock's room LESS its section's header, divider and plus row (DockHeightBudget.paneListFloor chrome:, tested; InspectorDockLayout.chrome(of:); the probe's needsForOpenPane uses the same cap). Shadow now lands whole with the Border's tail above it (checked 5-shadow-open-sc.png). Walk was wrong for layer-row-lifts-by-pointer: the pane moved its Layers header 590->511, so both windowDrag points moved up 79 with a comment saying why. Verified: all three walks pass; 30 effect/fold/lists-pane/layer-row/dock walks pass (section-fold-motion failed once on a 20.8ms pass vs 16ms at load 4.8, passed twice on rerun); Scripts/test.sh 13,271 tests green. Filed the-layers-list-uses-the-room-its-pane-holds for the blank band under a scrolling Layers list seen in this walk's capture. No audit: no new feature, a fix to an existing reveal."
+    },
+    {
+      "t": "2026-10-15T22:50:51.962Z",
+      "note": "ee59b940: app was wrong for the two Effects walks (a just-added effect's list room was capped at the dock but not less its section header, so the Shadow sat 5pt under the panel edge once the held lists pane shortened the pick; DockHeightBudget.paneListFloor now takes the section chrome, unit tested); walk was wrong for layer-row-lifts-by-pointer (fixed pointer points moved up 79 with the Layers header). All three walks pass, 30 related panel walks pass, 13,271 tests green. Follow-up filed: the-layers-list-uses-the-room-its-pane-holds."
+    }
+  ],
+  "walks": [
+    "layer-row-lifts-by-pointer-walk",
+    "effects-room-for-the-one-you-opened-walk",
+    "effects-open-into-view-walk"
+  ],
+  "started": "2026-10-15T22:02:32.395Z",
+  "completed": "2026-10-15T22:50:51.963Z"
+}

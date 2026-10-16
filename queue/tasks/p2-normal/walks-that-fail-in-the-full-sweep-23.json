@@ -1,0 +1,61 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-23",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and the check between tasks found some that no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 4040,
+  "status": "done",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-15T21:13:21.199Z",
+  "updated": "2026-10-16T01:35:20.103Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nOpened by the rotating check at 2026-10-15T21:13:21Z, not by a full sweep: it ran 31 of 942 walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.\n\nFailing walks (1): framing-a-zoom-shows-one-box-walk\n\nFull output: /Users/dzearing/git/photonz/queue/sweep/slice-2026-10-15-140504.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log"
+  ],
+  "log": [
+    {
+      "t": "2026-10-15T21:13:21.201Z",
+      "note": "created (rotating check)"
+    },
+    {
+      "t": "2026-10-15T21:13:21.204Z",
+      "note": "rotating check 2026-10-15T21:13:21Z, 31 walks run from 329 onward in the rotation: framing-a-zoom-shows-one-box-walk failing. This is a slice, not a sweep: the rest of the set is unchecked."
+    },
+    {
+      "t": "2026-10-16T01:14:09.043Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T01:35:13.062Z",
+      "note": "owns these walks: framing-a-zoom-shows-one-box-walk"
+    },
+    {
+      "t": "2026-10-16T01:35:13.127Z",
+      "note": "Reproduced at HEAD 12fefd7a: step 17 expectCue at window (260,112) read grab, not resize. Bisected in a worktree: passes at 059cd49a, fails at d3826b57. Both open the sample at 99% zoom; on the old code adding the zoom grew the timeline (zoom lane counted in its height), the canvas refit to 75%, and the walk's window points were written against that. d3826b57 stops picks and zoom lanes from resizing the timeline ON PURPOSE, so the walk was wrong, not the app."
+    },
+    {
+      "t": "2026-10-16T01:35:13.190Z",
+      "note": "Walk rewritten in document points (box (16,72)-(656,472), grab at its centre, draw at (930,610), none at (1340,300) past the picture, drag BR to (789,561)), so it survives a canvas refit. Passed twice in a row on its own, every point checked in log.json against the reported handle positions."
+    },
+    {
+      "t": "2026-10-16T01:35:13.252Z",
+      "note": "Found on the way, reproduced on a person's path (guide cut-a-recording-down opens the sample at 99% with its bottom under the tool bar and transport): filed a-recording-that-opens-straight-into-edit-fits-a (p2, video-editing) with the diagnostic walk and the cause (EditorWindowFit.plan ignores the timeline; pendingOpenScale path skips the refit). Not fixed here: it moves every walk that clicks window points after opening a recording."
+    },
+    {
+      "t": "2026-10-16T01:35:20.100Z",
+      "note": "framing-a-zoom-shows-one-box-walk was wrong, not the app: d3826b57 deliberately stopped a zoom lane growing the timeline, which had refit the picture to 75% under the walk's window points. Rewritten in document points (73b54d74), passes twice in a row on its own. Bisected 059cd49a ok / d3826b57 fail. Filed a-recording-that-opens-straight-into-edit-fits-a for the real open-fit bug found on the way."
+    }
+  ],
+  "standing": "walk-sweep",
+  "started": "2026-10-16T01:14:09.040Z",
+  "walks": [
+    "framing-a-zoom-shows-one-box-walk"
+  ],
+  "completed": "2026-10-16T01:35:20.102Z"
+}

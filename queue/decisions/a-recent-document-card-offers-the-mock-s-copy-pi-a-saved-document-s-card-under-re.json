@@ -1,0 +1,53 @@
+{
+  "id": "a-recent-document-card-offers-the-mock-s-copy-pi-a-saved-document-s-card-under-re",
+  "taskId": "a-recent-document-card-offers-the-mock-s-copy-pi",
+  "question": "A saved document's card under Recent: should it offer Pin, and should Delete throw the file away?",
+  "context": "The front door (New Window, in Next) lists recent captures and saved documents. The mock gives every card Copy, Edit, Pin and Delete under the pointer. Copy and Edit are built for documents now (Copy puts the full-size picture on the clipboard). Captures already have Delete, which moves the capture to the Bin. For a document you saved yourself the app draws an X that only takes the card off the list, and nothing in the app can pin yet. Picture of the card today: queue/audits/2026-10-15-recent-document-card-row.png",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep Remove from Recent, no Pin",
+      "summary": "Pointing at a document card shows Copy, Edit, Show in Finder and Remove from Recent (what ships today). The X takes the card off the list; the file stays where you saved it. Nothing pins.",
+      "pros": [
+        "Nothing on the front door can lose your work",
+        "Show in Finder is one click away, the way Finder and Premiere’s recent lists do it",
+        "Nothing more to build"
+      ],
+      "cons": [
+        "Differs from the mock: no Pin, and an X where the mock draws a trash can"
+      ],
+      "mitigation": "The trash can stays on capture cards, where Delete means what history means by it."
+    },
+    {
+      "id": "b",
+      "label": "Copy, Edit, Pin, Remove from Recent",
+      "summary": "The mock’s row with its Pin: a pinned card stays at the front of Recent whatever you open later, on documents and captures alike. The last button takes the card off the list and never deletes the file. Show in Finder moves to the right-click menu.",
+      "pros": [
+        "Matches the mock’s four buttons and their order",
+        "Pin keeps the project you return to daily one click away"
+      ],
+      "cons": [
+        "Pin has to be built: a pinned look on the card and a Pinned order on Recent",
+        "Show in Finder leaves the hover row"
+      ],
+      "mitigation": "Show in Finder stays on right-click, where a Mac hand looks for it."
+    },
+    {
+      "id": "c",
+      "label": "The mock exactly: Delete moves the file to the Bin",
+      "summary": "Copy, Edit, Pin, Delete, as drawn. Delete on a saved document moves the file to the Bin after a confirm, the same way it does for a capture. Pin as in b.",
+      "pros": [
+        "Identical to the mock and to the capture cards",
+        "One meaning of the trash can everywhere"
+      ],
+      "cons": [
+        "A launcher that can throw away a project you saved elsewhere (Desktop, a shared folder) surprises people",
+        "Needs a confirm and Pin built"
+      ],
+      "mitigation": "Moves to the Bin, never erases, so it can be put back from Finder."
+    }
+  ],
+  "recommended": "b",
+  "status": "pending",
+  "created": "2026-10-15T21:03:59.873Z"
+}

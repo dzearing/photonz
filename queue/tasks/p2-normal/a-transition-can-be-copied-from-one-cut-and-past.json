@@ -1,0 +1,32 @@
+{
+  "id": "a-transition-can-be-copied-from-one-cut-and-past",
+  "title": "A transition can be copied from one cut and pasted onto others",
+  "goal": "Tune a dissolve at one cut, and today there is no way to put the same one on another cut except setting it up again. The transition mock gives a cut Copy Transition, and Paste puts it on the picked cut or cuts. Premiere and Final Cut both work this way.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:59.038Z",
+  "updated": "2026-10-16T03:35:12.620Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transitions.html panel overflow menu 'Copy transition'. Code: the cut's right-click is EditorState+TimelineMenus.swift ~553-578 (Apply Default Transition, Add, Remove, Roll Edit); no transition handling in EditorState+Clipboard.swift or PhotonzCore/Clipboard.swift. Apply to Every Cut and Set as Default exist (one-step-puts-a-transition-on-every-cut, one-key-puts-the-usual-transition-on-the-cut-at). Searches 'copy transition', 'paste transition': nothing.",
+  "acceptance": [
+    "At Next defaults: right-click a cut with a transition and choose Copy Transition; pick another cut (or several) and Paste (Command V and the right-click row): each gets the same kind, length and curve, in one undo step",
+    "Pasting where a cut cannot afford it greys or refuses the same way the picker does and says why",
+    "Edit > Copy and Paste reach it with a cut picked; no new key is added",
+    "A walk at Next defaults covers it and passes twice; a core test pins the copy; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:59.040Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.619Z",
+      "note": "seq 89.375 -> 23"
+    }
+  ]
+}

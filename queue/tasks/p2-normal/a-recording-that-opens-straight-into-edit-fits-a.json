@@ -1,0 +1,53 @@
+{
+  "id": "a-recording-that-opens-straight-into-edit-fits-a",
+  "title": "A recording that opens straight into Edit fits above the tool bar and the timeline",
+  "goal": "When a recording opens straight into Edit (a guide sample, or a recording you already edited), the picture comes up nearly full size and its lower part sits under the tool bar, the transport and the timeline. It should open fitted into the room left above them, the way it does after you switch from View to Edit.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 85,
+  "status": "done",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T01:34:55.243Z",
+  "updated": "2026-10-16T02:51:47.872Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced 2026-10-15 while fixing walks-that-fail-in-the-full-sweep-23. Diagnostic walk /tmp/diag-walk/guide.json (setup forget tutorials, startGuide cut-a-recording-down, waitFor a-clip-on-v1, describe): every describe reads displayZoom 99, viewCentre (640, 370) on the 1280x800 sample in a 1728x990 window, and the -sc.png shows the picture from the title bar down past the transport. The same happens with setup timelineOpen + openSampleRecording. Cause, from the code: EditorWindowFit.plan (PhotonzCore) sizes the window for image + 100pt padding and ignores the transport and timeline. Here it cannot hold 100%, so it returns imageScale about 0.99. EditorState.canvasViewSizeChanged then applies that planned zoom (pendingOpenScale path) without checking it against the real canvas, and returns before the first-layout refit. View mode is fine because refitForViewEditMode refits on the switch. Before d3826b57 the picture fell to 75% by accident, the first time a pick grew the timeline; that refit is gone on purpose. Blast radius: every walk that clicks window points after openSampleRecording/timelineOpen will shift, so expect a batch of walk updates (grep -l openSampleRecording Scripts/playtest/*.json, then the ones with space window).",
+  "acceptance": [
+    "Starting the Cut a recording down guide opens the sample with its whole picture visible above the tool bar and the transport (a walk measures the picture bottom edge above the tool bar top)",
+    "Opening an edited recording at Next defaults does the same",
+    "A picture (no time) still opens at 100% when the window can hold it",
+    "Walks that click window points after opening a recording are moved to the new layout in the same commit, or rewritten in document points"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T01:34:55.245Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T01:47:18.346Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T02:51:16.677Z",
+      "note": "owns these walks: a-recording-that-opens-into-edit-fits-above-the-timeline-walk"
+    },
+    {
+      "t": "2026-10-16T02:51:31.980Z",
+      "note": "Reproduced on main: /tmp/diag-walk/guide.json opened the guide sample at zoom 0.987 in 2 of 3 runs and 0.785 in 1, so it is a race: when the canvas's first reported size already has the timeline under it, the window plan's zoom (sized for the picture alone) was applied unchecked and nothing refit. Fix: Viewport.opening (PhotonzCore, ViewportOpeningTests) keeps the planned zoom only when the real canvas holds it above the tool bar, otherwise it is the fit; EditorState.canvasViewSizeChanged uses it and marks such a camera fitted so it keeps fitting on resize. With the fix: 5 of 5 runs at 0.785 (79%)."
+    },
+    {
+      "t": "2026-10-16T02:51:32.044Z",
+      "note": "Walks: ran the 39 walks that open a recording and click view or window points or read the zoom. 37 pass; a-zoom-is-shaped-by-hand-walk and pick-several-zooms-walk fail identically on main without this change (A/B with the change stashed), so they are not moved by it; folded into walks-that-fail-in-the-full-sweep-24. New walk a-recording-that-opens-into-edit-fits-above-the-timeline-walk (no flags, lock-safe): guide sample, the same cut + saved + reopened, and a 800x500 picture at 100%, each checked with toolBar clearOfPicture. Passed 3 times. Scripts/test.sh green. Note: on main this walk also passed once because the bug is a race; the diagnostic repeat runs are the A/B evidence."
+    },
+    {
+      "t": "2026-10-16T02:51:47.869Z",
+      "note": "Recordings that open straight into Edit (guide samples, an edited recording reopened) now open fitted above the tool bar, transport and timeline instead of at ~99% under them; pictures that fit still open at 100%. Viewport.opening in PhotonzCore (tested) + EditorState.canvasViewSizeChanged. Verified: diagnostic walk 5/5 at 79% (main raced to 99% in 2 of 3), new no-flag walk a-recording-that-opens-into-edit-fits-above-the-timeline-walk passes 3x, 37 of 39 affected walks pass (the 2 others fail identically on main, folded into sweep-24), Scripts/test.sh green. Commit a2a63729. Audit queue/audits/2026-10-15-a-recording-that-opens-straight-into-edit-fits-a.json."
+    }
+  ],
+  "started": "2026-10-16T01:47:18.343Z",
+  "walks": [
+    "a-recording-that-opens-into-edit-fits-above-the-timeline-walk"
+  ],
+  "completed": "2026-10-16T02:51:47.871Z"
+}

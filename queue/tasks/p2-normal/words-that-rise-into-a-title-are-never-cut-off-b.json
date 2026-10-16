@@ -1,0 +1,32 @@
+{
+  "id": "words-that-rise-into-a-title-are-never-cut-off-b",
+  "title": "Words that rise into a title are never cut off by their own box",
+  "goal": "A title whose words rise in from below gets them sliced at the bottom edge of the text's own box while they travel, so the entrance looks broken. The words should be whole for the whole move, the way depth flips already are.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 27,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:59.351Z",
+  "updated": "2026-10-16T03:35:12.866Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From queue/audits/2026-10-10-title-words-reveal.json rough: 'A piece rising from below can be cut at the bottom edge of the text's own box while it travels.' The later done task text-that-swings-flips-or-flies-in-from-depth-is loosened clipping only for depth flips; look at how it did that (TextRevealRasterizer in PhotonzRender) and extend it. Model checklist for a look task: title-text-visibly-comes-in-and-every-built-in-t. Renderer change: perf note in the commit (composite path).",
+  "acceptance": [
+    "Measured bar, set by measuring today first: at every frame of a rise entrance on a built-in title, the share of each rising word's glyph pixels that is drawn, against the same word at rest; today's value is quoted in the log and the bar is 100 per cent at every frame",
+    "Every built-in title entrance that moves words across their box edge is checked the same way, and any other one that clips is fixed in the same change",
+    "A reel (short MP4 or GIF plus a contact sheet) of the rise before and after under queue/audits/, and a decision card linking it so the user judges the look; building does not wait on the answer",
+    "Export of the title matches the canvas; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:59.354Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.865Z",
+      "note": "seq 89.921875 -> 27"
+    }
+  ]
+}

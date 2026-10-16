@@ -1,0 +1,32 @@
+{
+  "id": "a-box-pick-on-the-timeline-is-copied-and-ripple",
+  "title": "A box pick on the timeline is copied and ripple deleted whole",
+  "goal": "Draw a box over the timeline and it picks clips, zooms and keys together. But Option drag copies only the clips, and Shift Delete leaves the zooms and keys picked on other clips behind. What the box picked should be acted on as one.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.813Z",
+  "updated": "2026-10-16T03:35:12.493Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From queue/audits/2026-10-10-timeline-box-picks-everything.json rough: 'Option drag on a box's pick copies its clips but not the zooms and keys picked beside them' and 'Shift Delete... leaves zooms and keys picked on other clips'. Not reproduced by the manager. Searches 'option drag box zooms keys', 'box pick copy zooms': nothing open.",
+  "acceptance": [
+    "Reproduced first in a walk at Next defaults: a box over two clips with a zoom and a key, then Option drag and Shift Delete; the log quotes what each left behind",
+    "Option drag of a box pick copies every clip, zoom and key in it, keeping their times relative to each other, in one undo step",
+    "Shift Delete on a box pick removes everything it picked and closes the gap, in one undo step",
+    "The walk passes twice in a row and a core test pins both; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.815Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.492Z",
+      "note": "seq 87.5 -> 21"
+    }
+  ]
+}

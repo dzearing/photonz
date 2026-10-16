@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 10,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "queue",
   "created": "2026-10-15T00:54:23.262Z",
-  "updated": "2026-10-15T12:23:25.955Z",
+  "updated": "2026-10-15T12:34:06.364Z",
   "deps": [],
   "blockedBy": [],
   "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-15T08:47:52Z: 927 of 930 walks passed in 258 minutes.\n\nFailing walks (3): segmented-chip-refraction-film-walk, title-on-the-timeline-walk, view-to-edit-on-a-long-recording-walk\n\nAlready named by another open task, so read that one before re-diagnosing (2):\n  segmented-chip-refraction-film-walk -> the-layers-and-library-pane-holds-still-under-th (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 1: title-on-the-timeline-walk\n\nFull output: queue/sweep/2026-10-14-212946.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: a scheduled sweep\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
@@ -42,7 +42,40 @@
     {
       "t": "2026-10-15T12:23:25.954Z",
       "note": "seq 4060 -> 10"
+    },
+    {
+      "t": "2026-10-15T12:26:11.795Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T12:26:20.657Z",
+      "note": "owns these walks: title-on-the-timeline-walk, a-recording-stays-and-opens-right-after-stop-walk"
+    },
+    {
+      "t": "2026-10-15T12:33:59.297Z",
+      "note": "walks title-on-the-timeline-walk, a-recording-stays-and-opens-right-after-stop-walk -> title-on-the-timeline-walk"
+    },
+    {
+      "t": "2026-10-15T12:33:59.375Z",
+      "note": "Reproduced title-on-the-timeline-walk: step 25 'no field called Shipping today clip'. The walk was WRONG, not the app: an expect on a field finds a clip bar through the bar's readout, whose anchor spans the whole lane, so it belongs to the piece only while the lane's middle falls inside the bar. This title starts at 4.0s on an 8s recording, i.e. exactly the lane's middle; since 0c297537 (bars drawn from their own start and slid) the middle lands a few points left of it and the readout reads as 'Timing Shipping today'. The control 'Shipping today clip' was present and in the window all along, and title-2-before-it-arrives-sc.png shows the bar at 4s to 7s with the playhead at 0. Fixed the step to expect the control (b3db30ed); passed twice in a row on its own."
+    },
+    {
+      "t": "2026-10-15T12:33:59.444Z",
+      "note": "a-recording-stays-and-opens-right-after-stop-walk (from the 10:45Z rotating check, not this task's sweep-owned walk): failed both of my runs at 258-271 ms worst against a 250 ms budget; sweep logs show it alternating since 2026-10-14. Not a load near-miss to dismiss, filed with the reproduction as a-recording-opens-within-its-250-ms-budget-after (p2)."
+    },
+    {
+      "t": "2026-10-15T12:33:59.511Z",
+      "note": "left rough: five other walks (a-locked-track-keeps-its-clip, a-shape-s-bar-keeps-its-track, bar-end-follows-the-pointer, drawn-shape-gets-a-timeline-row) also expect '<name> clip' as a field; they pass because their bars cover the lane's middle. Agent-only fragility, did not earn a task."
+    },
+    {
+      "t": "2026-10-15T12:34:06.362Z",
+      "note": "title-on-the-timeline-walk was wrong, not the app: its bar check read a lane-wide readout that only counted as the title's clip while the lane's middle sat inside the bar, and since 0c297537 it lands just left of a title starting at 4.0s. The step now expects the 'Shipping today clip' control (b3db30ed, pushed); the walk passes twice in a row on its own, and its picture shows the bar at 4s to 7s. The open-after-Stop timing walk reproduced over its 250 ms budget twice and is filed as a-recording-opens-within-its-250-ms-budget-after."
     }
   ],
-  "standing": "walk-sweep"
+  "standing": "walk-sweep",
+  "started": "2026-10-15T12:26:11.794Z",
+  "walks": [
+    "title-on-the-timeline-walk"
+  ],
+  "completed": "2026-10-15T12:34:06.363Z"
 }

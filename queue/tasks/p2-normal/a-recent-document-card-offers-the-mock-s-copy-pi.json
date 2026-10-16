@@ -5,14 +5,14 @@
   "epic": "ui-building",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-10T08:55:55.575Z",
-  "updated": "2026-10-15T12:24:07.197Z",
+  "updated": "2026-10-15T21:04:25.663Z",
   "deps": [],
   "blockedBy": [],
-  "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open.",
+  "notes": "Mock: docs/design/mocks/pages/ui-entry-wt.html ~300-330 (.filmcard .acts: Copy, Edit, Pin, Delete). Built: Sources/Photonz/FrontDoorView.swift FrontDoorRecentCard.actions (document case: Edit, Show in Finder, Remove from Recent; capture case keeps the history strip's Copy, Edit, Show in Finder, Delete; no Pin anywhere in the app). Copy for a .photonz could copy its preview (PackageIO.readPreview). From the-front-door-s-recent-lists-documents-you-open. | 2026-10-15 runner: Copy built for document cards (FrontDoorCopy: .photonz rendered whole off main via PackageIO.read + DocumentRenderer, picture file via CaptureStore.copyToPasteboard, recording via ClipboardWriter.writeFile); row and menu read FrontDoor.actions. Walk front-door-recent-card-actions-walk (startFromFrontDoor rest/first/gone) proves Copy, Edit, Remove from Recent by pointer at Next defaults. Show in Finder is deliberately not clicked by the walk: it activates Finder over the person. Remaining: Pin (not in the app at all) and what the last button does, on the decision card.",
   "acceptance": [
     "A decision card asks the user whether a document card's Delete removes the file or only the card, and whether Pin is wanted",
     "The document card's hover row and right-click menu offer what the user picked",
@@ -62,7 +62,26 @@
     {
       "t": "2026-10-15T12:24:07.196Z",
       "note": "seq 80 -> 90"
+    },
+    {
+      "t": "2026-10-15T20:40:34.860Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-15T21:04:20.054Z",
+      "note": "walks none -> front-door-recent-card-actions-walk"
+    },
+    {
+      "t": "2026-10-15T21:04:20.144Z",
+      "note": "Adversarial pass: a Photoshop/Finder hand expects recent lists to remove, not delete, so Delete on a document stays a user call. Copy on a project must not paste a 480px preview or the .photonz package into Slack, so it renders the project full size (verified 1440x960 PNG on the clipboard). Built Copy (commit 6fd15036), walk green with 2 real window pictures; opened both: the hover row shows Copy/Edit/Finder/X and the card is gone after Remove from Recent with the file still on disk. Decision card filed for Pin + Delete, recommended b. No audit yet: the feature is not done until the card is answered; picture for the card at queue/audits/2026-10-15-recent-document-card-row.png."
+    },
+    {
+      "t": "2026-10-15T21:04:25.659Z",
+      "note": "Copy built and walked for document cards (6fd15036). Pin and what the last button does wait on the decision card: keep Remove from Recent, add Pin, or delete the file as the mock draws."
     }
   ],
-  "walks": []
+  "walks": [
+    "front-door-recent-card-actions-walk"
+  ],
+  "started": "2026-10-15T20:40:34.858Z"
 }

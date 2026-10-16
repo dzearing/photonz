@@ -1,0 +1,32 @@
+{
+  "id": "a-logo-or-picture-can-be-brought-into-a-video-fo",
+  "title": "A logo or picture can be brought into a video for a title",
+  "goal": "The title walkthrough puts a logo on a lower third from the Library. Today Import Media takes only movies and sounds, and an SVG dropped from the Finder does nothing and says nothing. A picture or a logo should come in like any other media and sit on a track with an in and an out.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 26,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:59.457Z",
+  "updated": "2026-10-16T03:35:12.803Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8 (Library holds svg, png, a logo). Code: EditorState+LibraryImport.swift ~20-21 and ~58-78 take movies and audio only; MediaDrop.swift ~21-26 returns nil for pictures; EditorState.swift ~2237-2238 reads a dropped picture with CGImageSourceCreateWithURL, which cannot read SVG. No SVG reader in Sources. Pixels stay in ImageStore, never in the model. Searches 'import svg', 'clip art', 'import media pictures': only SVG export tasks.",
+  "acceptance": [
+    "Reproduced first at Next defaults: Import Media with a PNG, and a Finder drop of an SVG, on the sample recording; the log quotes what each did",
+    "Import Media takes PNG, JPEG and HEIC into the video's Library, and a tile drags onto the timeline or the picture as a layer with an in and an out",
+    "An SVG is either brought in (sharp at any size) or refused with a short note saying so; never a silent nothing. If a real SVG reader is more than this sitting, the refusal ships and the reader is filed as its own task",
+    "A walk at Next defaults covers the PNG path and passes twice; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:59.459Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.802Z",
+      "note": "seq 89.9609375 -> 26"
+    }
+  ]
+}

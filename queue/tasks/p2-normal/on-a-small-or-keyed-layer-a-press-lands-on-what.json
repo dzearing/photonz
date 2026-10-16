@@ -1,0 +1,32 @@
+{
+  "id": "on-a-small-or-keyed-layer-a-press-lands-on-what",
+  "title": "On a small or keyed layer a press lands on what it aims at",
+  "goal": "Two places on the canvas take a press meant for something else. On a layer about 40 points across the depth arrow covers much of its upper right, so trying to move the layer pushes it in depth instead. And when the playhead sits on a key, the key's ring sits under the layer's middle where the 3D handles are drawn, so the ring cannot be clicked. Both should go to what the pointer is aimed at.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 22,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T03:34:58.710Z",
+  "updated": "2026-10-16T03:35:12.556Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "From audit rough lines, not reproduced by the manager: queue/audits/2026-10-13-3d-grippers-on-a-picked-layer.json ('On a layer about 40 points across, the depth arrow covers much of its upper right quarter: a press there pushes it in depth instead of moving it') and queue/audits/2026-10-13-every-key-dot-picks.json ('When the playhead sits on a key, that key's ring is under the layer's middle, where the 3D handles are drawn... the ring cannot be clicked'). Searches 'depth arrow small layer', 'key ring 3D handles': nothing open. Rule: never cover what is being manipulated; hit areas should shrink or step aside on small layers rather than grow over them.",
+  "acceptance": [
+    "Reproduced first: both cases run in a walk at Next defaults before any change, and the log quotes what each press did",
+    "On a 40 point layer, a press anywhere on the layer away from the drawn arrow moves the layer; the arrow still pushes in depth when pressed on its own drawing",
+    "With the playhead on a key, the key's ring on the canvas can be clicked and picks that key, and the 3D handles still work",
+    "The walk passes twice in a row; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T03:34:58.712Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-16T03:35:12.555Z",
+      "note": "seq 85 -> 22"
+    }
+  ]
+}

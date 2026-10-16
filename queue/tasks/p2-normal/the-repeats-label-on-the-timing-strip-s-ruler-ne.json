@@ -5,11 +5,11 @@
   "epic": "icon-animate",
   "priority": "p2-normal",
   "seq": 4030,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-15T19:40:02.917Z",
-  "updated": "2026-10-15T19:40:02.920Z",
+  "updated": "2026-10-16T01:02:04.992Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-15: `Scripts/playtest.sh Scripts/playtest/a-lone-spinner-strip-reads-one-turn-walk.json` then look at /tmp/photonz-playtest/a-lone-spinner-strip-reads-one-turn/1-one-turn-sc.png: the ruler reads \"|800\" with \"repeats\" printed over it at the same x (garbled \"800eats\"). Same picture saved as queue/audits/2026-10-15-forever-turn-reading-2.png. The label is MotionStripMarksView in Sources/Photonz/MotionStripView.swift (~line 1102), offset to laneWidth * ruler.repeatsFraction at the top of the marks overlay, which is the ruler's row. The mock (icon-loop-wt.html #wrapMark) labels the restart \"and again\" and draws it down in the lanes. Whether to also take the mock's word is part of the fix.",
@@ -22,9 +22,22 @@
     {
       "t": "2026-10-15T19:40:02.919Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T00:32:24.324Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T01:02:04.920Z",
+      "note": "Built and verified in 12fefd7a. Reproduced first: 1-one-turn-sc.png read 800 with repeats over it. Fix: MotionStripRuler.repeatsLabelPlace (PhotonzCore, 5 tests in MotionStripRepeatsLabelTests) says when the label would touch a tick's number; MotionStripMarksView then drops it by the ruler's height (just under the ruler, above the first heading). Between ticks it stays on the ruler (motion-timing-strip-walk 7-shorter: 900 ms reads repeats between 800 and 1000). Also made the restart mark dashed accent 70% with an accent label, matching icon-animate-wt, icon-phase-wt and icon-loop-wt. I opened every audit picture and both show the intended look. Walks green: a-lone-spinner-strip-reads-one-turn, motion-timing-strip, a-ring-or-arc-arrives-spinning, forever-spinner-keeps-its-own-pace. Scripts/test.sh green, 13279 tests. MotionStripView.swift is shared, not forked, so Current gets the same fix. Open: the spinner mock words it \"and again\" under the last lane; decision card filed, recommending the built version. If the answer is a, this task only needs closing."
+    },
+    {
+      "t": "2026-10-16T01:02:04.989Z",
+      "note": "Fix shipped in 12fefd7a (label never sits on a ruler number, walk picture in the audit). Waiting on the card about the spinner mock's wording and placement (\"and again\" under the last lane vs \"repeats\" under the ruler)."
     }
   ],
   "walks": [
     "a-lone-spinner-strip-reads-one-turn-walk"
-  ]
+  ],
+  "started": "2026-10-16T00:32:24.323Z"
 }
