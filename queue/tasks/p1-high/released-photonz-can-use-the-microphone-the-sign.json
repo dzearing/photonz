@@ -1,0 +1,36 @@
+{
+  "id": "released-photonz-can-use-the-microphone-the-sign",
+  "title": "Released Photonz can use the microphone: the signed app carries the audio-input entitlement",
+  "goal": "Recording with sound must work in the app people download. Today the released app is signed with Apple's hardened runtime but carries no entitlements, so macOS refuses the microphone silently, never shows the permission prompt, and never lists Photonz under Privacy & Security > Microphone, so there is nothing for the person to turn on. Add the entitlement, make sure the app asks for the microphone the first time it needs it, and make the release fail if the entitlement is ever missing again.",
+  "epic": "capture-clickthrough",
+  "priority": "p1-high",
+  "seq": 0.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T17:20:30.867Z",
+  "updated": "2026-10-16T17:20:30.971Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-16): \"in photonz on my other machine, i try to record a video. It says i don't have permissions for mic. I say go to accessibility settings. it goes to microphone settings but Photonz is totally missing from the list. This makes it IMPOSSIBLE for users to record video with audio!!!!\"\n\nVerified in intake on the published release (gh release download v0.17.0, mounted): codesign -dv: flags=0x10000(runtime), Authority=Developer ID Application: DAVID BENJAMIN ZEARING (VMGW2V57S7); codesign -d --entitlements: none; NSMicrophoneUsageDescription present. Release run 38419745140 imported the Developer ID cert and notarized. Scripts/build-app.sh:325 signs with 'codesign --force --options runtime --timestamp --sign \"$CODESIGN_IDENTITY\" \"$APP\"' and passes no --entitlements. A hardened runtime app without com.apple.security.device.audio-input is denied microphone access by TCC without a prompt and is never added to the Microphone list. Dev builds (stable self-signed 'Photonz Dev', no --options runtime, :340) and ad-hoc builds are not hardened, which is why this never showed on the dev machine. App side: CaptureCenter.swift resolveMicrophoneAccessThenStart / MicrophonePermissionGate / presentMicrophoneBlocked (Open System Settings). Memory: no permission prompt loops (bounded once per launch).",
+  "acceptance": [
+    "Checked in intake on the published v0.17.0 DMG: codesign shows flags=0x10000(runtime), Authority=Developer ID Application, and NO entitlements; Info.plist has NSMicrophoneUsageDescription. Reproduce the user's report with a Developer ID + hardened runtime build on a Mac (or a fresh user account) where Photonz has never asked: recording with the microphone says it is blocked and Photonz is absent from the Microphone list",
+    "An entitlements file (for example Resources/Photonz.entitlements) with com.apple.security.device.audio-input = true is passed to codesign for the hardened runtime Developer ID signing in Scripts/build-app.sh (:325, '--options runtime'), and any other entitlement the hardened runtime needs for features the app uses is audited and listed in the audit (camera is not used; screen capture needs no entitlement; check anything else, such as Apple Events or JIT, and add only what is needed)",
+    "After the change, on a Mac that has never seen Photonz, the first recording with the microphone shows macOS's microphone prompt with the usage text; Allow lets it record with sound; Photonz then appears in Privacy & Security > Microphone. If the person had said Don't Allow, the app's 'microphone is turned off' sheet opens the Microphone settings pane where Photonz IS listed. Verify on the notarized build, written in the audit with screenshots",
+    "The blocked-microphone sheet never sends the person to settings while the status is still not determined: it asks first (MicrophonePermissionGate), and its Open System Settings button opens Privacy & Security > Microphone (not Accessibility)",
+    "CI guard: the Release workflow (and build-app.sh in release mode) checks the signed app's entitlements and fails the build if com.apple.security.device.audio-input is missing, so this can never ship again",
+    "Notarization still succeeds with the entitlement (it is a standard one)",
+    "A patch release is needed once this lands; say so in the task log so the user can ask for /release",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T17:20:30.869Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-16T17:20:30.970Z",
+      "note": "seq 3970 -> 0.5"
+    }
+  ]
+}
