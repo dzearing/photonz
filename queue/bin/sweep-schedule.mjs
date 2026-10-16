@@ -434,7 +434,8 @@ if (isMain) {
   A rotating check is not a sweep. It never closes the standing walk task and
   its green is never the state of the walk set. A walk it finds broken goes
   onto the open task that owns it, or else onto the standing walk task, which
-  it opens if none is open: one new task per check at most.
+  it opens if none is open: one new task per check at most. An owner blocked
+  on a card does not count: the standing task takes that walk too.
 
   A runner that changed something every walk touches can jump the floor:
       queue/bin/sweep.sh request --now "<why the whole set, right now>"

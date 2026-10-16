@@ -63,7 +63,9 @@ The schedule now:
   and thirty walks passing is never the state of seven hundred. A walk it finds
   broken lands on a task the same day: onto the open task that owns it (it said
   so with `queue.mjs walks`, or its words name the walk), otherwise onto the
-  standing walk task, which the check opens if none is open. At most one new
+  standing walk task, which the check opens if none is open. An owner blocked
+  on one of your cards does not count, since no runner claims it until the
+  card is answered: the standing task takes that walk as well. At most one new
   task per check, naming only the walks it saw fail
   (`queue/bin/sweep-slice-record.mjs`, drilled by
   `queue/bin/slice-owner-drill.mjs`).

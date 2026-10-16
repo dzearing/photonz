@@ -19,7 +19,11 @@
 // will pick up, the same day:
 //
 //   - a walk another open task owns (it said so with `queue.mjs walks`, or its
-//     words name the walk) is written onto THAT task, and nowhere else;
+//     words name the walk) is written onto THAT task, and nowhere else, unless
+//     every task that owns it is blocked on one of the user's cards: then it
+//     goes onto the standing walk task as well, naming the owner, because
+//     nobody claims a blocked task until the card is answered (2026-10-16,
+//     path-outline-align-walk on a task blocked since 2026-10-08);
 //   - every other failing walk is written onto the standing walk task, and if
 //     none is open the check opens it. At most one task per check, and the
 //     task names only the walks it saw fail, so it claims nothing about the
@@ -35,7 +39,7 @@
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { parseSweepLog } from './sweep-parse.mjs';
 import * as q from './queue-lib.mjs';
-import { ownersOfWalks, MACHINE_BEGIN, MACHINE_END } from './sweep-notes.mjs';
+import { ownersOfWalks, isWaiting, waitingNote, MACHINE_BEGIN, MACHINE_END } from './sweep-notes.mjs';
 
 const [runlog, out, began, ended, seconds, ran, of, pickFile, timedOut] = process.argv.slice(2);
 const cutShort = timedOut === '1';
@@ -124,14 +128,20 @@ for (const [id, o] of byOwner) {
   console.log(`    ${o.walks.join(', ')}: written onto ${id}, which ${o.guessed ? 'names' : 'owns'} ${o.walks.length > 1 ? 'them' : 'it'}.`);
 }
 
-// Everything nobody owns goes onto the standing task, opening it if it has to.
-const unowned = broken.filter((w) => !owners[w]?.ids?.length);
+// Everything nobody owns goes onto the standing task, opening it if it has to,
+// and so does everything whose owners are all waiting on a card.
+const unowned = broken.filter((w) => !owners[w]?.ids?.length || isWaiting(owners[w]));
 if (!unowned.length) process.exit(0);
-const line = `${how}: ${own(unowned)} failing. This is a slice, not a sweep: the rest of the set is unchecked.`;
+const waiting = unowned.filter((w) => isWaiting(owners[w]));
+const said = (ws) => ws.map((w) => (isWaiting(owners[w]) ? waitingNote(own([w]), owners[w]) : own([w]))).join(', ');
+const line = `${how}: ${said(unowned)} failing. This is a slice, not a sweep: the rest of the set is unchecked.`;
+const why = waiting.length
+  ? ` (${waiting.join(', ')} ${waiting.length > 1 ? 'are' : 'is'} also on ${waiting.length > 1 ? 'their owners' : 'its owner'}, which ${waiting.length > 1 ? 'are' : 'is'} waiting on a card)`
+  : '';
 
 if (standing) {
   q.noteTask(standing.id, line);
-  console.log(`    ${unowned.join(', ')}: written onto the standing walk task ${standing.id}.`);
+  console.log(`    ${unowned.join(', ')}: written onto the standing walk task ${standing.id}${why}.`);
 } else {
   // The notes carry a block between the sweep's own markers, so the first full
   // sweep replaces it with its own reading of the set, and reads the list back
@@ -139,9 +149,13 @@ if (standing) {
   const notes = [
     MACHINE_BEGIN,
     ``,
-    `Opened by the rotating check at ${ended}, not by a full sweep: it ran ${r.walks} of ${of} walks and found the ones below failing with no other open task naming them. Nothing here is a claim about the rest of the set.`,
+    `Opened by the rotating check at ${ended}, not by a full sweep: it ran ${r.walks} of ${of} walks and found the ones below failing with no other open task naming them, or with every task naming them waiting on a card. Nothing here is a claim about the rest of the set.`,
     ``,
     `Failing walks (${unowned.length}): ${unowned.join(', ')}`,
+    ...(waiting.length
+      ? [``, `Owned by a task that is waiting on a card, so this task takes them until it is answered (${waiting.length}):`,
+         ...waiting.map((w) => `  ${w} -> ${owners[w].ids.join(', ')} (waiting on a card, so no runner would pick it up there)`)]
+      : []),
     ...(cutShort ? [``, `That check was stopped on the clock, so a walk failing in its last moments may be a casualty of the stop rather than a break.`] : []),
     ``,
     `Full output: ${runlog}. Re-run one of them on its own with`,
@@ -169,5 +183,5 @@ if (standing) {
   });
   q.appendLog(task, line);
   q.saveTask({ ...task, standing: STANDING });
-  console.log(`    ${unowned.join(', ')}: no open task names ${unowned.length > 1 ? 'them' : 'it'}, so opened the standing walk task ${task.id}.`);
+  console.log(`    ${unowned.join(', ')}: no open task ${waiting.length ? 'a runner can claim ' : ''}names ${unowned.length > 1 ? 'them' : 'it'}, so opened the standing walk task ${task.id}${why}.`);
 }

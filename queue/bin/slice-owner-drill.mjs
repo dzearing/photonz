@@ -12,6 +12,9 @@
 //   - the next check writes onto that task rather than opening a second;
 //   - a walk another open task owns is written onto that task and not onto the
 //     standing one, whether the owner declared it or only names it;
+//   - unless every task that owns it is blocked on a card: then the standing
+//     task takes it too (opened if it has to be), naming the owner, and so
+//     does the full sweep's block, because nobody claims a blocked task;
 //   - a clean check files nothing;
 //   - the first full sweep reads the check's list back, so it can say a walk
 //     stopped failing and close the task it did not open.
@@ -143,6 +146,77 @@ check('it reads the check\'s list back and says which stopped failing',
   /Stopped failing since the last sweep \(2\): d-walk, f-walk/.test(after.notes), after.notes);
 check('the check\'s own paragraph is replaced, not kept as somebody\'s writing',
   !/Opened by the rotating check/.test(after.notes), after.notes);
+
+// ---- 8. the owner is waiting on a card --------------------------------------
+// A walk written only onto a blocked task waits for the user to answer a card
+// before anybody looks at it. On 2026-10-16 path-outline-align-walk sat failing
+// on a task blocked since 2026-10-08.
+console.log('a walk whose owner is blocked on a card, with no standing task open');
+const fileOf = (id) => readdirSync(join(qdir, 'tasks')).map((p) => join(qdir, 'tasks', p, id + '.json'))
+  .find((f) => { try { readFileSync(f); return true; } catch { return false; } });
+const close = (id) => writeFileSync(fileOf(id), JSON.stringify({ ...task(id), status: 'done' }, null, 2) + '\n');
+for (const t of standing().filter((t) => t.status !== 'done')) close(t.id);
+put('fix-zeta', { walks: ['zeta-walk'], status: 'blocked' });
+put('about-eta', { notes: 'eta-walk fails since the popover moved', status: 'blocked' });
+out = runCheck(['zeta-walk', 'eta-walk', 'alpha-walk']);
+const parked = standing().filter((t) => t.status !== 'done');
+check('it opens the standing walk task, because nobody could pick the walk up otherwise',
+  parked.length === 1, standing().map((t) => [t.id, t.status]));
+check('  ...and that task is one a runner can claim', parked[0]?.status === 'pending', parked[0]?.status);
+check('its notes list the blocked owner\'s walks as failing',
+  /Failing walks \(2\): zeta-walk, eta-walk/.test(parked[0]?.notes || ''), parked[0]?.notes);
+check('its log names who owns each one and that the owner is waiting on a card',
+  /zeta-walk \(owned by fix-zeta, which is waiting on a card\)/.test(logText(parked[0] || {}))
+  && /eta-walk \(owned by about-eta, which is waiting on a card\)/.test(logText(parked[0] || {})),
+  parked[0]?.log);
+check('the blocked owner is still told', /zeta-walk failing/.test(logText(task('fix-zeta'))), task('fix-zeta').log);
+check('a walk whose owner is free still goes only to that owner',
+  !/alpha-walk/.test(logText(parked[0] || {})) && /alpha-walk failing/.test(out + logText(task('fix-alpha'))),
+  parked[0]?.log);
+check('the check says where they went', /waiting on a card/.test(out) && /opened the standing walk task/.test(out), out);
+
+console.log('the same walk the next check, with the standing task open');
+out = runCheck(['zeta-walk']);
+check('no second task is opened', standing().filter((t) => t.status !== 'done').length === 1, standing().map((t) => [t.id, t.status]));
+check('the standing task is told again, with the owner named',
+  logText(standing().find((t) => t.status !== 'done')).split('\n')
+    .filter((l) => /zeta-walk \(owned by fix-zeta, which is waiting on a card\)/.test(l)).length === 2,
+  standing().find((t) => t.status !== 'done')?.log);
+
+console.log('a walk owned by one blocked task and one free one');
+put('also-zeta', { walks: ['zeta-walk'] });
+const zBefore = logText(standing().find((t) => t.status !== 'done'));
+out = runCheck(['zeta-walk']);
+check('is left to the free owner',
+  logText(standing().find((t) => t.status !== 'done')) === zBefore && /zeta-walk failing/.test(logText(task('also-zeta'))),
+  standing().find((t) => t.status !== 'done')?.log);
+rmSync(fileOf('also-zeta'));
+
+// ---- 9. the full sweep, same owner ------------------------------------------
+console.log('a full sweep with a walk whose owner is blocked on a card');
+writeFileSync(latest, JSON.stringify({
+  ended: '2026-10-16T00:00:00Z', seconds: 6000, walks: 653, passed: 650, failed: ['zeta-walk', 'alpha-walk', 'e-walk'],
+  crashed: [], couldNotRun: 0, total: 653, complete: true, requests: [], log: 'run.log',
+}));
+out = execFileSync('queue/bin/sweep-report.mjs', [latest], { env, encoding: 'utf8' });
+const swept = standing().find((t) => t.status !== 'done');
+check('the standing task takes it as its own',
+  /This task owns 2: zeta-walk, e-walk/.test(swept?.notes || ''), swept?.notes);
+check('  ...saying who owns it and that the owner is waiting on a card',
+  /zeta-walk -> fix-zeta \(waiting on a card/.test(swept?.notes || ''), swept?.notes);
+check('a walk a free task owns stays that task\'s',
+  /alpha-walk -> fix-alpha \(that task says it owns this walk\)/.test(swept?.notes || ''), swept?.notes);
+
+console.log('a full sweep that finds only a blocked owner\'s walk, with no standing task open');
+close(swept.id);
+writeFileSync(latest, JSON.stringify({
+  ended: '2026-10-17T00:00:00Z', seconds: 6000, walks: 653, passed: 652, failed: ['zeta-walk'],
+  crashed: [], couldNotRun: 0, total: 653, complete: true, requests: [], log: 'run.log',
+}));
+out = execFileSync('queue/bin/sweep-report.mjs', [latest], { env, encoding: 'utf8' });
+const fresh = standing().filter((t) => t.status !== 'done');
+check('it files a standing task a runner can claim', fresh.length === 1 && fresh[0].status === 'pending', fresh);
+check('  ...which owns the walk', /This task owns (the other )?1: zeta-walk/.test(fresh[0]?.notes || ''), fresh[0]?.notes);
 
 rmSync(qdir, { recursive: true, force: true });
 console.log(failures ? '\n' + failures + ' FAILED' : '\nall good');

@@ -163,8 +163,19 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
     }
   }
 
-  const ownedHere = failed.filter((w) => !owners[w]?.ids?.length);
-  const ownedElsewhere = failed.filter((w) => owners[w]?.ids?.length);
+  // A walk whose owners are all blocked on a card is this task's too, or
+  // nobody would look at it until the card is answered.
+  const waiting = failed.filter((w) => isWaiting(owners[w]));
+  const ownedHere = failed.filter((w) => !owners[w]?.ids?.length || isWaiting(owners[w]));
+  const ownedElsewhere = failed.filter((w) => owners[w]?.ids?.length && !isWaiting(owners[w]));
+  if (waiting.length) {
+    lines.push(
+      ``,
+      `Owned by a task that is waiting on a card, so this task takes them until it is answered (${waiting.length}):`,
+      ...waiting.map((w) => `  ${w} -> ${owners[w].ids.join(', ')} (waiting on a card, so no runner would pick it up there)`),
+    );
+    if (!ownedElsewhere.length) lines.push(``, `This task owns ${ownedHere.length}: ${ownedHere.join(', ')}`);
+  }
   if (ownedElsewhere.length) {
     // A task that SAID it owns a walk and a task that merely mentioned the name
     // are worth very different amounts, and a line that reads the same for both
@@ -183,7 +194,7 @@ export function machineBlock(result, { previous = [], owners = {} } = {}) {
         : []),
       ``,
       ownedHere.length
-        ? `This task owns the other ${ownedHere.length}: ${ownedHere.join(', ')}`
+        ? `This task owns ${waiting.length ? '' : 'the other '}${ownedHere.length}: ${ownedHere.join(', ')}`
         : `That is every failing walk, so this task owns none of them right now.`,
     );
   }
@@ -252,19 +263,38 @@ export function declaredWalks(task) {
 // mentioning it is usually about it, which is why the guess is worth keeping;
 // it was also wrong often enough to be worth labelling. The standing task
 // itself is skipped, and so is anything finished.
+//
+// `waiting` is true when EVERY owner is blocked on one of the user's cards.
+// Such a walk still goes onto its owner, but nobody will claim that task until
+// the card is answered, so the standing walk task takes it as well
+// (`isWaiting`). On 2026-10-16 path-outline-align-walk sat failing on a task
+// that had been blocked on a card since 2026-10-08.
 export function ownersOfWalks(failed, tasks, standingId) {
   const open = (tasks || []).filter((t) => t.id !== standingId && !['done', 'dropped'].includes(t.status));
   const said = open.map((t) => [t, declaredWalks(t)]);
+  const blocked = new Set(open.filter((t) => t.status === 'blocked').map((t) => t.id));
   const owners = {};
+  const own = (ids, declared) => ({ ids, declared, waiting: ids.every((id) => blocked.has(id)) });
   for (const name of failed) {
     const walk = walkName(name);
     const declared = said.filter(([, w]) => w && w.includes(walk)).map(([t]) => t.id);
-    if (declared.length) { owners[name] = { ids: declared, declared: true }; continue; }
+    if (declared.length) { owners[name] = own(declared, true); continue; }
     const guessed = said
       .filter(([, w]) => w === null)
       .filter(([t]) => [t.title, t.goal, t.notes].concat(t.acceptance || []).filter(Boolean).join('\n').includes(walk))
       .map(([t]) => t.id);
-    if (guessed.length) owners[name] = { ids: guessed, declared: false };
+    if (guessed.length) owners[name] = own(guessed, false);
   }
   return owners;
+}
+
+// A failing walk the standing task has to take: nobody owns it, or everybody
+// who does is waiting on a card.
+export function isWaiting(owner) {
+  return Boolean(owner?.ids?.length && owner.waiting);
+}
+
+// How a walk whose owners are all waiting reads on the standing task.
+export function waitingNote(walk, owner) {
+  return `${walk} (owned by ${owner.ids.join(', ')}, which ${owner.ids.length > 1 ? 'are' : 'is'} waiting on a card)`;
 }
