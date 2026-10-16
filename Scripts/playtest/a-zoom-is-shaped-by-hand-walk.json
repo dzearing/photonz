@@ -57,11 +57,11 @@
       "do": "windowDrag",
       "from": [
         995.8,
-        897
+        922
       ],
       "to": [
         937.9,
-        897
+        922
       ],
       "steps": 10
     },
@@ -73,11 +73,11 @@
       "do": "windowDrag",
       "from": [
         1129,
-        897
+        922
       ],
       "to": [
         1082.7,
-        897
+        922
       ],
       "steps": 10
     },
@@ -87,15 +87,9 @@
     },
     {
       "do": "drag",
-      "from": [
-        742,
-        413
-      ],
-      "to": [
-        842,
-        480
-      ],
-      "space": "window",
+      "from": [656, 472],
+      "to": [789, 561],
+      "space": "document",
       "steps": 12,
       "hold": "1-box-under-the-hand"
     },
