@@ -342,6 +342,29 @@ public final class DocumentRenderer: @unchecked Sendable {
         return image
     }
 
+    /// A drawing as big as its layer's frame shows the WHOLE of it, in output
+    /// pixels: the frame itself, or, where a crop or a zoom shows only part of
+    /// the drawing, what the whole would be at that size. Drawn at a step at or
+    /// past that (`VectorArt.drawingSize`) and kept, so holding still costs
+    /// nothing and growing redraws it a handful of times.
+    private func vectorImage(_ art: VectorArt, ref: ImageRef, layer: Layer,
+                             contentScale: CGFloat) -> CIImage? {
+        var whole = layer.frame.size
+        if let crop = layer.crop, crop.width > 0, crop.height > 0 {
+            whole.width *= ref.pixelSize.width * contentScale / crop.width
+            whole.height *= ref.pixelSize.height * contentScale / crop.height
+        }
+        if let window = layer.zoomWindow, window.width > 0, window.height > 0 {
+            whole.width /= window.width
+            whole.height /= window.height
+        }
+        guard let size = VectorArt.drawingSize(for: whole) else { return nil }
+        return raster(for: .image(ref), size: CGSize(width: size.width, height: size.height),
+                      variant: "vector") {
+            art.drawn(width: size.width, height: size.height)
+        }
+    }
+
     /// A frame's surface gradient, sized to its own box, drawn at most
     /// `surfaceRasterCap` across and stretched back up. Nil for a flat paint,
     /// which has a cheaper way to be a color.
@@ -1144,6 +1167,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         case .sound:
             return nil
         case .image(let ref):
+            // A drawing (an SVG) is drawn afresh at the pixels its frame is
+            // about to be seen at, so a logo blown up on a 4K frame keeps its
+            // edges; the picture of it at its own size is only the fallback
+            // (`VectorArt.swift`).
+            if let art = store.vector(for: ref),
+               let drawn = vectorImage(art, ref: ref, layer: layer, contentScale: contentScale) {
+                image = drawn
+                break
+            }
             guard let cg = store.image(for: ref) else { return nil }
             image = magnified(wrapped(cg), nearest: magnifyNearest, scale: contentScale)
             // A bitmap asked to cover more than it has pixels for gets the

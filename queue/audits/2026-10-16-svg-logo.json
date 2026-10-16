@@ -1,0 +1,55 @@
+{
+  "feature": "An SVG logo comes into a video and stays sharp",
+  "epic": "video-titles-graphics",
+  "summary": "An SVG now comes into a video like a PNG, from Import Media, a drop on the Library, the picture or the timeline, and it is drawn fresh at whatever size it is shown or exported, so a logo blown up on a 4K frame keeps hard edges. Art tiles on the Media shelf read like the mock: the name over its kind (Acme Logo / svg).",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording (Help > Tutorial Sample works). The files used are Scripts/playtest/fixtures/logo/Acme Logo.svg and Sparkle.svg. Walk: Scripts/playtest/library-svg-logo-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "File > Import Media (Shift Command I) and pick Acme Logo.svg.",
+      "shot": "2026-10-16-svg-logo-1-on-the-shelf-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag the Acme Logo tile onto the timeline two seconds in.",
+      "shot": "2026-10-16-svg-logo-2-on-a-track-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Drag Acme Logo.svg from the Finder straight onto the picture.",
+      "shot": "2026-10-16-svg-logo-3-dropped-on-the-picture-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Set its W to 1000 and H to 400, then do the same to Acme Logo.png placed under it.",
+      "shot": "2026-10-16-svg-logo-4-beside-the-png-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Zoom the canvas in on the two dots, or export at 2x, and compare the edges (left SVG, right PNG, four times zoomed).",
+      "shot": "2026-10-16-svg-logo-6-edges-svg-vs-png.png"
+    },
+    {
+      "do": "Drag Sparkle.svg from the Finder onto the timeline.",
+      "shot": "2026-10-16-svg-logo-7-finder-file-over-the-timeline-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Save with Command S, close and open the project again; the logo is still sharp blown up."
+    }
+  ],
+  "evaluate": [
+    "Blown up to fill the frame, does the SVG logo look as crisp as the art did in the file?",
+    "Does Acme Logo over svg tell you at a glance which tiles are drawings that stay sharp?",
+    "Is a picture from the Finder landing on its own Gfx track (and on the shelf) what you expect when you drop it on the timeline?",
+    "Does the whole logo sitting centred in its tile read better than a cropped picture would?"
+  ],
+  "rough": [
+    "Measured bar: across the orange tile's left edge on a 4K frame the SVG blends over 2 pixels (a native draw of the same art: 0), the same logo kept as a bitmap over 12. The drawing is made a step past the frame and brought down, so a growing logo is redrawn a handful of times rather than every frame; that step is the 2 pixels.",
+    "A compressed SVG (.svgz) is not taken: macOS does not draw one. It reads as a file with nothing in it.",
+    "An SVG let go on a collage slot lands as its own layer instead of filling the slot, because a slot holds pixels.",
+    "Opening an SVG with no document open (Finder > Open With) still does nothing; only bringing one into an open document is covered.",
+    "Matches the mock's shelf of 'svg, png, a logo': a PNG tile brought in from a file also reads name over kind now (Acme Logo / png); the picked tile's section still gives a PNG's pixel size.",
+    "A PNG or SVG from the Finder dropped on the timeline now lands on a Gfx track and on the Library shelf, the way Premiere takes a file dropped on a sequence; before, a PNG landed in the middle of the picture."
+  ]
+}

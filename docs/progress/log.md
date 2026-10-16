@@ -21507,3 +21507,17 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   reveal (cached per words, reveal and camera). Old fixed depth-only reach gone.
 - `TextRevealUnclippedTests` holds the 100% bar for every entrance and built-in
   title; reel in `queue/audits/2026-10-16-words-whole-*`, card open for the look.
+
+## 2026-10-16 — An SVG logo comes into a video and stays sharp
+
+- `VectorArt` (PhotonzRender): an SVG kept as its own bytes; the app installs an
+  NSImage reader at launch (`SVGDrawing`), since the render module has no UI
+  imports. `ImageStore.register(_ art:)` keeps the bytes beside a stand-in bitmap
+  at its own size; `DocumentRenderer` draws the drawing at the frame's output
+  pixels, stepped a quarter octave so a growing logo is redrawn a handful of times.
+- `PackageIO` writes `images/<id>.svg` beside the heic and reattaches it on read.
+- Import Media, a Library drop, the canvas and the timeline all take an SVG; the
+  refusal (`vectorRefusal`, `LibraryImport.notYet`, `CanvasFileDrop.vector`) is gone.
+  A PNG/SVG from the Finder on the timeline now lands on a Gfx track + the shelf.
+- Media tiles from files read name over kind (Acme Logo / svg); art fits its well.
+- Walk: `library-svg-logo-walk`. Audit: `queue/audits/2026-10-16-svg-logo.json`.

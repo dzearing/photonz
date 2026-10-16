@@ -18,9 +18,8 @@ extension EditorState {
         Experiments.shared.libraryEnabled && Experiments.shared.droppingMedia && document != nil
     }
 
-    /// What the Open panel lets you pick: recordings, sounds and pictures.
-    /// An SVG can be picked too, so it is refused in words rather than shown
-    /// dimmed with no reason given.
+    /// What the Open panel lets you pick: recordings, sounds and pictures,
+    /// an SVG among them (`VectorArt`).
     static let importableTypes: [UTType] = [.movie, .mpeg4Movie, .quickTimeMovie, .audio, .mp3, .wav,
                                             .aiff, .mpeg4Audio, .png, .jpeg, .heic, .heif, .tiff, .gif,
                                             .bmp, .webP, .svg]
@@ -57,21 +56,15 @@ extension EditorState {
     }
 
     /// Reads each file and puts the ones that play or show on the shelf,
-    /// then shows the shelf on Media with the first of them in view. An SVG
-    /// is named as one that cannot come in yet; anything else that is not a
-    /// recording, a sound or a picture is left alone.
+    /// then shows the shelf on Media with the first of them in view. Anything
+    /// that is not a recording, a sound or a picture is left alone.
     @discardableResult
     func importMedia(_ urls: [URL]) async -> LibraryImport? {
         guard canImportMedia else { return nil }
         var sources: [DocumentMediaSource] = []
         var unreadable: [String] = []
-        var notYet: [String] = []
         for url in urls {
-            if MediaFiles.isVector(url) {
-                notYet.append(url.lastPathComponent)
-                continue
-            }
-            if MediaFiles.isPicture(url) {
+            if MediaFiles.isPicture(url) || MediaFiles.isVector(url) {
                 if let picture = importedPicture(at: url) {
                     sources.append(DocumentMediaSource(media: .picture(picture), name: url.lastPathComponent))
                 } else {
@@ -97,8 +90,8 @@ extension EditorState {
                 continue
             }
         }
-        guard document != nil, !(sources.isEmpty && unreadable.isEmpty && notYet.isEmpty) else { return nil }
-        var outcome = LibraryImport(unreadable: unreadable, notYet: notYet)
+        guard document != nil, !(sources.isEmpty && unreadable.isEmpty) else { return nil }
+        var outcome = LibraryImport(unreadable: unreadable)
         if !sources.isEmpty {
             // Only a change when something is new, so importing a file the
             // shelf already has leaves nothing to undo.
@@ -107,9 +100,9 @@ extension EditorState {
                     && !documentMediaItems.contains { $0.id == source.id }
             }
             if isNew {
-                perform { outcome = $0.bringIntoLibrary(sources, unreadable: unreadable, notYet: notYet) }
+                perform { outcome = $0.bringIntoLibrary(sources, unreadable: unreadable) }
             } else if var copy = document {
-                outcome = copy.bringIntoLibrary(sources, unreadable: unreadable, notYet: notYet)
+                outcome = copy.bringIntoLibrary(sources, unreadable: unreadable)
             }
         }
         if outcome.revealID != nil { showMediaShelf(revealing: outcome.revealID) }
@@ -119,15 +112,25 @@ extension EditorState {
 
     /// The picture in a file, read once per window: the same file brought in
     /// again is the same picture, so its tile is found rather than doubled.
-    /// Nil for a file with no picture in it.
-    private func importedPicture(at url: URL) -> ImageRef? {
+    /// Nil for a file with no picture in it. An SVG is kept as the drawing it
+    /// is, so it stays sharp at any size (`VectorArt`).
+    func importedPicture(at url: URL) -> ImageRef? {
         let key = url.standardizedFileURL
         if let known = importedPictures[key], store.image(for: known) != nil { return known }
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
-        let ref = store.register(image)
+        guard let ref = registerPicture(at: url) else { return nil }
         importedPictures[key] = ref
         return ref
+    }
+
+    /// The picture in a file, kept in this window's store: an SVG as its
+    /// drawing, anything else as its pixels. Nil for a file with no picture.
+    func registerPicture(at url: URL) -> ImageRef? {
+        if MediaFiles.isVector(url) {
+            return VectorArt.read(contentsOf: url).flatMap { store.register($0) }
+        }
+        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return nil }
+        return store.register(image)
     }
 
     /// Opens the Library on Media, with this tile scrolled into view.

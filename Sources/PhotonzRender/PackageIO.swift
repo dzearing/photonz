@@ -4,7 +4,9 @@ import PhotonzCore
 
 /// Reads and writes the .photonz document package: a directory holding
 /// `document.json` (the pure model), `images/<ref-uuid>.heic` (the
-/// bitmaps the model's ImageRefs point at) and, for a video, `media.json`:
+/// bitmaps the model's ImageRefs point at), `images/<ref-uuid>.svg` beside
+/// the bitmap of any picture that is a drawing (`VectorArt`), so it opens
+/// again as sharp as it was, and, for a video, `media.json`:
 /// where each recording and sound it plays was when it was saved
 /// (`ProjectMedia`). Recordings are pointed at, never copied in. A package
 /// saved with a preview also holds `preview.png`, a small picture of what it
@@ -23,6 +25,7 @@ public enum PackageIO {
     private static let imagesDirectory = "images"
     private static let mediaFile = "media.json"
     private static let previewFile = "preview.png"
+    private static let vectorExtension = "svg"
 
     /// The longest side of a package's preview, in pixels: enough for a card
     /// on a Retina screen, small enough to read without a pause.
@@ -65,6 +68,13 @@ public enum PackageIO {
             try data.write(to: staging
                 .appendingPathComponent(imagesDirectory)
                 .appendingPathComponent("\(ref.id.uuidString).heic"))
+            // The drawing's own bytes ride beside its picture: the picture is
+            // what opens if the drawing ever cannot be read.
+            if let art = store.vector(for: ref) {
+                try art.data.write(to: staging
+                    .appendingPathComponent(imagesDirectory)
+                    .appendingPathComponent("\(ref.id.uuidString).\(vectorExtension)"))
+            }
         }
 
         if fm.fileExists(atPath: url.path) {
@@ -89,6 +99,9 @@ public enum PackageIO {
                 throw PackageError.decodingFailed(ref.id)
             }
             store.register(image, as: ref)
+            let drawingURL = url.appendingPathComponent(imagesDirectory)
+                .appendingPathComponent("\(ref.id.uuidString).\(vectorExtension)")
+            if let art = VectorArt.read(contentsOf: drawingURL) { store.attach(art, to: ref) }
         }
         return document
     }

@@ -378,7 +378,7 @@ public struct CopyConfirmation: Hashable, Sendable {
             return dropped.isEmpty && !droppedOwnType ? Self.lifetime : Self.breakLifetime
         // Something that would not open is a sentence worth reading.
         case .broughtIntoLibrary(let outcome):
-            return outcome.unreadable.isEmpty && outcome.notYet.isEmpty ? Self.lifetime : Self.breakLifetime
+            return outcome.unreadable.isEmpty ? Self.lifetime : Self.breakLifetime
         // Still working: it waits for its own answer (see `workingLifetime`).
         case .readingTheWords: return Self.workingLifetime
         // Cuts left hard are worth a second look before the pill goes.

@@ -30,10 +30,11 @@ public enum MediaFiles {
     public static let pictureExtensions: Set<String> =
         ["png", "jpg", "jpeg", "heic", "heif", "tif", "tiff", "gif", "bmp", "webp"]
 
-    /// Drawings kept as shapes rather than pixels. The app keeps every picture
-    /// as pixels at one size, so one of these cannot come in yet without going
-    /// soft when it is blown up; it is refused in words instead of in silence.
-    public static let vectorExtensions: Set<String> = ["svg", "svgz"]
+    /// Drawings kept as shapes rather than pixels. One comes in like a
+    /// picture, but its own bytes are kept and drawn afresh at whatever size it
+    /// is shown, so a logo blown up on a 4K frame stays sharp
+    /// (`VectorArt`, in the renderer).
+    public static let vectorExtensions: Set<String> = ["svg"]
 
     public static func isPicture(_ url: URL) -> Bool {
         pictureExtensions.contains(url.pathExtension.lowercased())
@@ -41,12 +42,6 @@ public enum MediaFiles {
 
     public static func isVector(_ url: URL) -> Bool {
         vectorExtensions.contains(url.pathExtension.lowercased())
-    }
-
-    /// What the app says about a vector file it was given: the reason, and
-    /// the one move that works.
-    public static func vectorRefusal(named name: String) -> String {
-        "\(name) can't come in yet. Save it as a PNG"
     }
 }
 

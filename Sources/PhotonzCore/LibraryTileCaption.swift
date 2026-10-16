@@ -11,6 +11,13 @@ public enum LibraryTileCaption {
         "\(Int(size.width.rounded())) × \(Int(size.height.rounded()))"
     }
 
+    /// A Media tile's second line: the kind of file a picture came from
+    /// ("svg", "png"), the way the mock's art tiles print it, or its size for
+    /// a picture with no file behind it.
+    public static func meta(of item: DocumentMediaItem) -> String {
+        item.kind ?? pictureSize(item.image.pixelSize)
+    }
+
     /// The three kinds of style share one shelf, so each says which it is.
     public static let colorStyle = "paint"
     public static let textStyle = "type"

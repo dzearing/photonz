@@ -63,6 +63,7 @@ extension EditorState {
     /// A file has arrived over the timeline. Its length is read off it now, so
     /// the ghost can be drawn the length it will be.
     func beginTimelineFileHover(_ url: URL) {
+        if beginPictureFileHover(url) { return }
         guard Experiments.shared.droppingMedia, document?.hasTime == true,
               let kind = MediaFiles.kind(of: url) else { return }
         guard timelineFileInAir?.url != url else { return }
@@ -92,7 +93,8 @@ extension EditorState {
         refreshTimelineFileHover()
     }
 
-    private func refreshTimelineFileHover() {
+    func refreshTimelineFileHover() {
+        if refreshPictureFileHover() { return }
         guard let inAir = timelineFileInAir, let hover = timelineFilePointer,
               let landing = timelineLanding(for: inAir, at: hover.point, insert: hover.insert) else {
             if timelineFileHover != nil { timelineFileHover = nil }
@@ -105,6 +107,7 @@ extension EditorState {
     /// The file has left the timeline without landing.
     func endTimelineFileHover() {
         timelineFilePointer = nil
+        timelinePictureFileInAir = nil
         timelineFileInAir = nil
         if timelineDropRoomMS != nil { timelineDropRoomMS = nil }
         if timelineFileHover != nil { timelineFileHover = nil }

@@ -20,10 +20,6 @@ public enum CanvasFileDrop: Equatable, Sendable {
     /// answers that, and the drag says the answer out loud rather than drawing
     /// a box, because neither of these has a box to draw.
     case media(MediaDrop.Kind)
-    /// An SVG. The app keeps pictures as pixels, so one cannot come in yet;
-    /// the drag is taken far enough to say so under the pointer
-    /// (`MediaFiles.vectorRefusal`) and is never let land.
-    case vector
     /// A text file, an archive, a folder, a picture too broken to read: there
     /// is nothing the canvas can make of it, so the drag refuses it.
     case unsupported
@@ -39,7 +35,12 @@ public enum CanvasFileDrop: Equatable, Sendable {
         // poster frame out of some movie containers and a recording that came
         // back as a still picture would land as one.
         if takingMedia, let media = MediaFiles.kind(of: url) { return .media(media) }
-        if takingMedia, MediaFiles.isVector(url) { return .vector }
+        // An SVG is a picture where media comes in (a video, Next), drawn at
+        // whatever size it lands at (`VectorArt`); its size is the one it says.
+        if MediaFiles.isVector(url) {
+            guard takingMedia, let art = VectorArt.read(contentsOf: url) else { return .unsupported }
+            return .picture(art.pixelSize)
+        }
         guard let size = ImageCodec.pixelSize(ofFileAt: url) else { return .unsupported }
         return .picture(size)
     }

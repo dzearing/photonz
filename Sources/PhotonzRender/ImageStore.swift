@@ -6,6 +6,10 @@ import PhotonzCore
 /// Documents stay value-typed; pixels live here exactly once.
 public final class ImageStore: @unchecked Sendable {
     private var images: [UUID: CGImage] = [:]
+    /// The drawings among them, kept as their own bytes so they are drawn
+    /// sharp at any size (`VectorArt`). Each also has a picture in `images`,
+    /// at its own size, for everything that reads pixels.
+    private var vectors: [UUID: VectorArt] = [:]
     private let lock = NSLock()
 
     public init() {}
@@ -20,11 +24,42 @@ public final class ImageStore: @unchecked Sendable {
     }
 
     /// Registers a bitmap under an existing ref (package loading, where the
-    /// document's refs must keep resolving).
+    /// document's refs must keep resolving). New pixels under a drawing's ref
+    /// are what it now is, so the drawing behind it is let go.
     public func register(_ image: CGImage, as ref: ImageRef) {
         lock.lock()
         images[ref.id] = image
+        vectors[ref.id] = nil
         lock.unlock()
+    }
+
+    /// Keeps a drawing, with a picture of it at its own size beside it. Nil
+    /// when the drawing will not draw.
+    @discardableResult
+    public func register(_ art: VectorArt) -> ImageRef? {
+        let size = art.pixelSize
+        guard let picture = art.drawn(width: Int(size.width), height: Int(size.height)) else { return nil }
+        let ref = ImageRef(pixelSize: size)
+        lock.lock()
+        images[ref.id] = picture
+        vectors[ref.id] = art
+        lock.unlock()
+        return ref
+    }
+
+    /// Keeps `art` as the drawing behind a picture already held under `ref`
+    /// (package loading, where the picture is read from the package too).
+    public func attach(_ art: VectorArt, to ref: ImageRef) {
+        lock.lock()
+        vectors[ref.id] = art
+        lock.unlock()
+    }
+
+    /// The drawing behind a picture, or nil for a picture that is only pixels.
+    public func vector(for ref: ImageRef) -> VectorArt? {
+        lock.lock()
+        defer { lock.unlock() }
+        return vectors[ref.id]
     }
 
     public func image(for ref: ImageRef) -> CGImage? {
@@ -42,6 +77,7 @@ public final class ImageStore: @unchecked Sendable {
         let copy = ImageStore()
         lock.lock()
         copy.images = images
+        copy.vectors = vectors
         lock.unlock()
         return copy
     }
@@ -49,6 +85,7 @@ public final class ImageStore: @unchecked Sendable {
     public func remove(_ ref: ImageRef) {
         lock.lock()
         images[ref.id] = nil
+        vectors[ref.id] = nil
         lock.unlock()
     }
 }

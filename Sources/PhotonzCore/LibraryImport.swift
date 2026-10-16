@@ -14,20 +14,16 @@ public struct LibraryImport: Hashable, Sendable {
     public var alreadyThere: [String]
     /// The files that turned out to hold nothing the app can play.
     public var unreadable: [String]
-    /// The files the app cannot take yet (an SVG), said with the move that
-    /// works rather than left to look like a drop that did nothing.
-    public var notYet: [String]
     /// The first new tile, which the shelf scrolls to.
     public var firstNewID: UUID?
     /// The first tile this was about, new or not: the one worth showing.
     public var revealID: UUID?
 
     public init(added: [String] = [], alreadyThere: [String] = [], unreadable: [String] = [],
-                notYet: [String] = [], firstNewID: UUID? = nil, revealID: UUID? = nil) {
+                firstNewID: UUID? = nil, revealID: UUID? = nil) {
         self.added = added
         self.alreadyThere = alreadyThere
         self.unreadable = unreadable
-        self.notYet = notYet
         self.firstNewID = firstNewID
         self.revealID = revealID
     }
@@ -50,9 +46,6 @@ public struct LibraryImport: Hashable, Sendable {
         if !unreadable.isEmpty {
             said.append("There is nothing in \(Self.names(unreadable)) the app can play")
         }
-        if !notYet.isEmpty {
-            said.append(MediaFiles.vectorRefusal(named: Self.names(notYet)))
-        }
         return said.joined(separator: ". ")
     }
 
@@ -72,9 +65,8 @@ extension PhotonzDocument {
     /// already holds keeps its tile and its name.
     @discardableResult
     public mutating func bringIntoLibrary(_ sources: [DocumentMediaSource],
-                                          unreadable: [String] = [],
-                                          notYet: [String] = []) -> LibraryImport {
-        var outcome = LibraryImport(unreadable: unreadable, notYet: notYet)
+                                          unreadable: [String] = []) -> LibraryImport {
+        var outcome = LibraryImport(unreadable: unreadable)
         for source in sources {
             let heldName = source.isPicture
                 ? DocumentMedia.items(in: self).first(where: { $0.id == source.id })?.name

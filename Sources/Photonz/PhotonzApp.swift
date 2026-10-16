@@ -38,6 +38,9 @@ struct PhotonzApp: App {
         TextMeasurement.use { text, maxWidth in
             TextRasterizer.naturalSize(text, maxWidth: maxWidth)
         }
+        // The renderer draws an SVG at whatever size it is shown, and macOS
+        // draws one through AppKit, which the renderer never imports.
+        SVGDrawing.install()
         let coordinator = AppCoordinator()
         _coordinator = State(initialValue: coordinator)
         // Hand the coordinator to the delegate so its launch hook can start the

@@ -36,7 +36,9 @@ struct LibraryPictureTests {
 
     @Test func anSVGIsAVectorAndNotAPicture() {
         #expect(MediaFiles.isVector(URL(fileURLWithPath: "/tmp/Logo.svg")))
-        #expect(MediaFiles.isVector(URL(fileURLWithPath: "/tmp/Logo.SVGZ")))
+        #expect(MediaFiles.isVector(URL(fileURLWithPath: "/tmp/Logo.SVG")))
+        // A compressed SVG is not one macOS can draw, so it is not taken.
+        #expect(!MediaFiles.isVector(URL(fileURLWithPath: "/tmp/Logo.svgz")))
         #expect(!MediaFiles.isVector(URL(fileURLWithPath: "/tmp/Logo.png")))
         // Neither is a sound or a recording, so nothing that asks that changes.
         #expect(MediaFiles.kind(of: URL(fileURLWithPath: "/tmp/Logo.svg")) == nil)
@@ -145,21 +147,57 @@ struct LibraryPictureTests {
         #expect(DocumentMedia.shelvedPictures(in: document) == [logo])
     }
 
-    // MARK: - An SVG, which cannot come in yet
+    // MARK: - A tile's two lines
 
-    @Test func anSVGIsRefusedInWordsThatNameAMoveThatWorks() {
-        let outcome = LibraryImport(notYet: ["Acme Logo.svg"])
-        #expect(outcome.title == "Not added")
-        #expect(outcome.detail == "Acme Logo.svg can't come in yet. Save it as a PNG")
-        #expect(MediaFiles.vectorRefusal(named: "Acme Logo.svg")
-                == "Acme Logo.svg can't come in yet. Save it as a PNG")
+    /// `video-title-wt.html`, the Media shelf: an art tile is its name over
+    /// its kind ("Sparkle / svg"), so a logo reads as a logo and the shelf
+    /// says which ones are drawings that stay sharp at any size.
+    @Test func aPictureFileIsCaptionedWithItsNameOverItsKind() throws {
+        var document = doc()
+        let sparkle = ImageRef(pixelSize: CGSize(width: 64, height: 64))
+        document.bringIntoLibrary([picture(logo, "Acme Logo.png"), picture(sparkle, "Sparkle.SVG")])
+        let tiles = DocumentMedia.items(in: document)
+        let art = try #require(tiles.first { $0.image == sparkle })
+        #expect(art.caption == "Sparkle")
+        #expect(art.kind == "svg")
+        let png = try #require(tiles.first { $0.image == logo })
+        #expect(png.caption == "Acme Logo")
+        #expect(png.kind == "png")
+        // The name the file came in under is kept: it is what a notice says.
+        #expect(png.name == "Acme Logo.png")
+        #expect(DocumentMedia.entries(in: document).map(\.name) == ["Sparkle", "Acme Logo"])
+        #expect(LibraryTileCaption.meta(of: art) == "svg")
     }
 
-    @Test func anSVGBesideAPictureSaysBoth() {
+    /// Placed on the picture it is still the logo: the tile keeps the file's
+    /// caption and kind once something draws it.
+    @Test func aPlacedPictureFileKeepsItsKind() throws {
         var document = doc()
-        let outcome = document.bringIntoLibrary([picture(logo, "Acme Logo.png")], notYet: ["Spark.svg"])
-        #expect(outcome.title == "Added to Library")
-        #expect(outcome.detail == "Acme Logo.png is in the Library. Spark.svg can't come in yet. Save it as a PNG")
+        document.bringIntoLibrary([picture(logo, "Acme Logo.png")])
+        let landing = document.titleLanding(lengthMS: PictureClip.lengthMS, atMS: 0, over: nil)
+        #expect(document.landPicture(logo, named: "Acme Logo", at: landing) != nil)
+        let tile = try #require(DocumentMedia.items(in: document).first)
+        #expect(tile.uses == 1)
+        #expect(tile.kind == "png")
+        #expect(tile.caption == "Acme Logo")
+    }
+
+    /// A picture that came in as a layer (a screenshot, a paste) has no file
+    /// and so no kind: its tile still says how big it is.
+    @Test func aPictureWithNoFileSaysItsSize() throws {
+        var document = doc()
+        document.addLayer(Layer(name: "Screenshot 16.22.12", content: .image(photo),
+                                frame: CGRect(x: 0, y: 0, width: 400, height: 300)))
+        let tile = try #require(DocumentMedia.items(in: document).first)
+        #expect(tile.kind == nil)
+        #expect(tile.caption == "Screenshot 16.22.12")
+        #expect(LibraryTileCaption.meta(of: tile) == "4032 × 3024")
+    }
+
+    /// An SVG is put down named like any picture file: without its extension.
+    @Test func anSVGIsPlacedUnderItsNameAlone() {
+        let item = DocumentMediaItem(image: logo, name: "Acme Logo.svg", uses: 0, kind: "svg")
+        #expect(item.layerName == "Acme Logo")
     }
 
     // MARK: - Onto a track

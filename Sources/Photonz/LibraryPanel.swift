@@ -737,7 +737,7 @@ private struct LibraryTile: View {
 
     var body: some View {
         LibraryShelfTile(name: item.name,
-                         meta: LibraryTileCaption.pictureSize(media.image.pixelSize),
+                         meta: LibraryTileCaption.meta(of: media),
                          isSelected: isSelected) { thumbnail }
         .libraryTileClicks(pick: { editorState.selectLibraryItem(item.id) }, open: place)
         // The preview is the picture itself, so a media tile and a component
@@ -779,9 +779,18 @@ private struct LibraryTile: View {
             .frame(height: tileMetrics.pictureHeight)
             .overlay {
                 if let image = editorState.store.image(for: media.image) {
-                    Image(decorative: image, scale: 1)
-                        .resizable()
-                        .scaledToFill()
+                    // Art (an SVG) sits whole in the middle of its well, the
+                    // way the mock's art tiles draw it; a picture fills it.
+                    if media.kind == "svg" {
+                        Image(decorative: image, scale: 1)
+                            .resizable()
+                            .scaledToFit()
+                            .padding(6)
+                    } else {
+                        Image(decorative: image, scale: 1)
+                            .resizable()
+                            .scaledToFill()
+                    }
                 }
             }
             .clipped()
@@ -828,14 +837,20 @@ struct LibraryItemInspector: View {
             .padding(.vertical, 4)
         } else if let item = editorState.selectedMediaItem {
             VStack(alignment: .leading, spacing: 8) {
-                Text(item.name)
+                Text(item.caption)
                     .font(.subheadline.weight(.medium))
                     .lineLimit(2)
                     .truncationMode(.middle)
                 VStack(alignment: .leading, spacing: 2) {
                     detail(item.detail)
-                    detail("\(Int(item.image.pixelSize.width)) × "
-                        + "\(Int(item.image.pixelSize.height)) px")
+                    // A drawing has no pixels of its own to count: it says
+                    // what it is instead.
+                    if item.kind == "svg" {
+                        detail("svg")
+                    } else {
+                        detail("\(Int(item.image.pixelSize.width)) × "
+                            + "\(Int(item.image.pixelSize.height)) px")
+                    }
                 }
                 Button("Place in Picture") {
                     editorState.placeLibraryPick()

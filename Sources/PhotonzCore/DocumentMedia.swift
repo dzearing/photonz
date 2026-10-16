@@ -34,6 +34,11 @@ public struct DocumentMediaItem: Identifiable, Hashable, Sendable {
     public let name: String
     /// How many layers draw it.
     public let uses: Int
+    /// The kind of file a picture brought into the Library came from ("png",
+    /// "svg"), which its tile says under its name (`video-title-wt.html`, the
+    /// Media shelf's "Sparkle / svg"). Nil for a picture with no file behind
+    /// it, a screenshot or a paste, whose tile says its size instead.
+    public let kind: String?
 
     public var id: UUID { image.id }
 
@@ -42,13 +47,27 @@ public struct DocumentMediaItem: Identifiable, Hashable, Sendable {
     /// picture dropped from the Finder is named.
     public var layerName: String {
         let url = URL(fileURLWithPath: name)
-        return MediaFiles.isPicture(url) ? url.deletingPathExtension().lastPathComponent : name
+        return MediaFiles.isPicture(url) || MediaFiles.isVector(url)
+            ? url.deletingPathExtension().lastPathComponent : name
     }
 
-    public init(image: ImageRef, name: String, uses: Int) {
+    /// What the tile and the picked item's section are headed with: the
+    /// name a layer putting it down would get, so "Sparkle" sits over "svg".
+    public var caption: String { layerName }
+
+    public init(image: ImageRef, name: String, uses: Int, kind: String? = nil) {
         self.image = image
         self.name = name
         self.uses = uses
+        self.kind = kind
+    }
+
+    /// The kind a file brought in under `name` is, or nil for a name that is
+    /// not a picture file's.
+    static func kind(ofFileNamed name: String) -> String? {
+        let url = URL(fileURLWithPath: name)
+        guard MediaFiles.isPicture(url) || MediaFiles.isVector(url) else { return nil }
+        return url.pathExtension.lowercased()
     }
 
     /// The tile's second line, and half of what search reads. It answers the
@@ -110,13 +129,15 @@ public enum DocumentMedia {
         var seen: Set<UUID> = []
         let waiting = shelved.reversed().compactMap { image, name -> DocumentMediaItem? in
             guard images[image.id] == nil, seen.insert(image.id).inserted else { return nil }
-            return DocumentMediaItem(image: image, name: name, uses: 0)
+            return DocumentMediaItem(image: image, name: name, uses: 0,
+                                     kind: DocumentMediaItem.kind(ofFileNamed: name))
         }
         return waiting + order.compactMap { id in
             guard let image = images[id], let drawn = names[id],
                   let name = shelvedNames[id] ?? caption(of: drawn)
             else { return nil }
-            return DocumentMediaItem(image: image, name: name, uses: drawn.count)
+            return DocumentMediaItem(image: image, name: name, uses: drawn.count,
+                                     kind: shelvedNames[id].flatMap(DocumentMediaItem.kind(ofFileNamed:)))
         }
     }
 
@@ -164,7 +185,7 @@ public enum DocumentMedia {
     /// not walk the whole layer tree twice to caption them.
     public static func entriesOf(_ items: [DocumentMediaItem]) -> [LibraryEntry] {
         items.map {
-            LibraryEntry(id: $0.id.uuidString, scope: .media, name: $0.name, detail: $0.detail)
+            LibraryEntry(id: $0.id.uuidString, scope: .media, name: $0.caption, detail: $0.detail)
         }
     }
 

@@ -69,4 +69,61 @@ extension EditorState {
                                          atMS: landing.startMS, isSound: false))
         return true
     }
+
+    // MARK: - A picture file from the Finder
+
+    /// A PNG or an SVG carried from the Finder over the timeline. It is taken
+    /// the way Premiere takes a file dropped on a sequence: into the bin (the
+    /// Library shelf) and onto a track, landing where a tile would. True when
+    /// the file is one.
+    func beginPictureFileHover(_ url: URL) -> Bool {
+        guard timelineTakesPictures, MediaFiles.isPicture(url) || MediaFiles.isVector(url) else { return false }
+        if timelinePictureFileInAir != url {
+            timelinePictureFileInAir = url
+            if timelineDropRoomMS != PictureClip.lengthMS { timelineDropRoomMS = PictureClip.lengthMS }
+        }
+        refreshTimelineFileHover()
+        return true
+    }
+
+    /// The ghost for a picture file in the air, when one is. True when it
+    /// answered.
+    func refreshPictureFileHover() -> Bool {
+        guard let url = timelinePictureFileInAir else { return false }
+        guard let pointer = timelineFilePointer, let landing = timelinePictureLanding(at: pointer.point) else {
+            if timelineFileHover != nil { timelineFileHover = nil }
+            return true
+        }
+        let name = PlacedImageNaming.layerName(fileName: url.lastPathComponent)
+        let next = TimelineFileHover(name: name, landing: landing, verb: "Picture")
+        if timelineFileHover != next { timelineFileHover = next }
+        return true
+    }
+
+    /// Let go over the timeline: the file goes on the Library shelf and its
+    /// picture lands where the ghost said, as one step to undo. False for a
+    /// file that is not a picture, or one that will not read.
+    @discardableResult
+    func dropPictureFileOnTimeline(_ url: URL, at point: CGPoint) -> Bool {
+        guard timelineTakesPictures, MediaFiles.isPicture(url) || MediaFiles.isVector(url) else { return false }
+        let landing = timelinePictureLanding(at: point)
+        endTimelineFileHover()
+        guard let landing, landing.allowed, let document, let ref = importedPicture(at: url) else { return false }
+        let name = PlacedImageNaming.layerName(named: PlacedImageNaming.layerName(fileName: url.lastPathComponent),
+                                               taken: Set(document.allLayers.map(\.name)))
+        let source = DocumentMediaSource(media: .picture(ref), name: url.lastPathComponent)
+        pauseDocument()
+        var landed: UUID?
+        perform {
+            $0.bringIntoLibrary([source])
+            landed = $0.landPicture(ref, named: name, at: landing)
+        }
+        guard let landed else { return false }
+        selectLayer(landed)
+        if let track = self.document?.trackID(ofClip: landed) { selectedTrackIDs = [track] }
+        documentMomentChanged()
+        raiseCanvasNotice(.landedOnTrack(name: name, track: landing.trackName,
+                                         atMS: landing.startMS, isSound: false))
+        return true
+    }
 }

@@ -1896,6 +1896,9 @@ final class EditorState {
     /// The Library picture tile over the timeline, by the id its drag carries
     /// (`EditorState+TimelinePicture`).
     @ObservationIgnored var timelinePictureInAir: UUID?
+    /// A picture FILE carried from the Finder over the timeline, a PNG or an
+    /// SVG, which lands as a shelf tile would (`EditorState+TimelinePicture`).
+    @ObservationIgnored var timelinePictureFileInAir: URL?
     @ObservationIgnored var timelineFilePointer: TimelineFilePointer?
     /// The room the timeline makes past its end while a file of this length
     /// is in the air over it.
@@ -2247,11 +2250,19 @@ final class EditorState {
             openImage(at: url)
             return
         }
-        // An SVG is taken as far as saying why it cannot come in yet, rather
-        // than read as a picture with nothing in it and dropped in silence.
-        if refusesVector(url) { return }
-        guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
-              let image = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+        // An SVG lands as the drawing it is, sharp at whatever size it is
+        // shown (`VectorArt`), where media comes in at all (Next).
+        let vector = Experiments.shared.droppingMedia && MediaFiles.isVector(url)
+        var image: CGImage?
+        var drawing: ImageRef?
+        if vector {
+            guard let ref = registerPicture(at: url) else { return }
+            drawing = ref
+        } else {
+            guard let source = CGImageSourceCreateWithURL(url as CFURL, nil),
+                  let picture = CGImageSourceCreateImageAtIndex(source, 0, nil) else { return }
+            image = picture
+        }
         let tool = activeTool
         // The layer this lands clears the memory on its way through, so the run
         // it belongs to is carried across by hand, as the paste path does.
@@ -2263,8 +2274,17 @@ final class EditorState {
         if Experiments.shared.pasteHandsYouThePointerEnabled {
             setSelection(nil, recording: false)
         }
-        guard let landed = pasteImage(image, at: point, fileName: url.lastPathComponent,
-                                      landingAt: landing) else { return }
+        let placed: UUID?
+        if let drawing {
+            placed = placeImage(drawing, at: point,
+                                named: PlacedImageNaming.layerName(fileName: url.lastPathComponent),
+                                landingAt: landing)
+        } else if let image {
+            placed = pasteImage(image, at: point, fileName: url.lastPathComponent, landingAt: landing)
+        } else {
+            placed = nil
+        }
+        guard let landed = placed else { return }
         handOverPointer(placed: landed, held: tool, carrying: carried)
     }
 

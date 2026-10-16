@@ -30,15 +30,6 @@ extension EditorState {
                                 hasDocument: document != nil)
     }
 
-    /// An SVG let go anywhere in the window: the app keeps pictures as pixels,
-    /// so it says the file cannot come in yet and what to do instead. True
-    /// when it did, which means the drop is answered and nothing lands.
-    func refusesVector(_ url: URL) -> Bool {
-        guard Experiments.shared.droppingMedia, MediaFiles.isVector(url) else { return false }
-        raiseCanvasNotice(.broughtIntoLibrary(LibraryImport(notYet: [url.lastPathComponent])))
-        return true
-    }
-
     /// Takes the drop the answer promised.
     ///
     /// `point` is where it landed on the canvas, in canvas coordinates, when

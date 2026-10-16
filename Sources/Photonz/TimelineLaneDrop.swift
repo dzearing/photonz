@@ -203,10 +203,13 @@ struct TimelineFileDropDelegate: DropDelegate {
         _ = provider.loadObject(ofClass: URL.self) { url, _ in
             guard let url else { return }
             Task { @MainActor in
-                // A sound or a recording lands on the timeline. Anything else
-                // is answered the way the rest of the window answers it.
+                // A sound, a recording or a picture lands on the timeline.
+                // Anything else is answered the way the rest of the window
+                // answers it.
                 if MediaFiles.kind(of: url) != nil, editorState.document?.hasTime == true {
                     await editorState.dropTimelineFile(url, at: point, insert: insert)
+                } else if editorState.dropPictureFileOnTimeline(url, at: point) {
+                    // A logo or a photo from the Finder: on the shelf and on a track.
                 } else {
                     editorState.endTimelineFileHover()
                     if editorState.mediaDropAnswer(for: url) != nil {
