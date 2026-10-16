@@ -21461,3 +21461,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - In the pane of lists the Library shelf asks the dock for all its tiles and is capped only by the pane's share (`PanelListsPane.listAsks/listCeiling`, the same pair Layers uses); its own grab bar is not built there. `LibraryPanel.inListsPane`, threaded from `InspectorPanel.sectionContent`.
 - library-shelf-height-walk step 4 read Library 549-780 in a pane running to 847 (67pt blank under a scrolling shelf); it now reads 599-847, and every state ends at the pane's foot.
 - library-shelf-height-walk and panel-grip-walk drive the Lists grip and expect no Library bar. 15 library, shelf and lists-pane walks green; 13,274 tests green.
+
+## 2026-10-15 — Shorten the cut to pay for a dissolve
+
+- A cut with no spare frames either side now offers "Or · Shorten the cut by 0.4s" in the Transition section (mock video-transition-wt.html step 10). It trims exactly what the overlap needs off both clip ends on every unlocked track, closes the gap and puts the dissolve on, as one undo (`PhotonzCore/ShortenTheCut.swift`, `ShortenTheCutTests`, walk `shorten-the-cut-for-a-dissolve-walk`).
+- Command T at such a cut keeps its dip fallback.
+- Open: decision card on `or-sits-beside-shorten-the-cut-the-way-the-trans` (Or stacks above the button at the usual panel width).

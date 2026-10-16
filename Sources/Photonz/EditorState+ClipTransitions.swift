@@ -275,6 +275,35 @@ extension EditorState {
         return stops.sorted()
     }
 
+    /// The mock's **Or · Shorten the cut** (`#rowForce`): at a cut in hand
+    /// that cannot pay for an overlap, what shortening it would take to pay
+    /// for one (`ShortenTheCut.swift`). Nil where nothing needs paying for or
+    /// it cannot be done, so the row is there only when it would work.
+    var cutShorteningInHand: ClipCutShortening? {
+        guard canWorkWithClipTransitions, clipTransitionDrag == nil, let inHand = cutInHand, var trial = document,
+              let offer = inHand.cut.shorteningOffer(defaultKind: defaultTransitionKind) else { return nil }
+        return trial.shortenCut(offer, at: inHand.place) == nil ? nil : offer
+    }
+
+    /// Shorten the cut in hand by what its overlap needs and put it on, as
+    /// one step to undo. Moves the incoming clip and everything after it, so
+    /// it is only ever done when asked.
+    func shortenCutInHand() {
+        guard let inHand = cutInHand, let offer = cutShorteningInHand else { return }
+        closeTransitionPicker()
+        endTrimBeforeCutting()
+        pauseDocument()
+        var landed: TimelineCutPlace?
+        perform { landed = $0.shortenCut(offer, at: inHand.place) }
+        guard let landed else { return }
+        pickCut(landed)
+        // Half way through the overlap, so the canvas shows both shots.
+        if let cut = document?.documentCut(at: landed), let drawn = cut.cut.drawnTransition {
+            documentTimeMS = min(max(0, cut.atMS - drawn.beforeMS + drawn.lengthMS / 2), lastDocumentTimeMS)
+        }
+        documentMomentChanged()
+    }
+
     /// Pick a cut wherever it is, the way a click on it does.
     func pickCut(_ place: TimelineCutPlace) {
         switch place {

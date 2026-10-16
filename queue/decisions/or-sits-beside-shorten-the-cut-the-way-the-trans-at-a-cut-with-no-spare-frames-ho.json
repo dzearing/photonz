@@ -1,0 +1,51 @@
+{
+  "id": "or-sits-beside-shorten-the-cut-the-way-the-trans-at-a-cut-with-no-spare-frames-ho",
+  "taskId": "or-sits-beside-shorten-the-cut-the-way-the-trans",
+  "question": "At a cut with no spare frames, how should the Or row with Shorten the cut sit in Properties?",
+  "context": "The transition mock (video-transition-wt.html step 10) draws Or beside a small button. At the panel's usual width the full button is about 25 points too wide to sit beside the Or label, so the panel puts it under Or instead of cutting its words off.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Or on its own line, full button under it",
+      "summary": "Or sits above, and under it a full width button reads Shorten the cut by 0.4s with its squeeze icon. What ships today.",
+      "pros": [
+        "Every word and the icon, as the mock prints them",
+        "No small type"
+      ],
+      "cons": [
+        "One more line than the mock, and Or alone on a line reads a little odd"
+      ],
+      "mitigation": "The row only appears at a cut that cannot afford an overlap, so the extra line is rare."
+    },
+    {
+      "id": "b",
+      "label": "Or beside a button with no icon",
+      "summary": "Or on the left as in the mock, the button beside it reading Shorten the cut by 0.4s without the squeeze icon.",
+      "pros": [
+        "Matches the mock layout",
+        "One line"
+      ],
+      "cons": [
+        "Loses the mock icon",
+        "Still wraps if the panel is narrowed"
+      ],
+      "mitigation": "At narrow widths it falls back to the stacked layout on its own."
+    },
+    {
+      "id": "c",
+      "label": "Or beside a shorter button",
+      "summary": "Or on the left, the button reads Shorten by 0.4s with its icon, and the full words go in its tip.",
+      "pros": [
+        "Mock layout and icon",
+        "Fits at every common width"
+      ],
+      "cons": [
+        "Drops the words the cut from the button"
+      ],
+      "mitigation": "The orange line above and the tip still say it is the cut that gets shorter."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-16T04:57:45.770Z"
+}

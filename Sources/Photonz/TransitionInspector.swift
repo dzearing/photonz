@@ -135,13 +135,18 @@ struct TransitionInspector: View {
                     }
                     .playtestField("At the cut")
                 }
-                if let warning = warning(inHand.cut) {
+                let shortening = editorState.cutShorteningInHand
+                if let warning = warning(inHand, shortening: shortening) {
                     Text(warning.line)
                         .font(.system(size: 10.5))
                         .foregroundStyle(.orange)
                         .fixedSize(horizontal: false, vertical: true)
                         .panelHelp(warning.help)
+                        .panelReadout(warning.line)
                         .playtestField("Transition warning")
+                }
+                if let shortening {
+                    shorten(shortening)
                 }
             }
             .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
@@ -154,7 +159,8 @@ struct TransitionInspector: View {
     /// a later trim took the spare a transition was spending, or both sides
     /// read the same frames so a dissolve would show nothing.
     /// A label, with the reason in its hover tip.
-    private func warning(_ cut: ClipCut) -> (line: String, help: String)? {
+    private func warning(_ inHand: DocumentCut, shortening: ClipCutShortening?) -> (line: String, help: String)? {
+        let cut = inHand.cut
         if cut.transition != nil, cut.drawnTransition == nil {
             return (line: "Plays as a hard cut", help: "No spare footage is left at this cut")
         }
@@ -165,7 +171,35 @@ struct TransitionInspector: View {
         if cut.isContinuous, cut.transition?.kind.needsOverlap ?? false {
             return (line: "Shows nothing here", help: "Both sides are the same frames")
         }
+        // The mock's warning box (`#warnBox`): its first words on the row,
+        // its sentence behind them.
+        if let shortening {
+            return (line: ClipTransitionCopy.noSpareForAnOverlap,
+                    help: ClipTransitionCopy.shorteningHelp(shortening, incomingName: inHand.incomingName))
+        }
         return nil
+    }
+
+    /// **Or · Shorten the cut by 0.4s** (`#rowForce`): the one way left to pay
+    /// for an overlap at a cut with no spare. Offered, never taken, because
+    /// it moves the incoming clip and everything after it.
+    private func shorten(_ shortening: ClipCutShortening) -> some View {
+        let title = ClipTransitionCopy.shortenTheCut(shortening)
+        return VideoKit.FieldRow(label: "Or") {
+            Button {
+                editorState.shortenCutInHand()
+            } label: {
+                Label(title, systemImage: "arrow.right.and.line.vertical.and.arrow.left")
+                    .font(.system(size: 11, weight: .medium))
+            }
+            .controlSize(.small)
+            // Whole or not at all: the row puts it under "Or" before it
+            // would cut the length off the end of its words.
+            .fixedSize()
+            .playtestControl("Shorten the cut", detail: title)
+            .panelHelp(ClipTransitionCopy.shorteningTip(shortening))
+        }
+        .playtestField("Or")
     }
 
     private func type(_ inHand: DocumentCut, current: ClipTransitionKind) -> some View {

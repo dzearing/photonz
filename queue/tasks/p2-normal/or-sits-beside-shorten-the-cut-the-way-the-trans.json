@@ -1,0 +1,34 @@
+{
+  "id": "or-sits-beside-shorten-the-cut-the-way-the-trans",
+  "title": "Or sits beside Shorten the cut the way the transition mock draws it",
+  "goal": "At a cut with no spare frames, the Properties panel offers \"Or · Shorten the cut by 0.4s\". The mock puts Or on the left with the button beside it; at the panel's usual width the full button does not fit, so today Or sits on its own line above it. Decide whether to keep the full words and icon on a second line or trim the button to fit beside.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 15,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T04:57:34.253Z",
+  "updated": "2026-10-16T04:57:55.521Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html #rowForce (irow, Or + btn secondary sm with ic-swap). App: TransitionInspector.shorten(_:), a VideoKit.FieldRow with a .fixedSize() button, so PanelFieldRowLayout stacks it under Or when the 76pt label column plus the ~173pt button exceeds the row (~236pt at default dock width). Without the icon at 10.5pt it is ~145pt, which would fit beside. Picture: queue/audits/2026-10-15-shorten-the-cut-1b-the-offer-sc.png.",
+  "acceptance": [
+    "The user has picked how the Or row is laid out on the decision card",
+    "At the panel's default width the row matches the picked layout, with the button's words never cut off",
+    "shorten-the-cut-for-a-dissolve-walk still passes"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T04:57:34.255Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T04:57:55.518Z",
+      "note": "Waiting on the decision card about the Or row layout"
+    }
+  ],
+  "walks": [
+    "shorten-the-cut-for-a-dissolve-walk"
+  ]
+}

@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p1-high",
   "seq": 8,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.508Z",
-  "updated": "2026-10-16T03:35:12.370Z",
+  "updated": "2026-10-16T04:59:07.942Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html step 10 (greyed overlapping tiles with the reason; Properties offers 'Or · Shorten the cut by 1.0s'). Code today: TransitionPicker.swift ~54-90 greys Dissolve, Push, Wipe, Blur with a tooltip; ClipTransitions.swift ~540-556 refuses rather than shortening; TransitionInspector.swift ~138-145 only warns; EditorState+ClipTransitions.swift ~354-362 Command T falls back to a dip. No 'shorten' code exists. Searches 'shorten the cut', 'not enough spare', 'insufficient media', 'hold the last frame': nothing open or done. This is building the user's mock, not a new unasked control, so no card. Place the row in the transition's own Properties section (the placement contract: the panel says what the picked cut is; a one-shot verb here is the mock's own).",
@@ -29,6 +29,34 @@
     {
       "t": "2026-10-16T03:35:12.369Z",
       "note": "seq 27.5 -> 8"
+    },
+    {
+      "t": "2026-10-16T04:08:23.195Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T04:59:07.665Z",
+      "note": "owns these walks: shorten-the-cut-for-a-dissolve-walk"
+    },
+    {
+      "t": "2026-10-16T04:59:07.735Z",
+      "note": "Review before building: a Premiere or Final Cut editor expects a no-handles dissolve to be offered by shortening (FCP asks to overlap media and shorten the project). The mock puts the offer in Properties, so it went there, not in the picker. One-sided spare already works through After it, so the offer only appears when no placement can pay. Command T keeps its dip fallback: a key never ripples the timeline."
+    },
+    {
+      "t": "2026-10-16T04:59:07.812Z",
+      "note": "Built: PhotonzCore/ShortenTheCut.swift (ClipCut.shortening/shorteningOffer, PhotonzDocument.cutShortening/shortenCut: extracts [cut-fromOut, cut+fromIn) on unlocked tracks like Q/W/Extract, moves markers and In/Out, then puts the transition on, all on a trial so it is all or nothing; a dip's hold is taken out first). App: EditorState.cutShorteningInHand + shortenCutInHand (one perform), TransitionInspector row Or + Shorten the cut by Xs under the line No spare frames for an overlap. Tests: ShortenTheCutTests (10). Full suite 13301 passed. New walk passed 4 times; 13 transition walks still pass."
+    },
+    {
+      "t": "2026-10-16T04:59:07.877Z",
+      "note": "Pictures looked at: 1b-the-offer-sc (greyed overlap tiles, orange line, Shorten the cut by 0.4s whole on its own line under Or), 2-shortened-and-dissolving-sc (Tutorial Sample ends and b-roll starts at 0:07.8, Paid with 0.2s + 0.2s, both 0.2s spare strips either side of the band, document 0:15), 4-command-t-keeps-the-dip-sc (No transition added, Use Dip to black, nothing moved)."
+    },
+    {
+      "t": "2026-10-16T04:59:07.941Z",
+      "note": "Rough items: the Or row stacking became task or-sits-beside-shorten-the-cut-the-way-the-trans with a decision card. Left rough, no task: a walk cannot read the Spare after strip by name while the Spare before strip is also up (the register lists Spare before strip twice), though the picture shows both strips; the walk reads the Spare after panel field instead. Nothing a person sees, so it did not clear the bar. Also left rough: the after strip's 0.2s label sits over the start of the b-roll name on the bar, as it already did before this change."
     }
+  ],
+  "started": "2026-10-16T04:08:23.192Z",
+  "walks": [
+    "shorten-the-cut-for-a-dissolve-walk"
   ]
 }

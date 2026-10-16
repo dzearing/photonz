@@ -1,0 +1,45 @@
+{
+  "feature": "Shorten the cut to pay for a dissolve",
+  "epic": "video-transitions-motion",
+  "summary": "A cut with no spare frames either side, the one a second clip dropped at full length leaves, now offers Shorten the cut by 0.4s in Properties. One click trims the frames the dissolve needs off both clip ends, closes the gap and puts the dissolve on, as one undo.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/shorten-the-cut-for-a-dissolve-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the sample recording and leave it at its full eight seconds."
+    },
+    {
+      "do": "Drag a second recording onto V1 so it starts at 0:08, right where the first one ends."
+    },
+    {
+      "do": "Click the cut between the two clips: the picker greys Cross dissolve, Push, Wipe and Blur through.",
+      "shot": "2026-10-15-shorten-the-cut-1b-the-offer-sc.png"
+    },
+    {
+      "do": "Press Escape, then click Shorten the cut by 0.4s in the Transition section of Properties.",
+      "shot": "2026-10-15-shorten-the-cut-2-shortened-and-dissolving-sc.png"
+    },
+    {
+      "do": "Press Command Z once: both clip ends come back and the cut is hard again."
+    },
+    {
+      "do": "With the cut picked, press Command T.",
+      "shot": "2026-10-15-shorten-the-cut-4-command-t-keeps-the-dip-sc.png"
+    }
+  ],
+  "evaluate": [
+    "Is No spare frames for an overlap, with the button under it, enough to tell you why the dissolve tiles are grey and what to do about it?",
+    "Is 0.2s off each side (0.4s in all, the dissolve's own length) the trim you would expect, rather than a full second as the mock's example says?",
+    "Should Command T at a cut like this keep offering Use Dip to black, or offer the shortening instead?",
+    "Does everything after the cut moving up by 0.4s, on every unlocked track, feel like Premiere's ripple, or did you expect only V1 to move?"
+  ],
+  "rough": [
+    "Or sits on its own line above the button rather than beside it as the mock draws it: the full button is too wide for the row at the usual panel width. Settled by decision card or-sits-beside-shorten-the-cut-the-way-the-trans-at-a-cut-with-no-spare-frames-ho on task or-sits-beside-shorten-the-cut-the-way-the-trans.",
+    "The mock's warning box sentence is longer than a panel row may be, so the row says its first words, No spare frames for an overlap, and the mock's whole sentence moved into that line's tip (UX-PATTERNS §4).",
+    "The button names the length it trims, as the mock's button does. With nothing spare either side that is the dissolve's own length, 0.4s, and any spare a side has is spent first, so the trim is never more than the overlap needs.",
+    "The offer sits in Properties, in the Transition section, as the mock's step 10 draws it. With the picker open, press Escape first, then click the button.",
+    "Command T at a cut with no spare keeps its dip fallback (a notice offering Use Dip to black): a key press never moves clips; moving them is only ever done when you click the button that says so.",
+    "The open question about holding the last frame stays open, as the mock leaves it. Nothing was built for it.",
+    "The trim takes the same stretch out of every unlocked track, as Q and W and Extract do, so captions, titles and music after the cut stay in step; a clip on a locked track means no offer at all."
+  ]
+}
