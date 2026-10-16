@@ -12060,3 +12060,88 @@
 {"t":"2026-10-16T03:35:12.991Z","ev":"task_resequenced","id":"stepping-and-resizing-a-size-measurement-measure","from":4070,"to":29}
 {"t":"2026-10-16T03:35:13.054Z","ev":"task_walks","id":"a-walk-that-fails-is-never-parked-on-a-task-wait","walks":["path-outline-align-walk"]}
 {"t":"2026-10-16T03:36:04.246Z","ev":"manager","filed":12,"readyBefore":2,"readyAfter":14,"report":"queue/manager/2026-10-15-2045.md"}
+{"t":"2026-10-16T03:36:37.004Z","ev":"manager_pass","exit":0,"ready":14}
+{"t":"2026-10-16T03:36:37.071Z","ev":"task_started","id":"command-e-on-a-video-never-flattens-the-recordin","title":"Command E on a video never flattens the recording into a still","priority":"p1-high"}
+{"t":"2026-10-16T03:55:14.025Z","ev":"task_walks","id":"command-e-on-a-video-never-flattens-the-recordin","walks":["command-e-on-a-video-keeps-the-clip-walk","bucket-fills-the-enclosed-area-walk"]}
+{"t":"2026-10-16T03:55:27.442Z","ev":"task_note","id":"command-e-on-a-video-never-flattens-the-recordin"}
+{"t":"2026-10-16T03:55:27.506Z","ev":"task_note","id":"command-e-on-a-video-never-flattens-the-recordin"}
+{"t":"2026-10-16T03:55:27.570Z","ev":"task_note","id":"command-e-on-a-video-never-flattens-the-recordin"}
+{"t":"2026-10-16T03:55:46.336Z","ev":"task_done","id":"command-e-on-a-video-never-flattens-the-recordin","from":"in_progress","note":"Merge Down never takes a clip, sound, timed layer or group holding one (PhotonzCore LayerMerge.swift, MergeNeverTakesTimeTests), so Command E with a title over a recording leaves the clip and title on the timeline; pictures merge as before. Command E stays Merge Down on video per UX-PATTERNS §7 (Premiere: Cmd E Edit Original, Cmd M Export); Export stays Shift Cmd E. Walk command-e-on-a-video-keeps-the-clip-walk ok twice at Next defaults; related walks ok; 13291 tests pass. Audit queue/audits/2026-10-15-command-e-on-a-video.json. Commit b1009210."}
+{"t":"2026-10-16T04:08:23.031Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":584,"of":944,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-16T04:08:23.201Z","ev":"task_started","id":"a-transition-onto-a-clip-with-no-spare-frames-of","title":"A transition onto a clip with no spare frames offers to shorten the cut","priority":"p1-high"}
+{"t":"2026-10-16T04:57:34.257Z","ev":"task_created","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","priority":"p2-normal","title":"Or sits beside Shorten the cut the way the transition mock draws it"}
+{"t":"2026-10-16T04:57:45.771Z","ev":"decision_opened","id":"or-sits-beside-shorten-the-cut-the-way-the-trans-at-a-cut-with-no-spare-frames-ho","taskId":"or-sits-beside-shorten-the-cut-the-way-the-trans","question":"At a cut with no spare frames, how should the Or row with Shorten the cut sit in Properties?"}
+{"t":"2026-10-16T04:57:55.522Z","ev":"task_blocked","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","from":"pending","note":"Waiting on the decision card about the Or row layout"}
+{"t":"2026-10-16T04:59:07.667Z","ev":"task_walks","id":"a-transition-onto-a-clip-with-no-spare-frames-of","walks":["shorten-the-cut-for-a-dissolve-walk"]}
+{"t":"2026-10-16T04:59:07.737Z","ev":"task_note","id":"a-transition-onto-a-clip-with-no-spare-frames-of"}
+{"t":"2026-10-16T04:59:07.814Z","ev":"task_note","id":"a-transition-onto-a-clip-with-no-spare-frames-of"}
+{"t":"2026-10-16T04:59:07.879Z","ev":"task_note","id":"a-transition-onto-a-clip-with-no-spare-frames-of"}
+{"t":"2026-10-16T04:59:07.943Z","ev":"task_note","id":"a-transition-onto-a-clip-with-no-spare-frames-of"}
+{"t":"2026-10-16T04:59:26.592Z","ev":"task_done","id":"a-transition-onto-a-clip-with-no-spare-frames-of","from":"in_progress","note":"A cut with no spare frames either side now offers Or, Shorten the cut by 0.4s in Properties (mock step 10); one click trims what the overlap needs off both clip ends, closes the gap on unlocked tracks and puts the dissolve on, one undo. Command T keeps its dip fallback. Core ShortenTheCut.swift + 10 tests, full suite 13301 green, walk shorten-the-cut-for-a-dissolve-walk passed 4 times at Next defaults with real captures, 13 transition walks still green. Audit queue/audits/2026-10-15-shorten-the-cut-for-a-dissolve.json. Commit 75e92a92."}
+{"t":"2026-10-16T09:43:13.182Z","ev":"task_created","id":"walks-that-fail-in-the-full-sweep-25","priority":"p2-normal","title":"Walks that fail in the full sweep"}
+{"t":"2026-10-16T09:43:13.274Z","ev":"sweep_pass","walks":945,"passed":936,"failed":9,"seconds":16999,"complete":true,"total":945}
+{"t":"2026-10-16T09:43:13.438Z","ev":"task_started","id":"a-walk-that-fails-is-never-parked-on-a-task-wait","title":"A walk that fails is never parked on a task waiting for an answer","priority":"p2-normal"}
+{"t":"2026-10-16T10:07:37.465Z","ev":"task_note","id":"a-walk-that-fails-is-never-parked-on-a-task-wait"}
+{"t":"2026-10-16T10:11:13.410Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-25"}
+{"t":"2026-10-16T10:11:13.472Z","ev":"task_note","id":"a-drawn-path-s-outline-settings-read-like-the-ic"}
+{"t":"2026-10-16T10:11:13.534Z","ev":"task_note","id":"a-walk-that-fails-is-never-parked-on-a-task-wait"}
+{"t":"2026-10-16T10:11:18.990Z","ev":"task_done","id":"a-walk-that-fails-is-never-parked-on-a-task-wait","from":"in_progress","note":"path-outline-align-walk passes at Next defaults, twice in a row: the walk HARNESS was wrong (a control marker scrolled out of the Appearance list named the Motion header's plus 'Align'), fixed in PlaytestPanelPress.registeredNames, c0aacee5; the app's plus was already 'Add Motion' to VoiceOver. A failing walk whose owners are all blocked on a card now also lands on the standing walk task from both the rotating check and the full sweep, naming the owner, 5beb7f4a; slice-owner-drill sections 8-9 prove it. Verified: 25 path walks + 12 register-heavy walks ok, Scripts/test.sh green (13301), all sweep drills pass."}
+{"t":"2026-10-16T10:25:53.500Z","ev":"slice_pass","walks":35,"passed":35,"failed":0,"seconds":695,"of":945,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-16T10:25:53.681Z","ev":"task_started","id":"a-box-pick-on-the-timeline-is-copied-and-ripple","title":"A box pick on the timeline is copied and ripple deleted whole","priority":"p2-normal"}
+{"t":"2026-10-16T11:07:56.897Z","ev":"task_created","id":"a-box-over-zooms-and-keys-with-no-clip-in-it-kee","priority":"p2-normal","title":"A box over zooms and keys with no clip in it keeps both picked"}
+{"t":"2026-10-16T11:08:40.120Z","ev":"task_walks","id":"a-box-pick-on-the-timeline-is-copied-and-ripple","walks":["box-pick-copied-and-rippled-whole-walk"]}
+{"t":"2026-10-16T11:08:40.185Z","ev":"task_note","id":"a-box-pick-on-the-timeline-is-copied-and-ripple"}
+{"t":"2026-10-16T11:08:40.247Z","ev":"task_note","id":"a-box-pick-on-the-timeline-is-copied-and-ripple"}
+{"t":"2026-10-16T11:08:40.311Z","ev":"task_note","id":"a-box-pick-on-the-timeline-is-copied-and-ripple"}
+{"t":"2026-10-16T11:08:40.375Z","ev":"task_note","id":"a-box-pick-on-the-timeline-is-copied-and-ripple"}
+{"t":"2026-10-16T11:09:02.969Z","ev":"task_done","id":"a-box-pick-on-the-timeline-is-copied-and-ripple","from":"in_progress","note":"Option drag on a box's pick copies its clips, zooms and keys by the same time in one undo (the hand stops where every zoom copy fits); Shift Delete on a box's pick takes the clips, closes their gaps and takes the zooms and keys beside them in one undo. Core TimelineBoxPick.swift + TimelineBoxCopyTests; walk box-pick-copied-and-rippled-whole-walk reproduced both leftovers first, then passed twice; 13,308 tests green; audit queue/audits/2026-10-16-box-pick-copied-and-rippled-whole.json. Commit 0219064c."}
+{"t":"2026-10-16T11:23:47.829Z","ev":"slice_pass","walks":34,"passed":34,"failed":0,"seconds":710,"of":946,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-16T11:23:48.000Z","ev":"task_started","id":"on-a-small-or-keyed-layer-a-press-lands-on-what","title":"On a small or keyed layer a press lands on what it aims at","priority":"p2-normal"}
+{"t":"2026-10-16T11:46:05.475Z","ev":"task_note","id":"on-a-small-or-keyed-layer-a-press-lands-on-what"}
+{"t":"2026-10-16T12:05:21.816Z","ev":"task_walks","id":"on-a-small-or-keyed-layer-a-press-lands-on-what","walks":["small-or-keyed-layer-presses-walk"]}
+{"t":"2026-10-16T12:05:37.675Z","ev":"task_note","id":"on-a-small-or-keyed-layer-a-press-lands-on-what"}
+{"t":"2026-10-16T12:06:06.637Z","ev":"task_done","id":"on-a-small-or-keyed-layer-a-press-lands-on-what","from":"in_progress","note":"Shipped a0330b28. On a picked layer's own body a 3D handle catches only on its drawing (SpaceHandles.drawnReach 4pt), so on a 40pt layer a press beside the depth arrow moves the layer; a key ring under the 3D handles takes the press when nearer (markReach, nearest-mark rule) and draws above the pivot crosshair. Reproduced first on the old code (Depth -150, ring edge click picked nothing). Verified: new walk small-or-keyed-layer-presses-walk green twice at Next defaults, 11 neighbouring walks green, Scripts/test.sh green. Audit queue/audits/2026-10-16-small-or-keyed-layer-presses.json."}
+{"t":"2026-10-16T12:18:19.950Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":557,"of":947,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-16T12:21:02.374Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-25"}
+{"t":"2026-10-16T12:21:02.436Z","ev":"task_walks","id":"walks-that-fail-in-the-full-sweep-25","walks":["a-click-on-the-zoom-bar-frames-it-walk","box-pick-by-hand-walk","find-what-stayed-a-picture-walk","section-fold-motion-walk","timeline-pinch-direction-walk","zoom-bar-scrolls-at-the-edge-walk","timeline-pinch-both-ways-walk","view-to-edit-on-a-long-recording-walk"]}
+{"t":"2026-10-16T12:22:35.705Z","ev":"task_note","id":"a-sound-clip-on-the-timeline-wears-its-file-name"}
+{"t":"2026-10-16T12:22:35.771Z","ev":"task_note","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa"}
+{"t":"2026-10-16T12:22:35.837Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-16T12:22:35.900Z","ev":"task_note","id":"the-lower-third-caption-plate-keeps-its-gradient"}
+{"t":"2026-10-16T12:22:35.962Z","ev":"task_note","id":"walks-that-fail-in-the-full-sweep-25"}
+{"t":"2026-10-16T12:22:36.028Z","ev":"task_resequenced","id":"walks-that-fail-in-the-full-sweep-25","from":4060,"to":10}
+{"t":"2026-10-16T12:22:36.092Z","ev":"task_resequenced","id":"a-box-over-zooms-and-keys-with-no-clip-in-it-kee","from":28.5,"to":20}
+{"t":"2026-10-16T12:22:36.154Z","ev":"task_resequenced","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","from":15,"to":30}
+{"t":"2026-10-16T12:22:36.218Z","ev":"task_resequenced","id":"a-transition-can-be-copied-from-one-cut-and-past","from":23,"to":40}
+{"t":"2026-10-16T12:22:36.278Z","ev":"task_resequenced","id":"cleaning-the-noise-on-one-stretch-eases-in-and-s","from":24,"to":50}
+{"t":"2026-10-16T12:22:36.340Z","ev":"task_resequenced","id":"a-library-component-dropped-on-the-timeline-land","from":25,"to":60}
+{"t":"2026-10-16T12:22:36.402Z","ev":"task_resequenced","id":"a-logo-or-picture-can-be-brought-into-a-video-fo","from":26,"to":70}
+{"t":"2026-10-16T12:22:36.463Z","ev":"task_resequenced","id":"words-that-rise-into-a-title-are-never-cut-off-b","from":27,"to":80}
+{"t":"2026-10-16T12:22:36.525Z","ev":"task_resequenced","id":"the-lower-third-caption-plate-keeps-its-gradient","from":28,"to":90}
+{"t":"2026-10-16T12:22:36.590Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":120,"to":100}
+{"t":"2026-10-16T12:22:36.658Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":130,"to":110}
+{"t":"2026-10-16T12:22:36.720Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":140,"to":120}
+{"t":"2026-10-16T12:22:36.785Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":150,"to":130}
+{"t":"2026-10-16T12:22:36.854Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":160,"to":140}
+{"t":"2026-10-16T12:22:36.917Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":170,"to":150}
+{"t":"2026-10-16T12:22:36.978Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":190,"to":160}
+{"t":"2026-10-16T12:22:37.040Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":220,"to":170}
+{"t":"2026-10-16T12:22:37.102Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":230,"to":180}
+{"t":"2026-10-16T12:22:37.165Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":240,"to":190}
+{"t":"2026-10-16T12:22:37.230Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":250,"to":200}
+{"t":"2026-10-16T12:22:37.291Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":260,"to":210}
+{"t":"2026-10-16T12:22:37.354Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":270,"to":220}
+{"t":"2026-10-16T12:22:37.416Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":280,"to":230}
+{"t":"2026-10-16T12:22:37.479Z","ev":"task_resequenced","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":300,"to":240}
+{"t":"2026-10-16T12:22:37.541Z","ev":"task_resequenced","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b","from":310,"to":250}
+{"t":"2026-10-16T12:22:37.604Z","ev":"task_resequenced","id":"stepping-and-resizing-a-size-measurement-measure","from":29,"to":260}
+{"t":"2026-10-16T12:22:37.666Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":90,"to":270}
+{"t":"2026-10-16T12:22:37.730Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":100,"to":280}
+{"t":"2026-10-16T12:22:37.796Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":110,"to":290}
+{"t":"2026-10-16T12:22:37.866Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":180,"to":300}
+{"t":"2026-10-16T12:22:37.929Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":200,"to":310}
+{"t":"2026-10-16T12:22:37.992Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":210,"to":320}
+{"t":"2026-10-16T12:22:38.055Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":290,"to":330}
+{"t":"2026-10-16T12:22:38.117Z","ev":"task_resequenced","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":4030,"to":340}
+{"t":"2026-10-16T12:22:38.149Z","ev":"triage","summary":"0 merged, 0 dropped, 0 priority moves, 0 reset (guard found nothing); 2 overlapping sound colour cards cross-linked; 1 measured bar added (lower third plate); 1 checklist item added to the walk task; six sweep failures re-run alone, all reproduce, two parked on card-blocked owners moved to the standing walk task; p2 renumbered 10-340 (broken walks and the box-pick bug first, then focus, then other epics)"}
+{"t":"2026-10-16T12:23:28.973Z","ev":"digest","file":"2026-10-16.md"}

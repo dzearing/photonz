@@ -1,0 +1,59 @@
+{
+  "id": "walks-that-fail-in-the-full-sweep-25",
+  "title": "Walks that fail in the full sweep",
+  "goal": "The scripted walks are the app driving itself, and some of them no longer reach what they were written to check. Find out what each failing walk is looking for, then either fix the app if the walk is right or update the walk if the app moved on. This serves the focus because the sweep is the only thing that tells a focus runner whether the change it just made broke anything: a sweep with failures nobody has named cannot say that, so every focus feature ships on a weaker claim than it should.",
+  "epic": "unmanned-loop",
+  "priority": "p2-normal",
+  "seq": 10,
+  "status": "pending",
+  "release": "next",
+  "area": "queue",
+  "created": "2026-10-16T09:43:13.178Z",
+  "updated": "2026-10-16T12:22:36.027Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": ">>> SWEEP RESULT (rewritten by every sweep; anything you write in here is lost)\n\nLast sweep 2026-10-16T09:43:12Z: 936 of 945 walks passed in 283 minutes.\n\nFailing walks (9): a-click-on-the-zoom-bar-frames-it-walk, box-pick-by-hand-walk, find-what-stayed-a-picture-walk, path-outline-align-walk, section-fold-motion-walk, timeline-pinch-both-ways-walk, timeline-pinch-direction-walk, view-to-edit-on-a-long-recording-walk, zoom-bar-scrolls-at-the-edge-walk\n\nAlready named by another open task, so read that one before re-diagnosing (3):\n  path-outline-align-walk -> a-drawn-path-s-outline-settings-read-like-the-ic, a-walk-that-fails-is-never-parked-on-a-task-wait (that task says it owns this walk)\n  timeline-pinch-both-ways-walk -> shift-z-means-the-one-thing-you-choose-on-a-vide (that task says it owns this walk)\n  view-to-edit-on-a-long-recording-walk -> edit-mode-s-contents-come-in-with-the-slide-not (that task says it owns this walk)\n\nThis task owns the other 6: a-click-on-the-zoom-bar-frames-it-walk, box-pick-by-hand-walk, find-what-stayed-a-picture-walk, section-fold-motion-walk, timeline-pinch-direction-walk, zoom-bar-scrolls-at-the-edge-walk\n\nFull output: queue/sweep/2026-10-15-215953.log. Re-run one of them on its own with\nScripts/playtest.sh Scripts/playtest/<name>.json --no-build, which takes about ten seconds.\nDo NOT run Scripts/playtest-all.sh yourself; ask for a sweep with\nqueue/bin/sweep.sh request \"<why>\" and finish your task.\n\nSweep asked for by: picking-a-title-no-longer-makes-the-picture-jump: walk harness reach rule changed (controls under the title bar) and the timeline no longer grows on a pick: every walk that reveals a panel control or clicks fixed points on the timeline\n\n<<< END SWEEP RESULT. Write below this line and a sweep will keep it.",
+  "acceptance": [
+    "Every walk the sweep block names as this task's own either passes or is rewritten to match what the app does now",
+    "Each one is run on its own and passes twice in a row",
+    "Any walk that was wrong rather than broken says so in this task log",
+    "A walk rewritten because the timeline or panel moved finds what it needs by name or by lane through the harness, never at a fixed window point, so the next layout change does not break it again"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T09:43:13.180Z",
+      "note": "created (sweep)"
+    },
+    {
+      "t": "2026-10-16T10:11:13.408Z",
+      "note": "path-outline-align-walk is fixed by a-walk-that-fails-is-never-parked-on-a-task-wait (commit c0aacee5): the walk harness let a control marker scrolled out of the Appearance list name the Motion header's plus, so panelMenu 'Align' refused as ambiguous. Passes twice on its own. Also tried section-fold-motion-walk on its own 2026-10-16: ok (the sweep's failure was a 22.7ms main-thread pass on pressing Time section, a timing reading, so watch whether it recurs)."
+    },
+    {
+      "t": "2026-10-16T12:21:02.372Z",
+      "note": "digest 2026-10-16: re-ran six on their own with Scripts/playtest.sh --no-build at 12:20Z; all six still fail the same way as the sweep (not flakes): timeline-pinch-both-ways (step 16, row 1 drifts 0.04 to 0.29 under the pointer), timeline-pinch-direction (step 28, same drift), box-pick-by-hand (step 26, only Sample Music picked), zoom-bar-scrolls-at-the-edge (step 16, zoom starts 5.92s, expected 4.5s), a-click-on-the-zoom-bar-frames-it (step 14, zoom picked but its box is not on the picture), find-what-stayed-a-picture (step 19, Text 3 row still in the panel). Most click fixed timeline points, so start from d3826b57 (the timeline stopped growing on a pick) and decide app or walk for each. timeline-pinch-both-ways-walk and view-to-edit-on-a-long-recording-walk name owners that are blocked on cards (shift-z..., edit-mode...), which nobody claims while the card is open, so this task takes them too (rule from 5beb7f4a landed after this sweep wrote its block)."
+    },
+    {
+      "t": "2026-10-16T12:21:02.434Z",
+      "note": "owns these walks: a-click-on-the-zoom-bar-frames-it-walk, box-pick-by-hand-walk, find-what-stayed-a-picture-walk, section-fold-motion-walk, timeline-pinch-direction-walk, zoom-bar-scrolls-at-the-edge-walk, timeline-pinch-both-ways-walk, view-to-edit-on-a-long-recording-walk"
+    },
+    {
+      "t": "2026-10-16T12:22:35.959Z",
+      "note": "digest 2026-10-16: added a checklist item. Four walks this week (framing-a-zoom, two zoom walks, and probably most of today's six) broke because they click fixed window points and d3826b57 moved the timeline."
+    },
+    {
+      "t": "2026-10-16T12:22:36.026Z",
+      "note": "seq 4060 -> 10"
+    }
+  ],
+  "standing": "walk-sweep",
+  "walks": [
+    "a-click-on-the-zoom-bar-frames-it-walk",
+    "box-pick-by-hand-walk",
+    "find-what-stayed-a-picture-walk",
+    "section-fold-motion-walk",
+    "timeline-pinch-direction-walk",
+    "zoom-bar-scrolls-at-the-edge-walk",
+    "timeline-pinch-both-ways-walk",
+    "view-to-edit-on-a-long-recording-walk"
+  ]
+}

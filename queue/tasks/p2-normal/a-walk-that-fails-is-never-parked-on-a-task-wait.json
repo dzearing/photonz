@@ -5,11 +5,11 @@
   "epic": "unmanned-loop",
   "priority": "p2-normal",
   "seq": 20,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.609Z",
-  "updated": "2026-10-16T03:35:13.053Z",
+  "updated": "2026-10-16T10:11:18.989Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-15 20:30 by the manager pass: Scripts/playtest.sh Scripts/playtest/path-outline-align-walk.json --no-build exits 1 with 'step 66 (panelMenu): 2 menus answer to \"Align\", so it does not say which one: Align on Mixed 124.0pt wide at x 1102.0 says \"Inside keeps the outline within the shape. Outside grows it past the edge.\", Align on Add Motion 25.0pt wide at x 1201.0 says \"Animate a property of this layer...\"'. The Add Motion plus is Sources/Photonz/MotionListInspector.swift ~717-720. Routing: queue/bin/sweep-slice-record.mjs ~98-125 writes onto every owner from ownersOfWalks without looking at the owner's status; the owner here is a-drawn-path-s-outline-settings-read-like-the-ic (blocked on a card since 2026-10-08), log line 2026-10-16T03:16:30Z. Check queue/bin/sweep-report.mjs does the same and fix both alike. Commit queue infra edits immediately (the loop stashes uncommitted ones).",
@@ -31,9 +31,27 @@
     {
       "t": "2026-10-16T03:35:13.052Z",
       "note": "owns these walks: path-outline-align-walk"
+    },
+    {
+      "t": "2026-10-16T09:43:13.431Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T10:07:37.463Z",
+      "note": "The WALK HARNESS was wrong, not the app. Reproduced step 66 failure. The Add Motion plus answered to 'Align' only through the harness's register of playtestControl markers (PlaytestPanelPress.registeredNames): the Align dropdown's marker, scrolled 104pt below the Appearance list's visible bottom, still has a frame lying under the Motion header, and registeredNames matched by frame alone. The plus's accessibility label is 'Add Motion', so VoiceOver already hears the right name (acceptance 2: nothing misnamed in the app). Fix: registeredNames skips a control marker whose nearest scroller does not hold the view, the rule fieldViews already keeps for rows. path-outline-align-walk ok twice in a row; 25 path walks and 12 register-heavy walks ok; Scripts/test.sh green (13301 tests)."
+    },
+    {
+      "t": "2026-10-16T10:11:13.532Z",
+      "note": "Routing (commit 5beb7f4a): ownersOfWalks (sweep-notes.mjs) marks a walk whose every owner is blocked as waiting. sweep-slice-record.mjs still writes it on the owner and ALSO on the standing walk task (opening it if none is open), as '<walk> (owned by <id>, which is waiting on a card)'. The sweep block (machineBlock, used by sweep-report.mjs) lists it under 'Owned by a task that is waiting on a card, so this task takes them' and counts it in 'This task owns'. A walk with one blocked and one free owner stays with the free one. Drill: node queue/bin/slice-owner-drill.mjs sections 8-9 (all good); sweep-notes, interrupt, blind, line, parse and schedule drills all pass. CLAUDE.md and the sweep.sh schedule text say the new rule. Adversarial note: 'blocked' is the only status treated as waiting; a pending task with unmet deps is still counted as an owner a runner can reach."
+    },
+    {
+      "t": "2026-10-16T10:11:18.987Z",
+      "note": "path-outline-align-walk passes at Next defaults, twice in a row: the walk HARNESS was wrong (a control marker scrolled out of the Appearance list named the Motion header's plus 'Align'), fixed in PlaytestPanelPress.registeredNames, c0aacee5; the app's plus was already 'Add Motion' to VoiceOver. A failing walk whose owners are all blocked on a card now also lands on the standing walk task from both the rotating check and the full sweep, naming the owner, 5beb7f4a; slice-owner-drill sections 8-9 prove it. Verified: 25 path walks + 12 register-heavy walks ok, Scripts/test.sh green (13301), all sweep drills pass."
     }
   ],
   "walks": [
     "path-outline-align-walk"
-  ]
+  ],
+  "started": "2026-10-16T09:43:13.430Z",
+  "completed": "2026-10-16T10:11:18.988Z"
 }

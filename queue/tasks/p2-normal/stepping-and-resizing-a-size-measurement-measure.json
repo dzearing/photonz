@@ -4,12 +4,12 @@
   "goal": "Two places where a size measurement goes wrong for someone redlining. Pressing the step key from a measured pill moves to a box that runs from the pill down into the small print under it. And dragging a corner of a picked measurement group stretches the calipers instead of measuring again.",
   "epic": "measure-redline",
   "priority": "p2-normal",
-  "seq": 29,
+  "seq": 260,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.562Z",
-  "updated": "2026-10-16T03:35:12.990Z",
+  "updated": "2026-10-16T12:22:37.603Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-13-size-mode-measures-objects.json rough ('Pressing ] from the pill steps to a box that runs from the pill's top down into the line of small print under it') and queue/audits/2026-10-13-size-measurement-group.json rough ('Dragging a corner handle of the picked group... stretches the calipers' positions rather than re-measuring'). Searches 'bracket steps pill', 'size group handles stretch': nothing open.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-16T03:35:12.989Z",
       "note": "seq 4070 -> 29"
+    },
+    {
+      "t": "2026-10-16T12:22:37.602Z",
+      "note": "seq 29 -> 260"
     }
   ]
 }

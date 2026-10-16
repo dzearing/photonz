@@ -4,12 +4,12 @@
   "goal": "A title whose words rise in from below gets them sliced at the bottom edge of the text's own box while they travel, so the entrance looks broken. The words should be whole for the whole move, the way depth flips already are.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 27,
+  "seq": 80,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.351Z",
-  "updated": "2026-10-16T03:35:12.866Z",
+  "updated": "2026-10-16T12:22:36.462Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-10-title-words-reveal.json rough: 'A piece rising from below can be cut at the bottom edge of the text's own box while it travels.' The later done task text-that-swings-flips-or-flies-in-from-depth-is loosened clipping only for depth flips; look at how it did that (TextRevealRasterizer in PhotonzRender) and extend it. Model checklist for a look task: title-text-visibly-comes-in-and-every-built-in-t. Renderer change: perf note in the commit (composite path).",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-16T03:35:12.865Z",
       "note": "seq 89.921875 -> 27"
+    },
+    {
+      "t": "2026-10-16T12:22:36.461Z",
+      "note": "seq 27 -> 80"
     }
   ]
 }

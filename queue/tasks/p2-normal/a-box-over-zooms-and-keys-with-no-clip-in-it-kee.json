@@ -4,12 +4,12 @@
   "goal": "On the timeline, a Shift box that adds a recording's keys to a zoom already picked (or one box that touches only zooms and keys) quietly drops the keys and keeps only the zooms, so the next move or delete leaves the keys behind. Whatever a box touches should stay picked together.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 28.5,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T11:07:56.893Z",
-  "updated": "2026-10-16T11:07:56.896Z",
+  "updated": "2026-10-16T12:22:36.091Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced 2026-10-16 while working a-box-pick-on-the-timeline-is-copied-and-ripple, with Scripts/playtest/box-pick-copied-and-rippled-whole-walk.json reordered so the Zoom box came first: step 29 'dragTracks Zoom Tutorial Sample 0:01 to 0:04: picked Tutorial Sample zoom 1', step 30 'dragTracks Keys Tutorial Sample 0:00 to 0:03 (shift): picked Tutorial Sample zoom 1' (the keys at 1000 and 3000 ms were touched but not kept). Cause read in code: EditorState+TrackRange applyBoxPick with no clip picks calls pickBoxedZoomsOrKeys, which picks the zooms the way a click does and returns before the keys; boxExtras is only kept beside clips. Picking the title first keeps all of them (same walk as committed).",
@@ -22,6 +22,10 @@
     {
       "t": "2026-10-16T11:07:56.895Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T12:22:36.090Z",
+      "note": "seq 28.5 -> 20"
     }
   ],
   "walks": []

@@ -4,12 +4,12 @@
   "goal": "Decide whether a recording's own sound bar, now drawn right under its picture, should be tinted to match its picture bar so the two read as one clip, or keep the dark green the sound mock uses. Today they are joined by a staple and a link mark only.",
   "epic": "video-cutting",
   "priority": "p2-normal",
-  "seq": 300,
+  "seq": 240,
   "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-14T00:20:57.150Z",
-  "updated": "2026-10-15T12:24:08.603Z",
+  "updated": "2026-10-16T12:22:37.478Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Split out of a-clip-s-own-sound-always-sits-right-under-its-v (2026-10-13), whose acceptance listed the same tint family among the join affordances. Picture fill: VideoKit.ClipKind.video gradient 0x12C2E9 to 0x7C4DFF; sound: ClipKind.audio dark green 0x26463A, waveform/level tint VideoKit.Palette.soundTrack (cyan, purple). The join drawn today: SoundJoin and SoundRowMark in Sources/Photonz/TimelineTrackRows.swift. Mock: docs/design/mocks/pages/video-audio.html colours sound lanes cyan and purple on dark green.",
@@ -38,6 +38,14 @@
     {
       "t": "2026-10-15T12:24:08.602Z",
       "note": "seq 290 -> 300"
+    },
+    {
+      "t": "2026-10-16T12:22:35.769Z",
+      "note": "digest 2026-10-16: overlaps the card on a-sound-clip-on-the-timeline-wears-its-file-name (panel colour with a coloured waveform, or green). Answer them together; whichever lands first, the runner reads the other answer before drawing anything."
+    },
+    {
+      "t": "2026-10-16T12:22:37.477Z",
+      "note": "seq 300 -> 240"
     }
   ],
   "walks": [

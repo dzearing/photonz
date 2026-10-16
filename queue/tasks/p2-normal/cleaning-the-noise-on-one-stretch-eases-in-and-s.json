@@ -4,12 +4,12 @@
   "goal": "Draw a range and choose Clean Noise in Section, and the cleaning switches on hard at the edge of the range, which you can hear as a click in the room tone, while the waveform still shows the uncleaned sound. Ease into and out of the cleaned stretch, draw what you will hear, and only offer the section rows when the right-click is inside the range.",
   "epic": "video-audio",
   "priority": "p2-normal",
-  "seq": 24,
+  "seq": 50,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.923Z",
-  "updated": "2026-10-16T03:35:12.683Z",
+  "updated": "2026-10-16T12:22:36.277Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-15-clean-noise-and-hide-picture-in-a-section.json rough ('The cleaning switches on hard at the cut, with no crossfade into the cleaned copy', cleaned at Medium only, waveform shows the uncleaned file) and queue/audits/2026-10-12-range-on-a-pick.json rough ('A right-click anywhere on a picked clip leads with the section rows, even on a part of the clip outside the range'). Feature commit ca23ab09. Searches 'crossfade cleaned', 'section rows outside': nothing open.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-16T03:35:12.682Z",
       "note": "seq 88.75 -> 24"
+    },
+    {
+      "t": "2026-10-16T12:22:36.276Z",
+      "note": "seq 24 -> 50"
     }
   ]
 }

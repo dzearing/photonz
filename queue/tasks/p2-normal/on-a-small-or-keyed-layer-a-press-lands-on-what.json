@@ -5,11 +5,11 @@
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
   "seq": 22,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.710Z",
-  "updated": "2026-10-16T03:35:12.556Z",
+  "updated": "2026-10-16T12:06:06.636Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From audit rough lines, not reproduced by the manager: queue/audits/2026-10-13-3d-grippers-on-a-picked-layer.json ('On a layer about 40 points across, the depth arrow covers much of its upper right quarter: a press there pushes it in depth instead of moving it') and queue/audits/2026-10-13-every-key-dot-picks.json ('When the playhead sits on a key, that key's ring is under the layer's middle, where the 3D handles are drawn... the ring cannot be clicked'). Searches 'depth arrow small layer', 'key ring 3D handles': nothing open. Rule: never cover what is being manipulated; hit areas should shrink or step aside on small layers rather than grow over them.",
@@ -27,6 +27,31 @@
     {
       "t": "2026-10-16T03:35:12.555Z",
       "note": "seq 85 -> 22"
+    },
+    {
+      "t": "2026-10-16T11:23:47.994Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T11:46:05.471Z",
+      "note": "Reproduced at Next defaults before any change (walks /tmp/pz-repro/a.json, before-ring.json, before-small.json, on the code before this fix). SMALL LAYER: rectangle 54 doc pts (40 view pts) at (480,480); a drag from (526,499), 5.7 view pts beside the drawn depth arrow, left the frame at (480,480,54,54) and the Info values read 'Transform Depth -150': the press pushed it in depth instead of moving it. Same at the walk's point (522,582): expectBox FAILED '\"Rectangle\" sits at (480, 560)', i.e. it did not move. KEY RING: Position keyed at 1s and 3s, playhead on the 3s key: the ring sits on the title's middle UNDER the pivot crosshair (drawn below it, so it reads as part of the crosshair). A click dead on its centre did pick it (expectKeyPick Position 2 passed), but a click on its upper right edge (958,421) 'the keys picked are none': the arrow's 9 pt slack covers half the ring, and the ring always yielded to any 3D handle in reach. Fix: SpaceHandles.hit gains onBody (inside the picked layer's box a 3D handle catches only within 4 pt of its drawing) and markReach (a key ring nearer than the handle keeps the press, nearest-mark rule); rings draw above the crosshair."
+    },
+    {
+      "t": "2026-10-16T12:05:21.814Z",
+      "note": "owns these walks: small-or-keyed-layer-presses-walk"
+    },
+    {
+      "t": "2026-10-16T12:05:37.673Z",
+      "note": "Fixed and verified: small-or-keyed-layer-presses-walk passed twice in a row at Next defaults (no flags); Scripts/test.sh green (13310 tests); 11 neighbouring walks green (3d-grippers, every-key-dot-picks, every-handle-lights-on-hover, tilt-and-flip, tilt-keys-like-a-move, rotate-a-tilted-layer-live, transform-bar, transform-values-info/link, camera-settings-on-the-frame, framing-a-zoom-shows-one-box). Looked at every audit picture: 1 shows the ring drawn over the crosshair, 2 the ring picked (blue hover look under the resting pointer), 3 the title swung with Rotation Y and Depth lanes, 4-6 the 54pt rectangle picked, moved to X 540 with no Depth row, then pushed by the arrow. Left rough, not filed: a picked ring under the resting pointer shows the blue hover look until the pointer moves (second time noted, after the 2026-10-13 key dot audit; transient, a person sees white as soon as they move); on the body the arrow's catch is now 4pt on every layer, not just small ones (deliberate: one rule, never cover what is manipulated)."
+    },
+    {
+      "t": "2026-10-16T12:06:06.634Z",
+      "note": "Shipped a0330b28. On a picked layer's own body a 3D handle catches only on its drawing (SpaceHandles.drawnReach 4pt), so on a 40pt layer a press beside the depth arrow moves the layer; a key ring under the 3D handles takes the press when nearer (markReach, nearest-mark rule) and draws above the pivot crosshair. Reproduced first on the old code (Depth -150, ring edge click picked nothing). Verified: new walk small-or-keyed-layer-presses-walk green twice at Next defaults, 11 neighbouring walks green, Scripts/test.sh green. Audit queue/audits/2026-10-16-small-or-keyed-layer-presses.json."
     }
-  ]
+  ],
+  "started": "2026-10-16T11:23:47.991Z",
+  "walks": [
+    "small-or-keyed-layer-presses-walk"
+  ],
+  "completed": "2026-10-16T12:06:06.635Z"
 }

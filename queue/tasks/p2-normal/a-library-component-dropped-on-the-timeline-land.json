@@ -4,12 +4,12 @@
   "goal": "The title walkthrough drags a Lower third from the Library straight onto the title track at ten seconds. Today the timeline refuses a component, so it can only be dropped on the picture and arrives at the playhead. A component dropped on the timeline should arrive on that track at that time.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 25,
+  "seq": 60,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.143Z",
-  "updated": "2026-10-16T03:35:12.743Z",
+  "updated": "2026-10-16T12:22:36.339Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html step 10. Code: Sources/Photonz/TimelineLaneDrop.swift ~35-42 accepts files, transition tiles and title presets only (attached at TimelineDock.swift ~490); components arrive via canvas drop at the playhead (PhotonzCore/ComponentsInTime.swift ~30-38). Done task components-on-the-timeline built canvas drops only. Searches 'component timeline drop', 'lower third timeline': nothing open.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-16T03:35:12.742Z",
       "note": "seq 89.6875 -> 25"
+    },
+    {
+      "t": "2026-10-16T12:22:36.338Z",
+      "note": "seq 25 -> 60"
     }
   ]
 }

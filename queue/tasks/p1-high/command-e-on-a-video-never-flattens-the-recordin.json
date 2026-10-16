@@ -5,11 +5,11 @@
   "epic": "video-beats-premiere",
   "priority": "p1-high",
   "seq": 5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.405Z",
-  "updated": "2026-10-16T03:35:12.302Z",
+  "updated": "2026-10-16T03:55:46.335Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Reproduced by the manager pass 2026-10-15 20:40 with a scratch walk (/tmp/mgr-walk/cmd-e-on-a-video.json, steps: openSampleRecording, videoSeekMiddle, text tool, click 620,330, type 'Shipping today', Command Return, expectLayers 2 passes, expectPicked [Shipping today] passes, then {do: shortcut, key: e, modifiers: [command], menuItem: Merge Down}). Result: 'step 19 (expectLayers): 1 layer in the document, not at least 2; the first few: Tutorial Sample', and the after picture (queue/manager/shots/2026-10-15-cmd-e-on-a-video-after.png) shows the timeline with no clip and no tracks and the title baked into the picture. A plain {do: key} press said: 'command+e is Layer > Merge Down'. Code: Sources/Photonz/EditorCommands.swift ~1949-1951 (Command E = Merge Down on every document), EditorState+LayerOps.swift canMergeDown ~165-171 (only needs a picked layer that is not the bottom one), mergeLayers ~208-217 (bakes into a still). Export is Shift Command E (EditorCommands.swift ~422-437). Mock: docs/design/mocks/pages/video-entry-wt.html step 8 and video.html command menu print Export MP4 Command E; Final Cut's Command E is Share/Export; check Premiere's own Command E before choosing. Merge on two still layers on a picture must not change.",
@@ -29,6 +29,36 @@
     {
       "t": "2026-10-16T03:35:12.301Z",
       "note": "seq 25 -> 5"
+    },
+    {
+      "t": "2026-10-16T03:36:37.065Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T03:55:14.023Z",
+      "note": "owns these walks: command-e-on-a-video-keeps-the-clip-walk, bucket-fills-the-enclosed-area-walk"
+    },
+    {
+      "t": "2026-10-16T03:55:27.440Z",
+      "note": "Reproduced first with the manager's walk: after Command E the document had 1 layer (Tutorial Sample) and the title was baked in. Key rule (UX-PATTERNS §7): Premiere's Cmd E is Edit Original and its Export is Cmd M; Photoshop's Cmd E is Merge Down. So Cmd E stays Merge Down on every document and the mock's Export MP4 Cmd E loses the key; Export stays Shift Cmd E. Fix: PhotonzCore LayerMerge.swift (Layer.mayBeMerged / Layer.canMerge: no clip, sound, in/out or group holding one), used by canMergeDown, the new canMergeDown(id:) for the Layers row menu, and the mergeLayers guard. Test: MergeNeverTakesTimeTests. Walk: command-e-on-a-video-keeps-the-clip-walk, ok twice in a row; bucket-fills, menu-keys-do-what-they-say and row-menu-group still ok. Scripts/test.sh: 13291 tests passed."
+    },
+    {
+      "t": "2026-10-16T03:55:27.504Z",
+      "note": "Adversarial review: a Final Cut user pressing Cmd E on a clip now gets nothing at all (a dimmed row and no note). The task allowed dimmed-or-note, and Export is one modifier away in the File menu. A timeline clip bar's own right-click menu has no Merge Down; the Layers panel row is the only right-click home and it now dims through the same rule."
+    },
+    {
+      "t": "2026-10-16T03:55:27.568Z",
+      "note": "left rough, not filed: Cmd E on a clip is silent (no canvas note). Nobody is stopped by it and nothing is lost, so it does not clear the bar yet; file it if the user asks on the audit. Premiere's Cmd M for Export is not added because Cmd M is the Mac's Minimize."
+    },
+    {
+      "t": "2026-10-16T03:55:46.333Z",
+      "note": "Merge Down never takes a clip, sound, timed layer or group holding one (PhotonzCore LayerMerge.swift, MergeNeverTakesTimeTests), so Command E with a title over a recording leaves the clip and title on the timeline; pictures merge as before. Command E stays Merge Down on video per UX-PATTERNS §7 (Premiere: Cmd E Edit Original, Cmd M Export); Export stays Shift Cmd E. Walk command-e-on-a-video-keeps-the-clip-walk ok twice at Next defaults; related walks ok; 13291 tests pass. Audit queue/audits/2026-10-15-command-e-on-a-video.json. Commit b1009210."
     }
-  ]
+  ],
+  "started": "2026-10-16T03:36:37.064Z",
+  "walks": [
+    "command-e-on-a-video-keeps-the-clip-walk",
+    "bucket-fills-the-enclosed-area-walk"
+  ],
+  "completed": "2026-10-16T03:55:46.334Z"
 }

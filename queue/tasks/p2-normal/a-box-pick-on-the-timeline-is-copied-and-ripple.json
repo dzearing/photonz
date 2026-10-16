@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 21,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:58.813Z",
-  "updated": "2026-10-16T03:35:12.493Z",
+  "updated": "2026-10-16T11:09:02.968Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-10-timeline-box-picks-everything.json rough: 'Option drag on a box's pick copies its clips but not the zooms and keys picked beside them' and 'Shift Delete... leaves zooms and keys picked on other clips'. Not reproduced by the manager. Searches 'option drag box zooms keys', 'box pick copy zooms': nothing open.",
@@ -27,6 +27,39 @@
     {
       "t": "2026-10-16T03:35:12.492Z",
       "note": "seq 87.5 -> 21"
+    },
+    {
+      "t": "2026-10-16T10:25:53.675Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T11:08:40.118Z",
+      "note": "owns these walks: box-pick-copied-and-rippled-whole-walk"
+    },
+    {
+      "t": "2026-10-16T11:08:40.182Z",
+      "note": "Reproduced at Next defaults (walk box-pick-copied-and-rippled-whole-walk, before the fix): after Option drag of the title (box pick = title + zoom 1 + 2 Scale keys on the recording), 'Tutorial Sample zoom 2 is not there; Tutorial Sample has zoom 1 2.00s to 5.00s' and 'Tutorial Sample: rows Scale; 2 moment(s)' and 'picked: Text' - the zoom and keys were not copied. After Shift Delete on the same pick: 'no clip is called Text' but 'Tutorial Sample zoom 1 2.00s to 5.00s' and 'rows Scale; 2 moment(s)' - zoom and keys left behind. Cause: copy drag never read the box extras; Shift Delete with whole clips fell through to a one-clip rippleDelete(selectedLayerID)."
+    },
+    {
+      "t": "2026-10-16T11:08:40.245Z",
+      "note": "Adversarial pass: a zoom copied by less than its length would overlap itself, and zooms on one clip never overlap; Premiere has no zooms, so the rule follows a move's: the hand stops at the nearest shift where every copy fits (a walk drag of 2.5s lands at 3.0s). Copied keys onto an existing key replace it, as key copies already do. Copies become the pick, as Premiere selects Alt-drag copies."
+    },
+    {
+      "t": "2026-10-16T11:08:40.309Z",
+      "note": "Fixed: core copyBoxExtras/boxExtrasCopyRoom/boxExtrasCopyShift/rippleDeleteBoxPick with tests; app copy session carries copyExtras, Shift Delete and the clip right-click Delete/Ripple Delete act on the whole box pick; Zoom lane shows carried/copied zooms under the hand (it did not show carried ones either). Walk passes twice in a row; neighbouring walks green (box-picks-everything, option-drag-copies-a-clip, a-gap-between-clips-closes, marquee-and-track-range, timeline-right-click, pick-several-zooms, a-locked-track-keeps-its-clip, a-cut-recording-copies-its-pieces, a-range-stays-on-top-of-a-pick, copy-a-range-from-its-menu, extract-from-the-ruler-menu, opening-title-dissolve). box-pick-by-hand-walk fails at its first windowDrag box (picks only the song) exactly as in the 09:43Z full sweep before this change; owned by walks-that-fail-in-the-full-sweep-25. Pictures looked at: 2-copy-in-hand (title copy, zoom copy and key copies under the hand at +3.0s), 3-copied (copies landed and lit, panel 4 picked), 5-rippled (title, zoom and Scale lane gone, recording kept)."
+    },
+    {
+      "t": "2026-10-16T11:08:40.373Z",
+      "note": "left rough: the right-click Delete / Ripple Delete rows on a picked clip were changed to act on the whole box pick but no walk drives them (a right-click step needs the Mac to itself); timeline-right-click-walk still passes. Did not earn a task: same code path as the Shift Delete key, which the walk proves."
+    },
+    {
+      "t": "2026-10-16T11:09:02.966Z",
+      "note": "Option drag on a box's pick copies its clips, zooms and keys by the same time in one undo (the hand stops where every zoom copy fits); Shift Delete on a box's pick takes the clips, closes their gaps and takes the zooms and keys beside them in one undo. Core TimelineBoxPick.swift + TimelineBoxCopyTests; walk box-pick-copied-and-rippled-whole-walk reproduced both leftovers first, then passed twice; 13,308 tests green; audit queue/audits/2026-10-16-box-pick-copied-and-rippled-whole.json. Commit 0219064c."
     }
-  ]
+  ],
+  "started": "2026-10-16T10:25:53.673Z",
+  "walks": [
+    "box-pick-copied-and-rippled-whole-walk"
+  ],
+  "completed": "2026-10-16T11:09:02.967Z"
 }

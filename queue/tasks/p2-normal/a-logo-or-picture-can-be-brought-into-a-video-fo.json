@@ -4,12 +4,12 @@
   "goal": "The title walkthrough puts a logo on a lower third from the Library. Today Import Media takes only movies and sounds, and an SVG dropped from the Finder does nothing and says nothing. A picture or a logo should come in like any other media and sit on a track with an in and an out.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 26,
+  "seq": 70,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.457Z",
-  "updated": "2026-10-16T03:35:12.803Z",
+  "updated": "2026-10-16T12:22:36.401Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8 (Library holds svg, png, a logo). Code: EditorState+LibraryImport.swift ~20-21 and ~58-78 take movies and audio only; MediaDrop.swift ~21-26 returns nil for pictures; EditorState.swift ~2237-2238 reads a dropped picture with CGImageSourceCreateWithURL, which cannot read SVG. No SVG reader in Sources. Pixels stay in ImageStore, never in the model. Searches 'import svg', 'clip art', 'import media pictures': only SVG export tasks.",
@@ -27,6 +27,10 @@
     {
       "t": "2026-10-16T03:35:12.802Z",
       "note": "seq 89.9609375 -> 26"
+    },
+    {
+      "t": "2026-10-16T12:22:36.400Z",
+      "note": "seq 26 -> 70"
     }
   ]
 }
