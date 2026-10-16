@@ -29,7 +29,9 @@ import Testing
 ///   load. Measured on the short clip at High: 293,876 bytes every time alone,
 ///   and 280,327 then 259,311, or 208,988 then 285,616, with the rest of the
 ///   test suite running beside it. So a HEIC's number is only true because the
-///   weighed file IS the export, and the sheet must never write it again.
+///   weighed file IS the export, and the sheet must never write it again. The
+///   same load can make a HEIC's Small outweigh its High, so for a HEIC only
+///   the pictures are claimed between presets, never the bytes.
 ///
 /// An MP4 is weighed from its budget instead (`VideoExportBudgetTests`).
 @Suite("An animated export weighs the same twice", .serialized)
@@ -201,31 +203,49 @@ struct AnimatedExportWeighTests {
                 let small = try #require(landed[.small])
                 let row = "\(label) \(format.rawValue) came out \(high)/\(standard)/\(small) "
                     + "bytes at High/Standard/Small, so the preset row does not move the size"
-                // Small is lighter than High, and every choice writes a
-                // different file. A GIF's Small is lighter than its Standard
-                // too, the crisp clip included: Standard keeps a recording
-                // under 800 pixels at its own size, and Small's scaling used to
-                // turn every crisp line into in-between greys that weighed more
-                // than the frames it saved (23,244 bytes at Standard against
-                // 26,988 at Small, every time). Its frames now come down in a
-                // plain last step (`GIFFrameScaling`). A HEIC's Small is not
-                // claimed against its Standard: its encoder decides under load.
+                // A GIF's Small is lighter than its High, and every choice
+                // writes a different file. Its Small is lighter than its
+                // Standard too, the crisp clip included: Standard keeps a
+                // recording under 800 pixels at its own size, and Small's
+                // scaling used to turn every crisp line into in-between greys
+                // that weighed more than the frames it saved (23,244 bytes at
+                // Standard against 26,988 at Small, every time). Its frames now
+                // come down in a plain last step (`GIFFrameScaling`).
                 // High against Standard: on the longer clip, still
                 // for half its length, a GIF has landed five per cent apart
                 // and the other way round, and a HEIC's High came out under its
                 // Standard with the suite running (208,988 against 234,401).
                 // The sheet weighs every choice, so it shows whichever way
                 // round they really are.
-                #expect(small < high, "\(row)")
-                if format == .gif { #expect(small < standard, "\(row)") }
-                #expect(Set([high, standard, small]).count == 3, "\(row)")
+                //
+                // A HEIC's bytes are not claimed at all, Small against High
+                // included. Its encoder gives one of two answers for the same
+                // frames, and which depends on how many other encodes share
+                // the machine: the crisp clip's Small came out 44,630 bytes
+                // alone and among nine others, and 65,158 for the writes past
+                // that. With the suite running it has landed anywhere from
+                // 55,580 to 124,540 against High's 80,862 (2026-10-16, a full
+                // run read 82,530 against 80,862). Alone, Small is the
+                // lightest on every clip here, and on a busy machine the sheet
+                // still says what lands, because the file it weighed is the
+                // export. What the choice writes is claimed below instead.
+                if format == .gif {
+                    #expect(small < high, "\(row)")
+                    #expect(small < standard, "\(row)")
+                    #expect(Set([high, standard, small]).count == 3, "\(row)")
+                }
                 // What the choice writes, as opposed to what the encoder makes
-                // of it, is exact every time: fewer frames each step down.
+                // of it, is exact every time: fewer frames each step down, and
+                // Small's pictures smaller than High's.
                 let frames = try #require(held[.high]?.count)
                 let fewer = try #require(held[.standard]?.count)
                 let fewest = try #require(held[.small]?.count)
                 #expect(fewest < fewer && fewer < frames,
                         "\(label) \(format.rawValue) held \(frames)/\(fewer)/\(fewest) frames")
+                let largest = try #require(held[.high]?.width)
+                let smallest = try #require(held[.small]?.width)
+                #expect(smallest < largest && smallest <= 480,
+                        "\(label) \(format.rawValue) is \(largest) wide at High, \(smallest) at Small")
             }
         }
     }
