@@ -1,0 +1,27 @@
+{
+  "id": "an-animated-export-weighs-less-at-small-than-at",
+  "title": "An animated export at Small never comes out heavier than at High",
+  "goal": "In a full test run the animated export size check failed again: an export at Small came out heavier than the same export at High. If that ever happens for real, someone picking Small to save space gets a bigger file. Find out whether the export can really do this or only the test reads it wrong under load, and make the check tell the truth.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 257.5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T19:53:50.882Z",
+  "updated": "2026-10-16T19:53:50.885Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen 2026-10-16 in Scripts/test.sh (13,371 tests, 338s) while running task a-title-or-a-logo-laid-over-a-video-lands-on-a-t: ✘ Test \"written twice, a GIF is the same file and a HEIC the same pictures\" recorded an issue at AnimatedExportWeighTests.swift:219:17: Expectation failed: (small → 82530) < (high → 80862). Same test alone: Scripts/test.sh --filter AnimatedExportWeigh → 3 tests passed (35s). Which format the row was (GIF or HEIC) was not in the summary lines; the test log is a mktemp file the wrapper does not keep. Earlier work on the same test, all done: the-export-size-test-fails-about-one-run-in-thre, find-out-why-a-small-gif-can-come-out-bigger-tha, a-small-gif-of-a-crisp-recording-weighs-less-tha. Tests/PhotonzMediaTests/AnimatedExportWeighTests.swift ~line 219 #expect(small < high). Unreproduced in isolation, so p2.",
+  "acceptance": [
+    "The cause is named: the encoder under load, or the export itself",
+    "Five full test runs in a row pass the animated export size check",
+    "If Small can really come out heavier than High, the Export sheet shows the sizes the way round they really are"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T19:53:50.884Z",
+      "note": "created (manual)"
+    }
+  ]
+}

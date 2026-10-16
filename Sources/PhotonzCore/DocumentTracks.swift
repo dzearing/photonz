@@ -38,6 +38,11 @@ public struct DocumentTrack: Identifiable, Hashable, Codable, Sendable {
         }
     }
 
+    /// What a new track a title lands on is called, and one a picture or a
+    /// logo lands on (`video-title-wt.html`: Gfx, Title, V1, Audio 1).
+    public static let titleTrackName = "Title"
+    public static let graphicsTrackName = "Gfx"
+
     public let id: UUID
     public var name: String
     public var kind: Kind
@@ -432,10 +437,7 @@ extension PhotonzDocument {
     /// V1, V2...; Audio, Audio 2...; Captions, Captions 2...
     /// "Title", then "Title 2", for the tracks words land on by themselves.
     static func freeTitleTrackName(used: Set<String>) -> String {
-        if !used.contains("Title") { return "Title" }
-        var n = 2
-        while used.contains("Title \(n)") { n += 1 }
-        return "Title \(n)"
+        freeNamedTrackName(DocumentTrack.titleTrackName, used: used)
     }
 
     /// A track named after what is on it, numbered where that name is taken.
@@ -446,6 +448,19 @@ extension PhotonzDocument {
         var n = 2
         while used.contains("\(base) \(n)") { n += 1 }
         return "\(base) \(n)"
+    }
+
+    /// The name a track made for a landing is given: the one the landing
+    /// worked out and showed on its ghost, or, where something has taken it
+    /// since, the next of the same kind (V3 after V2, Gfx 2 after Gfx).
+    static func freeTrackName(like name: String, _ kind: DocumentTrack.Kind, used: Set<String>) -> String {
+        let words = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !words.isEmpty, !used.contains(words) { return words }
+        if words.isEmpty || (kind == .video && words.wholeMatch(of: /V\d+/) != nil) {
+            return freeTrackName(kind, used: used)
+        }
+        let base = words.replacing(/\s\d+$/, with: "")
+        return freeNamedTrackName(base, used: used)
     }
 
     static func freeTrackName(_ kind: DocumentTrack.Kind, used: Set<String>) -> String {
@@ -539,11 +554,16 @@ extension PhotonzDocument {
 
     /// A new empty track. Picture tracks land on top, sound at the bottom and
     /// captions under the picture, unless a place is given.
+    /// `named` is what it is called when that is free (a Title track, a Gfx
+    /// track), else the next of its kind.
     @discardableResult
-    public mutating func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil, id: UUID? = nil) -> UUID {
+    public mutating func addTrack(_ kind: DocumentTrack.Kind, at index: Int? = nil, id: UUID? = nil,
+                                  named name: String? = nil) -> UUID {
         materializeTracks()
+        let used = Set(tracks.map(\.name))
         let track = DocumentTrack(id: id ?? UUID(),
-                                  name: Self.freeTrackName(kind, used: Set(tracks.map(\.name))),
+                                  name: name.map { Self.freeTrackName(like: $0, kind, used: used) }
+                                      ?? Self.freeTrackName(kind, used: used),
                                   kind: kind)
         let place = index ?? {
             switch kind {
@@ -872,10 +892,12 @@ extension Layer {
         isPlacedInTime && clipTrackKind == .video && !isTitleText
     }
 
+    /// Words placed in time, or a title built from a preset (its design is
+    /// kept on it), so a title page sits on a Title track like any title.
     var isTitleText: Bool {
         guard isPlacedInTime, clipTrackKind == .video else { return false }
         if case .text = content { return true }
-        return false
+        return group?.titleRecipe != nil
     }
 }
 

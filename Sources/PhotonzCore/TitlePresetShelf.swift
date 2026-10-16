@@ -304,15 +304,22 @@ extension PhotonzDocument {
     /// one. Between two tracks it makes one there, and nowhere near a track
     /// it goes on top. So a drop never covers or cuts a clip: a title is laid
     /// over the picture, not edited into it.
-    public func titleLanding(lengthMS: Int, atMS ms: Int, over pointed: TrackDrop?) -> ClipLanding {
+    ///
+    /// A new track is named for what it carries (`video-title-wt.html`: Title
+    /// and Gfx beside V1), numbered where that name is taken; nil for the
+    /// plain V2, V3.
+    public func titleLanding(lengthMS: Int, atMS ms: Int, over pointed: TrackDrop?,
+                             newTrackNamed name: String? = DocumentTrack.titleTrackName) -> ClipLanding {
         let tracks = timelineTracks
         let start = max(0, ms)
         let length = max(LayerTime.shortestMS, lengthMS)
         func newTrack(at index: Int) -> ClipLanding {
-            ClipLanding(target: .newTrack(at: min(max(0, index), tracks.count)), startMS: start,
-                        lengthMS: length, edit: .overwrite,
-                        trackName: Self.freeTrackName(.video, used: Set(tracks.map(\.name))),
-                        allowed: true)
+            let used = Set(tracks.map(\.name))
+            return ClipLanding(target: .newTrack(at: min(max(0, index), tracks.count)), startMS: start,
+                               lengthMS: length, edit: .overwrite,
+                               trackName: name.map { Self.freeNamedTrackName($0, used: used) }
+                                   ?? Self.freeTrackName(.video, used: used),
+                               allowed: true)
         }
         guard let pointed else { return newTrack(at: 0) }
         switch pointed {

@@ -15,6 +15,13 @@ extension EditorState {
         Experiments.shared.droppingMedia && documentHasTime
     }
 
+    /// Where a picture let go at `point` would land: as a title does, on a
+    /// new track called Gfx when it gets one.
+    func timelinePictureLanding(at point: CGPoint) -> ClipLanding? {
+        timelineOverlayLanding(lengthMS: PictureClip.lengthMS, at: point,
+                               newTrackNamed: DocumentTrack.graphicsTrackName)
+    }
+
     /// A picture tile has arrived over the timeline, or moved across it.
     func movePictureHover(_ id: UUID, to point: CGPoint) {
         guard timelineTakesPictures, let item = documentMediaItems.first(where: { $0.id == id }) else {
@@ -25,7 +32,7 @@ extension EditorState {
         // Room past the end for it, so one let go after the last clip has a
         // lane to be drawn on.
         if timelineDropRoomMS != PictureClip.lengthMS { timelineDropRoomMS = PictureClip.lengthMS }
-        guard let landing = timelineOverlayLanding(lengthMS: PictureClip.lengthMS, at: point) else {
+        guard let landing = timelinePictureLanding(at: point) else {
             if timelineFileHover != nil { timelineFileHover = nil }
             return
         }
@@ -45,7 +52,7 @@ extension EditorState {
     func dropPictureOnTimeline(_ id: UUID, at point: CGPoint) -> Bool {
         // Read before the room made for it goes, since taking the room away
         // moves the lane under the pointer.
-        let landing = timelineOverlayLanding(lengthMS: PictureClip.lengthMS, at: point)
+        let landing = timelinePictureLanding(at: point)
         endPictureHover()
         guard timelineTakesPictures, let landing, landing.allowed, let document,
               let item = documentMediaItems.first(where: { $0.id == id }) else { return false }

@@ -16,6 +16,14 @@ public enum PictureClip {
 
 extension PhotonzDocument {
 
+    /// Where a still let go over the timeline at `ms` would land: the way a
+    /// title does, for five seconds, and on a new track called Gfx (Gfx 2 and
+    /// on) when it gets one.
+    public func pictureLanding(atMS ms: Int, over pointed: TrackDrop?) -> ClipLanding {
+        titleLanding(lengthMS: PictureClip.lengthMS, atMS: ms, over: pointed,
+                     newTrackNamed: DocumentTrack.graphicsTrackName)
+    }
+
     /// Puts a picture the document holds on the timeline where `landing`
     /// says, sized to fit the frame and centred in it. Reuses the ref, so a
     /// second placement is a second layer and never a second bitmap.

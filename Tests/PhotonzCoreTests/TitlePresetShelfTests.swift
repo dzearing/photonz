@@ -144,6 +144,59 @@ struct TitlePresetShelfTests {
         #expect(doc.clipIDs(onTrack: v1).count == 1)
     }
 
+    /// `video-title-wt.html` step 2: the track a title lands on is called
+    /// Title, beside V1, so a busy edit says where its titles are.
+    @Test func aNewTrackATitleLandsOnIsCalledTitle() throws {
+        var (doc, v1, _) = Self.recordingWithATrackAbove()
+        let first = doc.titleLanding(lengthMS: TitleKind.titlePage.lengthMS, atMS: 1000, over: .onto(v1))
+        #expect(first.trackName == "Title")
+        let insertedLanded = doc.insertTitle(.builtIn(.midnight), atTimeMS: 1000, landing: first)
+        let inserted = try #require(insertedLanded)
+        let track = try #require(doc.trackID(ofClip: inserted.layerID))
+        #expect(doc.track(id: track)?.name == "Title")
+        // A second over the busy recording gets a second track of its own.
+        let second = doc.titleLanding(lengthMS: TitleKind.titlePage.lengthMS, atMS: 1000, over: .onto(v1))
+        #expect(second.trackName == "Title 2")
+        let againLanded = doc.insertTitle(.builtIn(.midnight), atTimeMS: 1000, landing: second)
+        let again = try #require(againLanded)
+        let secondTrack = try #require(doc.trackID(ofClip: again.layerID))
+        #expect(doc.track(id: secondTrack)?.name == "Title 2")
+        // Past the tracks, and between two, it is still a Title track.
+        #expect(doc.titleLanding(lengthMS: 4000, atMS: 0, over: nil).trackName == "Title 3")
+        #expect(doc.titleLanding(lengthMS: 4000, atMS: 0, over: .newTrack(at: 1)).trackName == "Title 3")
+    }
+
+    /// A preset put in at the playhead (a tile double-clicked, Sequence ▸
+    /// Insert) gets its own track called Title as well, so it and one let go
+    /// over the timeline never sit on differently named tracks.
+    @Test func aTitleInsertedAtThePlayheadIsOnATrackCalledTitle() throws {
+        var (doc, _, _) = Self.recordingWithATrackAbove()
+        let firstLanded = doc.insertTitle(.builtIn(.midnight), atTimeMS: 0)
+        let first = try #require(firstLanded)
+        let track = try #require(doc.trackID(ofClip: first.layerID))
+        #expect(doc.track(id: track)?.name == "Title")
+        let secondLanded = doc.insertTitle(.builtIn(.bar), atTimeMS: 0)
+        let second = try #require(secondLanded)
+        let other = try #require(doc.trackID(ofClip: second.layerID))
+        #expect(doc.track(id: other)?.name == "Title 2")
+    }
+
+    /// A landing on a track that is already there is named for that track.
+    @Test func aTitleOnAFreeTrackKeepsThatTracksName() throws {
+        let (doc, _, v2) = Self.recordingWithATrackAbove()
+        let landing = doc.titleLanding(lengthMS: 4000, atMS: 0, over: .onto(v2))
+        #expect(landing.trackName == doc.track(id: v2)?.name)
+    }
+
+    /// Something laid over the picture that is not a title can ask for the
+    /// plain numbered name.
+    @Test func aLandingCanAskForANumberedTrack() {
+        let (doc, _, _) = Self.recordingWithATrackAbove()
+        let name = doc.titleLanding(lengthMS: 4000, atMS: 0, over: nil, newTrackNamed: nil).trackName
+        #expect(name.wholeMatch(of: /V\d+/) != nil)
+        #expect(!doc.timelineTracks.map(\.name).contains(name))
+    }
+
     @Test func aLandedPresetStillAnimatesInAndOutAndOpensItsWords() throws {
         var (doc, _, v2) = Self.recordingWithATrackAbove()
         let landing = doc.titleLanding(lengthMS: TitleKind.nameCard.lengthMS, atMS: 1000, over: .onto(v2))

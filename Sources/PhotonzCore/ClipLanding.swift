@@ -241,7 +241,8 @@ extension PhotonzDocument {
                   track.accepts(layer.clipTrackKind) else { return nil }
             trackID = id
         case .newTrack(let index):
-            trackID = addTrack(layer.clipTrackKind, at: index)
+            // Called what the ghost said it would be.
+            trackID = addTrack(layer.clipTrackKind, at: index, named: landing.trackName)
         }
         switch landing.edit {
         case .overwrite: clearTrack(trackID, from: placed.inMS, to: placed.outMS)

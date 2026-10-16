@@ -190,6 +190,42 @@ struct LibraryPictureTests {
         #expect(document.durationMS == 11_000)
     }
 
+    /// `video-title-wt.html` step 7: "A Gfx track appears under the Title
+    /// track carrying its clip". A picture let go on a new track makes a
+    /// track called Gfx, then Gfx 2, and the ghost says the same name.
+    @Test func aPictureOnANewTrackLandsOnATrackCalledGfx() throws {
+        var document = doc()
+        let landing = document.pictureLanding(atMS: 2_000, over: nil)
+        #expect(landing.trackName == "Gfx")
+        #expect(landing.lengthMS == PictureClip.lengthMS)
+        let firstLanded = document.landPicture(logo, named: "Acme Logo", at: landing)
+        let first = try #require(firstLanded)
+        let track = try #require(document.trackID(ofClip: first))
+        #expect(document.track(id: track)?.name == "Gfx")
+        // Over the busy Gfx track at the same moment: a second one above.
+        let second = document.pictureLanding(atMS: 2_000, over: .onto(track))
+        #expect(second.trackName == "Gfx 2")
+        let againLanded = document.landPicture(logo, named: "Acme Logo 2", at: second)
+        let again = try #require(againLanded)
+        let secondTrack = try #require(document.trackID(ofClip: again))
+        #expect(document.track(id: secondTrack)?.name == "Gfx 2")
+        #expect(secondTrack != track)
+    }
+
+    /// A landing worked out before something else took its name still lands,
+    /// on the next numbered one rather than a second track called the same.
+    @Test func aNewTrackWhoseNameWasTakenMeanwhileIsNumbered() throws {
+        var document = doc()
+        let landing = document.pictureLanding(atMS: 0, over: nil)
+        let firstLanded = document.landPicture(logo, named: "Acme Logo", at: landing)
+        #expect(firstLanded != nil)
+        let againLanded = document.landPicture(logo, named: "Acme Logo 2", at: landing)
+        let again = try #require(againLanded)
+        let names = document.timelineTracks.map(\.name)
+        #expect(Set(names).count == names.count)
+        #expect(document.trackID(ofClip: again).flatMap { document.track(id: $0)?.name } == "Gfx 2")
+    }
+
     /// A picture bigger than the frame is fitted into it, never left hanging
     /// past every edge.
     @Test func aBigPhotoIsFittedToTheFrame() throws {

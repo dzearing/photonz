@@ -22,7 +22,7 @@ extension EditorState {
     /// (`ComponentsInTime.swift`).
     func componentLanding(at point: CGPoint) -> ClipLanding? {
         guard timelineTakesComponents else { return nil }
-        return timelineOverlayLanding(lengthMS: TitleTime.defaultLengthMS, at: point)
+        return timelineOverlayLanding(lengthMS: TitleTime.defaultLengthMS, at: point, newTrackNamed: nil)
     }
 
     /// What the ghost calls a component in the air: the name its tile prints.

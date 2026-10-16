@@ -1,0 +1,48 @@
+{
+  "feature": "Titles and logos land on tracks named Title and Gfx",
+  "epic": "video-titles-graphics",
+  "summary": "A title let go over the timeline now makes a track called Title (then Title 2), and a picture or logo makes one called Gfx (then Gfx 2), the way the title mock names them beside V1. The ghost in the air says the same name before you let go.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline open; import a PNG with File > Import Media.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Drag the logo's tile from the Library's Media shelf over V1 at about two seconds, and hold.",
+      "shot": "2026-10-16-title-gfx-tracks-1.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go.",
+      "shot": "2026-10-16-title-gfx-tracks-2.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open Comps in the Library, double-click Keynote Clean to put a title in at the playhead."
+    },
+    {
+      "do": "Drag Soft Gradient Glass over the recording on V1 and hold.",
+      "shot": "2026-10-16-title-gfx-tracks-3.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Let go, then drag it again onto the Title 2 track where it is free.",
+      "shot": "2026-10-16-title-gfx-tracks-4.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command Z and drag the logo again: it lands on Gfx, not Gfx 2."
+    }
+  ],
+  "evaluate": [
+    "Does a column of Title, Title 2, Gfx, V1 tell you where your titles and art are faster than V2, V3, V4 did?",
+    "Does the ghost's 'New Gfx' or 'New Title' read clearly before you let go?",
+    "Should a second title over a busy stretch get Title 2, or should it go onto the existing Title track wherever that track is free?",
+    "Is Gfx the right word for a logo or photo laid over the video, or would Graphics read better?"
+  ],
+  "rough": [
+    "Track headers for Title and Gfx still show the stacked-layers icon every overlay track wears, where video-title-wt.html draws a text mark and a sparkle (a-title-track-and-a-gfx-track-wear-the-icons-the).",
+    "Where the Gfx track goes follows where you let go: over the Title track it lands just above it, which matches the mock's picture, and over V1 it lands under Title, which matches the mock's step 7 words.",
+    "No mock covers the track a Library component lands on, so a component let go on a new track is still numbered V2, V3.",
+    "A title put in at the playhead used to sit on a track named after the preset (Title Page, Name Card); it now sits on a Title track too, so a dropped title and a double-clicked one never wear different names.",
+    "Pictures were taken with the window behind another app, so picked controls show their background colour."
+  ]
+}

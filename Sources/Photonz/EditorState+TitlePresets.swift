@@ -227,8 +227,10 @@ extension EditorState {
     /// `lengthMS` long would land if let go at `point` in the tracks' own
     /// space: the moment under the pointer, pulled onto a nearby clip edge or
     /// the playhead, on the track under it when that track is free, else on a
-    /// new track of its own (`PhotonzDocument.titleLanding`).
-    func timelineOverlayLanding(lengthMS: Int, at point: CGPoint) -> ClipLanding? {
+    /// new track of its own (`PhotonzDocument.titleLanding`), called
+    /// `newTrackNamed` (Title, Gfx) or V2, V3 for nil.
+    func timelineOverlayLanding(lengthMS: Int, at point: CGPoint,
+                                newTrackNamed name: String? = DocumentTrack.titleTrackName) -> ClipLanding? {
         guard let document, timelineLaneWidth > 0 else { return nil }
         let ruler = motionStripRuler
         let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
@@ -238,7 +240,8 @@ extension EditorState {
         let start = ClipLanding.snapped(startMS: raw, lengthMS: lengthMS,
                                         to: document.timelineEdgesMS + [documentTimeMS],
                                         withinMS: isTimelineSnapping ? max(0, reach) : 0)
-        return document.titleLanding(lengthMS: lengthMS, atMS: start, over: trackDrop(atY: point.y))
+        return document.titleLanding(lengthMS: lengthMS, atMS: start, over: trackDrop(atY: point.y),
+                                     newTrackNamed: name)
     }
 
     /// A title tile has arrived over the timeline, or moved across it: the

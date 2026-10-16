@@ -1,0 +1,27 @@
+{
+  "id": "a-title-track-and-a-gfx-track-wear-the-icons-the",
+  "title": "A Title track and a Gfx track wear the icons the title mock draws",
+  "goal": "In the title walkthrough mock, the Title track header shows a text mark and the Gfx track a sparkle, so the kind of track reads at a glance. Today both show the same stacked-layers icon that every track laid over the picture wears, so a title track and a logo track look alike apart from their names.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 258.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-16T20:31:56.582Z",
+  "updated": "2026-10-16T20:31:56.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html lines ~372-378 (#trackGfx ic-sparkle, #trackTitle ic-text). Code: TimelineTrackRow.symbol(_:) in Sources/Photonz/TimelineTrackRows.swift (overlay = square.3.layers.3d, text = textformat) and the trackKind the header row is given (~line 1238). Seen in the audit pictures of a-title-or-a-logo-laid-over-a-video-lands-on-a-t (2026-10-16): Gfx and Title 2 headers both show the layers icon. Check video.html too, which may use ic-layers for overlay tracks, before choosing.",
+  "acceptance": [
+    "A track holding a title (Title, Title 2) shows the text mark in its header, as video-title-wt.html draws it",
+    "A track holding a picture laid over the video (Gfx) shows the sparkle mark in its header",
+    "A walk at Next defaults photographs both headers beside V1"
+  ],
+  "log": [
+    {
+      "t": "2026-10-16T20:31:56.584Z",
+      "note": "created (manual)"
+    }
+  ]
+}

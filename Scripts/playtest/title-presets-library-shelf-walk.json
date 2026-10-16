@@ -155,7 +155,7 @@
     {
       "comment": "The title's headline is picked and its rows open inside the timeline, under the title's track, so the recording on V1 is below the timeline's foot. A turn of the wheel over the timeline brings it up, the way a person reaches it.",
       "do": "wheel",
-      "control": "Track Title Page",
+      "control": "Track Title",
       "by": -120
     },
     {
@@ -169,7 +169,7 @@
       "seconds": 0.5,
       "release": false,
       "hold": "3-held-over-the-recording",
-      "says": "Title Page · New V2"
+      "says": "Title Page · New Title 2"
     },
     {
       "do": "describe",
@@ -197,7 +197,7 @@
     {
       "do": "expectClip",
       "clip": "Title Page",
-      "track": "V2",
+      "track": "Title 2",
       "startsAt": 0.5,
       "endsAt": 4.5,
       "count": 2
@@ -212,7 +212,7 @@
     {
       "do": "describe",
       "stage": "4-let-go-over-the-recording",
-      "note": "Let go, the Soft Gradient Glass title page lands half a second in on the new track V2, over the recording, which is untouched on V1"
+      "note": "Let go, the Soft Gradient Glass title page lands half a second in on a new track called Title 2, named the way the mock names a title track, under the Keynote Clean one on Title, over the recording, which is untouched on V1"
     },
     {
       "do": "snapshot",
@@ -221,15 +221,15 @@
     {
       "do": "dropOnTimeline",
       "tile": "Soft Gradient Glass",
-      "track": "V2",
+      "track": "Title 2",
       "seconds": 5.5,
       "release": false,
-      "says": "Title Page · V2"
+      "says": "Title Page · Title 2"
     },
     {
       "do": "dropOnTimeline",
       "tile": "Soft Gradient Glass",
-      "track": "V2",
+      "track": "Title 2",
       "seconds": 5.5
     },
     {
@@ -247,7 +247,7 @@
     {
       "do": "expectClip",
       "clip": "Title Page",
-      "track": "V2",
+      "track": "Title 2",
       "startsAt": 5.5,
       "endsAt": 9.5,
       "count": 3
@@ -255,7 +255,7 @@
     {
       "do": "describe",
       "stage": "5-let-go-on-a-free-track",
-      "note": "THE FOURTH TEST: held over V2 where it is free, after the first Soft Gradient Glass, the ghost says V2 and the second lands there at five and a half seconds, on the same track"
+      "note": "THE FOURTH TEST: held over the Title 2 track where it is free, after the first Soft Gradient Glass, the ghost says Title 2 and the second lands there at five and a half seconds, on the same track"
     },
     {
       "do": "snapshot",
