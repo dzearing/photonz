@@ -89,6 +89,46 @@ struct CaptionPlateRenderTests {
         #expect(right.r > left.r + 20, "and warmer to the right, the mock's 120 degree run")
     }
 
+    /// A ramp somebody made in the picker, three stops left to right, is drawn
+    /// across the plate as made: red at its left end, green in the middle,
+    /// blue at its right end.
+    @Test func aPlateDrawsTheGradientItWasGiven() throws {
+        var text = caption("Capture the screen and more")
+        text.alignment = .left
+        text.plateHex = "#FF0000"
+        text.plateGradient = Paint(hex: "#FF0000", kind: .linear,
+                                   stops: [GradientStop(hex: "#FF0000", position: 0),
+                                           GradientStop(hex: "#00FF00", position: 0.5),
+                                           GradientStop(hex: "#0000FF", position: 1)],
+                                   angle: 90)
+        let px = try #require(pixels(text))
+        let plate = try #require(inkedColumns(px))
+        let y = px.height - 6
+        let left = colour(px, x: plate.lowerBound + 3, y: y)
+        let middle = colour(px, x: (plate.lowerBound + plate.upperBound) / 2, y: y)
+        let right = colour(px, x: plate.upperBound - 3, y: y)
+        #expect(left.r > 200 && left.g < 60 && left.b < 60, "red at the left: \(left)")
+        #expect(middle.g > 180 && middle.r < 90 && middle.b < 90, "green in the middle: \(middle)")
+        #expect(right.b > 200 && right.r < 60 && right.g < 60, "blue at the right: \(right)")
+    }
+
+    /// The mock's 120 degree run points right and a little DOWN: the bottom
+    /// of the plate's left end is further along the ramp than its top.
+    @Test func theLowerThirdRampStillRunsDownToTheRight() throws {
+        var text = caption("Capture the screen")
+        text.alignment = .left
+        text.plateHex = "#000000"
+        text.plateEndHex = "#FFFFFF"
+        let px = try #require(pixels(text))
+        let plate = try #require(inkedColumns(px))
+        var top: Int?
+        for y in 0..<px.height where colour(px, x: plate.lowerBound + 6, y: y).a > 240 { top = y; break }
+        let first = try #require(top)
+        let upper = colour(px, x: plate.lowerBound + 6, y: first + 2)
+        let lower = colour(px, x: plate.lowerBound + 6, y: px.height - 3)
+        #expect(lower.r > upper.r, "lighter lower down: \(upper) above \(lower)")
+    }
+
     @Test func aLeftAlignedPlateKeepsItsAirInsideTheBox() throws {
         var text = caption("Capture the screen")
         text.alignment = .left

@@ -61,6 +61,9 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// Where the plate runs to, left to right, for a plate that is a
     /// gradient (the lower third's violet), or nil for one flat colour.
     public var plateEndHex: String?
+    /// Any other ramp the plate runs, as the colour picker made it (another
+    /// angle, more stops, a spreading one), or nil. Wins over `plateEndHex`.
+    public var plateGradient: Paint?
     /// The colour the word being said lights up in, for a caption whose look
     /// lights one. Nil for everything else.
     public var activeWordHex: String?
@@ -121,6 +124,7 @@ public struct TextContent: Hashable, Codable, Sendable {
         // has neither.
         plateHex = try container.decodeIfPresent(String.self, forKey: .plateHex)
         plateEndHex = try container.decodeIfPresent(String.self, forKey: .plateEndHex)
+        plateGradient = try container.decodeIfPresent(Paint.self, forKey: .plateGradient)
         activeWordHex = try container.decodeIfPresent(String.self, forKey: .activeWordHex)
         activeWordSung = try container.decodeIfPresent(Bool.self, forKey: .activeWordSung)
         highlight = try container.decodeIfPresent(TextHighlight.self, forKey: .highlight)
@@ -128,6 +132,21 @@ public struct TextContent: Hashable, Codable, Sendable {
         // A reveal postdates all of it: older text simply has its words.
         reveal = try container.decodeIfPresent(TextReveal.self, forKey: .reveal)
         revealElapsedMS = try container.decodeIfPresent(Int.self, forKey: .revealElapsedMS)
+    }
+}
+
+extension TextContent {
+
+    /// What the plate is painted with: one flat colour, the lower third's
+    /// two-colour ramp, or any ramp the picker made; nil for no plate.
+    public var platePaint: Paint? {
+        guard let hex = plateHex else { return nil }
+        if var ramp = plateGradient, ramp.isGradient {
+            ramp.hex = hex
+            return ramp
+        }
+        if let end = plateEndHex { return CaptionPlate.ramp(from: hex, to: end) }
+        return Paint(hex: hex)
     }
 }
 

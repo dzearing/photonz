@@ -1,0 +1,48 @@
+{
+  "out": "/tmp/photonz-playtest/lower-third-plate-keeps-its-gradient-walk",
+  "seed": "The Lower third caption sits on the mock's violet to lilac plate (docs/design/mocks/pages/video-captions.html, STYLES.B). Its Background well used to show only the first colour, and a colour picked there made the plate one flat colour, so the look was lost the moment anyone tuned it. At Next defaults with no flag set: the well shows the ramp, the picker opens on it as a gradient (Linear picked, its stops editable), a darker shade picked in it changes the start of the ramp alone, the plate's two ends in the drawn frame still differ by at least as much as the untouched plate's did, and one undo puts the mock's plate back.",
+  "setup": { "timelineOpen": true, "forget": ["all"] },
+  "steps": [
+    { "do": "action", "action": "openSampleTalk" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsWriteQuietly" },
+    { "do": "action", "action": "videoPause" },
+    { "do": "selectRow", "row": "Captions" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "videoSeekQuarter" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "press", "control": "Caption style Lower third" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "action", "action": "captionsExpectLowerThirdTag" },
+    { "do": "reveal", "control": "Color", "in": "Caption background" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expect", "field": "Caption background", "reads": "Linear gradient #9A5CFF 94% to #C56CFF 86%" },
+    { "do": "action", "action": "captionsNotePlateEnds" },
+    { "do": "describe", "stage": "1-the-mocks-plate", "note": "Lower third picked: the plate runs violet to lilac, and the Background well in the Text section shows that ramp, not its first colour." },
+    { "do": "snapshot", "name": "1-the-mocks-plate" },
+    { "do": "render", "name": "1-the-mocks-plate-frame" },
+
+    { "do": "press", "control": "Color", "in": "Caption background" },
+    { "do": "wait", "seconds": 0.8 },
+    { "do": "expect", "control": "Linear", "present": true },
+    { "do": "expect", "control": "None", "present": true },
+    { "do": "describe", "stage": "2-the-picker-on-the-ramp", "note": "The picker opens on the plate's gradient: Linear picked in its type row, the ramp's stops and aim under it, the first stop's violet in the square." },
+    { "do": "snapshot", "name": "2-the-picker-on-the-ramp" },
+    { "do": "press", "control": "Shades 7" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "key", "key": "escape" },
+    { "do": "wait", "seconds": 0.4 },
+
+    { "do": "action", "action": "captionsExpectPlateEndsApart" },
+    { "do": "action", "action": "captionsExpectLowerThirdTag" },
+    { "do": "describe", "stage": "3-a-darker-start", "note": "A darker violet picked: the start of the ramp is darker and its lilac end is untouched, so the plate is still a gradient and the well still shows the ramp." },
+    { "do": "snapshot", "name": "3-a-darker-start" },
+    { "do": "render", "name": "3-a-darker-start-frame" },
+
+    { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Caption background", "reads": "Linear gradient #9A5CFF 94% to #C56CFF 86%" },
+    { "do": "describe", "stage": "4-undone", "note": "One undo: the mock's violet to lilac plate is back." },
+    { "do": "snapshot", "name": "4-undone" }
+  ]
+}

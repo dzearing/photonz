@@ -62,6 +62,82 @@ final class CaptionLowerThirdTests: XCTestCase {
         }
     }
 
+    // MARK: - The plate's gradient in the Background well
+
+    /// The violet ramp the mock draws, as the one colour picker reads a
+    /// gradient: a straight run at the mock's 120 degrees, violet to lilac.
+    func testTheBackgroundWellHoldsTheLowerThirdsWholeGradient() throws {
+        let paint = try XCTUnwrap(CaptionLook.preset(.lowerThird).backgroundPaint)
+        XCTAssertTrue(paint.isGradient)
+        XCTAssertEqual(paint.kind, .linear)
+        XCTAssertEqual(paint.angle, 120)
+        XCTAssertEqual(paint.orderedStops.map(\.hex), ["#9A5CFFF0", "#C56CFFDB"])
+        XCTAssertFalse(try XCTUnwrap(CaptionLook.preset(.caption).backgroundPaint).isGradient,
+                       "the Caption plate is one flat colour")
+        XCTAssertNil(CaptionLook.preset(.karaoke).backgroundPaint, "and Karaoke has none")
+        XCTAssertEqual(CaptionLookControl.allCases.filter(\.holdsGradient), [.background],
+                       "only the plate can be a gradient: words, glows and outlines are one colour")
+    }
+
+    /// Picking a colour in the picker changes the stop that is picked, so the
+    /// other end is still lilac and the plate is still a gradient.
+    func testChangingOneStopKeepsThePlateAGradient() throws {
+        var look = CaptionLook.preset(.lowerThird)
+        var paint = try XCTUnwrap(look.backgroundPaint)
+        paint.stops[0].hex = "#5E2BD1F0"
+        CaptionLookControl.background.set(.paint(paint), in: &look)
+        let kept = try XCTUnwrap(look.backgroundPaint)
+        XCTAssertTrue(kept.isGradient)
+        XCTAssertEqual(kept.orderedStops.map(\.hex), ["#5E2BD1F0", "#C56CFFDB"])
+        XCTAssertNotNil(look.backgroundHex, "a plate is still drawn")
+        let layer = try captions(captioned(look: look))
+        for cue in layer.children {
+            guard case .text(let content) = cue.content else { return XCTFail() }
+            XCTAssertEqual(content.platePaint?.orderedStops.map(\.hex), ["#5E2BD1F0", "#C56CFFDB"],
+                           "every caption draws the ramp as changed")
+        }
+    }
+
+    /// Whatever the picker can make of it (another angle, a third stop, a
+    /// spreading ramp) is kept, saved and drawn, never quietly dropped.
+    func testAnyGradientThePickerMakesIsKeptSavedAndDrawn() throws {
+        var look = CaptionLook.preset(.lowerThird)
+        let ramp = Paint(hex: "#1A1433", kind: .radial,
+                         stops: [GradientStop(hex: "#FF4FD8", position: 0),
+                                 GradientStop(hex: "#12C2E9", position: 0.5),
+                                 GradientStop(hex: "#1A1433", position: 1)],
+                         angle: 45, center: CGPoint(x: 0.2, y: 0.5))
+        CaptionLookControl.background.set(.paint(ramp), in: &look)
+        XCTAssertEqual(look.backgroundPaint, ramp)
+        let data = try JSONEncoder().encode(look)
+        XCTAssertEqual(try JSONDecoder().decode(CaptionLook.self, from: data), look)
+        let layer = try captions(captioned(look: look))
+        guard case .text(let content) = try XCTUnwrap(layer.children.first).content else { return XCTFail() }
+        XCTAssertEqual(content.platePaint, ramp)
+        let reread = try JSONDecoder().decode(TextContent.self, from: JSONEncoder().encode(content))
+        XCTAssertEqual(reread.platePaint, ramp, "a caption saved with it draws it when opened")
+    }
+
+    /// The mock's own ramp is written the way it always was, so a look saved
+    /// by this build reads the same in the one before it.
+    func testTheMocksRampIsStillWrittenAsTwoColours() throws {
+        let text = String(decoding: try JSONEncoder().encode(CaptionLook.preset(.lowerThird)), as: UTF8.self)
+        XCTAssertTrue(text.contains("backgroundEndHex"))
+        XCTAssertFalse(text.contains("backgroundGradient"))
+    }
+
+    func testPickingSolidOrNoneInThePickerMakesThePlateFlatOrBare() {
+        var look = CaptionLook.preset(.lowerThird)
+        CaptionLookControl.background.set(.paint(Paint(hex: "#202020")), in: &look)
+        XCTAssertEqual(look.backgroundHex, "#202020")
+        XCTAssertNil(look.backgroundEndHex)
+        XCTAssertEqual(look.backgroundPaint, Paint(hex: "#202020"))
+        CaptionLookControl.background.set(.paint(nil), in: &look)
+        XCTAssertNil(look.backgroundPaint)
+        XCTAssertNil(look.backgroundHex)
+    }
+
+    /// A flat colour dropped on the well is one colour, so the plate takes it.
     func testPickingABackgroundColourMakesThePlateFlat() {
         var look = CaptionLook.preset(.lowerThird)
         CaptionLookControl.background.set(.colour("#202020"), in: &look)

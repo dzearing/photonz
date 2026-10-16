@@ -248,6 +248,49 @@ private final class Run {
     /// Every caption line's words, as `captionsNoteLines` found them.
     private var captionLinesNoted: [String] = []
 
+    /// The colour of a caption plate's two ends in the frame drawn at the
+    /// playhead: a small patch just inside each end, near the plate's top
+    /// where no letter reaches, read off the same render a `render` step
+    /// writes.
+    private func captionPlateEnds(_ editor: EditorState) throws
+        -> (left: String, right: String, apart: Double) {
+        guard let plate = editor.lowerThirdPlates.first?.plate else {
+            throw Failure(description: "no lower third plate is on screen")
+        }
+        guard let document = editor.document,
+              let image = DocumentRenderer().render(document, store: editor.store, scale: 1) else {
+            throw Failure(description: "the document did not render")
+        }
+        let width = image.width, height = image.height
+        var bytes = [UInt8](repeating: 0, count: width * height * 4)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(data: &bytes, width: width, height: height, bitsPerComponent: 8,
+                                      bytesPerRow: width * 4, space: space,
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+            throw Failure(description: "the frame could not be read")
+        }
+        context.draw(image, in: CGRect(x: 0, y: 0, width: width, height: height))
+        let scale = CGFloat(width) / document.canvasSize.width
+        func patch(fromX x0: CGFloat) -> [Double] {
+            var sum = [0.0, 0.0, 0.0], count = 0.0
+            let y0 = plate.minY + 3
+            for y in Int(y0 * scale)..<Int((y0 + 6) * scale) where y >= 0 && y < height {
+                for x in Int(x0 * scale)..<Int((x0 + 10) * scale) where x >= 0 && x < width {
+                    let i = (y * width + x) * 4
+                    for c in 0..<3 { sum[c] += Double(bytes[i + c]) }
+                    count += 1
+                }
+            }
+            return sum.map { $0 / max(count, 1) }
+        }
+        let left = patch(fromX: plate.minX + 6), right = patch(fromX: plate.maxX - 16)
+        let apart = zip(left, right).map { abs($0 - $1) }.reduce(0, +) / 3
+        func hex(_ c: [Double]) -> String {
+            c.map { String(format: "%02X", Int($0.rounded())) }.joined()
+        }
+        return ("#" + hex(left), "#" + hex(right), apart)
+    }
+
     /// Every caption line's words, in time order.
     private func captionLines(_ editor: EditorState) -> [String] {
         (editor.document?.captionLayers ?? []).map { editor.captionWords(of: $0.id) ?? "" }
@@ -255,6 +298,9 @@ private final class Run {
     /// The caption drawn at the playhead when a walk last noted it
     /// (`captionsNoteDrawn`).
     private var notedCaption: [Layer]?
+    /// How far apart the caption plate's two ends were when a walk last
+    /// noted them (`captionsNotePlateEnds`), as a mean channel difference.
+    private var notedPlateEndsApart: Double?
     /// A row's keys, moment and value, noted under a word by
     /// `expectRowKeys` with `remember`.
     private var notedRowKeys: [String: [(atMS: Int, value: MotionValue)]] = [:]
@@ -5437,6 +5483,24 @@ private final class Run {
                     note(number, step.name, "captions: Lower-third tag on the plate's top left at "
                          + "(\(Int(plate.minX)), \(Int(plate.minY))) in the picture", state: describe())
                 }
+            case .captionsNotePlateEnds, .captionsExpectPlateEndsApart:
+                let ends = try captionPlateEnds(editor)
+                let reading = "left \(ends.left) right \(ends.right), "
+                    + "\(String(format: "%.1f", ends.apart)) apart (mean channel difference)"
+                if action == .captionsExpectPlateEndsApart {
+                    guard let noted = notedPlateEndsApart else {
+                        throw Failure(description: "no plate ends were noted to compare with")
+                    }
+                    guard ends.apart >= noted - 1 else {
+                        throw Failure(description: "the plate's ends are \(reading); they were "
+                                      + "\(String(format: "%.1f", noted)) apart: the gradient has gone")
+                    }
+                    note(number, step.name, "captions: plate \(reading), noted \(String(format: "%.1f", noted))",
+                         state: describe())
+                } else {
+                    notedPlateEndsApart = ends.apart
+                    note(number, step.name, "captions: plate \(reading), noted", state: describe())
+                }
             case .captionsExpectReset:
                 guard let document = editor.document, let layer = editor.captionsLayerInFocus else {
                     throw Failure(description: "there is no Captions layer to have been reset")
@@ -6835,6 +6899,7 @@ private final class Run {
                  .captionsExpectLitWord, .captionsExportFiles,
                  .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
                  .captionsExpectLowerThirdTag, .captionsExpectNoLowerThirdTag,
+                 .captionsNotePlateEnds, .captionsExpectPlateEndsApart,
                  .captionsExpectFootApart,
                  .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
                  .captionsNoteDrawn, .captionsExpectDrawnChanged,

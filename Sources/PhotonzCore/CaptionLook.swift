@@ -58,9 +58,11 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     /// The plate behind the words, or nil for words straight on the picture
     /// wearing the readable shadow.
     public var backgroundHex: String?
-    /// Where the plate runs to, for a plate that is a gradient (the mock's
-    /// lower third), or nil for one flat colour.
-    public var backgroundEndHex: String?
+    /// The plate's ramp, for a plate that is a gradient (the mock's lower
+    /// third, or any the colour picker makes), or nil for one flat colour.
+    /// `backgroundHex` is still its flat stand-in and says whether there is a
+    /// plate at all.
+    public var backgroundGradient: Paint?
     public var alignment: TextAlign
 
     /// How many words show at a time, and how many lines a caption may fill.
@@ -75,6 +77,30 @@ public struct CaptionLook: Hashable, Codable, Sendable {
     public var glowHex: String?
     public var strokeHex: String?
     public var shadow: CaptionShadow
+
+    /// Where the plate runs to, for the mock's two-colour ramp, or nil for a
+    /// flat plate. Setting one makes the plate that ramp.
+    public var backgroundEndHex: String? {
+        get { backgroundGradient?.orderedStops.last?.hex }
+        set {
+            backgroundGradient = newValue.map { CaptionPlate.ramp(from: backgroundHex ?? $0, to: $0) }
+        }
+    }
+
+    /// The plate as the colour picker holds it: one flat colour, or a ramp
+    /// of any kind it makes, or nil for no plate.
+    public var backgroundPaint: Paint? {
+        get {
+            guard let hex = backgroundHex else { return nil }
+            guard var ramp = backgroundGradient, ramp.isGradient else { return Paint(hex: hex) }
+            ramp.hex = hex
+            return ramp
+        }
+        set {
+            backgroundHex = newValue?.hex
+            backgroundGradient = newValue.flatMap { $0.isGradient ? $0 : nil }
+        }
+    }
 
     /// The colour the word being said lights up in, or nil for none.
     public var activeHex: String? {
@@ -96,7 +122,9 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         self.fontSize = fontSize
         self.colorHex = colorHex
         self.backgroundHex = backgroundHex
-        self.backgroundEndHex = backgroundEndHex
+        self.backgroundGradient = backgroundEndHex.map {
+            CaptionPlate.ramp(from: backgroundHex ?? $0, to: $0)
+        }
         self.alignment = alignment
         self.show = show
         self.lines = lines
@@ -111,6 +139,7 @@ public struct CaptionLook: Hashable, Codable, Sendable {
 
     private enum CodingKeys: String, CodingKey {
         case preset, fontName, weight, fontSize, colorHex, backgroundHex, backgroundEndHex
+        case backgroundGradient
         case activeHex, alignment
         case show, lines, said, coming, word, glowHex, strokeHex, shadow
     }
@@ -137,7 +166,13 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         glowHex = try c.decodeIfPresent(String.self, forKey: .glowHex)
         strokeHex = try c.decodeIfPresent(String.self, forKey: .strokeHex)
         shadow = try c.decodeIfPresent(CaptionShadow.self, forKey: .shadow) ?? .auto
-        backgroundEndHex = try c.decodeIfPresent(String.self, forKey: .backgroundEndHex)
+        // The mock's two-colour ramp is written as its far colour; any other
+        // ramp the picker made is written whole.
+        if let ramp = try c.decodeIfPresent(Paint.self, forKey: .backgroundGradient) {
+            backgroundGradient = ramp
+        } else if let end = try c.decodeIfPresent(String.self, forKey: .backgroundEndHex) {
+            backgroundGradient = CaptionPlate.ramp(from: backgroundHex ?? end, to: end)
+        }
     }
 
     public func encode(to encoder: Encoder) throws {
@@ -148,7 +183,13 @@ public struct CaptionLook: Hashable, Codable, Sendable {
         try c.encodeIfPresent(fontSize, forKey: .fontSize)
         try c.encode(colorHex, forKey: .colorHex)
         try c.encodeIfPresent(backgroundHex, forKey: .backgroundHex)
-        try c.encodeIfPresent(backgroundEndHex, forKey: .backgroundEndHex)
+        if let ramp = backgroundGradient {
+            if let end = CaptionPlate.farEnd(of: ramp, from: backgroundHex) {
+                try c.encode(end, forKey: .backgroundEndHex)
+            } else {
+                try c.encode(ramp, forKey: .backgroundGradient)
+            }
+        }
         try c.encodeIfPresent(activeHex, forKey: .activeHex)
         try c.encode(alignment, forKey: .alignment)
         try c.encode(show, forKey: .show)
@@ -651,8 +692,16 @@ extension CaptionLayers {
                                   colorHex: look.colorHex, weight: look.weight,
                                   alignment: look.alignment, verticalAlignment: .bottom)
         content.staysOnOneLine = false
+        // The mock's two-colour ramp goes as its far colour, the way every
+        // caption has carried it; any other ramp goes whole.
         content.plateHex = look.backgroundHex
-        content.plateEndHex = look.backgroundHex == nil ? nil : look.backgroundEndHex
+        if look.backgroundHex != nil, let ramp = look.backgroundGradient {
+            if let end = CaptionPlate.farEnd(of: ramp, from: look.backgroundHex) {
+                content.plateEndHex = end
+            } else {
+                content.plateGradient = ramp
+            }
+        }
         content.activeWordHex = look.activeHex
         content.activeWordSung = look.lightsEverythingSaid ? true : nil
         layer.content = .text(content)
@@ -778,5 +827,32 @@ extension PhotonzDocument {
         var clean = self
         clean.clearCaptions()
         return clean
+    }
+}
+
+// MARK: - The plate's ramp
+
+/// A caption plate that is a gradient. The mock's lower third runs violet to
+/// lilac at 120 degrees (`linear-gradient(120deg, …)`); the colour picker can
+/// make it any ramp it makes anywhere else.
+public enum CaptionPlate {
+
+    /// The way the mock's plate runs: right and a little down.
+    public static let angle: Double = 120
+
+    /// The mock's two-colour ramp, from `start` to `end`.
+    public static func ramp(from start: String, to end: String) -> Paint {
+        Paint(hex: start, kind: .linear,
+              stops: [GradientStop(hex: start, position: 0), GradientStop(hex: end, position: 1)],
+              angle: angle)
+    }
+
+    /// The far colour of `paint` when it is exactly the mock's two-colour
+    /// ramp starting at `start`, so it can be written the way it always was;
+    /// nil for any other ramp.
+    public static func farEnd(of paint: Paint, from start: String?) -> String? {
+        guard let start, let end = paint.orderedStops.last?.hex,
+              paint == ramp(from: start, to: end) else { return nil }
+        return end
     }
 }

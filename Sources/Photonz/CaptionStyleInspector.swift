@@ -159,7 +159,12 @@ struct CaptionColourWellRow: View {
             if case .colour(let hex) = control.value(in: look) { return hex }
             return nil
         }()
-        let reading = hex.map { CaptionColourWellRow.reading($0) } ?? "None"
+        // The plate's well holds its whole ramp, so it shows the ramp and its
+        // picker edits it; a plate with none opens on the flat stand-in.
+        let gradientPaint: Paint? = control.holdsGradient
+            ? (look.backgroundPaint ?? Paint(hex: control.openingHex(in: look))) : nil
+        let reading = gradientPaint.flatMap { $0.isGradient ? CaptionColourWellRow.reading($0) : nil }
+            ?? hex.map { CaptionColourWellRow.reading($0) } ?? "None"
         VideoKit.FieldRow(label: control.title) {
             HStack(spacing: 8) {
                 ColorWellButton(hex: hex ?? control.openingHex(in: look),
@@ -168,6 +173,11 @@ struct CaptionColourWellRow: View {
                                 wellKey: "caption-\(control.rawValue)",
                                 isNone: hex == nil,
                                 onNone: control.allowsNone ? { editorState.setCaption(control, to: .colour(nil)) } : nil,
+                                paint: gradientPaint,
+                                onCommitPaint: control.holdsGradient ? { picked in
+                                    editorState.setCaption(control, to: .paint(picked))
+                                    editorState.recordRecentColor(hex: picked.hex)
+                                } : nil,
                                 onCommit: { picked in
                                     editorState.setCaption(control, to: .colour(picked))
                                     editorState.recordRecentColor(hex: picked)
@@ -185,6 +195,11 @@ struct CaptionColourWellRow: View {
             .panelReadout(reading)
             .playtestField(name)
         }
+    }
+
+    /// A ramp, read stop by stop: `Linear gradient #9A5CFF 94% to #C56CFF 86%`.
+    static func reading(_ paint: Paint) -> String {
+        "\(paint.kind.title) gradient " + paint.orderedStops.map { reading($0.hex) }.joined(separator: " to ")
     }
 
     /// `#FF4FD8`, or `#000000 70%` for a colour you can see through.

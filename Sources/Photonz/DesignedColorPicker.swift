@@ -154,9 +154,20 @@ struct DesignedColorPicker: View {
             .overlay(RoundedRectangle(cornerRadius: 5).strokeBorder(.primary.opacity(0.2), lineWidth: 1))
             .panelHelp("Was \(openedOn.hex), now \(color.hex)")
 
-            Text(headerTitle)
-                .font(.callout.weight(.medium))
-                .lineLimit(1)
+            // A long name gives way before the stop does: the stop is what
+            // says which colour of the ramp the square is changing.
+            HStack(spacing: 0) {
+                Text(name)
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                if let stopTitle {
+                    Text(stopTitle)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+            }
+            .font(.callout.weight(.medium))
+            .accessibilityElement(children: .combine)
             Spacer(minLength: 0)
 
             if let onNone {
@@ -462,9 +473,11 @@ struct DesignedColorPicker: View {
     /// the square is pointed at, because otherwise the biggest control in the
     /// picker would be quietly editing one colour out of several with nothing
     /// saying which.
-    private var headerTitle: String {
-        guard supportsGradient, paint.isGradient else { return name }
-        return "\(name) · stop \(stopIndex + 1)"
+    ///
+    /// The stop half of it, or nil while the paint is flat.
+    private var stopTitle: String? {
+        guard supportsGradient, paint.isGradient else { return nil }
+        return " · stop \(stopIndex + 1)"
     }
 
     private func start(_ incoming: Paint? = nil) {

@@ -1,0 +1,53 @@
+{
+  "feature": "The lower third caption plate keeps its gradient when its colour is set",
+  "epic": "video-audio",
+  "summary": "The Background well for a Lower third caption now shows the plate's violet to lilac ramp, and opens the colour picker on that gradient. Picking a colour changes the stop you are on, so the plate stays a gradient instead of going one flat colour.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Any recording with speech, captions written (timeline + menu, Captions). Walk: Scripts/playtest/lower-third-plate-keeps-its-gradient-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Before this change: Lower third, Background, any shade. The plate went one flat colour.",
+      "shot": "2026-10-16-lower-third-plate-gradient-before-flat-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Pick the Captions row, click the Lower third tile, and look at Background in the Text section: the swatch shows the ramp.",
+      "shot": "2026-10-16-lower-third-plate-gradient-1-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click the Background swatch: the picker opens on Linear at 120 degrees with Stop 1 picked.",
+      "shot": "2026-10-16-lower-third-plate-gradient-2-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Click a darker violet under Shades, then press Escape: the plate's left end darkens and the lilac end stays.",
+      "shot": "2026-10-16-lower-third-plate-gradient-3-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open the picker again, click the right stop on the ramp and pick another colour for the far end."
+    },
+    {
+      "do": "Press Command-Z: the mock's violet to lilac plate is back in one step.",
+      "shot": "2026-10-16-lower-third-plate-gradient-4-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Is editing one stop at a time the way you expected to tune the plate, or did you want one pick to shift the whole ramp's hue?",
+    "Does the small ramp in the Background swatch read as a gradient at panel size?",
+    "Should picking Solid in the picker keep the plate's first colour, as it does now, or its last?",
+    "Is it right that Radial and Angular are offered for the plate too, or should a caption plate only run straight?"
+  ],
+  "rough": [
+    "No mock draws the Background well or its picker.",
+    "At defaults the plate matches the captions mock's Lower third (linear-gradient 120deg, violet to lilac), as it did before.",
+    "Measured bar, frame rendered at the playhead, small patches just inside each end of the plate: untouched plate 15.1 apart (mean channel difference); today's build after a pick 0.0 (both #B385FF); this build after picking a darker shade 76.1 (left #4D09B3, right #AC5BE6). The walk fails if the ends come closer than the untouched plate's.",
+    "Both stops are editable, the way the picker edits every gradient in the app (the colour styles shelf); a pick does not shift the hue across the whole ramp.",
+    "Changes made in the picker land when you let go, not while dragging, the same as every other caption colour well today.",
+    "Once the ramp is changed, the Lower third tile no longer shows as picked, the same as after any other change to the look.",
+    "Gradient picker header: a long name now shortens before the stop number does (it read 'Caption backgrou...' and lost 'stop 1'). This also applies to the colour styles shelf's picker.",
+    "The walk changes the first stop only; editing the far stop goes through the same shared picker the colour styles shelf uses, but no walk drives it on the caption plate."
+  ]
+}

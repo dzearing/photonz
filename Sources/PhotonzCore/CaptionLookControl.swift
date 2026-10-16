@@ -61,6 +61,10 @@ public enum CaptionLookControl: String, CaseIterable, Hashable, Sendable {
         kind == .colour && self != .textColour
     }
 
+    /// Whether the control's colour can be a gradient: only the plate can.
+    /// Its well shows the ramp and its picker edits it (`.paint`).
+    public var holdsGradient: Bool { self == .background }
+
     /// Other controls a change here moves too: picking a grow gives a word
     /// at full size somewhere to grow to (`CaptionWordLook.pick`).
     public var alsoMoves: Set<CaptionLookControl> {
@@ -118,10 +122,14 @@ public enum CaptionLookControl: String, CaseIterable, Hashable, Sendable {
         case (.weight, .weight(let weight)): look.weight = weight
         case (.textColour, .colour(let hex?)): look.colorHex = hex
         case (.background, .colour(let hex)):
-            // A colour picked for the plate is one colour, so the lower
+            // A flat colour dropped on the plate is one colour, so the lower
             // third's gradient gives way to it.
             look.backgroundHex = hex
-            look.backgroundEndHex = nil
+            look.backgroundGradient = nil
+        case (.background, .paint(let paint)):
+            // What the picker made: a ramp stays a ramp, a stop changed in
+            // it changes that stop alone.
+            look.backgroundPaint = paint
         case (.glow, .colour(let hex)): look.glowHex = hex
         case (.stroke, .colour(let hex)): look.strokeHex = hex
         case (.shadow, .shadow(let shadow)): look.shadow = shadow
@@ -175,7 +183,7 @@ public enum CaptionLookControl: String, CaseIterable, Hashable, Sendable {
         case .speed: look.word.pick(.grow)
         case .shadow:
             look.backgroundHex = nil
-            look.backgroundEndHex = nil
+            look.backgroundGradient = nil
         default: break
         }
         return look
@@ -189,6 +197,8 @@ public enum CaptionLookValue: Hashable, Sendable {
     case shade(CaptionWordShade)
     /// A colour, or nil for none.
     case colour(String?)
+    /// A colour or a ramp, or nil for none: the plate's well.
+    case paint(Paint?)
     case on(Bool)
     case amount(CGFloat)
     case motion(CaptionWordMotion)

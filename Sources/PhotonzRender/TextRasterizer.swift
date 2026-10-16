@@ -136,35 +136,20 @@ public enum TextRasterizer {
                                   bounds box: CGRect, in context: CGContext, through limit: Int? = nil,
                                   including extra: CGRect? = nil,
                                   attributed: NSAttributedString? = nil) {
-        guard let rgba = RGBA(hex: hex),
-              let plate = plateBounds(for: text, laidOutIn: path, bounds: box, through: limit,
+        guard let plate = plateBounds(for: text, laidOutIn: path, bounds: box, through: limit,
                                       including: extra, attributed: attributed) else { return }
+        let paint = text.platePaint ?? Paint(hex: hex)
         let radius = min(text.fontSize * 0.28, plate.height / 2)
+        let shape = CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius, transform: nil)
         context.saveGState()
-        context.addPath(CGPath(roundedRect: plate, cornerWidth: radius, cornerHeight: radius, transform: nil))
-        if let end = text.plateEndHex.flatMap({ RGBA(hex: $0) }),
-           let space = CGColorSpace(name: CGColorSpace.sRGB),
-           let gradient = CGGradient(colorSpace: space,
-                                     colorComponents: [rgba.r, rgba.g, rgba.b, rgba.a,
-                                                       end.r, end.g, end.b, end.a],
-                                     locations: [0, 1], count: 2) {
-            // The lower third's plate runs the way the mock's CSS does,
-            // `linear-gradient(120deg, …)`: toward the right and a little
-            // down, across the line that just reaches both corners. This
-            // context's y runs up, so down is minus.
-            let angle = 120.0 * Double.pi / 180
-            let dx = CGFloat(sin(angle)), dy = CGFloat(-cos(angle))
-            let half = (abs(plate.width * dx) + abs(plate.height * dy)) / 2
-            let mid = CGPoint(x: plate.midX, y: plate.midY)
-            context.clip()
-            context.drawLinearGradient(gradient,
-                                       start: CGPoint(x: mid.x - dx * half, y: mid.y + dy * half),
-                                       end: CGPoint(x: mid.x + dx * half, y: mid.y - dy * half),
-                                       options: [.drawsBeforeStartLocation, .drawsAfterEndLocation])
-        } else {
-            context.setFillColor(CGColor(srgbRed: rgba.r, green: rgba.g, blue: rgba.b, alpha: rgba.a))
-            context.fillPath()
-        }
+        // The gradient painter aims a ramp in top-left space, which is how
+        // the colour picker and the mock's `linear-gradient(120deg, …)` say
+        // it; this context's y runs up, so the plate is turned over about
+        // its own middle first. The rounded plate is the same shape either
+        // way up.
+        context.translateBy(x: 0, y: plate.midY * 2)
+        context.scaleBy(x: 1, y: -1)
+        GradientPainter.fill(path: shape, with: paint, in: context)
         context.restoreGState()
     }
 

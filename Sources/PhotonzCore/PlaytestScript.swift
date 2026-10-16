@@ -1349,6 +1349,12 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// third's plate on the canvas; `captionsExpectNoLowerThirdTag` wants it
     /// gone, as it is under any other style.
     case captionsExpectLowerThirdTag, captionsExpectNoLowerThirdTag
+    /// Read the colour at the left and right ends of the caption plate in
+    /// the frame drawn at the playhead, and note them;
+    /// `captionsExpectPlateEndsApart` fails unless the ends still differ by
+    /// at least as much as they did when noted: a gradient plate that stays
+    /// a gradient after its colour is changed.
+    case captionsNotePlateEnds, captionsExpectPlateEndsApart
     /// Fail unless the Captions layer wears the standard look in the box a
     /// fresh one lands in: what the Caption track bar's Reset does.
     case captionsExpectReset
@@ -1638,6 +1644,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
              .captionsPositionTop, .captionsPositionBottom, .captionsExpectLitWord,
              .captionsExpectGuides, .captionsExpectNoGuides, .captionsExpectReset,
              .captionsExpectLowerThirdTag, .captionsExpectNoLowerThirdTag,
+             .captionsNotePlateEnds, .captionsExpectPlateEndsApart,
              .captionsExpectFootApart,
              .captionsSeekIntoNextWord, .captionsStepIntoWord, .captionsExpectOneWordPopping,
              .captionsNoteDrawn, .captionsExpectDrawnChanged,

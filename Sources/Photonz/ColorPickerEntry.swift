@@ -55,7 +55,10 @@ struct ColorPickerContent: View {
          supportsOpacity: Bool = false, supportsGradient: Bool = false,
          embedded: Bool = false, onClose: (() -> Void)? = nil,
          onPreview: ((Paint) -> Void)? = nil,
+         onNone: (() -> Void)? = nil, isNone: Bool = false,
          onCommit: @escaping (Paint) -> Void) {
+        self.onNone = onNone
+        self.isNone = isNone
         self.editorState = editorState
         self.paint = paint
         self.name = name
@@ -120,6 +123,14 @@ struct ColorWellButton: View {
     /// Takes the colour off, for a slot that can hold none. The picker offers
     /// None beside its eyedropper.
     var onNone: (() -> Void)?
+    /// What a slot that can hold a gradient holds, ramp and all: the swatch
+    /// draws the ramp, the picker opens on it with its type row, and a ramp
+    /// dropped on the well lands whole. Nil for a flat-colour slot, which is
+    /// every row but a caption's plate.
+    var paint: Paint?
+    /// Where such a slot's picker sends what it made. Used instead of
+    /// `onCommit` whenever `paint` is set.
+    var onCommitPaint: ((Paint) -> Void)?
     let onCommit: (String) -> Void
 
     @State private var isHovering = false
@@ -138,28 +149,26 @@ struct ColorWellButton: View {
                 // "Shadow"`. The system picker below is not marked, because
                 // its panel belongs to macOS and a walk cannot drive it.
                 .playtestControl("Color", detail: name,
-                                 payload: { ColorDrag.itemProvider(paint: Paint(hex: hex),
+                                 payload: { ColorDrag.itemProvider(paint: paint ?? Paint(hex: hex),
                                                                    source: key) })
                 // A colour well on a Mac has always been something you can
                 // pull a colour off and drop a colour onto, so every row that
                 // goes through here gets it at once: a shadow's colour, a
-                // collage backdrop, the measure chip. None of them can hold a
-                // ramp, so a gradient dropped here lands as its flat colour
-                // and the swatch says so before it does.
+                // collage backdrop, the measure chip. Most of them cannot
+                // hold a ramp, so a gradient dropped there lands as its flat
+                // colour and the swatch says so before it does; a slot that
+                // holds one (`paint`) takes the ramp whole.
                 .colorSwatchDrag(key: key, part: name,
-                                 paint: { Paint(hex: hex) },
-                                 onDrop: { landing in onCommit(landing.paint.hex) })
+                                 paint: { paint ?? Paint(hex: hex) },
+                                 onDrop: { landing in
+                                     if let onCommitPaint, paint != nil {
+                                         onCommitPaint(landing.paint)
+                                     } else {
+                                         onCommit(landing.paint.hex)
+                                     }
+                                 })
                 .popover(isPresented: editorState.colorWellBinding(key), arrowEdge: .top) {
-                    ColorPickerContent(editorState: editorState,
-                                       hex: hex,
-                                       name: name,
-                                       slot: slot,
-                                       supportsOpacity: supportsOpacity,
-                                       onClose: { editorState.openColorWell = nil },
-                                       onPreview: onPreview,
-                                       onNone: onNone,
-                                       isNone: isNone,
-                                       onCommit: onCommit)
+                    picker
                 }
         } else {
             ColorPicker(name, selection: Binding(
@@ -168,6 +177,33 @@ struct ColorWellButton: View {
                         supportsOpacity: supportsOpacity)
                 .labelsHidden()
                 .controlSize(.small)
+        }
+    }
+
+    /// The one picker, opened on the ramp for a slot that holds one.
+    @ViewBuilder private var picker: some View {
+        if let paint, let onCommitPaint {
+            ColorPickerContent(editorState: editorState,
+                               paint: paint,
+                               name: name,
+                               slot: slot,
+                               supportsOpacity: supportsOpacity,
+                               supportsGradient: true,
+                               onClose: { editorState.openColorWell = nil },
+                               onNone: onNone,
+                               isNone: isNone,
+                               onCommit: onCommitPaint)
+        } else {
+            ColorPickerContent(editorState: editorState,
+                               hex: hex,
+                               name: name,
+                               slot: slot,
+                               supportsOpacity: supportsOpacity,
+                               onClose: { editorState.openColorWell = nil },
+                               onPreview: onPreview,
+                               onNone: onNone,
+                               isNone: isNone,
+                               onCommit: onCommit)
         }
     }
 
@@ -185,6 +221,13 @@ struct ColorWellButton: View {
     private var filled: some View {
         RoundedRectangle(cornerRadius: 4)
             .fill(Color(hex: hex))
+            // A ramp is drawn as the ramp, so the well says what the slot
+            // holds rather than its first colour.
+            .overlay {
+                if let paint, paint.isGradient {
+                    PaintFill(paint: paint).clipShape(RoundedRectangle(cornerRadius: 4))
+                }
+            }
             // Under anything that can be see-through, so a color made
             // translucent looks translucent rather than looking paler.
             .background {
