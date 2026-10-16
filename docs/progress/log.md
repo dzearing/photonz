@@ -21495,3 +21495,15 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Import Media and a Library drop take PNG/JPEG/HEIC (and more) as shelf pictures (`DocumentMediaSource.Media.picture`), saved in the package even when unplaced. A picture tile lands on the timeline like a title (free or new track, 5 s, `PictureClip`), or on the picture where dropped.
 - SVG is refused in words everywhere (`MediaFiles.vectorRefusal`). Next: `an-svg-logo-comes-into-a-video-and-stays-sharp-a`, `a-title-or-a-logo-laid-over-a-video-lands-on-a-t`.
 - Gotcha: `DocumentImageDrag`'s type is not declared in Info.plist, so `UTType(...) ?? .data` matches every file.
+
+## 2026-10-16 — Words that travel into a title are never cut at their box
+
+- Task `words-that-rise-into-a-title-are-never-cut-off-b`. Reproduced: a rising
+  word's picture was cropped to its text box, so Keynote Clean's headline showed
+  69% of its ink at worst, Minimal Underline 50%, Track In / Flip Up by letter in
+  a tight box 0% / 73%.
+- `TextRevealCompositor.reach(of:reveal:eyeDistance:)` now follows every piece
+  through its move and the renderer gives the picture that much room for every
+  reveal (cached per words, reveal and camera). Old fixed depth-only reach gone.
+- `TextRevealUnclippedTests` holds the 100% bar for every entrance and built-in
+  title; reel in `queue/audits/2026-10-16-words-whole-*`, card open for the look.

@@ -1,0 +1,41 @@
+{
+  "feature": "Words that travel into a title are never cut off by their own box",
+  "epic": "video-titles-graphics",
+  "summary": "Words that rise, track or flip into a title are drawn whole the whole way in, even where they pass outside their text box. Before, a rising word was sliced flat along the bottom of its box until it landed.",
+  "setup": "Photonz Next, no switch changed from its defaults, a video open (the sample recording works). Walk: Scripts/playtest/title-set-keynote-clean-walk.json.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Open the Library, pick Comps, and insert Keynote Clean at the playhead at 0:00."
+    },
+    {
+      "do": "Press Home, then step forward a quarter second twice.",
+      "shot": "2026-10-16-words-whole-walk-coming-in-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Look at the second word rising in: its bottom is drawn below the selection box, not cut along it."
+    },
+    {
+      "do": "Press Space and watch the headline come in at full speed."
+    },
+    {
+      "do": "Export the video and scrub the first second of the title in the exported file."
+    },
+    {
+      "do": "Open queue/audits/2026-10-16-words-whole-contact.png and compare each Before and After row."
+    }
+  ],
+  "evaluate": [
+    "Does the rising headline in Keynote Clean now look whole from its first frame?",
+    "Does a word drawn briefly outside its selection box while it travels bother you?",
+    "In the Track In row, do the outer letters coming from past the line's ends look right?",
+    "Does the exported file match what you saw on the canvas?"
+  ],
+  "rough": [
+    "No mock covers how a travelling word meets its text box; this follows the depth flips, which already drew past it.",
+    "Mid-move, words can sit outside the selection outline on the canvas. They land back inside it.",
+    "Mask Reveal's first sliver now shows in the mask's own thin margin under the line, which the box used to cut: it starts a frame or so sooner.",
+    "Track In by letter in a tight box gives the picture a lot of room while its outer letters are far out (521 px each side on a 1080p headline); measured at 1080p with motion blur it draws in 5.6 ms a frame, the same as without the room."
+  ]
+}

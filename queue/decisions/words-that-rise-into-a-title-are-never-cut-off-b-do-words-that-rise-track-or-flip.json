@@ -1,0 +1,49 @@
+{
+  "id": "words-that-rise-into-a-title-are-never-cut-off-b-do-words-that-rise-track-or-flip",
+  "taskId": "words-that-rise-into-a-title-are-never-cut-off-b",
+  "question": "Do words that rise, track or flip into a title now look whole the whole way in?",
+  "context": "Reel: queue/audits/2026-10-16-words-whole-contact.png (each row before over after, the text box dashed) and an MP4 and GIF per entrance: Keynote Clean, Minimal Underline, Track In by letter, Flip Up by letter; plus Keynote Clean exported (2026-10-16-words-whole-keynote-exported.mp4). Real app capture: 2026-10-16-words-whole-walk-coming-in-sc.png. Already built at Next defaults; this card is for judging the look.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep words whole",
+      "summary": "A word rising in from below, a letter tracked in from past the end of the line or one flipping toward you is drawn in full while it travels, even where it passes outside its text box. Nothing else about the entrances changes.",
+      "pros": [
+        "No word arrives sliced across its feet",
+        "The canvas, playback and an export all show the same whole words"
+      ],
+      "cons": [
+        "Mid-move, words can sit a little outside the selection box you see on the canvas"
+      ],
+      "mitigation": "They land back inside the box when the entrance ends, exactly where they rest."
+    },
+    {
+      "id": "b",
+      "label": "Whole, but rising a shorter way",
+      "summary": "Words stay whole as in a, and the built-in rises travel about half as far, so less of each word ever passes outside its box.",
+      "pros": [
+        "Calmer entrances that stay closer to the box"
+      ],
+      "cons": [
+        "Brings back some of the flatness of titles you called boring on 2026-10-11"
+      ],
+      "mitigation": "Each title can still set its own Rise distance."
+    },
+    {
+      "id": "c",
+      "label": "Cut at the box, as before",
+      "summary": "Go back to cutting every travelling word at the edge of its text box, so a rising word is sliced along the bottom until it lands.",
+      "pros": [
+        "Nothing ever draws outside the box"
+      ],
+      "cons": [
+        "Rising words look broken for most of their entrance"
+      ],
+      "mitigation": "A Mask Reveal gives a deliberate cut edge for anyone who wants one.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-16T21:28:19.746Z"
+}

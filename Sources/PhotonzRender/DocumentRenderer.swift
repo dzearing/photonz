@@ -134,6 +134,17 @@ public final class DocumentRenderer: @unchecked Sendable {
     /// Texts' pieces for their reveals (`TextRevealRasterizer.swift`).
     private var piecesCache: [RasterKey: TextRevealPieces] = [:]
     private var piecesOrder: [RasterKey] = []
+    /// How far past their box those pieces draw while one reveal brings them
+    /// in (`TextRevealCompositor.reach(of:reveal:eyeDistance:)`): it follows
+    /// every piece through its whole move, too much to do every frame, and
+    /// it changes only with the words, the reveal and the camera.
+    private struct ReachKey: Hashable {
+        let pieces: RasterKey
+        let reveal: TextReveal
+        let eyeDistance: Double
+    }
+    private var reachCache: [ReachKey: CGFloat] = [:]
+    private var reachOrder: [ReachKey] = []
     // The CIImage retains its CGImage, so identities can't be reused while
     // an entry lives.
     private var wrapCache: [ObjectIdentifier: CIImage] = [:]
@@ -242,11 +253,15 @@ public final class DocumentRenderer: @unchecked Sendable {
 
     /// A text's pieces for its reveal, laid out and drawn once per text,
     /// size, look and unit.
+    private func piecesKey(for text: TextContent, size: CGSize, variant: String, unit: TextRevealUnit) -> RasterKey {
+        RasterKey(content: .text(text), pixelWidth: Int(size.width.rounded()),
+                  pixelHeight: Int(size.height.rounded()), variant: variant + "|pieces:\(unit.rawValue)")
+    }
+
     private func revealPieces(for text: TextContent, size: CGSize, box: CGSize,
                               outlines: [TextRasterizer.TextOutline], bake: CGFloat, variant: String,
                               unit: TextRevealUnit) -> TextRevealPieces? {
-        let key = RasterKey(content: .text(text), pixelWidth: Int(size.width.rounded()),
-                            pixelHeight: Int(size.height.rounded()), variant: variant + "|pieces:\(unit.rawValue)")
+        let key = piecesKey(for: text, size: size, variant: variant, unit: unit)
         cacheLock.lock()
         if let hit = piecesCache[key] {
             contentCacheHits += 1
@@ -267,6 +282,35 @@ public final class DocumentRenderer: @unchecked Sendable {
         }
         cacheLock.unlock()
         return pieces
+    }
+
+    /// `TextRevealCompositor.reach(of:reveal:eyeDistance:)` for pieces from
+    /// `revealPieces(for:…)` with the same words, size, variant and unit,
+    /// worked out once per reveal.
+    private func revealReach(_ pieces: TextRevealPieces, for text: TextContent, size: CGSize, variant: String,
+                             reveal: TextReveal, eyeDistance: Double) -> CGFloat {
+        // When it starts moves no piece: a reveal retimed reaches as far.
+        var timeless = reveal
+        timeless.startMS = 0
+        let key = ReachKey(pieces: piecesKey(for: text, size: size, variant: variant, unit: reveal.unit),
+                           reveal: timeless, eyeDistance: eyeDistance)
+        cacheLock.lock()
+        if let hit = reachCache[key] {
+            cacheLock.unlock()
+            return hit
+        }
+        cacheLock.unlock()
+        let reach = TextRevealCompositor.reach(of: pieces, reveal: reveal, eyeDistance: eyeDistance)
+        cacheLock.lock()
+        if reachCache[key] == nil {
+            reachCache[key] = reach
+            reachOrder.append(key)
+            if reachOrder.count > Self.cacheCapacity {
+                reachCache[reachOrder.removeFirst()] = nil
+            }
+        }
+        cacheLock.unlock()
+        return reach
     }
 
     private func raster(for content: LayerContent, size: CGSize, variant: String = "",
@@ -1147,12 +1191,15 @@ public final class DocumentRenderer: @unchecked Sendable {
                !reveal.hasSettled(atElapsedMS: elapsed - (text.revealShutterMS.map { Int($0 / 2) + 1 } ?? 0),
                                   count: pieces.pieces.count) {
                 let eye = document.projection.eyeDistance * Double(bake)
-                // A word turned toward its lens may draw past the box the words
-                // are laid out in, and is drawn there rather than cut at it:
-                // the picture comes back that much bigger on every side, and
-                // the frame is grown to match, as a shape's outside stroke is.
-                let reach = reveal.style.isInDepth && layer.crop == nil && contentOutset == 0
-                    ? TextRevealCompositor.reach(of: pieces) : 0
+                // A word rising in from under the bottom line, a letter
+                // tracked in from past the end of it or one turned toward its
+                // lens draws past the box the words are laid out in, and is
+                // drawn there rather than cut at it: the picture comes back
+                // that much bigger on every side, and the frame is grown to
+                // match, as a shape's outside stroke is.
+                let reach = layer.crop == nil && contentOutset == 0
+                    ? revealReach(pieces, for: still, size: layer.frame.size, variant: variant, reveal: reveal,
+                                  eyeDistance: eye) : 0
                 image = magnified(TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: elapsed,
                                                              shutterMS: text.revealShutterMS,
                                                              eyeDistance: eye, reach: reach),

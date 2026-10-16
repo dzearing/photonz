@@ -132,9 +132,11 @@ is drawn: each move is the shots or the title's parts turned with
   never further than the document's and flat when the document has no
   perspective: the convention for animated type (CSS `perspective()` per
   letter). Depth is kept as the same share of the lens, so a word looks as far
-  off and as small as before. A turned piece may draw up to
-  `TextRevealCompositor.reach(of:)` past the text box; the renderer grows the
-  layer's frame by it the way a shape's outside stroke does. The depth
+  off and as small as before. Any travelling piece (turned, risen, tracked,
+  blurred) may draw up to `TextRevealCompositor.reach(of:reveal:eyeDistance:)`
+  past the text box, worked out by following each piece through its whole
+  move; the renderer grows the layer's frame by it the way a shape's outside
+  stroke does (task `words-that-rise-into-a-title-are-never-cut-off-b`). The depth
   entrances ease on Ease in out sine (half turned at half time), Flip Up starts
   edge on (90), Tilt Settle from 60, and Fly In closes its distance by
   `left²`. Midpoint near:far 1.32 to 1.57 by word and letter

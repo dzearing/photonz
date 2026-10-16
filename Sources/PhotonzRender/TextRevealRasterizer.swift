@@ -226,10 +226,11 @@ public enum TextRevealCompositor {
     /// camera in this picture's pixels: a lens is never weaker than it, and a
     /// document with no perspective keeps its words flat.
     ///
-    /// `reach` is how far, in pixels, a piece turned toward the camera may be
-    /// drawn past the box the words are laid out in (`reach(of:)`): the
-    /// picture comes back that much bigger on every side, its origin still at
-    /// nought, so nothing near the camera is cut at the box's edge.
+    /// `reach` is how far, in pixels, a piece may be drawn past the box the
+    /// words are laid out in (`reach(of:reveal:eyeDistance:)`): the picture
+    /// comes back that much bigger on every side, its origin still at nought,
+    /// so nothing rising in from under it, tracked in from past its end or
+    /// turned toward the camera is cut at the box's edge.
     public static func image(_ pieces: TextRevealPieces, reveal: TextReveal, elapsedMS: Int,
                              shutterMS: Double? = nil, eyeDistance: Double? = nil,
                              reach: CGFloat = 0) -> CIImage {
@@ -355,14 +356,62 @@ public enum TextRevealCompositor {
         return lens
     }
 
-    /// How far past the box the words are laid out in a piece of `pieces`
-    /// turned toward its lens can reach, in pixels: what `image(…, reach:)`
-    /// is asked for while a reveal turns in depth. Fixed for the words, so the
-    /// picture keeps one size through the whole reveal.
-    public static func reach(of pieces: TextRevealPieces) -> CGFloat {
-        let widest = pieces.pieces.map { max($0.box.width, $0.box.height) }.max() ?? 0
-        let room = (widest * 0.25 + pieces.emPixels * 0.25).rounded(.up)
-        return min(room, max(pieces.pixelSize.width, pieces.pixelSize.height))
+    /// How far past the box the words are laid out, in pixels, any piece of
+    /// `pieces` is drawn at any moment of `reveal`: what `image(…, reach:)` is
+    /// asked for, so a word rising in from under the bottom line, a letter
+    /// tracked in from past the end of it or one turning toward its lens is
+    /// drawn whole rather than cut at the box. Nought where every piece stays
+    /// inside it, a plain fade or a wipe, so those pictures are exactly the
+    /// box's as before.
+    ///
+    /// Worked out from the reveal itself, not the moment: each piece's drawn
+    /// extent is followed through its whole move, so the picture keeps one
+    /// size through the reveal. A piece's pose depends on its beat only by
+    /// when it starts, and holds its first and last pose either side of its
+    /// move, so one beat's worth of moments covers every piece and every
+    /// shutter open across them.
+    public static func reach(of pieces: TextRevealPieces, reveal: TextReveal,
+                             eyeDistance: Double? = nil) -> CGFloat {
+        guard !pieces.pieces.isEmpty, reveal.style.hasLength else { return 0 }
+        let whole = CGRect(origin: .zero, size: pieces.pixelSize)
+        let em = pieces.emPixels
+        let eye = eyeDistance ?? Double(max(pieces.pixelSize.width, pieces.pixelSize.height)) * 1.2
+        let steps = 48
+        let moments = (0...steps).map { Double(max(1, reveal.lengthMS)) * Double($0) / Double(steps) }
+        var poses: [TextRevealPlace: [TextRevealPose]] = [:]
+        var farthest: CGFloat = 0
+        for piece in pieces.pieces {
+            let along = poses[piece.place] ?? moments.map { reveal.pose(rank: 0, atElapsed: $0, place: piece.place) }
+            poses[piece.place] = along
+            for pose in along {
+                let drawn: CGRect
+                if pose.isTurned {
+                    guard let quad = turnedQuad(piece, pose: pose, em: em, height: whole.height,
+                                                eyeDistance: eye, ignoringBack: true) else { continue }
+                    let xs = quad.map(\.x), ys = quad.map(\.y)
+                    guard let minX = xs.min(), let maxX = xs.max(), let minY = ys.min(), let maxY = ys.max()
+                    else { continue }
+                    drawn = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
+                } else {
+                    // As `image` draws it: cut to its mask while it slides,
+                    // softened past that by its blur, then carried by its
+                    // offset. A smear only spreads it between places these
+                    // moments already hold.
+                    var rect = mask(of: piece, pose: pose, em: em)
+                    if pose.blurEm > 0 {
+                        let radius = CGFloat(pose.blurEm) * em
+                        rect = rect.insetBy(dx: -radius * 2, dy: -radius * 2)
+                    }
+                    drawn = rect.offsetBy(dx: pose.offsetEm.x * em, dy: -pose.offsetEm.y * em)
+                }
+                guard drawn.width.isFinite, drawn.height.isFinite else { continue }
+                farthest = max(farthest, whole.minX - drawn.minX, drawn.maxX - whole.maxX,
+                               whole.minY - drawn.minY, drawn.maxY - whole.maxY)
+            }
+        }
+        guard farthest > 0.5 else { return 0 }
+        // A couple of pixels for the moments between the ones followed.
+        return min((farthest + 2).rounded(.up), max(pieces.pixelSize.width, pieces.pixelSize.height))
     }
 
     /// Where the corners of a piece's picture land, clockwise from its

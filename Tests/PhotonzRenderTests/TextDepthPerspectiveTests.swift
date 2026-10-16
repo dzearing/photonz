@@ -101,9 +101,9 @@ struct TextDepthPerspectiveTests {
     @Test("Turned toward the camera, a word may draw past its text box rather than be cut at it")
     func reachesPastTheBox() throws {
         let pieces = try Self.pieces(.word)
-        let reach = TextRevealCompositor.reach(of: pieces)
-        #expect(reach > 0)
         let reveal = TextReveal(style: .flipUp, unit: .word, staggerMS: 0)
+        let reach = TextRevealCompositor.reach(of: pieces, reveal: reveal, eyeDistance: Self.documentEye)
+        #expect(reach > 0)
         let image = TextRevealCompositor.image(pieces, reveal: reveal, elapsedMS: reveal.lengthMS / 2,
                                                eyeDistance: Self.documentEye, reach: reach)
         #expect(image.extent == CGRect(x: 0, y: 0, width: pieces.pixelSize.width + reach * 2,
