@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 70,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.457Z",
-  "updated": "2026-10-16T19:16:42.276Z",
+  "updated": "2026-10-16T19:17:07.517Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8 (Library holds svg, png, a logo). Code: EditorState+LibraryImport.swift ~20-21 and ~58-78 take movies and audio only; MediaDrop.swift ~21-26 returns nil for pictures; EditorState.swift ~2237-2238 reads a dropped picture with CGImageSourceCreateWithURL, which cannot read SVG. No SVG reader in Sources. Pixels stay in ImageStore, never in the model. Searches 'import svg', 'clip art', 'import media pictures': only SVG export tasks.",
@@ -55,10 +55,15 @@
     {
       "t": "2026-10-16T19:16:42.275Z",
       "note": "Verified: Scripts/test.sh 13366 tests passed; library-picture-import-walk passed twice (with and without rebuild), plus library-import, drop-a-sound-or-a-video, add-media-at-playhead, empty-track-slot and 8 timeline file-drop walks. Looked at every audit picture: logo tile on the shelf, 'Picture · New V2 · 0:02' over the timeline, logo on V2 0:02-0:07 over the footage, logo on the picture where dropped with an in and out, SVG note legible under the pointer and in the pill. Filed: an-svg-logo-comes-into-a-video-and-stays-sharp-a (p2), a-title-or-a-logo-laid-over-a-video-lands-on-a-t (p1, mock's Gfx/Title track names). Left rough (no task, under the bar): a Finder PNG let go on the timeline still lands on the picture at the playhead rather than the track under the pointer; a tile on the picture runs playhead-to-end vs 5s on the timeline (existing rules)."
+    },
+    {
+      "t": "2026-10-16T19:17:07.515Z",
+      "note": "Import Media and Library drops take PNG/JPEG/HEIC onto the video's Media shelf; a picture tile lands on the timeline on its own track for 5s (or on the picture where dropped) with an in and out; SVG refused in words on shelf, canvas and window. Commit 009cd9c0. Verified: test.sh 13366 green, library-picture-import-walk passed twice at Next defaults, related walks green. Audit queue/audits/2026-10-16-library-picture-import.json. Follow-ups: an-svg-logo-comes-into-a-video-and-stays-sharp-a, a-title-or-a-logo-laid-over-a-video-lands-on-a-t."
     }
   ],
   "started": "2026-10-16T18:24:20.655Z",
   "walks": [
     "library-picture-import-walk"
-  ]
+  ],
+  "completed": "2026-10-16T19:17:07.516Z"
 }
