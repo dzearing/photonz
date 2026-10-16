@@ -568,3 +568,26 @@ struct SectionCleanAndHideTests {
         #expect(back.pictureHidden && back.noiseReduction == .medium)
     }
 }
+
+@Suite("A right click leads with the range's rows only on the range")
+struct SectionRowsWhereTheClickIsTests {
+
+    @Test("On the range, its edges included, the range's rows lead")
+    func onTheRange() {
+        for ms in [3000, 4500, 6000] {
+            #expect(SectionOperation.leadsTheMenu(rightClickAtMS: ms, range: 3000..<6000))
+        }
+    }
+
+    @Test("Off the range, on the same clip, they do not")
+    func offTheRange() {
+        for ms in [0, 2999, 6001, 9000] {
+            #expect(!SectionOperation.leadsTheMenu(rightClickAtMS: ms, range: 3000..<6000))
+        }
+    }
+
+    @Test("A menu opened with no pointer, from the keyboard, still leads with them")
+    func noPointer() {
+        #expect(SectionOperation.leadsTheMenu(rightClickAtMS: nil, range: 3000..<6000))
+    }
+}

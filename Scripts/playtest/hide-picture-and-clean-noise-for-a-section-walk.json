@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/hide-picture-and-clean-noise-for-a-section-walk",
-  "seed": "At Next defaults, no flag set: the sample recording, which has its own sound. A range drawn on the ruler from 0:03 to 0:06, then a click on the recording inside it, keeps the range and picks the recording. Its right click inside the range offers Hide Picture for Section: the picture is off between 0:03 and 0:06 and on either side, its sound plays on through the hidden stretch, the bar is cut at both edges and its middle piece says hidden, and one Undo takes it all back. Show Picture on the hidden piece's right click brings it back too. The same range over the recording's sound offers Clean Noise in Section: the mix plays a cleaned copy between 0:03 and 0:06 and the file as recorded outside it.",
+  "seed": "At Next defaults, no flag set: the sample recording, which has its own sound. A range drawn on the ruler from 0:03 to 0:06, then a click on the recording inside it, keeps the range and picks the recording. Its right click inside the range offers Hide Picture for Section: the picture is off between 0:03 and 0:06 and on either side, its sound plays on through the hidden stretch, the bar is cut at both edges and its middle piece says hidden, and one Undo takes it all back. Show Picture on the hidden piece's right click brings it back too. A right click on the recording outside the range offers the clip's own rows and none of the range's. The same range over the recording's sound offers Clean Noise in Section: the mix plays a cleaned copy between 0:03 and 0:06 and the file as recorded outside it, easing between the two over a fifth of a second at each edge, and the sound's bar draws the cleaned copy inside the range and the file outside it.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -32,8 +32,28 @@
     { "do": "snapshot", "name": "1-recording-picked-under-the-range" },
     {
       "do": "rightClick",
+      "at": [452, 893],
+      "space": "window",
+      "first": "Split at Playhead",
+      "lacks": ["Hide Picture for Section", "Clean Noise in Section", "Split at Range Edges", "Delete Section", "Speed for Section", "Freeze Frame for Section"]
+    },
+    {
+      "do": "expectTimelinePick",
+      "clips": ["Tutorial Sample"],
+      "rangeOn": ["every track"],
+      "from": 3.0,
+      "to": 6.0
+    },
+    {
+      "do": "describe",
+      "stage": "1b-right-click-outside-the-range",
+      "note": "a right click on the picked recording at 0:01.5, outside the range, offers the clip's own rows and none of the range's; the range and the pick are both still in hand"
+    },
+    {
+      "do": "rightClick",
       "at": [1000, 893],
       "space": "window",
+      "first": "Mute Section",
       "choose": "Hide Picture for Section"
     },
     { "do": "wait", "seconds": 0.5 },
@@ -109,6 +129,7 @@
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectLevel", "clip": "Tutorial Sample", "cleanedAt": [3.2, 4.5, 5.8], "rawAt": [1.0, 2.5, 7.0] },
     { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 3 },
+    { "do": "expectWaveform", "clip": "Tutorial Sample", "within": 20, "cleanedAt": [4.5], "rawAt": [1.0, 7.0] },
     {
       "do": "describe",
       "stage": "6-noise-cleaned-in-the-range",

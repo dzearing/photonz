@@ -3222,9 +3222,13 @@ public enum PlaytestStep: Sendable, Equatable {
     /// nought to one, instead of in the middle, the way `press` takes it: a
     /// walk says which moment on a clip's bar it means, which decides what
     /// the right click picks (it never moves the playhead).
+    ///
+    /// `first` names the row the menu must lead with, and `lacks` rows that
+    /// must not be in it at all: what a right click is about decides both, so
+    /// a walk says where the click lands and what the menu leads with there.
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                     ticked: [String], unticked: [String], keys: [String: String] = [:],
-                    across: CGFloat? = nil)
+                    across: CGFloat? = nil, first: String? = nil, lacks: [String] = [])
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -3826,7 +3830,11 @@ public enum PlaytestStep: Sendable, Equatable {
     /// arrived stays a flat line: a recording added at the playhead did exactly
     /// that until 2026-09-26, and a picture of a flat line looks like a quiet
     /// clip. This reads what the bar last drew, not what the app has read.
-    case expectWaveform(clip: String, within: Double)
+    /// `cleanedAt` names moments (seconds on the document's clock) where the
+    /// piece of the bar under them draws the shape of a cleaned copy itself,
+    /// never the file standing in for it, and `rawAt` moments where it draws
+    /// the file: a stretch cleaned on its own draws what it plays.
+    case expectWaveform(clip: String, within: Double, cleanedAt: [Double] = [], rawAt: [Double] = [])
     /// CLAIMS where the level line of the clip named `clip` has been left:
     /// how many `points` it carries, that one of them is quieter than
     /// `dipsBelowDB` (a dip landed), or that they are all at one level
@@ -5024,7 +5032,9 @@ public enum PlaytestStep: Sendable, Equatable {
                                ticked: try f.optionalStrings("ticked"),
                                unticked: try f.optionalStrings("unticked"),
                                keys: try f.optionalWordsByName("keys"),
-                               across: try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) })
+                               across: try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) },
+                               first: try f.optionalString("first"),
+                               lacks: try f.optionalStrings("lacks"))
         case "dragTile":
             let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes
@@ -5333,7 +5343,9 @@ public enum PlaytestStep: Sendable, Equatable {
             guard within >= 0 else {
                 throw f.invalid("within", "a number of seconds to wait is zero or more, not \(within)")
             }
-            self = .expectWaveform(clip: try f.string("clip"), within: within)
+            self = .expectWaveform(clip: try f.string("clip"), within: within,
+                                   cleanedAt: try f.optionalNumbers("cleanedAt"),
+                                   rawAt: try f.optionalNumbers("rawAt"))
         case "expectLevel":
             let points = try f.optionalNumber("points")
             let dipsBelowDB = try f.optionalNumber("dipsBelowDB")

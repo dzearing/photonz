@@ -560,8 +560,10 @@ extension PhotonzDocument {
                     ramps: Self.ramps(for: level, startMS: start, lengthMS: piece.lengthMS,
                                       layerInMS: time.inMS)))
             }
-            if pieces.hasAnyTransition {
-                crossings += Self.soundCrossings(inClip: layer.id, pieces: pieces, inMS: time.inMS)
+            // ...and eases in and out of it (`SectionCleaningSeam`).
+            if pieces.hasAnyTransition || !cleanedPieces.isEmpty {
+                crossings += Self.soundCrossings(inClip: layer.id, pieces: pieces, inMS: time.inMS,
+                                                 seams: !cleanedPieces.isEmpty)
             }
         }
         guard !heard.isEmpty else { return mix }

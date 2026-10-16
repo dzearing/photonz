@@ -348,7 +348,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -369,7 +369,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
                        "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
         """)
-        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -386,10 +386,26 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label", "keys": { "Duplicate": "⌘J", "Delete": "⌘⌫" } } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, let keys, _) = script.steps[0] else {
+        guard case .rightClick(_, _, _, _, _, _, let keys, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(keys == ["Duplicate": "⌘J", "Delete": "⌘⌫"])
+    }
+
+    @Test("A rightClick step can say which row the menu leads with and which rows it lacks")
+    func rightClickStepCanSayFirstAndLacks() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "at": [10, 20], "space": "window",
+                       "first": "Split at Playhead", "lacks": ["Mute Section", "Clean Noise in Section"] },
+                     { "do": "rightClick", "on": "Label" } ] }
+        """)
+        guard case .rightClick(_, _, _, _, _, _, _, _, let first, let lacks) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, _, let none, let nothing) = script.steps[1] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(first == "Split at Playhead")
+        #expect(lacks == ["Mute Section", "Clean Noise in Section"])
+        #expect(none == nil && nothing.isEmpty)
     }
 
     /// A right click on the timeline moves the playhead to where it lands, so
@@ -401,9 +417,9 @@ struct PlaytestScriptTests {
                      { "do": "rightClick", "on": "Label" },
                      { "do": "rightClick", "on": "Label", "across": 3 } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, _, let across) = script.steps[0],
-              case .rightClick(_, _, _, _, _, _, _, let middle) = script.steps[1],
-              case .rightClick(_, _, _, _, _, _, _, let clamped) = script.steps[2] else {
+        guard case .rightClick(_, _, _, _, _, _, _, let across, _, _) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, let middle, _, _) = script.steps[1],
+              case .rightClick(_, _, _, _, _, _, _, let clamped, _, _) = script.steps[2] else {
             Issue.record("rightClick"); return
         }
         #expect(across == 0.25)
@@ -428,7 +444,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [140, 120], "choose": "Group" } ] }
         """)
-        guard case .rightClick(let on, let at, _, let choose, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, _, let choose, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == nil)
@@ -441,7 +457,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [40, 40], "space": "window" } ] }
         """)
-        guard case .rightClick(_, let at, _, _, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(_, let at, _, _, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(at == PlaytestPoint(CGPoint(x: 40, y: 40), space: .window))
@@ -5234,12 +5250,28 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectWaveform", "clip": "b-roll" } ] }
         """)
-        guard case .expectWaveform(let clip, let within) = script.steps[0] else {
+        guard case .expectWaveform(let clip, let within, let cleanedAt, let rawAt) = script.steps[0] else {
             Issue.record("expectWaveform"); return
         }
         #expect(clip == "b-roll")
         #expect(within == 1)
+        #expect(cleanedAt.isEmpty && rawAt.isEmpty)
         #expect(script.steps[0].name == "expectWaveform")
+    }
+
+    @Test("An expectWaveform step can claim where the bar draws the cleaned sound and where the file")
+    func expectWaveformCleanedAndRaw() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "expectWaveform", "clip": "talk", "within": 8,
+                       "cleanedAt": [4.5], "rawAt": [1.0, 7.0] } ] }
+        """)
+        guard case .expectWaveform(let clip, let within, let cleanedAt, let rawAt) = script.steps[0] else {
+            Issue.record("expectWaveform"); return
+        }
+        #expect(clip == "talk")
+        #expect(within == 8)
+        #expect(cleanedAt == [4.5])
+        #expect(rawAt == [1.0, 7.0])
     }
 
     @Test("An expectWaveform step can say how long to wait for the shape to land")
@@ -5247,7 +5279,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "expectWaveform", "clip": "b-roll", "within": 2.5 } ] }
         """)
-        guard case .expectWaveform(_, let within) = script.steps[0] else {
+        guard case .expectWaveform(_, let within, _, _) = script.steps[0] else {
             Issue.record("expectWaveform"); return
         }
         #expect(within == 2.5)

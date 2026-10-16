@@ -4,6 +4,7 @@
 // the dev and probe bundles, so the shipping build does not contain this file.
 #if PHOTONZ_PLAYTEST
 import Foundation
+import PhotonzCore
 
 /// Whether each clip's bar drew the shape of its sound the last time it drew.
 ///
@@ -25,5 +26,17 @@ final class DrawnWaveforms {
 
     /// What the bar of this clip last drew: `nil` when it has never drawn.
     func drew(_ layerID: UUID) -> Bool? { drawn[layerID] }
+
+    /// What one piece of a bar last drew: the sound it asked for, and whether
+    /// the shape was that sound's own rather than the file standing in for a
+    /// cleaned copy not made yet.
+    struct Piece { let sound: SoundRef; let own: Bool }
+    private var pieces: [UUID: [Int: Piece]] = [:]
+
+    func piece(_ index: Int, of layerID: UUID, sound: SoundRef, own: Bool) {
+        pieces[layerID, default: [:]][index] = Piece(sound: sound, own: own)
+    }
+
+    func drew(_ layerID: UUID, piece index: Int) -> Piece? { pieces[layerID]?[index] }
 }
 #endif

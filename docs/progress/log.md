@@ -21481,3 +21481,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - The cut's and edit point's right-click carry Copy Transition / Paste Transition (⌘C / ⌘V printed); the Transition header gets the mock's three dots menu with Copy, Paste and Reset to Default Length (also Clip ▸ Transition at Cut).
 - Walk `transition-copy-paste-walk` (ok twice, Next defaults); 13,322 tests green; audit `queue/audits/2026-10-16-transition-copy-paste.json`.
 - Filed: `with-a-cut-picked-the-panel-opens-under-the-prop` (the mock's Properties header is missing while a cut is picked, so the menu sits on the Transition header for now).
+
+## 2026-10-16 — Clean Noise in Section eases in and out
+
+- The mix plan overlaps the file and its cleaned copy for 200 ms centred on each edge of a stretch cleaned on its own, fading in straight lines on two voices (`SectionCleaningSeam`, `SoundCrossingShape` in `TransitionSound.swift`). Measured off the exporter's composition: the jump at each edge went from 0.046 (10x the room tone's own) to under the room tone's own.
+- `AudioMixdown` now holds a track at the level its next segment starts at; AVFoundation otherwise waits at volume 1 and slides into a fade-in, a blip of a few ms (found by the same measure).
+- A right click on a picked clip outside the range offers the clip's own rows (`SectionOperation.leadsTheMenu`).
+- Walk steps: `expectWaveform` gains `cleanedAt`/`rawAt`; `rightClick` gains `first`/`lacks`.
+- Next: strength choice for a section clean (open question in the audit).

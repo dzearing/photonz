@@ -25,6 +25,17 @@ import Foundation
 // both readings are the same samples, so cross-fading them only colours them.
 // And only a clip's OWN sound is shaped. Sound taken off onto its own layer,
 // and music nobody linked to anything, are not a side of any cut.
+//
+// **The seam either side of a stretch cleaned on its own** (Clean Noise in
+// Section, `RangeSection.swift`) is the one cut with no transition on it that
+// is shaped all the same. Its two sides read the same frames, but one reads
+// them from the cleaned copy, so switching at the cut drops the room tone from
+// one sample to the next: a click. The two readings overlap for a short fixed
+// time centred on the cut (`SectionCleaningSeam`) and fade in straight lines,
+// not at equal power, because they are two readings of the same recording:
+// the voice in them is the same voice, and straight lines keep it at its
+// level where equal power would swell it by three decibels mid-way. A cut
+// somebody put a dip on keeps the dip, which already goes through silence.
 
 /// Which side of a cut a sound is on.
 public enum TransitionSoundSide: Hashable, Sendable {
@@ -64,6 +75,65 @@ extension ClipTransition {
     }
 }
 
+/// The ease either side of a stretch of sound cleaned on its own.
+public enum SectionCleaningSeam {
+
+    /// How long the two readings overlap, centred on the cut: long enough
+    /// that the room tone slides rather than steps, short enough that the
+    /// cleaning still starts where the range does.
+    public static let lengthMS = 200
+
+    /// Half the seam, either side of a cut between `outgoing` and `incoming`:
+    /// never more than half of either piece, so a short stretch eases over no
+    /// more than itself.
+    static func halfMS(outgoing: ClipPiece, incoming: ClipPiece) -> Int {
+        min(lengthMS / 2, outgoing.lengthMS / 2, incoming.lengthMS / 2)
+    }
+
+    /// How loud one side is at a moment of a seam of `halfMS` either side of
+    /// a cut at `cutAtMS`, nought to one: straight lines that always add up
+    /// to one.
+    static func gain(atMS ms: Int, cutAtMS: Int, halfMS: Int, side: TransitionSoundSide) -> Double {
+        let through = halfMS <= 0 ? (ms < cutAtMS ? 0.0 : 1.0)
+            : min(1, max(0, Double(ms - (cutAtMS - halfMS)) / Double(2 * halfMS)))
+        return side == .outgoing ? 1 - through : through
+    }
+}
+
+/// What shapes the sound over one cut: a transition somebody put on it, or the
+/// seam either side of a stretch cleaned on its own.
+enum SoundCrossingShape {
+    case transition(ClipTransition)
+    case cleaningSeam(halfMS: Int)
+
+    /// How far the outgoing side runs on past the cut and the incoming one
+    /// starts before it, where both sound at once; nil where each stays
+    /// inside its own time.
+    var overlap: (beforeMS: Int, afterMS: Int)? {
+        switch self {
+        case .transition(let transition):
+            transition.kind.needsOverlap ? (transition.beforeMS, transition.afterMS) : nil
+        case .cleaningSeam(let half): (half, half)
+        }
+    }
+
+    func gain(atMS ms: Int, cutAtMS: Int, side: TransitionSoundSide) -> Double {
+        switch self {
+        case .transition(let transition): transition.soundGain(atMS: ms, cutAtMS: cutAtMS, side: side)
+        case .cleaningSeam(let half):
+            SectionCleaningSeam.gain(atMS: ms, cutAtMS: cutAtMS, halfMS: half, side: side)
+        }
+    }
+
+    /// Where the level turns a corner: straight lines need only their ends.
+    func moments(cutAtMS: Int) -> [Int] {
+        switch self {
+        case .transition(let transition): transition.soundMoments(cutAtMS: cutAtMS)
+        case .cleaningSeam(let half): [cutAtMS - half, cutAtMS + half]
+        }
+    }
+}
+
 /// One piece of one layer, the way a transition names a side of its cut.
 struct TransitionSoundPiece: Hashable {
     let layerID: UUID
@@ -77,13 +147,13 @@ struct HeardPiece {
     let layerInMS: Int
 }
 
-/// A transition that shapes sound: the two pieces it joins, where the cut is
-/// on the document's clock, and the transition as it is drawn.
+/// A cut whose sound is shaped: the two pieces it joins, where the cut is on
+/// the document's clock, and what shapes it.
 struct TransitionSoundCrossing {
     let outgoing: TransitionSoundPiece
     let incoming: TransitionSoundPiece
     let cutAtMS: Int
-    let transition: ClipTransition
+    let shape: SoundCrossingShape
 
     /// Whether this is a join inside one clip, whose two sides are two voices
     /// of the one layer.
@@ -92,16 +162,26 @@ struct TransitionSoundCrossing {
 
 extension PhotonzDocument {
 
-    /// The transitions on the joins inside one clip that shape its sound.
+    /// The joins inside one clip whose sound is shaped: the transitions on
+    /// them, and, where `seams` says the stretches cleaned on their own are
+    /// heard, the seam either side of each.
     static func soundCrossings(inClip id: UUID, pieces: ClipPieces,
-                               inMS: Int) -> [TransitionSoundCrossing] {
+                               inMS: Int, seams: Bool = false) -> [TransitionSoundCrossing] {
         pieces.cuts.compactMap { cut in
-            guard let drawn = cut.drawnTransition,
-                  !(drawn.kind.needsOverlap && cut.isContinuous) else { return nil }
+            let shape: SoundCrossingShape
+            if let drawn = cut.drawnTransition, !(drawn.kind.needsOverlap && cut.isContinuous) {
+                shape = .transition(drawn)
+            } else if seams, cut.isContinuous,
+                      cut.outgoing.noiseReduction != cut.incoming.noiseReduction {
+                shape = .cleaningSeam(halfMS: SectionCleaningSeam.halfMS(outgoing: cut.outgoing,
+                                                                          incoming: cut.incoming))
+            } else {
+                return nil
+            }
             return TransitionSoundCrossing(
                 outgoing: TransitionSoundPiece(layerID: id, index: cut.index - 1),
                 incoming: TransitionSoundPiece(layerID: id, index: cut.index),
-                cutAtMS: inMS + cut.atMS, transition: drawn)
+                cutAtMS: inMS + cut.atMS, shape: shape)
         }
     }
 
@@ -120,7 +200,7 @@ extension PhotonzDocument {
             return TransitionSoundCrossing(
                 outgoing: TransitionSoundPiece(layerID: point.outgoing, index: outPieces.count - 1),
                 incoming: TransitionSoundPiece(layerID: incoming.id, index: 0),
-                cutAtMS: cut.atMS, transition: drawn)
+                cutAtMS: cut.atMS, shape: .transition(drawn))
         }
     }
 
@@ -135,18 +215,18 @@ extension PhotonzDocument {
                                     heard: [TransitionSoundPiece: HeardPiece]) -> [AudioMixSegment] {
         var reshapes: [Int: Reshape] = [:]
         for crossing in crossings {
-            let transition = crossing.transition
+            let shape = crossing.shape
             let out = heard[crossing.outgoing], into = heard[crossing.incoming]
             if let out {
                 reshapes[out.at, default: Reshape(heard: out)].shapes.append(
-                    (crossing.cutAtMS, transition, .outgoing))
-                if transition.kind.needsOverlap { reshapes[out.at]?.runOnMS = transition.afterMS }
+                    (crossing.cutAtMS, shape, .outgoing))
+                if let overlap = shape.overlap { reshapes[out.at]?.runOnMS = overlap.afterMS }
             }
             if let into {
                 reshapes[into.at, default: Reshape(heard: into)].shapes.append(
-                    (crossing.cutAtMS, transition, .incoming))
-                if transition.kind.needsOverlap {
-                    reshapes[into.at]?.earlyMS = transition.beforeMS
+                    (crossing.cutAtMS, shape, .incoming))
+                if let overlap = shape.overlap {
+                    reshapes[into.at]?.earlyMS = overlap.beforeMS
                     // Two pieces of one clip sounding at once each get a
                     // fader: the incoming one takes the voice the outgoing
                     // one is not on. The joins are visited in order, so a
@@ -170,7 +250,7 @@ extension PhotonzDocument {
         var earlyMS = 0
         var runOnMS = 0
         var voice = 0
-        var shapes: [(cutAtMS: Int, transition: ClipTransition, side: TransitionSoundSide)] = []
+        var shapes: [(cutAtMS: Int, shape: SoundCrossingShape, side: TransitionSoundSide)] = []
 
         init(heard: HeardPiece) { self.heard = heard }
 
@@ -201,14 +281,14 @@ extension PhotonzDocument {
                                              layerInMS: heard.layerInMS))
             var moments = Set(own.ramps.map(\.fromMS) + [end])
             for shape in shapes {
-                for ms in shape.transition.soundMoments(cutAtMS: shape.cutAtMS) where ms > start && ms < end {
+                for ms in shape.shape.moments(cutAtMS: shape.cutAtMS) where ms > start && ms < end {
                     moments.insert(ms)
                 }
             }
             let sorted = moments.sorted()
             func gain(_ ms: Int) -> Double {
                 shapes.reduce(own.gain(atMS: ms)) {
-                    $0 * $1.transition.soundGain(atMS: ms, cutAtMS: $1.cutAtMS, side: $1.side)
+                    $0 * $1.shape.gain(atMS: ms, cutAtMS: $1.cutAtMS, side: $1.side)
                 }
             }
             let ramps = zip(sorted, sorted.dropFirst()).map { from, to in

@@ -1,0 +1,26 @@
+{
+  "feature": "Clean Noise in Section eases in and out",
+  "epic": "video-audio",
+  "summary": "A stretch cleaned with Clean Noise in Section now slides into and out of the cleaned sound over a fifth of a second at each edge, so there is no click in the room tone, in playback and in an export. A right click on a picked clip outside the range now offers the clip's own menu, not the range's.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (it has its own sound).",
+  "switched": {},
+  "try": [
+    { "do": "Drag on the ruler from 0:03 to 0:06 to draw a range, then click the recording's bar on V1 inside it.", "shot": "2026-10-16-section-clean-range-picked.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the recording at about 0:01, outside the range: the menu starts with Split at Playhead and has no section rows." },
+    { "do": "Right-click the recording's sound under V1 inside the range and choose Clean Noise in Section.", "shot": "2026-10-16-section-clean-eases-waveform.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at the sound's bar: the middle piece draws the cleaned sound, quiet between the words." },
+    { "do": "Play from 0:02 to 0:07 and listen at 0:03 and 0:06 for the hiss easing down and back up." },
+    { "do": "Choose Export Sound… from the menu bar and listen to the same two edges in the file." }
+  ],
+  "evaluate": [
+    "Do the edges at 0:03 and 0:06 now sound smooth, with no click or tick?",
+    "Is a fifth of a second the right length for the ease, or would you want it shorter or longer?",
+    "With a range drawn, does a right click outside it giving the clip's own menu match what you expect?"
+  ],
+  "rough": [
+    "No mock covers these rows; they follow the table of range rows the user asked for on 2026-10-12.",
+    "The ease is centred on each edge, so the cleaning starts a tenth of a second before the range and ends a tenth after it, the way Premiere centres a crossfade on a cut.",
+    "The waveform still changes at the exact edge rather than easing over the same fifth of a second; at timeline scale the two read the same.",
+    "A stretch is still cleaned at Medium, with no strength choice for a section."
+  ]
+}

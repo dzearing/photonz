@@ -92,9 +92,11 @@ extension EditorState {
         if pieces.count > 1, isPiecePickedByBox(layerID: layerID, index: index) {
             rows += trackThingMenuRows() + [.separator]
         }
-        // Picked under a range in hand: what the range does to it leads
-        // (`EditorState+RangeSection`).
-        if rangeSection?.ids.contains(layerID) == true {
+        // Picked under a range in hand and right clicked on the range: what
+        // the range does to it leads (`EditorState+RangeSection`). On a part
+        // of the clip outside the range the click is about the clip.
+        if let section = rangeSection, section.ids.contains(layerID),
+           SectionOperation.leadsTheMenu(rightClickAtMS: timelineLastRightPressMS, range: section.range) {
             rows += rangeSectionMenuRows() + [.separator]
         }
         let piece = pieces.piece(at: index)

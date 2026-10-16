@@ -101,6 +101,15 @@ public enum AudioMixdown {
                 composition.scaleTimeRange(CMTimeRange(start: at, duration: read.duration),
                                            toDuration: ms(segment.lengthMS))
             }
+            // A track waits for its next segment at the level that segment
+            // starts at. Left alone it waits at full volume (a new track) or
+            // wherever its last segment ended, and AVFoundation slides from
+            // there to a ramp's first level over a few milliseconds: a sound
+            // that should fade in from silence starts with a blip at full
+            // volume (the cleaned side of a seam, `SectionCleaningSeam`).
+            if segment.startMS > filledToMS[index], let first = segment.ramps.first {
+                parameters[index].setVolume(Float(first.fromGain), at: ms(filledToMS[index]))
+            }
             filledToMS[index] = segment.endMS
             durationMS = max(durationMS, segment.endMS)
 

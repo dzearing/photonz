@@ -2753,9 +2753,11 @@ private final class Run {
             try await photographMenuBarMenu(menu, name: name, ticked: ticked,
                                             unticked: unticked, number: number)
 
-        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, let across):
+        case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, let across,
+                         let first, let lacks):
             try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
-                                  unticked: unticked, keys: keys, across: across, number: number)
+                                  unticked: unticked, keys: keys, across: across, first: first, lacks: lacks,
+                                  number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
@@ -3292,8 +3294,9 @@ private final class Run {
         case .expectFrameSharp(let within):
             note(number, step.name, try await checkFrameSharp(within: within), state: describe())
 
-        case .expectWaveform(let clip, let within):
-            note(number, step.name, try await checkWaveform(clip: clip, within: within),
+        case .expectWaveform(let clip, let within, let cleanedAt, let rawAt):
+            note(number, step.name, try await checkWaveform(clip: clip, within: within,
+                                                            cleanedAt: cleanedAt, rawAt: rawAt),
                  state: describe())
 
         case .expectLevel(let clip, let points, let dipsBelowDB, let flat, let silentAt, let fullAt,
@@ -9473,7 +9476,8 @@ private final class Run {
         return "\(clip)'s volume line is as the walk said: \(reading)"
     }
 
-    private func checkWaveform(clip: String, within: Double) async throws -> String {
+    private func checkWaveform(clip: String, within: Double,
+                               cleanedAt: [Double] = [], rawAt: [Double] = []) async throws -> String {
         let editor = try requireEditor()
         guard let layer = editor.document?.flattenedLayers.first(where: { $0.name == clip }) else {
             throw Failure(description: "there is no clip called \(clip) in the document")
@@ -9481,14 +9485,50 @@ private final class Run {
         guard layer.sound != nil else {
             throw Failure(description: "\(clip) has no sound, so its bar has no waveform to draw")
         }
+        // Each moment named, as the piece of the bar under it and what that
+        // piece has to be drawing.
+        var asked: [(seconds: Double, piece: Int, cleaned: Bool)] = []
+        for (moments, cleaned) in [(cleanedAt, true), (rawAt, false)] {
+            for seconds in moments {
+                guard let time = layer.time, let pieces = layer.clipPieces,
+                      let index = pieces.pieceIndex(atMS: Int((seconds * 1000).rounded()) - time.inMS) else {
+                    throw Failure(description: String(format: "%@ has no piece at %.2fs", clip, seconds))
+                }
+                asked.append((seconds, index, cleaned))
+            }
+        }
+        func wrongPieces() -> [String] {
+            asked.compactMap { ask in
+                let at = String(format: "%.2fs (piece %d)", ask.seconds, ask.piece)
+                guard let drew = DrawnWaveforms.shared.drew(layer.id, piece: ask.piece) else {
+                    return "at \(at) the bar has never drawn"
+                }
+                if ask.cleaned {
+                    if drew.sound.cleaning == nil { return "at \(at) it draws the file, not a cleaned copy" }
+                    if !drew.own { return "at \(at) it draws the file standing in for the cleaned copy" }
+                } else if drew.sound.cleaning != nil {
+                    return "at \(at) it draws a cleaned copy, not the file"
+                }
+                return nil
+            }
+        }
         let began = CACurrentMediaTime()
         while true {
-            if DrawnWaveforms.shared.drew(layer.id) == true {
+            if DrawnWaveforms.shared.drew(layer.id) == true, wrongPieces().isEmpty {
                 let waited = Self.round1(CGFloat(CACurrentMediaTime() - began))
-                return "\(clip)'s bar is drawing the shape of its sound, after \(waited)s"
+                let said = (cleanedAt.isEmpty ? "" : ", the cleaned copy's own shape at "
+                    + cleanedAt.map { String(format: "%.2fs", $0) }.joined(separator: ", "))
+                    + (rawAt.isEmpty ? "" : ", the file's at "
+                        + rawAt.map { String(format: "%.2fs", $0) }.joined(separator: ", "))
+                return "\(clip)'s bar is drawing the shape of its sound\(said), after \(waited)s"
             }
             guard CACurrentMediaTime() - began < within else { break }
             await sleep(0.05)
+        }
+        let wrong = wrongPieces()
+        if DrawnWaveforms.shared.drew(layer.id) == true, !wrong.isEmpty {
+            throw Failure(description: "\(clip)'s bar is not drawing what plays after "
+                + "\(Self.round1(CGFloat(within)))s: " + wrong.joined(separator: "; "))
         }
         let read = layer.sound.flatMap { SoundLibrary.shared.waveform(for: $0) } != nil
         let bar = DrawnWaveforms.shared.drew(layer.id) == nil ? "has never drawn" : "last drew a flat line"
@@ -12998,7 +13038,8 @@ private final class Run {
     /// from.
     private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], keys: [String: String] = [:],
-                             across: CGFloat? = nil, number: Int) async throws {
+                             across: CGFloat? = nil, first: String? = nil, lacks: [String] = [],
+                             number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
         if let name {
             var target = try rightClickTarget(name)
@@ -13187,6 +13228,15 @@ private final class Run {
         }
         if let extra = unticked.first(where: { reading.asked[$0] == true }) {
             throw Failure(description: "\(target.name) ▸ \(extra) should NOT be ticked and it is")
+        }
+        let listed = reading.rows.map { $0.isEmpty ? "—" : $0 }.joined(separator: ", ")
+        if let first, reading.rows.first(where: { !$0.isEmpty }) != first {
+            throw Failure(description: "the menu on \"\(target.name)\" should lead with \"\(first)\"; "
+                + "the rows are: " + listed)
+        }
+        if let there = lacks.first(where: { reading.rows.contains($0) }) {
+            throw Failure(description: "the menu on \"\(target.name)\" should not offer \"\(there)\" here; "
+                + "the rows are: " + listed)
         }
         // A printed key is a promise; the walk holds the row to the one it
         // expects, so it can go on and press that key.

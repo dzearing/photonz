@@ -590,6 +590,8 @@ struct ClipPiecesBar: View {
         let already = SoundLibrary.shared.waveform(for: sound)
         #if PHOTONZ_PLAYTEST
         DrawnWaveforms.shared.bar(of: layerID, drew: already != nil)
+        DrawnWaveforms.shared.piece(index, of: layerID, sound: sound,
+                                    own: SoundLibrary.shared.exactWaveform(for: sound) != nil)
         #endif
         if let already { return already }
         SoundLibrary.shared.loadWaveform(for: sound)

@@ -95,6 +95,16 @@ public enum SectionOperation: String, CaseIterable, Hashable, Sendable {
     /// offered.
     public var isAvailable: Bool { true }
 
+    /// Whether a right click on a picked clip at `ms` (on the document's
+    /// clock) leads its menu with the range's rows: only on the range, its
+    /// edges included. A right click on a part of the clip outside the range
+    /// is about the clip, and gets the clip's own rows. A menu opened with no
+    /// pointer (`ms` nil) is about the pick, range and all.
+    public static func leadsTheMenu(rightClickAtMS ms: Int?, range: Range<Int>) -> Bool {
+        guard let ms else { return true }
+        return ms >= range.lowerBound && ms <= range.upperBound
+    }
+
     /// The operations offered for a pick of these kinds, in menu order, only
     /// those the app can do.
     public static func offered(for kinds: Set<SectionKind>) -> [SectionOperation] {
