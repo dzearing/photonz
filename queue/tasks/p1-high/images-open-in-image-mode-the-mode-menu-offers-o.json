@@ -1,0 +1,37 @@
+{
+  "id": "images-open-in-image-mode-the-mode-menu-offers-o",
+  "title": "Images open in Image mode, the mode menu offers only what fits the document, and videos have no mode menu",
+  "goal": "The window's mode menu should only offer modes that make sense for what is open. Redline is renamed Image and is what every image opens in. An image's menu offers Image, Icon and Design (no Video). A video has only one sensible setup, so a video window shows no mode menu at all and is always set up for video. Today an image can open in Video mode because the last mode picked anywhere is remembered for every window.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1.2,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:06:51.467Z",
+  "updated": "2026-10-17T13:06:51.569Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"i open an image and the top left dropdown says 'video'. WTF is this. There isn't even an image mode. The modes confuse me really. Redline should just be 'Image' and it should be the default mode for images. Then maybe Icon, then Video, then Design. But! Video mode doesnt even apply to anything but a video! In fact, I think the dropdown should only apply to image editing, and when you open a video, you shouldn't see the dropdown. it makes no sense if only one mode is relevant. Remove video mode from the dropdown for images.\" Screenshot 2026-10-17 06.03: an image window (layers Arrow 2, Arrow, Background) whose chip reads Video; the menu lists Icon ^1, Redline ^2, Video ^3 (checked), Design ^4, Show Everything.\n\nFrom code reading: PhotonzCore/WindowMode.swift ('A MODE is what the WINDOW is set up for, never what the document IS'), design in docs/design/modes.md; the chosen mode is stored once in UserDefaults (experiments.next.windowMode), so it leaks across document kinds. PanelSectionsFooter.swift and ToolBarLayout.swift read it.",
+  "acceptance": [
+    "Reproduce first at Next defaults: pick Video in a video window, open an image; record the mode it opens in (the user saw 'Video' on an image, screenshot 2026-10-17 06.03) and where the remembered mode is stored (UserDefaults experiments.next.windowMode was {\"modeID\":\"video\"} on the user's Mac)",
+    "Redline is renamed Image everywhere it shows (chip, menu, Control-number key list, docs, guides, walks); its id may stay 'redline' internally if renaming would break saved settings, with a migration either way",
+    "An image document's mode menu lists, in order: Image, Icon, Design, then Show Everything; no Video row. A new image window always opens in Image mode; switching mode affects that window only and is remembered for that window/document, never carried to a different document kind",
+    "A video document's window shows NO mode chip in the title bar; the window is always in the video setup; the Control-number mode keys do nothing in a video window (or say so in the menu bar with the rows disabled)",
+    "Saved settings that remember Video for images are migrated so the next image opens in Image",
+    "The Control-number shortcuts follow the new order (Control 1 Image, Control 2 Icon, Control 3 Design) and the menu shows them",
+    "docs/design/modes.md and the UX-PATTERNS placement contract say: modes are for image documents; videos have one setup and no chip",
+    "A walk opens a video then an image and checks the image is in Image with no Video row in its menu, and the video window has no mode chip",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:06:51.469Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:06:51.568Z",
+      "note": "seq 3970 -> 1.2"
+    }
+  ]
+}
