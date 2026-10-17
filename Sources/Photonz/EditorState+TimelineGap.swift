@@ -73,10 +73,47 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// The rows a right click on a gap leads with.
-    func timelineGapMenuRows(_ gap: TimelineGap) -> [MenuRow] {
-        [.command("Ripple Delete", TimelineMenuKeys.rippleDelete, enabled: canCloseGap(gap)) {
-            self.closeGap(gap)
-        }]
+    /// What a right click on a gap, or on empty space on a track, offers
+    /// (`TimelineMenuTable`): what you can put there or take out, and the
+    /// timeline's view. The track's own menu is one level down, under Track,
+    /// added by the menu itself since its rows are the header's
+    /// (`TimelineTrackMenu`).
+    func timelineSpaceMenuRows(track: DocumentTrack, gap: TimelineGap?) -> [MenuRow] {
+        let emptyPictureTrack = isTrackEmpty(track.id) && track.kind == .video && !track.isLocked
+        return timelineMenu(gap == nil ? .emptySpace : .gap) { row in
+            switch row {
+            case .closeGap:
+                // Never greyed: a gap that cannot close says why when it is
+                // asked to (`closeGap`).
+                guard let gap else { return [] }
+                return [.command("Ripple Delete", TimelineMenuKeys.rippleDelete) { self.closeGap(gap) }]
+            case .addTitlePage:
+                // A title page or a name card from its presets, on this track
+                // from the playhead (`EditorState+TitlePresets`).
+                return emptyPictureTrack ? self.titleInsertMenuRows(verb: "Add", onTrack: track.id) : []
+            case .addText:
+                return emptyPictureTrack ? [.command("Add Text") { self.addText(onTrack: track.id) }] : []
+            case .addRectangle:
+                return emptyPictureTrack ? [.command("Add Rectangle") { self.addRectangle(onTrack: track.id) }] : []
+            case .putLayerHere:
+                // A layer that is on the canvas and on no track.
+                let loose = self.layersOffTheTimeline
+                guard emptyPictureTrack, !loose.isEmpty else { return [] }
+                return [.submenu("Put Layer Here", loose.map { layer in
+                    .command(layer.name) { self.putLayerOnTimeline(layer.id, onTrack: track.id) }
+                })]
+            case .pasteHere:
+                guard emptyPictureTrack, self.canPasteLayerOrPicture else { return [] }
+                return [.command("Paste Here") { self.paste(onTrack: track.id) }]
+            case .captionsTrack:
+                return track.kind == .captions ? self.captionTrackMenuRows() : []
+            case .zoomToFit:
+                return self.timelineViewMenuRows().filter { $0.title == "Zoom to Fit" && $0.isEnabled }
+            case .compactTracks:
+                return self.timelineViewMenuRows().filter { $0.title == "Compact Tracks" }
+            default:
+                return []
+            }
+        }
     }
 }

@@ -1,0 +1,33 @@
+{
+  "id": "a-title-or-picture-right-click-leads-with-animat",
+  "title": "A title or picture right-click leads with Animate and Add Key, as the animate mock draws it",
+  "goal": "Decide whether a title or picture on the timeline should offer Animate and Add Key at the top of its right-click menu, as the animation mock draws them, instead of one level down under More where the short-menu rework put them.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 248.75,
+  "status": "blocked",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T17:34:39.083Z",
+  "updated": "2026-10-17T17:34:56.830Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-animate.html, the key line contextmenu (onKeyLine): Animate, Add Key, Remove Key / Split at Playhead, Speed, Delete. The 2026-10-17 short-menu rework (task a-clip-s-right-click-menu-is-short-and-only-says, docs/design/timeline-right-click.md, TimelineMenuTable) put Animate and Add Key under More on every clip kind to hold the top level to about ten rows, per the user's ask that day.",
+  "acceptance": [
+    "The user has chosen on the decision card",
+    "If they chose the top level: a title and a picture lead with Animate and Add Key at the playhead time, the menu stays within the table budget, and the timeline right-click menus walk checks it"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T17:34:39.085Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-17T17:34:56.827Z",
+      "note": "Waiting on the decision card: Animate and Add Key on top of a title's right-click, or under More"
+    }
+  ],
+  "walks": [
+    "timeline-right-click-menus-walk"
+  ]
+}

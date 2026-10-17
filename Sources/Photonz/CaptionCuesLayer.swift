@@ -177,9 +177,10 @@ private struct CaptionCuesHands: View {
                 }
                 .contextMenu {
                     // The cue a right click landed on, else the one under the
-                    // pointer; built afresh for every right click.
-                    let _ = editorState.timelineRightPresses
-                    if let id = rightPressedCue(placed) ?? hovered { TimelineClipMenu(layerID: id, piece: 0) }
+                    // pointer; worked out as the menu is built, not as the
+                    // lane draws, so a right click that came with no hover
+                    // still finds its cue.
+                    CaptionCueMenu(cues: placed.map(\.cue), hovered: hovered)
                 }
                 .help(ClipPiecesBar.help(ClipPieces(single: LayerTime(inMS: 0, outMS: 1)), index: 0))
                 // One name for the whole painted layer, so a walk can click a
@@ -204,11 +205,6 @@ private struct CaptionCuesHands: View {
     }
 
     /// The cue under the moment a right click on the tracks just landed on.
-    private func rightPressedCue(_ placed: [CaptionCuesLayer.Placed]) -> UUID? {
-        guard let ms = editorState.timelineRightPressMS else { return nil }
-        let x = laneWidth * ruler.fraction(ofMS: Double(ms))
-        return CaptionCuesLayer.cue(at: CGPoint(x: x, y: 0), in: placed)?.cue.layerID
-    }
 
     /// A cue taken hold of and slid along, or up or down onto another track:
     /// `ClipPiecesBar.carry` for a clip of one piece.
@@ -245,5 +241,33 @@ private struct CueShapes: Shape {
         var path = Path()
         for span in spans { path.addRect(CGRect(x: span.minX, y: 0, width: span.width, height: rect.height)) }
         return path
+    }
+}
+
+/// A caption's right-click menu, choosing its cue as it is built: the one the
+/// right click landed on, else the one under the pointer. Found by its time,
+/// in the document when the lane no longer paints it: a right click picks its
+/// cue, and a picked cue is drawn as a bar of its own, so a menu rebuilt after
+/// the pick found nothing on the lane and came up blank.
+private struct CaptionCueMenu: View {
+    @Environment(EditorState.self) private var editorState
+    let cues: [CaptionCuesLayer.Cue]
+    let hovered: UUID?
+
+    var body: some View {
+        let _ = editorState.timelineRightPresses
+        // The press is gone by the time a second build asks, so the last one
+        // stands in for it after the pointer.
+        if let id = cue(at: editorState.timelineRightPressMS) ?? hovered
+            ?? cue(at: editorState.timelineLastRightPressMS) {
+            TimelineClipMenu(layerID: id, piece: 0)
+        }
+    }
+
+    private func cue(at ms: Int?) -> UUID? {
+        guard let ms else { return nil }
+        if let painted = cues.last(where: { $0.bar.inMS <= ms && ms <= $0.bar.outMS }) { return painted.layerID }
+        return editorState.document?.captionLayers
+            .last { ($0.time?.inMS ?? .max) <= ms && ms <= ($0.time?.outMS ?? .min) }?.id
     }
 }

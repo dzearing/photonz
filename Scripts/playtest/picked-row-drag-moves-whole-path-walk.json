@@ -20,7 +20,7 @@
     { "do": "tool", "tool": "select" },
     { "do": "wait", "seconds": 0.5 },
 
-    { "comment": "A Position row with a key at one second, and a second key where a drag at three seconds leaves it.", "do": "rightClick", "on": "Ship it faster. clip", "across": 0.4, "choose": "Animate > Position" },
+    { "comment": "A Position row with a key at one second, and a second key where a drag at three seconds leaves it.", "do": "rightClick", "on": "Ship it faster. clip", "across": 0.4, "choose": "More > Animate > Position" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectKeyRows", "clip": "Text", "rows": ["Position"], "moments": 1, "hollow": 0 },
     { "do": "action", "action": "videoStepOneSecond" },

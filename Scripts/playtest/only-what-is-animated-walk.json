@@ -35,7 +35,7 @@
     { "do": "describe", "stage": "2-title-add-key", "note": "Add Key on the title at one second: one hollow diamond on its key line, and no row for anything" },
     { "do": "snapshot", "name": "2-title-add-key" },
 
-    { "comment": "THE THIRD TEST: Animate > Scale on the clip's right click adds one row.", "do": "rightClick", "on": "Ship it faster. clip", "across": 0.6, "choose": "Animate > Scale" },
+    { "comment": "THE THIRD TEST: More > Animate > Scale on the clip's right click adds one row.", "do": "rightClick", "on": "Ship it faster. clip", "across": 0.6, "choose": "More > Animate > Scale" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectKeyRows", "clip": "Text", "rows": ["Scale"], "moments": 1, "hollow": 0 },
 

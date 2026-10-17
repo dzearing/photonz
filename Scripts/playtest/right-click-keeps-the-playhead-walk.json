@@ -37,7 +37,7 @@
   { "do": "action", "action": "undo" },
   { "do": "wait", "seconds": 0.4 },
 
-  { "comment": "Split at Playhead from a right click near six seconds cuts at the parked two seconds.", "do": "rightClick", "on": "Tutorial Sample clip", "across": 0.75, "choose": "Split at Playhead" },
+  { "comment": "Split at Playhead from a right click near six seconds cuts at the parked two seconds.", "do": "rightClick", "on": "Tutorial Sample clip", "across": 0.75, "choose": "Split at 0:02.00" },
   { "do": "wait", "seconds": 0.5 },
   { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
   { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 60, "rate": 0 },

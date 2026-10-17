@@ -375,18 +375,23 @@ extension EditorState {
         let refs = zoomsActedOn(from: ref)
         let reading = ClipZoomsReading(refs.compactMap { zoom($0) })
         let allFollow = reading.followsCursor == true
-        var follow = MenuRow.toggle("Follow Cursor", isOn: allFollow) {
-            self.setZoomFollowsCursor(refs, !allFollow)
+        // Laid out by `TimelineMenuTable`; Follow Cursor is left out where
+        // there is no cursor to follow.
+        return timelineMenu(.zoom) { row in
+            switch row {
+            case .followCursor:
+                guard self.canFollowCursor(refs) else { return [] }
+                return [.toggle("Follow Cursor", isOn: allFollow) { self.setZoomFollowsCursor(refs, !allFollow) }]
+            case .zoomAmount:
+                return [.submenu("Zoom", Self.zoomScaleStops.map { stop in
+                    .toggle("\(stop)%", isOn: stop == reading.scalePercent) { self.setZoomScale(refs, percent: stop) }
+                })]
+            case .deleteZoom:
+                return [.command("Delete Zoom", TimelineMenuKeys.delete, destructive: true) { self.removeZooms(refs) }]
+            default:
+                return []
+            }
         }
-        follow.isEnabled = canFollowCursor(refs)
-        return [
-            follow,
-            .submenu("Zoom", Self.zoomScaleStops.map { stop in
-                .toggle("\(stop)%", isOn: stop == reading.scalePercent) { self.setZoomScale(refs, percent: stop) }
-            }),
-            .separator,
-            .command("Delete Zoom", TimelineMenuKeys.delete, destructive: true) { self.removeZooms(refs) },
-        ]
     }
 
     // MARK: A hand on the bar or the box

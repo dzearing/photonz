@@ -99,7 +99,7 @@
     {
       "do": "rightClick",
       "on": "Shipping today clip",
-      "choose": "End at Playhead"
+      "choose": "End at 0:06.00"
     },
     {
       "do": "wait",
@@ -138,7 +138,7 @@
     {
       "do": "rightClick",
       "on": "Shipping today clip",
-      "choose": "Start at Playhead"
+      "choose": "Start at 0:03.00"
     },
     {
       "do": "wait",
@@ -157,7 +157,7 @@
     {
       "do": "rightClick",
       "on": "Shipping today clip",
-      "choose": "Fade In > 0.5s"
+      "choose": "More > Fade In > 0.5s"
     },
     {
       "do": "wait",

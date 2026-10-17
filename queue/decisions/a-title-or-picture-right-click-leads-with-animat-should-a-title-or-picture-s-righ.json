@@ -1,0 +1,38 @@
+{
+  "id": "a-title-or-picture-right-click-leads-with-animat-should-a-title-or-picture-s-righ",
+  "taskId": "a-title-or-picture-right-click-leads-with-animat",
+  "question": "Should a title or picture's right-click menu lead with Animate and Add Key?",
+  "context": "Right-clicking a clip used to show 21 rows. The rework holds each kind to about ten, with the rest under More. The animation mock draws the menu on a title's key line with Animate and Add Key first.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep them under More",
+      "summary": "A title or picture opens with Split, Start and End at the playhead, then Animate In and Animate Out, then Cut, Copy, Delete and Ripple Delete. Animate and Add Key at the playhead are one level down under More.",
+      "pros": [
+        "The menu stays at about ten rows, as you asked on 2026-10-17",
+        "Every clip kind reads the same way"
+      ],
+      "cons": [
+        "Keying a title by right-click takes one more step than the animation mock draws"
+      ],
+      "mitigation": "The diamond on the clip header and Key at Playhead in the menu bar still add a key in one step.",
+      "declines": true
+    },
+    {
+      "id": "b",
+      "label": "Animate and Add Key on top for titles and pictures",
+      "summary": "A title or picture opens with Animate and Add Key at the playhead time, as the animation mock draws, then Split, Start and End, then the deletes. Animate In, Animate Out, Cut and Copy move under More to keep it short.",
+      "pros": [
+        "Matches the animation mock",
+        "Moving a title from A to B is one right-click away"
+      ],
+      "cons": [
+        "Cut and Copy leave the top of the title menu, unlike every other clip"
+      ],
+      "mitigation": "Command X and Command C still cut and copy a picked title."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-17T17:34:56.748Z"
+}

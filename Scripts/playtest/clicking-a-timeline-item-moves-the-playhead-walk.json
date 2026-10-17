@@ -47,7 +47,7 @@
   { "do": "clickRuler", "seconds": 2.0 },
   { "do": "wait", "seconds": 0.3 },
   { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 60, "rate": 0 },
-  { "do": "rightClick", "at": [1300, 893], "space": "window", "choose": "Split at Playhead" },
+  { "do": "rightClick", "at": [1300, 893], "space": "window", "choose": "Split at 0:02.00" },
   { "do": "wait", "seconds": 0.5 },
   { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
   { "do": "expectTimeline", "playheadMS": 2000, "withinMS": 60, "rate": 0 },

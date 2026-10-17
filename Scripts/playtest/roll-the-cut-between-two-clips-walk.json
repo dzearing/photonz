@@ -55,7 +55,7 @@
     { "do": "expectTimeline", "playheadMS": 7000 },
     { "do": "snapshot", "name": "1-before-the-roll" },
 
-    { "do": "rightClick", "on": "Edit point Tutorial Sample to b-roll", "shot": "2-edit-point-menu", "choose": "Roll Edit to Playhead" },
+    { "do": "rightClick", "on": "Edit point Tutorial Sample to b-roll", "shot": "2-edit-point-menu", "choose": "Roll Edit to 0:07.00" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 7.0, "count": 1 },
     { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 7.0, "endsAt": 13.0, "count": 1 },

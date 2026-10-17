@@ -1,0 +1,57 @@
+{
+  "feature": "Short timeline right-click menus",
+  "epic": "video-cutting",
+  "summary": "Right-clicking anything on the timeline now gives a short menu about that thing: a video clip has 11 rows in four groups (it had 21), a gap has Ripple Delete and Track, and the rest of what a clip can do is one level down under More. Rows that act at the playhead say the time, and rows that cannot act are left out instead of greyed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the tutorial recording with the timeline showing; add a title page and some music to try every kind.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Park the playhead at two seconds and right-click the recording's clip.",
+      "shot": "2026-10-17-timeline-menus-1-video-clip.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Compare it with the menu the same clip gave before this change.",
+      "shot": "2026-10-17-timeline-menus-0-video-clip-before.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Open More at the foot of that menu: fades, Punch In, Add Zoom, Animate, Add Key, Duplicate, Rename and Reveal in Finder are there."
+    },
+    {
+      "do": "Right-click the sound drawn under the recording.",
+      "shot": "2026-10-17-timeline-menus-2-linked-sound.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Right-click the title page.",
+      "shot": "2026-10-17-timeline-menus-3-title.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Leave a gap on V1 (drop a clip a few seconds after the recording) and right-click the gap.",
+      "shot": "2026-10-17-timeline-menus-4-gap.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "On a talk with captions, right-click a caption line.",
+      "shot": "2026-10-17-timeline-menus-6-caption.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Does the clip menu now read as the things you do to that clip at that moment?",
+    "Is Split at 0:02.00 clearer than Split at Playhead when you right-click far from the playhead?",
+    "Is anything you reach for often now stuck under More?",
+    "On a gap and on empty track space, is Track ▸ the right home for the track's own settings?",
+    "Do Cut and Copy belong on the clip menu, beside Delete and Ripple Delete?"
+  ],
+  "rough": [
+    "The animation mock (video-animate.html, the key line's menu) leads with Animate and Add Key; here they are under More on every clip, to keep to your 2026-10-17 ask of about ten rows. Settled by decision card a-title-or-picture-right-click-leads-with-animat-should-a-title-or-picture-s-righ.",
+    "No mock draws a clip's right-click besides the animation one: the Clip sections of video.html and video-cut-wt.html are the page's command menu, and they match (Split, Detach Audio, Ripple Delete with their keys).",
+    "Freeze Frame is still a submenu of fixed lengths; asking how long is its own task (freeze-frame-asks-how-long-and-inserts-a-freeze).",
+    "Rows that act at the playhead print the time, so walks name the exact moment (Split at 0:02.02) and a ruler click a frame off changes the words.",
+    "The track header's own menu is unchanged, including its greyed Zoom to Fit, and it is what Track ▸ opens.",
+    "A walk's right click on a caption line used to raise no menu at all, and a second one came up blank; both now give the line's own menu."
+  ]
+}

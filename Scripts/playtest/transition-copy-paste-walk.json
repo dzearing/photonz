@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/transition-copy-paste-walk",
-  "seed": "A transition tuned at one cut is copied and pasted onto another, the way Premiere and Final Cut do it: Command C with the cut picked, pick another cut, Command V. The same kind, length and curve land in one undo step. The cut's right click carries Copy Transition and Paste Transition with the Edit menu's keys printed beside them, and with a cut picked the panel opens under one Properties header saying Transition (Edit point on a hard cut), its three dots carrying them too with Reset to Default Length, and Edit point and Transition as the two sections inside it, as the transitions mock draws #gProps and its panel menu. At Next defaults, no flag set.",
+  "seed": "A transition tuned at one cut is copied and pasted onto another, the way Premiere and Final Cut do it: Command C with the cut picked, pick another cut, Command V. The same kind, length and curve land in one undo step. The cut's right click carries Copy Transition where the cut has one and Paste Transition once one is copied, with the Edit menu's keys printed beside them, and with a cut picked the panel opens under one Properties header saying Transition (Edit point on a hard cut), its three dots carrying them too with Reset to Default Length, and Edit point and Transition as the two sections inside it, as the transitions mock draws #gProps and its panel menu. At Next defaults, no flag set.",
   "setup": {
     "forget": [
       "all"
@@ -162,10 +162,7 @@
       "do": "rightClick",
       "on": "Tutorial Sample join 2",
       "choose": "Paste Transition",
-      "keys": {
-        "Copy Transition": "⌘C",
-        "Paste Transition": "⌘V"
-      }
+      "keys": { "Paste Transition": "⌘V" }, "lacks": ["Copy Transition"]
     },
     {
       "do": "wait",
@@ -189,7 +186,7 @@
     {
       "do": "describe",
       "stage": "3-right-click-paste",
-      "note": "THE SECOND TEST: a right click on the second cut offers Copy Transition and Paste Transition with Command C and Command V beside them, and Paste puts the same kind, length and curve on it; the panel now talks about the second cut"
+      "note": "THE SECOND TEST: a right click on the second cut, which has no transition to copy, offers Paste Transition with Command V beside it and no Copy Transition, and Paste puts the same kind, length and curve on it; the panel now talks about the second cut"
     },
     {
       "do": "snapshot",

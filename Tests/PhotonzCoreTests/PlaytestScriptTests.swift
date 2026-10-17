@@ -348,7 +348,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -369,7 +369,7 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Label", "shot": "layer-row-menu",
                        "choose": "Duplicate", "ticked": ["Visible"], "unticked": ["Locked"] } ] }
         """)
-        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, _, let shot, let choose, let ticked, let unticked, _, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == "Label")
@@ -386,7 +386,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "on": "Label", "keys": { "Duplicate": "⌘J", "Delete": "⌘⌫" } } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, let keys, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(_, _, _, _, _, _, let keys, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(keys == ["Duplicate": "⌘J", "Delete": "⌘⌫"])
@@ -399,13 +399,32 @@ struct PlaytestScriptTests {
                        "first": "Split at Playhead", "lacks": ["Mute Section", "Clean Noise in Section"] },
                      { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, _, _, let first, let lacks, _) = script.steps[0],
-              case .rightClick(_, _, _, _, _, _, _, _, let none, let nothing, _) = script.steps[1] else {
+        guard case .rightClick(_, _, _, _, _, _, _, _, let first, let lacks, _, _, _) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, _, let none, let nothing, _, _, _) = script.steps[1] else {
             Issue.record("rightClick"); return
         }
         #expect(first == "Split at Playhead")
         #expect(lacks == ["Mute Section", "Clean Noise in Section"])
         #expect(none == nil && nothing.isEmpty)
+    }
+
+    /// A timeline menu is laid out by a table (`TimelineMenuTable`), so a
+    /// walk holds a menu to its whole top level, separators as "—", and to
+    /// what is one level down under More.
+    @Test("A rightClick step can say the exact rows of the menu and of its More")
+    func rightClickStepCanSayItsRows() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "rightClick", "on": "Tutorial Sample clip",
+                       "rows": ["Split at 0:02.00", "—", "Delete"], "more": ["Rename…"] },
+                     { "do": "rightClick", "on": "Label" } ] }
+        """)
+        guard case .rightClick(_, _, _, _, _, _, _, _, _, _, _, let rows, let more) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, _, _, _, _, let noRows, let noMore) = script.steps[1] else {
+            Issue.record("rightClick"); return
+        }
+        #expect(rows == ["Split at 0:02.00", "—", "Delete"])
+        #expect(more == ["Rename…"])
+        #expect(noRows == nil && noMore == nil)
     }
 
     @Test("A rightClick step can say which rows must be there but dimmed")
@@ -414,8 +433,8 @@ struct PlaytestScriptTests {
         { "steps": [ { "do": "rightClick", "on": "Tutorial Sample join 1", "dimmed": ["Join Through Edit"] },
                      { "do": "rightClick", "on": "Label" } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, _, _, _, _, let dimmed) = script.steps[0],
-              case .rightClick(_, _, _, _, _, _, _, _, _, _, let none) = script.steps[1] else {
+        guard case .rightClick(_, _, _, _, _, _, _, _, _, _, let dimmed, _, _) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, _, _, _, let none, _, _) = script.steps[1] else {
             Issue.record("rightClick"); return
         }
         #expect(dimmed == ["Join Through Edit"])
@@ -431,9 +450,9 @@ struct PlaytestScriptTests {
                      { "do": "rightClick", "on": "Label" },
                      { "do": "rightClick", "on": "Label", "across": 3 } ] }
         """)
-        guard case .rightClick(_, _, _, _, _, _, _, let across, _, _, _) = script.steps[0],
-              case .rightClick(_, _, _, _, _, _, _, let middle, _, _, _) = script.steps[1],
-              case .rightClick(_, _, _, _, _, _, _, let clamped, _, _, _) = script.steps[2] else {
+        guard case .rightClick(_, _, _, _, _, _, _, let across, _, _, _, _, _) = script.steps[0],
+              case .rightClick(_, _, _, _, _, _, _, let middle, _, _, _, _, _) = script.steps[1],
+              case .rightClick(_, _, _, _, _, _, _, let clamped, _, _, _, _, _) = script.steps[2] else {
             Issue.record("rightClick"); return
         }
         #expect(across == 0.25)
@@ -458,7 +477,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [140, 120], "choose": "Group" } ] }
         """)
-        guard case .rightClick(let on, let at, _, let choose, _, _, _, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(let on, let at, _, let choose, _, _, _, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(on == nil)
@@ -471,7 +490,7 @@ struct PlaytestScriptTests {
         let script = try decode("""
         { "steps": [ { "do": "rightClick", "at": [40, 40], "space": "window" } ] }
         """)
-        guard case .rightClick(_, let at, _, _, _, _, _, _, _, _, _) = script.steps[0] else {
+        guard case .rightClick(_, let at, _, _, _, _, _, _, _, _, _, _, _) = script.steps[0] else {
             Issue.record("rightClick"); return
         }
         #expect(at == PlaytestPoint(CGPoint(x: 40, y: 40), space: .window))

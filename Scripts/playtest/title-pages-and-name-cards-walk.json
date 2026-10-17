@@ -323,7 +323,7 @@
     {
       "do": "rightClick",
       "on": "b-roll clip",
-      "choose": "Fade Out > 1s"
+      "choose": "More > Fade Out > 1s"
     },
     {
       "do": "wait",

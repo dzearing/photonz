@@ -3248,10 +3248,15 @@ public enum PlaytestStep: Sendable, Equatable {
     /// `first` names the row the menu must lead with, and `lacks` rows that
     /// must not be in it at all: what a right click is about decides both, so
     /// a walk says where the click lands and what the menu leads with there.
+    ///
+    /// `rows` holds the menu to its whole top level, top to bottom, a
+    /// separator written "—", and `more` to the rows of its More (or Track)
+    /// submenu the same way: a timeline menu is laid out by a table
+    /// (`TimelineMenuTable`), and a walk proves the menu a person gets is it.
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                     ticked: [String], unticked: [String], keys: [String: String] = [:],
                     across: CGFloat? = nil, first: String? = nil, lacks: [String] = [],
-                    dimmed: [String] = [])
+                    dimmed: [String] = [], rows: [String]? = nil, more: [String]? = nil)
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -5086,7 +5091,9 @@ public enum PlaytestStep: Sendable, Equatable {
                                across: try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) },
                                first: try f.optionalString("first"),
                                lacks: try f.optionalStrings("lacks"),
-                               dimmed: try f.optionalStrings("dimmed"))
+                               dimmed: try f.optionalStrings("dimmed"),
+                               rows: fields["rows"] == nil ? nil : try f.optionalStrings("rows"),
+                               more: fields["more"] == nil ? nil : try f.optionalStrings("more"))
         case "dragTile":
             let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes

@@ -28,7 +28,7 @@
     { "do": "action", "action": "videoStepQuarterSecond" },
     { "do": "action", "action": "videoStepQuarterSecond" },
     { "do": "wait", "seconds": 0.6 },
-    { "comment": "At three and a half seconds along the bar: a right click puts the playhead where it lands before the menu opens.", "do": "rightClick", "on": "Rectangle clip", "across": 0.3571, "choose": "End at Playhead" },
+    { "comment": "At three and a half seconds along the bar: a right click puts the playhead where it lands before the menu opens.", "do": "rightClick", "on": "Rectangle clip", "across": 0.3571, "choose": "End at 0:03.50" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "describe", "stage": "2-ended", "note": "THE SECOND TEST: its bar is a bar like a title's: End at Playhead on its bar's right-click menu, at three and a half seconds, says when it goes" },
     { "do": "reveal", "control": "Properties section" },

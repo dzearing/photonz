@@ -471,7 +471,7 @@ struct TimelineTrackRow: View {
                 .contentShape(Rectangle())
                 .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
                                                      trackID: track.id))
-                .contextMenu { TimelineTrackMenu(track: track, index: index) }
+                .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
             // Each gap between two clips is the same empty space, with its own
             // right-click menu that leads with Ripple Delete, as Premiere's
             // does (`EditorState+TimelineGap`). The press is read in the
@@ -568,7 +568,7 @@ struct TimelineTrackRow: View {
                     .contentShape(Rectangle())
                     .gesture(TimelineLaneMarquee.gesture(editorState, ruler: ruler, laneWidth: laneWidth,
                                                          trackID: track.id))
-                    .contextMenu { TimelineTrackMenu(track: track, index: index) }
+                    .contextMenu { TimelineTrackMenu(track: track, index: index, onTheLane: true) }
             }
             if track.isLocked { lockedHatch }
             dropMark
@@ -802,12 +802,12 @@ struct TimelineTrackMenu: View {
     /// Delete leads (`EditorState+TimelineGap`).
     var gap: TimelineGap?
 
+    /// Opened on the lane rather than the header: space on the track, or a
+    /// gap in it, whose short menu says what can go there and keeps the
+    /// header's rows one level down (`TimelineMenuTable`).
+    var onTheLane = false
+
     var body: some View {
-        let isEmpty = editorState.isTrackEmpty(track.id)
-        if let gap {
-            MenuRowsView(rows: editorState.timelineGapMenuRows(gap))
-            Divider()
-        }
         // A range over this track with things picked under it: what it does
         // to them leads (`EditorState+RangeSection`).
         if editorState.rangeSection != nil,
@@ -822,6 +822,26 @@ struct TimelineTrackMenu: View {
             MenuRowsView(rows: editorState.trackThingMenuRows())
             Divider()
         }
+        if onTheLane || gap != nil {
+            let rows = editorState.timelineSpaceMenuRows(track: track, gap: gap)
+            if rows.isEmpty {
+                // Nothing to put here or take out: a lone Track ▸ would be a
+                // door to one room, so the track's rows are the menu.
+                headerRows
+            } else {
+                MenuRowsView(rows: rows)
+                Divider()
+                Menu(TimelineMenuTable.title(.track, playheadMS: 0) ?? "Track") { headerRows }
+            }
+        } else {
+            headerMenu
+        }
+    }
+
+    /// The header's own menu: the track, and on an empty picture track what
+    /// can be put on it.
+    @ViewBuilder private var headerMenu: some View {
+        let isEmpty = editorState.isTrackEmpty(track.id)
         if track.kind == .captions {
             MenuRowsView(rows: editorState.captionTrackMenuRows())
             Divider()
@@ -847,6 +867,10 @@ struct TimelineTrackMenu: View {
             }
             Divider()
         }
+        headerRows
+    }
+
+    @ViewBuilder private var headerRows: some View {
         if track.attachedTo != nil {
             soundRowRows
         } else {

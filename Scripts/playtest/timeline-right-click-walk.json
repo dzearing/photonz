@@ -78,7 +78,7 @@
       ],
       "space": "window",
       "shot": "2-clip-menu",
-      "choose": "Split at Playhead",
+      "choose": "Split at 0:02.02",
       "comment": "A right click on the tracks puts the playhead where it lands before the menu opens. So it is made at two seconds, where the ruler put the playhead."
     },
     {
@@ -88,7 +88,7 @@
     {
       "do": "describe",
       "stage": "3-split",
-      "note": "Right-click the clip, Split at Playhead: two pieces meeting at two seconds"
+      "note": "Right-click the clip, Split at 0:02.02: two pieces meeting at two seconds"
     },
     {
       "do": "snapshot",
@@ -145,7 +145,7 @@
         893
       ],
       "space": "window",
-      "choose": "Roll Edit to Playhead"
+      "choose": "Roll Edit to 0:03.01"
     },
     {
       "do": "wait",

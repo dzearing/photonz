@@ -53,6 +53,9 @@ struct PlaytestMenuReading: Sendable {
     /// Every row, top to bottom, in the words on screen. A separator reads as
     /// an empty string, so the shape of the menu survives too.
     var rows: [String] = []
+    /// The rows of its More (or Track) submenu, where it has one, the same
+    /// way.
+    var more: [String]?
     /// The rows nothing would happen on, which is how a dimmed row reads.
     var dimmed: [String] = []
     /// The rows wearing a checkmark, which is how a setting says it is on.

@@ -68,7 +68,18 @@ extension EditorState {
     /// `onTheSound` is a click on the clip's linked sound, drawn on the Audio
     /// track under it, which answers like the audio clip it looks like
     /// (`ClipMenuPlan`).
+    ///
+    /// Which rows, in which groups, and what is one level down under More is
+    /// `TimelineMenuTable`, one table per kind of thing (the user, 2026-10-17:
+    /// "I right click on a clip, and i get this enormous right click menu
+    /// which makes nearly no sense to me"). Here each row is only drawn, and
+    /// left OUT where it cannot act on this clip at this moment.
     func timelineClipMenuRows(layerID: UUID, piece index: Int, onTheSound: Bool = false) -> [MenuRow] {
+        // A caption's verbs are the words and the track they are on. A caption
+        // is cut into no pieces, so it is answered before the clip's are read.
+        if document?.layer(id: layerID)?.isCaption == true, !isClipLocked(layerID) {
+            return captionCueMenuRows(layerID: layerID)
+        }
         guard let document, let layer = document.layer(id: layerID),
               let time = layer.time, let pieces = layer.clipPieces else { return [] }
         var rows: [MenuRow] = []
@@ -85,8 +96,6 @@ extension EditorState {
             }
             return rows
         }
-        // A caption's verbs are the words and the track they are on.
-        if layer.isCaption { return captionCueMenuRows(layerID: layerID) }
         // One of the pieces a box picked: what the picked pieces do leads
         // (`EditorState+TrackRange`).
         if pieces.count > 1, isPiecePickedByBox(layerID: layerID, index: index) {
@@ -99,174 +108,278 @@ extension EditorState {
            SectionOperation.leadsTheMenu(rightClickAtMS: timelineLastRightPressMS, range: section.range) {
             rows += rangeSectionMenuRows() + [.separator]
         }
-        let piece = pieces.piece(at: index)
-        let underPlayhead = time.contains(ms: documentTimeMS)
-        // A video leads with its picture and keeps its sound one submenu
-        // away; its sound on the Audio track, and a sound of its own, lead
-        // with the sound (the user, 2026-10-03).
-        let plan = ClipMenuPlan(hasPicture: layer.movie != nil,
-                                hasSound: layer.sound != nil, onTheSound: onTheSound)
+        // Clips merged into one answer as the clips they were made of.
+        let thing: TimelineMenuThing = onTheSound ? .linkedSound
+            : layer.movie != nil || (layer.isMergedClip && !layer.isSoundOnly) ? .videoClip
+            : layer.sound != nil || layer.isMergedClip ? .soundClip
+            : document.titleRecipe(layerID: layerID) != nil ? .title
+            : .picture
+        let clip = ClipMenuContext(layerID: layerID, index: index, piece: pieces.piece(at: index),
+                                   underPlayhead: time.contains(ms: documentTimeMS),
+                                   playheadPiece: pieces.pieceIndex(atMS: documentTimeMS - time.inMS),
+                                   onePiece: pieces.count <= 1, onTheSound: onTheSound,
+                                   targets: clipMenuTargets(layerID),
+                                   plan: ClipMenuPlan(hasPicture: layer.movie != nil,
+                                                      hasSound: layer.sound != nil, onTheSound: onTheSound))
+        return rows + timelineMenu(thing) { self.clipMenuRows($0, clip: clip, layer: layer) }
+    }
 
-        // Right clicked inside a pick of several clips, the cut and the
-        // deletes act on the whole pick (`EditorState+TimelinePointing`).
-        let targets = clipMenuTargets(layerID)
-        if targets.count > 1 {
-            rows.append(.command("Split at Playhead", TimelineMenuKeys.split,
-                                 enabled: targets.contains { canSplitClip($0) }) {
-                self.splitClipsAtPlayhead(targets)
-            })
-        } else {
-            rows.append(.command("Split at Playhead", TimelineMenuKeys.split, enabled: canSplitClip(layerID)) {
+    /// What one clip menu is about, worked out once for all its rows.
+    struct ClipMenuContext {
+        let layerID: UUID
+        let index: Int
+        let piece: ClipPiece?
+        /// The playhead runs through the clip.
+        let underPlayhead: Bool
+        /// The piece the playhead stands in, which Q and W reach.
+        let playheadPiece: Int?
+        let onePiece: Bool
+        /// Opened on the clip's linked sound, under its picture.
+        let onTheSound: Bool
+        /// Right clicked inside a pick of several clips, the cut and the
+        /// deletes act on the whole pick (`EditorState+TimelinePointing`).
+        let targets: [UUID]
+        let plan: ClipMenuPlan
+    }
+
+    /// A timeline menu laid out by `TimelineMenuTable`: each group's rows as
+    /// `build` draws them, a group with none left out, a separator between
+    /// the rest, and the long tail one level down under More (or Track).
+    func timelineMenu(_ thing: TimelineMenuThing, build: (TimelineMenuRow) -> [MenuRow]) -> [MenuRow] {
+        func laid(_ groups: [[TimelineMenuRow]]) -> [MenuRow] {
+            groups.map { $0.flatMap(build) }
+                .map { Self.trimmedSeparators($0) }
+                .filter { !$0.isEmpty }
+                .enumerated()
+                .flatMap { $0.offset == 0 ? $0.element : [.separator] + $0.element }
+        }
+        let holder = TimelineMenuTable.moreRow(for: thing)
+        var rows = laid(TimelineMenuTable.groups(for: thing).map { $0.filter { $0 != holder } })
+        let more = laid(TimelineMenuTable.moreGroups(for: thing))
+        if !more.isEmpty, let title = TimelineMenuTable.title(holder, playheadMS: 0) {
+            if !rows.isEmpty { rows.append(.separator) }
+            rows.append(.submenu(title, more))
+        }
+        return rows
+    }
+
+    /// A list without a separator at either end or two in a row.
+    static func trimmedSeparators(_ rows: [MenuRow]) -> [MenuRow] {
+        var out: [MenuRow] = []
+        for row in rows {
+            if case .separator = row.kind {
+                if let last = out.last, case .separator = last.kind { continue }
+                if out.isEmpty { continue }
+            }
+            out.append(row)
+        }
+        if let last = out.last, case .separator = last.kind { out.removeLast() }
+        return out
+    }
+
+    /// One row of a clip's menu, drawn, or none where it cannot act here.
+    // swiftlint:disable:next cyclomatic_complexity function_body_length
+    private func clipMenuRows(_ row: TimelineMenuRow, clip: ClipMenuContext, layer: Layer) -> [MenuRow] {
+        let layerID = clip.layerID, index = clip.index, targets = clip.targets
+        let at = documentTimeMS
+        func titled(_ row: TimelineMenuRow) -> String { TimelineMenuTable.title(row, playheadMS: at) ?? "" }
+        let picture = clip.plan.offersPictureRows
+        let drawnOnTheTimeline = Experiments.shared.drawnOnTheTimelineEnabled && !layer.isSoundOnly
+        switch row {
+        // At the playhead
+        case .split:
+            if targets.count > 1 {
+                guard targets.contains(where: { canSplitClip($0) }) else { return [] }
+                return [.command(titled(.split), TimelineMenuKeys.split) { self.splitClipsAtPlayhead(targets) }]
+            }
+            guard canSplitClip(layerID) else { return [] }
+            return [.command(titled(.split), TimelineMenuKeys.split) {
                 self.selectLayer(layerID)
                 self.splitClipAtPlayhead()
-            })
-        }
-        // Clips merged into one open back into their parts.
-        if layer.isMergedClip {
-            rows.append(.command("Break Apart",
-                                 Experiments.shared.layerGroupsEnabled || Experiments.shared.proMenuBarEnabled
-                                     ? TimelineMenuKeys.breakApart : nil,
-                                 enabled: document.canBreakApart(layerID)) {
-                self.breakApartClip(layerID)
-            })
-        }
-        // Q and W reach the piece the playhead is standing in, so the rows
-        // are offered live only on that piece.
-        let playheadPiece = pieces.pieceIndex(atMS: documentTimeMS - time.inMS)
-        if layer.movie != nil || layer.sound != nil {
-            for end in [RippleTrimEnd.start, .end] {
-                let enabled = underPlayhead && playheadPiece == index
-                    && canRippleTrimToPlayhead(end, clip: layerID)
-                rows.append(.command(end == .start ? "Ripple Trim Start to Playhead" : "Ripple Trim End to Playhead",
-                                     end == .start ? TimelineMenuKeys.rippleTrimStart : TimelineMenuKeys.rippleTrimEnd,
-                                     enabled: enabled) {
-                    self.rippleTrimToPlayhead(end, clip: layerID)
-                })
-            }
-        }
-        if plan.offersPictureRows {
-            // A stretch whose picture a range took off (Hide Picture for
-            // Section) gets it back where the hand is.
-            if piece?.pictureHidden == true {
-                rows.append(.command("Show Picture") { self.showPicture(layerID: layerID, piece: index) })
-            }
-            rows.append(freezeFrameMenuRow(layerID: layerID, piece: index, enabled: underPlayhead))
-            rows.append(contentsOf: punchInMenuRows(layerID: layerID, around: nil))
-            // A click the recording missed, or one made before clicks were
-            // kept: the playhead says when, the next click on the picture
-            // says where (`EditorState+Clicks`).
-            rows.append(.command("Add Click at Playhead\u{2026}", enabled: canAddClick(toClip: layerID)) {
-                self.beginPlacingClick(onClip: layerID)
-            })
-            // A spot of the recording filling the frame for a while, at the
-            // playhead, and zooms round every run of clicks (`EditorState+Zoom`).
-            rows.append(contentsOf: addZoomMenuRows(layerID: layerID, atMS: documentTimeMS))
-        }
-        if let piece, !piece.isHeld, layer.hasMediaBehindIt {
-            rows.append(.submenu("Speed", EditorState.clipSpeeds.map { percent in
+            }]
+        case .freezeFrame:
+            guard picture, let piece = clip.piece else { return [] }
+            // On a hold, the lengths change THAT hold, wherever the playhead is.
+            if piece.isHeld { return [freezeFrameMenuRow(layerID: layerID, piece: index, enabled: true)] }
+            guard clip.underPlayhead else { return [] }
+            var freeze = freezeFrameMenuRow(layerID: layerID, piece: index, enabled: true)
+            freeze.title = titled(.freezeFrame)
+            return [freeze]
+        case .speed:
+            guard let piece = clip.piece, !piece.isHeld, layer.hasMediaBehindIt else { return [] }
+            return [.submenu("Speed", EditorState.clipSpeeds.map { percent in
                 .toggle(ClipSpeed.title(percent), isOn: piece.speedPercent == percent) {
                     self.selectClipPiece(layerID: layerID, index: index)
                     self.setClipSpeedInHand(percent)
                 }
-            }))
-        }
-        // How the picture comes up at the clip's start and goes down at its
-        // end. A title's are with its Start and End at Playhead, below.
-        if !onTheSound, !layer.isPlacedInTime {
-            rows.append(contentsOf: pictureFadeMenuRows(layerID: layerID))
-        }
-        // A transition at both ends of the piece: the cut where it meets
-        // the next, or a fade where it meets nothing (`TransitionTargets`).
-        if !onTheSound { rows.append(contentsOf: clipTransitionMenuRows(layerID: layerID, piece: index)) }
-        // What its sound does: how loud it is at the source (Premiere's Audio
-        // Gain) and captions from what is said in it (Premiere's Transcribe,
-        // only ever when asked).
-        var soundRows: [MenuRow] = []
-        if Experiments.shared.soundOnTheTimelineEnabled, layer.sound != nil {
-            soundRows += soundGainMenuRows(layerID: layerID)
-        }
-        if layer.movie != nil || layer.sound != nil, let row = addCaptionsMenuRow() {
-            if !soundRows.isEmpty { soundRows.append(.separator) }
-            soundRows.append(row)
-        }
-        // Once the sound is a layer of its own, the same row on the picture
-        // and on that sound reads Re-attach Audio, as the cut clickthrough's
-        // button does (`video-cut-wt`), on the same key.
-        let detachAudio: MenuRow? = document.canDetachSound(ofLayer: layerID) && plan.offersDetachAudio
-            ? .command("Detach Audio", TimelineMenuKeys.detachAudio) {
-                self.selectLayer(layerID)
-                self.detachSound()
+            })]
+        case .startAtPlayhead, .endAtPlayhead:
+            let start = row == .startAtPlayhead
+            guard start ? canStartPlacedLayerHere(layerID) : canEndPlacedLayerHere(layerID) else { return [] }
+            return [.command(titled(row)) {
+                if start { self.startPlacedLayerHere(layerID) } else { self.endPlacedLayerHere(layerID) }
+            }]
+
+        // What it does
+        case .addTransition:
+            return clip.onTheSound ? [] : clipTransitionMenuRows(layerID: layerID, piece: index)
+        case .detachAudio:
+            if document?.canDetachSound(ofLayer: layerID) == true, clip.plan.offersDetachAudio {
+                return [.command("Detach Audio", TimelineMenuKeys.detachAudio) {
+                    self.selectLayer(layerID)
+                    self.detachSound()
+                }]
             }
-            : document.canReattachSound(ofLayer: layerID)
-            ? .command("Re-attach Audio", TimelineMenuKeys.detachAudio) {
-                self.selectLayer(layerID)
-                self.reattachSound()
+            // Once the sound is a layer of its own, the same row on the
+            // picture and on that sound reads Re-attach Audio, on the same key.
+            if document?.canReattachSound(ofLayer: layerID) == true {
+                return [.command("Re-attach Audio", TimelineMenuKeys.detachAudio) {
+                    self.selectLayer(layerID)
+                    self.reattachSound()
+                }]
             }
-            : nil
-        // On the sound itself, the sound's rows are what the click was for.
-        if !plan.offersPictureRows {
-            if let detachAudio { rows.append(detachAudio) }
-            rows += soundRows
-        }
-        if !onTheSound {
-            // A title, a piece of clip art: when it comes on and goes off, and how.
-            rows.append(contentsOf: placedLayerMenuRows(layerID: layerID))
-            rows.append(contentsOf: titleAnimationMenuRows(layerID: layerID))
-            // ...and kept as a preset of your own, beside the built-in ones.
-            rows.append(contentsOf: titlePresetSaveMenuRows(layerID: layerID))
+            return []
+        case .audio:
+            // A video's sound, folded into one Audio menu: how loud it is at
+            // the source (Premiere's Audio Gain) and captions from what is
+            // said in it.
+            guard picture, clip.plan.sound == .submenu else { return [] }
+            var sound = soundGainRows(layerID: layerID)
+            if let captions = addCaptionsMenuRow() { sound += (sound.isEmpty ? [] : [.separator]) + [captions] }
+            return sound.isEmpty ? [] : [.submenu(ClipMenuPlan.soundSubmenuTitle, sound)]
+        case .normalize:
+            return Array(soundGainRows(layerID: layerID).prefix(1))
+        case .cleanNoise:
+            return Array(soundGainRows(layerID: layerID).dropFirst().prefix(1))
+        case .resetGain:
+            return Array(soundGainRows(layerID: layerID).dropFirst(2))
+        case .addCaptions:
+            guard layer.movie != nil || layer.sound != nil, let captions = addCaptionsMenuRow() else { return [] }
+            return [captions]
+        case .animateIn:
+            return Array(titleAnimationMenuRows(layerID: layerID).prefix(1))
+        case .animateOut:
+            return Array(titleAnimationMenuRows(layerID: layerID).dropFirst())
+
+        // The clipboard and the deletes
+        case .cut, .copy:
+            // The clipboard holds one clip, so these are offered on one.
+            guard targets.count <= 1, document?.canDeleteLayers(ids: [layerID]) == true else { return [] }
+            if row == .copy {
+                return [.command(titled(.copy), KeyClipboardKeys.copy) { _ = self.copyClip(layerID) }]
+            }
+            return [.command(titled(.cut), MenuShortcut.command("x")) { self.cutClip(layerID) }]
+        case .delete:
+            // Under a range ⌫ and ⇧⌫ take the section, and its rows above say
+            // so; the whole clip's rows stay, without a key that does
+            // something else.
+            let keys = !sectionTakesTheDelete
+            return [.command("Delete", keys ? TimelineMenuKeys.delete : nil, destructive: true) {
+                // A box's pick takes the zooms and keys beside its clips too.
+                if self.boxExtrasHeld != nil, targets.contains(layerID), self.deleteBoxPick() { return }
+                if targets.count > 1 { return self.deleteLayers(ids: targets) }
+                self.deleteFromTimeline(layerID: layerID, piece: clip.onePiece ? nil : index)
+            }]
+        case .rippleDelete:
+            let keys = !sectionTakesTheDelete
+            return [.command("Ripple Delete", keys ? TimelineMenuKeys.rippleDelete : nil, destructive: true) {
+                if self.boxExtrasHeld != nil, targets.contains(layerID), self.extractBoxPick() { return }
+                if targets.count > 1 { return self.rippleDeleteClips(targets) }
+                self.rippleDelete(layerID: layerID, piece: clip.onePiece ? nil : index)
+            }]
+
+        // One level down
+        case .showPicture:
+            // A stretch whose picture a range took off (Hide Picture for
+            // Section) gets it back where the hand is.
+            guard picture, clip.piece?.pictureHidden == true else { return [] }
+            return [.command("Show Picture") { self.showPicture(layerID: layerID, piece: index) }]
+        case .rippleTrimStart, .rippleTrimEnd:
+            // Q and W reach the piece the playhead is standing in, so the rows
+            // are offered only on that piece.
+            let end: RippleTrimEnd = row == .rippleTrimStart ? .start : .end
+            guard layer.movie != nil || layer.sound != nil, clip.underPlayhead, clip.playheadPiece == index,
+                  canRippleTrimToPlayhead(end, clip: layerID) else { return [] }
+            return [.command(end == .start ? "Ripple Trim Start to Playhead" : "Ripple Trim End to Playhead",
+                             end == .start ? TimelineMenuKeys.rippleTrimStart : TimelineMenuKeys.rippleTrimEnd) {
+                self.rippleTrimToPlayhead(end, clip: layerID)
+            }]
+        case .fadeIn, .fadeOut:
+            // How the picture comes up at the start and goes down at the end.
+            return clip.onTheSound ? [] : fadeRows(row == .fadeIn ? .in : .out, layer: layer)
+        case .punchIn:
+            return picture ? punchInMenuRows(layerID: layerID, around: nil) : []
+        case .addZoom, .suggestZooms:
+            // A spot of the recording filling the frame for a while, at the
+            // playhead, and zooms round every run of clicks (`EditorState+Zoom`).
+            guard picture else { return [] }
+            let zooms = addZoomMenuRows(layerID: layerID, atMS: at).filter(\.isEnabled)
+            return zooms.filter { ($0.title == "Add Zoom") == (row == .addZoom) }
+        case .addClick:
+            // A click the recording missed: the playhead says when, the next
+            // click on the picture says where (`EditorState+Clicks`).
+            guard picture, canAddClick(toClip: layerID) else { return [] }
+            let title = TimelinePointing.atPlayhead("Add Click", ms: at) + "…"
+            return [.command(title) {
+                self.beginPlacingClick(onClip: layerID)
+            }]
+        case .animate:
+            guard drawnOnTheTimeline, !clip.onTheSound, let animate = animateMenuRow(layerID: layerID) else { return [] }
+            return [animate]
+        case .addKey:
             // Where it is, its size, its angle and its opacity, keyed at the
             // playhead: the header diamond's verb, where the hand already is.
-            // A right click leaves the playhead parked, so the row says where
-            // the key goes (`TimelinePointing.atPlayhead`).
-            if Experiments.shared.drawnOnTheTimelineEnabled, !layer.isSoundOnly {
-                // Animate ▸ first: what is not animating yet, grouped as the
-                // panel is (`video-animate.html`, the key line's menu).
-                if let animate = animateMenuRow(layerID: layerID) { rows.append(animate) }
-                let onKey = document.keyMomentDiamond(layerID: layerID, atDocumentTimeMS: documentTimeMS) == .onKey
-                rows.append(.command(TimelinePointing.atPlayhead(onKey ? "Remove Key" : "Add Key", ms: documentTimeMS),
-                                     enabled: underPlayhead) {
-                    self.selectLayer(layerID)
-                    self.toggleHeaderKey(layerID)
-                })
-            }
-            // Keys copied off another layer land here at the playhead.
-            if keysOnClipboard != nil { rows.append(pasteKeysRow(layerID: layerID)) }
+            guard drawnOnTheTimeline, !clip.onTheSound, clip.underPlayhead else { return [] }
+            let onKey = document?.keyMomentDiamond(layerID: layerID, atDocumentTimeMS: at) == .onKey
+            return [.command(TimelinePointing.atPlayhead(onKey ? "Remove Key" : "Add Key", ms: at)) {
+                self.selectLayer(layerID)
+                self.toggleHeaderKey(layerID)
+            }]
+        case .pasteKeys:
+            guard !clip.onTheSound, keysOnClipboard != nil, canPasteKeys(onto: layerID) else { return [] }
+            return [pasteKeysRow(layerID: layerID)]
+        case .breakApart:
+            // Clips merged into one open back into their parts.
+            guard layer.isMergedClip, document?.canBreakApart(layerID) == true else { return [] }
+            return [.command("Break Apart",
+                             Experiments.shared.layerGroupsEnabled || Experiments.shared.proMenuBarEnabled
+                                 ? TimelineMenuKeys.breakApart : nil) {
+                self.breakApartClip(layerID)
+            }]
+        case .replayTitle:
+            return titlePresetSaveMenuRows(layerID: layerID).filter { $0.title == "Replay Title" }
+        case .saveAsPreset:
+            return titlePresetSaveMenuRows(layerID: layerID).filter { $0.title != "Replay Title" }
+        case .selectForward:
+            // The Track Select Forward tool's pick (A), where the hand already is.
+            return [.command("Select Forward") { self.selectClipsForward(from: layerID, onItsTrackOnly: false) }]
+        case .duplicate:
+            return [.command("Duplicate", TimelineMenuKeys.duplicate) { self.duplicateLayer(id: layerID) }]
+        case .rename:
+            return [.command("Rename…") { self.beginRenamingClip(layerID) }]
+        case .revealInFinder:
+            guard let url = mediaURL(ofLayer: layerID) else { return [] }
+            return [.command("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }]
+        default:
+            return []
         }
-        // A video's sound: Detach Audio where the hand is, since it is how a
-        // person gets to the sound, and the rest folded into one Audio menu.
-        if plan.offersPictureRows {
-            let audio = plan.sound == .submenu && !soundRows.isEmpty
-                ? MenuRow.submenu(ClipMenuPlan.soundSubmenuTitle, soundRows) : nil
-            let tail = [detachAudio, audio].compactMap { $0 }
-            if !tail.isEmpty { rows += [.separator] + tail }
+    }
+
+    /// Normalize ▸, Clean Noise and Reset Gain on a sound, where sound is on
+    /// the timeline.
+    private func soundGainRows(layerID: UUID) -> [MenuRow] {
+        guard Experiments.shared.soundOnTheTimelineEnabled, document?.layer(id: layerID)?.sound != nil
+        else { return [] }
+        return soundGainMenuRows(layerID: layerID)
+    }
+
+    /// Fade In ▸ or Fade Out ▸: one fade for everything on the timeline. A
+    /// title's single Fade ▸ where picture fades are off.
+    private func fadeRows(_ end: FadeEnd, layer: Layer) -> [MenuRow] {
+        if layer.isPlacedInTime, !Experiments.shared.pictureFadesEnabled {
+            return end == .in ? placedLayerFadeRows(layerID: layer.id) : []
         }
-        rows.append(.separator)
-        // The Track Select Forward tool's pick (A), where the hand already is.
-        rows.append(.command("Select Forward") {
-            self.selectClipsForward(from: layerID, onItsTrackOnly: false)
-        })
-        rows.append(.command("Rename…") { self.beginRenamingClip(layerID) })
-        rows.append(.command("Duplicate", TimelineMenuKeys.duplicate) { self.duplicateLayer(id: layerID) })
-        if let url = mediaURL(ofLayer: layerID) {
-            rows.append(.command("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) })
-        }
-        rows.append(.separator)
-        let onePiece = pieces.count <= 1
-        // Under a range ⌫ and ⇧⌫ take the section, and its rows above say so;
-        // the whole clip's rows stay, without a key that does something else.
-        let keys = !sectionTakesTheDelete
-        rows.append(.command("Delete", keys ? TimelineMenuKeys.delete : nil, destructive: true) {
-            // A box's pick takes the zooms and keys beside its clips too.
-            if self.boxExtrasHeld != nil, targets.contains(layerID), self.deleteBoxPick() { return }
-            if targets.count > 1 { return self.deleteLayers(ids: targets) }
-            self.deleteFromTimeline(layerID: layerID, piece: onePiece ? nil : index)
-        })
-        rows.append(.command("Ripple Delete", keys ? TimelineMenuKeys.rippleDelete : nil, destructive: true) {
-            if self.boxExtrasHeld != nil, targets.contains(layerID), self.extractBoxPick() { return }
-            if targets.count > 1 { return self.rippleDeleteClips(targets) }
-            self.rippleDelete(layerID: layerID, piece: onePiece ? nil : index)
-        })
-        return rows
+        return pictureFadeMenuRows(layerID: layer.id).filter { $0.title == end.title }
     }
 
     /// **Normalize ▸**, with Clean Noise checked inside it (remembered, on
@@ -473,25 +586,31 @@ extension EditorState {
         return url
     }
 
-    /// The menu on one caption on the Captions track.
+    /// The menu on one caption on the Captions track: its words, and what
+    /// the Captions track does as a whole one level down.
     func captionCueMenuRows(layerID: UUID) -> [MenuRow] {
-        var rows: [MenuRow] = [
-            .command("Edit Words") { self.beginRenamingClip(layerID) },
-            .command("Start Here") {
-                self.selectLayer(layerID)
-                self.moveDocumentPlayhead(toMS: self.document?.layer(id: layerID)?.time?.inMS ?? 0)
-            },
-            .command("Join with Next Line", enabled: canJoinCaptionWithNextLine(layerID)) {
-                self.joinCaptionWithNextLine(layerID)
-            },
-            .separator,
-        ]
-        rows.append(contentsOf: captionTrackMenuRows())
-        rows.append(.separator)
-        rows.append(.command("Delete", TimelineMenuKeys.delete, destructive: true) {
-            self.deleteFromTimeline(layerID: layerID, piece: nil)
-        })
-        return rows
+        timelineMenu(.caption) { row in
+            switch row {
+            case .editWords:
+                return [.command("Edit Words") { self.beginRenamingClip(layerID) }]
+            case .joinWithNextLine:
+                guard self.canJoinCaptionWithNextLine(layerID) else { return [] }
+                return [.command("Join with Next Line") { self.joinCaptionWithNextLine(layerID) }]
+            case .startHere:
+                return [.command("Start Here") {
+                    self.selectLayer(layerID)
+                    self.moveDocumentPlayhead(toMS: self.document?.layer(id: layerID)?.time?.inMS ?? 0)
+                }]
+            case .delete:
+                return [.command("Delete", TimelineMenuKeys.delete, destructive: true) {
+                    self.deleteFromTimeline(layerID: layerID, piece: nil)
+                }]
+            case .captionsTrack:
+                return self.captionTrackMenuRows()
+            default:
+                return []
+            }
+        }
     }
 
     /// **Add Captions**, or Rewrite Captions once there are some, or Cancel
@@ -535,36 +654,51 @@ extension EditorState {
     func timelineCutMenuRows(layerID: UUID, cut index: Int) -> [MenuRow] {
         guard let document, let layer = document.layer(id: layerID), layer.time != nil,
               let cut = layer.clipPieces?.cut(at: index), !isClipLocked(layerID) else { return [] }
-        var rows: [MenuRow] = []
-        if Experiments.shared.transitionsAtACutEnabled {
-            let place = TimelineCutPlace.join(clip: layerID, index: index)
-            rows += cutTransitionMenuRows(at: place, cut: cut)
-            rows.append(.separator)
-            rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
-            rows.append(.separator)
-        }
-        rows.append(rollEditMenuRow(at: .join(clip: layerID, index: index)))
-        rows.append(joinThroughEditMenuRow(at: .join(clip: layerID, index: index)))
-        return rows
+        return cutMenuRows(at: .join(clip: layerID, index: index), cut: cut)
     }
 
     /// The menu on the edit point between two clips, or on the transition
-    /// drawn over one.
+    /// drawn over one. The cut between two clips looks just like a join on
+    /// the timeline, so it answers just like one, as any edit point does in
+    /// Premiere.
     func timelineEditPointMenuRows(_ point: TimelineEditPoint) -> [MenuRow] {
         let place = TimelineCutPlace.edit(outgoing: point.outgoing, incoming: point.incoming)
         guard let cut = document?.documentCut(at: place)?.cut, !isCutLocked(place) else { return [] }
-        var rows: [MenuRow] = []
-        if Experiments.shared.transitionsAtACutEnabled {
-            rows += cutTransitionMenuRows(at: place, cut: cut)
-            rows.append(.separator)
-            rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
-            rows.append(.separator)
+        return cutMenuRows(at: place, cut: cut)
+    }
+
+    /// A cut's menu (`TimelineMenuTable`, a join): its transition, the
+    /// transition clipboard, and the edits a cut takes. A row that cannot act
+    /// on this cut is left out.
+    private func cutMenuRows(at place: TimelineCutPlace, cut: ClipCut) -> [MenuRow] {
+        let transitions = Experiments.shared.transitionsAtACutEnabled
+            ? cutTransitionMenuRows(at: place, cut: cut) : [:]
+        return timelineMenu(.join) { row in
+            switch row {
+            case .applyDefaultTransition, .addTransition, .transitionLength, .transitionCurve,
+                 .removeTransition:
+                return transitions[row].map { [$0] } ?? []
+            case .copyTransition:
+                guard transitions.isEmpty == false, cut.transition != nil else { return [] }
+                return self.transitionClipboardMenuRows(at: place, hasTransition: true).prefix(1).map { $0 }
+            case .pasteTransition:
+                guard transitions.isEmpty == false, self.transitionOnClipboard != nil else { return [] }
+                return Array(self.transitionClipboardMenuRows(at: place, hasTransition: true).dropFirst())
+            case .rollEdit:
+                guard self.canRollCut(at: place) else { return [] }
+                return [.command(TimelineMenuTable.title(.rollEdit, playheadMS: self.documentTimeMS) ?? "") {
+                    self.rollCutToPlayhead(at: place)
+                }]
+            case .joinThroughEdit:
+                // A cut with nothing removed, put back into one piece
+                // (`ThroughEdit.swift`). No key, as Premiere gives it none
+                // (UX-PATTERNS §7).
+                guard self.canJoinThroughEdit(at: place) else { return [] }
+                return [.command("Join Through Edit") { self.joinThroughEdit(at: place) }]
+            default:
+                return []
+            }
         }
-        // The cut between two clips looks just like a join on the timeline,
-        // so it rolls just like one, as any edit point does in Premiere.
-        rows.append(rollEditMenuRow(at: place))
-        rows.append(joinThroughEditMenuRow(at: place))
-        return rows
     }
 
     /// What a cut's right-click says about its transition. A bare cut offers
@@ -573,13 +707,14 @@ extension EditorState {
     /// change it to another kind, how long it takes, the curve it runs on, or
     /// take it off for a straight cut (the user, 2026-10-17: "right click to
     /// change the transition or press delete to delete the transition").
-    private func cutTransitionMenuRows(at place: TimelineCutPlace, cut: ClipCut) -> [MenuRow] {
+    private func cutTransitionMenuRows(at place: TimelineCutPlace, cut: ClipCut) -> [TimelineMenuRow: MenuRow] {
         guard let transition = cut.transition else {
             return [
-                .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
+                .applyDefaultTransition: .command("Apply Default Transition",
+                                                  TimelineMenuKeys.applyDefaultTransition) {
                     self.applyDefaultTransition(at: place)
                 },
-                addTransitionMenuRow([.cut(place)]),
+                .addTransition: addTransitionMenuRow([.cut(place)]),
             ]
         }
         let kind = cut.drawnTransition?.kind ?? transition.kind
@@ -589,40 +724,25 @@ extension EditorState {
         lengths.insert(now)
         let curves = EasingCurve.named.prefix(EasingCurve.standardCount)
         return [
-            addTransitionMenuRow([.cut(place)], current: transition.kind, title: "Change Transition"),
-            .submenu("Length", lengths.sorted().map { ms in
+            .addTransition: addTransitionMenuRow([.cut(place)], current: transition.kind,
+                                                 title: "Change Transition"),
+            .transitionLength: .submenu("Length", lengths.sorted().map { ms in
                 .toggle(ClipTransitionCopy.lengthChoice(ms, of: kind), isOn: ms == now) {
                     self.pickCut(place)
                     self.setClipTransitionLength(ms)
                 }
             }),
-            .submenu("Curve", curves.map { curve in
+            .transitionCurve: .submenu("Curve", curves.map { curve in
                 .toggle(curve.title, isOn: curve == transition.curve) {
                     self.pickCut(place)
                     self.setClipTransitionCurve(curve)
                 }
             }),
-            .command("Remove Transition") {
+            .removeTransition: .command("Remove Transition") {
                 self.pickCut(place)
                 self.setTransition(nil, at: place)
             },
         ]
-    }
-
-    /// Roll Edit to Playhead, on a join or on the cut between two clips.
-    private func rollEditMenuRow(at place: TimelineCutPlace) -> MenuRow {
-        .command("Roll Edit to Playhead", enabled: canRollCut(at: place)) {
-            self.rollCutToPlayhead(at: place)
-        }
-    }
-
-    /// Join Through Edit, on a join or on the cut between two clips: a cut
-    /// with nothing removed, put back into one piece (`ThroughEdit.swift`).
-    /// No key, as Premiere gives it none (UX-PATTERNS §7).
-    private func joinThroughEditMenuRow(at place: TimelineCutPlace) -> MenuRow {
-        .command("Join Through Edit", enabled: canJoinThroughEdit(at: place)) {
-            self.joinThroughEdit(at: place)
-        }
     }
 
     /// Whether the cut at `place` reads straight on across, so joining it

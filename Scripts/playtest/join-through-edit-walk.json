@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/join-through-edit-walk",
-  "seed": "A cut made with Split at Playhead (or the Blade) and nothing else is a through edit, and its right-click joins it back into one piece the way Premiere's Join Through Edit does, without Undo throwing away what came after. A cut with frames taken out offers the row dimmed. At Next defaults, no flag set.",
+  "seed": "A cut made with Split at Playhead (or the Blade) and nothing else is a through edit, and its right-click joins it back into one piece the way Premiere's Join Through Edit does, without Undo throwing away what came after. A cut with frames taken out leaves the row out. At Next defaults, no flag set.",
   "setup": {
     "timelineOpen": true,
     "forget": ["all"]
@@ -60,7 +60,7 @@
     { "do": "action", "action": "clipDeletePiece" },
     { "do": "wait", "seconds": 0.6 },
     { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
-    { "do": "rightClick", "on": "Tutorial Sample join 1", "shot": "5-jump-cut-menu", "dimmed": ["Join Through Edit"] },
-    { "do": "describe", "stage": "5-jump-cut", "note": "Cut at four and six seconds and the two seconds between thrown away: the cut left behind jumps, so its right-click offers Join Through Edit dimmed" }
+    { "do": "rightClick", "on": "Tutorial Sample join 1", "shot": "5-jump-cut-menu", "lacks": ["Join Through Edit"] },
+    { "do": "describe", "stage": "5-jump-cut", "note": "Cut at four and six seconds and the two seconds between thrown away: the cut left behind jumps, so its right-click leaves Join Through Edit out" }
   ]
 }

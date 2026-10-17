@@ -112,27 +112,14 @@ extension EditorState {
         documentMomentChanged()
     }
 
-    /// **Start at Playhead**, **End at Playhead** and **Fade ▸**: what the
-    /// bar of something placed in time offers on a right click. A row the
-    /// playhead gives nowhere to go is dimmed, as Split at Playhead is, since
-    /// the reason is the playhead you can see.
-    func placedLayerMenuRows(layerID id: UUID) -> [MenuRow] {
+    /// A title's single **Fade ▸**, where picture fades are switched off;
+    /// with them on it has Fade In ▸ and Fade Out ▸ like any clip
+    /// (`EditorState+PictureFade`). Its Start and End at Playhead are the
+    /// timeline menu's own rows (`TimelineMenuTable`).
+    func placedLayerFadeRows(layerID id: UUID) -> [MenuRow] {
         guard let layer = placedLayer(id) else { return [] }
         let fade = layer.titleFadeMS ?? 0
-        let rows: [MenuRow] = [
-            .command("Start at Playhead", enabled: canStartPlacedLayerHere(id)) {
-                self.startPlacedLayerHere(id)
-            },
-            .command("End at Playhead", enabled: canEndPlacedLayerHere(id)) {
-                self.endPlacedLayerHere(id)
-            },
-        ]
-        // One fade for everything on the timeline: Fade In ▸ and Fade Out ▸,
-        // the same rows a clip has (`EditorState+PictureFade`).
-        if Experiments.shared.pictureFadesEnabled {
-            return rows + pictureFadeMenuRows(layerID: id)
-        }
-        return rows + [
+        return [
             .submenu("Fade", TitleTime.fadeStopsMS.map { ms in
                 .toggle(TitleTime.fadeTitle(ms), isOn: ms == fade) {
                     self.setPlacedLayerFade(ms, layerID: id)

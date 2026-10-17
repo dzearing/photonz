@@ -2821,10 +2821,10 @@ private final class Run {
                                             unticked: unticked, number: number)
 
         case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, let across,
-                         let first, let lacks, let dimmed):
+                         let first, let lacks, let dimmed, let rows, let more):
             try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
                                   unticked: unticked, keys: keys, across: across, first: first, lacks: lacks,
-                                  dimmed: dimmed, number: number)
+                                  dimmed: dimmed, rows: rows, more: more, number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
@@ -13229,7 +13229,8 @@ private final class Run {
     private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], keys: [String: String] = [:],
                              across: CGFloat? = nil, first: String? = nil, lacks: [String] = [],
-                             dimmed: [String] = [], number: Int) async throws {
+                             dimmed: [String] = [], rows wantedRows: [String]? = nil,
+                             more wantedMore: [String]? = nil, number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
         if let name {
             var target = try rightClickTarget(name)
@@ -13278,6 +13279,12 @@ private final class Run {
         // menu as built, never opened.
         let readAndChoose: @MainActor () -> Void = {
             reading.rows = menu.items.map { $0.isSeparatorItem ? "" : $0.title }
+            // A timeline menu's long tail hangs one level down under More, or
+            // Track on the track's own space (`TimelineMenuTable`).
+            if let holder = menu.items.last(where: { ["More", "Track"].contains($0.title) })?.submenu {
+                holder.update()
+                reading.more = holder.items.map { $0.isSeparatorItem ? "" : $0.title }
+            }
             reading.dimmed = menu.items.filter { !$0.isSeparatorItem && !$0.isEnabled }.map(\.title)
             reading.ticked = menu.items.filter { $0.state == .on }.map(\.title)
             for item in menu.items where !item.isSeparatorItem {
@@ -13428,6 +13435,19 @@ private final class Run {
             throw Failure(description: "the menu on \"\(target.name)\" should not offer \"\(there)\" here; "
                 + "the rows are: " + listed)
         }
+        // The whole menu, held to the table it is laid out by.
+        if let wantedRows, wantedRows != reading.rows.map({ $0.isEmpty ? "—" : $0 }) {
+            throw Failure(description: "the menu on \"\(target.name)\" should read "
+                + wantedRows.joined(separator: ", ") + "; its rows are: " + listed)
+        }
+        if let wantedMore {
+            let more = (reading.more ?? []).map { $0.isEmpty ? "—" : $0 }
+            if wantedMore != more {
+                throw Failure(description: "the More on \"\(target.name)\" should read "
+                    + wantedMore.joined(separator: ", ") + "; it reads: "
+                    + (reading.more == nil ? "nothing, there is no More" : more.joined(separator: ", ")))
+            }
+        }
         // A row offered but dimmed: there, so a person finds it, and not live
         // on this thing.
         if let live = dimmed.first(where: { reading.rows.contains($0) && !reading.dimmed.contains($0) }) {
@@ -13461,11 +13481,14 @@ private final class Run {
             detail += "; keys: " + reading.rows.compactMap { row in reading.keys[row].map { "\(row) \($0)" } }
                 .joined(separator: ", ")
         }
+        if let more = reading.more {
+            detail += "; more: " + more.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")
+        }
         if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
         if shot == nil { detail += opened ? "; opened on screen to read it" : "; read without opening it" }
         detail += "; picture: \(outcome)"
         note(number, "rightClick", detail,
-             state: ["on": target.name, "rows": reading.rows, "ticked": reading.ticked,
+             state: ["on": target.name, "rows": reading.rows, "more": reading.more ?? [], "ticked": reading.ticked,
                      "dimmed": reading.dimmed, "keys": reading.keys, "chose": reading.chose ?? NSNull(),
                      "shot": reading.shot ?? NSNull()])
     }
@@ -13804,6 +13827,9 @@ private final class Run {
         let dimmed = reading.dimmed.filter { !$0.isEmpty }
         var detail = "\"\(name)\" opened with \(reading.rows.count) rows: \(rows)"
         if !dimmed.isEmpty { detail += "; dimmed: \(dimmed.joined(separator: ", "))" }
+        if let more = reading.more {
+            detail += "; more: " + more.map { $0.isEmpty ? "—" : $0 }.joined(separator: " | ")
+        }
         if let chose = reading.chose { detail += "; picked \"\(chose)\"" }
         detail += "; picture: \(outcome)"
         detail += "; \(opened)"

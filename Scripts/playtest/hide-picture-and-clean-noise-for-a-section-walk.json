@@ -34,7 +34,7 @@
       "do": "rightClick",
       "at": [452, 893],
       "space": "window",
-      "first": "Split at Playhead",
+      "first": "Split at 0:04.31",
       "lacks": ["Hide Picture for Section", "Clean Noise in Section", "Split at Range Edges", "Delete Section", "Speed for Section", "Freeze Frame for Section"]
     },
     {

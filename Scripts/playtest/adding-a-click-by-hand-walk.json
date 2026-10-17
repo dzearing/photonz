@@ -11,7 +11,7 @@
     { "do": "action", "action": "videoStepOneSecond" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectTimeline", "playheadMS": 2000, "lengthMS": 8000 },
-    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-with-add-click", "choose": "Add Click at Playhead…" },
+    { "do": "rightClick", "at": [900, 893], "space": "window", "shot": "0-clip-menu-with-add-click", "choose": "Add Click at 0:02.00…" },
     { "do": "wait", "seconds": 0.4 },
     { "do": "snapshot", "name": "1-waiting-for-the-click" },
     { "do": "click", "at": [200, 120] },

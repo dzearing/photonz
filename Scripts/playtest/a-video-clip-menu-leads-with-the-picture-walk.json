@@ -59,7 +59,7 @@
       "shot": "2-video-clip-menu",
       "keys": {
         "Detach Audio": "⌃⇧D",
-        "Split at Playhead": "⌘K"
+        "Cut": "⌘X"
       }
     },
     {

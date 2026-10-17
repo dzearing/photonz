@@ -239,6 +239,20 @@ extension EditorState {
         return true
     }
 
+    /// Copy from a clip's right-click: the clip, whole, whatever else is
+    /// picked or marqueed, as ⌘C copies a picked clip.
+    @discardableResult
+    func copyClip(_ id: UUID) -> Bool {
+        copyWholeLayer(id)
+    }
+
+    /// Cut from a clip's right-click: copied whole and taken off the
+    /// timeline, leaving a gap, as Premiere's Cut does.
+    func cutClip(_ id: UUID) {
+        guard document?.canDeleteLayers(ids: [id]) == true, copyWholeLayer(id) else { return }
+        deleteLayer(id: id)
+    }
+
     /// ⌘X: cut follows copy. With a marquee up it takes the picked layer's
     /// pixels OUT of the marquee and leaves the rest of the layer standing
     /// (Photoshop); with no marquee it takes the whole unlocked layer.

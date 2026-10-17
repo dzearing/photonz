@@ -21551,3 +21551,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Join right-click: Change Transition / Length / Curve / Remove Transition; Delete on a picked transition gives a straight cut.
 - Core: `Sources/PhotonzCore/TitleBeforeClip.swift`, tests `TitleBeforeClipTests`. Walk: `insert-a-title-before-a-clip-walk`.
 - Next: `a-clip-or-title-held-as-an-insert-shows-what-mov` (insert ghost previews what moves).
+
+## 2026-10-17 — Short timeline right-click menus, one table (Next)
+
+- Every timeline right-click is laid out by one table, `PhotonzCore/TimelineMenuTable.swift` (tests `TimelineMenuTableTests`, doc `docs/design/timeline-right-click.md`): about ten rows in at most four groups, playhead rows say the time (Split at 0:02.00), rows that cannot act are absent, the rest under More (Track on lane space and gaps).
+- Measured top-level rows before → after: video clip 21 → 11, its sound 14 → 10, title 15 → 10, gap 11 → 2, empty picture track 15 → 7. New Cut and Copy rows on clips.
+- Fixed: a caption line's right click raised no menu from a walk, and a second one came up blank (the menu read the lane's painted cues, which drop a picked line).
+- Walk step `rightClick` takes `rows` and `more`. Walks: `timeline-right-click-menus-walk`, `a-caption-s-right-click-menu-walk`; ~20 walks updated for the new wording.
+- Open question: Animate and Add Key on top for titles, as the animate mock draws (card on `a-title-or-picture-right-click-leads-with-animat`).

@@ -125,7 +125,7 @@
     {
       "do": "rightClick",
       "on": "Timing Title Page",
-      "choose": "Fade Out > 1s"
+      "choose": "More > Fade Out > 1s"
     },
     {
       "do": "wait",
@@ -196,7 +196,7 @@
     {
       "do": "rightClick",
       "on": "Timing Title Page",
-      "choose": "Fade Out > 0.25s"
+      "choose": "More > Fade Out > 0.25s"
     },
     {
       "do": "wait",
