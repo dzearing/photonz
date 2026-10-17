@@ -1,0 +1,34 @@
+{
+  "id": "title-pages-that-look-like-apple-designed-them",
+  "title": "Title pages that look like Apple designed them",
+  "goal": "The built-in title pages must look like they came from an Apple keynote or product video: restrained, typographically excellent, beautifully spaced, with motion that is calm and precise. Today, even with the moving backgrounds, the user says they look like a high school presentation. This task resets the bar: design first, judged by the user, then build exactly that.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.08,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:18:32.752Z",
+  "updated": "2026-10-17T13:18:32.931Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nContext: the title set shipped in title-text-visibly-comes-in-and-every-built-in-t and title-backgrounds-that-are-alive-auroras-energy (done 10-11/12) and the user still calls them amateur. Memory: visual work needs a bar the weak version fails; mocks are the floor.",
+  "acceptance": [
+    "Design first, outside the app: an HTML/CSS/JS mock page under docs/design/mocks/pages/ with at least 8 title page designs at 1920x1080 that PLAY (real animation), each a faithful study of a specific reference (Apple keynote section titles, Apple product film supers, WWDC session titles, Apple Event chapter cards, Stripe Sessions, Linear launch videos) with the reference named; typography in SF Pro Display / New York with real tracking, optical sizes and leading; a strict layout grid and generous negative space; restrained palettes (mostly black or white, one accent at most); motion of 400 to 900 ms with soft expo out landings, small travel distances, subtle blur in, and nothing bouncing, spinning or glowing for its own sake; backgrounds still or barely moving unless the reference moves",
+    "A decision card links the mock and asks the user to pick which designs to build and to flag anything that still feels amateur; nothing is built until the card is answered (this is the one place the build waits: the user rejected two rounds of self-graded titles)",
+    "Build the chosen designs exactly as the mock (mocks are the floor), replacing or demoting the current twelve; the old ones stay available under a 'More styles' group only if the user's answer keeps them",
+    "Bar, MEASURED and in the audit: side by side frames of mock and app at the same moments (0, 25, 50, 100% of the in, the hold) within a small pixel difference; text legible on any recording",
+    "A reel of the built titles under queue/audits/ and a second card for the user to approve the result",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:18:32.754Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:18:32.929Z",
+      "note": "seq 45 -> 1.08"
+    }
+  ]
+}

@@ -1,0 +1,36 @@
+{
+  "id": "insert-a-title-before-a-clip-on-its-track-and-ch",
+  "title": "Insert a title before a clip on its track, and change the transition between them like any cut",
+  "goal": "Putting a title page in front of a recording must be one move: pick the clip, double click a title in the Library (or drag it onto the clip's track before the clip), and the title goes on the SAME track right before the clip, the clip and everything after it moving along to make room. The join between title and clip is a real transition on the timeline that the person can see, click to pick, right-click to change (Cross Dissolve, Dip to Black, Cube, Flip, Push...) or Delete to make a straight cut. The fade the title has today is not baked in: it IS that transition.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.05,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:18:31.622Z",
+  "updated": "2026-10-17T13:18:31.813Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nCode: titles are inserted on their own Title tracks as overlays (EditorState+TitlePresets.swift insertTitle :108-120) so no edit point exists between a title and a clip; transitions live at edit points (EditPointTransitions.swift) and cuts (ClipTransitions.swift); the title's fade out is a key written by TitlePresets/ClipKeys. Related: 3d-transitions-and-title-entrances (done), a-title-page-s-parts-each-have-their-own-labelle (in progress).",
+  "acceptance": [
+    "Reproduce first at Next defaults: insert a title page, move a recording to follow it, try to change the title-to-clip transition to Cube, try to drag the title onto the clip's track; record each failure (today titles go on their own Title track as overlays and there is no join between a title and a clip)",
+    "A title page (full frame title) can live on a video track as a clip in the sequence, like a recording: dragging it onto a video track before or after a clip places it in the sequence there (ripple inserting), and the drop shows where it will land and what will move; overlay titles and name cards still go on Title tracks above",
+    "With a clip picked, double clicking a title page in the Library (or Insert > Title Page) inserts it on the picked clip's track immediately before that clip, rippling the clip and everything after it on that track (and linked sound) later by the title's length; one undo step",
+    "The join between the title and the clip is a transition at an edit point exactly like a join between two clips: drawn on the timeline as a visible band, hover highlights it, click picks it, right-click offers the transition list (2D and 3D) with length and curve, Delete removes it (a straight cut). The title's own 'fade out' is no longer a key baked into the title: it becomes this transition (default Cross Dissolve), and the title's out build only animates its parts",
+    "Transitions declare how they join: overlapping ones (dissolve, cube, flip, push) overlap the two clips by their length, using the title's tail and the clip's head; non-overlapping ones (dip to black or white, with an optional hold) put the dip between them; the timeline shows which, and changing kind adjusts the clips (ripple) without leaving gaps",
+    "A title with no handle frames still takes an overlapping transition (titles are generated, so they can always extend), and a recording without spare frames offers to shorten itself as cuts already do",
+    "A walk picks a recording, double clicks a title page, checks it landed before the clip on the same track with the clip moved later, right-clicks the join, picks Cube, plays through it, deletes the transition, and checks a straight cut",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:18:31.625Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:18:31.812Z",
+      "note": "seq 45 -> 1.05"
+    }
+  ]
+}
