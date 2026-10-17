@@ -1,0 +1,48 @@
+{
+  "id": "title-pages-that-look-like-apple-designed-them-which-of-these-ten-title-pages-s",
+  "taskId": "title-pages-that-look-like-apple-designed-them",
+  "question": "Which of these ten title pages should become Photonz's built-in set?",
+  "context": "Each page in the mock is a close study of one reference (Apple keynotes, product films, WWDC, Apple Events, Apple News+, Stripe Sessions, Linear), playing at full size. Open it, click a page to scrub it, and pick. Nothing is built until you answer.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Build all ten, retire today's set",
+      "summary": "The ten pages in the mock become the title pages on the shelf, in the mock's order. Today's nine (Keynote Clean, Kinetic Bold, Light Leak and the rest) leave the shelf; titles already in your films keep their look. Name any numbers to cut in your note.",
+      "pros": [
+        "One calm, consistent family with nothing amateur left next to it",
+        "Fewer choices, each one good"
+      ],
+      "cons": [
+        "Moving backgrounds and bolder looks are gone from the shelf"
+      ],
+      "mitigation": "Any title you already placed keeps playing exactly as before, and a look can come back later as its own ask."
+    },
+    {
+      "id": "b",
+      "label": "Build all ten, old set under More styles",
+      "summary": "The ten lead the shelf. Today's nine stay reachable in a collapsed More styles group at the bottom. Name any numbers to cut in your note.",
+      "pros": [
+        "Nothing anyone used disappears"
+      ],
+      "cons": [
+        "The looks you called high school stay one click away, beside the new ones"
+      ],
+      "mitigation": "The group starts collapsed, so the first thing anyone sees is the new set."
+    },
+    {
+      "id": "c",
+      "label": "Not there yet: another design round",
+      "summary": "Nothing is built. Say in your note which pages still look amateur and why, and the next pass redraws the mock before anything reaches the app.",
+      "pros": [
+        "Nothing ships until the look is right"
+      ],
+      "cons": [
+        "Title pages stay as they are for another round"
+      ],
+      "mitigation": "The mock page is quick to change, so a second round costs a day, not a week."
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-17T19:49:55.727Z"
+}

@@ -5,12 +5,14 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.08,
-  "status": "pending",
+  "status": "blocked",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:32.752Z",
-  "updated": "2026-10-17T13:18:32.931Z",
-  "deps": [],
+  "updated": "2026-10-17T19:50:21.611Z",
+  "deps": [
+    "title-text-can-be-set-like-apple-sets-it-trackin"
+  ],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nContext: the title set shipped in title-text-visibly-comes-in-and-every-built-in-t and title-backgrounds-that-are-alive-auroras-energy (done 10-11/12) and the user still calls them amateur. Memory: visual work needs a bar the weak version fails; mocks are the floor.",
   "acceptance": [
@@ -29,6 +31,27 @@
     {
       "t": "2026-10-17T13:18:32.929Z",
       "note": "seq 45 -> 1.08"
+    },
+    {
+      "t": "2026-10-17T19:39:51.619Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T19:49:26.502Z",
+      "note": "Design pass (2026-10-17): mock page docs/design/mocks/pages/video-titles-apple.html (http://127.0.0.1:8791/index.html#video-titles-apple), ten 1920x1080 title pages that play, each a study of one named reference: 01 Keynote Section, 02 Film Super, 03 Session Title (WWDC), 04 Chapter Card (Apple Event), 05 Editorial (Apple News+, New York), 06 Sessions Stage (Stripe), 07 Launch (Linear), 08 Gradient Word (Apple Intelligence), 09 Big Number (keynote stat), 10 End Card (product film). One deterministic timeline per page (tpFrame) with ?shot=<id>&t=<ms> for exact frames; every part written in the app's own vocabulary (role, build kind, delay, length, amount) so the build transcribes it. Capture tool: docs/design/title-mock-capture.mjs (headless Chrome over DevTools; --frames writes 0/25/50/100% of the in plus the hold, --reel an MP4). Mock frames for the later side-by-side bar: queue/audits/2026-10-17-apple-titles-mock-*.jpg, sheet and reel."
+    },
+    {
+      "t": "2026-10-17T19:49:26.565Z",
+      "note": "Adversarial review before building: (1) The weak set failed on restraint, not features: loud moving backgrounds, several effects per part, long travel, spring/flip/3D builds. The mock bans all of those: fade, rise of 10 to 22 px, blur in, a tracking settle, a per-line mask reveal, 600 to 950 ms on expo out, outs of 300 to 450 ms. (2) The app cannot yet draw the mock's type: TextContent has no tracking and no line height (TextMeasurement fixes leading at 1.22), New York was dropped from the font list (TextStyles.swift says it is only reachable through AppKit's design API; CoreText can load /System/Library/Fonts/NewYork.ttf by URL), and text has no gradient fill (only plateGradient), which Launch and Gradient Word need. Filed as a prerequisite. (3) Combined builds (blur in + rise, scale + blur) are one kind per part in TitleBuild today; the build phase needs either combined kinds or amounts on blurIn for rise/scale. Decided in the build, not a UX question. (4) A Premiere or Final Cut editor expects titles that are type on black or white with a calm dissolve (Essential Graphics, Final Cut Basic Title). This set meets that and goes beyond it in typography. (5) Session Title's presenter role line is grey; the app paints one colour per text layer, so the build uses two layers (name, role). No UX consequence."
+    },
+    {
+      "t": "2026-10-17T19:50:21.517Z",
+      "note": "Checked my own pictures: read the contact sheet (all ten at 0/25/50/100% of the in and the hold), the full-size holds of Editorial, Session Title, Film Super and Launch, and the grid and player pages in headless Chrome. They show calm type on still backgrounds, New York drawing as New York, every entrance visibly mid-flight at 25%. Fixed on the way: gradient-filled headlines sat at the left edge (Chrome paints a background-clipped block's inline children off-centre; the fill moved onto the line spans), Stripe's glow read as a hard disk (softened and widened), the player was trapped inside the shell's screen (moved to the body) and its buttons were white on white (given their own dark style). Build waits on the card and on title-text-can-be-set-like-apple-sets-it-trackin (now in deps)."
+    },
+    {
+      "t": "2026-10-17T19:50:21.608Z",
+      "note": "Ten Apple-level title pages designed as a playing mock (docs/design/mocks/pages/video-titles-apple.html); waiting on the user to pick which to build. Typography prerequisite filed: title-text-can-be-set-like-apple-sets-it-trackin."
     }
-  ]
+  ],
+  "started": "2026-10-17T19:39:51.618Z"
 }

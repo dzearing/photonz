@@ -1,0 +1,29 @@
+{
+  "id": "title-text-can-be-set-like-apple-sets-it-trackin",
+  "title": "Title text can be set like Apple sets it: tracking, leading, New York and a gradient fill",
+  "goal": "The new title pages are set with tight letter spacing, tight line spacing, Apple's New York serif and, on two of them, a colour gradient running through the words. Today a piece of text in Photonz can have none of these, so the chosen designs cannot be built to look like their mock until it can.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.085,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T19:49:43.240Z",
+  "updated": "2026-10-17T19:49:43.243Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Prerequisite for title-pages-that-look-like-apple-designed-them, whose mock (docs/design/mocks/pages/video-titles-apple.html) specifies tracking per part (-0.04em to +0.16em), leading 1.02 to 1.06, New York Medium 128, and gradient fills on 07 Launch and 08 Gradient Word. Findings 2026-10-17: TextContent (Sources/PhotonzCore/Layer.swift) has fontName/fontSize/colorHex/weight but no tracking or line height; TextMeasurement.swift fixes line height at fontSize*1.22; TextStyles.swift dropped New York because it is only reachable via AppKit's design API, but CoreText can register /System/Library/Fonts/NewYork.ttf by URL (CTFontManagerCreateFontDescriptorsFromURL) inside PhotonzRender; only the plate has a gradient (plateGradient: Paint), the glyph fill is flat. TextRasterizer already sets kCTKernAttributeName for reveal spacing (line 267), so tracking can ride the same attribute. Gradient fill sweep is only needed if the user keeps 08 Gradient Word; the fill itself is needed for 07 Launch too.",
+  "acceptance": [
+    "A text layer carries its own letter spacing (as a share of its size, negative allowed) and its own line spacing, both kept in the document, undoable, and drawn the same on the canvas, in playback and in an export",
+    "New York is offered in the font list and draws as New York (not a fallback serif) on the canvas and in an export",
+    "A text layer can be filled with a gradient (two or more colours, any angle) instead of one colour, and its colours can be slid across the words over time so a title can sweep colour through them",
+    "SF Pro at title sizes draws its Display cut (the system's optical size), checked by rendering 184 px text beside a reference",
+    "Unit tests in PhotonzCore and PhotonzRender for each of the above, written before the code"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T19:49:43.242Z",
+      "note": "created (manual)"
+    }
+  ]
+}

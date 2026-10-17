@@ -1,0 +1,618 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Photonz · video-titles-apple</title>
+<link rel="stylesheet" href="/shared/photonz-ds.css">
+<style>
+/* video-titles-apple · ten title pages, each a close study of one named
+   reference (Apple keynotes, product films, WWDC, Apple Events, Stripe
+   Sessions, Linear). Every design is a 1920x1080 frame driven by ONE
+   deterministic timeline (tpFrame), so any moment can be photographed and laid
+   beside the app's render of the same moment:
+     ?shot=<design id>&t=<ms>   one frame, unscaled, paused (for capture)
+     ?open=<design id>          opens that design in the player
+   Each part is written in the app's own title vocabulary (role, build kind,
+   delay, length, amount) so the build is a transcription, not a guess.
+   Every local class carries the tp- prefix (AGENTS.md). */
+
+#video-titles-apple{
+  --tp-sf:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro",system-ui,sans-serif;
+  --tp-sft:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro",system-ui,sans-serif;
+  --tp-ny:"New York","New York Large","NewYork",ui-serif,Georgia,serif;
+}
+#video-titles-apple .tp-intro{max-width:760px;color:var(--fg2,#a1a1a6);font-size:13px;line-height:1.5;margin:0 0 var(--s5,20px)}
+#video-titles-apple .tp-bar{display:flex;gap:8px;align-items:center;margin:0 0 var(--s5,20px)}
+#video-titles-apple .tp-btn{appearance:none;border:1px solid rgba(127,127,127,.28);background:rgba(127,127,127,.1);
+  color:inherit;font:inherit;font-size:12px;font-weight:550;padding:5px 12px;border-radius:7px;cursor:pointer}
+#video-titles-apple .tp-btn:hover{background:rgba(127,127,127,.18)}
+#video-titles-apple .tp-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:28px 24px}
+@media (max-width:1100px){#video-titles-apple .tp-grid{grid-template-columns:1fr}}
+#video-titles-apple .tp-card{margin:0;cursor:pointer}
+#video-titles-apple .tp-vp{position:relative;aspect-ratio:16/9;border-radius:10px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(127,127,127,.22),0 10px 30px rgba(0,0,0,.28);background:#000}
+#video-titles-apple .tp-card:hover .tp-vp{box-shadow:0 0 0 2px var(--accent,#0a84ff),0 10px 30px rgba(0,0,0,.28)}
+#video-titles-apple .tp-cap{display:grid;grid-template-columns:auto 1fr;gap:2px 10px;padding:10px 2px 0}
+#video-titles-apple .tp-num{font-size:12px;font-weight:650;color:var(--fg3,#86868b);font-variant-numeric:tabular-nums;grid-row:span 3;padding-top:1px}
+#video-titles-apple .tp-name{font-size:14px;font-weight:650}
+#video-titles-apple .tp-ref{font-size:12px;color:var(--fg2,#a1a1a6)}
+#video-titles-apple .tp-why{font-size:12px;color:var(--fg3,#86868b);line-height:1.45}
+
+/* ---------- the 1920x1080 frame ---------- */
+.tp-stage{position:absolute;left:0;top:0;width:1920px;height:1080px;transform-origin:0 0;overflow:hidden;
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;
+  font-kerning:normal;font-optical-sizing:auto;font-family:var(--tp-sf)}
+.tp-stage .tp-bg{position:absolute;inset:0}
+.tp-stage .tp-p{position:absolute;will-change:transform,opacity,filter;white-space:nowrap}
+.tp-stage .tp-ln{display:block;overflow:hidden;padding:0 .04em .14em;margin:0 -.04em -.14em}
+.tp-stage .tp-ln>span{display:inline-block;will-change:transform}
+.tp-stage .tp-rule{position:absolute;transform-origin:0 50%}
+
+/* ---------- the player ---------- */
+.tp-dlg{position:fixed;inset:0;z-index:50;display:none;background:rgba(0,0,0,.72);
+  -webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px)}
+.tp-dlg.on{display:grid;grid-template-rows:1fr auto;padding:28px 40px 20px;gap:14px}
+.tp-dlg .tp-dvp{position:relative;align-self:center;justify-self:center;border-radius:10px;overflow:hidden;
+  box-shadow:0 0 0 1px rgba(255,255,255,.12),0 30px 80px rgba(0,0,0,.6);background:#000}
+.tp-dlg .tp-ctl{display:grid;grid-template-columns:auto auto 1fr auto auto;gap:12px;align-items:center;color:#f5f5f7;
+  font-size:12px;max-width:1400px;width:100%;justify-self:center}
+.tp-dlg .tp-ctl b{font-weight:650}
+.tp-dlg .tp-time{font-variant-numeric:tabular-nums;color:#a1a1a6;min-width:120px;text-align:right}
+.tp-dlg .tp-scrub{position:relative;height:28px;cursor:pointer}
+.tp-dlg .tp-track{position:absolute;left:0;right:0;top:13px;height:2px;background:rgba(255,255,255,.18);border-radius:1px}
+.tp-dlg .tp-seg{position:absolute;top:11px;height:6px;border-radius:3px}
+.tp-dlg .tp-seg.in{background:rgba(10,132,255,.55)}
+.tp-dlg .tp-seg.out{background:rgba(255,159,10,.5)}
+.tp-dlg .tp-mk{position:absolute;top:6px;width:1px;height:16px;background:rgba(255,255,255,.45)}
+.tp-dlg .tp-mk i{position:absolute;top:18px;left:-20px;width:40px;text-align:center;font-style:normal;font-size:9px;color:#8e8e93}
+.tp-dlg .tp-head{position:absolute;top:2px;width:2px;height:24px;margin-left:-1px;background:#fff;border-radius:1px}
+.tp-dlg .tp-spec{max-width:1400px;width:100%;justify-self:center;color:#d1d1d6;font-size:11px;line-height:1.5;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:4px 24px;max-height:150px;overflow:auto}
+.tp-dlg .tp-spec div b{color:#fff;font-weight:600}
+.tp-dlg .tp-x{position:absolute;right:16px;top:12px}
+.tp-dlg .tp-btn{appearance:none;border:1px solid rgba(255,255,255,.22);background:rgba(255,255,255,.1);color:#f5f5f7;
+  font:inherit;font-size:12px;font-weight:550;padding:5px 12px;border-radius:7px;cursor:pointer}
+.tp-dlg .tp-btn:hover{background:rgba(255,255,255,.18)}
+
+/* ---------- capture mode: one frame, unscaled ---------- */
+body.tp-shot{margin:0;background:#000;overflow:hidden}
+body.tp-shot .tp-stage{transform:none}
+</style>
+</head>
+<body class="page">
+<main class="stage">
+  <section class="screen on" id="video-titles-apple">
+    <div class="scen-head"><span class="pip" style="background:#f5f5f7"></span><h2>Title pages</h2><span class="k">· ten studies of how Apple, Stripe and Linear open a film</span></div>
+    <p class="tp-intro">Each page is a close study of one reference, at 1920 by 1080, playing for real. Click one to scrub it frame by frame and read its type and motion. Pick the ones worth building, and say which still look amateur.</p>
+    <div class="tp-bar"><button class="tp-btn" id="tp-replay">Replay all</button></div>
+    <div class="tp-grid" id="tp-grid"></div>
+
+    <div class="tp-dlg" id="tp-dlg" role="dialog" aria-label="Title player">
+      <button class="tp-btn tp-x" id="tp-close">Close</button>
+      <div class="tp-dvp" id="tp-dvp"></div>
+      <div>
+        <div class="tp-ctl">
+          <button class="tp-btn" id="tp-play" style="min-width:64px">Pause</button>
+          <b id="tp-dname"></b>
+          <div class="tp-scrub" id="tp-scrub"><div class="tp-track"></div></div>
+          <span class="tp-time" id="tp-time"></span>
+          <span id="tp-dref" style="color:#8e8e93"></span>
+        </div>
+        <div class="tp-spec" id="tp-spec" style="margin-top:12px"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<script src="/shared/photonz-ds.js"></script>
+<script>
+(() => {
+/* ============================================================
+   Curves. Landings are a soft exponential ease out; leaving is a short
+   sine in-out. Opacity reaches full a little before the travel settles,
+   which is what makes a move read as calm rather than late.
+   ============================================================ */
+const C = {
+  expoOut: p => p >= 1 ? 1 : 1 - Math.pow(2, -10 * p),
+  quintOut: p => 1 - Math.pow(1 - p, 5),
+  cubicOut: p => 1 - Math.pow(1 - p, 3),
+  sineInOut: p => -(Math.cos(Math.PI * p) - 1) / 2,
+  linear: p => p,
+};
+const clamp = (v, a = 0, b = 1) => Math.min(b, Math.max(a, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ============================================================
+   The designs. Sizes are pixels of the 1920x1080 frame.
+   Each part:
+     role    background | headline | subtitle | kicker | accent (the app's roles)
+     build   the app's build kind the motion transcribes to
+     in      { delay, len, rise, blur, scale, track:[from,to] em, mask, draw, curve, stagger }
+     out     { delay, len, blur, rise }   measured from the start of the out
+   ============================================================ */
+const HOLD = 2200, GAP = 500;
+
+const DESIGNS = [
+{
+  id: 'keynote-section', name: 'Keynote Section',
+  ref: 'Apple Event keynote section title (the black "Apple Watch" chapter slide)',
+  why: 'One word, nothing else. The weight and the black do all the work; it arrives out of a soft focus and simply is there.',
+  bg: '#000',
+  parts: [
+    { id: 'h', role: 'headline', build: 'Blur In', text: 'Timeline',
+      css: 'left:0;right:0;top:432px;text-align:center;font-size:184px;line-height:1;font-weight:600;letter-spacing:-0.028em;color:#f5f5f7',
+      type: 'SF Pro Display Semibold 184 · tracking -2.8% · #F5F5F7',
+      in: { delay: 0, len: 900, blur: 18, scale: 1.035, curve: 'expoOut' },
+      out: { delay: 0, len: 420, blur: 10 } },
+    { id: 's', role: 'subtitle', build: 'Rise', text: 'What is new in Photonz 3',
+      css: 'left:0;right:0;top:664px;text-align:center;font-size:40px;line-height:1.2;font-weight:500;letter-spacing:-0.004em;color:#86868b',
+      type: 'SF Pro Display Medium 40 · tracking -0.4% · #86868B',
+      in: { delay: 280, len: 750, rise: 14, curve: 'expoOut' },
+      out: { delay: 0, len: 360 } },
+  ],
+},
+{
+  id: 'film-super', name: 'Film Super',
+  ref: 'Apple product film supers (the lower left "Shot on iPhone" lines)',
+  why: 'Small, low and left, set on the film grid. A super never shouts: it is read in passing, so it is set like a caption, not a poster.',
+  bg: 'radial-gradient(1200px 900px at 78% 38%,#2b2722 0%,#14120f 48%,#070707 100%)',
+  parts: [
+    { id: 'h', role: 'headline', build: 'Rise', text: 'Record. Redline. Ship.',
+      css: 'left:160px;top:808px;font-size:68px;line-height:1.06;font-weight:600;letter-spacing:-0.016em;color:#f5f5f7',
+      type: 'SF Pro Display Semibold 68 · tracking -1.6% · left margin 160',
+      in: { delay: 120, len: 800, rise: 18, blur: 4, curve: 'expoOut' },
+      out: { delay: 0, len: 380 } },
+    { id: 's', role: 'subtitle', build: 'Rise', text: 'Photonz for Mac',
+      css: 'left:160px;top:896px;font-size:32px;line-height:1.25;font-weight:400;letter-spacing:0;color:rgba(245,245,247,.62)',
+      type: 'SF Pro Text Regular 32 · 62% white',
+      in: { delay: 280, len: 750, rise: 12, curve: 'expoOut' },
+      out: { delay: 0, len: 340 } },
+  ],
+},
+{
+  id: 'wwdc-session', name: 'Session Title',
+  ref: 'WWDC session video opening card (left set title, presenter beneath)',
+  why: 'A strict left edge, a two line title on tight leading, and the presenter set quietly a long way below it. The space between them is the design.',
+  bg: '#000',
+  parts: [
+    { id: 'k', role: 'kicker', build: 'Fade', text: 'Session 3',
+      css: 'left:160px;top:330px;font-size:34px;line-height:1;font-weight:600;letter-spacing:-0.004em;color:#bf5af2',
+      type: 'SF Pro Display Semibold 34 · accent #BF5AF2 (the only colour)',
+      in: { delay: 0, len: 600, curve: 'cubicOut' },
+      out: { delay: 120, len: 320 } },
+    { id: 'h', role: 'headline', build: 'Mask Reveal (by line)', text: 'Measure and redline\nany screenshot',
+      css: 'left:160px;top:392px;font-size:112px;line-height:1.04;font-weight:700;letter-spacing:-0.022em;color:#f5f5f7',
+      type: 'SF Pro Display Bold 112 · leading 1.04 · tracking -2.2%',
+      in: { delay: 120, len: 900, mask: true, stagger: 90, curve: 'expoOut' },
+      out: { delay: 0, len: 380, rise: 10 } },
+    { id: 's', role: 'subtitle', build: 'Rise', text: 'Dana Zhou\nDesign Engineer',
+      css: 'left:160px;top:716px;font-size:34px;line-height:1.3;font-weight:500;letter-spacing:-0.004em;color:#f5f5f7',
+      type: 'SF Pro Display Medium 34 · second line #8E8E93',
+      lineColors: [null, '#8e8e93'],
+      in: { delay: 520, len: 750, rise: 10, curve: 'expoOut' },
+      out: { delay: 0, len: 320 } },
+  ],
+},
+{
+  id: 'event-chapter', name: 'Chapter Card',
+  ref: 'Apple Event chapter interstitial (white card, chapter number over one word)',
+  why: 'Apple\'s off white, Apple\'s near black, and the word closing up from slightly open tracking to tight. The only motion is the spacing settling.',
+  bg: '#fbfbfd',
+  parts: [
+    { id: 'k', role: 'kicker', build: 'Fade', text: 'Chapter 2',
+      css: 'left:0;right:0;top:404px;text-align:center;font-size:34px;line-height:1;font-weight:600;letter-spacing:-0.002em;color:#6e6e73',
+      type: 'SF Pro Display Semibold 34 · #6E6E73',
+      in: { delay: 0, len: 600, curve: 'cubicOut' },
+      out: { delay: 100, len: 320 } },
+    { id: 'h', role: 'headline', build: 'Track In', text: 'Capture',
+      css: 'left:0;right:0;top:460px;text-align:center;font-size:168px;line-height:1;font-weight:600;color:#1d1d1f',
+      type: 'SF Pro Display Semibold 168 · tracking +4% to -2.6% · #1D1D1F on #FBFBFD',
+      in: { delay: 100, len: 900, track: [0.04, -0.026], blur: 6, curve: 'expoOut' },
+      out: { delay: 0, len: 380 } },
+  ],
+},
+{
+  id: 'editorial', name: 'Editorial',
+  ref: 'Apple News+ cover story title set in New York',
+  why: 'A serif headline on warm paper, centred, with a small spaced kicker and a byline. The lines rise out of their own baselines one after the other.',
+  bg: '#f4f0e8',
+  parts: [
+    { id: 'k', role: 'kicker', build: 'Fade', text: 'THE MAKING OF',
+      css: 'left:0;right:0;top:312px;text-align:center;font-family:var(--tp-sft);font-size:22px;line-height:1;font-weight:600;letter-spacing:0.16em;color:#a4472a',
+      type: 'SF Pro Text Semibold 22 caps · tracking +16% · accent #A4472A',
+      in: { delay: 0, len: 600, curve: 'cubicOut' },
+      out: { delay: 140, len: 320 } },
+    { id: 'r', role: 'accent', build: 'Draw On', rule: true,
+      css: 'left:928px;top:368px;width:64px;height:2px;background:#1c1a17',
+      type: 'Rule 64 x 2 · #1C1A17, draws from the left',
+      in: { delay: 120, len: 700, draw: true, curve: 'expoOut' },
+      out: { delay: 120, len: 300 } },
+    { id: 'h', role: 'headline', build: 'Mask Reveal (by line)', text: 'A better way\nto explain things',
+      css: 'left:0;right:0;top:412px;text-align:center;font-family:var(--tp-ny);font-size:128px;line-height:1.06;font-weight:500;letter-spacing:-0.012em;color:#1c1a17',
+      type: 'New York Medium 128 · leading 1.06 · tracking -1.2%',
+      in: { delay: 200, len: 950, mask: true, stagger: 110, curve: 'expoOut' },
+      out: { delay: 0, len: 400, rise: 8 } },
+    { id: 's', role: 'subtitle', build: 'Fade', text: 'By Sam Rivera',
+      css: 'left:0;right:0;top:752px;text-align:center;font-family:var(--tp-sft);font-size:30px;line-height:1;font-weight:400;letter-spacing:0;color:#6b665e',
+      type: 'SF Pro Text Regular 30 · #6B665E',
+      in: { delay: 650, len: 700, curve: 'cubicOut' },
+      out: { delay: 0, len: 300 } },
+  ],
+},
+{
+  id: 'stripe-sessions', name: 'Sessions Stage',
+  ref: 'Stripe Sessions keynote stage title (navy, left set, one slow glow)',
+  why: 'Navy instead of black, a single violet glow drifting so slowly you only notice it if you look, and an editorial left column with a quiet meta line.',
+  bg: '#0a2540',
+  glow: { css: 'width:2200px;height:1600px;border-radius:50%;background:radial-gradient(closest-side,rgba(99,91,255,.34),rgba(99,91,255,.12) 50%,rgba(99,91,255,0) 100%)', x: 900, y: -900, dx: 60, dy: 40, period: 14000 },
+  parts: [
+    { id: 'k', role: 'kicker', build: 'Fade', text: 'Sessions 2026',
+      css: 'left:160px;top:356px;font-size:32px;line-height:1;font-weight:600;letter-spacing:-0.004em;color:#a39dff',
+      type: 'SF Pro Display Semibold 32 · accent #A39DFF',
+      in: { delay: 0, len: 600, curve: 'cubicOut' },
+      out: { delay: 120, len: 320 } },
+    { id: 'h', role: 'headline', build: 'Rise (by line)', text: 'The fastest way\nto make a demo',
+      css: 'left:160px;top:414px;font-size:120px;line-height:1.02;font-weight:600;letter-spacing:-0.026em;color:#fff',
+      type: 'SF Pro Display Semibold 120 · leading 1.02 · tracking -2.6%',
+      in: { delay: 100, len: 850, rise: 22, blur: 4, stagger: 90, lines: true, curve: 'expoOut' },
+      out: { delay: 0, len: 380 } },
+    { id: 's', role: 'subtitle', build: 'Fade', text: 'Keynote  ·  9:00 AM',
+      css: 'left:160px;top:712px;font-size:30px;line-height:1;font-weight:500;letter-spacing:0;color:#adbdcc',
+      type: 'SF Pro Display Medium 30 · #ADBDCC',
+      in: { delay: 520, len: 700, curve: 'cubicOut' },
+      out: { delay: 0, len: 300 } },
+  ],
+},
+{
+  id: 'linear-launch', name: 'Launch',
+  ref: 'Linear launch video title (near black, a faint top light, gradient type)',
+  why: 'The headline is filled top to bottom from white to grey, the way Linear sets its type, under a light so faint it reads as depth rather than effect.',
+  bg: 'radial-gradient(1100px 520px at 50% -60px,rgba(255,255,255,.075),rgba(255,255,255,0) 70%),#08090a',
+  parts: [
+    { id: 'h', role: 'headline', build: 'Blur In + Rise', text: 'Built for speed',
+      css: 'left:0;right:0;top:418px;text-align:center;font-size:150px;line-height:1.08;font-weight:500;letter-spacing:-0.034em;color:#f7f8f8',
+      fill: 'linear-gradient(180deg,#f7f8f8 30%,rgba(247,248,248,.52))',
+      type: 'SF Pro Display Medium 150 · tracking -3.4% · fill white to 52% white, top to bottom',
+      in: { delay: 0, len: 900, rise: 14, blur: 20, curve: 'expoOut' },
+      out: { delay: 0, len: 420, blur: 10 } },
+    { id: 's', role: 'subtitle', build: 'Rise', text: 'Every command is one key away',
+      css: 'left:0;right:0;top:614px;text-align:center;font-size:38px;line-height:1.2;font-weight:400;letter-spacing:-0.006em;color:#8a8f98',
+      type: 'SF Pro Display Regular 38 · #8A8F98',
+      in: { delay: 300, len: 750, rise: 10, curve: 'expoOut' },
+      out: { delay: 0, len: 340 } },
+  ],
+},
+{
+  id: 'gradient-word', name: 'Gradient Word',
+  ref: 'Apple Event "Apple Intelligence" title (one word filled with the Siri glow)',
+  why: 'Black, one phrase, and the colour is the only accent: the words land white and the spectrum washes through them once, then holds perfectly still.',
+  bg: '#000',
+  parts: [
+    { id: 'h', role: 'headline', build: 'Blur In + colour sweep', text: 'Smart Redline',
+      css: 'left:0;right:0;top:450px;text-align:center;font-size:172px;line-height:1.05;font-weight:600;letter-spacing:-0.03em;color:#c959dd',
+      fill: 'linear-gradient(90deg,#0894ff 0%,#c959dd 14%,#ff2e54 29%,#ff9004 44%,#f5f5f7 58%,#f5f5f7 100%)', fillSize: '220% 100%',
+      type: 'SF Pro Display Semibold 172 · tracking -3% · fill #0894FF, #C959DD, #FF2E54, #FF9004, washing in from white',
+      in: { delay: 0, len: 900, blur: 16, scale: 1.02, sweep: 1600, curve: 'expoOut' },
+      out: { delay: 0, len: 420, blur: 10 } },
+  ],
+},
+{
+  id: 'keynote-stat', name: 'Big Number',
+  ref: 'Apple keynote stat slide ("Up to 22 hours of battery life")',
+  why: 'A number large enough to be the picture, a short lead in above it and the claim beneath. Three sizes, one colour, centred on one axis.',
+  bg: '#000',
+  parts: [
+    { id: 'k', role: 'kicker', build: 'Fade', text: 'Up to',
+      css: 'left:0;right:0;top:268px;text-align:center;font-size:48px;line-height:1;font-weight:600;letter-spacing:-0.008em;color:#f5f5f7',
+      type: 'SF Pro Display Semibold 48',
+      in: { delay: 0, len: 600, curve: 'cubicOut' },
+      out: { delay: 100, len: 320 } },
+    { id: 'h', role: 'headline', build: 'Scale From + Blur', text: '3×',
+      css: 'left:0;right:0;top:330px;text-align:center;font-size:360px;line-height:1;font-weight:700;letter-spacing:-0.04em;color:#f5f5f7;font-variant-numeric:tabular-nums',
+      type: 'SF Pro Display Bold 360 · tracking -4%',
+      in: { delay: 80, len: 950, scale: 0.94, blur: 14, curve: 'expoOut' },
+      out: { delay: 0, len: 420, blur: 10 } },
+    { id: 's', role: 'subtitle', build: 'Rise', text: 'faster to explain a bug',
+      css: 'left:0;right:0;top:722px;text-align:center;font-size:48px;line-height:1.1;font-weight:600;letter-spacing:-0.008em;color:#86868b',
+      type: 'SF Pro Display Semibold 48 · #86868B',
+      in: { delay: 360, len: 750, rise: 12, curve: 'expoOut' },
+      out: { delay: 0, len: 340 } },
+  ],
+},
+{
+  id: 'end-card', name: 'End Card',
+  ref: 'Apple product film end card (white, the product name, one availability line)',
+  why: 'The quietest page in the set: a name and a line on white, dissolving in. It ends a film the way Apple ends theirs.',
+  bg: '#fff',
+  parts: [
+    { id: 'h', role: 'headline', build: 'Fade', text: 'Photonz',
+      css: 'left:0;right:0;top:452px;text-align:center;font-size:112px;line-height:1;font-weight:600;letter-spacing:-0.022em;color:#1d1d1f',
+      type: 'SF Pro Display Semibold 112 · tracking -2.2% · #1D1D1F',
+      in: { delay: 0, len: 900, curve: 'sineInOut', opacityOnly: true },
+      out: { delay: 0, len: 450 } },
+    { id: 's', role: 'subtitle', build: 'Fade', text: 'Free on the Mac',
+      css: 'left:0;right:0;top:594px;text-align:center;font-size:36px;line-height:1.2;font-weight:400;letter-spacing:-0.004em;color:#6e6e73',
+      type: 'SF Pro Text Regular 36 · #6E6E73',
+      in: { delay: 400, len: 800, curve: 'sineInOut', opacityOnly: true },
+      out: { delay: 0, len: 400 } },
+  ],
+},
+];
+
+/* timings every design shares */
+DESIGNS.forEach(d => {
+  d.inEnd = Math.max(...d.parts.map(p => p.in.delay + p.in.len + (p.in.stagger || 0) * (lineCount(p) - 1)));
+  d.outStart = d.inEnd + HOLD;
+  d.outEnd = d.outStart + Math.max(...d.parts.map(p => p.out.delay + p.out.len));
+  d.loop = d.outEnd + GAP;
+});
+function lineCount(p) { return p.text ? p.text.split('\n').length : 1; }
+
+/* ============================================================
+   Build one stage
+   ============================================================ */
+function buildStage(d) {
+  const st = document.createElement('div');
+  st.className = 'tp-stage';
+  const bg = document.createElement('div');
+  bg.className = 'tp-bg';
+  bg.style.background = d.bg;
+  st.appendChild(bg);
+  if (d.glow) {
+    const g = document.createElement('div');
+    g.style.cssText = 'position:absolute;left:0;top:0;' + d.glow.css;
+    g.dataset.glow = '1';
+    st.appendChild(g);
+  }
+  d.parts.forEach(p => {
+    const el = document.createElement('div');
+    el.className = p.rule ? 'tp-rule' : 'tp-p';
+    el.style.cssText = p.css;
+    el.dataset.part = p.id;
+    if (!p.rule) {
+      p.text.split('\n').forEach((line, i) => {
+        const ln = document.createElement('span');
+        ln.className = 'tp-ln';
+        const inner = document.createElement('span');
+        inner.textContent = line;
+        if (p.lineColors && p.lineColors[i]) inner.style.color = p.lineColors[i];
+        if (p.fill) {
+          inner.style.backgroundImage = p.fill;
+          if (p.fillSize) inner.style.backgroundSize = p.fillSize;
+          inner.style.webkitBackgroundClip = 'text'; inner.style.backgroundClip = 'text';
+          inner.style.webkitTextFillColor = 'transparent';
+        }
+        ln.appendChild(inner);
+        el.appendChild(ln);
+      });
+      /* a mask reveal clips each line; everything else draws its lines unclipped */
+      if (!p.in.mask) el.querySelectorAll('.tp-ln').forEach(l => { l.style.overflow = 'visible'; });
+    }
+    st.appendChild(el);
+  });
+  return st;
+}
+
+/* ============================================================
+   The one function that says what the frame looks like at time t.
+   ============================================================ */
+function tpFrame(st, d, t) {
+  const g = st.querySelector('[data-glow]');
+  if (g) {
+    const a = (t / d.glow.period) * Math.PI * 2;
+    g.style.transform = `translate(${d.glow.x + Math.sin(a) * d.glow.dx}px,${d.glow.y + Math.cos(a) * d.glow.dy}px)`;
+  }
+  d.parts.forEach(p => {
+    const el = st.querySelector(`[data-part="${p.id}"]`);
+    const I = p.in, O = p.out, curve = C[I.curve || 'expoOut'];
+    const qo = C.sineInOut(clamp((t - d.outStart - O.delay) / O.len));
+    const outOpacity = 1 - qo, outBlur = (O.blur || 0) * qo, outRise = (O.rise || 0) * qo;
+
+    const lines = el.querySelectorAll('.tp-ln>span');
+    const perLine = I.mask || I.lines;
+    const raw0 = clamp((t - I.delay) / I.len);
+    const e0 = curve(raw0);
+    /* opacity is full at 60% of the build; the travel keeps settling after */
+    const op0 = I.opacityOnly ? curve(raw0) : C.cubicOut(clamp(raw0 / 0.6));
+
+    if (perLine) {
+      lines.forEach((sp, i) => {
+        const raw = clamp((t - I.delay - i * (I.stagger || 0)) / I.len);
+        const e = curve(raw);
+        if (I.mask) {
+          sp.style.transform = `translateY(${(1 - e) * 112}%)`;
+        } else {
+          const op = C.cubicOut(clamp(raw / 0.6));
+          sp.style.transform = `translateY(${(I.rise || 0) * (1 - e)}px)`;
+          sp.style.opacity = op;
+          sp.style.filter = I.blur ? `blur(${(I.blur * (1 - e)).toFixed(2)}px)` : '';
+        }
+      });
+      el.style.opacity = outOpacity;
+      el.style.transform = `translateY(${-outRise}px)`;
+      el.style.filter = outBlur ? `blur(${outBlur.toFixed(2)}px)` : '';
+      return;
+    }
+
+    if (p.rule) {
+      el.style.transform = `scaleX(${I.draw ? e0 : 1})`;
+      el.style.opacity = (I.draw ? 1 : op0) * outOpacity * (raw0 > 0 ? 1 : 0);
+      return;
+    }
+
+    const rise = (I.rise || 0) * (1 - e0) - outRise;
+    const sc = I.scale ? lerp(I.scale, 1, e0) : 1;
+    const blur = (I.blur || 0) * (1 - e0) + outBlur;
+    el.style.opacity = op0 * outOpacity;
+    el.style.transform = `translateY(${rise.toFixed(2)}px) scale(${sc.toFixed(4)})`;
+    el.style.filter = blur > 0.01 ? `blur(${blur.toFixed(2)}px)` : '';
+    if (I.track) el.style.letterSpacing = lerp(I.track[0], I.track[1], e0).toFixed(4) + 'em';
+    if (I.sweep) {
+      const s = C.cubicOut(clamp((t - I.delay) / I.sweep));
+      el.querySelectorAll('.tp-ln>span').forEach(sp => { sp.style.backgroundPosition = `${lerp(100, 0, s).toFixed(2)}% 50%`; });
+    }
+  });
+}
+
+/* ============================================================
+   Capture mode
+   ============================================================ */
+const q = new URLSearchParams(location.search);
+if (q.has('shot')) {
+  const d = DESIGNS.find(x => x.id === q.get('shot')) || DESIGNS[0];
+  document.body.className = 'tp-shot';
+  document.body.innerHTML = '';
+  const host = document.createElement('div');
+  host.id = 'video-titles-apple';
+  const st = buildStage(d);
+  host.appendChild(st);
+  document.body.appendChild(host);
+  window.tpDesigns = DESIGNS;
+  window.tpSeek = (id, t) => {
+    const dd = DESIGNS.find(x => x.id === id);
+    if (dd !== d) { host.innerHTML = ''; const s2 = buildStage(dd); host.appendChild(s2); tpFrame(s2, dd, t); window.__d = dd; return; }
+    tpFrame(host.firstChild, dd, t);
+  };
+  tpFrame(st, d, +(q.get('t') || 0));
+  return;
+}
+
+/* ============================================================
+   The grid: every card loops on its own clock while it is on screen.
+   ============================================================ */
+const grid = document.getElementById('tp-grid');
+const cards = DESIGNS.map((d, i) => {
+  const fig = document.createElement('figure');
+  fig.className = 'tp-card';
+  fig.tabIndex = 0;
+  const vp = document.createElement('div');
+  vp.className = 'tp-vp';
+  const st = buildStage(d);
+  vp.appendChild(st);
+  const cap = document.createElement('figcaption');
+  cap.className = 'tp-cap';
+  cap.innerHTML = `<span class="tp-num">${String(i + 1).padStart(2, '0')}</span><span class="tp-name"></span><span class="tp-ref"></span><span class="tp-why"></span>`;
+  cap.querySelector('.tp-name').textContent = d.name;
+  cap.querySelector('.tp-ref').textContent = 'Study of: ' + d.ref;
+  cap.querySelector('.tp-why').textContent = d.why;
+  fig.append(vp, cap);
+  grid.appendChild(fig);
+  const card = { d, vp, st, t0: performance.now() - i * 260, visible: true };
+  fig.addEventListener('click', () => openPlayer(d));
+  fig.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openPlayer(d); } });
+  return card;
+});
+
+function fit(vp, st) { st.style.transform = `scale(${vp.clientWidth / 1920})`; }
+const ro = new ResizeObserver(() => { cards.forEach(c => fit(c.vp, c.st)); if (P.d) fit(P.vp, P.st); });
+cards.forEach(c => ro.observe(c.vp));
+const io = new IntersectionObserver(es => es.forEach(e => {
+  const c = cards.find(k => k.vp === e.target); if (c) c.visible = e.isIntersecting;
+}));
+cards.forEach(c => io.observe(c.vp));
+document.getElementById('tp-replay').addEventListener('click', () => {
+  const now = performance.now(); cards.forEach((c, i) => { c.t0 = now - i * 120; });
+});
+
+/* ============================================================
+   The player: scrub, step, and read the spec.
+   ============================================================ */
+const dlg = document.getElementById('tp-dlg');
+/* the shell's screen is a containing block for fixed boxes, so the player lives on the body */
+document.body.appendChild(dlg);
+const P = { d: null, st: null, vp: document.getElementById('tp-dvp'), t: 0, playing: true, last: 0 };
+ro.observe(P.vp);
+function sizePlayer() {
+  const w = Math.min(window.innerWidth - 80, (window.innerHeight - 260) * 16 / 9, 1440);
+  P.vp.style.width = w + 'px'; P.vp.style.height = (w * 9 / 16) + 'px';
+  if (P.st) fit(P.vp, P.st);
+}
+function openPlayer(d) {
+  P.d = d; P.t = 0; P.playing = true;
+  P.vp.innerHTML = ''; P.st = buildStage(d); P.vp.appendChild(P.st);
+  document.getElementById('tp-dname').textContent = d.name;
+  document.getElementById('tp-dref').textContent = d.ref.replace(/ \(.*\)$/, '');
+  const sc = document.getElementById('tp-scrub');
+  sc.querySelectorAll('.tp-seg,.tp-mk').forEach(n => n.remove());
+  const pct = ms => (ms / d.loop * 100) + '%';
+  const seg = (cls, a, b) => { const s = document.createElement('div'); s.className = 'tp-seg ' + cls; s.style.left = pct(a); s.style.width = pct(b - a); sc.appendChild(s); };
+  seg('in', 0, d.inEnd); seg('out', d.outStart, d.outEnd);
+  [[0, '0'], [d.inEnd * .25, '25%'], [d.inEnd * .5, '50%'], [d.inEnd, 'in'], [d.inEnd + HOLD / 2, 'hold'], [d.outEnd, 'out']].forEach(([ms, label]) => {
+    const m = document.createElement('div'); m.className = 'tp-mk'; m.style.left = pct(ms);
+    m.innerHTML = `<i>${label}</i>`; m.dataset.ms = ms; sc.appendChild(m);
+  });
+  if (!sc.querySelector('.tp-head')) { const h = document.createElement('div'); h.className = 'tp-head'; sc.appendChild(h); }
+  const spec = document.getElementById('tp-spec');
+  spec.innerHTML = '';
+  d.parts.forEach(p => {
+    const I = p.in;
+    const bits = [`${p.build}`, `delay ${I.delay}`, `${I.len} ms`];
+    if (I.rise) bits.push(`rise ${I.rise}`);
+    if (I.blur) bits.push(`blur ${I.blur}`);
+    if (I.scale) bits.push(`scale from ${Math.round(I.scale * 100)}%`);
+    if (I.stagger) bits.push(`${I.stagger} ms per line`);
+    bits.push(I.curve === 'expoOut' ? 'expo out' : I.curve === 'sineInOut' ? 'sine in out' : 'cubic out');
+    const row = document.createElement('div');
+    row.innerHTML = `<b></b> <span class="a"></span><br><span class="b"></span><br><span class="c" style="color:#8e8e93"></span>`;
+    row.querySelector('b').textContent = p.role[0].toUpperCase() + p.role.slice(1);
+    row.querySelector('.a').textContent = p.text ? `"${p.text.replace('\n', ' / ')}"` : '';
+    row.querySelector('.b').textContent = p.type;
+    row.querySelector('.c').textContent = `In: ${bits.join(', ')} · Out: ${p.out.len} ms${p.out.blur ? ', blur ' + p.out.blur : ''}`;
+    spec.appendChild(row);
+  });
+  const bgRow = document.createElement('div');
+  bgRow.innerHTML = '<b>Background</b><br><span></span>';
+  bgRow.querySelector('span').textContent = d.glow ? 'Navy #0A2540, one violet glow drifting 60 px over 14 s' : 'Still, ' + (d.bg.startsWith('#') ? d.bg.toUpperCase() : 'a fixed gradient');
+  spec.appendChild(bgRow);
+  dlg.classList.add('on');
+  sizePlayer();
+  document.getElementById('tp-play').textContent = 'Pause';
+  history.replaceState(null, '', '?open=' + d.id);
+}
+function closePlayer() { dlg.classList.remove('on'); P.d = null; history.replaceState(null, '', location.pathname); }
+document.getElementById('tp-close').addEventListener('click', closePlayer);
+dlg.addEventListener('click', e => { if (e.target === dlg) closePlayer(); });
+document.getElementById('tp-play').addEventListener('click', e => {
+  P.playing = !P.playing; e.target.textContent = P.playing ? 'Pause' : 'Play';
+  if (P.playing && P.t >= P.d.loop - 1) P.t = 0;
+});
+const scrub = document.getElementById('tp-scrub');
+function seekFrom(e) {
+  const r = scrub.getBoundingClientRect();
+  P.t = clamp((e.clientX - r.left) / r.width) * P.d.loop;
+  P.playing = false; document.getElementById('tp-play').textContent = 'Play';
+}
+scrub.addEventListener('pointerdown', e => { scrub.setPointerCapture(e.pointerId); seekFrom(e); });
+scrub.addEventListener('pointermove', e => { if (e.buttons) seekFrom(e); });
+window.addEventListener('keydown', e => {
+  if (!P.d) return;
+  if (e.key === 'Escape') closePlayer();
+  else if (e.key === ' ') { e.preventDefault(); document.getElementById('tp-play').click(); }
+  else if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    e.preventDefault(); P.playing = false; document.getElementById('tp-play').textContent = 'Play';
+    P.t = clamp(P.t + (e.key === 'ArrowRight' ? 1 : -1) * (e.shiftKey ? 250 : 1000 / 30), 0, P.d.loop);
+  }
+});
+window.addEventListener('resize', () => { if (P.d) sizePlayer(); });
+
+/* ============================================================
+   One clock for the page.
+   ============================================================ */
+function tick(now) {
+  cards.forEach(c => { if (c.visible && !P.d) tpFrame(c.st, c.d, (now - c.t0) % c.d.loop); });
+  if (P.d) {
+    if (P.playing) { P.t += now - (P.last || now); if (P.t >= P.d.loop) P.t = 0; }
+    tpFrame(P.st, P.d, P.t);
+    document.querySelector('#tp-scrub .tp-head').style.left = (P.t / P.d.loop * 100) + '%';
+    document.getElementById('tp-time').textContent = (P.t / 1000).toFixed(2) + ' s of ' + (P.d.loop / 1000).toFixed(1) + ' s';
+  }
+  P.last = now;
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+cards.forEach(c => fit(c.vp, c.st));
+if (q.has('open')) { const d = DESIGNS.find(x => x.id === q.get('open')); if (d) openPlayer(d); }
+})();
+</script>
+</body>
+</html>
