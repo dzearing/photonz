@@ -736,6 +736,10 @@ public enum PlaytestCondition: Hashable, Sendable {
     /// down over a clip: the timeline says it put it there AND the cursor
     /// really is the badge, so something taking it straight back down fails.
     case clipCopyBadge
+    /// An edge grip wears Premiere's ripple yellow: ⌘ is down with the
+    /// pointer on it, or it is the edge in a ripple drag
+    /// (`RippleEdgeDrag.swift`).
+    case clipRippleLook
     /// A dialog is up (or has gone), named by the words at the top of it:
     /// "Resize Image", "Export", "New Frame", "Blank Canvas", "Canvas Size".
     ///
@@ -4722,6 +4726,7 @@ public enum PlaytestStep: Sendable, Equatable {
             case "soundSettled": .soundSettled
             case "clipsOfOneRecording": .clipsOfOneRecording(Int(try f.number("value")))
             case "clipCopyBadge": .clipCopyBadge
+            case "clipRippleLook": .clipRippleLook
             case "dialogUp": .dialog(try f.string("value"), up: true)
             case "dialogGone": .dialog(try f.string("value"), up: false)
             case "panelMenuOpen": .panelMenuOpen(try f.string("value"))
@@ -4732,7 +4737,7 @@ public enum PlaytestStep: Sendable, Equatable {
                 case let other: throw f.invalid("value", "zoomControl is \"shown\" or \"hidden\", not \"\(other)\"")
                 }
             case "displayZoom": .displayZoom(Int(try f.number("value")))
-            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
+            default: throw f.invalid("condition", "\"\(condition)\" is not a condition; use edgeMap, captionField, tool, measureMode, sectionInView, sectionHeaderInView, sectionDirectlyUnder, layerRowInView, tutorialStep, tutorialFinished, exportSizeWeighed, soundSettled, clipsOfOneRecording, clipCopyBadge, clipRippleLook, dialogUp, dialogGone, panelMenuOpen, zoomControl or displayZoom")
             }
             self = .waitFor(parsed, timeout: try f.optionalNumber("timeout") ?? Self.defaultTimeout)
         case "startGuide":

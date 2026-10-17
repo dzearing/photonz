@@ -32,9 +32,11 @@
     { "do": "wait", "seconds": 0.5 },
     { "do": "describe", "stage": "3-start-pulled", "note": "THE SECOND TEST: its left end, pulled right, did the same" },
 
-    { "do": "dragGrip", "control": "Rectangle clip end", "by": 158, "steps": 40, "within": 2, "modifiers": ["command"] },
+    { "do": "press", "control": "Timeline Snapping" },
+    { "do": "dragGrip", "control": "Rectangle clip end", "by": 158, "steps": 40, "within": 2 },
+    { "do": "press", "control": "Timeline Snapping" },
     { "do": "wait", "seconds": 0.5 },
-    { "do": "describe", "stage": "4-end-free", "note": "THE THIRD TEST: with Command held nothing catches, so it followed the hand at every step" },
+    { "do": "describe", "stage": "4-end-free", "note": "THE THIRD TEST: with snapping switched off nothing catches, so it followed the hand at every step. (Command on an edge is Premiere's ripple trim since 2026-10-17, UX-PATTERNS §7, so the walk switches the magnet off instead.)" },
     { "do": "snapshot", "name": "4-after" },
 
     { "do": "dragGrip", "control": "Rectangle clip", "by": -90, "steps": 30, "within": 2, "modifiers": ["command"] },

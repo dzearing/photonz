@@ -2046,6 +2046,10 @@ final class EditorState {
     /// whether the copy badge is pushed onto the cursor stack right now.
     @ObservationIgnored var clipBarHovered: [String: UUID] = [:]
     @ObservationIgnored var clipBarCopyCursorShown = false
+    /// The edge grips the pointer is on, and whether ⌘ is down while it is:
+    /// what turns a grip Premiere's ripple yellow (`RippleEdgeDrag.swift`).
+    @ObservationIgnored var clipBarGripHovered: Set<String> = []
+    var clipBarCommandHeld = false
     /// ...and the one armed while a transition's band is.
     @ObservationIgnored var clipTransitionEscapeWatch: Any?
     /// The Escape watch armed for exactly as long as a bar is in hand

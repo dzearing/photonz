@@ -364,7 +364,12 @@ extension EditorState {
     /// Take hold of an edge, a piece or the bar itself. `copying` is ⌥ held
     /// as the hand took hold of a piece or the bar: what moves is a copy, and
     /// the clip stays where it was (`ClipDragCopy.swift`).
-    func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab, copying: Bool = false) {
+    ///
+    /// `ripple` is ⌘ held as an edge was taken hold of: Premiere's ripple
+    /// trim, where everything after the edit follows the edge
+    /// (`RippleEdgeDrag.swift`). Ignored for a grab that cannot ripple.
+    func beginClipBarDrag(layerID: UUID, grab: ClipBarGrab, copying: Bool = false,
+                          ripple: Bool = false) {
         endTrimBeforeCutting()
         guard let document, let layer = document.layer(id: layerID),
               let time = layer.time, let pieces = layer.clipPieces,
@@ -392,6 +397,7 @@ extension EditorState {
         clipBarDrag = ClipBarDragSession(layerID: layerID, grab: grab, drag: drag,
                                          landing: drag.landing(byMS: 0),
                                          heldTimelineMS: max(1, document.documentDurationMS),
+                                         ripple: ripple && drag.ripples,
                                          along: along,
                                          // A box's zooms and keys come too
                                          // (`EditorState+TrackRange`).
@@ -492,6 +498,9 @@ extension EditorState {
     /// part way brings the magnets back from where the hand already is.
     func updateClipBarDrag(byMS delta: Int, free: Bool = false) {
         guard var session = clipBarDrag else { return }
+        // A ripple was asked for with ⌘, so ⌘ is not also a release from the
+        // magnets: Premiere's ripple snaps as any trim does.
+        let free = free && !session.ripple
         session.handMS = delta
         session.landing = (free ? session.drag.snapping(withinMS: 0) : session.drag).landing(byMS: delta)
         // A box's zooms and keys go as far as the one with least room, and
@@ -561,6 +570,11 @@ extension EditorState {
             // end does not move (`TitleTime.moveLayerStart`).
             guard landing.movedMS != 0 else { break }
             perform { $0.moveLayerStart(id, toMS: landing.clipStartMS) }
+        case .clipStart where session.ripple, .seam where session.ripple:
+            // ⌘: the clip trims and everything after the edit follows it, on
+            // every unlocked track, as one step (`RippleEdgeDrag.swift`).
+            guard landing.movedMS != 0 else { break }
+            perform { $0.rippleTrimClipEdge(id, session.grab, byMS: landing.movedMS) }
         case .clipStart:
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipStart(id, ofPiece: 0, byMS: landing.movedMS) }
@@ -709,14 +723,42 @@ extension EditorState {
         refreshClipBarCopyCursor(optionHeld: optionHeld)
     }
 
+    /// The pointer came onto an edge grip, or left it. ⌘ down while it is on
+    /// one gives the grip the ripple look (`ClipPiecesBar.gripRipples`), and
+    /// the same watch the copy badge uses tells it when ⌘ comes and goes.
+    func clipBarGripHover(_ key: String, inside: Bool) {
+        if inside { clipBarGripHovered.insert(key) } else { clipBarGripHovered.remove(key) }
+        var commandHeld = ClipPiecesBar.commandHeld
+        #if PHOTONZ_PLAYTEST
+        commandHeld = commandHeld || PlaytestPointer.restingModifiers.contains(.command)
+        #endif
+        noteClipBarCommand(commandHeld)
+        watchForClipBarCopyKeys()
+    }
+
+    /// Whether an edge grip wears the ripple look right now: the same answer
+    /// `ClipPiecesBar.gripRipples` draws from, for a walk to read.
+    var clipRippleLookShown: Bool {
+        if let session = clipBarDrag { return session.ripple }
+        return clipBarCommandHeld && !clipBarGripHovered.isEmpty
+    }
+
+    /// Whether ⌘ is down, written only when it changes so a grip is not
+    /// redrawn at every key the watch sees.
+    private func noteClipBarCommand(_ held: Bool) {
+        if clipBarCommandHeld != held { clipBarCommandHeld = held }
+    }
+
     /// The watch on ⌥ and on the pointer, armed while the pointer is over a
     /// clip's bar or a copy is in the hand, and taken down otherwise.
     private func watchForClipBarCopyKeys() {
-        let wanted = !clipBarHovered.isEmpty || clipBarDrag?.copies.isEmpty == false
+        let wanted = !clipBarHovered.isEmpty || !clipBarGripHovered.isEmpty
+            || clipBarDrag?.copies.isEmpty == false
         if wanted, clipBarCopyCursorWatch == nil {
             clipBarCopyCursorWatch = NSEvent.addLocalMonitorForEvents(
                 matching: [.flagsChanged, .mouseMoved, .leftMouseDragged, .cursorUpdate]) { [weak self] event in
                 if event.type == .flagsChanged {
+                    self?.noteClipBarCommand(event.modifierFlags.contains(.command))
                     self?.refreshClipBarCopyCursor(optionHeld: event.modifierFlags.contains(.option))
                 } else {
                     self?.reassertClipBarCopyCursor()
@@ -813,9 +855,17 @@ extension EditorState {
             shown.soundDetached = true
             document.placeClipCopy(shown, over: copy.original, atInMS: copy.layer.time?.inMS ?? 0)
         }
-        document.updateLayer(id: session.layerID) { layer in
-            layer.setClipPieces(landing.pieces)
-            layer.time = layer.time?.moved(toInMS: landing.clipStartMS)
+        // A ripple on the end edge shows everything after it following the
+        // hand. One on the start edge keeps the clip where it was put, and the
+        // bar's far end only closes up when it is let go, so what is after it
+        // closes up then too rather than sliding under a bar still drawn long.
+        if session.ripple, case .seam = session.grab, landing.movedMS != 0,
+           document.rippleTrimClipEdge(session.layerID, session.grab, byMS: landing.movedMS) {
+        } else {
+            document.updateLayer(id: session.layerID) { layer in
+                layer.setClipPieces(landing.pieces)
+                layer.time = layer.time?.moved(toInMS: landing.clipStartMS)
+            }
         }
         // Everything carried along goes by what the bar in the hand went by.
         for (id, start) in session.along {
@@ -853,6 +903,12 @@ extension EditorState {
         guard let session = clipBarDrag else { return nil }
         let landing = session.landing
         switch session.grab {
+        case .clipStart where session.ripple:
+            return ClipBarCopy.rippling(lengthMS: landing.pieces.piece(at: 0)?.lengthMS ?? 0,
+                                        changeMS: -landing.movedMS)
+        case .seam(let after) where session.ripple:
+            return ClipBarCopy.rippling(lengthMS: landing.pieces.piece(at: after)?.lengthMS ?? 0,
+                                        changeMS: landing.movedMS)
         case .clipStart:
             return ClipBarCopy.trimming(pieceNumber: 1, of: landing.pieces.count,
                                         lengthMS: landing.pieces.piece(at: 0)?.lengthMS ?? 0,
@@ -894,6 +950,9 @@ struct ClipBarDragSession {
     /// How long the document was when the bar was grabbed, held for the length
     /// of the drag so the ruler cannot rescale under the hand.
     let heldTimelineMS: Int
+    /// ⌘ held as an edge was taken hold of: a ripple trim, and everything
+    /// after the edit follows the edge (`RippleEdgeDrag.swift`).
+    var ripple = false
     /// The other picked clips carried along with a `.body` drag, each with
     /// where it started. Empty for a bar dragged on its own.
     var along: [UUID: Int] = [:]

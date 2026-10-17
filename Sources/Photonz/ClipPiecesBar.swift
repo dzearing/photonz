@@ -52,6 +52,8 @@ struct ClipPiecesBar: View {
     private var fieldName: String { isLinkedSound ? "\(layerName) sound" : layerName }
 
     @State private var isHovered = false
+    /// The edge grip the pointer is on, for the ripple look ⌘ gives it.
+    @State private var hoveredGrip: Int?
     /// A fade handle in the hand: which end, and how long the fade would be.
     @State private var fadeDrag: FadeDrag?
     /// A picture fade handle in the hand, on a clip, a title or a shape.
@@ -309,7 +311,10 @@ struct ClipPiecesBar: View {
     private var spareBehindMS: Int? {
         guard isInHand, let session = editorState.clipBarDrag, session.layerID == layerID,
               case .seam(let after) = session.grab,
-              after == session.landing.pieces.count - 1 else { return nil }
+              after == session.landing.pieces.count - 1,
+              // A ripple brings what is after the clip along behind its end,
+              // so the spare would be drawn over the next clip.
+              !session.ripple else { return nil }
         guard let range = session.landing.pieces.trimEndRange(ofPiece: after) else { return nil }
         return range.out
     }
@@ -1299,9 +1304,16 @@ struct ClipPiecesBar: View {
                        Self.gripWidth * 3)
         let width = max(3, min(Self.gripWidth, room / 3))
         if isPicked, room >= Self.smallestGrabbablePiece, !gripHidesUnderABand(pieces, edge: edge) {
-            gripFace(width: width)
+            gripFace(width: width, rippling: gripRipples(edge: edge))
                 .frame(width: width, height: barHeight)
                 .contentShape(Rectangle().inset(by: -5))
+                // ⌘ over an edge turns it Premiere's ripple yellow before
+                // anything is pressed, so the drag it is about to make is
+                // never a surprise.
+                .playtestHover("\(Self.gripName(layerName: fieldName, edge: edge, of: pieces.count)) grip") { inside in
+                    if inside { hoveredGrip = edge } else if hoveredGrip == edge { hoveredGrip = nil }
+                    editorState.clipBarGripHover("\(layerID)-\(edge)", inside: inside)
+                }
                 .gesture(edgeDrag(pieces, edge: edge, ruler: ruler))
                 // A join is a CUT, and a cut is a thing you can pick: one click
                 // and the panel is talking about what happens there. Dragging
@@ -1367,16 +1379,32 @@ struct ClipPiecesBar: View {
         return shownCuts(pieces).contains { $0.index == edge }
     }
 
+    /// Whether this edge wears the ripple look: ⌘ is down with the pointer on
+    /// it, or it is the edge in a ripple drag. Never on an edge that cannot
+    /// ripple (a title's free start), where ⌘ still means no magnets.
+    private func gripRipples(edge: Int) -> Bool {
+        if let session = editorState.clipBarDrag, session.layerID == layerID {
+            switch session.grab {
+            case .clipStart: return session.ripple && edge == 0
+            case .seam(let after): return session.ripple && edge == after + 1
+            case .body, .carry: return false
+            }
+        }
+        guard hoveredGrip == edge, editorState.clipBarCommandHeld else { return false }
+        return edge > 0 || !(editorState.document?.layer(id: layerID)?.startIsFree ?? false)
+    }
+
     /// A grip as the strip draws it (an accent capsule), or as the kit's clip
     /// does (a white bar with a dark hairline, readable on any clip colour).
-    @ViewBuilder private func gripFace(width: CGFloat) -> some View {
+    /// Rippling, it is Premiere's ripple yellow.
+    @ViewBuilder private func gripFace(width: CGFloat, rippling: Bool = false) -> some View {
         if kind == nil {
             Capsule()
-                .fill(Color.accentColor)
+                .fill(rippling ? Color.yellow : Color.accentColor)
                 .overlay { Capsule().strokeBorder(Color.white.opacity(0.75), lineWidth: 1) }
         } else {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color.white)
+                .fill(rippling ? Color.yellow : Color.white)
                 .overlay { RoundedRectangle(cornerRadius: 2).strokeBorder(Color.black.opacity(0.3), lineWidth: 0.5) }
                 .frame(width: min(4, width))
                 .padding(.vertical, 5)
@@ -1413,16 +1441,21 @@ struct ClipPiecesBar: View {
         DragGesture(minimumDistance: 1, coordinateSpace: Self.handSpace)
             .onChanged { value in
                 if editorState.clipBarDrag == nil {
+                    // ⌘ held as the edge is taken hold of is Premiere's ripple
+                    // trim: everything after the edit follows the edge
+                    // (`RippleEdgeDrag.swift`).
                     editorState.beginClipBarDrag(
                         layerID: layerID,
-                        grab: edge == 0 ? .clipStart : .seam(after: edge - 1))
+                        grab: edge == 0 ? .clipStart : .seam(after: edge - 1),
+                        ripple: Self.commandHeld)
                 }
-                // ⌘ held frees the edge of every magnet for as long as it is
-                // held, the way it frees a handle on the canvas and in Trim.
+                // Otherwise ⌘ held frees the edge of every magnet for as long
+                // as it is held, the way it frees a handle on the canvas and in
+                // Trim; a ripple keeps its magnets, and S still switches them.
                 // Read through the editor's ruler, which an edge scroll moves.
                 let travel = Self.ms(value.translation.width, laneWidth: laneWidth,
                                      ruler: editorState.motionStripRuler)
-                let free = Self.commandHeld
+                let free = Self.commandHeld && editorState.clipBarDrag?.ripple != true
                 editorState.updateClipBarDrag(byMS: travel + editorState.timelineEdgePannedMS, free: free)
                 // On the dock, an edge held near the timeline's left or right
                 // scrolls it, and the edge goes on with it.

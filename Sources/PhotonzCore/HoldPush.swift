@@ -168,16 +168,28 @@ extension PhotonzDocument {
     ///   arrived on a frame of the picture and should leave on the same one.
     ///
     /// A layer that is over before the moment is not touched at all.
+    ///
+    /// `sparingLocked` leaves a locked layer, and everything on a locked
+    /// track, exactly where it was: a ripple drag's way (`RippleEdgeDrag`),
+    /// which is Premiere's, where a locked track never moves.
     @discardableResult
-    public mutating func rippleTime(atMS ms: Int, byMS delta: Int, exceptLayer keep: UUID?) -> Bool {
+    public mutating func rippleTime(atMS ms: Int, byMS delta: Int, exceptLayer keep: UUID?,
+                                    sparingLocked: Bool = false) -> Bool {
         guard delta != 0 else { return false }
         var moved = false
+        let locked = sparingLocked ? layerIDsOnLockedTracks() : []
         for layer in allLayers {
             guard layer.id != keep, let time = layer.time else { continue }
+            if sparingLocked, layer.isLocked || locked.contains(layer.id) { continue }
             if time.inMS >= ms {
                 let landing = max(ms, time.inMS + delta)
                 guard landing != time.inMS else { continue }
-                updateLayer(id: layer.id) { $0.time = $0.time?.moved(toInMS: landing) }
+                updateLayer(id: layer.id) { layer in
+                    layer.time = layer.time?.moved(toInMS: landing)
+                    // A caption's words are on the document's clock, so they
+                    // go where the caption goes (`StretchRemoval.swift`).
+                    layer.captionWords = layer.captionWords?.map { $0.shifted(byMS: landing - time.inMS) }
+                }
                 moved = true
             } else if ms < time.outMS {
                 if layer.holdsMedia, var pieces = layer.clipPieces {

@@ -1,0 +1,68 @@
+{
+  "out": "/tmp/photonz-playtest/command-drag-ripple-trims-an-edge-walk",
+  "seed": "Command held on a clip's end edge makes the drag Premiere's ripple trim (task command-dragging-a-clip-s-edge-ripple-trims-so-l). At Next defaults with no flag changed: the sample recording cut to six seconds with W, a second clip butted onto it at six, the playhead parked at four. Command over the recording's end grip turns it ripple yellow; Command-dragging that grip left catches on the playhead and the second clip follows it in, so the two still meet with no gap; one undo puts both back. The same drag without Command trims the recording and leaves the second clip where it was, with a gap.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"],
+    "scratch": ["sample:recording as b-roll.mp4"]
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "key", "key": "w" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "dropOnTimeline", "file": "scratch/b-roll.mp4", "track": "V1", "seconds": 5.96 },
+    { "do": "wait", "seconds": 1.0 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
+
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectTimeline", "playheadMS": 4000 },
+    { "do": "selectRow", "row": "Tutorial Sample" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "describe", "stage": "1-two-clips-meet", "note": "The recording cut to its first six seconds with W and b-roll butted onto it at six; the playhead parked at four and the recording picked, so its edge grips are up" },
+    { "do": "snapshot", "name": "1-before" },
+
+    { "do": "move", "control": "Tutorial Sample clip end", "modifiers": ["command"] },
+    { "do": "waitFor", "condition": "clipRippleLook", "timeout": 2 },
+    { "do": "describe", "stage": "2-ripple-look", "note": "Command held with the pointer on the recording's end grip: the grip is Premiere's ripple yellow before anything is pressed" },
+    { "do": "snapshot", "name": "2-ripple-look" },
+
+    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -220, "steps": 24, "modifiers": ["command"], "hold": "3-rippling-mid-drag" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 4.0, "count": 1, "within": 0.02 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 4.0, "endsAt": 12.0, "count": 1, "within": 0.02 },
+    { "do": "describe", "stage": "3-rippled", "note": "THE TEST: Command-dragging the recording's end left caught on the playhead at four, and b-roll followed it in to start at four, so the two still meet with no gap" },
+    { "do": "snapshot", "name": "4-after-the-ripple" },
+
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 6.0, "count": 1 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
+    { "do": "describe", "stage": "4-undone", "note": "One Command Z puts the recording's end and b-roll back at six: the ripple was one step" },
+
+    { "do": "move", "at": [40, 40] },
+    { "do": "dragGrip", "control": "Tutorial Sample clip end", "by": -220, "steps": 24 },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "track": "V1", "startsAt": 0.0, "endsAt": 4.0, "count": 1, "within": 0.02 },
+    { "do": "expectClip", "clip": "b-roll", "track": "V1", "startsAt": 6.0, "endsAt": 14.0, "count": 1 },
+    { "do": "describe", "stage": "5-plain-trim", "note": "The same drag without Command is the plain trim it always was: the recording ends at four and b-roll stays at six, with a gap" },
+    { "do": "snapshot", "name": "5-plain-trim" }
+  ]
+}

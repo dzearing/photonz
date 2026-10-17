@@ -17714,6 +17714,7 @@ private final class Run {
         case .exportSizeWeighed: ExportWeigh.onScreen?.isSettled == true
         case .soundSettled: SoundLibrary.shared.cleaningTasks.isEmpty && editor.soundsBeingNormalized == 0
         case .clipCopyBadge: editor.clipBarCopyCursorShown && Self.cursorName() == "dragCopy"
+        case .clipRippleLook: editor.clipRippleLookShown
         case .panelMenuOpen(let label): VideoKit.DropdownButton.isHeldOpenForAWalk(label)
         case .zoomControl(let shown): editor.canvasZoomControl.isShown == shown
         case .displayZoom(let percent): Int((editor.displayZoom * 100).rounded()) == percent
@@ -19213,6 +19214,9 @@ private final class Run {
             // (`EditorState.clipBarHover`). Read beside `cursor`, it says
             // whether the badge went up and whether anything took it down.
             "clipCopyBadge": editor.clipBarCopyCursorShown,
+            // Whether an edge grip is in Premiere's ripple yellow: ⌘ over it,
+            // or a ripple drag on it (`RippleEdgeDrag.swift`).
+            "clipRippleLook": editor.clipRippleLookShown,
             // ...and what the canvas thinks is under the pointer, which is the
             // other half: these two disagreeing means the cue was right and the
             // pointer did not follow it.

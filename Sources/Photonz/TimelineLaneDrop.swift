@@ -371,6 +371,11 @@ struct TimelineEditPointView: View {
     let height: CGFloat
 
     @State private var isHovered = false
+    /// Which half of the edit point the pointer is on: the outgoing clip's end
+    /// (true) or the incoming clip's start (false). A drag there trims that
+    /// side, as Premiere's Selection tool does on an edit point, and ⌘ makes it
+    /// a ripple trim (`RippleEdgeDrag.swift`).
+    @State private var hoveredOutgoingSide: Bool?
 
     /// `.editpt{width:9px}`: room to hit, centred on the seam.
     static let width: CGFloat = 9
@@ -447,8 +452,21 @@ struct TimelineEditPointView: View {
                     }
                 }
         }
+        // Drawn where the cut was until the hand lets go, so while one of its
+        // clips is in a drag the cut is not drawn at all: a ripple carries the
+        // next clip under where it was. Still there to hold the drag.
+        .opacity(isInADrag ? 0 : 1)
         .frame(width: Self.width, height: height)
+        .overlay { rippleBracket }
         .contentShape(Rectangle())
+        // Each half takes hold of its own side of the cut. A press that does
+        // not move falls through to the pick below.
+        .overlay {
+            HStack(spacing: 0) {
+                side(outgoing: true)
+                side(outgoing: false)
+            }
+        }
         .onTapGesture {
             editorState.pickEditPoint(point)
             editorState.openTransitionPicker(at: place)
@@ -463,6 +481,72 @@ struct TimelineEditPointView: View {
         .panelReadout(picked ? "edit point \(name) picked at \(CaptionProgress.clock(point.atMS))"
                              : "edit point \(name) at \(CaptionProgress.clock(point.atMS))")
         .offset(x: x - Self.width / 2)
+    }
+
+    /// One half of the edit point: hovered with ⌘ it wears the ripple
+    /// bracket, and dragged it trims its own side of the cut.
+    private func side(outgoing: Bool) -> some View {
+        Color.clear
+            .contentShape(Rectangle())
+            .playtestHover("Edit point \(name) \(outgoing ? "end" : "start")") { inside in
+                if inside {
+                    hoveredOutgoingSide = outgoing
+                } else if hoveredOutgoingSide == outgoing {
+                    hoveredOutgoingSide = nil
+                }
+                editorState.clipBarGripHover("\(point.id)-\(outgoing)", inside: inside)
+            }
+            .gesture(sideDrag(outgoing: outgoing))
+    }
+
+    /// The drag on one side: the outgoing clip's end, or the incoming clip's
+    /// start, exactly as its own grip would take it, ⌘ making it a ripple.
+    /// Read in the hand's space, which stays put while the edge moves.
+    private func sideDrag(outgoing: Bool) -> some Gesture {
+        DragGesture(minimumDistance: 1, coordinateSpace: ClipPiecesBar.handSpace)
+            .onChanged { value in
+                if editorState.clipBarDrag == nil {
+                    let id = outgoing ? point.outgoing : point.incoming
+                    guard let count = editorState.document?.layer(id: id)?.clipPieces?.count else { return }
+                    editorState.beginClipBarDrag(layerID: id,
+                                                 grab: outgoing ? .seam(after: count - 1) : .clipStart,
+                                                 ripple: ClipPiecesBar.commandHeld)
+                }
+                let travel = ClipPiecesBar.ms(value.translation.width, laneWidth: laneWidth,
+                                              ruler: editorState.motionStripRuler)
+                let free = ClipPiecesBar.commandHeld && editorState.clipBarDrag?.ripple != true
+                editorState.updateClipBarDrag(byMS: travel + editorState.timelineEdgePannedMS, free: free)
+                editorState.clipBarDragHand(laneX: ClipPiecesBar.laneX(globalX: value.location.x, editorState),
+                                            contentY: nil, handMS: travel, travelledY: 0, free: free)
+            }
+            .onEnded { _ in editorState.commitClipBarDrag() }
+    }
+
+    /// Premiere's ripple cursor drawn on the cut: a yellow bracket opening
+    /// towards the clip whose edge ⌘ would ripple, while ⌘ is down with the
+    /// pointer on that half.
+    @ViewBuilder private var rippleBracket: some View {
+        if let outgoing = rippleSide {
+            RippleBracket(opensLeft: outgoing)
+                .stroke(Color.yellow, style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                .padding(.vertical, 3)
+                .allowsHitTesting(false)
+        }
+    }
+
+    /// Whether either clip at this cut is in a hand.
+    private var isInADrag: Bool {
+        guard let id = editorState.clipBarDrag?.layerID else { return false }
+        return id == point.outgoing || id == point.incoming
+    }
+
+    /// Which side wears the ripple bracket, if either. Not during a drag:
+    /// the cut is drawn where it was until the hand lets go, so a bracket
+    /// left there would float over the clip that followed the edge, and the
+    /// edge's own grip is yellow for the whole drag instead.
+    private var rippleSide: Bool? {
+        guard editorState.clipBarDrag == nil, editorState.clipBarCommandHeld else { return nil }
+        return hoveredOutgoingSide
     }
 
     /// The band (`.xband`): drawn ON both clips, before, across or after the
@@ -599,5 +683,24 @@ struct TimelineSpareStrips: View {
         .offset(x: x0)
         .panelReadout(label)
         .playtestField(alongTop ? "Spare after strip" : "Spare before strip")
+    }
+}
+
+/// Premiere's ripple bracket: a stroke down the cut with short arms at top and
+/// bottom pointing into the clip being trimmed, `]` for the outgoing clip's
+/// end and `[` for the incoming clip's start.
+struct RippleBracket: Shape {
+    let opensLeft: Bool
+
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        let arm = rect.width / 2
+        let x = rect.midX
+        let tip = opensLeft ? x - arm : x + arm
+        path.move(to: CGPoint(x: tip, y: rect.minY))
+        path.addLine(to: CGPoint(x: x, y: rect.minY))
+        path.addLine(to: CGPoint(x: x, y: rect.maxY))
+        path.addLine(to: CGPoint(x: tip, y: rect.maxY))
+        return path
     }
 }

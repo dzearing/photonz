@@ -4879,6 +4879,17 @@ struct PlaytestScriptTests {
         #expect(condition == .clipCopyBadge)
     }
 
+    @Test func waitForReadsTheClipRippleLook() {
+        let json = """
+        { "out": "/tmp/x", "steps": [
+            { "do": "waitFor", "condition": "clipRippleLook" }
+        ] }
+        """
+        let script = try! PlaytestScript.decode(Data(json.utf8))
+        guard case .waitFor(let condition, _) = script.steps[0] else { Issue.record("waitFor"); return }
+        #expect(condition == .clipRippleLook)
+    }
+
     @Test func waitForReadsWhetherADialogHasGone() {
         let json = """
         { "out": "/tmp/x", "steps": [

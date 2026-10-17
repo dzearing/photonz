@@ -76,8 +76,12 @@ extension PhotonzDocument {
     ///
     /// `onTracks` limits it to those tracks (`TrackRange.swift`): the gap
     /// closes on them alone, and every other track is left exactly as it was.
+    /// `exceptLayers` are left out because the caller has already cut them
+    /// for itself: the clip whose edge a ripple drag moved
+    /// (`RippleEdgeDrag.swift`).
     @discardableResult
-    public mutating func extractStretch(fromMS start: Int, toMS end: Int, onTracks: Set<UUID>? = nil) -> Bool {
+    public mutating func extractStretch(fromMS start: Int, toMS end: Int, onTracks: Set<UUID>? = nil,
+                                        exceptLayers: Set<UUID> = []) -> Bool {
         let from = max(0, start)
         guard end > from else { return false }
         let only = onTracks.map { layerIDs(onTracks: $0) }
@@ -85,7 +89,7 @@ extension PhotonzDocument {
         // One wholly inside is left for `removeTime`, which drops it.
         var cut: Set<UUID> = []
         let locked = layerIDsOnLockedTracks()
-        for layer in allLayers where layer.holdsMedia
+        for layer in allLayers where layer.holdsMedia && !exceptLayers.contains(layer.id)
             && takesPart(layer, fromMS: from, toMS: end, locked: locked, only: only) {
             guard let time = layer.time, time.inMS < from || time.outMS > end,
                   let pieces = layer.clipPieces,
@@ -103,7 +107,7 @@ extension PhotonzDocument {
             }
             cut.insert(layer.id)
         }
-        let rest = removeTime(fromMS: from, toMS: end, exceptLayers: cut, onlyLayers: only)
+        let rest = removeTime(fromMS: from, toMS: end, exceptLayers: cut.union(exceptLayers), onlyLayers: only)
         if !cut.isEmpty { refreshDuration() }
         return rest || !cut.isEmpty
     }

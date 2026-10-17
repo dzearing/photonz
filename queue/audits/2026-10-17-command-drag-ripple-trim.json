@@ -1,0 +1,29 @@
+{
+  "feature": "Command drag on a clip's edge ripple trims",
+  "epic": "video-cutting",
+  "summary": "Hold Command and drag a clip's end (or start) edge: the clip trims and everything after it on every unlocked track follows, so no gap opens. This is Premiere's ripple trim with the Selection tool. A plain drag still trims and leaves the gap.",
+  "setup": "Photonz Probe, release Next, no flag changed from its default. Walk: command-drag-ripple-trims-an-edge-walk.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording, park the playhead at 6s and press W, then drop a second clip onto V1 at 6s so the two meet.", "shot": "2026-10-17-ripple-edge-1-before-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Park the playhead at 4s, pick the recording, and hold Command with the pointer on its end edge: the edge turns yellow and a yellow ] sits on the cut.", "shot": "2026-10-17-ripple-edge-2-look-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Still holding Command, drag the edge left toward the playhead: the second clip follows the edge, the capsule reads Ripple, and the edge catches on the playhead.", "shot": "2026-10-17-ripple-edge-3-mid-drag-sc.png" },
+    { "do": "Let go: the recording ends at 4s and the second clip starts at 4s, with no gap.", "shot": "2026-10-17-ripple-edge-4-after-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z once: both clips go back to meeting at 6s." },
+    { "do": "Drag the same edge left without Command: the recording trims to 4s and the second clip stays at 6s, leaving a gap.", "shot": "2026-10-17-ripple-edge-5-plain-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Is the yellow edge plus the yellow bracket on the cut enough of a cue that Command will ripple, or do you want the pointer itself to change too?",
+    "When you ripple-extend a clip, music running under the cut pauses for the added time and then carries on. Is that what you expect, or should music under the cut be left alone?",
+    "Ripple-trimming a clip's START keeps the clip where it is, and the clips after it close up when you let go rather than during the drag. Does that read right?",
+    "Is the capsule's \"Ripple · 4.0s · -2.0s\" the right thing to read while you drag?"
+  ],
+  "rough": [
+    "Command during an edge drag used to mean \"no snapping\". Premiere gives Command on an edit point to the ripple trim, so on an edge it now ripples and snapping stays on; S (or the magnet button) still turns snapping off mid-drag, and Command still frees a whole-clip drag and a title's start (UX-PATTERNS §7). bar-end-follows-the-pointer-walk now switches the magnet off instead of holding Command.",
+    "The cut between two clips that meet can now be dragged: its left half trims the outgoing clip's end and its right half the incoming clip's start, with Command making either a ripple. Before, a drag there did nothing, because the cut sat over the clip's end grip.",
+    "Premiere's pointer becomes a yellow ripple bracket. macOS has no such pointer, so the edge and the cut turn yellow instead and the pointer stays the arrow.",
+    "Lengthening reuses the time a hold puts in, so a sound or clip spanning the cut on another track gets a held pause there (Premiere with sync lock leaves a gap there instead). Shortening takes the stretch out of every unlocked track exactly as Q and W do.",
+    "No mock draws a ripple drag, so the yellow look and the capsule wording are the app going further than the mock, not a departure from it.",
+    "Adobe's help pages refused to load here (HTTP 403). The Command-on-an-edit-point ripple comes from Adobe's ripple and rolling edit pages as summarized by search (Premiere help: Perform ripple edits, Perform rolling edits) and from third-party Premiere guides."
+  ]
+}

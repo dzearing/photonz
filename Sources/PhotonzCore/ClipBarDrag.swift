@@ -394,6 +394,13 @@ public enum ClipBarCopy {
         return "\(piece)\(length(lengthMS)) · \(change(changeMS))"
     }
 
+    /// What it says while an edge is dragged with ⌘ held, a ripple trim
+    /// (`RippleEdgeDrag.swift`): that it ripples, since everything after it is
+    /// moving too, then the piece's length and the change.
+    public static func rippling(lengthMS: Int, changeMS: Int) -> String {
+        "Ripple · \(length(lengthMS)) · \(change(changeMS))"
+    }
+
     /// What it says while a whole clip is sliding.
     public static func moving(startMS: Int, changeMS: Int) -> String {
         "Starts \(MotionStripRuler.timecode(Double(startMS))) · \(change(changeMS))"
