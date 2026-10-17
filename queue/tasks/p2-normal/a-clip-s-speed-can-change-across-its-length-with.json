@@ -1,0 +1,33 @@
+{
+  "id": "a-clip-s-speed-can-change-across-its-length-with",
+  "title": "A clip's speed can change across its length with speed stops",
+  "goal": "Today a piece of a clip plays at one speed. The speed mock lets an editor put speed stops on a clip so it ramps from normal to fast and back, the way a screen recording is sped through a boring stretch and eased back in. This first part makes the ramp real: stops you add at the playhead, the picture following them in playback and export, and the stop's speed set in Properties.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 24,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:03.994Z",
+  "updated": "2026-10-17T02:56:16.773Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-speed.html. Menu rows 'Add speed stop A', 'Delete speed stop', 'Reset ramp'; Properties 'Speed stop 4 of 7', Speed, 'Between stops interpolation: Ramp / Hold' with the line 'Ramp eases between stops... A stop at zero holds a single frame, so two zeros side by side make a freeze' (that sentence goes in the tip, not the panel). API sketch clip.retime({at:1.2, speed:0.25}). The mock prints A for Add speed stop: A is Photoshop's Path Selection and on a video it may already be taken; apply UX-PATTERNS §7 and name the move in the audit. Code today: one constant speed per piece, Sources/PhotonzCore/ClipPieces.swift:66 speedPercent, dropdown stops ClipSpeed.swift:189, SpeedInspector.swift:109-118, freeze is holdFrame ClipPieces.swift:666. Keep a piece with no stops exactly as today (Codable back compat test). Sound: Premiere's time remapping leaves the sound unchanged; decide by measuring what reads right and say it in the audit. The curve plotted under the clip is the next task (deps). TDD for Core.",
+  "acceptance": [
+    "Right-click a clip and the Clip menu in the menu bar offer Add Speed Stop at the playhead, Delete Speed Stop and Reset Ramp, as the mock prints them; Reset Ramp returns the clip to one speed",
+    "Properties for a picked stop shows the mock's rows: which stop of how many, its Speed (the existing dropdown's values), and Between stops: Ramp or Hold",
+    "With two stops at 100% and 400% set to Ramp, the frame shown at each moment follows the eased speed between them in playback, scrubbing and the exported MP4 (unit tested in PhotonzCore: source time for a timeline time, and the clip's new length)",
+    "The clip's length on the timeline changes to match the ramp, and later clips move with it exactly as a plain speed change moves them today",
+    "Try path, no flag changed from Next defaults: open the sample recording, put the playhead 3 s in, right-click the clip, Add Speed Stop, set it to 400%; audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:03.996Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.772Z",
+      "note": "seq 265 -> 24"
+    }
+  ]
+}

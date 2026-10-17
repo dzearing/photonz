@@ -1,0 +1,33 @@
+{
+  "id": "finishing-a-typed-title-on-a-video-never-stalls",
+  "title": "Finishing a typed title on a video never stalls the app",
+  "goal": "When you type a title over a video and press Command Return to finish it, the app freezes for about a fifth of a second while it lays out the new Title track. Picking a transition tile at a cut also holds for about 80 ms. Both should answer inside the 50 ms the video goals promise, so finishing a title and picking a dissolve feel instant.",
+  "epic": "video-beats-premiere",
+  "priority": "p1-high",
+  "seq": 5,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:03.804Z",
+  "updated": "2026-10-17T02:56:16.525Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Reproduced by the manager on 2026-10-16 at HEAD cac7a368 with Scripts/playtest-all.sh --no-build an-editing-session-walk, twice. Run 1: step 53 'key command+return taken by responder chain', step 54 'wait 1.0s asked, quiet after 0.97s; mainBusy 877.0ms over 299 passes, longest 197.4ms from 458ms in'. Run 2: step 54 'never went quiet (13 of 16 slices busy, busiest 367.4ms); mainBusy 869.2ms over 291 passes, longest 202.7ms from 422ms in'. Step 40 press 'Cross dissolve' in At this cut: longest 67.8 ms (run 1), 82.5 ms (run 2). Logs at /tmp/photonz-playtest/an-editing-session-walk/log.json. The hold starts ~0.4 s after the commit, so suspect the deferred work after a text commit on a video: the new Title track being made (411c247d puts a title on a track named Title), the timeline rows re-laying out, the panel rebuilding for the new pick, or the title's text being rasterised for the first frame. Profile before guessing. The cut click, first animated value pick and its undo stay with clicking-a-cut-keying-a-value-and-undoing-it-ans (blocked on its card; its notes hold the panel-teardown attribution, which may explain the tile pick too). Needs a perf note in the commit if it touches the composite path.",
+  "acceptance": [
+    "In an-editing-session-walk, the wait after Command Return on the typed title (step 54 today) shows no single main thread pass over 50 ms, in three runs in a row",
+    "Picking Cross dissolve from the At this cut tiles (step 40 today) holds under 50 ms in three runs in a row",
+    "The walk's timing claims are tightened to 50 ms on both steps so a slide back fails the walk",
+    "Try path, no flag changed from Next defaults: open the sample recording, press T, click the picture, type a title, press Command Return; the playhead and the panel answer at once",
+    "Audit written under queue/audits/ with before and after numbers; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:03.806Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.524Z",
+      "note": "seq 25 -> 5"
+    }
+  ]
+}

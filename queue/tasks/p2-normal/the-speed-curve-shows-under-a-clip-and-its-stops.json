@@ -1,0 +1,35 @@
+{
+  "id": "the-speed-curve-shows-under-a-clip-and-its-stops",
+  "title": "The speed curve shows under a clip and its stops drag",
+  "goal": "Once a clip can ramp, an editor needs to see and shape the ramp where the clip is. Plot the clip's speed curve under it on the timeline, as the speed mock draws it, with each stop a point you drag in time and in speed.",
+  "epic": "video-transitions-motion",
+  "priority": "p2-normal",
+  "seq": 25,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:04.090Z",
+  "updated": "2026-10-17T02:56:16.834Z",
+  "deps": [
+    "a-clip-s-speed-can-change-across-its-length-with"
+  ],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-speed.html, CSS '.schdr/.scbody/.scaxis' (speed curve editor inside the timeline dock), swatches .sw.fast #ff5d8f and .sw.frz hatched amber, 'Speed curve 3x 1x 0'. Reuse the shared line-with-points piece the value graph and volume line use (AnimatedLineSurface.swift) rather than a third curve view. Depends on a-clip-s-speed-can-change-across-its-length-with (set in deps after filing).",
+  "acceptance": [
+    "A clip with speed stops shows the mock's Speed curve under it on the timeline, on the clip's own time axis, with the 3x, 1x and 0 scale the mock prints, and the speed bands (slow, normal, fast, freeze) tinted as the mock tints them",
+    "Dragging a stop sideways moves it in time and up or down changes its speed, live in the picture, as one undo per drag; clicking the curve between stops adds one",
+    "The curve opens and closes the way a layer's other lanes open on the timeline, and takes no room on a clip with no stops",
+    "Try path, no flag changed from Next defaults: on the sample recording add two speed stops, open the clip's speed curve, drag the second stop up",
+    "Audit written under queue/audits/ with the app beside the mock on one picture; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:04.092Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.832Z",
+      "note": "seq 267.5 -> 25"
+    }
+  ]
+}

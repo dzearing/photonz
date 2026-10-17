@@ -12272,3 +12272,29 @@
 {"t":"2026-10-17T02:05:13.592Z","ev":"task_note","id":"stepping-and-resizing-a-size-measurement-measure"}
 {"t":"2026-10-17T02:05:13.656Z","ev":"task_note","id":"stepping-and-resizing-a-size-measurement-measure"}
 {"t":"2026-10-17T02:05:26.255Z","ev":"task_done","id":"stepping-and-resizing-a-size-measurement-measure","from":"in_progress","note":"From a measured pill, ] no longer steps to a box running into the small print: rungs whose edge cuts a line of print are dropped (ElementBounds, Next Size only), so ] holds on the pill. A picked Size measurement's handles now sit on its measured box; a corner drag moves that corner with the hand, the calipers stay on the box's edges and read the new size, and the name follows (MeasureSizeGroup.resized, slack insets). Option-drag copies land where the hand lets go. Verified: 4 new unit tests red then green, Scripts/test.sh green (13400), size-steps-and-resizes-walk ok 3 runs at Next defaults, 47 size/measure/caliper walks ok. Commit 9e18bc44. Audit queue/audits/2026-10-16-size-steps-and-resizes.json."}
+{"t":"2026-10-17T02:17:56.471Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":584,"of":955,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T02:17:56.654Z","ev":"task_started","id":"a-copied-size-measurement-keeps-saying-its-own-s","title":"A copied Size measurement keeps saying its own size","priority":"p2-normal"}
+{"t":"2026-10-17T02:28:36.549Z","ev":"task_walks","id":"a-copied-size-measurement-keeps-saying-its-own-s","walks":["size-steps-and-resizes-walk"]}
+{"t":"2026-10-17T02:35:11.435Z","ev":"task_note","id":"a-copied-size-measurement-keeps-saying-its-own-s"}
+{"t":"2026-10-17T02:35:23.191Z","ev":"task_done","id":"a-copied-size-measurement-keeps-saying-its-own-s","from":"in_progress","note":"A copied Size measurement (duplicate, Option drag, paste) keeps its automatic name 'Size W × H', so resizing the copy renames it in the same step; chosen names still gain 'copy'. Commit cac7a368. Verified by MeasureCopyNamesTests, size-steps-and-resizes-walk at Next defaults (copy named Size 274 × 62, resized to Size 305 × 80, undo restores), full suite green. Audit queue/audits/2026-10-16-copied-size-measurement-name.json."}
+{"t":"2026-10-17T02:47:21.539Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":561,"of":955,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T02:56:03.808Z","ev":"task_created","id":"finishing-a-typed-title-on-a-video-never-stalls","priority":"p1-high","title":"Finishing a typed title on a video never stalls the app"}
+{"t":"2026-10-17T02:56:03.905Z","ev":"task_created","id":"a-clip-can-be-colour-graded-from-add-effect","priority":"p2-normal","title":"A clip can be colour graded from Add Effect"}
+{"t":"2026-10-17T02:56:03.998Z","ev":"task_created","id":"a-clip-s-speed-can-change-across-its-length-with","priority":"p2-normal","title":"A clip's speed can change across its length with speed stops"}
+{"t":"2026-10-17T02:56:04.094Z","ev":"task_created","id":"the-speed-curve-shows-under-a-clip-and-its-stops","priority":"p2-normal","title":"The speed curve shows under a clip and its stops drag"}
+{"t":"2026-10-17T02:56:04.194Z","ev":"task_created","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","priority":"p2-normal","title":"A cut opens into its two clips on their own rows"}
+{"t":"2026-10-17T02:56:04.301Z","ev":"task_created","id":"a-cut-with-nothing-removed-can-be-joined-back-in","priority":"p2-normal","title":"A cut with nothing removed can be joined back into one piece"}
+{"t":"2026-10-17T02:56:04.399Z","ev":"task_created","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l","priority":"p2-normal","title":"Command dragging a clip's edge ripple trims, so later clips follow"}
+{"t":"2026-10-17T02:56:04.492Z","ev":"task_created","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","priority":"p2-normal","title":"Opening an SVG file gives you its drawing to edit"}
+{"t":"2026-10-17T02:56:04.587Z","ev":"task_created","id":"a-title-s-words-can-follow-a-curved-path","priority":"p2-normal","title":"A title's words can follow a curved path"}
+{"t":"2026-10-17T02:56:16.526Z","ev":"task_resequenced","id":"finishing-a-typed-title-on-a-video-never-stalls","from":25,"to":5}
+{"t":"2026-10-17T02:56:16.586Z","ev":"task_resequenced","id":"a-cut-with-nothing-removed-can-be-joined-back-in","from":269.375,"to":21}
+{"t":"2026-10-17T02:56:16.648Z","ev":"task_resequenced","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l","from":269.6875,"to":22}
+{"t":"2026-10-17T02:56:16.709Z","ev":"task_resequenced","id":"a-clip-can-be-colour-graded-from-add-effect","from":260,"to":23}
+{"t":"2026-10-17T02:56:16.774Z","ev":"task_resequenced","id":"a-clip-s-speed-can-change-across-its-length-with","from":265,"to":24}
+{"t":"2026-10-17T02:56:16.835Z","ev":"task_resequenced","id":"the-speed-curve-shows-under-a-clip-and-its-stops","from":267.5,"to":25}
+{"t":"2026-10-17T02:56:16.898Z","ev":"task_resequenced","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","from":268.75,"to":26}
+{"t":"2026-10-17T02:56:16.959Z","ev":"task_resequenced","id":"a-title-s-words-can-follow-a-curved-path","from":269.84375,"to":27}
+{"t":"2026-10-17T02:56:17.019Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":4070,"to":28}
+{"t":"2026-10-17T02:56:24.109Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-17T02:56:59.819Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":10,"report":"queue/manager/2026-10-16-1947.md"}

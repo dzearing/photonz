@@ -1,0 +1,33 @@
+{
+  "id": "a-cut-with-nothing-removed-can-be-joined-back-in",
+  "title": "A cut with nothing removed can be joined back into one piece",
+  "goal": "After cutting a clip with B and changing your mind later, there is no way to put the two halves back together except Undo, which also throws away everything done since. Premiere calls such a cut a through edit and lets you join it from its right-click. Let a cut whose two sides still run on from each other be joined back into one piece.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 21,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:04.297Z",
+  "updated": "2026-10-17T02:56:16.585Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the manager's Premiere check on 2026-10-16. ClipCut.isContinuous already detects a through edit (Sources/PhotonzCore/ClipTransitions.swift:379-383) but is only used to warn that a dissolve there would show nothing (:904; TransitionInspector.swift:171). The join itself exists inside Break Apart: healCuts / Layer.joined (Sources/PhotonzCore/MergedClip.swift:295-336). Cut right-click menu: Sources/Photonz/EditorState+TimelineMenus.swift. Premiere also joins a picked through edit with Delete; do not change what Delete does on a cut here without a card. Title Case row, no key needed (UX-PATTERNS §7: Premiere gives it none by default). TDD in PhotonzCore.",
+  "acceptance": [
+    "Right-click on a cut whose two sides are continuous (the same source, no frames removed, same speed) offers Join Through Edit, and the menu bar's Edit point group offers it too with the cut picked; on any other cut the row is dimmed",
+    "Choosing it leaves one piece where there were two, keeping the earlier piece's effects, keys and name, as one undo; captions, sound and anything on other tracks do not move",
+    "A transition on that cut is taken off with the join, and the canvas note says so",
+    "Try path, no flag changed from Next defaults: open the sample recording, press B at 4 s, right-click the cut, Join Through Edit",
+    "Audit written under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:04.299Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.584Z",
+      "note": "seq 269.375 -> 21"
+    }
+  ]
+}

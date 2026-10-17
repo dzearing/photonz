@@ -1,0 +1,33 @@
+{
+  "id": "a-clip-can-be-colour-graded-from-add-effect",
+  "title": "A clip can be colour graded from Add Effect",
+  "goal": "The video mocks put a colour grade in a clip's Effects list (Warm grade) and in the Add Effect menu (Color grade), and the app has no way to warm, cool, brighten or saturate a recording. Add a Color grade effect with the few controls an editor reaches for, keyable like every other effect value, so a dull screen recording or b-roll can be given a look in two clicks.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 23,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:03.901Z",
+  "updated": "2026-10-17T02:56:16.708Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video.html line 515 (Effects list 'Warm grade · adjust'), line 570 (add-effect menu 'Color grade', ic-sliders), line 1071 (keyable Saturation, 0-300%, still 100). video-compositing.html lines 262/306/346 show a grade as its own layer with a blend mode and a matte; that layer form and the 'grade.look' Library preset are NOT this task (open thread). Code today: the only colour effects are lens kinds Greyscale, Invert, Brightness (Sources/PhotonzCore/Lens.swift:13-21, LensFilter.swift:52-63); Add Effect menu at Sources/Photonz/EffectsListInspector.swift:759-792. Model the effect in PhotonzCore (pure, Codable, tested first) and its CIFilter chain in PhotonzRender (CITemperatureAndTint, CIExposureAdjust, CIColorControls). TDD for Core and Render. Perf note in the commit: the composite path, target under 16 ms for a 12 MP frame. Copy: Mac title case, no em dashes, label controls, no sentences in the panel.",
+  "acceptance": [
+    "Add Effect on a picked clip lists Color grade; adding it shows a Color grade row in the clip's Effects list with the mock's 'adjust' meta, and its section offers Temperature, Tint, Exposure, Contrast and Saturation, each a slider with a number field",
+    "Each of those values has a keyframe diamond and can be animated like any other effect value; the effect shows in playback, scrubbing and the exported MP4 alike",
+    "A measured check in a walk: on the sample recording, Temperature at its warm end makes the mean red minus blue of a rendered frame rise by a clear margin over the untouched frame (threshold set by measuring), and returning every value to its middle gives a frame identical to the untouched one",
+    "Try path, no flag changed from Next defaults: open the sample recording, pick the clip, Effects, Add Effect, Color grade, drag Temperature right",
+    "Audit written under queue/audits/ with a before and after frame on one contact sheet and a decision card linking it so the user judges the look; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:03.903Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.707Z",
+      "note": "seq 260 -> 23"
+    }
+  ]
+}

@@ -1,0 +1,33 @@
+{
+  "id": "command-dragging-a-clip-s-edge-ripple-trims-so-l",
+  "title": "Command dragging a clip's edge ripple trims, so later clips follow",
+  "goal": "Trimming the end of a clip by dragging its edge leaves a gap that then has to be closed by hand. In Premiere, holding Command while dragging an edge with the selection tool makes it a ripple trim: the clips after it slide along so no gap opens. Give Photonz the same drag, so tightening a cut by eye is one gesture.",
+  "epic": "video-cutting",
+  "priority": "p2-normal",
+  "seq": 22,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:56:04.395Z",
+  "updated": "2026-10-17T02:56:16.647Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Found by the manager's Premiere check on 2026-10-16: an edge drag never ripples (Sources/PhotonzCore/ClipPieces.swift:860-874, 909-918; ClipBarDrag.swift:41-52 has no modifier handling; EditorState+ClipBar.swift:567-569 leaves the next clip in place). Q and W already ripple to the playhead (RippleTrim.swift:71-84), so reuse their all-tracks shift rather than a second ripple. Premiere on the Mac: with the Selection tool, holding Command over an edit point gives the Ripple Edit cursor (third-party guides, not Adobe docs; check Adobe's own help before shipping and cite it in the audit). Rolling a cut by drag (Premiere's N) is not this task. TDD for the Core part.",
+  "acceptance": [
+    "Holding Command while dragging a clip's end edge moves every later clip on every unlocked track by the same amount, closing or opening time, as one undo; a plain drag behaves exactly as today",
+    "Holding Command while dragging a clip's start edge trims its head and pulls the clip and everything after it left so the clip keeps its place's start, as Premiere's ripple trim does",
+    "The edge shows Premiere's ripple look while Command is held over it (a different pointer or a tinted edge), and snapping still works during the drag",
+    "Try path, no flag changed from Next defaults: on the sample recording with two pieces, hold Command and drag the first piece's end edge left; the second piece follows",
+    "Audit written under queue/audits/ naming Premiere's modifier it follows; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:56:04.397Z",
+      "note": "created (manager)"
+    },
+    {
+      "t": "2026-10-17T02:56:16.646Z",
+      "note": "seq 269.6875 -> 22"
+    }
+  ]
+}
