@@ -2926,6 +2926,10 @@ private final class Run {
             try await dragTiming(bar, grab: grab, byMS: byMS, hold: hold, cancelBy: cancelBy,
                                  cancel: cancel, number: number)
 
+        case .dragTitlePart(let part, let grab, let byMS, let hold, let startsAt, let endsAt):
+            try await dragTitlePart(part, grab: grab, byMS: byMS, hold: hold,
+                                    startsAt: startsAt, endsAt: endsAt, number: number)
+
         case .dragMotionKey(let bar, let key, let byMS, let hold, let cancel):
             try await dragMotionKey(bar, key: key, byMS: byMS, hold: hold,
                                     cancel: cancel, number: number)
@@ -8348,6 +8352,97 @@ private final class Run {
         return (start, end)
     }
 
+    /// A title part's bar on its row under the title carried along and let go
+    /// (`TimelineTitlePartBar`), through the editor calls the bar's own drag
+    /// makes, with the timeline's and the picture's zoom read before, in the
+    /// hand and after.
+    private func dragTitlePart(_ name: String, grab: TitlePartGrab, byMS: Int, hold: String?,
+                               startsAt: Double?, endsAt: Double?, number: Int) async throws {
+        let editor = try requireEditor()
+        let rows = editor.timelineTrackRows.flatMap(\.inner)
+        let parts = rows.compactMap { editor.titlePartTiming(pieceID: $0.layerID) }
+        guard let found = parts.first(where: { $0.name.compare(name, options: .caseInsensitive) == .orderedSame })
+        else {
+            throw Failure(description: "there is no part row called \"\(name)\" under a title on the timeline; "
+                + "there is \(parts.isEmpty ? "none at all (is a title or a part of one picked?)" : parts.map(\.name).joined(separator: ", "))")
+        }
+        // A start dragged later is checked in the picture: half way along
+        // the move, the part was in the frame before and is not after.
+        let probeMS = grab == .start && byMS > 0 ? found.titleInMS + found.startMS + byMS / 2 : nil
+        let inBefore = probeMS.map { partInPicture(editor, pieceID: found.pieceID, atMS: $0) }
+        let zoomBefore = ZoomReading(editor)
+        editor.beginTitlePartDrag(pieceID: found.pieceID, grab: grab)
+        // The bar catches within six points; a lane about a thousand wide.
+        let catchMS = Int(editor.motionStripRuler.msSpanning(fraction: 6 / 1000).rounded())
+        for fraction in [0.35, 0.7, 1.0] {
+            editor.updateTitlePartDrag(byMS: Int((Double(byMS) * fraction).rounded()), catchMS: catchMS)
+            await sleep(0.05)
+        }
+        let caught = editor.titlePartDrag?.caughtMS
+        let zoomHeld = ZoomReading(editor)
+        if let hold, let window = try? requireWindow(), let content = window.contentView {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+        }
+        editor.commitTitlePartDrag()
+        await sleep(0.4)
+        let steady = try ZoomReading.steady(zoomBefore, held: zoomHeld, after: ZoomReading(editor),
+                                            dragging: "the \(found.name) bar")
+        guard let after = editor.titlePartTiming(pieceID: found.pieceID) else {
+            throw Failure(description: "the \(found.name) row is gone after the drag")
+        }
+        func secs(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+        if let startsAt, abs(Double(after.startMS) / 1000 - startsAt) > 0.011 {
+            throw Failure(description: "\(found.name) starts at \(secs(after.startMS)) into the title after the "
+                + "drag, not \(String(format: "%.2fs", startsAt)) (it started at \(secs(found.startMS)))")
+        }
+        if let endsAt, abs(Double(after.endMS) / 1000 - endsAt) > 0.011 {
+            throw Failure(description: "\(found.name) ends at \(secs(after.endMS)) into the title after the "
+                + "drag, not \(String(format: "%.2fs", endsAt)) (it ended at \(secs(found.endMS)))")
+        }
+        var arrival = ""
+        if let probeMS, let inBefore {
+            let inAfter = partInPicture(editor, pieceID: found.pieceID, atMS: probeMS)
+            let at = secs(probeMS)
+            guard inAfter < 1 else {
+                throw Failure(description: "\(found.name)'s start was dragged \(byMS) ms later, and yet at \(at) "
+                    + "it is still in the picture (it differs from the frame without it by "
+                    + String(format: "%.2f", inAfter) + ")")
+            }
+            arrival = "; at \(at) \(found.name) was in the picture before (differs by "
+                + String(format: "%.2f", inBefore) + ") and is not after (" + String(format: "%.2f", inAfter) + ")"
+        }
+        var said = "\(steady); \(found.name) \(grab.rawValue) dragged \(byMS) ms: "
+            + "\(secs(found.startMS))-\(secs(found.endMS)) became \(secs(after.startMS))-\(secs(after.endMS)) "
+            + "into the title"
+        if let caught { said += "; caught at \(secs(caught))" }
+        said += arrival
+        if let hold { said += "; held \(hold).png" }
+        note(number, "dragTitlePart", said, state: describe())
+    }
+
+    /// How much one piece adds to the picture at `ms`: the frame drawn there
+    /// against the same frame without the piece, over the piece's box. Under
+    /// one is nothing a person could see.
+    private func partInPicture(_ editor: EditorState, pieceID: UUID, atMS ms: Int) -> Double {
+        guard let document = editor.document else { return 0 }
+        let drawn = document.drawn(atTimeMS: ms)
+        guard let piece = drawn.allLayers.first(where: { $0.id == pieceID }) else { return 0 }
+        var without = drawn
+        without.updateLayer(id: pieceID) { $0.isVisible = false }
+        let renderer = DocumentRenderer()
+        let store = editor.store.snapshot()
+        let box = piece.frame.integral.insetBy(dx: -8, dy: -8)
+            .intersection(CGRect(origin: .zero, size: document.canvasSize))
+        guard !box.isNull, box.width >= 1, box.height >= 1,
+              let with = renderer.renderInteractive(drawn, store: store, contentScale: 1,
+                                                    colorSpace: editor.canvasColorSpace)?.cropping(to: box),
+              let bare = renderer.renderInteractive(without, store: store, contentScale: 1,
+                                                    colorSpace: editor.canvasColorSpace)?.cropping(to: box)
+        else { return 0 }
+        return Self.meanDifference(with, bare)
+    }
+
     private func dragTiming(_ bar: String, grab: PlaytestTimingGrab, byMS: Int,
                             hold: String?, cancelBy: PlaytestTimingCancel,
                             cancel: Bool, number: Int) async throws {
@@ -8371,6 +8466,7 @@ private final class Run {
         }
         let before = found.lane.timing
         let heldCycle = editor.document?.motionCycleLengthMS ?? 0
+        let zoomBefore = ZoomReading(editor)
 
         editor.beginMotionTimingDrag(motionID: found.lane.motionID, grab: grab.grab)
         // Carried in a handful of moves rather than one jump, the way a hand
@@ -8381,6 +8477,7 @@ private final class Run {
             await sleep(0.05)
         }
         let inHand = editor.motionTimingDrag
+        let zoomHeld = ZoomReading(editor)
         if let hold, let window = try? requireWindow(), let content = window.contentView {
             try snapshot(content, name: hold)
             await screenCapture(window, name: hold)
@@ -8422,7 +8519,12 @@ private final class Run {
             throw Failure(description: "\(bar) is not on the strip any more after the drag")
         }
         let cycle = editor.document?.motionCycleLengthMS ?? 0
-        var said = "\(bar) \(grab.rawValue) dragged \(byMS) ms: "
+        // On a document with time nothing a bar drag does may zoom the
+        // timeline or the picture, in the hand or after it.
+        let steady = editor.motionStripMeasuresADocument
+            ? try ZoomReading.steady(zoomBefore, held: zoomHeld, after: ZoomReading(editor), dragging: bar) + "; "
+            : ""
+        var said = steady + "\(bar) \(grab.rawValue) dragged \(byMS) ms: "
             + "\(before.startMS)-\(before.endMS) ms became \(after.startMS)-\(after.endMS) ms"
         if let snap = inHand?.snappedTo { said += "; caught on \(snap.name) at \(snap.ms) ms" }
         if let gap = inHand?.gap { said += "; gap read \"\(gap.reading)\"" }
@@ -20398,4 +20500,38 @@ extension Run {
         }
     }
 }
+
+
+/// How far the timeline and the picture are zoomed, for a walk to check that a
+/// drag changed neither (`a-title-page-s-parts-each-have-their-own-labelle`:
+/// holding a title part's bar zoomed the timeline in to the picture's lap).
+@MainActor
+private struct ZoomReading: Equatable {
+    /// How much time the timeline's width shows, and where it starts.
+    var spanMS: Int
+    var startMS: Int
+    /// The canvas zoom, in percent.
+    var display: Int
+
+    init(_ editor: EditorState) {
+        let ruler = editor.motionStripRuler
+        spanMS = Int(ruler.spanMS.rounded())
+        startMS = Int(ruler.startMS.rounded())
+        display = Int((editor.displayZoom * 100).rounded())
+    }
+
+    var reading: String { "timeline shows \(spanMS) ms from \(startMS) ms, picture at \(display)%" }
+
+    /// The words for a drag that left both alone, or the failure naming what
+    /// moved and when.
+    static func steady(_ before: ZoomReading, held: ZoomReading, after: ZoomReading,
+                       dragging what: String) throws -> String {
+        for (when, now) in [("with it in the hand", held), ("after letting go", after)] where now != before {
+            throw Run.Failure(description: "dragging \(what) zoomed: before it the \(before.reading); "
+                + "\(when) the \(now.reading)")
+        }
+        return "no zoom moved (\(before.reading))"
+    }
+}
+
 #endif

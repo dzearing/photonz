@@ -1,0 +1,200 @@
+{
+ "out": "/tmp/photonz-playtest/title-part-rows-retime-walk",
+ "seed": "Every part of a title page has its own labelled row under it, and dragging a part's bar retimes that part and zooms nothing, at Next defaults with no switch touched: a Keynote Clean title page put on a new track from the empty track's right-click, picked by a click in the picture and opened by the arrow on its track, so its Background, Headline and Subtitle rows open under it. The Subtitle's start is dragged half a second later: its bar starts at 1.5 s, the subtitle is no longer in the frame at 1.25 s, and the timeline's scale and the picture's zoom read the same before, in the hand and after. Then the Headline's own Opacity bar is dragged, which used to zoom the timeline in to the picture's lap.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Keynote Clean"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Title Page",
+   "track": "V2",
+   "startsAt": 0
+  },
+  {
+   "comment": "One click in the picture picks the whole title page, as a person picks it.",
+   "do": "click",
+   "at": [
+    640,
+    640
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Title Page"
+   ]
+  },
+  {
+   "comment": "Picking the whole title leaves its parts folded, so the tracks under it stay in sight: no Subtitle bar yet.",
+   "do": "expect",
+   "control": "Part bar Subtitle",
+   "present": false
+  },
+  {
+   "comment": "The arrow on V2's header, clicked with the pointer at its face as a hand clicks it.",
+   "do": "windowClick",
+   "on": "Parts V2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Part bar Subtitle",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "title-picked",
+   "note": "The title page picked. Under its bar on V2 every part has a labelled row of its own: Background, Headline, Subtitle, each with a bar from where it starts coming in to where it has gone, the in and the out darker at either end."
+  },
+  {
+   "do": "snapshot",
+   "name": "1-part-rows"
+  },
+  {
+   "do": "dragTitlePart",
+   "part": "Subtitle",
+   "grab": "start",
+   "byMS": 500,
+   "hold": "2-subtitle-in-hand",
+   "startsAt": 1.5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Subtitle"
+   ]
+  },
+  {
+   "do": "describe",
+   "stage": "subtitle-later",
+   "note": "The Subtitle's start let go half a second later: its bar starts at 1.5 s, it is the part picked, and the Part section reads its new In."
+  },
+  {
+   "do": "snapshot",
+   "name": "3-subtitle-later"
+  },
+  {
+   "do": "dragTitlePart",
+   "part": "Subtitle",
+   "grab": "end",
+   "byMS": -300,
+   "endsAt": 3.52,
+   "comment": "Pulled 0.3 s earlier from 3.8 s, the end catches on the Headline's out starting at 3.52 s, six points away."
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "dragTitlePart",
+   "part": "Headline",
+   "grab": "body",
+   "byMS": -100
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "comment": "The Headline's own property bars, the three rows that zoomed the timeline in when one was dragged.",
+   "do": "dragTiming",
+   "bar": "Title Opacity",
+   "grab": "end",
+   "byMS": -200,
+   "hold": "4-opacity-in-hand"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "snapshot",
+   "name": "5-headline-lanes"
+  }
+ ]
+}

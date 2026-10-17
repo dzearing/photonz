@@ -231,6 +231,12 @@ extension EditorState {
         // cannot be judged on a still picture, and the hand about to move this
         // bar is asking what it looks like (`motionGestureBegan`).
         motionGestureBegan()
+        // What the ruler measures is what is held: on a document with time
+        // that is the timeline, never the picture's lap. Holding the lap there
+        // zoomed the whole timeline in to four seconds for as long as a
+        // title's part bar was in the hand, and back out on letting go
+        // (`a-title-page-s-parts-each-have-their-own-labelle`).
+        let timed = motionStripMeasuresADocument
         motionTimingDrag = MotionTimingDrag(
             motionID: motionID,
             layerID: lane.layerID,
@@ -238,7 +244,8 @@ extension EditorState {
                                   others: document.motionStripEdges(excluding: motionID),
                                   snapWithinMS: Self.motionSnapMS(cycleMS: document.motionCycleLengthMS)),
             timing: lane.timing,
-            heldCycleMS: max(1, document.motionCycleLengthMS),
+            heldCycleMS: timed ? motionStripCycleMS : max(1, document.motionCycleLengthMS),
+            holdsLap: !timed,
             snappedTo: nil,
             gap: nil)
         watchForMotionTimingEscape()
@@ -315,10 +322,12 @@ extension EditorState {
             }
             // What the drag did to the LAP, in the same step, so undo takes
             // both back together. The rule itself is in `MotionStripCycle`,
-            // where it is tested.
-            document.motionCycleMS = MotionStripCycle.after(
-                drag: held, automatic: document.automaticMotionCycleLengthMS,
-                current: document.motionCycleMS)
+            // where it is tested. A document with time has no lap to change.
+            if drag.holdsLap {
+                document.motionCycleMS = MotionStripCycle.after(
+                    drag: held, automatic: document.automaticMotionCycleLengthMS,
+                    current: document.motionCycleMS)
+            }
         }
         // The change has landed, so the lap starts over with the new lag in it.
         motionChanged()
@@ -450,7 +459,7 @@ extension EditorState {
             motions[index] = motions[index].retimed(to: drag.timing)
             layer.motions = motions
         }
-        document.motionCycleMS = drag.heldCycleMS
+        if drag.holdsLap { document.motionCycleMS = drag.heldCycleMS }
         return document
     }
 
@@ -483,6 +492,10 @@ struct MotionTimingDrag {
     /// How long the lap was when the drag started, held for its length so the
     /// ruler cannot rescale under the hand.
     let heldCycleMS: Int
+    /// Whether `heldCycleMS` is a picture's lap, written down when the drag
+    /// lands. False on a document with time, where it is the timeline's
+    /// length and only keeps the ruler still.
+    let holdsLap: Bool
     var snappedTo: MotionStripEdge?
     var gap: MotionStripGap?
 }

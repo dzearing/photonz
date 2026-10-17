@@ -1,0 +1,31 @@
+{
+  "feature": "A title's parts each have their own row, and dragging timing never zooms",
+  "epic": "video-titles-graphics",
+  "summary": "Open a title's track with the arrow on its header and every part (Background, Headline, Subtitle) gets a labelled row with its own bar, from where it starts coming in to where it has gone. Drag an end to make that part arrive later or leave earlier, or drag the middle to slide it. Holding any bar under a title no longer zooms the timeline.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Walk: Scripts/playtest/title-part-rows-retime-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a recording, right-click an empty track and choose Add Title Page > Keynote Clean." },
+    { "do": "Click the title in the picture, then click the arrow before V2 on its track header.", "shot": "2026-10-17-title-part-rows-1-part-rows-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the left end of the Subtitle bar half a second to the right.", "shot": "2026-10-17-title-part-rows-2-subtitle-in-hand-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Let go and press Space from the title's start: the subtitle comes in half a second later.", "shot": "2026-10-17-title-part-rows-3-subtitle-later-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the right end of the Subtitle bar toward the Headline's out: it catches there." },
+    { "do": "Click the Headline row's name, then drag the end of its Opacity bar: the timeline keeps its zoom.", "shot": "2026-10-17-title-part-rows-5-headline-lanes-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Command Z: the part's timing goes back in one step." }
+  ],
+  "evaluate": [
+    "Is the arrow on the title's track where you would look to see its parts?",
+    "Do the darker ends of each part's bar read as its in and its out?",
+    "Is dragging the Subtitle's start the way you expected to change when it arrives?",
+    "Does the timeline now stay put while you hold any bar under a title?"
+  ],
+  "rough": [
+    "No mock draws a title's parts on the timeline; the rows reuse the clip bar look and the track arrow from the key lanes.",
+    "The parts stay folded until the arrow opens them, so picking a title never pushes the tracks under it out of sight; picking one part still opens just that part's row, as before.",
+    "An in lives in the title's first half and an out in its second, the way titles are built, so an end stops at the middle of the title.",
+    "A part that had no in or out gets a cut (it simply appears or disappears) where its end is dragged to.",
+    "Moving a part's own Opacity, Position or Scale bar by hand is undone by the next restyle or part retime (a-title-part-move-dragged-by-hand-on-the-timelin).",
+    "Escape does not call off a part bar drag yet; Command Z undoes it in one step.",
+    "The user's screenshot showed the three Headline rows without names because it was cropped to the bars; the names were always in the column on the left."
+  ]
+}

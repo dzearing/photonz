@@ -3392,6 +3392,16 @@ public enum PlaytestStep: Sendable, Equatable {
                   tracksUp: Int = 0, reads: String? = nil, lights: [String]? = nil)
     case dragTiming(bar: String, grab: PlaytestTimingGrab, byMS: Int,
                     hold: String?, cancel: Bool, cancelBy: PlaytestTimingCancel)
+    /// Drag the bar of one PART of a placed title on its row under the title
+    /// (`TimelineTitlePartBar`), by the part's name as its row reads it
+    /// ("Subtitle", "Headline"): `grab` its start (when it starts coming in),
+    /// its end (when it has gone) or its body, `byMS` along. It goes in through
+    /// the same editor calls the bar's own drag makes, and FAILS when the
+    /// timeline's zoom or the picture's changed at any point of it, or when
+    /// `startsAt` / `endsAt` (seconds into the title, after the drag) are not
+    /// where the bar ended up. `hold` photographs the window mid-drag.
+    case dragTitlePart(part: String, grab: TitlePartGrab, byMS: Int, hold: String?,
+                       startsAt: Double?, endsAt: Double?)
     /// Drag ONE KEY along a bar on the timing strip: the mark at a moment the
     /// value is nailed to, between the bar's two ends (`MotionStripKey`).
     ///
@@ -4349,6 +4359,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "action", "appKey", "appearance", "blank", "blankVideo", "startFromEmpty", "startFromFrontDoor", "clearClipboard", "click", "describe", "drag",
         "dragColor", "dragComponent", "dragGrip",
         "dragClip", "dragFile", "dragHandle", "dragMotionKey", "dragOver", "dragRow", "dragTrack", "dragSection", "dragTile", "dragTiming",
+        "dragTitlePart",
         "dropComponent",
         "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
@@ -4439,6 +4450,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .dragSection: "dragSection"
         case .dragClip: "dragClip"
         case .dragTiming: "dragTiming"
+        case .dragTitlePart: "dragTitlePart"
         case .dragMotionKey: "dragMotionKey"
         case .dragHandle: "dragHandle"
         case .selectRow: "selectRow"
@@ -5198,6 +5210,17 @@ public enum PlaytestStep: Sendable, Equatable {
                                hold: try f.optionalString("hold"),
                                cancel: try f.optionalFlag("cancel") ?? false,
                                cancelBy: cancelBy)
+        case "dragTitlePart":
+            let grab: TitlePartGrab = if fields["grab"] == nil {
+                .body
+            } else {
+                try f.enumValue("grab", TitlePartGrab.self)
+            }
+            self = .dragTitlePart(part: try f.string("part"), grab: grab,
+                                  byMS: Int(try f.number("byMS").rounded()),
+                                  hold: try f.optionalString("hold"),
+                                  startsAt: try f.optionalNumber("startsAt"),
+                                  endsAt: try f.optionalNumber("endsAt"))
         case "dragMotionKey":
             let key = Int(try f.number("key").rounded())
             guard key >= 1 else {

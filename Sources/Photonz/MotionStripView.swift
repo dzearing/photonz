@@ -799,6 +799,10 @@ private struct MotionStripBar: View {
     /// find no drag in flight and cheerfully start the whole thing again, so
     /// the bar would snap back and then leap to the pointer.
     @State private var calledOff = false
+    /// Where the bar's left end is, in the space the hand is read in, so the
+    /// end a press came down on can be told apart while the hand itself is
+    /// read in a space that does not move with the bar.
+    @State private var barMinX: CGFloat = 0
 
     /// How wide the grab zone at each end is. Narrower than this and the ends
     /// are a thing you hunt for; wider and a short bar is nothing BUT ends.
@@ -827,6 +831,9 @@ private struct MotionStripBar: View {
             .offset(x: x)
             .overlay(alignment: .leading) { marks(width: width) }
             .overlay(alignment: .topLeading) { bracket }
+            .onGeometryChange(for: CGFloat.self) { proxy in
+                proxy.frame(in: ClipPiecesBar.handSpace).minX
+            } action: { barMinX = $0 }
             .gesture(drag(width: width))
             .onTapGesture { editorState.selectLayer(lane.layerID) }
             .panelHelp("\(lane.title) on \(layerName): starts at \(lane.timing.startMS) ms "
@@ -900,7 +907,11 @@ private struct MotionStripBar: View {
     }
 
     private func drag(width: CGFloat) -> some Gesture {
-        DragGesture(minimumDistance: 1)
+        // Read in a space that does not move with the bar: in the bar's own,
+        // every step the bar took under the hand came off the hand's travel,
+        // so a dragged bar lagged half way behind the pointer and shook
+        // (`ClipPiecesBar.handSpace`).
+        DragGesture(minimumDistance: 1, coordinateSpace: ClipPiecesBar.handSpace)
             .onChanged { value in
                 guard !calledOff else { return }
                 if editorState.motionTimingDrag?.motionID != lane.motionID {
@@ -913,7 +924,7 @@ private struct MotionStripBar: View {
                     }
                     carrying = true
                     editorState.beginMotionTimingDrag(motionID: lane.motionID,
-                                                      grab: grab(at: value.startLocation.x,
+                                                      grab: grab(at: value.startLocation.x - barMinX,
                                                                  width: width))
                     // A bar the strip will not give up — it went away between
                     // the press and now — leaves nothing to drag.
@@ -1027,7 +1038,8 @@ private struct MotionStripKeyMark: View {
     }
 
     private var drag: some Gesture {
-        DragGesture(minimumDistance: 1)
+        // In a space that does not move with the mark (`MotionStripBar.drag`).
+        DragGesture(minimumDistance: 1, coordinateSpace: ClipPiecesBar.handSpace)
             .onChanged { value in
                 guard !calledOff else { return }
                 if editorState.motionStopDrag?.motionID != lane.motionID

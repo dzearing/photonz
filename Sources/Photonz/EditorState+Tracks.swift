@@ -133,6 +133,9 @@ extension EditorState {
         // ask. Not while a bar on the strip is under a hand, since that draws
         // the drag over the document without changing it.
         let steady = motionTimingDrag == nil && motionStopDrag == nil
+        // Read before the memo, so a view drawing these rows is told when the
+        // arrow on a title's track opens or closes its parts.
+        _ = titlePartTracksOpened
         if steady, let memo = timelineTrackRowsMemo, memo.document == document,
            memo.picked == selectedLayerID { return memo.rows }
         let rows = timelineTrackRows(of: document)
@@ -177,6 +180,27 @@ extension EditorState {
                     clips.append(group)
                 }
                 guard let layer = document.layer(id: id) else { continue }
+                // A title opened by the arrow on its track lists EVERY part,
+                // each with its own bar, so the subtitle can be retimed without
+                // first finding it on the canvas; a part with nothing moving on
+                // it gets its row too. Closed, only a part picked has its row,
+                // so picking never pushes the tracks under it out of sight. Only
+                // the part picked opens its property lanes under it
+                // (`a-title-page-s-parts-each-have-their-own-labelle`).
+                if layer.group?.titleRecipe != nil, layer.isPlacedInTime, !layer.isComponentInstance {
+                    let open = titlePartRowsOpen(trackID: track.id)
+                    for timing in document.titlePartTimings(layerID: layer.id) {
+                        guard let piece = document.layer(id: timing.pieceID),
+                              open || partInHand.contains(piece.id) else { continue }
+                        var group = byLayer[piece.id]
+                            ?? MotionStripGroup(layerID: piece.id, layerName: piece.displayName(readWords: [:]),
+                                                lanes: [], span: layer.time,
+                                                trackKind: piece.timelineTrackKind, mark: piece.mark)
+                        if piece.id != selectedLayerID { group.lanes = [] }
+                        inner.append(group)
+                    }
+                    continue
+                }
                 for part in layer.selfAndDescendants.dropFirst() {
                     guard let group = byLayer[part.id] else { continue }
                     // A title's parts each come in on their own beat

@@ -21538,3 +21538,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Color Grade in the Effects plus (Next, `next-color-grade` on by default): Temperature, Tint, Exposure, Contrast, Saturation, each a slider with a number box and a key diamond in the name's column. Arrives as a gentle warm look; every value at its middle draws the picture untouched, byte for byte.
 - Core: `ColorGradeEffect` (`PhotonzCore/ColorGrade.swift`), five keyable `MotionProperty` values (`grade*`); Saturation offered on every picture at 100 per the mock catalogue. Render: `ColorGradeFilter`, applied after a chroma key. New walk step `measureColor` (`FrameColor`).
 - Walk `color-grade-warms-a-clip-walk`; audit `queue/audits/2026-10-17-color-grade.json`; card on the look. Follow-up: grade as its own track with blend + matte (`a-colour-grade-can-be-its-own-track-over-the-cli`).
+
+## 2026-10-17 — title parts on the timeline, no zoom on a held bar
+
+- Holding a motion bar on a document with time no longer swaps the timeline's ruler to the picture's lap (it zoomed the timeline to ~4s while a title part's bar was held). Motion bars and key marks read the hand in global space.
+- A title's track has an arrow that opens a row per part (Background, Headline, Subtitle...), each a bar from in start to out end with the in/out shaded; ends and middle drag through the title's design (`PhotonzCore/TitlePartTiming.swift`), one undo step.
+- Walk: `title-part-rows-retime-walk`, new step `dragTitlePart`. Follow-up: `a-title-part-move-dragged-by-hand-on-the-timelin`.

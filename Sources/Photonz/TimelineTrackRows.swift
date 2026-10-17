@@ -159,7 +159,8 @@ struct TimelineTrackRow: View {
 
     /// Where everything in the header goes at the column's width right now.
     private var layout: TrackHeaderLayout {
-        TrackHeaderLayout(width: TimelineDock.gutter, inGroup: inGroup, hasTwist: hasKeyLanes || hasWordsLane,
+        TrackHeaderLayout(width: TimelineDock.gutter, inGroup: inGroup,
+                          hasTwist: hasKeyLanes || hasWordsLane || hasTitleParts,
                           switches: shownSwitches, hasKey: keyLayerID != nil, wantsIcon: !showsAllSwitches)
     }
 
@@ -283,6 +284,11 @@ struct TimelineTrackRow: View {
         editorState.trackHasKeyLanes(row.clips.map(\.layerID))
     }
 
+    /// A track holding a title opens into a row for each part of it.
+    private var hasTitleParts: Bool {
+        !row.isCaptions && editorState.trackHasTitleParts(row.clips.map(\.layerID))
+    }
+
     /// A Captions track opens into its Words lane the same way, and starts
     /// open, the way the captions mock draws it.
     private var hasWordsLane: Bool { row.isCaptions && !row.clips.isEmpty }
@@ -291,7 +297,25 @@ struct TimelineTrackRow: View {
     /// track into its keyed values: pointing right while closed, down while
     /// open.
     @ViewBuilder private var twist: some View {
-        if hasKeyLanes || hasWordsLane {
+        if hasTitleParts {
+            // A title opens into a row for each of its parts.
+            let open = editorState.titlePartRowsOpen(trackID: track.id)
+            Button {
+                withAnimation(.snappy(duration: 0.18)) { editorState.toggleTitlePartRows(trackID: track.id) }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .rotationEffect(.degrees(open ? 90 : 0))
+                    .frame(width: TrackHeaderLayout.twistWidth, height: laneHeight)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(open ? "Hide the title's parts" : "Show the title's parts")
+            .accessibilityLabel(open ? "Hide the parts of \(track.name)" : "Show the parts of \(track.name)")
+            .playtestControl("Parts \(track.name)", detail: "Timeline")
+            .panelReadout("\(track.name) parts \(open ? "open" : "closed")")
+        } else if hasKeyLanes || hasWordsLane {
             let open = editorState.isKeyTrackOpen(track.id)
             let what = hasWordsLane ? "words" : "keyed values"
             Button {
@@ -1235,10 +1259,15 @@ struct TimelineInnerRow: View {
     var body: some View {
         let height = rows.height(group.isSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
         let ruler = editorState.motionStripRuler
+        // A part of a title: named as the Part menu names it, picked inside
+        // its title, and drawn as its own in, hold and out
+        // (`TimelineTitlePartBar`).
+        let part = editorState.titlePartTiming(pieceID: group.layerID)
+        let name = part?.name ?? group.layerName
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: TimelineDock.gap) {
-                Button { editorState.selectLayer(group.layerID) } label: {
-                    VideoKit.TrackHeader(title: group.layerName, symbol: TimelineTrackRow.symbol(group.trackKind),
+                Button { pick(isPart: part != nil) } label: {
+                    VideoKit.TrackHeader(title: name, symbol: TimelineTrackRow.symbol(group.trackKind),
                                          width: TimelineDock.gutter - 10, uppercase: false,
                                          isSelected: editorState.selectedLayerID == group.layerID)
                         .padding(.leading, 10)
@@ -1246,16 +1275,23 @@ struct TimelineInnerRow: View {
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .help(group.layerName)
-                .accessibilityLabel("Track \(group.layerName)")
+                .help(name)
+                .accessibilityLabel("Track \(name)")
+                .playtestControl("Row \(name)", detail: "Timeline")
                 ZStack(alignment: .topLeading) {
                     TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: height)
                     Color.clear
                         .contentShape(Rectangle())
                         .gesture(TimelineLaneScrub.gesture(editorState, ruler: ruler, laneWidth: laneWidth))
-                    TimelineClipView(group: group, laneWidth: laneWidth, height: height)
-                        .allowsHitTesting(!isLocked)
-                    if isBlade, !isLocked { TimelineBlade(group: group, laneWidth: laneWidth) }
+                    if let part {
+                        TimelineTitlePartBar(timing: part, kind: group.trackKind, laneWidth: laneWidth,
+                                             height: height)
+                            .allowsHitTesting(!isLocked)
+                    } else {
+                        TimelineClipView(group: group, laneWidth: laneWidth, height: height)
+                            .allowsHitTesting(!isLocked)
+                        if isBlade, !isLocked { TimelineBlade(group: group, laneWidth: laneWidth) }
+                    }
                 }
                 .frame(width: laneWidth, height: height, alignment: .topLeading)
                 .clipShape(TimelineEdgeClip())
@@ -1266,6 +1302,16 @@ struct TimelineInnerRow: View {
                 MotionStripLaneView(lane: lane, layerName: group.layerName, laneWidth: laneWidth,
                                     labelWidth: TimelineDock.lanesLeading)
             }
+        }
+    }
+
+    /// A click on the row's name picks it, a title's part inside its title the
+    /// way double clicking it in the picture does.
+    private func pick(isPart: Bool) {
+        if isPart, let titleID = editorState.document?.titleLayerID(containing: group.layerID) {
+            editorState.selectLayer(group.layerID, inGroup: titleID)
+        } else {
+            editorState.selectLayer(group.layerID)
         }
     }
 }

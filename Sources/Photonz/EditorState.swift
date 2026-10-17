@@ -1507,6 +1507,14 @@ final class EditorState {
     /// reason: the whole drag is one step to undo
     /// (`EditorState+MotionStrip`).
     var motionStopDrag: MotionStopDragState?
+    /// A title part's bar under a hand on the timeline, kept out of the
+    /// document so the whole drag is one undo step
+    /// (`EditorState+TitlePartBars`).
+    var titlePartDrag: TitlePartDrag?
+    /// The arrow on a title's track opened or closed by hand, by track. Left
+    /// alone, a title's part rows open while one of its parts is picked
+    /// (`EditorState+TitlePartBars`).
+    var titlePartTracksOpened: [UUID: Bool] = [:]
     /// The timeline's tracks as last worked out, and the document they were
     /// worked out from (`timelineTrackRows`). The dock asks for them three or
     /// four times per draw, and on a talk with 170 captions each asking laid
@@ -5153,6 +5161,9 @@ final class EditorState {
         // you started moving it (`EditorState+MotionStrip`). The held lap comes
         // with it, so the loop does not change length mid-drag either.
         document = withDraggedMotionTiming(document)
+        // ...and a title part's bar, so the part arrives where the hand has
+        // its end (`EditorState+TitlePartBars`).
+        document = withDraggedTitlePart(document)
         // ...and a CLIP's bar under a hand, for exactly the same reason: a
         // trim has to show you the frame it is about to land on rather than
         // the one you started the drag from (`EditorState+ClipBar`). Writing

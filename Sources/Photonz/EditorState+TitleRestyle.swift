@@ -59,13 +59,8 @@ extension EditorState {
 
     /// What the panel calls a part: what it is for.
     static func partName(_ part: TitlePart) -> String {
-        switch part.role {
-        case .background: "Background"
-        case .headline: "Headline"
-        case .subtitle: "Subtitle"
-        case .kicker: "Kicker"
-        case .accent: "Accent"
-        }
+        // The same name the part's row on the timeline goes by.
+        TitlePartTiming.name(of: part.role)
     }
 
     /// Whether the title in hand could be glass: something is on screen under it.
