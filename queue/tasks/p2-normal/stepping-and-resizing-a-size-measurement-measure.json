@@ -5,11 +5,11 @@
   "epic": "measure-redline",
   "priority": "p2-normal",
   "seq": 260,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.562Z",
-  "updated": "2026-10-16T12:22:37.603Z",
+  "updated": "2026-10-17T02:05:26.254Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-13-size-mode-measures-objects.json rough ('Pressing ] from the pill steps to a box that runs from the pill's top down into the line of small print under it') and queue/audits/2026-10-13-size-measurement-group.json rough ('Dragging a corner handle of the picked group... stretches the calipers' positions rather than re-measuring'). Searches 'bracket steps pill', 'size group handles stretch': nothing open.",
@@ -31,6 +31,39 @@
     {
       "t": "2026-10-16T12:22:37.602Z",
       "note": "seq 29 -> 260"
+    },
+    {
+      "t": "2026-10-17T01:04:23.120Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T02:05:13.357Z",
+      "note": "owns these walks: size-steps-and-resizes-walk"
+    },
+    {
+      "t": "2026-10-17T02:05:13.461Z",
+      "note": "Reproduced at Next defaults before any change (walk size-steps-and-resizes-walk): ] from the pill then click measured 279 px by 90 px, a box (487,270,558x180 px) from the pill's top into the small print line (414,429,704x25). Picking Size 274 × 62 and dragging its bottom right handle (sitting on the group's whole box, out past the calipers and chips) by 100,50 renamed it Size 315 × 78: the box grew 64x38 px, not where the hand went."
+    },
+    {
+      "t": "2026-10-17T02:05:13.525Z",
+      "note": "Adversarial review: a Photoshop user expects a picked thing's handles on the thing; for a measurement that is the measured area, so the handles moved onto the box and a corner drag measures the box again (rather than hiding the handles, which would leave move-only and no way to adjust a measurement by hand). ] with nothing bigger holds still, the same as at the top of any ladder."
+    },
+    {
+      "t": "2026-10-17T02:05:13.590Z",
+      "note": "Fix: ElementBounds.ladder (readsShapes, Next Size only) drops rungs above the start whose edge cuts a line of print (TextLineBounds probed just inside each side). Layer.withoutSlack/withSlack treat a size group's box as its seen box (MeasureSizeGroup.boxInsets); Layer.resized routes size groups to MeasureSizeGroup.resized(toBox:) which keeps feet on the box edges and headOffset as it was. CanvasDisplay compares in-flight frames against the seen box; one-layer Option-drag copies send the stored origin. Harness: expectFeet reads nested calipers in canvas space. Perf: debug ladder at the pill 157 -> 186 ms per 10 hovers (+~3 ms per hover in debug, only when rungs sit above the start); other probes unchanged."
+    },
+    {
+      "t": "2026-10-17T02:05:13.654Z",
+      "note": "Verified: new unit tests (4) red then green; Scripts/test.sh green, 13400 tests; size-steps-and-resizes-walk ok three runs in a row; all 26 'size', 15 'measure' and 6 'caliper' walks ok. Pictures looked at: 1 (] holds on the pill, 274x62 outline), 3 (handles on the pill box), 5 (box 334x105 with calipers on its edges, name followed), 7 (copy lands 150 lower). Left rough, in the audit: ] does not offer the pill+caption stack (no ask for it yet, did not clear the bar); turn knob over picked groups is pre-existing. Filed a-copied-size-measurement-keeps-saying-its-own-s."
+    },
+    {
+      "t": "2026-10-17T02:05:26.252Z",
+      "note": "From a measured pill, ] no longer steps to a box running into the small print: rungs whose edge cuts a line of print are dropped (ElementBounds, Next Size only), so ] holds on the pill. A picked Size measurement's handles now sit on its measured box; a corner drag moves that corner with the hand, the calipers stay on the box's edges and read the new size, and the name follows (MeasureSizeGroup.resized, slack insets). Option-drag copies land where the hand lets go. Verified: 4 new unit tests red then green, Scripts/test.sh green (13400), size-steps-and-resizes-walk ok 3 runs at Next defaults, 47 size/measure/caliper walks ok. Commit 9e18bc44. Audit queue/audits/2026-10-16-size-steps-and-resizes.json."
     }
-  ]
+  ],
+  "started": "2026-10-17T01:04:23.117Z",
+  "walks": [
+    "size-steps-and-resizes-walk"
+  ],
+  "completed": "2026-10-17T02:05:26.253Z"
 }

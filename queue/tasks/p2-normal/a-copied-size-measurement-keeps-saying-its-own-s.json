@@ -1,0 +1,27 @@
+{
+  "id": "a-copied-size-measurement-keeps-saying-its-own-s",
+  "title": "A copied Size measurement keeps saying its own size",
+  "goal": "When someone copies a Size measurement (Option-drag, or copy and paste), the copy is named \"Size 274 × 62 copy\", and from then on its name no longer follows its numbers: resize the copy and its name and Measurements row still say the old size.",
+  "epic": "measure-redline",
+  "priority": "p2-normal",
+  "seq": 4060,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T02:05:00.838Z",
+  "updated": "2026-10-17T02:05:00.841Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Seen in Scripts/playtest/size-steps-and-resizes-walk.json on 2026-10-16: an Option-drag copy of the pill measurement was named \"Size 274 × 62 copy\" (expectSizeMeasure failed: the Size measurement is called \"Size 274 × 62 copy\"). MeasureSizeGroup.isAutomaticName(\"Size 274 × 62 copy\") is false (\"62 copy\" is not a number), so keepSizeMeasureNamesInStep never renames it; the resize rename was not run on the copy, that half is read from the code. Copy naming is in duplicateLayers.",
+  "acceptance": [
+    "A copied Size measurement is named for what it measures, the way a fresh one is",
+    "Resizing the copy renames it to its new size, in the same undo step",
+    "A walk at Next defaults copies a Size measurement, resizes the copy and claims its name"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T02:05:00.840Z",
+      "note": "created (manual)"
+    }
+  ]
+}
