@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.085,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T19:49:43.240Z",
-  "updated": "2026-10-17T19:49:43.243Z",
+  "updated": "2026-10-17T20:50:37.319Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Prerequisite for title-pages-that-look-like-apple-designed-them, whose mock (docs/design/mocks/pages/video-titles-apple.html) specifies tracking per part (-0.04em to +0.16em), leading 1.02 to 1.06, New York Medium 128, and gradient fills on 07 Launch and 08 Gradient Word. Findings 2026-10-17: TextContent (Sources/PhotonzCore/Layer.swift) has fontName/fontSize/colorHex/weight but no tracking or line height; TextMeasurement.swift fixes line height at fontSize*1.22; TextStyles.swift dropped New York because it is only reachable via AppKit's design API, but CoreText can register /System/Library/Fonts/NewYork.ttf by URL (CTFontManagerCreateFontDescriptorsFromURL) inside PhotonzRender; only the plate has a gradient (plateGradient: Paint), the glyph fill is flat. TextRasterizer already sets kCTKernAttributeName for reveal spacing (line 267), so tracking can ride the same attribute. Gradient fill sweep is only needed if the user keeps 08 Gradient Word; the fill itself is needed for 07 Launch too.",
@@ -24,6 +24,43 @@
     {
       "t": "2026-10-17T19:49:43.242Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-17T19:50:56.391Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T20:49:48.012Z",
+      "note": "owns these walks: title-type-set-like-apple-walk"
+    },
+    {
+      "t": "2026-10-17T20:50:31.461Z",
+      "note": "Review before building: a Photoshop/Figma user expects Tracking and Leading as values in the type panel (app-shell mock draws Tracking beside Size); placed as a line under Size+Weight behind next-title-type (on in Next). Gradient on text reuses the existing colour picker (Text row gains Solid/Linear/Radial/Angular in Next only via ColorSlot.offersGradient). SF Pro Display cut was already right (opsz 96 at 184pt, identical to the system font); added a test that renders beside a reference and fails for the forced Text cut."
+    },
+    {
+      "t": "2026-10-17T20:50:31.524Z",
+      "note": "Built: TextContent.tracking/lineHeight/fill/fillLength/fillShift (Layer.swift), TextBuilder.respaced, keepSetting on re-word, TextSpacing (panel readouts), MotionProperty.gradientShift ('Gradient position', keyable on words with a gradient; a key on a 1x ramp makes it 2x). Render: kern for tracking (CSS widths), min=max line height (CoreText splits the squeeze like CSS, measured), lineOverhang room so tight leading never clips, per-line ramp via glyph outlines (TextRamp.swift) in both the still and reveal-piece paths, New York loaded from /System/Library/Fonts/NewYork.ttf skipping GRAD copies. Inline editor draft gets kern/line height."
+    },
+    {
+      "t": "2026-10-17T20:50:31.591Z",
+      "note": "Verified: 17 core + 13 render tests written first (mutation check: disabling kern/line height/ramp turns 11 expectations red); full suite 13532 passed; new walk title-type-set-like-apple-walk green at Next defaults (no flags); 15 neighbouring walks green (font menu, size box, gradient, title presets/tiles). Looked at 1-spacing-row-sc (row present; Auto had a stray % which I fixed and re-shot), 5-gradient-window-sc (New York, tight, crimson-to-orange ramp through the letters), 5-picker-on-a-title-sc (Text stop 1 with gradient tiles), 6-undone (flat crimson after one undo), 7-spacing-row-light (legible in light)."
+    },
+    {
+      "t": "2026-10-17T20:50:31.655Z",
+      "note": "Visual bar: this is a capability task (type can be set); the look itself is judged on title-pages-that-look-like-apple-designed-them, which builds the designs with it, so no reel here. Updated two tests that encoded 'text takes no ramp' (BorrowedColorTests, PaintTests). Side effect in audit rough: a saved gradient colour style lands as a ramp on text in Current too, since the core now says text can hold one; only the picker tiles are Next-gated."
+    },
+    {
+      "t": "2026-10-17T20:50:31.719Z",
+      "note": "Left rough (no task): draft text while typing with tight leading may sit a point or two off the committed words (NSTextView shares the squeeze differently); not reproduced visually, kept in audit rough."
+    },
+    {
+      "t": "2026-10-17T20:50:37.317Z",
+      "note": "Tracking, leading (percent boxes under Size/Weight), New York in the Font menu, gradient through the words from the Color row, and a keyable Gradient position for colour sweeps, at Next defaults (next-title-type on). SF Display cut confirmed by test. Verified by 32 new unit tests written first, full suite green (13532), walk title-type-set-like-apple-walk plus 15 neighbouring walks green. Audit queue/audits/2026-10-17-title-text-can-be-set-like-apple-sets-it-trackin.json. Commit 8eb1f173."
     }
-  ]
+  ],
+  "started": "2026-10-17T19:50:56.389Z",
+  "walks": [
+    "title-type-set-like-apple-walk"
+  ],
+  "completed": "2026-10-17T20:50:37.318Z"
 }

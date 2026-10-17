@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 1.06,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:31.999Z",
-  "updated": "2026-10-17T13:18:32.160Z",
+  "updated": "2026-10-17T17:56:37.808Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nCode: the clip menu is built in EditorState+TimelineMenus.swift (timelineClipMenuRows ~:68, 69 rows.append sites) and TimelineClipMenu.",
@@ -30,6 +30,32 @@
     {
       "t": "2026-10-17T13:18:32.158Z",
       "note": "seq 45 -> 1.06"
+    },
+    {
+      "t": "2026-10-17T16:05:45.175Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T17:33:07.366Z",
+      "note": "Captured every timeline right-click menu before the change (video clip 21 top rows, linked sound 14, sound 13, title 15, picture 13, gap 11, empty picture track 15). Built TimelineMenuTable in PhotonzCore (tested) and rebuilt the clip, caption, zoom, join, gap and empty-space menus from it; rows that cannot act are absent; playhead rows say the time; long tail under More, track header under Track on lane space. Found and fixed: a walk's right click on a caption line raised no menu, and a second one came up blank (the menu read the lane's painted list, which drops a picked line)."
+    },
+    {
+      "t": "2026-10-17T17:55:48.663Z",
+      "note": "owns these walks: timeline-right-click-menus-walk, a-caption-s-right-click-menu-walk"
+    },
+    {
+      "t": "2026-10-17T17:56:37.732Z",
+      "note": "Rough, where each went: Animate/Add Key under More vs the animate mock -> decision card on a-title-or-picture-right-click-leads-with-animat. Freeze Frame still a fixed-length submenu -> noted on freeze-frame-asks-how-long-and-inserts-a-freeze. Left rough (no task): the track header menu is unchanged and still shows a greyed Zoom to Fit, which Track > opens too; walks that choose playhead rows now name the exact time (Split at 0:02.02), so a ruler click a frame off changes the words. Pictures looked at: 1-video-clip, 8-gap, caption 1-caption: menus read as the table says."
+    },
+    {
+      "t": "2026-10-17T17:56:37.806Z",
+      "note": "Every timeline right-click is laid out by one table (PhotonzCore TimelineMenuTable, tested; docs/design/timeline-right-click.md): video clip 21 -> 11 top rows, gap 11 -> 2, title 15 -> 10; playhead rows say the time, rows that cannot act are absent, rest under More; caption menu fixed. Walks timeline-right-click-menus-walk and a-caption-s-right-click-menu-walk check every kind at Next defaults; all 82 timeline right-click walks green; Scripts/test.sh green (13,490 tests). Audit queue/audits/2026-10-17-timeline-right-click-menus.json. Commit f26565da."
     }
-  ]
+  ],
+  "started": "2026-10-17T16:05:45.173Z",
+  "walks": [
+    "timeline-right-click-menus-walk",
+    "a-caption-s-right-click-menu-walk"
+  ],
+  "completed": "2026-10-17T17:56:37.807Z"
 }

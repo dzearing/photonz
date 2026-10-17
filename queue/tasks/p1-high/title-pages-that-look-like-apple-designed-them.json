@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:32.752Z",
-  "updated": "2026-10-17T19:50:21.611Z",
+  "updated": "2026-10-17T20:50:03.690Z",
   "deps": [
     "title-text-can-be-set-like-apple-sets-it-trackin"
   ],
@@ -51,6 +51,10 @@
     {
       "t": "2026-10-17T19:50:21.608Z",
       "note": "Ten Apple-level title pages designed as a playing mock (docs/design/mocks/pages/video-titles-apple.html); waiting on the user to pick which to build. Typography prerequisite filed: title-text-can-be-set-like-apple-sets-it-trackin."
+    },
+    {
+      "t": "2026-10-17T20:50:03.689Z",
+      "note": "From title-text-can-be-set-like-apple-sets-it-trackin (done 2026-10-17): text now has tracking (TextContent.tracking, em), lineHeight (multiple), fill (gradient Paint) with fillLength/fillShift (CSS background-size/position across each line), New York resolves, SF Display cut confirmed. Still on this task: (1) tight leading grows the text box by TextRasterizer.lineOverhang above and below, so a part placed from the mock's CSS top sits that much higher, compensate when laying out; (2) tracking is not a keyable motion yet, so the Track In build needs a MotionProperty for it (beware the box re-fitting as letters spread); (3) Gradient Word: set fillLength 2.2 and key .gradientShift 100 -> 0 over 1600ms, cubicOut."
     }
   ],
   "started": "2026-10-17T19:39:51.618Z"

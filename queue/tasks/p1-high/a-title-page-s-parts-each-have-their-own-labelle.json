@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:02:17.447Z",
-  "updated": "2026-10-17T13:06:51.638Z",
+  "updated": "2026-10-17T14:20:25.092Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"dragging any of the modifiers of the title of a title page cause weird zooming. Also, I can't seem to tweak the subtitle timings because it's not a sub element of the titlepage???\" Screenshot: timeline rows 'Title Page' (bar), 'Title' (picked, blue ring), then three unlabelled rows with small blue grip bars (two short near the end, one long earlier).\n\nFrom code reading (not run): title part timing is only edited in the panel (TitlePartInspector, TitleRestyleInspector.swift:291; model PhotonzCore TitleDesign / TitleRestyle); no timeline view for parts was found. The unlabelled rows are possibly the picked child's animated-property lanes from a-layer-s-track-shows-only-what-is-animated-and (done 10-14) drawn without labels, or reveal spans; their grips may be wired to a zoom/scale gesture (the zoom bar's or a resize). Suspects only. Earlier fix 'Picking a title no longer makes the picture jump in size' (10-15) is related to picture zoom; check it did not regress.",
@@ -39,7 +39,43 @@
     {
       "t": "2026-10-17T13:06:51.637Z",
       "note": "USER screenshot 2026-10-17 06.03 answers what the unlabelled rows were: under the picked 'Title' they are Opacity, Position and Scale key lanes (now labelled in the newer build), and the user's arrow marks the SCALE lane's long bar: 'Dragging this zooms in weirdly'. So dragging the Scale span moves the title's scale keys in time, which changes the title's size at the playhead and reads as zooming. The fix this task needs: dragging a part's timing (its row's bar) retimes the part's in/hold/out without the person having to touch raw key lanes; key lanes stay available one level deeper, and a key-span drag shows clearly that it moves keys (keys highlighted, a time readout), not that it zooms."
+    },
+    {
+      "t": "2026-10-17T13:08:37.201Z",
+      "note": "Reproduced (walk /tmp/repro/repro-title-drag.json, Keynote Clean title page, headline double-clicked): the three 'unlabelled' rows are the headline's Opacity, Position and Scale timing bars (compiled from the title design). They DO carry names in the gutter; the user's screenshot was cropped to the bars. The zoom: dragTiming 'Title Opacity' end -300 photographed mid-drag shows the timeline ruler jump from the 11s document to ~3.9s and back on release. Cause: beginMotionTimingDrag holds heldCycleMS = document.motionCycleLengthMS (the picture lap) and motionStripCycleMS returns it during the drag, so a timed document's ruler swaps to the lap. Canvas zoom did not change (displayZoom 74 throughout). Subtitle has no row because it has no motions and no time of its own, so motionStrip() makes no group for it; and only the picked part's row opens (deliberate rule in EditorState+Tracks)."
+    },
+    {
+      "t": "2026-10-17T13:08:37.267Z",
+      "note": "Adversarial pass before building: a Premiere user expects a graphic's layers listed under it with their own in/out bars (Essential Graphics layers / After Effects layer bars). Risk: a row for every part under every title buries tracks below (the reason only the picked part opened). Plan: list every part while the title or one of its parts is picked; the picked part keeps its property lanes under its row. A part's bar is drawn from its compiled in start to its out end; ends drag the in start / out end (design delays divided by the energy pace, clamped to the halves the compiler clamps to); body slides both. A part with no in/out gets a cut (1ms fade) when its end is dragged in. Mock: no mock page draws title parts on the timeline (checked below)."
+    },
+    {
+      "t": "2026-10-17T14:19:33.835Z",
+      "note": "owns these walks: title-part-rows-retime-walk"
+    },
+    {
+      "t": "2026-10-17T14:19:53.905Z",
+      "note": "Built: (1) zoom fix in EditorState+MotionStrip (timed docs hold the timeline length, never the lap; lap only written for pictures) + motion bar and key mark drags read the hand in global space (they lagged/shook in local space). (2) PhotonzCore/TitlePartTiming.swift: titlePartTimings + retimeTitlePart (TDD, TitlePartTimingTests, 12 tests). (3) Title tracks get an arrow (Parts <track>) that opens a row per part; closed, a picked part keeps just its row (opening all on a pick pushed V1 below the fold and broke title-pages-and-name-cards / clicking-a-timeline-item / right-click-keeps-the-playhead walks). (4) TimelineTitlePartBar: in/out wedges, grips, drag start/end/body, catches on playhead, title ends, other parts' ends, markers; one undo step. (5) Walk step dragTitlePart measures timeline span/start + canvas zoom before/held/after and checks the part left the frame mid-move; dragTiming now fails on a zoom change in a timed doc."
+    },
+    {
+      "t": "2026-10-17T14:19:53.970Z",
+      "note": "left rough: Escape does not call off a part bar drag (motion bars have it); Command Z undoes it. Not filed: undo covers it, nobody is stuck."
+    },
+    {
+      "t": "2026-10-17T14:19:54.033Z",
+      "note": "left rough: a title track whose title group itself has keyed values: the header arrow now opens title parts, so its key lanes can no longer be folded from the arrow (they stay open, the default). Not filed: rare (titles are keyed on parts, not the group) and nothing is lost."
+    },
+    {
+      "t": "2026-10-17T14:19:54.097Z",
+      "note": "Filed a-title-part-move-dragged-by-hand-on-the-timelin (p2): a hand-dragged part motion bar is reset by the next restyle/part retime, reproduced in a core probe. Pictures looked at: 1-part-rows (arrow open, three labelled part bars with in/out wedges), 2-subtitle-in-hand, 3-subtitle-later (Subtitle bar from 1.5s, picked, its Opacity lane under it), 5-headline-lanes (Headline picked with Opacity/Position/Scale lanes, Subtitle row under). No Logo role exists in the title model, so no Logo row."
+    },
+    {
+      "t": "2026-10-17T14:20:25.090Z",
+      "note": "Reproduced first: the 'unlabelled' rows were the Headline's Opacity/Position/Scale bars (names were in the cropped-off column); holding any of them swapped the timeline ruler to the 3.9s picture lap. Fixed (timed docs hold the timeline length). Title tracks now have an arrow opening a labelled row per part with an in/out bar; ends and middle retime the part through the design (PhotonzCore TitlePartTiming, 12 tests), snapping, one undo. Walk title-part-rows-retime-walk green at Next defaults: Subtitle start +0.5s -> bar 1.5s, subtitle out of frame at 1.25s, timeline span and canvas zoom unchanged before/held/after for part bars and the Headline's Opacity bar. 17 related walks green, Scripts/test.sh 13470 tests green. Audit queue/audits/2026-10-17-title-part-rows.json. Commit 1587db68."
     }
   ],
-  "started": "2026-10-17T13:02:30.069Z"
+  "started": "2026-10-17T13:02:30.069Z",
+  "walks": [
+    "title-part-rows-retime-walk"
+  ],
+  "completed": "2026-10-17T14:20:25.091Z"
 }

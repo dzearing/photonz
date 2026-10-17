@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T17:34:39.083Z",
-  "updated": "2026-10-17T17:34:56.830Z",
+  "updated": "2026-10-17T19:37:39.277Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-animate.html, the key line contextmenu (onKeyLine): Animate, Add Key, Remove Key / Split at Playhead, Speed, Delete. The 2026-10-17 short-menu rework (task a-clip-s-right-click-menu-is-short-and-only-says, docs/design/timeline-right-click.md, TimelineMenuTable) put Animate and Add Key under More on every clip kind to hold the top level to about ten rows, per the user's ask that day.",
@@ -25,6 +25,14 @@
     {
       "t": "2026-10-17T17:34:56.827Z",
       "note": "Waiting on the decision card: Animate and Add Key on top of a title's right-click, or under More"
+    },
+    {
+      "t": "2026-10-17T18:11:57.365Z",
+      "note": "rotating check 2026-10-17T18:11:57Z, 33 walks run from 377 onward in the rotation: timeline-right-click-menus-walk (its script changed since the last check) failing."
+    },
+    {
+      "t": "2026-10-17T19:37:39.276Z",
+      "note": "rotating check 2026-10-17T19:37:39Z, 32 walks run from 388 onward in the rotation: timeline-right-click-menus-walk (its script changed since the last check) failing."
     }
   ],
   "walks": [
