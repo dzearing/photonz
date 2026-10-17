@@ -1,0 +1,36 @@
+{
+  "id": "a-title-page-s-parts-each-have-their-own-labelle",
+  "title": "A title page's parts each have their own labelled row on the timeline, and dragging their timing never zooms anything",
+  "goal": "Under a Title Page on the timeline, every part of it (background, headline, subtitle, kicker, accent, logo) is a labelled child row with its own bar showing when it comes in, holds and goes out, so the person can drag the subtitle's in later or its out earlier right there. Dragging any of those handles changes that part's timing and nothing else: no zooming of the timeline or the picture. Today only 'Title' is listed, the subtitle is not, three rows under it have no labels, and dragging their handles causes weird zooming.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:02:17.447Z",
+  "updated": "2026-10-17T13:02:17.553Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"dragging any of the modifiers of the title of a title page cause weird zooming. Also, I can't seem to tweak the subtitle timings because it's not a sub element of the titlepage???\" Screenshot: timeline rows 'Title Page' (bar), 'Title' (picked, blue ring), then three unlabelled rows with small blue grip bars (two short near the end, one long earlier).\n\nFrom code reading (not run): title part timing is only edited in the panel (TitlePartInspector, TitleRestyleInspector.swift:291; model PhotonzCore TitleDesign / TitleRestyle); no timeline view for parts was found. The unlabelled rows are possibly the picked child's animated-property lanes from a-layer-s-track-shows-only-what-is-animated-and (done 10-14) drawn without labels, or reveal spans; their grips may be wired to a zoom/scale gesture (the zoom bar's or a resize). Suspects only. Earlier fix 'Picking a title no longer makes the picture jump in size' (10-15) is related to picture zoom; check it did not regress.",
+  "acceptance": [
+    "Reproduce first at Next defaults with the user's case (screenshot 2026-10-17 05.59.29: 'Title Page' bar, a picked 'Title' child, then three UNLABELLED rows holding short blue bars with grips, one long): insert a title page, expand it, identify what each unlabelled row is (part timing? key lanes of the Title child? reveal spans?), drag each grip and record exactly what zooms (timeline, canvas, picture) and why",
+    "Every part of a title is a child row under it, labelled with the part's name (Background, Headline, Subtitle, Kicker, Accent, Logo...) and its kind icon; each row's bar spans the part's time in the title with its In and Out drawn as distinct ends (the in and out builds shaded), matching the Part section's In/Hold/Out",
+    "Dragging a part bar's start or end grip changes that part's in start or out end (snapping to the playhead, other parts' edges and markers), live, one undo step; dragging the bar's middle slides the part in time inside the title; the Part section's numbers follow",
+    "No drag on a title's rows changes the timeline zoom, the canvas zoom or the picture's size; MEASURED by a walk that records timeline scale and canvas zoom before and after each drag",
+    "Any other row the timeline shows under a layer has a label (no unlabelled lanes anywhere): animated property lanes name their property",
+    "Selecting a part row selects that part on the canvas and shows its Part section; selecting a part on the canvas highlights its row",
+    "A walk inserts a title page, expands it, drags the Subtitle's in 0.5 s later, checks the subtitle arrives later on playback and no zoom changed, and photographs the expanded rows",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:02:17.449Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:02:17.552Z",
+      "note": "seq 45 -> 1"
+    }
+  ]
+}
