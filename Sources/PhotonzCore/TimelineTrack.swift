@@ -4,11 +4,13 @@ import Foundation
 ///
 /// The mock gives every track an icon and every clip a colour, and both say the
 /// same one thing: what the clip on it is. A recording is video, a sound is
-/// audio, words are text, a placed component is a component, and anything else
-/// drawn over the picture is an overlay. Nothing else about a clip changes its
-/// colour; being picked, retimed or keyed is drawn on top.
+/// audio, words are text, a placed component is a component, a still picture
+/// or logo laid over the video for a stretch is a graphic (the title mock's
+/// Gfx track), and anything else drawn over the picture is an overlay. Nothing
+/// else about a clip changes its colour; being picked, retimed or keyed is
+/// drawn on top.
 public enum TimelineTrackKind: String, Hashable, Sendable, CaseIterable {
-    case video, audio, text, component, overlay
+    case video, audio, text, component, graphic, overlay
 }
 
 extension Layer {
@@ -23,6 +25,11 @@ extension Layer {
         switch content {
         case .sound: return .audio
         case .text: return .text
+        // A title built from a preset is words, however many layers draw it.
+        case .group(let group) where group.titleRecipe != nil: return .text
+        // A picture with no time of its own is the one the motion is drawn
+        // over, not one laid over the video.
+        case .image: return time == nil ? .overlay : .graphic
         default: return .overlay
         }
     }

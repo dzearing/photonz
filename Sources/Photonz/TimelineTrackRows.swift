@@ -636,11 +636,13 @@ struct TimelineTrackRow: View {
     // MARK: The mock's words for kinds
 
     /// The mock's track icons: `ic-image` for the picture, `ic-layers` for
-    /// what sits over it, `ic-audio`, `ic-text`, `ic-component`.
+    /// what sits over it, `ic-audio`, `ic-text`, `ic-component`, and the
+    /// title mock's `ic-sparkle` for a Gfx track.
     static func symbol(_ kind: TimelineTrackKind) -> String {
         switch kind {
         case .video: "photo"
         case .overlay: "square.3.layers.3d"
+        case .graphic: "sparkles"
         case .audio: "music.note"
         case .text: "textformat"
         case .component: "square.on.square.dashed"
@@ -650,7 +652,7 @@ struct TimelineTrackRow: View {
     static func clipKind(_ kind: TimelineTrackKind) -> VideoKit.ClipKind {
         switch kind {
         case .video: .video
-        case .overlay: .overlay
+        case .overlay, .graphic: .overlay
         case .audio: .audio
         case .text: .text
         case .component: .component

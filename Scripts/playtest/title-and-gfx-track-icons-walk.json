@@ -1,0 +1,145 @@
+{
+  "out": "/tmp/photonz-playtest/title-and-gfx-track-icons-walk",
+  "seed": "A Title track and a Gfx track wear the icons video-title-wt.html draws beside V1: the text mark on Title, the sparkle on Gfx, the picture on V1. At Next defaults with no flag set: a PNG logo comes in by File > Import Media and is let go over V1 two seconds in, the Keynote Clean title is double clicked onto the playhead from the Library's Comps shelf, nothing is left picked, and the timeline is photographed with Title, Gfx and V1 together.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ],
+    "scratch": [
+      "sample:recording"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "key",
+      "key": "home"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "importPicks",
+      "files": [
+        "fixtures/logo/Acme Logo.png"
+      ]
+    },
+    {
+      "comment": "File > Import Media (Shift Command I). The menu bar is frozen under a walk that is not in front, so the command is run directly.",
+      "do": "action",
+      "action": "importMedia"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.5
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Acme Logo",
+      "track": "V1",
+      "seconds": 2.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Acme Logo",
+      "track": "Gfx",
+      "startsAt": 2.0,
+      "endsAt": 7.0,
+      "count": 1
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "press",
+      "control": "Keynote Clean",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "Title",
+      "startsAt": 2.0,
+      "count": 1
+    },
+    {
+      "comment": "Nothing picked, so no clip's own rows open under its track and Title, Gfx and V1 sit together.",
+      "do": "action",
+      "action": "selectCanvas"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Track Title",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track Gfx",
+      "present": true
+    },
+    {
+      "do": "expect",
+      "control": "Track V1",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-title-gfx-v1",
+      "note": "THE TEST: a logo and a title page laid over the recording, nothing picked. The Title track's header wears the text mark, the Gfx track's the sparkle and V1's the picture, as video-title-wt.html draws them, so the kind of each track reads at a glance"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-title-gfx-v1"
+    }
+  ]
+}

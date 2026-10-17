@@ -1,0 +1,40 @@
+{
+  "feature": "Title and Gfx tracks wear the title mock's icons",
+  "epic": "video-titles-graphics",
+  "summary": "A track holding a title now shows the text mark in its header, and a track holding a logo or picture laid over the video shows the sparkle, as the title mock draws them beside V1. Before, both wore the same stacked-layers icon.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording with the timeline open; import a PNG with File > Import Media.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Move the playhead to two seconds."
+    },
+    {
+      "do": "Drag the logo's tile from the Library's Media shelf over V1 at two seconds and let go."
+    },
+    {
+      "do": "Open Comps in the Library and double-click Keynote Clean."
+    },
+    {
+      "do": "Click the empty canvas so nothing is picked, and look at the track headers.",
+      "shot": "2026-10-17-title-gfx-track-icons-1-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Read the column of headers: Title, Gfx, V1.",
+      "shot": "2026-10-17-title-gfx-track-icons-2-headers-sc.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    }
+  ],
+  "evaluate": [
+    "Can you tell the title track from the logo track by its icon alone, before reading its name?",
+    "Does the sparkle read as 'graphic' to you, or would a picture icon say it better?",
+    "The title clip is now the dark text colour the mock gives titles, no longer teal: does that read better on the timeline?"
+  ],
+  "rough": [
+    "A title's clip changed colour with its icon: it was overlay teal and is now the dark text clip, so it matches the mock (video-title-wt.html .clip.txt).",
+    "The logo's clip is still overlay teal where video-title-wt.html draws Gfx clips amber (a-logo-or-picture-clip-on-a-gfx-track-wears-the).",
+    "A screenshot with no time of its own (the picture a motion document is drawn over) keeps the stacked-layers icon; only a picture placed for a stretch of the video counts as Gfx.",
+    "Shapes and arrows drawn over a video still wear the stacked-layers icon; no mock gives them a track of their own.",
+    "Pictures were taken with the window behind another app, so picked controls show their background colour."
+  ]
+}

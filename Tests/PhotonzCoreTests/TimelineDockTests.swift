@@ -52,6 +52,40 @@ struct TimelineDockTests {
         #expect(layer.timelineTrackKind == .component)
     }
 
+    /// `video-title-wt.html` draws the Title track with the text mark: a title
+    /// built from a preset is words, however many layers draw it.
+    @Test("A title from a preset is a text track")
+    func aTitlePresetIsText() throws {
+        var doc = TitlePresetsTests.eightSeconds()
+        let insertedLanded = doc.insertTitle(.clean, atTimeMS: 0)
+        let inserted = try #require(insertedLanded)
+        let layer = try #require(doc.layer(id: inserted.layerID))
+        #expect(layer.timelineTrackKind == .text)
+        #expect(doc.motionStrip().contains { $0.layerID == inserted.layerID && $0.trackKind == .text })
+    }
+
+    /// `video-title-wt.html` draws the Gfx track with the sparkle: a still
+    /// picture or logo laid over the video for a stretch of it is a graphic.
+    @Test("A picture laid over the video for a while is a graphic track")
+    func aPlacedPictureIsAGraphic() throws {
+        var doc = TitlePresetsTests.eightSeconds()
+        let logo = ImageRef(pixelSize: CGSize(width: 400, height: 160))
+        let landing = doc.pictureLanding(atMS: 1_000, over: nil)
+        let landed = doc.landPicture(logo, named: "Logo", at: landing)
+        let id = try #require(landed)
+        #expect(doc.layer(id: id)?.timelineTrackKind == .graphic)
+    }
+
+    /// The screenshot under a picture document's motion is not laid over
+    /// anything for a stretch of time, so it keeps the overlay mark.
+    @Test("A picture with no time of its own stays an overlay")
+    func aPictureWithNoTimeIsAnOverlay() {
+        let layer = Layer(name: "Screenshot",
+                          content: .image(ImageRef(pixelSize: CGSize(width: 40, height: 40))),
+                          frame: CGRect(x: 0, y: 0, width: 40, height: 40))
+        #expect(layer.timelineTrackKind == .overlay)
+    }
+
     @Test("Anything else drawn over the picture is an overlay")
     func aShapeIsAnOverlay() {
         let layer = Layer(name: "Box",
