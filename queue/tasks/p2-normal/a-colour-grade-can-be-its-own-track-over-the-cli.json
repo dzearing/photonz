@@ -1,0 +1,28 @@
+{
+  "id": "a-colour-grade-can-be-its-own-track-over-the-cli",
+  "title": "A colour grade can be its own track over the clips below it, with a blend mode and a matte",
+  "goal": "The compositing mock puts a colour grade on its own track (V4) above the picture, tinting everything under it through a blend mode, and shows only where a matte layer lets it, so a whole scene or one region of it can be graded at once. Today a grade is only an effect on one clip.",
+  "epic": "video-editing",
+  "priority": "p2-normal",
+  "seq": 27.75,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T12:36:36.602Z",
+  "updated": "2026-10-17T12:36:36.605Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-compositing.html lines 262 (layer list Colour grade screen), 287 (grade.look preset), 306 (add menu Colour grade), 346 (V4 colour grade track), 377-443 (blend swatches, matte masking). The per-clip Color Grade effect landed in task a-clip-can-be-colour-graded-from-add-effect: ColorGradeEffect (PhotonzCore/ColorGrade.swift) and ColorGradeFilter (PhotonzRender) can be reused as the adjustment the layer applies to the composite below it. The grade.look Library preset is part of this too.",
+  "acceptance": [
+    "A Colour grade item can be added to its own track above other clips, and grades every picture below it while it is on the timeline",
+    "Its Blending picks how it combines with what is under it, as the mock swatches show",
+    "With a matte layer under it, the grade shows only where the matte lets it, and a keyed matte shape animates the reveal",
+    "A walk at Next defaults measures the frame graded under the grade layer and ungraded outside its matte"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T12:36:36.604Z",
+      "note": "created (manual)"
+    }
+  ]
+}

@@ -498,6 +498,7 @@ extension EditorState {
             case .grain: return Experiments.shared.titleBackgroundsEnabled
             case .motionBlur:
                 return Experiments.shared.motionBlurEnabled && document?.hasTime == true
+            case .colorGrade: return Experiments.shared.colorGradeEnabled
             default: return true
             }
         }

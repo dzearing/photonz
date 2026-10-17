@@ -280,6 +280,11 @@ extension Layer {
             where keyStill(property) != nil {
                 list.append(.motion(property))
             }
+            // ...and the grade: Saturation on every picture, the rest once
+            // there is a grade to change.
+            for property in MotionProperty.gradeProperties where keyStill(property) != nil {
+                list.append(.motion(property))
+            }
         }
         if sound != nil { list.append(.volume) }
         return list
@@ -296,6 +301,9 @@ extension Layer {
         // The colour a ring is born with (`BorderEffect`), for a ring a
         // width key brings in: the video mock offers it on every picture.
         case .borderColor: return isSoundOnly ? nil : .color(BorderEffect().colorHex)
+        // The video mock's catalogue offers Saturation on every picture at a
+        // still of 100; a key off it brings a grade in (`applied`).
+        case .gradeSaturation: return isSoundOnly ? nil : .number(100)
         default: return nil
         }
     }

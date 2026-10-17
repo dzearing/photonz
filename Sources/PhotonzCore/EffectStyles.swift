@@ -431,6 +431,9 @@ public enum EffectStyleNaming {
             return "Grain • \(Int(grain.amount.rounded()))%"
         case .motionBlur(let blur):
             return "Motion blur • \(Int(blur.shutterAngle.rounded()))°"
+        case .colorGrade(let grade):
+            let warmth = Int(grade.temperature.rounded())
+            return "Color grade • \(warmth > 0 ? "+" : "")\(warmth) • \(Int(grade.saturation.rounded()))%"
         }
     }
 

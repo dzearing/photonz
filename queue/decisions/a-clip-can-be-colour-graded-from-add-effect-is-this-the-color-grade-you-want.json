@@ -1,0 +1,62 @@
+{
+  "id": "a-clip-can-be-colour-graded-from-add-effect-is-this-the-color-grade-you-want",
+  "taskId": "a-clip-can-be-colour-graded-from-add-effect",
+  "question": "Is this the Color Grade you want on a clip?",
+  "context": "Built and measured on the sample recording: see the contact sheet and reel in the brief. Temperature 100 raises red over blue across the frame by 68 levels; every value back at its middle gives the untouched frame pixel for pixel.",
+  "options": [
+    {
+      "id": "a",
+      "label": "Keep it: Color Grade arrives warm, fixed at the top of Effects",
+      "summary": "Adding Color Grade warms the clip a little straight away (Temperature 20, Contrast 10, Saturation 110). Five sliders with key diamonds. The row always sits first in Effects, with no grip, like Blur.",
+      "pros": [
+        "The press visibly does something, the mock's Warm grade",
+        "A dull blue screen recording looks better in one click"
+      ],
+      "cons": [
+        "Someone who only wants to brighten has to pull Temperature back first"
+      ],
+      "mitigation": "Typing 0 or dragging to the middle of each slider gives the untouched picture exactly."
+    },
+    {
+      "id": "b",
+      "label": "Arrive at the middles: adding it changes nothing until you drag",
+      "summary": "Color Grade lands with every slider at its middle, Premiere's way: the picture is unchanged until you move a slider. Same five sliders, same place at the top of Effects.",
+      "pros": [
+        "Matches Premiere's Lumetri exactly",
+        "No surprise tint"
+      ],
+      "cons": [
+        "Pressing Add Effect looks like nothing happened"
+      ],
+      "mitigation": "The row opens with its sliders showing, so the next step is obvious."
+    },
+    {
+      "id": "c",
+      "label": "Turn the warm end down: Temperature 100 is too orange",
+      "summary": "Keep it arriving warm, but make the far ends of Temperature and Tint about half as strong, so 100 is a sunset rather than an orange wash.",
+      "pros": [
+        "Hard to overdo by accident"
+      ],
+      "cons": [
+        "Less range for stylised looks"
+      ],
+      "mitigation": "Exposure and Saturation still reach far."
+    },
+    {
+      "id": "d",
+      "label": "No colour grade in Effects",
+      "summary": "Color Grade comes out of the Effects plus and the menu bar; clips cannot be graded.",
+      "pros": [
+        "One less thing in the menu"
+      ],
+      "cons": [
+        "No way to warm, cool, brighten or saturate a recording"
+      ],
+      "mitigation": "None.",
+      "declines": true
+    }
+  ],
+  "recommended": "a",
+  "status": "pending",
+  "created": "2026-10-17T12:35:37.272Z"
+}

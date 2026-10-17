@@ -393,6 +393,19 @@ struct EffectSample: View {
                     .scaledToFit()
                     .padding(10)
                     .foregroundStyle(.white.opacity(0.6)))
+        case .colorGrade(let grade):
+            // The plate warmed or cooled as the grade would, with the mock's
+            // sliders glyph on it.
+            base.overlay(
+                (grade.temperature >= 0 ? Color.orange : Color.blue)
+                    .opacity(min(abs(grade.temperature) / 100, 1) * 0.5))
+                .saturation(grade.saturation / 100)
+                .overlay(
+                    Image(systemName: "slider.horizontal.3")
+                        .resizable()
+                        .scaledToFit()
+                        .padding(10)
+                        .foregroundStyle(.white.opacity(0.6)))
         }
     }
 
@@ -538,6 +551,13 @@ struct LibraryEffectStyleInspector: View {
         case .motionBlur(let blur):
             slider(style, "Shutter", CGFloat(blur.shutterAngle), 0...360, .degrees) {
                 $0.motionBlur?.shutterAngle = Double($1)
+            }
+        case .colorGrade(let grade):
+            ForEach(ColorGradeRows.rows, id: \.property) { row in
+                slider(style, row.label, CGFloat(grade.value(of: row.property) ?? 0),
+                       CGFloat(row.range.lowerBound)...CGFloat(row.range.upperBound), row.typing) {
+                    $0.colorGrade?.set(row.property, to: Double($1))
+                }
             }
         }
     }

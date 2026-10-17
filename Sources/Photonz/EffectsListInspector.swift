@@ -155,6 +155,7 @@ private struct EffectRowView: View {
             isMixed: row.isMixed,
             isFolded: editorState.isEffectFolded(row),
             toggleFold: { editorState.toggleEffectFolded(row) },
+            reading: row.kind.listReading,
             switchReading: row.switchReading,
             switchHelp: CrowdWords.them(row.switchIDs.count)
                 .map { "Stops it drawing on \($0), and keeps its settings" }
@@ -230,6 +231,8 @@ private struct EffectRowView: View {
             GrainEffectRow(row: row)
         case .motionBlur:
             MotionBlurEffectRow(row: row)
+        case .colorGrade:
+            ColorGradeEffectRows(row: row)
         }
     }
 }

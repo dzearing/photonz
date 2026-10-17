@@ -515,6 +515,9 @@ public enum SVGExport {
                 return .beyondSVG("it wears a glow")
             case .grain:
                 return .beyondSVG("it wears grain")
+            case .colorGrade(let grade):
+                guard grade.paints else { continue }
+                return .beyondSVG("it wears a color grade")
             case .shadow(let shadow):
                 guard shadow.paints else { continue }
                 guard shadow.kind == .drop else {

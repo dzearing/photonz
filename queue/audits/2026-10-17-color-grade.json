@@ -1,0 +1,49 @@
+{
+  "feature": "Color grade on a clip",
+  "epic": "video-editing",
+  "summary": "A clip can be warmed, cooled, brightened, made punchier or more colourful from Add Effect > Color Grade: five sliders (Temperature, Tint, Exposure, Contrast, Saturation), each keyable, the same in playback, scrubbing and the exported movie.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording (Help > Open Sample Recording or the Welcome window).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click the clip on the timeline to pick it.",
+      "shot": "2026-10-17-color-grade-1-arrives-sc.png",
+      "shotNote": "This picture shows the window behind another app, so picked controls read grey rather than blue."
+    },
+    {
+      "do": "Press the + on the Effects header and choose Color Grade: the clip turns a little warmer and a Color Grade row appears, reading adjust."
+    },
+    {
+      "do": "Drag Temperature all the way right: the recording turns orange.",
+      "shot": "2026-10-17-color-grade-2-warm-end-sc.png",
+      "shotNote": "This picture shows the window behind another app, so picked controls read grey rather than blue."
+    },
+    {
+      "do": "Drag Temperature to the middle, type 0 in Contrast and 100 in Saturation: the clip is exactly as recorded.",
+      "shot": "2026-10-17-color-grade-3-back-at-the-middle-sc.png",
+      "shotNote": "This picture shows the window behind another app, so picked controls read grey rather than blue."
+    },
+    {
+      "do": "At 0:00 click the diamond in front of Temperature, move to 0:01 and drag Temperature right: a second key, and a Temperature lane under the clip.",
+      "shot": "2026-10-17-color-grade-4-keyed-sc.png",
+      "shotNote": "This picture shows the window behind another app, so picked controls read grey rather than blue."
+    },
+    {
+      "do": "Press Space: the clip warms over its first second, and File > Export writes it the same."
+    }
+  ],
+  "evaluate": [
+    "Is the warm look it arrives with right, or should it arrive changing nothing (card: Is this the Color Grade you want on a clip?)",
+    "Is Temperature 100 too orange for a screen recording, or about what you would reach for?",
+    "Are the five sliders the ones you reach for first, in the order you expect from Premiere's Lumetri?",
+    "Does the small diamond in front of each name read as the way to animate that value?",
+    "See the contact sheet (2026-10-17-color-grade-contact-sheet.png) and reel (2026-10-17-color-grade-reel.gif): untouched, as it arrives, at the warm end, and put back."
+  ],
+  "rough": [
+    "The mock's row reads Warm grade with a drag grip; ours reads Color Grade (the menu item's own name) and sits fixed at the top of Effects with no grip, like Blur, since its place changes nothing. Settled by card a-clip-can-be-colour-graded-from-add-effect-is-this-the-color-grade-you-want.",
+    "The mock's menu row says Color grade; ours says Color Grade (UX-PATTERNS §7, menu rows are Title Case).",
+    "The grade's sliders are shorter than Appearance's because Effects settings are indented; the key diamond sits inside the name's column, as the mock's property rows put it, so it costs the track nothing, and Temperature's name is set a touch tighter to fit beside it.",
+    "Saturation is now offered in Animate a property on every picture at 100%, as the mock's catalogue lists it, so the Animating count reads one more than before on every clip.",
+    "The grade as its own track with a blend mode and a matte, and a saved look in the Library, from video-compositing.html, are not in this: task a-colour-grade-can-be-its-own-track-over-the-cli."
+  ]
+}

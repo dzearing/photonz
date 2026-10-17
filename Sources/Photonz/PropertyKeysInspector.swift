@@ -782,6 +782,9 @@ struct KeyDiamondButton: View {
     let property: KeyedProperty
     private var title: String { editorState.keyTitle(property) }
     let state: KeyDiamond
+    /// How big a target it is. 18 in the Properties list; a slider row that
+    /// keeps it in its name's column takes a smaller one.
+    var side: CGFloat = 18
 
     @State private var isHovering = false
 
@@ -790,7 +793,7 @@ struct KeyDiamondButton: View {
             editorState.toggleKeyHere(property)
         } label: {
             VideoKit.KeyDiamond(state: kitState, isHovering: isHovering)
-                .frame(width: 18, height: 18)
+                .frame(width: side, height: side)
                 .contentShape(Rectangle())
         }
         .buttonStyle(.plain)

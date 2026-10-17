@@ -277,6 +277,8 @@ public enum FeatureCatalog {
 
     public static let motionBlurFlag = "next-motion-blur"
 
+    public static let colorGradeFlag = "next-color-grade"
+
     public static let titleRestyleFlag = "next-title-restyle"
 
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
@@ -1010,6 +1012,16 @@ public enum FeatureCatalog {
                     name: motionBlurFlag,
                     title: "Motion blur",
                     description: "Motion Blur in the Effects list on video, with a Shutter angle, worn by the built-in titles: fast moves smear along the way they go. Off means none is offered or added.",
+                    area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: colorGradeFlag,
+                    title: "Color grade",
+                    description: "Color Grade in the Effects list: Temperature, Tint, Exposure, Contrast and Saturation on a clip or picture, each keyable. Off means none is offered.",
                     area: .motion,
                     isEnabled: false,
                     parameters: []),

@@ -59,7 +59,7 @@ extension MotionProperty {
     public var keyValueUnit: String? {
         switch self {
         case .opacity, .scale, .shadowOpacity, .glowOpacity, .cropLeft, .cropTop, .cropRight, .cropBottom,
-             .trimStart, .trimEnd, .backgroundZoom:
+             .trimStart, .trimEnd, .backgroundZoom, .gradeSaturation:
             "%"
         case .rotation, .rotationX, .rotationY, .shadowDirection, .cameraPerspective:
             "°"
@@ -73,10 +73,11 @@ extension MotionProperty {
     /// of type), and Reset then has nothing to do.
     public var keyValueDefault: MotionValue? {
         switch self {
-        case .opacity, .scale, .shadowOpacity, .glowOpacity, .trimEnd, .backgroundZoom:
+        case .opacity, .scale, .shadowOpacity, .glowOpacity, .trimEnd, .backgroundZoom, .gradeSaturation:
             .number(100)
         case .rotation, .rotationX, .rotationY, .depth, .pivotDepth, .blur, .backgroundBlur,
-             .cropLeft, .cropTop, .cropRight, .cropBottom, .trimStart:
+             .cropLeft, .cropTop, .cropRight, .cropBottom, .trimStart,
+             .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast:
             .number(0)
         default:
             nil

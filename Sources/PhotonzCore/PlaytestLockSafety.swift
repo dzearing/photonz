@@ -291,6 +291,10 @@ public enum PlaytestLockSafety {
         // the picture the editor already holds. a-video-clip-fades-walk is its
         // watch.
         "measureFade",
+        // Added 2026-10-17 by reading, NOT yet watched under a lock: it holds
+        // the playhead still and reads the picture the editor already holds,
+        // as measureFade does. color-grade-warms-a-clip-walk is its watch.
+        "measureColor",
         // Watched on 2026-09-20, twenty-two walks forced under a lock and all
         // of them green. Every one of these either drives the app through its
         // own pasteboard and its own views, or reads a number the app is

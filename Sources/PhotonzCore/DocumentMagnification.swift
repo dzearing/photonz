@@ -156,6 +156,9 @@ extension LayerEffect {
         // A shutter is a share of a frame, not a length.
         case .motionBlur:
             return self
+        // ...and a grade is a change of colour, at any size.
+        case .colorGrade:
+            return self
         }
     }
 }

@@ -304,6 +304,9 @@ private final class Run {
     /// A row's keys, moment and value, noted under a word by
     /// `expectRowKeys` with `remember`.
     private var notedRowKeys: [String: [(atMS: Int, value: MotionValue)]] = [:]
+    /// Each `measureColor` reading by name, with the picture it was read off,
+    /// so a later step can say how far it moved and whether it came back.
+    private var colorReadings: [String: (FrameColor, CGImage)] = [:]
     /// A colour drag left down by `holdColorDrag`, waiting for the release that
     /// turns its live frames into one recorded step.
     private var heldColorDrag: (slot: ColorSlot, paint: Paint)?
@@ -2789,6 +2792,11 @@ private final class Run {
         case .measureFade(let name, let atMS, let within, let smooth):
             note(number, step.name,
                  try await measureFade(name: name, atMS: atMS, within: within, smooth: smooth),
+                 state: describe())
+
+        case .measureColor(let name, let against, let warmerBy, let same):
+            note(number, step.name,
+                 try await measureColor(name: name, against: against, warmerBy: warmerBy, same: same),
                  state: describe())
 
         case .writeFrame(let name, let atMS, let width, let height):
@@ -16561,6 +16569,51 @@ private final class Run {
             throw Failure(description: wrong.joined(separator: "; ") + " (allowed \(within)). " + summary)
         }
         return summary
+    }
+
+    /// The canvas's mean colour now, remembered by name and checked against
+    /// an earlier reading (`measureColor`).
+    private func measureColor(name: String, against: String?, warmerBy: Double?,
+                              same: Bool) async throws -> String {
+        let editor = try requireEditor()
+        editor.pauseDocument()
+        // Let the picture settle to the sharp frame a hand holding still gets,
+        // and hold out for one that has stopped changing.
+        await sleep(0.8)
+        guard let picture = editor.renderedImage, let reading = FrameColor.mean(of: picture) else {
+            throw Failure(description: "the canvas has no picture to measure")
+        }
+        colorReadings[name] = (reading, picture)
+        var facts = ["\(name): \(reading.text)"]
+        var wrong: [String] = []
+        var record: [String: Any] = ["red": reading.red, "green": reading.green, "blue": reading.blue,
+                                     "warmth": reading.warmth]
+        if let against {
+            guard let (before, earlier) = colorReadings[against] else {
+                throw Failure(description: "there is no earlier reading called \(against) to compare with")
+            }
+            let rose = reading.warmth - before.warmth
+            record["against"] = against
+            record["warmerBy"] = rose
+            facts.append("against \(against) (\(before.text)) red over blue moved "
+                + String(format: "%+.1f", rose))
+            if let warmerBy, rose < warmerBy {
+                wrong.append("red over blue rose \(String(format: "%.1f", rose)) over \(against), "
+                    + "not the \(String(format: "%.1f", warmerBy)) claimed")
+            }
+            if same {
+                let identical = FrameColor.identical(picture, earlier)
+                record["identical"] = identical
+                facts.append(identical ? "identical to \(against) pixel for pixel"
+                                       : "NOT identical to \(against)")
+                if !identical { wrong.append("the picture is not the same as \(against) pixel for pixel") }
+            }
+        }
+        write(json: record, to: "\(name).json")
+        guard wrong.isEmpty else {
+            throw Failure(description: wrong.joined(separator: "; ") + ". " + facts.joined(separator: "; "))
+        }
+        return facts.joined(separator: "; ")
     }
 
     /// The mean luminance of a picture laid over black, nought to one: Rec.

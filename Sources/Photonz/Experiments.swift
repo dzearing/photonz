@@ -609,6 +609,8 @@ extension Experiments {
     /// `next-motion-blur`: Motion Blur in the Effects list on video, and on
     /// the built-in titles.
     var motionBlurEnabled: Bool { isEnabled(FeatureCatalog.motionBlurFlag) }
+    /// `next-color-grade`: Color Grade in the Effects list.
+    var colorGradeEnabled: Bool { isEnabled(FeatureCatalog.colorGradeFlag) }
 
     /// `next-title-restyle`: the Title and Part sections for a picked title,
     /// titles laid out again after typing, and Library title tiles that play.

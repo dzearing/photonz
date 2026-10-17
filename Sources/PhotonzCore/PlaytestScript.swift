@@ -3166,6 +3166,17 @@ public enum PlaytestStep: Sendable, Equatable {
     /// that plays as two hard cuts fails a walk
     /// (`dip-to-black-and-dip-to-white-visibly-fade-out-a`).
     case measureFade(name: String, atMS: [Int], within: Double, smooth: Bool)
+    /// The mean colour of the canvas as it is drawn now, the playhead held
+    /// still and the picture let settle, remembered under `name` and written
+    /// to `<name>.json` (`FrameColor`). With `against` naming an earlier
+    /// reading it also checks: `warmerBy` fails the step unless red over blue
+    /// rose by at least that much over it, and `same` fails it unless the two
+    /// pictures are identical pixel for pixel.
+    ///
+    /// How a colour grade is measured (`a-clip-can-be-colour-graded-from-add-effect`):
+    /// Temperature at its warm end warms the frame by a clear margin, and
+    /// every value back at its middle gives the untouched frame exactly.
+    case measureColor(name: String, against: String?, warmerBy: Double?, same: Bool)
     /// Open a menu that lives INSIDE the window — the Add menu on a
     /// component's Properties list, the ellipsis on the Measurements header —
     /// write its rows to the log, photograph it if `shot` names a picture, and
@@ -4342,7 +4353,7 @@ public enum PlaytestStep: Sendable, Equatable {
         "boxToEdge", "clickRuler", "dragRuler", "dragTracks", "dropImage", "dropOnLibrary", "dropOnTimeline", "expect", "expectBox", "expectBuilds", "expectCallout", "expectSizeMeasure", "expectCaption", "expectChrome", "expectClickReaches", "expectClip", "expectClipPictures", "expectCorners", "expectCue", "expectSpaceHandles", "expectTilt", "expectTransformBar", "expectEdited", "expectFeet", "expectField", "expectFrameSharp", "expectApart", "expectHint", "expectIconPreviews", "expectInView", "expectLanding", "expectLayers", "expectLevel", "expectRowSpan", "expectRows", "expectTracks", "expectListStill", "expectMeasures", "expectNotice", "expectOneNumberPerName", "expectOneUnit", "expectPath", "expectPenMarks", "expectPicked", "expectPlaybackNeverBlank", "expectPlaybackShows", "expectReadout", "expectFresh", "expectRecording", "expectRegion", "expectSVG", "expectScrubSmooth", "expectSectionFits", "expectSections", "expectSharp", "expectShows", "expectStoredRecording", "expectTimeline", "expectTimelinePick", "expectKeyPick", "expectKeyRows", "expectRowKeys", "expectKeyValues", "expectDrawn", "expectSoundLine", "expectToast", "expectTutorialStep", "expectTutorialTracks", "expectWaveform", "expectWindows", "expectHistory", "exportQuality", "filmMenuBar", "filmThumb", "filmWindow", "focus", "hover", "hoverHandles", "importPicks", "key", "measureMode", "menuShot", "menus", "move", "open",
         "labelsWhole", "panel", "panelEdge", "panelMargins", "panelMenu", "panelStart", "pickUpTile", "pinch", "press", "timeTileClicks",
         "timelinePinch",
-        "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
+        "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "measureColor", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
     /// True for a wait that bounds the longest pass (`longestUnderMS`): it is
@@ -4415,6 +4426,7 @@ public enum PlaytestStep: Sendable, Equatable {
         case .writeVideo: "writeVideo"
         case .writeFrame: "writeFrame"
         case .measureFade: "measureFade"
+        case .measureColor: "measureColor"
         case .panelMenu: "panelMenu"
         case .menuShot: "menuShot"
         case .rightClick: "rightClick"
@@ -5025,6 +5037,11 @@ public enum PlaytestStep: Sendable, Equatable {
                                 atMS: try f.optionalNumbers("atMS").map { Int($0) },
                                 within: try f.optionalNumber("within") ?? 0.03,
                                 smooth: try f.optionalFlag("smooth") ?? false)
+        case "measureColor":
+            self = .measureColor(name: try f.string("name"),
+                                 against: try f.optionalString("against"),
+                                 warmerBy: try f.optionalNumber("warmerBy"),
+                                 same: try f.optionalFlag("same") ?? false)
         case "writeFrame":
             self = .writeFrame(name: try f.string("name"),
                                atMS: try f.optionalNumber("atMS").map { Int($0) },

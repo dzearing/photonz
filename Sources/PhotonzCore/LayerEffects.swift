@@ -42,6 +42,10 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// (`MotionBlurEffect`). About time, not the picture: a part holding still
     /// draws exactly as it would without it.
     case motionBlur
+    /// Warmer or cooler, brighter or darker, punchier or more colourful: the
+    /// layer's own picture graded (`ColorGradeEffect`), the video mock's Warm
+    /// grade.
+    case colorGrade
 
     /// What the row is called on screen.
     public var title: String {
@@ -52,7 +56,15 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         case .glow: return "Glow"
         case .grain: return "Grain"
         case .motionBlur: return "Motion Blur"
+        case .colorGrade: return "Color Grade"
         }
+    }
+
+    /// The short reading at the end of the row, where the mock prints one: a
+    /// grade says what kind of effect it is, "adjust", the way the video
+    /// mock's Warm grade does.
+    public var listReading: String? {
+        self == .colorGrade ? "adjust" : nil
     }
 
     /// Whether a layer can wear more than one of these.
@@ -64,7 +76,8 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         switch self {
         // One grain, like one softness: two would be one answer twice.
         // ...and one shutter: two would be one question asked twice.
-        case .blur, .grain, .motionBlur: return false
+        // ...and one grade: five values already say everything about it.
+        case .blur, .grain, .motionBlur, .colorGrade: return false
         // A card wants a dark hairline tight to its edge AND a pale halo
         // outside it, so a border is countable too. A glow likewise: a tight
         // bright core and a wide soft bloom are two of them.
@@ -85,7 +98,10 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
         // so it holds its place at the top beside the blur.
         // Motion blur smears the finished part, whatever else it wears, so it
         // holds its place at the top too.
-        case .blur, .grain, .motionBlur: return true
+        // A grade is done to the layer's own picture before anything is laid
+        // over or thrown behind it, wherever it is listed, so it holds its
+        // place at the top too: the video mock lists its Warm grade first.
+        case .blur, .grain, .motionBlur, .colorGrade: return true
         case .shadow, .border, .glow: return false
         }
     }
@@ -99,7 +115,7 @@ public enum EffectKind: String, CaseIterable, Hashable, Sendable {
     /// at all, which brings no colour row rather than a blank one.
     public var colorSlot: ColorSlot? {
         switch self {
-        case .blur, .grain, .motionBlur: return nil
+        case .blur, .grain, .motionBlur, .colorGrade: return nil
         case .shadow: return .shadow
         case .border: return .border
         case .glow: return .glow
@@ -524,6 +540,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     case glow(GlowEffect)
     case grain(GrainEffect)
     case motionBlur(MotionBlurEffect)
+    case colorGrade(ColorGradeEffect)
 
     public var kind: EffectKind {
         switch self {
@@ -533,6 +550,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .glow: return .glow
         case .grain: return .grain
         case .motionBlur: return .motionBlur
+        case .colorGrade: return .colorGrade
         }
     }
 
@@ -547,6 +565,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .glow(let glow): return glow.isOn
             case .grain(let grain): return grain.isOn
             case .motionBlur(let blur): return blur.isOn
+            case .colorGrade(let grade): return grade.isOn
             }
         }
         set {
@@ -557,6 +576,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
             case .glow(var glow): glow.isOn = newValue; self = .glow(glow)
             case .grain(var grain): grain.isOn = newValue; self = .grain(grain)
             case .motionBlur(var blur): blur.isOn = newValue; self = .motionBlur(blur)
+            case .colorGrade(var grade): grade.isOn = newValue; self = .colorGrade(grade)
             }
         }
     }
@@ -572,7 +592,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
     public var colorHex: String? {
         get {
             switch self {
-            case .blur, .grain, .motionBlur: return nil
+            case .blur, .grain, .motionBlur, .colorGrade: return nil
             case .shadow(let shadow): return shadow.colorHex
             case .border(let border): return border.colorHex
             case .glow(let glow): return glow.colorHex
@@ -581,7 +601,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set {
             guard let newValue else { return }
             switch self {
-            case .blur, .grain, .motionBlur: return
+            case .blur, .grain, .motionBlur, .colorGrade: return
             case .shadow(var shadow): shadow.colorHex = newValue; self = .shadow(shadow)
             case .border(var border): border.colorHex = newValue; self = .border(border)
             case .glow(var glow): glow.colorHex = newValue; self = .glow(glow)
@@ -625,10 +645,16 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         set { if let newValue, case .motionBlur = self { self = .motionBlur(newValue) } }
     }
 
+    /// The colour grade this entry holds, or nil when it is something else.
+    public var colorGrade: ColorGradeEffect? {
+        get { if case .colorGrade(let grade) = self { return grade } else { return nil } }
+        set { if let newValue, case .colorGrade = self { self = .colorGrade(newValue) } }
+    }
+
     // Written by hand rather than synthesized, so the saved file reads
     // `{"kind":"shadow","shadow":{…}}` instead of Swift's `{"shadow":{"_0":…}}`.
     // A file is a thing people open, and a new kind should be legible in it.
-    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow, grain, motionBlur }
+    private enum CodingKeys: String, CodingKey { case kind, blur, shadow, border, glow, grain, motionBlur, colorGrade }
 
     public init(from decoder: Decoder) throws {
         let c = try decoder.container(keyedBy: CodingKeys.self)
@@ -640,6 +666,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .glow: self = .glow(try c.decode(GlowEffect.self, forKey: .glow))
         case .grain: self = .grain(try c.decode(GrainEffect.self, forKey: .grain))
         case .motionBlur: self = .motionBlur(try c.decode(MotionBlurEffect.self, forKey: .motionBlur))
+        case .colorGrade: self = .colorGrade(try c.decode(ColorGradeEffect.self, forKey: .colorGrade))
         }
     }
 
@@ -653,6 +680,7 @@ public enum LayerEffect: Hashable, Codable, Sendable {
         case .glow(let glow): try c.encode(glow, forKey: .glow)
         case .grain(let grain): try c.encode(grain, forKey: .grain)
         case .motionBlur(let blur): try c.encode(blur, forKey: .motionBlur)
+        case .colorGrade(let grade): try c.encode(grade, forKey: .colorGrade)
         }
     }
 }
@@ -676,6 +704,9 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
     case glow
     case border
     case blur
+    /// Beside the blur, as the video mock's menu has it: the two that change
+    /// the picture itself rather than adding something round it.
+    case colorGrade
     /// Last: it is a texture rather than a halo or a line, and the rarest of
     /// the five to reach for.
     case grain
@@ -708,6 +739,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .blur: return .blur
         case .grain: return .grain
         case .motionBlur: return .motionBlur
+        case .colorGrade: return .colorGrade
         }
     }
 
@@ -720,6 +752,7 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .blur: return "Softens the whole layer"
         case .grain: return "Fine film grain that moves on video"
         case .motionBlur: return "Smooths fast moves on video"
+        case .colorGrade: return "Warms, cools, brightens or saturates the picture"
         }
     }
 
@@ -738,6 +771,9 @@ public enum AddableEffect: String, CaseIterable, Hashable, Sendable, Identifiabl
         case .blur: return .blur(BlurEffect())
         case .grain: return .grain(GrainEffect())
         case .motionBlur: return .motionBlur(MotionBlurEffect())
+        // Warm, as the mock's row is: a grade that arrived at its middles
+        // would look like a press that did nothing.
+        case .colorGrade: return .colorGrade(.starting)
         }
     }
 }

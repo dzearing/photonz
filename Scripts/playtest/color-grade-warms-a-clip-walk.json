@@ -1,0 +1,397 @@
+{
+  "out": "/tmp/photonz-playtest/color-grade-warms-a-clip-walk",
+  "seed": "A clip is colour graded from Add Effect, at Next defaults with no flag changed: the sample recording is picked, given a Color Grade from the Effects plus, which arrives as a gentle warm look with Temperature, Tint, Exposure, Contrast and Saturation rows, and Temperature is pulled to its warm end. The canvas is measured each time: the warm end raises red over blue by a clear margin over the untouched frame, and every value put back at its middle gives the untouched frame pixel for pixel. Then Temperature is keyed from its middle at 0:00 to warm at 0:01, and the diamond and lane follow.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "measureColor",
+      "name": "untouched"
+    },
+    {
+      "do": "render",
+      "name": "0-canvas-untouched"
+    },
+    {
+      "do": "reveal",
+      "control": "Effects section"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "panelMenu",
+      "menu": "Add Effect",
+      "choose": "Color Grade"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "1-color-grade-arrives",
+      "note": "THE FIRST TEST: Color Grade from the Effects plus puts a Color Grade row in the clip's Effects list reading adjust, with Temperature, Tint, Exposure, Contrast and Saturation, each a slider with a number beside it. It arrives as a gentle warm look, so the press visibly did something"
+    },
+    {
+      "do": "expect",
+      "field": "Temperature",
+      "reads": "20"
+    },
+    {
+      "do": "expect",
+      "field": "Tint",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Exposure",
+      "reads": "0.0"
+    },
+    {
+      "do": "expect",
+      "field": "Contrast",
+      "reads": "10"
+    },
+    {
+      "do": "expect",
+      "field": "Saturation",
+      "reads": "110"
+    },
+    {
+      "do": "measureColor",
+      "name": "arrived",
+      "against": "untouched",
+      "warmerBy": 3
+    },
+    {
+      "do": "panel",
+      "stage": "1-color-grade-arrives"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-color-grade-arrives"
+    },
+    {
+      "do": "render",
+      "name": "1-canvas-arrived"
+    },
+    {
+      "do": "reveal",
+      "control": "Slider",
+      "in": "Temperature"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Temperature",
+      "across": 0.98
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-warm-end",
+      "note": "THE SECOND TEST: Temperature dragged to its warm end, 100: the recording turns visibly orange, and red over blue across the frame rises by a clear margin over the untouched frame"
+    },
+    {
+      "do": "expect",
+      "field": "Temperature",
+      "reads": "100"
+    },
+    {
+      "do": "measureColor",
+      "name": "warm",
+      "against": "untouched",
+      "warmerBy": 30
+    },
+    {
+      "do": "panel",
+      "stage": "2-warm-end"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-warm-end"
+    },
+    {
+      "do": "render",
+      "name": "2-canvas-warm"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Temperature",
+      "across": 0.5
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "reveal",
+      "control": "Value",
+      "in": "Grade Contrast"
+    },
+    {
+      "do": "press",
+      "control": "Value",
+      "in": "Grade Contrast"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "0"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "reveal",
+      "control": "Value",
+      "in": "Grade Saturation"
+    },
+    {
+      "do": "press",
+      "control": "Value",
+      "in": "Grade Saturation"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.3
+    },
+    {
+      "do": "key",
+      "key": "a",
+      "modifiers": [
+        "command"
+      ]
+    },
+    {
+      "do": "type",
+      "text": "100"
+    },
+    {
+      "do": "key",
+      "key": "return"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.5
+    },
+    {
+      "do": "describe",
+      "stage": "3-every-value-at-its-middle",
+      "note": "THE THIRD TEST: every value put back at its middle (Temperature, Tint and Contrast 0, Exposure 0.0, Saturation 100%) is no grade at all: the canvas is the untouched frame pixel for pixel"
+    },
+    {
+      "do": "expect",
+      "field": "Temperature",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Contrast",
+      "reads": "0"
+    },
+    {
+      "do": "expect",
+      "field": "Saturation",
+      "reads": "100"
+    },
+    {
+      "do": "measureColor",
+      "name": "back-at-the-middle",
+      "against": "untouched",
+      "same": true
+    },
+    {
+      "do": "render",
+      "name": "3-canvas-back-at-the-middle"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-back-at-the-middle"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Key",
+      "in": "Grade Temperature"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Grade Temperature",
+      "reads": "on a key"
+    },
+    {
+      "do": "action",
+      "action": "videoStepOneSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Grade Temperature",
+      "reads": "between keys"
+    },
+    {
+      "do": "press",
+      "control": "Slider",
+      "in": "Temperature",
+      "across": 0.98
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "4-temperature-keyed",
+      "note": "THE FOURTH TEST: Temperature keyed at its middle at 0:00 with its diamond, then pulled warm at 0:01: that is a second key there, the diamond is filled, and Temperature has its own lane under the clip's track"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Grade Temperature",
+      "reads": "on a key"
+    },
+    {
+      "do": "expect",
+      "field": "Temperature",
+      "reads": "100"
+    },
+    {
+      "do": "expect",
+      "field": "Key lane Tutorial Sample Temperature",
+      "present": true
+    },
+    {
+      "do": "panel",
+      "stage": "4-temperature-keyed"
+    },
+    {
+      "do": "snapshot",
+      "name": "4-temperature-keyed"
+    },
+    {
+      "do": "action",
+      "action": "videoSeekStart"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "action",
+      "action": "videoStepQuarterSecond"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "describe",
+      "stage": "5-between-the-keys",
+      "note": "THE FIFTH TEST: at half a second, between the keys, the diamond is hollow and Temperature reads part way, and the frame is part warmed"
+    },
+    {
+      "do": "expect",
+      "control": "Key",
+      "in": "Grade Temperature",
+      "reads": "between keys"
+    },
+    {
+      "do": "measureColor",
+      "name": "half-way"
+    },
+    {
+      "do": "snapshot",
+      "name": "5-between-the-keys"
+    },
+    {
+      "do": "writeVideo",
+      "name": "6-the-warming",
+      "format": "mp4",
+      "seconds": 8.0,
+      "within": 0.6,
+      "copied": false
+    }
+  ]
+}

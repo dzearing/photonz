@@ -216,6 +216,12 @@ public struct LayerStyleSelection: Hashable, Sendable {
                             selectionCount: selectionCount)
     }
 
+    /// The picked layers with a COLOUR GRADE in a given place in their list.
+    public func colorGrades(at index: Int) -> LayerStyleSelection {
+        LayerStyleSelection(members: members.filter { $0.style.colorGradeEffect(at: index) != nil },
+                            selectionCount: selectionCount)
+    }
+
     /// The picked layers with GRAIN in a given place in their list.
     public func grains(at index: Int) -> LayerStyleSelection {
         LayerStyleSelection(members: members.filter { $0.style.grainEffect(at: index) != nil },

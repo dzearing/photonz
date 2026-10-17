@@ -26,6 +26,7 @@ extension MotionProperty {
                                                   .glow, .glowColor, .glowOpacity, .borderWidth,
                                                   .borderColor, .textSize, .trimStart, .trimEnd,
                                                   .backgroundBlur, .backgroundZoom]
+        + MotionProperty.gradeProperties
 }
 
 extension Layer {

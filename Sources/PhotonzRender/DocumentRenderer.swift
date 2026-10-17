@@ -906,6 +906,11 @@ public final class DocumentRenderer: @unchecked Sendable {
         // as one — and its halo escapes the group's box the way its shadow
         // does. A group is always a drawn thing, never a photograph.
         image = blurred(image, radius: layer.style.blurRadius, fadesEdges: true)
+        // A group has no pixels of its own, so its grade takes the whole card
+        // it makes, before the grain laid over it.
+        if let grade = layer.style.colorGrade {
+            image = ColorGradeFilter.graded(image, by: grade)
+        }
         if let grain = layer.style.grain {
             image = GrainFilter.grained(image, amount: grain.amount, atMS: layer.drawnAtMS,
                                         linearLight: compositing == .linearLight,
@@ -1371,6 +1376,15 @@ public final class DocumentRenderer: @unchecked Sendable {
         // of the file that way (`ChromaKeyFilter.swift`).
         if let key = layer.style.key, key.isOn {
             image = ChromaKeyFilter.keyed(image, with: key)
+        }
+
+        // ...and graded, for the same reason: a grade changes what the layer
+        // is made of, so a shadow is thrown by the graded picture and a ring
+        // drawn round it below keeps the colour it was set to
+        // (`ColorGradeFilter.swift`). Nothing at all when every value is at
+        // its middle.
+        if let grade = layer.style.colorGrade {
+            image = ColorGradeFilter.graded(image, by: grade)
         }
 
         // Layer-local crop. On a picture the crop is in the picture's own

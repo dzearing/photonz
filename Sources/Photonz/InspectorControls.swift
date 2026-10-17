@@ -87,6 +87,10 @@ struct SliderReadout: View {
     /// Whether there is anything to type into. A row speaking for no layers
     /// draws its number and takes no keyboard, exactly as its slider does.
     var isEnabled = true
+    /// What a walk calls the box, on the rows that name it: a colour grade's
+    /// `{"control": "Value", "in": "Grade Saturation"}`. Left out elsewhere,
+    /// where the row's own name is how a walk finds it.
+    var playtest: (name: String, detail: String)? = nil
     /// The typed number, in the SLIDER's units, reaching whatever the row
     /// speaks for.
     ///
@@ -131,6 +135,7 @@ struct SliderReadout: View {
             floor: typing.shown(range.lowerBound),
             ceiling: typing.shown(range.upperBound),
             wholeNumbers: typing.wholeNumbers,
+            playtest: playtest,
             spell: typing.spell,
             land: { typed in
                 land(typing.slid(typed))
@@ -176,6 +181,10 @@ struct LayerStyleSlider: View, Equatable {
     /// component can own. It puts the way back on the row itself, which is
     /// where the person who just dragged it is looking.
     var field: LayerStyleField? = nil
+    /// The value this row is, where it can be keyed: its diamond leads the
+    /// name, in the name's own column, the way the video mock's property rows
+    /// draw it. Nil on a row with no keys (a still picture, several picked).
+    var keyed: KeyedProperty? = nil
     let apply: (inout LayerStyle, Double) -> Void
 
     /// The row as it was always written: the layers, listed. Everything outside
@@ -183,10 +192,11 @@ struct LayerStyleSlider: View, Equatable {
     /// particular set of layers.
     init(layerIDs: [UUID], label: String, reading: StyleReading<Double>,
          range: ClosedRange<Double>, typing: SliderNumber = .points,
-         field: LayerStyleField? = nil,
+         field: LayerStyleField? = nil, keyed: KeyedProperty? = nil,
          apply: @escaping (inout LayerStyle, Double) -> Void) {
         self.init(reach: .fixed(layerIDs), isEnabled: !layerIDs.isEmpty, label: label,
                   reading: reading, range: range, typing: typing, field: field, apply: apply)
+        self.keyed = keyed
     }
 
     init(reach: PanelReach, isEnabled: Bool, label: String, reading: StyleReading<Double>,
@@ -217,7 +227,7 @@ struct LayerStyleSlider: View, Equatable {
     nonisolated static func == (a: LayerStyleSlider, b: LayerStyleSlider) -> Bool {
         a.reach == b.reach && a.isEnabled == b.isEnabled && a.label == b.label
             && a.reading == b.reading && a.range == b.range && a.typing == b.typing
-            && a.field == b.field
+            && a.field == b.field && a.keyed == b.keyed
     }
 
     /// Where the knob sits. Over layers that differ this is the first picked
@@ -232,7 +242,10 @@ struct LayerStyleSlider: View, Equatable {
             if Experiments.shared.panelRowsInOneColumnEnabled {
                 // The mock's row: the name in the label column, the track and
                 // its box beside it (`PanelFieldRow`).
-                PanelFieldRow(label) {
+                PanelFieldRow(label, lead: keyed.map { keyed in
+                    AnyView(KeyDiamondButton(property: keyed, state: editorState.keyDiamond(keyed),
+                                             side: 12))
+                }) {
                     HStack(spacing: 6) {
                         track.frame(minWidth: PanelSliderRow.trackMinimum)
                         readout
@@ -244,6 +257,9 @@ struct LayerStyleSlider: View, Equatable {
             } else {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack {
+                        if let keyed {
+                            KeyDiamondButton(property: keyed, state: editorState.keyDiamond(keyed), side: 12)
+                        }
                         Text(label).font(.caption).foregroundStyle(.secondary)
                         if let field {
                             InstanceStyleRevert(reach: reach, field: field)
@@ -273,6 +289,9 @@ struct LayerStyleSlider: View, Equatable {
             isMixed: reading.isMixed,
             range: CGFloat(range.lowerBound)...CGFloat(range.upperBound),
             identity: reach, isEnabled: isEnabled,
+            // A keyed row names its box, so a walk can type an exact number
+            // where a click on a short track cannot land one.
+            playtest: keyed.map { _ in ("Value", label) },
             // ONE undo step, the same as a pull on the knob is: a
             // typed number is a one-shot edit with no preview behind
             // it, so it goes the way the steppers and the switches go.

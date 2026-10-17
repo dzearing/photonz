@@ -21532,3 +21532,9 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   body drag and a title's free start. Dragging the cut itself now trims its side.
 - Walk: `command-drag-ripple-trims-an-edge-walk`. Audit:
   `queue/audits/2026-10-17-command-drag-ripple-trim.json`.
+
+## 2026-10-17 — A clip can be colour graded from Add Effect
+
+- Color Grade in the Effects plus (Next, `next-color-grade` on by default): Temperature, Tint, Exposure, Contrast, Saturation, each a slider with a number box and a key diamond in the name's column. Arrives as a gentle warm look; every value at its middle draws the picture untouched, byte for byte.
+- Core: `ColorGradeEffect` (`PhotonzCore/ColorGrade.swift`), five keyable `MotionProperty` values (`grade*`); Saturation offered on every picture at 100 per the mock catalogue. Render: `ColorGradeFilter`, applied after a chroma key. New walk step `measureColor` (`FrameColor`).
+- Walk `color-grade-warms-a-clip-walk`; audit `queue/audits/2026-10-17-color-grade.json`; card on the look. Follow-up: grade as its own track with blend + matte (`a-colour-grade-can-be-its-own-track-over-the-cli`).

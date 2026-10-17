@@ -41,7 +41,7 @@ struct BorderEffectTests {
 
     @Test("The plus offers one Shadow, one Glow, a Border and a Blur")
     func theMenu() {
-        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur", "Grain", "Motion Blur"])
+        #expect(AddableEffect.allCases.map(\.title) == ["Shadow", "Glow", "Border", "Blur", "Color Grade", "Grain", "Motion Blur"])
         // The two shadow entries were one idea named twice. One entry adds an
         // ordinary drop shadow, and the Kind on the row it becomes is what
         // turns it into an inner one.

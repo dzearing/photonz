@@ -29,18 +29,34 @@ struct PanelFieldRow<Control: View>: View {
     /// itself: the width it takes when offered none, which is what a track's
     /// `minWidth` and a box's fixed width add up to.
     var controlMinimum: CGFloat?
+    /// Something that leads the name INSIDE its column, where the mock's
+    /// property rows put a key diamond, so the control keeps the width every
+    /// other row's has.
+    var lead: AnyView?
     @ViewBuilder let control: Control
 
-    init(_ label: String, controlMinimum: CGFloat? = nil,
+    init(_ label: String, controlMinimum: CGFloat? = nil, lead: AnyView? = nil,
          @ViewBuilder control: () -> Control) {
         self.label = label
         self.controlMinimum = controlMinimum
+        self.lead = lead
         self.control = control()
     }
 
     var body: some View {
         PanelFieldRowLayout(controlMinimum: controlMinimum) {
-            PanelRowLabel(text: label)
+            if let lead {
+                HStack(spacing: 2) {
+                    lead
+                    // Sharing its column, a long name tightens a little rather
+                    // than losing its end: "Temperature", not "Temperat...".
+                    PanelRowLabel(text: label)
+                        .allowsTightening(true)
+                        .minimumScaleFactor(0.8)
+                }
+            } else {
+                PanelRowLabel(text: label)
+            }
             control
         }
     }

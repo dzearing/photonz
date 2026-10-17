@@ -108,6 +108,7 @@ extension PhotonzDocument {
                                                       .borderWidth, .borderColor, .textSize,
                                                       .trimStart, .trimEnd, .backgroundBlur,
                                                       .backgroundZoom]
+        + MotionProperty.gradeProperties
 
     static func laneRank(_ property: MotionProperty) -> Int {
         laneOrder.firstIndex(of: property) ?? laneOrder.count

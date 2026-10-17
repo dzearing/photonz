@@ -167,6 +167,7 @@ enum MotionSVG {
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
              .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
              .rotationX, .rotationY, .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
                 // An animated SVG has no way to say this yet: a blur in the
@@ -315,6 +316,7 @@ enum MotionSVG {
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
              .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
              .rotationX, .rotationY, .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
             // Never reached: these are dropped before a track is asked for.
@@ -549,6 +551,7 @@ private extension MotionProperty {
              .borderWidth, .borderColor,
              .cropLeft, .cropTop, .cropRight, .cropBottom,
              .backgroundBlur, .backgroundZoom, .trimStart, .trimEnd,
+             .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation,
              .rotationX, .rotationY, .depth, .pivotDepth,
              .cameraPerspective, .cameraDepth, .cameraX, .cameraY: false
         }

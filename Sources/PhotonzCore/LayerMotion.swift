@@ -112,6 +112,16 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     /// Where the camera has moved across and down the canvas, in points.
     case cameraX
     case cameraY
+    /// The five values of its colour grade (`ColorGradeEffect`): warmer or
+    /// cooler, greener or more magenta, brighter in stops, punchier, and how
+    /// colourful as a percent. Saturation is offered on every picture, the
+    /// video mock's catalogue at a still of 100, and a key off its middle
+    /// brings a grade in; the other four arrive with the grade.
+    case gradeTemperature
+    case gradeTint
+    case gradeExposure
+    case gradeContrast
+    case gradeSaturation
 
     /// What the menu item and the row are called.
     public var title: String {
@@ -151,6 +161,11 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cameraDepth: "Camera depth"
         case .cameraX: "Camera X"
         case .cameraY: "Camera Y"
+        case .gradeTemperature: "Temperature"
+        case .gradeTint: "Tint"
+        case .gradeExposure: "Exposure"
+        case .gradeContrast: "Contrast"
+        case .gradeSaturation: "Saturation"
         }
     }
 
@@ -255,6 +270,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
          .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize,
          .cropLeft, .cropTop, .cropRight, .cropBottom,
          .cameraPerspective, .cameraDepth, .cameraX, .cameraY]
+        // A grade changes the picture's colours, which nothing else here
+        // touches, so where it nests changes nothing; innermost with the crop.
+        + MotionProperty.gradeProperties
 
     /// One item of the plus's menu: a property, the value the layer is wearing
     /// now, and whether this layer is already animating it.
@@ -390,6 +408,13 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cameraPerspective, .cameraDepth, .cameraX, .cameraY:
             // The camera's, never a layer's (`SceneCamera.current`).
             return nil
+        case .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation:
+            // The layer's grade, on or off. A picture with none is still
+            // offered Saturation at its middle (`keyStill`), as the video
+            // mock's catalogue has it, and a key off it brings one in.
+            guard !layer.isSoundOnly,
+                  let grade = layer.style.effects.compactMap(\.colorGrade).first else { return nil }
+            return grade.value(of: self).map { .number($0) }
         }
     }
 
@@ -425,7 +450,8 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
              let (.rotationY, .number(degrees)), let (.cameraPerspective, .number(degrees)):
             return "\(MotionNumber.text(degrees))°"
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
-             let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)):
+             let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)),
+             let (.gradeSaturation, .number(percent)):
             return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
@@ -1466,6 +1492,21 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(now), to: .number(0),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation:
+            // A look arriving: from its middle to where the grade has it now,
+            // or to a clear step past the middle where it has none yet (a
+            // clip draining to grey is Saturation from 100 to nought).
+            let middle = property.gradeMiddle ?? 0
+            let now = if case let .number(number) = current ?? .number(middle) { number } else { middle }
+            let step: Double = switch property {
+            case .gradeSaturation: 0
+            case .gradeExposure: 1
+            default: 40
+            }
+            let to = now != middle ? now : step
+            return LayerMotion(property: property, from: .number(middle), to: .number(to),
+                               timing: MotionTiming(startMS: 0, durationMS: 1000),
+                               curve: .easeInOut, repeats: plays)
         case .backgroundZoom:
             // Settling back from a little in: the slow pull a title's
             // recording backdrop makes.
@@ -1781,6 +1822,23 @@ extension MotionProperty {
             default: turn.pivotDepth = number * Double(grown)
             }
             moved.turn3D = turn
+        case let (.gradeTemperature, .number(number)), let (.gradeTint, .number(number)),
+             let (.gradeExposure, .number(number)), let (.gradeContrast, .number(number)),
+             let (.gradeSaturation, .number(number)):
+            // The layer's grade. None yet: a value off its middle brings one
+            // in, every other value at its middle, the way a shadow's size
+            // brings a shadow (Saturation keyed down to grey on a clip that
+            // has never been graded).
+            guard let index = moved.style.effects.firstIndex(where: { $0.kind == .colorGrade }) else {
+                var grade = ColorGradeEffect.neutral
+                grade.set(self, to: number)
+                if !grade.isNeutral {
+                    moved.style.effects.insert(.colorGrade(grade),
+                                               at: moved.style.insertionIndex(for: .colorGrade))
+                }
+                break
+            }
+            moved.style.updateColorGradeEffect(at: index) { $0.set(self, to: number) }
         default:
             break
         }

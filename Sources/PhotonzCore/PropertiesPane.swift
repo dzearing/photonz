@@ -104,7 +104,9 @@ public enum PropertyPicker {
             case .opacity, .cornerRadius, .strokeWidth, .color: return "Appearance"
             case .blur, .shadow, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity,
                  .glow, .glowColor, .glowOpacity, .borderWidth, .borderColor,
-                 .backgroundBlur, .backgroundZoom: return "Effects"
+                 .backgroundBlur, .backgroundZoom,
+                 .gradeTemperature, .gradeTint, .gradeExposure, .gradeContrast, .gradeSaturation:
+                return "Effects"
             case .trimStart, .trimEnd: return "Appearance"
             case .rotationX, .rotationY, .depth, .pivotDepth: return "3D"
             case .cameraPerspective, .cameraDepth, .cameraX, .cameraY: return "Camera"
