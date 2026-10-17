@@ -281,6 +281,8 @@ public enum FeatureCatalog {
 
     public static let titleRestyleFlag = "next-title-restyle"
 
+    public static let titleTypeFlag = "next-title-type"
+
     public static let titleOnTheTimelineFlag = "next-a-title-has-an-in-and-an-out"
 
     public static let captionsFromTheSoundFlag = "next-captions-from-the-sound"
@@ -1023,6 +1025,16 @@ public enum FeatureCatalog {
                     title: "Color grade",
                     description: "Color Grade in the Effects list: Temperature, Tint, Exposure, Contrast and Saturation on a clip or picture, each keyable. Off means none is offered.",
                     area: .motion,
+                    isEnabled: false,
+                    parameters: []),
+                releases: [.next],
+                enabledByDefaultIn: [.next]),
+            Definition(
+                flag: FeatureFlag(
+                    name: titleTypeFlag,
+                    title: "Set type like a title",
+                    description: "Text gets Tracking and Leading boxes beside its Size, New York in the Font menu, and a gradient through its words from the Color row. Off means text is set in its face's own spacing, in one colour.",
+                    area: .appearance,
                     isEnabled: false,
                     parameters: []),
                 releases: [.next],

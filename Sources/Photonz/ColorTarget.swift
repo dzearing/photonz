@@ -159,5 +159,14 @@ struct ColorTarget: Hashable {
     /// paints can hold one: a ring round a picture takes a flat colour, so a
     /// row speaking for a ring and a stroke offers no ramp rather than one that
     /// half lands.
-    var acceptsGradient: Bool { parts.allSatisfy(\.slot.acceptsGradient) }
+    @MainActor var acceptsGradient: Bool { parts.allSatisfy { $0.slot.offersGradient } }
+}
+
+extension ColorSlot {
+    /// Whether the panel offers a ramp for this colour: what the slot can
+    /// hold, with words' ink offered one only where title type is on
+    /// (`next-title-type`), so Current's Text row stays one colour.
+    @MainActor var offersGradient: Bool {
+        self == .text ? Experiments.shared.titleTypeEnabled : acceptsGradient
+    }
 }

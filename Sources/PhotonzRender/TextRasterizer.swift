@@ -125,6 +125,14 @@ public enum TextRasterizer {
         if let plateHex = text.plateHex {
             drawPlate(for: text, hex: plateHex, laidOutIn: path, bounds: box, in: context)
         }
+        // A ramp through the letters (`TextRamp.swift`). A caption's lit word
+        // is one colour by definition, so lit words stay flat.
+        if let ramp = text.fillPaint, text.highlight == nil {
+            let frame = CTFramesetterCreateFrame(CTFramesetterCreateWithAttributedString(attributedString(text)),
+                                                 CFRange(location: 0, length: 0), path, nil)
+            drawRamped(frame, text: text, ramp: ramp, base: path.boundingBox.origin, in: context)
+            return context.makeImage()
+        }
         draw(lit(attributedString(text), text))
 
         return context.makeImage()
@@ -265,9 +273,14 @@ public enum TextRasterizer {
             guard room > 0.5 else { return attributed }
             let mutable = NSMutableAttributedString(attributedString: attributed)
             let kern = NSAttributedString.Key(kCTKernAttributeName as String)
-            if start > 0 { mutable.addAttribute(kern, value: room / 2, range: NSRange(location: start - 1, length: 1)) }
+            // On top of the letter spacing the words are set with, not
+            // instead of it.
+            let tracked = text.trackingPoints
+            if start > 0 {
+                mutable.addAttribute(kern, value: tracked + room / 2, range: NSRange(location: start - 1, length: 1))
+            }
             if end > start, end < length {
-                mutable.addAttribute(kern, value: room / 2, range: NSRange(location: end - 1, length: 1))
+                mutable.addAttribute(kern, value: tracked + room / 2, range: NSRange(location: end - 1, length: 1))
             }
             return mutable
         }
@@ -564,12 +577,34 @@ public enum TextRasterizer {
     /// worse than a line of text hugging the top of a box too small for it.
     static func laidOutBox(_ text: TextContent, in box: CGRect) -> CGRect {
         let box = alignedWidth(text, in: plateRoom(text, in: box))
+        // Lines set tighter than their face reach past their own boxes, and
+        // the box keeps that much room above the first and below the last
+        // (`lineOverhang`), so the lines are laid out inside it.
+        let over = lineOverhang(text)
         // `TextBlockMetrics` owns how far down the lines sit, so the field you
         // type a label in can offset its draft by exactly the same amount.
         let inset = TextBlockMetrics.topInset(for: text, in: box.size)
-        guard inset > 0 else { return box }
+        guard inset > 0 else {
+            guard over > 0 else { return box }
+            return CGRect(x: box.minX, y: box.minY + over, width: box.width,
+                          height: max(1, box.height - over * 2))
+        }
         let needed = TextBlockMetrics.laidOutHeight(text, width: box.width)
-        return CGRect(x: box.minX, y: box.maxY - inset - needed, width: box.width, height: needed)
+        return CGRect(x: box.minX, y: box.maxY - inset - needed + over, width: box.width,
+                      height: max(1, needed - over * 2))
+    }
+
+    /// How far a line's letters can reach past the line, above and below,
+    /// where the line spacing is tighter than the face's own: nothing for
+    /// words in their face's spacing. CoreText shares the squeeze out above
+    /// and below the baseline, as CSS does, so each side gets half, and a
+    /// point more for the rounding.
+    public static func lineOverhang(_ text: TextContent, font: CTFont? = nil) -> CGFloat {
+        guard let multiple = text.lineHeight, text.fontSize > 0 else { return 0 }
+        let font = font ?? self.font(for: text)
+        let natural = CTFontGetAscent(font) + CTFontGetDescent(font)
+        let squeeze = natural - multiple * text.fontSize
+        return squeeze > 0 ? ceil(squeeze / 2) + 1 : 0
     }
 
     /// `text` cut down to what fits `width`, with an ellipsis where the rest
@@ -661,13 +696,18 @@ public enum TextRasterizer {
         // the drawing must not disagree about how tall a title is.
         let maxWidth = text.staysOnOneLine == true ? CGFloat.greatestFiniteMagnitude : maxWidth
         let font = font(for: text)
-        let lineHeight = CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font)
+        // A line spacing set by hand is the line's height; otherwise the
+        // face's own.
+        let lineHeight = text.lineHeight.map { $0 * text.fontSize }
+            ?? CTFontGetAscent(font) + CTFontGetDescent(font) + CTFontGetLeading(font)
+        // Room for letters reaching past lines set tighter than their face.
+        let over = lineOverhang(text, font: font) * 2
         // The floor applies to the whole frame width, but never exceeds maxWidth
         // (a deliberately-narrow wrap width wins over the default minimum).
         let floor = maxWidth.isFinite ? min(minWidth, maxWidth) : minWidth
         guard !text.string.isEmpty else {
             return CGSize(width: max(ceil(text.fontSize / 2) + frameInset * 2, floor),
-                          height: ceil(lineHeight) + frameInset * 2)
+                          height: ceil(lineHeight) + over + frameInset * 2)
         }
         let framesetter = CTFramesetterCreateWithAttributedString(attributedString(text, font: font))
         let constraint = maxWidth.isFinite ? max(maxWidth - frameInset * 2, 1) : .greatestFiniteMagnitude
@@ -675,7 +715,7 @@ public enum TextRasterizer {
             framesetter, CFRange(location: 0, length: 0), nil,
             CGSize(width: constraint, height: .greatestFiniteMagnitude), nil)
         return CGSize(width: max(ceil(suggested.width) + frameInset * 2, floor),
-                      height: max(ceil(suggested.height), ceil(lineHeight)) + frameInset * 2)
+                      height: max(ceil(suggested.height), ceil(lineHeight)) + over + frameInset * 2)
     }
 
     /// How far the ink of a single line sits from the middle of the box
@@ -759,6 +799,7 @@ public enum TextRasterizer {
     /// silently returns Helvetica for them — so build them from the UI font and
     /// stamp the requested weight. Everything else goes through family matching.
     private static func resolveDescriptor(fontName: String, weight: TextWeight) -> CTFontDescriptor? {
+        if fontName == newYork { return newYorkFace(target: weight.fontWeightTrait) }
         if let uiType = systemUIFontType(for: fontName) {
             guard let base = CTFontCreateUIFontForLanguage(uiType, 0, nil) else { return nil }
             let descriptor = CTFontCopyFontDescriptor(base)
@@ -777,6 +818,34 @@ public enum TextRasterizer {
         case "SF Mono": return .userFixedPitch
         default: return nil
         }
+    }
+
+    /// The system serif's family name, as the Font menu offers it.
+    static let newYork = "New York"
+
+    /// Where the system keeps New York. It is a hidden system family (its
+    /// faces are named ".New York"), so no lookup by family name finds it and
+    /// a name lookup quietly hands back Helvetica; its own file is the one
+    /// door CoreText has to it.
+    private static let newYorkFile = URL(fileURLWithPath: "/System/Library/Fonts/NewYork.ttf")
+
+    /// The New York face closest to `target` in weight. The file also holds
+    /// graded copies of each weight (a darker ink at the same width, which
+    /// carry a GRAD axis); those are left out, so Medium is Medium.
+    private static func newYorkFace(target: CGFloat) -> CTFontDescriptor? {
+        guard let faces = CTFontManagerCreateFontDescriptorsFromURL(newYorkFile as CFURL) as? [CTFontDescriptor]
+        else { return nil }
+        let grade = NSNumber(value: 0x4752_4144)   // 'GRAD'
+        var best: (descriptor: CTFontDescriptor, distance: CGFloat)?
+        for face in faces {
+            let axes = CTFontDescriptorCopyAttribute(face, kCTFontVariationAttribute) as? [NSNumber: NSNumber]
+            guard axes?[grade] == nil else { continue }
+            let traits = CTFontDescriptorCopyAttribute(face, kCTFontTraitsAttribute) as? [String: Any]
+            let weight = (traits?[kCTFontWeightTrait as String] as? NSNumber).map { CGFloat($0.doubleValue) } ?? 0
+            let distance = abs(weight - target)
+            if distance < (best?.distance ?? .infinity) { best = (face, distance) }
+        }
+        return best?.descriptor
     }
 
     /// The upright face in `fontName`'s family whose weight is closest to
@@ -841,12 +910,20 @@ public enum TextRasterizer {
             NSAttributedString.Key(kCTFontAttributeName as String): font ?? self.font(for: text),
             NSAttributedString.Key(kCTForegroundColorAttributeName as String): color,
         ]
-        // Where the words sit across the box. Left is CoreText's own default,
-        // so text that has never been placed carries no paragraph style at all
-        // and lays out exactly as it did before alignment existed.
-        if let alignment = text.alignment, alignment != .left,
-           let paragraph = paragraphStyle(alignment) {
+        // Where the words sit across the box, and how tall each line is. Left
+        // and the face's own spacing are CoreText's defaults, so text that has
+        // set neither carries no paragraph style at all and lays out exactly
+        // as it did before either existed.
+        let alignment = text.alignment.flatMap { $0 == .left ? nil : $0 }
+        let lineHeight = text.lineHeight.map { $0 * text.fontSize }
+        if alignment != nil || lineHeight != nil,
+           let paragraph = paragraphStyle(alignment, lineHeight: lineHeight) {
             attrs[NSAttributedString.Key(kCTParagraphStyleAttributeName as String)] = paragraph
+        }
+        // Letter spacing is added after every letter, the last included, the
+        // way CSS `letter-spacing` is, so a title measures what its mock does.
+        if text.trackingPoints != 0 {
+            attrs[NSAttributedString.Key(kCTKernAttributeName as String)] = text.trackingPoints
         }
         if borderWidth > 0, text.fontSize > 0 {
             let brgba = RGBA(hex: borderColorHex) ?? RGBA(r: 0, g: 0, b: 0)
@@ -862,15 +939,33 @@ public enum TextRasterizer {
         return NSAttributedString(string: text.string, attributes: attrs)
     }
 
-    /// A paragraph style that says nothing but which edge the lines line up on.
-    private static func paragraphStyle(_ alignment: TextAlign) -> CTParagraphStyle? {
-        var value: CTTextAlignment = alignment == .center ? .center : .right
-        return withUnsafeBytes(of: &value) { raw -> CTParagraphStyle? in
-            guard let base = raw.baseAddress else { return nil }
-            var setting = CTParagraphStyleSetting(spec: .alignment,
-                                                  valueSize: MemoryLayout<CTTextAlignment>.size,
-                                                  value: base)
-            return CTParagraphStyleCreate(&setting, 1)
+    /// A paragraph style that says which edge the lines line up on, where
+    /// that is not the left, and how tall every line is, where that is set.
+    /// A line height is both the least and the most a line may be, which is
+    /// what CSS `line-height` means; CoreText shares a squeeze or a stretch
+    /// out above and below the baseline the way CSS does.
+    private static func paragraphStyle(_ alignment: TextAlign?, lineHeight: CGFloat?) -> CTParagraphStyle? {
+        var align: CTTextAlignment = alignment == .center ? .center : .right
+        var height = lineHeight ?? 0
+        return withUnsafeBytes(of: &align) { alignRaw -> CTParagraphStyle? in
+            withUnsafeBytes(of: &height) { heightRaw -> CTParagraphStyle? in
+                guard let alignBase = alignRaw.baseAddress, let heightBase = heightRaw.baseAddress else {
+                    return nil
+                }
+                var settings: [CTParagraphStyleSetting] = []
+                if alignment != nil {
+                    settings.append(CTParagraphStyleSetting(spec: .alignment,
+                                                            valueSize: MemoryLayout<CTTextAlignment>.size,
+                                                            value: alignBase))
+                }
+                if lineHeight != nil {
+                    for spec in [CTParagraphStyleSpecifier.minimumLineHeight, .maximumLineHeight] {
+                        settings.append(CTParagraphStyleSetting(spec: spec, valueSize: MemoryLayout<CGFloat>.size,
+                                                                value: heightBase))
+                    }
+                }
+                return CTParagraphStyleCreate(settings, settings.count)
+            }
         }
     }
 }

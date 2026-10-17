@@ -109,12 +109,15 @@ public enum ColorSlot: String, CaseIterable, Hashable, Codable, Sendable {
         // and a glow are light rather than paint, and a letter's ink has no box
         // for a ramp to run across.
         case .fill, .stroke, .border, .arrowHead: return true
+        // A text block's ramp runs across each line of its words, the way a
+        // CSS `background-clip: text` title's does (`TextContent.fill`).
+        case .text: return true
         // A label pill is drawn by the pill rasterizer, which paints one flat
         // colour for its inside, one for its ring and one for its words.
         // A measurement is drawn by the measure rasterizer, which paints one
         // flat colour for the caliper and one each for the chip's three, so
         // none of the four is ever offered a ramp that would not land.
-        case .text, .shadow, .glow,
+        case .shadow, .glow,
              .captionFill, .captionBorder, .captionText,
              .caliper, .chipFill, .chipBorder, .chipText: return false
         }
@@ -409,6 +412,8 @@ extension Layer {
         case (.arrowHead, .annotation(let annotation)):
             guard annotation.drawsArrowhead else { return nil }
             return annotation.headPaint
+        case (.text, .text(let text)):
+            return text.fillPaint ?? Paint(hex: text.colorHex)
         case (.border, _):
             return hasBorderColor ? style.borderEffects.first?.paint : nil
         default:
@@ -444,6 +449,14 @@ extension Layer {
         case (.arrowHead, .annotation(var annotation)):
             annotation.headPaint = paint
             content = .annotation(annotation)
+        case (.text, .text):
+            // A flat colour goes through the text builder like any other, and
+            // takes a ramp away; a ramp keeps its stand-in as the words'
+            // colour, so the contrast halo and every flat reading follow it.
+            setColorHex(paint.hex, for: .text)
+            guard paint.isGradient, case .text(var text) = content else { return }
+            text.fill = paint
+            content = .text(text)
         case (.border, _):
             // The ring nearest the eye, ramp and all.
             guard let index = style.borderEffectIndex else { return }

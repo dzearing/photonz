@@ -106,6 +106,26 @@ public enum GradientPainter {
         return context.makeImage()
     }
 
+    /// Pours `paint` through `path`, laying the ramp across `box` rather than
+    /// across the path's own bounds: the letters of one line of a title wear
+    /// a ramp sized to the line (or longer, slid along it), not to their ink.
+    /// `box` is in the context's own space; the ramp is aimed the top-left
+    /// way the picker says it, whichever way up the context runs, because the
+    /// box is turned over about its own middle first.
+    static func fill(path: CGPath, with paint: Paint, across box: CGRect, in context: CGContext) {
+        guard paint.isGradient else {
+            fill(path: path, with: paint, in: context)
+            return
+        }
+        context.saveGState()
+        context.addPath(path)
+        context.clip()
+        context.translateBy(x: 0, y: box.midY * 2)
+        context.scaleBy(x: 1, y: -1)
+        draw(paint, in: box, in: context)
+        context.restoreGState()
+    }
+
     // MARK: - Laying the ramp down
 
     /// Draws `paint` across `box`, inside whatever clip the caller set up.

@@ -105,7 +105,7 @@ extension PhotonzDocument {
                                                       .strokeWidth, .color, .blur, .shadow,
                                                       .shadowDistance, .shadowDirection, .shadowColor,
                                                       .shadowOpacity, .glow, .glowColor, .glowOpacity,
-                                                      .borderWidth, .borderColor, .textSize,
+                                                      .borderWidth, .borderColor, .textSize, .gradientShift,
                                                       .trimStart, .trimEnd, .backgroundBlur,
                                                       .backgroundZoom]
         + MotionProperty.gradeProperties

@@ -616,6 +616,13 @@ extension Experiments {
     /// titles laid out again after typing, and Library title tiles that play.
     var titleRestyleEnabled: Bool { isEnabled(FeatureCatalog.titleRestyleFlag) }
 
+    /// `next-title-type`: Tracking and Leading on text, New York in the Font
+    /// menu, and a gradient through the words from the Color row.
+    var titleTypeEnabled: Bool { isEnabled(FeatureCatalog.titleTypeFlag) }
+
+    /// The families the Font menu offers: New York joins them with title type.
+    var fontFamilies: [String] { titleTypeEnabled ? TextStyles.fonts : TextStyles.currentFonts }
+
     /// `next-open-out-the-timeline`: whether the timeline's own bar carries a
     /// zoom, so a recording longer than a few seconds can be worked on a
     /// second at a time (`TimelineZoom.swift`).

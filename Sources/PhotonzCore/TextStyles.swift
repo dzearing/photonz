@@ -65,18 +65,23 @@ public struct TextStyles: Equatable, Codable, Sendable {
     /// The font picker's family choices. Curated: families that ship with
     /// macOS and read well as screenshot callouts.
     // Curated set. "SF Pro"/"SF Mono" are the system UI faces (resolved specially
-    // in TextRasterizer — they aren't matchable by family name); the rest are
-    // installed families. ("New York" was dropped: it's only reachable via
-    // AppKit's design API, which the render layer can't import — Baskerville is a
-    // real serif that resolves through CoreText.)
+    // in TextRasterizer — they aren't matchable by family name); "New York" is
+    // the system serif, which no family lookup finds either, so the renderer
+    // reads it from the file the system keeps it in. The rest are installed
+    // families.
     public static let fonts: [String] = [
         "SF Pro",
         "SF Mono",
+        "New York",
         "Helvetica Neue",
         "Avenir Next",
         "Georgia",
         "Baskerville",
     ]
+
+    /// The list as it stood before New York joined it, for the release that
+    /// does not set title type (`next-title-type` off).
+    public static let currentFonts: [String] = fonts.filter { $0 != "New York" }
 
     /// A family whose name is longer than the box the Font menu is held to, so
     /// the menu has to shorten it and say the whole thing on hover instead.
@@ -183,9 +188,9 @@ public struct TextStyles: Equatable, Codable, Sendable {
     /// name in its list, so as long as the widest curated name is present in
     /// every state, that name, and nothing an opened document brought with it,
     /// decides how wide the box is.
-    public static func fontOptions(picked: [String]) -> [String] {
-        var seen = Set(fonts)
-        return fonts + picked.filter { seen.insert($0).inserted }
+    public static func fontOptions(picked: [String], offering curated: [String] = fonts) -> [String] {
+        var seen = Set(curated)
+        return curated + picked.filter { seen.insert($0).inserted }
     }
 
     /// Content for a new text block in the current style.
@@ -244,6 +249,9 @@ public enum TextBuilder {
         if let fontSize { content.fontSize = fontSize }
         if let weight { content.weight = weight }
         var updated = layer
+        // Painting the words a colour is painting them ONE colour, even the
+        // colour a ramp through them stands in as.
+        if colorHex != nil { content.fill = nil }
         if let colorHex, colorHex != content.colorHex {
             let oldHalo = autoContrastShadow(forColorHex: content.colorHex)
             let newHalo = autoContrastShadow(forColorHex: colorHex)
@@ -265,6 +273,30 @@ public enum TextBuilder {
                 updated.style.shadow = newHalo
             }
         }
+        updated.content = .text(content)
+        return updated
+    }
+
+    /// The same words set with other letter or line spacing, each clamped to
+    /// what a person may set (`TextContent.trackingRange`, `lineHeightRange`).
+    /// Leaving an argument out leaves that spacing alone; nought tracking and
+    /// a nil line height are the face's own, which write nothing. The box is
+    /// left as it is: re-measuring needs CoreText, so the app re-fits it, the
+    /// way it does for `restyled`.
+    public static func respaced(_ layer: Layer, tracking: CGFloat? = nil,
+                                lineHeight: CGFloat?? = .none) -> Layer {
+        guard case .text(var content) = layer.content else { return layer }
+        if let tracking {
+            let clamped = min(max(tracking, TextContent.trackingRange.lowerBound),
+                              TextContent.trackingRange.upperBound)
+            content.tracking = clamped == 0 ? nil : clamped
+        }
+        if case .some(let height) = lineHeight {
+            content.lineHeight = height.map {
+                min(max($0, TextContent.lineHeightRange.lowerBound), TextContent.lineHeightRange.upperBound)
+            }
+        }
+        var updated = layer
         updated.content = .text(content)
         return updated
     }

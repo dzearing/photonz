@@ -115,7 +115,9 @@ public enum TextBlockMetrics {
         let suggested = CTFramesetterSuggestFrameSizeWithConstraints(
             framesetter, CFRange(location: 0, length: 0), nil,
             CGSize(width: width, height: CGFloat.greatestFiniteMagnitude), nil)
-        return ceil(suggested.height)
+        // With the room kept for letters reaching past lines set tighter than
+        // their face (`TextRasterizer.lineOverhang`).
+        return ceil(suggested.height) + TextRasterizer.lineOverhang(text) * 2
     }
 
     /// The height a FRAME handed those lines has to be: the words, plus one

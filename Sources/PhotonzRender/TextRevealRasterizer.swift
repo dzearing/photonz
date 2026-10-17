@@ -67,6 +67,8 @@ extension TextRasterizer {
         // whole picture is drawn in. Colour and stroke never move a glyph, so
         // all of them share one layout.
         let fill = frame(lit(attributedString(text), text))
+        // A ramp through the letters, drawn as the whole picture draws it.
+        let ramp = text.highlight == nil ? text.fillPaint : nil
         let rings = outlines.filter { $0.width > 0 }.sorted { $0.width > $1.width }.map { outline in
             var underlay = text
             underlay.colorHex = outline.colorHex
@@ -169,7 +171,23 @@ extension TextRasterizer {
                 }
             }
             for ring in ringLines { draw(ring) }
-            draw(lines)
+            if let ramp {
+                // Each piece poured from its own line's ramp, so the letters
+                // arrive already the colour they settle in (`TextRamp.swift`).
+                for part in parts where part.line < lines.count {
+                    guard let runs = CTLineGetGlyphRuns(lines[part.line]) as? [CTRun], part.run < runs.count
+                    else { continue }
+                    let outlines = CGMutablePath()
+                    glyphOutlines(runs[part.run], from: part.from, count: part.count,
+                                  at: CGPoint(x: base.x + origins[part.line].x, y: base.y + origins[part.line].y),
+                                  into: outlines)
+                    let box = text.fillBox(forLine: rampLineBox(lines[part.line], origin: origins[part.line],
+                                                                base: base))
+                    GradientPainter.fill(path: outlines, with: ramp, across: box, in: context)
+                }
+            } else {
+                draw(lines)
+            }
             guard let image = context.makeImage() else { continue }
             let box = CGRect(x: points.minX * scale, y: points.minY * scale,
                              width: points.width * scale, height: points.height * scale)

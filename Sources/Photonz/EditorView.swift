@@ -2753,7 +2753,10 @@ struct EditorView: View {
     /// Whether the swatch the toolbar opens can be armed with a gradient: a
     /// ramp has to be something the slot can hold, or four tiles that quietly
     /// do nothing are worse than no tiles.
-    private var toolColorAcceptsGradient: Bool { toolColorSlot.acceptsGradient }
+    ///
+    /// Words' ink here is the text tool's, one flat colour for the next block
+    /// typed; a ramp through picked words is the Color row's.
+    private var toolColorAcceptsGradient: Bool { toolColorSlot != .text && toolColorSlot.acceptsGradient }
 
     /// Which of a layer's colours the toolbar's single swatch stands for.
     private var toolColorSlot: ColorSlot { showsTextControls ? .text : .stroke }
@@ -3014,10 +3017,8 @@ struct EditorView: View {
     /// Font families for the picker, including the selected element's family if
     /// it isn't one of the curated defaults (so its current value stays valid).
     private var fontMenuFamilies: [String] {
-        guard let name = selectedTextContent?.fontName, !TextStyles.fonts.contains(name) else {
-            return TextStyles.fonts
-        }
-        return TextStyles.fonts + [name]
+        TextStyles.fontOptions(picked: selectedTextContent.map { [$0.fontName] } ?? [],
+                               offering: Experiments.shared.fontFamilies)
     }
 
     /// Sizes for the picker, including the selected element's size if it isn't a

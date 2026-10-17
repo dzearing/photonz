@@ -158,13 +158,14 @@ struct PaintTests {
 
     // MARK: - Slots that can only take a flat color
 
-    @Test func aLetterAndAHaloTakeNoGradient() {
+    @Test func aHaloTakesNoGradientButLettersDo() {
         #expect(ColorSlot.fill.acceptsGradient)
         #expect(ColorSlot.stroke.acceptsGradient)
         // A box's edge is a Border now, and a box's edge always took a ramp
         // (`OutlineRetirementTests`).
         #expect(ColorSlot.border.acceptsGradient)
-        #expect(ColorSlot.text.acceptsGradient == false)
+        // Words take one through their letters, the way a CSS title does.
+        #expect(ColorSlot.text.acceptsGradient)
         #expect(ColorSlot.shadow.acceptsGradient == false)
         #expect(ColorSlot.glow.acceptsGradient == false)
     }

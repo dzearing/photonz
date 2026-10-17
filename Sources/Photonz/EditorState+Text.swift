@@ -178,6 +178,37 @@ extension EditorState {
                              weight: weight, colorHex: colorHex)
     }
 
+    /// The picked text set with other letter or line spacing, in ONE undo
+    /// step (Tracking and Leading in the Text section). Leaving an argument
+    /// out leaves that spacing alone; `lineHeight: .some(nil)` is Auto. Each
+    /// box is re-fitted to its words the way a new size re-fits it: one that
+    /// hugs its words keeps hugging them, and one somebody gave room keeps it.
+    func setTextSpacing(ids: [UUID], tracking: CGFloat? = nil, lineHeight: CGFloat?? = .none) {
+        let targets = ids.filter { id in
+            guard let layer = document?.layer(id: id), !layer.isLocked, let words = layer.text else { return false }
+            return TextBuilder.respaced(layer, tracking: tracking, lineHeight: lineHeight).text != words
+        }
+        guard !targets.isEmpty else { return }
+        let sizes: [UUID: CGSize] = targets.reduce(into: [:]) { sizes, id in
+            guard let layer = document?.layer(id: id), let was = layer.text,
+                  let words = TextBuilder.respaced(layer, tracking: tracking, lineHeight: lineHeight).text
+            else { return }
+            let room = TextBlockMetrics.roomyBox(for: was, frame: layer.frame)
+            sizes[id] = TextBlockMetrics.frameSize(for: words, maxWidth: .greatestFiniteMagnitude,
+                                                   roomyWidth: room.width, roomyHeight: room.height,
+                                                   hugsShortWords: true)
+        }
+        discardDragPreview()
+        perform { document in
+            for id in targets {
+                document.updateLayer(id: id) { l in
+                    l = TextBuilder.respaced(l, tracking: tracking, lineHeight: lineHeight)
+                    if let size = sizes[id] { l.frame = CGRect(origin: l.frame.origin, size: size) }
+                }
+            }
+        }
+    }
+
     /// What the next block of text starts at.
     private func rememberTextDefaults(fontName: String?, fontSize: CGFloat?,
                                       weight: TextWeight?, colorHex: String?) {
@@ -282,6 +313,9 @@ extension EditorState {
         if let existing = edited?.text {
             content.alignment = existing.alignment
             content.verticalAlignment = existing.verticalAlignment
+            // So does how it is set: re-wording a title keeps its tracking,
+            // leading and ramp.
+            content.keepSetting(of: existing)
         }
         // A box somebody made bigger than its words — a paragraph, or a label
         // told to stretch — keeps the room it was given, so re-wording it

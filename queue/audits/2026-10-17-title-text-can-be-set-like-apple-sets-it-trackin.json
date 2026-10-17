@@ -1,0 +1,50 @@
+{
+  "feature": "Title type set like Apple sets it: tracking, leading, New York and a gradient through the words",
+  "epic": "video-titles-graphics",
+  "summary": "Picked text now has Tracking and Leading boxes under Size and Weight, New York is on the Font menu and draws as New York, and the Color row can run a gradient through the words, which a title can slide across them over time with a Gradient position key.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open the sample recording.",
+  "switched": {},
+  "try": [
+    {
+      "do": "Pick the Text tool, click the video, type Field notes and press Command-Return.",
+      "shot": "2026-10-17-title-type-1-row.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "With the title picked, type 96 into Size, -2.8 into Tracking and 106 into Leading, pressing Return after each."
+    },
+    {
+      "do": "Choose New York in the Font menu."
+    },
+    {
+      "do": "Click the Color row's well and press the Linear tile.",
+      "shot": "2026-10-17-title-type-3-picker.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Close the picker and look at the words.",
+      "shot": "2026-10-17-title-type-2-gradient.png",
+      "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour."
+    },
+    {
+      "do": "Press Command-Z once."
+    },
+    {
+      "do": "Empty the Leading box and press Return."
+    }
+  ],
+  "evaluate": [
+    "Does -2.8 Tracking look like the tight headline spacing of an Apple title?",
+    "Are percents the right way to type tracking and leading, or would you rather type Photoshop's thousandths of an em and leading in points?",
+    "Does the ramp read as running through the letters, rather than as a coloured box behind them?",
+    "Does one Command-Z taking the gradient off (and leaving the font and spacing) match what you expected?"
+  ],
+  "rough": [
+    "No mock draws a Leading control, so it reads as a percent of the size like Tracking (106 for the Apple mock's 1.06). Tracking in percent matches the mock's own 'tracking -1.2%'.",
+    "Leading tighter than the face's own grows the text box by the overhang above and below, so the letters are never cut; a title placed from the mock's CSS top edge sits that many points higher. Folded into title-pages-that-look-like-apple-designed-them, which lays the designs out.",
+    "Gradient position is keyable on words wearing a gradient (the Properties picker's Text group), but nothing in the panel sets how long the ramp is: a key on it first makes the ramp twice the words' length. The Gradient Word design (220%) is built by the title-pages task, which can set the length directly.",
+    "A saved colour style that is a gradient now lands as a gradient on text in either release, because text can draw one. The picker's gradient tiles on a text row are offered in Next only.",
+    "Tracking cannot be keyed yet, so the mock's Track In build (letters closing up over time) is not buildable from this alone. Folded into title-pages-that-look-like-apple-designed-them.",
+    "Typing into the canvas with tight leading uses the Mac's own text layout, which shares the squeeze differently from the drawn title; the draft may sit a point or two off until Return."
+  ]
+}

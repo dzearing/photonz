@@ -17461,7 +17461,7 @@ private final class Run {
     /// tile in the picker's type row does.
     private func paintGradient(_ editor: EditorState, kind: Paint.Kind) {
         guard let slot = editor.colorStyleSlots.first(where: {
-            $0.acceptsGradient && editor.colorStyleSelection(slot: $0).members.first != nil
+            $0.offersGradient && editor.colorStyleSelection(slot: $0).members.first != nil
         }) else { return }
         var paint = editor.selectionPaint(slot: slot)
             ?? Paint(hex: editor.colorStyleSelection(slot: slot).savableColorHex ?? "#3366FF")

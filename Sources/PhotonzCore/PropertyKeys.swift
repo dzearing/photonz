@@ -270,7 +270,7 @@ extension Layer {
                     }
                 }
             }
-            for property in [MotionProperty.textSize] + MotionProperty.cropEdges
+            for property in [MotionProperty.textSize, .gradientShift] + MotionProperty.cropEdges
             where keyStill(property) != nil {
                 list.append(.motion(property))
             }

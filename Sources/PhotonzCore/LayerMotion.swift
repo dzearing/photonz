@@ -46,6 +46,11 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
     case shadow
     /// How big its type is, in document points. Words only.
     case textSize
+    /// Where the ramp through its words sits, as a percent: nought puts the
+    /// ramp's start on the first letter, 100 its end on the last
+    /// (`TextContent.fillShift`). A title sweeping colour through its words
+    /// is this going from 100 to nought. Words wearing a gradient only.
+    case gradientShift
     /// How far the first glow in its Effects list reaches, in document points:
     /// an effect's amount, keyed like any other length.
     case glow
@@ -136,6 +141,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
         case .cornerRadius: "Corner radius"
         case .shadow: "Shadow size"
         case .textSize: "Text size"
+        case .gradientShift: "Gradient position"
         case .glow: "Glow size"
         case .shadowDistance: "Shadow distance"
         case .shadowDirection: "Shadow direction"
@@ -267,7 +273,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
          .position, .rotation, .scale, .color,
          .strokeWidth, .trimStart, .trimEnd,
          .cornerRadius, .shadowDistance, .shadowDirection, .shadowColor, .shadowOpacity, .shadow,
-         .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize,
+         .glowColor, .glowOpacity, .glow, .borderColor, .borderWidth, .textSize, .gradientShift,
          .cropLeft, .cropTop, .cropRight, .cropBottom,
          .cameraPerspective, .cameraDepth, .cameraX, .cameraY]
         // A grade changes the picture's colours, which nothing else here
@@ -360,6 +366,9 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             return shadow.map { .number(Double($0.radius)) }
         case .textSize:
             return layer.text.map { .number(Double($0.fontSize)) }
+        case .gradientShift:
+            guard let text = layer.text, text.fillPaint != nil else { return nil }
+            return .number((text.fillShift ?? 0) * 100)
         case .glow:
             return glow.map { .number(Double($0.size)) }
         case .shadowDistance:
@@ -451,7 +460,7 @@ public enum MotionProperty: String, CaseIterable, Hashable, Codable, Sendable {
             return "\(MotionNumber.text(degrees))°"
         case let (.cropLeft, .number(percent)), let (.cropTop, .number(percent)),
              let (.cropRight, .number(percent)), let (.cropBottom, .number(percent)),
-             let (.gradeSaturation, .number(percent)):
+             let (.gradeSaturation, .number(percent)), let (.gradientShift, .number(percent)):
             return "\(MotionNumber.text(percent))%"
         case let (.strokeWidth, .number(points)): return "\(MotionNumber.text(points)) pt"
         case let (.blur, .number(points)), let (.cornerRadius, .number(points)),
@@ -1443,6 +1452,12 @@ public struct LayerMotion: Identifiable, Hashable, Codable, Sendable {
             return LayerMotion(property: property, from: .number(now), to: .number(to),
                                timing: MotionTiming(startMS: 0, durationMS: 600),
                                curve: .easeInOut, repeats: plays)
+        case .gradientShift:
+            // The sweep the Gradient Word title plays: the colours come in
+            // from the far end of the ramp and settle on its start.
+            return LayerMotion(property: .gradientShift, from: .number(100), to: .number(0),
+                               timing: MotionTiming(startMS: 0, durationMS: 1600),
+                               curve: .easeOut, repeats: plays)
         case .glow:
             // Grows the glow it has by half, the same as the lengths above.
             let now = if case let .number(number) = current ?? .number(0) { number } else { 0.0 }
@@ -1728,6 +1743,14 @@ extension MotionProperty {
             } else {
                 moved.style.updateShadow(at: effect) { $0.radius = radius }
             }
+        case let (.gradientShift, .number(percent)):
+            // A ramp exactly as long as the words has nowhere to slide, so
+            // sliding one first makes it twice their length: the colours then
+            // have somewhere to come in from.
+            guard var text = moved.text else { break }
+            text.fillShift = min(max(percent / 100, 0), 1)
+            if (text.fillLength ?? 1) <= 1 { text.fillLength = 2 }
+            moved.content = .text(text)
         case let (.textSize, .number(points)):
             // The type grows and so does the box it is set in, about the box's
             // middle, so the words neither wrap nor get cut off on the way up.

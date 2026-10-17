@@ -351,7 +351,7 @@ struct CaptionsTextInspector: View {
         VStack(alignment: .leading, spacing: 8) {
             SelectionMenu(label: "Font",
                           reading: StyleReading(value: look.fontName, isMixed: false),
-                          options: TextStyles.fontOptions(picked: [look.fontName]),
+                          options: TextStyles.fontOptions(picked: [look.fontName], offering: Experiments.shared.fontFamilies),
                           title: { $0 },
                           help: "The font of every caption") { font in
                 editorState.setCaption(.font, to: .font(font))

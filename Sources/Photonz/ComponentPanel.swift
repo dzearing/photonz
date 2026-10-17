@@ -2390,7 +2390,7 @@ private struct InstanceColorKnob: View {
                                    name: property.name,
                                    slot: slot,
                                    supportsOpacity: true,
-                                   supportsGradient: slot.acceptsGradient,
+                                   supportsGradient: slot.offersGradient,
                                    onClose: { editorState.openColorWell = nil },
                                    // Live while the pointer is down, so the
                                    // copy follows the drag; ONE step, and one

@@ -21566,3 +21566,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Default push is now this track (HoldPush.thisTrack, raw value `pictureOnly`): later clips on the clip's track ripple; Freeze every track ripples every unlocked track. Length changes, the end drag and Delete follow the same rule.
 - New walk `freeze-frame-asks-how-long-walk`; seven freeze walks updated to the popover.
 - Next: captions heard off a clip should follow it (captions-of-a-clip-move-with-it-when-a-freeze-mo); the panel's Hold should take a typed length (the-panel-s-hold-takes-any-typed-length).
+
+## 2026-10-17 — Title type set like Apple sets it (go loop)
+
+- Text layers carry tracking (em), line height (multiple), and a gradient fill with length/shift (CSS background-size/position per line). New York resolves from its system file; SF Pro's Display optical size at title sizes confirmed by test.
+- Next (`next-title-type`, on by default): Tracking and Leading boxes (percent) under Size and Weight, New York in the Font menu, gradient tiles on the Text colour row. New keyable motion "Gradient position" for colour sweeps.
+- Walk: `title-type-set-like-apple-walk`. Audit: `queue/audits/2026-10-17-title-text-can-be-set-like-apple-sets-it-trackin.json`.
+- Next: `title-pages-that-look-like-apple-designed-them` builds the designs on this (overhang offset, keyable tracking for Track In, Gradient Word sweep).

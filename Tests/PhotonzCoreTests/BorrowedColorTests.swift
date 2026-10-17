@@ -141,16 +141,19 @@ struct BorrowedColorTests {
                          stops: [GradientStop(hex: "#FF8800", position: 0),
                                  GradientStop(hex: "#8800FF", position: 1)])
         doc.addColorStyle(name: "Sunset", paint: ramp, roles: [.ink])
-        // Text cannot draw a ramp, so it is not a name the row wears...
-        #expect(doc.colorStyles(for: .text).isEmpty)
+        // An arrow label's words cannot draw a ramp, so it is not a name the
+        // row wears...
+        #expect(doc.colorStyles(for: .captionText).isEmpty)
         // ...but the colour it starts on is still reachable, flattened.
-        let borrowed = doc.borrowedColors(for: .text)
+        let borrowed = doc.borrowedColors(for: .captionText)
         #expect(borrowed.map(\.label) == ["Sunset (gradient)"])
         #expect(borrowed.first?.paint.isGradient == false)
         #expect(borrowed.first?.paint.hex == ramp.hex)
-        // ...and on a row that CAN draw one it is a name, not a copy.
+        // ...and on a row that CAN draw one it is a name, not a copy: words
+        // take a ramp through their letters (`TextContent.fill`).
         #expect(doc.colorStyles(for: .stroke).map(\.name) == ["Sunset"])
         #expect(doc.borrowedColors(for: .stroke).isEmpty)
+        #expect(doc.colorStyles(for: .text).map(\.name) == ["Sunset"])
     }
 
     // MARK: - The list stays short

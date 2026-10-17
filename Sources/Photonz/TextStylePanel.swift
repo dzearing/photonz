@@ -407,7 +407,7 @@ struct LibraryTextStyleInspector: View {
     private func fontRow(_ style: TextStyle) -> some View {
         captioned("Font") {
             dropdown("Font", style, \.fontName,
-                     TextStyles.fontOptions(picked: [style.treatment.fontName]), title: { $0 })
+                     TextStyles.fontOptions(picked: [style.treatment.fontName], offering: Experiments.shared.fontFamilies), title: { $0 })
         }
     }
 

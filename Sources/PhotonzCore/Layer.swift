@@ -91,6 +91,27 @@ public struct TextContent: Hashable, Codable, Sendable {
     /// way it travels in that time (`MotionSmear.swift`). Set only on the
     /// frame drawn at a moment, like `revealElapsedMS`.
     public var revealShutterMS: Double?
+    /// How far apart the letters are pulled, as a share of the type size: the
+    /// CSS `letter-spacing` in em that every Apple title is set with (-0.028
+    /// on a 184 point headline, +0.16 on a small caps eyebrow). Nil for the
+    /// face's own spacing, which is every piece of text written before this.
+    public var tracking: CGFloat?
+    /// How tall each line is, as a multiple of the type size: the CSS
+    /// `line-height` (1.06 on a New York headline). Nil for the face's own,
+    /// which the panel calls Auto.
+    public var lineHeight: CGFloat?
+    /// A ramp running through the letters instead of one colour, or nil for
+    /// words in `colorHex`. Only drawn while its flat stand-in IS `colorHex`
+    /// (`fillPaint`), so anything that recolours the words flat wins.
+    public var fill: Paint?
+    /// How long the ramp is, as a multiple of each line's width: the CSS
+    /// `background-size` across. Nil is the line's own width.
+    public var fillLength: Double?
+    /// Which part of a ramp longer than the line the letters show, nought to
+    /// one: the CSS `background-position` across. Nought puts the ramp's
+    /// start on the first letter, one puts its end on the last. A title sweeps
+    /// colour through its words by keying this (`MotionProperty.gradientShift`).
+    public var fillShift: Double?
 
     public init(string: String, fontName: String = "SF Pro", fontSize: CGFloat = 24,
                 colorHex: String = "#FFFFFF", weight: TextWeight = .regular,
@@ -132,10 +153,66 @@ public struct TextContent: Hashable, Codable, Sendable {
         // A reveal postdates all of it: older text simply has its words.
         reveal = try container.decodeIfPresent(TextReveal.self, forKey: .reveal)
         revealElapsedMS = try container.decodeIfPresent(Int.self, forKey: .revealElapsedMS)
+        // How the words are set postdates everything: older text is set in
+        // its face's own spacing, in one colour.
+        tracking = try container.decodeIfPresent(CGFloat.self, forKey: .tracking)
+        lineHeight = try container.decodeIfPresent(CGFloat.self, forKey: .lineHeight)
+        fill = try container.decodeIfPresent(Paint.self, forKey: .fill)
+        fillLength = try container.decodeIfPresent(Double.self, forKey: .fillLength)
+        fillShift = try container.decodeIfPresent(Double.self, forKey: .fillShift)
     }
 }
 
 extension TextContent {
+
+    /// The letter spacing a person may set, in em. Tighter than a fifth of the
+    /// type and the letters sit on each other; looser than one em and they are
+    /// not a word any more.
+    public static let trackingRange: ClosedRange<CGFloat> = -0.2...1
+    /// The line spacing a person may set, as a multiple of the type size.
+    public static let lineHeightRange: ClosedRange<CGFloat> = 0.5...3
+
+    /// The letter spacing in points: what is added after every letter.
+    public var trackingPoints: CGFloat { (tracking ?? 0) * fontSize }
+
+    /// The ramp the letters are filled with, or nil for words in one colour.
+    ///
+    /// A ramp only while its flat stand-in is still the words' colour: a title
+    /// restyle, a saved colour or a colour key writes `colorHex` alone, and
+    /// the words then wear that colour rather than a ramp nobody can see is
+    /// still there.
+    public var fillPaint: Paint? {
+        guard let fill, fill.isGradient,
+              fill.hex.caseInsensitiveCompare(colorHex) == .orderedSame else { return nil }
+        return fill
+    }
+
+    /// The box the ramp runs across for one line whose words sit in `line`:
+    /// the line itself, or a box `fillLength` times as wide slid across it by
+    /// `fillShift`, the way CSS sizes and places a background behind each
+    /// line of `background-clip: text`. Any coordinates; only x changes.
+    public func fillBox(forLine line: CGRect) -> CGRect {
+        let length = max(1, fillLength ?? 1)
+        guard length > 1 else { return line }
+        let width = line.width * CGFloat(length)
+        let shift = CGFloat(min(max(fillShift ?? 0, 0), 1))
+        return CGRect(x: line.minX - (width - line.width) * shift, y: line.minY,
+                      width: width, height: line.height)
+    }
+
+    /// Takes on how `existing` is set, for words typed over it: re-wording a
+    /// title keeps its spacing, and keeps its ramp unless a different colour
+    /// was chosen while typing. Alignment rides separately
+    /// (`EditorState.commitTextEdit`), as it always has.
+    public mutating func keepSetting(of existing: TextContent) {
+        tracking = existing.tracking
+        lineHeight = existing.lineHeight
+        fillLength = existing.fillLength
+        fillShift = existing.fillShift
+        if let ramp = existing.fillPaint, ramp.hex.caseInsensitiveCompare(colorHex) == .orderedSame {
+            fill = ramp
+        }
+    }
 
     /// What the plate is painted with: one flat colour, the lower third's
     /// two-colour ramp, or any ramp the picker made; nil for no plate.

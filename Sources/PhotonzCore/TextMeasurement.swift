@@ -92,10 +92,15 @@ public enum TextMeasurement {
     /// been installed.
     public static func estimated(_ text: TextContent, _ maxWidth: CGFloat) -> CGSize {
         let perGlyph: CGFloat = text.weight == .regular ? 0.52 : 0.55
-        let lineHeight = (text.fontSize * 1.22).rounded()
-        func width(_ s: Substring) -> CGFloat { CGFloat(s.count) * text.fontSize * perGlyph }
+        // A line spacing tighter than the face's own still leaves room for the
+        // letters that reach past it, top and bottom (`TextRasterizer`).
+        let natural = text.fontSize * 1.22
+        let lineHeight = (text.lineHeight.map { text.fontSize * $0 } ?? natural).rounded()
+        let overhang = max(0, natural - lineHeight).rounded()
+        let tracking = text.trackingPoints
+        func width(_ s: Substring) -> CGFloat { CGFloat(s.count) * (text.fontSize * perGlyph + tracking) }
         guard !text.string.isEmpty else {
-            return CGSize(width: (text.fontSize / 2).rounded() + slack, height: lineHeight + slack)
+            return CGSize(width: (text.fontSize / 2).rounded() + slack, height: lineHeight + overhang + slack)
         }
         let room = maxWidth.isFinite ? max(maxWidth - slack, 1) : .greatestFiniteMagnitude
         var lines: [Substring] = []
@@ -114,7 +119,7 @@ public enum TextMeasurement {
         }
         let widest = lines.map(width).max() ?? 0
         return CGSize(width: min(ceil(widest), room) + slack,
-                      height: lineHeight * CGFloat(lines.count) + slack)
+                      height: lineHeight * CGFloat(lines.count) + overhang + slack)
     }
 
     /// The installed measurement, behind a lock. A closure is not `Hashable`

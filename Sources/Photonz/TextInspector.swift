@@ -122,6 +122,18 @@ struct TextInspector: View {
                     .equatable()
                 }
                 }
+                // Letter and line spacing, the way a title is set: the
+                // app-shell mock's Tracking box beside Size, and Leading.
+                if Experiments.shared.titleTypeEnabled {
+                    TextSpacingRow(
+                        tracking: selection.number { $0.tracking ?? 0 },
+                        leading: selection.reading { $0.lineHeight },
+                        identity: AnyHashable(ids),
+                        trackingHelp: help("letter spacing", selection.count),
+                        leadingHelp: help("line spacing", selection.count),
+                        setTracking: { editorState.setTextSpacing(ids: pickedIDs, tracking: $0) },
+                        setLeading: { editorState.setTextSpacing(ids: pickedIDs, lineHeight: .some($0)) })
+                }
                 // Where the words sit inside their own boxes. Only tells while
                 // a box is bigger than its words, which is what a box told to
                 // stretch is (Next, `next-placement`).
@@ -239,7 +251,7 @@ struct TextInspector: View {
     /// Curated families plus any the picked labels are already set in, so a
     /// label in an off-list font does not lose it just by being picked.
     private func fontFamilies(_ selection: TextLayerSelection) -> [String] {
-        TextStyles.fontOptions(picked: selection.fontNames)
+        TextStyles.fontOptions(picked: selection.fontNames, offering: Experiments.shared.fontFamilies)
     }
 
     /// Preset sizes plus any the picked labels already wear.
@@ -307,6 +319,65 @@ struct TextSizeAndWeightRow: View {
             .frame(maxWidth: .infinity)
             .playtestField("Weight")
             .panelHelp(weightHelp)
+        }
+    }
+}
+
+/// Tracking and Leading on one line, under Size and Weight: two boxes you
+/// type a percent of the size into, the way a design tool sets type. Tracking
+/// -2.8 is an Apple headline's -0.028em; Leading 106 its 1.06 line, and
+/// emptied it goes back to Auto, the face's own spacing.
+struct TextSpacingRow: View {
+    let tracking: StyleReading<CGFloat>
+    let leading: StyleReading<CGFloat?>
+    let identity: AnyHashable
+    let trackingHelp: String
+    let leadingHelp: String
+    /// Letter spacing in em.
+    let setTracking: (CGFloat) -> Void
+    /// Line height as a multiple of the size, nil for Auto.
+    let setLeading: (CGFloat?) -> Void
+
+    var body: some View {
+        HStack(spacing: 8) {
+            PanelNumberField(
+                showing: TextSpacing.trackingShowing(tracking),
+                label: "Tracking",
+                identity: identity,
+                suffix: "%",
+                width: .flexible(least: 28),
+                floor: TextContent.trackingRange.lowerBound * 100,
+                ceiling: TextContent.trackingRange.upperBound * 100,
+                help: trackingHelp,
+                spell: { TextSpacing.spell($0) },
+                look: .well,
+                land: { value in
+                    setTracking(TextSpacing.tracking(percent: value))
+                    return nil
+                })
+            .frame(maxWidth: .infinity)
+            .playtestField("Tracking")
+            let leadingShows = TextSpacing.leadingShowing(leading)
+            PanelNumberField(
+                showing: leadingShows,
+                label: "Leading",
+                identity: identity,
+                // A percent mark after Auto or Mixed would be a unit on a word.
+                suffix: leadingShows.isStandIn ? nil : "%",
+                prompt: TextSpacing.automatic,
+                width: .flexible(least: 28),
+                floor: TextContent.lineHeightRange.lowerBound * 100,
+                ceiling: TextContent.lineHeightRange.upperBound * 100,
+                help: leadingHelp,
+                clear: { setLeading(nil) },
+                spell: { TextSpacing.spell($0) },
+                look: .well,
+                land: { value in
+                    setLeading(TextSpacing.lineHeight(percent: value))
+                    return nil
+                })
+            .frame(maxWidth: .infinity)
+            .playtestField("Leading")
         }
     }
 }

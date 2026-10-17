@@ -221,10 +221,24 @@ extension CanvasNSView {
         editor.font = font
         editor.textColor = color
         editor.insertionPointColor = color
-        editor.typingAttributes = [.font: font, .foregroundColor: color]
+        // Typed with the letter and line spacing the words are set in, so a
+        // tracked title does not spread out on Return (`TextContent.tracking`).
+        var attributes: [NSAttributedString.Key: Any] = [.font: font, .foregroundColor: color]
+        if stored.trackingPoints != 0 { attributes[.kern] = stored.trackingPoints * viewport.zoom }
+        if let multiple = stored.lineHeight, textSession?.captionStyle == nil {
+            let paragraph = NSMutableParagraphStyle()
+            paragraph.minimumLineHeight = multiple * stored.fontSize * viewport.zoom
+            paragraph.maximumLineHeight = multiple * stored.fontSize * viewport.zoom
+            paragraph.alignment = switch stored.usedAlignment {
+            case .left: .left
+            case .center: .center
+            case .right: .right
+            }
+            attributes[.paragraphStyle] = paragraph
+        }
+        editor.typingAttributes = attributes
         if let storage = editor.textStorage, storage.length > 0 {
-            storage.addAttributes([.font: font, .foregroundColor: color],
-                                  range: NSRange(location: 0, length: storage.length))
+            storage.addAttributes(attributes, range: NSRange(location: 0, length: storage.length))
         }
         // The draft sits where the committed words will: a centred label is
         // typed centred rather than jumping on Return.
@@ -319,8 +333,11 @@ extension CanvasNSView {
             box.width = max(box.width, TextRasterizer.naturalSize(draft).width)
         }
         // Words that sit low in a roomy box are typed low in it too.
+        // So are words set tighter than their face, below the room the
+        // renderer keeps for letters reaching past their lines.
         editor.textContainerInset = NSSize(width: 0,
-                                           height: TextBlockMetrics.topInset(for: draft, in: box) * zoom)
+                                           height: (TextBlockMetrics.topInset(for: draft, in: box)
+                                                    + TextRasterizer.lineOverhang(draft)) * zoom)
         editor.textContainer?.containerSize = NSSize(width: box.width * zoom,
                                                      height: .greatestFiniteMagnitude)
         // Words on a card that has been TURNED are typed ON the words. The
