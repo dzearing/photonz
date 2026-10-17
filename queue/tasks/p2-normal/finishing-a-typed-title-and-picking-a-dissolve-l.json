@@ -1,0 +1,38 @@
+{
+  "id": "finishing-a-typed-title-and-picking-a-dissolve-l",
+  "title": "Finishing a typed title and picking a dissolve land inside 50 ms",
+  "goal": "Command Return on a typed title over a video and a click on the Cross dissolve tile at a cut now hold the app for about 55 to 65 ms and 47 to 53 ms, down from 200 ms and 80 ms. Getting both under the 50 ms the video goals promise takes the last frame of lag out of finishing a title and picking a transition.",
+  "epic": "video-beats-premiere",
+  "priority": "p2-normal",
+  "seq": 50,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T05:16:47.373Z",
+  "updated": "2026-10-17T12:59:59.220Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Carried from finishing-a-typed-title-on-a-video-never-stalls (2026-10-16), whose log has the traces. Numbers at its commit, markers down, three runs: after Command Return 64.2 / 64.6 / 54.5 ms (worst pass is either the commit's own pass, 55-62 ms, or an effect pane arriving ~0.5 s later, up to 80 ms once); tile 53.2 / 49.9 / 47.2 ms. Attribution (xctrace Time Profiler, attach to the probe, export time-profile, cut to the pass): commit pass = ~10 ms harness/window performKeyEquivalent walk + ~45 ms diffuse SwiftUI graph update (timeline gains a Title track, canvas, menu commands body, panel) + ~8 ms AX. Moving the hand-back to Select a turn later was tried and did NOT help (61.8 ms; the landing is the cost, not the pick). Effect panes: each shadow pane is ~8 rows built in one pass plus SwiftUI's AccessibilityNode.updateFocus walk over every focusable view in the window (20-80 ms, half of it swift_conformsToProtocol for new view types on first use); splitting a pane's rows across passes is the next lever. Tile pass: diffuse graph update after setTransition (document change, pickCut, playhead to the cut, picker closing); the transition form already arrives a pass later.",
+  "acceptance": [
+    "In an-editing-session-walk, the wait after Command Return on the typed title shows no single main thread pass over 50 ms, in three runs in a row",
+    "Picking Cross dissolve from the At this cut tiles holds under 50 ms in three runs in a row",
+    "The walk's two timing claims (today 100 ms and 65 ms) are tightened to 50 ms"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T05:16:47.375Z",
+      "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-17T12:59:46.119Z",
+      "note": "digest 2026-10-17: twin of clicking-a-cut-keying-a-value-and-undoing-it-ans (now unblocked). Both costs are the panel's diffuse rebuild and the accessibility focus walk; whoever lands a cut to that first should re-measure the other's steps and log them there."
+    },
+    {
+      "t": "2026-10-17T12:59:59.219Z",
+      "note": "seq 27.5 -> 50"
+    }
+  ],
+  "walks": [
+    "an-editing-session-walk"
+  ]
+}

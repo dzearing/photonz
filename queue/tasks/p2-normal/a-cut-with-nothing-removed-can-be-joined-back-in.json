@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 21,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.297Z",
-  "updated": "2026-10-17T02:56:16.585Z",
+  "updated": "2026-10-17T10:19:22.278Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the manager's Premiere check on 2026-10-16. ClipCut.isContinuous already detects a through edit (Sources/PhotonzCore/ClipTransitions.swift:379-383) but is only used to warn that a dissolve there would show nothing (:904; TransitionInspector.swift:171). The join itself exists inside Break Apart: healCuts / Layer.joined (Sources/PhotonzCore/MergedClip.swift:295-336). Cut right-click menu: Sources/Photonz/EditorState+TimelineMenus.swift. Premiere also joins a picked through edit with Delete; do not change what Delete does on a cut here without a card. Title Case row, no key needed (UX-PATTERNS §7: Premiere gives it none by default). TDD in PhotonzCore.",
@@ -28,6 +28,32 @@
     {
       "t": "2026-10-17T02:56:16.584Z",
       "note": "seq 269.375 -> 21"
+    },
+    {
+      "t": "2026-10-17T09:50:03.046Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T10:19:04.821Z",
+      "note": "owns these walks: join-through-edit-walk, join-through-edit-from-the-menu-bar-walk"
+    },
+    {
+      "t": "2026-10-17T10:19:04.885Z",
+      "note": "Adversarial pass: B in Next picks the Blade (Premiere's razor), so the try path is B+click or Cmd-K at 4s; Delete on a picked through edit left alone per the notes; two-clip edit points of one recording also join (earlier clip wins, later clip's zooms/clicks carried since they are on the recording clock, its keys dropped as Premiere does). Added a 'dimmed' expectation to the rightClick walk step to prove the row is dimmed on a jump cut."
+    },
+    {
+      "t": "2026-10-17T10:19:04.953Z",
+      "note": "left rough: no Delete-joins-a-through-edit (Premiere does); not filed, the task said not to change Delete without a card and nobody has asked for it."
+    },
+    {
+      "t": "2026-10-17T10:19:22.276Z",
+      "note": "Join Through Edit on a cut's right-click (both kinds of cut) and Clip menu, dimmed elsewhere; one undo; a transition on the cut goes with it and the canvas says 'Joined · <kind> taken off'. Core in Sources/PhotonzCore/ThroughEdit.swift + ClipPieces.joinThroughEdit, 13 new tests, full suite green (13421). Walks join-through-edit-walk and join-through-edit-from-the-menu-bar-walk pass at Next defaults with real captures. Audit queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json. Commit d632ca68."
     }
-  ]
+  ],
+  "started": "2026-10-17T09:50:03.045Z",
+  "walks": [
+    "join-through-edit-walk",
+    "join-through-edit-from-the-menu-bar-walk"
+  ],
+  "completed": "2026-10-17T10:19:22.277Z"
 }

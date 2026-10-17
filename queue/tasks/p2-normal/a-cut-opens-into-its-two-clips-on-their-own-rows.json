@@ -4,12 +4,12 @@
   "goal": "The transition walkthrough explains how a dissolve works by opening the cut into the two clips it is made of: clip A on one row running past the cut, clip B on the row below starting early, with the overlap and the spare frames it spends in plain sight. Add that Expand the cut view so an editor can see and check what a transition borrows.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 26,
+  "seq": 30,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.190Z",
-  "updated": "2026-10-17T02:56:16.897Z",
+  "updated": "2026-10-17T12:59:59.088Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-transition-wt.html line 81 menu 'Expand the cut ⌥E' under Edit point; lines 166-173 'THE EXPANDED CUT · the same two clips on their own rows' (A screen-recording, B b-roll.mov, 'both on screen · 1.0s', Audio); steps 5-9 (data-class #btnExpand=open). The mock opens it from a chevron on the V1 track label. Today that chevron opens the keyed-value and words lanes (Sources/Photonz/TimelineTrackRows.swift:292-300), so do not take it over: ship the menu rows and Option E, and say in the audit's rough list how the mock's chevron and today's chevron differ, so the user can react. Option E is neither Photoshop's nor Premiere's key (check before binding; UX-PATTERNS §7). Spare strips already drawn in-row: TimelineLaneDrop.swift:538 TimelineSpareStrips; spare and paid-with numbers: TransitionInspector.swift:22-23,112. Nothing moves a clip by opening the view; only a Hold moves time, as today.",
@@ -18,6 +18,7 @@
     "With a cross dissolve on the cut, A visibly runs past the cut and B starts early by the dissolve's halves, the spent spare frames are hatched, and a 'both on screen' label gives the overlap's length, as the mock's step 5 draws it",
     "Switching the transition to Dip to black shows the overlap released (A and B no longer reach past each other) and setting a Hold on black shows the inserted black, as steps 7 and 8 draw them",
     "The playhead crosses both rows, and the picture at the seam shows both shots at once (step 6)",
+    "Measured bar a pair of plain rows fails: with a 1 s cross dissolve the walk measures A running 0.5 s past the cut and B starting 0.5 s before it against the ruler, each within 1 px, and finds the hatched spare frames over exactly that overlap",
     "Try path, no flag changed from Next defaults: on the sample recording make a cut, put a cross dissolve on it, press Option E; audit written under queue/audits/ with the app beside the mock's step 5; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
@@ -28,6 +29,14 @@
     {
       "t": "2026-10-17T02:56:16.896Z",
       "note": "seq 268.75 -> 26"
+    },
+    {
+      "t": "2026-10-17T12:59:38.526Z",
+      "note": "digest 2026-10-17: added a measured visual bar to the acceptance, so the flat version cannot close it (runner-prompt, work about how something looks)"
+    },
+    {
+      "t": "2026-10-17T12:59:59.087Z",
+      "note": "seq 26 -> 30"
     }
   ]
 }

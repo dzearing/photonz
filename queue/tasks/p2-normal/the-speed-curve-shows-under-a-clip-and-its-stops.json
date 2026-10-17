@@ -4,12 +4,12 @@
   "goal": "Once a clip can ramp, an editor needs to see and shape the ramp where the clip is. Plot the clip's speed curve under it on the timeline, as the speed mock draws it, with each stop a point you drag in time and in speed.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 25,
+  "seq": 20,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.090Z",
-  "updated": "2026-10-17T02:56:16.834Z",
+  "updated": "2026-10-17T12:59:59.020Z",
   "deps": [
     "a-clip-s-speed-can-change-across-its-length-with"
   ],
@@ -20,6 +20,7 @@
     "Dragging a stop sideways moves it in time and up or down changes its speed, live in the picture, as one undo per drag; clicking the curve between stops adds one",
     "The curve opens and closes the way a layer's other lanes open on the timeline, and takes no room on a clip with no stops",
     "Try path, no flag changed from Next defaults: on the sample recording add two speed stops, open the clip's speed curve, drag the second stop up",
+    "Measured bar a plain line fails: the walk samples the curve area and finds the fast band in the mock's #ff5d8f and the hatched amber freeze band where the stops say, and the 1x line within 1 px of where the scale puts it; a reel of a stop being dragged goes with the audit",
     "Audit written under queue/audits/ with the app beside the mock on one picture; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
@@ -30,6 +31,14 @@
     {
       "t": "2026-10-17T02:56:16.832Z",
       "note": "seq 267.5 -> 25"
+    },
+    {
+      "t": "2026-10-17T12:59:38.526Z",
+      "note": "digest 2026-10-17: added a measured visual bar to the acceptance, so the flat version cannot close it (runner-prompt, work about how something looks)"
+    },
+    {
+      "t": "2026-10-17T12:59:59.019Z",
+      "note": "seq 25 -> 20"
     }
   ]
 }

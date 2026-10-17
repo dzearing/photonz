@@ -12298,3 +12298,101 @@
 {"t":"2026-10-17T02:56:17.019Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":4070,"to":28}
 {"t":"2026-10-17T02:56:24.109Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
 {"t":"2026-10-17T02:56:59.819Z","ev":"manager","filed":9,"readyBefore":2,"readyAfter":10,"report":"queue/manager/2026-10-16-1947.md"}
+{"t":"2026-10-17T02:57:19.103Z","ev":"manager_pass","exit":0,"ready":10}
+{"t":"2026-10-17T02:57:19.170Z","ev":"task_started","id":"finishing-a-typed-title-on-a-video-never-stalls","title":"Finishing a typed title on a video never stalls the app","priority":"p1-high"}
+{"t":"2026-10-17T05:16:30.681Z","ev":"task_walks","id":"finishing-a-typed-title-on-a-video-never-stalls","walks":["an-editing-session-walk"]}
+{"t":"2026-10-17T05:16:47.377Z","ev":"task_created","id":"finishing-a-typed-title-and-picking-a-dissolve-l","priority":"p2-normal","title":"Finishing a typed title and picking a dissolve land inside 50 ms"}
+{"t":"2026-10-17T05:17:46.437Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.500Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.568Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.642Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.707Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.767Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.832Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.903Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:46.968Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:17:47.031Z","ev":"task_note","id":"finishing-a-typed-title-on-a-video-never-stalls"}
+{"t":"2026-10-17T05:18:13.545Z","ev":"task_done","id":"finishing-a-typed-title-on-a-video-never-stalls","from":"in_progress","note":"Command Return on a typed video title: longest pass 190-200 ms -> 55-65 ms (Effects no longer built twice: shortenable dock sections always keep their scroller; effect panes arrive a pass apart; the field answers Command Return before the menu bar). Cross dissolve tile 68-82 -> 47-53 ms (transition settings arrive a pass later). Walk claims 100/65 ms, three green runs; Scripts/test.sh green; 50+ related walks green. Commit 1fd831d8. The 50 ms remainder is finishing-a-typed-title-and-picking-a-dissolve-l."}
+{"t":"2026-10-17T09:50:02.886Z","ev":"sweep_pass","walks":955,"passed":955,"failed":0,"seconds":15904,"complete":true,"total":955}
+{"t":"2026-10-17T09:50:03.052Z","ev":"task_started","id":"a-cut-with-nothing-removed-can-be-joined-back-in","title":"A cut with nothing removed can be joined back into one piece","priority":"p2-normal"}
+{"t":"2026-10-17T10:19:04.823Z","ev":"task_walks","id":"a-cut-with-nothing-removed-can-be-joined-back-in","walks":["join-through-edit-walk","join-through-edit-from-the-menu-bar-walk"]}
+{"t":"2026-10-17T10:19:04.887Z","ev":"task_note","id":"a-cut-with-nothing-removed-can-be-joined-back-in"}
+{"t":"2026-10-17T10:19:04.955Z","ev":"task_note","id":"a-cut-with-nothing-removed-can-be-joined-back-in"}
+{"t":"2026-10-17T10:19:22.279Z","ev":"task_done","id":"a-cut-with-nothing-removed-can-be-joined-back-in","from":"in_progress","note":"Join Through Edit on a cut's right-click (both kinds of cut) and Clip menu, dimmed elsewhere; one undo; a transition on the cut goes with it and the canvas says 'Joined · <kind> taken off'. Core in Sources/PhotonzCore/ThroughEdit.swift + ClipPieces.joinThroughEdit, 13 new tests, full suite green (13421). Walks join-through-edit-walk and join-through-edit-from-the-menu-bar-walk pass at Next defaults with real captures. Audit queue/audits/2026-10-17-a-cut-with-nothing-removed-can-be-joined-back-in.json. Commit d632ca68."}
+{"t":"2026-10-17T10:32:11.355Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":614,"of":957,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T10:32:11.551Z","ev":"task_started","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l","title":"Command dragging a clip's edge ripple trims, so later clips follow","priority":"p2-normal"}
+{"t":"2026-10-17T10:40:25.297Z","ev":"task_note","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l"}
+{"t":"2026-10-17T11:16:26.230Z","ev":"task_walks","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l","walks":["command-drag-ripple-trims-an-edge-walk","bar-end-follows-the-pointer-walk"]}
+{"t":"2026-10-17T11:16:36.148Z","ev":"task_note","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l"}
+{"t":"2026-10-17T11:17:00.086Z","ev":"task_done","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l","from":"in_progress","note":"Command on a clip's edge (its grip, or either half of the cut where two clips meet) now ripple trims like Premiere: everything after the edit on every unlocked track follows, snapping stays on, one undo. Yellow grip + bracket under Command, capsule 'Ripple'. Core RippleEdgeDrag.swift TDD (12 tests); walk command-drag-ripple-trims-an-edge-walk green at Next defaults with real captures; 14 neighbouring walks + full suite (13,433) green. Commit aff880af. Audit queue/audits/2026-10-17-command-drag-ripple-trim.json."}
+{"t":"2026-10-17T11:29:51.388Z","ev":"slice_pass","walks":33,"passed":33,"failed":0,"seconds":602,"of":958,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T11:29:51.571Z","ev":"task_started","id":"a-clip-can-be-colour-graded-from-add-effect","title":"A clip can be colour graded from Add Effect","priority":"p2-normal"}
+{"t":"2026-10-17T12:35:37.273Z","ev":"decision_opened","id":"a-clip-can-be-colour-graded-from-add-effect-is-this-the-color-grade-you-want","taskId":"a-clip-can-be-colour-graded-from-add-effect","question":"Is this the Color Grade you want on a clip?"}
+{"t":"2026-10-17T12:36:36.606Z","ev":"task_created","id":"a-colour-grade-can-be-its-own-track-over-the-cli","priority":"p2-normal","title":"A colour grade can be its own track over the clips below it, with a blend mode and a matte"}
+{"t":"2026-10-17T12:36:41.596Z","ev":"task_walks","id":"a-clip-can-be-colour-graded-from-add-effect","walks":["color-grade-warms-a-clip-walk"]}
+{"t":"2026-10-17T12:37:09.255Z","ev":"task_note","id":"a-clip-can-be-colour-graded-from-add-effect"}
+{"t":"2026-10-17T12:37:09.319Z","ev":"task_note","id":"a-clip-can-be-colour-graded-from-add-effect"}
+{"t":"2026-10-17T12:37:09.383Z","ev":"task_note","id":"a-clip-can-be-colour-graded-from-add-effect"}
+{"t":"2026-10-17T12:37:09.447Z","ev":"task_note","id":"a-clip-can-be-colour-graded-from-add-effect"}
+{"t":"2026-10-17T12:37:09.509Z","ev":"task_note","id":"a-clip-can-be-colour-graded-from-add-effect"}
+{"t":"2026-10-17T12:44:14.311Z","ev":"task_done","id":"a-clip-can-be-colour-graded-from-add-effect","from":"in_progress","note":"Color Grade in the Effects plus on Next defaults (next-color-grade on): Temperature, Tint, Exposure, Contrast, Saturation, each slider + number box + key diamond, arriving as the mock's Warm grade. Core ColorGradeEffect + five keyable values (Saturation offered on every picture), PhotonzRender ColorGradeFilter. Verified: unit, render and real-MP4 export tests, full suite 13,458 green; walk color-grade-warms-a-clip-walk at defaults: warm end +67.6 red over blue (bar 30), all middles identical pixel for pixel, keys and lane. Audit queue/audits/2026-10-17-color-grade.json with contact sheet + reel; card on the look open. Commit 462efa64."}
+{"t":"2026-10-17T12:56:43.793Z","ev":"slice_pass","walks":25,"passed":25,"failed":0,"seconds":720,"of":959,"couldNotRun":0,"timedOut":false,"rotating":true}
+{"t":"2026-10-17T12:59:00.861Z","ev":"task_pending","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":"blocked","note":"digest 2026-10-17: unblocked. Its card (should the picture shrink for a key lane) no longer gates this work: the app already does option b, as the 2026-10-16 digest found, and the 50 ms work is the same either way. The card stays open for the user; if they pick a, undo ownLanesOnly as the 2026-10-15 log line says."}
+{"t":"2026-10-17T12:59:46.056Z","ev":"task_note","id":"the-panel-shows-what-the-picked-thing-is-and-its"}
+{"t":"2026-10-17T12:59:46.121Z","ev":"task_note","id":"finishing-a-typed-title-and-picking-a-dissolve-l"}
+{"t":"2026-10-17T12:59:46.186Z","ev":"task_note","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans"}
+{"t":"2026-10-17T12:59:46.251Z","ev":"task_resequenced","id":"a-video-document-shows-the-library-in-its-dock","from":10,"to":10}
+{"t":"2026-10-17T12:59:46.316Z","ev":"task_resequenced","id":"the-panel-shows-what-the-picked-thing-is-and-its","from":20,"to":20}
+{"t":"2026-10-17T12:59:46.378Z","ev":"task_resequenced","id":"a-sound-lane-is-as-tall-as-the-mock-s-and-its-wa","from":40,"to":30}
+{"t":"2026-10-17T12:59:46.442Z","ev":"task_resequenced","id":"a-picked-rounded-shape-is-ringed-round-its-box-a","from":70,"to":40}
+{"t":"2026-10-17T12:59:46.505Z","ev":"task_resequenced","id":"the-grid-s-controls-come-back-to-the-tool-bar-as","from":30,"to":50}
+{"t":"2026-10-17T12:59:46.569Z","ev":"task_resequenced","id":"a-drawn-path-s-outline-settings-read-like-the-ic","from":50,"to":60}
+{"t":"2026-10-17T12:59:46.632Z","ev":"task_resequenced","id":"on-a-video-captions-and-transitions-sit-where-th","from":60,"to":70}
+{"t":"2026-10-17T12:59:58.955Z","ev":"task_resequenced","id":"a-clip-s-speed-can-change-across-its-length-with","from":24,"to":10}
+{"t":"2026-10-17T12:59:59.021Z","ev":"task_resequenced","id":"the-speed-curve-shows-under-a-clip-and-its-stops","from":25,"to":20}
+{"t":"2026-10-17T12:59:59.089Z","ev":"task_resequenced","id":"a-cut-opens-into-its-two-clips-on-their-own-rows","from":26,"to":30}
+{"t":"2026-10-17T12:59:59.155Z","ev":"task_resequenced","id":"a-title-s-words-can-follow-a-curved-path","from":27,"to":40}
+{"t":"2026-10-17T12:59:59.221Z","ev":"task_resequenced","id":"finishing-a-typed-title-and-picking-a-dissolve-l","from":27.5,"to":50}
+{"t":"2026-10-17T12:59:59.286Z","ev":"task_resequenced","id":"clicking-a-cut-keying-a-value-and-undoing-it-ans","from":200,"to":60}
+{"t":"2026-10-17T12:59:59.350Z","ev":"task_resequenced","id":"a-colour-grade-can-be-its-own-track-over-the-cli","from":27.75,"to":70}
+{"t":"2026-10-17T12:59:59.412Z","ev":"task_resequenced","id":"or-sits-beside-shorten-the-cut-the-way-the-trans","from":30,"to":80}
+{"t":"2026-10-17T12:59:59.477Z","ev":"task_resequenced","id":"music-dips-under-the-speech-by-itself","from":100,"to":90}
+{"t":"2026-10-17T12:59:59.543Z","ev":"task_resequenced","id":"zooms-write-themselves-from-the-clicks-in-a-reco","from":110,"to":100}
+{"t":"2026-10-17T12:59:59.606Z","ev":"task_resequenced","id":"time-on-a-video-reads-in-frames-where-an-editor","from":120,"to":110}
+{"t":"2026-10-17T12:59:59.670Z","ev":"task_resequenced","id":"edit-mode-s-contents-come-in-with-the-slide-not","from":130,"to":120}
+{"t":"2026-10-17T12:59:59.732Z","ev":"task_resequenced","id":"the-panel-keeps-its-promise-on-a-video-document","from":140,"to":130}
+{"t":"2026-10-17T12:59:59.798Z","ev":"task_resequenced","id":"shift-z-means-the-one-thing-you-choose-on-a-vide","from":150,"to":140}
+{"t":"2026-10-17T12:59:59.865Z","ev":"task_resequenced","id":"title-pages-and-name-cards-follow-the-mock-or-th","from":160,"to":150}
+{"t":"2026-10-17T12:59:59.932Z","ev":"task_resequenced","id":"animate-a-property-fits-on-screen-on-a-title-wit","from":170,"to":160}
+{"t":"2026-10-17T12:59:59.997Z","ev":"task_resequenced","id":"a-clip-landing-where-another-sits-does-the-same","from":180,"to":170}
+{"t":"2026-10-17T13:00:00.061Z","ev":"task_resequenced","id":"option-delete-ripple-deletes-on-the-timeline-as","from":190,"to":180}
+{"t":"2026-10-17T13:00:00.125Z","ev":"task_resequenced","id":"a-sound-clip-on-the-timeline-wears-its-file-name","from":210,"to":190}
+{"t":"2026-10-17T13:00:00.193Z","ev":"task_resequenced","id":"the-part-after-a-cut-is-labelled-the-way-the-cut","from":220,"to":200}
+{"t":"2026-10-17T13:00:00.260Z","ev":"task_resequenced","id":"music-longer-than-the-edit-stops-where-the-pictu","from":230,"to":210}
+{"t":"2026-10-17T13:00:00.325Z","ev":"task_resequenced","id":"a-clip-s-picture-and-sound-bars-wear-one-tint-fa","from":240,"to":220}
+{"t":"2026-10-17T13:00:00.391Z","ev":"task_resequenced","id":"wherever-you-ease-a-key-a-segment-a-row-or-the-b","from":250,"to":230}
+{"t":"2026-10-17T13:00:00.454Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":28,"to":240}
+{"t":"2026-10-17T13:00:00.526Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":270,"to":250}
+{"t":"2026-10-17T13:00:00.595Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":280,"to":260}
+{"t":"2026-10-17T13:00:00.674Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":290,"to":270}
+{"t":"2026-10-17T13:00:00.740Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":300,"to":280}
+{"t":"2026-10-17T13:00:00.806Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":310,"to":290}
+{"t":"2026-10-17T13:00:00.892Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":320,"to":300}
+{"t":"2026-10-17T13:00:00.961Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":330,"to":310}
+{"t":"2026-10-17T13:00:01.029Z","ev":"task_resequenced","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":340,"to":320}
+{"t":"2026-10-17T13:00:01.098Z","ev":"task_resequenced","id":"a-colour-swatch-at-the-very-top-of-the-panel-ope","from":10,"to":10}
+{"t":"2026-10-17T13:00:01.165Z","ev":"task_resequenced","id":"find-out-whether-grid-settings-is-hard-to-read-i","from":20,"to":20}
+{"t":"2026-10-17T13:00:10.014Z","ev":"triage","summary":"41 open, 0 merged, 0 dropped, 0 priority moves, 0 reset; 1 unblocked (clicking-a-cut perf task, its card no longer gates it); 3 groomed with measured visual bars (text on a path, speed curve, expanded cut); 3 findings folded as log lines; p1, p2 and p3 renumbered in steps of 10, focus first"}
+{"t":"2026-10-17T13:01:09.199Z","ev":"task_created","id":"delete-on-a-picked-through-edit-joins-it-as-in-p","priority":"p2-normal","title":"Delete on a picked through edit joins it, as in Premiere"}
+{"t":"2026-10-17T13:01:12.903Z","ev":"task_note","id":"command-dragging-a-clip-s-edge-ripple-trims-so-l"}
+{"t":"2026-10-17T13:01:18.099Z","ev":"task_resequenced","id":"delete-on-a-picked-through-edit-joins-it-as-in-p","from":235,"to":240}
+{"t":"2026-10-17T13:01:18.162Z","ev":"task_resequenced","id":"opening-an-svg-file-gives-you-its-drawing-to-edi","from":240,"to":250}
+{"t":"2026-10-17T13:01:18.231Z","ev":"task_resequenced","id":"a-recent-document-card-offers-the-mock-s-copy-pi","from":250,"to":260}
+{"t":"2026-10-17T13:01:18.299Z","ev":"task_resequenced","id":"the-measuring-legend-says-something-useful-now-t","from":260,"to":270}
+{"t":"2026-10-17T13:01:18.365Z","ev":"task_resequenced","id":"icon-snapping-reaches-what-the-icon-mock-draws","from":270,"to":280}
+{"t":"2026-10-17T13:01:18.434Z","ev":"task_resequenced","id":"copying-an-icon-carries-the-white-canvas-the-exp","from":280,"to":290}
+{"t":"2026-10-17T13:01:18.504Z","ev":"task_resequenced","id":"the-timing-strip-s-name-column-is-as-wide-as-the","from":290,"to":300}
+{"t":"2026-10-17T13:01:18.573Z","ev":"task_resequenced","id":"rounding-corners-works-the-same-way-on-a-rectang","from":300,"to":310}
+{"t":"2026-10-17T13:01:18.641Z","ev":"task_resequenced","id":"the-size-rows-in-the-layout-section-match-the-au","from":310,"to":320}
+{"t":"2026-10-17T13:01:18.713Z","ev":"task_resequenced","id":"the-repeats-label-on-the-timing-strip-s-ruler-ne","from":320,"to":330}
+{"t":"2026-10-17T13:02:14.092Z","ev":"digest","file":"2026-10-17.md"}

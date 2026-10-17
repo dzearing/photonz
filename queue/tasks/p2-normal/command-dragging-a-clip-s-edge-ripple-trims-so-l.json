@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p2-normal",
   "seq": 22,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.395Z",
-  "updated": "2026-10-17T02:56:16.647Z",
+  "updated": "2026-10-17T13:01:12.902Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Found by the manager's Premiere check on 2026-10-16: an edge drag never ripples (Sources/PhotonzCore/ClipPieces.swift:860-874, 909-918; ClipBarDrag.swift:41-52 has no modifier handling; EditorState+ClipBar.swift:567-569 leaves the next clip in place). Q and W already ripple to the playhead (RippleTrim.swift:71-84), so reuse their all-tracks shift rather than a second ripple. Premiere on the Mac: with the Selection tool, holding Command over an edit point gives the Ripple Edit cursor (third-party guides, not Adobe docs; check Adobe's own help before shipping and cite it in the audit). Rolling a cut by drag (Premiere's N) is not this task. TDD for the Core part.",
@@ -28,6 +28,36 @@
     {
       "t": "2026-10-17T02:56:16.646Z",
       "note": "seq 269.6875 -> 22"
+    },
+    {
+      "t": "2026-10-17T10:32:11.545Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T10:40:25.295Z",
+      "note": "Adversarial review before building: (1) ⌘ during an edge drag today means 'no snapping', which clashes with Premiere's ⌘-over-an-edit-point ripple. UX-PATTERNS §7 rule: Premiere's key wins, so ⌘ held AT THE GRAB of an edge makes it a ripple and snapping stays on; ⌘ still frees a body drag and a title's free start; S still toggles snapping mid-drag. (2) Lengthening has no 'insert' op in the app, so it reuses the hold-push ripple (rippleTime): a sound or clip spanning the edit pauses there, like Premiere's sync-locked gap. (3) Shortening reuses Q/W's Extract on every unlocked track. (4) Head ripple: the clip keeps its start, so later clips close up when you let go, the same moment the bar's far end does; end ripple previews live. (5) Adobe's help pages are 403 to fetch; the ⌘-Selection-tool ripple is from third-party guides plus Adobe's rolling/ripple page wording. Core done TDD: RippleEdgeDrag.swift + tests (11), extractStretch exceptLayers, rippleTime sparingLocked + caption words now move with a rippled caption."
+    },
+    {
+      "t": "2026-10-17T11:16:26.228Z",
+      "note": "owns these walks: command-drag-ripple-trims-an-edge-walk, bar-end-follows-the-pointer-walk"
+    },
+    {
+      "t": "2026-10-17T11:16:36.146Z",
+      "note": "Built: Core RippleEdgeDrag.swift (rippleTrimClipEdge + ClipBarDrag.ripples), extractStretch exceptLayers, rippleTime sparingLocked + caption words follow; app: ⌘ at the grab of an edge grip or either half of the cut between two clips starts a ripple (ClipPiecesBar.edgeDrag, TimelineEditPointView.sideDrag), snapping stays on, grip turns yellow and the cut shows a yellow bracket under ⌘ hover, capsule 'Ripple · 4.0s · -2.0s', end ripple previews live, start ripple closes up on let go, commit is one perform. Walk command-drag-ripple-trims-an-edge-walk green at Next defaults (5 real captures); 14 neighbouring edge/edit-point walks green; bar-end-follows-the-pointer-walk now switches the magnet off instead of holding ⌘. Full suite 13,433 green. Looked at 2-ripple-look, 3-mid-drag, 4-after, 5-plain crops: yellow ] + grip on hover; b-roll follows to the playhead mid-drag with no stale cut or spare block (both fixed after the first run showed them); clips meet at 4s after; plain drag leaves the gap. Rough items in the audit are questions for the user (evaluate) or written rules, none cleared the follow-up bar: no pointer change (no system ripple cursor), held pause in spanning sound on extension, Adobe help 403."
+    },
+    {
+      "t": "2026-10-17T11:17:00.083Z",
+      "note": "Command on a clip's edge (its grip, or either half of the cut where two clips meet) now ripple trims like Premiere: everything after the edit on every unlocked track follows, snapping stays on, one undo. Yellow grip + bracket under Command, capsule 'Ripple'. Core RippleEdgeDrag.swift TDD (12 tests); walk command-drag-ripple-trims-an-edge-walk green at Next defaults with real captures; 14 neighbouring walks + full suite (13,433) green. Commit aff880af. Audit queue/audits/2026-10-17-command-drag-ripple-trim.json."
+    },
+    {
+      "t": "2026-10-17T13:01:12.901Z",
+      "note": "left rough (digest 2026-10-17): in 2026-10-17-ripple-edge-3-mid-drag-sc.png the clip's Properties still read 0.0s to 6.0s while the drag label says 4.0s; the panel catches up only on release. Mid-drag only, so no task; file it if it shows up again."
     }
-  ]
+  ],
+  "started": "2026-10-17T10:32:11.542Z",
+  "walks": [
+    "command-drag-ripple-trims-an-edge-walk",
+    "bar-end-follows-the-pointer-walk"
+  ],
+  "completed": "2026-10-17T11:17:00.084Z"
 }

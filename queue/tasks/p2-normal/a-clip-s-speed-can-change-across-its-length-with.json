@@ -4,12 +4,12 @@
   "goal": "Today a piece of a clip plays at one speed. The speed mock lets an editor put speed stops on a clip so it ramps from normal to fast and back, the way a screen recording is sped through a boring stretch and eased back in. This first part makes the ramp real: stops you add at the playhead, the picture following them in playback and export, and the stop's speed set in Properties.",
   "epic": "video-transitions-motion",
   "priority": "p2-normal",
-  "seq": 24,
+  "seq": 10,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:03.994Z",
-  "updated": "2026-10-17T02:56:16.773Z",
+  "updated": "2026-10-17T12:59:58.954Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-speed.html. Menu rows 'Add speed stop A', 'Delete speed stop', 'Reset ramp'; Properties 'Speed stop 4 of 7', Speed, 'Between stops interpolation: Ramp / Hold' with the line 'Ramp eases between stops... A stop at zero holds a single frame, so two zeros side by side make a freeze' (that sentence goes in the tip, not the panel). API sketch clip.retime({at:1.2, speed:0.25}). The mock prints A for Add speed stop: A is Photoshop's Path Selection and on a video it may already be taken; apply UX-PATTERNS §7 and name the move in the audit. Code today: one constant speed per piece, Sources/PhotonzCore/ClipPieces.swift:66 speedPercent, dropdown stops ClipSpeed.swift:189, SpeedInspector.swift:109-118, freeze is holdFrame ClipPieces.swift:666. Keep a piece with no stops exactly as today (Codable back compat test). Sound: Premiere's time remapping leaves the sound unchanged; decide by measuring what reads right and say it in the audit. The curve plotted under the clip is the next task (deps). TDD for Core.",
@@ -28,6 +28,10 @@
     {
       "t": "2026-10-17T02:56:16.772Z",
       "note": "seq 265 -> 24"
+    },
+    {
+      "t": "2026-10-17T12:59:58.953Z",
+      "note": "seq 24 -> 10"
     }
   ]
 }

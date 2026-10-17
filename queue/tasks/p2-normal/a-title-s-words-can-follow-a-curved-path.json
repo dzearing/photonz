@@ -4,12 +4,12 @@
   "goal": "The motion mock lets a headline flow along any drawn curve, reflowing as the curve is reshaped, and the app can only move a whole layer along a path. Let a text layer be put on a path so its letters sit along the curve, and stay there as the path is edited or animated.",
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
-  "seq": 27,
+  "seq": 40,
   "status": "pending",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T02:56:04.583Z",
-  "updated": "2026-10-17T02:56:16.958Z",
+  "updated": "2026-10-17T12:59:59.154Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-motion.html line 210 command 'Put text on a path'; lines 464-468 'Text on a path / Follow the curve: A headline flows along any vector path... the type reflows as you reshape the curve.' Noted as cut without asking in the 2026-10-15 manager report's open threads. Code today: MotionPath.swift moves a whole layer along a path; TextRasterizer.swift:495-502 places glyphs on straight lines only. Glyph placement along a path belongs in PhotonzRender with the arc-length maths in PhotonzCore (pure, tested first). 'Stagger children' on the same mock line is not this task. Perf note if it touches the composite path.",
@@ -18,6 +18,7 @@
     "Reshaping the path with its points reflows the letters live; the text stays editable by double-click and keeps its font, colour, shadow and stroke",
     "A Start offset on the text's section moves the words along the path and can be keyed, so the words travel along the curve over time",
     "Try path, no flag changed from Next defaults: on the sample recording press T and type a headline, draw a curve with the pen, pick both, Put Text on a Path",
+    "Measured bar the flat version fails: on a quarter-circle path the walk reads each letter's turn against the path's direction under that letter, every letter within 5 degrees, and its baseline within 2 px of the curve (letters set on a straight line, or all turned by one angle, fail it)",
     "Audit written under queue/audits/ with the app beside the mock on one picture and a short reel of the words travelling; anything left rough is filed as a follow-up task if it clears the follow-up bar, and written into this task's log if it does not"
   ],
   "log": [
@@ -28,6 +29,14 @@
     {
       "t": "2026-10-17T02:56:16.957Z",
       "note": "seq 269.84375 -> 27"
+    },
+    {
+      "t": "2026-10-17T12:59:38.525Z",
+      "note": "digest 2026-10-17: added a measured visual bar to the acceptance, so the flat version cannot close it (runner-prompt, work about how something looks)"
+    },
+    {
+      "t": "2026-10-17T12:59:59.153Z",
+      "note": "seq 27 -> 40"
     }
   ]
 }
