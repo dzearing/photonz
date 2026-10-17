@@ -325,10 +325,17 @@ extension Layer {
     /// this moment hidden. A layer already hidden by hand stays hidden: the
     /// timeline decides when something COULD be on screen, and the eye in the
     /// layers list still decides whether it is.
+    /// `parentOriginMS` is the moment the clock of the thing this layer is
+    /// inside reads nought, nil at the top: what a part's own stretch is
+    /// written on (`LayerPartTime.swift`).
     func shownTree(atTimeMS ms: Int, framesInHand: MovieFramesInHand? = nil,
-                   captionLook: CaptionLook? = nil) -> Layer {
+                   captionLook: CaptionLook? = nil, parentOriginMS: Int? = nil) -> Layer {
         var shown = self
         if !isOnScreen(atTimeMS: ms) { shown.isVisible = false }
+        if time == nil, let part = partTime, let origin = parentOriginMS,
+           !part.contains(clockMS: ms - origin) {
+            shown.isVisible = false
+        }
         // ...and whatever IS on screen and plays a recording shows the frame
         // this moment lands on, which is the whole of "what is drawn at a
         // moment is what the renderer composites for that moment"
@@ -341,8 +348,11 @@ extension Layer {
         }
         if shown.isGroup {
             let look = captionsLook ?? captionLook
+            let origin = time.map { $0.inMS - $0.sourceInMS }
+                ?? ((parentOriginMS ?? 0) + (partTime?.shiftMS ?? 0))
             shown.children = children.map {
-                $0.shownTree(atTimeMS: ms, framesInHand: framesInHand, captionLook: look)
+                $0.shownTree(atTimeMS: ms, framesInHand: framesInHand, captionLook: look,
+                             parentOriginMS: origin)
             }
         }
         return shown
@@ -429,7 +439,11 @@ extension Layer {
     func movedTree(atDocumentTimeMS ms: Int, documentCycleMS: Int,
                    inheritedClockMS: Int? = nil, inheritedCycleMS: Int? = nil,
                    magnification: CGFloat = 1) -> Layer {
-        let clock = time == nil ? (inheritedClockMS ?? ms) : motionClockMS(atDocumentTimeMS: ms)
+        // A part with a stretch of its own runs its clock behind its parent's
+        // by as far as its bar was slid (`LayerPartTime.shiftMS`).
+        let clock = time == nil
+            ? (inheritedClockMS ?? ms) - (inheritedClockMS == nil ? 0 : partTime?.shiftMS ?? 0)
+            : motionClockMS(atDocumentTimeMS: ms)
         let cycle = time == nil
             ? (inheritedCycleMS ?? documentCycleMS)
             : motionCycleMS(documentCycleMS: documentCycleMS)

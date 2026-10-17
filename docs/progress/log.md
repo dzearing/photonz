@@ -21573,3 +21573,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Next (`next-title-type`, on by default): Tracking and Leading boxes (percent) under Size and Weight, New York in the Font menu, gradient tiles on the Text colour row. New keyable motion "Gradient position" for colour sweeps.
 - Walk: `title-type-set-like-apple-walk`. Audit: `queue/audits/2026-10-17-title-text-can-be-set-like-apple-sets-it-trackin.json`.
 - Next: `title-pages-that-look-like-apple-designed-them` builds the designs on this (overhang offset, keyable tracking for Track In, Gradient Word sweep).
+
+## 2026-10-17 — Timeline rows open into their sub-layers (`any-timeline-row-that-holds-sub-layers-expands-a`)
+
+- Core: `LayerPartTime` (a part's own stretch, written on the clock of the thing it is inside, so it travels with its parent; `shiftMS` carries its keys when its bar is slid) honoured by `drawn(atTimeMS:)` and the motion strip; `retimePart` / `partStretch`. `TimelineChildRows`: the row tree in the Layers list's order from the same open set, the picked part's chain under a closed row, every-level open, closed-row marks.
+- Next/shared app: any clip with parts gets the track arrow; child rows indent one Layers-list step per level with their own arrow (⌥ = every level) and a bar (`TimelinePartBar` for generic parts). Open state is `expandedGroupIDs`, shared with the Layers list; a pick no longer opens groups while the timeline stands in for the list.
+- Walk: `timeline-sub-layer-rows-walk` (new steps `dragPart`, `markZoom`, `expectZoomSteady`). Audit: `queue/audits/2026-10-17-timeline-sub-layer-rows.json`.
+- Open: Size measurement groups on a video not tried; logos land as one picture with no parts.

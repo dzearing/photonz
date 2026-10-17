@@ -1511,16 +1511,16 @@ final class EditorState {
     /// document so the whole drag is one undo step
     /// (`EditorState+TitlePartBars`).
     var titlePartDrag: TitlePartDrag?
-    /// The arrow on a title's track opened or closed by hand, by track. Left
-    /// alone, a title's part rows open while one of its parts is picked
-    /// (`EditorState+TitlePartBars`).
-    var titlePartTracksOpened: [UUID: Bool] = [:]
+    /// A part's bar under a hand on the timeline (a part of a logo, a group or
+    /// a component), kept out of the document so the whole drag is one undo
+    /// step (`EditorState+TimelineChildRows`).
+    var partBarDrag: PartBarDrag?
     /// The timeline's tracks as last worked out, and the document they were
     /// worked out from (`timelineTrackRows`). The dock asks for them three or
     /// four times per draw, and on a talk with 170 captions each asking laid
     /// every track out again.
     @ObservationIgnored var timelineTrackRowsMemo: (document: PhotonzDocument, picked: UUID?,
-                                                     rows: [TimelineTrackRowModel])?
+                                                     open: Set<UUID>, rows: [TimelineTrackRowModel])?
     /// How far the timeline is opened out, and which stretch of the document
     /// is on screen (`EditorState+TimelineZoom`). Not in the document: how you
     /// are looking at a recording is not part of the recording, so it is
@@ -5167,6 +5167,8 @@ final class EditorState {
         // ...and a title part's bar, so the part arrives where the hand has
         // its end (`EditorState+TitlePartBars`).
         document = withDraggedTitlePart(document)
+        // ...and any other part's bar (`EditorState+TimelineChildRows`).
+        document = withDraggedPartBar(document)
         // ...and a CLIP's bar under a hand, for exactly the same reason: a
         // trim has to show you the frame it is about to land on rather than
         // the one you started the drag from (`EditorState+ClipBar`). Writing

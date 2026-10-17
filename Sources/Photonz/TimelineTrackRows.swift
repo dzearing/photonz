@@ -101,7 +101,9 @@ struct TimelineTrackRow: View {
             }
             ForEach(row.inner) { group in
                 TimelineInnerRow(group: group, laneWidth: laneWidth, isBlade: isBlade,
-                                 isLocked: track.isLocked, rows: rows)
+                                 isLocked: track.isLocked, rows: rows,
+                                 nesting: row.nesting[group.layerID]
+                                     ?? TimelineRowNesting(depth: 1, opens: false, isOpen: false))
             }
         }
         .playtestHover("Track \(track.name)") { isHovered = $0 }
@@ -160,7 +162,7 @@ struct TimelineTrackRow: View {
     /// Where everything in the header goes at the column's width right now.
     private var layout: TrackHeaderLayout {
         TrackHeaderLayout(width: TimelineDock.gutter, inGroup: inGroup,
-                          hasTwist: hasKeyLanes || hasWordsLane || hasTitleParts,
+                          hasTwist: hasKeyLanes || hasWordsLane || hasParts,
                           switches: shownSwitches, hasKey: keyLayerID != nil, wantsIcon: !showsAllSwitches)
     }
 
@@ -284,9 +286,10 @@ struct TimelineTrackRow: View {
         editorState.trackHasKeyLanes(row.clips.map(\.layerID))
     }
 
-    /// A track holding a title opens into a row for each part of it.
-    private var hasTitleParts: Bool {
-        !row.isCaptions && editorState.trackHasTitleParts(row.clips.map(\.layerID))
+    /// A track holding anything made of parts (a title page, a logo, a
+    /// group, a component) opens into a row for each part of it.
+    private var hasParts: Bool {
+        !row.isCaptions && !editorState.clipsWithParts(row.clips.map(\.layerID)).isEmpty
     }
 
     /// A Captions track opens into its Words lane the same way, and starts
@@ -297,11 +300,16 @@ struct TimelineTrackRow: View {
     /// track into its keyed values: pointing right while closed, down while
     /// open.
     @ViewBuilder private var twist: some View {
-        if hasTitleParts {
-            // A title opens into a row for each of its parts.
-            let open = editorState.titlePartRowsOpen(trackID: track.id)
+        if hasParts {
+            // Anything made of parts opens into a row for each of them, the
+            // way its group opens in the layers list; ⌥ opens every level.
+            let clipIDs = row.clips.map(\.layerID)
+            let open = editorState.trackPartsOpen(clipIDs)
             Button {
-                withAnimation(.snappy(duration: 0.18)) { editorState.toggleTitlePartRows(trackID: track.id) }
+                let everyLevel = NSApp.currentEvent?.modifierFlags.contains(.option) ?? false
+                withAnimation(.snappy(duration: 0.18)) {
+                    editorState.toggleTrackParts(clipIDs, everyLevel: everyLevel)
+                }
             } label: {
                 Image(systemName: "chevron.right")
                     .font(.system(size: 8, weight: .bold))
@@ -311,7 +319,7 @@ struct TimelineTrackRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .help(open ? "Hide the title's parts" : "Show the title's parts")
+            .help(open ? "Hide the parts" : "Show the parts")
             .accessibilityLabel(open ? "Hide the parts of \(track.name)" : "Show the parts of \(track.name)")
             .playtestControl("Parts \(track.name)", detail: "Timeline")
             .panelReadout("\(track.name) parts \(open ? "open" : "closed")")
@@ -513,6 +521,14 @@ struct TimelineTrackRow: View {
                                  soundNumber: row.soundNumber)
                     .allowsHitTesting(!track.isLocked)
                     .modifier(TimingName(on: !row.isCaptions, name: "Timing \(clip.layerName)"))
+            }
+            // A closed clip made of parts marks where its parts' own timings
+            // fall, faint along the foot of its bar, so there is plainly
+            // something inside to open and retime (`TimelineChildMarks`).
+            if !row.isCaptions {
+                ForEach(row.clips) { clip in
+                    TimelineChildMarks(layerID: clip.layerID, laneWidth: laneWidth, height: laneHeight)
+                }
             }
             // Each click of a recording, as a tick along the foot of its bar
             // (`ClickTicksView`).
@@ -1282,6 +1298,13 @@ struct TimelineInnerRow: View {
     let isBlade: Bool
     let isLocked: Bool
     var rows: TimelineRowZoom = .compact
+    /// How far in the row sits and whether it wears an arrow
+    /// (`TimelineChildRows.swift`). One step in by default: a part of a clip.
+    var nesting = TimelineRowNesting(depth: 1, opens: false, isOpen: false)
+
+    /// How far in each level is drawn: the layers list's own step, so the two
+    /// lists read as one.
+    static let indentPerLevel = LayerRowDragSession.indentPerLevel
 
     var body: some View {
         let height = rows.height(group.isSound ? TimelineDock.soundLaneHeight : TimelineDock.laneHeight)
@@ -1290,21 +1313,33 @@ struct TimelineInnerRow: View {
         // its title, and drawn as its own in, hold and out
         // (`TimelineTitlePartBar`).
         let part = editorState.titlePartTiming(pieceID: group.layerID)
+        // Any other part of something placed in time, with a bar of its own to
+        // drag (`TimelinePartBar`).
+        let stretch = part == nil && group.bar == nil ? editorState.partBarStretch(pieceID: group.layerID) : nil
         let name = part?.name ?? group.layerName
+        // One step in from the track's own arrow per level, the layers list's step.
+        let leading = CGFloat(nesting.depth) * Self.indentPerLevel
         VStack(alignment: .leading, spacing: 3) {
             HStack(spacing: TimelineDock.gap) {
-                Button { pick(isPart: part != nil) } label: {
-                    VideoKit.TrackHeader(title: name, symbol: TimelineTrackRow.symbol(group.trackKind),
-                                         width: TimelineDock.gutter - 10, uppercase: false,
-                                         isSelected: editorState.selectedLayerID == group.layerID)
-                        .padding(.leading, 10)
-                        .frame(height: height)
-                        .contentShape(Rectangle())
+                HStack(spacing: 0) {
+                    Color.clear.frame(width: leading)
+                    twist(name: name, height: height)
+                    Button { pick(isPart: part != nil) } label: {
+                        VideoKit.TrackHeader(title: name, symbol: group.mark.symbol,
+                                             width: TimelineDock.gutter - leading - TrackHeaderLayout.twistWidth,
+                                             uppercase: false,
+                                             isSelected: editorState.selectedLayerID == group.layerID)
+                            .frame(height: height)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .help(name)
+                    .accessibilityLabel("Track \(name)")
+                    .playtestControl("Row \(name)", detail: "Timeline")
+                    .panelReadout("row \(name): level \(nesting.depth)"
+                                  + (nesting.opens ? (nesting.isOpen ? ", open" : ", closed") : ""))
                 }
-                .buttonStyle(.plain)
-                .help(name)
-                .accessibilityLabel("Track \(name)")
-                .playtestControl("Row \(name)", detail: "Timeline")
+                .frame(width: TimelineDock.gutter, height: height, alignment: .leading)
                 ZStack(alignment: .topLeading) {
                     TimelineGridlines(ruler: ruler, laneWidth: laneWidth, height: height)
                     Color.clear
@@ -1314,10 +1349,17 @@ struct TimelineInnerRow: View {
                         TimelineTitlePartBar(timing: part, kind: group.trackKind, laneWidth: laneWidth,
                                              height: height)
                             .allowsHitTesting(!isLocked)
+                    } else if let stretch {
+                        TimelinePartBar(stretch: stretch, name: name, kind: group.trackKind,
+                                        laneWidth: laneWidth, height: height)
+                            .allowsHitTesting(!isLocked)
                     } else {
                         TimelineClipView(group: group, laneWidth: laneWidth, height: height)
                             .allowsHitTesting(!isLocked)
                         if isBlade, !isLocked { TimelineBlade(group: group, laneWidth: laneWidth) }
+                    }
+                    if nesting.opens {
+                        TimelineChildMarks(layerID: group.layerID, laneWidth: laneWidth, height: height)
                     }
                 }
                 .frame(width: laneWidth, height: height, alignment: .topLeading)
@@ -1332,11 +1374,40 @@ struct TimelineInnerRow: View {
         }
     }
 
-    /// A click on the row's name picks it, a title's part inside its title the
-    /// way double clicking it in the picture does.
+    /// The arrow before the name, the layers list's twist in the timeline's
+    /// look: on a row with parts or moving values of its own, and an empty
+    /// slot the same width on one without, so names at one level line up.
+    @ViewBuilder private func twist(name: String, height: CGFloat) -> some View {
+        if nesting.opens {
+            Button {
+                let everyLevel = NSApp.currentEvent?.modifierFlags.contains(.option) ?? false
+                withAnimation(.snappy(duration: 0.18)) {
+                    editorState.toggleTimelineRow(group.layerID, everyLevel: everyLevel)
+                }
+            } label: {
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 8, weight: .bold))
+                    .foregroundStyle(VideoKit.Palette.faint)
+                    .rotationEffect(.degrees(nesting.isOpen ? 90 : 0))
+                    .frame(width: TrackHeaderLayout.twistWidth, height: height)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(nesting.isOpen ? "Hide what is inside" : "Show what is inside")
+            .accessibilityLabel(nesting.isOpen ? "Hide what is inside \(name)" : "Show what is inside \(name)")
+            .playtestControl("Twist \(name)", detail: "Timeline, \(nesting.isOpen ? "open" : "closed")")
+        } else {
+            Color.clear.frame(width: TrackHeaderLayout.twistWidth, height: height)
+        }
+    }
+
+    /// A click on the row's name picks it inside what it is part of, the way
+    /// double clicking it in the picture does.
     private func pick(isPart: Bool) {
         if isPart, let titleID = editorState.document?.titleLayerID(containing: group.layerID) {
             editorState.selectLayer(group.layerID, inGroup: titleID)
+        } else if let parent = editorState.document?.parentID(of: group.layerID) {
+            editorState.selectLayer(group.layerID, inGroup: parent)
         } else {
             editorState.selectLayer(group.layerID)
         }

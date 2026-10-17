@@ -1,0 +1,517 @@
+{
+ "out": "/tmp/photonz-playtest/timeline-sub-layer-rows-walk",
+ "seed": "Anything made of parts opens on the timeline the way it opens in the layers list, at Next defaults with no switch touched. A plain recording's row has no arrow. A Keynote Clean title page put on its own track opens by the arrow on its header into a row per part, and nothing zooms when it opens; the Subtitle's start is dragged half a second later; closed again, the title is one row with faint marks where its parts' timings fall. Then three rectangles are drawn and grouped two levels deep; the group's track opens, the inner group opens by its own arrow one step further in, and a grandchild rectangle's bar is slid a second later, its row alone moving, and no zoom changes through any of it. Option-click on the track's arrow closes every level, and again opens every level at once.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleRecording"
+  },
+  {
+   "do": "wait",
+   "seconds": 2.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "comment": "A recording is not made of parts: its track has no arrow.",
+   "do": "expect",
+   "control": "Parts V1",
+   "present": false
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V1",
+   "choose": "Add Track Above"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "rightClick",
+   "on": "Track V2",
+   "choose": "Add Title Page > Keynote Clean"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.2
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "home"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Title Page",
+   "track": "V2",
+   "startsAt": 0
+  },
+  {
+   "comment": "Closed, the title is one row: no part rows under it.",
+   "do": "expect",
+   "control": "Part bar Subtitle",
+   "present": false
+  },
+  {
+   "do": "describe",
+   "stage": "1-title-closed",
+   "note": "The title page on V2, closed: one row, its bar carrying faint marks along its foot where its parts come and go."
+  },
+  {
+   "do": "snapshot",
+   "name": "1-title-closed"
+  },
+  {
+   "do": "markZoom"
+  },
+  {
+   "comment": "The arrow on V2's header, clicked with the pointer at its face as a hand clicks it.",
+   "do": "windowClick",
+   "on": "Parts V2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectZoomSteady"
+  },
+  {
+   "do": "expect",
+   "control": "Part bar Subtitle",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Row Headline",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "2-title-open",
+   "note": "Opened by its arrow, each part of the title is its own row one step in, named and marked like its layer, with its own bar; the timeline's scale and the picture's zoom are where they were."
+  },
+  {
+   "do": "snapshot",
+   "name": "2-title-open"
+  },
+  {
+   "do": "dragPart",
+   "part": "Subtitle",
+   "grab": "start",
+   "byMS": 500,
+   "startsAt": 1.5
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectPicked",
+   "layers": [
+    "Subtitle"
+   ]
+  },
+  {
+   "do": "snapshot",
+   "name": "3-subtitle-later"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "comment": "Picking the Subtitle scrolled the timeline to its row; a person scrolls back up to the track's arrow.",
+   "do": "reveal",
+   "control": "Parts V2"
+  },
+  {
+   "do": "markZoom"
+  },
+  {
+   "do": "windowClick",
+   "on": "Parts V2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectZoomSteady"
+  },
+  {
+   "do": "expect",
+   "control": "Part bar Subtitle",
+   "present": false
+  },
+  {
+   "do": "snapshot",
+   "name": "4-title-closed-again"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "videoStepOneSecond"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    500,
+    300
+   ],
+   "to": [
+    600,
+    380
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    650,
+    300
+   ],
+   "to": [
+    750,
+    380
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "rectangle"
+  },
+  {
+   "do": "drag",
+   "from": [
+    800,
+    300
+   ],
+   "to": [
+    900,
+    380
+   ],
+   "steps": 8
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "click",
+   "at": [
+    550,
+    340
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    700,
+    340
+   ],
+   "modifiers": [
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "action",
+   "action": "group"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "click",
+   "at": [
+    550,
+    340
+   ]
+  },
+  {
+   "do": "click",
+   "at": [
+    850,
+    340
+   ],
+   "modifiers": [
+    "shift"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "action",
+   "action": "group"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "describe",
+   "stage": "5-groups",
+   "note": "Three rectangles in a group inside a group, on one row of their own."
+  },
+  {
+   "do": "snapshot",
+   "name": "5-nested-group-closed"
+  },
+  {
+   "do": "expect",
+   "control": "Parts V3",
+   "present": true
+  },
+  {
+   "do": "markZoom"
+  },
+  {
+   "comment": "The arrow on the group's track, clicked at its face.",
+   "do": "windowClick",
+   "on": "Parts V3"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Row Group",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Row Rectangle 3",
+   "present": true
+  },
+  {
+   "comment": "The inner group is still closed: its rectangles have no rows yet.",
+   "do": "expect",
+   "control": "Row Rectangle 2",
+   "present": false
+  },
+  {
+   "comment": "The inner group's own arrow, one step in.",
+   "do": "windowClick",
+   "on": "Twist Group"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectZoomSteady"
+  },
+  {
+   "do": "expect",
+   "control": "Row Rectangle 2",
+   "present": true
+  },
+  {
+   "do": "expect",
+   "control": "Row Rectangle",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "6-two-levels-open",
+   "note": "Group 2 open on V3: Group and Rectangle 3 one step in, and Group open again, its two rectangles one step further in, each with its own bar."
+  },
+  {
+   "do": "snapshot",
+   "name": "6-two-levels-open"
+  },
+  {
+   "do": "markZoom"
+  },
+  {
+   "comment": "A grandchild's bar slid a second later: only its row moves.",
+   "do": "dragClip",
+   "clip": "Rectangle",
+   "byMS": 1000
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectZoomSteady"
+  },
+  {
+   "do": "expectRowSpan",
+   "row": "Rectangle",
+   "startsAt": 2.0,
+   "within": 0.05
+  },
+  {
+   "do": "expectRowSpan",
+   "row": "Rectangle 2",
+   "startsAt": 1.0,
+   "within": 0.05
+  },
+  {
+   "do": "describe",
+   "stage": "7-grandchild-moved",
+   "note": "Rectangle, two levels in, now starts at 2 s; Rectangle 2 beside it in the same group has not moved."
+  },
+  {
+   "do": "snapshot",
+   "name": "7-grandchild-moved"
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "reveal",
+   "control": "Parts V3"
+  },
+  {
+   "comment": "Option-click closes every level under the track's arrow.",
+   "do": "windowClick",
+   "on": "Parts V3",
+   "modifiers": [
+    "option"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "comment": "Every level closed: nothing outside the pick has a row (a part picked keeps its row under a closed one, so the picked Rectangle's group may stay).",
+   "do": "expect",
+   "control": "Row Rectangle 3",
+   "present": false
+  },
+  {
+   "comment": "The inner group was closed too, not just the track: its other rectangle has no row.",
+   "do": "expect",
+   "control": "Row Rectangle 2",
+   "present": false
+  },
+  {
+   "comment": "And Option-click again opens every level at once: the inner group's rectangles are back without touching its own arrow.",
+   "do": "windowClick",
+   "on": "Parts V3",
+   "modifiers": [
+    "option"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expect",
+   "control": "Row Rectangle 2",
+   "present": true
+  },
+  {
+   "do": "snapshot",
+   "name": "8-every-level-open"
+  }
+ ]
+}

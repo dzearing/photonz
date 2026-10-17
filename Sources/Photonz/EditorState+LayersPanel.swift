@@ -175,6 +175,14 @@ extension EditorState {
         return max(visibleRowCount, document.fullyExpandedRowCount)
     }
 
+    /// The timeline is on screen in a document with time, so the panel leaves
+    /// the layers list out and the timeline is the list (`TimelineIsTheLayerList`).
+    var timelineStandsInForTheLayersList: Bool {
+        !TimelineIsTheLayerList.showsLayersList(isOn: Experiments.shared.timelineIsTheLayerListEnabled,
+                                                documentHasTime: documentHasTime,
+                                                isTimelineOpen: motionStripPhase == .open)
+    }
+
     /// The twist-open control on a group row.
     func toggleGroupExpanded(id: UUID) {
         if expandedGroupIDs.contains(id) { expandedGroupIDs.remove(id) } else { expandedGroupIDs.insert(id) }
@@ -194,6 +202,11 @@ extension EditorState {
     /// this one, then this one" does not.
     func revealInLayersList(_ ids: Set<UUID>) {
         guard let document, !ids.isEmpty else { return }
+        // Where the timeline stands in for the list, the open groups are its
+        // rows too, and a pick opening them would push the tracks under a
+        // title out of sight. The timeline shows the part picked under a closed
+        // row by itself (`TimelineChildRows.swift`).
+        if timelineStandsInForTheLayersList { return }
         let ancestors = ids.reduce(into: Set<UUID>()) { $0.formUnion(document.ancestorIDs(of: $1)) }
         // Only a group that is not open yet is worth a write: the layers list
         // animates on this set, so an unchanged write is a re-layout for nothing.

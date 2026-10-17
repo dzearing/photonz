@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 1.1,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:02:56.512Z",
-  "updated": "2026-10-17T13:03:33.397Z",
+  "updated": "2026-10-17T22:10:54.034Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"I think it would be nice to have timeline rows with sub layers like title/subtitle should be expandable/collapsible similar to layers, and you can tweak those elements independently.\" Follows the user's report the same morning that the subtitle could not be retimed because it is not a sub element of the title page (a-title-page-s-parts-each-have-their-own-labelle, seq 1, already in progress).\n\nFrom code reading: track rows already have a disclosure twist (Sources/Photonz/TimelineTrackRows.swift:225, :293-304) and folded/open heights (:1286-1297, :1425) for a layer's motion lanes and group tracks; the Layers list's disclosure lives in LayersListView.swift. Reuse those; do not invent a second disclosure look.",
@@ -40,6 +40,35 @@
     {
       "t": "2026-10-17T13:03:33.396Z",
       "note": "USER 2026-10-17, the model to build to: \"but components with parts would? the timeline is similar to the layers pane, but it allows you to adjust horizontally on a timeline when it appears and how it transitions\". So the timeline IS the Layers list with a time axis: the same rows, the same nesting and order, the same names and icons; components with parts show their parts as sub-rows; every row adds a horizontal bar for when that layer is on screen and its in and out transitions (drawn as the bar's shaded ends, draggable). Write this sentence into the design rules (UX-PATTERNS placement contract, Timeline row) and keep the two views in step (expanding, renaming, reordering in one shows in the other)."
+    },
+    {
+      "t": "2026-10-17T21:04:44.828Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T21:10:02.102Z",
+      "note": "Adversarial pass before building: (1) The timeline already shows a picked part's row and a title track's arrow opens all parts; a generic tree must not bury the tracks below, so rows open only by an arrow, and a pick still shows just the picked part's chain when closed (the rule the title task kept after walks broke). (2) Plain Right/Left are Premiere's frame step on a video and Photoshop's nudge with a layer picked, so per UX-PATTERNS §7 expand/collapse does not take them: the arrow and Option-click (all levels) open rows. (3) A part of a group placed in time has no stretch of its own (placeInTime refuses one, because a part with absolute times is left behind when its parent moves). So a part's own time is new model: a stretch on the clock of the thing it is inside, so it travels with the parent, plus a shift so sliding a part carries its keys (After Effects' layer bar). (4) The Layers list is hidden while the timeline is open on a video (TimelineIsTheLayerList), so one open set shared by both is the honest mirror; it is remembered per file the way the list's is, not in the document, since opening a row must not be an undo step or mark the file edited. (5) A copy of a component has its contents rewritten from its original, so its parts are listed but their bars do not drag (an edit would be lost on the next sync). (6) Premiere/AE: a nested comp twirls open with its layers indented and their own bars; this matches it."
+    },
+    {
+      "t": "2026-10-17T22:10:53.825Z",
+      "note": "owns these walks: timeline-sub-layer-rows-walk, title-part-rows-retime-walk"
+    },
+    {
+      "t": "2026-10-17T22:10:53.894Z",
+      "note": "Built: PhotonzCore LayerPartTime (a part's own stretch on the clock of the thing it is inside, shift so a slide carries its keys; drawn/strip honour it; 15 tests) and TimelineChildRows (the row tree from the Layers list's order and open set, picked chain under a closed row, every-level open, closed-row marks; 8 tests). App: the track arrow opens any clip with parts (was title-only), child rows indent one Layers-list step per level with their own arrow (Option = every level), name and kind icon, and a bar: title part bar, own-time clip bar, or the new TimelinePartBar (ends and middle retime, snaps, one undo). Open state is expandedGroupIDs shared with the Layers list; a pick no longer opens groups while the timeline stands in for the list. Walk steps dragPart, markZoom, expectZoomSteady; dragClip finds own-time parts on open rows."
+    },
+    {
+      "t": "2026-10-17T22:10:53.968Z",
+      "note": "Verified: Scripts/test.sh 13555 tests green. timeline-sub-layer-rows-walk green at Next defaults (no flags): V1 has no arrow; title opens with zoom unchanged (markZoom/expectZoomSteady); Subtitle start +0.5s -> 1.5s; closed again; three rectangles grouped two deep, track and inner group opened by their arrows clicked at their faces, grandchild Rectangle slid +1s to 2.0s with Rectangle 2 unmoved and no zoom change; Option-click closes and opens every level. 14 related walks and 24 timeline walks green. Pictures looked at: 1-title-closed (marks on foot of title bar), 2/3 (part rows, Subtitle at 1.5s), 6 (two levels, indented), 7 (grandchild moved, groups' bars follow), 8 (every level open). Fixed timeline-right-click-menus-walk, which failed after another walk left keys on the clipboard (it passes alone): clearClipboard at its start."
+    },
+    {
+      "t": "2026-10-17T22:10:54.033Z",
+      "note": "Left rough (not filed): a part's moving-value lane labels sit at the left margin, not indented (cosmetic, in the audit's evaluate); Escape does not call off a part bar drag (undo covers it, same as title parts); a part with its own stretch taken out of its group by Ungroup keeps a stretch nothing reads (it shows the whole time, nothing lost); component copies' parts list but do not drag (by design, sync would undo it). Not verified at defaults: logos (an SVG/PNG lands as one picture, no layers to open) and Size measurement groups on a video (not tried). Arrow keys: per UX-PATTERNS §7 Right/Left stay frame step/nudge."
     }
+  ],
+  "started": "2026-10-17T21:04:44.823Z",
+  "walks": [
+    "timeline-sub-layer-rows-walk",
+    "title-part-rows-retime-walk"
   ]
 }

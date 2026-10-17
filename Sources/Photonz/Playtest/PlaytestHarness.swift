@@ -221,6 +221,8 @@ private final class Run {
     /// can paint through it after picking something else. See
     /// `PlaytestAction.holdColorRow`.
     private var heldColorRow: ColorTarget?
+    /// The timeline's scale and the picture's zoom a `markZoom` wrote down.
+    private var zoomMark: ZoomReading?
     /// The recording's window a video guide opened, when the walk is in one.
     /// Nil in every other walk, and the two are never both set: a window holds
     /// a picture or a recording, never both.
@@ -2929,6 +2931,35 @@ private final class Run {
         case .dragTitlePart(let part, let grab, let byMS, let hold, let startsAt, let endsAt):
             try await dragTitlePart(part, grab: grab, byMS: byMS, hold: hold,
                                     startsAt: startsAt, endsAt: endsAt, number: number)
+
+        case .dragPart(let part, let grab, let byMS, let hold, let startsAt, let endsAt):
+            let editor = try requireEditor()
+            let isTitlePart = editor.timelineTrackRows.flatMap(\.inner).contains {
+                editor.titlePartTiming(pieceID: $0.layerID)?.name
+                    .compare(part, options: .caseInsensitive) == .orderedSame
+            }
+            if isTitlePart {
+                try await dragTitlePart(part, grab: grab, byMS: byMS, hold: hold,
+                                        startsAt: startsAt, endsAt: endsAt, number: number)
+            } else {
+                try await dragPartBar(part, grab: grab, byMS: byMS, hold: hold,
+                                      startsAt: startsAt, endsAt: endsAt, number: number)
+            }
+
+        case .markZoom:
+            let reading = ZoomReading(try requireEditor())
+            zoomMark = reading
+            note(number, "markZoom", reading.reading, state: describe())
+
+        case .expectZoomSteady:
+            guard let mark = zoomMark else {
+                throw Failure(description: "expectZoomSteady has nothing to compare with: no markZoom ran before it")
+            }
+            let now = ZoomReading(try requireEditor())
+            guard now == mark else {
+                throw Failure(description: "the zoom moved: at the markZoom the \(mark.reading); now the \(now.reading)")
+            }
+            note(number, "expectZoomSteady", "no zoom moved (\(now.reading))", state: describe())
 
         case .dragMotionKey(let bar, let key, let byMS, let hold, let cancel):
             try await dragMotionKey(bar, key: key, byMS: byMS, hold: hold,
@@ -8231,7 +8262,12 @@ private final class Run {
             throw Failure(description: "the window is in View mode, so no clip is on "
                 + "screen to be pressed")
         }
-        let clips = editor.document?.timelineClipLayers ?? []
+        // The clips on the tracks, then any part with a stretch of its own on a
+        // row opened under one (a rectangle inside a group), which a hand
+        // drags the same way.
+        let open = editor.timelineTrackRows.flatMap(\.inner).filter { $0.bar != nil }
+            .compactMap { editor.document?.layer(id: $0.layerID) }
+        let clips = (editor.document?.timelineClipLayers ?? []) + open
         guard let layer = clips.first(where: {
             $0.name.compare(clip, options: .caseInsensitive) == .orderedSame
         }) else {
@@ -8425,6 +8461,75 @@ private final class Run {
         said += arrival
         if let hold { said += "; held \(hold).png" }
         note(number, "dragTitlePart", said, state: describe())
+    }
+
+    /// A part's bar on its row under a logo, a group or a component carried
+    /// along and let go (`TimelinePartBar`), through the editor calls the
+    /// bar's own drag makes, with the timeline's and the picture's zoom read
+    /// before, in the hand and after.
+    private func dragPartBar(_ name: String, grab: TitlePartGrab, byMS: Int, hold: String?,
+                             startsAt: Double?, endsAt: Double?, number: Int) async throws {
+        let editor = try requireEditor()
+        let rows = editor.timelineTrackRows.flatMap(\.inner)
+        let parts = rows.compactMap { row -> (String, LayerPartStretch)? in
+            editor.partBarStretch(pieceID: row.layerID).map { (row.layerName, $0) }
+        }
+        guard let (label, found) = parts.first(where: {
+            $0.0.compare(name, options: .caseInsensitive) == .orderedSame
+        }) else {
+            throw Failure(description: "there is no part row called \"\(name)\" open on the timeline; there is "
+                + (parts.isEmpty ? "none at all (is its arrow open?)" : parts.map(\.0).joined(separator: ", ")))
+        }
+        if found.isInsideACopy {
+            throw Failure(description: "\(label) is a part of a copy of a component, whose bar does not drag")
+        }
+        let zoomBefore = ZoomReading(editor)
+        editor.beginPartBarDrag(pieceID: found.layerID, grab: grab)
+        let catchMS = Int(editor.motionStripRuler.msSpanning(fraction: 6 / 1000).rounded())
+        for fraction in [0.35, 0.7, 1.0] {
+            editor.updatePartBarDrag(byMS: Int((Double(byMS) * fraction).rounded()), catchMS: catchMS)
+            await sleep(0.05)
+        }
+        let caught = editor.partBarDrag?.caughtMS
+        let zoomHeld = ZoomReading(editor)
+        if let hold, let window = try? requireWindow(), let content = window.contentView {
+            try snapshot(content, name: hold)
+            await screenCapture(window, name: hold)
+        }
+        editor.commitPartBarDrag()
+        await sleep(0.4)
+        let steady = try ZoomReading.steady(zoomBefore, held: zoomHeld, after: ZoomReading(editor),
+                                            dragging: "the \(label) bar")
+        guard let after = editor.partBarStretch(pieceID: found.layerID) else {
+            throw Failure(description: "the \(label) row is gone after the drag")
+        }
+        func secs(_ ms: Int) -> String { String(format: "%.2fs", Double(ms) / 1000) }
+        if let startsAt, abs(Double(after.startMS) / 1000 - startsAt) > 0.011 {
+            throw Failure(description: "\(label) starts at \(secs(after.startMS)) after the drag, not "
+                + "\(String(format: "%.2fs", startsAt)) (it started at \(secs(found.startMS)))")
+        }
+        if let endsAt, abs(Double(after.endMS) / 1000 - endsAt) > 0.011 {
+            throw Failure(description: "\(label) ends at \(secs(after.endMS)) after the drag, not "
+                + "\(String(format: "%.2fs", endsAt)) (it ended at \(secs(found.endMS)))")
+        }
+        // Dragged later, the part is gone from the picture where it used to
+        // start; the picture is asked, not the model.
+        var arrival = ""
+        if grab == .start, byMS > 0 {
+            let probe = found.startMS + byMS / 2
+            let inAfter = partInPicture(editor, pieceID: found.layerID, atMS: probe)
+            guard inAfter < 1 else {
+                throw Failure(description: "\(label)'s start was dragged \(byMS) ms later, and yet at \(secs(probe)) "
+                    + "it is still in the picture")
+            }
+            arrival = "; not in the picture at \(secs(probe))"
+        }
+        var said = "\(steady); \(label) \(grab.rawValue) dragged \(byMS) ms: "
+            + "\(secs(found.startMS))-\(secs(found.endMS)) became \(secs(after.startMS))-\(secs(after.endMS))"
+        if let caught { said += "; caught at \(secs(caught))" }
+        said += arrival
+        if let hold { said += "; held \(hold).png" }
+        note(number, "dragPart", said, state: describe())
     }
 
     /// How much one piece adds to the picture at `ms`: the frame drawn there

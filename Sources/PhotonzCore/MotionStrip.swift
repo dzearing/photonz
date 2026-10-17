@@ -232,14 +232,23 @@ extension PhotonzDocument {
         // (`components-on-the-timeline-animated-the-way-ever`).
         // The same goes for WHERE its row runs: a part with no time of its
         // own is on screen while the thing it is inside is.
+        // A part with a stretch of its own runs only there, on the clock of
+        // the thing it is inside, and its keys go where its bar was slid
+        // (`LayerPartTime.swift`).
         func walk(_ list: [Layer], shiftMS: Int, inside: LayerTime?) {
             for layer in list.reversed() {
-                let shift = layer.occupiesTime ? layer.motionShiftMS : shiftMS
+                var shift = layer.occupiesTime ? layer.motionShiftMS : shiftMS
+                var stretch = layer.time ?? inside
+                if !layer.occupiesTime, let part = layer.partTime, let window = inside {
+                    let start = min(max(shiftMS + part.fromMS, window.inMS), window.outMS)
+                    stretch = LayerTime(inMS: start, outMS: max(start, min(shiftMS + part.toMS, window.outMS)))
+                    shift += part.shiftMS
+                }
                 if var group = stripGroup(layer, shiftMS: shift) {
-                    if group.bar == nil { group.span = inside }
+                    if group.bar == nil { group.span = stretch }
                     groups.append(group)
                 }
-                if layer.isGroup { walk(layer.children, shiftMS: shift, inside: layer.time ?? inside) }
+                if layer.isGroup { walk(layer.children, shiftMS: shift, inside: stretch) }
             }
         }
         walk(layers, shiftMS: 0, inside: nil)

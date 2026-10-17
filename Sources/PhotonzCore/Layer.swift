@@ -1910,6 +1910,12 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
     /// a piece away throws none away.
     public var time: LayerTime?
 
+    /// For a PART of something placed in time: when it is on screen, on the
+    /// clock of the thing it is inside (`LayerPartTime.swift`). Nil is a part on
+    /// screen whenever its parent is, which is every layer in every document
+    /// written before this existed.
+    public var partTime: LayerPartTime?
+
     /// The pieces this layer's stretch is cut into, when somebody has cut it
     /// (`ClipPieces.swift`). Nil is the ordinary case and always means the
     /// same thing: one piece, playing at the speed it was recorded, which is
@@ -2110,6 +2116,7 @@ public struct Layer: Identifiable, Hashable, Codable, Sendable {
         copy.turn3D = turn3D
         // ...and it occupies the same stretch of time, for the same reason.
         copy.time = time
+        copy.partTime = partTime
         // A copy of a clip somebody has cut is still cut: the pieces come
         // along with the stretch they are pieces of.
         copy.cuts = cuts

@@ -1,0 +1,32 @@
+{
+  "feature": "Timeline rows open into their sub-layers, like the Layers list",
+  "epic": "video-cutting",
+  "task": "any-timeline-row-that-holds-sub-layers-expands-a",
+  "summary": "Anything on the timeline made of parts (a title page, a name card, a group, a group of groups) now has an arrow. Opened, each part is its own row one step in, with its own bar, so you can pick it, retime it and drag it on its own. Closed, it is one row with faint marks showing where its parts' timings fall.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a recording with the timeline showing.",
+  "switched": {},
+  "try": [
+    { "do": "Right-click V1's header, choose Add Track Above, then right-click V2 and choose Add Title Page > Keynote Clean. The title is one row, with faint lines along the foot of its bar.", "shot": "2026-10-17-sub-layer-rows-1-title-closed-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click the arrow before V2. Background, Headline and Subtitle open as rows one step in, each with its own bar.", "shot": "2026-10-17-sub-layer-rows-2-title-open-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the left end of the Subtitle bar half a second later. The subtitle arrives later; nothing zooms.", "shot": "2026-10-17-sub-layer-rows-3-subtitle-later-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Draw three rectangles on the picture, pick two and press Command G, then pick that group and the third rectangle and press Command G again." },
+    { "do": "Click the arrow on the new track, then the arrow on the row called Group. Its rectangles open one step further in.", "shot": "2026-10-17-sub-layer-rows-6-two-levels-open-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the bar of the innermost Rectangle a second later. Only that rectangle moves; the groups' bars stretch to follow it.", "shot": "2026-10-17-sub-layer-rows-7-grandchild-moved-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Option-click an arrow to open or close every level under it at once." }
+  ],
+  "evaluate": [
+    "Does a part row one step in under its track read as part of that clip, the way a layer inside a group reads in the Layers list?",
+    "Are the faint marks on a closed title's bar enough to tell you there is timing inside to open, without being noise?",
+    "Should a part's own moving values (the Opacity row under the Subtitle) be indented under the part too, or is the left margin right?",
+    "Is the arrow plus Option-click enough, or do you want a key for opening and closing rows?"
+  ],
+  "rough": [
+    "Right and Left arrows do not open or close rows: on a video they are Premiere's frame step, and with a layer picked Photoshop's nudge, so opening and closing stays on the arrow and Option-click (UX-PATTERNS §7).",
+    "Opening a row is shared with the Layers list (one set of open groups) and is remembered per file the way the list remembers it, in the app's settings rather than inside the document, so opening a row is never an undo step and never marks the file edited.",
+    "While the timeline stands in for the Layers list, picking a part on the canvas no longer opens its groups; the timeline shows the picked part's row under a closed one by itself, so a pick never pushes the tracks below out of sight.",
+    "A part of a copy of a component is listed with its bar, but the bar does not drag: a copy's contents are rewritten from its original, so the change would be lost on the next sync.",
+    "Logos: an SVG or PNG logo lands on the timeline as one picture with no layers, so it has nothing to open. Size measurement groups on a video were not tried in this pass.",
+    "A part's moving-value rows (Opacity, Position) keep their labels at the left margin rather than indented under the part.",
+    "No mock page draws nested timeline rows; this follows the Layers list, the model you named on 2026-10-17, and the placement contract's Timeline row now says so."
+  ]
+}

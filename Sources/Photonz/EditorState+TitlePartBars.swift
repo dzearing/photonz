@@ -18,30 +18,6 @@ struct TitlePartDrag: Equatable {
 
 extension EditorState {
 
-    // MARK: The arrow on a title's track
-
-    /// Whether a track holds a placed title, which earns its header the arrow
-    /// that opens the title's part rows.
-    func trackHasTitleParts(_ layerIDs: [UUID]) -> Bool {
-        guard let document else { return false }
-        return layerIDs.contains { id in
-            guard let layer = document.layer(id: id) else { return false }
-            return layer.group?.titleRecipe != nil && layer.isPlacedInTime && !layer.isComponentInstance
-        }
-    }
-
-    /// Whether the arrow on track `trackID` has its title's parts open. Closed
-    /// until somebody opens it.
-    func titlePartRowsOpen(trackID: UUID) -> Bool {
-        titlePartTracksOpened[trackID] ?? false
-    }
-
-    /// The arrow: open closes it, closed opens it.
-    func toggleTitlePartRows(trackID: UUID) {
-        titlePartTracksOpened[trackID] = !titlePartRowsOpen(trackID: trackID)
-        timelineTrackRowsMemo = nil
-    }
-
     // MARK: A part's bar
 
     /// The bar the row of the part `pieceID` draws: where the hand has it while

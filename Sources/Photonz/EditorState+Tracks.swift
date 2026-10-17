@@ -80,6 +80,9 @@ struct TimelineTrackRowModel: Identifiable, Equatable {
     /// The clips on this track that have zooms, each with a Zoom lane under
     /// it (`ZoomLane`).
     var zoomedClips: [UUID] = []
+    /// How each row in `inner` sits: how far in, and whether it wears an
+    /// arrow (`TimelineChildRows.swift`).
+    var nesting: [UUID: TimelineRowNesting] = [:]
 
     var id: UUID { track.id }
 
@@ -133,35 +136,29 @@ extension EditorState {
         // ask. Not while a bar on the strip is under a hand, since that draws
         // the drag over the document without changing it.
         let steady = motionTimingDrag == nil && motionStopDrag == nil
-        // Read before the memo, so a view drawing these rows is told when the
-        // arrow on a title's track opens or closes its parts.
-        _ = titlePartTracksOpened
+        // Read before the memo, so a view drawing these rows is told when an
+        // arrow opens or closes a row's parts.
+        let open = expandedGroupIDs
         if steady, let memo = timelineTrackRowsMemo, memo.document == document,
-           memo.picked == selectedLayerID { return memo.rows }
+           memo.picked == selectedLayerID, memo.open == open { return memo.rows }
         let rows = timelineTrackRows(of: document)
-        if steady { timelineTrackRowsMemo = (document, selectedLayerID, rows) }
+        if steady { timelineTrackRowsMemo = (document, selectedLayerID, open, rows) }
         return rows
     }
 
     private func timelineTrackRows(of document: PhotonzDocument) -> [TimelineTrackRowModel] {
         let groups = motionStripGroups
-        // The part picked, and every group it is inside.
-        var partInHand = Set<UUID>()
-        if let picked = selectedLayerID, var path = document.path(of: picked) {
-            while !path.isEmpty {
-                if let found = document.layer(atPath: path) { partInHand.insert(found.id) }
-                path.removeLast()
-            }
-        }
         let byLayer = Dictionary(groups.map { ($0.layerID, $0) }, uniquingKeysWith: { a, _ in a })
         let tracks = document.timelineTracks
         let soloPicture = tracks.contains { $0.kind != .audio && $0.isSolo }
         let soloSound = tracks.contains { $0.kind == .audio && $0.isSolo }
         let linkedByTrack = document.linkedSoundsByTrack
         let linkedClips = Set(linkedByTrack.values.joined())
+        let open = expandedGroupIDs
         return tracks.map { track in
             var clips: [MotionStripGroup] = []
             var inner: [MotionStripGroup] = []
+            var nesting: [UUID: TimelineRowNesting] = [:]
             // A captions track draws every cue on its one lane, side by side,
             // rather than the group as one bar with a row per cue under it.
             if track.kind == .captions {
@@ -172,45 +169,37 @@ extension EditorState {
                 return row
             }
             for id in document.clipIDs(onTrack: track.id) {
-                if var group = byLayer[id] {
+                guard let layer = document.layer(id: id) else { continue }
+                if var group = byLayer[id] ?? Self.partsOnlyBar(layer, in: document) {
                     // A clip whose sound is on an audio track of its own is
                     // drawn as picture only: its waveform and level line are
                     // on the segment under it.
                     if linkedClips.contains(id) { group.isSound = false }
                     clips.append(group)
                 }
-                guard let layer = document.layer(id: id) else { continue }
-                // A title opened by the arrow on its track lists EVERY part,
-                // each with its own bar, so the subtitle can be retimed without
-                // first finding it on the canvas; a part with nothing moving on
-                // it gets its row too. Closed, only a part picked has its row,
-                // so picking never pushes the tracks under it out of sight. Only
-                // the part picked opens its property lanes under it
-                // (`a-title-page-s-parts-each-have-their-own-labelle`).
-                if layer.group?.titleRecipe != nil, layer.isPlacedInTime, !layer.isComponentInstance {
-                    let open = titlePartRowsOpen(trackID: track.id)
-                    for timing in document.titlePartTimings(layerID: layer.id) {
-                        guard let piece = document.layer(id: timing.pieceID),
-                              open || partInHand.contains(piece.id) else { continue }
-                        var group = byLayer[piece.id]
-                            ?? MotionStripGroup(layerID: piece.id, layerName: piece.displayName(readWords: [:]),
-                                                lanes: [], span: layer.time,
-                                                trackKind: piece.timelineTrackKind, mark: piece.mark)
-                        if piece.id != selectedLayerID { group.lanes = [] }
-                        inner.append(group)
-                    }
-                    continue
-                }
-                for part in layer.selfAndDescendants.dropFirst() {
-                    guard let group = byLayer[part.id] else { continue }
-                    // A title's parts each come in on their own beat
-                    // (`TitleDesign.swift`), and a row for every part under
-                    // every title buried the tracks below it: they open for
-                    // the part in hand, the way Premiere shows a graphic's
-                    // keys for the layer picked inside it. A component's
-                    // pieces keep their rows (`ComponentsInTime.swift`).
-                    if layer.isPlacedInTime, !layer.isComponentInstance,
-                       !partInHand.contains(part.id) { continue }
+                // **The timeline is the layers list with a time axis**: a clip
+                // made of parts (a title page, a name card, a logo, a group, a
+                // component) opens by its arrow into a row per part, one step
+                // in per level, each with its own bar. Closed, only a part
+                // picked keeps its row, and the groups it is in, so picking
+                // never pushes the tracks under it out of sight
+                // (`any-timeline-row-that-holds-sub-layers-expands-a`).
+                for child in document.timelineChildRows(of: id, open: open, picked: selectedLayerID) {
+                    guard let piece = document.layer(id: child.layerID) else { continue }
+                    var group = byLayer[piece.id]
+                        ?? Self.partsOnlyBar(piece, in: document)
+                        ?? MotionStripGroup(layerID: piece.id, layerName: piece.displayName(readWords: [:]),
+                                            lanes: [], span: document.partStretch(of: piece.id).map {
+                                                LayerTime(inMS: $0.startMS, outMS: $0.endMS)
+                                            } ?? layer.time,
+                                            trackKind: piece.timelineTrackKind, mark: piece.mark)
+                    // A part's moving values open under it with its arrow, and
+                    // under the part picked.
+                    let hasLanes = !group.lanes.isEmpty
+                    let lanesOpen = open.contains(piece.id) || piece.id == selectedLayerID
+                    if !lanesOpen { group.lanes = [] }
+                    nesting[piece.id] = TimelineRowNesting(depth: child.depth, opens: child.opens || hasLanes,
+                                                           isOpen: open.contains(piece.id))
                     inner.append(group)
                 }
             }
@@ -226,6 +215,7 @@ extension EditorState {
                 : track.isHidden || (soloPicture && !track.isSolo)
             var row = TimelineTrackRowModel(track: track, clips: clips, inner: inner, isOff: isOff,
                                             linked: linked)
+            row.nesting = nesting
             row.soundNumber = tracks.soundTrackNumber(of: track.id) ?? 0
             if Experiments.shared.zoomRegionsEnabled {
                 row.zoomedClips = clips.map(\.layerID).filter {
@@ -234,6 +224,19 @@ extension EditorState {
             }
             return row
         }
+    }
+
+    /// A clip with no time and nothing moving of its own, made of parts that
+    /// have (a group of shapes each placed in time): a bar across where its
+    /// parts are, so the track says something is there while its rows are
+    /// closed. It has no ends of its own to drag.
+    private static func partsOnlyBar(_ layer: Layer, in document: PhotonzDocument) -> MotionStripGroup? {
+        guard layer.isGroup, layer.time == nil else { return nil }
+        let times = layer.selfAndDescendants.compactMap(\.time)
+        guard let start = times.map(\.inMS).min(), let end = times.map(\.outMS).max() else { return nil }
+        return MotionStripGroup(layerID: layer.id, layerName: layer.displayName(readWords: [:]), lanes: [],
+                                span: LayerTime(inMS: start, outMS: end),
+                                trackKind: layer.timelineTrackKind, mark: layer.mark)
     }
 
     /// The dock's rows: tracks, with a heading over each run of tracks in one
