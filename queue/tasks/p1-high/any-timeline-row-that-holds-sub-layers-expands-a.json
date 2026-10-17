@@ -1,0 +1,37 @@
+{
+  "id": "any-timeline-row-that-holds-sub-layers-expands-a",
+  "title": "Any timeline row that holds sub-layers expands and collapses like the Layers list",
+  "goal": "On the timeline, anything made of parts (a title page with its title and subtitle, a name card, a group, a component, a logo with layers, a Size measurement group) has a disclosure arrow like the Layers list. Expanded, each sub-layer is its own indented row with its own bar, so it can be picked, retimed, keyed and changed independently; collapsed, it is one row. The behaviour and look match the Layers list so the two read as one system.",
+  "epic": "video-cutting",
+  "priority": "p1-high",
+  "seq": 1.1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:02:56.512Z",
+  "updated": "2026-10-17T13:02:56.622Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"I think it would be nice to have timeline rows with sub layers like title/subtitle should be expandable/collapsible similar to layers, and you can tweak those elements independently.\" Follows the user's report the same morning that the subtitle could not be retimed because it is not a sub element of the title page (a-title-page-s-parts-each-have-their-own-labelle, seq 1, already in progress).\n\nFrom code reading: track rows already have a disclosure twist (Sources/Photonz/TimelineTrackRows.swift:225, :293-304) and folded/open heights (:1286-1297, :1425) for a layer's motion lanes and group tracks; the Layers list's disclosure lives in LayersListView.swift. Reuse those; do not invent a second disclosure look.",
+  "acceptance": [
+    "Builds on a-title-page-s-parts-each-have-their-own-labelle (title parts as labelled rows, in progress when this was filed): generalise that to every layer with children, one shared implementation, not a title-only path",
+    "A disclosure arrow on any timeline row whose layer has children; click (or Option-click to expand all levels, as in the Layers list), Right/Left arrow keys on a picked row expand and collapse; nested children indent one step per level, like the Layers list",
+    "Each child row shows the child's name and kind icon and its own bar for when it is on screen; picking it picks that child on the canvas and shows its own panel sections; dragging its bar's ends or middle changes only that child's timing; its keys and animated property lanes appear under it when it is expanded further",
+    "Expanded or collapsed state is remembered per layer in the document, and mirrors the Layers list (expanding in one expands in the other) unless the audit argues they should be separate",
+    "Collapsed, a parent row shows a faint summary of where its children's timings fall (thin marks) so retiming is discoverable",
+    "No zoom of the timeline or canvas changes when expanding, collapsing or dragging child bars (MEASURED)",
+    "Works for title pages, name cards, groups, components, logos with layers and Size measurement groups at Next defaults",
+    "A walk expands a title page, retimes the Subtitle, collapses it, expands a group two levels deep and moves a grandchild's bar",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:02:56.516Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:02:56.620Z",
+      "note": "seq 45 -> 1.1"
+    }
+  ]
+}
