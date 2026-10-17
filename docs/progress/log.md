@@ -21521,3 +21521,14 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
   A PNG/SVG from the Finder on the timeline now lands on a Gfx track + the shelf.
 - Media tiles from files read name over kind (Acme Logo / svg); art fits its well.
 - Walk: `library-svg-logo-walk`. Audit: `queue/audits/2026-10-16-svg-logo.json`.
+
+## 2026-10-17 — Command drag on a clip's edge ripple trims
+
+- ⌘ at the grab of a clip's edge grip, or either half of the cut where two clips
+  meet, is Premiere's ripple trim: everything after the edit on every unlocked
+  track follows (`Sources/PhotonzCore/RippleEdgeDrag.swift`). Shorter = Extract,
+  longer = `rippleTime(sparingLocked:)`; snapping stays on, S still switches it.
+- ⌘ no longer frees an EDGE drag of its magnets (UX-PATTERNS §7); it still frees a
+  body drag and a title's free start. Dragging the cut itself now trims its side.
+- Walk: `command-drag-ripple-trims-an-edge-walk`. Audit:
+  `queue/audits/2026-10-17-command-drag-ripple-trim.json`.
