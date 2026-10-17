@@ -2518,18 +2518,21 @@ struct EditorCommands: Commands {
         // out would be seven rows in the middle of View, and the chip in
         // the title bar is the everyday door. This one is the keyboard's
         // door and accessibility's.
+        //
+        // Modes are for pictures: a document with time has one setup, so the
+        // submenu is there but dimmed, and ⌃1 … ⌃3 do nothing to it.
         if Experiments.shared.windowModesEnabled {
             Menu(WindowModeCopy.menuTitle) {
-                ForEach(WindowModes.swappable) { mode in
-                    Button(mode.title) { WindowModeStore.shared.swap(to: mode.id) }
+                ForEach(WindowModes.offered(hasTime: false)) { mode in
+                    Button(mode.title) { editor?.swapWindowMode(to: mode.id) }
                         .keyboardShortcut(modeKey(mode.id))
                 }
                 Divider()
                 Button(WindowModeCopy.showEverything) {
-                    WindowModeStore.shared.showEverything()
+                    editor?.showEverythingInWindow()
                 }
             }
-            .disabled(!hasDocument)
+            .disabled(!hasDocument || (editor?.documentHasTime ?? false))
         }
         Button("Zoom In") { editor?.zoomIn() }
             .keyboardShortcut("=", modifiers: .command) // the ⌘+ key

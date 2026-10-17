@@ -6989,22 +6989,22 @@ private final class Run {
             // What the window is set up for (`next-window-modes`). Says which
             // mode it landed in and what the chip now reads, because "the
             // action ran" is not the same claim as "the window swapped".
-            case .modeIcon, .modeRedline, .modeVideo, .modeDesign, .modeShowEverything:
-                let modes = WindowModeStore.shared
+            case .modeImage, .modeIcon, .modeDesign, .modeShowEverything:
                 if action == .modeShowEverything {
-                    modes.showEverything()
+                    editor.showEverythingInWindow()
+                    actionDetail = "the chip reads \(editor.windowModeLabel)"
                 } else {
                     let id: String = switch action {
+                    case .modeImage: WindowModes.imageID
                     case .modeIcon: "icon"
-                    case .modeRedline: "redline"
-                    case .modeVideo: "video"
                     default: "design"
                     }
-                    modes.swap(to: id)
+                    actionDetail = !Experiments.shared.windowModesEnabled
+                        ? "modes are switched off in this release, so nothing swapped"
+                        : editor.swapWindowMode(to: id)
+                            ? "the chip reads \(editor.windowModeLabel)"
+                            : "this document is not offered that mode, so nothing swapped"
                 }
-                actionDetail = Experiments.shared.windowModesEnabled
-                    ? "the chip reads \(modes.label)"
-                    : "modes are switched off in this release, so nothing swapped"
             case .toggleFullScreen:
                 // The same door F, ⌃⌘F and the transport's button use. A walk
                 // opens its window while the probe is still a menu-bar agent,

@@ -291,11 +291,11 @@ struct EditorView: View {
             }
             // ...and, at the leading end of the same title bar, the chip that
             // says what this window is set up for (Next, `next-window-modes`).
-            // Only with a document open, for the reason the toggle above is:
-            // an empty window has no panel to fold, so a chip that swapped a
-            // mode would change nothing anybody could see.
+            // Only with a picture open: an empty window has no panel to fold,
+            // and a document with time has one setup, so a chip offering a
+            // list of one would be a control that chooses nothing.
             .background {
-                if editorState.hasDocument, Experiments.shared.windowModesEnabled {
+                if editorState.showsWindowModeChip {
                     TitlebarModeChipInstaller(editorState: editorState)
                 }
             }
@@ -1308,13 +1308,12 @@ struct EditorView: View {
         let lit: ToolBarLayout.Entry? = isVideoBar && editorState.isTimelineBlade
             ? .blade : layout.entry(for: editorState.activeTool)
         // A mode with tools of its own (Design) puts them in front and folds
-        // the rest under More. A document with time keeps the video's bar: the
-        // mode is app-wide, and a recording opened while in Design still needs
-        // its Blade.
-        if !isVideoBar, Experiments.shared.windowModesEnabled,
-           let strip = WindowModeStore.shared.mode.toolStrip {
+        // the rest under More. A document with time keeps the video's bar: it
+        // is always in the video setup, which has no strip of its own.
+        if !isVideoBar, let mode = editorState.activeWindowMode,
+           let strip = mode.toolStrip {
             return ToolBarFold(layout, strip: strip,
-                               priority: WindowModeStore.shared.mode.toolStripPriority,
+                               priority: mode.toolStripPriority,
                                room: toolRowRoom,
                                metrics: toolRowMetrics(layout), keeping: lit)
         }

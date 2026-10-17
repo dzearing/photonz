@@ -2,21 +2,20 @@ import Foundation
 import Observation
 import PhotonzCore
 
-/// Which mode the app is in, and what each mode is holding
-/// (Next, `next-window-modes`).
+/// How each mode is arranged, for the whole app (Next, `next-window-modes`).
 ///
-/// A mode is a named bundle of the panel choices `PanelSectionVisibilityStore`
-/// already keeps, so this store owns no arrangement of its own: it hands the
-/// panel store a new set on a swap and takes the old one back. That is what
-/// keeps a mode from being a second mechanism, and it is why turning a section
-/// off by hand while in a mode is not a conflict but simply the mode, bent.
+/// Which mode a window is IN is that window's own (`EditorState`'s
+/// `windowModeSession`): a recording's window is in its video setup, a
+/// picture's window starts in Image, and neither reaches the other. What is
+/// kept here, once, is how you like each mode: the sections you turned on or
+/// off while in it. A window's panel is the arrangement of the mode it is in,
+/// read from here, and a switch ticked in the Sections list is written straight
+/// back here for that mode.
 ///
-/// **One store for the whole app**, like the panel choices it drives and for
-/// the same reason: the arrangement it moves is app-wide, so a mode that was
-/// per-window would be two settings fighting over one value. The study wants
-/// two windows onto one file in two different modes, and that wants the panel
-/// choices to become per-window first; it is written up on the task rather than
-/// half-built here.
+/// Until 2026-10-17 this store held one mode for every window, so a recording
+/// set to Video left every picture opened after it in Video too. What it wrote
+/// then is read once and carried across as arrangements only
+/// (`WindowModeArrangements.migrating`).
 ///
 /// **Kept per release.** The key carries the running release's namespace, the
 /// way the panel choices and the feature flags do.
@@ -25,85 +24,92 @@ import PhotonzCore
 final class WindowModeStore {
     static let shared = WindowModeStore()
 
-    /// Where the mode is written, under the running release's own namespace:
-    /// `experiments.next.windowMode`.
+    /// Where the arrangements are written, under the running release's own
+    /// namespace: `experiments.next.windowModeArrangements`.
     static func defaultsKey(for release: Release) -> String {
+        "\(release.storageNamespace).windowModeArrangements"
+    }
+
+    /// Where builds before 2026-10-17 wrote the one mode the whole app was in.
+    /// Read once, to carry its arrangements across, and never written again.
+    static func legacyDefaultsKey(for release: Release) -> String {
         "\(release.storageNamespace).windowMode"
     }
 
     private let key: String
+    private let legacyKey: String
+    private let panelKey: String
 
-    /// The mode, and the arrangement each bent mode is holding.
-    private(set) var session: WindowModeSession {
+    private(set) var arrangements: WindowModeArrangements {
         didSet {
-            guard session != oldValue else { return }
+            guard arrangements != oldValue else { return }
             write()
         }
     }
 
     private init() {
-        key = Self.defaultsKey(for: Experiments.shared.release)
-        session = Self.read(key)
+        let release = Experiments.shared.release
+        key = Self.defaultsKey(for: release)
+        legacyKey = Self.legacyDefaultsKey(for: release)
+        panelKey = PanelSectionVisibilityStore.defaultsKey(for: release)
+        arrangements = Self.read(key: key, legacyKey: legacyKey, panelKey: panelKey)
     }
 
-    var mode: WindowMode { session.mode }
-
-    /// What the chip reads: the mode's name, and whether you have bent it.
-    ///
-    /// Read against the panel's live choices rather than against a copy, so a
-    /// switch ticked in the Sections list at the foot of the panel turns the
-    /// chip to "Icon, edited" in the same frame.
-    var label: String {
-        session.chipLabel(with: PanelSectionVisibilityStore.shared.choices)
+    func arrangement(of id: String) -> PanelSectionVisibility.Choices {
+        arrangements.arrangement(of: id)
     }
 
-    var isBent: Bool {
-        session.isBent(with: PanelSectionVisibilityStore.shared.choices)
+    func isBent(_ id: String) -> Bool { arrangements.isBent(id) }
+
+    /// Keep what is on screen as this mode's arrangement.
+    func keep(_ choices: PanelSectionVisibility.Choices, for id: String) {
+        var next = arrangements
+        next.keep(choices, for: id)
+        arrangements = next
     }
 
-    /// Move the window into another mode. The mode being left keeps whatever
-    /// you did to it, so coming back lands on the window you left.
-    func swap(to id: String) {
-        let panel = PanelSectionVisibilityStore.shared
-        var next = session
-        panel.choices = next.swap(to: id, leaving: panel.choices)
-        session = next
+    /// Put this mode back the way it shipped.
+    func reset(_ id: String) {
+        var next = arrangements
+        next.reset(id)
+        arrangements = next
     }
 
-    /// Put this mode back the way it shipped, without leaving it.
-    func resetCurrent() {
-        let panel = PanelSectionVisibilityStore.shared
-        var next = session
-        panel.choices = next.resetCurrent()
-        session = next
+    /// Hand a window's lot back (`WindowModeSession.showEverything`).
+    func showEverything(_ session: inout WindowModeSession, hasTime: Bool) {
+        var next = arrangements
+        session.showEverything(hasTime: hasTime, arrangements: &next)
+        arrangements = next
     }
 
-    /// Hand the lot back: every section follows the document again, which is
-    /// the window of somebody who never touched a mode. The mode being left
-    /// keeps its arrangement, so this is a way out and never a way to lose one.
-    func showEverything() {
-        let panel = PanelSectionVisibilityStore.shared
-        var next = session
-        panel.choices = next.showEverything(leaving: panel.choices)
-        session = next
-    }
-
-    /// Reads the mode back off disk. Only a scripted walk asking the app to
-    /// forget it needs this: it wipes the setting after the app has read it.
-    func reload() { session = Self.read(key) }
+    /// Reads the arrangements back off disk. Only a scripted walk asking the
+    /// app to forget them needs this: it wipes the settings after the app has
+    /// read them.
+    func reload() { arrangements = Self.read(key: key, legacyKey: legacyKey, panelKey: panelKey) }
 
     // MARK: Written down
 
-    private static func read(_ key: String) -> WindowModeSession {
-        guard let stored = UserDefaults.standard.string(forKey: key),
-              let data = stored.data(using: .utf8),
-              let session = try? JSONDecoder().decode(WindowModeSession.self, from: data)
-        else { return WindowModeSession() }
-        return session
+    private static func read(key: String, legacyKey: String, panelKey: String) -> WindowModeArrangements {
+        let defaults = UserDefaults.standard
+        if let stored = defaults.string(forKey: key) {
+            return stored.data(using: .utf8)
+                .flatMap { try? JSONDecoder().decode(WindowModeArrangements.self, from: $0) }
+                ?? WindowModeArrangements()
+        }
+        // Nothing written under the new key yet: carry across what an older
+        // build left, and write it under the new key so this happens once.
+        let migrated = WindowModeArrangements.migrating(
+            legacySession: defaults.string(forKey: legacyKey),
+            livePanel: defaults.string(forKey: panelKey))
+        if let data = try? JSONEncoder().encode(migrated),
+           let stored = String(data: data, encoding: .utf8) {
+            defaults.set(stored, forKey: key)
+        }
+        return migrated
     }
 
     private func write() {
-        guard let data = try? JSONEncoder().encode(session),
+        guard let data = try? JSONEncoder().encode(arrangements),
               let stored = String(data: data, encoding: .utf8) else { return }
         UserDefaults.standard.set(stored, forKey: key)
     }

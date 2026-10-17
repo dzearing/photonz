@@ -19,7 +19,7 @@ struct DesignModeToolStripTests {
     private let metrics = ToolBarFold.Metrics(slot: 28, gap: 4, hairline: 5, more: 28)
 
     private var design: WindowMode {
-        WindowModes.mode("design") ?? WindowModes.everything
+        WindowModes.mode("design") ?? WindowModes.image
     }
 
     private func strip(_ room: CGFloat = .greatestFiniteMagnitude,
@@ -175,7 +175,7 @@ struct DesignModeToolStripTests {
     @Test("The picture bar keeps the family's own first member")
     func pictureBarKeepsItsOwnDefault() {
         #expect(ToolGroup.shapes.member(from: nil) == .line)
-        #expect(WindowModes.everything.startingMember(of: .shapes) == nil)
+        #expect(WindowModes.image.startingMember(of: .shapes) == nil)
         for mode in WindowModes.all where mode.toolStrip == nil {
             for group in ToolGroup.allCases {
                 #expect(mode.startingMember(of: group) == nil)

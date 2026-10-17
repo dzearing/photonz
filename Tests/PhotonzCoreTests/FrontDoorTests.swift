@@ -37,8 +37,9 @@ struct FrontDoorTests {
         }
         #expect(FrontDoorTemplate.designUI.modeID == "design")
         #expect(FrontDoorTemplate.editVideo.modeID == "video")
-        #expect(FrontDoorTemplate.captureRedline.modeID == "redline")
-        #expect(FrontDoorTemplate.editImage.modeID == WindowModes.everythingID)
+        // A picture, captured or opened, starts in Image like every picture.
+        #expect(FrontDoorTemplate.captureRedline.modeID == WindowModes.imageID)
+        #expect(FrontDoorTemplate.editImage.modeID == WindowModes.imageID)
     }
 
     @Test("Every word the front door draws is a label inside the chrome budget")

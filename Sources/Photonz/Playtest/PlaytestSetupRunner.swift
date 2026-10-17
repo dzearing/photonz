@@ -77,11 +77,14 @@ extension PlaytestMemory {
              // turned off by hand, which decides what the dock draws at all
              // (`next-panel-sections`).
              PanelSectionVisibilityStore.defaultsKey(for: Experiments.shared.release),
-             // ...and which MODE the window is in, which is a named bundle of
-             // exactly those choices (`next-window-modes`). Forgetting the
-             // choices without forgetting the mode would leave the chip naming
-             // a mode whose arrangement had just been thrown away.
-             WindowModeStore.defaultsKey(for: Experiments.shared.release)]
+             // ...and how each MODE is arranged, which is a named bundle of
+             // exactly those choices (`next-window-modes`), along with the one
+             // mode older builds held for the whole app. Forgetting the
+             // choices without forgetting the arrangements would leave the
+             // chip calling a mode edited whose arrangement had been thrown
+             // away.
+             WindowModeStore.defaultsKey(for: Experiments.shared.release),
+             WindowModeStore.legacyDefaultsKey(for: Experiments.shared.release)]
         case .grid:
             [EditorState.canvasGridKey]
         case .frames:

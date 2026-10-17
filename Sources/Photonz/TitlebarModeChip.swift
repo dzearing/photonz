@@ -74,7 +74,7 @@ struct TitlebarModeChipInstaller: NSViewRepresentable {
             controller.view = accessoryView
             // Zero on purpose, exactly as the panel toggle's is: full screen
             // takes the title bar away along with its accessories, and the
-            // keyboard (⌃1 … ⌃4) and View ▸ Mode are still the way in.
+            // keyboard (⌃1 … ⌃3) and View ▸ Mode are still the way in.
             controller.fullScreenMinHeight = 0
             window.addTitlebarAccessoryViewController(controller)
             accessory = controller
@@ -94,11 +94,10 @@ struct TitlebarModeChipInstaller: NSViewRepresentable {
 /// The chip itself: what this window is set up for, and the list that changes
 /// it.
 struct TitlebarModeChip: View {
-    @State private var modes = WindowModeStore.shared
-    /// Watched as well as the mode, because the chip says whether you have bent
-    /// the mode by hand and that is a fact about the panel's choices.
-    @State private var sections = PanelSectionVisibilityStore.shared
     @State private var isOpen = false
+    /// The window this chip is about: the mode is the window's own. Optional
+    /// only so the legibility catalogue can draw the chip with no window,
+    /// where it reads as a picture's window starting out.
     @Environment(EditorState.self) private var editorState: EditorState?
 
     /// The title bar's own height, so the chip is centred in it the way the
@@ -110,7 +109,11 @@ struct TitlebarModeChip: View {
     static let boxWidth: CGFloat = 176
 
     private var label: String {
-        modes.session.chipLabel(with: sections.choices)
+        editorState?.windowModeLabel ?? WindowModes.image.title
+    }
+
+    private var symbol: String {
+        editorState?.windowMode.symbol ?? WindowModes.image.symbol
     }
 
     var body: some View {
@@ -126,7 +129,7 @@ struct TitlebarModeChip: View {
     private var chip: some View {
         Button { isOpen.toggle() } label: {
             HStack(spacing: 5) {
-                Image(systemName: modes.mode.symbol)
+                Image(systemName: symbol)
                     .font(.system(size: 10, weight: .semibold))
                     .foregroundStyle(.secondary)
                     .measuredInk()
@@ -162,7 +165,9 @@ struct TitlebarModeChip: View {
         // walk asks for "Mode" and reads what it currently says.
         .playtestControl(WindowModeCopy.chipControl, detail: label)
         .popover(isPresented: $isOpen, arrowEdge: .bottom) {
-            WindowModeList(modes: modes, sections: sections) { isOpen = false }
+            if let editorState {
+                WindowModeList(editorState: editorState) { isOpen = false }
+            }
         }
         .onChange(of: isOpen) { _, open in
             if open { escapeWatch.start { isOpen = false } } else { escapeWatch.stop() }
@@ -177,54 +182,57 @@ struct TitlebarModeChip: View {
     @State private var escapeWatch = PanelSectionsEscapeWatch()
 }
 
-/// The list the chip opens: every mode, then the two ways out.
+/// The list the chip opens: every mode this window's document is offered,
+/// then the two ways out.
 struct WindowModeList: View {
-    @Bindable var modes: WindowModeStore
-    @Bindable var sections: PanelSectionVisibilityStore
+    let editorState: EditorState
     let close: () -> Void
+
+    private var isInImage: Bool { editorState.windowMode.id == WindowModes.imageID }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(WindowModeCopy.listTitle)
                 .font(.subheadline.weight(.semibold))
             VStack(alignment: .leading, spacing: 1) {
-                ForEach(WindowModes.swappable) { mode in
+                ForEach(editorState.offeredWindowModes) { mode in
                     row(mode)
                 }
             }
             Divider()
             // The panic button, first under the line so it is findable when you
             // are annoyed. It is the same act as Use Automatic for All at the
-            // foot of the panel, and says so by landing you in Everything.
+            // foot of the panel, and lands you in Image with nothing folded.
             action(WindowModeCopy.showEverything,
                    symbol: "arrow.uturn.backward",
                    detail: "unfolds every section",
-                   enabled: modes.mode.id != WindowModes.everythingID || modes.isBent) {
-                modes.showEverything()
+                   enabled: !isInImage || editorState.isWindowModeBent) {
+                editorState.showEverythingInWindow()
             }
             // Only offered on a mode you have actually bent, because only a
-            // bent mode has anything to put back.
-            if modes.isBent, modes.mode.id != WindowModes.everythingID {
-                action(WindowModeCopy.resetMode(modes.mode.title),
+            // bent mode has anything to put back. Image's way back is the row
+            // above, which does exactly that.
+            if editorState.isWindowModeBent, !isInImage {
+                action(WindowModeCopy.resetMode(editorState.windowMode.title),
                        symbol: "arrow.counterclockwise",
                        detail: "resets this mode",
                        enabled: true) {
-                    modes.resetCurrent()
+                    editorState.resetWindowMode()
                 }
             }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
-        // Wide enough for the longest summary on ONE line: Redline's ran off
-        // the end at 286 and read "Measuring a capture, handing over a s…",
-        // which is a description that stops before it says anything.
+        // Wide enough for the longest summary on ONE line: the old Redline's
+        // ran off the end at 286 and read "Measuring a capture, handing over a
+        // s…", which is a description that stops before it says anything.
         .frame(width: 324)
     }
 
     @ViewBuilder private func row(_ mode: WindowMode) -> some View {
-        let picked = mode.id == modes.session.modeID
+        let picked = mode.id == editorState.windowMode.id
         Button {
-            modes.swap(to: mode.id)
+            editorState.swapWindowMode(to: mode.id)
             close()
         } label: {
             HStack(alignment: .firstTextBaseline, spacing: 8) {

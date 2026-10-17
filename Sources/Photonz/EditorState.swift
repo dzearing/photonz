@@ -61,6 +61,10 @@ final class EditorState {
     /// instead made every edit (a mark, a nudge) re-run the whole editor
     /// body and everything under it (`a-long-captioned-recording-walk`).
     private(set) var hasDocument = false
+    /// Which mode THIS window is in (Next, `next-window-modes`). Per window on
+    /// purpose: a recording's window and a picture's window never share one,
+    /// and a new window starts a picture in Image. See `EditorState+WindowMode`.
+    var windowModeSession = WindowModeSession()
     let store = ImageStore()
     /// Per-image detected UI edges, computed lazily on first use and reused for
     /// every measure-corner snap. Keyed by `ImageRef`, so it survives undo/redo.
@@ -2422,6 +2426,9 @@ final class EditorState {
     /// arrives with the document, so it is where history starts: undo after
     /// the first edit takes back that edit and never the frame.
     func newUIDesign() {
+        // A UI design is building screens, so its window is in Design however
+        // it was started: the front door, File ▸ New UI Design or a script.
+        swapWindowMode(to: "design")
         Self.uiDesignCount += 1
         untitledName = UIStarter.documentName(number: Self.uiDesignCount)
         installDocument(UIStarter.document(measure: { TextRasterizer.naturalSize($0) }), url: nil)
@@ -4265,8 +4272,7 @@ final class EditorState {
     /// window's. Only while the mode's strip is the bar: a document with time
     /// keeps the video's bar in any mode, and its memory with it.
     private func memoryMode(for group: ToolGroup) -> WindowMode? {
-        guard Experiments.shared.windowModesEnabled, !hasVideoToolBar else { return nil }
-        let mode = WindowModeStore.shared.mode
+        guard let mode = activeWindowMode, !hasVideoToolBar else { return nil }
         return mode.startingMember(of: group) == nil ? nil : mode
     }
 

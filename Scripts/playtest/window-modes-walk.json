@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/window-modes",
-  "seed": "THE CLAIM: a window can be set up for the job in front of you in one move, and nothing about the document moves with it. A chip beside the traffic lights says what this window is set up for; it opens a list of modes; picking one folds away the panel sections that job does not need, all at once, instead of you turning them off one at a time. The document is built first so the swaps have something to fold: two rectangles and a real gap measurement between them, which is what puts a Measurements list in the panel at all. Then four things are read at every stage rather than trusted from a picture: the WORDS on the chip, the WORDS on the Sections row at the foot of the panel, which sections the dock is actually drawing, and what is still picked. Icon folds the measurements list and keeps Motion; Redline is the other way round and is reached from the KEYBOARD rather than the chip, against the menu bar's own key equivalent; Design folds both. The same rectangle stays picked through every swap and the layer list stays three rows, because a mode is a fact about the WINDOW and never about the document. Last, the two ways back, which are the whole reason this is not a trap: turning one folded section back on by hand keeps you in the mode and turns the chip to Design, edited, and Show Everything hands the lot back in one press and puts the chip back to Everything.",
+  "seed": "THE CLAIM: a window can be set up for the job in front of you in one move, and nothing about the document moves with it. A chip beside the traffic lights says what this window is set up for; it opens a list of modes; picking one folds away the panel sections that job does not need, all at once, instead of you turning them off one at a time. The document is built first so the swaps have something to fold: two rectangles and a real gap measurement between them, which is what puts a Measurements list in the panel at all. Then four things are read at every stage rather than trusted from a picture: the WORDS on the chip, the WORDS on the Sections row at the foot of the panel, which sections the dock is actually drawing, and what is still picked. A picture starts in Image, which folds nothing, and the list offers Image, Icon and Design and no Video (the user, 2026-10-17). Icon folds the measurements list and keeps Motion; Image is reached back from the KEYBOARD rather than the chip, against the menu bar's own key equivalent, and unfolds it again; Design folds both. The same rectangle stays picked through every swap and the layer list stays three rows, because a mode is a fact about the WINDOW and never about the document. Last, the two ways back, which are the whole reason this is not a trap: turning one folded section back on by hand keeps you in the mode and turns the chip to Design, edited, and Show Everything hands the lot back in one press and puts the chip back to Image.",
   "setup": {
     "forget": [
       "panel",
@@ -148,8 +148,8 @@
     },
     {
       "do": "describe",
-      "stage": "1-everything",
-      "note": "BEFORE. Two rectangles, one gap measurement between them, the left rectangle picked, and the window in no mode at all: the chip beside the traffic lights reads Everything, every section follows the document exactly as it does for somebody who never finds modes, and the Sections row at the foot of the panel reads just Sections because nobody has hidden a thing. Both of the sections the modes below fold are here: Measurements, because this document now holds one, and Motion. This is the window every later stage is measured against."
+      "stage": "1-image",
+      "note": "BEFORE. Two rectangles, one gap measurement between them, the left rectangle picked, and the window in Image, where every picture starts: the chip beside the traffic lights reads Image, Image folds nothing so every section follows the document exactly as it does for somebody who never finds modes, and the Sections row at the foot of the panel reads just Sections because nobody has hidden a thing. Both of the sections the modes below fold are here: Measurements, because this document now holds one, and Motion. This is the window every later stage is measured against."
     },
     {
       "do": "expect",
@@ -159,7 +159,7 @@
     {
       "do": "expect",
       "control": "Mode",
-      "reads": "Everything"
+      "reads": "Image"
     },
     {
       "do": "expect",
@@ -178,11 +178,11 @@
     },
     {
       "do": "panel",
-      "stage": "1-everything"
+      "stage": "1-image"
     },
     {
       "do": "snapshot",
-      "name": "window-modes-1-everything"
+      "name": "window-modes-1-image"
     },
     {
       "do": "press",
@@ -195,7 +195,12 @@
     {
       "do": "describe",
       "stage": "2-mode-list",
-      "note": "The list the chip opens. Four modes, each with one plain sentence saying what it is for and the number it answers to on the keyboard, and under the line the panic button: Show Everything, one press and every folded thing comes back. It is a popup rather than a row of tabs on purpose: three tabs in the title bar would read as navigating between three applications, and a popup reads as state."
+      "note": "The list the chip opens. The three modes a picture is offered, Image, Icon and Design, in that order, each with one plain sentence saying what it is for and the number it answers to on the keyboard, and NO Video row, because a picture is not a recording. Under the line the panic button: Show Everything, one press and every folded thing comes back. It is a popup rather than a row of tabs on purpose: three tabs in the title bar would read as navigating between three applications, and a popup reads as state."
+    },
+    {
+      "do": "expect",
+      "control": "Image mode",
+      "present": true
     },
     {
       "do": "expect",
@@ -204,13 +209,8 @@
     },
     {
       "do": "expect",
-      "control": "Redline mode",
-      "present": true
-    },
-    {
-      "do": "expect",
       "control": "Video mode",
-      "present": true
+      "present": false
     },
     {
       "do": "expect",
@@ -273,11 +273,11 @@
     },
     {
       "do": "shortcut",
-      "key": "2",
+      "key": "1",
       "modifiers": [
         "control"
       ],
-      "menuItem": "Redline"
+      "menuItem": "Image"
     },
     {
       "do": "wait",
@@ -285,13 +285,13 @@
     },
     {
       "do": "describe",
-      "stage": "4-redline",
-      "note": "The same kind of swap from the KEYBOARD, against the menu bar's own key equivalent, so a mode never needs the pointer. THE CLAIM: the chip reads Redline and the window is the exact opposite of the one before it: the measurements list is back because that is the job, and Motion has folded away because measuring a capture is not animating it. The measurement itself never moved: it is still in the document, and it was still in the document while Icon had its list folded."
+      "stage": "4-image-by-key",
+      "note": "The same kind of swap from the KEYBOARD, against the menu bar's own key equivalent, so a mode never needs the pointer: Control 1 is Image. THE CLAIM: the chip reads Image and the measurements list Icon folded is back, with Motion still there, because Image folds nothing. The measurement itself never moved: it is still in the document, and it was still in the document while Icon had its list folded."
     },
     {
       "do": "expect",
       "control": "Mode",
-      "reads": "Redline"
+      "reads": "Image"
     },
     {
       "do": "expect",
@@ -301,7 +301,7 @@
     {
       "do": "expect",
       "control": "Motion section",
-      "present": false
+      "present": true
     },
     {
       "do": "expectMeasures",
@@ -309,11 +309,11 @@
     },
     {
       "do": "panel",
-      "stage": "4-redline"
+      "stage": "4-image-by-key"
     },
     {
       "do": "snapshot",
-      "name": "window-modes-4-redline"
+      "name": "window-modes-4-image-by-key"
     },
     {
       "do": "press",
@@ -469,13 +469,13 @@
     },
     {
       "do": "describe",
-      "stage": "7-everything-again",
-      "note": "AFTER. The panic button, one press. THE CLAIM: every folded section is back, the chip reads Everything again, the Sections row reads just Sections, and the dock is the window of stage 1 to the point. Nothing was lost by any of it, the measurement is still one measurement, and the document is the document it was four swaps ago."
+      "stage": "7-image-again",
+      "note": "AFTER. The panic button, one press. THE CLAIM: every folded section is back, the chip reads Image again, the Sections row reads just Sections, and the dock is the window of stage 1 to the point. Nothing was lost by any of it, the measurement is still one measurement, and the document is the document it was four swaps ago."
     },
     {
       "do": "expect",
       "control": "Mode",
-      "reads": "Everything"
+      "reads": "Image"
     },
     {
       "do": "expect",
@@ -498,15 +498,15 @@
     },
     {
       "do": "panel",
-      "stage": "7-everything-again"
+      "stage": "7-image-again"
     },
     {
       "do": "snapshot",
-      "name": "window-modes-7-everything-again"
+      "name": "window-modes-7-image-again"
     },
     {
       "do": "shortcut",
-      "key": "4",
+      "key": "3",
       "modifiers": [
         "control"
       ],

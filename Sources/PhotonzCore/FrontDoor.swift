@@ -53,14 +53,15 @@ public enum FrontDoorTemplate: String, CaseIterable, Sendable {
         }
     }
 
-    /// The mode the window goes into (`WindowModes`). Edit an image has no
-    /// mode of its own, so it is the mode that folds nothing.
+    /// The mode the window goes into (`WindowModes`). A picture, opened or
+    /// captured, starts in Image like every picture; a video has the one
+    /// setup a document with time has.
     public var modeID: String {
         switch self {
         case .designUI: "design"
-        case .editImage: WindowModes.everythingID
-        case .editVideo: "video"
-        case .captureRedline: "redline"
+        case .editImage: WindowModes.imageID
+        case .editVideo: WindowModes.videoID
+        case .captureRedline: WindowModes.imageID
         }
     }
 }

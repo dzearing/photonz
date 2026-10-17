@@ -42,10 +42,10 @@ struct ModeIsAPresetTests {
         WindowModes.mode("icon")?.preset ?? PanelSectionVisibility.Choices()
     }
 
-    /// Redline: you are measuring a capture, so the list of measurements is up
-    /// and the things that only matter while building are folded.
-    private static func redlineMode() -> PanelSectionVisibility.Choices {
-        WindowModes.mode("redline")?.preset ?? PanelSectionVisibility.Choices()
+    /// Design: you are building screens, so the redlining list and motion are
+    /// folded and the layout sections stay.
+    private static func designMode() -> PanelSectionVisibility.Choices {
+        WindowModes.mode("design")?.preset ?? PanelSectionVisibility.Choices()
     }
 
     /// A document with an icon frame, a screen frame and a measurement on it:
@@ -96,21 +96,21 @@ struct ModeIsAPresetTests {
     @Test("What the document says is the same under every mode")
     func theDocumentAnswersTheSameInEveryMode() {
         let situation = Self.mixedSituation()
-        let icon = Self.iconMode(), redline = Self.redlineMode()
-        #expect(icon != redline)
+        let icon = Self.iconMode(), design = Self.designMode()
+        #expect(icon != design)
         // The two modes are genuinely different windows...
         #expect(PanelSectionVisibility.shown(PanelSectionVisibility.optionalSections,
                                              choices: icon, in: situation)
                 != PanelSectionVisibility.shown(PanelSectionVisibility.optionalSections,
-                                                choices: redline, in: situation))
+                                                choices: design, in: situation))
         // ...and yet every section the two modes did NOT speak about answers
         // identically in both, because that answer is read off the document
         // alone. A mode can only fold what it names; it cannot reinterpret the
         // document underneath it.
         for section in PanelSectionVisibility.optionalSections
-        where !icon.isCustom(section) && !redline.isCustom(section) {
+        where !icon.isCustom(section) && !design.isCustom(section) {
             #expect(PanelSectionVisibility.isShown(section, choices: icon, in: situation)
-                    == PanelSectionVisibility.isShown(section, choices: redline, in: situation))
+                    == PanelSectionVisibility.isShown(section, choices: design, in: situation))
         }
         // The document is untouched by either: it still holds its measurement
         // and its component, and automatic still says so.
@@ -156,7 +156,7 @@ struct ModeIsAPresetTests {
         let situation = Self.mixedSituation()
         let sections = PanelSectionVisibility.optionalSections
         let before = PanelSectionVisibility.shown(sections, choices: Self.iconMode(), in: situation)
-        let away = PanelSectionVisibility.shown(sections, choices: Self.redlineMode(), in: situation)
+        let away = PanelSectionVisibility.shown(sections, choices: Self.designMode(), in: situation)
         #expect(before != away)
         let back = PanelSectionVisibility.shown(sections, choices: Self.iconMode(), in: situation)
         #expect(back == before)
@@ -185,93 +185,103 @@ struct ModeIsAPresetTests {
         }
         // Ids are stable and unique, because they are what settings holds.
         #expect(Set(WindowModes.all.map(\.id)).count == WindowModes.all.count)
-        // The one that folds nothing is the default, so somebody who never
-        // finds modes has the app as it was.
-        #expect(WindowModes.everything.preset == PanelSectionVisibility.Choices())
-        #expect(WindowModeSession().modeID == WindowModes.everythingID)
+        // Image folds nothing and is where every picture starts, so somebody
+        // who never finds modes has the app as it was.
+        #expect(WindowModes.image.preset == PanelSectionVisibility.Choices())
+        #expect(WindowModeSession().modeID(hasTime: false) == WindowModes.imageID)
     }
 
     @Test("Each mode the list offers answers to a number, in the order it is shown")
-    func everySwappableModeHasAKey() {
-        let swappable = WindowModes.swappable
-        #expect(swappable.count >= 3)
-        #expect(!swappable.contains { $0.id == WindowModes.everythingID })
-        for (index, mode) in swappable.enumerated() {
+    func everyOfferedModeHasAKey() {
+        let offered = WindowModes.offered(hasTime: false)
+        #expect(offered.count == 3)
+        for (index, mode) in offered.enumerated() {
             #expect(WindowModes.shortcutNumber(for: mode.id) == index + 1)
         }
-        #expect(WindowModes.shortcutNumber(for: WindowModes.everythingID) == nil)
+        // The video setup is never in a list, so it has no key either.
+        #expect(WindowModes.shortcutNumber(for: WindowModes.videoID) == nil)
         #expect(WindowModes.shortcutNumber(for: "no-such-mode") == nil)
     }
 
-    @Test("Swapping to a mode hands the panel that mode's arrangement")
+    @Test("Swapping a window's mode hands the panel that mode's arrangement")
     func swappingHandsOverTheArrangement() {
         var session = WindowModeSession()
-        let onScreen = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
-        #expect(session.modeID == "icon")
+        let arrangements = WindowModeArrangements()
+        let swapped1 = session.swap(to: "icon", hasTime: false)
+        #expect(swapped1)
+        #expect(session.modeID(hasTime: false) == "icon")
+        let onScreen = arrangements.arrangement(of: session.modeID(hasTime: false))
         #expect(onScreen == Self.iconMode())
-        #expect(!session.isBent(with: onScreen))
-        #expect(session.chipLabel(with: onScreen) == "Icon")
+        #expect(session.chipLabel(hasTime: false, arrangements: arrangements) == "Icon")
         // A mode nobody wrote down changes nothing at all: no half swap, no
         // empty window.
         var stubborn = session
-        let unchanged = stubborn.swap(to: "not-a-mode", leaving: onScreen)
+        let swapped2 = stubborn.swap(to: "not-a-mode", hasTime: false)
+        #expect(!swapped2)
         #expect(stubborn == session)
-        #expect(unchanged == onScreen)
     }
 
     @Test("Bending a mode by hand keeps it bent, says so, and can be put back")
     func aModeYouBendStaysBent() {
         var session = WindowModeSession()
-        var onScreen = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
+        var arrangements = WindowModeArrangements()
+        session.swap(to: "icon", hasTime: false)
         // You reach for the measurements list while in Icon, the way the way
         // back is supposed to work: one switch, and you are still in Icon.
+        var onScreen = arrangements.arrangement(of: "icon")
         onScreen.set("measurements", shown: true)
-        #expect(session.modeID == "icon")
-        #expect(session.isBent(with: onScreen))
-        #expect(session.chipLabel(with: onScreen) == "Icon, edited")
+        arrangements.keep(onScreen, for: "icon")
+        #expect(session.modeID(hasTime: false) == "icon")
+        #expect(arrangements.isBent("icon"))
+        #expect(session.chipLabel(hasTime: false, arrangements: arrangements) == "Icon, edited")
         // And the mode can be put back as it shipped without leaving it.
-        let reset = session.resetCurrent()
-        #expect(reset == Self.iconMode())
-        #expect(session.modeID == "icon")
-        #expect(!session.isBent(with: reset))
+        arrangements.reset("icon")
+        #expect(arrangements.arrangement(of: "icon") == Self.iconMode())
+        #expect(!arrangements.isBent("icon"))
+        // Bending a mode back to its own preset by hand is not a bend.
+        arrangements.keep(onScreen, for: "icon")
+        arrangements.keep(Self.iconMode(), for: "icon")
+        #expect(!arrangements.isBent("icon"))
     }
 
     @Test("Swapping away and back lands on the arrangement you left, bends and all")
     func comingBackIsTheWindowYouLeft() {
         var session = WindowModeSession()
-        var icon = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
+        var arrangements = WindowModeArrangements()
+        session.swap(to: "icon", hasTime: false)
+        var icon = arrangements.arrangement(of: "icon")
         icon.set("measurements", shown: true)
         icon.set("shadow", shown: false)
-        let bent = icon
+        arrangements.keep(icon, for: "icon")
 
-        let redline = session.swap(to: "redline", leaving: bent)
-        #expect(redline == Self.redlineMode())
-        #expect(session.modeID == "redline")
+        session.swap(to: "design", hasTime: false)
+        #expect(arrangements.arrangement(of: session.modeID(hasTime: false))
+                == WindowModes.mode("design")?.preset)
 
-        let back = session.swap(to: "icon", leaving: redline)
-        #expect(back == bent)
-        #expect(session.isBent(with: back))
-        // A mode you never bent is still the mode as shipped.
-        var untouched = WindowModeSession()
-        _ = untouched.swap(to: "video", leaving: PanelSectionVisibility.Choices())
-        let awayAndBack = untouched.swap(to: "video",
-                                         leaving: untouched.swap(to: "icon",
-                                                                 leaving: WindowModes.mode("video")!.preset))
-        #expect(awayAndBack == WindowModes.mode("video")?.preset)
+        session.swap(to: "icon", hasTime: false)
+        #expect(arrangements.arrangement(of: session.modeID(hasTime: false)) == icon)
+        #expect(arrangements.isBent("icon"))
     }
 
     @Test("Show everything gives the lot back and does not lose the mode you left")
     func showEverythingIsTheWayOut() {
         let situation = Self.mixedSituation()
         var session = WindowModeSession()
-        var icon = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
+        var arrangements = WindowModeArrangements()
+        session.swap(to: "icon", hasTime: false)
+        var icon = arrangements.arrangement(of: "icon")
         icon.set("arrange", shown: false)
-        let bent = icon
+        arrangements.keep(icon, for: "icon")
+        // Image bent too, so the way out has to put it straight as well.
+        var image = PanelSectionVisibility.Choices()
+        image.set("motion", shown: false)
+        arrangements.keep(image, for: WindowModes.imageID)
 
-        let everything = session.showEverything(leaving: bent)
-        #expect(session.modeID == WindowModes.everythingID)
+        session.showEverything(hasTime: false, arrangements: &arrangements)
+        #expect(session.modeID(hasTime: false) == WindowModes.imageID)
+        let everything = arrangements.arrangement(of: WindowModes.imageID)
         #expect(!everything.hasAnyCustom)
-        #expect(session.chipLabel(with: everything) == "Everything")
+        #expect(session.chipLabel(hasTime: false, arrangements: arrangements) == "Image")
         // The panel is now the one somebody who never touched a mode has.
         #expect(PanelSectionVisibility.shown(PanelSectionVisibility.optionalSections,
                                              choices: everything, in: situation)
@@ -279,33 +289,31 @@ struct ModeIsAPresetTests {
                                                 choices: .init(), in: situation))
         // And Icon still holds what you did to it, so this was a way out and
         // never a way to lose an arrangement.
-        #expect(session.swap(to: "icon", leaving: everything) == bent)
+        #expect(arrangements.arrangement(of: "icon") == icon)
     }
 
-    @Test("A mode survives being written down and read back, and a stale one is dropped")
-    func aSessionIsWrittenDownAndReadBack() throws {
-        var session = WindowModeSession()
-        var icon = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
+    @Test("How each mode is arranged survives being written down and read back")
+    func arrangementsAreWrittenDownAndReadBack() throws {
+        var arrangements = WindowModeArrangements()
+        var icon = Self.iconMode()
         icon.set("measurements", shown: true)
-        _ = session.swap(to: "redline", leaving: icon)
+        arrangements.keep(icon, for: "icon")
 
-        let data = try JSONEncoder().encode(session)
-        let reread = try JSONDecoder().decode(WindowModeSession.self, from: data)
-        #expect(reread == session)
-        #expect(reread.modeID == "redline")
+        let data = try JSONEncoder().encode(arrangements)
+        let reread = try JSONDecoder().decode(WindowModeArrangements.self, from: data)
+        #expect(reread == arrangements)
+        #expect(reread.arrangement(of: "icon") == icon)
 
-        // A settings file naming a mode this build no longer ships falls back
-        // to the one that folds nothing, rather than to a window with no name
-        // and no sections.
-        let stale = WindowModeSession(modeID: "pixel-art-that-was-removed",
-                                      bends: ["also-gone": "motion=0"])
-        #expect(stale.modeID == WindowModes.everythingID)
+        // A settings file naming a mode this build no longer ships drops it,
+        // rather than holding an arrangement for a window that cannot exist.
+        let stale = WindowModeArrangements(bends: ["also-gone": "motion=0"])
+        #expect(stale == WindowModeArrangements())
         #expect(stale.arrangement(of: "icon") == Self.iconMode())
     }
 
     @Test("Every mode can be reached from the keyboard, and a walk can press it")
     func everyModeIsReachableWithoutThePointer() throws {
-        for mode in WindowModes.swappable {
+        for mode in WindowModes.offered(hasTime: false) {
             let number = try #require(WindowModes.shortcutNumber(for: mode.id))
             let key = try #require(PlaytestKey(String(number)))
             // The chord the View menu carries has a stand-in, so a scripted
@@ -316,7 +324,7 @@ struct ModeIsAPresetTests {
         }
         // And nothing claims a chord for a mode that does not exist, which is
         // the failure the slice that makes modes editable data would introduce.
-        let beyond = WindowModes.swappable.count + 1
+        let beyond = WindowModes.offered(hasTime: false).count + 1
         if let key = PlaytestKey(String(beyond)), beyond <= 9 {
             #expect(PlaytestMenuStandIn.action(for: key, modifiers: [.control]) == nil)
         }
@@ -338,10 +346,11 @@ struct ModeIsAPresetTests {
         let before = try encoder.encode(document)
 
         var session = WindowModeSession()
-        var choices = session.swap(to: "icon", leaving: PanelSectionVisibility.Choices())
-        choices = session.swap(to: "video", leaving: choices)
-        choices = session.showEverything(leaving: choices)
-        #expect(session.modeID == WindowModes.everythingID)
+        var arrangements = WindowModeArrangements()
+        session.swap(to: "icon", hasTime: false)
+        session.swap(to: "design", hasTime: false)
+        session.showEverything(hasTime: false, arrangements: &arrangements)
+        #expect(session.modeID(hasTime: false) == WindowModes.imageID)
 
         let after = try encoder.encode(document)
         #expect(before == after)

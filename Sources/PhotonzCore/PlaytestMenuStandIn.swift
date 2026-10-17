@@ -98,10 +98,9 @@ public enum PlaytestMenuStandIn {
         // undo, so a walk pressing ⌃2 is told the item has no action behind it
         // and stops there. The numbers are `WindowModes.shortcutNumber`, in the
         // order the chip's own list shows them.
-        Chord(key: "1", modifiers: [.control]): .modeIcon,
-        Chord(key: "2", modifiers: [.control]): .modeRedline,
-        Chord(key: "3", modifiers: [.control]): .modeVideo,
-        Chord(key: "4", modifiers: [.control]): .modeDesign,
+        Chord(key: "1", modifiers: [.control]): .modeImage,
+        Chord(key: "2", modifiers: [.control]): .modeIcon,
+        Chord(key: "3", modifiers: [.control]): .modeDesign,
         // Layer ▸ the four arrange rows. The stack is the composite order, so
         // these are the presses a compositing walk makes most, and every one of
         // them hangs off the focused window like undo.

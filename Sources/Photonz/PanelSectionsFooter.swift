@@ -24,13 +24,15 @@ struct PanelSectionsFooter: View {
     let situation: PanelSectionVisibility.Situation
 
     @State private var isOpen = false
-    @State private var store = PanelSectionVisibilityStore.shared
+    /// The window whose panel this is: its choices are the arrangement of the
+    /// mode it is in (`EditorState+WindowMode`).
+    @Environment(EditorState.self) private var editorState
     @State private var escapeWatch = PanelSectionsEscapeWatch()
 
     /// The lines of the list, in the panel's own order.
     private var rows: [PanelSectionVisibility.Row] {
         PanelSectionVisibility.rows(for: offered.map(\.rawValue),
-                                    choices: store.choices, in: situation)
+                                    choices: editorState.panelChoices, in: situation)
     }
 
     /// What the row reads. "Sections" alone until somebody has turned one off,
@@ -70,7 +72,7 @@ struct PanelSectionsFooter: View {
             // nobody had hidden a thing.
             .playtestControl("Sections", detail: label)
             .popover(isPresented: $isOpen, arrowEdge: .bottom) {
-                PanelSectionsList(offered: offered, situation: situation, store: store)
+                PanelSectionsList(offered: offered, situation: situation, editorState: editorState)
             }
             // Escape takes the list down, the way Escape takes down anything
             // that pops up, and it does NOT go on to the canvas behind it.
@@ -137,11 +139,11 @@ struct PanelSectionsFooter: View {
 struct PanelSectionsList: View {
     let offered: [InspectorSectionID]
     let situation: PanelSectionVisibility.Situation
-    @Bindable var store: PanelSectionVisibilityStore
+    let editorState: EditorState
 
     private var rows: [PanelSectionVisibility.Row] {
         PanelSectionVisibility.rows(for: offered.map(\.rawValue),
-                                    choices: store.choices, in: situation)
+                                    choices: editorState.panelChoices, in: situation)
     }
 
     var body: some View {
@@ -162,16 +164,10 @@ struct PanelSectionsList: View {
             // a panel with nothing folded while the chip still claimed to be in
             // Icon, which is a window that has quietly stopped being what it
             // says it is.
-            Button("Use Automatic for All") {
-                if Experiments.shared.windowModesEnabled {
-                    WindowModeStore.shared.showEverything()
-                } else {
-                    store.useAutomaticForAll()
-                }
-            }
+            Button("Use Automatic for All") { editorState.useAutomaticForAllPanelSections() }
                 .font(.caption)
                 .buttonStyle(.link)
-                .disabled(!store.choices.hasAnyCustom)
+                .disabled(!editorState.panelChoices.hasAnyCustom)
                 .playtestControl("Use Automatic for All",
                                  detail: "hands every section back to the automatic rule")
         }
@@ -201,7 +197,7 @@ struct PanelSectionsList: View {
             Spacer(minLength: 8)
             Toggle(section.title, isOn: Binding(
                 get: { row.isShown },
-                set: { store.set(section, shown: $0) }
+                set: { editorState.setPanelSection(section, shown: $0) }
             ))
             .labelsHidden()
             .toggleStyle(.switch)
@@ -210,9 +206,9 @@ struct PanelSectionsList: View {
                              detail: "shows or hides that section of the panel")
             // Only a row you have answered for offers the way back, because
             // only that row has anything to go back to.
-            if store.choices.isCustom(row.section) {
+            if editorState.panelChoices.isCustom(row.section) {
                 Button {
-                    store.useAutomatic(for: section)
+                    editorState.useAutomaticPanelSection(section)
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.system(size: 9, weight: .semibold))

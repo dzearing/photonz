@@ -327,10 +327,6 @@ struct InspectorPanel: View {
     /// What each section costs the dock, and how tall the dock is. Together
     /// these are the whole input to `DockHeightBudget`; see `dockBudget`.
     @State private var budget = DockBudgetScratch()
-    /// Which of the optional sections you have said yes or no to. Watched
-    /// rather than read once, so ticking one in the list at the foot of the
-    /// panel redraws the dock in the same frame.
-    @State private var sectionVisibility = PanelSectionVisibilityStore.shared
     /// What the section list needs to know about where the playhead is, as
     /// the watcher last handed it over. Nil until it has, and worked out on
     /// the spot until then.
@@ -1293,9 +1289,10 @@ struct InspectorPanel: View {
         // `PanelSectionVisibility`.
         guard Experiments.shared.panelSectionsEnabled else { return inOrder }
         let situation = editorState.panelSectionSituation
+        let choices = editorState.panelChoices
         return inOrder.filter {
             PanelSectionVisibility.isShown($0.rawValue,
-                                           choices: sectionVisibility.choices,
+                                           choices: choices,
                                            in: situation)
         }
     }

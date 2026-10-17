@@ -111,7 +111,7 @@
 
     { "do": "action", "action": "modeShowEverything" },
     { "do": "wait", "seconds": 0.8 },
-    { "do": "expect", "control": "Mode", "reads": "Everything" },
+    { "do": "expect", "control": "Mode", "reads": "Image" },
     { "do": "toolBar", "stage": "5-everything", "zoom": false, "onlyTools": true, "more": [],
       "slots": ["Select", "Selection", "Crop", "Measure", "Arrow", "Shapes", "Highlight", "Text", "Lens", "Frame", "Pen", "Component insert", "Fill", "Hand"] },
     { "do": "describe", "stage": "5-everything", "note": "Show Everything gives the window its own bar back, every tool in its usual place" },

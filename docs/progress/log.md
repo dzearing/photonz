@@ -21580,3 +21580,11 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Next/shared app: any clip with parts gets the track arrow; child rows indent one Layers-list step per level with their own arrow (⌥ = every level) and a bar (`TimelinePartBar` for generic parts). Open state is `expandedGroupIDs`, shared with the Layers list; a pick no longer opens groups while the timeline stands in for the list.
 - Walk: `timeline-sub-layer-rows-walk` (new steps `dragPart`, `markZoom`, `expectZoomSteady`). Audit: `queue/audits/2026-10-17-timeline-sub-layer-rows.json`.
 - Open: Size measurement groups on a video not tried; logos land as one picture with no parts.
+
+## 2026-10-17 — Images open in Image mode; videos have no mode chip (Next)
+
+- User report: a picture opened with the chip reading Video, because the mode was one app-wide setting. Reproduced with a walk before fixing.
+- Core: `WindowModes.offered(hasTime:)` (picture: Image, Icon, Design; time: none), Redline renamed Image and folding nothing (Everything retired, Show Everything lands in Image), per-window `WindowModeSession`, app-wide `WindowModeArrangements` with a one-time migration of the old `experiments.next.windowMode` + `panelSections` keys.
+- App: mode held per `EditorState` (`EditorState+WindowMode.swift`); chip only on pictures; View ▸ Mode dimmed on a video; ⌃1 Image, ⌃2 Icon, ⌃3 Design; New UI Design opens its window in Design.
+- Walk: `modes-follow-the-document-walk`; `window-modes-walk` and `design-mode-tool-strip-walk` updated. Audit: `queue/audits/2026-10-17-images-open-in-image-mode.json`.
+- Open: should Image fold Motion/Components like Redline did; should a reopened file remember its mode (asked on the audit).

@@ -1,0 +1,28 @@
+{
+  "feature": "Images open in Image mode, videos have no mode menu",
+  "epic": "ui-building",
+  "summary": "Every picture now opens in Image, and its mode menu offers only Image, Icon and Design. A video window shows no mode menu at all. Picking a mode changes that one window, so a video can no longer leave the next picture in Video.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and press Command 2 for Edit. Look beside the traffic lights.", "shot": "2026-10-17-modes-1-video-no-chip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open a screenshot. The chip beside the traffic lights reads Image." },
+    { "do": "Click the chip. The list reads Image, Icon, Design, then Show Everything.", "shot": "2026-10-17-modes-3-image-list-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Control 2. The chip reads Icon.", "shot": "2026-10-17-modes-4-icon-by-key-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Open another screenshot in a new window. It starts in Image while the first stays in Icon.", "shot": "2026-10-17-modes-6-next-image-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "In the video window, open View > Mode. The submenu is dimmed." }
+  ],
+  "evaluate": [
+    "Does every picture you open now read Image, including the ones you already had open in Video before this build?",
+    "Image shows every panel section, the way Everything used to. Should it fold Motion and Components, the way Redline did?",
+    "Is a mode that lasts only as long as its window right, or should a file you reopen come back in the mode you left it in?",
+    "With no chip on a video, do you miss anything the Video mode used to give you?"
+  ],
+  "rough": [
+    "Redline's folds did not carry over to Image: Image folds nothing, so every picture opens with the whole panel as Everything did. Redline hid the Motion section's plus, the only way to start an animation, and as the default for every picture that would hide it everywhere. That is the second evaluate question.",
+    "The mode belongs to the window, not the file. Close a picture in Design and reopen it, and it opens in Image. Nothing about a mode is stored in a file, by the design in docs/design/modes.md.",
+    "How you arrange a mode by hand (a section turned on or off) is still shared by every window in that mode, and kept after a relaunch.",
+    "The Everything mode is gone. Show Everything now lands in Image with nothing folded.",
+    "The modes mock page (index.html#modes) still draws Redline and Video in the list. It is left as drawn, and the user's own answer on 2026-10-17 settles the difference."
+  ]
+}

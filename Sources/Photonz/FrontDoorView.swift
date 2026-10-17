@@ -232,15 +232,14 @@ struct FrontDoorView: View {
         }
     }
 
-    /// The primary button: put the window in the template's mode, then make
-    /// what it names. Each one opens its editor in a window of its own, and
-    /// the front door closes once that window is up.
+    /// The primary button: make what the template names. Each one opens its
+    /// editor in a window of its own, which starts in the template's mode
+    /// (`FrontDoorTemplate.modeID`) on its own: a UI design in Design, a
+    /// picture in Image, a video in its one setup. The front door closes once
+    /// that window is up.
     private func create(_ template: FrontDoorTemplate?) {
         guard isAvailable(template) else { return }
         picked = template
-        if let template, Experiments.shared.windowModesEnabled {
-            WindowModeStore.shared.swap(to: template.modeID)
-        }
         switch template {
         case nil: editorState.isBlankCanvasDialogPresented = true
         case .designUI?: editorState.startUIDesign()

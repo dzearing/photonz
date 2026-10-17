@@ -102,19 +102,29 @@ public struct WindowMode: Sendable, Equatable, Codable, Identifiable {
 /// slice moves this list into a file somebody can edit, and nothing else has to
 /// change when it does, because nowhere in the app is there a switch over a
 /// mode's id.
+///
+/// **Modes are for pictures.** A picture is offered Image, Icon and Design and
+/// starts in Image. A document with time has one sensible setup, the video one,
+/// so it is offered no list at all and its window draws no chip (the user,
+/// 2026-10-17: "when you open a video, you shouldn't see the dropdown. it makes
+/// no sense if only one mode is relevant").
 public enum WindowModes {
 
-    /// The mode a window is in until somebody picks another, and the one **Show
-    /// everything** goes back to: it folds nothing, so the panel follows the
-    /// automatic rule exactly as it does for somebody who never finds modes.
-    public static let everythingID = "everything"
+    /// The mode every picture starts in, and the one **Show Everything** goes
+    /// back to: it folds nothing, so the panel follows the automatic rule
+    /// exactly as it does for somebody who never finds modes. It was called
+    /// Redline until 2026-10-17, and folded the building sections then.
+    public static let imageID = "image"
+
+    /// The one setup a document with time has. Never in a list.
+    public static let videoID = "video"
 
     public static let all: [WindowMode] = [
         WindowMode(
-            id: everythingID,
-            title: "Everything",
-            summary: "The whole app, every section following the document.",
-            symbol: "square.grid.2x2",
+            id: imageID,
+            title: "Image",
+            summary: "Editing a picture or a screenshot.",
+            symbol: "photo",
             preset: choices([:])),
         WindowMode(
             id: "icon",
@@ -126,20 +136,6 @@ public enum WindowModes {
             // this whole direction rests on.
             preset: choices(["measurements": false, "library": false, "columns": false])),
         WindowMode(
-            id: "redline",
-            title: "Redline",
-            summary: "Measuring a capture, handing over a spec.",
-            symbol: "ruler",
-            preset: choices(["motion": false, "component": false,
-                             "placement": false, "columns": false])),
-        WindowMode(
-            id: "video",
-            title: "Video",
-            summary: "Cutting and arranging a recording.",
-            symbol: "film",
-            preset: choices(["measurements": false, "columns": false,
-                             "placement": false])),
-        WindowMode(
             id: "design",
             title: "Design",
             summary: "Building screens out of components.",
@@ -148,6 +144,13 @@ public enum WindowModes {
             toolStrip: designStrip,
             toolStripPriority: designStripPriority,
             toolStripMembers: [.shapes: .rectangle]),
+        WindowMode(
+            id: videoID,
+            title: "Video",
+            summary: "Cutting and arranging a recording.",
+            symbol: "film",
+            preset: choices(["measurements": false, "columns": false,
+                             "placement": false])),
     ]
 
     /// The tools for building screens, as the UI entry mock draws them
@@ -170,27 +173,34 @@ public enum WindowModes {
         .group(.shapes), .tool(.pen), .tool(.text), .tool(.measure),
     ]
 
-    /// The one mode that folds nothing.
-    public static let everything: WindowMode = mode(everythingID) ?? all[0]
+    /// The mode every picture starts in.
+    public static let image: WindowMode = mode(imageID) ?? all[0]
 
     public static func mode(_ id: String) -> WindowMode? {
         all.first { $0.id == id }
     }
 
-    /// The modes the list offers as a swap, which is everything but the one
-    /// that means "no mode". **Show everything** is a separate row under the
-    /// line rather than a fifth peer: it is the panic button, and it reads as
-    /// leaving a mode rather than as entering one.
-    public static var swappable: [WindowMode] {
-        all.filter { $0.id != everythingID }
+    /// The modes a window offers for what it holds, in list order: Image, Icon
+    /// and Design for a picture, nothing for a document with time.
+    public static func offered(hasTime: Bool) -> [WindowMode] {
+        hasTime ? [] : all.filter { $0.id != videoID }
     }
 
     /// The number this mode answers to on the keyboard, or nil for one with no
-    /// key. `⌃1 … ⌃5`, in list order, so the key and the list never disagree.
+    /// key. `⌃1 … ⌃3`, in a picture's list order, so the key and the list never
+    /// disagree. The video setup has none: it is never picked.
     public static func shortcutNumber(for id: String) -> Int? {
-        guard let index = swappable.firstIndex(where: { $0.id == id }),
+        guard let index = offered(hasTime: false).firstIndex(where: { $0.id == id }),
               index < 9 else { return nil }
         return index + 1
+    }
+
+    /// What an id an older build wrote down means now, or nil for one that no
+    /// longer ships. Everything was the mode that folded nothing, which is
+    /// Image now.
+    static func currentID(for stored: String) -> String? {
+        if stored == "everything" { return imageID }
+        return mode(stored)?.id
     }
 
     private static func choices(_ entries: [String: Bool]) -> PanelSectionVisibility.Choices {
@@ -200,90 +210,152 @@ public enum WindowModes {
     }
 }
 
-/// Which mode a window is in, and the arrangement it is holding for each mode
-/// it has been bent away from.
+/// How each mode is arranged, kept once for the whole app.
 ///
-/// It holds no choices of its own: the panel's own store is still the one place
-/// the live arrangement lives, and this hands it a new one on a swap and takes
-/// the old one back. That is what keeps a mode from being a second mechanism,
-/// and it is why turning a section off by hand while in a mode is not a
-/// conflict but simply the mode, bent.
-public struct WindowModeSession: Sendable, Equatable, Codable {
-
-    /// The mode the window is in.
-    public private(set) var modeID: String
+/// It holds no live panel of its own: a window's panel IS the arrangement of
+/// the mode that window is in, read from here, and a switch ticked in the
+/// Sections list is written straight back here for that mode. So swapping a
+/// window's mode hands nothing over, and "swapping back restores exactly the
+/// arrangement you left" is true rather than a promise. Two windows in the same
+/// mode share how you like it, the way the panel choices always were shared;
+/// two windows in different modes never touch each other.
+public struct WindowModeArrangements: Sendable, Equatable, Codable {
 
     /// The arrangement each bent mode is holding, as the same string the
-    /// settings file stores. A mode absent from here is sitting on its preset.
-    /// This is what makes "swapping back restores exactly the arrangement you
-    /// left" true rather than a promise.
+    /// settings file stores. A mode absent from here is sitting on its preset,
+    /// so a mode never bent stays the mode as shipped even if its preset is
+    /// later reworded.
     private var bends: [String: String]
 
-    public init(modeID: String = WindowModes.everythingID, bends: [String: String] = [:]) {
-        self.modeID = WindowModes.mode(modeID) == nil ? WindowModes.everythingID : modeID
-        self.bends = bends.filter { WindowModes.mode($0.key) != nil }
+    public init(bends: [String: String] = [:]) {
+        var kept: [String: String] = [:]
+        for (id, stored) in bends {
+            guard let mode = WindowModes.mode(id),
+                  PanelSectionVisibility.Choices(stored: stored) != mode.preset else { continue }
+            kept[id] = stored
+        }
+        self.bends = kept
     }
 
-    public var mode: WindowMode {
-        WindowModes.mode(modeID) ?? WindowModes.everything
-    }
-
-    /// The arrangement this mode is currently holding: what it was bent to, or
-    /// its own preset.
+    /// The arrangement this mode is holding: what it was bent to, or its own
+    /// preset.
     public func arrangement(of id: String) -> PanelSectionVisibility.Choices {
         if let bent = bends[id] { return PanelSectionVisibility.Choices(stored: bent) }
         return WindowModes.mode(id)?.preset ?? PanelSectionVisibility.Choices()
     }
 
-    /// Whether what is on screen is no longer what this mode asks for. The chip
-    /// says so, because a mode that has quietly stopped being itself is a mode
-    /// you cannot trust the name of.
-    public func isBent(with choices: PanelSectionVisibility.Choices) -> Bool {
-        choices != mode.preset
+    /// Whether this mode is no longer what it shipped as. The chip says so,
+    /// because a mode that has quietly stopped being itself is a mode you
+    /// cannot trust the name of.
+    public func isBent(_ id: String) -> Bool { bends[id] != nil }
+
+    /// Keep what is on screen as this mode's arrangement. Bending it back to
+    /// its own preset by hand is not a bend.
+    public mutating func keep(_ choices: PanelSectionVisibility.Choices, for id: String) {
+        guard let mode = WindowModes.mode(id) else { return }
+        bends[id] = choices == mode.preset ? nil : choices.stored
+    }
+
+    /// Put this mode back the way it shipped.
+    public mutating func reset(_ id: String) { bends[id] = nil }
+
+    /// What an older build wrote down, read into arrangements.
+    ///
+    /// Until 2026-10-17 the app held ONE mode for every window
+    /// (`{"modeID":"video","bends":{…}}`) and one live panel string that was
+    /// that mode's arrangement. The mode itself is not carried over: it was the
+    /// bug, a recording's Video reaching every picture. What is carried is how
+    /// each mode was arranged: its bends, and the live panel for the mode it
+    /// belonged to when that differs from the mode's preset. Everything is
+    /// Image's now. Redline's arrangement folded the building sections for a
+    /// narrower job than Image's, so it is left behind rather than folding
+    /// them on every picture.
+    public static func migrating(legacySession: String?, livePanel: String?) -> WindowModeArrangements {
+        struct Legacy: Decodable {
+            var modeID: String?
+            var bends: [String: String]?
+        }
+        let legacy = legacySession?.data(using: .utf8)
+            .flatMap { try? JSONDecoder().decode(Legacy.self, from: $0) }
+        var bends: [String: String] = [:]
+        for (id, stored) in legacy?.bends ?? [:] {
+            guard let current = WindowModes.currentID(for: id) else { continue }
+            bends[current] = stored
+        }
+        let liveModeID = legacy?.modeID ?? "everything"
+        if let live = livePanel, !live.isEmpty,
+           let current = WindowModes.currentID(for: liveModeID) {
+            bends[current] = live
+        }
+        return WindowModeArrangements(bends: bends)
+    }
+}
+
+/// Which mode one window is in.
+///
+/// Per WINDOW, never shared: a recording's window in its video setup and a
+/// picture's window in Design are two sessions that never meet, and a new
+/// window starts a picture in Image whatever any other window picked. It holds
+/// no arrangement, only the name of the mode; what that mode looks like is the
+/// app's (`WindowModeArrangements`).
+///
+/// The document decides the rest. A document with time is in the video setup
+/// whatever was picked, and gets its picked mode back if it ever stops having
+/// time, because the pick is remembered rather than overwritten.
+public struct WindowModeSession: Sendable, Equatable {
+
+    /// The picture mode this window is in.
+    public private(set) var pickedID: String
+
+    public init(pickedID: String = WindowModes.imageID) {
+        self.pickedID = WindowModes.offered(hasTime: false).contains { $0.id == pickedID }
+            ? pickedID : WindowModes.imageID
+    }
+
+    /// The mode the window is in for what it holds.
+    public func modeID(hasTime: Bool) -> String {
+        hasTime ? WindowModes.videoID : pickedID
+    }
+
+    public func mode(hasTime: Bool) -> WindowMode {
+        WindowModes.mode(modeID(hasTime: hasTime)) ?? WindowModes.image
+    }
+
+    /// Whether the window draws the chip: only when there is more than one
+    /// mode to be in. A list of one is not a choice.
+    public static func showsChip(hasTime: Bool) -> Bool {
+        WindowModes.offered(hasTime: hasTime).count > 1
+    }
+
+    /// Move to another mode. Refuses, and changes nothing, for a mode this
+    /// document is not offered: Video on a picture, anything on a recording.
+    @discardableResult
+    public mutating func swap(to id: String, hasTime: Bool) -> Bool {
+        guard WindowModes.offered(hasTime: hasTime).contains(where: { $0.id == id }) else {
+            return false
+        }
+        pickedID = id
+        return true
     }
 
     /// What the chip reads: the mode's name, and whether you have bent it.
-    public func chipLabel(with choices: PanelSectionVisibility.Choices) -> String {
-        isBent(with: choices) ? "\(mode.title), edited" : mode.title
+    public func chipLabel(hasTime: Bool, arrangements: WindowModeArrangements) -> String {
+        let id = modeID(hasTime: hasTime)
+        let title = mode(hasTime: hasTime).title
+        return arrangements.isBent(id) ? "\(title), edited" : title
     }
 
-    /// Move to another mode, handing over what is on screen right now.
-    /// Returns the arrangement the panel should take.
-    ///
-    /// The outgoing mode keeps what you did to it, so coming back lands on the
-    /// window you left; a mode you never bent stores nothing, so it stays the
-    /// mode as shipped even if its preset is later reworded.
-    public mutating func swap(to id: String,
-                              leaving choices: PanelSectionVisibility.Choices)
-    -> PanelSectionVisibility.Choices {
-        guard WindowModes.mode(id) != nil else { return choices }
-        if choices == mode.preset {
-            bends[modeID] = nil
+    /// Hand the lot back: every section follows the document again, which is
+    /// the window of somebody who never touched a mode. A picture lands in
+    /// Image, put back as it shipped; the mode being left keeps what you did to
+    /// it, so this is a way out and never a way to lose an arrangement. A
+    /// recording has nowhere else to go, so its own setup is unfolded instead.
+    public mutating func showEverything(hasTime: Bool, arrangements: inout WindowModeArrangements) {
+        if hasTime {
+            arrangements.keep(PanelSectionVisibility.Choices(), for: WindowModes.videoID)
         } else {
-            bends[modeID] = choices.stored
+            pickedID = WindowModes.imageID
+            arrangements.reset(WindowModes.imageID)
         }
-        modeID = id
-        return arrangement(of: id)
-    }
-
-    /// Put this mode back the way it shipped, without leaving it.
-    public mutating func resetCurrent() -> PanelSectionVisibility.Choices {
-        bends[modeID] = nil
-        return mode.preset
-    }
-
-    /// Leave modes altogether: the panel every section of which follows the
-    /// document again, which is the window of somebody who never touched a
-    /// mode. The one move that can never leave you short of anything.
-    public mutating func showEverything(leaving choices: PanelSectionVisibility.Choices)
-    -> PanelSectionVisibility.Choices {
-        // The mode you are leaving keeps what you did to it, exactly as an
-        // ordinary swap does, so this is a way OUT and never a way to lose an
-        // arrangement. What it does not keep is a bend on Everything itself:
-        // the whole meaning of the button is "give me the lot back", so it
-        // lands on the clean one however bent it was last time.
-        _ = swap(to: WindowModes.everythingID, leaving: choices)
-        bends[WindowModes.everythingID] = nil
-        return WindowModes.everything.preset
     }
 }

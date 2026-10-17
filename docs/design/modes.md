@@ -192,10 +192,10 @@ switch on a raster layer, which belongs to the drawing work.
   no dialog in front of a file somebody just double-clicked, and no compatibility
   promise. This is the biggest practical difference from the project type this
   replaces.
-- **New documents:** open in the mode the window was already in, unless what you
-  did says otherwise. New ▸ Icon opens in Icon; a capture opened from History
-  opens in Redline; a recording opens in Video. Nobody is asked a question at the
-  front door.
+- **New documents:** every picture opens in **Image**, in a window of its own
+  mode, whatever any other window is in. New UI Design opens in Design. A
+  recording has one setup and no chip (see "Modes are for pictures" below).
+  Nobody is asked a question at the front door.
 - **Somebody who never finds modes** loses nothing: the default arrangement is
   the one the app has now.
 
@@ -268,7 +268,7 @@ whole prototype rested on is now a fact about shipped code rather than a drawing
 
 Shipped 2026-09-22 behind `next-window-modes`. A chip at the leading end of the
 title bar, beside the traffic lights, says what the window is set up for and
-opens the list; the same list is View ▸ Mode and ⌃1 … ⌃4. Four modes ship — Icon,
+opens the list; the same list is View ▸ Mode and ⌃1 … ⌃4. Four modes shipped then — Icon,
 Redline, Video, Design — plus **Everything**, which is the window before you pick
 one and what **Show Everything** goes back to. The way back shipped in the same
 slice, as section 3 asks: a folded section is still listed at the foot of the
@@ -303,6 +303,40 @@ shape last picked in Design under its own key (`tool.shapes.last.design`), so th
 picture bar outside Design keeps its Line and its own last pick (2026-10-09).
 
 Still to build, and filed as the second slice: a mode being a record somebody can write rather than a list in
-Swift (section 4). Also unbuilt: two windows onto one file in two different
-modes, which needs the panel's choices to become per-window first — they are one
-app-wide setting today, and so is the mode.
+Swift (section 4).
+
+### Modes are for pictures (2026-10-17)
+
+The user opened a picture and the chip read Video: the mode was one setting for
+the whole app, so a recording set to Video left every picture after it in Video.
+Their words: "Redline should just be 'Image' and it should be the default mode for
+images... Video mode doesnt even apply to anything but a video... when you open a
+video, you shouldn't see the dropdown. it makes no sense if only one mode is
+relevant." So, now:
+
+- **A picture is offered Image, Icon and Design**, in that order, on ⌃1, ⌃2, ⌃3,
+  then Show Everything. No Video row. Every picture starts in **Image**.
+- **Image is what Redline was renamed to, and it folds nothing.** Redline folded
+  Motion, Component, Placement and Columns for measuring a capture; as the mode
+  every picture starts in, that would hide the Motion section's plus (the only
+  door to a first animation) on every picture, so Image is the whole panel
+  following the document, which is what Everything was. Everything is gone as a
+  mode of its own: Show Everything lands in Image, put back as it shipped.
+- **A document with time has one setup, the video one, and no chip.** View ▸ Mode
+  is there but dimmed, and ⌃1 … ⌃3 do nothing to it. Its panel still folds what
+  the Video preset folds (Measurements, Columns, Placement), and the Sections row
+  at the foot of the panel still bends it.
+- **The mode is the WINDOW's** (`WindowModeSession`, held by each `EditorState`).
+  Picking Design in one window changes that window only. **How each mode is
+  arranged is the app's** (`WindowModeArrangements`, `WindowModeStore`): a window's
+  panel is the arrangement of its mode, and a section ticked by hand is kept for
+  that mode, in every window in it and after a relaunch. Two windows onto one
+  file can now be in two different modes.
+- **Old settings** (`experiments.next.windowMode`, one mode for the app) are read
+  once into arrangements: bends come across, Everything's as Image's, Redline's
+  are left behind (they folded for a narrower job), and the old mode itself is
+  never where a new window starts. Written under
+  `experiments.next.windowModeArrangements`.
+
+Evidence: `Tests/PhotonzCoreTests/ModesFollowTheDocumentTests.swift`,
+`Scripts/playtest/modes-follow-the-document-walk.json`.

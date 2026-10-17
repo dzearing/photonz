@@ -19,7 +19,7 @@ document disagrees with this table, the table wins.
 
 | Area | Its one purpose | What goes there | What never does |
 | --- | --- | --- | --- |
-| **Title bar** | Which document, and how you are looking at the window | Document name and state (edited, recording), the window's mode (View / Edit), the panel toggles | Document actions, tools, readouts, settings |
+| **Title bar** | Which document, and how you are looking at the window | Document name and state (edited, recording), the window's mode (View / Edit), the panel toggles, and on a picture only the mode chip (Image, Icon, Design: modes are for pictures; a video has one setup and no chip) | Document actions, tools, readouts, settings |
 | **Tool bar** (floating, bottom of the canvas) | Pick the thing you will use on the canvas | Tools only (something you pick, then use on the canvas), plus the colour pair a painting tool uses, plus More for the tools that do not fit, plus Info at its right end while something is picked (named exception below) | Zoom, view options (grid, rulers), readouts, settings, one-shot commands |
 | **Tool options** (the capsule over the tool bar) | Tune the tool in your hand | The settings of the tool in hand, only while it is in hand, and its commit / cancel while a tool is mid-edit (Crop's tick and cross) | Anything about the selection or the document |
 | **Canvas** | The work, handled directly | The document, handles, guides, measurements drawn on the work, a readout only while a drag is live | Persistent panels, buttons, status pills |
