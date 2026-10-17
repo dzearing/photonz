@@ -415,7 +415,7 @@ extension EditorState {
         // came from. A name nothing here is using is kept as it is, so a layer
         // pasted into another document, or cut and pasted back, reads the same
         // as it always did (`LayerNaming.pastedName`).
-        layer.name = LayerNaming.pastedName(of: transfer.layer.name,
+        layer.name = LayerNaming.pastedName(of: transfer.layer,
                                             taken: Set(document.allLayers.map(\.name)))
         discardDragPreview()
         // Pasted over a screen means pasted ONTO it: the layer keeps the spot
@@ -437,7 +437,7 @@ extension EditorState {
     private func pasteClipAtPlayhead(_ layer: Layer, copiedFrom original: Layer) -> UUID? {
         guard let document else { return nil }
         var layer = layer
-        layer.name = LayerNaming.pastedName(of: original.name,
+        layer.name = LayerNaming.pastedName(of: original,
                                             taken: Set(document.allLayers.map(\.name)))
         let source = document.layer(id: original.id) != nil ? document.trackID(ofClip: original.id) : nil
         let at = documentTimeMS

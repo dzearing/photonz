@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/size-steps-and-resizes-walk",
-  "seed": "Two ways a Size measurement went wrong for someone redlining, found in the audits of 2026-10-13. At Next defaults, on the user's own download page crop: from the measured pill, ] stepped to a box from the pill's top down into the line of small print under it (it read 279 by 90); now there is nothing bigger that is a real object, so ] holds on the pill. And a picked Size measurement's corner handles sat out past its calipers and chips, so dragging one stretched everything (the pill's 274 by 62 became 315 by 78 for a drag of 100 by 50); now the handles sit on the measured box, the corner goes where the hand lets go, the calipers stay on the box's edges and read its new size, and the name follows.",
+  "seed": "Two ways a Size measurement went wrong for someone redlining, found in the audits of 2026-10-13. At Next defaults, on the user's own download page crop: from the measured pill, ] stepped to a box from the pill's top down into the line of small print under it (it read 279 by 90); now there is nothing bigger that is a real object, so ] holds on the pill. And a picked Size measurement's corner handles sat out past its calipers and chips, so dragging one stretched everything (the pill's 274 by 62 became 315 by 78 for a drag of 100 by 50); now the handles sit on the measured box, the corner goes where the hand lets go, the calipers stay on the box's edges and read its new size, and the name follows. A copy made by Option drag was named Size 274 by 62 copy, so resizing it left it saying the old size (2026-10-16); now a copy is named for what it measures and its name follows it too.",
   "setup": { "forget": ["all"] },
   "steps": [
     { "do": "open", "file": "../../Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png", "width": 1280, "height": 840 },
@@ -58,6 +58,19 @@
     { "do": "wait", "seconds": 0.4 },
     { "do": "expectSizeMeasure", "count": 2, "at": [492, 420] },
     { "do": "snapshot", "name": "7-a-copy-dragged-off" },
-    { "do": "describe", "stage": "7-copied", "note": "an Option drag lands a copy exactly where the hand took the box, 150 points lower, not off by the calipers' margin" }
+    { "do": "describe", "stage": "7-copied", "note": "an Option drag lands a copy exactly where the hand took the box, 150 points lower, not off by the calipers' margin" },
+    { "do": "expectSizeMeasure", "count": 2, "name": "Size 274 × 62", "at": [492, 420] },
+    { "do": "expectPicked", "layers": ["Size 274 × 62"], "outline": "drawn" },
+    { "do": "describe", "stage": "8-copy-named", "note": "THE FOURTH CLAIM: the copy is named for what it measures, Size 274 × 62, the way a fresh one is, not Size 274 × 62 copy" },
+    { "do": "drag", "from": [1040, 545], "to": [1100, 580], "steps": 10 },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "expectSizeMeasure", "count": 2, "name": "Size 305 × 80", "at": [492, 420] },
+    { "do": "expectPicked", "layers": ["Size 305 × 80"], "outline": "drawn" },
+    { "do": "snapshot", "name": "9-the-copy-resized" },
+    { "do": "describe", "stage": "9-copy-resized", "note": "resizing the copy renames it to its new size, Size 305 × 80 (the corner catches a guide a point past where the hand let go), in the same step" },
+    { "do": "action", "action": "undo" },
+    { "do": "wait", "seconds": 0.3 },
+    { "do": "expectSizeMeasure", "count": 2, "name": "Size 274 × 62", "at": [492, 420] },
+    { "do": "describe", "stage": "10-copy-undone", "note": "one undo puts the copy's size and its name back together" }
   ]
 }

@@ -1,0 +1,24 @@
+{
+  "feature": "A copied Size measurement is named for what it measures",
+  "epic": "measure-redline",
+  "summary": "Copying a Size measurement (Option drag, duplicate, or copy and paste) now names the copy for its size, \"Size 274 × 62\", instead of \"Size 274 × 62 copy\", so resizing the copy renames it to its new size. A copied Gap or Distance caliper keeps following its reading the same way.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/size-steps-and-resizes-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screenshot, press I, pick Size and click a button to measure it." },
+    { "do": "Press V, then Option-Command drag the measurement's box down to copy it.", "shot": "2026-10-16-copied-size-measurement-name-copied.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read the copy's row in Layers: it says the same size as the original, with no \"copy\" on the end." },
+    { "do": "Drag the copy's bottom right corner handle to a new size.", "shot": "2026-10-16-copied-size-measurement-name-resized.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Read Layers and Measurements: both say the new size, and the original still says its own." },
+    { "do": "Press Command-Z once: the copy's size and its name go back together." }
+  ],
+  "evaluate": [
+    "Is two rows both reading \"Size 274 × 62\" right after a copy clear enough, or would you rather the copy said it is a copy until it is changed?",
+    "Does a renamed copy (one you typed a name for) still reading \"Save button copy\" match what you expect?",
+    "Does pasting a measurement with Command-V name it the same way as Option dragging it?"
+  ],
+  "rough": [
+    "Two measurements of the same size share a name until one changes, exactly as two fresh measurements of the same thing always have; measurements are never numbered apart.",
+    "In the resized picture the copy's width chip is not on screen: the copy's bottom edge sits about 20 px above the canvas's bottom, and its chip lands below the canvas. Not part of this change; left in this task's log."
+  ]
+}

@@ -126,6 +126,24 @@ public enum LayerNaming {
         return copyName(of: source, taken: taken)
     }
 
+    /// What to call a copy of `source`. A measurement still wearing the name
+    /// the app gave it keeps that name, the way a fresh one measuring the same
+    /// thing is named, so it goes on following its numbers: "Size 274 × 62
+    /// copy" no longer looks like the app's, and resizing the copy left it
+    /// saying the old size. Measurements are never numbered apart
+    /// (`autoStems`). Anything else is named by `copyName(of:taken:)`.
+    public static func copyName(of source: Layer, taken: Set<String>) -> String {
+        source.isAutomaticMeasureName(source.name) ? source.name
+            : copyName(of: source.name, taken: taken)
+    }
+
+    /// `pastedName(of:taken:)` for a whole layer, so a pasted measurement is
+    /// named the way duplicating it names it (`copyName(of:taken:)`).
+    public static func pastedName(of source: Layer, taken: Set<String>) -> String {
+        guard taken.contains(source.name) else { return source.name }
+        return copyName(of: source, taken: taken)
+    }
+
     /// `base`, then "base 2", "base 3"… — the first one nobody is using.
     /// The number a fresh BATCH of app-written names should start at: one past
     /// the highest `<stem> N` already spoken for, and 1 when none is.
@@ -286,7 +304,12 @@ extension PhotonzDocument {
         let copies = Set(made.map(\.copy))
         var taken = Set(allLayers.lazy.filter { !copies.contains($0.id) }.map(\.name))
         for entry in made {
-            let name = LayerNaming.copyName(of: entry.source, taken: taken)
+            // The copy wears its source's content, so it answers for whether
+            // the source's name is a measurement's automatic one.
+            var source = layer(id: entry.copy)
+            source?.name = entry.source
+            let name = source.map { LayerNaming.copyName(of: $0, taken: taken) }
+                ?? LayerNaming.copyName(of: entry.source, taken: taken)
             taken.insert(name)
             updateLayer(id: entry.copy) { $0.name = name }
         }

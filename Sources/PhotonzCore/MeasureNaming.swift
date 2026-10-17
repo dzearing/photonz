@@ -56,6 +56,17 @@ public enum MeasureNaming {
     }
 }
 
+extension Layer {
+    /// Whether `name`, worn by this measurement, is one the app gave it: a
+    /// Size measurement's "Size 320 × 48", a caliper's "Gap 16" or stock
+    /// "Measure". False for anything that is not a measurement.
+    public func isAutomaticMeasureName(_ name: String) -> Bool {
+        if isSizeMeasurement { return MeasureSizeGroup.isAutomaticName(name) }
+        guard let content = measure else { return false }
+        return MeasureNaming.isAutomaticName(name, for: content)
+    }
+}
+
 extension PhotonzDocument {
 
     /// Keeps every measurement's automatic name saying what it reads: a Size
