@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 259.375,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T00:25:37.764Z",
-  "updated": "2026-10-17T00:25:37.767Z",
+  "updated": "2026-10-17T00:50:23.643Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html line 48 (.clip.gfx), also video-move-wt, video-cut-wt, video-freeze-wt. Since a-title-track-and-a-gfx-track-wear-the-icons-the, a placed picture has its own TimelineTrackKind.graphic (Sources/PhotonzCore/TimelineTrack.swift); TimelineTrackRow.clipKind maps .graphic to VideoKit.ClipKind.overlay for now. Add a .graphic ClipKind in VideoKitTimeline.swift with the gradient and an ink that passes LegibilitySheet. Walk to extend: Scripts/playtest/title-and-gfx-track-icons-walk.json.",
@@ -22,9 +22,23 @@
     {
       "t": "2026-10-17T00:25:37.766Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-17T00:37:11.903Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T00:50:23.447Z",
+      "note": "Added ClipKind.graphic (VideoKitTimeline.swift): mock gradient #febc2e to #ff9d5c, ink #3A2300. TimelineTrackRow.clipKind maps .graphic to it (folded strip follows). White ink measured 1.73-1.78:1 on the amber in the legibility sheet (fails); dark ink passes light and dark. title-and-gfx-track-icons-walk ran green at Next defaults; its capture shows the amber Acme Logo clip on Gfx beside V1 (looked at it). Scripts/test.sh green: 13396 tests + legibility."
+    },
+    {
+      "t": "2026-10-17T00:50:23.641Z",
+      "note": "Gfx clips draw amber (#febc2e to #ff9d5c) with a dark ink that passes the legibility check in light and dark; title-and-gfx-track-icons-walk photographs the amber clip beside V1 at Next defaults; Scripts/test.sh green. Audit queue/audits/2026-10-16-gfx-clip-amber.json."
     }
   ],
   "walks": [
     "title-and-gfx-track-icons-walk"
-  ]
+  ],
+  "started": "2026-10-17T00:37:11.898Z",
+  "completed": "2026-10-17T00:50:23.642Z"
 }
