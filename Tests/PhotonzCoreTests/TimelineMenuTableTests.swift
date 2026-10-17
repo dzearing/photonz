@@ -113,7 +113,7 @@ struct TimelineMenuTableTests {
     /// Rows that act at the playhead say where it is.
     @Test func playheadRowsSayTheTime() {
         #expect(TimelineMenuTable.title(.split, playheadMS: 2000) == "Split at 0:02.00")
-        #expect(TimelineMenuTable.title(.freezeFrame, playheadMS: 61_500) == "Freeze Frame at 1:01.50")
+        #expect(TimelineMenuTable.title(.freezeFrame, playheadMS: 61_500) == "Freeze Frame at 1:01.50\u{2026}")
         #expect(TimelineMenuTable.title(.startAtPlayhead, playheadMS: 250) == "Start at 0:00.25")
         #expect(TimelineMenuTable.title(.endAtPlayhead, playheadMS: 4000) == "End at 0:04.00")
         #expect(TimelineMenuTable.title(.rollEdit, playheadMS: 3000) == "Roll Edit to 0:03.00")

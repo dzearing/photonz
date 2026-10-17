@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 1.07,
-  "status": "pending",
+  "status": "in_progress",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:32.339Z",
-  "updated": "2026-10-17T13:18:32.505Z",
+  "updated": "2026-10-17T19:24:55.107Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nCode: EditorState+TimelineMenus.swift freezeFrameMenuRow :315-344 (Freeze Frame submenu with fixed lengths), EditorCommands.swift:894 holdFrameAtPlayhead; held frames are already drawn on the timeline (A timeline you can read at a glance, v0.17.0).",
@@ -29,6 +29,36 @@
     {
       "t": "2026-10-17T13:18:32.501Z",
       "note": "seq 45 -> 1.07"
+    },
+    {
+      "t": "2026-10-17T17:55:48.591Z",
+      "note": "The clip right-click's Freeze row is now 'Freeze Frame at <time> ▸' (TimelineMenuTable.title(.freezeFrame)), absent when the playhead is off the clip; on a hold piece it stays 'Freeze Frame ▸' and edits that hold. Built in EditorState+TimelineMenus clipMenuRows(.freezeFrame). Walks choosing it name the time, e.g. a-held-frame-reads-as-a-still-walk 'Freeze Frame at 0:12.00 > Freeze for 2s'."
+    },
+    {
+      "t": "2026-10-17T18:14:09.487Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T18:19:14.572Z",
+      "note": "Reproduced 2026-10-17 (freeze-repro walk, Sample Talk cut at 4/8 with the middle lifted, playhead 0:12): right-click reads 'Freeze Frame at 0:12.00 >' with a fixed submenu (Freeze for 1s/2s/3s/5s/10s, then toggles Everything waits / The rest carries on; ClipPieces.holdStopsMS). Default push is Everything waits (HoldPush.whenNobodySays): the 2s freeze stretched the caption cue on the Captions track through the hold and the document went 0:17 -> 0:19; the panel's While held read Everything waits. The menu bar's Clip > Freeze Frame has no key and always holds 2s. Picture-only holds grow the clip but move nothing after it on its own track, and a plain drag of the hold's end trims it without moving the next clip; delete of a hold takes the time out of every track."
+    },
+    {
+      "t": "2026-10-17T19:24:55.042Z",
+      "note": "owns these walks: freeze-frame-asks-how-long-walk, hold-pushes-the-sound-walk, a-held-frame-reads-as-a-still-walk, the-quiet-under-a-hold-is-a-bare-slot-walk, hold-on-a-frame-walk, timeline-right-click-menus-walk, view-mode-and-edit-mode-walk"
+    },
+    {
+      "t": "2026-10-17T19:24:55.106Z",
+      "note": "Built: HoldPush.pictureOnly became .thisTrack (raw value kept, so old files read the same) and is the default; a this-track freeze ripples the later clips on its own track (HoldPush.pushHeldTime over layerIDs(onTracks:)), Freeze every track ripples every unlocked track (sparingLocked). setHoldLength, setHoldPush and rippleDeleteClipPiece follow the same rule; deleting a this-track freeze closes its join (ClipPieces.closeJoin). FreezeLength.parse reads 10, 2.5s, 1:30, 48f, 500ms. App: EditorState+FreezeAsk + FreezeFramePopover hang from the clip bar at the playhead (ClipPiecesBar anchor); right-click 'Freeze Frame at <t>…' (ellipsis now in TimelineMenuTable.title) or 'Change Freeze…' on a still; Clip > Freeze Frame… on Option Shift F (walk stand-in clipFreezeFrameAsk); a drag of a still's end goes through setHoldLength so its track follows. Panel readout renamed While held -> Freezes (This track / Every track). Adversarial notes: a first-time user finds it on the clip's right-click where Premiere keeps Frame Hold; the typed field opens with 2s selected so typing replaces it; a View-mode freeze opens the tracks first and the popover follows 250ms later (a popover asked of a bar laid out the same pass did not open). Left rough, in log only: the next clip jumps on release rather than sliding during the end drag (it is drawn from the document, not the drag)."
     }
+  ],
+  "started": "2026-10-17T18:14:09.484Z",
+  "walks": [
+    "freeze-frame-asks-how-long-walk",
+    "hold-pushes-the-sound-walk",
+    "a-held-frame-reads-as-a-still-walk",
+    "the-quiet-under-a-hold-is-a-bare-slot-walk",
+    "hold-on-a-frame-walk",
+    "timeline-right-click-menus-walk",
+    "view-mode-and-edit-mode-walk"
   ]
 }

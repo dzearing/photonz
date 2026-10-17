@@ -143,7 +143,7 @@ public struct ClipPiece: Hashable, Codable, Sendable {
     /// What this hold pushed when it was made, or nil for a piece that plays
     /// (`HoldPush.swift`). A hold that never said pushed the picture alone,
     /// because that is all a hold could do before the choice existed.
-    public var holdPush: HoldPush? { isHeld ? (push ?? .pictureOnly) : nil }
+    public var holdPush: HoldPush? { isHeld ? (push ?? .thisTrack) : nil }
 
     /// The same hold, pushing the other thing. What that does to the rest of
     /// the document is `PhotonzDocument.setHoldPush`; this is only the writing.
@@ -780,6 +780,20 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         return true
     }
 
+    /// Close the join in front of piece `index` where the pieces either side
+    /// of it read one continuous stretch of the file at one speed, as they do
+    /// once a freeze wedged between them has been thrown away. Two such pieces
+    /// ARE one piece, and leaving them as two would put a seam on the bar where
+    /// nobody cut.
+    @discardableResult
+    mutating func closeJoin(before index: Int) -> Bool {
+        guard index > 0, index < pieces.count,
+              let joined = pieces[index - 1].joined(with: pieces[index]) else { return false }
+        pieces.replaceSubrange((index - 1)...index, with: [joined])
+        settleFirstArrival()
+        return true
+    }
+
     /// The held piece STARTING at this moment that a hold elsewhere put there.
     /// A hold that merely covers the moment, and one somebody took themselves
     /// on this very frame, are both somebody else's edit and are left alone.
@@ -933,24 +947,24 @@ extension PhotonzDocument {
     }
 
     /// Hold on the frame under the playhead, for as long as asked, pushing
-    /// what the person said a hold should push (`HoldPush.swift`).
+    /// what the person said a hold should push (`HoldPush.swift`): the clips
+    /// after it on its own track, or every unlocked track.
     ///
-    /// The default is the picture alone because that is all one clip's pieces
-    /// can do by themselves; the app asks for `.everything` on purpose, and
-    /// the rest of the document moves here rather than inside `ClipPieces`,
+    /// The rest of the document moves here rather than inside `ClipPieces`,
     /// which can only see the one clip.
     @discardableResult
     public mutating func holdFrame(_ id: UUID, atMS ms: Int,
                                    forMS length: Int = ClipPieces.defaultHoldMS,
-                                   push: HoldPush = .pictureOnly) -> Bool {
+                                   push: HoldPush = .whenNobodySays) -> Bool {
         let did = editClip(id) { pieces, time in
             guard ms >= time.inMS, ms < time.outMS else { return false }
             return pieces.holdFrame(atMS: ms - time.inMS, forMS: length, push: push)
         }
-        guard did, push == .everything, let start = heldPieceStartMS(id, nearMS: ms) else {
-            return did
-        }
-        rippleTime(atMS: start, byMS: length, exceptLayer: id)
+        guard did, let start = heldPieceStartMS(id, nearMS: ms),
+              let clipIn = layer(id: id)?.time?.inMS, let pieces = layer(id: id)?.clipPieces,
+              let index = pieces.pieceIndex(atMS: start - clipIn),
+              let held = pieces.piece(at: index) else { return did }
+        pushHeldTime(id, push, atMS: start, byMS: held.lengthMS)
         return true
     }
 
@@ -964,10 +978,10 @@ extension PhotonzDocument {
         let before = layer(id: id)?.clipPieces?.piece(at: index)
         let start = holdStartMS(id, ofPiece: index)
         let did = editClip(id) { pieces, _ in pieces.setHoldLength(ofPiece: index, toMS: length) }
-        guard did, before?.holdPush == .everything, let start,
+        guard did, let push = before?.holdPush, let start,
               let after = layer(id: id)?.clipPieces?.piece(at: index),
               let was = before?.lengthMS else { return did }
-        rippleTime(atMS: start, byMS: after.lengthMS - was, exceptLayer: id)
+        pushHeldTime(id, push, atMS: start, byMS: after.lengthMS - was)
         return true
     }
 

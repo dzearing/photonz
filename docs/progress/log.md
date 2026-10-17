@@ -21559,3 +21559,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Fixed: a caption line's right click raised no menu from a walk, and a second one came up blank (the menu read the lane's painted cues, which drop a picked line).
 - Walk step `rightClick` takes `rows` and `more`. Walks: `timeline-right-click-menus-walk`, `a-caption-s-right-click-menu-walk`; ~20 walks updated for the new wording.
 - Open question: Animate and Add Key on top for titles, as the animate mock draws (card on `a-title-or-picture-right-click-leads-with-animat`).
+
+## 2026-10-17 — Freeze Frame asks how long, freezes its own track
+
+- Freeze Frame… (clip right-click, canvas right-click, Clip menu on ⌥⇧F) opens a popover on the clip at the playhead: typed length (FreezeLength.parse), Freeze every track off, Insert. On a still the row is Change Freeze….
+- Default push is now this track (HoldPush.thisTrack, raw value `pictureOnly`): later clips on the clip's track ripple; Freeze every track ripples every unlocked track. Length changes, the end drag and Delete follow the same rule.
+- New walk `freeze-frame-asks-how-long-walk`; seven freeze walks updated to the popover.
+- Next: captions heard off a clip should follow it (captions-of-a-clip-move-with-it-when-a-freeze-mo); the panel's Hold should take a typed length (the-panel-s-hold-takes-any-typed-length).

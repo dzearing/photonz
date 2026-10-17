@@ -25,7 +25,16 @@ extension PhotonzDocument {
     public mutating func rippleDeleteClipPiece(_ id: UUID, at index: Int) -> Bool {
         guard let time = layer(id: id)?.time,
               let range = layer(id: id)?.clipPieces?.rangeMS(ofPiece: index) else { return false }
+        let push = layer(id: id)?.clipPieces?.piece(at: index)?.holdPush
         guard removeClipPiece(id, at: index) else { return false }
+        // A freeze of this track alone moved only this track, so throwing it
+        // away closes the gap there and leaves the other tracks as they ran.
+        if push == .thisTrack {
+            _ = editClip(id) { pieces, _ in pieces.closeJoin(before: index) }
+            pushHeldTime(id, .thisTrack, atMS: time.inMS + range.start, byMS: -(range.end - range.start))
+            refreshDuration()
+            return true
+        }
         removeTime(fromMS: time.inMS + range.start, toMS: time.inMS + range.end, exceptLayer: id)
         return true
     }

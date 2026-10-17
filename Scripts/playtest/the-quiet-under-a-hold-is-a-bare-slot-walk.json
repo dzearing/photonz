@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/the-quiet-under-a-hold-is-a-bare-slot-walk",
-  "seed": "The talk sample, nothing switched from its default. Cut at 0:04 and 0:08 and lift the middle so V1 and its sound have a gap, then hold the frame at 0:12 for two seconds from the clip's right-click menu, which leaves While held on Everything waits. The sound under the still is drawn as video-freeze-wt.html step 3 draws #audGap: a dashed edge with no fill, no badge and no level line, and it reads apart from the hatched gap beside it in dark and light. The Hold menu still lengthens the hold, the quiet grows with it, and undo takes both away.",
+  "seed": "The talk sample, nothing switched from its default. Cut at 0:04 and 0:08 and lift the middle so V1 and its sound have a gap, then hold the frame at 0:12 for two seconds from the clip's right-click menu (Freeze Frame at 0:12.00…, Return on the 2s it opens on), which leaves Freezes on This track. The sound under the still is drawn as video-freeze-wt.html step 3 draws #audGap: a dashed edge with no fill, no badge and no level line, and it reads apart from the hatched gap beside it in dark and light. The Hold menu still lengthens the hold, the quiet grows with it, and undo takes both away.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -105,7 +105,20 @@
     {
       "do": "rightClick",
       "on": "Sample Talk clip",
-      "choose": "Freeze Frame at 0:12.00 > Freeze for 2s"
+      "choose": "Freeze Frame at 0:12.00…"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "field": "Length",
+      "reads": "2s"
+    },
+    {
+      "do": "key",
+      "key": "return"
     },
     {
       "do": "wait",
@@ -122,12 +135,12 @@
     {
       "do": "expect",
       "field": "Sample Talk still",
-      "reads": "Still \u00b7 0:12"
+      "reads": "Still · 0:12"
     },
     {
       "do": "expect",
       "field": "Held frame badge",
-      "reads": "Held frame \u00b7 0:12"
+      "reads": "Held frame · 0:12"
     },
     {
       "do": "expect",
@@ -136,8 +149,8 @@
     },
     {
       "do": "expect",
-      "field": "While held",
-      "reads": "Everything waits"
+      "field": "Freezes",
+      "reads": "This track"
     },
     {
       "do": "key",
@@ -217,7 +230,7 @@
     {
       "do": "expect",
       "field": "Sample Talk still",
-      "reads": "Still \u00b7 0:12"
+      "reads": "Still · 0:12"
     },
     {
       "do": "expect",

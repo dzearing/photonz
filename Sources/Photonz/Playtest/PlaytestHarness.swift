@@ -4998,6 +4998,12 @@ private final class Run {
                         + "to hold")
                 }
                 editor.holdFrameAtPlayhead()
+            case .clipFreezeFrameAsk:
+                guard editor.canHoldFrameAtPlayhead else {
+                    throw Failure(description: "Freeze Frame… is dimmed: no clip is in hand under the "
+                        + "playhead")
+                }
+                editor.openFreezeFrame()
             case .soundDetach:
                 guard editor.canDetachSound else {
                     throw Failure(description: "there is no sound to take off: pick a clip whose "
@@ -7648,7 +7654,7 @@ private final class Run {
                  .recordScriptedClicks, .recordAndOpenAtStop, .expectRecordingLandedInPlace,
                  .recordingControlDrill, .stopThenOpenDrill:
                 break  // handled above, in the branch that asks for a recording
-            case .clipSplit, .clipDeletePiece, .clipHoldFrame,
+            case .clipSplit, .clipDeletePiece, .clipHoldFrame, .clipFreezeFrameAsk,
                  .clipSpeedDouble, .clipSpeedHalf,
                  .clipDragStartIn, .clipDragStartBackOut, .clipDragEndIn,
                  .clipCarryLastToFront, .clipSlideLater,

@@ -37,6 +37,9 @@ extension EditorState {
         static let duplicate = MenuShortcut.command("j")
         static let clearInOut = MenuShortcut(key: "x", modifiers: .option)
         static let splitEverything = MenuShortcut.commandShift("k")
+        /// Freeze Frame…. Premiere gives frame holds no key, so it takes a
+        /// free one beside ⌥F (UX-PATTERNS §7: no grown-up tool claims it).
+        static let freezeFrame = MenuShortcut(key: "f", modifiers: [.option, .shift])
         /// Premiere's marks. Plain letters, which the timeline answers while
         /// it has the keyboard (`EditorState+TimelineKeys`).
         static let addMarker = MenuShortcut(key: "m", modifiers: [])
@@ -199,12 +202,14 @@ extension EditorState {
             }]
         case .freezeFrame:
             guard picture, let piece = clip.piece else { return [] }
-            // On a hold, the lengths change THAT hold, wherever the playhead is.
+            // On a freeze, the popover changes THAT freeze, wherever the
+            // playhead is.
             if piece.isHeld { return [freezeFrameMenuRow(layerID: layerID, piece: index, enabled: true)] }
             guard clip.underPlayhead else { return [] }
-            var freeze = freezeFrameMenuRow(layerID: layerID, piece: index, enabled: true)
-            freeze.title = titled(.freezeFrame)
-            return [freeze]
+            return [.command(titled(.freezeFrame), TimelineMenuKeys.freezeFrame) {
+                self.selectLayer(layerID)
+                self.openFreezeFrame()
+            }]
         case .speed:
             guard let piece = clip.piece, !piece.isHeld, layer.hasMediaBehindIt else { return [] }
             return [.submenu("Speed", EditorState.clipSpeeds.map { percent in
@@ -425,36 +430,21 @@ extension EditorState {
         return rows
     }
 
-    /// **Freeze Frame ▸**: hold the frame under the playhead for a length, and
-    /// say what the rest of the timeline does while it holds. On a piece that
-    /// is already a hold, the lengths and the choice change THAT hold.
-    ///
-    /// The choices used to be a column of radio buttons and three sentences in
-    /// the Time section; a freeze is a verb, so it lives on the clip.
+    /// **Freeze Frame…** on a clip that is not cut there yet asks how long
+    /// for a new freeze at the playhead; on a freeze already there it is
+    /// **Change Freeze…**, the same popover changing THAT freeze
+    /// (`EditorState+FreezeAsk`).
     func freezeFrameMenuRow(layerID: UUID, piece index: Int, enabled: Bool) -> MenuRow {
         let piece = document?.layer(id: layerID)?.clipPieces?.piece(at: index)
-        let held = piece?.isHeld == true
-        var rows: [MenuRow] = ClipPieces.holdStopsMS.map { ms in
-            if held {
-                return .toggle("Hold for \(ClipPieces.holdTitle(ms))", isOn: piece?.lengthMS == ms) {
-                    self.selectClipPiece(layerID: layerID, index: index)
-                    self.setHoldLengthInHand(ms)
-                }
-            }
-            return .command("Freeze for \(ClipPieces.holdTitle(ms))", enabled: enabled) {
-                self.selectLayer(layerID)
-                self.holdFrameAtPlayhead(forMS: ms)
+        if piece?.isHeld == true {
+            return .command("Change Freeze\u{2026}", enabled: enabled) {
+                self.openFreezeFrame(layerID: layerID, heldPiece: index)
             }
         }
-        rows.append(.separator)
-        let shown = piece?.holdPush ?? holdPushChoice
-        rows.append(contentsOf: HoldPush.allCases.map { push in
-            .toggle(push.title, isOn: shown == push) {
-                if held { self.selectClipPiece(layerID: layerID, index: index) }
-                self.setHoldPush(push)
-            }
-        })
-        return .submenu("Freeze Frame", rows)
+        return .command("Freeze Frame\u{2026}", TimelineMenuKeys.freezeFrame, enabled: enabled) {
+            self.selectLayer(layerID)
+            self.openFreezeFrame()
+        }
     }
 
     /// Show Picture: a piece whose picture a range took off drawn again, as

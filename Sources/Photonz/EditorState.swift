@@ -1974,6 +1974,9 @@ final class EditorState {
     /// The cut whose transition picker is open, nil while none is
     /// (`EditorState+ClipTransitions`, "At this cut").
     var transitionPickerPlace: TimelineCutPlace?
+    /// The Freeze Frame popover while it is up, nil while it is not
+    /// (`EditorState+FreezeAsk`).
+    var freezeAsk: FreezeAsk?
     /// Whether that picker hangs off the panel's Add transition button rather
     /// than off the cut on the timeline. One picker, two places it can grow
     /// out of, and only the one that was clicked opens.

@@ -1253,6 +1253,9 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// Hold on the frame under the playhead: a piece whose in and out are the
     /// same frame, dropped onto the timeline like any other piece.
     case clipHoldFrame
+    /// Clip ▸ Freeze Frame… (⇧⌥F): the popover that asks how long, on the
+    /// clip in hand at the playhead.
+    case clipFreezeFrameAsk
     /// Retime the piece in hand. Its sound goes with it, at the same rate.
     case clipSpeedDouble, clipSpeedHalf
     /// Take the picked clip's sound off its picture and lay it on a layer of
@@ -1627,7 +1630,7 @@ public enum PlaytestAction: String, CaseIterable, Hashable, Codable, Sendable {
     /// the old recording window, which has its own ids above.
     public var drivesTheTimeline: Bool {
         switch self {
-        case .clipSplit, .clipDeletePiece, .clipHoldFrame,
+        case .clipSplit, .clipDeletePiece, .clipHoldFrame, .clipFreezeFrameAsk,
              .clipSpeedDouble, .clipSpeedHalf, .expectAddedClick,
              .zoomScriptPointerPath, .expectZoomFollowsCursor, .expectZoomExportMatches,
              .expectZoomShapedByHand, .expectZoomSuggested, .expectZoomPicked, .expectZoomLetGo,

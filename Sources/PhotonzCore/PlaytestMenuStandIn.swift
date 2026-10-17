@@ -113,6 +113,9 @@ public enum PlaytestMenuStandIn {
         // to key. Window-scoped like undo, so dimmed for the whole of a walk.
         Chord(key: "k", modifiers: [.shift]): .goToNextKey,
         Chord(key: "k", modifiers: [.option]): .goToPreviousKey,
+        // Clip ▸ Freeze Frame…, the popover that asks how long. Window-scoped
+        // like undo.
+        Chord(key: "f", modifiers: [.option, .shift]): .clipFreezeFrameAsk,
         // Layer ▸ Move the Pivot, plain Y: the Around menu's Somewhere else
         // in the menu bar. Window-scoped like undo.
         Chord(key: "y", modifiers: []): .moveThePivot,

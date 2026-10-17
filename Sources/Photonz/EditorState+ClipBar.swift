@@ -578,6 +578,12 @@ extension EditorState {
         case .clipStart:
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipStart(id, ofPiece: 0, byMS: landing.movedMS) }
+        case .seam(let after) where session.drag.pieces.piece(at: after)?.isHeld == true:
+            // A freeze's end is its length: the clips after it on its track
+            // (or on every track, for a freeze of every track) come with it,
+            // so it never runs over the next clip (`HoldPush.swift`).
+            guard landing.movedMS != 0, let was = session.drag.pieces.piece(at: after)?.lengthMS else { break }
+            perform { $0.setHoldLength(id, ofPiece: after, toMS: was + landing.movedMS) }
         case .seam(let after):
             guard landing.movedMS != 0 else { break }
             perform { $0.trimClipEnd(id, ofPiece: after, byMS: landing.movedMS) }
@@ -861,6 +867,11 @@ extension EditorState {
         // closes up then too rather than sliding under a bar still drawn long.
         if session.ripple, case .seam = session.grab, landing.movedMS != 0,
            document.rippleTrimClipEdge(session.layerID, session.grab, byMS: landing.movedMS) {
+        } else if case .seam(let after) = session.grab, landing.movedMS != 0,
+                  let was = session.drag.pieces.piece(at: after), was.isHeld,
+                  document.setHoldLength(session.layerID, ofPiece: after, toMS: was.lengthMS + landing.movedMS) {
+            // A freeze's end carries its track along under the hand, as it
+            // will when it is let go.
         } else {
             document.updateLayer(id: session.layerID) { layer in
                 layer.setClipPieces(landing.pieces)

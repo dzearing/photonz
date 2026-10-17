@@ -80,7 +80,10 @@
     { "do": "describe", "stage": "5-another-recording", "note": "another recording opens in View too" },
     { "do": "snapshot", "name": "5-another-recording" },
 
-    { "do": "rightClick", "at": [640, 400], "choose": "Freeze Frame > Freeze for 2s" },
+    { "do": "rightClick", "at": [640, 400], "choose": "Freeze Frame…" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expect", "field": "Length", "reads": "2s" },
+    { "do": "key", "key": "return" },
     { "do": "wait", "seconds": 0.8 },
     { "do": "expectTimeline", "mode": "edit", "open": true },
     { "do": "shortcut", "key": "z", "modifiers": ["command"], "menuItem": "Undo" },

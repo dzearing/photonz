@@ -1,0 +1,30 @@
+{
+  "feature": "Freeze Frame asks how long, and freezes that track only",
+  "epic": "video-cutting",
+  "summary": "Freeze Frame now opens a small popover on the clip at the playhead where you type any length (10, 2.5s, 1:30, 48f). The freeze holds the clip's own track by default: the clips after it on that track move along, and every other track keeps playing unless you tick Freeze every track. Dragging the still's end resizes it and carries the track with it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording with music under it (the walk uses the talk sample cut at 0:04 and 0:08 with the middle lifted, plus the sample music).",
+  "switched": {},
+  "try": [
+    { "do": "Park the playhead on a clip, right-click the clip and choose Freeze Frame at 0:03.00… (or press Option Shift F).", "shot": "2026-10-17-freeze-frame-asks-how-long-1-asks-how-long-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Type 10 over the 2s and press Return.", "shot": "2026-10-17-freeze-frame-asks-how-long-2-ten-second-still-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Look at V1: the still is ten seconds and the next clip on V1 moved along by ten seconds; the music did not move." },
+    { "do": "Drag the still's right end back to the playhead at 0:07.", "shot": "2026-10-17-freeze-frame-asks-how-long-3-dragged-to-four-seconds-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Right-click the still and choose Change Freeze…, tick Freeze every track, press Return: now the music pauses with it too." },
+    { "do": "Press Delete with the still picked: it goes and the next clip on V1 closes back up." },
+    { "do": "Press Space from the start and watch it play through the still." }
+  ],
+  "evaluate": [
+    "Is a popover with a typed length and one checkbox the right weight, or do you want the common lengths offered as well?",
+    "Is freezing only the clip's own track the right default when there is music under it?",
+    "Does the orange 'out' mark on the music and captions tell you clearly that they kept playing under the still?",
+    "Is Option Shift F a key you would find, given Premiere has none for this?"
+  ],
+  "rough": [
+    "The mock video-freeze-wt.html puts Freeze frame, Length and The insert pushes in the panel's Time section; the user asked for a popover on the clip and this-track as the default instead (your call on 2026-10-17). The panel keeps Hold and a Freezes readout for a picked still.",
+    "The panel's Hold is still a dropdown of fixed lengths while the popover takes any length; filed as the-panel-s-hold-takes-any-typed-length.",
+    "The mock prints Shift F for Freeze frame; Shift F already walks the Frame slot and Premiere gives frame holds no key, so Freeze Frame… took the free Option Shift F beside Option F (UX-PATTERNS §7).",
+    "The captions heard off the clip stay where they were when only its track freezes, so they drift out of step with the speech (the 10s out mark in picture 2); filed as captions-of-a-clip-move-with-it-when-a-freeze-mo.",
+    "While dragging the still's end, the next clip on the track jumps to its new place on release rather than sliding under the hand.",
+    "The pictures were taken with the window behind another app, so the Insert button shows its grey background look rather than the accent blue."
+  ]
+}

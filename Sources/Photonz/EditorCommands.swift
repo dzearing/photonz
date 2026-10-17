@@ -886,9 +886,9 @@ struct EditorCommands: Commands {
     // out are the same frame, so it drops onto the timeline like
     // any other piece and can be moved, lengthened and thrown away
     // like any other piece (`video-freeze-wt`).
-    // No key: ⇧F walks the Frame slot, ⌥F fills the flow, and a
-    // freeze is a thing you do once in a cut rather than forty
-    // times. The row is where you would look for it.
+    // Freeze Frame… asks how long in a popover on the clip
+    // (`EditorState+FreezeAsk`). ⇧⌥F: Premiere gives frame holds no
+    // key, ⇧F walks the Frame slot and ⌥F fills the flow.
     // Retiming is a property of the piece you are on, so it is a
     // list of speeds rather than a surface of its own
     // (`video-speed`). Its sound goes with it, at the same rate.
@@ -897,7 +897,8 @@ struct EditorCommands: Commands {
     // row of its own above the list (`EditorState+SpeedKey`). Photoshop's ⌘R
     // is Rulers, which this app does not have.
     @ViewBuilder private var freezeAndSpeedRows: some View {
-        Button("Freeze Frame") { editor?.holdFrameAtPlayhead() }
+        Button("Freeze Frame\u{2026}") { editor?.openFreezeFrame() }
+            .keyboardShortcut("f", modifiers: [.option, .shift])
             .disabled(!(editor?.canHoldFrameAtPlayhead ?? false))
         // A stretch whose picture a range took off (Hide Picture for Section).
         Button("Show Picture") {

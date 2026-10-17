@@ -177,6 +177,19 @@ struct ClipPiecesBar: View {
                         .offset(x: x0 + laneWidth * ruler.fraction(spanningMS: Double(pieces.startMS(ofPiece: index))))
                 }
             }
+            // What Freeze Frame… hangs from: the playhead on this bar, or the
+            // middle of the freeze it is changing (`FreezeFramePopover`).
+            // Always there, like the cuts' anchors: a popover asked of a view
+            // in the same pass that puts it on screen does not open.
+            if kind != nil, kind != .caption, !isLinkedSound {
+                let ask = editorState.freezeAsk.flatMap { $0.layerID == layerID ? $0 : nil }
+                Color.clear
+                    .frame(width: 1, height: barHeight)
+                    .allowsHitTesting(false)
+                    .freezeFramePopover(layerID: layerID, editorState: editorState)
+                    .offset(x: x0 + laneWidth * ruler.fraction(
+                        spanningMS: Double((ask?.atMS ?? bar.inMS) - bar.inMS)))
+            }
             // A diamond for every moment something on the layer is keyed
             // (`ClipKeys.swift`): drag it in time, right-click it to ease it.
             if kind != nil, !isLinkedSound {

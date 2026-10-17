@@ -155,7 +155,8 @@ public enum TimelineMenuTable {
     public static func title(_ row: TimelineMenuRow, playheadMS ms: Int) -> String? {
         switch row {
         case .split: TimelinePointing.atPlayhead("Split", ms: ms)
-        case .freezeFrame: TimelinePointing.atPlayhead("Freeze Frame", ms: ms)
+        // It asks how long before it freezes, so it ends in an ellipsis.
+        case .freezeFrame: TimelinePointing.atPlayhead("Freeze Frame", ms: ms) + "\u{2026}"
         case .startAtPlayhead: TimelinePointing.atPlayhead("Start", ms: ms)
         case .endAtPlayhead: TimelinePointing.atPlayhead("End", ms: ms)
         case .rollEdit: TimelinePointing.atPlayhead("Roll Edit", ms: ms).replacingOccurrences(of: " at ", with: " to ")

@@ -150,12 +150,12 @@ struct SpeedInspector: View {
             opened: editorState.clipSpeedChoicesOpened)
         .playtestField("Hold")
         .panelHelp("How long the frame stays on screen.")
-        let push = piece.holdPush ?? .pictureOnly
-        VideoKit.FieldRow(label: "While held") {
+        let push = piece.holdPush ?? .thisTrack
+        VideoKit.FieldRow(label: "Freezes") {
             VideoKit.ValueFace(value: push.title)
                 .panelReadout(push.title)
         }
-        .playtestField("While held")
+        .playtestField("Freezes")
         .panelHelp(push.sentence(holdMS: piece.lengthMS))
     }
 }

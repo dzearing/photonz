@@ -149,7 +149,7 @@ struct LongTimelineCostTests {
         let held = doc.holdFrame(clip, atMS: 4000, forMS: 2000, push: .everything)
         #expect(held)
         #expect(!doc.hasPictureOnlyHolds)
-        let pushed = doc.holdFrame(clip, atMS: 1000, forMS: 2000, push: .pictureOnly)
+        let pushed = doc.holdFrame(clip, atMS: 1000, forMS: 2000, push: .thisTrack)
         #expect(pushed)
         #expect(doc.hasPictureOnlyHolds)
     }

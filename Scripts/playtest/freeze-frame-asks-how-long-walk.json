@@ -1,0 +1,385 @@
+{
+ "out": "/tmp/photonz-playtest/freeze-frame-asks-how-long-walk",
+ "seed": "At Next defaults, with no switch touched. The talk sample cut at 0:04 and 0:08 with the middle lifted, so V1 holds a clip from 0:00 to 0:04 and another from 0:08, and the sample music under both from 0:00. The clip's right-click offers Freeze Frame at 0:03.00 with an ellipsis, which opens a small popover on the clip at the playhead: a Length field on 2s, a Freeze every track box that is off, and Insert. Typing 10 and pressing Return inserts a ten second still on V1 only: the first clip now runs to 0:14 and the second moved along to 0:18, while the music runs on under the still exactly where it was. The still's end dragged back to the playhead at 0:07 makes it four seconds, the second clip follows it to 0:12, and the whole thing plays through without a blank frame. The user, 2026-10-17: 'Maybe I want to freeze it for 10 seconds... by default we'd just freeze THAT track, not every track.' Picked and deleted, the still goes, the clip is one piece again and the second clip closes back up to 0:08.",
+ "setup": {
+  "timelineOpen": true,
+  "forget": [
+   "all"
+  ]
+ },
+ "steps": [
+  {
+   "do": "action",
+   "action": "openSampleTalk"
+  },
+  {
+   "do": "action",
+   "action": "captionsWriteQuietly"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.0
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "tool",
+   "tool": "select"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 4.0
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 8.0
+  },
+  {
+   "do": "key",
+   "key": "k",
+   "modifiers": [
+    "command"
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 6.0
+  },
+  {
+   "do": "key",
+   "key": "x"
+  },
+  {
+   "do": "key",
+   "key": ";"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.5
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "startsAt": 0.0,
+   "endsAt": 4.0
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "startsAt": 8.0,
+   "endsAt": 17.25
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "action",
+   "action": "soundAddSample"
+  },
+  {
+   "do": "wait",
+   "seconds": 1.5
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Music",
+   "startsAt": 0.0,
+   "endsAt": 14.0,
+   "within": 0.5
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 10.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "The clip's own right-click offers it at the playhead, with an ellipsis because it asks something, and prints its key.",
+   "do": "rightClick",
+   "on": "Sample Talk clip",
+   "first": "Split at 0:10.00",
+   "keys": {
+    "Freeze Frame at 0:10.00…": "⌥⇧F"
+   }
+  },
+  {
+   "do": "key",
+   "key": "escape"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 3.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "comment": "Pick the first clip on the picture at 0:03 and press Option Shift F, the key the menu printed.",
+   "do": "click",
+   "at": [
+    640,
+    400
+   ]
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "shortcut",
+   "key": "f",
+   "modifiers": [
+    "option",
+    "shift"
+   ],
+   "menuItem": "Freeze Frame…"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Length",
+   "reads": "2s"
+  },
+  {
+   "do": "expect",
+   "control": "Freeze every track",
+   "in": "Freeze Frame",
+   "present": true
+  },
+  {
+   "do": "describe",
+   "stage": "1-asks-how-long",
+   "note": "the popover hangs from the clip at the playhead: Length on 2s, ready to type over, Freeze every track off, Insert"
+  },
+  {
+   "do": "snapshot",
+   "name": "1-asks-how-long"
+  },
+  {
+   "do": "type",
+   "text": "10"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.2
+  },
+  {
+   "do": "expect",
+   "field": "Length",
+   "reads": "10"
+  },
+  {
+   "do": "key",
+   "key": "return"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expect",
+   "field": "Freeze Frame",
+   "present": false
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 3,
+   "startsAt": 0.0,
+   "endsAt": 14.0
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "startsAt": 18.0,
+   "endsAt": 27.25
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Music",
+   "startsAt": 0.0,
+   "endsAt": 14.0,
+   "within": 0.5
+  },
+  {
+   "do": "expect",
+   "field": "Sample Talk still",
+   "reads": "Still · 0:03"
+  },
+  {
+   "do": "expect",
+   "menu": "Hold",
+   "reads": "10s"
+  },
+  {
+   "do": "expect",
+   "field": "Freezes",
+   "reads": "This track"
+  },
+  {
+   "do": "describe",
+   "stage": "2-ten-second-still",
+   "note": "THE FIRST TEST: a ten second still on V1 at 0:03, drawn as the timeline draws a held frame. The clip after it on V1 moved along by ten seconds, and the music on its own track runs straight on under the still"
+  },
+  {
+   "do": "snapshot",
+   "name": "2-ten-second-still"
+  },
+  {
+   "do": "clickRuler",
+   "seconds": 7.0
+  },
+  {
+   "do": "wait",
+   "seconds": 0.3
+  },
+  {
+   "do": "dragGrip",
+   "control": "Sample Talk join 2",
+   "by": -340,
+   "steps": 30
+  },
+  {
+   "do": "wait",
+   "seconds": 0.8
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 3,
+   "startsAt": 0.0,
+   "endsAt": 8.0,
+   "within": 0.1
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "startsAt": 12.0,
+   "endsAt": 21.25,
+   "within": 0.1
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Music",
+   "startsAt": 0.0,
+   "endsAt": 14.0,
+   "within": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "3-dragged-to-four-seconds",
+   "note": "THE SECOND TEST: the still's end, dragged back to the playhead at 0:07, makes it four seconds, and the second clip on V1 came back with it to 0:12. The music did not move"
+  },
+  {
+   "do": "snapshot",
+   "name": "3-dragged-to-four-seconds"
+  },
+  {
+   "do": "action",
+   "action": "videoSeekStart"
+  },
+  {
+   "do": "expectPlaybackNeverBlank",
+   "name": "plays-through",
+   "seconds": 10,
+   "moments": 20
+  },
+  {
+   "do": "action",
+   "action": "videoPause"
+  },
+  {
+   "do": "describe",
+   "stage": "4-played-through",
+   "note": "THE THIRD TEST: played from the start through the four second still and on into the second clip, never a blank frame"
+  },
+  {
+   "do": "snapshot",
+   "name": "4-played-through"
+  },
+  {
+   "do": "press",
+   "control": "Sample Talk piece 2"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.4
+  },
+  {
+   "do": "expect",
+   "menu": "Hold",
+   "reads": "4s"
+  },
+  {
+   "do": "key",
+   "key": "delete"
+  },
+  {
+   "do": "wait",
+   "seconds": 0.6
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "pieces": 1,
+   "startsAt": 0.0,
+   "endsAt": 4.0,
+   "within": 0.1
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Talk",
+   "track": "V1",
+   "startsAt": 8.0,
+   "endsAt": 17.25,
+   "within": 0.1
+  },
+  {
+   "do": "expectClip",
+   "clip": "Sample Music",
+   "startsAt": 0.0,
+   "endsAt": 14.0,
+   "within": 0.5
+  },
+  {
+   "do": "describe",
+   "stage": "5-thrown-away",
+   "note": "THE FOURTH TEST: the still picked and Delete pressed: it goes, the first clip is one piece again, and the second clip on V1 closed back up to 0:08. The music never moved"
+  },
+  {
+   "do": "snapshot",
+   "name": "5-thrown-away"
+  }
+ ]
+}

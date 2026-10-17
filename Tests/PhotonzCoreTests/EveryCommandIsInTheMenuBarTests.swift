@@ -51,6 +51,9 @@ struct EveryCommandIsInTheMenuBarTests {
     /// A right-click row the menu bar holds under other words: the right-click
     /// title, and the bar's row that does the same thing to the thing in hand.
     static let sameCommand: [String: String] = [
+        // A freeze's own right-click changes it in the popover Clip >
+        // Freeze Frame... opens on that freeze (`EditorState+FreezeAsk`).
+        "Change Freeze\\u{2026}": "Freeze Frame\\u{2026}",
         // A Components tile's right-click places the picked component, which
         // is Layer > Insert Component.
         "Place a Copy": "Insert Component",

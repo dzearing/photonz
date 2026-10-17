@@ -37,7 +37,7 @@ struct HoldPushTests {
     func pictureOnlyLeavesTheVoiceAlone() throws {
         var (doc, clip, voice) = Self.withVoice()
         let before = try #require(doc.layer(id: voice)?.time)
-        let did1 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .pictureOnly)
+        let did1 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .thisTrack)
         #expect(did1)
         // The picture is five seconds longer and the voice is where it was:
         // you keep talking over the frozen frame.
@@ -125,7 +125,7 @@ struct HoldPushTests {
 
         var changed = Self.withVoice().doc
         let clipB = changed.layers[0].id
-        let did7 = changed.holdFrame(clipB, atMS: 4000, forMS: 5000, push: .pictureOnly)
+        let did7 = changed.holdFrame(clipB, atMS: 4000, forMS: 5000, push: .thisTrack)
         #expect(did7)
         let did8 = changed.setHoldPush(clipB, ofPiece: 1, to: .everything)
         #expect(did8)
@@ -138,13 +138,13 @@ struct HoldPushTests {
     @Test("Changing it back puts the document back exactly as it was")
     func changingItBackIsAnExactUndo() throws {
         var (doc, clip, _) = Self.withVoice()
-        let did9 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .pictureOnly)
+        let did9 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .thisTrack)
         #expect(did9)
         let before = doc
         let did10 = doc.setHoldPush(clip, ofPiece: 1, to: .everything)
         #expect(did10)
         #expect(doc != before)
-        let did11 = doc.setHoldPush(clip, ofPiece: 1, to: .pictureOnly)
+        let did11 = doc.setHoldPush(clip, ofPiece: 1, to: .thisTrack)
         #expect(did11)
         // Byte for byte: the silence came out and the two halves of the voice
         // closed back into the one piece they were.
@@ -158,9 +158,9 @@ struct HoldPushTests {
         #expect(did12)
         let did13 = doc.setHoldPush(clip, ofPiece: 1, to: .everything)
         #expect(!did13)
-        let did14 = doc.setHoldPush(clip, ofPiece: 0, to: .pictureOnly)
+        let did14 = doc.setHoldPush(clip, ofPiece: 0, to: .thisTrack)
         #expect(!did14)
-        let did15 = doc.setHoldPush(clip, ofPiece: 9, to: .pictureOnly)
+        let did15 = doc.setHoldPush(clip, ofPiece: 9, to: .thisTrack)
         #expect(!did15)
     }
 
@@ -169,7 +169,7 @@ struct HoldPushTests {
         var (doc, clip, _) = Self.withVoice()
         let did16 = doc.holdFrame(clip, atMS: 4000, forMS: 2000)
         #expect(did16)
-        #expect(doc.layer(id: clip)?.clipPieces?.piece(at: 1)?.holdPush == .pictureOnly)
+        #expect(doc.layer(id: clip)?.clipPieces?.piece(at: 1)?.holdPush == .thisTrack)
         // A piece that plays is not holding anything, so it has nothing to say.
         #expect(doc.layer(id: clip)?.clipPieces?.piece(at: 0)?.holdPush == nil)
     }
@@ -208,7 +208,7 @@ struct HoldPushTests {
     @Test("Making a hold that pushes only the picture longer leaves the voice where it is")
     func alongerPictureOnlyHoldMovesNothingElse() throws {
         var (doc, clip, voice) = Self.withVoice()
-        let did21 = doc.holdFrame(clip, atMS: 4000, forMS: 2000, push: .pictureOnly)
+        let did21 = doc.holdFrame(clip, atMS: 4000, forMS: 2000, push: .thisTrack)
         #expect(did21)
         let before = try #require(doc.layer(id: voice)?.time)
         let did22 = doc.setHoldLength(clip, ofPiece: 1, toMS: 5000)
@@ -222,7 +222,7 @@ struct HoldPushTests {
     func thebarSaysHowFarOutItIs() throws {
         var (doc, clip, voice) = Self.withVoice()
         #expect(doc.holdDrifts(forLayer: voice).isEmpty)
-        let did23 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .pictureOnly)
+        let did23 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .thisTrack)
         #expect(did23)
         let drifts = doc.holdDrifts(forLayer: voice)
         #expect(drifts.count == 1)
@@ -261,9 +261,9 @@ struct HoldPushTests {
     @Test("Two holds that pushed the picture alone add up, because the drift does")
     func twoHoldsAddUp() throws {
         var (doc, clip, voice) = Self.withVoice()
-        let did25 = doc.holdFrame(clip, atMS: 2000, forMS: 1000, push: .pictureOnly)
+        let did25 = doc.holdFrame(clip, atMS: 2000, forMS: 1000, push: .thisTrack)
         #expect(did25)
-        let did26 = doc.holdFrame(clip, atMS: 6000, forMS: 2000, push: .pictureOnly)
+        let did26 = doc.holdFrame(clip, atMS: 6000, forMS: 2000, push: .thisTrack)
         #expect(did26)
         let drifts = doc.holdDrifts(forLayer: voice)
         #expect(drifts.count == 2)
@@ -275,23 +275,22 @@ struct HoldPushTests {
     @Test("Sound that starts after the hold was never in step with it, so it is not called drift")
     func nodriftForSoundPlacedAfterwards() throws {
         var (doc, clip, voice) = Self.withVoice(atMS: 6000, lengthMS: 4000)
-        let did27 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .pictureOnly)
+        let did27 = doc.holdFrame(clip, atMS: 4000, forMS: 5000, push: .thisTrack)
         #expect(did27)
         #expect(doc.holdDrifts(forLayer: voice).isEmpty)
     }
 
     // MARK: - What it is called
 
-    @Test("Both choices say what you would hear, not what the edit is called")
+    @Test("Both choices say which tracks wait, and what it costs")
     func thewordsSayWhatYouWouldHear() {
-        #expect(HoldPush.everything.title == "Everything waits")
-        #expect(HoldPush.pictureOnly.title == "The rest carries on")
+        #expect(HoldPush.everything.title == "Every track")
+        #expect(HoldPush.thisTrack.title == "This track")
         #expect(HoldPush.everything.sentence(holdMS: 5000)
-            == "The voice, the music and anything else on the timeline pause with the picture, "
-            + "so what was said over a shot stays over that shot.")
-        #expect(HoldPush.pictureOnly.sentence(holdMS: 5000)
-            == "Everything else keeps running under the frozen frame, so you can talk over it. "
-            + "What comes after it lands 5s out of step with the picture.")
+            == "Every track pauses with the picture, so what was said over a shot stays over that shot.")
+        #expect(HoldPush.thisTrack.sentence(holdMS: 5000)
+            == "Only this track moves along. The other tracks keep running under the frozen frame "
+            + "and land 5s out of step with the picture.")
         // What a hold does is written on the hold, so the panel and the
         // timeline never say it two ways.
         #expect(HoldPush.allCases.count == 2)
@@ -318,7 +317,7 @@ struct HoldPushTests {
             + #"{"sourceInMS":4000,"lengthMS":2000,"speedPercent":0},"#
             + #"{"sourceInMS":4000,"lengthMS":4000}],"sourceLengthMS":8000}"#
         let pieces = try JSONDecoder().decode(ClipPieces.self, from: Data(json.utf8))
-        #expect(pieces.piece(at: 1)?.holdPush == .pictureOnly)
+        #expect(pieces.piece(at: 1)?.holdPush == .thisTrack)
         // ...and it writes back the way it arrived, so opening a document does
         // not rewrite it.
         let again = try JSONEncoder().encode(pieces)

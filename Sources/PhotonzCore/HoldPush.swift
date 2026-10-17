@@ -8,20 +8,21 @@ import Foundation
 // everything after the hold in that clip moves along. The question this file
 // answers is whose time was inserted.
 //
-// - **The picture alone.** The voice on the layer below carries straight on
-//   under the frozen frame, which is exactly right when you froze the frame in
-//   order to talk over it. The cost is that everything after the hold is now
-//   out of step with the picture by the length of the hold, and nothing about
-//   the document says so.
-// - **Everything.** Time goes into the whole document at that moment: a layer
-//   that starts later starts later still, and a layer the hold lands inside
-//   pauses and resumes where it left off. The voice stays with the shot it
-//   belongs to. The cost is a silence over the frozen frame.
+// - **This track.** The clip grows by the hold and the clips after it on its
+//   own track move along with it, so nothing on the track is run over. Every
+//   other track carries straight on under the frozen frame: the voice on the
+//   track below keeps talking, which is exactly right when you froze the frame
+//   to talk over it. The cost is that what comes after the hold on the other
+//   tracks is now out of step with the picture by the length of the hold, and
+//   the timeline says so with a drift mark.
+// - **Every track.** Time goes into every unlocked track at that moment: a
+//   layer that starts later starts later still, and a layer the hold lands
+//   inside pauses and resumes where it left off. The voice stays with the shot
+//   it belongs to. The cost is a silence over the frozen frame.
 //
-// Neither is the right answer, which is why the person says. The default is
-// **everything**, because a voice that has quietly slid five seconds out of
-// step with the picture is a mistake you find at the end of the edit, while a
-// pause over a frozen frame is one you hear immediately and undo with a click.
+// The default is **this track** (the user, 2026-10-17: "by default we'd just
+// freeze THAT track, not every track"), and the freeze popover's Freeze every
+// track box is the other answer.
 //
 // **Nothing new is written down to make this work.** The silence a hold pushes
 // into a voice is an ordinary held piece — a piece that reads no stretch of its
@@ -31,21 +32,21 @@ import Foundation
 /// What a hold pushes along with it.
 public enum HoldPush: String, Codable, Sendable, CaseIterable {
 
-    /// Time goes into the whole document, so sound and picture stay in step.
+    /// Time goes into every unlocked track, so sound and picture stay in step.
     case everything
-    /// Only this clip gets longer, so everything else runs on underneath.
-    case pictureOnly
+    /// Only the clip's own track moves along; every other track runs on
+    /// underneath. Written as `pictureOnly`, which is what a hold that moved
+    /// nothing but its own clip was called before the track came with it.
+    case thisTrack = "pictureOnly"
 
     /// What a hold does when nobody has said.
-    public static let whenNobodySays: HoldPush = .everything
+    public static let whenNobodySays: HoldPush = .thisTrack
 
-    /// What the choice is called where it is offered. It says what you would
-    /// HEAR rather than what the edit is called: "ripple insert" is the name
-    /// of a thing you have to already know.
+    /// What the choice is called where it is offered.
     public var title: String {
         switch self {
-        case .everything: return "Everything waits"
-        case .pictureOnly: return "The rest carries on"
+        case .everything: return "Every track"
+        case .thisTrack: return "This track"
         }
     }
 
@@ -53,20 +54,19 @@ public enum HoldPush: String, Codable, Sendable, CaseIterable {
     public func sentence(holdMS: Int) -> String {
         switch self {
         case .everything:
-            return "The voice, the music and anything else on the timeline pause with the "
-                + "picture, so what was said over a shot stays over that shot."
-        case .pictureOnly:
-            return "Everything else keeps running under the frozen frame, so you can talk over "
-                + "it. What comes after it lands \(ClipSpeed.seconds(holdMS)) out of step with "
-                + "the picture."
+            return "Every track pauses with the picture, so what was said over a shot stays "
+                + "over that shot."
+        case .thisTrack:
+            return "Only this track moves along. The other tracks keep running under the frozen "
+                + "frame and land \(ClipSpeed.seconds(holdMS)) out of step with the picture."
         }
     }
 
     /// The shorter form, for a control that has a sentence under it already.
     public var help: String {
         switch self {
-        case .everything: return "Hold the whole timeline, not just the picture."
-        case .pictureOnly: return "Hold the picture and let everything else run on."
+        case .everything: return "Hold every unlocked track, not just this one."
+        case .thisTrack: return "Hold this track and let the others run on."
         }
     }
 }
@@ -122,9 +122,39 @@ extension PhotonzDocument {
               let start = holdStartMS(id, ofPiece: index) else { return false }
         guard pieces.setHoldPush(ofPiece: index, to: push) else { return false }
         updateLayer(id: id) { $0.setClipPieces(pieces) }
+        // The clip's own track moved with the hold either way, so only the
+        // other tracks take the time in or give it back.
         rippleTime(atMS: start, byMS: push == .everything ? piece.lengthMS : -piece.lengthMS,
-                   exceptLayer: id)
+                   except: ownTrackLayerIDs(ofClip: id), sparingLocked: true)
         return true
+    }
+
+    /// Move what a hold pushes by `delta`, at the hold's start: the clips
+    /// after it on its own track for a hold of this track, every unlocked
+    /// track for one of every track. The clip itself has already grown or
+    /// shrunk; this is everything else.
+    mutating func pushHeldTime(_ id: UUID, _ push: HoldPush, atMS ms: Int, byMS delta: Int) {
+        guard delta != 0 else { return }
+        switch push {
+        case .everything:
+            rippleTime(atMS: ms, byMS: delta, except: clipLayerIDs(id), sparingLocked: true)
+        case .thisTrack:
+            let mine = clipLayerIDs(id)
+            let track = ownTrackLayerIDs(ofClip: id).subtracting(mine)
+            guard !track.isEmpty else { return }
+            rippleTime(atMS: ms, byMS: delta, except: mine, only: track)
+        }
+    }
+
+    /// The clip and everything inside it.
+    func clipLayerIDs(_ id: UUID) -> Set<UUID> {
+        layer(id: id).map { Set($0.selfAndDescendants.map(\.id)) } ?? [id]
+    }
+
+    /// Everything on the clip's own track, the clip included.
+    func ownTrackLayerIDs(ofClip id: UUID) -> Set<UUID> {
+        guard let track = trackID(ofClip: id) else { return clipLayerIDs(id) }
+        return layerIDs(onTracks: [track]).union(clipLayerIDs(id))
     }
 
     /// Where a piece of a clip starts on the DOCUMENT's clock, for a piece
@@ -175,11 +205,20 @@ extension PhotonzDocument {
     @discardableResult
     public mutating func rippleTime(atMS ms: Int, byMS delta: Int, exceptLayer keep: UUID?,
                                     sparingLocked: Bool = false) -> Bool {
+        rippleTime(atMS: ms, byMS: delta, except: keep.map { [$0] } ?? [], sparingLocked: sparingLocked)
+    }
+
+    /// The same, leaving out every layer in `except`, and touching only the
+    /// layers in `only` where it is given (a hold of one track's own track).
+    @discardableResult
+    public mutating func rippleTime(atMS ms: Int, byMS delta: Int, except: Set<UUID>,
+                                    only: Set<UUID>? = nil, sparingLocked: Bool = false) -> Bool {
         guard delta != 0 else { return false }
         var moved = false
         let locked = sparingLocked ? layerIDsOnLockedTracks() : []
         for layer in allLayers {
-            guard layer.id != keep, let time = layer.time else { continue }
+            guard !except.contains(layer.id), only?.contains(layer.id) ?? true,
+                  let time = layer.time else { continue }
             if sparingLocked, layer.isLocked || locked.contains(layer.id) { continue }
             if time.inMS >= ms {
                 let landing = max(ms, time.inMS + delta)
@@ -230,7 +269,7 @@ extension PhotonzDocument {
         var found = false
         forEachLayer { layer in
             guard !found, let pieces = layer.clipPieces else { return }
-            found = (0..<pieces.count).contains { pieces.piece(at: $0)?.holdPush == .pictureOnly }
+            found = (0..<pieces.count).contains { pieces.piece(at: $0)?.holdPush == .thisTrack }
         }
         return found
     }
@@ -241,7 +280,7 @@ extension PhotonzDocument {
         forEachLayer { other in
             guard other.id != id, let theirTime = other.time, let pieces = other.clipPieces else { return }
             for index in 0..<pieces.count {
-                guard let piece = pieces.piece(at: index), piece.holdPush == .pictureOnly,
+                guard let piece = pieces.piece(at: index), piece.holdPush == .thisTrack,
                       let range = pieces.rangeMS(ofPiece: index) else { continue }
                 let start = theirTime.inMS + range.start
                 guard start > time.inMS, start < time.outMS else { continue }
