@@ -9,7 +9,7 @@
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:02:56.512Z",
-  "updated": "2026-10-17T13:02:56.622Z",
+  "updated": "2026-10-17T13:03:06.706Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"I think it would be nice to have timeline rows with sub layers like title/subtitle should be expandable/collapsible similar to layers, and you can tweak those elements independently.\" Follows the user's report the same morning that the subtitle could not be retimed because it is not a sub element of the title page (a-title-page-s-parts-each-have-their-own-labelle, seq 1, already in progress).\n\nFrom code reading: track rows already have a disclosure twist (Sources/Photonz/TimelineTrackRows.swift:225, :293-304) and folded/open heights (:1286-1297, :1425) for a layer's motion lanes and group tracks; the Layers list's disclosure lives in LayersListView.swift. Reuse those; do not invent a second disclosure look.",
@@ -32,6 +32,10 @@
     {
       "t": "2026-10-17T13:02:56.620Z",
       "note": "seq 45 -> 1.1"
+    },
+    {
+      "t": "2026-10-17T13:03:06.705Z",
+      "note": "USER 2026-10-17 follow-ups: \"i want to support sub layers\" and \"not every row would have sub layers\". So: sub-layers are a general timeline concept (any layer that has children shows them nested), not a title special case; a row whose layer has no children shows NO disclosure arrow and keeps today's look and height (no empty indent, no placeholder). The walk must check a plain clip row has no arrow."
     }
   ]
 }
