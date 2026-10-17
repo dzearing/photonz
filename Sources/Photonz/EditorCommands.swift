@@ -1327,10 +1327,12 @@ struct EditorCommands: Commands {
             .disabled(media == nil)
     }
 
-    // Clip: a cut's Roll Edit, beside the transition rows.
+    // Clip: a cut's Roll Edit and Join Through Edit, beside the transition rows.
     @ViewBuilder private var rollEditRow: some View {
         Button("Roll Edit to Playhead") { editor?.rollCutInHand() }
             .disabled(!(editor?.canRollCutInHand ?? false))
+        Button("Join Through Edit") { editor?.joinThroughEditInHand() }
+            .disabled(!(editor?.canJoinThroughEditInHand ?? false))
     }
 
     // Clip: the sound's gain, as its right-click and the Sound section have it.

@@ -3235,7 +3235,8 @@ public enum PlaytestStep: Sendable, Equatable {
     /// a walk says where the click lands and what the menu leads with there.
     case rightClick(on: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                     ticked: [String], unticked: [String], keys: [String: String] = [:],
-                    across: CGFloat? = nil, first: String? = nil, lacks: [String] = [])
+                    across: CGFloat? = nil, first: String? = nil, lacks: [String] = [],
+                    dimmed: [String] = [])
     /// Pick a tile up off the Library shelf by its name and let go of it
     /// somewhere: `to` a point on the picture, or `onto` a row in the layers
     /// list, which is the other place a saved style can be put down. Exactly
@@ -5050,7 +5051,8 @@ public enum PlaytestStep: Sendable, Equatable {
                                keys: try f.optionalWordsByName("keys"),
                                across: try f.optionalNumber("across").map { CGFloat(min(max($0, 0), 1)) },
                                first: try f.optionalString("first"),
-                               lacks: try f.optionalStrings("lacks"))
+                               lacks: try f.optionalStrings("lacks"),
+                               dimmed: try f.optionalStrings("dimmed"))
         case "dragTile":
             let landing: PlaytestColorDropExpectation = if fields["expect"] == nil {
                 .takes

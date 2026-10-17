@@ -1,0 +1,32 @@
+{
+  "out": "/tmp/photonz-playtest/join-through-edit-from-the-menu-bar-walk",
+  "seed": "With a through edit picked, Clip ▸ Join Through Edit joins it back into one piece, as the cut's right-click does. At Next defaults, no flag set.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": ["all"],
+    "front": true
+  },
+  "steps": [
+    { "do": "action", "action": "openSampleRecording" },
+    { "do": "wait", "seconds": 2.0 },
+    { "do": "action", "action": "videoPause" },
+    { "do": "tool", "tool": "select" },
+    { "do": "wait", "seconds": 0.5 },
+    { "do": "action", "action": "videoSeekStart" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "action", "action": "videoStepOneSecond" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "action", "action": "clipSplit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 2 },
+    { "do": "press", "control": "Tutorial Sample join 1" },
+    { "do": "wait", "seconds": 0.4 },
+    { "do": "menus", "stage": "1-clip-menu", "menu": "Clip", "choose": "Clip > Join Through Edit" },
+    { "do": "wait", "seconds": 0.6 },
+    { "do": "expectClip", "clip": "Tutorial Sample", "pieces": 1 },
+    { "do": "describe", "stage": "1-joined-from-the-menu-bar", "note": "Cut at four seconds, the cut picked, Clip ▸ Join Through Edit: one piece again" },
+    { "do": "snapshot", "name": "1-joined-from-the-menu-bar" }
+  ]
+}

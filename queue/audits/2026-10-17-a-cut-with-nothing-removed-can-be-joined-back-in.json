@@ -1,0 +1,28 @@
+{
+  "feature": "Join Through Edit",
+  "epic": "video-cutting",
+  "summary": "A cut that took nothing out (same recording, same speed, the second side starting on the frame the first stopped on) can be joined back into one piece from its right-click or from Clip ▸ Join Through Edit, without Undo throwing away everything done since.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Walk: Scripts/playtest/join-through-edit-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording and put the playhead at 4 s.", "shot": "2026-10-17-join-through-edit-1-cut-at-4s-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press ⌘K (or B for the Blade and click at 4 s) to cut the clip." },
+    { "do": "Right-click the cut and choose Join Through Edit.", "shot": "2026-10-17-join-through-edit-2-cut-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press ⌘Z once: the cut comes back." },
+    { "do": "Put Dip to black on the cut, then Join Through Edit again.", "shot": "2026-10-17-join-through-edit-4-joined-with-a-dip-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Cut at 4 s and 6 s, delete the piece between, and right-click the cut left behind.", "shot": "2026-10-17-join-through-edit-5-jump-cut-menu-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Pick a cut and open the Clip menu: Join Through Edit sits under Roll Edit to Playhead." }
+  ],
+  "evaluate": [
+    "Is Join Through Edit where you would reach for it, at the foot of the cut's right-click under Roll Edit to Playhead?",
+    "When a transition is on the cut, is the short 'Joined · Dip to black taken off' note enough to tell you what went?",
+    "On a jump cut the row is there but dimmed: does that read as 'not here', or would you rather it were hidden?",
+    "After the join you are left holding the joined piece; is that what you expected?"
+  ],
+  "rough": [
+    "No mock draws this row; it follows Premiere's Join Through Edit name and has no key, as Premiere gives it none (UX-PATTERNS §7).",
+    "Delete on a picked through edit does not join it, as it does in Premiere; the task asked not to change Delete without a card, so it is left as it was.",
+    "B in Next picks the Blade tool, as Premiere's razor does, so the task's 'press B at 4 s' is B and a click at 4 s, or ⌘K at the playhead.",
+    "Between two separate clips of one recording the join keeps the earlier clip's name, effects and keys; the later clip's keys are dropped, as Premiere drops the second clip's attributes."
+  ]
+}

@@ -574,6 +574,22 @@ public struct ClipPieces: Hashable, Codable, Sendable {
         return true
     }
 
+    /// Join a through edit: the two pieces either side of a cut that still
+    /// read straight on from each other become the one they were
+    /// (`ThroughEdit.swift`). The earlier piece's marks win, and whatever was
+    /// on the cut goes with it. Refused, and unchanged, on any other cut.
+    @discardableResult
+    public mutating func joinThroughEdit(atCut index: Int) -> Bool {
+        guard let cut = cut(at: index), cut.isContinuous else { return false }
+        let out = cut.outgoing
+        let joined = ClipPiece(sourceInMS: out.sourceInMS, lengthMS: out.lengthMS + cut.incoming.lengthMS,
+                               speedPercent: out.speedPercent, transitionIn: out.transitionIn,
+                               pictureHidden: out.pictureHidden, noiseReduction: out.noiseReduction)
+        pieces.replaceSubrange((index - 1)...index, with: [joined])
+        settleFirstArrival()
+        return true
+    }
+
     /// Put a piece somewhere else in the order. What plays and what an export
     /// would write follow it, and there is nothing else to change, because a
     /// piece's place is never stored.

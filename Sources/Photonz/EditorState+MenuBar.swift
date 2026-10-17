@@ -155,6 +155,17 @@ extension EditorState {
         rollCutToPlayhead(at: place)
     }
 
+    /// Clip ▸ Join Through Edit: whether the cut in hand is a through edit.
+    var canJoinThroughEditInHand: Bool {
+        guard let place = cutInHand?.place else { return false }
+        return canJoinThroughEdit(at: place)
+    }
+
+    func joinThroughEditInHand() {
+        guard let place = cutInHand?.place else { return }
+        joinThroughEdit(at: place)
+    }
+
     /// The transition Apply to Every Cut and Set as Default Transition act on:
     /// the one on the cut in hand, else the tile picked in Transitions.
     var transitionKindInHand: ClipTransitionKind {

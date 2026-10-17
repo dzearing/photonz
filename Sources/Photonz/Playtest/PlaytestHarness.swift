@@ -2813,10 +2813,10 @@ private final class Run {
                                             unticked: unticked, number: number)
 
         case .rightClick(let on, let at, let shot, let choose, let ticked, let unticked, let keys, let across,
-                         let first, let lacks):
+                         let first, let lacks, let dimmed):
             try await openRowMenu(on, at: at, shot: shot, choose: choose, ticked: ticked,
                                   unticked: unticked, keys: keys, across: across, first: first, lacks: lacks,
-                                  number: number)
+                                  dimmed: dimmed, number: number)
 
         case .dragOver(let carry, let at, let hold, let leave):
             try await dragOver(carry, at: at, hold: hold, leave: leave, number: number)
@@ -13119,7 +13119,7 @@ private final class Run {
     private func openRowMenu(_ name: String?, at: PlaytestPoint?, shot: String?, choose: String?,
                              ticked: [String], unticked: [String], keys: [String: String] = [:],
                              across: CGFloat? = nil, first: String? = nil, lacks: [String] = [],
-                             number: Int) async throws {
+                             dimmed: [String] = [], number: Int) async throws {
         let aimed: (name: String, detail: String, point: CGPoint, window: NSWindow)
         if let name {
             var target = try rightClickTarget(name)
@@ -13316,6 +13316,16 @@ private final class Run {
         }
         if let there = lacks.first(where: { reading.rows.contains($0) }) {
             throw Failure(description: "the menu on \"\(target.name)\" should not offer \"\(there)\" here; "
+                + "the rows are: " + listed)
+        }
+        // A row offered but dimmed: there, so a person finds it, and not live
+        // on this thing.
+        if let live = dimmed.first(where: { reading.rows.contains($0) && !reading.dimmed.contains($0) }) {
+            throw Failure(description: "\(target.name) ▸ \(live) should be dimmed here and it is live; "
+                + "dimmed: \(reading.dimmed.isEmpty ? "none" : reading.dimmed.joined(separator: ", "))")
+        }
+        if let missing = dimmed.first(where: { !reading.rows.contains($0) }) {
+            throw Failure(description: "no row called \"\(missing)\" in the menu on \"\(target.name)\"; "
                 + "the rows are: " + listed)
         }
         // A printed key is a promise; the walk holds the row to the one it

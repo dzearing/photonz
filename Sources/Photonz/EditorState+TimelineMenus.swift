@@ -553,6 +553,7 @@ extension EditorState {
             rows.append(.separator)
         }
         rows.append(rollEditMenuRow(at: .join(clip: layerID, index: index)))
+        rows.append(joinThroughEditMenuRow(at: .join(clip: layerID, index: index)))
         return rows
     }
 
@@ -580,6 +581,7 @@ extension EditorState {
         // The cut between two clips looks just like a join on the timeline,
         // so it rolls just like one, as any edit point does in Premiere.
         rows.append(rollEditMenuRow(at: place))
+        rows.append(joinThroughEditMenuRow(at: place))
         return rows
     }
 
@@ -588,6 +590,42 @@ extension EditorState {
         .command("Roll Edit to Playhead", enabled: canRollCut(at: place)) {
             self.rollCutToPlayhead(at: place)
         }
+    }
+
+    /// Join Through Edit, on a join or on the cut between two clips: a cut
+    /// with nothing removed, put back into one piece (`ThroughEdit.swift`).
+    /// No key, as Premiere gives it none (UX-PATTERNS §7).
+    private func joinThroughEditMenuRow(at place: TimelineCutPlace) -> MenuRow {
+        .command("Join Through Edit", enabled: canJoinThroughEdit(at: place)) {
+            self.joinThroughEdit(at: place)
+        }
+    }
+
+    /// Whether the cut at `place` reads straight on across, so joining it
+    /// gives back the one piece it was.
+    func canJoinThroughEdit(at place: TimelineCutPlace) -> Bool {
+        guard documentHasTime, !isCutLocked(place), let document else { return false }
+        return document.canJoinThroughEdit(at: place)
+    }
+
+    /// Join the through edit at `place`, as one undo step. You are left
+    /// holding the piece the cut was in; a transition that was on the cut goes
+    /// with it, and the canvas says so, since nothing else would.
+    func joinThroughEdit(at place: TimelineCutPlace) {
+        endTrimBeforeCutting()
+        guard canJoinThroughEdit(at: place), let document else { return }
+        let removed = document.documentCut(at: place)?.cut.transition?.kind
+        pauseDocument()
+        switchToEditForAnEdit()
+        perform { $0.joinThroughEdit(at: place) }
+        switch place {
+        case let .join(clip, index):
+            selectClipPiece(layerID: clip, index: index - 1)
+        case let .edit(outgoing, _):
+            selectLayer(outgoing)
+        }
+        if let removed { raiseCanvasNotice(.throughEditJoined(removed: removed)) }
+        documentMomentChanged()
     }
 
     /// Whether a cut can roll to the playhead: there is time, neither side is

@@ -213,6 +213,10 @@ public struct CopyConfirmation: Hashable, Sendable {
         /// frames to pay for it (`#rowAlign`). The segment stays where it
         /// was, so it says why.
         case transitionSideRefused(ClipTransitionAlignment)
+        /// A through edit was joined back into one piece and the transition
+        /// on it went with it (`ThroughEdit.swift`). The cut's line going is
+        /// plain to see; the transition going is not, so a word says it.
+        case throughEditJoined(removed: ClipTransitionKind)
         /// ⌘R found no clip to retime: nothing picked and nothing under the
         /// playhead, or a title picked. A key that does nothing reads as a
         /// key that is broken, so it says what it needs.
@@ -420,6 +424,7 @@ public struct CopyConfirmation: Hashable, Sendable {
         case .transitionOnEveryCut(let kind, let outcome):
             return outcome.put.isEmpty ? "No transition added" : kind.title
         case .transitionSideRefused: return "Not moved"
+        case .throughEditJoined: return "Joined"
         case .speedNeedsAClip: return "No clip picked"
         case .boxKeptAsDrawn: return "Kept your box"
         case .gapNotClosed: return "Not closed"
@@ -495,6 +500,8 @@ public struct CopyConfirmation: Hashable, Sendable {
             return "No spare frames at \(CaptionProgress.clock(ms))"
         case .transitionSideRefused:
             return "No spare frames on that side"
+        case .throughEditJoined(let kind):
+            return "\(kind.title) taken off"
         case .speedNeedsAClip:
             return "Pick a clip to set its speed"
         case .boxKeptAsDrawn:
