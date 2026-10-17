@@ -100,26 +100,34 @@ struct TransitionInspector: View {
             VStack(alignment: .leading, spacing: 7) {
                 if let transition = inHand.cut.transition {
                     type(inHand, current: transition.kind)
-                    length(inHand)
-                    CurveRow(current: transition.curve, help: "How it moves from one shot to the other.") {
-                        editorState.setClipTransitionCurve($0)
-                    }
-                    if transition.kind.hasDirection {
-                        direction(transition.direction)
-                    }
-                    motionBlur(transition.motionBlur)
-                    if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
-                        VideoKit.FieldRow(label: "Paid with") {
-                            VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
-                                .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
+                    // The rest a pass after the click that put the transition
+                    // on: built in the same pass as the tile click's timeline,
+                    // canvas and picker work, they held it 70-80 ms
+                    // (`an-editing-session-walk`, 2026-10-16).
+                    PanelRowsArrival(after: 1, remembering: "transition rows") {
+                        VStack(alignment: .leading, spacing: 7) {
+                            length(inHand)
+                            CurveRow(current: transition.curve, help: "How it moves from one shot to the other.") {
+                                editorState.setClipTransitionCurve($0)
+                            }
+                            if transition.kind.hasDirection {
+                                direction(transition.direction)
+                            }
+                            motionBlur(transition.motionBlur)
+                            if transition.kind.needsOverlap, inHand.cut.drawnTransition != nil {
+                                VideoKit.FieldRow(label: "Paid with") {
+                                    VideoKit.ValueFace(value: ClipTransitionCopy.paidWith(inHand.cut))
+                                        .panelReadout(ClipTransitionCopy.paidWith(inHand.cut))
+                                }
+                                .playtestField("Paid with")
+                            }
+                            if transition.kind.needsOverlap {
+                                alignment(current: transition.alignment)
+                            }
+                            if editorState.canHoldClipTransition {
+                                hold(transition)
+                            }
                         }
-                        .playtestField("Paid with")
-                    }
-                    if transition.kind.needsOverlap {
-                        alignment(current: transition.alignment)
-                    }
-                    if editorState.canHoldClipTransition {
-                        hold(transition)
                     }
                 } else {
                     VideoKit.FieldRow(label: "At the cut") {

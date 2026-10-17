@@ -59,9 +59,19 @@ struct EffectsListInspector: View {
                 empty
             } else {
                 ForEach(rows) { row in
-                    EffectRowView(row: row,
-                                  onExtent: { panes[row.index] = $0 },
-                                  onFrame: { onPaneFrame?(row.id, $0) })
+                    // A pass apart, top down, a pass after the section: a
+                    // title's two shadows built in the pass Effects arrived
+                    // held the window 93 ms, and SwiftUI's focus walk over the
+                    // controls they brought held it 150 ms more, right after
+                    // Command Return finished a typed title on a video
+                    // (`an-editing-session-walk`, 2026-10-16). In pieces, each
+                    // pays for its own (`PanelRowsArrival`).
+                    PanelRowsArrival(after: row.index + 1, remembering: "effect \(row.index)",
+                                     waitsForReach: false) {
+                        EffectRowView(row: row,
+                                      onExtent: { panes[row.index] = $0 },
+                                      onFrame: { onPaneFrame?(row.id, $0) })
+                    }
                 }
             }
         }

@@ -511,7 +511,12 @@ private final class Run {
             do {
                 await holdTheFront()
                 PlaytestSchedulingRole.shared.takeTheFrontAppsRole()
-                await putTheMarkersBackUp()
+                // A wait that guards the step before it belongs to that step:
+                // the markers stay down until it has read what it guards.
+                // Put back up at its start, they went up in the middle of the
+                // work it was watching, after half a second, and every pass
+                // after that paid for them.
+                if !step.guardsTheStepBefore { await putTheMarkersBackUp() }
                 do {
                     try await perform(step, number: number)
                 } catch let failure where !(failure is LockedOut) && !(failure is FailedAfterActing)
@@ -1072,6 +1077,14 @@ private final class Run {
             // the way a click's does. It used to carry everything since the
             // last press, so four keys in a row read as the slowest of them
             // and no walk could say which key froze the app.
+            // A key is timed like a click: in a walk that says so, with the
+            // walk's markers down, so the wait after it reads what a person's
+            // press costs (`PlaytestSetup.timedWithoutMarkers`). Up, every
+            // panel section a key brings in built its markers too, and
+            // SwiftUI's focus walk visited each of them: ⌘Return on a typed
+            // title read 70-80 ms passes that were 40-50 ms without them
+            // (2026-10-16).
+            await takeTheMarkersDownForATimedStep()
             MainThreadMeter.shared.install()
             MainThreadMeter.shared.reset()
             ViewBuildMeter.shared.reset()
@@ -18069,9 +18082,17 @@ private final class Run {
     /// scroll areas swallow a synthesised wheel, so if the clip view has not
     /// moved afterwards this scrolls it directly rather than reporting a pass
     /// for a walk that went nowhere. Either way it says which happened.
+    ///
+    /// The scroller is the nearest one with somewhere to go, as a person's
+    /// wheel finds it: a dock section the dock may shorten keeps a scroller
+    /// round its body even while it is whole (`SectionBodyHost`), and a turn
+    /// over one that has nothing to scroll belongs to the dock around it.
     private func scroll(from target: PanelTargetView, by points: Double) throws -> String {
-        guard let scrollView = target.enclosingScrollView else {
+        guard var scrollView = target.enclosingScrollView else {
             throw Failure(description: "\"\(target.name)\" is not inside anything that scrolls")
+        }
+        while !Self.hasRoomToScroll(scrollView), let outer = scrollView.enclosingScrollView {
+            scrollView = outer
         }
         let clip = scrollView.contentView
         let start = clip.bounds.origin.y
@@ -18093,6 +18114,11 @@ private final class Run {
         return abs(delta) > 0.5
             ? String(format: "the wheel did nothing, so it was scrolled directly by %.0fpt", delta)
             : "IT DID NOT MOVE: already at the end, or nothing here scrolls"
+    }
+
+    /// Whether a scroller holds more than it shows, top to bottom.
+    private static func hasRoomToScroll(_ scrollView: NSScrollView) -> Bool {
+        (scrollView.documentView?.frame.height ?? 0) > scrollView.contentView.bounds.height + 0.5
     }
 
     // MARK: - Rendering

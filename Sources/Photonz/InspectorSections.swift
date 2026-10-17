@@ -574,6 +574,11 @@ struct CollapsibleSection<Content: View>: View {
     /// body is drawn whole, because the dock has room for all of it. See
     /// `DockHeightBudget`.
     var bodyCeiling: CGFloat?
+    /// Whether the dock may ever shorten this body (a list section,
+    /// `DockMetrics.scrollingSections`). Such a body always sits in its
+    /// scroller, so a ceiling arriving or going is a height and never a
+    /// rebuild: see `SectionBodyHost`.
+    var mayBeShortened = false
     /// Told how tall the body would like to be, whether or not it got it. This
     /// is what the dock budgets from, and it is measured INSIDE the scroller,
     /// so it is the content's own height rather than the height it was given —
@@ -614,6 +619,7 @@ struct CollapsibleSection<Content: View>: View {
                     onHeaderHeight?($0)
                 }
             SectionFoldWindow(fold: fold, isCollapsed: isCollapsed, bodyCeiling: bodyCeiling,
+                              mayBeShortened: mayBeShortened,
                               onBodyHeight: onBodyHeight, onBodyFrame: onBodyFrame,
                               onSettled: { folded in
                                   if spokenFolded != folded { spokenFolded = folded }
@@ -749,6 +755,7 @@ private struct SectionFoldWindow<Content: View>: View {
     let fold: PanelFoldCell?
     let isCollapsed: Bool
     let bodyCeiling: CGFloat?
+    let mayBeShortened: Bool
     let onBodyHeight: ((CGFloat) -> Void)?
     let onBodyFrame: ((CGRect) -> Void)?
     /// Told when the body has left or rejoined what VoiceOver hears, so the
@@ -804,7 +811,8 @@ private struct SectionFoldWindow<Content: View>: View {
         let folded = isFolded
         VStack(alignment: .leading, spacing: 0) {
             if !folded || isBuilt {
-                SectionBodyHost(bodyCeiling: bodyCeiling, onBodyHeight: onBodyHeight, content: content)
+                SectionBodyHost(bodyCeiling: bodyCeiling, mayBeShortened: mayBeShortened,
+                                onBodyHeight: onBodyHeight, content: content)
                     .onGeometryChange(for: CGRect.self) {
                         $0.frame(in: .named(inspectorDockSpace))
                     } action: { frame in
@@ -853,16 +861,28 @@ private struct SectionFoldWindow<Content: View>: View {
     private static var beatApart: Double { 0.1 }
 }
 
-/// A section's body, inside its own scroller when the dock has had to shorten
-/// it.
+/// A section's body, inside its own scroller when the dock may shorten it.
 ///
-/// Whole and unwrapped the rest of the time, which is every case where the
-/// panel fits: a section that would be drawn at exactly its own height gains
-/// nothing from a scroller and loses a frame of lag every time its content
-/// changes, because the height it is given is measured one pass behind the
-/// content it is given for.
+/// A form the dock never shortens is drawn whole and unwrapped: a scroller
+/// round it would gain nothing.
+///
+/// A list the dock may shorten (`mayBeShortened`) is ALWAYS in its scroller,
+/// shortened or not, and only the scroller's height follows the ceiling. Put in
+/// the scroller only once a ceiling came, the body changed identity at that
+/// moment, and SwiftUI tore down every control in it and built them all again
+/// inside the scroller in the same pass. A title's Effects, two shadows' worth
+/// of sliders, measured itself whole as it arrived, was given a ceiling, and
+/// was built twice: a 190 ms pass and then a 150 ms one, right after Command
+/// Return finished a typed title on a video (`an-editing-session-walk`,
+/// 2026-10-16). The layers list has always kept its scroller for the same
+/// reason, and so does the fade (`ScrollEdgeFade.isShortened`).
+///
+/// Unshortened, the scroller is as tall as what it holds (asked for its own
+/// height, it answers with its content's), so nothing waits a pass for a
+/// measurement and nothing scrolls.
 private struct SectionBodyHost<Content: View>: View {
     let bodyCeiling: CGFloat?
+    let mayBeShortened: Bool
     let onBodyHeight: ((CGFloat) -> Void)?
     @ViewBuilder let content: () -> Content
 
@@ -872,11 +892,13 @@ private struct SectionBodyHost<Content: View>: View {
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: {
                 onBodyHeight?($0)
             }
-        if let bodyCeiling {
+        if mayBeShortened || bodyCeiling != nil {
             ScrollView(.vertical) { measured }
                 .frame(height: bodyCeiling)
+                .fixedSize(horizontal: false, vertical: bodyCeiling == nil)
                 .scrollBounceBehavior(.basedOnSize)
-                .scrollEdgeFade()
+                .scrollDisabled(bodyCeiling == nil)
+                .scrollEdgeFade(isShortened: bodyCeiling != nil)
         } else {
             measured
         }

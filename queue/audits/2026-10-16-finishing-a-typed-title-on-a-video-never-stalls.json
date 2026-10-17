@@ -1,0 +1,28 @@
+{
+  "feature": "Finishing a typed title on a video no longer stalls",
+  "epic": "video-beats-premiere",
+  "summary": "After Command Return on a typed title over a video, the longest freeze dropped from about 200 ms to 55-65 ms. Picking Cross dissolve at a cut dropped from 70-80 ms to 47-53 ms. The 50 ms goal is not met yet; the rest is filed.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open the sample recording and click Edit." },
+    { "do": "Click the join between two pieces of the recording on V1, then click Cross dissolve in the picker.", "shot": "2026-10-16-title-commit-stall-dissolve.png" },
+    { "do": "Press T and click on the picture." },
+    { "do": "Type a title, then press Command Return.", "shot": "2026-10-16-title-commit-stall-title.png" },
+    { "do": "Watch the playhead and the panel as the title lands: the panel fills in top down over about half a second without a visible hitch." },
+    { "do": "Scroll the panel with the pointer over the Effects or Appearance section and check the panel still scrolls." }
+  ],
+  "evaluate": [
+    "Does finishing a title with Command Return now feel instant, or do you still feel a hitch?",
+    "Does the Cross dissolve tile answer the moment you click it?",
+    "When the title's panel fills in, does anything jump or flicker as the Effects panes arrive one after another?",
+    "Does the panel still scroll normally with the pointer over Appearance, Effects or Measurements?"
+  ],
+  "rough": [
+    "Before and after, an-editing-session-walk, three runs each: wait after Command Return 197 / 203 / 189 ms before, 64 / 65 / 55 ms after; Cross dissolve tile 68 / 83 / 73 ms before, 53 / 50 / 47 ms after.",
+    "Still over the 50 ms bar on both steps. The walk's claims are set at 100 ms and 65 ms, so sliding back to the old stall fails it, and the last stretch to 50 ms is its own task (finishing-a-typed-title-and-picking-a-dissolve-l).",
+    "The title's Effects panes now arrive one per frame after the section, like Captions' rows do. The first time a title is made they have no remembered height, so the sections under Effects settle a frame later.",
+    "The transition settings under Type (Length, Curve, Motion blur, Paid with, the overlap control) now land one frame after the click that adds the transition.",
+    "The walk's numbers now come with its markers down through the wait after a key, as they already did for clicks. With them up the same commit read 70-80 ms passes that a person never pays."
+  ]
+}

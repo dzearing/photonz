@@ -1212,6 +1212,20 @@ struct PlaytestScriptTests {
         }
     }
 
+    /// A wait that bounds the longest pass is guarding the step before it, so
+    /// the walk keeps that step's conditions (its markers down) until the
+    /// wait has read what it guards. Every other step, a plain wait
+    /// included, is a step of its own.
+    @Test func onlyAWaitThatBoundsThePassGuardsTheStepBefore() throws {
+        let script = try decode("""
+        { "steps": [ { "do": "wait", "seconds": 1, "longestUnderMS": 50 },
+                     { "do": "wait", "seconds": 1 },
+                     { "do": "wait", "seconds": 1, "onTheClock": true, "busyUnderMS": 100 },
+                     { "do": "key", "key": "k" } ] }
+        """)
+        #expect(script.steps.map(\.guardsTheStepBefore) == [true, false, false, false])
+    }
+
     /// A wait spent on the clock can bound how much of it the main thread
     /// spent busy: an editor with nothing playing should sit quiet, and a
     /// view redrawing itself for ever reads as busy the whole time. Only on

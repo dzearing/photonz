@@ -711,6 +711,7 @@ struct InspectorPanel: View {
                 // window, and what it cut was the caption
                 // under a tile, which is the tile's name.
                 bodyCeiling: Self.boundsItself(id) ? nil : ceilings[id],
+                mayBeShortened: !Self.boundsItself(id) && DockMetrics.scrollingSections.contains(id),
                 onBodyHeight: { height in
                     guard !Self.boundsItself(id) else { return }
                     record(bodyHeight: height, for: id)

@@ -761,6 +761,25 @@ private final class InlineTextView: NSTextView {
         super.keyDown(with: event)
     }
 
+    /// ⌘Return is answered here, before AppKit offers it to the menu bar. No
+    /// menu item carries it, so the menu would only have said no, and asking
+    /// it means filling every menu (Services and Window included) to look:
+    /// about 30 ms of the pass that finished a typed title on a video
+    /// (`an-editing-session-walk`, 2026-10-16). Only while this field holds
+    /// the keyboard, and only for ⌘ alone, so a chord with more keys held
+    /// still reaches the menu first.
+    override func performKeyEquivalent(with event: NSEvent) -> Bool {
+        if event.type == .keyDown, window?.firstResponder === self,
+           event.keyCode == 36 || event.keyCode == 76,
+           event.modifierFlags.intersection([.command, .shift, .option, .control]) == .command {
+            if !isCaptionField || ArrowCaptionEntry.action(for: .return(command: true)) == .commit {
+                onCommit()
+                return true
+            }
+        }
+        return super.performKeyEquivalent(with: event)
+    }
+
     override func didChangeText() {
         super.didChangeText()
         if placeholder != nil { needsDisplay = true }

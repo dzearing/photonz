@@ -31,6 +31,11 @@ struct PanelRowsArrival<Content: View>: View {
     let after: Int
     /// The name their last drawn height is kept under.
     let remembering: String
+    /// Whether they also wait to come near the view and are let go far out
+    /// of it. Off for rows that sit inside a scroller of their own (an
+    /// Effects pane), where the nearest scroller is that list, not the dock:
+    /// they only arrive a pass at a time.
+    var waitsForReach = true
     @ViewBuilder let content: () -> Content
     @State private var isHere = false
     /// Within reach of the view, as last measured. True until measured, so a
@@ -38,7 +43,7 @@ struct PanelRowsArrival<Content: View>: View {
     @State private var isNear = true
 
     var body: some View {
-        let mayWait = PanelBuildsEverything.dockMayWait
+        let mayWait = waitsForReach && PanelBuildsEverything.dockMayWait
         let wanted = isNear || !mayWait
         Group {
             if isHere {
@@ -63,6 +68,7 @@ struct PanelRowsArrival<Content: View>: View {
                                                 bottom: proxy.size.height - visible.minY,
                                                 viewport: visible.height)
         } action: { near in
+            guard waitsForReach else { return }
             isNear = near
             if !near { letGoSoon() }
         }

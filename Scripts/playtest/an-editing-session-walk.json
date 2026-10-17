@@ -195,7 +195,8 @@
     {
       "do": "press",
       "control": "Cross dissolve",
-      "in": "At this cut"
+      "in": "At this cut",
+      "longestUnderMS": 65
     },
     {
       "do": "wait",
@@ -259,7 +260,8 @@
     },
     {
       "do": "wait",
-      "seconds": 1.0
+      "seconds": 1.0,
+      "longestUnderMS": 100
     },
     {
       "do": "tool",

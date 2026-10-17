@@ -4340,6 +4340,15 @@ public enum PlaytestStep: Sendable, Equatable {
         "readClipboard", "render", "reveal", "rightClick", "spaceHandle", "scrollPanel", "selectRow", "setLensAmount", "shortcut", "snapshot", "startGuide", "tool", "toolBar", "toolFlyout", "type", "wait", "waitFor", "wheel", "writeFrame", "measureFade", "writePicture", "writeRecording", "writeSVG", "writeVideo", "windowDrag", "windowClick",
     ].sorted()
 
+    /// True for a wait that bounds the longest pass (`longestUnderMS`): it is
+    /// reading what the step before it set off, so the walk keeps that step's
+    /// conditions until it has (the harness leaves a timed step's markers
+    /// down through it, `PlaytestSetup.timedWithoutMarkers`).
+    public var guardsTheStepBefore: Bool {
+        if case .wait(_, _, let bound, _) = self { return bound != nil }
+        return false
+    }
+
     /// The `do` name this step answers to.
     public var name: String {
         switch self {
