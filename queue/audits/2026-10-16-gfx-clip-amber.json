@@ -1,0 +1,23 @@
+{
+  "feature": "A logo or picture clip on a Gfx track is amber",
+  "epic": "video-titles-graphics",
+  "summary": "A picture or logo you lay over a video now sits on its Gfx track as an amber clip, the colour the title mock draws, so it stands apart from the recording on V1 and from titles.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default.",
+  "switched": {},
+  "try": [
+    { "do": "Open a screen recording and pause two seconds in." },
+    { "do": "File > Import Media (Shift Command I) and bring in a PNG logo." },
+    { "do": "Drag the logo's tile from the Library onto V1 at two seconds and let go." },
+    { "do": "Click an empty spot on the canvas so nothing is picked, and look at the Gfx track.", "shot": "2026-10-16-gfx-clip-amber-1-sc.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Switch the Mac to Light appearance and read the clip's name again.", "shot": "2026-10-16-gfx-clip-amber-light.png", "shotNote": "Drawn by the legibility check, not the live window: the clip on the light panel." }
+  ],
+  "evaluate": [
+    "Does the logo's amber clip read as a different kind of thing from the recording on V1 at a glance?",
+    "Is the dark brown name on the amber easy to read in both light and dark?",
+    "Does the amber feel at home beside the teal-to-violet V1 clip and the dark Title clip, or is it too loud?"
+  ],
+  "rough": [
+    "The mock prints the clip's name in white; white on this amber reads 1.8:1 and fails the legibility check, so the name is a deep brown instead (the user's legibility rule, your call on 2026-09-30, and this task's own checklist).",
+    "Folded tracks (the collapsed strip) also take the amber for a Gfx clip, which the mock does not draw; matches the colour the open track uses."
+  ]
+}

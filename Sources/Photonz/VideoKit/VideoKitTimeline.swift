@@ -173,10 +173,10 @@ extension VideoKit {
 
 extension VideoKit {
     /// What a clip is, which decides its colour (`.clip.v1`, `.v2`, `.comp`,
-    /// `.ov`, `.txt`, `.aud`). Colour says which track a clip came from and
+    /// `.ov`, `.gfx`, `.txt`, `.aud`). Colour says which track a clip came from and
     /// nothing else; retiming, keys and trimming are drawn on top.
     enum ClipKind: CaseIterable {
-        case video, videoAlternate, component, overlay, text, audio, caption
+        case video, videoAlternate, component, overlay, graphic, text, audio, caption
 
         var fill: AnyShapeStyle {
             switch self {
@@ -184,6 +184,8 @@ extension VideoKit {
             case .videoAlternate: AnyShapeStyle(Self.diagonal(0x7C4DFF, 0xFF5D8F))
             case .component: AnyShapeStyle(Self.diagonal(0x9A5CFF, 0xC56CFF))
             case .overlay: AnyShapeStyle(Self.diagonal(0x1B7A8C, 0x12C2E9))
+            // `.clip.gfx` in the title mock: a picture or logo laid in time.
+            case .graphic: AnyShapeStyle(Self.diagonal(0xFEBC2E, 0xFF9D5C))
             case .text: AnyShapeStyle(rgb(0x2A2F45))
             // `.clip.cue`: the mock's lavender at a fifth, over the lane.
             case .caption: AnyShapeStyle(rgb(0xB98CFF).opacity(0.2))
@@ -206,6 +208,9 @@ extension VideoKit {
             switch self {
             case .audio: rgb(0x88FFEE)
             case .caption: rgb(0xB98CFF)
+            // The mock's white reads under 2:1 on its amber, so a Gfx clip's
+            // name is a deep brown of the same hue.
+            case .graphic: rgb(0x3A2300)
             default: .white
             }
         }

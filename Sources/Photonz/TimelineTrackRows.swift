@@ -652,7 +652,8 @@ struct TimelineTrackRow: View {
     static func clipKind(_ kind: TimelineTrackKind) -> VideoKit.ClipKind {
         switch kind {
         case .video: .video
-        case .overlay, .graphic: .overlay
+        case .overlay: .overlay
+        case .graphic: .graphic
         case .audio: .audio
         case .text: .text
         case .component: .component

@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-and-gfx-track-icons-walk",
-  "seed": "A Title track and a Gfx track wear the icons video-title-wt.html draws beside V1: the text mark on Title, the sparkle on Gfx, the picture on V1. At Next defaults with no flag set: a PNG logo comes in by File > Import Media and is let go over V1 two seconds in, the Keynote Clean title is double clicked onto the playhead from the Library's Comps shelf, nothing is left picked, and the timeline is photographed with Title, Gfx and V1 together.",
+  "seed": "A Title track and a Gfx track wear the icons video-title-wt.html draws beside V1: the text mark on Title, the sparkle on Gfx, the picture on V1, and the logo's clip on Gfx is the mock's amber with a dark name, apart from the teal and violet of V1. At Next defaults with no flag set: a PNG logo comes in by File > Import Media and is let go over V1 two seconds in, the Keynote Clean title is double clicked onto the playhead from the Library's Comps shelf, nothing is left picked, and the timeline is photographed with Title, Gfx and V1 together.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -135,7 +135,7 @@
     {
       "do": "describe",
       "stage": "1-title-gfx-v1",
-      "note": "THE TEST: a logo and a title page laid over the recording, nothing picked. The Title track's header wears the text mark, the Gfx track's the sparkle and V1's the picture, as video-title-wt.html draws them, so the kind of each track reads at a glance"
+      "note": "THE TEST: a logo and a title page laid over the recording, nothing picked. The Title track's header wears the text mark, the Gfx track's the sparkle and V1's the picture, as video-title-wt.html draws them, so the kind of each track reads at a glance. The Acme Logo clip on Gfx is amber (#febc2e to #ff9d5c, .clip.gfx) with its name in dark ink, not the teal of an overlay"
     },
     {
       "do": "snapshot",
