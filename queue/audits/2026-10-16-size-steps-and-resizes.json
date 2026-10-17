@@ -1,0 +1,27 @@
+{
+  "feature": "Size measurement: ] stays on real objects, and a corner drag measures again",
+  "epic": "measure-redline",
+  "summary": "Pressing ] from a measured pill no longer jumps to a box that runs from the pill into the small print under it. A picked Size measurement now shows its handles on the area it measured, so dragging a corner moves that corner where your hand lets go and the calipers read the new size.",
+  "setup": "Photonz Dev, release Next, no switch changed from its default. Open your download page capture, or Tests/PhotonzRenderTests/Fixtures/download-pill-2x.png. Walk: Scripts/playtest/size-steps-and-resizes-walk.json.",
+  "switched": {},
+  "try": [
+    { "do": "Press I, pick Size, hover the left end of the purple pill and press ].", "shot": "2026-10-16-size-steps-and-resizes-1-step-up-from-the-pill.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Click: it measures the pill, 274 by 62, not 279 by 90." },
+    { "do": "Press V and click the Size 274 × 62 row in Layers.", "shot": "2026-10-16-size-steps-and-resizes-3-handles-on-the-measured-box.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Drag the bottom right handle down and right.", "shot": "2026-10-16-size-steps-and-resizes-5-measured-again.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." },
+    { "do": "Press Cmd-Z: the measurement goes back to 274 by 62." },
+    { "do": "Option-drag the box down: the copy lands where you let go.", "shot": "2026-10-16-size-steps-and-resizes-7-a-copy-dragged-off.png", "shotNote": "Photographed with the window behind another app, the way a walk leaves it. Blue buttons and picked controls show their background look here; with the window in front they take the accent colour." }
+  ],
+  "evaluate": [
+    "Is ] doing nothing on the pill right, or would you want it to reach the pill and the line under it together?",
+    "Do handles on the measured area, with the calipers outside them, read as the measurement you picked?",
+    "After a corner drag, is it clear the numbers are now the box you drew rather than anything in the picture?",
+    "Should a corner drag snap to the picture's edges the way a fresh Size click does?"
+  ],
+  "rough": [
+    "No mock covers stepping or resizing a Size measurement; this changes what is measured, not how anything looks.",
+    "From the pill, ] now holds on the pill: nothing bigger in this crop is one object. It does not offer the pill and its small print together as a stack.",
+    "The turn knob and its arrows sit over the picked measurement, as they do for every picked group.",
+    "An Option-drag copy is named Size 274 × 62 copy, and that name stops following its numbers when the copy is resized (a-copied-size-measurement-keeps-saying-its-own-s)."
+  ]
+}

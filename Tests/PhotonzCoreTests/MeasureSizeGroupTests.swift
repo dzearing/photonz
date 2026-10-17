@@ -307,5 +307,65 @@ struct MeasureSizeGroupTests {
         #expect(!doc.contentsSelection(layerIDs: [group.id]).isPresent)
         #expect(!doc.placementSelection(layerIDs: [box.id]).isPresent)
     }
-}
 
+    // MARK: - Resizing
+
+    /// Where a caliper's feet are, in the space its group sits in.
+    private func feet(of caliper: Layer, in group: Layer) throws -> (CGPoint, CGPoint) {
+        let m = try #require(caliper.measure)
+        let o = CGPoint(x: group.frame.minX + caliper.frame.minX, y: group.frame.minY + caliper.frame.minY)
+        return (CGPoint(x: o.x + m.start.x, y: o.y + m.start.y), CGPoint(x: o.x + m.end.x, y: o.y + m.end.y))
+    }
+
+    /// The box a person sees and drags by its handles is the measured area,
+    /// not the area the calipers and their chips spread over.
+    @Test func thePickedGroupsHandlesSitOnTheMeasuredArea() {
+        let rect = CGRect(x: 100, y: 200, width: 320, height: 48)
+        let group = sizeGroup(round: rect)
+        #expect(group.localBounds != rect)
+        #expect(group.withoutSlack(group.localBounds) == rect)
+        #expect(group.withSlack(rect) == group.localBounds)
+        // Wherever the canvas has it.
+        let moved = group.localBounds.offsetBy(dx: 40, dy: -12)
+        #expect(group.withoutSlack(moved) == rect.offsetBy(dx: 40, dy: -12))
+    }
+
+    /// Dragging a corner measures again: the box takes the new size, the
+    /// calipers' feet stay on its edges at the distance they stood off it, and
+    /// the name says the new numbers.
+    @Test func resizingTheGroupMeasuresTheNewBox() throws {
+        let rect = CGRect(x: 100, y: 200, width: 320, height: 48)
+        var doc = PhotonzDocument(canvasSize: CGSize(width: 800, height: 600))
+        let group = sizeGroup(round: rect)
+        doc.addLayer(group)
+        let before = doc
+        let wanted = CGRect(x: 100, y: 200, width: 400, height: 100)
+        let resized = group.resized(to: group.withSlack(wanted), chosenByHand: true)
+        let box = try #require(MeasureSizeGroup.box(of: resized))
+        #expect(box.frame.offsetBy(dx: resized.frame.minX, dy: resized.frame.minY) == wanted)
+        #expect(resized.withoutSlack(resized.localBounds) == wanted)
+        let calipers = MeasureSizeGroup.calipers(of: resized)
+        let oldCalipers = MeasureSizeGroup.calipers(of: group)
+        #expect(calipers.count == 2)
+        let (w0, w1) = try feet(of: calipers[0], in: resized)
+        #expect(w0 == CGPoint(x: 100, y: 300) && w1 == CGPoint(x: 500, y: 300))
+        let (h0, h1) = try feet(of: calipers[1], in: resized)
+        #expect(h0 == CGPoint(x: 500, y: 200) && h1 == CGPoint(x: 500, y: 300))
+        // The heads stand off the box as far as they did.
+        #expect(calipers.map { $0.measure?.headOffset } == oldCalipers.map { $0.measure?.headOffset })
+        doc.updateLayer(id: group.id) { $0 = resized }
+        doc.keepMeasureNamesInStep(since: before)
+        #expect(doc.layer(id: group.id)?.name == "Size 400 × 100")
+    }
+
+    /// Dragging the far corner past the near one flips the box rather than
+    /// handing back a box of negative size.
+    @Test func aResizePastTheOppositeCornerStillMeasuresABox() throws {
+        let rect = CGRect(x: 100, y: 200, width: 320, height: 48)
+        let group = sizeGroup(round: rect)
+        let resized = group.resized(to: group.withSlack(CGRect(x: 60, y: 180, width: 20, height: 10)))
+        let box = try #require(MeasureSizeGroup.box(of: resized))
+        #expect(box.frame.width == 20 && box.frame.height == 10)
+        #expect(MeasureSizeGroup.numbers(of: resized, pixelScale: 1) == "20 × 10")
+    }
+}

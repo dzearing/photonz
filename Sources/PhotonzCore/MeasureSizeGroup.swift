@@ -68,6 +68,77 @@ public enum MeasureSizeGroup {
         return group
     }
 
+    // MARK: Resizing
+
+    /// How far the measured area sits inside the group's whole box on each
+    /// side (left, top, right, bottom), or nil for anything that is not a
+    /// Size measurement still holding its box. The whole box takes in the
+    /// calipers and their chips, which stand off the area they measure, so the
+    /// box a person sees picked and drags by its corners is the area: what the
+    /// measurement is OF. Read the same wherever the group sits.
+    public static func boxInsets(of group: Layer) -> (left: CGFloat, top: CGFloat,
+                                                      right: CGFloat, bottom: CGFloat)? {
+        guard let box = box(of: group) else { return nil }
+        let whole = group.localBounds.standardized
+        let area = box.frame.standardized.offsetBy(dx: group.frame.minX, dy: group.frame.minY)
+        return (area.minX - whole.minX, area.minY - whole.minY,
+                whole.maxX - area.maxX, whole.maxY - area.maxY)
+    }
+
+    /// The group measuring `area` instead, in the space the group sits in:
+    /// the box takes the new size, each caliper's feet stay on the box's edges
+    /// (a foot somebody dragged off an edge keeps its distance from it), the
+    /// heads stand off as far as they did, and the numbers read the new box.
+    /// What a corner handle does to a picked Size measurement: it measures
+    /// again rather than stretching the calipers apart.
+    public static func resized(_ group: Layer, toBox area: CGRect) -> Layer {
+        guard group.isSizeMeasurement, let old = box(of: group),
+              old.frame.width > 0, old.frame.height > 0 else { return group }
+        let origin = group.frame.origin
+        let was = old.frame.standardized.offsetBy(dx: origin.x, dy: origin.y)
+        let now = area.standardized
+        guard now.width > 0, now.height > 0 else { return group }
+        func axis(_ v: CGFloat, _ lo: CGFloat, _ hi: CGFloat, _ newLo: CGFloat, _ newHi: CGFloat) -> CGFloat {
+            if v < lo { return newLo - (lo - v) }
+            if v > hi { return newHi + (v - hi) }
+            return newLo + (v - lo) / (hi - lo) * (newHi - newLo)
+        }
+        func map(_ p: CGPoint) -> CGPoint {
+            CGPoint(x: axis(p.x, was.minX, was.maxX, now.minX, now.maxX),
+                    y: axis(p.y, was.minY, was.maxY, now.minY, now.maxY))
+        }
+        // Every part in the group's own parent space, then grouped again round
+        // the new union so nothing shifts for being regrouped.
+        let parts = group.children.map { child -> Layer in
+            var part = child
+            part.frame = child.frame.offsetBy(dx: origin.x, dy: origin.y)
+            if part.id == old.id, var shape = part.annotation {
+                shape.start = .zero
+                shape.end = CGPoint(x: now.width, y: now.height)
+                part.content = .annotation(shape)
+                part.frame = now
+            } else if let m = part.measure {
+                let at = part.frame.origin
+                let start = CGPoint(x: at.x + m.start.x, y: at.y + m.start.y)
+                let end = CGPoint(x: at.x + m.end.x, y: at.y + m.end.y)
+                part = MeasureBuilder.updating(part, start: map(start), end: map(end))
+            }
+            return part
+        }
+        guard let first = parts.first else { return group }
+        let union = parts.dropFirst().reduce(first.localBounds) { $0.union($1.localBounds) }
+        var regrouped = group
+        guard case .group(var content) = group.content else { return group }
+        content.children = parts.map { part in
+            var part = part
+            part.frame = part.frame.offsetBy(dx: -union.minX, dy: -union.minY)
+            return part
+        }
+        regrouped.content = .group(content)
+        regrouped.frame.origin = union.origin
+        return regrouped
+    }
+
     /// The two calipers inside a size group, width first. Empty for anything
     /// that is not one.
     public static func calipers(of group: Layer) -> [Layer] {

@@ -1151,8 +1151,14 @@ extension CanvasNSView {
         // layer about, which is the stored one: a text box's slack sits on its
         // far edges, so its centre is half of that past the middle of the
         // words the outline is drawn round.
-        let slack = selectedLayer.boxSlack
-        let center = CGPoint(x: frame.midX + slack.width / 2, y: frame.midY + slack.height / 2)
+        // A Size measurement's box is the area it measures, inside the box
+        // its calipers spread over (`MeasureSizeGroup`), so the stored box is
+        // asked for rather than worked out from the slack.
+        let stored = selectedLayer.withSlack(frame)
+        let center = CGPoint(x: stored.midX, y: stored.midY)
+        // Where the box the chrome is drawn round sits when nothing is in
+        // flight, so a move in flight is the difference from it.
+        let seen = selectedLayer.withoutSlack(selectedLayer.frame)
         // ...and then whatever the containers above it have been turned by, so
         // a piece picked inside a card on a slant is outlined where it is.
         let docToHandle = (activeTransform.isIdentity
@@ -1177,8 +1183,7 @@ extension CanvasNSView {
                 shown.updateLayer(id: drag.layerID) { $0.transform = drag.transform }
             }
             guard shown.isSeenInSpace else { return nil }
-            let delta = CGPoint(x: frame.minX - selectedLayer.frame.minX,
-                                y: frame.minY - selectedLayer.frame.minY)
+            let delta = CGPoint(x: frame.minX - seen.minX, y: frame.minY - seen.minY)
             if delta != .zero {
                 shown.updateLayer(id: selectedLayer.id) {
                     $0.frame = $0.frame.offsetBy(dx: delta.x, dy: delta.y)
@@ -1200,9 +1205,8 @@ extension CanvasNSView {
         } else {
             var box = inkBox(of: selectedLayer)
             // The frame above may be an in-flight move; carry the ink with it.
-            if frame.origin != selectedLayer.frame.origin {
-                box = box.offsetBy(dx: frame.minX - selectedLayer.frame.minX,
-                                   dy: frame.minY - selectedLayer.frame.minY)
+            if frame.origin != seen.origin {
+                box = box.offsetBy(dx: frame.minX - seen.minX, dy: frame.minY - seen.minY)
             }
             // In Next the ring hugs the box with the mocks' 2 point softening,
             // so it never reads as a rounded shape's own border

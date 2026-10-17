@@ -220,7 +220,49 @@ public enum ElementBounds {
             }
             found.rungs = rungs
         }
+        if readsShapes {
+            // Out past the start, a rung whose edge runs through a line of
+            // print is a pairing of one thing's edge with a line through
+            // another's words, not an object: the pill's top with the middle
+            // of the small print under it. `]` never steps there.
+            let kept = found.rungs.enumerated().filter { index, rung in
+                index <= found.start || !cutsALine(rung, in: luma, textGap: textGap,
+                                                   minElement: minElement, maxRadius: maxRadius)
+            }
+            found = Ladder(rungs: kept.map(\.element), start: found.start)
+        }
         return Ladder(rungs: Array(found.rungs.prefix(found.start + limit)), start: found.start)
+    }
+
+    /// Whether a line of text crosses one of `rung`'s edges: read just inside
+    /// each side, a line that reaches into the rung and out past it.
+    private static func cutsALine(_ rung: CGRect, in luma: LumaField, textGap: Double,
+                                  minElement: Double, maxRadius: Double) -> Bool {
+        let slack = CGFloat(probeSlack)
+        let inside = rung.insetBy(dx: 2, dy: 2)
+        guard inside.width > 0, inside.height > 0 else { return false }
+        var probes: [CGPoint] = []
+        for f in [0.1, 0.3, 0.5, 0.7, 0.9] {
+            let x = inside.minX + CGFloat(f) * inside.width
+            probes.append(CGPoint(x: x, y: inside.minY))
+            probes.append(CGPoint(x: x, y: inside.maxY))
+        }
+        for f in [0.25, 0.5, 0.75] {
+            let y = inside.minY + CGFloat(f) * inside.height
+            probes.append(CGPoint(x: inside.minX, y: y))
+            probes.append(CGPoint(x: inside.maxX, y: y))
+        }
+        var seen: [CGRect] = []
+        for probe in probes {
+            guard let line = TextLineBounds.detect(at: probe, in: luma, gap: textGap,
+                                                   minElement: minElement, maxRadius: maxRadius),
+                  !seen.contains(line) else { continue }
+            seen.append(line)
+            let shared = line.intersection(rung)
+            guard !shared.isNull, shared.width > slack, shared.height > slack else { continue }
+            if !rung.insetBy(dx: -slack, dy: -slack).contains(line) { return true }
+        }
+        return false
     }
 
     private static func baseLadder(at point: CGPoint, shape: ShapeBounds.Reading?, text: CGRect?,

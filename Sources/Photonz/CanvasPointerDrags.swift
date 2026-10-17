@@ -8,6 +8,15 @@ import SwiftUI
 // out of CanvasView.swift; `CanvasNSView`'s stored properties still live there.
 
 extension CanvasNSView {
+
+    /// A one-layer drag travels the box a person sees; a copy lands by the
+    /// box the layer STORES. The two share a corner for everything but a Size
+    /// measurement, whose seen box is the area it measures, inside its
+    /// calipers (`MeasureSizeGroup`).
+    func storedOrigin(of id: UUID, seen origin: CGPoint) -> CGPoint {
+        guard let layer = document?.canvasLayer(id: id) else { return origin }
+        return layer.withSlack(CGRect(origin: origin, size: .zero)).origin
+    }
     // MARK: Pointer: layer move or marquee
 
     override var acceptsFirstResponder: Bool { true }
@@ -1125,7 +1134,7 @@ extension CanvasNSView {
                 snapHold.caught(x: drag.snapped.guideX ?? drag.snapped.gridX,
                                 y: drag.snapped.guideY ?? drag.snapped.gridY)
                 if drag.copying {
-                    onCopyDragPreview([drag.layerID: drag.snapped.origin])
+                    onCopyDragPreview([drag.layerID: storedOrigin(of: drag.layerID, seen: drag.snapped.origin)])
                 } else {
                     onFramePreview(drag.layerID, CGRect(origin: drag.snapped.origin, size: drag.size))
                 }
@@ -1523,7 +1532,7 @@ extension CanvasNSView {
                     // The copy is what ends up selected, and it is the same
                     // size in the same place, so the handles stay put.
                     selectedLayerFrame = frame
-                    onCopyDragCommit([drag.layerID: drag.snapped.origin])
+                    onCopyDragCommit([drag.layerID: storedOrigin(of: drag.layerID, seen: drag.snapped.origin)])
                 } else {
                     // ⌥ and a click that never travelled: a plain click, and
                     // nothing was ever made.

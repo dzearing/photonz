@@ -10028,7 +10028,9 @@ private final class Run {
         guard let measure = layer.measure else {
             throw Failure(description: "that layer is not a measurement")
         }
-        let feet = MeasureSnapping.documentMeasure(layer)
+        // On the canvas, where a walk's clicks are written: a caliper inside a
+        // Size measurement's group keeps its frame against the group.
+        let feet = MeasureSnapping.documentMeasure(document.canvasLayer(id: layer.id) ?? layer)
         let actualStart = feet?.start ?? measure.start
         let actualEnd = feet?.end ?? measure.end
         let label = measure.label(pixelScale: document.pixelScale)

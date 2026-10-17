@@ -128,6 +128,28 @@ struct ObjectDetectionFixtureTests {
         #expect(Self.pillRect.contains(label) && label.width < 400 && label.height < 60, "\(found)")
     }
 
+    /// The line of small print under the pill, "v0.16.0 · Apple silicon ·
+    /// macOS 26+ · Free & open source", as the line reader reads it.
+    static let smallPrint = CGRect(x: 414, y: 429, width: 704, height: 25)
+
+    /// `]` from the pill went to a box from the pill's top down into the
+    /// small print (487, 270, 558 x 180): a pairing of the pill's top with a
+    /// line through the words, which is no object at all. Every rung above
+    /// the start holds a line of print whole or leaves it alone.
+    @Test func steppingOutFromThePillNeverCutsThroughTheSmallPrint() {
+        let a = Self.pill
+        for p in [CGPoint(x: 520, y: 330), CGPoint(x: 1000, y: 300), CGPoint(x: 700, y: 335)] {
+            let found = ElementBounds.ladder(at: p, in: a.edges, luma: a.luma, minElement: 20,
+                                             textGap: 16, readsShapes: true)
+            expectEdges(found.rung(0), Self.pillRect, within: 2, "the pill from \(p): \(found)")
+            for rung in found.rungs.dropFirst(found.start + 1) {
+                let holds = rung.insetBy(dx: -4, dy: -4).contains(Self.smallPrint)
+                let clear = !rung.intersects(Self.smallPrint)
+                #expect(holds || clear, "from \(p) the step up to \(rung) cuts the small print")
+            }
+        }
+    }
+
     @Test func aRoughBoxRoundTheUsersPillSnapsToThePill() {
         // The box the user drew, 300 x 86 points, round the pill and over the
         // top of the line of small print under it.
@@ -163,3 +185,4 @@ struct ObjectDetectionFixtureTests {
         }
     }
 }
+

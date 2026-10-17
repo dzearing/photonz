@@ -158,6 +158,14 @@ extension Layer {
     /// reads four points more than the words are, and it lines up by an edge
     /// nobody can see.
     public func withoutSlack(_ box: CGRect) -> CGRect {
+        // A Size measurement is seen, picked and resized by the area it
+        // measures; its calipers stand off outside that (`MeasureSizeGroup`).
+        if let inset = MeasureSizeGroup.boxInsets(of: self) {
+            let standard = box.standardized
+            return CGRect(x: standard.minX + inset.left, y: standard.minY + inset.top,
+                          width: max(0, standard.width - inset.left - inset.right),
+                          height: max(0, standard.height - inset.top - inset.bottom))
+        }
         let slack = boxSlack
         guard slack != .zero else { return box }
         let standard = box.standardized
@@ -170,6 +178,12 @@ extension Layer {
     /// STORE. What the canvas and the fields hand back has to gain the slack
     /// again or the words would lose the room they are drawn in and re-wrap.
     public func withSlack(_ box: CGRect) -> CGRect {
+        if let inset = MeasureSizeGroup.boxInsets(of: self) {
+            let standard = box.standardized
+            return CGRect(x: standard.minX - inset.left, y: standard.minY - inset.top,
+                          width: standard.width + inset.left + inset.right,
+                          height: standard.height + inset.top + inset.bottom)
+        }
         let slack = boxSlack
         guard slack != .zero else { return box }
         let standard = box.standardized

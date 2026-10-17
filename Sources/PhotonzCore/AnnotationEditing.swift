@@ -269,6 +269,11 @@ extension Layer {
             // A Captions layer's box is where its words sit and how wide they
             // wrap: every cue fills it, and the type keeps its size.
             if group.captionLook != nil { return reboxingCaptions(to: frame) }
+            // A Size measurement measures the box it is given again, its
+            // calipers keeping to the box's edges (`MeasureSizeGroup`).
+            if group.measuresSize == true, MeasureSizeGroup.box(of: self) != nil {
+                return MeasureSizeGroup.resized(self, toBox: withoutSlack(frame))
+            }
             // A copy is told how big it is and remembers being told, because
             // scaling what is inside one is work the next sync throws away.
             if group.instanceOf != nil, !placedByContainer {
