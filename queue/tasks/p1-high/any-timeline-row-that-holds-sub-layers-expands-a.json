@@ -5,11 +5,11 @@
   "epic": "video-cutting",
   "priority": "p1-high",
   "seq": 1.1,
-  "status": "in_progress",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:02:56.512Z",
-  "updated": "2026-10-17T22:10:54.034Z",
+  "updated": "2026-10-17T22:11:33.288Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"I think it would be nice to have timeline rows with sub layers like title/subtitle should be expandable/collapsible similar to layers, and you can tweak those elements independently.\" Follows the user's report the same morning that the subtitle could not be retimed because it is not a sub element of the title page (a-title-page-s-parts-each-have-their-own-labelle, seq 1, already in progress).\n\nFrom code reading: track rows already have a disclosure twist (Sources/Photonz/TimelineTrackRows.swift:225, :293-304) and folded/open heights (:1286-1297, :1425) for a layer's motion lanes and group tracks; the Layers list's disclosure lives in LayersListView.swift. Reuse those; do not invent a second disclosure look.",
@@ -64,11 +64,16 @@
     {
       "t": "2026-10-17T22:10:54.033Z",
       "note": "Left rough (not filed): a part's moving-value lane labels sit at the left margin, not indented (cosmetic, in the audit's evaluate); Escape does not call off a part bar drag (undo covers it, same as title parts); a part with its own stretch taken out of its group by Ungroup keeps a stretch nothing reads (it shows the whole time, nothing lost); component copies' parts list but do not drag (by design, sync would undo it). Not verified at defaults: logos (an SVG/PNG lands as one picture, no layers to open) and Size measurement groups on a video (not tried). Arrow keys: per UX-PATTERNS §7 Right/Left stay frame step/nudge."
+    },
+    {
+      "t": "2026-10-17T22:11:33.285Z",
+      "note": "Shipped in 5c55b6e8: any timeline row made of parts (title pages, name cards, groups, groups of groups, component copies) opens by an arrow into indented rows, one Layers-list step per level, each with its own arrow (Option = every level), name, kind icon and bar; a part's bar retimes it alone (new core LayerPartTime: a stretch on its parent's clock that travels with it, keys travel on a slide; 23 TDD tests). Closed rows mark their parts' timings. Open state is shared with the Layers list and remembered per file in settings, not the document. Verified: Scripts/test.sh 13555 green; timeline-sub-layer-rows-walk green at Next defaults (no arrow on a plain clip, title opened with zoom unchanged, Subtitle retimed, a grandchild two levels deep slid +1s alone, Option opens/closes every level), title-part-rows-retime-walk and 37 other related walks green. Right/Left stay frame step per UX-PATTERNS §7. Not verified: Size measurement groups on a video; logos land as one picture with no layers. Audit queue/audits/2026-10-17-timeline-sub-layer-rows.json."
     }
   ],
   "started": "2026-10-17T21:04:44.823Z",
   "walks": [
     "timeline-sub-layer-rows-walk",
     "title-part-rows-retime-walk"
-  ]
+  ],
+  "completed": "2026-10-17T22:11:33.287Z"
 }
