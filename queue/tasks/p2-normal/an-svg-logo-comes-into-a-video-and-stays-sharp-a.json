@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 255,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T19:15:07.939Z",
-  "updated": "2026-10-16T19:16:05.089Z",
+  "updated": "2026-10-16T23:18:17.445Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Follow-up from a-logo-or-picture-can-be-brought-into-a-video-fo, which shipped the refusal (MediaFiles.vectorRefusal, CanvasFileDrop.vector, LibraryImport.notYet). Finding: macOS reads SVG already: NSImage(contentsOf:) on an .svg returns an _NSSVGImageRep that draws as a vector at any size; CGImageSource cannot (count 0). The gap is the model: pixels live in ImageStore as one CGImage per ImageRef, so sharp-at-any-size needs ImageStore to keep the SVG data and rasterize per render scale (DocumentRenderer asks at the composite scale), plus PackageIO writing the .svg bytes. Fixture: Scripts/playtest/fixtures/logo/Acme Logo.svg. Mock: docs/design/mocks/pages/video-title-wt.html steps 6-8.",
@@ -28,6 +28,36 @@
     {
       "t": "2026-10-16T19:16:05.088Z",
       "note": "also: the mock's art tiles caption as the name over its kind (Sparkle / svg); a picture tile today says the file name with its extension over its pixel size (Acme Logo.png / 480 x 192), the way recording tiles already say Tutorial Sample.mp4 / 0:08. Settle the art tile's two lines with the SVG tiles."
+    },
+    {
+      "t": "2026-10-16T22:34:29.803Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T23:17:15.347Z",
+      "note": "owns these walks: library-svg-logo-walk, library-picture-import-walk"
+    },
+    {
+      "t": "2026-10-16T23:17:28.951Z",
+      "note": "before building: a Premiere/Photoshop user expects an SVG to behave like any picture and stay crisp (Photoshop places SVG as a smart object). Gaps found: the store keeps one bitmap per picture, the render module may not import AppKit (macOS only draws SVG through NSImage), .svgz is not readable by macOS, and a picture FILE from the Finder on the timeline had no ghost and landed mid-canvas (PNG too). Decided: keep the SVG bytes beside a stand-in bitmap, have the app hand the renderer an NSImage reader at launch, draw at the frame's output pixels in quarter-octave steps, write images/<id>.svg in packages, drop svgz, and land Finder picture files on a Gfx track + the shelf like Premiere."
+    },
+    {
+      "t": "2026-10-16T23:17:29.015Z",
+      "note": "after building: walked library-svg-logo-walk at Next defaults (green, 6 real captures, screen unlocked). Opened every audit picture: shelf tile reads Acme Logo / svg with the whole logo centred (matched the mock's .th.art after fitting art instead of cropping), timeline tile lands on Gfx 0:02-0:07, Finder SVG lands on the canvas and on the timeline (ghost says Picture · New Gfx · 0:01), and the 2x render plus the 4x edge sheet show the SVG hard and the PNG soft. Measured bar in VectorArtTests: edge ramp 2px (native 0) vs 12px for the bitmap."
+    },
+    {
+      "t": "2026-10-16T23:17:29.077Z",
+      "note": "left rough (none clear the follow-up bar, kept here): .svgz not taken (macOS cannot draw it); an SVG on a collage slot lands as its own layer; opening an SVG with no document open still does nothing; the shelf thumbnail of an SVG is drawn from its own-size picture, so a tiny SVG can read slightly soft in the tile."
+    },
+    {
+      "t": "2026-10-16T23:18:17.443Z",
+      "note": "SVGs come into a video from Import Media, a Library drop, the canvas and the timeline, and are drawn at the frame's output pixels (VectorArt + ImageStore + DocumentRenderer), so a logo filling a 4K frame keeps hard edges (edge ramp 2px vs 12px for a bitmap, VectorArtTests). Packages carry images/<id>.svg and reopen sharp. Art tiles read name over kind (Acme Logo / svg). Finder picture files on the timeline land on a Gfx track. Verified: Scripts/test.sh 13393 green, library-svg-logo-walk at Next defaults green with 6 real captures, 13 related walks green. Audit queue/audits/2026-10-16-svg-logo.json. Commit cbea81b5."
     }
-  ]
+  ],
+  "started": "2026-10-16T22:34:29.801Z",
+  "walks": [
+    "library-svg-logo-walk",
+    "library-picture-import-walk"
+  ],
+  "completed": "2026-10-16T23:18:17.444Z"
 }

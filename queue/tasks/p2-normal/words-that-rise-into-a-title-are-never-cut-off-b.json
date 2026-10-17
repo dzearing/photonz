@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 80,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.351Z",
-  "updated": "2026-10-16T12:22:36.462Z",
+  "updated": "2026-10-16T21:30:01.713Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-10-title-words-reveal.json rough: 'A piece rising from below can be cut at the bottom edge of the text's own box while it travels.' The later done task text-that-swings-flips-or-flies-in-from-depth-is loosened clipping only for depth flips; look at how it did that (TextRevealRasterizer in PhotonzRender) and extend it. Model checklist for a look task: title-text-visibly-comes-in-and-every-built-in-t. Renderer change: perf note in the commit (composite path).",
@@ -31,6 +31,45 @@
     {
       "t": "2026-10-16T12:22:36.461Z",
       "note": "seq 27 -> 80"
+    },
+    {
+      "t": "2026-10-16T20:48:16.463Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T21:05:09.522Z",
+      "note": "Adversarial pass before building: a Premiere/AE user expects a word rising in to be whole the whole way; nothing here asks a UX question (the look of each entrance is unchanged, only the cut goes), so no card is needed for the behaviour. Mask Reveal and Wipe hide words behind an edge ON PURPOSE: that edge stays; only the outer text box stops cutting past it."
+    },
+    {
+      "t": "2026-10-16T21:05:09.587Z",
+      "note": "Reproduced, measured (TextRevealUnclippedTests, share of each travelling piece's posed ink the renderer's picture holds, every 33 ms frame, vs the same pose with room for anything). TODAY: built-ins Keynote Clean headline Rise 69.0% (subtitle 76.4%), Minimal Underline name Rise by letter 50.2%, Behind Glass Fly In From Depth 65.9%, Soft Gradient Glass Blur In 91.7%, Kinetic Bold subtitle Rise 93.1%, Light Leak Track In 97.2%, Stacked Stagger 99.6%. Every entrance in a tight box: Rise by word up 16.5%, by letter 0%; Track In by letter 0% (outer letters start wholly outside), by word 86.5%; Flip Up by letter left/right 66-75% even with the depth reach; Blur In 99.8%. Bar: 99.8% (100% give or take float rounding) at every frame. Cause: TextRevealCompositor.image crops the picture to the text box; only isInDepth styles got reach(of:), a fixed formula that also under-covered letter flips."
+    },
+    {
+      "t": "2026-10-16T21:05:09.652Z",
+      "note": "Fix: TextRevealCompositor.reach(of:reveal:eyeDistance:) follows every piece through its whole move (49 moments, poses as image draws them: mask, blur, offset, turned quads) and returns how far past the box anything draws; the renderer uses it for every reveal (cached per words+reveal+camera, ReachKey) and grows the frame like an outside stroke, as depth already did. Old fixed reach(of:) removed. After: every built-in title and every entrance x unit x direction x shutter measures 100.0%. Perf: 1080p letter flip with blur 8.5-9.2 ms calibrated vs 9.0-9.3 before (same machine, same load); uncached reach costs ~9 ms in debug, hence the cache."
+    },
+    {
+      "t": "2026-10-16T21:09:38.987Z",
+      "note": "CORRECTION to the TODAY numbers above: the first meter averaged in half floats; re-measured with full floats against the old renderer's reach (0, or the fixed depth formula): Keynote Clean headline Rise 69.0%, subtitle 76.1%; Minimal Underline name Rise by letter 50.2%; Kinetic Bold subtitle Rise 94.2% and its Mask Reveal headline 0% (the first sliver shows in the mask's own 0.08 em margin under the line, outside the box); Soft Gradient Glass Blur In 99.0%; Stacked Stagger subtitle 99.7%; Behind Glass, Light Leak, Editorial, Pill Card, Split Wipe, Tech Terminal were already 100%. Tight-box sweep: Rise by word 16.5%, by letter 0%; Track In by letter 0%, by word 86.5%; Flip Up by letter 72.9%; Mask Reveal 0% (margin sliver); Blur In 99.8%; Swing In, Fly In, Tilt Settle, Wipe 100%. After the fix every one is 100.0%."
+    },
+    {
+      "t": "2026-10-16T21:15:15.345Z",
+      "note": "owns these walks: title-set-keynote-clean-walk, title-words-mask-reveal-walk, title-words-turn-in-depth-walk"
+    },
+    {
+      "t": "2026-10-16T21:30:01.639Z",
+      "note": "Left rough, not filed (no one is stopped by them, audit rough lists them for the user to react to): mid-move words can sit outside the canvas selection outline (they land inside it); Mask Reveal's first sliver now shows in the mask's own 0.08 em margin under the line, a frame or so sooner. Pictures checked: contact sheet and the four early stills (before cut flat at the box edge, after whole past it), and the walk capture 2-coming-in-sc.png (Keynote Clean, 'it' drawn below the selection box while rising). Walks: title-set-keynote-clean-walk, title-words-mask-reveal-walk, title-words-turn-in-depth-walk all ok on the rebuilt probe at Next defaults. Full Scripts/test.sh green: 13377 tests. Commit 2c6d218b."
+    },
+    {
+      "t": "2026-10-16T21:30:01.711Z",
+      "note": "Travelling title words (rise, track in, blur, flips, mask margin) are drawn whole past their text box: TextRevealCompositor.reach(of:reveal:eyeDistance:) follows each piece through its move, the renderer grows the frame by it (cached). Bar measured in TextRevealUnclippedTests: Keynote Clean 69% -> 100%, Minimal Underline 50% -> 100%, every entrance x unit x direction 100%. Reel + card for the look, audit 2026-10-16, walks green, 13377 tests green, perf unchanged (flip by letter 1080p ~9 ms). Commit 2c6d218b."
     }
-  ]
+  ],
+  "started": "2026-10-16T20:48:16.460Z",
+  "walks": [
+    "title-set-keynote-clean-walk",
+    "title-words-mask-reveal-walk",
+    "title-words-turn-in-depth-walk"
+  ],
+  "completed": "2026-10-16T21:30:01.712Z"
 }

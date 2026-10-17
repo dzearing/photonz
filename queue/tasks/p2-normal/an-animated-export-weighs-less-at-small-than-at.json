@@ -5,11 +5,11 @@
   "epic": "video-editing",
   "priority": "p2-normal",
   "seq": 257.5,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T19:53:50.882Z",
-  "updated": "2026-10-16T19:53:50.885Z",
+  "updated": "2026-10-17T00:07:28.579Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Seen 2026-10-16 in Scripts/test.sh (13,371 tests, 338s) while running task a-title-or-a-logo-laid-over-a-video-lands-on-a-t: ✘ Test \"written twice, a GIF is the same file and a HEIC the same pictures\" recorded an issue at AnimatedExportWeighTests.swift:219:17: Expectation failed: (small → 82530) < (high → 80862). Same test alone: Scripts/test.sh --filter AnimatedExportWeigh → 3 tests passed (35s). Which format the row was (GIF or HEIC) was not in the summary lines; the test log is a mktemp file the wrapper does not keep. Earlier work on the same test, all done: the-export-size-test-fails-about-one-run-in-thre, find-out-why-a-small-gif-can-come-out-bigger-tha, a-small-gif-of-a-crisp-recording-weighs-less-tha. Tests/PhotonzMediaTests/AnimatedExportWeighTests.swift ~line 219 #expect(small < high). Unreproduced in isolation, so p2.",
@@ -22,6 +22,29 @@
     {
       "t": "2026-10-16T19:53:50.884Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-16T23:29:46.270Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T23:34:42.431Z",
+      "note": "Cause: the system HEVC encoder under load, not the export. Temporary experiment (Tests/PhotonzMediaTests/ZZAnimatedWeighExperiment.swift, removed) via Scripts/test.sh --filter ZZAnimatedWeighExperiment. Quiet, every write identical (High/Standard/Small bytes): short gif 120867/74948/52558, short heic 159301/141742/76881, crisp gif 32836/23280/15920, crisp heic 80862/46817/44630, longer gif 279850/125974/68422, longer heic 363113/261672/115014. The failing row was crisp HEIC (High 80,862 exactly). 12 HEIC triples written at once: crisp heic Small 55,580 to 124,540 against High 80,862, e.g. [80862, 46817, 124540], [80862, 83597, 86231]; GIFs never move. Second experiment, the crisp clip's Small HEIC written 12 at once: 9 came out 44,630 and 3 came out 65,158, two discrete answers, so the encoder switches path when it is busy. An explicit quality 0.85 behaves the same; 0.6 held steady but changes what people get, so not taken. In the app the sheet weighs one choice at a time and saves the very file it weighed, and no sheet copy says Small is lighter in bytes, so a person sees the real number either way round."
+    },
+    {
+      "t": "2026-10-17T00:07:28.442Z",
+      "note": "owns no walks; the ones it names are examples"
+    },
+    {
+      "t": "2026-10-17T00:07:28.506Z",
+      "note": "Fix: AnimatedExportWeighTests keeps byte claims (Small<High, Small<Standard, three distinct) for a GIF only; a HEIC is claimed by what the preset writes: fewer frames each step and Small narrower than High and at most 480 (an injected HEIC that ignored its size cap failed all three rows). Five full Scripts/test.sh runs in a row passed, 13,393 tests each (345-370s). Left rough, not filed: on a machine busy with other HEVC encodes a person's HEIC Small can land heavier than High; the sheet shows the real weighed number and saves that very file, so nothing on screen is wrong, and it needs about ten simultaneous HEVC encodes. No UI change, so no audit."
+    },
+    {
+      "t": "2026-10-17T00:07:28.577Z",
+      "note": "Cause named: the system HEVC encoder under load (it switches to a second, heavier answer for the same frames when other encodes share the machine), not the export; alone Small is lightest on every clip and GIFs never move. Test now claims GIF bytes and HEIC pictures (fewer frames, smaller at Small). Five full Scripts/test.sh runs in a row green (13,393 tests). The sheet weighs one choice at a time and saves that file, so it shows the real size either way round. Commit abe354d2."
     }
-  ]
+  ],
+  "started": "2026-10-16T23:29:46.267Z",
+  "walks": [],
+  "completed": "2026-10-17T00:07:28.578Z"
 }

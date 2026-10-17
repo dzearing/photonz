@@ -5,11 +5,11 @@
   "epic": "video-audio",
   "priority": "p2-normal",
   "seq": 90,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T03:34:59.246Z",
-  "updated": "2026-10-16T12:22:36.524Z",
+  "updated": "2026-10-16T22:23:20.834Z",
   "deps": [],
   "blockedBy": [],
   "notes": "From queue/audits/2026-10-09-lower-third-caption-style.json rough: 'The Background colour well shows only the plate's first colour; picking a colour makes the plate one flat colour.' Done task the-lower-third-caption-style-sits-low-left-on-i left it rough. Searches 'lower third plate gradient colour': nothing open. Reuse the existing gradient editing control rather than a new one.",
@@ -36,6 +36,43 @@
     {
       "t": "2026-10-16T12:22:36.523Z",
       "note": "seq 28 -> 90"
+    },
+    {
+      "t": "2026-10-16T21:45:52.523Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-16T21:49:57.825Z",
+      "note": "Reproduced at Next defaults (walk /tmp/lt-repro/repro.json, no flags): pick Captions row, Lower third, Text > Background. The well shows one flat violet swatch and the picker opens with no paint type row (flat only). Pressed Shades 3: plate became one flat #B385FF. Measured on the offscreen frame render, plate top band 10x6 px patches just inside each end: before left #995BF7 right #AC61E2, mean channel diff 15.3; after left #B385FF right #B385FF, diff 0.0. Bar: after a pick the ends must still differ by >= ~15."
+    },
+    {
+      "t": "2026-10-16T21:49:57.895Z",
+      "note": "Adversarial pass: a Photoshop user expects a gradient fill's swatch to show the ramp and the picker to edit the selected stop (Photoshop's gradient editor). The app already has that: the shared picker with supportsGradient shows a type row, an aim pad and stops, and only the colour styles shelf uses it. Plan: the caption plate holds a full Paint (any kind the picker offers, any stops, any angle), the well draws PaintFill and opens the gradient picker, a pick edits the selected stop. A flat colour dropped on the well or chosen as Solid still makes it flat, which is what the user asked for at that point. Undo is one step since setCaption goes through perform. Risk: the rasterizer context is y-up, so the GradientPainter (top-left space) must be flipped around the plate."
+    },
+    {
+      "t": "2026-10-16T22:22:39.838Z",
+      "note": "owns these walks: lower-third-plate-keeps-its-gradient-walk"
+    },
+    {
+      "t": "2026-10-16T22:22:59.419Z",
+      "note": "Built: the caption plate holds a whole Paint (CaptionLook.backgroundGradient, TextContent.plateGradient; the mock's two-colour ramp is still written as backgroundEndHex/plateEndHex). Background well (CaptionColourWellRow) passes paint + onCommitPaint to ColorWellButton, which now draws a ramp in its swatch and opens ColorPickerContent with supportsGradient (type row, aim pad, stops). A pick edits the selected stop (both stops editable), the way the colour styles shelf's picker does. TextRasterizer.drawPlate now fills through GradientPainter (flipped about the plate's middle for the y-up context), so any kind the picker makes is drawn. Also: the gradient picker header now shortens the name before ' · stop N' (it showed 'Caption backgrou...' and lost the stop)."
+    },
+    {
+      "t": "2026-10-16T22:22:59.483Z",
+      "note": "Measured bar (walk actions captionsNotePlateEnds / captionsExpectPlateEndsApart, frame render at the playhead, patches just inside each end): untouched plate 15.1 apart (left #995BF8, right #B363ED); after picking Shades 7: 76.1 apart (left #4D09B3, right #AC5BE6). Before the change: 0.0 (both #B385FF). Undo: one Command-Z, the well reads 'Linear gradient #9A5CFF 94% to #C56CFF 86%' again. Tests: Scripts/test.sh green (13379 tests). Walks green: lower-third-plate-keeps-its-gradient, lower-third-sits-low-left, every-caption-control-changes-the-captions, captions-panel-keeps-its-margins, picker-controls, gradient-paint, gradient-style. Pictures looked at: 1-sc (ramp in swatch), 2-sc (picker on Linear 120, Stop 1, header now keeps 'stop 1'), 3-sc and 3-frame (deep violet to lilac plate), 4-sc (violet to lilac back), before-flat-sc (flat plate in today's build)."
+    },
+    {
+      "t": "2026-10-16T22:22:59.547Z",
+      "note": "Rough triage, none clear the follow-up bar, kept here: (1) picker changes land on release, not live while dragging: true of every caption colour well, nobody has reported it. (2) Lower third tile goes unpicked once the ramp is tuned: same as after any look change, by design of wears(). (3) Far-stop edit not driven by a walk on the caption plate; it is the shared picker the gradient-style walk covers."
+    },
+    {
+      "t": "2026-10-16T22:23:20.832Z",
+      "note": "Caption Background well shows and edits the plate's gradient with the shared picker; a pick edits the selected stop so the Lower third plate stays a gradient (ends 15.1 apart untouched, 76.1 after a darker pick, 0.0 before). Plate holds any ramp the picker makes, saved and drawn via GradientPainter. One undo restores it. Verified: Scripts/test.sh green, lower-third-plate-keeps-its-gradient-walk plus 6 neighbouring walks green at Next defaults; audit queue/audits/2026-10-16-lower-third-plate-gradient.json. Commit acdbc555."
     }
-  ]
+  ],
+  "started": "2026-10-16T21:45:52.520Z",
+  "walks": [
+    "lower-third-plate-keeps-its-gradient-walk"
+  ],
+  "completed": "2026-10-16T22:23:20.833Z"
 }

@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p2-normal",
   "seq": 258.75,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-16T20:31:56.582Z",
-  "updated": "2026-10-16T20:31:56.585Z",
+  "updated": "2026-10-17T00:26:05.279Z",
   "deps": [],
   "blockedBy": [],
   "notes": "Mock: docs/design/mocks/pages/video-title-wt.html lines ~372-378 (#trackGfx ic-sparkle, #trackTitle ic-text). Code: TimelineTrackRow.symbol(_:) in Sources/Photonz/TimelineTrackRows.swift (overlay = square.3.layers.3d, text = textformat) and the trackKind the header row is given (~line 1238). Seen in the audit pictures of a-title-or-a-logo-laid-over-a-video-lands-on-a-t (2026-10-16): Gfx and Title 2 headers both show the layers icon. Check video.html too, which may use ic-layers for overlay tracks, before choosing.",
@@ -22,6 +22,27 @@
     {
       "t": "2026-10-16T20:31:56.584Z",
       "note": "created (manual)"
+    },
+    {
+      "t": "2026-10-17T00:07:47.440Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T00:25:50.292Z",
+      "note": "owns these walks: title-and-gfx-track-icons-walk"
+    },
+    {
+      "t": "2026-10-17T00:26:00.653Z",
+      "note": "Cause: a preset title is a group and a placed logo is an image, so both fell through to TimelineTrackKind.overlay (stacked layers). Fix: a title group (titleRecipe) is .text; an image with its own time is a new .graphic kind (sparkles); an image with no time stays .overlay. Title clips now draw the mock's .clip.txt colour too. Tests: 3 new in TimelineDockTests; full suite 13396 passed. Walks: new title-and-gfx-track-icons-walk ok at Next defaults with a real capture (looked at it: Aa Title, sparkle Gfx, photo V1); library-picture-import, library-svg-logo, title-presets-library-shelf ok. Filed a-logo-or-picture-clip-on-a-gfx-track-wears-the for the mock's amber Gfx clip. Left rough (no task): shapes/arrows over video keep the layers icon, no mock covers them."
+    },
+    {
+      "t": "2026-10-17T00:26:05.277Z",
+      "note": "Title tracks show the text mark and Gfx tracks the sparkle (TimelineTrack.swift: preset title = .text, timed picture = new .graphic; TimelineTrackRows symbol). 3 new core tests, full suite 13396 passed; title-and-gfx-track-icons-walk ok at Next defaults with a real capture; audit 2026-10-17-title-gfx-track-icons.json. Amber Gfx clip filed as a-logo-or-picture-clip-on-a-gfx-track-wears-the."
     }
-  ]
+  ],
+  "started": "2026-10-17T00:07:47.439Z",
+  "walks": [
+    "title-and-gfx-track-icons-walk"
+  ],
+  "completed": "2026-10-17T00:26:05.278Z"
 }

@@ -1,0 +1,30 @@
+{
+  "id": "a-logo-or-picture-clip-on-a-gfx-track-wears-the",
+  "title": "A logo or picture clip on a Gfx track wears the amber the title mock draws",
+  "goal": "In the title walkthrough mock, a picture or logo laid over the video is an amber clip on its Gfx track, so it stands apart from the recording and from titles. Today it is the same teal as every other overlay, close to the recording it sits on.",
+  "epic": "video-titles-graphics",
+  "priority": "p2-normal",
+  "seq": 259.375,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T00:25:37.764Z",
+  "updated": "2026-10-17T00:25:37.767Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "Mock: docs/design/mocks/pages/video-title-wt.html line 48 (.clip.gfx), also video-move-wt, video-cut-wt, video-freeze-wt. Since a-title-track-and-a-gfx-track-wear-the-icons-the, a placed picture has its own TimelineTrackKind.graphic (Sources/PhotonzCore/TimelineTrack.swift); TimelineTrackRow.clipKind maps .graphic to VideoKit.ClipKind.overlay for now. Add a .graphic ClipKind in VideoKitTimeline.swift with the gradient and an ink that passes LegibilitySheet. Walk to extend: Scripts/playtest/title-and-gfx-track-icons-walk.json.",
+  "acceptance": [
+    "A still picture or logo placed in time draws its clip in the mock amber (#febc2e to #ff9d5c, video-title-wt.html .clip.gfx)",
+    "Its name on the clip is legible against the amber in light and dark (a dark ink if white does not read)",
+    "A walk at Next defaults photographs a Gfx clip beside V1"
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T00:25:37.766Z",
+      "note": "created (manual)"
+    }
+  ],
+  "walks": [
+    "title-and-gfx-track-icons-walk"
+  ]
+}
