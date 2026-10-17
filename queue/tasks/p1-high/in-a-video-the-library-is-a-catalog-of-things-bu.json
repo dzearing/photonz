@@ -1,0 +1,36 @@
+{
+  "id": "in-a-video-the-library-is-a-catalog-of-things-bu",
+  "title": "In a video, the Library is a catalog of things built for video, grouped by kind",
+  "goal": "When a video is open, the Library becomes a catalog of content made and animated for video, organised by what it is: Title Pages, Name Cards (lower thirds), Animated Charts, Callouts and Highlights, Backgrounds, Transitions, Logos and Brand, End Cards and Calls to Action, plus Media (the person's recordings, sounds and pictures). Pivots that make no sense for video (Styles, Systems) are not shown. UI components, which are built for mockups, are not mixed in: they are reachable only through a filter. Finding the right thing should take a glance, not a scroll through one long list.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.3,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:10:09.802Z",
+  "updated": "2026-10-17T13:10:09.907Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17): \"In the library, 'Styles' and 'Systems' are confusing to me. Why should these be in the library when i'm editing a video? Things not relevant to a video shouldn't be in the library pivots. Also, the contents of the library really arent grouped well for videos. Like it's just a big list of stuff. We need a better layout to select types of things for videos. Like title page, name plates, animated charts, etc. It should be a catalog that is easy to find things which can apply to videos. I think components could be there, but there should be a way to filter to just content useful for video that is animated and built for video. Components are built for mocks. and i'm not sure at the moment they apply well in video cases.\" Screenshot context (06.03): Library pivots Media / Comps / Styles / Systems with a Titles group of tiles inside Comps.\n\nCode: Sources/Photonz/LibraryPanel.swift (pivots and tiles), title tiles that play (LibraryTitleTile.swift), live backgrounds, transitions (TransitionsGroup.swift). Related blocked task a-video-document-shows-the-library-in-its-dock (card: 'Should a video document show the Library in the dock without being asked?'); this task is about what the Library holds for video, not whether it shows. Companion filed the same day: 'Animated charts you can drop into a video'.",
+  "acceptance": [
+    "Design first: a mock page under docs/design/mocks/pages/ (shared shell) showing the video Library: category rail or chips (the kinds above, each with a count), a grid of tiles that play on hover, search across all categories, and a 'Built for video' filter that is on by default (off reveals components and other non-video items, clearly labelled); placement checked against the IA contract; a decision card for any real fork (for example rail vs chips), with option labels saying exactly what the person sees. Building does not wait unless the fork blocks it",
+    "With a video document open, the Library's pivots are only those that apply to video (Media and the video catalog); Styles and Systems are hidden (they stay for image and design documents); the pivot set follows the open document, switching when the person switches windows",
+    "Every built-in video item is tagged with its kind and 'built for video' (the twelve titles, name cards and lower thirds, the ten live backgrounds, the 3D and 2D transitions, logos and pictures the person added, end cards if any exist), and appears under its category; empty categories are not shown (Animated Charts appears once its companion task ships)",
+    "Tiles show a playing preview at small size (reusing the title tiles' playing previews) and a one-line name; double click or drag adds the item at the playhead on the right track (titles on a Title track, logos on a Gfx track, transitions onto the cut under the pointer)",
+    "Components appear only with 'Built for video' off (or a Components category marked 'for mockups'); dropping one into a video still works",
+    "Search finds items by name and kind across categories; the last category viewed is remembered per document kind",
+    "A walk opens a video, checks Styles and Systems are absent, picks Title Pages and Name Cards categories, adds one of each from the catalog, toggles 'Built for video' off and sees components appear",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:10:09.804Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:10:09.906Z",
+      "note": "seq 45 -> 1.3"
+    }
+  ]
+}

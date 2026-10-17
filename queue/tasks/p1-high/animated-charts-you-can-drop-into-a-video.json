@@ -1,0 +1,37 @@
+{
+  "id": "animated-charts-you-can-drop-into-a-video",
+  "title": "Animated charts you can drop into a video",
+  "goal": "A video can show data the way good explainer and product videos do: a bar chart whose bars grow in, a line that draws itself, a donut that sweeps round, a big number that counts up to its value. The person picks one from the video Library's Animated Charts category, types or pastes the numbers and labels, and it animates in and out like a title, in the title themes.",
+  "epic": "video-titles-graphics",
+  "priority": "p1-high",
+  "seq": 1.4,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-17T13:10:09.994Z",
+  "updated": "2026-10-17T13:10:10.106Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-17), naming the video catalog's kinds: \"Like title page, name plates, animated charts, etc.\" No chart content exists in Photonz today (none found in the Library or title presets). Build on the title model (PhotonzCore TitleDesign / TitleRestyle, text reveal, motion blur, live backgrounds) rather than a separate system. Companion: 'In a video, the Library is a catalog of things built for video, grouped by kind' (its Animated Charts category stays hidden until this ships). Memory: visual work needs a measured bar and a reel.",
+  "acceptance": [
+    "At least five chart kinds: Bar (vertical and horizontal), Line (draws on), Donut or Pie (sweeps), Big Number (counts up, with a label and an optional delta like +18%), Comparison (two or three stat cards side by side)",
+    "Data entry is simple: a small table in the panel (label, value, optional colour) that also accepts pasted tab or comma separated text; units and number format (%, $, decimals) settable",
+    "Each chart animates in with a stagger (bars grow one after another, the line draws, numbers count) and out, using the title part model (in, hold, out, curves, energy) and the shared curve list; timing editable on its timeline row like other title parts",
+    "Charts take the title themes and font pairs and the live backgrounds, and read legibly over footage",
+    "They are non-destructive layers (editable later), render at 1080p within the 16 ms budget (MEASURED, perf note), and export matches playback",
+    "They appear in the video Library under Animated Charts with playing previews (from the catalog task)",
+    "Visual bar: a reel (MP4, GIF, contact sheet) of every chart kind animating in, under queue/audits/, with a decision card for the user to judge; the bars or line must visibly build (MEASURED: chart ink at the first frame under 10% of its held ink)",
+    "A walk adds a bar chart, pastes four rows of data, plays it, and checks the bars arrive one after another",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-17T13:10:09.996Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-17T13:10:10.105Z",
+      "note": "seq 45 -> 1.4"
+    }
+  ]
+}
