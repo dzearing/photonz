@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-presets-library-shelf-walk",
-  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Soft Gradient Glass held over the recording on V1 says it goes on a new track, never over the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
+  "seed": "Title pages and name cards are picture tiles on the Library's Components shelf, under a Titles header, the way the title mock drags a lower third out of the Library (video-title-wt.html, step 10). At Next defaults with no flag set: the shelf is opened by View > Library and the Comps segment pressed by the pointer. The Soft Gradient Glass tile is picked up by the pointer, and the Keynote Clean tile double clicked by the pointer lands at the playhead on its own track, exactly as Sequence > Insert does. Then Behind Glass, the page made of the recording under it, held over the recording on V1 says it goes on a new track, never into the recording, and let go it lands there half a second in; held over that new track after itself it lands on the same track. Last, in the dock those drops crowded, Keynote Clean double clicked by the pointer still lands, the dock at its end shows a whole row of title tiles, and the Media shelf still brings its tile into reach.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -164,7 +164,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Behind Glass",
       "track": "V1",
       "seconds": 0.5,
       "release": false,
@@ -174,11 +174,11 @@
     {
       "do": "describe",
       "stage": "3-held-over-the-recording",
-      "note": "THE THIRD TEST: the Soft Gradient Glass tile held over the recording on V1, half a second in. The lane draws the dashed ghost a file draws, four seconds long, and it says Title Page on a new track: a title is laid over the recording, never cut into it"
+      "note": "THE THIRD TEST: the Behind Glass tile held over the recording on V1, half a second in. The lane draws the dashed ghost a file draws, four seconds long, and it says Title Page on a new track: Behind Glass is made of the recording under it, so it is laid over the recording, never cut into it (any other title page goes into V1 in front of the clip there: insert-a-title-before-a-clip-walk)"
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Behind Glass",
       "track": "V1",
       "seconds": 0.5
     },
@@ -212,7 +212,7 @@
     {
       "do": "describe",
       "stage": "4-let-go-over-the-recording",
-      "note": "Let go, the Soft Gradient Glass title page lands half a second in on a new track called Title 2, named the way the mock names a title track, under the Keynote Clean one on Title, over the recording, which is untouched on V1"
+      "note": "Let go, the Behind Glass title page lands half a second in on a new track called Title 2, named the way the mock names a title track, under the Keynote Clean one on Title, over the recording, which is untouched on V1"
     },
     {
       "do": "snapshot",
@@ -220,7 +220,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Behind Glass",
       "track": "Title 2",
       "seconds": 5.5,
       "release": false,
@@ -228,7 +228,7 @@
     },
     {
       "do": "dropOnTimeline",
-      "tile": "Soft Gradient Glass",
+      "tile": "Behind Glass",
       "track": "Title 2",
       "seconds": 5.5
     },
@@ -255,7 +255,7 @@
     {
       "do": "describe",
       "stage": "5-let-go-on-a-free-track",
-      "note": "THE FOURTH TEST: held over the Title 2 track where it is free, after the first Soft Gradient Glass, the ghost says Title 2 and the second lands there at five and a half seconds, on the same track"
+      "note": "THE FOURTH TEST: held over the Title 2 track where it is free, after the first Behind Glass, the ghost says Title 2 and the second lands there at five and a half seconds, on the same track"
     },
     {
       "do": "snapshot",

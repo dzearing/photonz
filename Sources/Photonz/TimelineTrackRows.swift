@@ -428,8 +428,11 @@ struct TimelineTrackRow: View {
     }
 
     /// The mock's track icons: the kind of the first clip on the track, or of
-    /// the track itself while it is empty.
+    /// the track itself while it is empty. A track with a recording on it is
+    /// a video track, whatever comes first: a title page put in front of the
+    /// recording does not make V1 a text track.
     private var symbol: String {
+        if row.clips.contains(where: { $0.trackKind == .video }) { return Self.symbol(.video) }
         if let first = row.clips.first { return Self.symbol(first.trackKind) }
         if !row.linked.isEmpty { return Self.symbol(.audio) }
         switch track.kind {

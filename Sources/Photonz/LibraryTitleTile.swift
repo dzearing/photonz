@@ -109,11 +109,17 @@ struct LibraryTitlePresetInspector: View {
             Text("\(preset.entry.detail), \(ClipTransitionCopy.seconds(preset.lengthMS))")
                 .font(.caption)
                 .foregroundStyle(.secondary)
-            Button("Insert at Playhead") { editorState.insertTitle(preset) }
+            // A page goes in front of the picked clip, on its track, when
+            // there is one (`insertTitleBeforeClip`), and the button says so.
+            let beforeClip = preset.goesInFrontOfAClip && editorState.titleBeforeClipTarget != nil
+            let label = beforeClip ? "Insert Before Clip" : "Insert at Playhead"
+            Button(label) { editorState.insertTitle(preset) }
                 .controlSize(.small)
                 .disabled(!editorState.canInsertTitle)
-                .panelHelp("Puts this on the timeline at the playhead, on a track of its own")
-                .playtestControl("Insert at Playhead", detail: "the picked title tile")
+                .panelHelp(beforeClip
+                           ? "Puts this in front of the picked clip, on its track"
+                           : "Puts this on the timeline at the playhead, on a track of its own")
+                .playtestControl(label, detail: "the picked title tile")
         }
         .padding(.horizontal, EditorChromeLayout.panelEdgeInset)
         .padding(.vertical, 4)

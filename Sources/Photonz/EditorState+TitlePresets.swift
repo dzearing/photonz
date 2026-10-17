@@ -113,12 +113,48 @@ extension EditorState {
     }
 
     func insertTitle(_ preset: BuiltInTitle, onTrack trackID: UUID? = nil) {
+        if trackID == nil, insertTitleBeforeClip(.builtIn(preset)) { return }
         let blurs = Experiments.shared.motionBlurEnabled
         landTitle(onTrack: trackID) { $0.insertTitle(preset, atTimeMS: $1, motionBlur: blurs) }
     }
 
     func insertTitle(saved: SavedTitlePreset, onTrack trackID: UUID? = nil) {
+        if trackID == nil, insertTitleBeforeClip(.saved(saved)) { return }
         landTitle(onTrack: trackID) { $0.insertTitle(saved, atTimeMS: $1) }
+    }
+
+    // MARK: In front of a clip
+
+    /// The clip a title page goes in front of when one is inserted now
+    /// (`TitleBeforeClip.swift`): the picked one, when it is a picture clip on
+    /// a track a title can go into; else one starting under the playhead, so
+    /// a page put in at 0:00 plays before the recording rather than over it.
+    /// Nil leaves the page laid over the picture at the playhead, as before.
+    var titleBeforeClipTarget: UUID? {
+        guard canInsertTitle, let document else { return nil }
+        if let picked = selectedLayerID, document.canInsertTitle(beforeClip: picked) { return picked }
+        let ms = documentTimeMS
+        return document.timelineClipLayers.map(\.id).first { id in
+            guard document.canInsertTitle(beforeClip: id),
+                  let start = document.layer(id: id)?.time?.inMS else { return false }
+            return abs(start - ms) <= ClipLanding.playheadReachMS
+        }
+    }
+
+    /// A title page in front of `titleBeforeClipTarget`, on its track, the
+    /// clip and what follows moving along, with the default transition on the
+    /// join between them. One step to undo. False where there is no such clip
+    /// or the preset is not a page, so the caller lays it over the picture.
+    @discardableResult
+    func insertTitleBeforeClip(_ preset: TitlePreset) -> Bool {
+        guard preset.goesInFrontOfAClip, let clip = titleBeforeClipTarget,
+              let start = document?.layer(id: clip)?.time?.inMS else { return false }
+        let join = DefaultTransitionStore.shared.kind
+        let blurs = Experiments.shared.motionBlurEnabled
+        landTitle(onTrack: nil, atMS: start) { document, _ in
+            document.insertTitle(preset, beforeClip: clip, join: join, motionBlur: blurs)
+        }
+        return true
     }
 
     /// Puts it in at the playhead, picks it, moves the playhead on to where its
@@ -218,9 +254,33 @@ extension EditorState {
     /// land: the moment under the pointer, pulled onto a nearby clip edge or
     /// the playhead, on the track under it when that track is free, else on a
     /// new track of its own (`PhotonzDocument.titleLanding`).
+    ///
+    /// A title page held over a track that holds a recording goes INTO the
+    /// sequence there instead, pushing what is after it along, the way a clip
+    /// let go with an insert does (`titlePageSequenceLanding`).
     func titleLanding(_ preset: TitlePreset, at point: CGPoint) -> ClipLanding? {
         guard canInsertTitle else { return nil }
+        if preset.goesInFrontOfAClip, let document, let start = timelineDropStartMS(lengthMS: preset.lengthMS, at: point),
+           let landing = document.titlePageSequenceLanding(lengthMS: preset.lengthMS, atMS: start,
+                                                           over: trackDrop(atY: point.y)) {
+            return landing
+        }
         return timelineOverlayLanding(lengthMS: preset.lengthMS, at: point)
+    }
+
+    /// The moment something `lengthMS` long let go at `point` would start:
+    /// the moment under the pointer, pulled onto a nearby clip edge or the
+    /// playhead.
+    func timelineDropStartMS(lengthMS: Int, at point: CGPoint) -> Int? {
+        guard let document, timelineLaneWidth > 0 else { return nil }
+        let ruler = motionStripRuler
+        let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
+        let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
+        let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
+            .rounded())
+        return ClipLanding.snapped(startMS: raw, lengthMS: lengthMS,
+                                   to: document.timelineEdgesMS + [documentTimeMS],
+                                   withinMS: isTimelineSnapping ? max(0, reach) : 0)
     }
 
     /// Where something laid OVER the picture (a title, a component) and
@@ -231,15 +291,7 @@ extension EditorState {
     /// `newTrackNamed` (Title, Gfx) or V2, V3 for nil.
     func timelineOverlayLanding(lengthMS: Int, at point: CGPoint,
                                 newTrackNamed name: String? = DocumentTrack.titleTrackName) -> ClipLanding? {
-        guard let document, timelineLaneWidth > 0 else { return nil }
-        let ruler = motionStripRuler
-        let fraction = min(max(0, (point.x - TimelineDock.lanesLeading) / timelineLaneWidth), 1)
-        let raw = Int(ruler.ms(atFraction: Double(fraction)).rounded())
-        let reach = Int(ruler.msSpanning(fraction: Double(Self.timelineDropSnapPoints / timelineLaneWidth))
-            .rounded())
-        let start = ClipLanding.snapped(startMS: raw, lengthMS: lengthMS,
-                                        to: document.timelineEdgesMS + [documentTimeMS],
-                                        withinMS: isTimelineSnapping ? max(0, reach) : 0)
+        guard let document, let start = timelineDropStartMS(lengthMS: lengthMS, at: point) else { return nil }
         return document.titleLanding(lengthMS: lengthMS, atMS: start, over: trackDrop(atY: point.y),
                                      newTrackNamed: name)
     }
@@ -255,7 +307,10 @@ extension EditorState {
             if timelineFileHover != nil { timelineFileHover = nil }
             return
         }
-        let next = TimelineFileHover(name: preset.name, landing: landing, verb: preset.kind.name)
+        // Into the sequence it is an insert like any clip's, and says so;
+        // laid over the picture it says its kind.
+        let next = TimelineFileHover(name: preset.name, landing: landing,
+                                     verb: landing.edit == .insert ? nil : preset.kind.name)
         if timelineFileHover != next { timelineFileHover = next }
     }
 
@@ -275,9 +330,10 @@ extension EditorState {
         let landing = titleLanding(preset, at: point)
         endTitleHover()
         guard let landing, landing.allowed else { return false }
+        let join = DefaultTransitionStore.shared.kind
         landTitle(onTrack: nil, atMS: landing.startMS) {
             $0.insertTitle(preset, atTimeMS: $1, landing: landing,
-                           motionBlur: Experiments.shared.motionBlurEnabled)
+                           motionBlur: Experiments.shared.motionBlurEnabled, join: join)
         }
         return true
     }

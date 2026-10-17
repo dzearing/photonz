@@ -18,7 +18,7 @@
       "do": "wait", "seconds": 0.8 },
     { "do": "press", "control": "Keynote Clean" },
     { "do": "wait", "seconds": 0.6 },
-    { "do": "expect", "control": "Insert at Playhead", "present": true },
+    { "do": "expect", "control": "Insert Before Clip", "present": true },
     { "do": "snapshot", "name": "midnight-picked" },
     { "do": "press", "control": "Search library" },
     { "do": "type", "text": "card" },

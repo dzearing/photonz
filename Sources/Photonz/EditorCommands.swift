@@ -744,10 +744,16 @@ struct EditorCommands: Commands {
         let sectionHeld = onTimeline && !keysPicked && (editor?.sectionTakesTheDelete ?? false)
         // Points picked on a sound's volume line go the way keys do.
         let pointsPicked = keysPicked && (editor?.canDeletePickedSoundPoints ?? false)
-        Button(pointsPicked ? "Delete Points" : keysPicked ? "Delete Keys" : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
+        // ...and a transition picked on a cut, which ⌫ takes off.
+        let transitionHeld = onTimeline && !keysPicked && !rangeHeld && !trackHeld && !gapHeld
+            && editor?.transitionHeldForDelete != nil
+        Button(pointsPicked ? "Delete Points" : keysPicked ? "Delete Keys" : transitionHeld ? "Delete Transition"
+               : sectionHeld ? "Delete Section" : rangeHeld || trackRange ? "Delete Range"
                : trackHeld ? "Delete Pieces" : gapHeld ? "Delete Gap" : "Delete This Piece") {
             if keysPicked {
                 editor?.deletePickedKeys()
+            } else if transitionHeld {
+                editor?.deleteTransitionInHand()
             } else if sectionHeld {
                 editor?.deleteRangeSection()
             } else if rangeHeld {
@@ -769,7 +775,7 @@ struct EditorCommands: Commands {
         // for the measurement, including the half that says a text
         // field with the keyboard still keeps the key.
         .keyboardShortcut(KeyEquivalent(DeleteKeyCharacters.menuKeyEquivalent), modifiers: [])
-        .disabled(!(keysPicked || sectionHeld || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
+        .disabled(!(keysPicked || transitionHeld || sectionHeld || (rangeHeld && (editor?.canTakeOutMarkedStretch ?? false))
                     || (trackHeld && (editor?.canTakeOutTrackThing ?? false))
                     || (gapHeld && (editor?.canCloseGapInHand ?? false))
                     || (onTimeline ? (editor?.canDeleteClipPieceInHand ?? false)
@@ -1035,6 +1041,23 @@ struct EditorCommands: Commands {
             // The panel menu's third row (`#propMenu`).
             Button("Reset to Default Length") { editor?.resetClipTransitionLength() }
                 .disabled(!(editor?.canResetClipTransitionLength ?? false))
+            // The cut's right-click offers these too, for the transition on it.
+            let transition = editor?.cutInHand?.cut.drawnTransition
+            Menu("Length") {
+                ForEach(editor?.clipTransitionLengthOffers ?? [], id: \.self) { ms in
+                    Toggle(ClipTransitionCopy.lengthChoice(ms, of: transition?.kind ?? .dissolve),
+                           isOn: Binding(get: { transition?.lengthMS == ms },
+                                         set: { _ in editor?.setClipTransitionLength(ms) }))
+                }
+            }
+            .disabled(transition == nil)
+            Menu("Curve") {
+                ForEach(Array(EasingCurve.named.prefix(EasingCurve.standardCount)), id: \.self) { curve in
+                    Toggle(curve.title, isOn: Binding(get: { transition?.curve == curve },
+                                                      set: { _ in editor?.setClipTransitionCurve(curve) }))
+                }
+            }
+            .disabled(transition == nil)
             Divider()
             ForEach(ClipTransitionKind.allCases, id: \.self) { kind in
                 Button(kind.title) { editor?.setClipTransitionInHand(kind) }

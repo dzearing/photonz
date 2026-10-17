@@ -5,11 +5,11 @@
   "epic": "video-titles-graphics",
   "priority": "p1-high",
   "seq": 1.05,
-  "status": "pending",
+  "status": "done",
   "release": "next",
   "area": "app",
   "created": "2026-10-17T13:18:31.622Z",
-  "updated": "2026-10-17T13:18:31.813Z",
+  "updated": "2026-10-17T15:51:01.048Z",
   "deps": [],
   "blockedBy": [],
   "notes": "User's words (2026-10-17): \"Also the title pages are interesting with the backgrounds, but still feel like.. if apple were presenting, they would be embarrassing. They don't look like professionally designed. They look interesting for a high school student presentation. I need them to be apple-level quality of design and polish. Also i find the 3d transforms completely unusable and confusing. I try to create a title page. Drag it there, then move my video clip to follow it. How am i supposed to change the transition between the title and clip to a cube, for example? The title has this fadeout baked in. How am i supposed to change that? How do i attach the title to the clip? I tried dragging the title onto the clip's track, but that doesn't work! It is totally non intuitive. It should be straightforward to insert a title in front of a clip, and change the transition between them. Some transitions fade out and pause and then fade in while others might need more overlap. This requires that inserting a title should be easier. I select a clip, double click a title, it inserts it on the same track as the selected clip before it and adjusts things. And I can visually see the transition between them on the layout, and i can click it to select it, and right click to change the transition or press delete to delete the transition... this is what I expect. right now, I right click on a clip, and i get this enormous right click menu which makes nearly no sense to me. It is as if we didn't consider what these things meant in a particular context. and freeze frame, why have a submenu with only a fixed set of options when you could just pop up a dialog and select what you want? Maybe I want to freeze it for 10 seconds. I think some representation of 'freeze' should be inserted so i can resize it. by default we'd just freeze THAT track, not every track.\" (The screenshot attached was of the dashboard, not the menu; capture the clip menu yourself.)\n\nCode: titles are inserted on their own Title tracks as overlays (EditorState+TitlePresets.swift insertTitle :108-120) so no edit point exists between a title and a clip; transitions live at edit points (EditPointTransitions.swift) and cuts (ClipTransitions.swift); the title's fade out is a key written by TitlePresets/ClipKeys. Related: 3d-transitions-and-title-entrances (done), a-title-page-s-parts-each-have-their-own-labelle (in progress).",
@@ -31,6 +31,43 @@
     {
       "t": "2026-10-17T13:18:31.812Z",
       "note": "seq 45 -> 1.05"
+    },
+    {
+      "t": "2026-10-17T14:35:18.849Z",
+      "note": "claimed by go loop"
+    },
+    {
+      "t": "2026-10-17T14:38:22.934Z",
+      "note": "Reproduced at Next defaults (walk /tmp/photonz-repro/title-before-clip-today.json, Scripts/playtest.sh): with Tutorial Sample picked and the playhead at 0, a double click on Keynote Clean lands 'Title Page on Title 0.00s to 4.00s; Tutorial Sample on V1 3.50s to 11.50s' — the title is on its own Title track with a 0.5s picture fade out baked in (the recording starts under that fade), so there is no edit point between them and no transition to pick, change or delete. Held over V1 at 0:00 the Soft Gradient Glass tile says 'Title Page · New Title · 0:00': a drop on the clip's track goes to a new track instead."
+    },
+    {
+      "t": "2026-10-17T15:50:34.735Z",
+      "note": "owns these walks: insert-a-title-before-a-clip-walk"
+    },
+    {
+      "t": "2026-10-17T15:50:55.677Z",
+      "note": "Adversarial review before building: a Premiere editor puts a title on V1 ahead of the clip with a dissolve at the cut, which is what the user asked; the app's edit-point transitions already handle any two clips meeting on a picture track, so the gap was only that titles were laid on their own Title track with a baked picture fade. Risks found and handled: Behind Glass is made of the recording under it so it must stay an overlay (TitlePreset.goesInFrontOfAClip); a recording read from its first frame has no head frames, so the default dissolve sits AFTER the cut, paid for by the title running on (titles now report unlimited spare both sides at an edit point); a transition that arrived at the clip the title went in front of stays on that cut (now the clip into the title)."
+    },
+    {
+      "t": "2026-10-17T15:50:55.741Z",
+      "note": "Built: PhotonzCore/TitleBeforeClip.swift (canInsertTitle(beforeClip:), insertTitle(_:beforeClip:join:), titlePageSequenceLanding, settleTitleInSequence) + TitlePresetShelf insert path for .insert landings + EditPointTransitions spare for non-media incoming; 9 tests in TitleBeforeClipTests. App: EditorState+TitlePresets (titleBeforeClipTarget = picked picture clip, else one starting under the playhead; drop over a recording's track inserts and the ghost says Insert), Library button reads Insert Before Clip, the join's right-click reads Change Transition / Length / Curve / Remove Transition (a bare cut keeps Apply Default + Add Transition), Delete on a picked transition removes it (timeline key + Edit menu row 'Delete Transition'), Clip > Transition at Cut gains Length and Curve (menu-bar rule), V1 header stays a video icon with a title first on it."
+    },
+    {
+      "t": "2026-10-17T15:50:55.806Z",
+      "note": "Verified: Scripts/test.sh 13,479 tests green; new walk insert-a-title-before-a-clip-walk green at Next defaults (no flags): pick, double click Keynote Clean -> Title Page V1 0-4s, recording V1 4-12s; right-click join > Change Transition > Cube; photographed mid cube (looked at it: the particle page turns away on a cube as the recording comes in); played through; picked + Delete -> straight cut, nothing moved; bare join menu; 4 undos -> back to the recording at 0:00 (insert was one step); drag Soft Gradient Glass onto V1 at 0:00 says 'Insert · V1 · 0:00' and lands in front with a dissolve. Updated walks that expected the old placement (title-presets-menu-bar, library-tile-click-latency, title-sounds-whoosh-and-tick, title-presets-library-shelf now uses Behind Glass for the overlay checks, 8 title-set walks: Insert Before Clip, clip on V1, MP4 11.9s) and ran them plus 20 other title/transition walks: all green."
+    },
+    {
+      "t": "2026-10-17T15:50:55.869Z",
+      "note": "Rough edges: insert ghost does not preview the pushed clips -> filed a-clip-or-title-held-as-an-insert-shows-what-mov (p2). Left rough (no task): changing dissolve to Cube keeps the 0.4s length, which reads quick for a title; Length is on the same right-click. Acceptance 'transitions declare how they join' was already true: VideoKit.TransitionBand draws dips (isDip) apart from overlaps, a dip's hold is real time that ripples, overlaps spend handle frames and move nothing. Acceptance 'recording without spare frames offers to shorten' is moot at a title join (title pays) and is the existing ShortenTheCut row at other cuts."
+    },
+    {
+      "t": "2026-10-17T15:51:01.046Z",
+      "note": "A title page now goes in front of a clip on its own track: pick a recording and double click a title page (or Insert Title Page, or drag it onto the recording's track) and it lands right before the clip, the clip rippling later, with the default transition (cross dissolve) on the join instead of a baked fade. The join right-clicks to Change Transition / Length / Curve / Remove Transition and Delete on a picked transition leaves a straight cut. Core TitleBeforeClip.swift + 9 tests; full suite green (13,479); walk insert-a-title-before-a-clip-walk green at Next defaults plus 30 updated/related title and transition walks; audit queue/audits/2026-10-17-insert-a-title-before-a-clip.json. Follow-up filed: a-clip-or-title-held-as-an-insert-shows-what-mov."
     }
-  ]
+  ],
+  "started": "2026-10-17T14:35:18.846Z",
+  "walks": [
+    "insert-a-title-before-a-clip-walk"
+  ],
+  "completed": "2026-10-17T15:51:01.047Z"
 }

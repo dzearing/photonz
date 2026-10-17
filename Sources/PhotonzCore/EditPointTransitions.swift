@@ -94,7 +94,11 @@ extension PhotonzDocument {
         let sameFile = out.movie != nil && out.movie?.id == into.movie?.id
         return ClipCut(index: 0, atMS: at, outgoing: last, incoming: first,
                        spareAfterOutMS: outPieces.trimEndRange(ofPiece: outPieces.count - 1)?.out,
-                       spareBeforeInMS: inPieces.trimStartRange(ofPiece: 0)?.out.map { abs($0) },
+                       // A clip with nothing recorded in it (a title, words, a
+                       // shape) is drawn, so it has frames before its start
+                       // for as long as anyone wants, as it has after its end.
+                       spareBeforeInMS: into.holdsMedia
+                           ? inPieces.trimStartRange(ofPiece: 0)?.out.map { abs($0) } : nil,
                        readsOneRecording: sameFile)
     }
 

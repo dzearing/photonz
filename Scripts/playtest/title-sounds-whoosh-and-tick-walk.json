@@ -71,7 +71,7 @@
     },
     {
       "do": "press",
-      "control": "Insert at Playhead"
+      "control": "Insert Before Clip"
     },
     {
       "do": "wait",

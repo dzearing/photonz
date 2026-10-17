@@ -71,13 +71,14 @@ extension EditorState {
     /// **Add Transition ▸** with every kind, Cross dissolve first, putting
     /// the one chosen on `targets`. Never greyed: a place that cannot take a
     /// kind says so in words when it is chosen, which a greyed row cannot.
-    func addTransitionMenuRow(_ targets: [TransitionTarget], current: ClipTransitionKind? = nil) -> MenuRow {
+    func addTransitionMenuRow(_ targets: [TransitionTarget], current: ClipTransitionKind? = nil,
+                              title: String = "Add Transition") -> MenuRow {
         func row(_ kind: ClipTransitionKind) -> MenuRow {
             if kind == current { return .toggle(kind.title, isOn: true) {} }
             return .command(kind.title) { self.putTransition(kind, on: targets) }
         }
         // The flat ones, then the ones that turn in depth.
-        return .submenu("Add Transition", ClipTransitionKind.allCases.filter { !$0.isInDepth }.map(row)
+        return .submenu(title, ClipTransitionKind.allCases.filter { !$0.isInDepth }.map(row)
                             + [.separator] + ClipTransitionKind.inDepth.map(row))
     }
 

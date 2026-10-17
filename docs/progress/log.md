@@ -21544,3 +21544,10 @@ Shift/Command click adds zoom bars to the pick, the Zoom lane label picks the ro
 - Holding a motion bar on a document with time no longer swaps the timeline's ruler to the picture's lap (it zoomed the timeline to ~4s while a title part's bar was held). Motion bars and key marks read the hand in global space.
 - A title's track has an arrow that opens a row per part (Background, Headline, Subtitle...), each a bar from in start to out end with the in/out shaded; ends and middle drag through the title's design (`PhotonzCore/TitlePartTiming.swift`), one undo step.
 - Walk: `title-part-rows-retime-walk`, new step `dragTitlePart`. Follow-up: `a-title-part-move-dragged-by-hand-on-the-timelin`.
+
+## 2026-10-17 — A title page goes in front of a clip, with a real transition (Next)
+
+- Pick a recording, double click a title page (or Insert Title Page, or drag it onto the recording's track): it lands on the same track before the clip, which ripples later; the join is an edit point with the default transition (cross dissolve). Title pages put in this way carry no baked fade out.
+- Join right-click: Change Transition / Length / Curve / Remove Transition; Delete on a picked transition gives a straight cut.
+- Core: `Sources/PhotonzCore/TitleBeforeClip.swift`, tests `TitleBeforeClipTests`. Walk: `insert-a-title-before-a-clip-walk`.
+- Next: `a-clip-or-title-held-as-an-insert-shows-what-mov` (insert ghost previews what moves).

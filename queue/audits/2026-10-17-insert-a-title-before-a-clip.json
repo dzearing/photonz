@@ -1,0 +1,54 @@
+{
+  "feature": "Insert a title page before a clip, with a real transition between them",
+  "epic": "video-titles-graphics",
+  "task": "insert-a-title-before-a-clip-on-its-track-and-ch",
+  "summary": "Pick a recording and double click a title page in the Library: the page goes on the recording's own track right before it, the recording moves along to make room, and the join between them is an ordinary cut with a cross dissolve on it. Right-click the join to change it (Cube, Flip, Dip to black...), its length or its curve; pick it and press Delete for a straight cut. The title no longer has a fade baked into it.",
+  "setup": "Photonz Dev, release Next, no flag changed from its default. Open a screen recording with the timeline showing, and the Library on its Comps shelf (View > Library).",
+  "switched": {},
+  "try": [
+    {
+      "do": "Click the recording on the timeline to pick it, then double click Keynote Clean in the Library.",
+      "shot": "2026-10-17-title-before-clip-1-inserted-before-the-clip.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    },
+    {
+      "do": "Right-click the small band where the title meets the recording and choose Change Transition > Cube.",
+      "shot": "2026-10-17-title-before-clip-1b-the-join-menu.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    },
+    {
+      "do": "Press Space from 0:03 and watch the page turn away on a cube into the recording.",
+      "shot": "2026-10-17-title-before-clip-2-mid-cube.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    },
+    {
+      "do": "Click the band to pick it and press Delete: a straight cut, and nothing moves.",
+      "shot": "2026-10-17-title-before-clip-3-straight-cut.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    },
+    {
+      "do": "Press Command Z until the title is gone, then drag Soft Gradient Glass from the Library onto the start of the recording's track.",
+      "shot": "2026-10-17-title-before-clip-6-held-over-v1.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    },
+    {
+      "do": "Let go: it lands in front of the recording the same way, its join dissolving.",
+      "shot": "2026-10-17-title-before-clip-7-dropped-on-v1.png",
+      "shotNote": "This picture shows the window as it sits behind another app: a walk never takes key, so blue buttons can read grey."
+    }
+  ],
+  "evaluate": [
+    "Is a double click with the clip picked the one move you expected, or would you also want a key for it?",
+    "Is the band where the title meets the clip easy enough to find and hit, at the timeline's usual zoom?",
+    "Does the right-click on that band (Change Transition, Length, Curve, Remove Transition) say what you want to do there, and nothing more?",
+    "A cross dissolve is the join every new title page gets (it is your Command T default, so picking another default changes it). Is that the right starting point?",
+    "Should a title page put in with NOTHING picked and the playhead mid-recording still lie over the recording on a Title track, as it does now, or always cut in?"
+  ],
+  "rough": [
+    "The title mock (video-title-wt.html) puts a typed title on its own Title track over V1. A title PAGE now goes on V1 in front of the clip instead, your call on 2026-10-17. Name cards, typed titles and Behind Glass (which is made of the recording under it) still go on a Title track above, as the mock draws.",
+    "Held over the recording's track, the ghost says Insert and draws the insert bar at its start, but the clips it will push are not yet drawn moved along: filed as a-clip-or-title-held-as-an-insert-shows-what-mov.",
+    "A title page is now put in front of a clip when that clip is picked, or when the playhead sits where a recording starts (so a page at 0:00 plays before the recording, not over it). With nothing picked and the playhead mid-recording it still lies over the recording on a Title track, the old behaviour. The Library's button says which: Insert Before Clip or Insert at Playhead.",
+    "Overlapping transitions at the title's join are paid for by the title running on past its end (a title is drawn, so it never runs out), so they sit after the cut by default; a dip sits between the two and holds if asked. Nothing moves when you switch kinds, and Delete never leaves a gap.",
+    "The join's transition keeps the length the dissolve had (0.4s) when you change it to a Cube, which reads quick for a title; Length on the same right-click lengthens it."
+  ]
+}

@@ -1,0 +1,359 @@
+{
+  "out": "/tmp/photonz-playtest/insert-a-title-before-a-clip-walk",
+  "seed": "Putting a title page in front of a recording is one move, at Next defaults with no flag set: pick the recording, double click a title page tile in the Library, and the page lands on V1 right before the clip, the clip moved later by the page's length, with a cross dissolve on the join between them instead of a fade baked into the title. The join is an edit point like any other: right-click it and Change Transition > Cube turns it into a cube, which plays as the page turns away into the recording; picked, Delete takes the transition off and leaves a straight cut, nothing moving. Last, with all of that undone, the Soft Gradient Glass tile dragged onto V1 says Insert there at 0:00, and let go it lands in front of the recording the same way, its join dissolving.",
+  "setup": {
+    "timelineOpen": true,
+    "forget": [
+      "all"
+    ]
+  },
+  "steps": [
+    {
+      "do": "action",
+      "action": "openSampleRecording"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.0
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "tool",
+      "tool": "select"
+    },
+    {
+      "do": "selectRow",
+      "row": "Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectPicked",
+      "layers": [
+        "Tutorial Sample"
+      ]
+    },
+    {
+      "do": "action",
+      "action": "showLibrary"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "press",
+      "control": "Comps"
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "expect",
+      "control": "Insert Before Clip",
+      "present": false
+    },
+    {
+      "comment": "THE FIRST TEST: the recording picked, a double click on a title page tile by the pointer.",
+      "do": "press",
+      "control": "Keynote Clean",
+      "count": 2
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 12.0,
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Transition Title Page to Tutorial Sample",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "1-inserted-before-the-clip",
+      "note": "THE FIRST TEST: with the recording picked, a double click on Keynote Clean put the title page on V1 from 0:00 to 0:04, right before the recording, which moved along to start at 0:04 and plays whole. The join between them carries a cross dissolve, drawn as a band over the cut, and the title has no fade of its own"
+    },
+    {
+      "do": "snapshot",
+      "name": "1-inserted-before-the-clip"
+    },
+    {
+      "comment": "THE SECOND TEST: the join's right-click is about its transition.",
+      "do": "rightClick",
+      "on": "Transition Title Page to Tutorial Sample",
+      "shot": "1b-the-join-menu",
+      "choose": "Change Transition > Cube"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 4.2
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "describe",
+      "stage": "2-cube",
+      "note": "THE SECOND TEST: right-click on the join, Change Transition > Cube, and the page turns away on a cube into the recording, shown here part way through"
+    },
+    {
+      "do": "snapshot",
+      "name": "2-mid-cube"
+    },
+    {
+      "do": "clickRuler",
+      "seconds": 3.0
+    },
+    {
+      "do": "action",
+      "action": "videoPlay"
+    },
+    {
+      "do": "wait",
+      "seconds": 2.2
+    },
+    {
+      "do": "action",
+      "action": "videoPause"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expect",
+      "control": "Transition Title Page to Tutorial Sample",
+      "present": true
+    },
+    {
+      "comment": "THE THIRD TEST: pick the join by the pointer and press Delete.",
+      "do": "press",
+      "control": "Transition Title Page to Tutorial Sample"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Cube"
+    },
+    {
+      "do": "key",
+      "key": "delete"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 12.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "3-straight-cut",
+      "note": "THE THIRD TEST: the join picked and Delete pressed, the cube is gone and it is a straight cut; the title still ends and the recording still starts at 0:04, nothing moved"
+    },
+    {
+      "do": "snapshot",
+      "name": "3-straight-cut"
+    },
+    {
+      "do": "rightClick",
+      "on": "Edit point Title Page to Tutorial Sample",
+      "shot": "4-the-bare-join-menu",
+      "choose": "Add Transition > Dip to black"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "expect",
+      "menu": "Type",
+      "reads": "Dip to black"
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.6
+    },
+    {
+      "do": "action",
+      "action": "undo"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.8
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "count": 0
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 8.0,
+      "count": 1
+    },
+    {
+      "do": "describe",
+      "stage": "5-undone",
+      "note": "Undo backs out the dip, the delete, the cube, and then the insert in ONE step: the title is gone and the recording is back at 0:00"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Soft Gradient Glass",
+      "track": "V1",
+      "seconds": 0.0,
+      "release": false,
+      "hold": "6-held-over-v1",
+      "says": "Insert · V1 · 0:00"
+    },
+    {
+      "do": "describe",
+      "stage": "6-held-over-v1",
+      "note": "THE FOURTH TEST: the Soft Gradient Glass tile held over the recording's own track at its start: the ghost says Insert on V1 at 0:00, with the insert bar at its start: it goes in front of the recording, pushing it along, not on a new track"
+    },
+    {
+      "do": "dropOnTimeline",
+      "tile": "Soft Gradient Glass",
+      "track": "V1",
+      "seconds": 0.0
+    },
+    {
+      "do": "wait",
+      "seconds": 1.2
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "key",
+      "key": "escape"
+    },
+    {
+      "do": "wait",
+      "seconds": 0.4
+    },
+    {
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
+    },
+    {
+      "do": "expectClip",
+      "clip": "Tutorial Sample",
+      "track": "V1",
+      "startsAt": 4.0,
+      "endsAt": 12.0,
+      "count": 1
+    },
+    {
+      "do": "expect",
+      "control": "Transition Title Page to Tutorial Sample",
+      "present": true
+    },
+    {
+      "do": "describe",
+      "stage": "7-dropped-on-v1",
+      "note": "Let go, the page is on V1 from 0:00 to 0:04 in front of the recording, which moved along to 0:04, and the join between them dissolves"
+    },
+    {
+      "do": "snapshot",
+      "name": "7-dropped-on-v1"
+    }
+  ]
+}

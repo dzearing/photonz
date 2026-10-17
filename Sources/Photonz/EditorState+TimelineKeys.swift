@@ -145,6 +145,9 @@ extension EditorState {
                 closeGapInHand()
                 return true
             }
+            // ...and a transition picked on a cut: it comes off, a straight
+            // cut left, as Premiere's Delete does.
+            if deleteTransitionInHand() { return true }
             return liftInHand()
         case .rippleDelete:
             // A gap picked and refused still answers, with what is in the way.

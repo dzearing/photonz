@@ -325,6 +325,24 @@ extension EditorState {
         documentMomentChanged()
     }
 
+    /// The picked cut whose transition ⌫ takes off, leaving a straight cut,
+    /// the way Premiere's Delete does on a picked transition. Nil when no cut
+    /// is picked, or the one picked has nothing on it.
+    var transitionHeldForDelete: TimelineCutPlace? {
+        guard canWorkWithClipTransitions, let inHand = cutInHand, inHand.cut.transition != nil,
+              !isCutLocked(inHand.place) else { return nil }
+        return inHand.place
+    }
+
+    /// ⌫ on a picked transition: it goes, the cut stays picked as a straight
+    /// cut, and nothing moves.
+    @discardableResult
+    func deleteTransitionInHand() -> Bool {
+        guard let place = transitionHeldForDelete else { return false }
+        setTransition(nil, at: place)
+        return true
+    }
+
     /// Pick a cut wherever it is, the way a click on it does.
     func pickCut(_ place: TimelineCutPlace) {
         switch place {

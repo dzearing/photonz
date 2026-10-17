@@ -1,6 +1,6 @@
 {
   "out": "/tmp/photonz-playtest/title-set-gradient-glow-walk",
-  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Gradient Glow, a title page, found on the Library's Comps shelf by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 11.4s.",
+  "seed": "One of the designed set, end to end at Next defaults with no switch touched: Gradient Glow, a title page, found on the Library's Comps shelf by searching, inserted at the playhead, its words typed in, photographed as it lands, coming in and holding, and the whole edit written out as an MP4 that runs 11.9s, the page then the whole recording.",
   "setup": {
     "timelineOpen": true,
     "forget": [
@@ -71,7 +71,7 @@
     },
     {
       "do": "press",
-      "control": "Insert at Playhead"
+      "control": "Insert Before Clip"
     },
     {
       "do": "wait",
@@ -94,14 +94,18 @@
       "onTheClock": true
     },
     {
-      "do": "expect",
-      "field": "Timing Title Page",
-      "present": true
+      "comment": "The playhead is where the recording starts, so the page goes in front of it on V1 (insert-a-title-before-a-clip-walk).",
+      "do": "expectClip",
+      "clip": "Title Page",
+      "track": "V1",
+      "startsAt": 0.0,
+      "endsAt": 4.0,
+      "count": 1
     },
     {
       "do": "describe",
       "stage": "1-landed",
-      "note": "Gradient Glow inserted from its Library tile at 0:00 with Insert at Playhead, at Next defaults, and its words typed straight in as 'Ship it faster': the playhead waits where every part has arrived"
+      "note": "Gradient Glow inserted from its Library tile at 0:00 with Insert Before Clip, in front of the recording on V1, at Next defaults, and its words typed straight in as 'Ship it faster': the playhead waits where every part has arrived"
     },
     {
       "do": "snapshot",
@@ -158,7 +162,7 @@
       "name": "gradientGlow",
       "format": "mp4",
       "range": "whole",
-      "seconds": 11.4,
+      "seconds": 11.9,
       "within": 0.3,
       "estimateFactor": 2
     }

@@ -288,14 +288,29 @@ extension PhotonzDocument {
 
     /// Put any preset on the timeline: at `ms` on a track of its own, or where
     /// `landing` says when it was let go over the timeline.
+    ///
+    /// A title page landed by an insert onto a track is put INTO the sequence
+    /// there (`TitleBeforeClip.swift`): it carries no fade out, and the join
+    /// into the clip it went in front of gets `join`.
     @discardableResult
     public mutating func insertTitle(_ preset: TitlePreset, atTimeMS ms: Int,
-                                     landing: ClipLanding? = nil, motionBlur: Bool = false) -> InsertedTitle? {
-        switch preset {
+                                     landing: ClipLanding? = nil, motionBlur: Bool = false,
+                                     join: ClipTransitionKind = .usualDefault) -> InsertedTitle? {
+        var sequence: (track: UUID, arriving: UUID?, carried: ClipTransition?)?
+        if let landing, landing.edit == .insert, preset.goesInFrontOfAClip, case .onto(let id) = landing.target {
+            let arriving = clipIDs(onTrack: id).first { layer(id: $0)?.time?.inMS == landing.startMS }
+            sequence = (id, arriving, arriving.flatMap { layer(id: $0)?.arrivalTransition })
+        }
+        let inserted: InsertedTitle? = switch preset {
         // A saved title carries whatever it was saved wearing.
         case .builtIn(let builtIn): insertTitle(builtIn, atTimeMS: ms, landing: landing, motionBlur: motionBlur)
         case .saved(let saved): insertTitle(saved, atTimeMS: ms, landing: landing)
         }
+        if let inserted, let sequence {
+            settleTitleInSequence(inserted.layerID, trackID: sequence.track, carried: sequence.carried,
+                                  formerlyArriving: sequence.arriving, join: join)
+        }
+        return inserted
     }
 
     /// Where a preset let go over the timeline lands: on the track under the

@@ -538,16 +538,7 @@ extension EditorState {
         var rows: [MenuRow] = []
         if Experiments.shared.transitionsAtACutEnabled {
             let place = TimelineCutPlace.join(clip: layerID, index: index)
-            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
-                self.applyDefaultTransition(at: place)
-            })
-            rows.append(addTransitionMenuRow([.cut(place)], current: cut.transition?.kind))
-            if cut.transition != nil {
-                rows.append(.command("Remove Transition") {
-                    self.selectClipCut(layerID: layerID, index: index)
-                    self.setClipTransitionInHand(nil)
-                })
-            }
+            rows += cutTransitionMenuRows(at: place, cut: cut)
             rows.append(.separator)
             rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
             rows.append(.separator)
@@ -564,16 +555,7 @@ extension EditorState {
         guard let cut = document?.documentCut(at: place)?.cut, !isCutLocked(place) else { return [] }
         var rows: [MenuRow] = []
         if Experiments.shared.transitionsAtACutEnabled {
-            rows.append(.command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
-                self.applyDefaultTransition(at: place)
-            })
-            rows.append(addTransitionMenuRow([.cut(place)], current: cut.transition?.kind))
-            if cut.transition != nil {
-                rows.append(.command("Remove Transition") {
-                    self.pickCut(place)
-                    self.setTransition(nil, at: place)
-                })
-            }
+            rows += cutTransitionMenuRows(at: place, cut: cut)
             rows.append(.separator)
             rows += transitionClipboardMenuRows(at: place, hasTransition: cut.transition != nil)
             rows.append(.separator)
@@ -583,6 +565,48 @@ extension EditorState {
         rows.append(rollEditMenuRow(at: place))
         rows.append(joinThroughEditMenuRow(at: place))
         return rows
+    }
+
+    /// What a cut's right-click says about its transition. A bare cut offers
+    /// one: the default on ⌘T, or any from the list. A cut that has one is
+    /// about THAT one, the way Premiere's right-click on a transition is:
+    /// change it to another kind, how long it takes, the curve it runs on, or
+    /// take it off for a straight cut (the user, 2026-10-17: "right click to
+    /// change the transition or press delete to delete the transition").
+    private func cutTransitionMenuRows(at place: TimelineCutPlace, cut: ClipCut) -> [MenuRow] {
+        guard let transition = cut.transition else {
+            return [
+                .command("Apply Default Transition", TimelineMenuKeys.applyDefaultTransition) {
+                    self.applyDefaultTransition(at: place)
+                },
+                addTransitionMenuRow([.cut(place)]),
+            ]
+        }
+        let kind = cut.drawnTransition?.kind ?? transition.kind
+        let now = cut.drawnTransition?.lengthMS ?? transition.lengthMS
+        let longest = cut.longestMS(for: transition)
+        var lengths = Set(ClipTransition.lengthStopsMS.filter { $0 <= longest })
+        lengths.insert(now)
+        let curves = EasingCurve.named.prefix(EasingCurve.standardCount)
+        return [
+            addTransitionMenuRow([.cut(place)], current: transition.kind, title: "Change Transition"),
+            .submenu("Length", lengths.sorted().map { ms in
+                .toggle(ClipTransitionCopy.lengthChoice(ms, of: kind), isOn: ms == now) {
+                    self.pickCut(place)
+                    self.setClipTransitionLength(ms)
+                }
+            }),
+            .submenu("Curve", curves.map { curve in
+                .toggle(curve.title, isOn: curve == transition.curve) {
+                    self.pickCut(place)
+                    self.setClipTransitionCurve(curve)
+                }
+            }),
+            .command("Remove Transition") {
+                self.pickCut(place)
+                self.setTransition(nil, at: place)
+            },
+        ]
     }
 
     /// Roll Edit to Playhead, on a join or on the cut between two clips.
@@ -636,7 +660,7 @@ extension EditorState {
     }
 
     /// Whether either clip a cut belongs to is on a locked track.
-    private func isCutLocked(_ place: TimelineCutPlace) -> Bool {
+    func isCutLocked(_ place: TimelineCutPlace) -> Bool {
         switch place {
         case let .join(clip, _): isClipLocked(clip)
         case let .edit(outgoing, incoming): isClipLocked(outgoing) || isClipLocked(incoming)
