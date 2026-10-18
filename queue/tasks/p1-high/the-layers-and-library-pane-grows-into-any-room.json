@@ -1,0 +1,36 @@
+{
+  "id": "the-layers-and-library-pane-grows-into-any-room",
+  "title": "The Layers and Library pane grows into any room the sections above leave empty",
+  "goal": "The panel's top part (the picked thing's sections) should only take the height its open sections need; the Layers and Library pane below fills everything else. Collapsing sections above makes the Library taller at once, with no empty gap. Today the bottom pane keeps a fixed or remembered height, so with every section collapsed a large empty gap sits above the Library and cannot be removed.",
+  "epic": "ui-building",
+  "priority": "p1-high",
+  "seq": 1,
+  "status": "pending",
+  "release": "next",
+  "area": "app",
+  "created": "2026-10-18T16:25:38.246Z",
+  "updated": "2026-10-18T16:25:38.358Z",
+  "deps": [],
+  "blockedBy": [],
+  "notes": "User's words (2026-10-18): \"why does the library pane have this giant gap above it??? I minimized everything to see the library pane, and couldn't get rid of this gap\". Screenshot: panel with TIME, CAPTIONS, TRANSITIONS collapsed, then a large empty band, then LIBRARY (Media / Catalog) with tiles, then Sections.\n\nFrom code reading (not run): the lists pane's height is a stored setting (InspectorPanel.swift:204-208, @StoredSetting inspector.listsPaneHeight, default PanelListsPane.defaultShare) with a hold so a scope switch never moves it (:212-213, PanelListsPane.Hold); used at :372-374 listsPaneHeight(for:)/listsLayout. Nothing shrinks the top area to its content, so collapsed sections leave the fixed split's space empty. Shipped by 'The pick on top, Layers and Library in a pane at the bottom' (10-13).",
+  "acceptance": [
+    "Reproduce first at Next defaults with the user's case (screenshot 2026-10-18 09.22.42: a video with Time, Captions and Transitions collapsed, about 170 pt of empty panel above LIBRARY): record the stored inspector.listsPaneHeight and the computed share, and how the divider behaves",
+    "The top area hugs its content: its height is the sum of its sections as shown (collapsed headers or open contents), up to a maximum; the lists pane takes all remaining height. Collapsing or expanding a section above resizes both in the same frame with the panel's usual animation, and there is never empty space between the last section and the pane (MEASURED gap 0 pt in every state)",
+    "When the sections above need more room than the panel has, the top area scrolls and the pane keeps the person's chosen height (the divider still drags, and its position is remembered as a preference for that case only, not as a fixed height)",
+    "Expanding a section never shoves the pane off screen: the pane keeps a minimum height that shows its header, scope switch and at least one row of tiles",
+    "Collapsing the Layers or Library section inside the pane gives the room back to the top area",
+    "Behaves the same for image, video and design documents and in every window mode",
+    "A walk collapses every section above, checks the pane's top meets the last header (gap 0), expands Time, checks the pane shrank by Time's height, and photographs both",
+    "Audit under queue/audits/; anything left rough is filed as a follow-up task if it clears the follow-up bar (queue/bin/follow-up-bar.md), and written into this task's log if it does not."
+  ],
+  "log": [
+    {
+      "t": "2026-10-18T16:25:38.248Z",
+      "note": "created (user)"
+    },
+    {
+      "t": "2026-10-18T16:25:38.356Z",
+      "note": "seq 3970 -> 1"
+    }
+  ]
+}
